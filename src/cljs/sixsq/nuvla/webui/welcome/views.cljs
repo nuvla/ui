@@ -41,7 +41,6 @@
       (@tr [:welcome-detail])]
 
      [ui/CardGroup {:centered true}
-      (when-not @iframe? [card :dashboard :welcome-dashboard-desc "dashboard" "dashboard"])
       (when-not @iframe? [card :quota :welcome-quota-desc "balance scale" "quota"])
       (when-not @iframe? [card :usage :welcome-usage-desc "history" "usage"])
       ;[card :appstore :welcome-appstore-desc "certificate" "appstore"]

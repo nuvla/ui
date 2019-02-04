@@ -8,7 +8,6 @@
     [sixsq.nuvla.webui.cimi.events :as api-events]
     [sixsq.nuvla.webui.client.events :as client-events]
     [sixsq.nuvla.webui.config :as config]
-    [sixsq.nuvla.webui.dashboard.views :as dashboard-views]
     [sixsq.nuvla.webui.db.events :as db-events]
     [sixsq.nuvla.webui.deployment-detail.views :as deployment-detail-views]
     [sixsq.nuvla.webui.dnd.utils :as dnd-utils]
@@ -24,7 +23,7 @@
 ;;
 ;; determine the host url
 ;;
-(def SLIPSTREAM_URL (delay (if-not (str/blank? defines/HOST_URL) defines/HOST_URL (utils/host-url))))
+(def NUVLA_URL (delay (if-not (str/blank? defines/HOST_URL) defines/HOST_URL (utils/host-url))))
 
 
 (defn dev-setup []
@@ -46,14 +45,13 @@
   (render-component-when-present "app" main-views/app)
   (render-component-when-present "modal-login" authn-views/modal-login
                                  :initialization-fn #(do (dispatch-sync [::authn-events/server-redirect-uri "/login"])
-                                                         (dispatch-sync [::authn-events/redirect-uri "/dashboard"])))
+                                                         (dispatch-sync [::authn-events/redirect-uri "/"])))
   (render-component-when-present "modal-signup" authn-views/modal-signup
                                  :initialization-fn #(do (dispatch-sync [::authn-events/server-redirect-uri "/login"])
-                                                         (dispatch-sync [::authn-events/redirect-uri "/dashboard"])))
+                                                         (dispatch-sync [::authn-events/redirect-uri "/"])))
   (render-component-when-present "modal-reset-password" authn-views/modal-reset-password
                                  :initialization-fn #(do (dispatch-sync [::authn-events/server-redirect-uri "/login"])
-                                                         (dispatch-sync [::authn-events/redirect-uri "/dashboard"])))
-  (render-component-when-present "dashboard-tab" dashboard-views/vms-deployments)
+                                                         (dispatch-sync [::authn-events/redirect-uri "/"])))
   (render-component-when-present "usage" usage-views/usage)
   (render-component-when-present "deployment-detail-reports" deployment-detail-views/reports-list))
 
@@ -84,7 +82,7 @@
   (patch-process)
   (dev-setup)
   (dispatch-sync [::db-events/initialize-db])
-  (dispatch-sync [::client-events/initialize @SLIPSTREAM_URL])
+  (dispatch-sync [::client-events/initialize @NUVLA_URL])
   (dispatch-sync [::api-events/get-cloud-entry-point])
   (dispatch-sync [::authn-events/initialize])
   (dispatch-sync [::main-events/check-iframe])

@@ -23,7 +23,7 @@
   ^{:documentation
     "determine the host url
 
-     Set a fixed SlipStream endpoint (useful for development) with:
+     Set a fixed Nuvla endpoint (useful for development) with:
 
      {:compiler-options
        {:closure-defines
@@ -39,7 +39,7 @@
   ^{:documentation
     "determine the web application prefix
 
-     The default is to concatenate '/webui' to the end of the SLIPSTREAM_URL.
+     The default is to concatenate '/webui' to the end of the NUVLA_URL.
      If the application is mounted elsewhere, you can change the default with:
 
      {:compiler-options

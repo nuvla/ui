@@ -8,13 +8,11 @@
     [sixsq.nuvla.webui.cimi-detail.spec :as api-detail]
     [sixsq.nuvla.webui.cimi.spec :as api]
     [sixsq.nuvla.webui.client.spec :as client]
-    [sixsq.nuvla.webui.dashboard.spec :as dashboard]
     [sixsq.nuvla.webui.data.spec :as data]
     [sixsq.nuvla.webui.deployment-dialog.spec :as deployment-dialog]
     [sixsq.nuvla.webui.deployment.spec :as deployment]
     [sixsq.nuvla.webui.docs.spec :as docs]
     [sixsq.nuvla.webui.i18n.spec :as i18n]
-    [sixsq.nuvla.webui.legacy-application.spec :as legacy-application]
     [sixsq.nuvla.webui.main.spec :as main]
     [sixsq.nuvla.webui.messages.spec :as messages]
     [sixsq.nuvla.webui.metrics.spec :as metrics]
@@ -30,13 +28,11 @@
                      ::api/db
                      ::api-detail/db
                      ::client/db
-                     ::dashboard/db
                      ::deployment/db
                      ::deployment-dialog/db
                      ::data/db
                      ::docs/db
                      ::i18n/db
-                     ::legacy-application/db
                      ::main/db
                      ::metrics/db
                      ::messages/db
@@ -55,10 +51,8 @@
          deployment/defaults
          deployment-dialog/defaults
          client/defaults
-         dashboard/defaults
          docs/defaults
          i18n/defaults
-         legacy-application/defaults
          main/defaults
          metrics/defaults
          messages/defaults

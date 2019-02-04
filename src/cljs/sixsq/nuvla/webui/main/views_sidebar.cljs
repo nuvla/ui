@@ -71,7 +71,6 @@
                 :compact  true
                 :inverted true}
        (when-not @iframe? [logo-item])
-       (when-not @iframe? [item :dashboard "dashboard" "dashboard"])
        (when-not @iframe? [item :quota "quota" "balance scale"])
        (when-not @iframe? [item :usage "usage" "history"])
        (when-not @iframe? [item :application "application" "sitemap"])

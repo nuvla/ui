@@ -9,16 +9,16 @@
                              :output-dir "resources/public/js"
                              :asset-path "/js"
 
-                             :modules    {:webui {:entries [sixsq.slipstream.webui.core]}}
+                             :modules    {:webui {:entries [sixsq.nuvla.webui.core]}}
 
                              :devtools   {:http-root        "resources/public"
                                           :push-state/index "webui.html"
                                           :http-port        8280
-                                          :after-load       sixsq.slipstream.webui.core/mount-root
+                                          :after-load       sixsq.nuvla.webui.core/mount-root
                                           :preloads         [devtools.preload]}
 
-                             :dev        {:closure-defines {sixsq.slipstream.webui.utils.defines/HOST_URL "https://nuv.la"
-                                                            :compiler-options                             {:infer-externs :auto}}}
+                             :dev        {:closure-defines {sixsq.nuvla.webui.utils.defines/HOST_URL "https://nuv.la"
+                                                            :compiler-options                        {:infer-externs :auto}}}
 
 
                              :release    {:closure-defines  {sixsq.slipstream.webui.utils.defines/HOST_URL ""}

@@ -1,0 +1,26 @@
+;; shadow-cljs configuration
+{:lein              {:profile "+scljs"}
+
+ :open-file-command ["idea" :pwd "--line" :line :file]
+
+ :repositories      {"sixsq-community-releases" {:url "https://nexus.sixsq.com/content/repositories/releases-community-rhel7/"}}
+
+ :builds            {:webui {:target     :browser
+                             :output-dir "resources/public/js"
+                             :asset-path "/js"
+
+                             :modules    {:webui {:entries [sixsq.slipstream.webui.core]}}
+
+                             :devtools   {:http-root        "resources/public"
+                                          :push-state/index "webui.html"
+                                          :http-port        8280
+                                          :after-load       sixsq.slipstream.webui.core/mount-root
+                                          :preloads         [devtools.preload]}
+
+                             :dev        {:closure-defines {sixsq.slipstream.webui.utils.defines/HOST_URL "https://nuv.la"
+                                                            :compiler-options                             {:infer-externs :auto}}}
+
+
+                             :release    {:closure-defines  {sixsq.slipstream.webui.utils.defines/HOST_URL ""}
+                                          :compiler-options {:infer-externs :auto
+                                                             :optimizations :advanced}}}}}

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" viewBox="388 171 148 60" width="148pt" height="5pc" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <metadata> Produced by OmniGraffle 7.5 
+    <dc:date>2017-11-10 20:02:44 +0000</dc:date>
+  </metadata>
+  <defs>
+    <font-face font-family="Bank Gothic" font-size="48" panose-1="0 0 4 0 0 0 0 0 0 0" units-per-em="1000" underline-position="-73" underline-thickness="50" slope="0" x-height="424" cap-height="516" ascent="791.0004" descent="-235.99243" font-weight="300">
+      <font-face-src>
+        <font-face-name name="BankGothic-Light"/>
+      </font-face-src>
+    </font-face>
+  </defs>
+  <g stroke="none" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1">
+    <title>Canvas 1</title>
+    <rect fill="white" width="148" height="60"/>
+    <g>
+      <title>Layer 1</title>
+      <text transform="translate(393 176.5)" fill="#ebebeb">
+        <tspan font-family="Bank Gothic" font-size="48" font-weight="300" fill="#ebebeb" x=".036" y="38" textLength="31">C</tspan>
+        <tspan font-family="Bank Gothic" font-size="48" font-weight="300" fill="#ebebeb" x="31.036" y="38" textLength="32.168">U</tspan>
+        <tspan font-family="Bank Gothic" font-size="48" font-weight="300" fill="#ebebeb" x="63.204" y="38" textLength="31.768">B</tspan>
+        <tspan font-family="Bank Gothic" font-size="48" font-weight="300" fill="#ebebeb" x="94.972" y="38" textLength="11.992">I</tspan>
+        <tspan font-family="Bank Gothic" font-size="48" font-weight="300" fill="#ebebeb" x="106.964" y="38" textLength="31">C</tspan>
+      </text>
+    </g>
+  </g>
+</svg>

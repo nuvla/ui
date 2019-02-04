@@ -56,7 +56,7 @@
                  [clj-commons/secretary]
                  [expound]
                  [com.taoensso/timbre]
-                 [com.sixsq.slipstream/SlipStreamClojureAPI-cimi ~+version+]
+                 [sixsq.nuvla/clojure-api-cimi ~+version+]
                  [com.taoensso/tempura]
                  [funcool/promesa]
                  [com.taoensso/encore]                      ;; fix conflict, needed indirectly

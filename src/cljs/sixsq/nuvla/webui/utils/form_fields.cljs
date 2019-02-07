@@ -49,7 +49,7 @@
                             :options       (map (fn [v] {:key v, :value v, :text v}) values)}]
        :else [ui/Input
               (cond-> {:type          (if sensitive "password" "text")
-                       :name          label
+                       :name          name
                        :default-value default-value
                        :read-only     read-only
                        :on-change     on-change-fn}
@@ -65,7 +65,7 @@
      (when-not hidden [:label label nbsp (help-popup help)])
      [ui/Input
       (cond-> {:type          "number"
-               :name          label
+               :name          name
                :default-value (or (:value vscope) (:default vscope) "")
                :read-only     (not consumerWritable)
                :on-change     (ui-callback/value #(update-fn form-id name (utils/str->int %)))}
@@ -110,7 +110,7 @@
     [ui/FormField {:required consumerMandatory}
      (when-not hidden [:label label nbsp (help-popup help)])
      [ui/Checkbox
-      (cond-> {:name          label
+      (cond-> {:name          name
                :default-value (or (:value vscope) (:default vscope) false)
                :read-only     (not consumerWritable)
                :on-change     (ui-callback/checked #(update-fn form-id name %))}
@@ -125,7 +125,7 @@
     [ui/FormField {:required consumerMandatory}
      (when-not hidden [:label label nbsp (help-popup help)])
      [ui/Checkbox
-      (cond-> {:name          label
+      (cond-> {:name          name
                :default-value (or (:value vscope) (:default vscope) "")
                :read-only     (not consumerWritable)
                :on-change     (ui-callback/value #(update-fn form-id name {:href %}))}

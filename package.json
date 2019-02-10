@@ -1,5 +1,5 @@
 {
-  "name": "slipstream-webui",
+  "name": "nuvla-ui",
   "version": "1.0.0",
   "main": "resources/webui.js",
   "scripts": {
@@ -11,9 +11,9 @@
   "author": "SixSq Sàrl",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/slipstream/SlipStreamWebUI/issues"
+    "url": "https://github.com/nuvla/ui/issues"
   },
-  "homepage": "https://github.com/slipstream/SlipStreamWebUI",
+  "homepage": "https://github.com/nuvla/ui",
   "devDependencies": {
     "shadow-cljs": "2.7.25",
     "source-map-support": "^0.5.10"
@@ -32,6 +32,7 @@
     "react-datepicker": "^1.8.0",
     "react-dom": "^16.7.0",
     "react-markdown": "^4.0.6",
+    "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.84.0",
     "ws": "^6.1.3"
   }

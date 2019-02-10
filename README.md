@@ -7,8 +7,8 @@ services that use the CIMI interface.
 
 SlipStream Code:
 
- * [SlipStream Clojure(Script)
-   API](https://github.com/slipstream/SlipStreamClojureAPI): Provides
+ * [Nuvla Clojure(Script)
+   API](https://github.com/nuvla/clojure-api): Provides
    a ClojureScript API for the CIMI and CIMI-like resources within
    SlipStream.
 

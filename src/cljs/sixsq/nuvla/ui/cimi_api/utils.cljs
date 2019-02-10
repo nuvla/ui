@@ -6,7 +6,7 @@
     [clojure.set :as set]
     [clojure.walk :as walk]
     [re-frame.core :refer [dispatch reg-fx]]
-    [sixsq.nuvla.client.api.cimi :as cimi]
+    [sixsq.nuvla.client.api :as api]
     [taoensso.timbre :as log]))
 
 
@@ -33,7 +33,7 @@
 (defn get-current-session
   [client]
   (go
-    (let [session-collection (<! (cimi/search client :sessions))]
+    (let [session-collection (<! (api/search client :sessions))]
       (when-not (instance? js/Error session-collection)
         (-> session-collection :sessions first)))))
 

@@ -6,8 +6,8 @@
   (:require
     [cljs.core.async :refer [<!]]
     [re-frame.core :refer [dispatch reg-fx]]
-    [sixsq.nuvla.client.api.authn :as authn]
-    [sixsq.nuvla.client.api.cimi :as cimi]
+    [sixsq.nuvla.client.authn :as authn]
+    [sixsq.nuvla.client.api :as api]
     [sixsq.nuvla.ui.cimi-api.utils :as cimi-api-utils]))
 
 
@@ -15,21 +15,21 @@
   ::cloud-entry-point
   (fn [[client callback]]
     (go
-      (callback (<! (cimi/cloud-entry-point client))))))
+      (callback (<! (api/cloud-entry-point client))))))
 
 
 (reg-fx
   ::get
   (fn [[client resource-id callback]]
     (go
-      (callback (<! (cimi/get client resource-id))))))
+      (callback (<! (api/get client resource-id))))))
 
 
 (reg-fx
   ::search
   (fn [[client resource-type params callback]]
     (go
-      (callback (<! (cimi/search client resource-type (cimi-api-utils/sanitize-params params)))))))
+      (callback (<! (api/search client resource-type (cimi-api-utils/sanitize-params params)))))))
 
 
 (reg-fx
@@ -37,32 +37,32 @@
   (fn [[client resource-id callback]]
     (go
       ;; FIXME: Using 2-arg form doesn't work with advanced optimization. Why?
-      (callback (<! (cimi/delete client resource-id {}))))))
+      (callback (<! (api/delete client resource-id {}))))))
 
 
 (reg-fx
   ::edit
   (fn [[client resource-id data callback]]
     (go
-      (<! (cimi/edit client resource-id data))
+      (<! (api/edit client resource-id data))
 
       ;; This is done to get a fully updated resource.  If the return
       ;; value of edit is used, then, for example, the operations are
       ;; not updated.
-      (callback (<! (cimi/get client resource-id))))))
+      (callback (<! (api/get client resource-id))))))
 
 (reg-fx
   ::add
   (fn [[client resource-type data callback]]
     (go
-      (callback (<! (cimi/add client resource-type data))))))
+      (callback (<! (api/add client resource-type data))))))
 
 
 (reg-fx
   ::operation
   (fn [[client resource-id operation callback]]
     (go
-      (callback (<! (cimi/operation client resource-id operation))))))
+      (callback (<! (api/operation client resource-id operation))))))
 
 
 (reg-fx
@@ -94,8 +94,8 @@
     (go
       (when (and client username)
         (let [filter (str "acl/owner/principal='" username "'")]
-          (callback (-> (<! (cimi/search client
-                                         :userParam
-                                         (cimi-api-utils/sanitize-params {:$filter filter})))
+          (callback (-> (<! (api/search client
+                                        :userParam
+                                        (cimi-api-utils/sanitize-params {:filter filter})))
                         :userParam
                         first)))))))

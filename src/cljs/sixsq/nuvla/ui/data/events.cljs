@@ -83,8 +83,8 @@
   (fn [{{:keys [::client-spec/client] :as db} :db} _]
     (when client
       {:db                  (assoc db ::spec/credentials nil)
-       ::cimi-api-fx/search [client "credentials" {:$filter "type^='cloud-cred'"
-                                                   :$select "id, name, connector"}
+       ::cimi-api-fx/search [client :credential {:filter "type^='cloud-cred'"
+                                                 :select "id, name, connector"}
                              #(dispatch [::set-credentials %])]})))
 
 
@@ -119,7 +119,7 @@
                                       ::spec/loading-applications? true
                                       ::spec/selected-application-id nil
                                       ::spec/content-type-filter query-objects)
-       ::cimi-api-fx/search [client "modules" {:$filter query-application}
+       ::cimi-api-fx/search [client :module {:filter query-application}
                              #(dispatch [::set-applications %])]})))
 
 
@@ -160,7 +160,7 @@
   (fn [{{:keys [::client-spec/client] :as db} :db} _]
     (when client
       {:db                  (assoc db ::spec/datasets nil)
-       ::cimi-api-fx/search [client "serviceOffers" {:$filter "resource:type='DATASET'"}
+       ::cimi-api-fx/search [client :service-offer {:filter "resource:type='DATASET'"}
                              #(dispatch [::set-datasets %])]})))
 
 

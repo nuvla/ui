@@ -11,19 +11,19 @@
                                                           ::collection-key
                                                           ::collection-href])))
 
-(s/def ::$first nat-int?)
-(s/def ::$last nat-int?)
-(s/def ::$filter (s/nilable string?))
-(s/def ::$orderby (s/nilable string?))
-(s/def ::$select (s/nilable string?))
-(s/def ::$aggregation (s/nilable string?))
+(s/def ::first nat-int?)
+(s/def ::last nat-int?)
+(s/def ::filter (s/nilable string?))
+(s/def ::orderby (s/nilable string?))
+(s/def ::select (s/nilable string?))
+(s/def ::aggregation (s/nilable string?))
 
-(s/def ::query-params (s/keys :req-un [::$first
-                                       ::$last
-                                       ::$filter
-                                       ::$orderby
-                                       ::$select
-                                       ::$aggregation]))
+(s/def ::query-params (s/keys :req-un [::first
+                                       ::last
+                                       ::filter
+                                       ::orderby
+                                       ::select
+                                       ::aggregation]))
 
 (s/def ::loading? boolean?)
 
@@ -54,18 +54,18 @@
                           ::show-add-modal?
                           ::collections-templates-cache]))
 
-(def defaults {::cloud-entry-point   nil
-               ::query-params        {:$first       0
-                                      :$last        20
-                                      :$filter      nil
-                                      :$orderby     nil
-                                      :$select      nil
-                                      :$aggregation nil}
-               ::loading?            false
-               ::aggregations        nil
-               ::collection          nil
-               ::collection-name     nil
-               ::selected-fields     ["id"]
-               ::available-fields    ["id"]
-               ::show-add-modal?     false
+(def defaults {::cloud-entry-point           nil
+               ::query-params                {:first       0
+                                              :last        20
+                                              :filter      nil
+                                              :orderby     nil
+                                              :select      nil
+                                              :aggregation nil}
+               ::loading?                    false
+               ::aggregations                nil
+               ::collection                  nil
+               ::collection-name             nil
+               ::selected-fields             ["id"]
+               ::available-fields            ["id"]
+               ::show-add-modal?             false
                ::collections-templates-cache {}})

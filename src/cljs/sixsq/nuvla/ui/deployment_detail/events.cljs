@@ -32,11 +32,11 @@
     (let [filter-str (str "objectType='report' and runUUID='" href "'")
           order-by-str "created:desc, component"
           select-str "id, state, created, component"
-          query-params {:$filter  filter-str
-                        :$orderby order-by-str
-                        :$select  select-str}]
+          query-params {:filter  filter-str
+                        :orderby order-by-str
+                        :select  select-str}]
       {::cimi-api-fx/search [client
-                             "externalObjects"
+                             :external-object
                              (general-utils/prepare-params query-params)
                              #(dispatch [::set-reports %])]})))
 
@@ -58,10 +58,10 @@
 (reg-event-fx
   ::get-global-deployment-parameters
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ resource-id]]
-    (let [filter-depl-params {:$filter  (str "deployment/href='" resource-id "' and nodeID=null")
-                              :$orderby "name"}
+    (let [filter-depl-params {:filter  (str "deployment/href='" resource-id "' and nodeID=null")
+                              :orderby "name"}
           get-depl-params-callback #(dispatch [::set-deployment-parameters %])]
-      {::cimi-api-fx/search [client "deploymentParameters" filter-depl-params get-depl-params-callback]})))
+      {::cimi-api-fx/search [client :deployment-parameter filter-depl-params get-depl-params-callback]})))
 
 
 (reg-event-fx
@@ -118,11 +118,11 @@
     (let [filter-str (str "content/resource/href='" href "'")
           order-by-str "timestamp:desc"
           select-str "id, content, severity, timestamp, type"
-          query-params {:$filter  filter-str
-                        :$orderby order-by-str
-                        :$select  select-str}]
+          query-params {:filter  filter-str
+                        :orderby order-by-str
+                        :select  select-str}]
       {::cimi-api-fx/search [client
-                             "events"
+                             :event
                              (general-utils/prepare-params query-params)
                              #(dispatch [::set-events (:events %)])]})))
 
@@ -140,11 +140,11 @@
     (let [filter-str (str "targetResource/href='" href "'")
           order-by-str "timeOfStatusChange:desc"
           select-str "id, timeOfStatusChange, state, targetResource, returnCode, progress, statusMessage"
-          query-params {:$filter  filter-str
-                        :$orderby order-by-str
-                        :$select  select-str}]
+          query-params {:filter  filter-str
+                        :orderby order-by-str
+                        :select  select-str}]
       {::cimi-api-fx/search [client
-                             "jobs"
+                             :job
                              (general-utils/prepare-params query-params)
                              #(dispatch [::set-jobs (:jobs %)])]})))
 
@@ -159,10 +159,10 @@
   [client deployment node-name]
   (let [filter-str (str "deployment/href='" (:id deployment) "' and nodeID='" node-name "'")
         select-str "id, created, updated, name, description, value"
-        query-params {:$filter filter-str
-                      :$select select-str}]
+        query-params {:filter filter-str
+                      :select select-str}]
     {::cimi-api-fx/search [client
-                           "deploymentParameters"
+                           :deployment-parameter
                            (general-utils/prepare-params query-params)
                            #(dispatch [::set-node-parameters (:deploymentParameters %)])]}))
 
@@ -183,11 +183,11 @@
     (when (boolean node-parameters-modal)
       (let [filter-str (str "deployment/href='" (:id deployment) "' and nodeID='" node-parameters-modal "'")
             select-str "id, created, updated, name, description, value"
-            query-params {:$filter  filter-str
-                          :$select  select-str
-                          :$orderby "name"}]
+            query-params {:filter  filter-str
+                          :select  select-str
+                          :orderby "name"}]
         {::cimi-api-fx/search [client
-                               "deploymentParameters"
+                               :deployment-parameter
                                (general-utils/prepare-params query-params)
                                #(dispatch [::set-node-parameters (:deploymentParameters %)])]}))))
 
@@ -220,11 +220,11 @@
                                           (str "(" nodes-filter ")")
                                           (str "(" names-filter ")")])
             select-str "nodeID, name, value"
-            query-params {:$filter  filter-str
-                          :$select  select-str
-                          :$orderby "name"}]
+            query-params {:filter  filter-str
+                          :select  select-str
+                          :orderby "name"}]
         {::cimi-api-fx/search [client
-                               "deploymentParameters"
+                               :deployment-parameter
                                (general-utils/prepare-params query-params)
                                #(dispatch [::set-summary-nodes-parameters (:deploymentParameters %)])]}))))
 

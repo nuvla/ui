@@ -45,13 +45,13 @@
           datasets-map (select-keys (::data-spec/service-offers-by-dataset db) selected-keys)
 
           callback-data #(dispatch [::set-deployment
-                                      (-> updated-deployment
-                                          (assoc :serviceOffers (utils/invert-dataset-map datasets-map))
-                                          (assoc-in [:module :content :mounts] (utils/service-offers->mounts %)))])]
+                                    (-> updated-deployment
+                                        (assoc :serviceOffers (utils/invert-dataset-map datasets-map))
+                                        (assoc-in [:module :content :mounts] (utils/service-offers->mounts %)))])]
       (cond-> {:db (assoc db ::spec/selected-credential credential
                              ::spec/deployment updated-deployment)}
-              cloud-filter (assoc ::cimi-api-fx/search [client "serviceOffers"
-                                                        {:$filter filter, :$select "id, data:bucket, data:nfsIP, data:nfsDevice"}
+              cloud-filter (assoc ::cimi-api-fx/search [client :service-offer
+                                                        {:filter filter, :select "id, data:bucket, data:nfsIP, data:nfsDevice"}
                                                         callback-data])))))
 
 
@@ -120,11 +120,11 @@
         {:db                  (assoc db ::spec/loading-credentials? true
                                         ::spec/credentials nil
                                         ::spec/selected-credential nil)
-         ::cimi-api-fx/search [client "credentials"
-                               {:$select "id, name, description, created, type"
-                                :$filter (data-utils/join-and
-                                           cloud-filter
-                                           (str "type^='cloud-cred'"))} search-creds-callback]}))))
+         ::cimi-api-fx/search [client :credential
+                               {:select "id, name, description, created, type"
+                                :filter (data-utils/join-and
+                                          cloud-filter
+                                          (str "type^='cloud-cred'"))} search-creds-callback]}))))
 
 
 (reg-event-fx
@@ -190,9 +190,9 @@
 
       {:db                  (cond-> (assoc db ::spec/data-clouds buckets)
                                     (= 1 (count clouds)) (set-cloud-and-filter (first clouds)))
-       ::cimi-api-fx/search [client "connectors"
-                             {:$filter filter
-                              :$select "id, name, description, cloudServiceType"} #(dispatch [::set-connectors %])]})))
+       ::cimi-api-fx/search [client :connector
+                             {:filter filter
+                              :select "id, name, description, cloudServiceType"} #(dispatch [::set-connectors %])]})))
 
 
 (reg-event-fx
@@ -207,9 +207,9 @@
       (let [filter (data-utils/join-and time-period-filter cloud-filter content-type-filter)]
         (-> {:db db}
             (assoc ::cimi-api-fx/search
-                   [client "serviceOffers" {:$filter      filter
-                                            :$last        0
-                                            :$aggregation "terms:connector/href"}
+                   [client :service-offer {:filter      filter
+                                           :last        0
+                                           :aggregation "terms:connector/href"}
                     #(dispatch [::set-data-clouds %])]))))))
 
 

@@ -21,7 +21,7 @@
                 ::spec/elements-per-page] :as db} :db} _]
     (when client
       {:db                  (assoc db ::spec/deployment-templates nil)
-       ::cimi-api-fx/search [client "deploymentTemplates" (utils/get-query-params full-text-search page elements-per-page)
+       ::cimi-api-fx/search [client :deployment-template (utils/get-query-params full-text-search page elements-per-page)
                              #(dispatch [::set-deployment-templates %])]})))
 
 
@@ -32,7 +32,7 @@
     (let [new-page 1]
       {:db                  (assoc db ::spec/full-text-search full-text-search
                                       ::spec/page new-page)
-       ::cimi-api-fx/search [client "deploymentTemplates" (utils/get-query-params full-text-search new-page elements-per-page)
+       ::cimi-api-fx/search [client :deployment-template (utils/get-query-params full-text-search new-page elements-per-page)
                              #(dispatch [::set-deployment-templates %])]})))
 
 
@@ -43,5 +43,5 @@
                 ::spec/page
                 ::spec/elements-per-page] :as db} :db} [_ page]]
     {:db                  (assoc db ::spec/page page)
-     ::cimi-api-fx/search [client "deploymentTemplates" (utils/get-query-params full-text-search page elements-per-page)
+     ::cimi-api-fx/search [client "deployment-template" (utils/get-query-params full-text-search page elements-per-page)
                            #(dispatch [::set-deployment-templates %])]}))

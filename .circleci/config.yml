@@ -43,3 +43,11 @@ jobs:
         
       # run build
       - run: lein do clean, install, deploy
+
+workflows:
+  version: 2
+  my-workflow:
+    jobs:
+      - build:
+          context: nexus
+

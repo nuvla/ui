@@ -42,20 +42,20 @@
              :template-fn #(apply str %)
              :target      "target/version.css"}]
 
-  :resource {:skip-stencil [ #".*" ]
+  :resource {:skip-stencil [#".*"]
              :resource-paths
-             [["node_modules/semantic-ui-css/semantic.min.css"
-               {:target-path "resources/public/css/semantic.min.css"}]
-              ["node_modules/semantic-ui-css/themes"
-               {:target-path "resources/public/css/themes"}]
-              ["node_modules/react-datepicker/dist/react-datepicker.min.css"
-               {:target-path "resources/public/css/react-datepicker.min.css"}]
-              ["node_modules/codemirror/lib/codemirror.css"
-               {:target-path "resources/public/css/codemirror.css"}]
-              ["node_modules/codemirror/addon/fold/foldgutter.css"
-               {:target-path "resources/public/css/foldgutter.css"}]
-              ["target/version.css"
-               {:target-path "resources/public/css/version.css"}]]}
+                           [["node_modules/semantic-ui-css/semantic.min.css"
+                             {:target-path "resources/public/css/semantic.min.css"}]
+                            ["node_modules/semantic-ui-css/themes"
+                             {:target-path "resources/public/css/themes"}]
+                            ["node_modules/react-datepicker/dist/react-datepicker.min.css"
+                             {:target-path "resources/public/css/react-datepicker.min.css"}]
+                            ["node_modules/codemirror/lib/codemirror.css"
+                             {:target-path "resources/public/css/codemirror.css"}]
+                            ["node_modules/codemirror/addon/fold/foldgutter.css"
+                             {:target-path "resources/public/css/foldgutter.css"}]
+                            ["target/version.css"
+                             {:target-path "resources/public/css/version.css"}]]}
 
   ;; mark all dependencies as provided to avoid having transitive
   ;; dependencies pulled in by those that depend on this
@@ -79,7 +79,28 @@
                           [binaryage/devtools]]}
 
    :scljs {:dependencies [[thheller/shadow-cljs]            ;; WARNING: also in package.json
-                          [com.google.javascript/closure-compiler-unshaded]]}}
+                          [com.google.javascript/closure-compiler-unshaded]]}
+
+   :auth  {:repository-auth
+           {#"https://nexus.sixsq.com/content/repositories/snapshots-community-rhel7/"
+            {:username :env/SIXSQ_NEXUS_USERNAME
+             :password :env/SIXSQ_NEXUS_PASSWORD}
+
+            #"https://nexus.sixsq.com/content/repositories/releases-community-rhel7/"
+            {:username :env/SIXSQ_NEXUS_USERNAME
+             :password :env/SIXSQ_NEXUS_PASSWORD}
+
+            #"https://nexus.sixsq.com/content/repositories/snapshots-enterprise-rhel7/"
+            {:username :env/SIXSQ_NEXUS_USERNAME
+             :password :env/SIXSQ_NEXUS_PASSWORD}
+
+            #"https://nexus.sixsq.com/content/repositories/releases-enterprise-rhel7/"
+            {:username :env/SIXSQ_NEXUS_USERNAME
+             :password :env/SIXSQ_NEXUS_PASSWORD}
+
+            #"https://nexus.sixsq.com/content/repositories/thirdparty/"
+            {:username :env/SIXSQ_NEXUS_USERNAME
+             :password :env/SIXSQ_NEXUS_PASSWORD}}}}
 
 
   :aliases {"prepare"   ["do" ["filegen"] ["resource"]]

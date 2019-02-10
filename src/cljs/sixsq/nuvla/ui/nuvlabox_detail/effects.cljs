@@ -4,7 +4,7 @@
   (:require
     [cljs.core.async :refer [<!]]
     [re-frame.core :refer [reg-fx]]
-    [sixsq.nuvla.client.api.cimi :as cimi]))
+    [sixsq.nuvla.client.api :as api]))
 
 
 (reg-fx
@@ -12,6 +12,6 @@
   (fn [[client mac callback]]
     (go
       (when (and mac callback)
-        (let [state (<! (cimi/get client (str "nuvlabox-state/" mac)))
-              record (<! (cimi/get client (str "nuvlabox-record/" mac)))]
+        (let [state (<! (api/get client (str "nuvlabox-state/" mac)))
+              record (<! (api/get client (str "nuvlabox-record/" mac)))]
           (callback state record))))))

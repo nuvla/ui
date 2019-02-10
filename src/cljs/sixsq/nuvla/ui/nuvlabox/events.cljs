@@ -52,11 +52,11 @@
                                       ::nuvlabox-spec/nuvlabox-records nil)
        ::cimi-api-fx/search [client
                              resource-type
-                             (general-utils/prepare-params {:$filter  filter
-                                                            :$first   (inc (* (dec page) elements-per-page))
-                                                            :$last    (* page elements-per-page)
-                                                            :$orderby "created:desc"
-                                                            :$select  "id, macAddress, state, name"})
+                             (general-utils/prepare-params {:filter  filter
+                                                            :first   (inc (* (dec page) elements-per-page))
+                                                            :last    (* page elements-per-page)
+                                                            :orderby "created:desc"
+                                                            :select  "id, macAddress, state, name"})
                              #(dispatch [::set-nuvlabox-records resource-type %])]})))
 
 

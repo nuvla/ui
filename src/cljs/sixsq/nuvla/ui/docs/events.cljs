@@ -12,7 +12,7 @@
     {:db                  (assoc db ::spec/loading? true
                                     ::spec/documents nil)
      ::cimi-api-fx/search [client
-                           :resourceMetadatas
+                           :resource-metadata
                            nil
                            #(dispatch [::set-documents %])]}))
 

@@ -5,7 +5,7 @@
     [cljs.core.async :refer [<!]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-fx]]
-    [sixsq.nuvla.client.api.cimi :as cimi]))
+    [sixsq.nuvla.client.api :as api]))
 
 
 (reg-fx
@@ -17,7 +17,7 @@
             children-filter (str "parentPath='" path "'")
 
             {:keys [type id] :as project-metadata} (if-not (str/blank? path)
-                                                     (-> (<! (cimi/search client "modules" {:$filter path-filter}))
+                                                     (-> (<! (api/search client "modules" {:filter path-filter}))
                                                          :modules
                                                          first)
                                                      {:type        "PROJECT"
@@ -25,11 +25,11 @@
                                                       :description "cloud applications at your service"})
 
             module (if (not= "PROJECT" type)
-                     (<! (cimi/get client id))
+                     (<! (api/get client id))
                      project-metadata)
 
             children (when (= type "PROJECT")
-                       (:modules (<! (cimi/search client "modules" {:$filter children-filter}))))
+                       (:modules (<! (api/search client "modules" {:filter children-filter}))))
 
             module-data (cond-> module
                                 children (assoc :children children))]
@@ -41,7 +41,7 @@
   ::create-module
   (fn [[client path data callback]]
     (go
-      (let [{:keys [status] :as response} (<! (cimi/add client "modules" data))]
+      (let [{:keys [status] :as response} (<! (api/add client "modules" data))]
         (when (= 201 status)
           (callback response))))))
 

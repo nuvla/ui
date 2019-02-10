@@ -20,31 +20,31 @@
 (reg-event-db
   ::set-first
   (fn [db [_ first-value]]
-    (update db ::cimi-spec/query-params merge {:$first first-value})))
+    (update db ::cimi-spec/query-params merge {:first first-value})))
 
 
 (reg-event-db
   ::set-last
   (fn [db [_ last-value]]
-    (update db ::cimi-spec/query-params merge {:$last last-value})))
+    (update db ::cimi-spec/query-params merge {:last last-value})))
 
 
 (reg-event-db
   ::set-filter
   (fn [db [_ filter-value]]
-    (update db ::cimi-spec/query-params merge {:$filter filter-value})))
+    (update db ::cimi-spec/query-params merge {:filter filter-value})))
 
 
 (reg-event-db
   ::set-orderby
   (fn [db [_ orderby-value]]
-    (update db ::cimi-spec/query-params merge {:$orderby orderby-value})))
+    (update db ::cimi-spec/query-params merge {:orderby orderby-value})))
 
 
 (reg-event-db
   ::set-select
   (fn [db [_ select-value]]
-    (update db ::cimi-spec/query-params merge {:$select select-value})))
+    (update db ::cimi-spec/query-params merge {:select select-value})))
 
 (reg-event-db
   ::set-query-params
@@ -66,7 +66,7 @@
 (reg-event-db
   ::set-aggregation
   (fn [db [_ aggregation-value]]
-    (update db ::cimi-spec/query-params merge {:$aggregation aggregation-value})))
+    (update db ::cimi-spec/query-params merge {:aggregation aggregation-value})))
 
 
 (reg-event-db
@@ -210,7 +210,7 @@
     (let [resource-type (-> cloud-entry-point
                             :collection-key
                             (get (name template-href)))]
-      {::cimi-api-fx/search [client resource-type {:$orderby "id"}
+      {::cimi-api-fx/search [client resource-type {:orderby "id"}
                              #(dispatch [::set-templates template-href (resource-type %)])]})))
 
 

@@ -2,25 +2,25 @@
   (:require
     [cljs.pprint :refer [cl-format]]
     [clojure.string :as str]
-    [sixsq.nuvla.client.api.cimi :as cimi]
+    [sixsq.nuvla.client.api :as api]
     [sixsq.nuvla.ui.cimi-api.utils :as cimi-api-utils]))
 
 
-(def default-params {:$first 1, :$last 10000})
+(def default-params {:first 1, :last 10000})
 
 (def floating-time-tolerance "-10s")
 
-(def stale-nb-machines (assoc default-params :$filter (str "nextCheck < 'now" floating-time-tolerance "'")
-                                             :$select "nuvlabox"))
+(def stale-nb-machines (assoc default-params :filter (str "nextCheck < 'now" floating-time-tolerance "'")
+                                             :select "nuvlabox"))
 
 
-(def active-nb-machines (assoc default-params :$filter (str "nextCheck >= 'now" floating-time-tolerance "'")
-                                              :$select "nuvlabox"))
+(def active-nb-machines (assoc default-params :filter (str "nextCheck >= 'now" floating-time-tolerance "'")
+                                              :select "nuvlabox"))
 
 
 (defn nuvlabox-search
   [client params]
-  (cimi/search client "nuvlaboxStates" (cimi-api-utils/sanitize-params params)))
+  (api/search client "nuvlaboxStates" (cimi-api-utils/sanitize-params params)))
 
 
 (defn percentage

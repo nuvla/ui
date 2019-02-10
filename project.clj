@@ -24,6 +24,8 @@
 
   :clean-targets ^{:protect false} ["resources/public/js/"
                                     "target"
+                                    "resources/public/css/semantic.min.css"
+                                    "resources/public/css/themes"
                                     "resources/public/css/version.css"
                                     "resources/public/css/codemirror.css"
                                     "resources/public/css/foldgutter.css"
@@ -40,8 +42,13 @@
              :template-fn #(apply str %)
              :target      "target/version.css"}]
 
-  :resource {:resource-paths
-             [["node_modules/react-datepicker/dist/react-datepicker.min.css"
+  :resource {:skip-stencil [ #".*" ]
+             :resource-paths
+             [["node_modules/semantic-ui-css/semantic.min.css"
+               {:target-path "resources/public/css/semantic.min.css"}]
+              ["node_modules/semantic-ui-css/themes"
+               {:target-path "resources/public/css/themes"}]
+              ["node_modules/react-datepicker/dist/react-datepicker.min.css"
                {:target-path "resources/public/css/react-datepicker.min.css"}]
               ["node_modules/codemirror/lib/codemirror.css"
                {:target-path "resources/public/css/codemirror.css"}]
@@ -50,17 +57,19 @@
               ["target/version.css"
                {:target-path "resources/public/css/version.css"}]]}
 
-  :dependencies [[reagent]
-                 [re-frame]
-                 [day8.re-frame/http-fx]
-                 [clj-commons/secretary]
-                 [expound]
-                 [com.taoensso/timbre]
-                 [sixsq.nuvla/clojure-api-cimi ~+version+]
-                 [com.taoensso/tempura]
-                 [funcool/promesa]
-                 [com.taoensso/encore]                      ;; fix conflict, needed indirectly
-                 [camel-snake-kebab]]
+  ;; mark all dependencies as provided to avoid having transitive
+  ;; dependencies pulled in by those that depend on this
+  :dependencies [[reagent :scope "provided"]
+                 [re-frame :scope "provided"]
+                 [day8.re-frame/http-fx :scope "provided"]
+                 [clj-commons/secretary :scope "provided"]
+                 [expound :scope "provided"]
+                 [com.taoensso/timbre :scope "provided"]
+                 [sixsq.nuvla/clojure-api-cimi ~+version+ :scope "provided"]
+                 [com.taoensso/tempura :scope "provided"]
+                 [funcool/promesa :scope "provided"]
+                 [com.taoensso/encore :scope "provided"]    ;; fix conflict, needed indirectly
+                 ]
 
   :source-paths ["src/clj" "src/cljs"]
 
@@ -74,6 +83,6 @@
 
 
   :aliases {"prepare"   ["do" ["filegen"] ["resource"]]
-            "dev"       ["do" "prepare" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli" "watch" "webui"]]
-            "cljs-repl" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli" "cljs-repl" "webui"]
-            "install"   ["do" "prepare" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli" "release" "webui"] ["install"]]})
+            "dev"       ["do" "prepare" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli" "watch" "nuvla-ui"]]
+            "cljs-repl" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli" "cljs-repl" "nuvla-ui"]
+            "install"   ["do" "prepare" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli" "release" "nuvla-ui"] ["install"]]})

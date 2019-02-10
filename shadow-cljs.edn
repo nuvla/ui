@@ -5,22 +5,22 @@
 
  :repositories      {"sixsq-community-releases" {:url "https://nexus.sixsq.com/content/repositories/releases-community-rhel7/"}}
 
- :builds            {:webui {:target     :browser
-                             :output-dir "resources/public/js"
-                             :asset-path "/js"
+ :builds            {:nuvla-ui {:target     :browser
+                                :output-dir "resources/public/js"
+                                :asset-path "/js"
 
-                             :modules    {:webui {:entries [sixsq.nuvla.webui.core]}}
+                                :modules    {:nuvla-ui {:entries [sixsq.nuvla.ui.core]}}
 
-                             :devtools   {:http-root        "resources/public"
-                                          :push-state/index "webui.html"
-                                          :http-port        8280
-                                          :after-load       sixsq.nuvla.webui.core/mount-root
-                                          :preloads         [devtools.preload]}
+                                :devtools   {:http-root        "resources/public"
+                                             :push-state/index "index.html"
+                                             :http-port        8280
+                                             :after-load       sixsq.nuvla.ui.core/mount-root
+                                             :preloads         [devtools.preload]}
 
-                             :dev        {:closure-defines {sixsq.nuvla.webui.utils.defines/HOST_URL "https://nuv.la"
-                                                            :compiler-options                        {:infer-externs :auto}}}
+                                :dev        {:closure-defines {sixsq.nuvla.ui.utils.defines/HOST_URL "https://nuv.la"
+                                                               :compiler-options                     {:infer-externs :auto}}}
 
 
-                             :release    {:closure-defines  {sixsq.slipstream.webui.utils.defines/HOST_URL ""}
-                                          :compiler-options {:infer-externs :auto
-                                                             :optimizations :advanced}}}}}
+                                :release    {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL ""}
+                                             :compiler-options {:infer-externs :auto
+                                                                :optimizations :advanced}}}}}

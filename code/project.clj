@@ -1,6 +1,6 @@
-(def +version+ "3.69-SNAPSHOT")
+(def +version+ "0.0.1-SNAPSHOT")
 
-(defproject sixsq.nuvla/ui "3.69-SNAPSHOT"
+(defproject sixsq.nuvla.ui/code "0.0.1-SNAPSHOT"
 
   :description "Web Browser User Interface for Nuvla"
 
@@ -65,7 +65,7 @@
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
                  [com.taoensso/timbre :scope "provided"]
-                 [sixsq.nuvla/clojure-api ~+version+ :scope "provided"]
+                 [sixsq.nuvla/clojure-api "3.69-SNAPSHOT" :scope "provided"]
                  [com.taoensso/tempura :scope "provided"]
                  [funcool/promesa :scope "provided"]
                  [com.taoensso/encore :scope "provided"]    ;; fix conflict, needed indirectly

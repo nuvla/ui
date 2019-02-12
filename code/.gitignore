@@ -16,7 +16,6 @@ resources/public/css/version.css
 
 resources/public/js
 
-package-lock.json
 node_modules
 
 .shadow-cljs

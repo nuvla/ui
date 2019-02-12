@@ -3,10 +3,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>ui-dep</artifactId>
+  <groupId>sixsq.nuvla.ui</groupId>
+  <artifactId>parent</artifactId>
   <packaging>pom</packaging>
-  <version>3.69-SNAPSHOT</version>
-  <name>ui/dep</name>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>ui</name>
   <url>http://sixsq.com</url>
 
   <parent>
@@ -30,80 +31,9 @@
     <tag>HEAD</tag>
   </scm>
 
-  <dependencies>
-    <dependency>
-      <groupId>sixsq.nuvla.clojure-api</groupId>
-      <artifactId>clojure-api-dep</artifactId>
-      <version>${project.version}</version>
-      <type>pom</type>
-      <scope>provided</scope>
-    </dependency>
-  </dependencies>
-
-  <build>
-    <plugins>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>npm-install</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <executable>npm</executable>
-              <arguments>
-                <argument>install</argument>
-              </arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>lein-install</id>
-            <phase>install</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <executable>lein</executable>
-              <arguments>
-                <argument>install</argument>
-              </arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>lein-deploy</id>
-            <phase>deploy</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <executable>lein</executable>
-              <arguments>
-                <argument>deploy</argument>
-              </arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>lein-clean</id>
-            <phase>clean</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <executable>lein</executable>
-              <arguments>
-                <argument>clean</argument>
-              </arguments>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-    </plugins>
-  </build>
+  <modules>
+    <module>code</module>
+    <module>container</module>
+  </modules>
 
 </project>
-

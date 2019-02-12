@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>container-dep</artifactId>
+  <packaging>pom</packaging>
+  <name>ui/container</name>
+  <url>http://sixsq.com</url>
+
+  <parent>
+    <groupId>sixsq.nuvla.ui</groupId>
+    <artifactId>parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+    </license>
+  </licenses>
+
+  <dependencies>
+    <dependency>
+      <groupId>sixsq.nuvla.ui</groupId>
+      <artifactId>code</artifactId>
+      <version>${project.version}</version>
+      <type>jar</type>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>expand-ui</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>sixsq.nuvla.ui</groupId>
+                  <artifactId>code</artifactId>
+                  <version>${project.version}</version>
+                  <type>jar</type>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/dependency/ui</outputDirectory>
+                  <includes>**/public/**/*</includes>
+                  <excludes>**/*.edn,**/*.graffle</excludes>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.6.0</version>
+        <executions>
+          <execution>
+            <id>precompress-files</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <executable>find</executable>
+          <workingDirectory>${project.build.directory}/dependency/ui</workingDirectory>
+          find target/dependency/ui -type f -exec zopfli {} \;
+          <arguments>
+            <argument>${project.build.directory}/dependency/ui</argument>
+            <argument>-type</argument>
+            <argument>f</argument>
+            <argument>-a</argument>
+            <argument>-not</argument>
+            <argument>-name</argument>
+            <argument>*.woff*</argument>
+            <argument>-a</argument>
+            <argument>-not</argument>
+            <argument>-name</argument>
+            <argument>version.css</argument>
+            <argument>-exec</argument>
+            <argument>zopfli</argument>
+            <argument>{}</argument>
+            <argument>;</argument>
+          </arguments>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>0.24.0</version>
+        <configuration>
+          <images>
+            <image>
+              <alias>ui</alias>
+              <name>nuvla/ui</name>
+              <build>
+                <from>nginx:1.14-alpine</from>
+                <optimise>true</optimise>
+                <assembly>
+                  <targetDir>/</targetDir>
+                  <inline>
+                    <fileSets>
+                      <fileSet>
+                        <directory>target/dependency/ui/public</directory>
+                        <outputDirectory>/usr/share/nginx/html</outputDirectory>
+                        <includes>
+                          <include>**/*</include>
+                        </includes>
+                      </fileSet>
+                    </fileSets>
+                    <files>
+                      <file>
+                        <source>src/config/nginx.conf</source>
+                        <outputDirectory>/etc/nginx</outputDirectory>
+                      </file>
+                    </files>
+                  </inline>
+                </assembly>
+                <tags>
+                  <tag>${project.version}</tag>
+                </tags>
+              </build>
+            </image>
+          </images>
+        </configuration>
+
+        <executions>
+          <execution>
+            <id>docker-build</id>
+            <phase>package</phase>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      
+    </plugins>
+  </build>
+
+</project>

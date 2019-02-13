@@ -1,11 +1,12 @@
 # SlipStream Web UI
 
-An application that provides a graphical interface to cloud management
-services that use the CIMI interface.
+This repository provides a Docker image containing the Nuvla
+browser-based user interface. This consists of Javascript code (built
+with ClojureScript) and other support files (HTML, CSS, etc.).
 
 ## Frameworks and Libraries
 
-SlipStream Code:
+Nuvla dependency:
 
  * [Nuvla Clojure(Script)
    API](https://github.com/nuvla/clojure-api): Provides
@@ -122,3 +123,21 @@ in development mode. From the REPL do:
 The default value is `:debug` which will log all of the HTTP requests
 and responses.  This is useful when debugging interactions with
 SlipStream, but annoying otherwise.
+
+## Copyright
+
+Copyright &copy; 2019, SixSq Sàrl
+
+## License
+
+Licensed under the Apache License, Version 2.0 (the "License"); you
+may not use this file except in compliance with the License.  You may
+obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+implied.  See the License for the specific language governing
+permissions and limitations under the License.

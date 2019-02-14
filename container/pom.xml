@@ -99,56 +99,28 @@
       </plugin>
 
       <plugin>
-        <groupId>io.fabric8</groupId>
-        <artifactId>docker-maven-plugin</artifactId>
-        <version>0.24.0</version>
-        <configuration>
-          <images>
-            <image>
-              <alias>ui</alias>
-              <name>nuvla/ui</name>
-              <build>
-                <from>nginx:1.14-alpine</from>
-                <optimise>true</optimise>
-                <assembly>
-                  <targetDir>/</targetDir>
-                  <inline>
-                    <fileSets>
-                      <fileSet>
-                        <directory>target/dependency/ui/public</directory>
-                        <outputDirectory>/usr/share/nginx/html</outputDirectory>
-                        <includes>
-                          <include>**/*</include>
-                        </includes>
-                      </fileSet>
-                    </fileSets>
-                    <files>
-                      <file>
-                        <source>src/config/nginx.conf</source>
-                        <outputDirectory>/etc/nginx</outputDirectory>
-                      </file>
-                    </files>
-                  </inline>
-                </assembly>
-                <tags>
-                  <tag>${project.version}</tag>
-                </tags>
-              </build>
-            </image>
-          </images>
-        </configuration>
-
+        <groupId>com.spotify</groupId>
+        <artifactId>dockerfile-maven-plugin</artifactId>
+        <version>1.4.10</version>
         <executions>
           <execution>
-            <id>docker-build</id>
-            <phase>package</phase>
+            <id>default</id>
             <goals>
               <goal>build</goal>
+              <goal>push</goal>
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <repository>docker.io/nuvla/ui</repository>
+          <tag>${project.version}</tag>
+          <build>
+            <squash>true</squash>
+          </build>
+          <useMavenSettingsForAuth>true</useMavenSettingsForAuth>
+        </configuration>
       </plugin>
-      
+
     </plugins>
   </build>
 

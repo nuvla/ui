@@ -14,16 +14,6 @@
     <version>0.0.1-SNAPSHOT</version>
   </parent>
 
-  <dependencies>
-    <dependency>
-      <groupId>sixsq.nuvla.clojure-api</groupId>
-      <artifactId>clojure-api-dep</artifactId>
-      <version>3.69-SNAPSHOT</version>
-      <type>pom</type>
-      <scope>provided</scope>
-    </dependency>
-  </dependencies>
-
   <build>
     <plugins>
 

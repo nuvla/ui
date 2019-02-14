@@ -65,7 +65,7 @@
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
                  [com.taoensso/timbre :scope "provided"]
-                 [sixsq.nuvla/clojure-api "3.69-SNAPSHOT" :scope "provided"]
+                 [sixsq.nuvla/clojure-library "0.0.1-SNAPSHOT" :scope "provided"]
                  [com.taoensso/tempura :scope "provided"]
                  [funcool/promesa :scope "provided"]
                  [com.taoensso/encore :scope "provided"]    ;; fix conflict, needed indirectly

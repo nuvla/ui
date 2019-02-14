@@ -36,4 +36,32 @@
     <module>container</module>
   </modules>
 
+  <repositories>
+
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>nuvla.releases</id>
+      <name>Nuvla Releases</name>
+      <url>https://nexus.sixsq.com/content/repositories/nuvla-releases</url>
+    </repository>
+
+    <repository>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <id>nuvla.snapshots</id>
+      <name>Nuvla Snapshots</name>
+      <url>https://nexus.sixsq.com/content/repositories/nuvla-snapshots</url>
+    </repository>
+
+  </repositories>
+
 </project>

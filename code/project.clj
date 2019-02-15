@@ -15,7 +15,7 @@
             [pdok/lein-filegen "0.1.0"]
             [lein-resource "16.9.1"]]
 
-  :parent-project {:coords  [sixsq.nuvla/parent "6.0.0"]
+  :parent-project {:coords  [sixsq.nuvla/parent "6.1.0"]
                    :inherit [:plugins
                              :min-lein-version
                              :managed-dependencies
@@ -68,7 +68,6 @@
                  [sixsq.nuvla/clojure-library "0.0.1-SNAPSHOT" :scope "provided"]
                  [com.taoensso/tempura :scope "provided"]
                  [funcool/promesa :scope "provided"]
-                 [com.taoensso/encore :scope "provided"]    ;; fix conflict, needed indirectly
                  ]
 
   :source-paths ["src/clj" "src/cljs"]
@@ -79,28 +78,8 @@
                           [binaryage/devtools]]}
 
    :scljs {:dependencies [[thheller/shadow-cljs]            ;; WARNING: also in package.json
-                          [com.google.javascript/closure-compiler-unshaded]]}
+                          [com.google.javascript/closure-compiler-unshaded]]}}
 
-   :auth  {:repository-auth
-           {#"https://nexus.sixsq.com/content/repositories/snapshots-community-rhel7/"
-            {:username :env/SIXSQ_NEXUS_USERNAME
-             :password :env/SIXSQ_NEXUS_PASSWORD}
-
-            #"https://nexus.sixsq.com/content/repositories/releases-community-rhel7/"
-            {:username :env/SIXSQ_NEXUS_USERNAME
-             :password :env/SIXSQ_NEXUS_PASSWORD}
-
-            #"https://nexus.sixsq.com/content/repositories/snapshots-enterprise-rhel7/"
-            {:username :env/SIXSQ_NEXUS_USERNAME
-             :password :env/SIXSQ_NEXUS_PASSWORD}
-
-            #"https://nexus.sixsq.com/content/repositories/releases-enterprise-rhel7/"
-            {:username :env/SIXSQ_NEXUS_USERNAME
-             :password :env/SIXSQ_NEXUS_PASSWORD}
-
-            #"https://nexus.sixsq.com/content/repositories/thirdparty/"
-            {:username :env/SIXSQ_NEXUS_USERNAME
-             :password :env/SIXSQ_NEXUS_PASSWORD}}}}
 
 
   :aliases {"prepare"   ["do" ["filegen"] ["resource"]]

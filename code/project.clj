@@ -22,15 +22,15 @@
                              :repositories
                              :deploy-repositories]}
 
-  :clean-targets ^{:protect false} ["resources/public/js/"
+  :clean-targets ^{:protect false} ["resources/public/ui/js/"
                                     "target"
-                                    "resources/public/css/semantic.min.css"
-                                    "resources/public/css/themes"
-                                    "resources/public/css/version.css"
-                                    "resources/public/css/codemirror.css"
-                                    "resources/public/css/foldgutter.css"
-                                    "resources/public/css/react-datepicker.min.css"
-                                    "resources/public/css/codemirror.css"]
+                                    "resources/public/ui/css/semantic.min.css"
+                                    "resources/public/ui/css/themes"
+                                    "resources/public/ui/css/version.css"
+                                    "resources/public/ui/css/codemirror.css"
+                                    "resources/public/ui/css/foldgutter.css"
+                                    "resources/public/ui/css/react-datepicker.min.css"
+                                    "resources/public/ui/css/codemirror.css"]
 
   :auto-clean false
 
@@ -45,17 +45,17 @@
   :resource {:skip-stencil [#".*"]
              :resource-paths
                            [["node_modules/semantic-ui-css/semantic.min.css"
-                             {:target-path "resources/public/css/semantic.min.css"}]
+                             {:target-path "resources/public/ui/css/semantic.min.css"}]
                             ["node_modules/semantic-ui-css/themes"
-                             {:target-path "resources/public/css/themes"}]
+                             {:target-path "resources/public/ui/css/themes"}]
                             ["node_modules/react-datepicker/dist/react-datepicker.min.css"
-                             {:target-path "resources/public/css/react-datepicker.min.css"}]
+                             {:target-path "resources/public/ui/css/react-datepicker.min.css"}]
                             ["node_modules/codemirror/lib/codemirror.css"
-                             {:target-path "resources/public/css/codemirror.css"}]
+                             {:target-path "resources/public/ui/css/codemirror.css"}]
                             ["node_modules/codemirror/addon/fold/foldgutter.css"
-                             {:target-path "resources/public/css/foldgutter.css"}]
+                             {:target-path "resources/public/ui/css/foldgutter.css"}]
                             ["target/version.css"
-                             {:target-path "resources/public/css/version.css"}]]}
+                             {:target-path "resources/public/ui/css/version.css"}]]}
 
   ;; mark all dependencies as provided to avoid having transitive
   ;; dependencies pulled in by those that depend on this

@@ -43,7 +43,7 @@
     [ui/MenuItem {:aria-label (@tr [:welcome])
                   :on-click   #(navigate "welcome")}
      [ui/Image {:alt      "logo"
-                :src      "/images/nuvla-logo.png"
+                :src      "/ui/images/nuvla-logo.png"
                 :size     "tiny"
                 :style    {:margin-top    "10px"
                            :margin-bottom "10px"}

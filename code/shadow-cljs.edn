@@ -1,21 +1,21 @@
 ;; shadow-cljs configuration
 {:lein              {:profile "+scljs"}
 
+ :dev-http          {8280 {:root             "resources/public"
+                           :push-state/index "ui/index.html"}}
+
  :open-file-command ["idea" :pwd "--line" :line :file]
 
  :repositories      {"sixsq-community-releases" {:url "https://nexus.sixsq.com/content/repositories/releases-community-rhel7/"}}
 
  :builds            {:nuvla-ui {:target     :browser
-                                :output-dir "resources/public/js"
-                                :asset-path "/js"
+                                :output-dir "resources/public/ui/js"
+                                :asset-path "/ui/js"
 
                                 :modules    {:nuvla-ui {:entries [sixsq.nuvla.ui.core]}}
 
-                                :devtools   {:http-root        "resources/public"
-                                             :push-state/index "index.html"
-                                             :http-port        8280
-                                             :after-load       sixsq.nuvla.ui.core/mount-root
-                                             :preloads         [devtools.preload]}
+                                :devtools   {:after-load sixsq.nuvla.ui.core/mount-root
+                                             :preloads   [devtools.preload]}
 
                                 :dev        {:closure-defines {sixsq.nuvla.ui.utils.defines/HOST_URL "https://nuv.la"
                                                                :compiler-options                     {:infer-externs :auto}}}

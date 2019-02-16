@@ -1,5 +1,7 @@
 {
   "name": "nuvla-ui",
+  "description": "Web application for Nuvla, a cloud and edge application management platform.",
+  "repository": "https://github.com/nuvla/ui",
   "version": "1.0.0",
   "main": "resources/webui.js",
   "scripts": {

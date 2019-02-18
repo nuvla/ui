@@ -258,7 +258,7 @@
         tr (subscribe [::i18n-subs/tr])]
     (fn []
       (let [total-pages (general-utils/total-pages (get @deployments :count 0) @elements-per-page)
-            deployments-list (get @deployments :deployments [])]
+            deployments-list (get @deployments :resources [])]
         [ui/Container {:fluid true}
          [menu-bar]
          [ui/Segment style/basic

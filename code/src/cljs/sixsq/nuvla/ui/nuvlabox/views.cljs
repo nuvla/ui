@@ -133,7 +133,7 @@
          [ui/Table {:compact "very", :selectable true}
           (format-nb-header)
           (vec (concat [ui/TableBody]
-                       (mapv (partial format-nb-row healthy?) (get @nuvlabox-records :nuvlaboxRecords []))))]
+                       (mapv (partial format-nb-row healthy?) (get @nuvlabox-records :resources []))))]
 
          [uix/Pagination {:totalPages   (general-utils/total-pages total-elements @elements-per-page)
                           :activePage   @page

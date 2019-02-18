@@ -91,7 +91,7 @@
 (reg-event-db
   ::set-applications
   (fn [db [_ applications]]
-    (assoc db ::spec/applications (:modules applications)
+    (assoc db ::spec/applications (:resources applications)
               ::spec/loading-applications? false)))
 
 

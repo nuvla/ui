@@ -7,8 +7,8 @@
     [reagent.core :as reagent]
     [sixsq.nuvla.ui.cimi-api.utils :as cimi-api-utils]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
-    [sixsq.nuvla.ui.cimi.events :as cimi-events]
-    [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
+    [sixsq.nuvla.ui.cimi.events :as events]
+    [sixsq.nuvla.ui.cimi.subs :as subs]
     [sixsq.nuvla.ui.cimi.utils :as cimi-utils]
     [sixsq.nuvla.ui.docs.subs :as docs-subs]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -45,7 +45,7 @@
 (defn remove-column-fn
   [label]
   (fn []
-    (dispatch [::cimi-events/remove-field label])))
+    (dispatch [::events/remove-field label])))
 
 
 (defn table-header-cell
@@ -108,16 +108,16 @@
 (defn results-statistic
   []
   (let [tr (subscribe [::i18n-subs/tr])
-        collection-name (subscribe [::cimi-subs/collection-name])
-        resources (subscribe [::cimi-subs/collection])
-        cep (subscribe [::cimi-subs/cloud-entry-point])]
+        collection-name (subscribe [::subs/collection-name])
+        resources (subscribe [::subs/collection])
+        cep (subscribe [::subs/cloud-entry-point])]
     (fn []
       (let [collection-name @collection-name
             resources @resources]
         (when resources
           (let [collection-key (get (:collection-key @cep) collection-name)
                 total (:count resources)
-                n (count (get resources collection-key []))]
+                n (count (get resources :resources []))]
             [ui/Statistic
              [ui/StatisticValue (str n " / " total)]
              [ui/StatisticLabel (@tr [:results])]]))))))
@@ -129,7 +129,7 @@
 
 (defn aggregations-table
   []
-  (let [aggregations (subscribe [::cimi-subs/aggregations])]
+  (let [aggregations (subscribe [::subs/aggregations])]
     (fn []
       (let [stats (->> @aggregations
                        (map tuple-fn)
@@ -141,10 +141,10 @@
 
 
 (defn results-display []
-  (let [collection (subscribe [::cimi-subs/collection])
-        collection-name (subscribe [::cimi-subs/collection-name])
-        selected-fields (subscribe [::cimi-subs/selected-fields])
-        cep (subscribe [::cimi-subs/cloud-entry-point])]
+  (let [collection (subscribe [::subs/collection])
+        collection-name (subscribe [::subs/collection-name])
+        selected-fields (subscribe [::subs/selected-fields])
+        cep (subscribe [::subs/cloud-entry-point])]
     (fn []
       (let [{:keys [collection-key]} @cep
             resource-collection-key (get collection-key @collection-name)
@@ -152,7 +152,7 @@
         (if (instance? js/Error results)
           [ui/Segment style/basic
            [:pre (with-out-str (pprint (ex-data results)))]]
-          (let [entries (get results resource-collection-key [])]
+          (let [entries (get results :resources [])]
             [ui/Segment style/basic
              [aggregations-table]
              [results-table @selected-fields entries]]))))))
@@ -161,8 +161,8 @@
 (defn cloud-entry-point-title
   []
   (let [tr (subscribe [::i18n-subs/tr])
-        cep (subscribe [::cimi-subs/cloud-entry-point])
-        selected-id (subscribe [::cimi-subs/collection-name])]
+        cep (subscribe [::subs/cloud-entry-point])
+        selected-id (subscribe [::subs/collection-name])]
     (fn []
       (let [options (->> @cep
                          :collection-href
@@ -184,15 +184,15 @@
 
 (defn search-header []
   (let [tr (subscribe [::i18n-subs/tr])
-        query-params (subscribe [::cimi-subs/query-params])
-        selected-id (subscribe [::cimi-subs/collection-name])]
+        query-params (subscribe [::subs/query-params])
+        selected-id (subscribe [::subs/collection-name])]
     (fn []
       ;; reset visible values of parameters
       (let [{:keys [$first $last $filter $select $aggregation $orderby]} @query-params]
         [ui/Form {:aria-label   "filter parameters"
                   :on-key-press (partial forms/on-return-key
                                          #(when @selected-id
-                                            (dispatch [::cimi-events/get-results])))}
+                                            (dispatch [::events/get-results])))}
 
          [ui/FormGroup
           [ui/Message {:info     true
@@ -218,7 +218,7 @@
                       :min          0
                       :label        (@tr [:first])
                       :defaultValue $first
-                      :on-blur      (ui-callback/input ::cimi-events/set-first)}]]
+                      :on-blur      (ui-callback/input ::events/set-first)}]]
 
           [ui/FormField
            ^{:key (str "last:" $last)}
@@ -227,7 +227,7 @@
                       :min          0
                       :label        (@tr [:last])
                       :defaultValue $last
-                      :on-blur      (ui-callback/input ::cimi-events/set-last)}]]
+                      :on-blur      (ui-callback/input ::events/set-last)}]]
 
           [ui/FormField
            ^{:key (str "select:" $select)}
@@ -236,7 +236,7 @@
                       :label        (@tr [:select])
                       :defaultValue $select
                       :placeholder  "e.g. id, endpoint, ..."
-                      :on-blur      (ui-callback/input ::cimi-events/set-select)}]]]
+                      :on-blur      (ui-callback/input ::events/set-select)}]]]
 
          [ui/FormGroup {:widths "equal"}
           [ui/FormField
@@ -246,7 +246,7 @@
                       :label        (@tr [:order])
                       :defaultValue $orderby
                       :placeholder  "e.g. created:desc, ..."
-                      :on-blur      (ui-callback/input ::cimi-events/set-orderby)}]]
+                      :on-blur      (ui-callback/input ::events/set-orderby)}]]
 
           [ui/FormField
            ^{:key (str "aggregation:" $aggregation)}
@@ -255,7 +255,7 @@
                       :label        (@tr [:aggregation])
                       :defaultValue $aggregation
                       :placeholder  "e.g. min:resource:vcpu, ..."
-                      :on-blur      (ui-callback/input ::cimi-events/set-aggregation)}]]]
+                      :on-blur      (ui-callback/input ::events/set-aggregation)}]]]
 
          [ui/FormGroup {:widths "equal"}
           [ui/FormField
@@ -266,7 +266,7 @@
              :label        (@tr [:filter])
              :defaultValue $filter
              :placeholder  "e.g. connector/href^='exoscale-' and resource:type='VM' and resource:ram>=8096"
-             :on-blur      (ui-callback/input ::cimi-events/set-filter)}]]]]))))
+             :on-blur      (ui-callback/input ::events/set-filter)}]]]]))))
 
 
 (defn format-field-item [selections-atom item]
@@ -289,9 +289,9 @@
 
 (defn select-fields []
   (let [tr (subscribe [::i18n-subs/tr])
-        available-fields (subscribe [::cimi-subs/available-fields])
-        selected-fields (subscribe [::cimi-subs/selected-fields])
-        selected-id (subscribe [::cimi-subs/collection-name])
+        available-fields (subscribe [::subs/available-fields])
+        selected-fields (subscribe [::subs/selected-fields])
+        selected-id (subscribe [::subs/collection-name])
         selections (reagent/atom (set @selected-fields))
         show? (reagent/atom false)]
     (fn []
@@ -320,31 +320,27 @@
           :primary  true
           :on-click (fn []
                       (reset! show? false)
-                      (dispatch [::cimi-events/set-selected-fields @selections]))}]]])))
+                      (dispatch [::events/set-selected-fields @selections]))}]]])))
 
 
 (defn resource-add-form
   []
   (let [tr (subscribe [::i18n-subs/tr])
-        show? (subscribe [::cimi-subs/show-add-modal?])
-        collection-name (subscribe [::cimi-subs/collection-name])
+        show? (subscribe [::subs/show-add-modal?])
+        collection-name (subscribe [::subs/collection-name])
         default-text (general/edn->json {})
         text (atom default-text)
-        collection (subscribe [::cimi-subs/collection])
+        collection (subscribe [::subs/collection])
         selected-tmpl-id (reagent/atom nil)]
     (fn []
       (let [resource-metadata (subscribe [::docs-subs/document @collection])
             collection-template-href (some-> @collection-name cimi-utils/collection-template-href)
-            templates-info (subscribe [::cimi-subs/collection-templates collection-template-href])
+            templates-info (subscribe [::subs/collection-templates collection-template-href])
             selected-tmpl-resource-meta (subscribe [::docs-subs/document (get @templates-info @selected-tmpl-id)])]
-        #_(log/warn "resource-metadata" @resource-metadata)
-        #_(log/warn "____COLLNAME____" @collection-name " ____SELECTED-TEMPLATE-ID____" @selected-tmpl-id
-                    "____TMPL-INFO____" (get @templates-info @selected-tmpl-id)
-                    "____TMPL-RES-META____" @selected-tmpl-resource-meta  #_@templates-info)
         (when @show?
           [ui/Modal
            {:size    "large", :closeIcon true, :open @show?,
-            :onClose #(dispatch [::cimi-events/hide-add-modal])}
+            :onClose #(dispatch [::events/hide-add-modal])}
 
            [ui/ModalContent
             [:div
@@ -377,7 +373,7 @@
              {:text     (@tr [:cancel])
               :on-click (fn []
                           (reset! text default-text)
-                          (dispatch [::cimi-events/hide-add-modal]))}]
+                          (dispatch [::events/hide-add-modal]))}]
             [uix/Button
              {:text     (@tr [:create])
               :primary  true
@@ -385,14 +381,14 @@
                           (try
                             (let [data (cond->> (general/json->edn @text)
                                                 @selected-tmpl-id (cimi-api-utils/create-template @collection-name))]
-                              (dispatch [::cimi-events/create-resource data]))
+                              (dispatch [::events/create-resource data]))
                             (catch :default e
                               (dispatch [::messages-events/add
                                          {:header  "invalid JSON document"
                                           :message (str "invalid JSON:\n\n" e)
                                           :type    :error}]))
                             (finally
-                              (dispatch [::cimi-events/hide-add-modal]))))}]]
+                              (dispatch [::events/hide-add-modal]))))}]]
            ])))))
 
 
@@ -407,30 +403,30 @@
 (defn search-button
   []
   (let [tr (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::cimi-subs/loading?])
-        selected-id (subscribe [::cimi-subs/collection-name])]
+        loading? (subscribe [::subs/loading?])
+        selected-id (subscribe [::subs/collection-name])]
     (fn []
       [uix/MenuItemForSearch {:name     (@tr [:search])
                               :loading? @loading?
                               :disabled (nil? @selected-id)
-                              :on-click #(dispatch [::cimi-events/get-results])}])))
+                              :on-click #(dispatch [::events/get-results])}])))
 
 
 (defn create-button
   []
   (let [tr (subscribe [::i18n-subs/tr])
-        search-results (subscribe [::cimi-subs/collection])]
+        search-results (subscribe [::subs/collection])]
     (fn []
       (when (can-add? (:operations @search-results))
         [uix/MenuItemWithIcon
          {:name      (@tr [:add])
           :icon-name "add"
-          :on-click  #(dispatch [::cimi-events/show-add-modal])}]))))
+          :on-click  #(dispatch [::events/show-add-modal])}]))))
 
 
 (defn menu-bar []
   (let [tr (subscribe [::i18n-subs/tr])
-        resources (subscribe [::cimi-subs/collection])]
+        resources (subscribe [::subs/collection])]
     (fn []
       (when (instance? js/Error @resources)
         (dispatch [::messages-events/add
@@ -457,9 +453,9 @@
         query-params (subscribe [::main-subs/nav-query-params])]
     (fn []
       (let [[_ resource-type resource-id] @path]
-        (dispatch [::cimi-events/set-collection-name resource-type])
+        (dispatch [::events/set-collection-name resource-type])
         (when @query-params
-          (dispatch [::cimi-events/set-query-params @query-params])))
+          (dispatch [::events/set-query-params @query-params])))
       (let [n (count @path)
             children (case n
                        1 [[menu-bar]]

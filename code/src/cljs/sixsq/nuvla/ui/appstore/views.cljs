@@ -77,7 +77,7 @@
         [ui/Container {:fluid true}
          [control-bar]
          [deployment-dialog-views/deploy-modal false]
-         [deployment-templates-cards-group (get @deployment-templates :deploymentTemplates [])]
+         [deployment-templates-cards-group (get @deployment-templates :resources [])]
          (when (> total-pages 1)
            [uix/Pagination
             {:totalPages   total-pages

@@ -1,5 +1,7 @@
 # SlipStream Web UI
 
+[![Build Status](https://travis-ci.com/nuvla/ui.svg?branch=master)](https://travis-ci.com/nuvla/ui)
+
 This repository provides a Docker image containing the Nuvla
 browser-based user interface. This consists of Javascript code (built
 with ClojureScript) and other support files (HTML, CSS, etc.).

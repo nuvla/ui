@@ -183,11 +183,11 @@
 
 (reg-event-db
   ::set-cloud-entry-point
-  (fn [db [_ {:keys [baseURI] :as cep}]]
+  (fn [db [_ {:keys [base-uri] :as cep}]]
     (let [href-map (utils/collection-href-map cep)
           key-map (utils/collection-key-map cep)]
       (-> db
-          (assoc ::spec/cloud-entry-point {:baseURI         baseURI
+          (assoc ::spec/cloud-entry-point {:base-uri        base-uri
                                            :collection-href href-map
                                            :collection-key  key-map})
           (assoc ::spec/collections-templates-cache (utils/collections-template-map cep))))))

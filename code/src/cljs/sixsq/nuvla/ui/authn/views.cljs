@@ -71,8 +71,8 @@
       (let [dropdown? (> (count methods) 1)
             method (u/select-method-by-id @form-id methods)
             resourceMetadata (subscribe [::docs-subs/document method])
-            {:keys [baseURI collection-href]} @cep
-            post-uri (str baseURI (collections-kw collection-href)) ;; FIXME: Should be part of CIMI API.
+            {:keys [base-uri collection-href]} @cep
+            post-uri (str base-uri (collections-kw collection-href)) ;; FIXME: Should be part of CIMI API.
             inputs-method (conj
                             (->> (:attributes @resourceMetadata)
                                  (filter (fn [{:keys [consumerWritable consumerMandatory group] :as attribute}]
@@ -106,12 +106,12 @@
 
 (defn login-method-form
   [[_ methods]]
-  [authn-method-form methods :sessions])
+  [authn-method-form methods :session])
 
 
 (defn signup-method-form
   [[_ methods]]
-  [authn-method-form methods :users])
+  [authn-method-form methods :user])
 
 
 (defn authn-method-group-option

@@ -139,8 +139,8 @@
     ^{:key operation-uri} [other-button label data #(dispatch [::api-detail-events/operation id operation-uri])]))
 
 
-(defn format-operations [refresh-button {:keys [operations] :as data} baseURI description]
-  (let [ops (map (juxt #(general/operation-name (:rel %)) #(str baseURI (:href %)) :rel) operations)]
+(defn format-operations [refresh-button {:keys [operations] :as data} base-uri description]
+  (let [ops (map (juxt #(general/operation-name (:rel %)) #(str base-uri (:href %)) :rel) operations)]
     (vec (concat [refresh-button] (map (partial operation-button data description) ops)))))
 
 
@@ -213,17 +213,17 @@
 
 
 (defn detail-menu
-  [refresh-button data baseURI description]
+  [refresh-button data base-uri description]
   (vec (concat [ui/Menu {:borderless true}]
-               (format-operations nil data baseURI description)
+               (format-operations nil data base-uri description)
                [refresh-button])))
 
 
 (defn resource-detail
   "Provides a generic visualization of a CIMI resource document."
-  [refresh-button data baseURI description]
+  [refresh-button data base-uri description]
   (vec (concat
          [ui/Segment style/basic
-          (detail-menu refresh-button data baseURI description)
+          (detail-menu refresh-button data base-uri description)
           (detail-header data)
           (group-table-sui (cimi-api-utils/remove-common-attrs data) description)])))

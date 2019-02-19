@@ -188,7 +188,12 @@
         selected-id (subscribe [::subs/collection-name])]
     (fn []
       ;; reset visible values of parameters
-      (let [{:keys [$first $last $filter $select $aggregation $orderby]} @query-params]
+      (let [{$filter      :filter,
+             $first       :first,
+             $last        :last,
+             $select      :select,
+             $aggregation :aggregation,
+             $orderby     :orderby} @query-params]
         [ui/Form {:aria-label   "filter parameters"
                   :on-key-press (partial forms/on-return-key
                                          #(when @selected-id

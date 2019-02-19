@@ -61,7 +61,7 @@
                                                                status (str " (" status ")"))
                                               :content message
                                               :type    :success}])
-                                  (dispatch [::history-events/navigate (str "cimi/" collection-name)])))]})))
+                                  (dispatch [::history-events/navigate (str "api/" collection-name)])))]})))
 
 
 (reg-event-fx

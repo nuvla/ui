@@ -1,11 +1,23 @@
 language: java
+
 dist: trusty
+
 jdk:
-- openjdk8
+  - openjdk8
+
+before_install:
+  - sudo apt-get install -y zopfli
+
+cache:
+  directories:
+  - code/node_modules
+  - $HOME/.m2
+
 deploy:
   provider: script
   script: cp .travis.settings.xml $HOME/.m2/settings.xml && mvn deploy
   skip_cleanup: true
+
 env:
   global:
   - secure: BXPcsqk0pUEiWqjDVSE3CgC84YBYYrLd0mzxFtQ4X7lzAAg5LuyIERNnnSCa1ATL4Fk8D7iwxp1DyTOfhptdzfYlj62ifQ5AIiffDpKorWVvrIbDJexEBCDwKmllxRDGbf/uQgsgwRirGksS5GxA9iStJS6WFgoc62wLJijxzKRy02pPgjTplGzfPhO9FSYOVemIohUF8OP+ipCrUpBTpQKiAbuf7bG5HB1aKKboqdn3q57CrS6Ghz5JWhN0qBlxZKSa6mQ0jzh82stAgs0ZXgfOL76Q/B7WW++cUifC1eL5YnQSQ3K1LWUIm5WraHRL6qKs9Q5W/DKdNQ2JsIf6kz5C/m5ZNGgxV8CaJ2wVsEaROtNUktDkyIePR0ovt870PZLnxaucTUAXrzDnzs5ZJzPxNEmEznkK2RWLz9lwFxt33IaJHPN79xKuOOJuf5T4jXxxJvD/1luqCyaDkY3o/cgv3sJW9Xlf034M/3Ys3b51zNybZcWa3rv7f50MlfpwNuETNfw9nSiBO/BaMH7Usi7sorkev/YOc0cEaR4X3pwrHFOPIpJZ8Jil8XBOynwSnBtquoo114BHQiz3hQwThWcvgeC7fZ0IEn4+ieDEF82xwYh3oyGLgKTQj5sltDYG3LTk4nB9kb0BSXnJ+2D8ngKFu37O1diXrn98HjvUxlo=

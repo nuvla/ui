@@ -18,6 +18,6 @@
     ^{:key operation-uri} [resource-details/other-button label data #(dispatch [::events/operation id operation-uri])]))
 
 
-(defn format-operations [refresh-button {:keys [operations] :as data} baseURI description]
-  (let [ops (map (juxt #(general/operation-name (:rel %)) #(str baseURI (:href %)) :rel) operations)]
+(defn format-operations [refresh-button {:keys [operations] :as data} base-uri description]
+  (let [ops (map (juxt #(general/operation-name (:rel %)) #(str base-uri (:href %)) :rel) operations)]
     (vec (concat [refresh-button] (map (partial operation-button data description) ops)))))

@@ -2,8 +2,8 @@
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.cimi.spec :as cimi-spec]
-    [sixsq.nuvla.ui.cimi.utils :as cimi-utils]
+    [sixsq.nuvla.ui.cimi.spec :as spec]
+    [sixsq.nuvla.ui.cimi.utils :as utils]
     [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -20,62 +20,62 @@
 (reg-event-db
   ::set-first
   (fn [db [_ first-value]]
-    (update db ::cimi-spec/query-params merge {:first first-value})))
+    (update db ::spec/query-params merge {:first first-value})))
 
 
 (reg-event-db
   ::set-last
   (fn [db [_ last-value]]
-    (update db ::cimi-spec/query-params merge {:last last-value})))
+    (update db ::spec/query-params merge {:last last-value})))
 
 
 (reg-event-db
   ::set-filter
   (fn [db [_ filter-value]]
-    (update db ::cimi-spec/query-params merge {:filter filter-value})))
+    (update db ::spec/query-params merge {:filter filter-value})))
 
 
 (reg-event-db
   ::set-orderby
   (fn [db [_ orderby-value]]
-    (update db ::cimi-spec/query-params merge {:orderby orderby-value})))
+    (update db ::spec/query-params merge {:orderby orderby-value})))
 
 
 (reg-event-db
   ::set-select
   (fn [db [_ select-value]]
-    (update db ::cimi-spec/query-params merge {:select select-value})))
+    (update db ::spec/query-params merge {:select select-value})))
 
 (reg-event-db
   ::set-query-params
   (fn [db [_ params]]
-    (update db ::cimi-spec/query-params merge params)))
+    (update db ::spec/query-params merge params)))
 
 (reg-event-db
   ::show-add-modal
   (fn [db _]
-    (assoc db ::cimi-spec/show-add-modal? true)))
+    (assoc db ::spec/show-add-modal? true)))
 
 
 (reg-event-db
   ::hide-add-modal
   (fn [db _]
-    (assoc db ::cimi-spec/show-add-modal? false)))
+    (assoc db ::spec/show-add-modal? false)))
 
 
 (reg-event-db
   ::set-aggregation
   (fn [db [_ aggregation-value]]
-    (update db ::cimi-spec/query-params merge {:aggregation aggregation-value})))
+    (update db ::spec/query-params merge {:aggregation aggregation-value})))
 
 
 (reg-event-db
   ::set-collection-name
-  (fn [{:keys [::cimi-spec/cloud-entry-point] :as db} [_ collection-name]]
+  (fn [{:keys [::spec/cloud-entry-point] :as db} [_ collection-name]]
     (if (or (empty? collection-name) (-> cloud-entry-point
                                          :collection-key
                                          (get collection-name)))
-      (assoc db ::cimi-spec/collection-name collection-name)
+      (assoc db ::spec/collection-name collection-name)
       (let [msg-map {:header  (cond-> (str "invalid resource type: " collection-name))
                      :content (str "The resource type '" collection-name "' is not valid. "
                                    "Please choose another resource type.")
@@ -91,31 +91,31 @@
 (reg-event-db
   ::set-selected-fields
   (fn [db [_ fields]]
-    (assoc db ::cimi-spec/selected-fields (sort (vec fields)))))
+    (assoc db ::spec/selected-fields (sort (vec fields)))))
 
 
 (reg-event-db
   ::remove-field
-  (fn [{:keys [::cimi-spec/selected-fields] :as db} [_ field]]
+  (fn [{:keys [::spec/selected-fields] :as db} [_ field]]
     (->> selected-fields
          (remove #{field})
          vec
          sort
-         (assoc db ::cimi-spec/selected-fields))))
+         (assoc db ::spec/selected-fields))))
 
 
 (reg-event-fx
   ::get-results
-  (fn [{{:keys [::cimi-spec/collection-name
-                ::cimi-spec/cloud-entry-point
-                ::cimi-spec/query-params
+  (fn [{{:keys                            [::spec/collection-name
+                                           ::spec/cloud-entry-point
+                                           ::spec/query-params
                 ::client-spec/client] :as db} :db} _]
     (let [resource-type (-> cloud-entry-point
                             :collection-key
                             (get collection-name))]
-      {:db                  (assoc db ::cimi-spec/loading? true
-                                      ::cimi-spec/aggregations nil
-                                      ::cimi-spec/collection nil)
+      {:db                  (assoc db ::spec/loading? true
+                                      ::spec/aggregations nil
+                                      ::spec/collection nil)
        ::cimi-api-fx/search [client
                              resource-type
                              (general-utils/prepare-params query-params)
@@ -124,8 +124,8 @@
 
 (reg-event-fx
   ::create-resource
-  (fn [{{:keys [::cimi-spec/collection-name
-                ::cimi-spec/cloud-entry-point
+  (fn [{{:keys                            [::spec/collection-name
+                                           ::spec/cloud-entry-point
                 ::client-spec/client] :as db} :db} [_ data]]
     (let [resource-type (-> cloud-entry-point
                             :collection-key
@@ -165,7 +165,7 @@
   ::set-results
   (fn [db [_ resource-type listing]]
     (let [error? (instance? js/Error listing)
-          entries (get listing (keyword resource-type) [])
+          entries (get listing :resources [])
           aggregations (get listing :aggregations nil)
           fields (general-utils/merge-keys (conj entries {:id "id"}))]
       (when error?
@@ -175,22 +175,22 @@
                                        status (str " (" status ")"))
                       :content message
                       :type    :error})]))
-      (assoc db ::cimi-spec/aggregations aggregations
-                ::cimi-spec/collection (when-not error? listing)
-                ::cimi-spec/loading? false
-                ::cimi-spec/available-fields fields))))
+      (assoc db ::spec/aggregations aggregations
+                ::spec/collection (when-not error? listing)
+                ::spec/loading? false
+                ::spec/available-fields fields))))
 
 
 (reg-event-db
   ::set-cloud-entry-point
-  (fn [db [_ {:keys [baseURI] :as cep}]]
-    (let [href-map (cimi-utils/collection-href-map cep)
-          key-map (cimi-utils/collection-key-map cep)]
+  (fn [db [_ {:keys [base-uri] :as cep}]]
+    (let [href-map (utils/collection-href-map cep)
+          key-map (utils/collection-key-map cep)]
       (-> db
-          (assoc ::cimi-spec/cloud-entry-point {:baseURI         baseURI
-                                                :collection-href href-map
-                                                :collection-key  key-map})
-          (assoc ::cimi-spec/collections-templates-cache (cimi-utils/collections-template-map cep))))))
+          (assoc ::spec/cloud-entry-point {:base-uri        base-uri
+                                           :collection-href href-map
+                                           :collection-key  key-map})
+          (assoc ::spec/collections-templates-cache (utils/collections-template-map cep))))))
 
 
 (reg-event-fx
@@ -204,14 +204,15 @@
 
 (reg-event-fx
   ::get-templates
-  (fn [{{:keys [::cimi-spec/cloud-entry-point
-                ::cimi-spec/collections-templates-cache
-                ::client-spec/client] :as db} :db} [_ template-href]]
+  (fn [{{:keys [::spec/cloud-entry-point
+                ::spec/collections-templates-cache
+                ::client-spec/client] :as db} :db}
+       [_ template-href]]
     (let [resource-type (-> cloud-entry-point
                             :collection-key
                             (get (name template-href)))]
       {::cimi-api-fx/search [client resource-type {:orderby "id"}
-                             #(dispatch [::set-templates template-href (resource-type %)])]})))
+                             #(dispatch [::set-templates template-href (:resources %)])]})))
 
 
 (reg-event-db
@@ -224,7 +225,7 @@
                                      status (str " (" status ")"))
                     :content message
                     :type    :error})])
-      (assoc-in db [::cimi-spec/collections-templates-cache template-href]
+      (assoc-in db [::spec/collections-templates-cache template-href]
                 (->> templates
                      (map (juxt :id identity))
                      (into {}))))))

@@ -30,6 +30,6 @@
   (fn [db [_ docs]]
     (assoc db ::spec/loading? false
               ::spec/documents (->> docs
-                                    :resourceMetadatas
+                                    :resources
                                     (map (juxt :id add-vscope-to-attributes))
                                     (into {})))))

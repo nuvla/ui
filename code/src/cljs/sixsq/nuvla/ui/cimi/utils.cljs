@@ -8,11 +8,11 @@
 (defn collection-href-map
   "Creates a map from the CloudEntryPoint that maps the resource collection
    key (as a keyword) to the href for the collection (as a string)."
-  [cep]
+  [{:keys [collections] :as cep}]
   (when cep
-    (into {} (->> cep
-                  (map (juxt first #(:href (second %))))
-                  (remove (fn [[k v]] (not (string? v))))))))
+    (->> collections
+         (map (juxt first #(:href (second %))))
+         (into {}))))
 
 
 (defn collection-key-map

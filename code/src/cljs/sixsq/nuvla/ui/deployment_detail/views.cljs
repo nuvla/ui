@@ -192,15 +192,15 @@
 (defn report-item
   [{:keys [id component created state] :as report}]
   (let [cep (subscribe [::api-subs/cloud-entry-point])
-        {:keys [baseURI]} @cep]
-    (when baseURI
+        {:keys [base-uri]} @cep]
+    (when base-uri
       ^{:key id} [:li
                   (let [label (str/join " " [component created])]
                     (if (= state "ready")
                       ;; FIXME: The download URLs should be taken from operations rather than constructed like this.
                       [:a {:style    {:cursor "pointer"}
                            :download true
-                           :href     (str baseURI id "/download")} label]
+                           :href     (str base-uri id "/download")} label]
                       label))])))
 
 
@@ -435,7 +435,7 @@
         cep (subscribe [::api-subs/cloud-entry-point])]
     (vec (concat [ui/Menu {:borderless true}]
 
-                 (operations/format-operations nil @deployment (:baseURI @cep) nil)
+                 (operations/format-operations nil @deployment (:base-uri @cep) nil)
 
                  [[service-link-button]
                   [refresh-button]]))))

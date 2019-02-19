@@ -33,13 +33,13 @@
 (defn get-current-session
   [client]
   (go
-    (let [session-collection (<! (api/search client :sessions))]
+    (let [session-collection (<! (api/search client :session))]
       (when-not (instance? js/Error session-collection)
-        (-> session-collection :sessions first)))))
+        (-> session-collection :resources first)))))
 
 
-(defn absolute-url [baseURI relative-url]
-  (str baseURI relative-url))
+(defn absolute-url [base-uri relative-url]
+  (str base-uri relative-url))
 
 
 (defn login-form-fields [{:keys [params-desc] :as tpl}]

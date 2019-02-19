@@ -83,10 +83,10 @@
       (when (= :data first-step)
         (dispatch [::get-service-offers-by-cred]))
       (let [data (if (str/starts-with? id "module/")
-                   {:deploymentTemplate {:module {:href id}}}
+                   {:template {:module {:href id}}}
                    {:name               (str "Deployment from " id)
                     :description        (str "A deployment for the deployment template " id)
-                    :deploymentTemplate {:href id}})
+                    :template {:href id}})
             add-depl-callback (fn [response]
                                 (if (instance? js/Error response)
                                   (let [{:keys [status message]} (response/parse-ex-info response)]

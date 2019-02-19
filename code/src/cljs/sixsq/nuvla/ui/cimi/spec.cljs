@@ -3,11 +3,11 @@
   (:require
     [clojure.spec.alpha :as s]))
 
-(s/def ::baseURI string?)
+(s/def ::base-uri string?)
 (s/def ::collection-key (s/map-of string? keyword?))
 (s/def ::collection-href (s/map-of keyword? string?))
 
-(s/def ::cloud-entry-point (s/nilable (only-keys :req-un [::baseURI
+(s/def ::cloud-entry-point (s/nilable (only-keys :req-un [::base-uri
                                                           ::collection-key
                                                           ::collection-href])))
 

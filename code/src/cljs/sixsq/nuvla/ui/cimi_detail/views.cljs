@@ -53,5 +53,5 @@
         [details/resource-detail
          [refresh-button]
          (when (and (not @loading?) correct-resource?) @resource)
-         (:baseURI @cep)
+         (:base-uri @cep)
          @resourceMetadata]))))

@@ -46,9 +46,9 @@
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
-      <id>nuvla.releases.public</id>
+      <id>nuvla.releases</id>
       <name>Nuvla Releases</name>
-      <url>https://sixsq-build-artifacts.s3.amazonaws.com/releases</url>
+      <url>s3p://sixsq-build-artifacts/releases</url>
     </repository>
 
     <repository>
@@ -58,9 +58,9 @@
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
-      <id>nuvla.snapshots.public</id>
+      <id>nuvla.snapshots</id>
       <name>Nuvla Snapshots</name>
-      <url>https://sixsq-build-artifacts.s3.amazonaws.com/snapshots</url>
+      <url>s3p://sixsq-build-artifacts/snapshots</url>
     </repository>
 
   </repositories>
@@ -69,7 +69,7 @@
     <repository>
       <id>nuvla.releases</id>
       <name>Nuvla Releases</name>
-      <url>s3p://sixsq-build-artifacts/snapshots</url>
+      <url>s3p://sixsq-build-artifacts/releases</url>
     </repository>
 
     <snapshotRepository>

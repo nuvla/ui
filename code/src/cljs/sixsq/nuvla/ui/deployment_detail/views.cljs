@@ -216,10 +216,10 @@
            (map dt-fn)))))
 
 
-(defn format-event-id
+(defn format-id
   [id]
   (let [tag (second (re-matches #"^.*/([^-]+).*$" id))]
-    [history/link (str "str/" id) tag]))
+    [history/link (str "api/" id) tag]))
 
 
 (defn format-delta-time
@@ -230,7 +230,7 @@
 (defn event-map-to-row
   [{:keys [id content timestamp type delta-time] :as evt}]
   [ui/TableRow
-   [ui/TableCell (format-event-id id)]
+   [ui/TableCell (format-id id)]
    [ui/TableCell timestamp]
    [ui/TableCell (format-delta-time delta-time)]
    [ui/TableCell type]
@@ -268,7 +268,7 @@
 (defn job-map-to-row
   [{:keys [id timeOfStatusChange state progress returnCode statusMessage] :as job}]
   [ui/TableRow
-   [ui/TableCell (format-event-id id)]
+   [ui/TableCell (format-id id)]
    [ui/TableCell timeOfStatusChange]
    [ui/TableCell state]
    [ui/TableCell progress]

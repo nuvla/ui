@@ -28,7 +28,7 @@
        boolean))
 
 
-(def stop-action? (partial has-action? "http://schemas.dmtf.org/cimi/2/action/stop"))
+(def stop-action? (partial has-action? "stop"))
 
 
 (def delete-action? (partial has-action? "delete"))

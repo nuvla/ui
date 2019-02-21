@@ -7,8 +7,7 @@
     [sixsq.nuvla.ui.application.utils :as utils]
     [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.history.events :as history-evts]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.main.spec :as main-spec]))
 
 
 (reg-event-db

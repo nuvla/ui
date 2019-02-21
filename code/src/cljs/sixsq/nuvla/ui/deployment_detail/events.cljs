@@ -94,7 +94,7 @@
   ::stop-deployment
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ href]]
     {:db                     db
-     ::cimi-api-fx/operation [client href "http://schemas.dmtf.org/cimi/2/action/stop"
+     ::cimi-api-fx/operation [client href "stop"
                               #(if (instance? js/Error %)
                                  (let [{:keys [status message]} (response/parse-ex-info %)]
                                    (dispatch [::messages-events/add
@@ -124,7 +124,7 @@
       {::cimi-api-fx/search [client
                              :event
                              (general-utils/prepare-params query-params)
-                             #(dispatch [::set-events (:events %)])]})))
+                             #(dispatch [::set-events (:resources %)])]})))
 
 
 (reg-event-db
@@ -146,7 +146,7 @@
       {::cimi-api-fx/search [client
                              :job
                              (general-utils/prepare-params query-params)
-                             #(dispatch [::set-jobs (:jobs %)])]})))
+                             #(dispatch [::set-jobs (:resources %)])]})))
 
 
 (reg-event-db
@@ -164,7 +164,7 @@
     {::cimi-api-fx/search [client
                            :deployment-parameter
                            (general-utils/prepare-params query-params)
-                           #(dispatch [::set-node-parameters (:deploymentParameters %)])]}))
+                           #(dispatch [::set-node-parameters (:resources %)])]}))
 
 
 (reg-event-db
@@ -189,7 +189,7 @@
         {::cimi-api-fx/search [client
                                :deployment-parameter
                                (general-utils/prepare-params query-params)
-                               #(dispatch [::set-node-parameters (:deploymentParameters %)])]}))))
+                               #(dispatch [::set-node-parameters (:resources %)])]}))))
 
 
 (reg-event-db
@@ -226,7 +226,7 @@
         {::cimi-api-fx/search [client
                                :deployment-parameter
                                (general-utils/prepare-params query-params)
-                               #(dispatch [::set-summary-nodes-parameters (:deploymentParameters %)])]}))))
+                               #(dispatch [::set-summary-nodes-parameters (:resources %)])]}))))
 
 
 ;;

@@ -37,7 +37,7 @@
             callback (fn [response]
                        (when-not (instance? js/Error response)
                          (dispatch [::set-creds-name-map (->> response
-                                                              :credentials
+                                                              :resources
                                                               (map (juxt :id :name))
                                                               (into {}))])))]
         {::cimi-api-fx/search [client :credential query-params callback]}))))
@@ -151,7 +151,7 @@
 (reg-event-fx
   ::stop-deployment
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ href]]
-    {::cimi-api-fx/operation [client href "http://schemas.dmtf.org/cimi/2/action/stop"
+    {::cimi-api-fx/operation [client href "stop"
                               #(if (instance? js/Error %)
                                  (let [{:keys [status message]} (response/parse-ex-info %)]
                                    (dispatch [::messages-events/add

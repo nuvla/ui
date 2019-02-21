@@ -308,7 +308,7 @@
   []
   (let [reports (subscribe [::subs/reports])]
     (if (seq @reports)
-      (vec (concat [:ul] (mapv report-item (:externalObjects @reports))))
+      (vec (concat [:ul] (mapv report-item (:resources @reports))))
       [:p "Reports will be displayed as soon as available. No need to refresh."])))
 
 

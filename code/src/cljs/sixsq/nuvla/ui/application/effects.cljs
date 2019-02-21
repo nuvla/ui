@@ -17,8 +17,8 @@
             children-filter (str "parentPath='" path "'")
 
             {:keys [type id] :as project-metadata} (if-not (str/blank? path)
-                                                     (-> (<! (api/search client "modules" {:filter path-filter}))
-                                                         :modules
+                                                     (-> (<! (api/search client "module" {:filter path-filter}))
+                                                         :resources
                                                          first)
                                                      {:type        "PROJECT"
                                                       :name        "Applications"
@@ -29,7 +29,7 @@
                      project-metadata)
 
             children (when (= type "PROJECT")
-                       (:modules (<! (api/search client "modules" {:filter children-filter}))))
+                       (:resources (<! (api/search client "module" {:filter children-filter}))))
 
             module-data (cond-> module
                                 children (assoc :children children))]
@@ -41,7 +41,7 @@
   ::create-module
   (fn [[client path data callback]]
     (go
-      (let [{:keys [status] :as response} (<! (api/add client "modules" data))]
+      (let [{:keys [status] :as response} (<! (api/add client "module" data))]
         (when (= 201 status)
           (callback response))))))
 

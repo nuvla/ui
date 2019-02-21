@@ -50,8 +50,9 @@
                                         (assoc-in [:module :content :mounts] (utils/service-offers->mounts %)))])]
       (cond-> {:db (assoc db ::spec/selected-credential credential
                              ::spec/deployment updated-deployment)}
-              cloud-filter (assoc ::cimi-api-fx/search [client :service-offer
-                                                        {:filter filter, :select "id, data:bucket, data:nfsIP, data:nfsDevice"}
+              cloud-filter (assoc ::cimi-api-fx/search
+                                  [client :service-offer {:filter filter,
+                                                          :select "id, data:bucket, data:nfsIP, data:nfsDevice"}
                                                         callback-data])))))
 
 
@@ -108,7 +109,7 @@
                                      ::spec/selected-cloud nil
                                      ::spec/connectors nil
                                      ::spec/data-clouds nil)
-         ::cimi-api-fx/add [client "deployments" data add-depl-callback]}))))
+         ::cimi-api-fx/add [client "deployment" data add-depl-callback]}))))
 
 
 (reg-event-fx
@@ -116,7 +117,7 @@
   (fn [{{:keys [::client-spec/client
                 ::spec/cloud-filter] :as db} :db :as cofx} _]
     (when client
-      (let [search-creds-callback #(dispatch [::set-credentials (get % :credentials [])])]
+      (let [search-creds-callback #(dispatch [::set-credentials (get % :resources [])])]
         {:db                  (assoc db ::spec/loading-credentials? true
                                         ::spec/credentials nil
                                         ::spec/selected-credential nil)
@@ -147,7 +148,7 @@
                                  (dispatch [::messages-events/add success-msg])
                                  (dispatch [::history-evts/navigate "deployment"]))))]
         {:db                     (assoc db ::spec/deploy-modal-visible? false)
-         ::cimi-api-fx/operation [client id "http://schemas.dmtf.org/cimi/2/action/start" start-callback]}))))
+         ::cimi-api-fx/operation [client id "start" start-callback]}))))
 
 
 (reg-event-fx

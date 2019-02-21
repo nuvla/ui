@@ -64,7 +64,5 @@
 
 (defn create-template
   [resource-type form-data]
-  (log/info "resource-type: " resource-type)
-  (let [[common-map template-map] (split-form-data form-data)
-        template-keyword (-> resource-type (str "-template-") keyword)] ; FIXME
-    (assoc common-map template-keyword template-map)))
+  (let [[common-map template-map] (split-form-data form-data)]
+    (assoc common-map :template template-map)))

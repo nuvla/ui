@@ -30,6 +30,31 @@
     </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <id>default TRAVIS_BRANCH value</id>
+      <activation>
+        <property>
+          <name>!env.TRAVIS_BRANCH</name>
+        </property>
+      </activation>
+      <properties>
+        <env.TRAVIS_BRANCH></env.TRAVIS_BRANCH>
+      </properties>
+    </profile>
+    <profile>
+      <id>default TRAVIS_PULL_REQUEST_BRANCH value</id>
+      <activation>
+        <property>
+          <name>!env.TRAVIS_PULL_REQUEST_BRANCH</name>
+        </property>
+      </activation>
+      <properties>
+        <env.TRAVIS_PULL_REQUEST_BRANCH></env.TRAVIS_PULL_REQUEST_BRANCH>
+      </properties>
+    </profile>
+  </profiles>
+
   <build>
     <plugins>
 

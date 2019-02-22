@@ -34,12 +34,66 @@
     <plugins>
 
       <plugin>
+        <groupId>pl.project13.maven</groupId>
+        <artifactId>git-commit-id-plugin</artifactId>
+        <version>2.2.6</version>
+        <executions>
+          <execution>
+            <id>git-information</id>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+            <phase>validate</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <dotGitDirectory>${project.basedir}/../.git</dotGitDirectory>
+          <prefix>git</prefix>
+          <verbose>true</verbose>
+          <generateGitPropertiesFile>true</generateGitPropertiesFile>
+          <generateGitPropertiesFilename>${project.build.directory}/git.properties</generateGitPropertiesFilename>
+          <format>properties</format>
+          <skipPoms>false</skipPoms>
+          <gitDescribe>
+            <skip>false</skip>
+            <always>false</always>
+            <dirty>-dirty</dirty>
+          </gitDescribe>
+        </configuration>
+      </plugin>
+      
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
         <version>3.0.0</version>
         <executions>
           <execution>
-            <!-- sets to 'test' on snapshot, version otherwise -->
+            <id>recover true branch name</id>
+            <goals>
+              <goal>regex-property</goal>
+            </goals>
+            <configuration>
+              <name>git.branch.selected</name>
+              <value>${env.TRAVIS_PULL_REQUEST_BRANCH}%${env.TRAVIS_BRANCH}%${git.branch}</value>
+              <regex>^%*([^%]+).*$</regex>
+              <replacement>$1</replacement>
+              <failIfNoMatch>false</failIfNoMatch>
+            </configuration>
+          </execution>
+          <execution>
+            <id>convert branch name to valid docker repository name</id>
+            <goals>
+              <goal>regex-property</goal>
+            </goals>
+            <configuration>
+              <name>git.branch.sanitized</name>
+              <value>${git.branch.selected}</value>
+              <regex>[^a-z0-9\._-]</regex>
+              <replacement>-</replacement>
+              <failIfNoMatch>false</failIfNoMatch>
+            </configuration>
+          </execution>
+          <execution>
             <id>set docker tag property</id>
             <goals>
               <goal>regex-property</goal>
@@ -48,7 +102,20 @@
               <name>docker-tag</name>
               <value>${project.version}</value>
               <regex>^.*SNAPSHOT$</regex>
-              <replacement>test</replacement>
+              <replacement>${git.branch.sanitized}</replacement>
+              <failIfNoMatch>false</failIfNoMatch>
+            </configuration>
+          </execution>
+          <execution>
+            <id>set docker organization property</id>
+            <goals>
+              <goal>regex-property</goal>
+            </goals>
+            <configuration>
+              <name>docker-organization</name>
+              <value>${project.version} nuvladev nuvla</value>
+              <regex>(?=.*SNAPSHOT).*(nuvladev).*|.*(nuvla).*</regex>
+              <replacement>$1$2</replacement>
               <failIfNoMatch>false</failIfNoMatch>
             </configuration>
           </execution>
@@ -134,12 +201,17 @@
           </execution>
         </executions>
         <configuration>
-          <repository>docker.io/nuvla/ui</repository>
+          <repository>docker.io/${docker-organization}/ui</repository>
           <tag>${docker-tag}</tag>
-          <build>
-            <squash>true</squash>
-          </build>
           <useMavenSettingsForAuth>true</useMavenSettingsForAuth>
+          <buildArgs>
+            <GIT_BRANCH>${git.branch.selected}</GIT_BRANCH>
+            <GIT_COMMIT_ID>${git.commit.id}</GIT_COMMIT_ID>
+            <GIT_DIRTY>${git.dirty}</GIT_DIRTY>
+            <GIT_BUILD_TIME>${git.build.time}</GIT_BUILD_TIME>
+            <TRAVIS_BUILD_NUMBER>${env.TRAVIS_BUILD_NUMBER}</TRAVIS_BUILD_NUMBER>
+            <TRAVIS_BUILD_WEB_URL>${env.TRAVIS_BUILD_WEB_URL}</TRAVIS_BUILD_WEB_URL>
+          </buildArgs>
         </configuration>
       </plugin>
 

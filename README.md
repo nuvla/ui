@@ -1,4 +1,4 @@
-# SlipStream Web UI
+# Nuvlas Web UI
 
 [![Build Status](https://travis-ci.com/nuvla/ui.svg?branch=master)](https://travis-ci.com/nuvla/ui)
 
@@ -13,7 +13,7 @@ Nuvla dependency:
  * [Nuvla Clojure(Script)
    API](https://github.com/nuvla/clojure-api): Provides
    a ClojureScript API for the CIMI and CIMI-like resources within
-   SlipStream.
+   Nuvla.
 
 Frameworks:
 
@@ -36,7 +36,7 @@ The essentials for using the development environment are below.
 
 ### Browser
 
-To test the code on a SlipStream server (e.g. https://nuv.la/) running
+To test the code on a Nuvla server (e.g. https://nuv.la/) running
 on a different machine, you'll need to start a browser with the XSS
 protections disabled.
 
@@ -124,7 +124,7 @@ in development mode. From the REPL do:
 
 The default value is `:debug` which will log all of the HTTP requests
 and responses.  This is useful when debugging interactions with
-SlipStream, but annoying otherwise.
+Nuvla, but annoying otherwise.
 
 ## Copyright
 

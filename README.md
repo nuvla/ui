@@ -1,4 +1,4 @@
-# Nuvlas Web UI
+# Nuvla Web UI
 
 [![Build Status](https://travis-ci.com/nuvla/ui.svg?branch=master)](https://travis-ci.com/nuvla/ui)
 

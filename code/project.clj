@@ -1,3 +1,5 @@
+(def +sixsq-nuvla-api-version+ "0.0.1")
+
 (def +version+ "0.0.1-SNAPSHOT")
 
 (defproject sixsq.nuvla.ui/code "0.0.1-SNAPSHOT"
@@ -65,7 +67,7 @@
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
                  [com.taoensso/timbre :scope "provided"]
-                 [sixsq.nuvla/clojure-library "0.0.1-SNAPSHOT" :scope "provided"]
+                 [sixsq.nuvla/api ~+sixsq-nuvla-api-version+ :scope "provided"]
                  [com.taoensso/tempura :scope "provided"]
                  [funcool/promesa :scope "provided"]
                  ]

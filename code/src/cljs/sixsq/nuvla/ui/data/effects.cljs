@@ -17,7 +17,7 @@
           (let [objectFilter (get dataset (keyword "dataset:objectFilter"))
                 filter (utils/join-and time-period-filter cloud-filter full-text-search objectFilter)]
             (callback id (<! (api/search client
-                                         "serviceOffers"
+                                         "service-offer"
                                          {:filter      filter
                                           :select      "id"
                                           :aggregation "count:id, sum:data:bytes"})))))))))

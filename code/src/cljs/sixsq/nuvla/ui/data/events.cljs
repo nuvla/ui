@@ -56,7 +56,7 @@
   (fn [db [_ dataset-id response]]
     (let [doc-count (get-in response [:aggregations :count:id :value])
           total-bytes (get-in response [:aggregations :sum:data:bytes :value])
-          service-offer-ids (mapv :id (:serviceOffers response))]
+          service-offer-ids (mapv :id (:resources response))]
       (-> db
           (update ::spec/counts assoc dataset-id doc-count)
           (update ::spec/sizes assoc dataset-id total-bytes)
@@ -68,14 +68,14 @@
   (fn [{{:keys [::client-spec/client
                 ::spec/time-period-filter
                 ::spec/datasets
-                ::spec/full-text-search] :as db} :db} [_ {:keys [credentials]}]]
-    (let [cloud-filter (utils/create-cloud-filter credentials)]
+                ::spec/full-text-search] :as db} :db} [_ {:keys [resources]}]]
+    (let [cloud-filter (utils/create-cloud-filter resources)]
       (when client
-        (merge {:db (assoc db ::spec/credentials credentials
+        (merge {:db (assoc db ::spec/credentials resources
                               ::spec/cloud-filter cloud-filter
                               ::spec/counts nil
                               ::spec/sizes nil)}
-               (fetch-data-cofx credentials client time-period-filter cloud-filter full-text-search datasets))))))
+               (fetch-data-cofx resources client time-period-filter cloud-filter full-text-search datasets))))))
 
 
 (reg-event-fx
@@ -144,10 +144,10 @@
                 ::spec/cloud-filter
                 ::spec/time-period-filter
                 ::spec/datasets
-                ::spec/full-text-search] :as db} :db} [_ {:keys [serviceOffers]}]]
+                ::spec/full-text-search] :as db} :db} [_ {:keys [resources]}]]
     (let []
       (assoc db ::spec/datasets datasets))
-    (let [datasets (into {} (map (juxt :id identity) serviceOffers))]
+    (let [datasets (into {} (map (juxt :id identity) resources))]
       (when client
         (merge {:db (assoc db ::spec/counts nil
                               ::spec/sizes nil

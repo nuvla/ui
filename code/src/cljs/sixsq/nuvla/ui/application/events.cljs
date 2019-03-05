@@ -28,6 +28,7 @@
   ::close-add-modal
   (fn [db _]
     (assoc db ::spec/add-modal-visible? false
+              ::spec/active-tab :project
               ::spec/add-data nil)))
 
 

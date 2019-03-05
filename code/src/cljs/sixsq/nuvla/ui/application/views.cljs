@@ -19,7 +19,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 
 (defn refresh-button
@@ -164,30 +165,37 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])
         visible? (subscribe [::application-subs/add-modal-visible?])
-        nav-path (subscribe [::main-subs/nav-path])]
-    (let [hide-fn #(dispatch [::application-events/close-add-modal])
-          submit-fn #(dispatch [::application-events/add-module])]
-      [ui/Modal {:open       @visible?
-                 :close-icon true
-                 :on-close   hide-fn}
+        nav-path (subscribe [::main-subs/nav-path])
+        active-tab (subscribe [::application-subs/active-tab])
+        add-data (subscribe [::application-subs/add-data])
+        initial-value @add-data]
+    (fn []
+      (let [hide-fn #(dispatch [::application-events/close-add-modal])
+            submit-fn #(dispatch [::application-events/add-module])]
+        [ui/Modal {:open       @visible?
+                   :close-icon true
+                   :on-close   hide-fn}
 
-       [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
+         [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
 
-       [ui/ModalContent {:scrolling true}
-        [ui/Header {:as "h3"} (utils/nav-path->module-path @nav-path)]
-        [ui/Tab
-         {:panes         [(pane tr :project project-pane)
-                          (pane tr :image image-pane)
-                          #_(pane tr :component component-pane)
-                          #_(pane tr :application application-pane)]
-          :on-tab-change (ui-callback/callback :activeIndex
-                                               (fn [index]
-                                                 (let [kw (index->kw index)]
-                                                   (dispatch [::application-events/set-active-tab kw]))))}]]
+         [ui/ModalContent {:scrolling true}
+          [ui/Header {:as "h3"} (utils/nav-path->module-path @nav-path)]
+          [ui/Tab
+           {:panes         [(pane tr :project project-pane)
+                            (pane tr :image image-pane)
+                            #_(pane tr :component component-pane)
+                            #_(pane tr :application application-pane)]
+            :on-tab-change (ui-callback/callback :activeIndex
+                                                 (fn [index]
+                                                   (let [kw (index->kw index)]
+                                                     (dispatch [::application-events/set-active-tab kw]))))}]]
 
-       [ui/ModalActions
-        [uix/Button {:text (@tr [:cancel]), :on-click hide-fn}]
-        [uix/Button {:text (@tr [:add]), :positive true, :on-click submit-fn}]]])))
+         (log/error "active-tab: " @active-tab "initial-value: "
+                    (@active-tab initial-value) "add-data value: " (@active-tab @add-data))
+         [ui/ModalActions
+          [uix/Button {:text (@tr [:cancel]), :on-click hide-fn}]
+          [uix/Button {:text     (@tr [:add]), :positive true,
+                       :disabled (identical? (@active-tab initial-value) (@active-tab @add-data)), :on-click submit-fn}]]]))))
 
 
 (defn format-module [{:keys [type name description] :as module}]

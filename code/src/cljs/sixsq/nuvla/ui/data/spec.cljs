@@ -6,10 +6,10 @@
 
 
 (s/def ::time-period (s/tuple any? any?))
+
 (s/def ::time-period-filter (s/nilable string?))
 
-
-(s/def ::service-offers any?)
+(s/def ::data-records any?)
 
 (s/def ::credentials (s/nilable (s/coll-of any? :kind vector?)))
 
@@ -31,15 +31,15 @@
 
 (s/def ::sizes any?)
 
-(s/def ::datasets (s/map-of string? map?))
+(s/def ::data-sets (s/map-of string? map?))
 
-(s/def ::service-offers-by-dataset (s/map-of string? vector?))
+(s/def ::data-records-by-data-set (s/map-of string? vector?))
 
-(s/def ::selected-dataset-ids (s/coll-of string? :kind set?))
+(s/def ::selected-data-set-ids (s/coll-of string? :kind set?))
 
 (s/def ::db (s/keys :req [::time-period
                           ::time-period-filter
-                          ::service-offers
+                          ::data-records
                           ::credentials
                           ::cloud-filter
                           ::application-select-visible?
@@ -49,9 +49,9 @@
                           ::full-text-search
                           ::counts
                           ::sizes
-                          ::datasets
-                          ::service-offers-by-dataset
-                          ::selected-dataset-ids
+                          ::data-sets
+                          ::data-records-by-data-set
+                          ::selected-data-set-ids
                           ]))
 
 (def default-time-period [(time/days-before 30)
@@ -59,7 +59,7 @@
 
 (def defaults {::time-period                 default-time-period
                ::time-period-filter          (utils/create-time-period-filter default-time-period)
-               ::service-offers              nil
+               ::data-records                nil
                ::credentials                 nil
                ::cloud-filter                nil
                ::application-select-visible? false
@@ -69,7 +69,7 @@
                ::full-text-search            nil
                ::counts                      nil
                ::sizes                       nil
-               ::datasets                    {}
-               ::service-offers-by-dataset   {}
-               ::selected-dataset-ids        #{}
+               ::data-sets                   {}
+               ::data-records-by-data-set    {}
+               ::selected-data-set-ids       #{}
                })

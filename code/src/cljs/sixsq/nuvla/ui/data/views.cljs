@@ -22,8 +22,8 @@
   (dispatch [::events/get-credentials]))
 
 
-(defn refresh-datasets []
-  (dispatch [::events/get-datasets]))
+(defn refresh-data-sets []
+  (dispatch [::events/get-data-sets]))
 
 
 (defn refresh-button
@@ -33,17 +33,17 @@
       [uix/MenuItemWithIcon
        {:name      (@tr [:refresh])
         :icon-name "refresh"
-        :on-click  #(dispatch [::events/get-datasets])}])))
+        :on-click  #(dispatch [::events/get-data-sets])}])))
 
 
 (defn process-button
   []
   (let [tr (subscribe [::i18n-subs/tr])
-        datasets (subscribe [::subs/selected-dataset-ids])]
+        data-sets (subscribe [::subs/selected-data-set-ids])]
     (fn []
       [uix/MenuItemWithIcon
        {:name      (@tr [:process])
-        :disabled  (not (seq @datasets))
+        :disabled  (not (seq @data-sets))
         :icon-name "rocket"
         :position  "left"
         :on-click  #(dispatch [::events/open-application-select-modal])}])))
@@ -242,10 +242,10 @@
            (@tr [:launch])]]]))))
 
 
-(defn format-dataset-title
-  [{:keys [id name] :as dataset}]
-  (let [datasets (subscribe [::subs/selected-dataset-ids])
-        selected? (@datasets id)]
+(defn format-data-set-title
+  [{:keys [id name] :as data-set}]
+  (let [data-sets (subscribe [::subs/selected-data-set-ids])
+        selected? (@data-sets id)]
     [ui/CardHeader {:style {:word-wrap "break-word"}}
      (or name id)
      (when selected? [ui/Label {:corner true
@@ -254,17 +254,17 @@
                                 :style  {:z-index 0}}])]))
 
 
-(defn format-dataset
-  [{:keys [id description] :as dataset}]
+(defn format-data-set
+  [{:keys [id description] :as data-set}]
   (let [tr (subscribe [::i18n-subs/tr])
         counts (subscribe [::subs/counts])
         sizes (subscribe [::subs/sizes])
         count (get @counts id "...")
         size (get @sizes id "...")]
     ^{:key id}
-    [ui/Card {:on-click #(dispatch [::events/toggle-dataset-id id])}
+    [ui/Card {:on-click #(dispatch [::events/toggle-data-set-id id])}
      [ui/CardContent
-      [format-dataset-title dataset]
+      [format-data-set-title data-set]
       [ui/CardDescription description]]
      [ui/CardContent {:extra true}
       [ui/Label
@@ -278,23 +278,23 @@
 (defn queries-cards-group
   []
   (let [tr (subscribe [::i18n-subs/tr])
-        datasets (subscribe [::subs/datasets])]
+        data-sets (subscribe [::subs/data-sets])]
     [ui/Segment style/basic
-     (if (seq @datasets)
+     (if (seq @data-sets)
        [ui/Message {:info true}
         [ui/Icon {:name "pin"}]
-        (@tr [:select-datasets])]
+        (@tr [:select-data-sets])]
        [ui/Message {:warning true}
         [ui/Icon {:name "warning sign"}]
-        (@tr [:no-datasets])])
-     (when (seq @datasets)
+        (@tr [:no-data-sets])])
+     (when (seq @data-sets)
        (vec (concat [ui/CardGroup]
-                    (map (fn [dataset]
-                           [format-dataset dataset])
-                         (vals @datasets)))))]))
+                    (map (fn [data-set]
+                           [format-data-set data-set])
+                         (vals @data-sets)))))]))
 
 
-(defn service-offer-resources
+(defn data-set-resources
   []
   [ui/Container {:fluid true}
    [control-bar]
@@ -306,8 +306,8 @@
 (defmethod panel/render :data
   [path]
 
-  ;; FIXME: find a better way to initialize credentials and datasets
+  ;; FIXME: find a better way to initialize credentials and data-sets
   (refresh-credentials)
-  (refresh-datasets)
+  (refresh-data-sets)
 
-  [service-offer-resources])
+  [data-set-resources])

@@ -10,6 +10,7 @@
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.history.views :as history]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
@@ -178,24 +179,25 @@
 
          [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
 
-         [ui/ModalContent {:scrolling true}
-          [ui/Header {:as "h3"} (utils/nav-path->module-path @nav-path)]
-          [ui/Tab
-           {:panes         [(pane tr :project project-pane)
-                            (pane tr :image image-pane)
-                            #_(pane tr :component component-pane)
-                            #_(pane tr :application application-pane)]
-            :on-tab-change (ui-callback/callback :activeIndex
-                                                 (fn [index]
-                                                   (let [kw (index->kw index)]
-                                                     (dispatch [::application-events/set-active-tab kw]))))}]]
+         [ui/ModalContent {:scrolling false}
+          [ui/CardGroup {:centered true}
+           [ui/Card {:on-click #(dispatch [::history-events/navigate "module-component"])}
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Project"]
+             [ui/Icon {:name "folder"
+                       :size :massive
+                       :centered true}]]]
+           [ui/Card {:on-click #(dispatch [::history-events/navigate "module-component"])}
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Component"]
+             [:div]
+             [ui/Icon {:name "th"
+                       :size :massive
+                       :centered true}]]]]]
 
          (log/error "active-tab: " @active-tab "initial-value: "
                     (@active-tab initial-value) "add-data value: " (@active-tab @add-data))
-         [ui/ModalActions
-          [uix/Button {:text (@tr [:cancel]), :on-click hide-fn}]
-          [uix/Button {:text     (@tr [:add]), :positive true,
-                       :disabled (identical? (@active-tab initial-value) (@active-tab @add-data)), :on-click submit-fn}]]]))))
+         [ui/ModalActions]]))))
 
 
 (defn format-module [{:keys [type name description] :as module}]

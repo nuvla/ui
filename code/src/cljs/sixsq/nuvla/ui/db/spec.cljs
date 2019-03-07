@@ -15,6 +15,7 @@
     [sixsq.nuvla.ui.i18n.spec :as i18n]
     [sixsq.nuvla.ui.main.spec :as main]
     [sixsq.nuvla.ui.messages.spec :as messages]
+    [sixsq.nuvla.ui.module-component.spec :as module-component]
     [sixsq.nuvla.ui.nuvlabox-detail.spec :as nuvlabox-detail]
     [sixsq.nuvla.ui.nuvlabox.spec :as nuvlabox]))
 
@@ -31,6 +32,7 @@
                      ::docs/db
                      ::i18n/db
                      ::main/db
+                     ::module-component/db
                      ::messages/db
                      ::nuvlabox/db
                      ::nuvlabox-detail/db))
@@ -50,5 +52,6 @@
          i18n/defaults
          main/defaults
          messages/defaults
+         module-component/defaults
          nuvlabox/defaults
          nuvlabox-detail/defaults))

@@ -7,8 +7,7 @@
     [sixsq.nuvla.ui.authn.spec :as authn-spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.client.spec :as client-spec]
-    [sixsq.nuvla.ui.history.effects :as history-fx]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.history.effects :as history-fx]))
 
 
 (reg-event-fx
@@ -21,17 +20,12 @@
 (reg-event-fx
   ::set-session
   (fn [{:keys [db]} [_ {:keys [username] :as session}]]
-    (let [redirect-uri (::authn-spec/redirect-uri db)
-          client (::client-spec/client db)]
+    (let [redirect-uri (::authn-spec/redirect-uri db)]
       (cond-> {:db (assoc db ::authn-spec/session session)}
 
-              (and session redirect-uri)
-              (assoc ::history-fx/navigate-js-location [redirect-uri])
+              (and session redirect-uri) (assoc ::history-fx/navigate-js-location [redirect-uri])
 
-              session
-              (assoc ::cimi-api-fx/current-user-params
-                     [client username #(dispatch [::set-current-user-params %])]
-                     ::authn-fx/automatic-logout-at-session-expiry [session])))))
+              session (assoc ::authn-fx/automatic-logout-at-session-expiry [session])))))
 
 
 (reg-event-fx
@@ -47,19 +41,12 @@
                   :on-failure      [::set-error-message]}}))
 
 
-(reg-event-db
-  ::set-current-user-params
-  (fn [db [_ user]]
-    (assoc db ::authn-spec/current-user-params user)))
-
-
 (reg-event-fx
   ::logout
   (fn [cofx _]
     (when-let [client (-> cofx :db ::client-spec/client)]
       {::cimi-api-fx/logout [client (fn []
-                                      (dispatch [::set-session nil])
-                                      (dispatch [::set-current-user-params nil]))]})))
+                                      (dispatch [::set-session nil]))]})))
 
 
 (reg-event-db

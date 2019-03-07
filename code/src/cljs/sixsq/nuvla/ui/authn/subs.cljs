@@ -2,33 +2,28 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.authn.spec :as authn-spec]
+    [sixsq.nuvla.ui.authn.spec :as spec]
     [sixsq.nuvla.ui.authn.utils :as utils]))
 
 
 (reg-sub
   ::open-modal
-  ::authn-spec/open-modal)
+  ::spec/open-modal)
 
 
 (reg-sub
   ::selected-method-group
-  ::authn-spec/selected-method-group)
+  ::spec/selected-method-group)
 
 
 (reg-sub
   ::session
-  ::authn-spec/session)
+  ::spec/session)
 
 
 (reg-sub
   ::loading?
-  ::authn-spec/loading?)
-
-
-(reg-sub
-  ::current-user-params
-  ::authn-spec/current-user-params)
+  ::spec/loading?)
 
 
 (reg-sub
@@ -54,24 +49,24 @@
 
 (reg-sub
   ::error-message
-  ::authn-spec/error-message)
+  ::spec/error-message)
 
 
 (reg-sub
   ::success-message
-  ::authn-spec/success-message)
+  ::spec/success-message)
 
 
 (reg-sub
   ::redirect-uri
-  ::authn-spec/redirect-uri)
+  ::spec/redirect-uri)
 
 
 (reg-sub
   ::server-redirect-uri
-  ::authn-spec/server-redirect-uri)
+  ::spec/server-redirect-uri)
 
 
 (reg-sub
   ::form-id
-  ::authn-spec/form-id)
+  ::spec/form-id)

@@ -55,7 +55,6 @@
   (let [selected-credential (subscribe [::subs/selected-credential])]
     ^{:key id}
     (let [{selected-id :id} @selected-credential
-
           options (assoc (item-options credential) :active (= id selected-id))
           on-click-fn #(dispatch [::events/set-selected-credential credential])]
 

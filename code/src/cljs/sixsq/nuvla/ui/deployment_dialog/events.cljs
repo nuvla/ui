@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.deployment-dialog.events
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.client.spec :as client-spec]
@@ -37,10 +36,10 @@
   (fn [{{:keys [::client-spec/client
                 ::spec/deployment
                 ::data-spec/time-period-filter
-                ::spec/cloud-filter
+                ::spec/infra-service-filter
                 ::data-spec/content-type-filter] :as db} :db} [_ {:keys [id] :as credential}]]
     (let [updated-deployment (utils/update-parameter-in-deployment "credential.id" id deployment)
-          filter (data-utils/join-and time-period-filter cloud-filter content-type-filter)
+          filter (data-utils/join-and time-period-filter infra-service-filter content-type-filter)
           selected-keys (map keyword (::data-spec/selected-data-set-ids db))
           datasets-map (select-keys (::data-spec/data-records-by-data-set db) selected-keys)
 
@@ -50,10 +49,10 @@
                                         (assoc-in [:module :content :mounts] (utils/service-offers->mounts %)))])]
       (cond-> {:db (assoc db ::spec/selected-credential credential
                              ::spec/deployment updated-deployment)}
-              cloud-filter (assoc ::cimi-api-fx/search
-                                  [client :service-offer {:filter filter,
-                                                          :select "id, data:bucket, data:nfsIP, data:nfsDevice"}
-                                                        callback-data])))))
+              infra-service-filter (assoc ::cimi-api-fx/search
+                                          [client :data-record {:filter filter,
+                                                                :select "id, data:bucket, data:nfsIP, data:nfsDevice"}
+                                           callback-data])))))
 
 
 (reg-event-db
@@ -82,12 +81,8 @@
   (fn [{{:keys [::client-spec/client] :as db} :db :as cofx} [_ id first-step do-not-open-modal?]]
     (when client
       (when (= :data first-step)
-        (dispatch [::get-service-offers-by-cred]))
-      (let [data (if (str/starts-with? id "module/")
-                   {:template {:module {:href id}}}
-                   {:name               (str "Deployment from " id)
-                    :description        (str "A deployment for the deployment template " id)
-                    :template {:href id}})
+        (dispatch [::get-data-records-by-cred]))
+      (let [data {:module {:href id}}
             add-depl-callback (fn [response]
                                 (if (instance? js/Error response)
                                   (let [{:keys [status message]} (response/parse-ex-info response)]
@@ -105,17 +100,17 @@
                                      ::spec/deploy-modal-visible? (not (boolean do-not-open-modal?))
                                      ::spec/active-step (or first-step :data)
                                      ::spec/data-step-active? (= first-step :data)
-                                     ::spec/cloud-filter nil
-                                     ::spec/selected-cloud nil
-                                     ::spec/connectors nil
-                                     ::spec/data-clouds nil)
+                                     ::spec/infra-service-filter nil
+                                     ::spec/selected-infra-service nil
+                                     ::spec/infra-services nil
+                                     ::spec/data-infra-services nil)
          ::cimi-api-fx/add [client "deployment" data add-depl-callback]}))))
 
 
 (reg-event-fx
   ::get-credentials
   (fn [{{:keys [::client-spec/client
-                ::spec/cloud-filter] :as db} :db :as cofx} _]
+                ::spec/infra-service-filter] :as db} :db :as cofx} _]
     (when client
       (let [search-creds-callback #(dispatch [::set-credentials (get % :resources [])])]
         {:db                  (assoc db ::spec/loading-credentials? true
@@ -124,8 +119,8 @@
          ::cimi-api-fx/search [client :credential
                                {:select "id, name, description, created, type"
                                 :filter (data-utils/join-and
-                                          cloud-filter
-                                          (str "type^='cloud-cred'"))} search-creds-callback]}))))
+                                          infra-service-filter
+                                          (str "type^='infrastructure-service-'"))} search-creds-callback]}))))
 
 
 (reg-event-fx
@@ -170,51 +165,50 @@
 
 
 (reg-event-db
-  ::set-connectors
-  (fn [db [_ {:keys [connectors]}]]
-    (assoc db ::spec/connectors (into {} (map (juxt :id identity) connectors)))))
+  ::set-infra-services
+  (fn [db [_ {infra-services :resources}]]
+    (assoc db ::spec/infra-services (into {} (map (juxt :id identity) infra-services)))))
 
 
-(defn set-cloud-and-filter
-  [db cloud]
+(defn set-infra-service-and-filter
+  [db infra-service]
   (dispatch [::get-credentials])
-  (assoc db ::spec/selected-cloud cloud
-            ::spec/cloud-filter (str "(connector/href='" cloud "' or connector/href='connector/" cloud "')")))
+  (assoc db ::spec/selected-infra-service infra-service
+            ::spec/infra-service-filter (str "services='" infra-service "'")))
 
 
 (reg-event-fx
-  ::set-data-clouds
+  ::set-data-infra-services
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ data-clouds-response]]
-    (let [buckets (get-in data-clouds-response [:aggregations (keyword "terms:connector/href") :buckets])
-          clouds (map :key buckets)
-          filter (apply data-utils/join-or (map #(str "id='" % "'") clouds))]
+    (let [buckets (get-in data-clouds-response [:aggregations (keyword "terms:infrastructure-service/href") :buckets])
+          infra-services (map :key buckets)
+          filter (apply data-utils/join-or (map #(str "id='" % "'") infra-services))]
 
-      {:db                  (cond-> (assoc db ::spec/data-clouds buckets)
-                                    (= 1 (count clouds)) (set-cloud-and-filter (first clouds)))
-       ::cimi-api-fx/search [client :connector
+      {:db                  (cond-> (assoc db ::spec/data-infra-services buckets)
+                                    (= 1 (count infra-services)) (set-infra-service-and-filter (first infra-services)))
+       ::cimi-api-fx/search [client :infrastructure-service
                              {:filter filter
-                              :select "id, name, description, cloudServiceType"} #(dispatch [::set-connectors %])]})))
+                              :select "id, name, description, type"} #(dispatch [::set-infra-services %])]})))
 
 
 (reg-event-fx
-  ::get-service-offers-by-cred
+  ::get-data-records-by-cred
   (fn [{{:keys [::client-spec/client
                 ::data-spec/time-period-filter
-                ::data-spec/cloud-filter
+                ::data-spec/infra-services-filter
                 ::data-spec/content-type-filter
                 ::data-spec/credentials] :as db} :db} _]
     (when client
-
-      (let [filter (data-utils/join-and time-period-filter cloud-filter content-type-filter)]
+      (let [filter (data-utils/join-and time-period-filter infra-services-filter content-type-filter)]
         (-> {:db db}
             (assoc ::cimi-api-fx/search
-                   [client :service-offer {:filter      filter
-                                           :last        0
-                                           :aggregation "terms:connector/href"}
-                    #(dispatch [::set-data-clouds %])]))))))
+                   [client :data-record {:filter      filter
+                                         :last        0
+                                         :aggregation "terms:infrastructure-service/href"}
+                    #(dispatch [::set-data-infra-services %])]))))))
 
 
 (reg-event-db
-  ::set-cloud-filter
+  ::set-infra-service-filter
   (fn [db [_ cloud]]
-    (set-cloud-and-filter db cloud)))
+    (set-infra-service-and-filter db cloud)))

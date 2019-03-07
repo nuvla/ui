@@ -43,12 +43,15 @@
        "')"))
 
 
-(defn create-cloud-filter
+(defn create-infra-service-filter
   [credentials]
-  (let [clouds (map (comp general-utils/resource-id->uuid :href :connector) credentials)]
-    (some->> clouds
+  (let [creds-services (->> credentials
+                            (map :services)
+                            (remove nil?)
+                            (sequence cat))]
+    (some->> creds-services
              (seq)
-             (map #(str "connector/href='connector/" % "'"))
+             (map #(str "infrastructure-service/href='" % "'"))
              (str/join " or "))))
 
 

@@ -12,15 +12,15 @@
 (s/def ::credentials (s/nilable (s/coll-of any? :kind vector?)))
 (s/def ::selected-credential any?)
 
-(s/def ::data-clouds any?)
-(s/def ::selected-cloud (s/nilable string?))
-(s/def ::cloud-filter (s/nilable string?))
+(s/def ::data-infra-services any?)
+(s/def ::selected-infra-service (s/nilable string?))
+(s/def ::infra-service-filter (s/nilable string?))
 
-(s/def ::connectors any?)
+(s/def ::infra-services any?)
 
-(s/def ::step-id #{:data :credentials :size :parameters :summary})
+(s/def ::step-id #{:data :credentials :parameters :summary})
 
-(def steps [:data :credentials :size :parameters :summary])
+(def steps [:data :credentials :parameters :summary])
 
 (s/def ::active-step ::step-id)
 
@@ -42,35 +42,33 @@
                           ::loading-credentials?
                           ::credentials
                           ::selected-credential
-                          ::data-clouds
-                          ::selected-cloud
-                          ::cloud-filter
-                          ::connectors
+                          ::data-infra-services
+                          ::selected-infra-service
+                          ::infra-service-filter
+                          ::infra-services
 
                           ::active-step
                           ::data-step-active?
                           ::step-states]))
 
 
-(def defaults {::deploy-modal-visible? false
-               ::loading-deployment?   false
-               ::deployment            nil
-               ::loading-credentials?  false
-               ::credentials           nil
-               ::selected-credential   nil
-               ::data-clouds           nil
-               ::selected-cloud        nil
-               ::cloud-filter          nil
-               ::connectors            nil
+(def defaults {::deploy-modal-visible?  false
+               ::loading-deployment?    false
+               ::deployment             nil
+               ::loading-credentials?   false
+               ::credentials            nil
+               ::selected-credential    nil
+               ::data-infra-services    nil
+               ::selected-infra-service nil
+               ::infra-service-filter   nil
+               ::infra-services         nil
 
-               ::active-step           :data
-               ::data-step-active      true
-               ::step-states           {:data        {:step-id :data
+               ::active-step            :data
+               ::data-step-active       true
+               ::step-states            {:data       {:step-id :data
                                                       :icon    "database"}
                                         :credentials {:step-id :credentials
                                                       :icon    "key"}
-                                        :size        {:step-id :size
-                                                      :icon    "expand arrows alternate"}
                                         :parameters  {:step-id :parameters
                                                       :icon    "list alternate outline"}
                                         :summary     {:step-id :summary

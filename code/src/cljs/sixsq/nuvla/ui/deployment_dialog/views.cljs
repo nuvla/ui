@@ -7,7 +7,6 @@
     [sixsq.nuvla.ui.deployment-dialog.views-credentials :as credentials-step]
     [sixsq.nuvla.ui.deployment-dialog.views-data :as data-step]
     [sixsq.nuvla.ui.deployment-dialog.views-parameters :as parameters-step]
-    [sixsq.nuvla.ui.deployment-dialog.views-size :as size-step]
     [sixsq.nuvla.ui.deployment-dialog.views-summary :as summary-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -18,7 +17,6 @@
   [{:keys [step-id completed? icon] :as step-state}]
   (let [tr (subscribe [::i18n-subs/tr])
         active-step (subscribe [::subs/active-step])
-        size-completed? (subscribe [::subs/size-completed?])
         credentials-completed? (subscribe [::subs/credentials-completed?])
         parameters-completed? (subscribe [::subs/parameters-completed?])
         data-completed? (subscribe [::subs/data-completed?])]
@@ -26,7 +24,6 @@
               :on-click  #(dispatch [::events/set-active-step step-id])
               :completed (case step-id
                            :data @data-completed?
-                           :size @size-completed?
                            :credentials @credentials-completed?
                            :parameters @parameters-completed?
                            completed?)
@@ -41,7 +38,6 @@
   (case active-step
     :data [data-step/content]
     :credentials [credentials-step/content]
-    :size [size-step/content]
     :parameters [parameters-step/content]
     :summary [summary-step/content]
     nil))
@@ -59,7 +55,6 @@
 
         data-completed? (subscribe [::subs/data-completed?])
         credentials-completed? (subscribe [::subs/credentials-completed?])
-        size-completed? (subscribe [::subs/size-completed?])
         parameters-completed? (subscribe [::subs/parameters-completed?])]
     (fn [show-data?]
       (let [ready? (and (not @loading?) @deployment)
@@ -71,7 +66,6 @@
             launch-disabled? (or (not @deployment)
                                  (and (not @data-completed?) @data-step-active?)
                                  (not @credentials-completed?)
-                                 (not @size-completed?)
                                  (not @parameters-completed?))]
 
         [ui/Modal {:open       @visible?

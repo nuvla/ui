@@ -78,7 +78,7 @@
                    :header      (or name key)
                    :description description
                    :doc_count   doc_count}
-          on-click-fn #(dispatch [::events/set-cloud-filter key])]
+          on-click-fn #(dispatch [::events/set-infra-service-filter key])]
 
       [cloud-list-item (assoc options :on-click-fn on-click-fn)])))
 

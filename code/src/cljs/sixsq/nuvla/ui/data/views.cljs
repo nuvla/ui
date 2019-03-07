@@ -199,7 +199,6 @@
         deployment (subscribe [::deployment-dialog-subs/deployment])
         data-completed? (subscribe [::deployment-dialog-subs/data-completed?])
         credentials-completed? (subscribe [::deployment-dialog-subs/credentials-completed?])
-        size-completed? (subscribe [::deployment-dialog-subs/size-completed?])
         parameters-completed? (subscribe [::deployment-dialog-subs/parameters-completed?])]
     (fn []
       (let [hide-fn #(do
@@ -216,7 +215,6 @@
             launch-disabled? (or (not @deployment)
                                  (and (not @data-completed?) @data-step-active?)
                                  (not @credentials-completed?)
-                                 (not @size-completed?)
                                  (not @parameters-completed?))]
 
         [ui/Modal {:open       @visible?

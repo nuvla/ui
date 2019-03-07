@@ -59,42 +59,24 @@
 (reg-sub
   ::data-clouds
   (fn [db]
-    (::spec/data-clouds db)))
+    (::spec/data-infra-services db)))
 
 
 (reg-sub
   ::selected-cloud
   (fn [db]
-    (::spec/selected-cloud db)))
+    (::spec/selected-infra-service db)))
 
 
 (reg-sub
   ::connectors
   (fn [db]
-    (::spec/connectors db)))
+    (::spec/infra-services db)))
 
 
 ;;
 ;; dynamic subscriptions to manage flow of derived data
 ;;
-
-(reg-sub
-  ::size
-  :<- [::deployment]
-  (fn [deployment _]
-    (let [{:keys [cpu ram disk]} (-> deployment :module :content)]
-      (cond-> {}
-              cpu (assoc :cpu cpu)
-              ram (assoc :ram ram)
-              disk (assoc :disk disk)))))
-
-
-(reg-sub
-  ::size-completed?
-  :<- [::size]
-  (fn [{:keys [cpu ram disk] :as size} _]
-    (boolean (and cpu ram disk
-                  (every? pos? (vals size))))))
 
 
 (reg-sub

@@ -6,7 +6,6 @@
     [sixsq.nuvla.ui.deployment-dialog.views-credentials :as credentials-step]
     [sixsq.nuvla.ui.deployment-dialog.views-data :as data-step]
     [sixsq.nuvla.ui.deployment-dialog.views-parameters :as parameters-step]
-    [sixsq.nuvla.ui.deployment-dialog.views-size :as size-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
@@ -40,6 +39,5 @@
       (when @data-step-active?
         [data-step/summary-row])
       [credentials-step/summary-row]
-      [size-step/summary-row]
       [parameters-step/summary-row]
       ]]))

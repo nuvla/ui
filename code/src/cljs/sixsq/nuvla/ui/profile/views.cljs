@@ -66,8 +66,7 @@
 (defn session-info
   []
   (let [tr (subscribe [::i18n-subs/tr])
-        session (subscribe [::authn-subs/session])
-        user-params (subscribe [::authn-subs/current-user-params])]
+        session (subscribe [::authn-subs/session])]
     [ui/Segment style/basic
      (when @session
        [cc/metadata
@@ -81,13 +80,6 @@
              process-session-data
              (map data-to-tuple)
              (map tuple-to-row))])
-     (when @user-params
-       (table/definition-table
-         (->> @user-params
-              cimi-api-utils/remove-common-attrs
-              format-ssh-keys
-              (map data-to-tuple)
-              (map tuple-to-row))))
      (when-not @session
        [:p (@tr [:no-session])])]))
 

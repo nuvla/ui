@@ -13,7 +13,7 @@
 
 (s/def ::credentials (s/nilable (s/coll-of any? :kind vector?)))
 
-(s/def ::cloud-filter (s/nilable string?))
+(s/def ::infra-services-filter (s/nilable string?))
 
 (s/def ::content-type-filter (s/nilable string?))
 
@@ -41,7 +41,7 @@
                           ::time-period-filter
                           ::data-records
                           ::credentials
-                          ::cloud-filter
+                          ::infra-services-filter
                           ::application-select-visible?
                           ::loading-applications?
                           ::applications
@@ -61,7 +61,7 @@
                ::time-period-filter          (utils/create-time-period-filter default-time-period)
                ::data-records                nil
                ::credentials                 nil
-               ::cloud-filter                nil
+               ::infra-services-filter       nil
                ::application-select-visible? false
                ::loading-applications?       false
                ::applications                nil

@@ -97,7 +97,9 @@
           [uix/Button {:text     (@tr [:cancel])
                        :on-click hide-fn
                        :disabled (not (:id @deployment))}]
-          [uix/Button {:text     (@tr [:launch])
-                       :primary  true
-                       :disabled launch-disabled?
-                       :on-click submit-fn}]]]))))
+          [ui/Button {:primary  true
+                      :disabled launch-disabled?
+                      :on-click submit-fn}
+           [ui/Icon {:name     "rocket"
+                     :disabled launch-disabled?}]
+           (@tr [:launch])]]]))))

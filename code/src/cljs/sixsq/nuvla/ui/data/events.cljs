@@ -64,7 +64,7 @@
 (reg-event-db
   ::set-data
   (fn [db [_ data-set-id response]]
-    (let [doc-count (get-in response [:aggregations :count:id :value])
+    (let [doc-count (get-in response [:aggregations :value_count:id :value])
           total-bytes (get-in response [:aggregations :sum:data:bytes :value])
           data-record-ids (mapv :id (:resources response))]
       (-> db

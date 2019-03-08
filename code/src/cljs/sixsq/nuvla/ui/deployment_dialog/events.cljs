@@ -37,16 +37,18 @@
                 ::spec/deployment
                 ::data-spec/time-period-filter
                 ::spec/infra-service-filter
-                ::data-spec/content-type-filter] :as db} :db} [_ {:keys [id] :as credential}]]
-    (let [updated-deployment (utils/update-parameter-in-deployment "credential.id" id deployment)
+                ::spec/selected-infra-service
+                ::data-spec/content-type-filter] :as db} :db} [_ {credential-id :id :as credential}]]
+    (let [updated-deployment (assoc deployment :credential-id credential-id
+                                               :infrastructure-service-id selected-infra-service)
           filter (data-utils/join-and time-period-filter infra-service-filter content-type-filter)
           selected-keys (map keyword (::data-spec/selected-data-set-ids db))
           datasets-map (select-keys (::data-spec/data-records-by-data-set db) selected-keys)
 
           callback-data #(dispatch [::set-deployment
                                     (-> updated-deployment
-                                        (assoc :serviceOffers (utils/invert-dataset-map datasets-map))
-                                        (assoc-in [:module :content :mounts] (utils/service-offers->mounts %)))])]
+                                        (assoc :data-records (utils/invert-dataset-map datasets-map))
+                                        (assoc-in [:module :content :mounts] (utils/data-records->mounts %)))])]
       (cond-> {:db (assoc db ::spec/selected-credential credential
                              ::spec/deployment updated-deployment)}
               infra-service-filter (assoc ::cimi-api-fx/search
@@ -110,7 +112,7 @@
 (reg-event-fx
   ::get-credentials
   (fn [{{:keys [::client-spec/client
-                ::spec/infra-service-filter] :as db} :db :as cofx} _]
+                ::spec/infra-services-filter] :as db} :db :as cofx} _]
     (when client
       (let [search-creds-callback #(dispatch [::set-credentials (get % :resources [])])]
         {:db                  (assoc db ::spec/loading-credentials? true
@@ -119,7 +121,7 @@
          ::cimi-api-fx/search [client :credential
                                {:select "id, name, description, created, type"
                                 :filter (data-utils/join-and
-                                          infra-service-filter
+                                          infra-services-filter
                                           (str "type^='infrastructure-service-'"))} search-creds-callback]}))))
 
 
@@ -174,7 +176,8 @@
   [db infra-service]
   (dispatch [::get-credentials])
   (assoc db ::spec/selected-infra-service infra-service
-            ::spec/infra-service-filter (str "services='" infra-service "'")))
+            ::spec/infra-services-filter (str "services='" infra-service "'")
+            ::spec/infra-service-filter (str "infrastructure-service='" infra-service "'")))
 
 
 (reg-event-fx

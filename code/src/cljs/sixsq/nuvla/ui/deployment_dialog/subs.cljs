@@ -87,20 +87,19 @@
 
 
 (reg-sub
-  ::filtered-input-parameters
+  ::input-parameters
   (fn [_ _]
     [(subscribe [::deployment])
      (subscribe [::selected-credential])])
   (fn [[deployment selected-credential] _]
-    (let [all-params (-> deployment :module :content :inputParameters)]
-      (utils/remove-input-params all-params (utils/params-to-remove-fn selected-credential)))))
+    (-> deployment :module :content :inputParameters)))
 
 
 (reg-sub
   ::parameters-completed?
-  :<- [::filtered-input-parameters]
-  (fn [filtered-params _]
-    (every? #(not (str/blank? (:value %))) filtered-params)))
+  :<- [::input-parameters]
+  (fn [input-params _]
+    (every? #(not (str/blank? (:value %))) input-params)))
 
 
 (reg-sub

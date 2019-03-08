@@ -13,10 +13,10 @@
 (defn summary-row
   []
   (let [tr (subscribe [::i18n-subs/tr])
-        filtered-params (subscribe [::subs/filtered-input-parameters])
+        input-params (subscribe [::subs/input-parameters])
         completed? (subscribe [::subs/parameters-completed?])
 
-        description (str "Number of parameters: " (count @filtered-params))
+        description (str "Number of parameters: " (count @input-params))
         on-click-fn #(dispatch [::events/set-active-step :parameters])]
 
     ^{:key "parameters"}
@@ -51,9 +51,9 @@
 (defn content
   []
   (let [tr (subscribe [::i18n-subs/tr])
-        filtered-params (subscribe [::subs/filtered-input-parameters])]
+        input-params (subscribe [::subs/input-parameters])]
 
-    (if (seq @filtered-params)
+    (if (seq @input-params)
       (vec (concat [ui/Form]
-                   (map as-form-input @filtered-params)))
+                   (map as-form-input @input-params)))
       [ui/Message {:success true} (@tr [:no-input-parameters])])))

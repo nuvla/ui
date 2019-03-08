@@ -1,4 +1,5 @@
-(ns sixsq.nuvla.ui.deployment-dialog.utils)
+(ns sixsq.nuvla.ui.deployment-dialog.utils
+  (:require [taoensso.timbre :as log]))
 
 
 (defn matches-parameter-name?
@@ -27,37 +28,21 @@
        (update-parameter-in-list name value)
        (assoc-in deployment [:module :content :inputParameters])))
 
-
-(defn params-to-remove-fn
-  "Creates a function (based on the credential) to identify input parameters
-   that should be removed from the UI."
-  [selected-credential]
-  (let [is-not-docker? (not= (:type selected-credential) "cloud-cred-docker")]
-    (cond-> #{"credential.id"}
-            is-not-docker? (conj "cloud.node.publish.ports"))))
-
-
-(defn remove-input-params
-  "Removes the input parameters from the collection that are identified by the
-   remove-param? function."
-  [collection remove-param?]
-  (remove #(remove-param? (:parameter %)) collection))
-
-
 (defn kw->str
   "Convert a keyword to a string, retaining any namespace."
   [kw]
   (subs (str kw) 1))
 
 
-(defn service-offers->mounts
-  [service-offers]
-  (->> service-offers
-       :serviceOffers
-       (map (fn [service-offer]
-              [((keyword "data:nfsIP") service-offer)
-               ((keyword "data:nfsDevice") service-offer)
-               ((keyword "data:bucket") service-offer)]))
+(defn data-records->mounts
+  [data-records]
+  (log/error "data-records->mounts data-records" data-records )
+  (->> data-records
+       :resources
+       (map (fn [data-record]
+              [((keyword "data:nfsIP") data-record)
+               ((keyword "data:nfsDevice") data-record)
+               ((keyword "data:bucket") data-record)]))
        distinct
        (map (fn [[ip device bucket]]
               (str "type=volume,volume-opt=o=addr=" ip

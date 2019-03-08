@@ -41,7 +41,7 @@
                   :on-click on-click-fn}
      [ui/TableCell {:collapsing true}
       (if @completed?
-        [ui/Icon {:name "key", :size "large", :vertical-align "middle"}]
+        [ui/Icon {:name "key", :size "large"}]
         [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
      [ui/TableCell {:collapsing true} (@tr [:credentials])]
      [ui/TableCell [:div

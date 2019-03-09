@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/nuvla/ui",
   "devDependencies": {
-    "shadow-cljs": "2.8.5",
+    "shadow-cljs": "2.8.15",
     "source-map-support": "^0.5.10"
   },
   "dependencies": {

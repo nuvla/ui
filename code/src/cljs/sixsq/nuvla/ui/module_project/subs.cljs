@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.module-component.subs
+(ns sixsq.nuvla.ui.module-project.subs
   (:require
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.module-component.spec :as spec]))
@@ -28,23 +28,3 @@
   ::logo-url-modal-visible?
   (fn [db]
     (::spec/logo-url-modal-visible? db)))
-
-(reg-sub
-  ::save-modal-visible?
-  (fn [db]
-    (::spec/save-modal-visible? db)))
-
-(reg-sub
-  ::port-mappings
-  (fn [db]
-    (::spec/port-mappings db)))
-
-(reg-sub
-  ::port-mappings-source
-  (fn [db]
-    (::spec/port-mappings db)))
-
-(reg-sub
-  ::page-changed?
-  (fn [db]
-    (::spec/page-changed? db)))

@@ -5,7 +5,8 @@
     [cljs.core.async :refer [<!]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-fx]]
-    [sixsq.nuvla.client.api :as api]))
+    [sixsq.nuvla.client.api :as api]
+    [taoensso.timbre :as log]))
 
 
 (reg-fx
@@ -29,11 +30,11 @@
                      project-metadata)
 
             children (when (= type "PROJECT")
-                       (:resources (<! (api/search client "module" {:filter children-filter}))))
+                       (:resources (<! (api/search client "module" {}))))
 
             module-data (cond-> module
                                 children (assoc :children children))]
-
+(log/infof "children %s" children)
         (callback module-data)))))
 
 

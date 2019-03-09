@@ -181,7 +181,7 @@
 
          [ui/ModalContent {:scrolling false}
           [ui/CardGroup {:centered true}
-           [ui/Card {:on-click #(dispatch [::history-events/navigate "module-component"])}
+           [ui/Card {:on-click #(dispatch [::history-events/navigate "module-project"])}
             [ui/CardContent {:text-align :center}
              [ui/Header "Project"]
              [ui/Icon {:name "folder"

@@ -76,5 +76,27 @@
 (reg-event-db
   ::page-changed?
   (fn [db [_ has-change?]]
-    (log/infof "dirty %s" has-change?)
     (assoc db ::spec/page-changed? has-change?)))
+
+
+(reg-event-db
+  ::commit-message
+  (fn [db [_ msg]]
+    (assoc db ::spec/commit-message msg)))
+
+
+(reg-event-db
+  ::open-save-modal
+  (fn [db _]
+    (assoc db ::spec/save-modal-visible? true)))
+
+
+(reg-event-db
+  ::close-save-modal
+  (fn [db _]
+    (assoc db ::spec/save-modal-visible? false)))
+
+
+;(reg-event-fx
+;  ::save-module
+;  (fn [_] {}))

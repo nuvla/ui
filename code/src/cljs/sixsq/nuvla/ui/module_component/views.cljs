@@ -50,8 +50,7 @@
         {:name     (@tr [:save])
          ;:icon-name "add"
          :disabled (not @page-changed?)
-         ;:on-click nil                                      ;#(dispatch [::application-events/open-add-modal])
-         }]
+         :on-click #(dispatch [::events/open-save-modal])}]
        [refresh-button]])))
 
 
@@ -60,14 +59,14 @@
         name             (subscribe [::subs/name])
         logo-url         (subscribe [::subs/logo-url])
         default-logo-url (subscribe [::subs/default-logo-url])]
-    [:div.ui.items
-     [:div.item
-      [:div.image.small {:style {:max-height :auto}}
-       [:img {:src (or @logo-url @default-logo-url)}]
+    [ui/Grid {:style {:margin-bottom 5}}
+     [ui/GridRow {:reversed :computer}
+      [ui/GridColumn {:computer 2}
+       [ui/Image {:src (or @logo-url @default-logo-url)}]
        [ui/Button {:fluid    true
                    :on-click #(dispatch [::events/open-logo-url-modal])}
         (@tr [:module-change-logo])]]
-      [:div.content
+      [ui/GridColumn {:computer 14}
        ;[:div (pr-str @(subscribe [::subs/name]) @(subscribe [::subs/description]))]
        [ui/Input {:name        "name"
                   :value       @name
@@ -98,7 +97,7 @@
          [ui/Dropdown {:name          "restart-policy"
                        :inline        true
                        :default-value :always
-                       ;:on-change     (ui-callback/value #(reset! state %))
+                       :on-change     (ui-callback/dropdown #(log/infof "Dropdown: %s" %))
                        :options       [{:key "Always", :value "always", :text "Always"}
                                        {:key "Never", :value "never", :text "Never"}]}]]
         [:span " "]
@@ -111,30 +110,30 @@
   (let [{source      :source
          destination :destination
          port-type   :port-type :or {source "" destination "" port-type "TCP"}} mapping]
-    ^{:key id}
-    [:div.item
-     ^{:key (str id "-source")}
-     [ui/Input {:name        (str "source" "-" id)
-                :placeholder "source"
-                :value       source                         ;(or source "")
-                :on-change   (ui-callback/input-callback #(dispatch [::events/update-mapping-source id %]))}]
-     [:span " : "]
-     ^{:key (str id "-destination")}
-     [ui/Input {:name        (str "destination" "-" id)
-                :placeholder "destination"
-                :value       destination                    ;(or destination "")
-                :on-change   (ui-callback/input-callback #(dispatch [::events/update-mapping-destination id %]))}]
-     [:span " / "]
-     ^{:key (str id "-port-type")}
-     [ui/Label
-      [ui/Dropdown {:name      (str "port-type" "-" id)
-                    :inline    true
-                    :value     port-type
-                    :options   [{:key "TCP", :value "TCP", :text "TCP"}
-                                {:key "UDP", :value "UDP", :text "UDP"}]
-                    :on-change (ui-callback/input-callback #(dispatch [::events/update-mapping-port-type id %]))}]]
-     ^{:key (str id "-trash")}
-     [:div.right.floated.content
+    [ui/GridRow {:key id}
+     [ui/GridColumn {:floated :left
+                     :width   11}
+      [ui/Input {:name        (str "source" "-" id)
+                 :placeholder "source"
+                 :value       source                        ;(or source "")
+                 :on-change   (ui-callback/input-callback #(dispatch [::events/update-mapping-source id %]))}]
+      [:span " : "]
+      [ui/Input {:name        (str "destination" "-" id)
+                 :placeholder "destination"
+                 :value       destination                   ;(or destination "")
+                 :on-change   (ui-callback/input-callback #(dispatch [::events/update-mapping-destination id %]))}]
+      [:span " / "]
+      [ui/Label
+       [ui/Dropdown {:name    (str "port-type" "-" id)
+                     :inline  true
+                     :value   port-type
+                     :options [{:key "TCP", :value "TCP", :text "TCP"}
+                               {:key "UDP", :value "UDP", :text "UDP"}]
+                     ;:on-change (events/dropdown ::events/toto 123)
+                     }]]]
+     [ui/GridColumn {:floated :right
+                     :align   :right
+                     :style   {:margin-right 5}}
       [ui/Icon {:name     "trash"
                 :on-click #(dispatch [::events/remove-port-mapping id])}]]]))
 
@@ -142,7 +141,6 @@
   (let [active?  (reagent/atom true)
         mappings (subscribe [::subs/port-mappings])]
     (fn []
-      ^{:key "port-mappings"}
       [ui/Accordion {:fluid     true
                      :styled    true
                      :exclusive false}
@@ -151,16 +149,19 @@
                            :on-click #(toggle active?)}
         [ui/Icon {:name (if @active? "dropdown" "caret right")}]
         "Port Mappings"]
-       ^{:key "port-mappings-accordion-content"}
+
        [ui/AccordionContent {:active @active?}
         [:div "Publish ports "
          [:span forms/nbsp (forms/help-popup "Definitions of port mappings between the container and its host")]]
-        [:div.ui.middle.aligned.divided.list
-         (for [[id mapping] @mappings]
-           [port-mapping id mapping])]
-        ^{:key "port-mapping-plus"}
-        [ui/Icon {:name     "plus circle"
-                  :on-click #(do (dispatch [::events/add-port-mapping (random-uuid) {}]))}]]])))
+        [:div [ui/Grid {:style {:margin-top    5
+                                :margin-bottom 5}}
+               (for [[id mapping] @mappings]
+                 ;[ui/GridRow {:key id}]
+                 [port-mapping id mapping])]]
+        [:div
+         [ui/Icon {:name     "plus circle"
+                   :on-click #(dispatch [::events/add-port-mapping (random-uuid) {}])}]]]])))
+
 
 (defn volumes []
   (let [active? (reagent/atom true)]
@@ -247,7 +248,8 @@
     (fn []
       [ui/Button {:primary  true
                   :style    {:margin-top 10}
-                  :disabled (not @(subscribe [::subs/page-changed?]))}
+                  :disabled (not @(subscribe [::subs/page-changed?]))
+                  :on-click #(dispatch [::events/open-save-modal])}
        "Save"])))
 
 (defn sections []
@@ -283,7 +285,7 @@
                                         (dispatch [::events/save-logo-url @local-url])))}]]
 
          [ui/ModalActions
-          [uix/Button {:text         (@tr [:save])
+          [uix/Button {:text         "Ok"
                        :positive     true
                        :disabled     (empty? @local-url)
                        :active       true
@@ -293,16 +295,74 @@
                                          (log/infof "Button ENTER")
                                          (log/infof "Button NOT ENTER")))}]]]))))
 
+(defn save-modal
+  []
+  (let [tr       (subscribe [::i18n-subs/tr])
+        visible? (subscribe [::subs/save-modal-visible?])]
+    (fn []
+      (let []
+        (log/infof "is true? %s" @visible?)
+        [ui/Modal {:open       @visible?
+                   :close-icon true
+                   :on-close   #(dispatch [::events/close-save-modal])}
+
+         [ui/ModalHeader (str/capitalize (str (@tr [:save]) " " (@tr [:component])))]
+
+         [ui/ModalContent
+          [ui/Input {:placeholder  (@tr [:commit-placeholder])
+                     :fluid        true
+                     :auto-focus   true
+                     :on-change    (ui-callback/input-callback #(dispatch [::events/commit-message %]))
+                     :on-key-press (fn [e]
+                                     (when (= 13 (.-charCode e))
+                                       (dispatch [::events/close-save-modal])))}]]
+
+         [ui/ModalActions
+          [uix/Button {:text     (@tr [:save])
+                       :positive true
+                       :active   true
+                       :on-click #(dispatch [::events/close-save-modal])}]]]))))
+
+;(defn testing []
+;  [ui/Grid
+;   [ui/GridRow
+;    [ui/GridColumn "LEFT"]
+;    [ui/GridColumn "LEFT"]
+;    [ui/GridColumn "LEFT"]
+;    [ui/GridColumn {:floated :right
+;                    } "RIGHT"]]
+;   [ui/GridRow
+;    [ui/GridColumn "LEFT"]
+;    [ui/GridColumn "LEFT"]
+;    [ui/GridColumn "LEFT"]
+;    [ui/GridColumn {:floated :right
+;                    } "RIGHT"]]
+;   [ui/GridRow
+;    [ui/GridColumn "LEFT"]
+;    [ui/GridColumn "LEFT"]
+;    [ui/GridColumn "LEFT"]
+;    [ui/GridColumn {:floated :right
+;                    } "RIGHT"]]
+;   [ui/GridRow
+;    [ui/GridColumn "LEFT"]
+;    [ui/GridColumn "LEFT"]
+;    [ui/GridColumn "LEFT"]
+;    [ui/GridColumn {:floated :right
+;                    } "RIGHT"]]
+;   ])
+
 (defn view-edit
   []
   (let []
     (fn []
       [ui/Container {:fluid true}
+       ;       [testing]
        [control-bar]
        [summary]
        [sections]
        [save-action]
        [logo-url-modal]
+       [save-modal]
        [deployment-dialog-views/deploy-modal false]])))
 
 (defmethod panel/render :module-component

@@ -110,16 +110,12 @@
               ::spec/loading-applications? false)))
 
 
-(reg-event-fx
+(reg-event-db
   ::set-selected-application-id
-  (fn [{{:keys [::client-spec/client
-                ::dialog-spec/deployment] :as db} :db} [_ application-id]]
-
+  (fn [{:keys [::client-spec/client
+               ::dialog-spec/deployment] :as db} [_ application-id]]
     (dispatch [::dialog-events/create-deployment application-id :data true])
-
-    (cond-> {:db (assoc db ::spec/selected-application-id application-id)}
-            (:id deployment) (assoc ::cimi-api-fx/delete [client (:id deployment)
-                                                          #(dispatch [::dialog-events/set-deployment nil])]))))
+    (assoc db ::spec/selected-application-id application-id)))
 
 
 (reg-event-fx

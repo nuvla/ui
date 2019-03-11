@@ -1,5 +1,4 @@
-(ns sixsq.nuvla.ui.deployment-dialog.utils
-  (:require [taoensso.timbre :as log]))
+(ns sixsq.nuvla.ui.deployment-dialog.utils)
 
 
 (defn matches-parameter-name?
@@ -36,7 +35,6 @@
 
 (defn data-records->mounts
   [data-records]
-  (log/error "data-records->mounts data-records" data-records )
   (->> data-records
        :resources
        (map (fn [data-record]

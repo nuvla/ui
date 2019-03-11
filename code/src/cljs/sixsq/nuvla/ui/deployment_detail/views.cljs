@@ -44,11 +44,6 @@
               :event     [::events/get-summary-nodes-parameters resource-id (nodes-list)]}])
   (dispatch [::main-events/action-interval
              {:action    :start
-              :id        :deployment-detail-reports
-              :frequency 30000
-              :event     [::events/get-reports resource-id]}])
-  (dispatch [::main-events/action-interval
-             {:action    :start
               :id        :deployment-detail-deployment-parameters
               :frequency 20000
               :event     [::events/get-global-deployment-parameters resource-id]}])
@@ -189,21 +184,6 @@
                     (map parameter-to-row @node-parameters)))])))
 
 
-(defn report-item
-  [{:keys [id component created state] :as report}]
-  (let [cep (subscribe [::api-subs/cloud-entry-point])
-        {:keys [base-uri]} @cep]
-    (when base-uri
-      ^{:key id} [:li
-                  (let [label (str/join " " [component created])]
-                    (if (= state "ready")
-                      ;; FIXME: The download URLs should be taken from operations rather than constructed like this.
-                      [:a {:style    {:cursor "pointer"}
-                           :download true
-                           :href     (str base-uri id "/download")} label]
-                      label))])))
-
-
 (def event-fields #{:id :content :timestamp :type})
 
 
@@ -303,34 +283,6 @@
         [cc/collapsible-segment
          (@tr [:job])
          [jobs-table jobs]]))))
-
-(defn reports-list-view
-  []
-  (let [reports (subscribe [::subs/reports])]
-    (if (seq @reports)
-      (vec (concat [:ul] (mapv report-item (:resources @reports))))
-      [:p "Reports will be displayed as soon as available. No need to refresh."])))
-
-
-(defn reports-list                                          ; Used by old UI
-  []
-  (let [runUUID (subscribe [::subs/runUUID])]
-    (when-not (str/blank? @runUUID)
-      (dispatch [::main-events/action-interval
-                 {:action    :start
-                  :id        :deployment-detail-reports
-                  :frequency 30000
-                  :event     [::events/get-reports @runUUID]}]))
-    [reports-list-view]))
-
-
-(defn reports-section
-  [href]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn []
-      [cc/collapsible-segment
-       (@tr [:reports])
-       [reports-list-view]])))
 
 
 (defn refresh-button
@@ -520,6 +472,5 @@
         [global-parameters-section]
         [events-section]
         [jobs-section]
-        [reports-section resource-id]
         [node-parameters-modal]
         ]])))

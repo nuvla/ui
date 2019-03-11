@@ -80,11 +80,13 @@
 
 (reg-event-fx
   ::create-deployment
-  (fn [{{:keys [::client-spec/client] :as db} :db :as cofx} [_ id first-step do-not-open-modal?]]
+  (fn [{{:keys [::client-spec/client
+                ::spec/deployment] :as db} :db :as cofx} [_ id first-step do-not-open-modal?]]
     (when client
       (when (= :data first-step)
         (dispatch [::get-data-records-by-cred]))
       (let [data {:module {:href id}}
+            old-deployment-id (:id deployment)
             add-depl-callback (fn [response]
                                 (if (instance? js/Error response)
                                   (let [{:keys [status message]} (response/parse-ex-info response)]
@@ -97,16 +99,18 @@
                                   (do
                                     (dispatch [::get-credentials])
                                     (dispatch [::get-deployment (:resource-id response)]))))]
-        {:db               (assoc db ::spec/loading-deployment? true
-                                     ::spec/selected-credential nil
-                                     ::spec/deploy-modal-visible? (not (boolean do-not-open-modal?))
-                                     ::spec/active-step (or first-step :data)
-                                     ::spec/data-step-active? (= first-step :data)
-                                     ::spec/infra-service-filter nil
-                                     ::spec/selected-infra-service nil
-                                     ::spec/infra-services nil
-                                     ::spec/data-infra-services nil)
-         ::cimi-api-fx/add [client "deployment" data add-depl-callback]}))))
+        (cond-> {:db               (assoc db ::spec/loading-deployment? true
+                                             ::spec/deployment nil
+                                             ::spec/selected-credential nil
+                                             ::spec/deploy-modal-visible? (not (boolean do-not-open-modal?))
+                                             ::spec/active-step (or first-step :data)
+                                             ::spec/data-step-active? (= first-step :data)
+                                             ::spec/infra-service-filter nil
+                                             ::spec/selected-infra-service nil
+                                             ::spec/infra-services nil
+                                             ::spec/data-infra-services nil)
+                 ::cimi-api-fx/add [client :deployment data add-depl-callback]}
+                old-deployment-id (assoc ::cimi-api-fx/delete [client old-deployment-id #()]))))))
 
 
 (reg-event-fx
@@ -176,14 +180,14 @@
   [db infra-service]
   (dispatch [::get-credentials])
   (assoc db ::spec/selected-infra-service infra-service
-            ::spec/infra-services-filter (str "services='" infra-service "'")
+            ::spec/infra-services-filter (str "infrastructure-services='" infra-service "'")
             ::spec/infra-service-filter (str "infrastructure-service='" infra-service "'")))
 
 
 (reg-event-fx
   ::set-data-infra-services
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ data-clouds-response]]
-    (let [buckets (get-in data-clouds-response [:aggregations (keyword "terms:infrastructure-service/href") :buckets])
+    (let [buckets (get-in data-clouds-response [:aggregations (keyword "terms:infrastructure-service") :buckets])
           infra-services (map :key buckets)
           filter (apply data-utils/join-or (map #(str "id='" % "'") infra-services))]
 
@@ -203,12 +207,12 @@
                 ::data-spec/credentials] :as db} :db} _]
     (when client
       (let [filter (data-utils/join-and time-period-filter infra-services-filter content-type-filter)]
-        (-> {:db db}
-            (assoc ::cimi-api-fx/search
-                   [client :data-record {:filter      filter
-                                         :last        0
-                                         :aggregation "terms:infrastructure-service/href"}
-                    #(dispatch [::set-data-infra-services %])]))))))
+        {:db db
+         ::cimi-api-fx/search
+             [client :data-record {:filter      filter
+                                   :last        0
+                                   :aggregation "terms:infrastructure-service"}
+              #(dispatch [::set-data-infra-services %])]}))))
 
 
 (reg-event-db

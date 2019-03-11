@@ -56,7 +56,7 @@
                   :on-click on-click-fn}
      [ui/TableCell {:collapsing true}
       (if @completed?
-        [ui/Icon {:name "database", :size "large", :vertical-align "middle"}]
+        [ui/Icon {:name "database", :size "large"}]
         [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
      [ui/TableCell {:collapsing true} (@tr [:data])]
      [ui/TableCell [:div

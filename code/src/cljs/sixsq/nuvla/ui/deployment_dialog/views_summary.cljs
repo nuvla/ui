@@ -22,7 +22,7 @@
     ^{:key "application"}
     [ui/TableRow
      [ui/TableCell {:collapsing true}
-      [ui/Icon {:name "sitemap", :size "large", :vertical-align "middle"}]]
+      [ui/Icon {:name "sitemap", :size "large"}]]
      [ui/TableCell {:collapsing true} (@tr [:application])]
      [ui/TableCell [:div
                     [:span header]

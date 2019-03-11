@@ -5,8 +5,6 @@
 
 (s/def ::runUUID (s/nilable string?))                       ; Used by old UI
 
-(s/def ::reports any?)
-
 (s/def ::loading? boolean?)
 
 (s/def ::deployment any?)
@@ -27,7 +25,6 @@
 
 
 (s/def ::db (s/keys :req [::runUUID
-                          ::reports
                           ::loading?
                           ::deployment
                           ::global-deployment-parameters
@@ -40,7 +37,6 @@
 
 
 (def defaults {::runUUID                      nil
-               ::reports                      nil
                ::loading?                     false
                ::deployment                   nil
                ::global-deployment-parameters nil

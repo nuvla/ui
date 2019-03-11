@@ -6,39 +6,15 @@
     [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.deployment-detail.spec :as spec]
     [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.main.effects :as main-fx]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.general :as general]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-db
   ::set-runUUID
   (fn [{:keys [::spec/runUUID] :as db} [_ uuid]]
     (assoc db ::spec/runUUID uuid)))
-
-
-(reg-event-db
-  ::set-reports
-  (fn [db [_ reports]]
-    (assoc db ::spec/reports reports)))
-
-
-(reg-event-fx
-  ::get-reports
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ href]]
-    (let [filter-str (str "objectType='report' and runUUID='" href "'")
-          order-by-str "created:desc, component"
-          select-str "id, state, created, component"
-          query-params {:filter  filter-str
-                        :orderby order-by-str
-                        :select  select-str}]
-      {::cimi-api-fx/search [client
-                             :external-object
-                             (general-utils/prepare-params query-params)
-                             #(dispatch [::set-reports %])]})))
 
 
 (reg-event-db
@@ -58,7 +34,7 @@
 (reg-event-fx
   ::get-global-deployment-parameters
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ resource-id]]
-    (let [filter-depl-params {:filter  (str "deployment/href='" resource-id "' and nodeID=null")
+    (let [filter-depl-params {:filter  (str "deployment/href='" resource-id "' and node-id=null")
                               :orderby "name"}
           get-depl-params-callback #(dispatch [::set-deployment-parameters %])]
       {::cimi-api-fx/search [client :deployment-parameter filter-depl-params get-depl-params-callback]})))
@@ -82,7 +58,6 @@
                                    (not= (:id deployment) resource-id) (assoc ::spec/deployment nil
                                                                               ::spec/global-deployment-parameters nil
                                                                               ::spec/events nil
-                                                                              ::spec/reports nil
                                                                               ::spec/node-parameters-modal nil
                                                                               ::spec/node-parameters nil
                                                                               ::spec/summary-nodes-parameters nil)
@@ -157,7 +132,7 @@
 
 (defn get-node-parameters
   [client deployment node-name]
-  (let [filter-str (str "deployment/href='" (:id deployment) "' and nodeID='" node-name "'")
+  (let [filter-str (str "deployment/href='" (:id deployment) "' and node-id='" node-name "'")
         select-str "id, created, updated, name, description, value"
         query-params {:filter filter-str
                       :select select-str}]

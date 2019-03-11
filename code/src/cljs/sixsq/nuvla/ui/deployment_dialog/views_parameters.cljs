@@ -24,7 +24,7 @@
                   :on-click on-click-fn}
      [ui/TableCell {:collapsing true}
       (if @completed?
-        [ui/Icon {:name "list alternate outline", :size "large", :vertical-align "middle"}]
+        [ui/Icon {:name "list alternate outline", :size "large"}]
         [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
      [ui/TableCell {:collapsing true} (@tr [:parameters])]
      [ui/TableCell [:div [:span description]]]]))

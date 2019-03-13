@@ -9,7 +9,7 @@
 
 (s/def ::deployment any?)
 
-(s/def ::global-deployment-parameters any?)
+(s/def ::deployment-parameters any?)
 
 (s/def ::events any?)
 
@@ -27,7 +27,7 @@
 (s/def ::db (s/keys :req [::runUUID
                           ::loading?
                           ::deployment
-                          ::global-deployment-parameters
+                          ::deployment-parameters
                           ::events
                           ::jobs
                           ::node-parameters-modal
@@ -36,13 +36,13 @@
                           ::force-refresh-events-steps]))
 
 
-(def defaults {::runUUID                      nil
-               ::loading?                     false
-               ::deployment                   nil
-               ::global-deployment-parameters nil
-               ::events                       nil
-               ::jobs                         nil
-               ::node-parameters-modal        nil
-               ::node-parameters              nil
-               ::summary-nodes-parameters     nil
-               ::force-refresh-events-steps   "force-refresh"})
+(def defaults {::runUUID                    nil
+               ::loading?                   false
+               ::deployment                 nil
+               ::deployment-parameters      nil
+               ::events                     nil
+               ::jobs                       nil
+               ::node-parameters-modal      nil
+               ::node-parameters            nil
+               ::summary-nodes-parameters   nil
+               ::force-refresh-events-steps "force-refresh"})

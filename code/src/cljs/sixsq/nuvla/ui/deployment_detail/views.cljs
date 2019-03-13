@@ -20,11 +20,6 @@
     [sixsq.nuvla.ui.utils.time :as time]))
 
 
-(defn ^:export set-runUUID
-  [uuid]                                                    ;Used by old UI
-  (dispatch [::events/set-runUUID uuid]))
-
-
 (defn nodes-list                                            ;FIXME
   []
   ["machine"])
@@ -46,7 +41,7 @@
              {:action    :start
               :id        :deployment-detail-deployment-parameters
               :frequency 20000
-              :event     [::events/get-global-deployment-parameters resource-id]}])
+              :event     [::events/get-deployment-parameters resource-id]}])
   (dispatch [::main-events/action-interval
              {:action    :start
               :id        :deployment-detail-events
@@ -116,7 +111,7 @@
 (defn metadata-section
   []
   (let [deployment (subscribe [::subs/deployment])
-        deployment-parameters (subscribe [::subs/global-deployment-parameters])]
+        deployment-parameters (subscribe [::subs/deployment-parameters])]
     (fn []
       (let [summary-info (-> (select-keys @deployment deployment-summary-keys)
                              (merge (select-keys (:module @deployment) #{:name :path :type})
@@ -148,22 +143,22 @@
                 [ui/TableCell name]
                 [ui/TableCell value]])}])
 
-(defn global-parameters-section
+(defn parameters-section
   []
   (let [tr (subscribe [::i18n-subs/tr])
-        deployment-parameters (subscribe [::subs/global-deployment-parameters])]
+        deployment-parameters (subscribe [::subs/deployment-parameters])]
     (fn []
-      (let [global-params (vals @deployment-parameters)]
-        [cc/collapsible-segment (@tr [:global-parameters])
+      (let [params (vals @deployment-parameters)]
+        [cc/collapsible-segment (@tr [:parameters])
          [ui/Segment style/autoscroll-x
           [ui/Table style/single-line
            [ui/TableHeader
             [ui/TableRow
              [ui/TableHeaderCell [:span (@tr [:name])]]
              [ui/TableHeaderCell [:span (@tr [:value])]]]]
-           (when-not (empty? global-params)
+           (when-not (empty? params)
              (vec (concat [ui/TableBody]
-                          (map parameter-to-row global-params))))]]]))))
+                          (map parameter-to-row params))))]]]))))
 
 (defn node-parameters-section
   []
@@ -301,9 +296,9 @@
 
 (defn service-link-button
   []
-  (let [deployment-parameters (subscribe [::subs/global-deployment-parameters])]
+  (let [deployment (subscribe [::subs/deployment])]
     (fn []
-      (let [link (-> @deployment-parameters (get "ss:url.service") :value)]
+      (let [link @(subscribe [::subs/url (-> @deployment :module :content :urls first second)])]
         (when link
           [uix/MenuItemWithIcon
            {:name      (general/truncate link 35)
@@ -314,10 +309,12 @@
 
 (defn node-card
   [node-name]
-  (let [summary-nodes-parameters (subscribe [::subs/summary-nodes-parameters])
+  (let [deployment (subscribe [::subs/deployment])
+
+        summary-nodes-parameters (subscribe [::subs/summary-nodes-parameters])
         node-params (get @summary-nodes-parameters node-name [])
         params-by-name (into {} (map (juxt :name identity) node-params))
-        service-url (get-in params-by-name ["url.service" :value])
+        service-url @(subscribe [::subs/url (-> @deployment :module :content :urls first second)])
         custom-state (get-in params-by-name ["statecustom" :value])
         ssh-url (get-in params-by-name ["url.ssh" :value])
         ssh-password (get-in params-by-name ["password.ssh" :value])
@@ -469,7 +466,7 @@
         [metadata-section]
         [progression-section]
         [summary-section]
-        [global-parameters-section]
+        [parameters-section]
         [events-section]
         [jobs-section]
         [node-parameters-modal]

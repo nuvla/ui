@@ -2,8 +2,7 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
-    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]))
+    [sixsq.nuvla.ui.deployment-dialog.spec :as spec]))
 
 
 (reg-sub

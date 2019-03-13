@@ -27,14 +27,14 @@
 (reg-event-db
   ::set-deployment-parameters
   (fn [db [_ resources]]
-    (assoc db ::spec/global-deployment-parameters
+    (assoc db ::spec/deployment-parameters
               (into {} (map (juxt :name identity) (get resources :resources []))))))
 
 
 (reg-event-fx
-  ::get-global-deployment-parameters
+  ::get-deployment-parameters
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ resource-id]]
-    (let [filter-depl-params {:filter  (str "deployment/href='" resource-id "' and node-id=null")
+    (let [filter-depl-params {:filter  (str "deployment/href='" resource-id "'")
                               :orderby "name"}
           get-depl-params-callback #(dispatch [::set-deployment-parameters %])]
       {::cimi-api-fx/search [client :deployment-parameter filter-depl-params get-depl-params-callback]})))
@@ -56,7 +56,7 @@
                                  (dispatch [::set-deployment %]))]
         {:db               (cond-> (assoc db ::spec/loading? true)
                                    (not= (:id deployment) resource-id) (assoc ::spec/deployment nil
-                                                                              ::spec/global-deployment-parameters nil
+                                                                              ::spec/deployment-parameters nil
                                                                               ::spec/events nil
                                                                               ::spec/node-parameters-modal nil
                                                                               ::spec/node-parameters nil

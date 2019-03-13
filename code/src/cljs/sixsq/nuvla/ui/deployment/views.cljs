@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.deployment-detail.events :as deployment-detail-events]
     [sixsq.nuvla.ui.deployment-detail.utils :as deployment-detail-utils]
     [sixsq.nuvla.ui.deployment-detail.views :as deployment-detail-views]
+    [sixsq.nuvla.ui.deployment-detail.subs :as deployment-details-subs]
     [sixsq.nuvla.ui.deployment.events :as events]
     [sixsq.nuvla.ui.deployment.subs :as subs]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -23,15 +24,8 @@
 
 
 (defn deployment-active?
-  [state ss-state]
-  (or (str/ends-with? state "ING")
-      (and (= state "STARTED")
-           (not (#{"DONE" "ABORTED" "READY"} ss-state)))))
-
-
-(defn deployment-state
-  [state ss-state]
-  (or (when (= state "STARTED") ss-state) state))
+  [state]
+  (str/ends-with? state "ING"))
 
 
 (defn control-bar []
@@ -120,11 +114,8 @@
 (defn row-fn
   [{:keys [id state module] :as deployment}]
   (let [deployments-creds-map (subscribe [::subs/deployments-creds-map])
-        deployments-service-url-map (subscribe [::subs/deployments-service-url-map])
-        deployments-ss-state-map (subscribe [::subs/deployments-ss-state-map])
-        ss-state (some->> id (get @deployments-ss-state-map) str/upper-case)
         creds-name (subscribe [::subs/creds-name-map])
-        service-url (get @deployments-service-url-map id)
+        service-url @(subscribe [::deployment-details-subs/url (-> deployment :module :content :urls first second)])
         creds-ids (get @deployments-creds-map id [])]
     ^{:key id}
     [ui/TableRow
@@ -132,7 +123,7 @@
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}} (:name module)]
-     [ui/TableCell (deployment-state state ss-state)]
+     [ui/TableCell state]
      [ui/TableCell (when service-url
                      [:a {:href service-url, :target "_blank", :rel "noreferrer"}
                       [ui/Icon {:name "external"}]])]
@@ -172,11 +163,9 @@
   [{:keys [id state module] :as deployment}]
   (let [tr (subscribe [::i18n-subs/tr])
         deployments-creds-map (subscribe [::subs/deployments-creds-map])
-        deployments-service-url-map (subscribe [::subs/deployments-service-url-map])
-        deployments-ss-state-map (subscribe [::subs/deployments-ss-state-map])
         creds-name (subscribe [::subs/creds-name-map])
-        service-url (get @deployments-service-url-map id)
-        ss-state (some->> id (get @deployments-ss-state-map) str/upper-case)
+        module-url  (-> deployment :module :content :urls first)
+        service-url @(subscribe [::deployment-details-subs/url (second module-url)])
         creds-ids (get @deployments-creds-map id [])
         logoURL (:logoURL module)
         cred-info (str/join ", " (map #(get @creds-name % %) creds-ids))]
@@ -204,8 +193,8 @@
 
 
       [ui/Segment (merge style/basic {:floated "right"})
-       [:p (deployment-state state ss-state)]
-       [ui/Loader {:active        (deployment-active? state ss-state)
+       [:p state]
+       [ui/Loader {:active        (deployment-active? state)
                    :indeterminate true}]]
 
       [ui/CardHeader [:span [:p {:style {:overflow      "hidden",
@@ -219,7 +208,7 @@
      (when service-url
        [ui/Button {:color   "green"
                    :icon    "external"
-                   :content (@tr [:access-deployment])
+                   :content (first module-url)
                    :fluid   true
                    :href    service-url
                    :target  "_blank"

@@ -44,7 +44,7 @@
        distinct
        (map (fn [[ip device bucket]]
               (str "type=volume,volume-opt=o=addr=" ip
-                   ",volume-opt=device=:" device
+                   ",volume-opt=device=:" device "/" bucket
                    ",volume-opt=type=nfs,dst=/mnt/" bucket)))))
 
 ;;

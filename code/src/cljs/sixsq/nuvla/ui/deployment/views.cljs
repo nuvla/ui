@@ -167,11 +167,11 @@
         module-url  (-> deployment :module :content :urls first)
         service-url @(subscribe [::deployment-details-subs/url (second module-url)])
         creds-ids (get @deployments-creds-map id [])
-        logoURL (:logoURL module)
+        logo-url (:logo-url module)
         cred-info (str/join ", " (map #(get @creds-name % %) creds-ids))]
     ^{:key id}
     [ui/Card
-     [ui/Image {:src      (or logoURL "")
+     [ui/Image {:src      (or logo-url "")
                 :bordered true
                 :style    {:width      "auto"
                            :height     "100px"

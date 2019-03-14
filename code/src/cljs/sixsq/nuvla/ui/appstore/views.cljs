@@ -38,11 +38,11 @@
 (defn format-deployment-template
   [{:keys [id name description module] :as deployment-template}]
   (let [tr (subscribe [::i18n-subs/tr])
-        {:keys [type parentPath logoURL]} module]
+        {:keys [type parentPath logo-url]} module]
     ^{:key id}
     [ui/Card
-     (when logoURL
-       [ui/Image {:src   logoURL
+     (when logo-url
+       [ui/Image {:src   logo-url
                   :style {:width      "auto"
                           :height     "100px"
                           :object-fit "contain"}}])

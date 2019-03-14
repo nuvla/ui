@@ -52,15 +52,13 @@
 (reg-event-fx
   ::set-deployments
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ deployments]]
-    (let [deployments-resource-ids (->> deployments :deployments (map :id))
+    (let [deployments-resource-ids (->> deployments :resources (map :id))
           filter-deps-ids (str/join " or " (map #(str "deployment/href='" % "'") deployments-resource-ids))
-          query-params {:filter (str "(" filter-deps-ids
-                                     ") and (name='credential.id' or name='ss:url.service' or name='ss:state')"
-                                     " and value!=null")
+          query-params {:filter (str "(" filter-deps-ids ") and value!=null")
                         :select "id, deployment, name, value"}
           callback (fn [response]
                      (when-not (instance? js/Error response)
-                       (let [deployment-params (->> response :deploymentParameters (group-by :name))
+                       (let [deployment-params (->> response :resources (group-by :name))
                              credentials-params (get deployment-params "credential.id")
                              credentials-ids (->> credentials-params (map :value) distinct)
                              deployments-creds-map (->> credentials-params

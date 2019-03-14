@@ -8,21 +8,21 @@
 
 
 (reg-event-db
-  ::set-deployment-templates
-  (fn [db [_ deployment-templates]]
-    (assoc db ::spec/deployment-templates deployment-templates)))
+  ::set-modules
+  (fn [db [_ modules]]
+    (assoc db ::spec/modules modules)))
 
 
 (reg-event-fx
-  ::get-deployment-templates
+  ::get-modules
   (fn [{{:keys [::client-spec/client
                 ::spec/full-text-search
                 ::spec/page
                 ::spec/elements-per-page] :as db} :db} _]
     (when client
-      {:db                  (assoc db ::spec/deployment-templates nil)
-       ::cimi-api-fx/search [client :deployment-template (utils/get-query-params full-text-search page elements-per-page)
-                             #(dispatch [::set-deployment-templates %])]})))
+      {:db                  (assoc db ::spec/modules nil)
+       ::cimi-api-fx/search [client :module (utils/get-query-params full-text-search page elements-per-page)
+                             #(dispatch [::set-modules %])]})))
 
 
 (reg-event-fx
@@ -32,8 +32,8 @@
     (let [new-page 1]
       {:db                  (assoc db ::spec/full-text-search full-text-search
                                       ::spec/page new-page)
-       ::cimi-api-fx/search [client :deployment-template (utils/get-query-params full-text-search new-page elements-per-page)
-                             #(dispatch [::set-deployment-templates %])]})))
+       ::cimi-api-fx/search [client :modules (utils/get-query-params full-text-search new-page elements-per-page)
+                             #(dispatch [::set-modules %])]})))
 
 
 (reg-event-fx
@@ -43,5 +43,5 @@
                 ::spec/page
                 ::spec/elements-per-page] :as db} :db} [_ page]]
     {:db                  (assoc db ::spec/page page)
-     ::cimi-api-fx/search [client "deployment-template" (utils/get-query-params full-text-search page elements-per-page)
-                           #(dispatch [::set-deployment-templates %])]}))
+     ::cimi-api-fx/search [client :module (utils/get-query-params full-text-search page elements-per-page)
+                           #(dispatch [::set-modules %])]}))

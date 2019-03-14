@@ -3,13 +3,14 @@
   (:require
     [clojure.spec.alpha :as s]))
 
-(def defaults {::page-changed?  false
-               ::name ""
-               ::description ""
-               ::default-logo-url "https://semantic-ui.com/images/wireframe/image.png"
-               ::port-mappings {1 {}}                       ; create an initial entry for new components
+(def defaults {::page-changed?       false
+               ::name                ""
+               ::parent              ""
+               ::description         ""
+               ::default-logo-url    "https://semantic-ui.com/images/wireframe/image.png"
+               ::port-mappings       {1 {}}                 ; create an initial entry for new components
                ::save-modal-visible? false
-               ;::volumes {}
+               ::volumes             {1 {}}                 ; create an initial entry for new components
                ;::env-vars {}
                })
 
@@ -25,3 +26,4 @@
 (s/def ::commit-message (s/nilable string?))
 
 (s/def ::port-mappings any?)
+(s/def ::volumes any?)

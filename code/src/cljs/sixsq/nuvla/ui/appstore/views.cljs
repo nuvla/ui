@@ -1,6 +1,8 @@
 (ns sixsq.nuvla.ui.appstore.views
   (:require
     [re-frame.core :refer [dispatch subscribe]]
+    [sixsq.nuvla.ui.application.views :as application-views]
+    [sixsq.nuvla.ui.application.events :as application-events]
     [sixsq.nuvla.ui.appstore.events :as events]
     [sixsq.nuvla.ui.appstore.subs :as subs]
     [sixsq.nuvla.ui.deployment-detail.utils :as deployment-detail-utils]
@@ -11,7 +13,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [reagent.core :as reagent]))
 
 
 (defn refresh-button
@@ -21,18 +24,7 @@
       [uix/MenuItemWithIcon
        {:name      (@tr [:refresh])
         :icon-name "refresh"
-        :on-click  #(dispatch [::events/get-deployment-templates])}])))
-
-
-(defn control-bar []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Menu {:attached "top", :borderless true}
-     [ui/MenuItem
-      [ui/Input {:placeholder (@tr [:search])
-                 :icon        "search"
-                 :on-change   (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))}]]
-     [ui/MenuMenu {:position "right"}
-      [refresh-button]]]))
+        :on-click  #(dispatch [::events/get-modules])}])))
 
 
 (defn format-deployment-template
@@ -58,34 +50,74 @@
       (@tr [:launch])]]))
 
 
-(defn deployment-templates-cards-group
-  [deployment-templates-list]
+(defn modules-cards-group
+  [modules-list]
   [ui/Segment style/basic
    (vec (concat [ui/CardGroup]
                 (map (fn [deployment-template]
                        [format-deployment-template deployment-template])
-                     deployment-templates-list)))])
+                     modules-list)))])
 
 
-(defn deployment-template-resources
+(defn toggle [v]
+  (swap! v not))
+
+
+(defn appstore-search []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Input {:placeholder (@tr [:search])
+               :icon        "search"
+               :on-change   (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))}]))
+
+
+(defn control-bar []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Menu {:secondary true}
+     [ui/MenuMenu {:position "left"}
+      [appstore-search]]
+     [ui/MenuMenu {:position "right"}
+      [refresh-button]]]))
+
+
+(defn appstore
   []
-  (let [deployment-templates (subscribe [::subs/deployment-templates])
+  (let [modules           (subscribe [::subs/modules])
         elements-per-page (subscribe [::subs/elements-per-page])
-        page (subscribe [::subs/page])]
+        page              (subscribe [::subs/page])
+        active? (reagent/atom true)]
     (fn []
-      (let [total-pages (general-utils/total-pages (get @deployment-templates :count 0) @elements-per-page)]
+      (let [total-pages (general-utils/total-pages (get @modules :count 0) @elements-per-page)]
         [ui/Container {:fluid true}
-         [control-bar]
          [deployment-dialog-views/deploy-modal false]
-         [deployment-templates-cards-group (get @deployment-templates :resources [])]
-         (when (> total-pages 1)
-           [uix/Pagination
-            {:totalPages   total-pages
-             :activePage   @page
-             :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}])]))))
+         [ui/Accordion {:fluid     true
+                        :styled    true
+                        :exclusive false
+                        }
+          [ui/AccordionTitle {:active   @active?
+                              :index    1
+                              :on-click #(toggle active?)}
+           [:h2
+            [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+            "App Store"]]
+          [ui/AccordionContent {:active @active?}
+           [control-bar]
+           [modules-cards-group (get @modules :resources [])]
+           (when (> total-pages 1)
+             [uix/Pagination
+              {:totalPages   total-pages
+               :activePage   @page
+               :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}])]]]))))
 
+(defn apps
+  []
+  [ui/Container {:fluid true}
+   [:div {:style {:margin-top 10}}]
+   [appstore]
+   [:div {:style {:margin-top 10}}]
+   [application-views/module-resource]])
 
 (defmethod panel/render :appstore
   [path]
-  (dispatch [::events/get-deployment-templates])
-  [deployment-template-resources])
+  (dispatch [::events/get-modules])
+  (dispatch [::application-events/get-module])
+  [apps])

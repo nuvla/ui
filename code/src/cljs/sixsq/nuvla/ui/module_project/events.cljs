@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.module-project.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.module-component.spec :as spec]
+    [sixsq.nuvla.ui.module-project.spec :as spec]
     [taoensso.timbre :as log]))
 
 
@@ -10,6 +10,13 @@
   (fn [db [_ name]]
     (dispatch [::page-changed? true])
     (assoc db ::spec/name name)))
+
+
+(reg-event-db
+  ::parent
+  (fn [db [_ parent]]
+    (dispatch [::page-changed? true])
+    (assoc db ::spec/parent parent)))
 
 
 (reg-event-db

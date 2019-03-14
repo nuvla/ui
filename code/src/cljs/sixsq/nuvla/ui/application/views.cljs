@@ -37,10 +37,10 @@
 
 
 (defn control-bar []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr     (subscribe [::i18n-subs/tr])
         module (subscribe [::application-subs/module])
-        cep (subscribe [::api-subs/cloud-entry-point])]
-    (let [add-disabled? (not= "PROJECT" (:type @module))
+        cep    (subscribe [::api-subs/cloud-entry-point])]
+    (let [add-disabled?    (not= "PROJECT" (:type @module))
           deploy-disabled? (= "PROJECT" (:type @module))]
       (vec (concat [ui/Menu {:borderless true}]
 
@@ -164,14 +164,14 @@
 
 (defn add-modal
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        visible? (subscribe [::application-subs/add-modal-visible?])
-        nav-path (subscribe [::main-subs/nav-path])
-        active-tab (subscribe [::application-subs/active-tab])
-        add-data (subscribe [::application-subs/add-data])
+  (let [tr            (subscribe [::i18n-subs/tr])
+        visible?      (subscribe [::application-subs/add-modal-visible?])
+        nav-path      (subscribe [::main-subs/nav-path])
+        active-tab    (subscribe [::application-subs/active-tab])
+        add-data      (subscribe [::application-subs/add-data])
         initial-value @add-data]
     (fn []
-      (let [hide-fn #(dispatch [::application-events/close-add-modal])
+      (let [hide-fn   #(dispatch [::application-events/close-add-modal])
             submit-fn #(dispatch [::application-events/add-module])]
         [ui/Modal {:open       @visible?
                    :close-icon true
@@ -184,15 +184,15 @@
            [ui/Card {:on-click #(dispatch [::history-events/navigate "module-project"])}
             [ui/CardContent {:text-align :center}
              [ui/Header "Project"]
-             [ui/Icon {:name "folder"
-                       :size :massive
+             [ui/Icon {:name     "folder"
+                       :size     :massive
                        :centered true}]]]
            [ui/Card {:on-click #(dispatch [::history-events/navigate "module-component"])}
             [ui/CardContent {:text-align :center}
              [ui/Header "Component"]
              [:div]
-             [ui/Icon {:name "th"
-                       :size :massive
+             [ui/Icon {:name     "th"
+                       :size     :massive
                        :centered true}]]]]]
 
          (log/error "active-tab: " @active-tab "initial-value: "
@@ -202,7 +202,7 @@
 
 (defn format-module [{:keys [type name description] :as module}]
   (when module
-    (let [on-click #(dispatch [::main-events/push-breadcrumb name])
+    (let [on-click  #(dispatch [::main-events/push-breadcrumb name])
           icon-name (utils/category-icon type)]
       [ui/ListItem {:on-click on-click}
        [ui/ListIcon {:name           icon-name
@@ -239,7 +239,7 @@
 (defn format-meta
   [module-meta]
   (let [metadata (preprocess-metadata module-meta)
-        rows (metadata-rows module-meta)]
+        rows     (metadata-rows module-meta)]
     [cc/metadata metadata rows]))
 
 
@@ -337,7 +337,7 @@
   (let [selected-target (reagent/atom "deployment")]
     (fn [targets]
       (when targets
-        (let [selected (keyword @selected-target)
+        (let [selected     (keyword @selected-target)
               target-value (get targets selected)]
           [cc/collapsible-segment
            [:span [target-dropdown selected-target] "target"]
@@ -394,25 +394,42 @@
     (vec (concat [ui/Segment] (mapv render-node sorted-nodes)))))
 
 
+(defn toggle [v]
+  (swap! v not))
+
+
 (defn module-resource []
-  (let [data (subscribe [::application-subs/module])]
+  (let [data (subscribe [::application-subs/module])
+        active? (reagent/atom true)]
     (fn []
-      (vec (concat [ui/Container {:fluid true}
-                    [control-bar]
-                    [add-modal]
-                    [deployment-dialog-views/deploy-modal false]
-                    [format-error @data]]
-                   (when (and @data (not (instance? js/Error @data)))
-                     (let [{:keys [children content]} @data
-                           metadata (dissoc @data :content)
-                           {:keys [targets nodes inputParameters outputParameters]} content
-                           type (:type metadata)]
-                       [[format-meta metadata]
-                        (when (= type "COMPONENT") [format-parameters :input-parameters inputParameters])
-                        (when (= type "COMPONENT") [format-parameters :output-parameters outputParameters])
-                        (when (= type "COMPONENT") [format-targets targets])
-                        (when (= type "APPLICATION") [format-nodes nodes])
-                        [format-module-children children]])))))))
+      (let []
+        [ui/Container {:fluid true}
+         ;                    [control-bar]
+         [add-modal]
+         [deployment-dialog-views/deploy-modal false]
+         [format-error @data]
+         [ui/Accordion {:fluid     true
+                        :styled    true
+                        :exclusive false}
+          [ui/AccordionTitle {:active   @active?
+                              :index    1
+                              :on-click #(toggle active?)}
+           [:h2
+            [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+            "All Applications"]]
+          [ui/AccordionContent {:active @active?}
+           [control-bar]
+            (when (and @data (not (instance? js/Error @data)))
+              (let [{:keys [children content]} @data
+                    metadata (dissoc @data :content)
+                    {:keys [targets nodes inputParameters outputParameters]} content
+                    type     (:type metadata)]
+                [format-meta metadata]
+                (when (= type "COMPONENT") [format-parameters :input-parameters inputParameters])
+                (when (= type "COMPONENT") [format-parameters :output-parameters outputParameters])
+                (when (= type "COMPONENT") [format-targets targets])
+                (when (= type "APPLICATION") [format-nodes nodes])
+                [format-module-children children]))]]]))))
 
 
 (defmethod panel/render :application

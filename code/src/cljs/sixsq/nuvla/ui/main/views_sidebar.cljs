@@ -22,7 +22,7 @@
 
 (defn item
   [label-kw url icon]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr       (subscribe [::i18n-subs/tr])
         nav-path (subscribe [::main-subs/nav-path])
         is-user? (subscribe [::authn-subs/is-user?])]
 
@@ -54,7 +54,7 @@
   "Provides the sidebar menu for selecting major components/panels of the
    application."
   []
-  (let [show? (subscribe [::main-subs/sidebar-open?])
+  (let [show?   (subscribe [::main-subs/sidebar-open?])
         iframe? (subscribe [::main-subs/iframe?])]
 
     [ui/Sidebar {:as        ui/MenuRaw
@@ -70,9 +70,11 @@
                 :compact  true
                 :inverted true}
        (when-not @iframe? [logo-item])
-       (when-not @iframe? [item :appstore "appstore" "play"])
-       (when-not @iframe? [item :application "application" "sitemap"])
+       (when-not @iframe? [item :dashboard "deployment" "dashboard"])
+       (when-not @iframe? [item :apps "appstore" "play"])
+       ;       (when-not @iframe? [item :application "application" "sitemap"])
        [item :data "data" "database"]
-       [item :deployment "deployment" "cloud"]
+       ;       [item :deployment "deployment" "cloud"]
+       (when-not @iframe? [item :infra-service-short "infra-service" "mixcloud"])
        (when-not @iframe? [item :nuvlabox-ctrl "nuvlabox" "desktop"])
        (when-not @iframe? [item :api "api" "code"])]]]))

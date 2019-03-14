@@ -5,8 +5,8 @@
 
 
 (reg-sub
-  ::deployment-templates
-  ::spec/deployment-templates)
+  ::modules
+  ::spec/modules)
 
 
 (reg-sub

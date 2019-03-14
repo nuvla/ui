@@ -15,6 +15,11 @@
     (::spec/name db)))
 
 (reg-sub
+  ::parent
+  (fn [db]
+    (::spec/parent db)))
+
+(reg-sub
   ::description
   (fn [db]
     (::spec/description db)))
@@ -40,9 +45,9 @@
     (::spec/port-mappings db)))
 
 (reg-sub
-  ::port-mappings-source
+  ::volumes
   (fn [db]
-    (::spec/port-mappings db)))
+    (::spec/volumes db)))
 
 (reg-sub
   ::page-changed?

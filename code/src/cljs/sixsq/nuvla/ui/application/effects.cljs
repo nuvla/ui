@@ -39,7 +39,7 @@
 
 
 (reg-fx
-  ::create-module
+  ::create-deployment
   (fn [[client path data callback]]
     (go
       (let [{:keys [status] :as response} (<! (api/add client "module" data))]

@@ -4,12 +4,10 @@
     [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.authn.events :as authn-events]
-    [sixsq.nuvla.ui.authn.views :as authn-views]
     [sixsq.nuvla.ui.cimi.events :as api-events]
     [sixsq.nuvla.ui.client.events :as client-events]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.db.events :as db-events]
-    [sixsq.nuvla.ui.deployment-detail.views :as deployment-detail-views]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -40,17 +38,7 @@
 
 (defn mount-root []
   (clear-subscription-cache!)
-  (render-component-when-present "app" main-views/app)
-  (render-component-when-present "modal-login" authn-views/modal-login
-                                 :initialization-fn #(do (dispatch-sync [::authn-events/server-redirect-uri "/login"])
-                                                         (dispatch-sync [::authn-events/redirect-uri "/"])))
-  (render-component-when-present "modal-signup" authn-views/modal-signup
-                                 :initialization-fn #(do (dispatch-sync [::authn-events/server-redirect-uri "/login"])
-                                                         (dispatch-sync [::authn-events/redirect-uri "/"])))
-  (render-component-when-present "modal-reset-password" authn-views/modal-reset-password
-                                 :initialization-fn #(do (dispatch-sync [::authn-events/server-redirect-uri "/login"])
-                                                         (dispatch-sync [::authn-events/redirect-uri "/"])))
-  (render-component-when-present "deployment-detail-reports" deployment-detail-views/reports-list))
+  (render-component-when-present "app" main-views/app))
 
 
 (defn visibility-watcher []

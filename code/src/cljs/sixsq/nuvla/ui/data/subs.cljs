@@ -53,12 +53,12 @@
 
 
 (reg-sub
-  ::datasets
+  ::data-sets
   (fn [db]
-    (::spec/datasets db)))
+    (::spec/data-sets db)))
 
 
 (reg-sub
-  ::selected-dataset-ids
+  ::selected-data-set-ids
   (fn [db]
-    (::spec/selected-dataset-ids db)))
+    (::spec/selected-data-set-ids db)))

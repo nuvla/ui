@@ -10,14 +10,14 @@
 
 (reg-fx
   ::fetch-data
-  (fn [[client time-period-filter cloud-filter full-text-search datasets callback]]
+  (fn [[client time-period-filter infra-services-filter full-text-search data-sets callback]]
     (go
       (when client
-        (doseq [{:keys [id] :as dataset} datasets]
-          (let [objectFilter (get dataset (keyword "dataset:objectFilter"))
-                filter (utils/join-and time-period-filter cloud-filter full-text-search objectFilter)]
+        (doseq [{:keys [id] :as data-set} data-sets]
+          (let [record-filter (:data-record-filter data-set)
+                filter (utils/join-and time-period-filter infra-services-filter full-text-search record-filter)]
             (callback id (<! (api/search client
-                                         "service-offer"
+                                         :data-record
                                          {:filter      filter
                                           :select      "id"
-                                          :aggregation "count:id, sum:data:bytes"})))))))))
+                                          :aggregation "value_count:id, sum:data:bytes"})))))))))

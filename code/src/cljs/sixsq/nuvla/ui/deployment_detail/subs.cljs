@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.deployment-detail.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.deployment-detail.spec :as spec]))
+    [sixsq.nuvla.ui.deployment-detail.spec :as spec]
+    [clojure.string :as str]))
 
 
 (reg-sub
@@ -42,10 +43,28 @@
 
 
 (reg-sub
-  ::global-deployment-parameters
+  ::deployment-parameters
   (fn [db]
-    (::spec/global-deployment-parameters db)))
+    (::spec/deployment-parameters db)))
 
+
+
+(reg-sub
+  ::url
+  :<- [::deployment-parameters]
+  (fn [deployment-parameters [_ url-pattern]]
+    (when url-pattern
+      (let [pattern-in-params (re-seq #"\$\{([^}]+)\}+" url-pattern)
+            pattern-value (map (fn [[param-pattern param-name]]
+                                 (some->> (get deployment-parameters param-name)
+                                          :value
+                                          (conj [param-pattern])))
+                               pattern-in-params)]
+        (when (every? some? pattern-value)
+          (reduce
+            (fn [url [param-pattern param-value]]
+              (str/replace url param-pattern param-value))
+            url-pattern pattern-value))))))
 
 (reg-sub
   ::node-parameters-modal

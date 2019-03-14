@@ -56,7 +56,7 @@
                   :on-click on-click-fn}
      [ui/TableCell {:collapsing true}
       (if @completed?
-        [ui/Icon {:name "database", :size "large", :vertical-align "middle"}]
+        [ui/Icon {:name "database", :size "large"}]
         [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
      [ui/TableCell {:collapsing true} (@tr [:data])]
      [ui/TableCell [:div
@@ -78,7 +78,7 @@
                    :header      (or name key)
                    :description description
                    :doc_count   doc_count}
-          on-click-fn #(dispatch [::events/set-cloud-filter key])]
+          on-click-fn #(dispatch [::events/set-infra-service-filter key])]
 
       [cloud-list-item (assoc options :on-click-fn on-click-fn)])))
 

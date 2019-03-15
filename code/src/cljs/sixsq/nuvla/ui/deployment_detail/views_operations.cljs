@@ -3,8 +3,7 @@
     [re-frame.core :refer [dispatch]]
     [sixsq.nuvla.ui.deployment-detail.events :as events]
     [sixsq.nuvla.ui.utils.general :as general]
-    [sixsq.nuvla.ui.utils.resource-details :as resource-details]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.resource-details :as resource-details]))
 
 
 ;; Explicit keys have been added to the operation buttons to avoid react

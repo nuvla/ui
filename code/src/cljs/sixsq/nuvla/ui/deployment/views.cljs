@@ -6,8 +6,8 @@
     [sixsq.nuvla.ui.deployment-detail.events :as deployment-detail-events]
     [sixsq.nuvla.ui.deployment-detail.utils :as deployment-detail-utils]
     [sixsq.nuvla.ui.deployment-detail.views :as deployment-detail-views]
-    [sixsq.nuvla.ui.deployment-detail.subs :as deployment-details-subs]
     [sixsq.nuvla.ui.deployment.events :as events]
+    [sixsq.nuvla.ui.deployment.utils :as utils]
     [sixsq.nuvla.ui.deployment.subs :as subs]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history]
@@ -20,7 +20,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 
 (defn deployment-active?
@@ -113,10 +114,9 @@
 
 (defn row-fn
   [{:keys [id state module] :as deployment}]
-  (let [deployments-creds-map (subscribe [::subs/deployments-creds-map])
+  (let [credential-id (:credential-id deployment)
         creds-name (subscribe [::subs/creds-name-map])
-        service-url @(subscribe [::deployment-details-subs/url (-> deployment :module :content :urls first second)])
-        creds-ids (get @deployments-creds-map id [])]
+        [url-name url] @(subscribe [::subs/deployment-url deployment])]
     ^{:key id}
     [ui/TableRow
      [ui/TableCell [format-href id]]
@@ -124,13 +124,14 @@
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}} (:name module)]
      [ui/TableCell state]
-     [ui/TableCell (when service-url
-                     [:a {:href service-url, :target "_blank", :rel "noreferrer"}
-                      [ui/Icon {:name "external"}]])]
+     [ui/TableCell (when url
+                     [:a {:href url, :target "_blank", :rel "noreferrer"}
+                      [ui/Icon {:name "external"}]
+                      url-name])]
      [ui/TableCell (-> deployment :created time/parse-iso8601 time/ago)]
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
-                            :max-width     "20ch"}} (str/join ", " (map #(get @creds-name % %) creds-ids))]
+                            :max-width     "20ch"}} (get @creds-name credential-id credential-id)]
      [ui/TableCell (cond
                      (deployment-detail-utils/stop-action? deployment) [stop-button deployment]
                      (deployment-detail-utils/delete-action? deployment) [delete-button deployment])]]))
@@ -162,13 +163,12 @@
 (defn card-fn
   [{:keys [id state module] :as deployment}]
   (let [tr (subscribe [::i18n-subs/tr])
-        deployments-creds-map (subscribe [::subs/deployments-creds-map])
         creds-name (subscribe [::subs/creds-name-map])
-        module-url  (-> deployment :module :content :urls first)
-        service-url @(subscribe [::deployment-details-subs/url (second module-url)])
-        creds-ids (get @deployments-creds-map id [])
+        credential-id (:credential-id deployment)
         logo-url (:logo-url module)
-        cred-info (str/join ", " (map #(get @creds-name % %) creds-ids))]
+        cred-info (get @creds-name credential-id credential-id)
+        _ (log/error @creds-name)
+        [url-name url] @(subscribe [::subs/deployment-url deployment])]
     ^{:key id}
     [ui/Card
      [ui/Image {:src      (or logo-url "")
@@ -205,12 +205,12 @@
 
       [ui/CardDescription (when-not (str/blank? cred-info)
                             [:div [ui/Icon {:name "key"}] cred-info])]]
-     (when service-url
+     (when url
        [ui/Button {:color   "green"
                    :icon    "external"
-                   :content (first module-url)
+                   :content url-name
                    :fluid   true
-                   :href    service-url
+                   :href    url
                    :target  "_blank"
                    :rel     "noreferrer"}])]))
 
@@ -245,6 +245,11 @@
         page (subscribe [::subs/page])
         deployments (subscribe [::subs/deployments])
         tr (subscribe [::i18n-subs/tr])]
+    (dispatch [::main-events/action-interval
+               {:action    :start
+                :id        :deployment-get-deployments
+                :frequency 20000
+                :event     [::events/get-deployments]}])
     (fn []
       (let [total-pages (general-utils/total-pages (get @deployments :count 0) @elements-per-page)
             deployments-list (get @deployments :resources [])]
@@ -275,9 +280,4 @@
 
 (defmethod panel/render :deployment
   [path]
-  (dispatch [::main-events/action-interval
-             {:action    :start
-              :id        :deployment-get-deployments
-              :frequency 20000
-              :event     [::events/get-deployments]}])
   [deployment-resources])

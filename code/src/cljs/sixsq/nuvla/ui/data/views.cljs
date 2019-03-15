@@ -144,7 +144,6 @@
         deployment (subscribe [::deployment-dialog-subs/deployment])
         data-completed? (subscribe [::deployment-dialog-subs/data-completed?])
         credentials-completed? (subscribe [::deployment-dialog-subs/credentials-completed?])
-        size-completed? (subscribe [::deployment-dialog-subs/size-completed?])
         parameters-completed? (subscribe [::deployment-dialog-subs/parameters-completed?])]
     (fn []
       (let [hide-fn #(do
@@ -161,7 +160,6 @@
             launch-disabled? (or (not @deployment)
                                  (and (not @data-completed?) @data-step-active?)
                                  (not @credentials-completed?)
-                                 (not @size-completed?)
                                  (not @parameters-completed?))]
 
         [ui/Modal {:open       @visible?
@@ -281,10 +279,10 @@
      (if (seq @data-sets)
        [ui/Message {:info true}
         [ui/Icon {:name "pin"}]
-        (@tr [:select-data-sets])]
+        (@tr [:select-datasets])]
        [ui/Message {:warning true}
         [ui/Icon {:name "warning sign"}]
-        (@tr [:no-data-sets])])
+        (@tr [:no-datasets])])
      (when (seq @data-sets)
        (vec (concat [ui/CardGroup]
                     (map (fn [data-set]

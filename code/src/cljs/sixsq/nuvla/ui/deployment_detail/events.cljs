@@ -12,12 +12,6 @@
 
 
 (reg-event-db
-  ::set-runUUID
-  (fn [{:keys [::spec/runUUID] :as db} [_ uuid]]
-    (assoc db ::spec/runUUID uuid)))
-
-
-(reg-event-db
   ::set-deployment
   (fn [db [_ resource]]
     (assoc db ::spec/loading? false
@@ -58,9 +52,7 @@
                                    (not= (:id deployment) resource-id) (assoc ::spec/deployment nil
                                                                               ::spec/deployment-parameters nil
                                                                               ::spec/events nil
-                                                                              ::spec/node-parameters-modal nil
-                                                                              ::spec/node-parameters nil
-                                                                              ::spec/summary-nodes-parameters nil)
+                                                                              ::spec/node-parameters nil)
                                    )
          ::cimi-api-fx/get [client resource-id get-depl-callback]}))))
 
@@ -83,8 +75,7 @@
 (reg-event-db
   ::set-events
   (fn [db [_ events]]
-    (assoc db ::spec/events events
-              ::spec/force-refresh-events-steps (random-uuid))))
+    (assoc db ::spec/events events)))
 
 
 (reg-event-fx
@@ -105,8 +96,7 @@
 (reg-event-db
   ::set-jobs
   (fn [db [_ jobs]]
-    (assoc db ::spec/jobs jobs
-              ::spec/force-refresh-events-steps (random-uuid))))
+    (assoc db ::spec/jobs jobs)))
 
 
 (reg-event-fx
@@ -128,80 +118,6 @@
   ::set-node-parameters
   (fn [db [_ node-parameters]]
     (assoc db ::spec/node-parameters node-parameters)))
-
-
-(defn get-node-parameters
-  [client deployment node-name]
-  (let [filter-str (str "deployment/href='" (:id deployment) "' and node-id='" node-name "'")
-        select-str "id, created, updated, name, description, value"
-        query-params {:filter filter-str
-                      :select select-str}]
-    {::cimi-api-fx/search [client
-                           :deployment-parameter
-                           (general-utils/prepare-params query-params)
-                           #(dispatch [::set-node-parameters (:resources %)])]}))
-
-
-(reg-event-db
-  ::show-node-parameters-modal
-  (fn [{:keys [::client-spec/client
-               ::spec/deployment] :as db} [_ node-name]]
-    (assoc db ::spec/node-parameters-modal node-name
-              ::spec/node-parameters nil)))
-
-
-(reg-event-fx
-  ::get-node-parameters
-  (fn [{{:keys [::client-spec/client
-                ::spec/deployment
-                ::spec/node-parameters-modal] :as db} :db} _]
-    (when (boolean node-parameters-modal)
-      (let [filter-str (str "deployment/href='" (:id deployment) "' and nodeID='" node-parameters-modal "'")
-            select-str "id, created, updated, name, description, value"
-            query-params {:filter  filter-str
-                          :select  select-str
-                          :orderby "name"}]
-        {::cimi-api-fx/search [client
-                               :deployment-parameter
-                               (general-utils/prepare-params query-params)
-                               #(dispatch [::set-node-parameters (:resources %)])]}))))
-
-
-(reg-event-db
-  ::close-node-parameters-modal
-  (fn [db _]
-    (assoc db ::spec/node-parameters-modal nil)))
-
-
-(reg-event-db
-  ::set-summary-nodes-parameters
-  (fn [db [_ summary-nodes-parameters]]
-    (assoc db ::spec/summary-nodes-parameters (group-by :nodeID summary-nodes-parameters))))
-
-
-(def summary-param-names #{"statecustom"
-                           "url.service"
-                           "url.ssh"
-                           "password.ssh"
-                           "complete"})
-
-(reg-event-fx
-  ::get-summary-nodes-parameters
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ resource-id nodes]]
-    (when (some? nodes)
-      (let [nodes-filter (str/join " or " (map #(str "nodeID='" % "'") nodes))
-            names-filter (str/join " or " (map #(str "name='" % "'") summary-param-names))
-            filter-str (str/join " and " [(str "deployment/href='" resource-id "'")
-                                          (str "(" nodes-filter ")")
-                                          (str "(" names-filter ")")])
-            select-str "nodeID, name, value"
-            query-params {:filter  filter-str
-                          :select  select-str
-                          :orderby "name"}]
-        {::cimi-api-fx/search [client
-                               :deployment-parameter
-                               (general-utils/prepare-params query-params)
-                               #(dispatch [::set-summary-nodes-parameters (:resources %)])]}))))
 
 
 ;;

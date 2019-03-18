@@ -79,7 +79,7 @@
         resource-metadata (subscribe [::docs-subs/document @collection])]
     (fn [{:keys [id] :as data} description action-fn]
       [action-button-icon
-       (@tr [:update])
+       (@tr [:raw])
        "pencil"
        (str (@tr [:editing]) " " id)
        [forms/resource-editor id text :resource-meta @resource-metadata]

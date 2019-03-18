@@ -7,7 +7,8 @@
     [sixsq.nuvla.ui.application.utils :as utils]
     [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.history.events :as history-evts]
-    [sixsq.nuvla.ui.main.spec :as main-spec]))
+    [sixsq.nuvla.ui.main.spec :as main-spec]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db
@@ -30,7 +31,6 @@
     (assoc db ::spec/add-modal-visible? false
               ::spec/active-tab :project
               ::spec/add-data nil)))
-
 
 
 (defn fixup-image-data
@@ -91,3 +91,71 @@
   (fn [db [_ active-tab]]
     (assoc db ::spec/active-tab active-tab)))
 
+
+(reg-event-db
+  ::page-changed?
+  (fn [db [_ has-change?]]
+    (assoc db ::spec/page-changed? has-change?)))
+
+
+(reg-event-db
+  ::name
+  (fn [db [_ name]]
+    (assoc-in db [::spec/module :name] name)))
+
+
+(reg-event-db
+  ::description
+  (fn [db [_ description]]
+    (assoc-in db [::spec/module :description] description)))
+
+
+(reg-event-db
+  ::parent
+  (fn [db [_ parent]]
+    (assoc-in db [::spec/module :parent-path] parent)))
+
+
+(reg-event-db
+  ::docker-image
+  (fn [db [_ docker-image]]
+    (assoc-in db [::spec/module :docker-image] docker-image)))
+
+
+(reg-event-db
+  ::commit-message
+  (fn [db [_ msg]]
+    (assoc db ::spec/commit-message msg)))
+
+
+(reg-event-db
+  ::open-save-modal
+  (fn [db _]
+    (assoc db ::spec/save-modal-visible? true)))
+
+
+(reg-event-db
+  ::close-save-modal
+  (fn [db _]
+    (assoc db ::spec/save-modal-visible? false)))
+
+
+(reg-event-db
+  ::save-logo-url
+  (fn [db [_ logo-url]]
+    (dispatch [::page-changed? true])
+    (-> db
+        (assoc-in [::spec/module :logo-url] logo-url)
+        (assoc-in [::spec/logo-url-modal-visible?] false))))
+
+
+(reg-event-db
+  ::open-logo-url-modal
+  (fn [db _]
+    (assoc db ::spec/logo-url-modal-visible? true)))
+
+
+(reg-event-db
+  ::close-logo-url-modal
+  (fn [db _]
+    (assoc db ::spec/logo-url-modal-visible? false)))

@@ -9,22 +9,35 @@
 
 (s/def ::module any?)
 
+(s/def ::default-logo-url (s/nilable string?))
+(s/def ::logo-url-modal-visible? boolean?)
+
+(s/def ::save-modal-visible? boolean?)
+
 (s/def ::add-modal-visible? boolean?)
 
-(s/def ::active-tab keyword?)
+(s/def ::page-changed? boolean?)
 
-(s/def ::add-data (s/nilable map?))
+(s/def ::commit-message (s/nilable string?))
 
 (s/def ::db (s/keys :req [::completed?
                           ::module-path
                           ::module
                           ::add-modal-visible?
-                          ::active-tab
-                          ::add-data]))
+                          ::page-changed?
+                          ::default-logo-url
+                          ::logo-url-modal-visible?
+                          ::save-modal-visible?
+                          ::commit-message
+                          ]))
 
-(def defaults {::completed?                    true
-               ::module-path                   nil
-               ::module                        nil
-               ::add-modal-visible?            false
-               ::active-tab                    :project
-               ::add-data                      nil})
+(def defaults {::completed?              true
+               ::module-path             nil
+               ::module                  nil
+               ::add-modal-visible?      false
+               ::page-changed?           false
+               ::logo-url-modal-visible? false
+               ::save-modal-visible?     false
+               ::default-logo-url        "https://semantic-ui.com/images/wireframe/image.png"
+               ::commit-message          nil
+               })

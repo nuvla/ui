@@ -8,6 +8,16 @@
   (some->> nav-path rest seq (str/join "/")))
 
 
+(defn nav-path->parent-path
+  [nav-path]
+  (some->> nav-path rest drop-last seq (str/join "/")))
+
+
+(defn nav-path->module-name
+  [nav-path]
+  (some->> nav-path rest last))
+
+
 (defn category-icon
   [category]
   (case category

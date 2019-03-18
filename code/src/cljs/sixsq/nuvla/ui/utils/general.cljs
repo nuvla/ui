@@ -2,7 +2,8 @@
   (:require
     [cljs.tools.reader.edn :as edn]
     [clojure.set :as set]
-    [clojure.string :as str]))
+    [clojure.string :as str]
+    [clojure.string :as string]))
 
 
 (defn str->int
@@ -82,6 +83,14 @@
      s)))
 
 
+(defn capitalize-words
+  "Capitalize every word in a string"
+  [s]
+  (->> (string/split (str s) #"\b")
+       (map string/capitalize)
+       string/join))
+
+
 ;;
 ;; json/edn conversions
 ;;
@@ -136,3 +145,4 @@
 
 (defn operation-name [op-uri]
   (second (re-matches #"^(?:.*/)?(.+)$" op-uri)))
+

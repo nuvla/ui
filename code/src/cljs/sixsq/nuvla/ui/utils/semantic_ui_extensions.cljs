@@ -75,14 +75,20 @@
 
 
 (defn Pagination
-  "Provide pagination element with more visible icons."
+  "Provide pagination element with more visible icons. Note: :totalitems is in lowercase not to interfere with
+   React DOM attributes."
   [options]
-  [ui/Pagination
-   (merge {:firstItem {:content (reagent/as-element [ui/Icon {:name "angle double left"}]) :icon true}
-           :lastItem  {:content (reagent/as-element [ui/Icon {:name "angle double right"}]) :icon true}
-           :prevItem  {:content (reagent/as-element [ui/Icon {:name "angle left"}]) :icon true}
-           :nextItem  {:content (reagent/as-element [ui/Icon {:name "angle right"}]) :icon true}}
-          (merge {:floated "right", :size "tiny"} options))])
+  [:div
+   (when (:totalitems options)
+     [ui/Label {:style {:float :left}
+                :size :medium}
+      (str "Total: " (:totalitems options))])
+   [ui/Pagination
+    (merge {:firstItem {:content (reagent/as-element [ui/Icon {:name "angle double left"}]) :icon true}
+            :lastItem  {:content (reagent/as-element [ui/Icon {:name "angle double right"}]) :icon true}
+            :prevItem  {:content (reagent/as-element [ui/Icon {:name "angle left"}]) :icon true}
+            :nextItem  {:content (reagent/as-element [ui/Icon {:name "angle right"}]) :icon true}}
+           (merge {:floated :right, :size "tiny"} options))]])
 
 (defn EditorJson
   "A convenience function to setup the CodeMirror editor component for JSON."

@@ -55,6 +55,5 @@
          main/defaults
          messages/defaults
          module-component/defaults
-         module-project/defaults
          nuvlabox/defaults
          nuvlabox-detail/defaults))

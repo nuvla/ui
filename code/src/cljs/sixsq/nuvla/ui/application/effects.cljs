@@ -13,9 +13,9 @@
   ::get-module
   (fn [[client path callback]]
     (go
-      (let [path (or path "")
-            path-filter (str "path='" path "'")
-            children-filter (str "parentPath='" path "'")
+      (let [path            (or path "")
+            path-filter     (str "path='" path "'")
+            children-filter (str "parent-path='" path "'")
 
             {:keys [type id] :as project-metadata} (if-not (str/blank? path)
                                                      (-> (<! (api/search client "module" {:filter path-filter}))
@@ -25,16 +25,16 @@
                                                       :name        "Applications"
                                                       :description "cloud applications at your service"})
 
-            module (if (not= "PROJECT" type)
-                     (<! (api/get client id))
-                     project-metadata)
+            module          (if (not= "PROJECT" type)
+                              (<! (api/get client id))
+                              project-metadata)
 
-            children (when (= type "PROJECT")
-                       (:resources (<! (api/search client "module" {}))))
+            children        (when (= type "PROJECT")
+                              (:resources (<! (api/search client "module" {:filter children-filter}))))
 
-            module-data (cond-> module
-                                children (assoc :children children))]
-(log/infof "children %s" children)
+            module-data     (cond-> module
+                                    children (assoc :children children))
+            ]
         (callback module-data)))))
 
 
@@ -45,5 +45,3 @@
       (let [{:keys [status] :as response} (<! (api/add client "module" data))]
         (when (= 201 status)
           (callback response))))))
-
-

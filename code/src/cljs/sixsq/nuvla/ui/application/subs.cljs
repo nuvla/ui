@@ -1,31 +1,44 @@
 (ns sixsq.nuvla.ui.application.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.application.spec :as application-spec]))
+    [sixsq.nuvla.ui.application.spec :as spec]))
 
 
 (reg-sub
   ::completed?
-  ::application-spec/completed?)
+  ::spec/completed?)
 
 
 (reg-sub
   ::module
-  ::application-spec/module)
+  ::spec/module)
 
 
 (reg-sub
   ::add-modal-visible?
-  ::application-spec/add-modal-visible?)
+  ::spec/add-modal-visible?)
 
 
 (reg-sub
   ::add-data
-  ::application-spec/add-data)
+  ::spec/add-data)
 
 
 (reg-sub
-  ::active-tab
-  ::application-spec/active-tab)
+  ::page-changed?
+  ::spec/page-changed?)
 
 
+(reg-sub
+  ::save-modal-visible?
+  ::spec/save-modal-visible?)
+
+
+(reg-sub
+  ::default-logo-url
+  ::spec/default-logo-url)
+
+
+(reg-sub
+  ::logo-url-modal-visible?
+  ::spec/logo-url-modal-visible?)

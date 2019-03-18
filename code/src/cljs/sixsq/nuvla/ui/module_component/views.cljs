@@ -19,12 +19,16 @@
     [sixsq.nuvla.ui.panel :as panel]
     [taoensso.timbre :as log]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]))
+    [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
+    [sixsq.nuvla.ui.application.subs :as application-subs]
+    [sixsq.nuvla.ui.application.utils :as application-utils]
+    [sixsq.nuvla.ui.application.views :as application-views]
+    [sixsq.nuvla.ui.application.events :as application-events]))
 
 (defn refresh-button
   []
   (let [tr            (subscribe [::i18n-subs/tr])
-        page-changed? (subscribe [::subs/page-changed?])]
+        page-changed? (subscribe [::application-subs/page-changed?])]
     (fn []
       [ui/MenuMenu {:position "right"}
        [uix/MenuItemWithIcon
@@ -32,85 +36,51 @@
          :icon-name "refresh"
          :loading?  false                                   ;; FIXME: Add loading flag for module.
          :disabled  @page-changed?
-         ;:on-click  #(dispatch [::application-events/get-module])
+         :on-click  #(do (dispatch [::application-events/page-changed? false])
+                         (dispatch [::application-events/get-module]))
          }]])))
 
 
 (defn control-bar []
   (let [tr            (subscribe [::i18n-subs/tr])
-        page-changed? (subscribe [::subs/page-changed?])]
+        page-changed? (subscribe [::application-subs/page-changed?])
+        module        (subscribe [::application-subs/module])]
     (fn []
       [ui/Menu {:borderless true}
        [uix/MenuItemWithIcon
         {:name      (@tr [:launch])
          :icon-name "rocket"
-         :disabled  true
-         ;:on-click #(dispatch [::deployment-dialog-events/create-deployment (:id @module) :credentials])
+         :disabled  (if @page-changed? true false)
+         :on-click  #(dispatch [::deployment-dialog-events/create-deployment (:id @module) :credentials])
          }]
        [uix/MenuItemWithIcon
-        {:name     (@tr [:save])
-         ;:icon-name "add"
-         :disabled (not @page-changed?)
-         :on-click #(dispatch [::events/open-save-modal])}]
+        {:name      (@tr [:save])
+         :icon-name "disk"
+         :disabled  (not @page-changed?)
+         :on-click  #(dispatch [::application-events/open-save-modal])}]
        [refresh-button]])))
 
 
 (defn summary []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        name             (subscribe [::subs/name])
-        parent           (subscribe [::subs/parent])
-        logo-url         (subscribe [::subs/logo-url])
-        default-logo-url (subscribe [::subs/default-logo-url])]
-    [ui/Grid {:style {:margin-bottom 5}}
-     [ui/GridRow {:reversed :computer}
-      [ui/GridColumn {:computer 2}
-       [ui/Image {:src (or @logo-url @default-logo-url)}]
-       [ui/Button {:fluid    true
-                   :on-click #(dispatch [::events/open-logo-url-modal])}
-        (@tr [:module-change-logo])]]
-      [ui/GridColumn {:computer 14}
-       ;[:div (pr-str @(subscribe [::subs/name]) @(subscribe [::subs/description]))]
-       [ui/Input {:name        "name"
-                  :value       @name
-                  :placeholder (str/capitalize (@tr [:name]))
-                  :fluid       true
-                  :style       {:padding-bottom 5}
-                  :on-change   (ui-callback/input-callback #(dispatch [::events/name %]))}]
-       [ui/Input {:name        "parent"
-                  :value       @parent
-                  :placeholder (str/capitalize (@tr [:parent]))
-                  :fluid       true
-                  :style       {:padding-bottom 5}
-                  :on-change   (ui-callback/input-callback #(dispatch [::events/parent %]))}]
-       [ui/Input {:name        "description"
-                  :placeholder (str/capitalize (@tr [:description]))
-                  :fluid       true
-                  :style       {:padding-bottom 5}
-                  :on-change   (ui-callback/input-callback #(dispatch [::events/description %]))}]
-       [:div
-        [:div "Docker image"
-         [:span forms/nbsp (forms/help-popup (@tr [:module-docker-name-help]))]]
-        [ui/Input {:name        "docker-name"
-                   :placeholder "e.g. ubuntu:18.11"
-                   :fluid       true
-                   :style       {:padding-bottom 5
-                                 :padding-top    5}}]]
-       ;[:div {:style {:padding-bottom 5}} " " (@tr [:module-force-pull-image?]) " "
-       ; [ui/Checkbox {:name  "force-image-pull"
-       ;               :align :middle}]
-       ; [:span " "]
-       ; [:span forms/nbsp (forms/help-popup "Force pull when...")]]
-       ;[:div (@tr [:module-restart-policy]) " "
-       ; [ui/Label
-       ;  [ui/Dropdown {:name          "restart-policy"
-       ;                :inline        true
-       ;                :default-value :always
-       ;                :on-change     (ui-callback/dropdown #(log/infof "Dropdown: %s" %))
-       ;                :options       [{:key "Always", :value "always", :text "Always"}
-       ;                                {:key "Never", :value "never", :text "Never"}]}]]
-       ; [:span " "]
-       ; [:span forms/nbsp (forms/help-popup (@tr [:module-restart-policy-help]))]]
-       ]]]))
+  (let [tr     (subscribe [::i18n-subs/tr])
+        module (subscribe [::application-subs/module])]
+    (fn []
+      (let [content (:content @module)
+            {docker-image :image
+                          :or {docker-image ""}} content]
+        [application-views/summary
+         [:div
+          [ui/Input {:name        "docker-image"
+                     :label       "docker image"
+                     :value       docker-image
+                     :placeholder (@tr [:module-docker-image-placeholder])
+                     :fluid       true
+                     :style       {:padding-bottom 5}
+                     :on-change   (ui-callback/input-callback #(do (dispatch [::application-events/page-changed? true])
+                                                                   (dispatch [::application-events/docker-image %])))
+                     }]]]))))
+
+
 
 (defn toggle [v]
   (swap! v not))
@@ -124,13 +94,15 @@
                      :width   11}
       [ui/Input {:name        (str "source-" id)
                  :placeholder "source - e.g. 22 or 22-23"
-                 :value       source                        ;(or source "")
-                 :on-change   (ui-callback/input-callback #(dispatch [::events/update-mapping-source id %]))}]
+                 :value       source
+                 :on-change   (ui-callback/input-callback #(do (dispatch [::application-events/page-changed? true])
+                                                               (dispatch [::events/update-mapping-source id %])))}]
       [:span " : "]
       [ui/Input {:name        (str "destination-" id)
                  :placeholder "dest. - e.g. 22 or 22-23"
-                 :value       destination                   ;(or destination "")
-                 :on-change   (ui-callback/input-callback #(dispatch [::events/update-mapping-destination id %]))}]
+                 :value       destination
+                 :on-change   (ui-callback/input-callback #(do (dispatch [::application-events/page-changed? true])
+                                                               (dispatch [::events/update-mapping-destination id %])))}]
       [:span " / "]
       [ui/Label
        [ui/Dropdown {:name    (str "port-type-" id)
@@ -144,7 +116,8 @@
                      :align   :right
                      :style   {}}
       [ui/Icon {:name     "trash"
-                :on-click #(dispatch [::events/remove-port-mapping id])
+                :on-click #(do (dispatch [::application-events/page-changed? true])
+                               (dispatch [::events/remove-port-mapping id]))
                 :color    :red}]]]))
 
 (defn port-mappings-section []
@@ -167,11 +140,12 @@
         [:div [ui/Grid {:style {:margin-top    5
                                 :margin-bottom 5}}
                (for [[id mapping] @mappings]
-                 ;[ui/GridRow {:key id}]
+                 ^{:key id}
                  [single-port-mapping id mapping])]]
         [:div
          [ui/Icon {:name     "plus circle"
-                   :on-click #(dispatch [::events/add-port-mapping (random-uuid) {}])}]]]])))
+                   :on-click #(do (dispatch [::application-events/page-changed? true])
+                                  (dispatch [::events/add-port-mapping (random-uuid) {}]))}]]]])))
 
 
 (defn single-volume [id volume]
@@ -206,15 +180,18 @@
       [ui/Input {:name        (str "source-" id)
                  :placeholder "source"
                  :value       source
-                 :on-change   (ui-callback/input-callback #(dispatch [::events/update-volume-source id %]))}]
+                 :on-change   (ui-callback/input-callback #(do (dispatch [::application-events/page-changed? true])
+                                                               (dispatch [::events/update-volume-source id %])))}]
       [ui/Input {:name        (str "destination-" id)
                  :placeholder "destination"
                  :value       destination
-                 :on-change   (ui-callback/input-callback #(dispatch [::events/update-volume-destination id %]))}]
+                 :on-change   (ui-callback/input-callback #(do (dispatch [::application-events/page-changed? true])
+                                                               (dispatch [::events/update-volume-destination id %])))}]
       [ui/Input {:name        (str "driver-" id)
                  :placeholder "driver"
                  :value       driver
-                 :on-change   (ui-callback/input-callback #(dispatch [::events/update-volume-driver id %]))}]
+                 :on-change   (ui-callback/input-callback #(do (dispatch [::application-events/page-changed? true])
+                                                               (dispatch [::events/update-volume-driver id %])))}]
       [:span " " (@tr [:module-volume-read-only?]) " "
        [ui/Checkbox {:name    "read-only"
                      :checked (if (nil? read-only?) false read-only?)
@@ -226,14 +203,15 @@
                      :align   :right
                      :style   {}}
       [ui/Icon {:name     "trash"
-                :on-click #(dispatch [::events/remove-volume id])
+                :on-click #(do (dispatch [::application-events/page-changed? true])
+                               (dispatch [::events/remove-volume id]))
                 :color    :red}]]]))
 
 
 (defn volumes-section []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        active?  (reagent/atom true)
-        volumes  (subscribe [::subs/volumes])]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        active? (reagent/atom true)
+        volumes (subscribe [::subs/volumes])]
     (fn []
       [ui/Accordion {:fluid     true
                      :styled    true
@@ -250,11 +228,12 @@
         [:div [ui/Grid {:style {:margin-top    5
                                 :margin-bottom 5}}
                (for [[id volume] @volumes]
-                 ;[ui/GridRow {:key id}]
+                 ^{:key id}
                  [single-volume id volume])]]
         [:div
          [ui/Icon {:name     "plus circle"
-                   :on-click #(dispatch [::events/add-volume (random-uuid) {}])}]]]])))
+                   :on-click #(do (dispatch [::application-events/page-changed? true])
+                                  (dispatch [::events/add-volume (random-uuid) {}]))}]]]])))
 
 
 (defn runtime []
@@ -307,140 +286,28 @@
             [ui/Icon {:name "trash"}]]]
           [ui/Icon {:name "plus circle"}]]]]])))
 
-(defn save-action []
-  (let [page-changed? (subscribe [::subs/page-changed?])]
-    (fn []
-      [ui/Button {:primary  true
-                  :style    {:margin-top 10}
-                  :disabled (not @(subscribe [::subs/page-changed?]))
-                  :on-click #(dispatch [::events/open-save-modal])}
-       "Save"])))
-
-(defn sections []
-  [:div
-   [port-mappings-section]
-   [:div {:style {:padding 5}}]
-   [volumes-section]
-   ;[:div {:style {:padding 5}}]
-   ;   [runtime]
-   ])
-
-(defn logo-url-modal
-  []
-  (let [local-url (reagent/atom "")
-        tr        (subscribe [::i18n-subs/tr])
-        visible?  (subscribe [::subs/logo-url-modal-visible?])
-        url       (subscribe [::subs/logo-url])]
-    (fn []
-      (let []
-        [ui/Modal {:open       @visible?
-                   :close-icon true
-                   :on-close   #(dispatch [::events/close-logo-url-modal])}
-
-         [ui/ModalHeader (@tr [:select-logo-url])]
-
-         [ui/ModalContent
-          [ui/Input {:default-value (or @url "")
-                     :placeholder   (@tr [:logo-url-placeholder])
-                     :fluid         true
-                     :auto-focus    true
-                     :on-change     (ui-callback/input-callback #(reset! local-url %))
-                     :on-key-press  (fn [e]
-                                      (when (= 13 (.-charCode e))
-                                        (dispatch [::events/save-logo-url @local-url])))}]]
-
-         [ui/ModalActions
-          [uix/Button {:text         "Ok"
-                       :positive     true
-                       :disabled     (empty? @local-url)
-                       :active       true
-                       :on-click     #(dispatch [::events/save-logo-url @local-url])
-                       :on-key-press (fn [e]
-                                       (if (= 13 (.-charCode e))
-                                         (log/infof "Button ENTER")
-                                         (log/infof "Button NOT ENTER")))}]]]))))
-
-(defn save-modal
-  []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        visible? (subscribe [::subs/save-modal-visible?])]
-    (fn []
-      (let []
-        (log/infof "is true? %s" @visible?)
-        [ui/Modal {:open       @visible?
-                   :close-icon true
-                   :on-close   #(dispatch [::events/close-save-modal])}
-
-         [ui/ModalHeader (str/capitalize (str (@tr [:save]) " " (@tr [:component])))]
-
-         [ui/ModalContent
-          [ui/Input {:placeholder  (@tr [:commit-placeholder])
-                     :fluid        true
-                     :auto-focus   true
-                     :on-change    (ui-callback/input-callback #(dispatch [::events/commit-message %]))
-                     :on-key-press (fn [e]
-                                     (when (= 13 (.-charCode e))
-                                       (dispatch [::events/close-save-modal])))}]]
-
-         [ui/ModalActions
-          [uix/Button {:text     (@tr [:save])
-                       :positive true
-                       :active   true
-                       :on-click #(dispatch [::events/close-save-modal])}]]]))))
-
-;(defn testing []
-;  [ui/Grid
-;   [ui/GridRow
-;    [ui/GridColumn "LEFT"]
-;    [ui/GridColumn "LEFT"]
-;    [ui/GridColumn "LEFT"]
-;    [ui/GridColumn {:floated :right
-;                    } "RIGHT"]]
-;   [ui/GridRow
-;    [ui/GridColumn "LEFT"]
-;    [ui/GridColumn "LEFT"]
-;    [ui/GridColumn "LEFT"]
-;    [ui/GridColumn {:floated :right
-;                    } "RIGHT"]]
-;   [ui/GridRow
-;    [ui/GridColumn "LEFT"]
-;    [ui/GridColumn "LEFT"]
-;    [ui/GridColumn "LEFT"]
-;    [ui/GridColumn {:floated :right
-;                    } "RIGHT"]]
-;   [ui/GridRow
-;    [ui/GridColumn "LEFT"]
-;    [ui/GridColumn "LEFT"]
-;    [ui/GridColumn "LEFT"]
-;    [ui/GridColumn {:floated :right
-;                    } "RIGHT"]]
-;   ])
 
 (defn view-edit
   []
-  (let [name   (subscribe [::subs/name])
-        parent (subscribe [::subs/parent])]
+  (let [module (subscribe [::application-subs/module])]
     (fn []
-      [ui/Container {:fluid true}
-       [:h2 [ui/Icon {:name "th"}]
-        @parent (when (not (empty? @parent)) "/") @name]
-       [control-bar]
-       [summary]
-       [sections]
-       [save-action]
-       [logo-url-modal]
-       [save-modal]
-       [deployment-dialog-views/deploy-modal false]])))
-
-
-(defn path->parent-path
-  [path]
-  (str/join "/" (rest path)))
-
-
-(defmethod panel/render :module-component
-  [path]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (dispatch [::events/name (str/capitalize (@tr [:new-component]))])
-    (dispatch [::events/parent (path->parent-path @(subscribe [::main-subs/nav-path]))])
-    [view-edit]))
+      (let [new-parent (application-utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
+            new-name   (application-utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))
+            name       (:name @module)
+            parent     (:parent-path @module)]
+        (when (nil? @module)
+          (dispatch [::application-events/name new-name])
+          (dispatch [::application-events/parent new-parent]))
+        [ui/Container {:fluid true}
+         [:h2 [ui/Icon {:name "th"}]
+          parent (when (not-empty parent) "/") name]
+         [application-views/control-bar]
+         [summary]
+         [port-mappings-section]
+         [:div {:style {:padding-top 10}}]
+         [volumes-section]
+         [application-views/save-action]
+         [application-views/add-modal]
+         [application-views/save-modal]
+         [application-views/logo-url-modal]
+         ]))))

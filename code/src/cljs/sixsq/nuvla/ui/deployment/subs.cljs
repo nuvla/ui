@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.deployment.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.deployment.spec :as spec]))
+    [sixsq.nuvla.ui.deployment.spec :as spec]
+    [sixsq.nuvla.ui.deployment.utils :as utils]))
 
 
 (reg-sub
@@ -29,24 +30,6 @@
 
 
 (reg-sub
-  ::deployments-creds-map
-  (fn [db]
-    (::spec/deployments-creds-map db)))
-
-
-(reg-sub
-  ::deployments-service-url-map
-  (fn [db]
-    (::spec/deployments-service-url-map db)))
-
-
-(reg-sub
-  ::deployments-ss-state-map
-  (fn [db]
-    (::spec/deployments-ss-state-map db)))
-
-
-(reg-sub
   ::active-only?
   (fn [db]
     (::spec/active-only? db)))
@@ -62,3 +45,22 @@
   ::view
   (fn [db]
     (::spec/view db)))
+
+
+(reg-sub
+  ::deployments-params-map
+  (fn [db]
+    (::spec/deployments-params-map db)))
+
+(reg-sub
+  ::deployment-url
+  :<- [::deployments-params-map]
+  (fn [deployments-params-map [_ {:keys [id module] :as deployment}]]
+    (let [deployment-params-by-name (->> (get deployments-params-map id)
+                                         (map (juxt :name identity))
+                                         (into {}))
+          first-url (first (get-in module[:content :urls]))
+          url-name (first first-url)
+          url-pattern (second first-url)
+          url (utils/resolve-url-pattern url-pattern deployment-params-by-name)]
+      [url-name url])))

@@ -10,12 +10,6 @@
 
 (s/def ::deployments any?)
 
-(s/def ::deployments-creds-map any?)
-
-(s/def ::deployments-service-url-map any?)
-
-(s/def ::deployments-ss-state-map any?)
-
 (s/def ::page int?)
 
 (s/def ::elements-per-page int?)
@@ -26,26 +20,24 @@
 
 (s/def ::view #{"cards" "table"})
 
+(s/def ::deployments-params-map {})
+
 (s/def ::db (s/keys :req [::loading?
                           ::deployments
+                          ::deployments-params-map
                           ::page
                           ::elements-per-page
                           ::full-text-search
                           ::active-only?
-                          ::deployments-creds-map
-                          ::deployments-service-url-map
-                          ::deployments-ss-state-map
                           ::creds-name-map
                           ::view]))
 
-(def defaults {::loading?                    false
-               ::page                        1
-               ::elements-per-page           9
-               ::full-text-search            nil
-               ::active-only?                true
-               ::deployments                 nil
-               ::deployments-creds-map       {}
-               ::deployments-service-url-map {}
-               ::deployments-ss-state-map    {}
-               ::creds-name-map              {}
-               ::view                        "cards"})
+(def defaults {::loading?               false
+               ::page                   1
+               ::elements-per-page      9
+               ::full-text-search       nil
+               ::active-only?           true
+               ::deployments            nil
+               ::deployments-params-map nil
+               ::creds-name-map         {}
+               ::view                   "cards"})

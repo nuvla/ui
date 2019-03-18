@@ -9,24 +9,6 @@
     [sixsq.nuvla.ui.utils.response :as response]))
 
 
-(reg-event-db
-  ::set-deployments-creds-map
-  (fn [db [_ deployments-creds-map]]
-    (assoc db ::spec/deployments-creds-map deployments-creds-map)))
-
-
-(reg-event-db
-  ::set-deployments-service-url-map
-  (fn [db [_ deployments-service-url-map]]
-    (assoc db ::spec/deployments-service-url-map deployments-service-url-map)))
-
-
-(reg-event-db
-  ::set-deployments-ss-state-map
-  (fn [db [_ deployments-ss-state-map]]
-    (assoc db ::spec/deployments-ss-state-map deployments-ss-state-map)))
-
-
 (reg-event-fx
   ::set-creds-ids
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ credentials-ids]]
@@ -49,33 +31,25 @@
     (assoc db ::spec/creds-name-map creds-name-map)))
 
 
+(reg-event-db
+  ::set-deployments-params-map
+  (fn [db [_ {deployment-params :resources}]]
+    (assoc db ::spec/deployments-params-map
+              (group-by (comp :href :deployment) deployment-params))))
+
+
 (reg-event-fx
   ::set-deployments
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ deployments]]
-    (let [deployments-resource-ids (->> deployments :resources (map :id))
+  (fn [{{:keys [::client-spec/client] :as db} :db} [_ {:keys [resources] :as deployments}]]
+    (let [deployments-resource-ids (map :id resources)
+          deployments-creds-ids (distinct (map :credential-id resources))
           filter-deps-ids (str/join " or " (map #(str "deployment/href='" % "'") deployments-resource-ids))
           query-params {:filter (str "(" filter-deps-ids ") and value!=null")
                         :select "id, deployment, name, value"}
           callback (fn [response]
                      (when-not (instance? js/Error response)
-                       (let [deployment-params (->> response :resources (group-by :name))
-                             credentials-params (get deployment-params "credential.id")
-                             credentials-ids (->> credentials-params (map :value) distinct)
-                             deployments-creds-map (->> credentials-params
-                                                        (group-by (comp :href :deployment))
-                                                        (map (fn [[k param-list]]
-                                                               [k (->> param-list (map :value) set)]))
-                                                        (into {}))
-                             deployments-service-url-map (->> (get deployment-params "ss:url.service")
-                                                              (map (juxt (comp :href :deployment) :value))
-                                                              (into {}))
-                             deployments-ss-state-map (->> (get deployment-params "ss:state")
-                                                           (map (juxt (comp :href :deployment) :value))
-                                                           (into {}))]
-                         (dispatch [::set-deployments-creds-map deployments-creds-map])
-                         (dispatch [::set-creds-ids credentials-ids])
-                         (dispatch [::set-deployments-service-url-map deployments-service-url-map])
-                         (dispatch [::set-deployments-ss-state-map deployments-ss-state-map]))))]
+                       (dispatch [::set-deployments-params-map response])))]
+      (dispatch [::set-creds-ids deployments-creds-ids])
       (cond-> {:db (assoc db ::spec/loading? false
                              ::spec/deployments deployments)}
               (not-empty deployments-resource-ids) (assoc ::cimi-api-fx/search

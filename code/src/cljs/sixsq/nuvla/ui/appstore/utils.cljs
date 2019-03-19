@@ -3,6 +3,7 @@
 
 (defn get-query-params
   [full-text-search page elements-per-page]
-  (cond-> {:first (inc (* (dec page) elements-per-page))
-           :last  (* page elements-per-page)}
-          (not-empty full-text-search) (assoc :filter (str "description=='" full-text-search "*'"))))
+  {:first  (inc (* (dec page) elements-per-page))
+   :last   (* page elements-per-page)
+   :filter (str "type=='COMPONENT'"
+                (when (not-empty full-text-search) (str "and fulltext=='" full-text-search "*'")))})

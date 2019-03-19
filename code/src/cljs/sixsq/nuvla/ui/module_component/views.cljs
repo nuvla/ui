@@ -23,7 +23,8 @@
     [sixsq.nuvla.ui.application.subs :as application-subs]
     [sixsq.nuvla.ui.application.utils :as application-utils]
     [sixsq.nuvla.ui.application.views :as application-views]
-    [sixsq.nuvla.ui.application.events :as application-events]))
+    [sixsq.nuvla.ui.application.events :as application-events]
+    [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]))
 
 (defn refresh-button
   []
@@ -39,26 +40,6 @@
          :on-click  #(do (dispatch [::application-events/page-changed? false])
                          (dispatch [::application-events/get-module]))
          }]])))
-
-
-(defn control-bar []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        page-changed? (subscribe [::application-subs/page-changed?])
-        module        (subscribe [::application-subs/module])]
-    (fn []
-      [ui/Menu {:borderless true}
-       [uix/MenuItemWithIcon
-        {:name      (@tr [:launch])
-         :icon-name "rocket"
-         :disabled  (if @page-changed? true false)
-         :on-click  #(dispatch [::deployment-dialog-events/create-deployment (:id @module) :credentials])
-         }]
-       [uix/MenuItemWithIcon
-        {:name      (@tr [:save])
-         :icon-name "disk"
-         :disabled  (not @page-changed?)
-         :on-click  #(dispatch [::application-events/open-save-modal])}]
-       [refresh-button]])))
 
 
 (defn summary []
@@ -291,13 +272,13 @@
   []
   (let [module (subscribe [::application-subs/module])]
     (fn []
-      (let [new-parent (application-utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
-            new-name   (application-utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))
-            name       (:name @module)
+      (let [name       (:name @module)
             parent     (:parent-path @module)]
-        (when (nil? @module)
-          (dispatch [::application-events/name new-name])
-          (dispatch [::application-events/parent new-parent]))
+        (when (empty? @module)
+          (let [new-parent (application-utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
+                new-name   (application-utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
+            (dispatch [::application-events/name new-name])
+            (dispatch [::application-events/parent new-parent])))
         [ui/Container {:fluid true}
          [:h2 [ui/Icon {:name "th"}]
           parent (when (not-empty parent) "/") name]
@@ -310,4 +291,5 @@
          [application-views/add-modal]
          [application-views/save-modal]
          [application-views/logo-url-modal]
+         [deployment-dialog-views/deploy-modal]
          ]))))

@@ -6,15 +6,14 @@
     [sixsq.nuvla.ui.application.subs :as application-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.application.utils :as application-utils]
-    [sixsq.nuvla.ui.module-project.events :as module-project-events]
+    [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.module-project.views :as module-project-views]
-    [sixsq.nuvla.ui.module-component.events :as module-component-events]
     [sixsq.nuvla.ui.module-component.views :as module-component-views]
     [sixsq.nuvla.ui.appstore.events :as events]
     [sixsq.nuvla.ui.appstore.subs :as subs]
-    [sixsq.nuvla.ui.appstore.utils :as utils]
     [sixsq.nuvla.ui.deployment-detail.utils :as deployment-detail-utils]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -35,14 +34,15 @@
       [uix/MenuItemWithIcon
        {:name      (@tr [:refresh])
         :icon-name "refresh"
-        :position "right"
+        :position  "right"
         :on-click  #(dispatch [::events/get-modules])}])))
 
 
-(defn format-deployment-template
-  [{:keys [id name description module] :as deployment-template}]
+(defn module-card
+  [{:keys [id name description path type logo-url] :as module}]
   (let [tr (subscribe [::i18n-subs/tr])
-        {:keys [type parentPath logo-url]} module]
+        ;{:keys [type parentPath logo-url]} module
+        ]
     ^{:key id}
     [ui/Card
      (when logo-url
@@ -53,21 +53,27 @@
      [ui/CardContent
       [ui/CardHeader {:style {:word-wrap "break-word"}}
        [ui/Icon {:name (deployment-detail-utils/category-icon type)}]
+       [ui/Label {:corner true
+                  :icon   "info circle"
+                  :style  {:z-index 0
+                           :cursor :pointer}
+                  :on-click #(dispatch [::history-events/navigate (str "apps/" path)])}]
        (or name id)]
-      [ui/CardMeta {:style {:word-wrap "break-word"}} parentPath]
+      [ui/CardMeta {:style {:word-wrap "break-word"}} path]
       [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]]
      [ui/Button {:fluid    true
                  :primary  true
-                 :on-click #(dispatch [::events/create-deployment id "credentials"])}
-      (@tr [:launch])]]))
+                 :icon     :rocket
+                 :content  (@tr [:launch])
+                 :on-click #(dispatch [::deployment-dialog-events/create-deployment (:id module) :credentials])}]]))
 
 
 (defn modules-cards-group
   [modules-list]
   [ui/Segment style/basic
    (vec (concat [ui/CardGroup {:centered true}]
-                (map (fn [deployment-template]
-                       [format-deployment-template deployment-template])
+                (map (fn [module]
+                       [module-card module])
                      modules-list)))])
 
 
@@ -92,18 +98,13 @@
 
 
 (defn control-bar-projects []
-  (let [tr     (subscribe [::i18n-subs/tr])
-        module (subscribe [::subs/module])
-        ]
-    (let []
-      (vec (concat [ui/Menu {:borderless true}
-
-                    [uix/MenuItemWithIcon
-                     {:name      (@tr [:add])
-                      :icon-name "add"
-                      :on-click  #(dispatch [::application-events/open-add-modal])}]
-
-                    [refresh-button]])))))
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (vec (concat [ui/Menu {:borderless true}
+                  [uix/MenuItemWithIcon
+                   {:name      (@tr [:add])
+                    :icon-name "add"
+                    :on-click  #(dispatch [::application-events/open-add-modal])}]
+                  [refresh-button]]))))
 
 
 (defn root-projects []
@@ -114,7 +115,6 @@
       (let []
         [ui/Container {:fluid true}
          [application-views/add-modal]
-         [deployment-dialog-views/deploy-modal false]
          [application-views/format-error @data]
          [ui/Accordion {:fluid     true
                         :styled    true
@@ -203,14 +203,14 @@
    [:div {:style {:margin-top 10}}]
    [appstore]
    [:div {:style {:margin-top 10}}]
-   [root-projects]])
+   [root-projects]
+   [deployment-dialog-views/deploy-modal]])
 
 (defn apps
   []
   (let [query       (clojure.walk/keywordize-keys (:query (url/url (-> js/window .-location .-href))))
         type        (:type query)
         module-name (application-utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
-    [deployment-dialog-views/deploy-modal false]
     (if module-name
       (module type)
       [root-view])))

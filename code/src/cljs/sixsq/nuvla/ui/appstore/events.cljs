@@ -32,7 +32,7 @@
     (let [new-page 1]
       {:db                  (assoc db ::spec/full-text-search full-text-search
                                       ::spec/page new-page)
-       ::cimi-api-fx/search [client :modules (utils/get-query-params full-text-search new-page elements-per-page)
+       ::cimi-api-fx/search [client :module (utils/get-query-params full-text-search new-page elements-per-page)
                              #(dispatch [::set-modules %])]})))
 
 

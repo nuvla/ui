@@ -8,7 +8,6 @@
     [sixsq.nuvla.ui.application.utils :as utils]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
-    [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -177,10 +176,10 @@
   []
   (let [tr       (subscribe [::i18n-subs/tr])
         visible? (subscribe [::subs/add-modal-visible?])
-        nav-path (subscribe [::main-subs/nav-path])
-        parent   (utils/nav-path->module-path @nav-path)]
+        nav-path (subscribe [::main-subs/nav-path])]
     (fn []
-      (let [hide-fn #(dispatch [::events/close-add-modal])]
+      (let [parent   (utils/nav-path->module-path @nav-path)
+            hide-fn #(dispatch [::events/close-add-modal])]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   hide-fn}
@@ -442,7 +441,7 @@
             (@tr [:module-change-logo])]]
           [ui/GridColumn {:computer     14
                           :large-screen 14}
-           ;[:div (pr-str @(subscribe [::subs/module]) @(subscribe [::subs/description]))]
+           ;           [:div (pr-str @(subscribe [::subs/module]))]
            [ui/Input {:name        "name"
                       :label       "name"
                       :value       name
@@ -454,7 +453,7 @@
                       }]
            [ui/Input {:name        "parent"
                       :label       (if (= "PROJECT" type) "parent project" "project")
-                      :value       parent
+                      :value       (or parent "")           ;should not be needed, but is!!?
                       :placeholder (str/capitalize (@tr [:parent]))
                       :fluid       true
                       :style       {:padding-bottom 5}

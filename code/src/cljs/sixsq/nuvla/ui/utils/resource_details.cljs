@@ -23,9 +23,9 @@
 (defn action-buttons
   [confirm-label cancel-label on-confirm on-cancel]
   [:div
-   [uix/Button
-    {:text     cancel-label
-     :on-click on-cancel}]
+   ;[uix/Button
+   ; {:text     cancel-label
+   ;  :on-click on-cancel}]
    [uix/Button
     {:text     confirm-label
      :primary  true
@@ -33,9 +33,9 @@
 
 
 (defn action-button-icon
-  [label icon title-text body on-confirm on-cancel & [scrolling? position]]
+  [menu-item-label button-confirm-label icon title-text body on-confirm on-cancel & [scrolling? position]]
   (let [show? (r/atom false)]
-    (fn [label icon title-text body on-confirm on-cancel & [scrolling? position]]
+    (fn [menu-item-label button-confirm-label icon title-text body on-confirm on-cancel & [scrolling? position]]
       (let [action-fn (fn []
                         (reset! show? false)
                         (on-confirm))
@@ -48,17 +48,19 @@
           :closeIcon true
           :on-close  #(reset! show? false)
           :trigger   (r/as-element
-                       [ui/MenuItem (cond-> {:aria-label label, :name label, :on-click #(reset! show? true)}
+                       [ui/MenuItem (cond-> {:aria-label menu-item-label
+                                             :name       menu-item-label
+                                             :on-click   #(reset! show? true)}
                                             position (assoc :position position))
                         (when icon
                           [ui/Icon {:name icon}])
-                        label])}
+                        menu-item-label])}
          [ui/ModalHeader title-text]
          [ui/ModalContent (cond-> {}
                                   scrolling? (assoc :scrolling true)) body]
          [ui/ModalActions
           [action-buttons
-           label
+           button-confirm-label
            "cancel"
            action-fn
            cancel-fn]]]))))
@@ -66,20 +68,21 @@
 
 (defn action-button
   [label title-text body on-confirm on-cancel & [scrolling?]]
-  [action-button-icon label nil title-text body on-confirm on-cancel scrolling?])
+  [action-button-icon label label nil title-text body on-confirm on-cancel scrolling?])
 
 
 (defn edit-button
   "Creates an edit that will bring up an edit dialog and will save the
    modified resource when saved."
   [{:keys [id] :as data} description action-fn]
-  (let [tr (subscribe [::i18n-subs/tr])
-        text (atom (general/edn->json data))
-        collection (subscribe [::cimi-subs/collection-name])
+  (let [tr                (subscribe [::i18n-subs/tr])
+        text              (atom (general/edn->json data))
+        collection        (subscribe [::cimi-subs/collection-name])
         resource-metadata (subscribe [::docs-subs/document @collection])]
     (fn [{:keys [id] :as data} description action-fn]
       [action-button-icon
        (@tr [:raw])
+       (@tr [:save])
        "pencil"
        (str (@tr [:editing]) " " id)
        [forms/resource-editor id text :resource-meta @resource-metadata]
@@ -100,6 +103,7 @@
     (fn [data action-fn]
       [action-button-icon
        (@tr [:delete])
+       (@tr [:delete])
        "trash"
        (@tr [:delete-resource])
        [:p (@tr [:delete-resource-msg] [(:id data)])]
@@ -113,6 +117,7 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [label data action-fn]
       [action-button-icon
+       label
        label
        (case label
          "download" "cloud download"

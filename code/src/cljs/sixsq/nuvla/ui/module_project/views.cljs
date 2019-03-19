@@ -104,13 +104,13 @@
   []
   (let [module (subscribe [::application-subs/module])]
     (fn []
-      (let [new-parent (application-utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
-            new-name   (application-utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))
-            name       (:name @module)
+      (let [name       (:name @module)
             parent     (:parent-path @module)]
         (when (nil? @module)
-          (dispatch [::application-events/name new-name])
-          (dispatch [::application-events/parent new-parent]))
+          (let [new-parent (application-utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
+                new-name   (application-utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
+            (dispatch [::application-events/name new-name])
+            (dispatch [::application-events/parent new-parent])))
         [ui/Container {:fluid true}
          [:h2 [ui/Icon {:name "folder"}]
           parent (when (not-empty parent) "/") name]

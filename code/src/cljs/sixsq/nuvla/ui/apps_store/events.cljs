@@ -1,8 +1,8 @@
-(ns sixsq.nuvla.ui.appstore.events
+(ns sixsq.nuvla.ui.apps-store.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.appstore.spec :as spec]
-    [sixsq.nuvla.ui.appstore.utils :as utils]
+    [sixsq.nuvla.ui.apps-store.spec :as spec]
+    [sixsq.nuvla.ui.apps-store.utils :as utils]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.client.spec :as client-spec]))
 

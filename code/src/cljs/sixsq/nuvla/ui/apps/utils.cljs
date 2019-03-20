@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.application.utils
+(ns sixsq.nuvla.ui.apps.utils
   (:require
     [clojure.string :as str]))
 

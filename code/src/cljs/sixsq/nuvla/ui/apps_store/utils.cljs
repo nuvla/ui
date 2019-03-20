@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.appstore.utils)
+(ns sixsq.nuvla.ui.apps-store.utils)
 
 
 (defn get-query-params

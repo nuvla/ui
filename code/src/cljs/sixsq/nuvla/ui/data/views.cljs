@@ -2,7 +2,7 @@
   (:require
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as reagent]
-    [sixsq.nuvla.ui.application.utils :as application-utils]
+    [sixsq.nuvla.ui.apps.utils :as application-utils]
     [sixsq.nuvla.ui.data.events :as events]
     [sixsq.nuvla.ui.data.subs :as subs]
     [sixsq.nuvla.ui.data.utils :as utils]

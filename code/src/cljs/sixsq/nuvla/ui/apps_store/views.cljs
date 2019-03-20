@@ -1,16 +1,16 @@
-(ns sixsq.nuvla.ui.appstore.views
+(ns sixsq.nuvla.ui.apps-store.views
   (:require
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [sixsq.nuvla.ui.application.views :as application-views]
-    [sixsq.nuvla.ui.application.events :as application-events]
-    [sixsq.nuvla.ui.application.subs :as application-subs]
+    [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
+    [sixsq.nuvla.ui.apps.events :as apps-events]
+    [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.application.utils :as application-utils]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
-    [sixsq.nuvla.ui.module-project.views :as module-project-views]
-    [sixsq.nuvla.ui.module-component.views :as module-component-views]
-    [sixsq.nuvla.ui.appstore.events :as events]
-    [sixsq.nuvla.ui.appstore.subs :as subs]
+    [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
+    [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
+    [sixsq.nuvla.ui.apps-store.events :as events]
+    [sixsq.nuvla.ui.apps-store.subs :as subs]
     [sixsq.nuvla.ui.deployment-detail.utils :as deployment-detail-utils]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -105,19 +105,19 @@
                   [uix/MenuItemWithIcon
                    {:name      (@tr [:add])
                     :icon-name "add"
-                    :on-click  #(dispatch [::application-events/open-add-modal])}]
+                    :on-click  #(dispatch [::apps-events/open-add-modal])}]
                   [refresh-button]]))))
 
 
 (defn root-projects []
   (let [tr      (subscribe [::i18n-subs/tr])
-        data    (subscribe [::application-subs/module])
+        data    (subscribe [::apps-subs/module])
         active? (reagent/atom true)]
     (fn []
       (let []
         [ui/Container {:fluid true}
-         [application-views/add-modal]
-         [application-views/format-error @data]
+         [apps-views-detail/add-modal]
+         [apps-views-detail/format-error @data]
          [ui/Accordion {:fluid     true
                         :styled    true
                         :exclusive false}
@@ -134,13 +134,9 @@
                    metadata (dissoc @data :content)
                    {:keys [targets nodes inputParameters outputParameters]} content
                    type     (:type metadata)]
-               [application-views/format-meta metadata]
-               ; TODO... needed?
-               (when (= type "COMPONENT") [application-views/format-parameters :input-parameters inputParameters])
-               (when (= type "COMPONENT") [application-views/format-parameters :output-parameters outputParameters])
-               (when (= type "COMPONENT") [application-views/format-targets targets])
-               (when (= type "APPLICATION") [application-views/format-nodes nodes])
-               [application-views/format-module-children children]))]]]))))
+               [apps-views-detail/format-meta metadata]
+               ;[apps-views-detail/format-module-children children]
+               ))]]]))))
 
 
 (defn appstore
@@ -175,49 +171,13 @@
                 :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]
              )]]]))))
 
-(defn module-details
-  [new-type]
-  (let [module     (subscribe [::application-subs/module])
-        new-parent (application-utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
-        new-name   (application-utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
-    (fn [new-type]
-      (let [type (:type @module)]
-        (when (nil? @module)
-          (do
-            (dispatch [::application-events/name new-name])
-            (dispatch [::application-events/parent new-parent])
-            ))
-        (if (or (= "component" new-type) (= "COMPONENT" type))
-          [module-component-views/view-edit module]
-          [module-project-views/view-edit module])
-        ))))
-
-(defn module
-  [new-type]
-  (dispatch [::application-events/get-module])
-  [module-details new-type])
-
 (defn root-view
   []
   (dispatch [::events/get-modules])
-  (dispatch [::application-events/get-module])
+  (dispatch [::apps-events/get-module])
   [ui/Container {:fluid true}
    [:div {:style {:margin-top 10}}]
    [appstore]
    [:div {:style {:margin-top 10}}]
    [root-projects]
    [deployment-dialog-views/deploy-modal]])
-
-(defn apps
-  []
-  (let [query       (clojure.walk/keywordize-keys (:query (url/url (-> js/window .-location .-href))))
-        type        (:type query)
-        module-name (application-utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
-    (if module-name
-      (module type)
-      [root-view])))
-
-(defmethod panel/render :apps
-  [path]
-  (timbre/set-level! :info)
-  [apps])

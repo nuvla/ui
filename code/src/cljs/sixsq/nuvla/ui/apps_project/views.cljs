@@ -1,18 +1,18 @@
-(ns sixsq.nuvla.ui.module-project.views
+(ns sixsq.nuvla.ui.apps-project.views
   (:require
     [reagent.core :as reagent]
     [cljs.pprint :refer [cl-format]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [sixsq.nuvla.ui.application.utils :as application-utils]
-    [sixsq.nuvla.ui.application.subs :as application-subs]
-    [sixsq.nuvla.ui.application.events :as application-events]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
+    [sixsq.nuvla.ui.apps.subs :as apps-subs]
+    [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.cimi-api.utils :as cimi-api-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.module-project.events :as events]
-    [sixsq.nuvla.ui.module-project.subs :as subs]
+    [sixsq.nuvla.ui.apps-project.events :as events]
+    [sixsq.nuvla.ui.apps-project.subs :as subs]
     [sixsq.nuvla.ui.plot.plot :as plot]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.resource-details :as details]
@@ -25,12 +25,12 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
-    [sixsq.nuvla.ui.application.views :as application-views]))
+    [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]))
 
 (defn refresh-button
   []
   (let [tr            (subscribe [::i18n-subs/tr])
-        page-changed? (subscribe [::application-subs/page-changed?])]
+        page-changed? (subscribe [::apps-subs/page-changed?])]
     (fn []
       [ui/MenuMenu {:position "right"}
        [uix/MenuItemWithIcon
@@ -38,19 +38,19 @@
          :icon-name "refresh"
          :loading?  false                                   ;; FIXME: Add loading flag for module.
          :disabled  @page-changed?
-         :on-click  #(dispatch [::application-events/get-module])
+         :on-click  #(dispatch [::apps-events/get-module])
          }]])))
 
 
 (defn summary []
-  [application-views/summary])
+  [apps-views-detail/summary])
 
 
 (defn format-module
   [{:keys [type name description] :as module}]
   (when module
     (let [on-click  #(dispatch [::main-events/push-breadcrumb name])
-          icon-name (application-utils/category-icon type)]
+          icon-name (apps-utils/category-icon type)]
       [ui/ListItem {:on-click on-click}
        [ui/ListIcon {:name           icon-name
                      :size           "large"
@@ -78,7 +78,7 @@
 
 (defn modules []
   (let [tr      (subscribe [::i18n-subs/tr])
-        module  (subscribe [::application-subs/module])
+        module  (subscribe [::apps-subs/module])
         active? (reagent/atom true)]
     (fn []
       (if (nil? @module)
@@ -102,24 +102,24 @@
 
 (defn view-edit
   []
-  (let [module (subscribe [::application-subs/module])]
+  (let [module (subscribe [::apps-subs/module])]
     (fn []
       (let [name       (:name @module)
             parent     (:parent-path @module)]
         (when (nil? @module)
-          (let [new-parent (application-utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
-                new-name   (application-utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
-            (dispatch [::application-events/name new-name])
-            (dispatch [::application-events/parent new-parent])))
+          (let [new-parent (apps-utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
+                new-name   (apps-utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
+            (dispatch [::apps-events/name new-name])
+            (dispatch [::apps-events/parent new-parent])))
         [ui/Container {:fluid true}
          [:h2 [ui/Icon {:name "folder"}]
           parent (when (not-empty parent) "/") name]
-         [application-views/control-bar]
+         [apps-views-detail/control-bar]
          [summary]
-         [application-views/save-action]
+         [apps-views-detail/save-action]
          [:div {:style {:padding-top 10}}]
          [modules]
-         [application-views/add-modal]
-         [application-views/save-modal]
-         [application-views/logo-url-modal]
+         [apps-views-detail/add-modal]
+         [apps-views-detail/save-modal]
+         [apps-views-detail/logo-url-modal]
          ]))))

@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.application.effects
+(ns sixsq.nuvla.ui.apps.effects
   (:require-macros
     [cljs.core.async.macros :refer [go]])
   (:require

@@ -1,11 +1,11 @@
-(ns sixsq.nuvla.ui.application.views
+(ns sixsq.nuvla.ui.apps.views-detail
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as reagent]
-    [sixsq.nuvla.ui.application.events :as events]
-    [sixsq.nuvla.ui.application.subs :as subs]
-    [sixsq.nuvla.ui.application.utils :as utils]
+    [sixsq.nuvla.ui.apps.events :as events]
+    [sixsq.nuvla.ui.apps.subs :as subs]
+    [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.history.views :as history]
@@ -20,7 +20,9 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [taoensso.timbre :as timbre]
+    [cemerick.url :as url]))
 
 
 (defn refresh-button
@@ -219,19 +221,6 @@
          [ui/ModalActions]]))))
 
 
-(defn format-module [{:keys [type name description] :as module}]
-  (when module
-    (let [on-click  #(dispatch [::main-events/push-breadcrumb name])
-          icon-name (utils/category-icon type)]
-      [ui/ListItem {:on-click on-click}
-       [ui/ListIcon {:name           icon-name
-                     :size           "large"
-                     :vertical-align "middle"}]
-       [ui/ListContent
-        [ui/ListHeader [:a {:on-click on-click} name]]
-        [ui/ListDescription [:span description]]]])))
-
-
 (defn tuple-to-row [[v1 v2]]
   [ui/TableRow
    [ui/TableCell {:collapsing true} (str v1)]
@@ -279,93 +268,6 @@
           (error-text tr error)]]))))
 
 
-(defn format-module-children
-  [module-children]
-  (when (pos? (count module-children))
-    [ui/Segment style/basic
-     (vec (concat [ui/ListSA {:divided   true
-                              :relaxed   true
-                              :selection true}]
-                  (map (fn [{:keys [id] :as module}]
-                         ^{:key id}
-                         [format-module module]) module-children)))]))
-
-
-(defn parameter-table-row
-  [[name description value]]
-  [ui/TableRow
-   [ui/TableCell {:collapsing true} name]
-   [ui/TableCell description]
-   [ui/TableCell value]])
-
-
-(defn format-parameters
-  [title-kw parameters]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [title-kw parameters]
-      (when parameters
-        (let [rows (mapv (juxt :parameter :description :value) parameters)]
-          [cc/collapsible-segment
-           (@tr [title-kw])
-           [ui/Table style/definition
-            (vec (concat [ui/TableBody] (map parameter-table-row rows)))]])))))
-
-
-(defn target-dropdown
-  [state]
-  [ui/Dropdown {:inline        true
-                :default-value :deployment
-                :on-change     (ui-callback/value #(reset! state %))
-                :options       [{:key "preinstall", :value "preinstall", :text "pre-install"}
-                                {:key "packages", :value "packages", :text "packages"}
-                                {:key "postinstall", :value "postinstall", :text "post-install"}
-                                {:key "deployment", :value "deployment", :text "deployment"}
-                                {:key "reporting", :value "reporting", :text "reporting"}
-                                {:key "onVmAdd", :value "onVmAdd", :text "on VM add"}
-                                {:key "onVmRemove", :value "onVmRemove", :text "on VM remove"}
-                                {:key "prescale", :value "prescale", :text "pre-scale"}
-                                {:key "postscale", :value "postscale", :text "post-scale"}]}])
-
-
-(defn render-package
-  [package]
-  ^{:key package}
-  [ui/ListItem
-   [ui/ListContent
-    [ui/ListHeader package]]])
-
-
-(defn render-packages
-  [packages]
-  (if (empty? packages)
-    [:span "no packages defined"]
-    (vec (concat [ui/ListSA] (mapv render-package packages)))))
-
-
-(defn render-script
-  [script]
-  (if (str/blank? script)
-    [:span "undefined"]
-    [ui/CodeMirror {:value   script
-                    :options {:line-numbers true
-                              :read-only    true}}]))
-
-
-(defn format-targets
-  [targets]
-  (let [selected-target (reagent/atom "deployment")]
-    (fn [targets]
-      (when targets
-        (let [selected     (keyword @selected-target)
-              target-value (get targets selected)]
-          [cc/collapsible-segment
-           [:span [target-dropdown selected-target] "target"]
-           [ui/Segment
-            (if (= :packages selected)
-              (render-packages target-value)
-              (render-script target-value))]])))))
-
-
 (defn format-component-link
   [label href]
   [history/link (str "api/" href) label])
@@ -380,37 +282,6 @@
     [ui/ListItem
      [ui/ListContent
       [ui/ListHeader label]]]))
-
-
-(defn render-parameter-mappings
-  [parameter-mappings]
-  (if (empty? parameter-mappings)
-    [:span "none"]
-    (vec (concat [ui/ListSA] (mapv render-parameter-mapping (sort-by :parameter parameter-mappings))))))
-
-
-(defn render-node
-  [{:keys [node multiplicity component parameterMappings] :as content}]
-  (let [label (name node)]
-    [cc/collapsible-segment
-     [:span label]
-     [ui/Table style/definition
-      [ui/TableBody
-       [ui/TableRow
-        [ui/TableCell {:collapsing true} "component"]
-        [ui/TableCell (format-component-link label (:href component))]]
-       [ui/TableRow
-        [ui/TableCell {:collapsing true} "multiplicity"]
-        [ui/TableCell multiplicity]]
-       [ui/TableRow
-        [ui/TableCell {:collapsing true} "parameterMappings"]
-        [ui/TableCell (render-parameter-mappings parameterMappings)]]]]]))
-
-
-(defn format-nodes
-  [nodes]
-  (let [sorted-nodes (sort-by :node nodes)]
-    (vec (concat [ui/Segment] (mapv render-node sorted-nodes)))))
 
 
 (defn toggle [v]

@@ -1,10 +1,10 @@
-(ns sixsq.nuvla.ui.application.events
+(ns sixsq.nuvla.ui.apps.events
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.application.effects :as application-fx]
-    [sixsq.nuvla.ui.application.spec :as spec]
-    [sixsq.nuvla.ui.application.utils :as utils]
+    [sixsq.nuvla.ui.apps.effects :as apps-fx]
+    [sixsq.nuvla.ui.apps.spec :as spec]
+    [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
@@ -66,7 +66,7 @@
                                    :parentPath path
                                    :path module-path)
                             fixup-image-data)]
-        {::application-fx/create-module [client path data
+        {::apps-fx/create-module [client path data
                                          #(do
                                             (dispatch [::close-add-modal])
                                             (dispatch [::history-events/navigate (str "application/" module-path)]))]}))))
@@ -80,7 +80,7 @@
         {:db                         (assoc db ::spec/completed? false
                                                ::spec/module-path nil
                                                ::spec/module nil)
-         ::application-fx/get-module [client path #(dispatch [::set-module path %])]}))))
+         ::apps-fx/get-module [client path #(dispatch [::set-module path %])]}))))
 
 
 (reg-event-db

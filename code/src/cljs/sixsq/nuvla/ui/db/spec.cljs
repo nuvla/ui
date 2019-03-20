@@ -15,6 +15,7 @@
     [sixsq.nuvla.ui.deployment.spec :as deployment]
     [sixsq.nuvla.ui.docs.spec :as docs]
     [sixsq.nuvla.ui.i18n.spec :as i18n]
+    [sixsq.nuvla.ui.infra-service.spec :as infra-service]
     [sixsq.nuvla.ui.main.spec :as main]
     [sixsq.nuvla.ui.messages.spec :as messages]
     [sixsq.nuvla.ui.nuvlabox-detail.spec :as nuvlabox-detail]
@@ -34,6 +35,7 @@
                      ::data/db
                      ::docs/db
                      ::i18n/db
+                     ::infra-service/db
                      ::main/db
                      ::messages/db
                      ::nuvlabox/db
@@ -54,6 +56,7 @@
          client/defaults
          docs/defaults
          i18n/defaults
+         infra-service/defaults
          main/defaults
          messages/defaults
          nuvlabox/defaults

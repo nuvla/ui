@@ -14,6 +14,7 @@
     [sixsq.nuvla.ui.docs.views]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
+    [sixsq.nuvla.ui.infra-service.views]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.main.views-sidebar :as sidebar]

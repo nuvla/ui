@@ -6,9 +6,12 @@
     [sixsq.nuvla.ui.application.spec :as spec]
     [sixsq.nuvla.ui.application.utils :as utils]
     [sixsq.nuvla.ui.client.spec :as client-spec]
-    [sixsq.nuvla.ui.history.events :as history-evts]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-db
@@ -53,20 +56,20 @@
                 ::spec/add-data
                 ::spec/active-tab] :as db} :db} _]
     (when client
-      (let [path (or (utils/nav-path->module-path nav-path) "")
+      (let [path        (or (utils/nav-path->module-path nav-path) "")
             {project-name :name :as form-data} (get add-data active-tab)
             module-path (if (str/blank? path)
                           project-name
                           (str path "/" project-name))
-            data (-> form-data
-                     (assoc :type (-> active-tab name str/upper-case)
-                            :parentPath path
-                            :path module-path)
-                     fixup-image-data)]
+            data        (-> form-data
+                            (assoc :type (-> active-tab name str/upper-case)
+                                   :parentPath path
+                                   :path module-path)
+                            fixup-image-data)]
         {::application-fx/create-module [client path data
                                          #(do
                                             (dispatch [::close-add-modal])
-                                            (dispatch [::history-evts/navigate (str "application/" module-path)]))]}))))
+                                            (dispatch [::history-events/navigate (str "application/" module-path)]))]}))))
 
 
 (reg-event-fx
@@ -159,3 +162,22 @@
   ::close-logo-url-modal
   (fn [db _]
     (assoc db ::spec/logo-url-modal-visible? false)))
+
+(reg-event-fx
+  ::edit-module
+  (fn [{{:keys [::spec/module ::client-spec/client] :as db} :db :as cofx} _]
+    (let [id   (:id module)
+          path (:path module)
+          ]
+      (log/infof "SAVING 4 %s" id)
+      {:db                      db
+       ::cimi-api-fx/edit [client id module
+                           #(if (instance? js/Error %)
+                              (let [{:keys [status message]} (response/parse-ex-info %)]
+                                (dispatch [::messages-events/add
+                                           {:header  (cond-> (str "error editing " id)
+                                                             status (str " (" status ")"))
+                                            :content message
+                                            :type    :error}]))
+                              (dispatch [::set-resource %]))]}
+      )))

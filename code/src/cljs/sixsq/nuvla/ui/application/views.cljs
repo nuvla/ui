@@ -133,7 +133,9 @@
           [uix/Button {:text     (@tr [:save])
                        :positive true
                        :active   true
-                       :on-click #(dispatch [::events/close-save-modal])}]]]))))
+                       :on-click #(do (dispatch [::events/edit-module])
+                                      (dispatch [::events/close-save-modal])
+                                      )}]]]))))
 
 
 (defn logo-url-modal
@@ -178,7 +180,7 @@
         visible? (subscribe [::subs/add-modal-visible?])
         nav-path (subscribe [::main-subs/nav-path])]
     (fn []
-      (let [parent   (utils/nav-path->module-path @nav-path)
+      (let [parent  (utils/nav-path->module-path @nav-path)
             hide-fn #(dispatch [::events/close-add-modal])]
         [ui/Modal {:open       @visible?
                    :close-icon true

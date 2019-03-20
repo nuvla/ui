@@ -54,10 +54,12 @@
       [ui/CardHeader {:style {:word-wrap "break-word"}}
        [ui/Icon {:name (deployment-detail-utils/category-icon type)}]
        [ui/Label {:corner true
-                  :icon   "info circle"
                   :style  {:z-index 0
                            :cursor :pointer}
-                  :on-click #(dispatch [::history-events/navigate (str "apps/" path)])}]
+                  :on-click #(dispatch [::history-events/navigate (str "apps/" path)])}
+        [ui/Icon {:name "info circle"
+                  :style {:cursor :pointer}}]               ; use content to work around bug in icon in label for cursor
+        ]
        (or name id)]
       [ui/CardMeta {:style {:word-wrap "break-word"}} path]
       [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]]

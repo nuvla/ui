@@ -222,7 +222,7 @@
       [:div [ui/Message {:info true}
              [ui/Icon {:name "info"}]
              (@tr [:click-for-depl-details])]
-       (vec (concat [ui/CardGroup]
+       (vec (concat [ui/CardGroup {:centered true}]
                     (map card-fn deployments-list)))])))
 
 

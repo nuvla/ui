@@ -284,7 +284,7 @@
         [ui/Icon {:name "warning sign"}]
         (@tr [:no-datasets])])
      (when (seq @data-sets)
-       (vec (concat [ui/CardGroup]
+       (vec (concat [ui/CardGroup {:centered true}]
                     (map (fn [data-set]
                            [format-data-set data-set])
                          (vals @data-sets)))))]))

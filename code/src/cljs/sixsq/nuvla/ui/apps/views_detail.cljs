@@ -268,22 +268,6 @@
           (error-text tr error)]]))))
 
 
-(defn format-component-link
-  [label href]
-  [history/link (str "api/" href) label])
-
-
-(defn render-parameter-mapping
-  [{:keys [parameter value mapped]}]
-  (let [label (str parameter
-                   (if mapped " \u2192 " " \uff1d ")
-                   (or value "empty"))]
-    ^{:key parameter}
-    [ui/ListItem
-     [ui/ListContent
-      [ui/ListHeader label]]]))
-
-
 (defn toggle [v]
   (swap! v not))
 

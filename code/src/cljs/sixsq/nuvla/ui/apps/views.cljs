@@ -1,16 +1,19 @@
 (ns sixsq.nuvla.ui.apps.views
   (:require
+    [cemerick.url :as url]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as reagent]
+    [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
+    [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
+    [sixsq.nuvla.ui.apps-store.views :as apps-store-views]
     [sixsq.nuvla.ui.apps.events :as events]
     [sixsq.nuvla.ui.apps.subs :as subs]
     [sixsq.nuvla.ui.apps.utils :as utils]
-    [sixsq.nuvla.ui.apps-store.views :as apps-store-views]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
-    [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
@@ -22,10 +25,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [taoensso.timbre :as log]
-    [taoensso.timbre :as timbre]
-    [cemerick.url :as url]
-    [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
-    [sixsq.nuvla.ui.apps-project.views :as apps-project-views]))
+    [taoensso.timbre :as timbre]))
 
 
 (defn module-details

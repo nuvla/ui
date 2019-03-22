@@ -1,23 +1,23 @@
 (ns sixsq.nuvla.ui.apps-component.views
   (:require
-    [reagent.core :as reagent]
     [cljs.pprint :refer [cl-format]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.form-fields :as forms]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [reagent.core :as reagent]
     [sixsq.nuvla.ui.apps-component.events :as events]
     [sixsq.nuvla.ui.apps-component.subs :as subs]
-    [sixsq.nuvla.ui.apps.subs :as apps-subs]
-    [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
     [sixsq.nuvla.ui.apps.events :as apps-events]
+    [sixsq.nuvla.ui.apps.subs :as apps-subs]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
+    [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
-    [sixsq.nuvla.ui.apps.utils :as apps-utils]))
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.utils.form-fields :as forms]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 (defn refresh-button
   []

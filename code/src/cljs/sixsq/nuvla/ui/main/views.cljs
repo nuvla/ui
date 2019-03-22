@@ -2,10 +2,10 @@
   (:require
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.about.views]
-    [sixsq.nuvla.ui.apps.views]
-    [sixsq.nuvla.ui.apps-store.views]
     [sixsq.nuvla.ui.apps-component.views]
     [sixsq.nuvla.ui.apps-project.views]
+    [sixsq.nuvla.ui.apps-store.views]
+    [sixsq.nuvla.ui.apps.views]
     [sixsq.nuvla.ui.authn.views :as authn-views]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.cimi.views]

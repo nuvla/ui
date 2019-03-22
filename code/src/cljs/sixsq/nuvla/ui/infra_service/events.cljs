@@ -1,11 +1,11 @@
 (ns sixsq.nuvla.ui.infra-service.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.infra-service.spec :as spec]
     [sixsq.nuvla.ui.infra-service.utils :as utils]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.client.spec :as client-spec]))
+    [taoensso.timbre :as log]))
 
 (reg-event-db
   ::set-services

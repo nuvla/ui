@@ -1,24 +1,23 @@
 (ns sixsq.nuvla.ui.infra-service.views
   (:require
-    [reagent.core :as reagent]
     [cljs.pprint :refer [cl-format]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as reagent]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.infra-service.events :as events]
     [sixsq.nuvla.ui.infra-service.subs :as subs]
-    [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.infra-service.events :as events]
-    [taoensso.timbre :as timbre]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]
+    [taoensso.timbre :as timbre]))
 
 
 (defn refresh-button

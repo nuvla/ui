@@ -1,30 +1,30 @@
 (ns sixsq.nuvla.ui.apps-store.views
   (:require
+    [cemerick.url :as url]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
-    [sixsq.nuvla.ui.apps.events :as apps-events]
-    [sixsq.nuvla.ui.apps.subs :as apps-subs]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
-    [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
+    [reagent.core :as reagent]
     [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
+    [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
     [sixsq.nuvla.ui.apps-store.events :as events]
     [sixsq.nuvla.ui.apps-store.subs :as subs]
+    [sixsq.nuvla.ui.apps.events :as apps-events]
+    [sixsq.nuvla.ui.apps.subs :as apps-subs]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
+    [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
     [sixsq.nuvla.ui.deployment-detail.utils :as deployment-detail-utils]
+    [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [reagent.core :as reagent]
     [taoensso.timbre :as log]
-    [taoensso.timbre :as timbre]
-    [cemerick.url :as url]))
+    [taoensso.timbre :as timbre]))
 
 
 (defn refresh-button

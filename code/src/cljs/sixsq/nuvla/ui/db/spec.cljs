@@ -2,10 +2,10 @@
   (:require-macros [sixsq.nuvla.ui.utils.spec :refer [only-keys]])
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.apps.spec :as apps]
     [sixsq.nuvla.ui.apps-component.spec :as apps-component]
     [sixsq.nuvla.ui.apps-project.spec :as apps-project]
     [sixsq.nuvla.ui.apps-store.spec :as apps-store]
+    [sixsq.nuvla.ui.apps.spec :as apps]
     [sixsq.nuvla.ui.authn.spec :as authn]
     [sixsq.nuvla.ui.cimi-detail.spec :as api-detail]
     [sixsq.nuvla.ui.cimi.spec :as api]

@@ -5,14 +5,14 @@
     [sixsq.nuvla.ui.apps.effects :as apps-fx]
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.utils :as utils]
+    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [taoensso.timbre :as log]
     [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]))
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db

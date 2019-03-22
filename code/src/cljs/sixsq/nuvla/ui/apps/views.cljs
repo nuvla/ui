@@ -30,11 +30,12 @@
 
 (defn module-details
   [new-type]
-  (let [module     (subscribe [::subs/module])
-        new-parent (utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
-        new-name   (utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
+  (let [module      (subscribe [::subs/module])
+        new-parent  (utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
+        new-name    (utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
     (fn [new-type]
       (let [type (:type @module)]
+        (dispatch [::events/is-new? (not-empty new-type)])
         (when (nil? @module)
           (do
             (dispatch [::events/name new-name])

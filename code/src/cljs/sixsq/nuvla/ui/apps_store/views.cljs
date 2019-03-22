@@ -111,13 +111,13 @@
 
 (defn root-projects []
   (let [tr      (subscribe [::i18n-subs/tr])
-        data    (subscribe [::apps-subs/module])
+        module    (subscribe [::apps-subs/module])
         active? (reagent/atom true)]
     (fn []
       (let []
         [ui/Container {:fluid true}
          [apps-views-detail/add-modal]
-         [apps-views-detail/format-error @data]
+         [apps-views-detail/format-error @module]
          [ui/Accordion {:fluid     true
                         :styled    true
                         :exclusive false}
@@ -129,14 +129,9 @@
             (sixsq.nuvla.ui.utils.general/capitalize-words (@tr [:all-projects]))]]
           [ui/AccordionContent {:active @active?}
            [control-bar-projects]
-           (when (and @data (not (instance? js/Error @data)))
-             (let [{:keys [children content]} @data
-                   metadata (dissoc @data :content)
-                   {:keys [targets nodes inputParameters outputParameters]} content
-                   type     (:type metadata)]
+           (when (and @module (not (instance? js/Error @module)))
+             (let [{:keys [children content]} @module]
                [apps-project-views/format-module-children children]
-               ;[apps-views-detail/format-meta metadata]
-               ;[apps-views-detail/format-module-children children]
                ))]]]))))
 
 

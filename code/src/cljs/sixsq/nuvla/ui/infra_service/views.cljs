@@ -14,6 +14,7 @@
     [sixsq.nuvla.ui.infra-service.subs :as subs]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.infra-service.events :as events]
     [taoensso.timbre :as timbre]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -51,10 +52,29 @@
       [refresh-button]]]))
 
 
+;(defn show-service-sidebar []
+;  (let [show-service-sidebar? (subscribe [::subs/show-service-sidebar?])]
+;    [ui/Sidebar {:as        ui/MenuRaw
+;                 ;                 :className "medium thin"
+;                 :vertical  true
+;                 :inverted  true
+;                 :direction :right
+;                 :visible   true                            ;@show-service-sidebar?
+;                 :animation :overlay}
+;     [:nav {:aria-label "sidebar"}
+;      [:div "hello"]
+;      ]]))
+
+
+(def service-icons
+  {:swarm :docker
+   :s3    :aws})
+
+
 (defn service-card
   [{:keys [id name description path type logo-url] :as service}]
   (let [tr (subscribe [::i18n-subs/tr])
-        ;{:keys [type parentPath logo-url]} module
+        {:keys [type]} service
         ]
     ^{:key id}
     [ui/Card
@@ -65,11 +85,11 @@
                           :object-fit "contain"}}])
      [ui/CardContent
       [ui/CardHeader {:style {:word-wrap "break-word"}}
-       [ui/Icon {:name :docker}]
+       [ui/Icon {:name ((keyword type) service-icons)}]
        [ui/Label {:corner   true
                   :style    {:z-index 0
                              :cursor  :pointer}
-                  :on-click #(dispatch [::history-events/navigate (str "infra-service/" path)])}
+                  :on-click #(dispatch [::events/show-service-sidebar? true])}
         [ui/Icon {:name  "info circle"
                   :style {:cursor :pointer}}]               ; use content to work around bug in icon in label for cursor
         ]
@@ -96,28 +116,28 @@
     (fn []
       (let [total-services (get @services :count 0)
             total-pages    (general-utils/total-pages total-services @elements-per-page)]
-        [ui/Container {:fluid true}
-         [ui/Accordion {:fluid     true
-                        :styled    true
-                        :exclusive false
-                        }
-          [ui/AccordionTitle {:active   @active?
-                              :index    1
-                              :on-click #(toggle active?)}
-           [:h2
-            [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-            "Infrastructure Services"]]
-          [ui/AccordionContent {:active @active?}
-           [control-bar]
-           [modules-cards-group (get @services :resources [])]
-           (when (> total-pages 1)
-             [:div {:style {:padding-bottom 30}}
-              [uix/Pagination
-               {:totalitems   total-services
-                :totalPages   total-pages
-                :activePage   @page
-                :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]
-             )]]]))))
+        [ui/Accordion {:fluid     true
+                       :styled    true
+                       :exclusive false
+                       }
+         [ui/AccordionTitle {:active   @active?
+                             :index    1
+                             :on-click #(toggle active?)}
+          [:h2
+           [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+           "Infrastructure Services"]]
+         [ui/AccordionContent {:active @active?}
+          [control-bar]
+          [modules-cards-group (get @services :resources [])]
+          (when (> total-pages 1)
+            [:div {:style {:padding-bottom 30}}
+             [uix/Pagination
+              {:totalitems   total-services
+               :totalPages   total-pages
+               :activePage   @page
+               :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]
+            )]]))))
+
 
 (defmethod panel/render :infra-service
   [path]

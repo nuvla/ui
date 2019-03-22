@@ -11,13 +11,15 @@
 
 (s/def ::elements-per-page int?)
 
+(s/def ::show-service-sidebar? boolean?)
 
 (s/def ::db (s/keys :req [::services
                           ::full-text-search
                           ::page
                           ::elements-per-page]))
 
-(def defaults {::services nil
-               ::full-text-search     nil
-               ::page                 1
-               ::elements-per-page    8})
+(def defaults {::services              nil
+               ::full-text-search      nil
+               ::page                  1
+               ::elements-per-page     8
+               ::show-service-sidebar? false})

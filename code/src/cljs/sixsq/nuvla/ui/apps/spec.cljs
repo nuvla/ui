@@ -3,6 +3,8 @@
     [clojure.spec.alpha :as s]))
 
 
+(s/def ::is-new? boolean?)
+
 (s/def ::completed? boolean?)
 
 (s/def ::module-path (s/nilable string?))
@@ -20,7 +22,8 @@
 
 (s/def ::commit-message (s/nilable string?))
 
-(s/def ::db (s/keys :req [::completed?
+(s/def ::db (s/keys :req [::is-new?
+                          ::completed?
                           ::module-path
                           ::module
                           ::add-modal-visible?
@@ -31,9 +34,10 @@
                           ::commit-message
                           ]))
 
-(def defaults {::completed?              true
+(def defaults {::is-new?                 false
+               ::completed?              true
                ::module-path             nil
-               ::module                  nil
+               ::module                  {}
                ::add-modal-visible?      false
                ::page-changed?           false
                ::logo-url-modal-visible? false

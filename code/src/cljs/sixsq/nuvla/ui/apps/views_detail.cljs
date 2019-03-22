@@ -20,6 +20,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.messages.events :as messages-events]
     [taoensso.timbre :as log]
     [taoensso.timbre :as timbre]
     [cemerick.url :as url]))
@@ -55,11 +56,12 @@
                       :disabled  deploy-disabled?
                       :on-click  #(dispatch [::deployment-dialog-events/create-deployment (:id @module) :credentials])}]
 
-                    [uix/MenuItemWithIcon
-                     {:name      (@tr [:add])
-                      :icon-name "add"
-                      :disabled  add-disabled?
-                      :on-click  #(dispatch [::events/open-add-modal])}]
+                    (when (not add-disabled?)
+                      [uix/MenuItemWithIcon
+                       {:name      (@tr [:add])
+                        :icon-name "add"
+                        :disabled  add-disabled?
+                        :on-click  #(dispatch [::events/open-add-modal])}])
 
                     [uix/MenuItemWithIcon
                      {:name      (@tr [:save])
@@ -129,7 +131,9 @@
                      :on-change    (ui-callback/input-callback #(dispatch [::events/commit-message %]))
                      :on-key-press (fn [e]
                                      (when (= 13 (.-charCode e))
-                                       (dispatch [::events/close-save-modal])))}]]
+                                       (do (dispatch [::events/edit-module])
+                                           (dispatch [::events/close-save-modal])
+                                           )))}]]
 
          [ui/ModalActions
           [uix/Button {:text     (@tr [:save])
@@ -272,22 +276,42 @@
   (swap! v not))
 
 
+(defn sanitize-name [name]
+  (str/lower-case
+    (str/replace
+      (str/trim
+        (str/join "" (re-seq #"[a-zA-Z0-9\ ]" name)))
+      " " "-")))
+
+
+(defn contruct-path [parent name]
+  (log/infof "san: %s '%s'" parent name)
+  (let [sanitized-name (sanitize-name name)]
+    (log/infof "san: '%s'" sanitized-name)
+    (str/join "/"
+              (remove str/blank?
+                      [parent sanitized-name]))))
+
+
 (defn summary
   [extras]
   (let [tr               (subscribe [::i18n-subs/tr])
-        module           (subscribe [::subs/module])
-        default-logo-url (subscribe [::subs/default-logo-url])]
+        default-logo-url (subscribe [::subs/default-logo-url])
+        is-new?          (subscribe [::subs/is-new?])]
     (fn [extras]
-      (let [{name        :name
+      (let [module (subscribe [::subs/module])
+            {name        :name
              parent      :parent-path
              description :description
              logo-url    :logo-url
              type        :type
+             path        :path
              :or         {name        ""
                           parent      ""
                           description ""
                           logo-url    @default-logo-url
-                          type        "project"}} @module]
+                          type        "project"
+                          path        nil}} @module]
         [ui/Grid {:style {:margin-bottom 5}}
          [ui/GridRow {:reversed :computer}
           [ui/GridColumn {:computer     2
@@ -298,7 +322,7 @@
             (@tr [:module-change-logo])]]
           [ui/GridColumn {:computer     14
                           :large-screen 14}
-           ;           [:div (pr-str @(subscribe [::subs/module]))]
+           ;[:div (pr-str @(subscribe [::subs/module]))]
            [ui/Input {:name        "name"
                       :label       "name"
                       :value       name
@@ -308,14 +332,14 @@
                       :on-change   (ui-callback/input-callback #(do (dispatch [::events/page-changed? true])
                                                                     (dispatch [::events/name %])))
                       }]
-           [ui/Input {:name        "parent"
-                      :label       (if (= "PROJECT" type) "parent project" "project")
-                      :value       (or parent "")           ;should not be needed, but is!!?
-                      :placeholder (str/capitalize (@tr [:parent]))
-                      :fluid       true
-                      :style       {:padding-bottom 5}
-                      :on-change   (ui-callback/input-callback #(do (dispatch [::events/page-changed? true])
-                                                                    (dispatch [::events/parent %])))}]
+           (when (not-empty parent)
+             [ui/Input {:name        "parent"
+                        :label       (if (= "PROJECT" type) "parent project" "project")
+                        :value       (or parent "")         ;should not be needed, but is!!?
+                        :placeholder (str/capitalize (@tr [:parent]))
+                        :disabled    true
+                        :fluid       true
+                        :style       {:padding-bottom 5}}])
            [ui/Input {:name        "description"
                       :label       "description"
                       :value       description
@@ -324,5 +348,11 @@
                       :style       {:padding-bottom 5}
                       :on-change   (ui-callback/input-callback #(do (dispatch [::events/page-changed? true])
                                                                     (dispatch [::events/description %])))}]
+           [ui/Input {:name     "path"
+                      :label    "path"
+                      :value    (or path (contruct-path parent name))
+                      :disabled true
+                      :fluid    true
+                      :style    {:padding-bottom 5}}]
            extras
            ]]]))))

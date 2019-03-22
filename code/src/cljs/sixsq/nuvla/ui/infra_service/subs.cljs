@@ -17,3 +17,7 @@
 (reg-sub
   ::page
   ::spec/page)
+
+(reg-sub
+  ::show-service-sidebar?
+  ::spec/show-service-sidebar?)

@@ -33,3 +33,23 @@
   (if (= "PROJECT" category)
     "folder open"
     (category-icon category)))
+
+
+;; Sanitize before serialization to server
+
+(defn sanitize-module-component
+  [module]
+   module)
+
+(defn sanitize-module-project
+  [module]
+  (dissoc module :children))
+
+(defn sanitize-module
+  [module]
+  (let [type (:type module)]
+    (cond
+      (= "COMPONENT" type) (sanitize-module-component module)
+      (= "PROJECT" type) (sanitize-module-project module)
+      :else module)))
+

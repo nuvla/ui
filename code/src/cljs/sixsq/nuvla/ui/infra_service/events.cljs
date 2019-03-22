@@ -13,6 +13,12 @@
     (assoc db ::spec/services services)))
 
 
+(reg-event-db
+  ::show-service-sidebar?
+  (fn [db [_ show?]]
+    (assoc db ::spec/show-service-sidebar? show?)))
+
+
 (reg-event-fx
   ::get-services
   (fn [{{:keys [::client-spec/client

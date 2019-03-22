@@ -10,6 +10,11 @@
 
 
 (reg-sub
+  ::is-new?
+  ::spec/is-new?)
+
+
+(reg-sub
   ::module
   ::spec/module)
 

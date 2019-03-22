@@ -118,7 +118,7 @@
         :no-datasets              "no datasets"
         :no-input-parameters      "no input parameters defined for the application"
         :no-messages              "no messages"
-        :no-children-modules     "no children modules"
+        :no-children-modules      "no sub-projects"
         :notifications            "notifications"
         :nuvlabox                 "NuvlaBox"
         :nuvlabox-ctrl            "edge control"

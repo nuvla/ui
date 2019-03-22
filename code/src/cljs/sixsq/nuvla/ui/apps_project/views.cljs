@@ -81,23 +81,24 @@
         module  (subscribe [::apps-subs/module])
         active? (reagent/atom true)]
     (fn []
-      (if (nil? @module)
-        [ui/Message {:warning true}
-         [ui/Icon {:name "warning sign"}]
-         (@tr [:no-children-modules])]
+      (let [children (:children @module)]
+        (if (empty? children)
+          [ui/Message {:warning true}
+           [ui/Icon {:name "warning sign"}]
+           (@tr [:no-children-modules])]
 
-        [ui/Accordion {:fluid     true
-                       :styled    true
-                       :exclusive false
-                       }
-         [ui/AccordionTitle {:active   @active?
-                             :index    1
-                             :on-click #(toggle active?)}
-          [:h2
-           [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-           "Sub-modules"]]
-         [ui/AccordionContent {:active @active?}
-          [format-module-children (:children @module)]]]))))
+          [ui/Accordion {:fluid     true
+                         :styled    true
+                         :exclusive false
+                         }
+           [ui/AccordionTitle {:active   @active?
+                               :index    1
+                               :on-click #(toggle active?)}
+            [:h2
+             [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+             "Sub-modules"]]
+           [ui/AccordionContent {:active @active?}
+            [format-module-children children]]])))))
 
 
 (defn view-edit
@@ -106,9 +107,11 @@
     (fn []
       (let [name       (:name @module)
             parent     (:parent-path @module)]
-        (when (nil? @module)
+        (log/infof "In project with module: %s" @module)
+        (when (empty? @module)
           (let [new-parent (apps-utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
                 new-name   (apps-utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
+            (log/infof "Setting new name: %s" new-name)
             (dispatch [::apps-events/name new-name])
             (dispatch [::apps-events/parent new-parent])))
         [ui/Container {:fluid true}

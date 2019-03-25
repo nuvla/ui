@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.apps.utils
   (:require
     [clojure.string :as str]
-    [sixsq.nuvla.ui.apps.spec :as spec]
     [taoensso.timbre :as log]))
 
 

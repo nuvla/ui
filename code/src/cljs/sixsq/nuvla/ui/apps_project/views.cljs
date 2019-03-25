@@ -47,9 +47,11 @@
 
 
 (defn format-module
-  [{:keys [type name description] :as module}]
+  [{:keys [type name path description] :as module}]
   (when module
-    (let [on-click  #(dispatch [::main-events/push-breadcrumb name])
+    (let [path-parts (str/split path #"/")
+          name-path (last path-parts)
+          on-click  #(dispatch [::main-events/push-breadcrumb name-path])
           icon-name (apps-utils/category-icon type)]
       [ui/ListItem {:on-click on-click}
        [ui/ListIcon {:name           icon-name
@@ -107,11 +109,9 @@
     (fn []
       (let [name       (:name @module)
             parent     (:parent-path @module)]
-        (log/infof "In project with module: %s" @module)
         (when (empty? @module)
           (let [new-parent (apps-utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
                 new-name   (apps-utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
-            (log/infof "Setting new name: %s" new-name)
             (dispatch [::apps-events/name new-name])
             (dispatch [::apps-events/parent new-parent])))
         [ui/Container {:fluid true}

@@ -14,6 +14,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.apps.views-versions :as views-versions]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
@@ -70,34 +71,6 @@
                       :on-click  #(dispatch [::events/open-save-modal])}]
 
                     [refresh-button]])))))
-
-
-(defn form-input-callback
-  [path]
-  (ui-callback/value #(dispatch [::events/update-add-data path %])))
-
-
-(defn kw->icon-name
-  [kw]
-  (-> kw name str/upper-case utils/category-icon))
-
-
-(defn pane
-  [tr kw element]
-  {:menuItem {:key     (name kw)
-              :icon    (kw->icon-name kw)
-              :content (@tr [kw])}
-   :render   (fn [] (reagent/as-element [element]))})
-
-
-(defn index->kw
-  [index]
-  (case index
-    0 :project
-    1 :image
-    2 :component
-    3 :application
-    :project))
 
 
 (defn save-action []
@@ -227,32 +200,45 @@
 
 (defn tuple-to-row [[v1 v2]]
   [ui/TableRow
-   [ui/TableCell {:collapsing true} (str v1)]
-   [ui/TableCell (str v2)]])
+   [ui/TableCell {:collapsing true} (name v1)]
+   [ui/TableCell v2]])
 
 
-(defn preprocess-metadata
-  [{:keys [name path description logo-url type acl] :as module-meta}]
-  {:title       name
-   :subtitle    path
-   :description description
-   :logo        logo-url
-   :icon        (utils/meta-category-icon type)
-   :acl         acl})
+(def module-summary-keys #{:created
+                           :updated
+                           :resourceUri
+                           :id})
 
 
-(defn metadata-rows
-  [module-meta]
-  (->> (dissoc module-meta :versions :children :acl :operations)
-       (map (juxt (comp name first) (comp str second)))
-       (map tuple-to-row)))
+(defn category-icon
+  [category]
+  (case category
+    "PROJECT" "folder"
+    "APPLICATION" "sitemap"
+    "IMAGE" "file"
+    "COMPONENT" "microchip"
+    "question circle"))
 
 
-(defn format-meta
-  [module-meta]
-  (let [metadata (preprocess-metadata module-meta)
-        rows     (metadata-rows module-meta)]
-    [cc/metadata metadata rows]))
+(defn details-section
+  []
+  (let [module (subscribe [::subs/module])]
+    (fn []
+      (let [summary-info (-> (select-keys @module module-summary-keys)
+                             (merge (select-keys @module #{:path :type})
+                                    {:owner (-> @module :acl :owner :principal)}))
+            icon         (-> @module :type category-icon)
+            rows         (map tuple-to-row summary-info)
+            name         (:name @module)
+            description  (:name @module)
+            acl          (:acl @module)]
+        [cc/metadata-simple
+         {:title       name
+          :description (:startTime summary-info)
+          :icon        icon
+          :subtitle    description
+          :acl         acl}
+         rows]))))
 
 
 (defn error-text [tr error]
@@ -272,87 +258,88 @@
           (error-text tr error)]]))))
 
 
-(defn toggle [v]
-  (swap! v not))
+  (defn toggle [v]
+    (swap! v not))
 
 
-(defn sanitize-name [name]
-  (str/lower-case
-    (str/replace
-      (str/trim
-        (str/join "" (re-seq #"[a-zA-Z0-9\ ]" name)))
-      " " "-")))
+  (defn sanitize-name [name]
+    (str/lower-case
+      (str/replace
+        (str/trim
+          (str/join "" (re-seq #"[a-zA-Z0-9\ ]" name)))
+        " " "-")))
 
 
-(defn contruct-path [parent name]
-  (log/infof "san: %s '%s'" parent name)
-  (let [sanitized-name (sanitize-name name)]
-    (log/infof "san: '%s'" sanitized-name)
-    (str/join "/"
-              (remove str/blank?
-                      [parent sanitized-name]))))
+  (defn contruct-path [parent name]
+    (log/infof "san: %s '%s'" parent name)
+    (let [sanitized-name (sanitize-name name)]
+      (log/infof "san: '%s'" sanitized-name)
+      (str/join "/"
+                (remove str/blank?
+                        [parent sanitized-name]))))
 
 
-(defn summary
-  [extras]
-  (let [tr               (subscribe [::i18n-subs/tr])
-        default-logo-url (subscribe [::subs/default-logo-url])
-        is-new?          (subscribe [::subs/is-new?])]
-    (fn [extras]
-      (let [module (subscribe [::subs/module])
-            {name        :name
-             parent      :parent-path
-             description :description
-             logo-url    :logo-url
-             type        :type
-             path        :path
-             :or         {name        ""
-                          parent      ""
-                          description ""
-                          logo-url    @default-logo-url
-                          type        "project"
-                          path        nil}} @module]
-        [ui/Grid {:style {:margin-bottom 5}}
-         [ui/GridRow {:reversed :computer}
-          [ui/GridColumn {:computer     2
-                          :large-screen 2}
-           [ui/Image {:src (or logo-url @default-logo-url)}]
-           [ui/Button {:fluid    true
-                       :on-click #(dispatch [::events/open-logo-url-modal])}
-            (@tr [:module-change-logo])]]
-          [ui/GridColumn {:computer     14
-                          :large-screen 14}
-           ;[:div (pr-str @(subscribe [::subs/module]))]
-           [ui/Input {:name        "name"
-                      :label       "name"
-                      :value       name
-                      :placeholder (str/capitalize (@tr [:name]))
-                      :fluid       true
-                      :style       {:padding-bottom 5}
-                      :on-change   (ui-callback/input-callback #(do (dispatch [::events/page-changed? true])
-                                                                    (dispatch [::events/name %])))
-                      }]
-           (when (not-empty parent)
-             [ui/Input {:name        "parent"
-                        :label       (if (= "PROJECT" type) "parent project" "project")
-                        :value       (or parent "")         ;should not be needed, but is!!?
-                        :placeholder (str/capitalize (@tr [:parent]))
-                        :disabled    true
-                        :fluid       true
-                        :style       {:padding-bottom 5}}])
-           [ui/Input {:name        "description"
-                      :label       "description"
-                      :value       description
-                      :placeholder (str/capitalize (@tr [:description]))
-                      :fluid       true
-                      :style       {:padding-bottom 5}
-                      :on-change   (ui-callback/input-callback #(do (dispatch [::events/page-changed? true])
-                                                                    (dispatch [::events/description %])))}]
-           [ui/Input {:name     "path"
-                      :label    "path"
-                      :value    (or path (contruct-path parent name))
-                      :disabled true
-                      :fluid    true
-                      :style    {:padding-bottom 5}}]
-           extras
-           ]]]))))
+  (defn summary-row
+    [name-kw value on-change-event]
+    (let [tr       (subscribe [::i18n-subs/tr])
+          name-str (name name-kw)]
+      [ui/TableRow
+       [ui/TableCell {:collapsing true
+                      :style      {:padding-bottom 8}} name-str]
+       [ui/TableCell
+        [ui/Input {:name        name-str
+                   :value       value
+                   :transparent true
+                   :placeholder (str/capitalize (@tr [name-kw]))
+                   :fluid       true
+                   :on-change   (ui-callback/input-callback #(do (dispatch [::events/page-changed? true])
+                                                                 (dispatch [on-change-event %])))
+                   }]]]))
+
+
+  (defn summary
+    [extras]
+    (let [tr               (subscribe [::i18n-subs/tr])
+          default-logo-url (subscribe [::subs/default-logo-url])
+          is-new?          (subscribe [::subs/is-new?])]
+      (fn [extras]
+        (let [module (subscribe [::subs/module])
+              {name        :name
+               parent      :parent-path
+               description :description
+               logo-url    :logo-url
+               type        :type
+               path        :path
+               :or         {name        ""
+                            parent      ""
+                            description ""
+                            logo-url    @default-logo-url
+                            type        "project"
+                            path        nil}} @module]
+          [ui/Grid {:style {:margin-bottom 5}}
+           [ui/GridRow {:reversed :computer}
+            [ui/GridColumn {:computer     2
+                            :large-screen 2}
+             [ui/Image {:src (or logo-url @default-logo-url)}]
+             [ui/Button {:fluid    true
+                         :on-click #(dispatch [::events/open-logo-url-modal])}
+              (@tr [:module-change-logo])]]
+            [ui/GridColumn {:computer     14
+                            :large-screen 14}
+             ;[:div (pr-str @(subscribe [::subs/module]))]
+             [ui/Table (update-in style/definition [:style :max-width] (constantly "100%"))
+              [ui/TableBody
+               [summary-row :name name ::events/name]
+               [summary-row :description description ::events/description]
+               (when (not-empty parent)
+                 (let [label (if (= "PROJECT" type) "parent project" "project")]
+                   [ui/TableRow
+                    [ui/TableCell {:collapsing true
+                                   :style      {:padding-bottom 8}} label]
+                    [ui/TableCell parent
+                     ]]
+                   ))]
+              extras]
+             [details-section]
+             [views-versions/versions]
+             ]]]))))

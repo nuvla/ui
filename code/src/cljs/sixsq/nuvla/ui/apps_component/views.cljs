@@ -43,17 +43,7 @@
             {docker-image :image
                           :or {docker-image ""}} content]
         [apps-views-detail/summary
-         [:div
-          [ui/Input {:name        "docker-image"
-                     :label       "docker image"
-                     :value       docker-image
-                     :placeholder (@tr [:module-docker-image-placeholder])
-                     :fluid       true
-                     :style       {:padding-bottom 5}
-                     :on-change   (ui-callback/input-callback #(do (dispatch [::apps-events/page-changed? true])
-                                                                   (dispatch [::apps-events/docker-image %])))
-                     }]]]))))
-
+         [apps-views-detail/summary-row "docker-image" docker-image ::apps-events/docker-image]]))))
 
 
 (defn toggle [v]

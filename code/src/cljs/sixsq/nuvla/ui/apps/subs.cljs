@@ -5,6 +5,11 @@
 
 
 (reg-sub
+  ::version-warning?
+  ::spec/version-warning?)
+
+
+(reg-sub
   ::completed?
   ::spec/completed?)
 

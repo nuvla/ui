@@ -30,9 +30,9 @@
 
 (defn module-details
   [new-type]
-  (let [module      (subscribe [::subs/module])
-        new-parent  (utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
-        new-name    (utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
+  (let [module     (subscribe [::subs/module])
+        new-parent (utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
+        new-name   (utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
     (fn [new-type]
       (let [type (:type @module)]
         (dispatch [::events/is-new? (not-empty new-type)])
@@ -47,21 +47,39 @@
         ))))
 
 (defn module
-  [new-type]
-  (dispatch [::events/get-module])
-  [module-details new-type])
+  [new-type version]
+  (dispatch [::events/get-module version])
+  [module-details new-type version])
+
+
+(defn version-warning []
+  (let [version-warning? (subscribe [::subs/version-warning?])]
+    (fn []
+      (let []
+        [ui/Message {;:on-dismiss (dispatch [::events/warning nil])
+                     :hidden  (not (true? @version-warning?))
+                     :warning true}
+         [ui/MessageHeader "Warning!"]
+         [ui/MessageContent "This is not the latest version. Click or tap "
+          [:a {:on-click #(dispatch [::events/get-module])
+               :style    {:cursor :pointer}} "here"]
+          " to load the latest."]]))))
 
 
 (defn apps
   []
   (let [query       (clojure.walk/keywordize-keys (:query (url/url (-> js/window .-location .-href))))
         type        (:type query)
+        version     (:version query nil)
         module-name (utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
+    (log/infof "ver: %s" version)
     (if module-name
-      (module type)
+      (module type version)
       [apps-store-views/root-view])))
 
 (defmethod panel/render :apps
   [path]
   (timbre/set-level! :info)
-  [apps])
+  [:div
+   [version-warning]
+   [apps]])

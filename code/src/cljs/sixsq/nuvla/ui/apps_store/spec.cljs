@@ -17,7 +17,7 @@
                           ::page
                           ::elements-per-page]))
 
-(def defaults {::modules nil
-               ::full-text-search     nil
-               ::page                 1
-               ::elements-per-page    8})
+(def defaults {::modules           nil
+               ::full-text-search  nil
+               ::page              1
+               ::elements-per-page 8})

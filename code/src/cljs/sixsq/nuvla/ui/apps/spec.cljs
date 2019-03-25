@@ -3,6 +3,8 @@
     [clojure.spec.alpha :as s]))
 
 
+(s/def ::version-warning? boolean?)
+
 (s/def ::is-new? boolean?)
 
 (s/def ::completed? boolean?)
@@ -22,7 +24,8 @@
 
 (s/def ::commit-message (s/nilable string?))
 
-(s/def ::db (s/keys :req [::is-new?
+(s/def ::db (s/keys :req [::version-warning?
+                          ::is-new?
                           ::completed?
                           ::module-path
                           ::module
@@ -34,7 +37,8 @@
                           ::commit-message
                           ]))
 
-(def defaults {::is-new?                 false
+(def defaults {::version-warning?        false
+               ::is-new?                 false
                ::completed?              true
                ::module-path             nil
                ::module                  {}

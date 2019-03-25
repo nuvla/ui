@@ -9,7 +9,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.table :as table]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [taoensso.timbre :as log]))
 
 
 (defn more-or-less
@@ -17,7 +18,7 @@
   (let [tr (subscribe [::i18n-subs/tr])
         more? state-atom]
     (fn [state-atom]
-      (let [label (@tr (if @more? [:less] [:more]))
+      (let [label (@tr (if @more? [:less-details] [:more-details]))
             icon-name (if @more? "caret down" "caret right")]
         [:a {:style    {:cursor "pointer"}
              :on-click #(reset! more? (not @more?))}
@@ -66,6 +67,21 @@
            [table/definition-table rows])
          (when @more? [properties-table properties])
          (when @more? [acl/acl-table acl])]]])))
+
+
+(defn metadata-simple
+  [{:keys [acl properties]} rows]
+  (let [more? (reagent/atom false)]
+    (fn [{:keys [acl properties]} rows]
+      [:div {:style {:padding-top 5
+                     :padding-bottom 5}}
+       (when (or (seq rows) (seq properties) acl)
+         [more-or-less more?])
+       (when @more?
+         [table/definition-table rows])
+       (when @more? [properties-table properties])
+       (when @more? [acl/acl-table acl])
+       ])))
 
 
 (defn title-card

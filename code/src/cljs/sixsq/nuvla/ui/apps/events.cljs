@@ -16,20 +16,23 @@
 
 
 (reg-event-db
+  ::set-version-warning
+  (fn [db [_]]
+    (assoc db ::spec/version-warning? true)))
+
+
+(reg-event-db
+  ::clear-version-warning
+  (fn [db [_]]
+    (assoc db ::spec/version-warning? false)))
+
+
+(reg-event-db
   ::set-module
   (fn [db [_ module]]
     (assoc db ::spec/completed? true
               ::spec/module-path (:path module)
               ::spec/module (if (nil? module) {} module))))
-
-
-;(reg-event-db
-;  ::set-resource
-;  (fn [db [_ module]]
-;    (log/infof "Got back: %s" module)
-;    (assoc db ::spec/completed? true
-;              ;::spec/module-path module-path
-;              ::spec/module (if (nil? module) {} module))))
 
 
 (reg-event-db
@@ -84,13 +87,13 @@
 
 (reg-event-fx
   ::get-module
-  (fn [{{:keys [::client-spec/client ::main-spec/nav-path] :as db} :db} _]
+  (fn [{{:keys [::client-spec/client ::main-spec/nav-path] :as db} :db} [_ version]]
     (when client
       (let [path (utils/nav-path->module-path nav-path)]
         {:db                  (assoc db ::spec/completed? false
                                         ::spec/module-path nil
                                         ::spec/module nil)
-         ::apps-fx/get-module [client path #(dispatch [::set-module %])]}))))
+         ::apps-fx/get-module [client path version #(dispatch [::set-module %])]}))))
 
 
 (reg-event-db
@@ -183,10 +186,7 @@
   ::edit-module
   (fn [{{:keys [::spec/module ::client-spec/client] :as db} :db :as cofx} _]
     (let [id               (:id module)
-          sanitized-module (utils/sanitize-module module)
-          ]
-      (log/infof "ID: %s" id)
-      (log/infof "module: %s" sanitized-module)
+          sanitized-module (utils/sanitize-module module)]
       (if (nil? id)
         {:db               db
          ::cimi-api-fx/add [client "module" sanitized-module

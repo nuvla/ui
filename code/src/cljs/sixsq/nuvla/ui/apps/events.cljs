@@ -62,27 +62,10 @@
     data))
 
 
-(reg-event-fx
-  ::add-module
-  (fn [{{:keys [::client-spec/client
-                ::main-spec/nav-path
-                ::spec/add-data
-                ::spec/active-tab] :as db} :db} _]
-    (when client
-      (let [path        (or (utils/nav-path->module-path nav-path) "")
-            {project-name :name :as form-data} (get add-data active-tab)
-            module-path (if (str/blank? path)
-                          project-name
-                          (str path "/" project-name))
-            data        (-> form-data
-                            (assoc :type (-> active-tab name str/upper-case)
-                                   :parentPath path
-                                   :path module-path)
-                            fixup-image-data)]
-        {::apps-fx/create-module [client path data
-                                  #(do
-                                     (dispatch [::close-add-modal])
-                                     (dispatch [::history-events/navigate (str "application/" module-path)]))]}))))
+(reg-event-db
+  ::clear-module
+  (fn [db [_]]
+    (assoc db ::spec/module {})))
 
 
 (reg-event-fx
@@ -130,6 +113,18 @@
   ::description
   (fn [db [_ description]]
     (assoc-in db [::spec/module :description] description)))
+
+
+(reg-event-db
+  ::type
+  (fn [db [_ type]]
+    (assoc-in db [::spec/module :type] (if (nil? type) nil (str/upper-case type)))))
+
+
+(reg-event-db
+  ::path
+  (fn [db [_ path]]
+    (assoc-in db [::spec/module :path] path)))
 
 
 (reg-event-db
@@ -184,31 +179,36 @@
 
 (reg-event-fx
   ::edit-module
-  (fn [{{:keys [::spec/module ::client-spec/client] :as db} :db :as cofx} _]
+  (fn [{{:keys [::spec/module ::client-spec/client] :as db} :db :as cofx} [_ commit-map]]
     (let [id               (:id module)
-          sanitized-module (utils/sanitize-module module)]
+          sanitized-module (utils/sanitize-module module commit-map)]
       (if (nil? id)
         {:db               db
          ::cimi-api-fx/add [client "module" sanitized-module
-                            #(if (instance? js/Error %)
-                               (let [{:keys [status message]} (response/parse-ex-info %)]
-                                 (dispatch [::messages-events/add
-                                            {:header  (cond-> (str "error editing " id)
-                                                              status (str " (" status ")"))
-                                             :content message
-                                             :type    :error}]))
-                               (do (dispatch [::cimi-detail-events/get (:id %)])
-                                   ))]}
+                            #(do
+                               (if (instance? js/Error %)
+                                 (let [{:keys [status message]} (response/parse-ex-info %)]
+                                   (dispatch [::messages-events/add
+                                              {:header  (cond-> (str "error editing " id)
+                                                                status (str " (" status ")"))
+                                               :content message
+                                               :type    :error}]))
+                                 (do (dispatch [::cimi-detail-events/get (:id %)])
+                                     (dispatch [::set-module sanitized-module])
+                                     (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))])
+                                     )))]}
         {:db                db
          ::cimi-api-fx/edit [client id sanitized-module
-                             #(if (instance? js/Error %)
-                                (let [{:keys [status message]} (response/parse-ex-info %)]
-                                  (dispatch [::messages-events/add
-                                             {:header  (cond-> (str "error editing " id)
-                                                               status (str " (" status ")"))
-                                              :content message
-                                              :type    :error}]))
-                                (do (dispatch [::cimi-detail-events/get (:id %)])
-                                    ))]
+                             #(do
+                                (if (instance? js/Error %)
+                                  (let [{:keys [status message]} (response/parse-ex-info %)]
+                                    (dispatch [::messages-events/add
+                                               {:header  (cond-> (str "error editing " id)
+                                                                 status (str " (" status ")"))
+                                                :content message
+                                                :type    :error}]))
+                                  (do (dispatch [::cimi-detail-events/get (:id %)])
+                                      (dispatch [::get-module])
+                                      )))]
          })
       )))

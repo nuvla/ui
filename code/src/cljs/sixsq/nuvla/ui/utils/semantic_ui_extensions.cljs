@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.utils.semantic-ui-extensions
   (:require
-    [reagent.core :as reagent]
     [re-frame.core :refer [subscribe]]
+    [reagent.core :as reagent]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 

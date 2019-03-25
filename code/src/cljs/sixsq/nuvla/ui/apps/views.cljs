@@ -10,6 +10,7 @@
     [sixsq.nuvla.ui.apps.events :as events]
     [sixsq.nuvla.ui.apps.subs :as subs]
     [sixsq.nuvla.ui.apps.utils :as utils]
+    [sixsq.nuvla.ui.apps.views-detail :as views-detail]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -30,26 +31,32 @@
 
 (defn module-details
   [new-type]
-  (let [module     (subscribe [::subs/module])
-        new-parent (utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
-        new-name   (utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
+  (let [module   (subscribe [::subs/module])
+        nav-path (subscribe [::main-subs/nav-path])]
     (fn [new-type]
-      (let [type (:type @module)]
-        (dispatch [::events/is-new? (not-empty new-type)])
-        (when (nil? @module)
+      (let [type       (:type @module)
+            new-parent (utils/nav-path->parent-path @nav-path)
+            new-name   (utils/nav-path->module-name @nav-path)]
+        (when (empty? @module)
           (do
             (dispatch [::events/name new-name])
             (dispatch [::events/parent new-parent])
+            (dispatch [::events/type new-type])
             ))
         (if (or (= "component" new-type) (= "COMPONENT" type))
-          [apps-component-views/view-edit module]
-          [apps-project-views/view-edit module])
+          [apps-component-views/view-edit]
+          [apps-project-views/view-edit])
         ))))
+
 
 (defn module
   [new-type version]
-  (dispatch [::events/get-module version])
-  [module-details new-type version])
+  (dispatch [::events/is-new? (not (empty? new-type))])
+  (if (empty? new-type)
+    (dispatch [::events/get-module version])
+    (dispatch [::events/clear-module])
+    )
+  [module-details new-type])
 
 
 (defn version-warning []
@@ -72,10 +79,10 @@
         type        (:type query)
         version     (:version query nil)
         module-name (utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
-    (log/infof "ver: %s" version)
     (if module-name
       (module type version)
       [apps-store-views/root-view])))
+
 
 (defmethod panel/render :apps
   [path]

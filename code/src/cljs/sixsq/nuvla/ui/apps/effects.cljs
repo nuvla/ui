@@ -36,7 +36,5 @@
             module-data       (cond-> module
                                       children (assoc :children children))
             ]
-        (log/infof "in get-module path: %s" path-with-version)
-
         (callback module-data)))))
 

@@ -4,9 +4,9 @@
     [sixsq.nuvla.ui.docs.subs :as docs-subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]))
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 
 (defn metadata-section

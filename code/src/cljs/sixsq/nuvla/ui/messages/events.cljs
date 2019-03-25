@@ -44,7 +44,7 @@
         {:db (assoc db ::messages-spec/messages updated-messages
                        ::messages-spec/alert-message timestamped-message
                        ::messages-spec/alert-display :slider)
-         :dispatch-later [{:ms 3000 :dispatch [::close-slider]}]}))))
+         :dispatch-later [{:ms 5000 :dispatch [::close-slider]}]}))))
 
 
 (reg-event-db

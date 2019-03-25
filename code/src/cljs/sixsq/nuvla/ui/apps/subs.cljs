@@ -52,3 +52,7 @@
 (reg-sub
   ::logo-url-modal-visible?
   ::spec/logo-url-modal-visible?)
+
+(reg-sub
+  ::commit-message
+  ::spec/commit-message)

@@ -1,10 +1,10 @@
 (ns sixsq.nuvla.ui.apps.views-versions
   (:require [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as reagent]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.apps.events :as events]
             [sixsq.nuvla.ui.apps.subs :as subs]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [taoensso.timbre :as log]))
 
 
@@ -42,16 +42,16 @@
            (when @show-versions?
              [ui/Table
               [ui/TableHeader
-               [ui/TableHeaderCell {:width "1"} "Version"]
-               [ui/TableHeaderCell {:width "1"} "Author"]
-               [ui/TableHeaderCell {:width "14"} "Commit message"]]
+               [ui/TableRow
+                [ui/TableHeaderCell {:width "1"} "Version"]
+                [ui/TableHeaderCell {:width "1"} "Author"]
+                [ui/TableHeaderCell {:width "14"} "Commit message"]]]
               [ui/TableBody
                (for [[v i] versions-indexes]
                  (let [href        (:href v)
                        commit      (:commit v)
                        author      (:author v)
                        is-current? (= current href)]
-                   (log/infof "href %s commit %s author %s and v %s" href commit author v)
                    ^{:key (str "version" i)}
                    [ui/TableRow (when is-current? {:active true})
                     [ui/TableCell [:a {:style    {:cursor "pointer"}

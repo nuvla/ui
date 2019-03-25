@@ -109,11 +109,6 @@
     (fn []
       (let [name       (:name @module)
             parent     (:parent-path @module)]
-        (when (empty? @module)
-          (let [new-parent (apps-utils/nav-path->parent-path @(subscribe [::main-subs/nav-path]))
-                new-name   (apps-utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
-            (dispatch [::apps-events/name new-name])
-            (dispatch [::apps-events/parent new-parent])))
         [ui/Container {:fluid true}
          [:h2 [ui/Icon {:name "folder"}]
           parent (when (not-empty parent) "/") name]

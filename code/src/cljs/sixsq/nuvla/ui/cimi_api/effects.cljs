@@ -6,8 +6,8 @@
   (:require
     [cljs.core.async :refer [<!]]
     [re-frame.core :refer [dispatch reg-fx]]
-    [sixsq.nuvla.client.authn :as authn]
     [sixsq.nuvla.client.api :as api]
+    [sixsq.nuvla.client.authn :as authn]
     [sixsq.nuvla.ui.cimi-api.utils :as cimi-api-utils]))
 
 

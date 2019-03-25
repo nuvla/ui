@@ -12,11 +12,11 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.utils :as history-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.form-fields :as forms]
     [taoensso.timbre :as log]))
 
 

@@ -7,6 +7,8 @@
     [sixsq.nuvla.ui.apps.events :as events]
     [sixsq.nuvla.ui.apps.subs :as subs]
     [sixsq.nuvla.ui.apps.utils :as utils]
+    [sixsq.nuvla.ui.apps.views-versions :as views-versions]
+    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -14,7 +16,6 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.apps.views-versions :as views-versions]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
@@ -87,10 +88,13 @@
 
 (defn save-modal
   []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        visible? (subscribe [::subs/save-modal-visible?])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        visible?       (subscribe [::subs/save-modal-visible?])
+        username       (subscribe [::authn-subs/user])
+        commit-message (subscribe [::subs/commit-message])]
     (fn []
-      (let []
+      (let [commit-map {:author @username
+                        :commit @commit-message}]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-save-modal])}
@@ -104,7 +108,7 @@
                      :on-change    (ui-callback/input-callback #(dispatch [::events/commit-message %]))
                      :on-key-press (fn [e]
                                      (when (= 13 (.-charCode e))
-                                       (do (dispatch [::events/edit-module])
+                                       (do (dispatch [::events/edit-module commit-map])
                                            (dispatch [::events/close-save-modal])
                                            )))}]]
 
@@ -112,7 +116,7 @@
           [uix/Button {:text     (@tr [:save])
                        :positive true
                        :active   true
-                       :on-click #(do (dispatch [::events/edit-module])
+                       :on-click #(do (dispatch [::events/edit-module commit-map])
                                       (dispatch [::events/close-save-modal])
                                       )}]]]))))
 
@@ -258,88 +262,72 @@
           (error-text tr error)]]))))
 
 
-  (defn toggle [v]
-    (swap! v not))
+(defn toggle [v]
+  (swap! v not))
 
 
-  (defn sanitize-name [name]
-    (str/lower-case
-      (str/replace
-        (str/trim
-          (str/join "" (re-seq #"[a-zA-Z0-9\ ]" name)))
-        " " "-")))
+(defn summary-row
+  [name-kw value on-change-event]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        name-str (name name-kw)]
+    [ui/TableRow
+     [ui/TableCell {:collapsing true
+                    :style      {:padding-bottom 8}} name-str]
+     [ui/TableCell
+      [ui/Input {:name        name-str
+                 :value       value
+                 :transparent true
+                 :placeholder (str/capitalize (@tr [name-kw]))
+                 :fluid       true
+                 :on-change   (ui-callback/input-callback #(do (dispatch [::events/page-changed? true])
+                                                               (dispatch [on-change-event %])))
+                 }]]]))
 
 
-  (defn contruct-path [parent name]
-    (log/infof "san: %s '%s'" parent name)
-    (let [sanitized-name (sanitize-name name)]
-      (log/infof "san: '%s'" sanitized-name)
-      (str/join "/"
-                (remove str/blank?
-                        [parent sanitized-name]))))
-
-
-  (defn summary-row
-    [name-kw value on-change-event]
-    (let [tr       (subscribe [::i18n-subs/tr])
-          name-str (name name-kw)]
-      [ui/TableRow
-       [ui/TableCell {:collapsing true
-                      :style      {:padding-bottom 8}} name-str]
-       [ui/TableCell
-        [ui/Input {:name        name-str
-                   :value       value
-                   :transparent true
-                   :placeholder (str/capitalize (@tr [name-kw]))
-                   :fluid       true
-                   :on-change   (ui-callback/input-callback #(do (dispatch [::events/page-changed? true])
-                                                                 (dispatch [on-change-event %])))
-                   }]]]))
-
-
-  (defn summary
-    [extras]
-    (let [tr               (subscribe [::i18n-subs/tr])
-          default-logo-url (subscribe [::subs/default-logo-url])
-          is-new?          (subscribe [::subs/is-new?])]
-      (fn [extras]
-        (let [module (subscribe [::subs/module])
-              {name        :name
-               parent      :parent-path
-               description :description
-               logo-url    :logo-url
-               type        :type
-               path        :path
-               :or         {name        ""
-                            parent      ""
-                            description ""
-                            logo-url    @default-logo-url
-                            type        "project"
-                            path        nil}} @module]
-          [ui/Grid {:style {:margin-bottom 5}}
-           [ui/GridRow {:reversed :computer}
-            [ui/GridColumn {:computer     2
-                            :large-screen 2}
-             [ui/Image {:src (or logo-url @default-logo-url)}]
-             [ui/Button {:fluid    true
-                         :on-click #(dispatch [::events/open-logo-url-modal])}
-              (@tr [:module-change-logo])]]
-            [ui/GridColumn {:computer     14
-                            :large-screen 14}
-             ;[:div (pr-str @(subscribe [::subs/module]))]
-             [ui/Table (update-in style/definition [:style :max-width] (constantly "100%"))
-              [ui/TableBody
-               [summary-row :name name ::events/name]
-               [summary-row :description description ::events/description]
-               (when (not-empty parent)
-                 (let [label (if (= "PROJECT" type) "parent project" "project")]
-                   [ui/TableRow
-                    [ui/TableCell {:collapsing true
-                                   :style      {:padding-bottom 8}} label]
-                    [ui/TableCell parent
-                     ]]
-                   ))]
-              extras]
-             [details-section]
-             [views-versions/versions]
-             ]]]))))
+(defn summary
+  [extras]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        default-logo-url (subscribe [::subs/default-logo-url])
+        is-new?          (subscribe [::subs/is-new?])]
+    (fn [extras]
+      (let [module (subscribe [::subs/module])
+            {name        :name
+             parent      :parent-path
+             description :description
+             logo-url    :logo-url
+             type        :type
+             path        :path
+             :or         {name        ""
+                          parent      ""
+                          description ""
+                          logo-url    @default-logo-url
+                          type        "project"
+                          path        nil}} @module]
+        [ui/Grid {:style {:margin-bottom 5}}
+         [ui/GridRow {:reversed :computer}
+          [ui/GridColumn {:computer     2
+                          :large-screen 2}
+           [ui/Image {:src (or logo-url @default-logo-url)}]
+           [ui/Button {:fluid    true
+                       :on-click #(dispatch [::events/open-logo-url-modal])}
+            (@tr [:module-change-logo])]]
+          [ui/GridColumn {:computer     14
+                          :large-screen 14}
+           ;[:div (pr-str @(subscribe [::subs/module]))]
+           [ui/Table (update-in style/definition [:style :max-width] (constantly "100%"))
+            [ui/TableBody
+             [summary-row :name name ::events/name]
+             [summary-row :description description ::events/description]
+             (when (not-empty parent)
+               (let [label (if (= "PROJECT" type) "parent project" "project")]
+                 [ui/TableRow
+                  [ui/TableCell {:collapsing true
+                                 :style      {:padding-bottom 8}} label]
+                  [ui/TableCell parent
+                   ]]
+                 ))
+             extras]]
+           (when (not @is-new?)
+             [details-section])
+           [views-versions/versions]
+           ]]]))))

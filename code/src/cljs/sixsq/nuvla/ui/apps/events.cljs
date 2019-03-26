@@ -195,6 +195,7 @@
                                                :type    :error}]))
                                  (do (dispatch [::cimi-detail-events/get (:id %)])
                                      (dispatch [::set-module sanitized-module])
+                                     (dispatch [::page-changed? false])
                                      (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))])
                                      )))]}
         {:db                db
@@ -209,6 +210,7 @@
                                                 :type    :error}]))
                                   (do (dispatch [::cimi-detail-events/get (:id %)])
                                       (dispatch [::get-module])
+                                      (dispatch [::page-changed? false])
                                       )))]
          })
       )))

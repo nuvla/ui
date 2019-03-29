@@ -33,7 +33,7 @@
   [index segment]
   (let [nav-fn (fn [& _] (dispatch [::main-events/trim-breadcrumb index]))]
     ^{:key (str index "_" segment)} [ui/BreadcrumbSection [:a {:on-click nav-fn :style {:cursor "pointer"}}
-                                           (utils/truncate (str segment))]]))
+                                                           (utils/truncate (str segment))]]))
 
 
 (defn breadcrumbs-links []
@@ -122,16 +122,16 @@
           iframe? (subscribe [::main-subs/iframe?])]
 
       (if @cep
-          [ui/Responsive {:as            "div"
-                          :fire-on-mount true
-                          :on-update     (responsive/callback #(dispatch [::main-events/set-device %]))}
-           [ui/SidebarPushable {:as    ui/SegmentRaw
-                                :basic true}
-            [sidebar/menu]
-            [ui/SidebarPusher
-             [ui/Container (cond-> {:id "nuvla-ui-main" :fluid true}
-                                   @show? (assoc :className "sidebar-visible"))
-              [header]
-              [contents]
-              (when-not @iframe? [footer])]]]]
-          [ui/Container [ui/Loader {:active true :size "massive"}]]))))
+        [ui/Responsive {:as            "div"
+                        :fire-on-mount true
+                        :on-update     (responsive/callback #(dispatch [::main-events/set-device %]))}
+         [ui/SidebarPushable {:as    ui/SegmentRaw
+                              :basic true}
+          [sidebar/menu]
+          [ui/SidebarPusher
+           [ui/Container (cond-> {:id "nuvla-ui-main" :fluid true}
+                                 @show? (assoc :className "sidebar-visible"))
+            [header]
+            [contents]
+            (when-not @iframe? [footer])]]]]
+        [ui/Container [ui/Loader {:active true :size "massive"}]]))))

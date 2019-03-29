@@ -5,7 +5,5 @@
   [full-text-search page elements-per-page]
   (let [full-text-search (str "fulltext=='" full-text-search "*'")]
     (cond-> {:first (inc (* (dec page) elements-per-page))
-             :last  (* page elements-per-page)
-             ;:orderby "created:desc"
-             }
+             :last  (* page elements-per-page)}
             (not (str/blank? filter)) (assoc :filter full-text-search))))

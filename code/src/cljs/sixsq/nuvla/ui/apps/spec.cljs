@@ -14,6 +14,7 @@
 (s/def ::module any?)
 
 (s/def ::default-logo-url (s/nilable string?))
+
 (s/def ::logo-url-modal-visible? boolean?)
 
 (s/def ::save-modal-visible? boolean?)
@@ -34,8 +35,7 @@
                           ::default-logo-url
                           ::logo-url-modal-visible?
                           ::save-modal-visible?
-                          ::commit-message
-                          ]))
+                          ::commit-message]))
 
 (def defaults {::version-warning?        false
                ::is-new?                 false
@@ -46,6 +46,5 @@
                ::page-changed?           false
                ::logo-url-modal-visible? false
                ::save-modal-visible?     false
-               ::default-logo-url        "https://semantic-ui.com/images/wireframe/image.png"
-               ::commit-message          nil
-               })
+               ::default-logo-url        "/ui/images/noimage.png"
+               ::commit-message          nil})

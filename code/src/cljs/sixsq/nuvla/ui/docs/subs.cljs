@@ -3,8 +3,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-sub]]
     [sixsq.nuvla.ui.docs.events :as events]
-    [sixsq.nuvla.ui.docs.spec :as spec]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.docs.spec :as spec]))
 
 
 (reg-sub

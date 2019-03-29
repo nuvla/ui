@@ -1,9 +1,7 @@
 (ns sixsq.nuvla.ui.apps.views
   (:require
     [cemerick.url :as url]
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as reagent]
     [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
     [sixsq.nuvla.ui.apps-store.views :as apps-store-views]
@@ -13,18 +11,17 @@
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [taoensso.timbre :as log]
     [taoensso.timbre :as timbre]))
 
 
 (defn module-details
   [new-type]
-  (let [module   (subscribe [::subs/module])
+  (let [module (subscribe [::subs/module])
         nav-path (subscribe [::main-subs/nav-path])]
     (fn [new-type]
-      (let [type       (:type @module)
+      (let [type (:type @module)
             new-parent (utils/nav-path->parent-path @nav-path)
-            new-name   (utils/nav-path->module-name @nav-path)]
+            new-name (utils/nav-path->module-name @nav-path)]
         (when (empty? @module)
           (do
             (dispatch [::events/name new-name])
@@ -63,9 +60,9 @@
 
 (defn apps
   []
-  (let [query       (clojure.walk/keywordize-keys (:query (url/url (-> js/window .-location .-href))))
-        type        (:type query)
-        version     (:version query nil)
+  (let [query (clojure.walk/keywordize-keys (:query (url/url (-> js/window .-location .-href))))
+        type (:type query)
+        version (:version query nil)
         module-name (utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
     (if module-name
       (module type version)

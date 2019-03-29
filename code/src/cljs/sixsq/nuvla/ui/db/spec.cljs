@@ -3,7 +3,6 @@
   (:require
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.apps-component.spec :as apps-component]
-    [sixsq.nuvla.ui.apps-project.spec :as apps-project]
     [sixsq.nuvla.ui.apps-store.spec :as apps-store]
     [sixsq.nuvla.ui.apps.spec :as apps]
     [sixsq.nuvla.ui.authn.spec :as authn]
@@ -24,7 +23,6 @@
 
 (s/def ::db (s/merge ::apps/db
                      ::apps-component/db
-                     ::apps-project/db
                      ::apps-store/db
                      ::authn/db
                      ::api/db
@@ -45,7 +43,6 @@
 (def default-db
   (merge apps/defaults
          apps-component/defaults
-         apps-project/defaults
          apps-store/defaults
          authn/defaults
          api/defaults

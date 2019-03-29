@@ -13,12 +13,11 @@
     [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn refresh-button
   []
-  (let [tr            (subscribe [::i18n-subs/tr])
+  (let [tr (subscribe [::i18n-subs/tr])
         page-changed? (subscribe [::apps-subs/page-changed?])]
     (fn []
       [ui/MenuMenu {:position "right"}
@@ -33,12 +32,12 @@
 
 
 (defn summary []
-  (let [tr     (subscribe [::i18n-subs/tr])
+  (let [tr (subscribe [::i18n-subs/tr])
         module (subscribe [::apps-subs/module])]
     (fn []
       (let [content (:content @module)
             {docker-image :image
-                          :or {docker-image ""}} content]
+             :or          {docker-image ""}} content]
         [apps-views-detail/summary
          [apps-views-detail/summary-row "docker-image" docker-image ::apps-events/docker-image]]))))
 
@@ -82,8 +81,8 @@
                 :color    :red}]]]))
 
 (defn port-mappings-section []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        active?  (reagent/atom true)
+  (let [tr (subscribe [::i18n-subs/tr])
+        active? (reagent/atom true)
         mappings (subscribe [::subs/port-mappings])]
     (fn []
       [ui/Accordion {:fluid     true
@@ -135,7 +134,7 @@
                      :options        [{:key "volume", :value "volume", :text "volume"}
                                       {:key "bind", :value "bind", :text "bind"}
                                       {:key "tmpfs", :value "tmpfs", :text "tmpfs"}]
-                     ;:on-change (events/dropdown ::events/toto 123)
+                     ;:on-change (events/dropdown ::events/toto 123) ;;TODO
                      }]]
       [:span " , "]
       [ui/Input {:name        (str "source-" id)
@@ -156,7 +155,7 @@
       [:span " " (@tr [:module-volume-read-only?]) " "
        [ui/Checkbox {:name    "read-only"
                      :checked (if (nil? read-only?) false read-only?)
-                     ;:on-click #(dispatch [::events/remove-volume id]) TODO!!
+                     ;:on-click #(dispatch [::events/remove-volume id])
                      :align   :middle}]
        ]]
      [ui/GridColumn {:floated :right
@@ -170,7 +169,7 @@
 
 
 (defn volumes-section []
-  (let [tr      (subscribe [::i18n-subs/tr])
+  (let [tr (subscribe [::i18n-subs/tr])
         active? (reagent/atom true)
         volumes (subscribe [::subs/volumes])]
     (fn []
@@ -252,8 +251,8 @@
   []
   (let [module (subscribe [::apps-subs/module])]
     (fn []
-      (let [name       (:name @module)
-            parent     (:parent-path @module)]
+      (let [name (:name @module)
+            parent (:parent-path @module)]
         [ui/Container {:fluid true}
          [:h2 [ui/Icon {:name "th"}]
           parent (when (not-empty parent) "/") name]

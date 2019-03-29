@@ -1,22 +1,17 @@
 (ns sixsq.nuvla.ui.infra-service.views
   (:require
     [cljs.pprint :refer [cl-format]]
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as reagent]
-    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.infra-service.events :as events]
     [sixsq.nuvla.ui.infra-service.subs :as subs]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]
     [taoensso.timbre :as timbre]))
 
 
@@ -51,20 +46,6 @@
       [refresh-button]]]))
 
 
-;(defn show-service-sidebar []
-;  (let [show-service-sidebar? (subscribe [::subs/show-service-sidebar?])]
-;    [ui/Sidebar {:as        ui/MenuRaw
-;                 ;                 :className "medium thin"
-;                 :vertical  true
-;                 :inverted  true
-;                 :direction :right
-;                 :visible   true                            ;@show-service-sidebar?
-;                 :animation :overlay}
-;     [:nav {:aria-label "sidebar"}
-;      [:div "hello"]
-;      ]]))
-
-
 (def service-icons
   {:swarm :docker
    :s3    :aws})
@@ -72,9 +53,7 @@
 
 (defn service-card
   [{:keys [id name description path type logo-url] :as service}]
-  (let [tr (subscribe [::i18n-subs/tr])
-        {:keys [type]} service
-        ]
+  (let [{:keys [type]} service]
     ^{:key id}
     [ui/Card
      (when logo-url
@@ -108,13 +87,13 @@
 
 (defn infra-services
   []
-  (let [services          (subscribe [::subs/services])
+  (let [services (subscribe [::subs/services])
         elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
-        active?           (reagent/atom true)]
+        page (subscribe [::subs/page])
+        active? (reagent/atom true)]
     (fn []
       (let [total-services (get @services :count 0)
-            total-pages    (general-utils/total-pages total-services @elements-per-page)]
+            total-pages (general-utils/total-pages total-services @elements-per-page)]
         [ui/Accordion {:fluid     true
                        :styled    true
                        :exclusive false

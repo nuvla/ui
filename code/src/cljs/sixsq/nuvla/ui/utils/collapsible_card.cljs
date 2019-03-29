@@ -9,8 +9,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.table :as table]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (defn more-or-less
@@ -73,7 +72,7 @@
   [{:keys [acl properties]} rows]
   (let [more? (reagent/atom false)]
     (fn [{:keys [acl properties]} rows]
-      [:div {:style {:padding-top 5
+      [:div {:style {:padding-top    5
                      :padding-bottom 5}}
        (when (or (seq rows) (seq properties) acl)
          [more-or-less more?])

@@ -23,9 +23,9 @@
 (defn action-buttons
   [confirm-label cancel-label on-confirm on-cancel]
   [:div
-   ;[uix/Button
-   ; {:text     cancel-label
-   ;  :on-click on-cancel}]
+   [uix/Button
+    {:text     cancel-label
+     :on-click on-cancel}]
    [uix/Button
     {:text     confirm-label
      :primary  true
@@ -75,9 +75,9 @@
   "Creates an edit that will bring up an edit dialog and will save the
    modified resource when saved."
   [{:keys [id] :as data} description action-fn]
-  (let [tr                (subscribe [::i18n-subs/tr])
-        text              (atom (general/edn->json data))
-        collection        (subscribe [::cimi-subs/collection-name])
+  (let [tr (subscribe [::i18n-subs/tr])
+        text (atom (general/edn->json data))
+        collection (subscribe [::cimi-subs/collection-name])
         resource-metadata (subscribe [::docs-subs/document @collection])]
     (fn [{:keys [id] :as data} description action-fn]
       [action-button-icon

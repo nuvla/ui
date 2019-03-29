@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.apps.utils
   (:require
-    [clojure.string :as str]
-    [taoensso.timbre :as log]))
+    [clojure.string :as str]))
 
 
 (defn nav-path->module-path

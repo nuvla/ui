@@ -83,7 +83,7 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [:div
      (when (:totalitems options)
-       [ui/Label {:style {:float :left
+       [ui/Label {:style {:float      :left
                           :margin-top 10}
                   :size  :medium
                   }

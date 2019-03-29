@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.apps-component.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.apps-component.spec :as spec]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.apps-component.spec :as spec]))
 
 
 (reg-event-db

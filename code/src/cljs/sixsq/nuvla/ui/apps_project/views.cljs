@@ -12,12 +12,11 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 (defn refresh-button
   []
-  (let [tr            (subscribe [::i18n-subs/tr])
+  (let [tr (subscribe [::i18n-subs/tr])
         page-changed? (subscribe [::apps-subs/page-changed?])]
     (fn []
       [ui/MenuMenu {:position "right"}
@@ -39,7 +38,7 @@
   (when module
     (let [path-parts (str/split path #"/")
           name-path (last path-parts)
-          on-click  #(dispatch [::main-events/push-breadcrumb name-path])
+          on-click #(dispatch [::main-events/push-breadcrumb name-path])
           icon-name (apps-utils/category-icon type)]
       [ui/ListItem {:on-click on-click}
        [ui/ListIcon {:name           icon-name
@@ -67,8 +66,8 @@
 
 
 (defn modules []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        module  (subscribe [::apps-subs/module])
+  (let [tr (subscribe [::i18n-subs/tr])
+        module (subscribe [::apps-subs/module])
         active? (reagent/atom true)]
     (fn []
       (let [children (:children @module)]
@@ -95,8 +94,8 @@
   []
   (let [module (subscribe [::apps-subs/module])]
     (fn []
-      (let [name       (:name @module)
-            parent     (:parent-path @module)]
+      (let [name (:name @module)
+            parent (:parent-path @module)]
         [ui/Container {:fluid true}
          [:h2 [ui/Icon {:name "folder"}]
           parent (when (not-empty parent) "/") name]

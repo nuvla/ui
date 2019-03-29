@@ -4,8 +4,7 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.infra-service.spec :as spec]
-    [sixsq.nuvla.ui.infra-service.utils :as utils]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.infra-service.utils :as utils]))
 
 (reg-event-db
   ::set-services

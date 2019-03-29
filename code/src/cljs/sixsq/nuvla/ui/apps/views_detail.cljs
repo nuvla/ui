@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.apps.views-detail
   (:require
-    [cemerick.url :as url]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as reagent]
@@ -20,8 +19,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]
-    [taoensso.timbre :as timbre]))
+    [sixsq.nuvla.ui.utils.forms :as forms]))
 
 
 (defn refresh-button
@@ -37,11 +35,11 @@
 
 
 (defn control-bar []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        module        (subscribe [::subs/module])
-        cep           (subscribe [::api-subs/cloud-entry-point])
+  (let [tr (subscribe [::i18n-subs/tr])
+        module (subscribe [::subs/module])
+        cep (subscribe [::api-subs/cloud-entry-point])
         page-changed? (subscribe [::subs/page-changed?])]
-    (let [add-disabled?    (not= "PROJECT" (:type @module))
+    (let [add-disabled? (not= "PROJECT" (:type @module))
           deploy-disabled? (= "PROJECT" (:type @module))]
       (vec (concat [ui/Menu {:borderless true}]
 
@@ -72,7 +70,7 @@
 
 (defn save-action []
   (let [page-changed? (subscribe [::subs/page-changed?])
-        tr            (subscribe [::i18n-subs/tr])]
+        tr (subscribe [::i18n-subs/tr])]
     (fn []
       [ui/Button {:primary  true
                   :style    {:margin-top 10}
@@ -84,9 +82,9 @@
 
 (defn save-modal
   []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        visible?       (subscribe [::subs/save-modal-visible?])
-        username       (subscribe [::authn-subs/user])
+  (let [tr (subscribe [::i18n-subs/tr])
+        visible? (subscribe [::subs/save-modal-visible?])
+        username (subscribe [::authn-subs/user])
         commit-message (subscribe [::subs/commit-message])]
     (fn []
       (let [commit-map {:author @username
@@ -102,11 +100,8 @@
                      :fluid        true
                      :auto-focus   true
                      :on-change    (ui-callback/input-callback #(dispatch [::events/commit-message %]))
-                     :on-key-press (fn [e]
-                                     (when (= 13 (.-charCode e))
-                                       (do (dispatch [::events/edit-module commit-map])
-                                           (dispatch [::events/close-save-modal])
-                                           )))}]]
+                     :on-key-press (partial forms/on-return-key #(do (dispatch [::events/edit-module commit-map])
+                                                                     (dispatch [::events/close-save-modal])))}]]
 
          [ui/ModalActions
           [uix/Button {:text     (@tr [:save])
@@ -120,9 +115,9 @@
 (defn logo-url-modal
   []
   (let [local-url (reagent/atom "")
-        tr        (subscribe [::i18n-subs/tr])
-        visible?  (subscribe [::subs/logo-url-modal-visible?])
-        module    (subscribe [::subs/module])]
+        tr (subscribe [::i18n-subs/tr])
+        visible? (subscribe [::subs/logo-url-modal-visible?])
+        module (subscribe [::subs/module])]
     (fn []
       (let []
         [ui/Modal {:open       @visible?
@@ -137,29 +132,24 @@
                      :fluid         true
                      :auto-focus    true
                      :on-change     (ui-callback/input-callback #(reset! local-url %))
-                     :on-key-press  (fn [e]
-                                      (when (= 13 (.-charCode e))
-                                        (dispatch [::events/save-logo-url @local-url])))}]]
+                     :on-key-press  (partial forms/on-return-key #(dispatch [::events/save-logo-url @local-url]))}]]
 
          [ui/ModalActions
-          [uix/Button {:text         "Ok"
-                       :positive     true
-                       :disabled     (empty? @local-url)
-                       :active       true
-                       :on-click     #(dispatch [::events/save-logo-url @local-url])
-                       :on-key-press (fn [e]
-                                       (if (= 13 (.-charCode e))
-                                         (log/infof "Button ENTER")
-                                         (log/infof "Button NOT ENTER")))}]]]))))
+          [uix/Button {:text     "Ok"
+                       :positive true
+                       :disabled (empty? @local-url)
+                       :active   true
+                       :on-click #(dispatch [::events/save-logo-url @local-url])}]]
+         ]))))
 
 
 (defn add-modal
   []
-  (let [tr       (subscribe [::i18n-subs/tr])
+  (let [tr (subscribe [::i18n-subs/tr])
         visible? (subscribe [::subs/add-modal-visible?])
         nav-path (subscribe [::main-subs/nav-path])]
     (fn []
-      (let [parent  (utils/nav-path->module-path @nav-path)
+      (let [parent (utils/nav-path->module-path @nav-path)
             hide-fn #(dispatch [::events/close-add-modal])]
         [ui/Modal {:open       @visible?
                    :close-icon true
@@ -227,11 +217,11 @@
       (let [summary-info (-> (select-keys @module module-summary-keys)
                              (merge (select-keys @module #{:path :type})
                                     {:owner (-> @module :acl :owner :principal)}))
-            icon         (-> @module :type category-icon)
-            rows         (map tuple-to-row summary-info)
-            name         (:name @module)
-            description  (:name @module)
-            acl          (:acl @module)]
+            icon (-> @module :type category-icon)
+            rows (map tuple-to-row summary-info)
+            name (:name @module)
+            description (:name @module)
+            acl (:acl @module)]
         [cc/metadata-simple
          {:title       name
           :description (:startTime summary-info)
@@ -264,7 +254,7 @@
 
 (defn summary-row
   [name-kw value on-change-event]
-  (let [tr       (subscribe [::i18n-subs/tr])
+  (let [tr (subscribe [::i18n-subs/tr])
         name-str (name name-kw)]
     [ui/TableRow
      [ui/TableCell {:collapsing true
@@ -282,9 +272,9 @@
 
 (defn summary
   [extras]
-  (let [tr               (subscribe [::i18n-subs/tr])
+  (let [tr (subscribe [::i18n-subs/tr])
         default-logo-url (subscribe [::subs/default-logo-url])
-        is-new?          (subscribe [::subs/is-new?])]
+        is-new? (subscribe [::subs/is-new?])]
     (fn [extras]
       (let [module (subscribe [::subs/module])
             {name        :name
@@ -309,7 +299,6 @@
             (@tr [:module-change-logo])]]
           [ui/GridColumn {:computer     14
                           :large-screen 14}
-           ;[:div (pr-str @(subscribe [::subs/module]))]
            [ui/Table (update-in style/definition [:style :max-width] (constantly "100%"))
             [ui/TableBody
              [summary-row :name name ::events/name]
@@ -319,9 +308,7 @@
                  [ui/TableRow
                   [ui/TableCell {:collapsing true
                                  :style      {:padding-bottom 8}} label]
-                  [ui/TableCell parent
-                   ]]
-                 ))
+                  [ui/TableCell parent]]))
              extras]]
            (when (not @is-new?)
              [details-section])

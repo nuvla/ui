@@ -82,7 +82,7 @@
                             {:name "href" :vscope {:value @form-id} :hidden true}
                             {:name "redirectURI" :vscope {:value @server-redirect-uri} :hidden true})
             dropdown-options (map dropdown-method-option methods)
-            internal? (= "internal" (:method method))]
+            password-method? (= "password" (:method method))]
 
         (log/infof "creating authentication form: %s %s" (name collections-kw) @form-id)
         (vec
@@ -101,7 +101,7 @@
                                :on-change     (ui-callback/dropdown ::authn-events/set-form-id)}])]
 
                           (mapv (partial forms/form-field #() @form-id) inputs-method)
-                          (when internal?
+                          (when password-method?
                             (reset-password tr))))]))))))
 
 

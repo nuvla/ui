@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.apps-store.views
   (:require
-    [cemerick.url :as url]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as reagent]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
@@ -18,9 +17,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]
-    [taoensso.timbre :as timbre]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn refresh-button
@@ -47,11 +44,11 @@
      [ui/CardContent
       [ui/CardHeader {:style {:word-wrap "break-word"}}
        [ui/Icon {:name (deployment-detail-utils/category-icon type)}]
-       [ui/Label {:corner true
-                  :style  {:z-index 0
-                           :cursor :pointer}
+       [ui/Label {:corner   true
+                  :style    {:z-index 0
+                             :cursor  :pointer}
                   :on-click #(dispatch [::history-events/navigate (str "apps/" path)])}
-        [ui/Icon {:name "info circle"
+        [ui/Icon {:name  "info circle"
                   :style {:cursor :pointer}}]               ; use content to work around bug in icon in label for cursor
         ]
        (or name id)]
@@ -104,8 +101,8 @@
 
 
 (defn root-projects []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        module    (subscribe [::apps-subs/module])
+  (let [tr (subscribe [::i18n-subs/tr])
+        module (subscribe [::apps-subs/module])
         active? (reagent/atom true)]
     (fn []
       (let []
@@ -131,13 +128,13 @@
 
 (defn appstore
   []
-  (let [modules           (subscribe [::subs/modules])
+  (let [modules (subscribe [::subs/modules])
         elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
-        active?           (reagent/atom true)]
+        page (subscribe [::subs/page])
+        active? (reagent/atom true)]
     (fn []
       (let [total-modules (get @modules :count 0)
-            total-pages   (general-utils/total-pages total-modules @elements-per-page)]
+            total-pages (general-utils/total-pages total-modules @elements-per-page)]
         [ui/Container {:fluid true}
          [ui/Accordion {:fluid     true
                         :styled    true
@@ -160,6 +157,7 @@
                 :activePage   @page
                 :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]
              )]]]))))
+
 
 (defn root-view
   []

@@ -30,7 +30,7 @@
 
 
 (defn control-bar []
-  (let [tr           (subscribe [::i18n-subs/tr])
+  (let [tr (subscribe [::i18n-subs/tr])
         active-only? (subscribe [::subs/active-only?])]
     ^{:key (str "activeOnly:" @active-only?)}
     [ui/Checkbox {:defaultChecked @active-only?
@@ -43,7 +43,7 @@
 
 (defn refresh-button
   []
-  (let [tr       (subscribe [::i18n-subs/tr])
+  (let [tr (subscribe [::i18n-subs/tr])
         loading? (subscribe [::subs/loading?])]
     [uix/MenuItemWithIcon
      {:name      (@tr [:refresh])
@@ -115,7 +115,7 @@
 (defn row-fn
   [{:keys [id state module] :as deployment}]
   (let [credential-id (:credential-id deployment)
-        creds-name    (subscribe [::subs/creds-name-map])
+        creds-name (subscribe [::subs/creds-name-map])
         [url-name url] @(subscribe [::subs/deployment-url deployment])]
     ^{:key id}
     [ui/TableRow
@@ -162,12 +162,12 @@
 
 (defn card-fn
   [{:keys [id state module] :as deployment}]
-  (let [tr            (subscribe [::i18n-subs/tr])
-        creds-name    (subscribe [::subs/creds-name-map])
+  (let [tr (subscribe [::i18n-subs/tr])
+        creds-name (subscribe [::subs/creds-name-map])
         credential-id (:credential-id deployment)
-        logo-url      (:logo-url module)
-        cred-info     (get @creds-name credential-id credential-id)
-        _             (log/error @creds-name)
+        logo-url (:logo-url module)
+        cred-info (get @creds-name credential-id credential-id)
+        _ (log/error @creds-name)
         [url-name url] @(subscribe [::subs/deployment-url deployment])]
     ^{:key id}
     [ui/Card
@@ -228,9 +228,9 @@
 
 (defn deployments-display
   [deployments-list]
-  (let [tr       (subscribe [::i18n-subs/tr])
+  (let [tr (subscribe [::i18n-subs/tr])
         loading? (subscribe [::subs/loading?])
-        view     (subscribe [::subs/view])]
+        view (subscribe [::subs/view])]
     (fn [deployments-list]
       [ui/Segment (merge style/basic
                          {:loading @loading?})
@@ -242,9 +242,9 @@
 (defn deployments-main
   []
   (let [elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
-        deployments       (subscribe [::subs/deployments])
-        tr                (subscribe [::i18n-subs/tr])]
+        page (subscribe [::subs/page])
+        deployments (subscribe [::subs/deployments])
+        tr (subscribe [::i18n-subs/tr])]
     (dispatch [::main-events/action-interval
                {:action    :start
                 :id        :deployment-get-deployments
@@ -252,8 +252,8 @@
                 :event     [::events/get-deployments]}])
     (fn []
       (let [total-deployments (:count @deployments)
-            total-pages       (general-utils/total-pages (get @deployments :count 0) @elements-per-page)
-            deployments-list  (get @deployments :resources [])]
+            total-pages (general-utils/total-pages (get @deployments :count 0) @elements-per-page)
+            deployments-list (get @deployments :resources [])]
         [ui/Container {:fluid true}
          [menu-bar]
          [ui/Segment style/basic
@@ -270,7 +270,7 @@
   []
   (let [path (subscribe [::main-subs/nav-path])]
     (fn []
-      (let [n        (count @path)
+      (let [n (count @path)
             [collection-name resource-id] @path
             children (case n
                        1 [[deployments-main]]

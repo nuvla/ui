@@ -70,9 +70,10 @@
                 :compact  true
                 :inverted true}
        (when-not @iframe? [logo-item])
-       (when-not @iframe? [item :appstore "appstore" "play"])
-       (when-not @iframe? [item :application "application" "sitemap"])
+       (when-not @iframe? [item :dashboard "deployment" "dashboard"])
+       (when-not @iframe? [item :apps "apps" "play"])
        [item :data "data" "database"]
-       [item :deployment "deployment" "cloud"]
-       (when-not @iframe? [item :nuvlabox-ctrl "nuvlabox" "desktop"])
+       ;       [item :deployment "deployment" "cloud"]
+       (when-not @iframe? [item :infra-service-short "infra-service" "mixcloud"])
+       ;(when-not @iframe? [item :nuvlabox-ctrl "nuvlabox" "desktop"])
        (when-not @iframe? [item :api "api" "code"])]]]))

@@ -1,10 +1,9 @@
 (ns sixsq.nuvla.ui.docs.subs
   (:require
-    [re-frame.core :refer [reg-sub dispatch]]
-    [sixsq.nuvla.ui.docs.spec :as spec]
-    [sixsq.nuvla.ui.docs.events :as events]
     [clojure.string :as str]
-    [taoensso.timbre :as log]))
+    [re-frame.core :refer [dispatch reg-sub]]
+    [sixsq.nuvla.ui.docs.events :as events]
+    [sixsq.nuvla.ui.docs.spec :as spec]))
 
 
 (reg-sub
@@ -21,9 +20,9 @@
 
 (defn resolve-metadata-id
   [{:keys [id resourceMetadata resourceURI] :as resource}]
-  (log/error "resourceMetadata" resourceMetadata)
-  (when id
-    (log/error (str "resource-metadata/" (str/replace id #"/" "-"))))
+  ;(log/error "resourceMetadata" resourceMetadata)
+  ;(when id
+  ;  (log/error (str "resource-metadata/" (str/replace id #"/" "-"))))
   (cond
     resourceMetadata resourceMetadata
     (re-find #"-template/" (str id)) (str "resource-metadata/" (str/replace id #"/" "-"))
@@ -41,6 +40,6 @@
   (fn [documents [_ resource]]
     (if (seq documents)
       (let [resource-metadata-id (resolve-metadata-id resource)]
-        (log/error "search for metadata id:" resource-metadata-id (sort (keys documents)))
+        ;        (log/error "search for metadata id:" resource-metadata-id (sort (keys documents)))
         (get documents resource-metadata-id))
       (dispatch [::events/get-documents]))))

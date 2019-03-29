@@ -94,9 +94,6 @@
               [step-content @active-step])]]]
 
          [ui/ModalActions
-          [uix/Button {:text     (@tr [:cancel])
-                       :on-click hide-fn
-                       :disabled (not (:id @deployment))}]
           [ui/Button {:primary  true
                       :disabled launch-disabled?
                       :on-click submit-fn}

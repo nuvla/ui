@@ -2,8 +2,10 @@
   (:require
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.about.views]
-    [sixsq.nuvla.ui.application.views]
-    [sixsq.nuvla.ui.appstore.views]
+    [sixsq.nuvla.ui.apps-component.views]
+    [sixsq.nuvla.ui.apps-project.views]
+    [sixsq.nuvla.ui.apps-store.views]
+    [sixsq.nuvla.ui.apps.views]
     [sixsq.nuvla.ui.authn.views :as authn-views]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.cimi.views]
@@ -12,6 +14,7 @@
     [sixsq.nuvla.ui.docs.views]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
+    [sixsq.nuvla.ui.infra-service.views]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
@@ -30,7 +33,7 @@
   [index segment]
   (let [nav-fn (fn [& _] (dispatch [::main-events/trim-breadcrumb index]))]
     ^{:key (str index "_" segment)} [ui/BreadcrumbSection [:a {:on-click nav-fn :style {:cursor "pointer"}}
-                                           (utils/truncate (str segment))]]))
+                                                           (utils/truncate (str segment))]]))
 
 
 (defn breadcrumbs-links []
@@ -119,16 +122,16 @@
           iframe? (subscribe [::main-subs/iframe?])]
 
       (if @cep
-          [ui/Responsive {:as            "div"
-                          :fire-on-mount true
-                          :on-update     (responsive/callback #(dispatch [::main-events/set-device %]))}
-           [ui/SidebarPushable {:as    ui/SegmentRaw
-                                :basic true}
-            [sidebar/menu]
-            [ui/SidebarPusher
-             [ui/Container (cond-> {:id "nuvla-ui-main" :fluid true}
-                                   @show? (assoc :className "sidebar-visible"))
-              [header]
-              [contents]
-              (when-not @iframe? [footer])]]]]
-          [ui/Container [ui/Loader {:active true :size "massive"}]]))))
+        [ui/Responsive {:as            "div"
+                        :fire-on-mount true
+                        :on-update     (responsive/callback #(dispatch [::main-events/set-device %]))}
+         [ui/SidebarPushable {:as    ui/SegmentRaw
+                              :basic true}
+          [sidebar/menu]
+          [ui/SidebarPusher
+           [ui/Container (cond-> {:id "nuvla-ui-main" :fluid true}
+                                 @show? (assoc :className "sidebar-visible"))
+            [header]
+            [contents]
+            (when-not @iframe? [footer])]]]]
+        [ui/Container [ui/Loader {:active true :size "massive"}]]))))

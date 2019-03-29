@@ -2,7 +2,7 @@
   (:require
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as reagent]
-    [sixsq.nuvla.ui.application.utils :as application-utils]
+    [sixsq.nuvla.ui.apps.utils :as application-utils]
     [sixsq.nuvla.ui.data.events :as events]
     [sixsq.nuvla.ui.data.subs :as subs]
     [sixsq.nuvla.ui.data.utils :as utils]
@@ -284,7 +284,7 @@
         [ui/Icon {:name "warning sign"}]
         (@tr [:no-datasets])])
      (when (seq @data-sets)
-       (vec (concat [ui/CardGroup]
+       (vec (concat [ui/CardGroup {:centered true}]
                     (map (fn [data-set]
                            [format-data-set data-set])
                          (vals @data-sets)))))]))

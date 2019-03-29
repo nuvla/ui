@@ -7,8 +7,8 @@
     [sixsq.nuvla.ui.deployment-detail.utils :as deployment-detail-utils]
     [sixsq.nuvla.ui.deployment-detail.views :as deployment-detail-views]
     [sixsq.nuvla.ui.deployment.events :as events]
-    [sixsq.nuvla.ui.deployment.utils :as utils]
     [sixsq.nuvla.ui.deployment.subs :as subs]
+    [sixsq.nuvla.ui.deployment.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -222,7 +222,7 @@
       [:div [ui/Message {:info true}
              [ui/Icon {:name "info"}]
              (@tr [:click-for-depl-details])]
-       (vec (concat [ui/CardGroup]
+       (vec (concat [ui/CardGroup {:centered true}]
                     (map card-fn deployments-list)))])))
 
 
@@ -251,16 +251,17 @@
                 :frequency 20000
                 :event     [::events/get-deployments]}])
     (fn []
-      (let [total-pages (general-utils/total-pages (get @deployments :count 0) @elements-per-page)
+      (let [total-deployments (:count @deployments)
+            total-pages (general-utils/total-pages (get @deployments :count 0) @elements-per-page)
             deployments-list (get @deployments :resources [])]
         [ui/Container {:fluid true}
          [menu-bar]
          [ui/Segment style/basic
           [deployments-display deployments-list]]
-         [ui/Label (@tr [:total]) [ui/LabelDetail (get @deployments :count "-")]]
          (when (> total-pages 1)
            [uix/Pagination
-            {:totalPages   total-pages
+            {:totalitems   total-deployments
+             :totalPages   total-pages
              :activePage   @page
              :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}])]))))
 

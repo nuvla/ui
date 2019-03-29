@@ -3,8 +3,8 @@
     [re-frame.core :refer [subscribe]]
     [reagent.core :as reagent]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.general :as general]))
+    [sixsq.nuvla.ui.utils.general :as general]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn on-return-key

@@ -155,3 +155,7 @@
 div.search.dropdown > input {
     width: 100% !important;
 }
+
+.ui.styled.accordion > .active.title {
+    background-color: lightgrey;
+}

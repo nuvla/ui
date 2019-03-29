@@ -73,13 +73,21 @@
   "Truncates a string to the given size and adds the optional suffix if the
    string was actually truncated."
   ([s]
-    (truncate s default-truncate-length ellipsis))
+   (truncate s default-truncate-length ellipsis))
   ([s max-size]
-    (truncate s max-size ellipsis))
+   (truncate s max-size ellipsis))
   ([s max-size suffix]
    (if (> (count s) max-size)
      (str (subs s 0 max-size) suffix)
      s)))
+
+
+(defn capitalize-words
+  "Capitalize every word in a string"
+  [s]
+  (->> (str/split (str s) #"\b")
+       (map str/capitalize)
+       str/join))
 
 
 ;;
@@ -136,3 +144,4 @@
 
 (defn operation-name [op-uri]
   (second (re-matches #"^(?:.*/)?(.+)$" op-uri)))
+

@@ -1,12 +1,12 @@
-(ns sixsq.nuvla.ui.appstore.subs
+(ns sixsq.nuvla.ui.apps-store.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.appstore.spec :as spec]))
+    [sixsq.nuvla.ui.apps-store.spec :as spec]))
 
 
 (reg-sub
-  ::deployment-templates
-  ::spec/deployment-templates)
+  ::modules
+  ::spec/modules)
 
 
 (reg-sub

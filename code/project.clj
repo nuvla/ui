@@ -70,7 +70,7 @@
                  [sixsq.nuvla/api ~+sixsq-nuvla-api-version+ :scope "provided"]
                  [com.taoensso/tempura :scope "provided"]
                  [funcool/promesa :scope "provided"]
-                 ]
+                 [com.cemerick/url :scope "provided"]]
 
   :source-paths ["src/clj" "src/cljs"]
 

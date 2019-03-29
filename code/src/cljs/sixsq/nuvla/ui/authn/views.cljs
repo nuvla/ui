@@ -12,11 +12,11 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.utils :as history-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.form-fields :as forms]
     [taoensso.timbre :as log]))
 
 
@@ -81,7 +81,8 @@
                                  (sort-by :order))
                             {:name "href" :vscope {:value @form-id} :hidden true}
                             {:name "redirectURI" :vscope {:value @server-redirect-uri} :hidden true})
-            dropdown-options (map dropdown-method-option methods)]
+            dropdown-options (map dropdown-method-option methods)
+            password-method? (= "password" (:method method))]
 
         (log/infof "creating authentication form: %s %s" (name collections-kw) @form-id)
         (vec
@@ -100,7 +101,7 @@
                                :on-change     (ui-callback/dropdown ::authn-events/set-form-id)}])]
 
                           (mapv (partial forms/form-field #() @form-id) inputs-method)
-                          (when (= "internal" (:method method))
+                          (when password-method?
                             (reset-password tr))))]))))))
 
 

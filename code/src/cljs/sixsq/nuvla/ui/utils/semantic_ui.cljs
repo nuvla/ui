@@ -22,9 +22,9 @@
     [reagent.core :as reagent]))
 
 
-;;(def Accordion (reagent/adapt-react-class semantic/Accordion))
-;;(def AccordionTitle (reagent/adapt-react-class semantic/AccordionTitle))
-;;(def AccordionContent (reagent/adapt-react-class semantic/AccordionContent))
+(def Accordion (reagent/adapt-react-class semantic/Accordion))
+(def AccordionTitle (reagent/adapt-react-class semantic/AccordionTitle))
+(def AccordionContent (reagent/adapt-react-class semantic/AccordionContent))
 
 (def Breadcrumb (reagent/adapt-react-class semantic/Breadcrumb))
 (def BreadcrumbDivider (reagent/adapt-react-class semantic/BreadcrumbDivider))
@@ -78,14 +78,14 @@
 (def FormSelect (reagent/adapt-react-class semantic/FormSelect))
 
 (def Grid (reagent/adapt-react-class semantic/Grid))
-;;(def GridColumn (reagent/adapt-react-class semantic/GridColumn))
-;;(def GridRow (reagent/adapt-react-class semantic/GridRow))
+(def GridColumn (reagent/adapt-react-class semantic/GridColumn))
+(def GridRow (reagent/adapt-react-class semantic/GridRow))
 
 (def Icon (reagent/adapt-react-class semantic/Icon))
 (def IconGroup (reagent/adapt-react-class semantic/IconGroup))
 
-;;(def Item (reagent/adapt-react-class semantic/Item))
-;;(def ItemContent (reagent/adapt-react-class semantic/ItemContent))
+(def Item (reagent/adapt-react-class semantic/Item))
+(def ItemContent (reagent/adapt-react-class semantic/ItemContent))
 ;;(def ItemDescription (reagent/adapt-react-class semantic/ItemDescription))
 ;;(def ItemExtra (reagent/adapt-react-class semantic/ItemExtra))
 ;;(def ItemGroup (reagent/adapt-react-class semantic/ItemGroup))

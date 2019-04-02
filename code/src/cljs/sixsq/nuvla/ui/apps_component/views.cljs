@@ -5,6 +5,7 @@
     [reagent.core :as reagent]
     [sixsq.nuvla.ui.apps-component.events :as events]
     [sixsq.nuvla.ui.apps-component.subs :as subs]
+    [sixsq.nuvla.ui.apps-component.spec :as spec]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
@@ -13,187 +14,248 @@
     [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [clojure.string :as str]
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
+    [cljs.spec.alpha :as s]))
 
-(defn refresh-button
+
+(defn registry-url
+  [image]
+  (str/join ":" (-> image (str/split #":") drop-last)))
+
+
+(defn get-image [module]
+  (get-in module [:content :image] ""))
+
+
+(defn docker-image
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        page-changed? (subscribe [::apps-subs/page-changed?])]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        active-input (subscribe [::apps-subs/active-input])
+        module       (subscribe [::apps-subs/module])
+        is-new?      (subscribe [::apps-subs/is-new?])
+        validate?    (reagent/atom false)]
     (fn []
-      [ui/MenuMenu {:position "right"}
-       [uix/MenuItemWithIcon
-        {:name      (@tr [:refresh])
-         :icon-name "refresh"
-         :loading?  false                                   ;; FIXME: Add loading flag for module.
-         :disabled  @page-changed?
-         :on-click  #(do (dispatch [::apps-events/page-changed? false])
-                         (dispatch [::apps-events/get-module]))
-         }]])))
+      (let [editable?     (apps-utils/editable? @module @is-new?)
+            name          "docker-image"
+            input-active? (= name @active-input)
+            image         (get-image @module)
+            valid?        (s/valid? ::spec/docker-image image)
+            label         (@tr [:module-docker-image-label])]
+        [ui/TableRow
+         [ui/TableCell {:collapsing true} (if editable? (apps-utils/mandatory-name label) label)]
+         [ui/TableCell
+          (if editable?
+            [ui/Input {:name         "docker-image"
+                       :value        image
+                       :placeholder  (@tr [:module-docker-image-placeholder])
+                       :fluid        true
+                       :error        (when (and @validate? (not valid?)) true)
+                       :icon         (when input-active? :pencil)
+                       :onMouseEnter #(dispatch [::apps-events/active-input name])
+                       :onMouseLeave #(dispatch [::apps-events/active-input nil])
+                       :on-change    (do
+                                       (reset! validate? true)
+                                       (ui-callback/input-callback #(do (dispatch [::apps-events/page-changed? true])
+                                                                        (dispatch [::apps-events/docker-image %]))))}]
+            [:div {:style {:padding-left 15}} image])
+          [:a {:href   (str "http://hub.docker.com/_/" (registry-url image))
+               :target "_blank"
+               :style  {:padding-left 15}}
+           "Access registry "
+           [ui/Icon {:name  :external
+                     :style {:padding-left   5
+                             :padding-top    5
+                             :padding-bottom 15}}]]]]))))
 
 
 (defn summary []
-  (let [tr (subscribe [::i18n-subs/tr])
-        module (subscribe [::apps-subs/module])]
+  (let []
     (fn []
-      (let [content (:content @module)
-            {docker-image :image
-             :or          {docker-image ""}} content]
+      (let []
         [apps-views-detail/summary
-         [apps-views-detail/summary-row "docker-image" docker-image ::apps-events/docker-image]]))))
+         [docker-image]]))))
 
 
 (defn toggle [v]
   (swap! v not))
 
-(defn single-port-mapping [id mapping]
+
+(defn input
+  [id name value placeholder update-event value-spec]
+  (let [active-input (subscribe [::apps-subs/active-input])
+        validate?    (reagent/atom false)]
+    (fn [id name value placeholder update-event value-spec]
+      (let [input-name (str name "-" id)
+            valid?     (s/valid? value-spec value)]
+        [ui/Input {:name         input-name
+                   :placeholder  placeholder
+                   :value        value
+                   :error        (when (and @validate? (not valid?)) true)
+                   :onMouseEnter #(dispatch [::apps-events/active-input input-name])
+                   :onMouseLeave #(dispatch [::apps-events/active-input nil])
+                   :on-change    (ui-callback/input-callback #(do
+                                                                (reset! validate? true)
+                                                                (dispatch [::apps-events/page-changed? true])
+                                                                (dispatch [update-event id %])))}]))))
+
+
+(defn single-port-mapping [id mapping editable?]
   (let [{source      :source
          destination :destination
-         port-type   :port-type :or {source "" destination "" port-type "TCP"}} mapping]
+         port-type   :port-type} mapping]
     [ui/GridRow {:key id}
      [ui/GridColumn {:floated :left
                      :width   11}
-      [ui/Input {:name        (str "source-" id)
-                 :placeholder "source - e.g. 22 or 22-23"
-                 :value       source
-                 :on-change   (ui-callback/input-callback #(do (dispatch [::apps-events/page-changed? true])
-                                                               (dispatch [::events/update-mapping-source id %])))}]
+      (if editable?
+        [input id "port-source" source "source - e.g. 22 or 22-23"
+         ::events/update-mapping-source ::spec/input-value]
+        [:span [:b source]])
       [:span " : "]
-      [ui/Input {:name        (str "destination-" id)
-                 :placeholder "dest. - e.g. 22 or 22-23"
-                 :value       destination
-                 :on-change   (ui-callback/input-callback #(do (dispatch [::apps-events/page-changed? true])
-                                                               (dispatch [::events/update-mapping-destination id %])))}]
-      [:span " / "]
-      [ui/Label
-       [ui/Dropdown {:name    (str "port-type-" id)
-                     :inline  true
-                     :value   port-type
-                     :options [{:key "TCP", :value "TCP", :text "TCP"}
-                               {:key "UDP", :value "UDP", :text "UDP"}]
-                     ;:on-change (events/dropdown ::events/toto 123)
-                     }]]]
-     [ui/GridColumn {:floated :right
-                     :align   :right
-                     :style   {}}
-      [ui/Icon {:name     "trash"
-                :on-click #(do (dispatch [::apps-events/page-changed? true])
-                               (dispatch [::events/remove-port-mapping id]))
-                :color    :red}]]]))
+      (if editable?
+        [input id "port-dest" destination "dest. - e.g. 22 or 22-23"
+         ::events/update-mapping-destination ::spec/input-value]
+        [:span [:b destination]])
+      (if editable?
+        (do
+          [:span " / "]
+          [ui/Label
+           [ui/Dropdown {:name      (str "port-type-" id)
+                         :inline    true
+                         :value     port-type
+                         :options   [{:key "TCP", :value "TCP", :text "TCP"}
+                                     {:key "UDP", :value "UDP", :text "UDP"}]
+                         :on-change (ui-callback/value #(dispatch [::events/update-mapping-port-type id %]))
+                         }]])
+        (when (not= "xTCP" port-type)
+          [:span " / " [:b port-type]]))]
+     (when editable?
+       [ui/GridColumn {:floated :right
+                       :align   :right
+                       :style   {}}
+        [ui/Icon {:name     "trash"
+                  :on-click #(do (dispatch [::apps-events/page-changed? true])
+                                 (dispatch [::events/remove-port-mapping id]))
+                  :color    :red}]])]))
+
 
 (defn port-mappings-section []
-  (let [tr (subscribe [::i18n-subs/tr])
-        active? (reagent/atom true)
-        mappings (subscribe [::subs/port-mappings])]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        active?  (reagent/atom true)
+        mappings (subscribe [::subs/port-mappings])
+        module   (subscribe [::apps-subs/module])
+        is-new?  (subscribe [::apps-subs/is-new?])]
     (fn []
-      [ui/Accordion {:fluid     true
-                     :styled    true
-                     :exclusive false}
-       [ui/AccordionTitle {:active   @active?
-                           :index    1
-                           :on-click #(toggle active?)}
-        [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-        "Port Mappings"]
+      (let [editable? (apps-utils/editable? @module @is-new?)]
+        [ui/Accordion {:fluid     true
+                       :styled    true
+                       :exclusive false}
+         [ui/AccordionTitle {:active   @active?
+                             :index    1
+                             :on-click #(toggle active?)}
+          [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+          "Port Mappings"]
+         [ui/AccordionContent {:active @active?}
+          [:div "Publish ports "
+           [:span forms/nbsp (forms/help-popup (@tr [:module-port-mapping-help]))]]
+          [:div [ui/Grid {:style {:margin-top    5
+                                  :margin-bottom 5}}
+                 (for [[id mapping] @mappings]
+                   ^{:key id}
+                   [single-port-mapping id mapping editable?])]]
+          (when editable?
+            [:div
+             [ui/Icon {:name     "plus circle"
+                       :on-click #(do (dispatch [::apps-events/page-changed? true])
+                                      (dispatch [::events/add-port-mapping (random-uuid) {}]))}]])]]))))
 
-       [ui/AccordionContent {:active @active?}
-        [:div "Publish ports "
-         [:span forms/nbsp (forms/help-popup (@tr [:module-port-mapping-help]))]]
-        [:div [ui/Grid {:style {:margin-top    5
-                                :margin-bottom 5}}
-               (for [[id mapping] @mappings]
-                 ^{:key id}
-                 [single-port-mapping id mapping])]]
-        [:div
-         [ui/Icon {:name     "plus circle"
-                   :on-click #(do (dispatch [::apps-events/page-changed? true])
-                                  (dispatch [::events/add-port-mapping (random-uuid) {}]))}]]]])))
 
-
-(defn single-volume [id volume]
+(defn single-volume [id volume editable?]
   (let [tr (subscribe [::i18n-subs/tr])
         {type        :type
          source      :source
          destination :destination
          driver      :driver
-         read-only?  :read-only? :or {type        "volume"
-                                      source      ""
-                                      destination ""
-                                      driver      "local"
-                                      read-only?  false}} volume]
+         read-only?  :read-only?} volume]
     [ui/GridRow {:key id}
      [ui/GridColumn {:floated :left
                      :width   15}
-      [ui/Label
-       [ui/Dropdown {:name           (str "type-" id)
-                     ;:inline  true
-                     :default-value  "volume"
-                     ;:value          (or type "volume")
-                     :allowAdditions true
-                     :selection      true
-                     :additionLabel  "Custom type: "
-                     :search         true
-                     :options        [{:key "volume", :value "volume", :text "volume"}
-                                      {:key "bind", :value "bind", :text "bind"}
-                                      {:key "tmpfs", :value "tmpfs", :text "tmpfs"}]
-                     ;:on-change (events/dropdown ::events/toto 123) ;;TODO
-                     }]]
+      (if editable?
+        [ui/Label
+         [ui/Dropdown {:name      (str "type-" id)
+                       :value     type
+                       :selection true
+                       :options   [{:key "volume", :value "volume", :text "volume"}
+                                   {:key "bind", :value "bind", :text "bind"}
+                                   {:key "tmpfs", :value "tmpfs", :text "tmpfs"}]
+                       :on-change (ui-callback/value #(dispatch [::events/update-volume-type id %]))}]]
+        [:span "type=" [:b type]])
       [:span " , "]
-      [ui/Input {:name        (str "source-" id)
-                 :placeholder "source"
-                 :value       source
-                 :on-change   (ui-callback/input-callback #(do (dispatch [::apps-events/page-changed? true])
-                                                               (dispatch [::events/update-volume-source id %])))}]
-      [ui/Input {:name        (str "destination-" id)
-                 :placeholder "destination"
-                 :value       destination
-                 :on-change   (ui-callback/input-callback #(do (dispatch [::apps-events/page-changed? true])
-                                                               (dispatch [::events/update-volume-destination id %])))}]
-      [ui/Input {:name        (str "driver-" id)
-                 :placeholder "driver"
-                 :value       driver
-                 :on-change   (ui-callback/input-callback #(do (dispatch [::apps-events/page-changed? true])
-                                                               (dispatch [::events/update-volume-driver id %])))}]
-      [:span " " (@tr [:module-volume-read-only?]) " "
-       [ui/Checkbox {:name    "read-only"
-                     :checked (if (nil? read-only?) false read-only?)
-                     ;:on-click #(dispatch [::events/remove-volume id])
-                     :align   :middle}]
-       ]]
-     [ui/GridColumn {:floated :right
-                     :width   1
-                     :align   :right
-                     :style   {}}
-      [ui/Icon {:name     "trash"
-                :on-click #(do (dispatch [::apps-events/page-changed? true])
-                               (dispatch [::events/remove-volume id]))
-                :color    :red}]]]))
+      (if editable?
+        [input id "vol-source" source "source" ::events/update-volume-source ::spec/input-value]
+        [:span "src=" [:b source]])
+      [:span " , "]
+      (if editable?
+        [input id "vol-dest" destination "destination" ::events/update-volume-destination ::spec/input-value]
+        [:span "dst=" [:b destination]])
+      [:span " , "]
+      (if editable?
+        [input id "vol-driver" driver "driver" ::events/update-volume-driver ::spec/input-value]
+        [:span "volume-driver=" [:b driver]])
+      (if editable?
+        (do
+          [:span " , "]
+          [:span " " (@tr [:module-volume-read-only?]) " "
+           [ui/Checkbox {:name      "read-only"
+                         :checked   read-only?
+                         :on-change (ui-callback/checked
+                                      #(dispatch [::events/update-volume-read-only? id %]))
+                         :align     :middle}]
+           ])
+        (when read-only? (do [:span " , " [:b "readonly"]])))]
+     (when editable?
+       [ui/GridColumn {:floated :right
+                       :width   1
+                       :align   :right
+                       :style   {}}
+        [ui/Icon {:name     "trash"
+                  :on-click #(do (dispatch [::apps-events/page-changed? true])
+                                 (dispatch [::events/remove-volume id]))
+                  :color    :red}]])]))
 
 
 (defn volumes-section []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr      (subscribe [::i18n-subs/tr])
         active? (reagent/atom true)
-        volumes (subscribe [::subs/volumes])]
+        module  (subscribe [::apps-subs/module])
+        volumes (subscribe [::subs/volumes])
+        is-new? (subscribe [::apps-subs/is-new?])]
     (fn []
-      [ui/Accordion {:fluid     true
-                     :styled    true
-                     :exclusive false}
-       [ui/AccordionTitle {:active   @active?
-                           :index    1
-                           :on-click #(toggle active?)}
-        [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-        "Volumes"]
+      (let [editable? (apps-utils/editable? @module @is-new?)]
+        [ui/Accordion {:fluid     true
+                       :styled    true
+                       :exclusive false}
+         [ui/AccordionTitle {:active   @active?
+                             :index    1
+                             :on-click #(toggle active?)}
+          [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+          "Volumes"]
 
-       [ui/AccordionContent {:active @active?}
-        [:div "Container volumes (i.e. mounts) "
-         [:span forms/nbsp (forms/help-popup (@tr [:module-volume-help]))]]
-        [:div [ui/Grid {:style {:margin-top    5
-                                :margin-bottom 5}}
-               (for [[id volume] @volumes]
-                 ^{:key id}
-                 [single-volume id volume])]]
-        [:div
-         [ui/Icon {:name     "plus circle"
-                   :on-click #(do (dispatch [::apps-events/page-changed? true])
-                                  (dispatch [::events/add-volume (random-uuid) {}]))}]]]])))
+         [ui/AccordionContent {:active @active?}
+          [:div "Container volumes (i.e. mounts) "
+           [:span forms/nbsp (forms/help-popup (@tr [:module-volume-help]))]]
+          [:div [ui/Grid {:style {:margin-top    5
+                                  :margin-bottom 5}}
+                 (for [[id volume] @volumes]
+                   ^{:key id}
+                   [single-volume id volume editable?])]]
+          (when editable?
+            [:div
+             [ui/Icon {:name     "plus circle"
+                       :on-click #(do (dispatch [::apps-events/page-changed? true])
+                                      (dispatch [::events/add-volume (random-uuid) {}]))}]])]]))))
 
 
 (defn runtime []
@@ -247,23 +309,60 @@
           [ui/Icon {:name "plus circle"}]]]]])))
 
 
+(defn generate-ports-args
+  [ports]
+  (let [ports-commands
+        (for [{:keys [source destination port-type]} ports]
+          (conj (str "-p " source ":" destination (when (not= "TCP" port-type) (str "/" port-type)))))]
+    (str/join " " ports-commands)))
+
+
+(defn generate-volumes-args
+  [volumes]
+  (let [volumes-commands
+        (for [{:keys [type source destination driver read-only?]} volumes]
+          (conj (str
+                  "--mount type=" type
+                  ",src=" source
+                  ",dst=" destination
+                  ",volume-driver=" driver
+                  (when read-only? ",readonly"))))]
+    (str/join " " volumes-commands)))
+
+
+(defn test-command
+  []
+  (let [tr           (subscribe [::i18n-subs/tr])
+        mappings     (subscribe [::subs/port-mappings])
+        mapping-args (generate-ports-args (vals @mappings))
+        volumes      (subscribe [::subs/volumes])
+        volumes-args (generate-volumes-args (vals @volumes))
+        image        (get-image @(subscribe [::apps-subs/module]))
+        command      (str "docker service create " mapping-args " " volumes-args " " image)]
+    [ui/Message {:info true}
+     [ui/MessageHeader (@tr [:module-docker-command-message])]
+     [:p command " "
+      [ui/Popup {:trigger  (reagent/as-element [ui/CopyToClipboard {:text command}
+                                                [:a [ui/Icon {:name "clipboard outline"}]]])
+                 :position "top center"}
+       "copy to clipboard"]]]))
+
+
 (defn view-edit
   []
   (let [module (subscribe [::apps-subs/module])]
     (fn []
-      (let [name (:name @module)
+      (let [name   (:name @module)
             parent (:parent-path @module)]
         [ui/Container {:fluid true}
          [:h2 [ui/Icon {:name "th"}]
           parent (when (not-empty parent) "/") name]
-         [apps-views-detail/control-bar]
+         [apps-views-detail/control-bar ::spec/module-component]
          [summary]
          [port-mappings-section]
          [:div {:style {:padding-top 10}}]
          [volumes-section]
-         [apps-views-detail/save-action]
-         [apps-views-detail/add-modal]
-         [apps-views-detail/save-modal]
-         [apps-views-detail/logo-url-modal]
+         [test-command]
+         [apps-views-detail/save-action ::spec/module-component]
          [deployment-dialog-views/deploy-modal]
          ]))))

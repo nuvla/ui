@@ -87,13 +87,13 @@
 
 (defn infra-services
   []
-  (let [services (subscribe [::subs/services])
+  (let [services          (subscribe [::subs/services])
         elements-per-page (subscribe [::subs/elements-per-page])
-        page (subscribe [::subs/page])
-        active? (reagent/atom true)]
+        page              (subscribe [::subs/page])
+        active?           (reagent/atom true)]
     (fn []
       (let [total-services (get @services :count 0)
-            total-pages (general-utils/total-pages total-services @elements-per-page)]
+            total-pages    (general-utils/total-pages total-services @elements-per-page)]
         [ui/Accordion {:fluid     true
                        :styled    true
                        :exclusive false

@@ -8,7 +8,7 @@
 
 
 (defn is-latest? [module]
-  (let [latest (-> module :versions last :href)
+  (let [latest  (-> module :versions last :href)
         current (-> module :content :id)]
     (= latest current)))
 
@@ -16,7 +16,7 @@
 (defn show-versions [show-versions?]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn []
-      (let [label (@tr (if @show-versions? [:hide-versions] [:show-versions]))
+      (let [label     (@tr (if @show-versions? [:hide-versions] [:show-versions]))
             icon-name (if @show-versions? "caret down" "caret right")]
         [:a {:style    {:cursor "pointer"}
              :on-click #(reset! show-versions? (not @show-versions?))}
@@ -25,13 +25,13 @@
 
 
 (defn versions []
-  (let [module (subscribe [::subs/module])
+  (let [module         (subscribe [::subs/module])
         show-versions? (reagent/atom false)]
     (fn []
-      (let [versions (:versions @module)
-            is-versioned? (not (empty? versions))
+      (let [versions         (:versions @module)
+            is-versioned?    (not (empty? versions))
             versions-indexes (zipmap versions (range))
-            current (-> @module :content :id)]
+            current          (-> @module :content :id)]
         (if (not (is-latest? @module))
           (dispatch [::events/set-version-warning])
           (dispatch [::events/clear-version-warning]))
@@ -47,9 +47,9 @@
                 [ui/TableHeaderCell {:width "14"} "Commit message"]]]
               [ui/TableBody
                (for [[v i] versions-indexes]
-                 (let [href (:href v)
-                       commit (:commit v)
-                       author (:author v)
+                 (let [href        (:href v)
+                       commit      (:commit v)
+                       author      (:author v)
                        is-current? (= current href)]
                    ^{:key (str "version" i)}
                    [ui/TableRow (when is-current? {:active true})

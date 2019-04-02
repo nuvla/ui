@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.apps.utils
   (:require
-    [clojure.string :as str]))
+    [clojure.string :as str]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn nav-path->module-path
@@ -69,11 +70,13 @@
         (assoc-in [:content :commit] commit)
         (assoc-in [:content :architecture] (or (::architecture module) "x86")))))
 
+
 (defn sanitize-module-project
   [module]
   (-> module
       (sanitize-base)
       (dissoc :children)))
+
 
 (defn sanitize-module
   [module commit]
@@ -83,3 +86,22 @@
       (= "PROJECT" type) (sanitize-module-project module)
       :else module)))
 
+
+(defn can-operation? [operation data]
+  (->> data :operations (map :rel) (some #{(name operation)}) nil? not))
+
+
+(defn can-edit? [data]
+  (can-operation? :edit data))
+
+
+(defn editable?
+  [module is-new?]
+  (or is-new? (can-edit? module)))
+
+
+(defn mandatory-name
+  [name]
+  [:span name [:sup " " [ui/Icon {:name  :asterisk
+                                  :size  :tiny
+                                  :color :red}]]])

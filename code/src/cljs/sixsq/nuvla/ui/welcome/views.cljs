@@ -40,7 +40,7 @@
       (@tr [:welcome-detail])]
 
      [ui/CardGroup {:centered true}
-      (when-not @iframe? [card :appstore :welcome-appstore-desc "play" "appstore"])
+      (when-not @iframe? [card :appstore :welcome-appstore-desc "play" "apps"])
       (when-not @iframe? [card :application :welcome-application-desc "sitemap" "application"])
       [card :data :welcome-data-desc "database" "data"]
       [card :deployment :welcome-deployment-desc "cloud" "deployment"]

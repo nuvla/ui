@@ -15,6 +15,24 @@
 
 
 (reg-event-db
+  ::active-input
+  (fn [db [_ input-name]]
+    (assoc db ::spec/active-input input-name)))
+
+
+(reg-event-db
+  ::form-invalid
+  (fn [db [_]]
+    (assoc db ::spec/form-valid? false)))
+
+
+(reg-event-db
+  ::form-valid
+  (fn [db [_]]
+    (assoc db ::spec/form-valid? true)))
+
+
+(reg-event-db
   ::set-version-warning
   (fn [db [_]]
     (assoc db ::spec/version-warning? true)))
@@ -76,6 +94,11 @@
   (fn [db [_ active-tab]]
     (assoc db ::spec/active-tab active-tab)))
 
+
+(reg-event-db
+  ::ignore-change-fn
+  (fn [db [_ f]]
+    (assoc db ::spec/ignore-change-fn f)))
 
 (reg-event-db
   ::page-changed?
@@ -144,6 +167,18 @@
 
 
 (reg-event-db
+  ::open-validation-error-modal
+  (fn [db _]
+    (assoc db ::spec/validation-error-modal-visible? true)))
+
+
+(reg-event-db
+  ::close-validation-error-modal
+  (fn [db _]
+    (assoc db ::spec/validation-error-modal-visible? false)))
+
+
+(reg-event-db
   ::save-logo-url
   (fn [db [_ logo-url]]
     (dispatch [::page-changed? true])
@@ -166,7 +201,7 @@
 (reg-event-fx
   ::edit-module
   (fn [{{:keys [::spec/module ::client-spec/client] :as db} :db :as cofx} [_ commit-map]]
-    (let [id (:id module)
+    (let [id               (:id module)
           sanitized-module (utils/sanitize-module module commit-map)]
       (if (nil? id)
         {:db               db

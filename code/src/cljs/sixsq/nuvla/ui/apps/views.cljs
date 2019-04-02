@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.apps.events :as events]
     [sixsq.nuvla.ui.apps.subs :as subs]
     [sixsq.nuvla.ui.apps.utils :as utils]
+    [sixsq.nuvla.ui.apps.views-detail :as views-detail]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -16,12 +17,12 @@
 
 (defn module-details
   [new-type]
-  (let [module (subscribe [::subs/module])
+  (let [module   (subscribe [::subs/module])
         nav-path (subscribe [::main-subs/nav-path])]
     (fn [new-type]
-      (let [type (:type @module)
+      (let [type       (:type @module)
             new-parent (utils/nav-path->parent-path @nav-path)
-            new-name (utils/nav-path->module-name @nav-path)]
+            new-name   (utils/nav-path->module-name @nav-path)]
         (when (empty? @module)
           (do
             (dispatch [::events/name new-name])
@@ -34,7 +35,7 @@
         ))))
 
 
-(defn module
+(defn module-view
   [new-type version]
   (dispatch [::events/is-new? (not (empty? new-type))])
   (if (empty? new-type)
@@ -44,28 +45,14 @@
   [module-details new-type])
 
 
-(defn version-warning []
-  (let [version-warning? (subscribe [::subs/version-warning?])]
-    (fn []
-      (let []
-        [ui/Message {;:on-dismiss (dispatch [::events/warning nil])
-                     :hidden  (not (true? @version-warning?))
-                     :warning true}
-         [ui/MessageHeader "Warning!"]
-         [ui/MessageContent "This is not the latest version. Click or tap "
-          [:a {:on-click #(dispatch [::events/get-module])
-               :style    {:cursor :pointer}} "here"]
-          " to load the latest."]]))))
-
-
 (defn apps
   []
-  (let [query (clojure.walk/keywordize-keys (:query (url/url (-> js/window .-location .-href))))
-        type (:type query)
-        version (:version query nil)
+  (let [query       (clojure.walk/keywordize-keys (:query (url/url (-> js/window .-location .-href))))
+        type        (:type query)
+        version     (:version query nil)
         module-name (utils/nav-path->module-name @(subscribe [::main-subs/nav-path]))]
     (if module-name
-      (module type version)
+      (module-view type version)
       [apps-store-views/root-view])))
 
 
@@ -73,5 +60,10 @@
   [path]
   (timbre/set-level! :info)
   [:div
-   [version-warning]
+   [views-detail/version-warning]
+   [views-detail/add-modal]
+   [views-detail/save-modal]
+   [views-detail/validation-error-message]
+   [views-detail/logo-url-modal]
+   [views-detail/ignore-changes-modal]
    [apps]])

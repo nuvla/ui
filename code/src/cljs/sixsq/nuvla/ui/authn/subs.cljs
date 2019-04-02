@@ -30,14 +30,14 @@
   ::is-admin?
   :<- [::session]
   (fn [session _]
-    (utils/has-role? session "ADMIN")))
+    (utils/has-role? session "group/nuvla-admin")))
 
 
 (reg-sub
   ::is-user?
   :<- [::session]
   (fn [session _]
-    (utils/has-role? session "USER")))
+    (utils/has-role? session "group/nuvla-user")))
 
 
 (reg-sub

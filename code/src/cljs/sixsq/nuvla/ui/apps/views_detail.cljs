@@ -5,6 +5,7 @@
     [reagent.core :as reagent]
     [sixsq.nuvla.ui.apps.events :as events]
     [sixsq.nuvla.ui.apps.subs :as subs]
+    [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.views-versions :as views-versions]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
@@ -19,7 +20,17 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.forms :as forms]))
+    [sixsq.nuvla.ui.utils.forms :as forms]
+    [taoensso.timbre :as log]
+    [clojure.spec.alpha :as s]))
+
+
+(defn ignore-changes?
+  [requested-fn]
+  (let [page-changed? (subscribe [::subs/page-changed?])]
+    (if @page-changed?
+      (dispatch [::events/ignore-change-fn requested-fn])
+      (requested-fn))))
 
 
 (defn refresh-button
@@ -31,60 +42,92 @@
         {:name      (@tr [:refresh])
          :icon-name "refresh"
          :loading?  false                                   ;; FIXME: Add loading flag for module.
-         :on-click  #(dispatch [::events/get-module])}]])))
+         :on-click  (fn [e] (ignore-changes? #(dispatch [::events/get-module])))}]])))
 
 
-(defn control-bar []
-  (let [tr (subscribe [::i18n-subs/tr])
-        module (subscribe [::subs/module])
-        cep (subscribe [::api-subs/cloud-entry-point])
+(defn edit-button-disabled?
+  [page-changed?]
+  (not page-changed?))
+
+
+(defn validate-form
+  [module-spec module]
+  ;(log/infof "module: %s module-spec: %s" module module-spec)
+  (let [valid? (s/valid? module-spec module)]
+    ;(log/infof "form is valid? %s" valid?)
+    ;(s/explain module-spec module)
+    (true? valid?)
+    ; TODO: fix validation
+    true))
+
+
+(defn control-bar [module-spec]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        module        (subscribe [::subs/module])
+        is-new?       (subscribe [::subs/is-new?])
+        cep           (subscribe [::api-subs/cloud-entry-point])
         page-changed? (subscribe [::subs/page-changed?])]
-    (let [add-disabled? (not= "PROJECT" (:type @module))
-          deploy-disabled? (= "PROJECT" (:type @module))]
-      (vec (concat [ui/Menu {:borderless true}]
-
-                   (resource-details/format-operations nil @module (:base-uri @cep) nil)
-
-                   [
-                    [uix/MenuItemWithIcon
-                     {:name      (@tr [:launch])
-                      :icon-name "rocket"
-                      :disabled  deploy-disabled?
-                      :on-click  #(dispatch [::deployment-dialog-events/create-deployment (:id @module) :credentials])}]
-
-                    (when (not add-disabled?)
-                      [uix/MenuItemWithIcon
-                       {:name      (@tr [:add])
-                        :icon-name "add"
-                        :disabled  add-disabled?
-                        :on-click  #(dispatch [::events/open-add-modal])}])
-
-                    [uix/MenuItemWithIcon
-                     {:name      (@tr [:save])
-                      :icon-name "save"
-                      :disabled  (not @page-changed?)
-                      :on-click  #(dispatch [::events/open-save-modal])}]
-
-                    [refresh-button]])))))
-
-
-(defn save-action []
-  (let [page-changed? (subscribe [::subs/page-changed?])
-        tr (subscribe [::i18n-subs/tr])]
     (fn []
-      [ui/Button {:primary  true
-                  :style    {:margin-top 10}
-                  :disabled (not @page-changed?)
-                  :icon     "save"
-                  :content  (@tr [:save])
-                  :on-click #(dispatch [::events/open-save-modal])}])))
+      (let [add-disabled?    (not= "PROJECT" (:type @module))
+            deploy-disabled? (= "PROJECT" (:type @module))
+            editable?        (utils/editable? @module @is-new?)
+            form-valid?      (validate-form module-spec @module)]
+        (vec (concat [ui/Menu {:borderless true}]
+
+                     (resource-details/format-operations nil @module (:base-uri @cep) nil)
+
+                     [
+                      [uix/MenuItemWithIcon
+                       {:name      (@tr [:launch])
+                        :icon-name "rocket"
+                        :disabled  deploy-disabled?
+                        :on-click  #(dispatch [::deployment-dialog-events/create-deployment (:id @module) :credentials])}]
+
+                      (when (not add-disabled?)
+                        [uix/MenuItemWithIcon
+                         {:name      (@tr [:add])
+                          :icon-name "add"
+                          :disabled  add-disabled?
+                          :on-click  #(dispatch [::events/open-add-modal])}])
+
+                      (when editable?
+                        [uix/MenuItemWithIcon
+                         {:name      (@tr [:save])
+                          :icon-name "save"
+                          :disabled  (edit-button-disabled? @page-changed?)
+                          :on-click  #(if
+                                        form-valid?
+                                        (dispatch [::events/open-save-modal])
+                                        (dispatch [::events/form-invalid]))}])
+
+                      [refresh-button]]))))))
+
+
+(defn save-action [module-spec]
+  (let [page-changed? (subscribe [::subs/page-changed?])
+        tr            (subscribe [::i18n-subs/tr])
+        module        (subscribe [::subs/module])
+        is-new?       (subscribe [::subs/is-new?])]
+    (fn []
+      (let [form-valid? (validate-form module-spec @module)
+            editable?   (utils/editable? @module @is-new?)]
+        (when editable?
+          [ui/Button {:primary  true
+                      :style    {:margin-top 10}
+                      :disabled (edit-button-disabled? @page-changed?)
+                      :icon     "save"
+                      :content  (@tr [:save])
+                      :on-click #(if
+                                   form-valid?
+                                   (dispatch [::events/open-save-modal])
+                                   (dispatch [::events/form-invalid]))}])))))
 
 
 (defn save-modal
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        visible? (subscribe [::subs/save-modal-visible?])
-        username (subscribe [::authn-subs/user])
+  (let [tr             (subscribe [::i18n-subs/tr])
+        visible?       (subscribe [::subs/save-modal-visible?])
+        username       (subscribe [::authn-subs/user])
         commit-message (subscribe [::subs/commit-message])]
     (fn []
       (let [commit-map {:author @username
@@ -112,12 +155,33 @@
                                       )}]]]))))
 
 
+(defn ignore-changes-modal
+  []
+  (let [tr               (subscribe [::i18n-subs/tr])
+        ignore-change-fn (subscribe [::subs/ignore-change-fn])]
+    [ui/Modal {:open       (not (nil? @ignore-change-fn))
+               :close-icon true
+               :on-close   #(dispatch [::events/ignore-change-fn nil])}
+
+     [ui/ModalHeader (str/capitalize (str (@tr [:ignore-changes?])))]
+
+     [ui/ModalContent {:content (@tr [:ignore-changes-content])}]
+
+     [ui/ModalActions
+      [uix/Button {:text     (@tr [:ignore-changes])
+                   :positive true
+                   :active   true
+                   :on-click #(do (dispatch [::events/page-changed? false])
+                                  (dispatch [::events/ignore-change-fn nil])
+                                  (@ignore-change-fn))}]]]))
+
+
 (defn logo-url-modal
   []
   (let [local-url (reagent/atom "")
-        tr (subscribe [::i18n-subs/tr])
-        visible? (subscribe [::subs/logo-url-modal-visible?])
-        module (subscribe [::subs/module])]
+        tr        (subscribe [::i18n-subs/tr])
+        visible?  (subscribe [::subs/logo-url-modal-visible?])
+        module    (subscribe [::subs/module])]
     (fn []
       (let []
         [ui/Modal {:open       @visible?
@@ -145,11 +209,11 @@
 
 (defn add-modal
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr       (subscribe [::i18n-subs/tr])
         visible? (subscribe [::subs/add-modal-visible?])
         nav-path (subscribe [::main-subs/nav-path])]
     (fn []
-      (let [parent (utils/nav-path->module-path @nav-path)
+      (let [parent  (utils/nav-path->module-path @nav-path)
             hide-fn #(dispatch [::events/close-add-modal])]
         [ui/Modal {:open       @visible?
                    :close-icon true
@@ -188,6 +252,30 @@
          [ui/ModalActions]]))))
 
 
+(defn version-warning []
+  (let [version-warning? (subscribe [::subs/version-warning?])]
+    (fn []
+      (let []
+        [ui/Message {:hidden  (not (true? @version-warning?))
+                     :warning true}
+         [ui/MessageHeader "Warning!"]
+         [ui/MessageContent "This is not the latest version. Click or tap "
+          [:a {:on-click #(dispatch [::events/get-module])
+               :style    {:cursor :pointer}} "here"]
+          " to load the latest."]]))))
+
+
+(defn validation-error-message []
+  (let [form-valid? (subscribe [::subs/form-valid?])]
+    (fn []
+      (let []
+        (log/infof "validation-error-message: %s" @form-valid?)
+        [ui/Message {:hidden (true? @form-valid?)
+                     :error  true}
+         [ui/MessageHeader "Validation error!"]
+         [ui/MessageContent "The form in invalid. Please review the fields in red."]]))))
+
+
 (defn tuple-to-row [[v1 v2]]
   [ui/TableRow
    [ui/TableCell {:collapsing true} (name v1)]
@@ -217,11 +305,11 @@
       (let [summary-info (-> (select-keys @module module-summary-keys)
                              (merge (select-keys @module #{:path :type})
                                     {:owner (-> @module :acl :owner :principal)}))
-            icon (-> @module :type category-icon)
-            rows (map tuple-to-row summary-info)
-            name (:name @module)
-            description (:name @module)
-            acl (:acl @module)]
+            icon         (-> @module :type category-icon)
+            rows         (map tuple-to-row summary-info)
+            name         (:name @module)
+            description  (:name @module)
+            acl          (:acl @module)]
         [cc/metadata-simple
          {:title       name
           :description (:startTime summary-info)
@@ -253,30 +341,44 @@
 
 
 (defn summary-row
-  [name-kw value on-change-event]
-  (let [tr (subscribe [::i18n-subs/tr])
-        name-str (name name-kw)]
-    [ui/TableRow
-     [ui/TableCell {:collapsing true
-                    :style      {:padding-bottom 8}} name-str]
-     [ui/TableCell
-      [ui/Input {:name        name-str
-                 :value       value
-                 :transparent true
-                 :placeholder (str/capitalize (@tr [name-kw]))
-                 :fluid       true
-                 :on-change   (ui-callback/input-callback #(do (dispatch [::events/page-changed? true])
-                                                               (dispatch [on-change-event %])))
-                 }]]]))
+  [name-kw value on-change-event editable? mandatory? value-spec]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        active-input (subscribe [::subs/active-input])
+        validate?    (reagent/atom false)
+        name-str     (name name-kw)]
+    (fn [name-kw value on-change-event editable? mandatory? value-spec]
+      (let [name-label    (if (and editable? mandatory?) (utils/mandatory-name name-str) name-str)
+            input-active? (= name-str @active-input)
+            valid?        (s/valid? value-spec value)]
+        [ui/TableRow
+         [ui/TableCell {:collapsing true}
+          name-label]
+         [ui/TableCell
+          (if editable?
+            [ui/Input {:name         name-str
+                       :value        value
+                       :placeholder  (str/capitalize (@tr [name-kw]))
+                       :disabled     (not editable?)
+                       :error        (when (and @validate? (not valid?)) true)
+                       :fluid        true
+                       :icon         (when input-active? :pencil)
+                       :onMouseEnter #(dispatch [::events/active-input name-str])
+                       :onMouseLeave #(dispatch [::events/active-input nil])
+                       :on-change    (do
+                                       (reset! validate? true)
+                                       (ui-callback/input-callback #(do (dispatch [::events/page-changed? true])
+                                                                        (dispatch [on-change-event %]))))}]
+            [:span {:style {:padding-left 15}} value])]]))))
 
 
 (defn summary
   [extras]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr               (subscribe [::i18n-subs/tr])
         default-logo-url (subscribe [::subs/default-logo-url])
-        is-new? (subscribe [::subs/is-new?])]
+        is-new?          (subscribe [::subs/is-new?])
+        module           (subscribe [::subs/module])]
     (fn [extras]
-      (let [module (subscribe [::subs/module])
+      (let [editable? (utils/editable? @module @is-new?)
             {name        :name
              parent      :parent-path
              description :description
@@ -299,18 +401,19 @@
             (@tr [:module-change-logo])]]
           [ui/GridColumn {:computer     14
                           :large-screen 14}
-           [ui/Table (update-in style/definition [:style :max-width] (constantly "100%"))
+           [ui/Table (assoc style/definition :class :nuvla-ui-editable)
             [ui/TableBody
-             [summary-row :name name ::events/name]
-             [summary-row :description description ::events/description]
+             [summary-row :name name ::events/name editable? true ::spec/name]
+             [summary-row :description description ::events/description editable? false ::spec/description]
              (when (not-empty parent)
                (let [label (if (= "PROJECT" type) "parent project" "project")]
                  [ui/TableRow
-                  [ui/TableCell {:collapsing true
-                                 :style      {:padding-bottom 8}} label]
-                  [ui/TableCell parent]]))
+                  [ui/TableCell label]
+                  [ui/TableCell {:style {:padding-left 23}} parent]]))
              extras]]
+
+           ]
+          [ui/GridColumn {:computer 16}
            (when (not @is-new?)
              [details-section])
-           [views-versions/versions]
-           ]]]))))
+           [views-versions/versions]]]]))))

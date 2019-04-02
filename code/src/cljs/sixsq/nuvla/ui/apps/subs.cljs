@@ -5,6 +5,16 @@
 
 
 (reg-sub
+  ::form-valid?
+  ::spec/form-valid?)
+
+
+(reg-sub
+  ::active-input
+  ::spec/active-input)
+
+
+(reg-sub
   ::version-warning?
   ::spec/version-warning?)
 
@@ -56,3 +66,14 @@
 (reg-sub
   ::commit-message
   ::spec/commit-message)
+
+
+(reg-sub
+  ::ignore-change-fn
+  ::spec/ignore-change-fn)
+
+
+(reg-sub
+  ::ignore-change-fn
+  ::spec/ignore-change-fn)
+

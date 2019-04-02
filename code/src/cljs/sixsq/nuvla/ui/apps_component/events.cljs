@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.apps-component.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.apps-component.spec :as spec]))
+    [sixsq.nuvla.ui.apps-component.spec :as spec]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db
@@ -76,3 +77,10 @@
   ::update-volume-options
   (fn [db [_ id value]]
     (assoc-in db [::spec/volumes id :options] value)))
+
+
+(reg-event-db
+  ::update-volume-read-only?
+  (fn [db [_ id value]]
+    (log/infof "checked: %s" value)
+    (assoc-in db [::spec/volumes id :read-only?] value)))

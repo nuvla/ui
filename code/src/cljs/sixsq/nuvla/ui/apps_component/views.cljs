@@ -73,12 +73,34 @@
                              :padding-bottom 15}}]]]]))))
 
 
+(defn architecture
+  []
+  (let [tr   (subscribe [::i18n-subs/tr])
+        arch (subscribe [::subs/architecture])]
+    [ui/TableRow
+     [ui/TableCell {:collapsing true
+                    :style      {:padding-bottom 8}} "architecture"]
+     [ui/TableCell
+      [ui/Label
+       [ui/Dropdown {:name      (str "architecture")
+                     :inline    true
+                     :value     @arch
+                     :options   [{:key "x86", :value "x86", :text "x86"}
+                                 {:key "ARM", :value "ARM", :text "ARM"}]
+                     :on-change (do (dispatch [::main-events/changes-protection? true])
+                                    (ui-callback/value) #(dispatch [::events/architecture %]))
+                     }]]]]))
+
+
 (defn summary []
   (let []
-    (fn []
-      (let []
-        [apps-views-detail/summary
-         [docker-image]]))))
+    [apps-views-detail/summary
+     [
+      ^{:key "summary-docker-image"}
+      [docker-image]
+      ^{:key "summary-architecture"}
+      [architecture]]
+     ]))
 
 
 (defn toggle [v]
@@ -92,16 +114,16 @@
     (fn [id name value placeholder update-event value-spec]
       (let [input-name (str name "-" id)
             valid?     (s/valid? value-spec value)]
-        [ui/Input {:name         input-name
-                   :placeholder  placeholder
-                   :value        value
-                   :error        (when (and @validate? (not valid?)) true)
-                   :onMouseEnter #(dispatch [::apps-events/active-input input-name])
-                   :onMouseLeave #(dispatch [::apps-events/active-input nil])
-                   :on-change    (ui-callback/input-callback #(do
-                                                                (reset! validate? true)
-                                                                (dispatch [::main-events/changes-protection? true])
-                                                                (dispatch [update-event id %])))}]))))
+        [ui/Input {:name          input-name
+                   :placeholder   placeholder
+                   :default-value value
+                   :error         (when (and @validate? (not valid?)) true)
+                   :onMouseEnter  #(dispatch [::apps-events/active-input input-name])
+                   :onMouseLeave  #(dispatch [::apps-events/active-input nil])
+                   :on-change     (ui-callback/input-callback #(do
+                                                                 (reset! validate? true)
+                                                                 (dispatch [::main-events/changes-protection? true])
+                                                                 (dispatch [update-event id %])))}]))))
 
 
 (defn single-port-mapping [id mapping editable?]
@@ -158,9 +180,9 @@
                              :index    1
                              :on-click #(toggle active?)}
           [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-          "Port Mappings"]
+          (@tr [:module-port-mapping])]
          [ui/AccordionContent {:active @active?}
-          [:div "Publish ports "
+          [:div (@tr [:module-publish-port]) " "
            [:span forms/nbsp (forms/help-popup (@tr [:module-port-mapping-help]))]]
           [:div [ui/Grid {:style {:margin-top    5
                                   :margin-bottom 5}}
@@ -186,13 +208,13 @@
                      :width   15}
       (if editable?
         [ui/Label
-         [ui/Dropdown {:name      (str "type-" id)
-                       :value     type
-                       :selection true
-                       :options   [{:key "volume", :value "volume", :text "volume"}
-                                   {:key "bind", :value "bind", :text "bind"}
-                                   {:key "tmpfs", :value "tmpfs", :text "tmpfs"}]
-                       :on-change (ui-callback/value #(dispatch [::events/update-volume-type id %]))}]]
+         [ui/Dropdown {:name          (str "type-" id)
+                       :default-value type
+                       :selection     true
+                       :options       [{:key "volume", :value "volume", :text "volume"}
+                                       {:key "bind", :value "bind", :text "bind"}
+                                       {:key "tmpfs", :value "tmpfs", :text "tmpfs"}]
+                       :on-change     (ui-callback/value #(dispatch [::events/update-volume-type id %]))}]]
         [:span "type=" [:b type]])
       [:span " , "]
       (if editable?
@@ -258,6 +280,197 @@
              [ui/Icon {:name     "plus circle"
                        :on-click #(do (dispatch [::main-events/changes-protection? true])
                                       (dispatch [::events/add-volume (random-uuid) {}]))}]])]]))))
+
+
+(defn single-url
+  [url-map]
+  (let [tr (subscribe [::i18n-subs/tr])
+        {:keys [id name url]} url-map]
+    [ui/GridRow {:key id}
+     [ui/GridColumn {:floated :left
+                     :width   2}
+      [ui/Input {:name          (str "url-name-" id)
+                 :placeholder   "name of this url"
+                 :default-value name
+                 :fluid         true
+                 :on-change     (ui-callback/input-callback #(do (dispatch [::main-events/changes-protection? true])
+                                                                 (dispatch [::events/update-url-name id %])))}]]
+     [ui/GridColumn {:floated :left
+                     :width   13}
+      [ui/Input {:name          (str "url-url-" id)
+                 :placeholder   "url - e.g. http://${hostname}:${tcp.8888}/?token=${jupyter-token}"
+                 :default-value url
+                 :fluid         true
+                 :on-change     (ui-callback/input-callback #(do (dispatch [::main-events/changes-protection? true])
+                                                                 (dispatch [::events/update-url-url id %])))}]]
+     [ui/GridColumn {:floated :right
+                     :width   1
+                     :align   :right
+                     :style   {}}
+      [ui/Icon {:name     "trash"
+                :on-click #(do (dispatch [::main-events/changes-protection? true])
+                               (dispatch [::events/remove-url id]))
+                :color    :red}]]]))
+
+
+(defn urls-section []
+  (let [tr      (subscribe [::i18n-subs/tr])
+        active? (reagent/atom true)
+        urls    (subscribe [::subs/urls])
+        module  (subscribe [::apps-subs/module])
+        ]
+    (fn []
+      [ui/Accordion {:fluid     true
+                     :styled    true
+                     :exclusive false}
+       [ui/AccordionTitle {:active   @active?
+                           :index    1
+                           :on-click #(toggle active?)}
+        [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+        (@tr [:urls])]
+
+       [ui/AccordionContent {:active @active?}
+        ;(log/infof "urls: %s" @urls)
+        ;[:div (pr-str "urls: " @urls)]
+        ;[:div (pr-str "module: " @module)]
+        [:div (@tr [:urls])
+         [:span forms/nbsp (forms/help-popup (@tr [:module-urls-help]))]]
+        [:div [ui/Grid {:style {:margin-top    5
+                                :margin-bottom 5}}
+               (for [url-map (vals @urls)]
+                 (do
+                   ^{:key (:id url-map)}
+                   [single-url url-map]))]]
+        [:div
+         [ui/Icon {:name     "plus circle"
+                   :on-click #(do (dispatch [::main-events/changes-protection? true])
+                                  (dispatch [::events/add-url (random-uuid) {}]))}]]]])))
+
+
+(defn single-output-parameter [id param]
+  (let [tr (subscribe [::i18n-subs/tr])
+        {name        :name
+         description :description} param]
+    [ui/GridRow {:key id}
+     [ui/GridColumn {:floated :left
+                     :width   2}
+      [ui/Input {:name          (str "output-param-name-" id)
+                 :placeholder   "output parameter name"
+                 :default-value name
+                 :fluid         true
+                 :on-change     (ui-callback/input-callback
+                                  #(do (dispatch [::main-events/changes-protection? true])
+                                       (dispatch [::events/update-output-parameter-name id %])))}]]
+     [ui/GridColumn {:floated :left
+                     :width   13}
+      [ui/Input {:name          (str "url-url-" id)
+                 :placeholder   "output parameter description"
+                 :default-value description
+                 :fluid         true
+                 :on-change     (ui-callback/input-callback
+                                  #(do (dispatch [::main-events/changes-protection? true])
+                                       (dispatch [::events/update-output-parameter-description id %])))}]]
+     [ui/GridColumn {:floated :right
+                     :width   1
+                     :align   :right
+                     :style   {}}
+      [ui/Icon {:name     "trash"
+                :on-click #(do (dispatch [::main-events/changes-protection? true])
+                               (dispatch [::events/remove-param id]))
+                :color    :red}]]]))
+
+
+(defn output-parameters-section []
+  (let [tr                (subscribe [::i18n-subs/tr])
+        active?           (reagent/atom true)
+        output-parameters (subscribe [::subs/output-parameters])]
+    (fn []
+      [ui/Accordion {:fluid     true
+                     :styled    true
+                     :exclusive false}
+       [ui/AccordionTitle {:active   @active?
+                           :index    1
+                           :on-click #(toggle active?)}
+        [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+        (@tr [:module-output-parameters])]
+
+       [ui/AccordionContent {:active @active?}
+        [:div (@tr [:module-output-parameters])
+         [:span forms/nbsp (forms/help-popup (@tr [:module-output-parameters-help]))]]
+        [:div [ui/Grid {:style {:margin-top    5
+                                :margin-bottom 5}}
+               (for [[id param] @output-parameters]
+                 ^{:key id}
+                 [single-output-parameter id param])]]
+        [:div
+         [ui/Icon {:name     "plus circle"
+                   :on-click #(do (dispatch [::main-events/changes-protection? true])
+                                  (dispatch [::events/add-output-parameter (random-uuid) {}]))}]]]])))
+
+
+(defonce data-type-options (atom [{:key "application/x-hdr", :value "application/x-hdr", :text "application/x-hdr"}
+                                  {:key "application/x-clk", :value "application/x-clk", :text "application/x-clk"}
+                                  {:key "text/plain", :value "text/plain", :text "text/plain"}]))
+
+
+(defn add-data-type-options
+  [option]
+  (swap! data-type-options conj {:key option :value option :text option}))
+
+
+(defn data-type [id dt]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/GridRow {:key id}
+     [ui/GridColumn {:floated :left
+                     :width   2}
+      [ui/Label
+       [ui/Dropdown {:name           (str "data-type-" id)
+                     :default-value  dt
+                     :allowAdditions true
+                     :selection      true
+                     :additionLabel  "Additional data type: "
+                     :search         true
+                     :options        @data-type-options
+                     :on-add-item    #(add-data-type-options (-> % .-target .-value))
+                     :on-change      (do (dispatch [::main-events/changes-protection? true])
+                                         (ui-callback/value #(dispatch [::events/update-data-type id %])))
+                     }]]]
+     [ui/GridColumn {:floated :right
+                     :width   1
+                     :align   :right
+                     :style   {}}
+      [ui/Icon {:name     "trash"
+                :on-click #(do (dispatch [::main-events/changes-protection? true])
+                               (dispatch [::events/remove-data-type id]))
+                :color    :red}]]]))
+
+
+(defn data-types-section []
+  (let [tr         (subscribe [::i18n-subs/tr])
+        active?    (reagent/atom true)
+        data-types (subscribe [::subs/data-types])]
+    (fn []
+      [ui/Accordion {:fluid     true
+                     :styled    true
+                     :exclusive false}
+       [ui/AccordionTitle {:active   @active?
+                           :index    1
+                           :on-click #(toggle active?)}
+        [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+        (@tr [:data-binding])]
+
+       [ui/AccordionContent {:active @active?}
+        [:div (@tr [:data-type])
+         [:span forms/nbsp (forms/help-popup (@tr [:module-data-type-help]))]]
+        [:div [ui/Grid {:style {:margin-top    5
+                                :margin-bottom 5}}
+               (for [[id dt] @data-types]
+                 ^{:key id}
+                 [data-type id dt])]]
+        [:div
+         [ui/Icon {:name     "plus circle"
+                   :on-click #(do (dispatch [::main-events/changes-protection? true])
+                                  (dispatch [::events/add-data-type (random-uuid) {}]))}]]]])))
 
 
 (defn runtime []
@@ -353,6 +566,7 @@
 (defn view-edit
   []
   (let [module (subscribe [::apps-subs/module])]
+    (dispatch [::events/deserialize-module])
     (fn []
       (let [name   (:name @module)
             parent (:parent-path @module)]
@@ -364,7 +578,17 @@
          [port-mappings-section]
          [:div {:style {:padding-top 10}}]
          [volumes-section]
+         [:div {:style {:padding-top 10}}]
+         [urls-section]
+         [:div {:style {:padding-top 10}}]
+         [output-parameters-section]
+         [:div {:style {:padding-top 10}}]
+         [data-types-section]
+         [:div {:style {:padding-top 10}}]
          [test-command]
          [apps-views-detail/save-action ::spec/module-component]
+         [apps-views-detail/add-modal]
+         [apps-views-detail/save-modal]
+         [apps-views-detail/logo-url-modal]
          [deployment-dialog-views/deploy-modal]
          ]))))

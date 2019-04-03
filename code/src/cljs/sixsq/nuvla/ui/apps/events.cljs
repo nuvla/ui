@@ -133,12 +133,6 @@
 
 
 (reg-event-db
-  ::docker-image
-  (fn [db [_ docker-image]]
-    (assoc-in db [::spec/module :content :image] docker-image)))
-
-
-(reg-event-db
   ::commit-message
   (fn [db [_ msg]]
     (assoc db ::spec/commit-message msg)))
@@ -191,8 +185,8 @@
 (reg-event-fx
   ::edit-module
   (fn [{{:keys [::spec/module ::client-spec/client] :as db} :db :as cofx} [_ commit-map]]
-    (let [id               (:id module)
-          sanitized-module (utils/sanitize-module module commit-map)]
+    (let [id (:id module)
+          sanitized-module (utils/sanitize-module module commit-map db)]
       (if (nil? id)
         {:db               db
          ::cimi-api-fx/add [client "module" sanitized-module

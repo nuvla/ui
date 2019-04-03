@@ -40,8 +40,7 @@
   (dispatch [::events/is-new? (not (empty? new-type))])
   (if (empty? new-type)
     (dispatch [::events/get-module version])
-    (dispatch [::events/clear-module])
-    )
+    (dispatch [::events/clear-module]))
   [module-details new-type])
 
 

@@ -38,11 +38,6 @@
          :on-click  #(dispatch [::events/get-module])}]])))
 
 
-(defn edit-button-disabled?
-  [page-changed?]
-  (not page-changed?))
-
-
 (defn validate-form
   [module-spec module]
   ;(log/infof "module: %s module-spec: %s" module module-spec)
@@ -52,6 +47,11 @@
     (true? valid?)
     ; TODO: fix validation
     true))
+
+
+(defn edit-button-disabled?
+  [page-changed?]
+  (not page-changed?))
 
 
 (defn control-bar [module-spec]
@@ -277,11 +277,11 @@
       (let [summary-info (-> (select-keys @module module-summary-keys)
                              (merge (select-keys @module #{:path :type})
                                     {:owners (->> @module :acl :owners (str/join ", "))}))
-            icon (-> @module :type category-icon)
-            rows (map tuple-to-row summary-info)
-            name (:name @module)
-            description (:name @module)
-            acl (:acl @module)]
+            icon         (-> @module :type category-icon)
+            rows         (map tuple-to-row summary-info)
+            name         (:name @module)
+            description  (:name @module)
+            acl          (:acl @module)]
         [cc/metadata-simple
          {:title       name
           :description (:startTime summary-info)
@@ -327,19 +327,20 @@
           name-label]
          [ui/TableCell
           (if editable?
-            [ui/Input {:name         name-str
-                       :value        value
-                       :placeholder  (str/capitalize (@tr [name-kw]))
-                       :disabled     (not editable?)
-                       :error        (when (and @validate? (not valid?)) true)
-                       :fluid        true
-                       :icon         (when input-active? :pencil)
-                       :onMouseEnter #(dispatch [::events/active-input name-str])
-                       :onMouseLeave #(dispatch [::events/active-input nil])
-                       :on-change    (do
-                                       (reset! validate? true)
-                                       (ui-callback/input-callback #(do (dispatch [::main-events/changes-protection? true])
-                                                                        (dispatch [on-change-event %]))))}]
+            [ui/Input {:name          name-str
+                       :default-value value
+                       :placeholder   (str/capitalize (@tr [name-kw]))
+                       :disabled      (not editable?)
+                       :error         (when (and @validate? (not valid?)) true)
+                       :fluid         true
+                       :icon          (when input-active? :pencil)
+                       :onMouseEnter  #(dispatch [::events/active-input name-str])
+                       :onMouseLeave  #(dispatch [::events/active-input nil])
+                       :on-change     (do
+                                        (reset! validate? true)
+                                        (ui-callback/input-callback
+                                          #(do (dispatch [::main-events/changes-protection? true])
+                                               (dispatch [on-change-event %]))))}]
             [:span {:style {:padding-left 15}} value])]]))))
 
 
@@ -380,12 +381,12 @@
              (when (not-empty parent)
                (let [label (if (= "PROJECT" type) "parent project" "project")]
                  [ui/TableRow
-                  [ui/TableCell label]
-                  [ui/TableCell {:style {:padding-left 23}} parent]]))
-             extras]]
-
-           ]
-          [ui/GridColumn {:computer 16}
+                  [ui/TableCell {:collapsing true
+                                 :style      {:padding-bottom 8}} label]
+                  [ui/TableCell parent]]))
+             (for [x extras]
+               x)
+             ]]
            (when (not @is-new?)
              [details-section])
            [views-versions/versions]]]]))))

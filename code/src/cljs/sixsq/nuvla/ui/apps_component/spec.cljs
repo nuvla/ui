@@ -4,15 +4,18 @@
             [sixsq.nuvla.ui.apps.spec :as apps-spec]))
 
 ; create an initial entry for new components
-(def defaults {::port-mappings {1 {:source      ""
-                                   :destination ""
-                                   :port-type   "TCP"}}
-               ::volumes       {1 {:type        "volume"
-                                   :source      ""
-                                   :destination ""
-                                   :driver      "local"
-                                   :read-only?  false}}
-               })
+(def defaults {::port-mappings     {1 {:source      ""
+                                       :destination ""
+                                       :port-type   "TCP"}}
+               ::volumes           {1 {:type        "volume"
+                                       :source      ""
+                                       :destination ""
+                                       :driver      "local"
+                                       :read-only?  false}}
+               ::urls              {1 {}}
+               ::output-parameters {1 {}}
+               ::architecture      "x86"
+               ::data-types        {1 ""}})
 
 (s/def ::docker-image #(and (not (empty? %)) string? %))
 
@@ -28,3 +31,11 @@
                                    ::content))
 
 (s/def ::input-value #(and (not (empty? %)) string? %))
+
+(s/def ::urls any?)
+
+(s/def ::output-parameters any?)
+
+(s/def ::architecture string?)
+
+(s/def ::data-type string?)

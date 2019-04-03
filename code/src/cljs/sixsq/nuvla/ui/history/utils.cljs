@@ -2,6 +2,7 @@
   (:require
     [clojure.string :as str]
     [goog.events :as events]
+    [re-frame.core :refer [dispatch]]
     [secretary.core :as secretary]
     [taoensso.timbre :as log])
   (:import
@@ -89,3 +90,12 @@
           port-field (when-not (str/blank? port) (str ":" port))]
       (str protocol "//" host port-field))))
 
+
+(defn trim-path
+  [path n]
+  (str/join "/" (take (inc n) path)))
+
+
+(defn push-path
+  [path element]
+  (str/join "/" (conj @path element)))

@@ -8,8 +8,10 @@
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
+    [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.history.utils :as history-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.style :as style]))
 
@@ -20,9 +22,10 @@
 (defn format-module
   [{:keys [type name path description] :as module}]
   (when module
-    (let [path-parts (str/split path #"/")
+    (let [nav-path (subscribe [::main-subs/nav-path])
+          path-parts (str/split path #"/")
           name-path  (last path-parts)
-          on-click   #(dispatch [::main-events/push-breadcrumb name-path])
+          on-click #(dispatch [::history-events/navigate (history-utils/push-path @nav-path name-path)])
           icon-name  (apps-utils/category-icon type)]
       [ui/ListItem {:on-click on-click}
        [ui/ListIcon {:name           icon-name

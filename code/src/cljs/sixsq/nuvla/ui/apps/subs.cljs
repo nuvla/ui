@@ -45,11 +45,6 @@
 
 
 (reg-sub
-  ::page-changed?
-  ::spec/page-changed?)
-
-
-(reg-sub
   ::save-modal-visible?
   ::spec/save-modal-visible?)
 
@@ -66,14 +61,4 @@
 (reg-sub
   ::commit-message
   ::spec/commit-message)
-
-
-(reg-sub
-  ::ignore-change-fn
-  ::spec/ignore-change-fn)
-
-
-(reg-sub
-  ::ignore-change-fn
-  ::spec/ignore-change-fn)
 

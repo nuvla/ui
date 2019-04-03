@@ -65,5 +65,4 @@
    [views-detail/save-modal]
    [views-detail/validation-error-message]
    [views-detail/logo-url-modal]
-   [views-detail/ignore-changes-modal]
    [apps]])

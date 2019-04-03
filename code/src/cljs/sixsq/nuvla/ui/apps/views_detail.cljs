@@ -1,11 +1,12 @@
 (ns sixsq.nuvla.ui.apps.views-detail
   (:require
+    [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as reagent]
     [sixsq.nuvla.ui.apps.events :as events]
-    [sixsq.nuvla.ui.apps.subs :as subs]
     [sixsq.nuvla.ui.apps.spec :as spec]
+    [sixsq.nuvla.ui.apps.subs :as subs]
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.views-versions :as views-versions]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
@@ -14,6 +15,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.resource-details :as resource-details]
@@ -21,17 +23,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.forms :as forms]
-    [taoensso.timbre :as log]
-    [clojure.spec.alpha :as s]))
-
-
-(defn ignore-changes?
-  [requested-fn]
-  (let [page-changed? (subscribe [::subs/page-changed?])]
-    (if @page-changed?
-      (dispatch [::events/ignore-change-fn requested-fn])
-      (requested-fn))))
+    [taoensso.timbre :as log]))
 
 
 (defn refresh-button
@@ -43,7 +35,7 @@
         {:name      (@tr [:refresh])
          :icon-name "refresh"
          :loading?  false                                   ;; FIXME: Add loading flag for module.
-         :on-click  (fn [e] (ignore-changes? #(dispatch [::events/get-module])))}]])))
+         :on-click  #(dispatch [::events/get-module])}]])))
 
 
 (defn edit-button-disabled?
@@ -67,7 +59,7 @@
         module        (subscribe [::subs/module])
         is-new?       (subscribe [::subs/is-new?])
         cep           (subscribe [::api-subs/cloud-entry-point])
-        page-changed? (subscribe [::subs/page-changed?])]
+        page-changed? (subscribe [::main-subs/changes-protection?])]
     (fn []
       (let [add-disabled?    (not= "PROJECT" (:type @module))
             deploy-disabled? (= "PROJECT" (:type @module))
@@ -105,7 +97,7 @@
 
 
 (defn save-action [module-spec]
-  (let [page-changed? (subscribe [::subs/page-changed?])
+  (let [page-changed? (subscribe [::main-subs/changes-protection?])
         tr            (subscribe [::i18n-subs/tr])
         module        (subscribe [::subs/module])
         is-new?       (subscribe [::subs/is-new?])]
@@ -154,27 +146,6 @@
                        :on-click #(do (dispatch [::events/edit-module commit-map])
                                       (dispatch [::events/close-save-modal])
                                       )}]]]))))
-
-
-(defn ignore-changes-modal
-  []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        ignore-change-fn (subscribe [::subs/ignore-change-fn])]
-    [ui/Modal {:open       (not (nil? @ignore-change-fn))
-               :close-icon true
-               :on-close   #(dispatch [::events/ignore-change-fn nil])}
-
-     [ui/ModalHeader (str/capitalize (str (@tr [:ignore-changes?])))]
-
-     [ui/ModalContent {:content (@tr [:ignore-changes-content])}]
-
-     [ui/ModalActions
-      [uix/Button {:text     (@tr [:ignore-changes])
-                   :positive true
-                   :active   true
-                   :on-click #(do (dispatch [::events/page-changed? false])
-                                  (dispatch [::events/ignore-change-fn nil])
-                                  (@ignore-change-fn))}]]]))
 
 
 (defn logo-url-modal
@@ -367,7 +338,7 @@
                        :onMouseLeave #(dispatch [::events/active-input nil])
                        :on-change    (do
                                        (reset! validate? true)
-                                       (ui-callback/input-callback #(do (dispatch [::events/page-changed? true])
+                                       (ui-callback/input-callback #(do (dispatch [::main-events/changes-protection? true])
                                                                         (dispatch [on-change-event %]))))}]
             [:span {:style {:padding-left 15}} value])]]))))
 

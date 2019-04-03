@@ -1,13 +1,17 @@
 (ns sixsq.nuvla.ui.apps-component.views
   (:require
     [cljs.pprint :refer [cl-format]]
+    [cljs.spec.alpha :as s]
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as reagent]
     [sixsq.nuvla.ui.apps-component.events :as events]
-    [sixsq.nuvla.ui.apps-component.subs :as subs]
     [sixsq.nuvla.ui.apps-component.spec :as spec]
+    [sixsq.nuvla.ui.apps-component.subs :as subs]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -15,10 +19,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [clojure.string :as str]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [cljs.spec.alpha :as s]))
+    [taoensso.timbre :as log]))
 
 
 (defn registry-url
@@ -58,8 +59,9 @@
                        :onMouseLeave #(dispatch [::apps-events/active-input nil])
                        :on-change    (do
                                        (reset! validate? true)
-                                       (ui-callback/input-callback #(do (dispatch [::apps-events/page-changed? true])
-                                                                        (dispatch [::apps-events/docker-image %]))))}]
+                                       (ui-callback/input-callback
+                                         #(do (dispatch [::main-events/changes-protection? true])
+                                              (dispatch [::apps-events/docker-image %]))))}]
             [:div {:style {:padding-left 15}} image])
           [:a {:href   (str "http://hub.docker.com/_/" (registry-url image))
                :target "_blank"
@@ -98,7 +100,7 @@
                    :onMouseLeave #(dispatch [::apps-events/active-input nil])
                    :on-change    (ui-callback/input-callback #(do
                                                                 (reset! validate? true)
-                                                                (dispatch [::apps-events/page-changed? true])
+                                                                (dispatch [::main-events/changes-protection? true])
                                                                 (dispatch [update-event id %])))}]))))
 
 
@@ -136,7 +138,7 @@
                        :align   :right
                        :style   {}}
         [ui/Icon {:name     "trash"
-                  :on-click #(do (dispatch [::apps-events/page-changed? true])
+                  :on-click #(do (dispatch [::main-events/changes-protection? true])
                                  (dispatch [::events/remove-port-mapping id]))
                   :color    :red}]])]))
 
@@ -168,7 +170,7 @@
           (when editable?
             [:div
              [ui/Icon {:name     "plus circle"
-                       :on-click #(do (dispatch [::apps-events/page-changed? true])
+                       :on-click #(do (dispatch [::main-events/changes-protection? true])
                                       (dispatch [::events/add-port-mapping (random-uuid) {}]))}]])]]))))
 
 
@@ -221,7 +223,7 @@
                        :align   :right
                        :style   {}}
         [ui/Icon {:name     "trash"
-                  :on-click #(do (dispatch [::apps-events/page-changed? true])
+                  :on-click #(do (dispatch [::main-events/changes-protection? true])
                                  (dispatch [::events/remove-volume id]))
                   :color    :red}]])]))
 
@@ -254,7 +256,7 @@
           (when editable?
             [:div
              [ui/Icon {:name     "plus circle"
-                       :on-click #(do (dispatch [::apps-events/page-changed? true])
+                       :on-click #(do (dispatch [::main-events/changes-protection? true])
                                       (dispatch [::events/add-volume (random-uuid) {}]))}]])]]))))
 
 

@@ -43,7 +43,7 @@
     (fn []
       (let [resource-id (path->resource-id @path)
             correct-resource? (= resource-id @cached-resource-id)
-            resourceMetadata (subscribe [::docs-subs/document @resource])]
+            resource-metadata (subscribe [::docs-subs/document @resource])]
 
         ;; forces a refresh when the correct resource isn't cached
         (when-not correct-resource?
@@ -54,4 +54,4 @@
          [refresh-button]
          (when (and (not @loading?) correct-resource?) @resource)
          (:base-uri @cep)
-         @resourceMetadata]))))
+         @resource-metadata]))))

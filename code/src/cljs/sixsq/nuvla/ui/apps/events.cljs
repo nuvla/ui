@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.client.spec :as client-spec]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -96,17 +97,6 @@
 
 
 (reg-event-db
-  ::ignore-change-fn
-  (fn [db [_ f]]
-    (assoc db ::spec/ignore-change-fn f)))
-
-(reg-event-db
-  ::page-changed?
-  (fn [db [_ has-change?]]
-    (assoc db ::spec/page-changed? has-change?)))
-
-
-(reg-event-db
   ::is-new?
   (fn [db [_ is-new?]]
     (assoc db ::spec/is-new? is-new?)))
@@ -181,7 +171,7 @@
 (reg-event-db
   ::save-logo-url
   (fn [db [_ logo-url]]
-    (dispatch [::page-changed? true])
+    (dispatch [::main-events/changes-protection? true])
     (-> db
         (assoc-in [::spec/module :logo-url] logo-url)
         (assoc-in [::spec/logo-url-modal-visible?] false))))
@@ -215,7 +205,7 @@
                                              :type    :error}]))
                                (do (dispatch [::cimi-detail-events/get (:id %)])
                                    (dispatch [::set-module sanitized-module])
-                                   (dispatch [::page-changed? false])
+                                   (dispatch [::main-events/changes-protection? false])
                                    (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))])
                                    ))]}
         {:db                db
@@ -229,5 +219,5 @@
                                               :type    :error}]))
                                 (do (dispatch [::cimi-detail-events/get (:id %)])
                                     (dispatch [::get-module])
-                                    (dispatch [::page-changed? false])
+                                    (dispatch [::main-events/changes-protection? false])
                                     ))]}))))

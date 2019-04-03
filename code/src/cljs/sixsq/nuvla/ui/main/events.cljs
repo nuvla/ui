@@ -49,10 +49,9 @@
   ::set-navigation-info
   (fn [{:keys [db]} [_ path query-params]]
     (let [path-vec (vec (str/split path #"/"))]
-      {:db                              (merge db {::spec/nav-path         path-vec
-                                                   ::spec/nav-query-params query-params})
-       ::main-fx/action-interval        [{:action :clean}]
-       ::history-fx/replace-url-history [path]})))
+      {:db                       (assoc db ::spec/nav-path path-vec
+                                           ::spec/nav-query-params query-params)
+       ::main-fx/action-interval [{:action :clean}]})))
 
 
 (reg-event-fx
@@ -62,17 +61,20 @@
 
 
 (reg-event-fx
-  ::push-breadcrumb
-  (fn [{{:keys [::spec/nav-path] :as db} :db} [_ path-element]]
-    {::history-fx/navigate [(str/join "/" (conj nav-path path-element))]}))
-
-
-(reg-event-fx
-  ::trim-breadcrumb
-  (fn [{{:keys [::spec/nav-path] :as db} :db} [_ index]]
-    {::history-fx/navigate [(str/join "/" (take (inc index) nav-path))]}))
-
-(reg-event-fx
   ::open-link
   (fn [_ [_ uri]]
     {::main-fx/open-new-window [uri]}))
+
+
+(reg-event-db
+  ::changes-protection?
+  (fn [db [_ choice]]
+    (assoc db ::spec/changes-protection? choice)))
+
+
+(reg-event-fx
+  ::ignore-changes
+  (fn [{{:keys [::spec/ignore-changes-modal] :as db} :db} [_ choice]]
+    (cond-> {:db (cond-> (assoc db ::spec/ignore-changes-modal nil)
+                         choice (assoc ::spec/changes-protection? false))}
+            choice (merge ignore-changes-modal))))

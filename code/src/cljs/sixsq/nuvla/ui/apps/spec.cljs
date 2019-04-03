@@ -41,10 +41,6 @@
 
 (s/def ::add-modal-visible? boolean?)
 
-(s/def ::ignore-change-fn any?)
-
-(s/def ::page-changed? boolean?)
-
 (s/def ::commit-message (s/nilable string?))
 
 (s/def ::db (s/keys :req [::active-input
@@ -55,8 +51,6 @@
                           ::module-path
                           ::module
                           ::add-modal-visible?
-                          ::page-changed?
-                          ::ignore-change-fn
                           ::default-logo-url
                           ::logo-url-modal-visible?
                           ::save-modal-visible?
@@ -70,8 +64,6 @@
                ::module-path                     nil
                ::module                          {}
                ::add-modal-visible?              false
-               ::ignore-change-fn                nil
-               ::page-changed?                   false
                ::logo-url-modal-visible?         false
                ::save-modal-visible?             false
                ::default-logo-url                "/ui/images/noimage.png"

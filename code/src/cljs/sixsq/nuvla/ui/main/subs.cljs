@@ -32,3 +32,14 @@
 (reg-sub
   ::nav-query-params
   ::spec/nav-query-params)
+
+
+(reg-sub
+  ::changes-protection?
+  ::spec/changes-protection?)
+
+
+(reg-sub
+  ::ignore-changes-modal
+  (fn [db]
+    (::spec/ignore-changes-modal db)))

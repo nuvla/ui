@@ -15,6 +15,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
+    [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -284,7 +285,7 @@
 
 (def module-summary-keys #{:created
                            :updated
-                           :resourceUri
+                           :resource-url
                            :id})
 
 
@@ -304,12 +305,12 @@
     (fn []
       (let [summary-info (-> (select-keys @module module-summary-keys)
                              (merge (select-keys @module #{:path :type})
-                                    {:owner (-> @module :acl :owner :principal)}))
-            icon         (-> @module :type category-icon)
-            rows         (map tuple-to-row summary-info)
-            name         (:name @module)
-            description  (:name @module)
-            acl          (:acl @module)]
+                                    {:owners (->> @module :acl :owners (str/join ", "))}))
+            icon (-> @module :type category-icon)
+            rows (map tuple-to-row summary-info)
+            name (:name @module)
+            description (:name @module)
+            acl (:acl @module)]
         [cc/metadata-simple
          {:title       name
           :description (:startTime summary-info)

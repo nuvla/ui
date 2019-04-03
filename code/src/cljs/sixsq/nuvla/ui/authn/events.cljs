@@ -1,13 +1,13 @@
 (ns sixsq.nuvla.ui.authn.events
   (:require
-    [ajax.core :as ajax]
-    [day8.re-frame.http-fx]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.authn.effects :as authn-fx]
-    [sixsq.nuvla.ui.authn.spec :as authn-spec]
+    [sixsq.nuvla.ui.authn.effects :as fx]
+    [sixsq.nuvla.ui.authn.spec :as spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.client.spec :as client-spec]
-    [sixsq.nuvla.ui.history.effects :as history-fx]))
+    [sixsq.nuvla.ui.history.effects :as history-fx]
+    [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-fx
@@ -19,26 +19,31 @@
 
 (reg-event-fx
   ::set-session
-  (fn [{:keys [db]} [_ {:keys [username] :as session}]]
-    (let [redirect-uri (::authn-spec/redirect-uri db)]
-      (cond-> {:db (assoc db ::authn-spec/session session)}
+  (fn [{:keys [db]} [_ session]]
+    (let [redirect-uri (::spec/redirect-uri db)]
+      (cond-> {:db (assoc db ::spec/session session)}
 
               (and session redirect-uri) (assoc ::history-fx/navigate-js-location [redirect-uri])
 
-              session (assoc ::authn-fx/automatic-logout-at-session-expiry [session])))))
+              session (assoc ::fx/automatic-logout-at-session-expiry [session])))))
 
 
 (reg-event-fx
   ::reset-password
-  (fn [db [_ username]]
-    (dispatch [::set-loading])
-    {:http-xhrio {:method          :post
-                  :uri             "https://nuv.la/reset" ; FIXME: should use a configuration parameter for http://nuv.la, or move reset to /api
-                  :params          {:username @username}
-                  :format          (ajax/url-request-format)
-                  :response-format (ajax/text-response-format {:keywords? true})
-                  :on-success      [::set-success-message]
-                  :on-failure      [::set-error-message]}}))
+  (fn [{{:keys [::client-spec/client
+                ::spec/server-redirect-uri] :as db} :db} [_ username new-password]]
+    (let [callback-add #(do (if (instance? js/Error %)
+                              (let [{:keys [message]} (response/parse-ex-info %)]
+                                (dispatch [::set-error-message message]))
+                              (dispatch [::set-success-message
+                                         "Success! An reset message has been sent to your email account."]))
+                            (dispatch [::clear-loading]))
+          template {:template {:href         "session-template/password-reset"
+                               :redirect-url server-redirect-uri
+                               :username     username
+                               :new-password new-password}}]
+      {:db               (assoc db ::spec/loading? true)
+       ::cimi-api-fx/add [client :session template callback-add]})))
 
 
 (reg-event-fx
@@ -52,73 +57,91 @@
 (reg-event-db
   ::open-modal
   (fn [db [_ modal-key]]
-    (assoc db ::authn-spec/open-modal modal-key)))
+    (assoc db ::spec/open-modal modal-key)))
 
 
 (reg-event-db
   ::close-modal
   (fn [db _]
-    (assoc db ::authn-spec/open-modal nil
-              ::authn-spec/selected-method-group nil)))
+    (assoc db ::spec/open-modal nil
+              ::spec/selected-method-group nil
+              ::spec/form-data nil)))
 
 
 (reg-event-db
   ::set-selected-method-group
   (fn [db [_ selected-method]]
-    (assoc db ::authn-spec/selected-method-group selected-method)))
+    (assoc db ::spec/selected-method-group selected-method)))
 
 
 (reg-event-db
   ::clear-loading
   (fn [db _]
-    (assoc db ::authn-spec/loading? false)))
-
-
-(reg-event-db
-  ::set-loading
-  (fn [db _]
-    (assoc db ::authn-spec/loading? true)))
-
+    (assoc db ::spec/loading? false)))
 
 (reg-event-db
   ::set-error-message
   (fn [db [_ error-message]]
-    (assoc db ::authn-spec/error-message error-message)))
+    (assoc db ::spec/error-message error-message)))
 
 
 (reg-event-db
   ::clear-error-message
   (fn [db _]
-    (assoc db ::authn-spec/error-message nil)))
+    (assoc db ::spec/error-message nil)))
 
 
 (reg-event-db
   ::set-success-message
   (fn [db [_ success-message]]
     (dispatch [::clear-loading])
-    (assoc db ::authn-spec/success-message success-message)))
+    (assoc db ::spec/success-message success-message)))
 
 
 (reg-event-db
   ::clear-success-message
   (fn [db _]
     (dispatch [::clear-loading])
-    (assoc db ::authn-spec/success-message nil)))
+    (assoc db ::spec/success-message nil)))
 
 
 (reg-event-db
   ::redirect-uri
   (fn [db [_ uri]]
-    (assoc db ::authn-spec/redirect-uri uri)))
+    (assoc db ::spec/redirect-uri uri)))
 
 
 (reg-event-db
   ::server-redirect-uri
   (fn [db [_ uri]]
-    (assoc db ::authn-spec/server-redirect-uri uri)))
+    (assoc db ::spec/server-redirect-uri uri)))
 
 
 (reg-event-db
   ::set-form-id
   (fn [db [_ form-id]]
-    (assoc db ::authn-spec/form-id form-id)))
+    (assoc db ::spec/form-id form-id)))
+
+
+(reg-event-db
+  ::update-form-data
+  (fn [db [_ form-id param-name param-value]]
+    (update db ::spec/form-data assoc-in [form-id param-name] param-value)))
+
+
+(reg-event-fx
+  ::submit
+  (fn [{{:keys [::client-spec/client
+                ::spec/form-data] :as db} :db} [_ collection-kw form-id]]
+    (let [template {:template (-> form-data
+                                  (get form-id)
+                                  (assoc :href form-id))}
+          callback-add #(if (instance? js/Error %)
+                          (let [{:keys [message]} (response/parse-ex-info %)]
+                            (dispatch [::set-error-message message]))
+                          (do (dispatch [::initialize])
+                              (dispatch [::close-modal])
+                              (dispatch [::history-events/navigate "welcome"])
+                              (dispatch [::clear-success-message])
+                              (dispatch [::clear-error-message])))]
+      {::cimi-api-fx/add [client collection-kw template callback-add]})))

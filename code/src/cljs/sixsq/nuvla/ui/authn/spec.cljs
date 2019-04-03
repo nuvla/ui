@@ -23,6 +23,8 @@
 
 (s/def ::form-id (s/nilable string?))
 
+(s/def ::form-data any?)
+
 (s/def ::loading? boolean?)
 
 (s/def ::db (s/keys :req [::open-modal
@@ -34,7 +36,8 @@
                           ::redirect-uri
                           ::server-redirect-uri
                           ::loading?
-                          ::form-id]))
+                          ::form-id
+                          ::form-data]))
 
 (def defaults
   {::open-modal            nil
@@ -46,4 +49,5 @@
    ::redirect-uri          nil
    ::server-redirect-uri   (str @config/path-prefix "/welcome")
    ::loading?              false
-   ::form-id               nil})
+   ::form-id               nil
+   ::form-data             {}})

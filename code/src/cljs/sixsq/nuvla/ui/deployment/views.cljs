@@ -167,7 +167,6 @@
         credential-id (:credential-id deployment)
         logo-url (:logo-url module)
         cred-info (get @creds-name credential-id credential-id)
-        _ (log/error @creds-name)
         [url-name url] @(subscribe [::subs/deployment-url deployment])]
     ^{:key id}
     [ui/Card

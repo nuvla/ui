@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.authn.subs
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.authn.spec :as spec]
     [sixsq.nuvla.ui.authn.utils :as utils]))
@@ -44,7 +43,7 @@
   ::user
   :<- [::session]
   (fn [session _]
-    (some-> session :username (str/replace #"user/" ""))))
+    (:identifier session)))
 
 
 (reg-sub
@@ -70,3 +69,9 @@
 (reg-sub
   ::form-id
   ::spec/form-id)
+
+
+(reg-sub
+  ::form-data
+  (fn [db [_ form-id]]
+    (get-in db [::spec/form-data form-id])))

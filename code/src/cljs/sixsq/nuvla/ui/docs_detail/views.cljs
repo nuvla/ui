@@ -25,23 +25,21 @@
        [ui/ReactMarkdown {:source description}]])))
 
 
-(defn row-attribute-fn [{:keys [name description type namespace uri
-                                providerMandatory consumerMandatory mutable templateMutable consumerWritable
-                                displayName help group order hidden sensitive vscope] :as entry
-                         :or {templateMutable false}}]
-  (let [characteristics [["displayName" displayName]
+(defn row-attribute-fn [{:keys [name description type
+                                provider-mandatory consumer-mandatory template-mutable mutable consumer-writable
+                                display-name help group order hidden sensitive vscope] :as entry
+                         :or {template-mutable false}}]
+  (let [characteristics [["display-name" display-name]
                          ["help" help]
                          ["order" order]
                          ["mutable" mutable]
-                         ["consumerWritable" consumerWritable]
-                         ["providerMandatory" providerMandatory]
-                         ["consumerMandatory" consumerMandatory]
-                         ["templateMutable" templateMutable]
+                         ["consumer-writable" consumer-writable]
+                         ["provider-mandatory" provider-mandatory]
+                         ["consumer-mandatory" consumer-mandatory]
+                         ["template-mutable" template-mutable]
                          ["group" group]
                          ["hidden" hidden]
                          ["sensitive" sensitive]
-                         ["namespace" namespace]
-                         ["uri" uri]
                          ["vscope" vscope]]
         row-span (inc (count characteristics))]
     (concat

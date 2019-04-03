@@ -63,13 +63,11 @@
   ;; dependencies pulled in by those that depend on this
   :dependencies [[reagent :scope "provided"]
                  [re-frame :scope "provided"]
-                 [day8.re-frame/http-fx :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
                  [com.taoensso/timbre :scope "provided"]
                  [sixsq.nuvla/api ~+sixsq-nuvla-api-version+ :scope "provided"]
                  [com.taoensso/tempura :scope "provided"]
-                 [funcool/promesa :scope "provided"]
                  [com.cemerick/url :scope "provided"]]
 
   :source-paths ["src/clj" "src/cljs"]

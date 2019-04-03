@@ -51,7 +51,7 @@
 
 (def deployment-summary-keys #{:created
                                :updated
-                               :resourceUri
+                               :resource-url
                                :state
                                :id
                                :name
@@ -109,7 +109,7 @@
     (fn []
       (let [summary-info (-> (select-keys @deployment deployment-summary-keys)
                              (merge (select-keys (:module @deployment) #{:name :path :type})
-                                    {:owner (-> @deployment :acl :owner :principal)}))
+                                    {:owners (->> @deployment :acl :owners (str/join ", "))}))
             icon (-> @deployment :module :type deployment-detail-utils/category-icon)
             rows (map tuple-to-row summary-info)
             state (:state @deployment)]

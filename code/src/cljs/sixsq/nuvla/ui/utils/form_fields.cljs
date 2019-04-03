@@ -1,13 +1,12 @@
 (ns sixsq.nuvla.ui.utils.form-fields
   (:require
-    [reagent.core :as reagent]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [re-frame.core :refer [subscribe]]
+    [reagent.core :as reagent]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.general :as utils]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (def nbsp "\u00a0")
@@ -29,15 +28,15 @@
 
 
 (defmethod form-field :default
-  [update-fn form-id {:keys [name displayName help hidden sensitive vscope
-                             consumerMandatory consumerWritable] :as attribute}]
+  [update-fn form-id {:keys [name display-name help hidden sensitive vscope
+                             consumer-mandatory consumer-writable] :as attribute}]
   (let [{:keys [values value default]} vscope
-        label (or displayName name)
+        label (or display-name name)
         default-value (or value default "")
-        read-only (not consumerWritable)
+        read-only (not consumer-writable)
         on-change-fn (ui-callback/value #(update-fn form-id name %))]
     ^{:key name}
-    [ui/FormField {:required consumerMandatory}
+    [ui/FormField {:required consumer-mandatory}
      (when-not hidden [:label label nbsp (help-popup help)])
      (cond
        values [ui/Dropdown {:selection     true
@@ -57,33 +56,32 @@
 
 
 (defmethod form-field :integer
-  [update-fn form-id {:keys [name displayName help hidden vscope
-                             consumerMandatory consumerWritable] :as attribute}]
-  (let [label (or displayName name)]
+  [update-fn form-id {:keys [name display-name help hidden vscope
+                             consumer-mandatory consumer-writable] :as attribute}]
+  (let [label (or display-name name)]
     ^{:key name}
-    [ui/FormField {:required consumerMandatory}
+    [ui/FormField {:required consumer-mandatory}
      (when-not hidden [:label label nbsp (help-popup help)])
      [ui/Input
       (cond-> {:type          "number"
                :name          name
                :default-value (or (:value vscope) (:default vscope) "")
-               :read-only     (not consumerWritable)
+               :read-only     (not consumer-writable)
                :on-change     (ui-callback/value #(update-fn form-id name (utils/str->int %)))}
               hidden (assoc :style {:display "none"}))]]))
 
 (defn date-time-form
-  [update-fn form-id {:keys [name displayName help hidden vscope
-                             consumerMandatory consumerWritable] :as attribute}]
+  [update-fn form-id {:keys [vscope] :as attribute}]
   (let [locale (subscribe [::i18n-subs/locale])
         {:keys [value default]} vscope
         default-value (or value default)
         date-atom (reagent/atom (when default-value (time/parse-iso8601 default-value)))]
-    (fn [update-fn form-id {:keys [name displayName help hidden vscope
-                                   consumerMandatory consumerWritable] :as attribute}]
-      (let [label (or displayName name)
-            read-only (not consumerWritable)]
+    (fn [update-fn form-id {:keys [name display-name help hidden vscope
+                                   consumer-mandatory consumer-writable] :as attribute}]
+      (let [label (or display-name name)
+            read-only (not consumer-writable)]
         ^{:key name}
-        [ui/FormField {:required consumerMandatory}
+        [ui/FormField {:required consumer-mandatory}
          (when-not hidden [:label label nbsp (help-popup help)])
          [ui/DatePicker (cond-> {:custom-input     (reagent/as-element [ui/Input {:style {:width "250px"}}])
                                  :show-time-select true
@@ -103,30 +101,30 @@
 
 
 (defmethod form-field :boolean
-  [update-fn form-id {:keys [name displayName help hidden vscope
-                             consumerMandatory consumerWritable] :as attribute}]
-  (let [label (or displayName name)]
+  [update-fn form-id {:keys [name display-name help hidden vscope
+                             consumer-mandatory consumer-writable] :as attribute}]
+  (let [label (or display-name name)]
     ^{:key name}
-    [ui/FormField {:required consumerMandatory}
+    [ui/FormField {:required consumer-mandatory}
      (when-not hidden [:label label nbsp (help-popup help)])
      [ui/Checkbox
       (cond-> {:name          name
                :default-value (or (:value vscope) (:default vscope) false)
-               :read-only     (not consumerWritable)
+               :read-only     (not consumer-writable)
                :on-change     (ui-callback/checked #(update-fn form-id name %))}
               hidden (assoc :style {:display "none"}))]]))
 
 
 (defmethod form-field :ref
-  [update-fn form-id {:keys [name displayName help hidden vscope
-                             consumerMandatory consumerWritable] :as attribute}]
-  (let [label (or displayName name)]
+  [update-fn form-id {:keys [name display-name help hidden vscope
+                             consumer-mandatory consumer-writable] :as attribute}]
+  (let [label (or display-name name)]
     ^{:key name}
-    [ui/FormField {:required consumerMandatory}
+    [ui/FormField {:required consumer-mandatory}
      (when-not hidden [:label label nbsp (help-popup help)])
      [ui/Checkbox
       (cond-> {:name          name
                :default-value (or (:value vscope) (:default vscope) "")
-               :read-only     (not consumerWritable)
+               :read-only     (not consumer-writable)
                :on-change     (ui-callback/value #(update-fn form-id name {:href %}))}
               hidden (assoc :style {:display "none"}))]]))

@@ -89,17 +89,3 @@
           port-field (when-not (str/blank? port) (str ":" port))]
       (str protocol "//" host port-field))))
 
-;;
-;; FIXME: This is currently a no-op because it causes issues when running
-;; with the old UI.  Specifically, it will rename the run URLs, causing
-;; the terminate actions to be applied to the wrong URL.  The side effect
-;; is that the URLs with parameters will not be 'cleaned' on the new UI
-;; for the moment.
-;;
-(defn replace-url-history
-  "Replace url in history with the given URL."
-  [url]
-  nil
-  #_(let [short-url (last (str/split url #"/"))]
-      (.replaceState js/history nil nil short-url)))
-

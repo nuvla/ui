@@ -1,13 +1,12 @@
 (ns sixsq.nuvla.ui.utils.form-fields
   (:require
-    [reagent.core :as reagent]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [re-frame.core :refer [subscribe]]
+    [reagent.core :as reagent]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.general :as utils]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (def nbsp "\u00a0")

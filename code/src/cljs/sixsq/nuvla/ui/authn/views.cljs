@@ -2,7 +2,7 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
+    [reagent.core :as reagent]
     [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.authn.utils :as u]
@@ -13,11 +13,11 @@
     [sixsq.nuvla.ui.history.utils :as history-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as forms]
+    [sixsq.nuvla.ui.utils.forms :as forms-utils]
     [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn form-component
@@ -59,36 +59,40 @@
      (@tr [:forgot-password])]]])
 
 
+(defn form-id->resource-type
+  [form-id]
+  (cond
+    (str/starts-with? form-id "user-template/") :user
+    (str/starts-with? form-id "session-template/") :session))
+
+
 (defn authn-method-form
   "Renders the form for a particular authentication (login or sign up) method.
    The fields are taken from the method description."
-  [methods collections-kw]
-  (let [cep (subscribe [::api-subs/cloud-entry-point])
-        server-redirect-uri (subscribe [::authn-subs/server-redirect-uri])
-        form-id (subscribe [::authn-subs/form-id])
+  [methods]
+  (let [form-id (subscribe [::authn-subs/form-id])
+        form-data (subscribe [::authn-subs/form-data @form-id])
         tr (subscribe [::i18n-subs/tr])]
-    (fn [methods collections-kw]
+    (fn [methods]
+      {:key @form-id}
       (let [dropdown? (> (count methods) 1)
             method (u/select-method-by-id @form-id methods)
-            resourceMetadata (subscribe [::docs-subs/document method])
-            {:keys [base-uri collection-href]} @cep
-            post-uri (str base-uri (collections-kw collection-href)) ;; FIXME: Should be part of CIMI API.
-            inputs-method (conj
-                            (->> (:attributes @resourceMetadata)
-                                 (filter (fn [{:keys [consumerWritable consumerMandatory group] :as attribute}]
-                                           (and (not (#{"metadata" "acl"} group))
-                                                consumerWritable)))
-                                 (sort-by :order))
-                            {:name "href" :vscope {:value @form-id} :hidden true}
-                            {:name "redirectURI" :vscope {:value @server-redirect-uri} :hidden true})
+            resource-metadata (subscribe [::docs-subs/document method])
+            inputs-method (->> (:attributes @resource-metadata)
+                               (filter (fn [{:keys [consumer-mandatory group] :as attribute}]
+                                         (and (not (#{"metadata" "acl"} group))
+                                              consumer-mandatory)))
+                               (sort-by :order))
             dropdown-options (map dropdown-method-option methods)
             password-method? (= "password" (:method method))]
 
-        (log/infof "creating authentication form: %s %s" (name collections-kw) @form-id)
         (vec
           (concat
-            [ui/Form {:id (or @form-id "authn-form-placeholder-id"), :action post-uri, :method "post"}]
-
+            [ui/Form {:id           (or @form-id "authn-form-placeholder-id")
+                      :on-key-press (partial forms-utils/on-return-key
+                                             #(when @form-id
+                                                (dispatch [::authn-events/submit
+                                                           (form-id->resource-type @form-id) @form-id])))}]
             [(vec (concat [ui/Segment {:style {:height     "35ex"
                                                :overflow-y "auto"}}
                            (when dropdown?
@@ -100,25 +104,35 @@
                                :close-on-blur true
                                :on-change     (ui-callback/dropdown ::authn-events/set-form-id)}])]
 
-                          (mapv (partial forms/form-field #() @form-id) inputs-method)
+                          (mapv (fn [{vscope :vscope param-name :name :as input-method}]
+                                  (let [value (get @form-data param-name)
+                                        input-method-updated (cond-> input-method
+                                                                     value (assoc-in [:vscope :value] value))]
+                                    (dispatch [::authn-events/update-form-data @form-id
+                                               param-name (or value
+                                                              (:value vscope)
+                                                              (:default vscope))])
+                                    (forms/form-field (fn [form-id name value]
+                                                        (dispatch [::authn-events/update-form-data form-id name value])
+                                                        ) @form-id input-method-updated))) inputs-method)
                           (when password-method?
                             (reset-password tr))))]))))))
 
 
 (defn login-method-form
   [[_ methods]]
-  [authn-method-form methods :session])
+  [authn-method-form methods])
 
 
 (defn signup-method-form
   [[_ methods]]
-  [authn-method-form methods :user])
+  [authn-method-form methods])
 
 
 (defn authn-method-group-option
   [[group methods]]
   (let [{:keys [icon]} (first methods)
-        option-label (r/as-element [:span [ui/Icon {:name icon}] group])]
+        option-label (reagent/as-element [:span [ui/Icon {:name icon}] group])]
     {:text    option-label
      :value   group
      :content option-label}))
@@ -209,67 +223,91 @@
                    [:a {:on-click f :style {:cursor "pointer"}} (str (@tr [:login-link]))]])))))
 
 
-(def username (r/atom nil))
-
 (defn reset-password-modal
   []
   (let [open-modal (subscribe [::authn-subs/open-modal])
-        cep (subscribe [::api-subs/cloud-entry-point])
         error-message (subscribe [::authn-subs/error-message])
         success-message (subscribe [::authn-subs/success-message])
         loading? (subscribe [::authn-subs/loading?])
-        tr (subscribe [::i18n-subs/tr])]
+        tr (subscribe [::i18n-subs/tr])
+        empty-reset-state {:username            nil
+                           :new-password        nil
+                           :repeat-new-password nil}
+        reset-form (reagent/atom empty-reset-state)]
+    (fn []
+      (let [{:keys [username
+                    new-password
+                    repeat-new-password]} @reset-form
+            error-password? (not= new-password repeat-new-password)]
+        [ui/Modal
+         {:id        "modal-reset-password-id"
+          :size      :tiny
+          :open      (= @open-modal :reset-password)
+          :closeIcon true
+          :on-close  (fn []
+                       (dispatch [::authn-events/close-modal])
+                       (reset! reset-form empty-reset-state))}
 
-    [ui/Modal
-     {:id        "modal-reset-password-id"
-      :size      :tiny
-      :open      (= @open-modal :reset-password)
-      :closeIcon true
-      :on-close  (fn []
-                   (dispatch [::authn-events/close-modal])
-                   (dispatch [::authn-events/clear-success-message])
-                   (dispatch [::authn-events/clear-error-message])
-                   (reset! username nil))}
+         [ui/ModalHeader (@tr [:reset-password])]
 
-     [ui/ModalHeader (@tr [:reset-password])]
+         [ui/ModalContent
 
-     [ui/ModalContent
+          (when @error-message
+            [ui/Message {:negative  true
+                         :size      "tiny"
+                         :onDismiss #(dispatch [::authn-events/clear-error-message])}
+             [ui/MessageHeader (@tr [:reset-password-error])]
+             [:p @error-message]])
 
-      (when @error-message
-        [ui/Message {:negative  true
-                     :size      "tiny"
-                     :onDismiss #(dispatch [::authn-events/clear-error-message])}
-         [ui/MessageHeader (@tr [:reset-password-error])]
-         [:p @error-message]])
+          (when @success-message
+            [ui/Message {:negative  false
+                         :size      "tiny"
+                         :onDismiss #(dispatch [::authn-events/clear-success-message])}
+             [ui/MessageHeader (@tr [:reset-password-success])]
+             [:p @success-message]])
 
-      (when @success-message
-        [ui/Message {:negative  false
-                     :size      "tiny"
-                     :onDismiss #(dispatch [::authn-events/clear-success-message])}
-         [ui/MessageHeader (@tr [:reset-password-success])]
-         [:p @success-message]])
+          [ui/Form
+           [ui/FormInput {:name         "username"
+                          :type         "text"
+                          :placeholder  "Username"
+                          :icon         "user"
+                          :fluid        false
+                          :iconPosition "left"
+                          :required     true
+                          :autoComplete "off"
+                          :on-change    (ui-callback/value #(swap! reset-form assoc :username %))}]
 
-      [ui/FormInput {:name         "username"
-                     :type         "text"
-                     :placeholder  "Username"
-                     :icon         "user"
-                     :iconPosition "left"
-                     :required     true
-                     :autoComplete "off"
-                     :on-change    (ui-callback/value #(reset! username %))}]
+           [ui/FormGroup {:widths 2}
+            [ui/FormInput {:name         "password"
+                           :type         "password"
+                           :placeholder  "New password"
+                           :icon         "key"
+                           :iconPosition "left"
+                           :required     true
+                           :error        error-password?
+                           :autoComplete "off"
+                           :on-change    (ui-callback/value #(swap! reset-form assoc :new-password %))}]
 
-      [:div {:style {:padding "10px 0"}} (@tr [:reset-password-inst])]]
+            [ui/FormInput {:name         "password"
+                           :type         "password"
+                           :placeholder  "Repeat new password"
+                           :required     true
+                           :error        error-password?
+                           :autoComplete "off"
+                           :on-change    (ui-callback/value #(swap! reset-form assoc :repeat-new-password %))}]]]
 
-     [ui/ModalActions
-      [switch-panel-link :reset-password]
-      [uix/Button
-       {:text     (@tr [:reset-password])
-        :positive true
-        :loading  @loading?
-        :disabled (str/blank? @username)
-        :on-click #(do
-                     (.preventDefault %)
-                     (dispatch [::authn-events/reset-password username]))}]]]))
+          [:div {:style {:padding "10px 0"}} (@tr [:reset-password-inst])]]
+
+         [ui/ModalActions
+          [switch-panel-link :reset-password]
+          [uix/Button
+           {:text     (@tr [:reset-password])
+            :positive true
+            :loading  @loading?
+            :disabled (or (str/blank? username) (str/blank? new-password) error-password?)
+            :on-click #(do
+                         (.preventDefault %)
+                         (dispatch [::authn-events/reset-password username new-password]))}]]]))))
 
 
 (defn authn-modal
@@ -297,9 +335,7 @@
          {:text     (@tr [modal-kw])
           :positive true
           :disabled (nil? @form-id)
-          :on-click #(some->> @form-id
-                              (.getElementById js/document)
-                              (.submit))}]]])))
+          :on-click #(dispatch [::authn-events/submit (form-id->resource-type @form-id) @form-id])}]]])))
 
 
 (defn modal-login []
@@ -379,12 +415,3 @@
        [modal-reset-password]
        [modal-signup]])))
 
-
-(defn ^:export open-authn-modal []
-  (log/debug "dispatch open-modal for login modal")
-  (dispatch [::authn-events/open-modal :login]))
-
-
-(defn ^:export open-sign-up-modal []
-  (log/debug "dispatch open-modal for sign up modal")
-  (dispatch [::authn-events/open-modal :signup]))

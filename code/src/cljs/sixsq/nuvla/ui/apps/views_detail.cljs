@@ -14,12 +14,12 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
+    [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.forms :as forms]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn refresh-button
@@ -216,7 +216,7 @@
     (fn []
       (let [summary-info (-> (select-keys @module module-summary-keys)
                              (merge (select-keys @module #{:path :type})
-                                    {:owner (-> @module :acl :owner :principal)}))
+                                    {:owners (->> @module :acl :owners (str/join ", "))}))
             icon (-> @module :type category-icon)
             rows (map tuple-to-row summary-info)
             name (:name @module)

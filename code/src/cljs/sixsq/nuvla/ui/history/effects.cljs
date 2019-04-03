@@ -21,7 +21,3 @@
   (fn [[url]]
     (.replace js/location url)))
 
-(reg-fx
-  ::replace-url-history
-  (fn [[url]]
-    (utils/replace-url-history url)))

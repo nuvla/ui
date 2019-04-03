@@ -74,7 +74,7 @@
         form-data (subscribe [::authn-subs/form-data @form-id])
         tr (subscribe [::i18n-subs/tr])]
     (fn [methods]
-      {:key @form-id}
+      ^{:key @form-id}
       (let [dropdown? (> (count methods) 1)
             method (u/select-method-by-id @form-id methods)
             resource-metadata (subscribe [::docs-subs/document method])

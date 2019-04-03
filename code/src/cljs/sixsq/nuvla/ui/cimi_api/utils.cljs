@@ -11,7 +11,7 @@
 
 
 (def ^:const common-attrs #{:id, :resourceURI, :created, :updated, :name, :description
-                            :properties, :resourceMetadata, :operations, :acl})
+                            :properties, :resource-metadata, :operations, :acl})
 
 
 (defn select-common-attrs

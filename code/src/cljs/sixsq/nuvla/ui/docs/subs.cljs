@@ -19,12 +19,12 @@
 
 
 (defn resolve-metadata-id
-  [{:keys [id resourceMetadata resourceURI] :as resource}]
-  ;(log/error "resourceMetadata" resourceMetadata)
+  [{:keys [id resource-metadata resourceURI] :as resource}]
+  ;(log/error "resource-metadata" resource-metadata)
   ;(when id
   ;  (log/error (str "resource-metadata/" (str/replace id #"/" "-"))))
   (cond
-    resourceMetadata resourceMetadata
+    resource-metadata resource-metadata
     (re-find #"-template/" (str id)) (str "resource-metadata/" (str/replace id #"/" "-"))
     :else (let [resource-name (-> resourceURI str (str/split #"/") last str/lower-case)
                 collection-name (cond-> resource-name

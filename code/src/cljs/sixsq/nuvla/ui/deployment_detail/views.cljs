@@ -51,7 +51,7 @@
 
 (def deployment-summary-keys #{:created
                                :updated
-                               :resourceUri
+                               :resource-url
                                :state
                                :id
                                :name

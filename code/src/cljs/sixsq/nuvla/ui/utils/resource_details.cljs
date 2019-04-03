@@ -161,8 +161,7 @@
 
 
 (defn detail-header
-  [{:keys [id resourceURI created updated
-           name description properties acl] :as data}]
+  [{:keys [id resource-url created updated name description properties acl] :as data}]
   (when data
     [cc/metadata
      {:title       (or name id)
@@ -174,7 +173,7 @@
       :properties  properties}
      (cond-> []
              id (conj (metadata-row "id" id))
-             resourceURI (conj (metadata-row "resourceURI" resourceURI))
+             resource-url (conj (metadata-row "resource-url" resource-url))
              name (conj (metadata-row "name" name))
              description (conj (metadata-row "description" description))
              created (conj (metadata-row "created" (time/time-value created)))
@@ -205,7 +204,7 @@
 
       [(strip-attr-ns field-name)
        field-value
-       (-> attributes-map field-name :displayName)
+       (-> attributes-map field-name :display-name)
        (-> attributes-map field-name :description)])))
 
 

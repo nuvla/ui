@@ -10,7 +10,7 @@
     [taoensso.timbre :as log]))
 
 
-(def ^:const common-attrs #{:id, :resourceURI, :created, :updated, :name, :description
+(def ^:const common-attrs #{:id, :resource-url, :created, :updated, :name, :description
                             :properties, :resource-metadata, :operations, :acl})
 
 

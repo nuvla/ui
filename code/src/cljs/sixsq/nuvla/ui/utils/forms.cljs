@@ -77,7 +77,7 @@
                                        new-value (assoc-in [:vscope :value] new-value)))))
                          (some->> resource-meta
                                   :attributes
-                                  (filter :consumerWritable)
+                                  (filter :consumer-writable)
                                   (sort-by :order)))))
           :json [ui/CodeMirror {:value     @text
                                 :on-change (fn [editor data value]

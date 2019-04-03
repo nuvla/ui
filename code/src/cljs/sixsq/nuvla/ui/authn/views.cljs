@@ -24,23 +24,23 @@
   "Provides a single element of a form. This should provide a reasonable
    control for each defined type, but this initial implementation just provides
    either a text or password field."
-  [[param-name {:keys [data type displayName mandatory autocomplete] :as param}]]
+  [[param-name {:keys [data type display-name mandatory autocomplete] :as param}]]
   (case type
     "hidden" [ui/FormField [:input {:name param-name :type "hidden" :value (or data "")}]]
     "password" [ui/FormInput {:name         param-name
                               :type         type
-                              :placeholder  displayName
+                              :placeholder  display-name
                               :icon         "lock"
                               :iconPosition "left"
                               :required     mandatory
-                              :autoComplete (or autocomplete "off")}]
+                              :auto-complete (or autocomplete "off")}]
     [ui/FormInput {:name         param-name
                    :type         type
-                   :placeholder  displayName
+                   :placeholder  display-name
                    :icon         "user"
                    :iconPosition "left"
                    :required     mandatory
-                   :autoComplete (or autocomplete "off")}]))
+                   :auto-complete (or autocomplete "off")}]))
 
 
 (defn dropdown-method-option
@@ -266,35 +266,37 @@
              [ui/MessageHeader (@tr [:reset-password-success])]
              [:p @success-message]])
 
-          [ui/Form
-           [ui/FormInput {:name         "username"
-                          :type         "text"
-                          :placeholder  "Username"
-                          :icon         "user"
-                          :fluid        false
-                          :iconPosition "left"
-                          :required     true
-                          :autoComplete "off"
-                          :on-change    (ui-callback/value #(swap! reset-form assoc :username %))}]
+          [ui/Form {:on-key-press (partial forms-utils/on-return-key
+                                           #(dispatch [::authn-events/reset-password username new-password]))}
+           [ui/FormInput {:name          "username"
+                          :type          "text"
+                          :placeholder   "Username"
+                          :icon          "user"
+                          :fluid         false
+                          :iconPosition  "left"
+                          :required      true
+                          :auto-focus    true
+                          :auto-complete "on"
+                          :on-change     (ui-callback/value #(swap! reset-form assoc :username %))}]
 
            [ui/FormGroup {:widths 2}
-            [ui/FormInput {:name         "password"
-                           :type         "password"
-                           :placeholder  "New password"
-                           :icon         "key"
-                           :iconPosition "left"
-                           :required     true
-                           :error        error-password?
-                           :autoComplete "off"
-                           :on-change    (ui-callback/value #(swap! reset-form assoc :new-password %))}]
+            [ui/FormInput {:name          "password"
+                           :type          "password"
+                           :placeholder   "New password"
+                           :icon          "key"
+                           :iconPosition  "left"
+                           :required      true
+                           :error         error-password?
+                           :auto-complete "off"
+                           :on-change     (ui-callback/value #(swap! reset-form assoc :new-password %))}]
 
-            [ui/FormInput {:name         "password"
-                           :type         "password"
-                           :placeholder  "Repeat new password"
-                           :required     true
-                           :error        error-password?
-                           :autoComplete "off"
-                           :on-change    (ui-callback/value #(swap! reset-form assoc :repeat-new-password %))}]]]
+            [ui/FormInput {:name          "password"
+                           :type          "password"
+                           :placeholder   "Repeat new password"
+                           :required      true
+                           :error         error-password?
+                           :auto-complete "off"
+                           :on-change     (ui-callback/value #(swap! reset-form assoc :repeat-new-password %))}]]]
 
           [:div {:style {:padding "10px 0"}} (@tr [:reset-password-inst])]]
 
@@ -305,9 +307,7 @@
             :positive true
             :loading  @loading?
             :disabled (or (str/blank? username) (str/blank? new-password) error-password?)
-            :on-click #(do
-                         (.preventDefault %)
-                         (dispatch [::authn-events/reset-password username new-password]))}]]]))))
+            :on-click #(dispatch [::authn-events/reset-password username new-password])}]]]))))
 
 
 (defn authn-modal

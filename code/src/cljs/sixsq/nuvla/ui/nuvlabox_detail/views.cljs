@@ -111,7 +111,7 @@
 
 (defn select-metadata
   [data]
-  (let [metadata-keys #{:id :resourceURI :name :description :created :updated}]
+  (let [metadata-keys #{:id :resource-url :name :description :created :updated}]
     (select-keys data metadata-keys)))
 
 

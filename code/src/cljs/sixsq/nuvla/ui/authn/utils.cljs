@@ -17,17 +17,6 @@
        (group-by #(or (:group %) (:method %)))))
 
 
-(defn keep-visible-params
-  "Keeps the form parameters that should be shown to the user. It removes all
-   readOnly parameters along with :name and :description."
-  [[k {:keys [readOnly]}]]
-  (and (not= :name k)
-       (not= :description k)
-       (not= :group k)
-       (not= :redirectURI k)
-       (not readOnly)))
-
-
 (defn select-method-by-id
   [id methods]
   (->> methods

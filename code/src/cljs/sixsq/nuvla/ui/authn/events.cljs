@@ -30,7 +30,8 @@
 
 (reg-event-fx
   ::reset-password
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ username new-password]]
+  (fn [{{:keys [::client-spec/client
+                ::spec/server-redirect-uri] :as db} :db} [_ username new-password]]
     (let [callback-add #(do (if (instance? js/Error %)
                               (let [{:keys [message]} (response/parse-ex-info %)]
                                 (dispatch [::set-error-message message]))
@@ -38,6 +39,7 @@
                                          "Success! An reset message has been sent to your email account."]))
                             (dispatch [::clear-loading]))
           template {:template {:href         "session-template/password-reset"
+                               :redirect-url server-redirect-uri
                                :username     username
                                :new-password new-password}}]
       {:db               (assoc db ::spec/loading? true)

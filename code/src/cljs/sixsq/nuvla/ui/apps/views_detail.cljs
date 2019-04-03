@@ -196,7 +196,7 @@
 
 (def module-summary-keys #{:created
                            :updated
-                           :resourceUri
+                           :resource-url
                            :id})
 
 

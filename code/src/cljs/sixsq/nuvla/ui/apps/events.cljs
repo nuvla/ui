@@ -8,8 +8,8 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.client.spec :as client-spec]
-    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]))

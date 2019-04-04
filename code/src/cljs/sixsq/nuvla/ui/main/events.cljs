@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.main.events
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.history.effects :as history-fx]
+    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.main.effects :as main-fx]
     [sixsq.nuvla.ui.main.spec :as spec]
     [taoensso.timbre :as log]))
@@ -75,6 +74,16 @@
 (reg-event-fx
   ::ignore-changes
   (fn [{{:keys [::spec/ignore-changes-modal] :as db} :db} [_ choice]]
-    (cond-> {:db (cond-> (assoc db ::spec/ignore-changes-modal nil)
-                         choice (assoc ::spec/changes-protection? false))}
-            choice (merge ignore-changes-modal))))
+    (let [close-modal-db (assoc db ::spec/ignore-changes-modal nil)]
+      (cond
+        (map? ignore-changes-modal) (cond-> {:db (cond-> close-modal-db
+                                                  choice (assoc ::spec/changes-protection? false))}
+                                            choice (merge ignore-changes-modal))
+        (fn? ignore-changes-modal) (do (when choice (ignore-changes-modal))
+                                       {:db close-modal-db})))))
+
+
+(reg-event-db
+  ::ignore-changes-modal
+  (fn [db [_ callback-fn]]
+    (assoc db ::spec/ignore-changes-modal callback-fn)))

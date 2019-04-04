@@ -22,17 +22,27 @@
 (s/def ::nav-query-params any?)
 
 
+(s/def ::changes-protection? boolean?)
+
+
+(s/def ::ignore-changes-modal (s/nilable any?))
+
+
 (s/def ::db (s/keys :req [::iframe?
                           ::device
                           ::sidebar-open?
                           ::visible?
                           ::nav-path
-                          ::nav-query-params]))
+                          ::nav-query-params
+                          ::changes-protection?
+                          ::ignore-changes-modal]))
 
 
-(def defaults {::iframe?          false
-               ::device           :computer
-               ::sidebar-open?    false
-               ::visible?         true
-               ::nav-path         ["welcome"]
-               ::nav-query-params {}})
+(def defaults {::iframe?              false
+               ::device               :computer
+               ::sidebar-open?        false
+               ::visible?             true
+               ::nav-path             ["welcome"]
+               ::nav-query-params     {}
+               ::changes-protection?  false
+               ::ignore-changes-modal nil})

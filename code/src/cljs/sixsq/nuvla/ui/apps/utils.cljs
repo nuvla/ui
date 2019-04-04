@@ -1,6 +1,8 @@
 (ns sixsq.nuvla.ui.apps.utils
   (:require
-    [clojure.string :as str]))
+    [clojure.string :as str]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [taoensso.timbre :as log]))
 
 
 (defn nav-path->module-path
@@ -60,14 +62,26 @@
       module)))
 
 
+(defn process-urls
+  [db]
+  (for [u [(:sixsq.nuvla.ui.apps-component.spec/urls db)]]
+    (conj [(:name u) (:url u)])))
+
+
 (defn sanitize-module-component
-  [module commit-map]
-  (let [{:keys [author commit]} commit-map]
+  [module commit-map db]
+  (let [{:keys [author commit]} commit-map
+        urls (process-urls db)]
+    (log/infof "urls: %s" (get-in db :sixsq.nuvla.ui.apps-component.spec/urls))
+    (log/infof "urls after: %s" urls)
     (-> module
         (sanitize-base)
         (assoc-in [:content :author] author)
         (assoc-in [:content :commit] commit)
-        (assoc-in [:content :architecture] (or (::architecture module) "x86")))))
+        (assoc-in [:content :architecture] (::architecture module))
+        (assoc-in [:content :urls] (urls db))
+        )))
+
 
 (defn sanitize-module-project
   [module]
@@ -75,11 +89,31 @@
       (sanitize-base)
       (dissoc :children)))
 
+
 (defn sanitize-module
-  [module commit]
+  [module commit db]
   (let [type (:type module)]
     (cond
-      (= "COMPONENT" type) (sanitize-module-component module commit)
+      (= "COMPONENT" type) (sanitize-module-component module commit db)
       (= "PROJECT" type) (sanitize-module-project module)
       :else module)))
 
+
+(defn can-operation? [operation data]
+  (->> data :operations (map :rel) (some #{(name operation)}) nil? not))
+
+
+(defn can-edit? [data]
+  (can-operation? :edit data))
+
+
+(defn editable?
+  [module is-new?]
+  (or is-new? (can-edit? module)))
+
+
+(defn mandatory-name
+  [name]
+  [:span name [:sup " " [ui/Icon {:name  :asterisk
+                                  :size  :tiny
+                                  :color :red}]]])

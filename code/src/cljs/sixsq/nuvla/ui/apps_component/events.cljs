@@ -1,7 +1,21 @@
 (ns sixsq.nuvla.ui.apps-component.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.apps-component.spec :as spec]))
+    [sixsq.nuvla.ui.apps-component.spec :as spec]
+    [sixsq.nuvla.ui.apps.spec :as apps-spec]
+    [taoensso.timbre :as log]))
+
+
+(reg-event-db
+  ::docker-image
+  (fn [db [_ docker-image]]
+    (assoc-in db [::apps-spec/module :content :image] docker-image)))
+
+
+(reg-event-db
+  ::architecture
+  (fn [db [_ architecture]]
+    (assoc db ::spec/architecture architecture)))
 
 
 (reg-event-db
@@ -76,3 +90,93 @@
   ::update-volume-options
   (fn [db [_ id value]]
     (assoc-in db [::spec/volumes id :options] value)))
+
+
+(reg-event-db
+  ::update-volume-read-only?
+  (fn [db [_ id value]]
+    (log/infof "checked: %s" value)
+    (assoc-in db [::spec/volumes id :read-only?] value)))
+
+
+(reg-event-db
+  ::add-url
+  (fn [db [_ id url]]
+    ; overwrite the id
+    (assoc-in db [::spec/urls id] (assoc url :id id))))
+
+
+(reg-event-db
+  ::remove-url
+  (fn [db [_ id]]
+    (update-in db [::spec/urls] dissoc id)))
+
+
+(reg-event-db
+  ::update-url-name
+  (fn [db [_ id name]]
+    (assoc-in db [::spec/urls id :name] name)))
+
+
+(reg-event-db
+  ::update-url-url
+  (fn [db [_ id url]]
+    (assoc-in db [::spec/urls id :url] url)))
+
+
+(reg-event-db
+  ::add-output-parameter
+  (fn [db [_ id param]]
+    ; overwrite the id
+    (assoc-in db [::spec/output-parameters id] (assoc param :id id))))
+
+
+(reg-event-db
+  ::remove-output-parameter
+  (fn [db [_ id]]
+    (update-in db [::spec/output-parameters] dissoc id)))
+
+
+(reg-event-db
+  ::update-output-parameter-name
+  (fn [db [_ id name]]
+    (assoc-in db [::spec/output-parameters id :name] name)))
+
+
+(reg-event-db
+  ::update-output-parameter-description
+  (fn [db [_ id description]]
+    (assoc-in db [::spec/output-parameters id :description] description)))
+
+
+(reg-event-db
+  ::add-data-type
+  (fn [db [_ id data-type]]
+    ; overwrite the id
+    (assoc-in db [::spec/data-types id] (assoc data-type :id id))))
+
+
+(reg-event-db
+  ::remove-data-type
+  (fn [db [_ id]]
+    (update-in db [::spec/data-types] dissoc id)))
+
+
+(reg-event-db
+  ::update-data-type
+  (fn [db [_ id dt]]
+    (assoc-in db [::spec/data-types id] dt)))
+
+
+(defn urls-tuples->map
+  [tuples]
+  (log/infof "tuples: %s" tuples)
+  (for [[name url] tuples]
+    (let [id (random-uuid)]
+      (conj {id {:id id :name name :url url}}))))
+
+
+(reg-event-db
+  ::deserialize-module
+  (fn [db [_]]
+    (-> db (assoc-in [::spec/urls] (first (urls-tuples->map (get-in db [::apps-spec/module :content :urls])))))))

@@ -28,7 +28,8 @@
        {:name      (@tr [:refresh])
         :icon-name "refresh"
         :position  "right"
-        :on-click  #(dispatch [::events/get-modules])}])))
+        :on-click  #(do (dispatch [::events/get-modules])
+                        (dispatch [::apps-events/get-module]))}])))
 
 
 (defn module-card
@@ -101,8 +102,8 @@
 
 
 (defn root-projects []
-  (let [tr (subscribe [::i18n-subs/tr])
-        module (subscribe [::apps-subs/module])
+  (let [tr      (subscribe [::i18n-subs/tr])
+        module  (subscribe [::apps-subs/module])
         active? (reagent/atom true)]
     (fn []
       (let []
@@ -128,13 +129,13 @@
 
 (defn appstore
   []
-  (let [modules (subscribe [::subs/modules])
+  (let [modules           (subscribe [::subs/modules])
         elements-per-page (subscribe [::subs/elements-per-page])
-        page (subscribe [::subs/page])
-        active? (reagent/atom true)]
+        page              (subscribe [::subs/page])
+        active?           (reagent/atom true)]
     (fn []
       (let [total-modules (get @modules :count 0)
-            total-pages (general-utils/total-pages total-modules @elements-per-page)]
+            total-pages   (general-utils/total-pages total-modules @elements-per-page)]
         [ui/Container {:fluid true}
          [ui/Accordion {:fluid     true
                         :styled    true

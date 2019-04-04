@@ -121,6 +121,29 @@
     border-radius: unset !important;
 }
 
+
+/*
+ * Editable tables
+ */
+/*
+.nuvla-ui-editable td:first-child {
+    padding-top: 15px !important;
+    padding-bottom: 15px !important;
+}
+
+.nuvla-ui-editable input {
+    margin-left: 14px !important;
+}
+
+.nuvla-ui-editable input:hover {
+    margin-left: 0px !important;
+}
+
+.nuvla-ui-editable td:has(>[input]) {
+    padding-left: 15px !important;
+    background-color: red !important;
+}*/
+
 /*
  * FIXME: Use the classes from the Semantic UI stylesheet for messages.
  */

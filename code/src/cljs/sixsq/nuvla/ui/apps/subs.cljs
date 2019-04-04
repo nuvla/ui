@@ -5,6 +5,16 @@
 
 
 (reg-sub
+  ::form-valid?
+  ::spec/form-valid?)
+
+
+(reg-sub
+  ::active-input
+  ::spec/active-input)
+
+
+(reg-sub
   ::version-warning?
   ::spec/version-warning?)
 
@@ -35,11 +45,6 @@
 
 
 (reg-sub
-  ::page-changed?
-  ::spec/page-changed?)
-
-
-(reg-sub
   ::save-modal-visible?
   ::spec/save-modal-visible?)
 
@@ -56,3 +61,4 @@
 (reg-sub
   ::commit-message
   ::spec/commit-message)
+

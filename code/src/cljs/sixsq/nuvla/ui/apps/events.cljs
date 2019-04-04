@@ -8,10 +8,29 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.client.spec :as client-spec]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]))
+
+
+(reg-event-db
+  ::active-input
+  (fn [db [_ input-name]]
+    (assoc db ::spec/active-input input-name)))
+
+
+(reg-event-db
+  ::form-invalid
+  (fn [db [_]]
+    (assoc db ::spec/form-valid? false)))
+
+
+(reg-event-db
+  ::form-valid
+  (fn [db [_]]
+    (assoc db ::spec/form-valid? true)))
 
 
 (reg-event-db
@@ -78,12 +97,6 @@
 
 
 (reg-event-db
-  ::page-changed?
-  (fn [db [_ has-change?]]
-    (assoc db ::spec/page-changed? has-change?)))
-
-
-(reg-event-db
   ::is-new?
   (fn [db [_ is-new?]]
     (assoc db ::spec/is-new? is-new?)))
@@ -120,12 +133,6 @@
 
 
 (reg-event-db
-  ::docker-image
-  (fn [db [_ docker-image]]
-    (assoc-in db [::spec/module :content :image] docker-image)))
-
-
-(reg-event-db
   ::commit-message
   (fn [db [_ msg]]
     (assoc db ::spec/commit-message msg)))
@@ -144,9 +151,21 @@
 
 
 (reg-event-db
+  ::open-validation-error-modal
+  (fn [db _]
+    (assoc db ::spec/validation-error-modal-visible? true)))
+
+
+(reg-event-db
+  ::close-validation-error-modal
+  (fn [db _]
+    (assoc db ::spec/validation-error-modal-visible? false)))
+
+
+(reg-event-db
   ::save-logo-url
   (fn [db [_ logo-url]]
-    (dispatch [::page-changed? true])
+    (dispatch [::main-events/changes-protection? true])
     (-> db
         (assoc-in [::spec/module :logo-url] logo-url)
         (assoc-in [::spec/logo-url-modal-visible?] false))))
@@ -167,7 +186,7 @@
   ::edit-module
   (fn [{{:keys [::spec/module ::client-spec/client] :as db} :db :as cofx} [_ commit-map]]
     (let [id (:id module)
-          sanitized-module (utils/sanitize-module module commit-map)]
+          sanitized-module (utils/sanitize-module module commit-map db)]
       (if (nil? id)
         {:db               db
          ::cimi-api-fx/add [client "module" sanitized-module
@@ -180,7 +199,7 @@
                                              :type    :error}]))
                                (do (dispatch [::cimi-detail-events/get (:id %)])
                                    (dispatch [::set-module sanitized-module])
-                                   (dispatch [::page-changed? false])
+                                   (dispatch [::main-events/changes-protection? false])
                                    (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))])
                                    ))]}
         {:db                db
@@ -194,5 +213,5 @@
                                               :type    :error}]))
                                 (do (dispatch [::cimi-detail-events/get (:id %)])
                                     (dispatch [::get-module])
-                                    (dispatch [::page-changed? false])
+                                    (dispatch [::main-events/changes-protection? false])
                                     ))]}))))

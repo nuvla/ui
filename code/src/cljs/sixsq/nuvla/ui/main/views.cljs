@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.main.views
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.about.views]
     [sixsq.nuvla.ui.apps-component.views]
@@ -13,6 +14,8 @@
     [sixsq.nuvla.ui.deployment.views]
     [sixsq.nuvla.ui.docs.views]
     [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.history.utils :as history-utils]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
     [sixsq.nuvla.ui.infra-service.views]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -25,21 +28,26 @@
     [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.responsive :as responsive]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.welcome.views]))
 
 
 (defn crumb
   [index segment]
-  (let [nav-fn (fn [& _] (dispatch [::main-events/trim-breadcrumb index]))]
-    ^{:key (str index "_" segment)} [ui/BreadcrumbSection [:a {:on-click nav-fn :style {:cursor "pointer"}}
-                                                           (utils/truncate (str segment))]]))
+  (let [nav-path (subscribe [::main-subs/nav-path])
+        callback-fn #(dispatch [::history-events/navigate (history-utils/trim-path @nav-path index)])]
+    ^{:key (str index "_" segment)}
+    [ui/BreadcrumbSection
+     [:a {:on-click callback-fn
+          :style    {:cursor "pointer"}}
+      (utils/truncate (str segment))]]))
 
 
 (defn breadcrumbs-links []
-  (let [path (subscribe [::main-subs/nav-path])]
+  (let [nav-path (subscribe [::main-subs/nav-path])]
     (vec (concat [ui/Breadcrumb {:size :large}]
-                 (->> @path
+                 (->> @nav-path
                       (map crumb (range))
                       (interpose [ui/BreadcrumbDivider {:icon "chevron right"}]))))))
 
@@ -52,14 +60,15 @@
 
 
 (defn breadcrumbs-dropdown []
-  (let [path (subscribe [::main-subs/nav-path])]
-    (let [options (map breadcrumb-option (range) @path)
-          selected (-> options last :value)]
-      [ui/Dropdown
-       {:inline    true
-        :value     selected
-        :on-change (ui-callback/value #(dispatch [::main-events/trim-breadcrumb %]))
-        :options   options}])))
+  (let [path (subscribe [::main-subs/nav-path])
+        options (map breadcrumb-option (range) @path)
+        selected (-> options last :value)
+        callback-fn #(dispatch [::history-events/navigate (history-utils/trim-path @path %)])]
+    [ui/Dropdown
+     {:inline    true
+      :value     selected
+      :on-change (ui-callback/value callback-fn)
+      :options   options}]))
 
 
 (defn breadcrumbs []
@@ -81,6 +90,27 @@
      [:span#release-version (str "v")]]]
    [:div.nuvla-ui-footer-right
     [i18n-views/locale-dropdown]]])
+
+
+(defn ignore-changes-modal
+  []
+  (let [tr (subscribe [::i18n-subs/tr])
+        navigation-info (subscribe [::main-subs/ignore-changes-modal])
+        ignore-changes-fn #(dispatch [::main-events/ignore-changes false])]
+
+    [ui/Modal {:open       (some? @navigation-info)
+               :close-icon true
+               :on-close   ignore-changes-fn}
+
+     [ui/ModalHeader (str/capitalize (str (@tr [:ignore-changes?])))]
+
+     [ui/ModalContent {:content (@tr [:ignore-changes-content])}]
+
+     [ui/ModalActions
+      [uix/Button {:text     (@tr [:ignore-changes]),
+                   :positive true
+                   :active   true
+                   :on-click #(dispatch [::main-events/ignore-changes true])}]]]))
 
 
 (defn contents
@@ -133,5 +163,6 @@
                                  @show? (assoc :className "sidebar-visible"))
             [header]
             [contents]
+            [ignore-changes-modal]
             (when-not @iframe? [footer])]]]]
         [ui/Container [ui/Loader {:active true :size "massive"}]]))))

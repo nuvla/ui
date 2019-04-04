@@ -2,6 +2,7 @@
   (:require
     [re-frame.core :refer [reg-event-fx trim-v]]
     [sixsq.nuvla.ui.history.effects :as fx]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [taoensso.timbre :as log]))
 
 
@@ -14,9 +15,13 @@
 
 (reg-event-fx
   ::navigate
-  (fn [_ [_ relative-url]]
-    (log/info "triggering navigate effect " relative-url)
-    {::fx/navigate [relative-url]}))
+  (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ relative-url]]
+    (let [nav-effect {::fx/navigate [relative-url]}]
+      (if changes-protection?
+        {:db (assoc db ::main-spec/ignore-changes-modal nav-effect)}
+        (do
+          (log/info "triggering navigate effect " relative-url)
+          nav-effect)))))
 
 
 (reg-event-fx

@@ -26,21 +26,18 @@
 
 
 (defn row-attribute-fn [{:keys [name description type
-                                provider-mandatory consumer-mandatory template-mutable mutable consumer-writable
-                                display-name help group order hidden sensitive vscope] :as entry
+                                provider-mandatory required template-mutable mutable editable
+                                display-name help group order hidden sensitive value-scope] :as entry
                          :or {template-mutable false}}]
   (let [characteristics [["display-name" display-name]
                          ["help" help]
                          ["order" order]
-                         ["mutable" mutable]
-                         ["consumer-writable" consumer-writable]
-                         ["provider-mandatory" provider-mandatory]
-                         ["consumer-mandatory" consumer-mandatory]
-                         ["template-mutable" template-mutable]
+                         ["editable" editable]
+                         ["required" required]
                          ["group" group]
                          ["hidden" hidden]
                          ["sensitive" sensitive]
-                         ["vscope" vscope]]
+                         ["value-scope" value-scope]]
         row-span (inc (count characteristics))]
     (concat
       [[ui/TableRow

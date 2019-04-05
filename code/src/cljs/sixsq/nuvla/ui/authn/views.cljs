@@ -79,9 +79,9 @@
             method (u/select-method-by-id @form-id methods)
             resource-metadata (subscribe [::docs-subs/document method])
             inputs-method (->> (:attributes @resource-metadata)
-                               (filter (fn [{:keys [consumer-mandatory group] :as attribute}]
+                               (filter (fn [{:keys [required group] :as attribute}]
                                          (and (not (#{"metadata" "acl"} group))
-                                              consumer-mandatory)))
+                                              required)))
                                (sort-by :order))
             dropdown-options (map dropdown-method-option methods)
             password-method? (= "password" (:method method))]
@@ -104,14 +104,14 @@
                                :close-on-blur true
                                :on-change     (ui-callback/dropdown ::authn-events/set-form-id)}])]
 
-                          (mapv (fn [{vscope :vscope param-name :name :as input-method}]
+                          (mapv (fn [{value-scope :value-scope param-name :name :as input-method}]
                                   (let [value (get @form-data param-name)
                                         input-method-updated (cond-> input-method
-                                                                     value (assoc-in [:vscope :value] value))]
+                                                                     value (assoc-in [:value-scope :value] value))]
                                     (dispatch [::authn-events/update-form-data @form-id
                                                param-name (or value
-                                                              (:value vscope)
-                                                              (:default vscope))])
+                                                              (:value value-scope)
+                                                              (:default value-scope))])
                                     (forms/form-field (fn [form-id name value]
                                                         (dispatch [::authn-events/update-form-data form-id name value])
                                                         ) @form-id input-method-updated))) inputs-method)

@@ -17,19 +17,10 @@
                            #(dispatch [::set-documents %])]}))
 
 
-(defn add-vscope-to-attributes
-  [{:keys [vscope, attributes]  :as document}]
-  (->> attributes
-       (map (fn [{attribute-name :name :as attribute}]
-              (assoc attribute :vscope (get vscope (keyword attribute-name)))))
-       (assoc document :attributes)))
-
-
 (reg-event-db
   ::set-documents
-  (fn [db [_ docs]]
+  (fn [db [_ {:keys [resources] :as docs}]]
     (assoc db ::spec/loading? false
-              ::spec/documents (->> docs
-                                    :resources
-                                    (map (juxt :id add-vscope-to-attributes))
+              ::spec/documents (->> resources
+                                    (map (juxt :id identity))
                                     (into {})))))

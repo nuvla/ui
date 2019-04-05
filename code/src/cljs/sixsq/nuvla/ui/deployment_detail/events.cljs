@@ -102,9 +102,9 @@
 (reg-event-fx
   ::get-jobs
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ href]]
-    (let [filter-str (str "targetResource/href='" href "'")
-          order-by-str "timeOfStatusChange:desc"
-          select-str "id, timeOfStatusChange, state, targetResource, returnCode, progress, statusMessage"
+    (let [filter-str (str "target-resource/href='" href "'")
+          order-by-str "time-of-status-change:desc"
+          select-str "id, time-of-status-change, state, target-resource, return-code, progress, status-message"
           query-params {:filter  filter-str
                         :orderby order-by-str
                         :select  select-str}]

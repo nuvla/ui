@@ -74,10 +74,10 @@
                                                         general/edn->json)))
                                nil
                                (cond-> attribute-meta
-                                       new-value (assoc-in [:vscope :value] new-value)))))
+                                       new-value (assoc-in [:value-scope :value] new-value)))))
                          (some->> resource-meta
                                   :attributes
-                                  (filter :consumer-writable)
+                                  (filter :editable)
                                   (sort-by :order)))))
           :json [ui/CodeMirror {:value     @text
                                 :on-change (fn [editor data value]

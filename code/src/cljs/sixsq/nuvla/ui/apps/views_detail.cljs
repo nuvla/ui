@@ -132,12 +132,13 @@
          [ui/ModalHeader (str/capitalize (str (@tr [:save]) " " (@tr [:component])))]
 
          [ui/ModalContent
-          [ui/Input {:placeholder  (@tr [:commit-placeholder])
-                     :fluid        true
-                     :auto-focus   true
-                     :on-change    (ui-callback/input-callback #(dispatch [::events/commit-message %]))
-                     :on-key-press (partial forms/on-return-key #(do (dispatch [::events/edit-module commit-map])
-                                                                     (dispatch [::events/close-save-modal])))}]]
+          [ui/Input {:placeholder   (@tr [:commit-placeholder])
+                     :fluid         true
+                     :default-value @commit-message
+                     :auto-focus    true
+                     :on-change     (ui-callback/input-callback #(dispatch [::events/commit-message %]))
+                     :on-key-press  (partial forms/on-return-key #(do (dispatch [::events/edit-module commit-map])
+                                                                      (dispatch [::events/close-save-modal])))}]]
 
          [ui/ModalActions
           [uix/Button {:text     (@tr [:save])
@@ -276,7 +277,8 @@
     (fn []
       (let [summary-info (-> (select-keys @module module-summary-keys)
                              (merge (select-keys @module #{:path :type})
-                                    {:owners (->> @module :acl :owners (str/join ", "))}))
+                                    {:owners (->> @module :acl :owners (str/join ", "))}
+                                    {:author (->> @module :content :author)}))
             icon         (-> @module :type category-icon)
             rows         (map tuple-to-row summary-info)
             name         (:name @module)

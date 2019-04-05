@@ -12,7 +12,7 @@
                                        :destination ""
                                        :driver      "local"
                                        :read-only?  false}}
-               ::urls              {1 {}}
+               ::urls              {1 {:id 1}}
                ::output-parameters {1 {}}
                ::architecture      "x86"
                ::data-types        {1 ""}})

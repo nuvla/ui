@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.apps.effects :as apps-fx]
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.utils :as utils]
+    [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.client.spec :as client-spec]
@@ -73,6 +74,15 @@
     (assoc db ::spec/module {})))
 
 
+(reg-event-db
+  ::deserialize-module
+  (fn [db [_ module]]
+    (let [type (:type module)]
+      (case type
+        "COMPONENT" (apps-component-utils/module->db module db)
+        "PROJECT" db))))
+
+
 (reg-event-fx
   ::get-module
   (fn [{{:keys [::client-spec/client ::main-spec/nav-path] :as db} :db} [_ version]]
@@ -81,7 +91,8 @@
         {:db                  (assoc db ::spec/completed? false
                                         ::spec/module-path nil
                                         ::spec/module nil)
-         ::apps-fx/get-module [client path version #(dispatch [::set-module %])]}))))
+         ::apps-fx/get-module [client path version #(do (dispatch [::set-module %])
+                                                        (dispatch [::deserialize-module %]))]}))))
 
 
 (reg-event-db
@@ -185,7 +196,7 @@
 (reg-event-fx
   ::edit-module
   (fn [{{:keys [::spec/module ::client-spec/client] :as db} :db :as cofx} [_ commit-map]]
-    (let [id (:id module)
+    (let [id               (:id module)
           sanitized-module (utils/sanitize-module module commit-map db)]
       (if (nil? id)
         {:db               db

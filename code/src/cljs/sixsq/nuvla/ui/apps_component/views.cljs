@@ -7,6 +7,7 @@
     [reagent.core :as reagent]
     [sixsq.nuvla.ui.apps-component.events :as events]
     [sixsq.nuvla.ui.apps-component.spec :as spec]
+    [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.apps-component.subs :as subs]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
@@ -19,7 +20,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 
 (defn registry-url
@@ -82,13 +84,14 @@
                     :style      {:padding-bottom 8}} "architecture"]
      [ui/TableCell
       [ui/Label
-       [ui/Dropdown {:name      (str "architecture")
-                     :inline    true
-                     :value     @arch
-                     :options   [{:key "x86", :value "x86", :text "x86"}
-                                 {:key "ARM", :value "ARM", :text "ARM"}]
-                     :on-change (do (dispatch [::main-events/changes-protection? true])
-                                    (ui-callback/value) #(dispatch [::events/architecture %]))
+       (log/infof "arch: %s" @arch)
+       [ui/Dropdown {:name          (str "architecture")
+                     :inline        true
+                     :default-value @arch
+                                    :options [{:key "x86", :value "x86", :text "x86"}
+                                              {:key "ARM", :value "ARM", :text "ARM"}]
+                                    :on-change (do (dispatch [::main-events/changes-protection? true])
+                                                   (ui-callback/value #(dispatch [::events/architecture %])))
                      }]]]]))
 
 
@@ -286,8 +289,9 @@
   [url-map]
   (let [tr (subscribe [::i18n-subs/tr])
         {:keys [id name url]} url-map]
-    [ui/GridRow {:key id}
-     [ui/GridColumn {:floated :left
+    [ui/TableRow {:key id}
+     (log/infof "url id: %s" id)
+     [ui/TableCell {:floated :left
                      :width   2}
       [ui/Input {:name          (str "url-name-" id)
                  :placeholder   "name of this url"
@@ -295,7 +299,7 @@
                  :fluid         true
                  :on-change     (ui-callback/input-callback #(do (dispatch [::main-events/changes-protection? true])
                                                                  (dispatch [::events/update-url-name id %])))}]]
-     [ui/GridColumn {:floated :left
+     [ui/TableCell {:floated :left
                      :width   13}
       [ui/Input {:name          (str "url-url-" id)
                  :placeholder   "url - e.g. http://${hostname}:${tcp.8888}/?token=${jupyter-token}"
@@ -303,7 +307,7 @@
                  :fluid         true
                  :on-change     (ui-callback/input-callback #(do (dispatch [::main-events/changes-protection? true])
                                                                  (dispatch [::events/update-url-url id %])))}]]
-     [ui/GridColumn {:floated :right
+     [ui/TableCell {:floated :right
                      :width   1
                      :align   :right
                      :style   {}}
@@ -316,9 +320,7 @@
 (defn urls-section []
   (let [tr      (subscribe [::i18n-subs/tr])
         active? (reagent/atom true)
-        urls    (subscribe [::subs/urls])
-        module  (subscribe [::apps-subs/module])
-        ]
+        urls    (subscribe [::subs/urls])]
     (fn []
       [ui/Accordion {:fluid     true
                      :styled    true
@@ -330,18 +332,23 @@
         (@tr [:urls])]
 
        [ui/AccordionContent {:active @active?}
-        ;(log/infof "urls: %s" @urls)
-        ;[:div (pr-str "urls: " @urls)]
-        ;[:div (pr-str "module: " @module)]
         [:div (@tr [:urls])
          [:span forms/nbsp (forms/help-popup (@tr [:module-urls-help]))]]
-        [:div [ui/Grid {:style {:margin-top    5
-                                :margin-bottom 5}}
-               (for [url-map (vals @urls)]
-                 (do
-                   ^{:key (:id url-map)}
-                   [single-url url-map]))]]
-        [:div
+        (if (empty? @urls)
+          [ui/Message
+           (str/capitalize (str (@tr [:no-output-parameters]) "."))]
+          [:div [ui/Table {:style {:margin-top 10}
+                           :class :nuvla-ui-editable}
+                 [ui/TableHeader
+                  [ui/TableRow
+                   [ui/TableHeaderCell {:content "Name"}]
+                   [ui/TableHeaderCell {:content "URL"}]
+                   [ui/TableHeaderCell {:content "Action"}]]]
+                 [ui/TableBody
+                  (for [url-map (vals @urls)]
+                    ^{:key (:id url-map)}
+                    [single-url url-map])]]])
+        [:div {:style {:padding-top 10}}
          [ui/Icon {:name     "plus circle"
                    :on-click #(do (dispatch [::main-events/changes-protection? true])
                                   (dispatch [::events/add-url (random-uuid) {}]))}]]]])))
@@ -351,8 +358,8 @@
   (let [tr (subscribe [::i18n-subs/tr])
         {name        :name
          description :description} param]
-    [ui/GridRow {:key id}
-     [ui/GridColumn {:floated :left
+    [ui/TableRow {:key id}
+     [ui/TableCell {:floated :left
                      :width   2}
       [ui/Input {:name          (str "output-param-name-" id)
                  :placeholder   "output parameter name"
@@ -361,7 +368,7 @@
                  :on-change     (ui-callback/input-callback
                                   #(do (dispatch [::main-events/changes-protection? true])
                                        (dispatch [::events/update-output-parameter-name id %])))}]]
-     [ui/GridColumn {:floated :left
+     [ui/TableCell {:floated :left
                      :width   13}
       [ui/Input {:name          (str "url-url-" id)
                  :placeholder   "output parameter description"
@@ -370,13 +377,13 @@
                  :on-change     (ui-callback/input-callback
                                   #(do (dispatch [::main-events/changes-protection? true])
                                        (dispatch [::events/update-output-parameter-description id %])))}]]
-     [ui/GridColumn {:floated :right
+     [ui/TableCell {:floated :right
                      :width   1
                      :align   :right
                      :style   {}}
       [ui/Icon {:name     "trash"
                 :on-click #(do (dispatch [::main-events/changes-protection? true])
-                               (dispatch [::events/remove-param id]))
+                               (dispatch [::events/remove-output-parameter id]))
                 :color    :red}]]]))
 
 
@@ -395,14 +402,25 @@
         (@tr [:module-output-parameters])]
 
        [ui/AccordionContent {:active @active?}
+        ;[:div (pr-str "output-parameters: " @output-parameters)]
+        ;[:div (pr-str "module: " (get-in @module [:content :output-parameters]))]
         [:div (@tr [:module-output-parameters])
          [:span forms/nbsp (forms/help-popup (@tr [:module-output-parameters-help]))]]
-        [:div [ui/Grid {:style {:margin-top    5
-                                :margin-bottom 5}}
-               (for [[id param] @output-parameters]
-                 ^{:key id}
-                 [single-output-parameter id param])]]
-        [:div
+        (if (empty? @output-parameters)
+          [ui/Message
+           (str/capitalize (str (@tr [:no-output-parameters]) "."))]
+          [:div [ui/Table {:style {:margin-top 10}
+                           :class :nuvla-ui-editable}
+                 [ui/TableHeader
+                  [ui/TableRow
+                   [ui/TableHeaderCell {:content "Name"}]
+                   [ui/TableHeaderCell {:content "Description"}]
+                   [ui/TableHeaderCell {:content "Action"}]]]
+                 [ui/TableBody
+                  (for [[id param] @output-parameters]
+                    ^{:key id}
+                    [single-output-parameter id param])]]])
+        [:div {:style {:padding-top 10}}
          [ui/Icon {:name     "plus circle"
                    :on-click #(do (dispatch [::main-events/changes-protection? true])
                                   (dispatch [::events/add-output-parameter (random-uuid) {}]))}]]]])))
@@ -418,14 +436,14 @@
   (swap! data-type-options conj {:key option :value option :text option}))
 
 
-(defn data-type [id dt]
+(defn single-data-type [{:keys [id data-type]} dt-map]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/GridRow {:key id}
      [ui/GridColumn {:floated :left
                      :width   2}
       [ui/Label
        [ui/Dropdown {:name           (str "data-type-" id)
-                     :default-value  dt
+                     :default-value  data-type
                      :allowAdditions true
                      :selection      true
                      :additionLabel  "Additional data type: "
@@ -462,11 +480,14 @@
        [ui/AccordionContent {:active @active?}
         [:div (@tr [:data-type])
          [:span forms/nbsp (forms/help-popup (@tr [:module-data-type-help]))]]
-        [:div [ui/Grid {:style {:margin-top    5
-                                :margin-bottom 5}}
-               (for [[id dt] @data-types]
-                 ^{:key id}
-                 [data-type id dt])]]
+        (if (empty? @data-types)
+          [ui/Message
+           (str/capitalize (str (@tr [:no-datasets]) "."))]
+          [:div [ui/Grid {:style {:margin-top    5
+                                  :margin-bottom 5}}
+                 (for [[id dt] @data-types]
+                   ^{:key id}
+                   [single-data-type dt])]])
         [:div
          [ui/Icon {:name     "plus circle"
                    :on-click #(do (dispatch [::main-events/changes-protection? true])
@@ -566,7 +587,6 @@
 (defn view-edit
   []
   (let [module (subscribe [::apps-subs/module])]
-    (dispatch [::events/deserialize-module])
     (fn []
       (let [name   (:name @module)
             parent (:parent-path @module)]

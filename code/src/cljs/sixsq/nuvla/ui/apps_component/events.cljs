@@ -15,7 +15,7 @@
 (reg-event-db
   ::architecture
   (fn [db [_ architecture]]
-    (assoc db ::spec/architecture architecture)))
+    (assoc-in db [::spec/architecture] architecture)))
 
 
 (reg-event-db
@@ -138,6 +138,12 @@
 
 
 (reg-event-db
+  ::remove-output-parameter
+  (fn [db [_ id]]
+    (update-in db [::spec/output-parameters] dissoc id)))
+
+
+(reg-event-db
   ::update-output-parameter-name
   (fn [db [_ id name]]
     (assoc-in db [::spec/output-parameters id :name] name)))
@@ -166,17 +172,3 @@
   ::update-data-type
   (fn [db [_ id dt]]
     (assoc-in db [::spec/data-types id] dt)))
-
-
-(defn urls-tuples->map
-  [tuples]
-  (log/infof "tuples: %s" tuples)
-  (for [[name url] tuples]
-    (let [id (random-uuid)]
-      (conj {id {:id id :name name :url url}}))))
-
-
-(reg-event-db
-  ::deserialize-module
-  (fn [db [_]]
-    (-> db (assoc-in [::spec/urls] (first (urls-tuples->map (get-in db [::apps-spec/module :content :urls])))))))

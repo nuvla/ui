@@ -5,15 +5,15 @@
 
 
 (reg-sub
-  ::port-mappings
+  ::ports
   (fn [db]
-    (::spec/port-mappings db)))
+    (::spec/ports db)))
 
 
 (reg-sub
-  ::volumes
+  ::mounts
   (fn [db]
-    (::spec/volumes db)))
+    (::spec/mounts db)))
 
 
 (reg-sub
@@ -43,4 +43,4 @@
 (reg-sub
   ::docker-image
   (fn [db]
-    (::spec/docker-image db)))
+    (::spec/image db)))

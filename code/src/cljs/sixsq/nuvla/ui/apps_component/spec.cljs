@@ -4,28 +4,57 @@
             [sixsq.nuvla.ui.apps.spec :as apps-spec]))
 
 ; create an initial entry for new components
-(def defaults {::port-mappings     {1 {:source      ""
-                                       :destination ""
-                                       :port-type   "TCP"}}
-               ::volumes           {1 {:type        "volume"
-                                       :source      ""
-                                       :destination ""
-                                       :driver      "local"
-                                       :read-only?  false}}
+(def defaults {::ports             {1 {:published-port 11
+                                       :target-port    22
+                                       :protocol       "tcp"}
+                                    2 {:published-port 33
+                                       :target-port    44
+                                       :protocol       "udp"}}
+               ::mounts            {1 {:mount-type "volume"
+                                       :source     "source"
+                                       :target     "target"
+                                       :driver     "local"
+                                       :read-only? false
+                                       :volume-options [{:option-key "key1"
+                                                         :option-value "val1"}
+                                                        {:option-key "key2"
+                                                         :option-value "val2"}]}}
                ::urls              {1 {:id 1}}
                ::output-parameters {1 {}}
                ::architecture      "x86"
                ::data-types        {1 ""}})
 
-(s/def ::docker-image #(and (not (empty? %)) string? %))
+; Image
 
-(s/def ::port-mappings any?)
+(s/def ::image-name string?)
+(s/def ::repository string?)
+(s/def ::registry string?)
+(s/def ::tag string?)
 
-(s/def ::volumes any?)
+(s/def ::image (s/keys :req-un [::image-name]
+                       :opt-un [::registry
+                                ::tag
+                                ::repository]))
+
+; Ports
+
+(s/def ::target-port int?)
+(s/def ::published-port (s/nilable int?))
+(s/def ::protocol (s/nilable string?))
+
+(s/def ::port (s/keys :req-un [::target-port]
+                      :opt-un [::protocol
+                               ::published-port]))
+
+(s/def ::ports any?)
+
+; Volumes (mounts)
+
+(s/def ::mounts any?)
 
 (s/def ::content (s/merge ::docker-image
-                          ::port-mappings
-                          ::volumes))
+                          ::ports
+                          ::mounts))
 
 (s/def ::module-component (s/merge ::apps-spec/summary
                                    ::content))

@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.apps.effects :as apps-fx]
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.utils :as utils]
+    [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
@@ -13,7 +14,8 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db
@@ -197,7 +199,7 @@
   ::edit-module
   (fn [{{:keys [::spec/module ::client-spec/client] :as db} :db :as cofx} [_ commit-map]]
     (let [id               (:id module)
-          sanitized-module (utils/sanitize-module module commit-map db)]
+          sanitized-module (utils-detail/db->module module commit-map db)]
       (if (nil? id)
         {:db               db
          ::cimi-api-fx/add [client "module" sanitized-module

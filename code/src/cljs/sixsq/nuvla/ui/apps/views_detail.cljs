@@ -28,7 +28,7 @@
 
 (defn refresh-button
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr            (subscribe [::i18n-subs/tr])
         page-changed? (subscribe [::main-subs/changes-protection?])]
     (fn []
       [ui/MenuMenu {:position "right"}
@@ -140,6 +140,7 @@
                      :fluid         true
                      :default-value @commit-message
                      :auto-focus    true
+                     :focus        true
                      :on-change     (ui-callback/input-callback #(dispatch [::events/commit-message %]))
                      :on-key-press  (partial forms/on-return-key #(do (dispatch [::events/edit-module commit-map])
                                                                       (dispatch [::events/close-save-modal])))}]]
@@ -246,7 +247,6 @@
   (let [form-valid? (subscribe [::subs/form-valid?])]
     (fn []
       (let []
-        (log/infof "validation-error-message: %s" @form-valid?)
         [ui/Message {:hidden (true? @form-valid?)
                      :error  true}
          [ui/MessageHeader "Validation error!"]
@@ -347,7 +347,7 @@
                                         (ui-callback/input-callback
                                           #(do (dispatch [::main-events/changes-protection? true])
                                                (dispatch [on-change-event %]))))}]
-            [:span {:style {:padding-left 15}} value])]]))))
+            [:span value])]]))))
 
 
 (defn summary
@@ -375,9 +375,10 @@
           [ui/GridColumn {:computer     2
                           :large-screen 2}
            [ui/Image {:src (or logo-url @default-logo-url)}]
-           [ui/Button {:fluid    true
-                       :on-click #(dispatch [::events/open-logo-url-modal])}
-            (@tr [:module-change-logo])]]
+           (when editable?
+             [ui/Button {:fluid    true
+                         :on-click #(dispatch [::events/open-logo-url-modal])}
+              (@tr [:module-change-logo])])]
           [ui/GridColumn {:computer     14
                           :large-screen 14}
            [ui/Table (assoc style/definition :class :nuvla-ui-editable)
@@ -389,7 +390,7 @@
                  [ui/TableRow
                   [ui/TableCell {:collapsing true
                                  :style      {:padding-bottom 8}} label]
-                  [ui/TableCell parent]]))
+                  [ui/TableCell {:style {:padding-left (when editable? 24)}} parent]]))
              (for [x extras]
                x)
              ]]

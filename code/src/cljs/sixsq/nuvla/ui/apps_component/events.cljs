@@ -17,86 +17,83 @@
   (fn [db [_ architecture]]
     (assoc-in db [::spec/architecture] architecture)))
 
+; Ports
 
 (reg-event-db
-  ::add-port-mapping
+  ::add-port
   (fn [db [_ id mapping]]
     ; overwrite the id
-    (assoc-in db [::spec/port-mappings id] (assoc mapping :id id))))
+    (assoc-in db [::spec/ports id] (assoc mapping :id id))))
 
 
 (reg-event-db
-  ::remove-port-mapping
+  ::remove-port
   (fn [db [_ id]]
-    (update-in db [::spec/port-mappings] dissoc id)))
+    (update-in db [::spec/ports] dissoc id)))
 
 
 (reg-event-db
-  ::update-mapping-source
+  ::update-port-published
   (fn [db [_ id value]]
-    (assoc-in db [::spec/port-mappings id :source] value)))
+    (assoc-in db [::spec/ports id :published-port] value)))
 
 
 (reg-event-db
-  ::update-mapping-destination
+  ::update-port-target
   (fn [db [_ id value]]
-    (assoc-in db [::spec/port-mappings id :destination] value)))
+    (assoc-in db [::spec/ports id :target-port] value)))
 
 
 (reg-event-db
-  ::update-mapping-port-type
+  ::update-port-protocol
   (fn [db [_ id value]]
-    (assoc-in db [::spec/port-mappings id :port-type] value)))
+    (assoc-in db [::spec/ports id :protocol] value)))
 
+
+; Volumes (mounts)
 
 (reg-event-db
-  ::add-volume
-  (fn [db [_ id volume]]
+  ::add-mount
+  (fn [db [_ id mount]]
     ; overwrite the id
-    (assoc-in db [::spec/volumes id] (assoc volume :id id))))
+    (assoc-in db [::spec/mounts id] (assoc mount :id id))))
 
 
 (reg-event-db
-  ::remove-volume
+  ::remove-mount
   (fn [db [_ id]]
-    (update-in db [::spec/volumes] dissoc id)))
+    (update-in db [::spec/mounts] dissoc id)))
 
 
 (reg-event-db
-  ::update-volume-type
+  ::update-mount-type
   (fn [db [_ id value]]
-    (assoc-in db [::spec/volumes id :type] value)))
+    (assoc-in db [::spec/mounts id :mount-type] value)))
 
 
 (reg-event-db
-  ::update-volume-source
+  ::update-mount-source
   (fn [db [_ id value]]
-    (assoc-in db [::spec/volumes id :source] value)))
+    (assoc-in db [::spec/mounts id :source] value)))
 
 
 (reg-event-db
-  ::update-volume-destination
+  ::update-mount-target
   (fn [db [_ id value]]
-    (assoc-in db [::spec/volumes id :destination] value)))
+    (assoc-in db [::spec/mounts id :target] value)))
 
 
 (reg-event-db
-  ::update-volume-driver
+  ::update-mount-options
   (fn [db [_ id value]]
-    (assoc-in db [::spec/volumes id :driver] value)))
+    (assoc-in db [::spec/mounts id :options] value)))
 
 
 (reg-event-db
-  ::update-volume-options
-  (fn [db [_ id value]]
-    (assoc-in db [::spec/volumes id :options] value)))
-
-
-(reg-event-db
-  ::update-volume-read-only?
+  ::update-mount-read-only?
   (fn [db [_ id value]]
     (log/infof "checked: %s" value)
-    (assoc-in db [::spec/volumes id :read-only?] value)))
+    (assoc-in db [::spec/mounts id :read-only] value)))
 
 
 (reg-event-db
@@ -171,4 +168,30 @@
 (reg-event-db
   ::update-data-type
   (fn [db [_ id dt]]
-    (assoc-in db [::spec/data-types id] dt)))
+    (assoc-in db [::spec/data-types id] {:id id :data-type dt})))
+
+
+; Docker image
+
+(reg-event-db
+  ::update-docker-image-name
+  (fn [db [_ image-name]]
+    (assoc-in db [::apps-spec/module :content :image :image-name] image-name)))
+
+
+(reg-event-db
+  ::update-docker-repository
+  (fn [db [_ repository]]
+    (assoc-in db [::apps-spec/module :content :image :repository] repository)))
+
+
+(reg-event-db
+  ::update-docker-registry
+  (fn [db [_ registry]]
+    (assoc-in db [::apps-spec/module :content :image :registry] registry)))
+
+
+(reg-event-db
+  ::update-docker-tag
+  (fn [db [_ tag]]
+    (assoc-in db [::apps-spec/module :content :image :tag] tag)))

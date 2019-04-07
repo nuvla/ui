@@ -67,4 +67,4 @@
                ::logo-url-modal-visible?         false
                ::save-modal-visible?             false
                ::default-logo-url                "/ui/images/noimage.png"
-               ::commit-message                  nil})
+               ::commit-message                  ""})

@@ -218,14 +218,14 @@
 
 
 (defn job-map-to-row
-  [{:keys [id timeOfStatusChange state progress returnCode statusMessage] :as job}]
+  [{:keys [id time-of-status-change state progress return-code status-message] :as job}]
   [ui/TableRow
    [ui/TableCell (format-id id)]
-   [ui/TableCell timeOfStatusChange]
+   [ui/TableCell time-of-status-change]
    [ui/TableCell state]
    [ui/TableCell progress]
-   [ui/TableCell returnCode]
-   [ui/TableCell statusMessage]])
+   [ui/TableCell return-code]
+   [ui/TableCell status-message]])
 
 
 (defn jobs-table

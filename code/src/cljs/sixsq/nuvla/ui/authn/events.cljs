@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.authn.events
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.authn.effects :as fx]
     [sixsq.nuvla.ui.authn.spec :as spec]
@@ -26,24 +27,6 @@
               (and session redirect-uri) (assoc ::history-fx/navigate-js-location [redirect-uri])
 
               session (assoc ::fx/automatic-logout-at-session-expiry [session])))))
-
-
-(reg-event-fx
-  ::reset-password
-  (fn [{{:keys [::client-spec/client
-                ::spec/server-redirect-uri] :as db} :db} [_ username new-password]]
-    (let [callback-add #(do (if (instance? js/Error %)
-                              (let [{:keys [message]} (response/parse-ex-info %)]
-                                (dispatch [::set-error-message message]))
-                              (dispatch [::set-success-message
-                                         "Success! An reset message has been sent to your email account."]))
-                            (dispatch [::clear-loading]))
-          template {:template {:href         "session-template/password-reset"
-                               :redirect-url server-redirect-uri
-                               :username     username
-                               :new-password new-password}}]
-      {:db               (assoc db ::spec/loading? true)
-       ::cimi-api-fx/add [client :session template callback-add]})))
 
 
 (reg-event-fx
@@ -120,22 +103,27 @@
 (reg-event-db
   ::set-form-id
   (fn [db [_ form-id]]
-    (assoc db ::spec/form-id form-id)))
+    (assoc db ::spec/form-id form-id
+              ::spec/form-data nil)))
 
 
 (reg-event-db
   ::update-form-data
-  (fn [db [_ form-id param-name param-value]]
-    (update db ::spec/form-data assoc-in [form-id param-name] param-value)))
+  (fn [db [_ param-name param-value]]
+    (update db ::spec/form-data assoc param-name param-value)))
 
 
 (reg-event-fx
   ::submit
   (fn [{{:keys [::client-spec/client
-                ::spec/form-data] :as db} :db} [_ collection-kw form-id]]
+                ::spec/form-id
+                ::spec/form-data
+                ::spec/server-redirect-uri] :as db} :db} _]
     (let [template {:template (-> form-data
-                                  (get form-id)
-                                  (assoc :href form-id))}
+                                  (dissoc :repeat-new-password
+                                          :repeat-password)
+                                  (assoc :href form-id
+                                         :redirect-url server-redirect-uri))}
           callback-add #(if (instance? js/Error %)
                           (let [{:keys [message]} (response/parse-ex-info %)]
                             (dispatch [::set-error-message message]))
@@ -143,5 +131,8 @@
                               (dispatch [::close-modal])
                               (dispatch [::history-events/navigate "welcome"])
                               (dispatch [::clear-success-message])
-                              (dispatch [::clear-error-message])))]
+                              (dispatch [::clear-error-message])))
+          collection-kw (cond
+                          (str/starts-with? form-id "session-template/") :session
+                          (str/starts-with? form-id "user-template/") :user)]
       {::cimi-api-fx/add [client collection-kw template callback-add]})))

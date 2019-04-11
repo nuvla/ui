@@ -128,7 +128,8 @@
 (defn login-method-form
   [[_ methods]]
   (let [form-id (subscribe [::subs/form-id])
-        form-data (subscribe [::subs/form-data])]
+        form-data (subscribe [::subs/form-data])
+        form-error? (subscribe [::subs/form-error?])]
     (fn [[_ methods]]
       (let [dropdown? (> (count methods) 1)
             method (u/select-method-by-id @form-id methods)
@@ -141,7 +142,7 @@
         ^{:key @form-id}
         [ui/Form {:id           (or @form-id "authn-form-placeholder-id")
                   :on-key-press (partial forms-utils/on-return-key
-                                         #(when @form-id
+                                         #(when-not @form-error?
                                             (dispatch [::events/submit])))}
          (vec (concat [ui/Segment {:style {:height     "35ex"
                                            :overflow-y "auto"}}
@@ -159,8 +160,10 @@
 
 (defn signup-method-form
   [[_ methods]]
-  (let [form-id (subscribe [::subs/form-id])
-        form-data (subscribe [::subs/form-data])]
+  (let [tr (subscribe [::i18n-subs/tr])
+        form-id (subscribe [::subs/form-id])
+        form-data (subscribe [::subs/form-data])
+        form-error? (subscribe [::subs/form-error?])]
     (fn [[_ methods]]
       ^{:key @form-id}
       (let [dropdown? (> (count methods) 1)
@@ -172,10 +175,12 @@
 
             dropdown-options (map dropdown-method-option methods)]
 
-        [ui/Form {:id           (or @form-id "authn-form-placeholder-id")
-                  :on-key-press (partial forms-utils/on-return-key
-                                         #(when @form-id
-                                            (dispatch [::events/submit])))}
+        [ui/Form
+         {:id           (or @form-id "authn-form-placeholder-id")
+          :on-key-press (partial forms-utils/on-return-key
+                                 #(when-not @form-error?
+                                    (dispatch [::events/submit {:close-modal false
+                                                                :success-msg (@tr [:validation-email-success-msg])}])))}
 
          (vec (concat [ui/Segment {:style {:height     "35ex"
                                            :overflow-y "auto"}}
@@ -233,6 +238,7 @@
         templates (subscribe [::api-subs/collection-templates template-href])
         tr (subscribe [::i18n-subs/tr])
         error-message (subscribe [::subs/error-message])
+        success-message (subscribe [::subs/success-message])
         selected-method-group (subscribe [::subs/selected-method-group])]
     (fn [collection-kw failed-kw method-form-fn]
       (let [method-groups (u/grouped-authn-methods @templates)
@@ -247,6 +253,13 @@
                         :onDismiss #(dispatch [::events/clear-error-message])}
             [ui/MessageHeader (@tr [failed-kw])]
             [:p @error-message]])
+
+         (when @success-message
+           [ui/Message {:negative  false
+                        :size      "tiny"
+                        :onDismiss #(dispatch [::events/clear-success-message])}
+            [ui/MessageHeader (@tr [:success])]
+            [:p @success-message]])
 
          [generic-method-dropdown method-groups]
          [ui/Divider]
@@ -286,11 +299,10 @@
 
 
 (defn generic-modal
-  [id modal-kw form-fn]
+  [id modal-kw form-fn submit-opts]
   (let [tr (subscribe [::i18n-subs/tr])
         open-modal (subscribe [::subs/open-modal])
-        form-id (subscribe [::subs/form-id])
-        fields-in-errors (subscribe [::subs/fields-in-errors])]
+        form-error? (subscribe [::subs/form-error?])]
     (fn [id modal-kw form-fn]
       [ui/Modal
        {:id        id
@@ -309,12 +321,12 @@
         [uix/Button
          {:text     (@tr [modal-kw])
           :positive true
-          :disabled (some? (seq @fields-in-errors))
-          :on-click #(dispatch [::events/submit])}]]])))
+          :disabled @form-error?
+          :on-click #(dispatch [::events/submit submit-opts])}]]])))
 
 
 (defn modal-login []
-  [generic-modal "modal-login-id" :login login-form-container])
+  [generic-modal "modal-login-id" :login login-form-container {}])
 
 
 (defn modal-reset-password []
@@ -323,7 +335,10 @@
         success-message (subscribe [::subs/success-message])
         loading? (subscribe [::subs/loading?])
         tr (subscribe [::i18n-subs/tr])
-        fields-in-errors (subscribe [::subs/fields-in-errors])]
+        fields-in-errors (subscribe [::subs/fields-in-errors])
+        form-error? (subscribe [::subs/form-error?])
+        submit-fn #(dispatch [::events/submit {:close-modal false
+                                               :success-msg (@tr [:validation-email-success-msg])}])]
     (fn []
       [ui/Modal
        {:id        "modal-reset-password-id"
@@ -348,11 +363,12 @@
           [ui/Message {:negative  false
                        :size      "tiny"
                        :onDismiss #(dispatch [::events/clear-success-message])}
-           [ui/MessageHeader (@tr [:reset-password-success])]
+           [ui/MessageHeader (@tr [:success])]
            [:p @success-message]])
 
         [ui/Form {:on-key-press (partial forms-utils/on-return-key
-                                         #(dispatch [::events/submit]))}
+                                         #(when-not @form-error?
+                                            (submit-fn)))}
          [ui/FormInput {:name          "username"
                         :placeholder   (str/capitalize (@tr [:username]))
                         :icon          "user"
@@ -393,13 +409,16 @@
          {:text     (@tr [:reset-password])
           :positive true
           :loading  @loading?
-          :disabled (some? (seq @fields-in-errors))
-          :on-click #(dispatch [::events/submit])}]]])))
+          :disabled @form-error?
+          :on-click submit-fn}]]])))
 
 
 
 (defn modal-signup []
-  [generic-modal "modal-signup-id" :signup signup-form-container])
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [generic-modal "modal-signup-id" :signup signup-form-container
+     {:close-modal false
+      :success-msg (@tr [:validation-email-success-msg])}]))
 
 
 (defn authn-menu
@@ -409,60 +428,59 @@
   (let [tr (subscribe [::i18n-subs/tr])
         user (subscribe [::subs/user])
         template-href (api-utils/collection-template-href :user)
-        user-templates (subscribe [::api-subs/collection-templates (keyword template-href)])]
-    (let [profile-fn #(history-utils/navigate "profile")
-          sign-out-fn (fn []
-                        (dispatch [::events/logout])
-                        (dispatch [::history-events/navigate "welcome"]))
-          login-fn #(dispatch [::events/open-modal :login])
-          logged-in? (boolean @user)
-          sign-up-ok? (get-in @user-templates [:templates (keyword (str template-href "/self-registration"))])]
+        user-templates (subscribe [::api-subs/collection-templates (keyword template-href)])
+        profile-fn #(history-utils/navigate "profile")
+        sign-out-fn (fn []
+                      (dispatch [::events/logout])
+                      (dispatch [::history-events/navigate "welcome"]))
+        login-fn #(dispatch [::events/open-modal :login])
+        logged-in? (boolean @user)
+        sign-up-ok? (get @user-templates (str (name template-href) "/email-password"))]
 
-      [ui/ButtonGroup {:primary true}
-       [ui/Button {:on-click (if logged-in? profile-fn login-fn)}
-        [ui/Icon {:name (if logged-in? "user" "sign in")}]
-        (if logged-in? (utils/truncate @user) (@tr [:login]))]
-       [ui/Dropdown {:inline    true
-                     :button    true
-                     :pointing  "top right"
-                     :className "icon"}
-        (vec
-          (concat
-            [ui/DropdownMenu]
+    [ui/ButtonGroup {:primary true}
+     [ui/Button {:on-click (if logged-in? profile-fn login-fn)}
+      [ui/Icon {:name (if logged-in? "user" "sign in")}]
+      (if logged-in? (utils/truncate @user) (@tr [:login]))]
+     [ui/Dropdown {:inline    true
+                   :button    true
+                   :pointing  "top right"
+                   :className "icon"}
+      (vec
+        (concat
+          [ui/DropdownMenu]
 
-            (when logged-in?
-              [[ui/DropdownItem
-                {:key      "sign-out"
-                 :text     (@tr [:logout])
-                 :icon     "sign out"
-                 :on-click sign-out-fn}]])
+          (when logged-in?
+            [[ui/DropdownItem
+              {:key      "sign-out"
+               :text     (@tr [:logout])
+               :icon     "sign out"
+               :on-click sign-out-fn}]])
 
-            (when (and sign-up-ok? (not logged-in?))
-              [[ui/DropdownItem {:icon     "signup"
-                                 :text     (@tr [:signup])
-                                 :on-click #(dispatch [::events/open-modal :signup])}]])
+          (when (and sign-up-ok? (not logged-in?))
+            [[ui/DropdownItem {:icon     "signup"
+                               :text     (@tr [:signup])
+                               :on-click #(dispatch [::events/open-modal :signup])}]])
 
-            (when (or logged-in? sign-up-ok?)
-              [[ui/DropdownDivider]])
+          (when (or logged-in? sign-up-ok?)
+            [[ui/DropdownDivider]])
 
-            [[ui/DropdownItem {:aria-label (@tr [:documentation])
-                               :icon       "book"
-                               :text       (@tr [:documentation])
-                               :href       "https://ssdocs.sixsq.com/"
-                               :target     "_blank"
-                               :rel        "noreferrer"}]
-             [ui/DropdownItem {:aria-label (@tr [:knowledge-base])
-                               :icon       "info circle"
-                               :text       (@tr [:knowledge-base])
-                               :href       "https://support.sixsq.com/solution/categories"
-                               :target     "_blank"
-                               :rel        "noreferrer"}]
-             [ui/DropdownItem {:aria-label (@tr [:support])
-                               :icon       "mail"
-                               :text       (@tr [:support])
-                               :href       (str "mailto:support%40sixsq%2Ecom?subject=%5BSlipStream%5D%20Support%20"
-                                                "question%20%2D%20Not%20logged%20in")}]]))]
-       [modal-login]
-       [modal-reset-password]
-       [modal-signup]])))
-
+          [[ui/DropdownItem {:aria-label (@tr [:documentation])
+                             :icon       "book"
+                             :text       (@tr [:documentation])
+                             :href       "https://ssdocs.sixsq.com/"
+                             :target     "_blank"
+                             :rel        "noreferrer"}]
+           [ui/DropdownItem {:aria-label (@tr [:knowledge-base])
+                             :icon       "info circle"
+                             :text       (@tr [:knowledge-base])
+                             :href       "https://support.sixsq.com/solution/categories"
+                             :target     "_blank"
+                             :rel        "noreferrer"}]
+           [ui/DropdownItem {:aria-label (@tr [:support])
+                             :icon       "mail"
+                             :text       (@tr [:support])
+                             :href       (str "mailto:support%40sixsq%2Ecom?subject=%5BSlipStream%5D%20Support%20"
+                                              "question%20%2D%20Not%20logged%20in")}]]))]
+     [modal-login]
+     [modal-reset-password]
+     [modal-signup]]))

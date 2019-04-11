@@ -48,7 +48,9 @@
   (fn [db _]
     (assoc db ::spec/open-modal nil
               ::spec/selected-method-group nil
-              ::spec/form-data nil)))
+              ::spec/form-data nil
+              ::spec/error-message nil
+              ::spec/success-message nil)))
 
 
 (reg-event-db
@@ -118,20 +120,25 @@
   (fn [{{:keys [::client-spec/client
                 ::spec/form-id
                 ::spec/form-data
-                ::spec/server-redirect-uri] :as db} :db} _]
-    (let [template {:template (-> form-data
+                ::spec/server-redirect-uri] :as db} :db} [_ opts]]
+    (let [{close-modal :close-modal,
+           success-msg :success-msg,
+           :or         {close-modal true}} opts
+          {callback-add :callback-add,
+           :or          {callback-add #(if (instance? js/Error %)
+                                         (let [{:keys [message]} (response/parse-ex-info %)]
+                                           (dispatch [::set-error-message message]))
+                                         (do (dispatch [::initialize])
+                                             (when close-modal
+                                               (dispatch [::close-modal]))
+                                             (when success-msg
+                                               (dispatch [::set-success-message success-msg]))
+                                             (dispatch [::history-events/navigate "welcome"])))}} opts
+          template {:template (-> form-data
                                   (dissoc :repeat-new-password
                                           :repeat-password)
                                   (assoc :href form-id
                                          :redirect-url server-redirect-uri))}
-          callback-add #(if (instance? js/Error %)
-                          (let [{:keys [message]} (response/parse-ex-info %)]
-                            (dispatch [::set-error-message message]))
-                          (do (dispatch [::initialize])
-                              (dispatch [::close-modal])
-                              (dispatch [::history-events/navigate "welcome"])
-                              (dispatch [::clear-success-message])
-                              (dispatch [::clear-error-message])))
           collection-kw (cond
                           (str/starts-with? form-id "session-template/") :session
                           (str/starts-with? form-id "user-template/") :user)]

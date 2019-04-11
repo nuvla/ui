@@ -108,3 +108,10 @@
                    nil ["error"]
                    #{})]
       (->> errors seq (remove nil?) set))))
+
+
+(reg-sub
+  ::form-error?
+  :<- [::fields-in-errors]
+  (fn [fields-in-errors]
+    (some? (seq fields-in-errors))))

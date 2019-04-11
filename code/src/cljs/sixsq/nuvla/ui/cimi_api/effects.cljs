@@ -60,9 +60,9 @@
 
 (reg-fx
   ::operation
-  (fn [[client resource-id operation callback]]
+  (fn [[client resource-id operation callback data]]
     (go
-      (callback (<! (api/operation client resource-id operation))))))
+      (callback (<! (api/operation client resource-id operation data))))))
 
 
 (reg-fx

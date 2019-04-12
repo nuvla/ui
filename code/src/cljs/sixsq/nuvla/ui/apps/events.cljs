@@ -194,6 +194,7 @@
   (fn [db _]
     (assoc db ::spec/logo-url-modal-visible? false)))
 
+
 (reg-event-fx
   ::edit-module
   (fn [{{:keys [::spec/module ::client-spec/client] :as db} :db :as cofx} [_ commit-map]]
@@ -212,8 +213,7 @@
                                (do (dispatch [::cimi-detail-events/get (:id %)])
                                    (dispatch [::set-module sanitized-module])
                                    (dispatch [::main-events/changes-protection? false])
-                                   (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))])
-                                   ))]}
+                                   (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))])))]}
         {:db                db
          ::cimi-api-fx/edit [client id sanitized-module
                              #(if (instance? js/Error %)
@@ -225,5 +225,4 @@
                                               :type    :error}]))
                                 (do (dispatch [::cimi-detail-events/get (:id %)])
                                     (dispatch [::get-module])
-                                    (dispatch [::main-events/changes-protection? false])
-                                    ))]}))))
+                                    (dispatch [::main-events/changes-protection? false])))]}))))

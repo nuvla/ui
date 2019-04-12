@@ -13,7 +13,8 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.style :as style]))
+    [sixsq.nuvla.ui.utils.style :as style]
+    [taoensso.timbre :as log]))
 
 (defn summary []
   [apps-views-detail/summary])
@@ -22,10 +23,7 @@
 (defn format-module
   [{:keys [type name path description] :as module}]
   (when module
-    (let [nav-path (subscribe [::main-subs/nav-path])
-          path-parts (str/split path #"/")
-          name-path  (last path-parts)
-          on-click #(dispatch [::history-events/navigate (history-utils/push-path nav-path name-path)])
+    (let [on-click #(dispatch [::history-events/navigate (str "apps/" path)])
           icon-name  (apps-utils/category-icon type)]
       [ui/ListItem {:on-click on-click}
        [ui/ListIcon {:name           icon-name
@@ -75,6 +73,10 @@
              "Sub-modules"]]
            [ui/AccordionContent {:active @active?}
             [format-module-children children]]])))))
+
+
+(defn clear-module
+  [])
 
 
 (defn view-edit

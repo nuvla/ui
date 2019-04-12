@@ -55,8 +55,7 @@
       (assoc-in [::spec/output-parameters] (output-parameters->db (get-in module [:content :output-parameters])))
       (assoc-in [::spec/data-types] (data-types->db (get-in module [:data-accept-content-types])))
       (assoc-in [::spec/ports] (ports->db (get-in module [:content :ports])))
-      (assoc-in [::spec/mounts] (mounts->db (get-in module [:content :mounts])))
-      ))
+      (assoc-in [::spec/mounts] (mounts->db (get-in module [:content :mounts])))))
 
 
 ;; Serialization functions: db->module
@@ -75,8 +74,7 @@
           (let [{:keys [target-port published-port protocol] :or {target-port nil published-port nil protocol "tcp"}} p]
             (conj {:target-port target-port}
                   (when (not (nil? published-port)) {:published-port published-port})
-                  (when (not (nil? protocol)) {:protocol protocol}))
-            ))))
+                  (when (not (nil? protocol)) {:protocol protocol}))))))
 
 
 ; TODO: add options
@@ -88,8 +86,7 @@
             (conj {:source source}
                   {:target target}
                   {:mount-type mount-type}
-                  (when (not (nil? read-only)) {:read-only read-only}))
-            ))))
+                  (when (not (nil? read-only)) {:read-only read-only}))))))
 
 
 (defn output-parameters->module
@@ -99,8 +96,7 @@
           (let [{:keys [name description]} op]
             (conj
               {:name name}
-              {:description description})
-            ))))
+              {:description description})))))
 
 
 (defn data-binding->module
@@ -119,16 +115,14 @@
         ports             (ports->module db)
         mounts            (mounts->module db)
         output-parameters (output-parameters->module db)
-        bindings (data-binding->module db)
-        ]
-    (-> module
-        (apps-utils/sanitize-base)
-        (assoc-in [:content :author] author)
-        (assoc-in [:content :commit] (if (empty? commit) "no commit message" commit))
-        (assoc-in [:content :architecture] (::spec/architecture db))
-        (assoc-in [:content :urls] urls)
-        (assoc-in [:content :ports] ports)
-        (assoc-in [:content :mounts] mounts)
-        (assoc-in [:content :output-parameters] output-parameters)
-        (assoc-in [:data-accept-content-types] bindings)
-        )))
+        bindings          (data-binding->module db)]
+    (as-> module m
+          (apps-utils/sanitize-base m)
+          (assoc-in m [:content :author] author)
+          (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
+          (assoc-in m [:content :architecture] (::spec/architecture db))
+          (if (empty? urls) (update-in m [:content] dissoc :urls) (assoc-in m [:content :urls] urls))
+          (assoc-in m [:content :ports] ports)
+          (assoc-in m [:content :mounts] mounts)
+          (assoc-in m [:content :output-parameters] output-parameters)
+          (assoc-in m [:data-accept-content-types] bindings))))

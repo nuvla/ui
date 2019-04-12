@@ -29,12 +29,14 @@
 (defn refresh-button
   []
   (let [tr            (subscribe [::i18n-subs/tr])
-        page-changed? (subscribe [::main-subs/changes-protection?])]
+        page-changed? (subscribe [::main-subs/changes-protection?])
+        is-new?       (subscribe [::subs/is-new?])]
     (fn []
       [ui/MenuMenu {:position "right"}
        [uix/MenuItemWithIcon
         {:name      (@tr [:refresh])
          :icon-name "refresh"
+         :disabled  @is-new?
          :loading?  false                                   ;; FIXME: Add loading flag for module.
          :on-click  #(let [get-module-fn (fn [] (dispatch [::events/get-module]))]
                        (if @page-changed?
@@ -65,8 +67,10 @@
         cep           (subscribe [::api-subs/cloud-entry-point])
         page-changed? (subscribe [::main-subs/changes-protection?])]
     (fn []
-      (let [add-disabled?    (not= "PROJECT" (:type @module))
-            deploy-disabled? (= "PROJECT" (:type @module))
+      (let [launchable?      (not= "PROJECT" (:type @module))
+            add?             (not= "PROJECT" (:type @module))
+            add-disabled?    @is-new?
+            launch-disabled? @is-new?
             editable?        (utils/editable? @module @is-new?)
             form-valid?      (validate-form module-spec @module)]
         (vec (concat [ui/Menu {:borderless true}]
@@ -74,13 +78,14 @@
                      (resource-details/format-operations nil @module (:base-uri @cep) nil)
 
                      [
-                      [uix/MenuItemWithIcon
-                       {:name      (@tr [:launch])
-                        :icon-name "rocket"
-                        :disabled  deploy-disabled?
-                        :on-click  #(dispatch [::deployment-dialog-events/create-deployment (:id @module) :credentials])}]
+                      (when launchable?
+                        [uix/MenuItemWithIcon
+                         {:name      (@tr [:launch])
+                          :icon-name "rocket"
+                          :disabled  launch-disabled?
+                          :on-click  #(dispatch [::deployment-dialog-events/create-deployment (:id @module) :credentials])}])
 
-                      (when (not add-disabled?)
+                      (when (not add?)
                         [uix/MenuItemWithIcon
                          {:name      (@tr [:add])
                           :icon-name "add"
@@ -116,7 +121,9 @@
                       :content  (@tr [:save])
                       :on-click #(if
                                    form-valid?
-                                   (dispatch [::events/open-save-modal])
+                                   (do
+                                     (dispatch [::events/is-new? false])
+                                     (dispatch [::events/open-save-modal]))
                                    (dispatch [::events/form-invalid]))}])))))
 
 
@@ -131,7 +138,8 @@
                         :commit @commit-message}]
         [ui/Modal {:open       @visible?
                    :close-icon true
-                   :on-close   #(dispatch [::events/close-save-modal])}
+                   :on-close   #(do (dispatch [::events/commit-message nil])
+                                    (dispatch [::events/close-save-modal]))}
 
          [ui/ModalHeader (str/capitalize (str (@tr [:save]) " " (@tr [:component])))]
 
@@ -140,18 +148,19 @@
                      :fluid         true
                      :default-value @commit-message
                      :auto-focus    true
-                     :focus        true
+                     :focus         true
                      :on-change     (ui-callback/input-callback #(dispatch [::events/commit-message %]))
                      :on-key-press  (partial forms/on-return-key #(do (dispatch [::events/edit-module commit-map])
-                                                                      (dispatch [::events/close-save-modal])))}]]
+                                                                      (dispatch [::events/close-save-modal])
+                                                                      (dispatch [::events/commit-message nil])))}]]
 
          [ui/ModalActions
           [uix/Button {:text     (@tr [:save])
                        :positive true
                        :active   true
                        :on-click #(do (dispatch [::events/edit-module commit-map])
-                                      (dispatch [::events/close-save-modal])
-                                      )}]]]))))
+                                      (dispatch [::events/commit-message nil])
+                                      (dispatch [::events/close-save-modal]))}]]]))))
 
 
 (defn logo-url-modal
@@ -319,13 +328,13 @@
 
 
 (defn summary-row
-  [name-kw value on-change-event editable? mandatory? value-spec]
+  [key name-kw value on-change-event editable? mandatory? value-spec]
   (let [tr           (subscribe [::i18n-subs/tr])
         active-input (subscribe [::subs/active-input])
-        validate?    (reagent/atom false)
-        name-str     (name name-kw)]
-    (fn [name-kw value on-change-event editable? mandatory? value-spec]
-      (let [name-label    (if (and editable? mandatory?) (utils/mandatory-name name-str) name-str)
+        validate?    (reagent/atom false)]
+    (fn [key name-kw value on-change-event editable? mandatory? value-spec]
+      (let [name-str      (name name-kw)
+            name-label    (if (and editable? mandatory?) (utils/mandatory-name name-str) name-str)
             input-active? (= name-str @active-input)
             valid?        (s/valid? value-spec value)]
         [ui/TableRow
@@ -333,8 +342,8 @@
           name-label]
          [ui/TableCell
           (if editable?
-            [ui/Input {:name          name-str
-                       :default-value value
+            ^{:key key}
+            [ui/Input {:default-value value
                        :placeholder   (str/capitalize (@tr [name-kw]))
                        :disabled      (not editable?)
                        :error         (when (and @validate? (not valid?)) true)
@@ -383,8 +392,8 @@
                           :large-screen 14}
            [ui/Table (assoc style/definition :class :nuvla-ui-editable)
             [ui/TableBody
-             [summary-row :name name ::events/name editable? true ::spec/name]
-             [summary-row :description description ::events/description editable? false ::spec/description]
+             [summary-row (str parent "-name") :name name ::events/name editable? true ::spec/name]
+             [summary-row (str parent "-description") :description description ::events/description editable? true ::spec/description]
              (when (not-empty parent)
                (let [label (if (= "PROJECT" type) "parent project" "project")]
                  [ui/TableRow

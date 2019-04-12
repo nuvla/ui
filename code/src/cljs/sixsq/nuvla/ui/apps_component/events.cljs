@@ -7,10 +7,16 @@
 
 
 (reg-event-db
-  ::docker-image
-  (fn [db [_ docker-image]]
-    (assoc-in db [::apps-spec/module :content :image] docker-image)))
-
+  ::clear-module
+  (fn [db [_]]
+    (-> db
+        (assoc ::spec/ports {})
+        (assoc ::spec/mounts {})
+        (assoc ::spec/urls nil)
+        (assoc ::spec/output-parameters {})
+        (assoc ::spec/data-types {})
+        (assoc ::spec/architecture "x86")
+        (assoc-in [::apps-spec/module :content :image] {}))))
 
 (reg-event-db
   ::architecture

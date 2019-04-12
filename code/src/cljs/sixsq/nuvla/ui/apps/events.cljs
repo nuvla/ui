@@ -51,9 +51,13 @@
 (reg-event-db
   ::set-module
   (fn [db [_ module]]
-    (assoc db ::spec/completed? true
-              ::spec/module-path (:path module)
-              ::spec/module (if (nil? module) {} module))))
+    (let [db   (assoc db ::spec/completed? true
+                         ::spec/module-path (:path module)
+                         ::spec/module (if (nil? module) {} module))
+          type (:type module)]
+      (case type
+        "COMPONENT" (apps-component-utils/module->db module db)
+        "PROJECT" db))))
 
 
 (reg-event-db
@@ -72,17 +76,13 @@
 
 (reg-event-db
   ::clear-module
-  (fn [db [_]]
-    (assoc db ::spec/module {})))
-
-
-(reg-event-db
-  ::deserialize-module
-  (fn [db [_ module]]
-    (let [type (:type module)]
-      (case type
-        "COMPONENT" (apps-component-utils/module->db module db)
-        "PROJECT" db))))
+  (fn [db [_ new-name new-parent new-type]]
+    (let [new-parent (or new-parent "")]
+      (-> db
+          (assoc ::spec/module {})
+          (assoc-in [::spec/module :name] new-name)
+          (assoc-in [::spec/module :parent-path] new-parent)
+          (assoc-in [::spec/module :type] new-type)))))
 
 
 (reg-event-fx
@@ -93,8 +93,7 @@
         {:db                  (assoc db ::spec/completed? false
                                         ::spec/module-path nil
                                         ::spec/module nil)
-         ::apps-fx/get-module [client path version #(do (dispatch [::set-module %])
-                                                        (dispatch [::deserialize-module %]))]}))))
+         ::apps-fx/get-module [client path version #(dispatch [::set-module %])]}))))
 
 
 (reg-event-db

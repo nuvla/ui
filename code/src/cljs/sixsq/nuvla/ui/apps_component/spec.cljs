@@ -4,25 +4,12 @@
             [sixsq.nuvla.ui.apps.spec :as apps-spec]))
 
 ; create an initial entry for new components
-(def defaults {::ports             {1 {:published-port 11
-                                       :target-port    22
-                                       :protocol       "tcp"}
-                                    2 {:published-port 33
-                                       :target-port    44
-                                       :protocol       "udp"}}
-               ::mounts            {1 {:mount-type "volume"
-                                       :source     "source"
-                                       :target     "target"
-                                       :driver     "local"
-                                       :read-only? false
-                                       :volume-options [{:option-key "key1"
-                                                         :option-value "val1"}
-                                                        {:option-key "key2"
-                                                         :option-value "val2"}]}}
-               ::urls              {1 {:id 1}}
-               ::output-parameters {1 {}}
+(def defaults {::ports             {}
+               ::mounts            {}
+               ::urls              {}
+               ::output-parameters {}
                ::architecture      "x86"
-               ::data-types        {1 ""}})
+               ::data-types        {}})
 
 ; Image
 

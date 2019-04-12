@@ -85,7 +85,7 @@
              [:span "/"]
              [ui/Input {:name          "docker-image-name"
                         :default-value image-name
-                        :placeholder   (@tr [:module-docker-image-name-placeholder])
+                        :placeholder   (@tr [:module-docker-image-placeholder])
                         :error         (when (and @validate? (not (s/valid? ::spec/image-name image-name))) true)
                         :on-change     (ui-callback/input-callback
                                          #(do (reset! validate? true)
@@ -136,9 +136,7 @@
       ^{:key "summary-docker-image"}
       [docker-image]
       ^{:key "summary-architecture"}
-      [architecture]
-      ]
-     ]))
+      [architecture]]]))
 
 
 (defn toggle [v]
@@ -168,6 +166,7 @@
                                     #(do (reset! validate? true)
                                          (dispatch [::main-events/changes-protection? true])
                                          (dispatch [update-event id %])))}]))))
+
 
 ; TODO: too much duplication with input above
 (defn input-int
@@ -280,7 +279,6 @@
     [ui/GridRow {:key id}
      [ui/GridColumn {:floated :left
                      :width   15}
-      [:div (pr-str mount)]
       (if editable?
         [ui/Label
          [ui/Dropdown {:name          (str "type-" id)
@@ -676,6 +674,11 @@
      [:p "Note: ensure you have a recent installation of docker."]]))
 
 
+(defn clear-module
+  []
+  (dispatch [::events/clear-module]))
+
+
 (defn view-edit
   []
   (let [module (subscribe [::apps-subs/module])]
@@ -702,5 +705,4 @@
          [apps-views-detail/add-modal]
          [apps-views-detail/save-modal]
          [apps-views-detail/logo-url-modal]
-         [deployment-dialog-views/deploy-modal]
-         ]))))
+         [deployment-dialog-views/deploy-modal]]))))

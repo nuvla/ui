@@ -61,8 +61,6 @@
         [ui/TableRow
          [ui/TableCell {:collapsing true} (if editable? (apps-utils/mandatory-name label) label)]
 
-         ; force react to regenerate the content of this cell with a random key
-         ^{:key (random-uuid)}
          [ui/TableCell
           (if editable?
             [:div

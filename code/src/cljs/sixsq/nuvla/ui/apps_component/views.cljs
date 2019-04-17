@@ -31,10 +31,6 @@
   (str/join ":" (-> image (str/split #":") drop-last)))
 
 
-(defn get-image [module]
-  (get-in module [:content :image]))
-
-
 (defn docker-image-view
   [{:keys [image-name registry repository tag]}]
   [:span
@@ -47,61 +43,69 @@
      [:span ":" tag])
    ])
 
+
 (defn docker-image
   []
-  (let [tr           (subscribe [::i18n-subs/tr])
-        active-input (subscribe [::apps-subs/active-input])
-        module       (subscribe [::apps-subs/module])
-        is-new?      (subscribe [::apps-subs/is-new?])
-        validate?    (reagent/atom false)]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        module          (subscribe [::apps-subs/module])
+        image           (subscribe [::subs/image])
+        is-new?         (subscribe [::apps-subs/is-new?])
+        local-validate? (reagent/atom false)
+        form-valid?     (subscribe [::apps-subs/form-valid?])]
     (fn []
       (let [editable? (apps-utils/editable? @module @is-new?)
-            image     (get-image @module)
-            {:keys [image-name registry repository tag] :or {registry "" repository "" tag ""}} image
-            label     (@tr [:module-docker-image-label])]
+            {:keys [::spec/image-name ::spec/registry ::spec/repository ::spec/tag]
+             :or   {registry "" repository "" image "" tag ""}} @image
+            label     (@tr [:module-docker-image-label])
+            validate? (or @local-validate? (not @form-valid?))]
         [ui/TableRow
          [ui/TableCell {:collapsing true} (if editable? (apps-utils/mandatory-name label) label)]
 
+         ; force react to regenerate the content of this cell with a random key
+         ^{:key (random-uuid)}
          [ui/TableCell
           (if editable?
             [:div
              [ui/Input {:name          "docker-registry"
                         :default-value registry
                         :placeholder   (@tr [:module-docker-registry-placeholder])
-                        :error         (when (and @validate? (not (s/valid? ::spec/registry registry))) true)
+                        :error         (when (and validate? (not (s/valid? ::spec/registry registry))) true)
                         :on-change     (ui-callback/input-callback
-                                         #(do (reset! validate? true)
+                                         #(do (reset! local-validate? true)
                                               (dispatch [::main-events/changes-protection? true])
-                                              (dispatch [::events/update-docker-registry %])))}]
+                                              (dispatch [::events/update-docker-registry %])
+                                              (dispatch [::apps-events/validate-form])))}]
              [:span "/"]
              [ui/Input {:name          "docker-repository"
                         :default-value repository
                         :placeholder   (@tr [:module-docker-repository-placeholder])
-                        :error         (when (and @validate? (not (s/valid? ::spec/repository repository))) true)
+                        :error         (when (and validate? (not (s/valid? ::spec/repository repository))) true)
                         :on-change     (ui-callback/input-callback
-                                         #(do (reset! validate? true)
+                                         #(do (reset! local-validate? true)
                                               (dispatch [::main-events/changes-protection? true])
-                                              (dispatch [::events/update-docker-repository %])))}]
+                                              (dispatch [::events/update-docker-repository %])
+                                              (dispatch [::apps-events/validate-form])))}]
              [:span "/"]
              [ui/Input {:name          "docker-image-name"
                         :default-value image-name
                         :placeholder   (@tr [:module-docker-image-placeholder])
-                        :error         (when (and @validate? (not (s/valid? ::spec/image-name image-name))) true)
+                        :error         (when (and validate? (not (s/valid? ::spec/image-name image-name))) true)
                         :on-change     (ui-callback/input-callback
-                                         #(do (reset! validate? true)
+                                         #(do (reset! local-validate? true)
                                               (dispatch [::main-events/changes-protection? true])
-                                              (dispatch [::events/update-docker-image-name %])))}]
+                                              (dispatch [::events/update-docker-image-name %])
+                                              (dispatch [::apps-events/validate-form])))}]
              [:span ":"]
              [ui/Input {:name          "docker-tag"
                         :default-value tag
                         :placeholder   (@tr [:module-docker-tag-placeholder])
-                        :error         (when (and @validate? (not (s/valid? ::spec/tag tag))) true)
+                        :error         (when (and validate? (not (s/valid? ::spec/tag tag))) true)
                         :on-change     (ui-callback/input-callback
-                                         #(do (reset! validate? true)
+                                         #(do (reset! local-validate? true)
                                               (dispatch [::main-events/changes-protection? true])
-                                              (dispatch [::events/update-docker-tag %])))}]]
-            (docker-image-view image))
-          ]]))))
+                                              (dispatch [::events/update-docker-tag %])
+                                              (dispatch [::apps-events/validate-form])))}]]
+            (docker-image-view image))]]))))
 
 
 (defn architecture
@@ -124,8 +128,7 @@
                                        {:key "ARM", :value "ARM", :text "ARM"}]
                        :on-change     (ui-callback/value
                                         #(do (dispatch [::main-events/changes-protection? true])
-                                             (dispatch [::events/architecture %])))
-                       }]]
+                                             (dispatch [::events/architecture %])))}]]
         [:span @arch])]]))
 
 
@@ -154,8 +157,7 @@
         validate?    (reagent/atom false)]
     (fn [id name value placeholder update-event value-spec]
       (let [input-name (str name "-" id)
-            valid?     (s/valid? value-spec value)
-            ]
+            valid?     (s/valid? value-spec value)]
         [ui/Input {:name          input-name
                    :placeholder   placeholder
                    :default-value value
@@ -175,9 +177,7 @@
         validate?    (reagent/atom false)]
     (fn [id name value placeholder update-event value-spec]
       (let [input-name (str name "-" id)
-            valid?     (s/valid? value-spec value)
-            ]
-        (s/explain value-spec 123)
+            valid?     (s/valid? value-spec value)]
         [ui/Input {:name          input-name
                    :placeholder   placeholder
                    :default-value value
@@ -193,9 +193,9 @@
 
 (defn single-port [port editable? tr]
   (let [{:keys [id
-                published-port
-                target-port
-                protocol]} port]
+                ::spec/published-port
+                ::spec/target-port
+                ::spec/protocol]} port]
     [ui/GridRow {:key id}
      [ui/GridColumn {:floated :left
                      :width   11}
@@ -220,8 +220,8 @@
                                      {:key "SCTP", :value "sctp", :text "SCTP"}]
                          :on-change (ui-callback/value
                                       #(do (dispatch [::main-events/changes-protection? true])
-                                           (dispatch [::events/update-port-protocol id %])))
-                         }]])
+                                           (dispatch [::events/update-port-protocol id %])
+                                           (dispatch [::apps-events/validate-form])))}]])
         (when (and (not (empty? protocol)) (not= "tcp" protocol))
           [:span " / " [:b protocol]]))]
      (when editable?
@@ -230,7 +230,8 @@
                        :style   {}}
         [ui/Icon {:name     "trash"
                   :on-click #(do (dispatch [::main-events/changes-protection? true])
-                                 (dispatch [::events/remove-port id]))
+                                 (dispatch [::events/remove-port id])
+                                 (dispatch [::apps-events/validate-form]))
                   :color    :red}]])]))
 
 
@@ -266,16 +267,17 @@
             [:div
              [ui/Icon {:name     "plus circle"
                        :on-click #(do (dispatch [::main-events/changes-protection? true])
-                                      (dispatch [::events/add-port (random-uuid) {}]))}]])]]))))
+                                      (dispatch [::events/add-port (random-uuid) {}])
+                                      (dispatch [::apps-events/validate-form]))}]])]]))))
 
 
 (defn single-mount [mount editable?]
   (let [tr (subscribe [::i18n-subs/tr])
         {:keys [id
-                mount-type
-                source
-                target
-                read-only]} mount]
+                ::spec/mount-type
+                ::spec/mount-source
+                ::spec/mount-target
+                ::spec/mount-read-only]} mount]
     [ui/GridRow {:key id}
      [ui/GridColumn {:floated :left
                      :width   15}
@@ -290,28 +292,29 @@
                                        ]
                        :on-change     (ui-callback/value
                                         #(do (dispatch [::main-events/changes-protection? true])
-                                             (dispatch [::events/update-mount-type id %])))}]]
+                                             (dispatch [::events/update-mount-type id %])
+                                             (dispatch [::apps-events/validate-form])))}]]
         [:span "type=" [:b mount-type]])
       [:span " , "]
       (if editable?
-        [input id "vol-source" source "source" ::events/update-mount-source ::spec/input-value]
-        [:span "src=" [:b source]])
+        [input id "vol-source" mount-source "source" ::events/update-mount-source ::spec/input-value]
+        [:span "src=" [:b mount-source]])
       [:span " , "]
       (if editable?
-        [input id "vol-dest" target "target" ::events/update-mount-target ::spec/input-value]
-        [:span "dst=" [:b target]])
+        [input id "vol-dest" mount-target "target" ::events/update-mount-target ::spec/input-value]
+        [:span "dst=" [:b mount-target]])
       (if editable?
         (do
           [:span " , "]
           [:span " " (@tr [:module-mount-read-only?]) " "
            [ui/Checkbox {:name            "read-only"
-                         :default-checked (if (nil? read-only) false read-only)
+                         :default-checked (if (nil? mount-read-only) false mount-read-only)
                          :on-change       (ui-callback/checked
                                             #(do (dispatch [::main-events/changes-protection? true])
-                                                 (dispatch [::events/update-mount-read-only? id %])))
-                         :align           :middle}]
-           ])
-        (when read-only (do [:span " , " [:b "readonly"]])))]
+                                                 (dispatch [::events/update-mount-read-only? id %])
+                                                 (dispatch [::apps-events/validate-form])))
+                         :align           :middle}]])
+        (when mount-read-only (do [:span " , " [:b "readonly"]])))]
      (when editable?
        [ui/GridColumn {:floated :right
                        :width   1
@@ -319,7 +322,8 @@
                        :style   {}}
         [ui/Icon {:name     "trash"
                   :on-click #(do (dispatch [::main-events/changes-protection? true])
-                                 (dispatch [::events/remove-mount id]))
+                                 (dispatch [::events/remove-mount id])
+                                 (dispatch [::apps-events/validate-form]))
                   :color    :red}]])]))
 
 
@@ -355,37 +359,45 @@
             [:div
              [ui/Icon {:name     "plus circle"
                        :on-click #(do (dispatch [::main-events/changes-protection? true])
-                                      (dispatch [::events/add-mount (random-uuid) {}]))}]])]]))))
+                                      (dispatch [::events/add-mount (random-uuid) {}])
+                                      (dispatch [::apps-events/validate-form]))}]])]]))))
 
 
 (defn single-url
   [url-map]
   (let [tr (subscribe [::i18n-subs/tr])
-        {:keys [id name url]} url-map]
+        {:keys [id ::spec/url-name ::spec/url]} url-map]
     [ui/TableRow {:key id}
      [ui/TableCell {:floated :left
                     :width   2}
-      [ui/Input {:name          (str "url-name-" id)
+      ;[input-int id "published-port" published-port (@tr [:module-ports-published-port-placeholder])
+
+       [ui/Input {:name          (str "url-name-" id)
                  :placeholder   "name of this url"
-                 :default-value name
+                 :default-value url-name
+                 :error         (when-not (s/valid? ::spec/url-name url-name) true)
                  :fluid         true
                  :on-change     (ui-callback/input-callback #(do (dispatch [::main-events/changes-protection? true])
-                                                                 (dispatch [::events/update-url-name id %])))}]]
+                                                                 (dispatch [::events/update-url-name id %])
+                                                                 (dispatch [::apps-events/validate-form])))}]]
      [ui/TableCell {:floated :left
                     :width   13}
       [ui/Input {:name          (str "url-url-" id)
                  :placeholder   "url - e.g. http://${hostname}:${tcp.8888}/?token=${jupyter-token}"
                  :default-value url
+                 :error         (not (s/valid? ::spec/url url))
                  :fluid         true
                  :on-change     (ui-callback/input-callback #(do (dispatch [::main-events/changes-protection? true])
-                                                                 (dispatch [::events/update-url-url id %])))}]]
+                                                                 (dispatch [::events/update-url-url id %])
+                                                                 (dispatch [::apps-events/validate-form])))}]]
      [ui/TableCell {:floated :right
                     :width   1
                     :align   :right
                     :style   {}}
       [ui/Icon {:name     "trash"
                 :on-click #(do (dispatch [::main-events/changes-protection? true])
-                               (dispatch [::events/remove-url id]))
+                               (dispatch [::events/remove-url id])
+                               (dispatch [::apps-events/validate-form]))
                 :color    :red}]]]))
 
 
@@ -423,12 +435,13 @@
         [:div {:style {:padding-top 10}}
          [ui/Icon {:name     "plus circle"
                    :on-click #(do (dispatch [::main-events/changes-protection? true])
-                                  (dispatch [::events/add-url (random-uuid) {}]))}]]]])))
+                                  (dispatch [::events/add-url (random-uuid) {}])
+                                  (dispatch [::apps-events/validate-form]))}]]]])))
 
 
 (defn single-output-parameter [param]
   (let [tr (subscribe [::i18n-subs/tr])
-        {:keys [id name description]} param]
+        {:keys [id ::spec/name ::spec/description]} param]
     [ui/TableRow {:key id}
      [ui/TableCell {:floated :left
                     :width   2}
@@ -438,7 +451,8 @@
                  :fluid         true
                  :on-change     (ui-callback/input-callback
                                   #(do (dispatch [::main-events/changes-protection? true])
-                                       (dispatch [::events/update-output-parameter-name id %])))}]]
+                                       (dispatch [::events/update-output-parameter-name id %])
+                                       (dispatch [::apps-events/validate-form])))}]]
      [ui/TableCell {:floated :left
                     :width   13}
       [ui/Input {:name          (str "url-url-" id)
@@ -447,13 +461,15 @@
                  :fluid         true
                  :on-change     (ui-callback/input-callback
                                   #(do (dispatch [::main-events/changes-protection? true])
-                                       (dispatch [::events/update-output-parameter-description id %])))}]]
+                                       (dispatch [::events/update-output-parameter-description id %])
+                                       (dispatch [::apps-events/validate-form])))}]]
      [ui/TableCell {:floated :right
                     :width   1
                     :align   :right}
       [ui/Icon {:name     "trash"
                 :on-click #(do (dispatch [::main-events/changes-protection? true])
-                               (dispatch [::events/remove-output-parameter id]))
+                               (dispatch [::events/remove-output-parameter id])
+                               (dispatch [::apps-events/validate-form]))
                 :color    :red}]]]))
 
 
@@ -491,7 +507,8 @@
         [:div {:style {:padding-top 10}}
          [ui/Icon {:name     "plus circle"
                    :on-click #(do (dispatch [::main-events/changes-protection? true])
-                                  (dispatch [::events/add-output-parameter (random-uuid) {}]))}]]]])))
+                                  (dispatch [::events/add-output-parameter (random-uuid) {}])
+                                  (dispatch [::apps-events/validate-form]))}]]]])))
 
 
 (def data-type-options (atom [{:key "application/x-hdr", :value "application/x-hdr", :text "application/x-hdr"}
@@ -507,7 +524,7 @@
 (defn single-data-type [dt]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [dt]
-      (let [{:keys [id data-type]} dt]
+      (let [{:keys [id ::spec/data-type]} dt]
         [ui/GridRow {:key id}
          [ui/GridColumn {:floated :left
                          :width   2}
@@ -522,15 +539,16 @@
                          :on-add-item    #(add-data-type-options (-> % .-target .-value))
                          :on-change      (ui-callback/value
                                            #(do (dispatch [::main-events/changes-protection? true])
-                                                (dispatch [::events/update-data-type id %])))
-                         }]]]
+                                                (dispatch [::events/update-data-type id %])
+                                                (dispatch [::apps-events/validate-form])))}]]]
          [ui/GridColumn {:floated :right
                          :width   1
                          :align   :right
                          :style   {}}
           [ui/Icon {:name     "trash"
                     :on-click #(do (dispatch [::main-events/changes-protection? true])
-                                   (dispatch [::events/remove-data-type id]))
+                                   (dispatch [::events/remove-data-type id])
+                                   (dispatch [::apps-events/validate-form]))
                     :color    :red}]]]))))
 
 
@@ -562,58 +580,8 @@
         [:div
          [ui/Icon {:name     "plus circle"
                    :on-click #(do (dispatch [::main-events/changes-protection? true])
-                                  (dispatch [::events/add-data-type (random-uuid) {}]))}]]]])))
-
-
-(defn runtime []
-  (let [active? (reagent/atom true)]
-    (fn []
-      [ui/Accordion {:fluid     true
-                     :styled    true
-                     :exclusive false}
-       [ui/AccordionTitle {:active   @active?
-                           :index    1
-                           :on-click #(toggle active?)}
-        [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-        "Runtime"]
-       [ui/AccordionContent {:active @active?}
-        [ui/Segment
-         [:div "Command " [ui/Icon {:name "question circle"}]]
-         [:div.ui.middle.aligned.divided.list
-          [:div.item
-           [ui/Input {:name        "runtime-command"
-                      :placeholder "e.g. echo \"hello world\""
-                      :fluid       true}]]]]
-        [ui/Segment
-         [:div "Environment variables " [ui/Icon {:name "question circle"}]]
-         [:div.ui.middle.aligned.divided.list
-          [:div.item
-           [ui/Input {:name        "envar-name"
-                      :placeholder "e.g. VAR"}]
-           [:span " = "]
-           [ui/Input {:name        "envar-value"
-                      :placeholder "e.g. VALUE"}]
-           [:div.right.floated.content
-            [ui/Icon {:name "trash"}]]]
-          [ui/Icon {:name "plus circle"}]]]
-        [ui/Segment
-         [:div "Secrets " [ui/Icon {:name "question circle"}]]
-         [:div.ui.middle.aligned.divided.list
-          [:div.item
-           [ui/Input {:name        "secret-name"
-                      :placeholder "Secret name"}]
-           [:span " = "]
-           [ui/Input {:name        "secret-value"
-                      :placeholder "Secret value"
-                      :type        :password
-                      :icon        :eye}]
-           [ui/Popup {:trigger  (reagent/as-element [ui/CopyToClipboard {:text "ssh-password"}
-                                                     [:a [ui/Icon {:name "clipboard outline"}]]])
-                      :position "top center"}
-            "copy to clipboard"]
-           [:div.right.floated.content
-            [ui/Icon {:name "trash"}]]]
-          [ui/Icon {:name "plus circle"}]]]]])))
+                                  (dispatch [::events/add-data-type (random-uuid) {}])
+                                  (dispatch [::apps-events/validate-form]))}]]]])))
 
 
 (defn generate-ports-args
@@ -655,23 +623,24 @@
 
 (defn test-command
   []
-  (let [tr           (subscribe [::i18n-subs/tr])
-        mappings     (subscribe [::subs/ports])
-        mapping-args (generate-ports-args @mappings)
-        mounts       (subscribe [::subs/mounts])
-        mounts-args  (generate-mounts-args @mounts)
-        image        (get-image @(subscribe [::apps-subs/module]))
-        image-arg    (generate-image-arg image)
-        command      (str "docker service create " mapping-args " " mounts-args " " image-arg)]
-    [ui/Message {:info true}
-     [ui/MessageHeader (@tr [:module-docker-command-message])]
-     [:p {:style {:padding-top 8}
-          :class "nuvla-command"} [:b "$ " command " "]
-      [ui/Popup {:trigger  (reagent/as-element [ui/CopyToClipboard {:text command}
-                                                [:a [ui/Icon {:name "clipboard outline"}]]])
-                 :position "top center"}
-       "copy to clipboard"]]
-     [:p "Note: ensure you have a recent installation of docker."]]))
+  (let [tr       (subscribe [::i18n-subs/tr])
+        mappings (subscribe [::subs/ports])
+        mounts   (subscribe [::subs/mounts])
+        image    (subscribe [::subs/image])]
+    (fn []
+      (let [mapping-args (generate-ports-args @mappings)
+            mounts-args  (generate-mounts-args @mounts)
+            image-arg    (generate-image-arg @image)
+            command      (str "docker service create " mapping-args " " mounts-args " " image-arg)]
+        [ui/Message {:info true}
+         [ui/MessageHeader (@tr [:module-docker-command-message])]
+         [:p {:style {:padding-top 8}
+              :class "nuvla-command"} [:b "$ " command " "]
+          [ui/Popup {:trigger  (reagent/as-element [ui/CopyToClipboard {:text command}
+                                                    [:a [ui/Icon {:name "clipboard outline"}]]])
+                     :position "top center"}
+           "copy to clipboard"]]
+         [:p "Note: ensure you have a recent installation of docker."]]))))
 
 
 (defn clear-module
@@ -681,14 +650,18 @@
 
 (defn view-edit
   []
-  (let [module (subscribe [::apps-subs/module])]
+  (let [module-common (subscribe [::apps-subs/module-common])
+        mc            (subscribe [::subs/module-component])]
     (fn []
-      (let [name   (:name @module)
-            parent (:parent-path @module)]
+      (let [name   (get @module-common ::apps-spec/name)
+            parent (get @module-common ::apps-spec/parent-path)]
+        (dispatch [::apps-events/set-form-spec ::spec/module-component])
+        (dispatch [::apps-events/set-module-type :component])
         [ui/Container {:fluid true}
          [:h2 [ui/Icon {:name "th"}]
           parent (when (not-empty parent) "/") name]
-         [apps-views-detail/control-bar ::spec/module-component]
+         [apps-views-detail/control-bar]
+         [:div (pr-str @mc)]
          [summary]
          [ports-section]
          [:div {:style {:padding-top 10}}]
@@ -701,7 +674,7 @@
          [data-types-section]
          [:div {:style {:padding-top 10}}]
          [test-command]
-         [apps-views-detail/save-action ::spec/module-component]
+         [apps-views-detail/save-action]
          [apps-views-detail/add-modal]
          [apps-views-detail/save-modal]
          [apps-views-detail/logo-url-modal]

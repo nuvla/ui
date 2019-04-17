@@ -3,8 +3,11 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
+    [sixsq.nuvla.ui.apps-project.utils :as apps-project-utils]
     [sixsq.nuvla.ui.apps.effects :as apps-fx]
     [sixsq.nuvla.ui.apps.spec :as spec]
+    [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
+    [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
@@ -15,7 +18,63 @@
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [cljs.spec.alpha :as s]))
+
+
+;; Validation
+
+(defn get-module
+  [module-type db]
+  (let [component (get db ::apps-component-spec/module-component)
+        project   (get db ::apps-project-spec/module-project)]
+    (case module-type
+      :component component
+      :project project
+      project)))
+
+
+(reg-event-db
+  ::set-validate-form?
+  (fn [db [_ validate-form?]]
+    (assoc db ::spec/validate-form? validate-form?)))
+
+
+(reg-event-db
+  ::set-module-spec
+  (fn [db [_ module-spec]]
+    (assoc db ::spec/module-spec module-spec)))
+
+
+(reg-event-db
+  ::set-module-type
+  (fn [db [_ module-type]]
+    (assoc db ::spec/module-type module-type)))
+
+
+; Perform form validation if validate-form? is true.
+(reg-event-db
+  ::validate-form
+  (fn [db [_]]
+    (let [form-spec      (get db ::spec/form-spec)
+          module-type    (get db ::spec/module-type)
+          module-common  (get db ::spec/module-common)
+          module         (get-module module-type db)
+          validate-form? (get db ::spec/validate-form?)
+          valid?         (if validate-form? (and
+                                              (s/valid? ::spec/module-common module-common)
+                                              (if (nil? form-spec) true (s/valid? form-spec module)))
+                                            true)]
+      ;(s/explain ::spec/module-common module-common)
+      ;(s/explain form-spec module)
+      (assoc db ::spec/form-valid? valid?))))
+
+
+; Set the spec to apply for form validation
+(reg-event-db
+  ::set-form-spec
+  (fn [db [_ form-spec]]
+    (assoc db ::spec/form-spec form-spec)))
 
 
 (reg-event-db
@@ -56,8 +115,8 @@
                          ::spec/module (if (nil? module) {} module))
           type (:type module)]
       (case type
-        "COMPONENT" (apps-component-utils/module->db module db)
-        "PROJECT" db))))
+        "COMPONENT" (apps-component-utils/module->db db module)
+        "PROJECT" (apps-project-utils/module->db db module)))))
 
 
 (reg-event-db
@@ -77,12 +136,16 @@
 (reg-event-db
   ::clear-module
   (fn [db [_ new-name new-parent new-type]]
-    (let [new-parent (or new-parent "")]
+    (let [new-parent       (or new-parent "")
+          default-logo-url (::spec/default-logo-url db)]
       (-> db
           (assoc ::spec/module {})
-          (assoc-in [::spec/module :name] new-name)
-          (assoc-in [::spec/module :parent-path] new-parent)
-          (assoc-in [::spec/module :type] new-type)))))
+          (assoc ::spec/module-common {})
+          (assoc-in [::spec/module-common ::spec/name] new-name)
+          (assoc-in [::spec/module-common ::spec/description] "")
+          (assoc-in [::spec/module-common ::spec/logo-url] default-logo-url)
+          (assoc-in [::spec/module-common ::spec/parent-path] new-parent)
+          (assoc-in [::spec/module-common ::spec/type] new-type)))))
 
 
 (reg-event-fx
@@ -117,31 +180,31 @@
 (reg-event-db
   ::name
   (fn [db [_ name]]
-    (assoc-in db [::spec/module :name] name)))
+    (assoc-in db [::spec/module-common ::spec/name] name)))
 
 
 (reg-event-db
   ::description
   (fn [db [_ description]]
-    (assoc-in db [::spec/module :description] description)))
+    (assoc-in db [::spec/module-common ::spec/description] description)))
 
 
 (reg-event-db
   ::type
   (fn [db [_ type]]
-    (assoc-in db [::spec/module :type] (if (nil? type) nil (str/upper-case type)))))
+    (assoc-in db [::spec/module-common :type] (if (nil? type) nil (str/upper-case type)))))
 
 
 (reg-event-db
   ::path
   (fn [db [_ path]]
-    (assoc-in db [::spec/module :path] path)))
+    (assoc-in db [::spec/module-common :path] path)))
 
 
 (reg-event-db
   ::parent
   (fn [db [_ parent]]
-    (assoc-in db [::spec/module :parent-path] parent)))
+    (assoc-in db [::spec/module-common :parent-path] parent)))
 
 
 (reg-event-db
@@ -179,7 +242,7 @@
   (fn [db [_ logo-url]]
     (dispatch [::main-events/changes-protection? true])
     (-> db
-        (assoc-in [::spec/module :logo-url] logo-url)
+        (assoc-in [::spec/module-common ::spec/logo-url] logo-url)
         (assoc-in [::spec/logo-url-modal-visible?] false))))
 
 
@@ -200,6 +263,7 @@
   (fn [{{:keys [::spec/module ::client-spec/client] :as db} :db :as cofx} [_ commit-map]]
     (let [id               (:id module)
           sanitized-module (utils-detail/db->module module commit-map db)]
+      (log/infof "sanitized-module: %s" sanitized-module)
       (if (nil? id)
         {:db               db
          ::cimi-api-fx/add [client "module" sanitized-module

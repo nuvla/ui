@@ -1,25 +1,49 @@
 (ns sixsq.nuvla.ui.apps.spec
   (:require
-    [clojure.spec.alpha :as s]))
+    [clojure.spec.alpha :as s]
+    [clojure.string :as str]))
 
+;; Utils
+
+(defn nonblank-string [s]
+  (let [str-s (str s)]
+    (when-not (str/blank? str-s)
+      str-s)))
 
 ;; Module
 
-(s/def ::name #(and (not (empty? %)) string? %))
+(s/def ::name nonblank-string)
 
-(s/def ::description (s/nilable string?))
+(s/def ::description nonblank-string)
 
-(s/def ::module-path (s/nilable string?))
+(s/def ::parent-path any?)
 
-(s/def ::logo-url (s/nilable string?))
+(s/def ::path any?)
 
-(s/def ::module any?)
+(s/def ::logo-url any?)
 
-(s/def ::summary (s/merge ::name
-                          ::description
-                          ::parent-path
-                          ::module-path
-                          ::logo-url))
+(s/def ::module-common (s/keys :req [::name
+                                     ::parent-path
+                                     ; needed by the server, but not the ui
+                                     ; (this is handled before contacting the server)
+                                     ;::path
+                                     ]
+                               :opt [::description
+                                     ::logo-url]))
+
+;; Validation
+
+; Is the form valid?
+(s/def ::form-valid? boolean?)
+
+; Should the form be validated?
+(s/def ::validate-form? boolean?)
+
+; Spec to use when validating form
+(s/def ::form-spec any?)
+
+; TODO: should be set (:component, :project)
+(s/def ::module-type any?)
 
 ;; Page
 
@@ -30,8 +54,6 @@
 (s/def ::active-input (s/nilable string?))
 
 (s/def ::version-warning? boolean?)
-
-(s/def ::form-valid? boolean?)
 
 (s/def ::is-new? boolean?)
 
@@ -44,27 +66,26 @@
 (s/def ::commit-message (s/nilable string?))
 
 (s/def ::db (s/keys :req [::active-input
-                          ::version-warning?
+                          ::form-spec
                           ::form-valid?
+                          ::validate-form?
                           ::is-new?
                           ::completed?
-                          ::module-path
-                          ::module
                           ::add-modal-visible?
                           ::default-logo-url
                           ::logo-url-modal-visible?
                           ::save-modal-visible?
                           ::commit-message]))
 
-(def defaults {::active-input                    nil
-               ::version-warning?                false
-               ::form-valid?                     true
-               ::is-new?                         false
-               ::completed?                      true
-               ::module-path                     nil
-               ::module                          {}
-               ::add-modal-visible?              false
-               ::logo-url-modal-visible?         false
-               ::save-modal-visible?             false
-               ::default-logo-url                "/ui/images/noimage.png"
-               ::commit-message                  ""})
+(def defaults {::active-input            nil
+               ::form-spec               nil
+               ::form-valid?             true
+               ::validate-form?          false
+               ::version-warning?        false
+               ::is-new?                 false
+               ::completed?              true
+               ::add-modal-visible?      false
+               ::logo-url-modal-visible? false
+               ::save-modal-visible?     false
+               ::default-logo-url        "/ui/images/noimage.png"
+               ::commit-message          ""})

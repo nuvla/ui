@@ -1,8 +1,12 @@
-(ns sixsq.nuvla.ui.apps.utils
+(ns
+  sixsq.nuvla.ui.apps.utils
   (:require
+    [re-frame.core :refer [subscribe]]
     [clojure.string :as str]
+    [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [cljs.spec.alpha :as s]))
 
 
 (defn nav-path->module-path
@@ -54,12 +58,46 @@
                       [parent sanitized-name]))))
 
 
-(defn sanitize-base
+(defn
+  sanitize-base
   [module]
   (let [path (contruct-path (:parent-path module) (:name module))]
+    (log/infof "module: %s" module)
+    (log/infof "path: %s %s" path (:path module))
     (if (nil? (:path module))
       (assoc module :path path)
       module)))
+
+
+(defn db->module
+  [module commit-map db]
+  (let [{:keys [author commit]} commit-map
+        name        (get-in db [::apps-spec/module-common ::apps-spec/name])
+        description (get-in db [::apps-spec/module-common ::apps-spec/description])
+        parent-path (get-in db [::apps-spec/module-common ::apps-spec/parent-path])
+        logo-url    (get-in db [::apps-spec/module-common ::apps-spec/logo-url])
+        type        (get-in db [::apps-spec/module-common ::apps-spec/type])
+        path        (get-in db [::apps-spec/module-common ::apps-spec/path])]
+    (as-> module m
+          (assoc-in m [:name] name)
+          (assoc-in m [:description] description)
+          (assoc-in m [:parent-path] parent-path)
+          (assoc-in m [:logo-url] logo-url)
+          (assoc-in m [:type] type)
+          (assoc-in m [:path] path)
+          (sanitize-base m)
+          (dissoc m :children))))
+
+
+(defn module->db
+  [db module]
+  (-> db
+      (assoc-in [::apps-spec/module-common ::apps-spec/name] (get-in module [:name]))
+      (assoc-in [::apps-spec/module-common ::apps-spec/description] (get-in module [:description]))
+      (assoc-in [::apps-spec/module-common ::apps-spec/parent-path] (get-in module [:parent-path]))
+      (assoc-in [::apps-spec/module-common ::apps-spec/path] (get-in module [:path]))
+      (assoc-in [::apps-spec/module-common ::apps-spec/logo-url] (get-in module [:logo-url]))
+      (assoc-in [::apps-spec/module-common ::apps-spec/type] (get-in module [:type]))))
 
 
 (defn can-operation? [operation data]

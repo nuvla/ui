@@ -5,8 +5,21 @@
 
 
 (reg-sub
+  ::module-common
+  ::spec/module-common)
+
+
+;; Validation
+
+; Is the form valid?
+(reg-sub
   ::form-valid?
   ::spec/form-valid?)
+
+; Should the form be validated?
+(reg-sub
+  ::validate-form?
+  ::spec/validate-form?)
 
 
 (reg-sub
@@ -30,6 +43,7 @@
 
 
 (reg-sub
+
   ::module
   ::spec/module)
 

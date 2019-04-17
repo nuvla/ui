@@ -2,7 +2,11 @@
   (:require [sixsq.nuvla.ui.apps.utils :as apps-utils]))
 
 (defn db->module
-  [module]
-  (-> module
-      (apps-utils/sanitize-base)
-      (dissoc :children)))
+  [module commit-map db]
+  module)
+
+
+(defn module->db
+  [db module]
+  (-> db
+      (apps-utils/module->db module)))

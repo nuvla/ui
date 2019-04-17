@@ -2,6 +2,7 @@
   (:require
     [cemerick.url :as url]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
     [sixsq.nuvla.ui.apps-store.views :as apps-store-views]
@@ -33,8 +34,9 @@
         new-parent (utils/nav-path->parent-path @nav-path)
         new-name   (utils/nav-path->module-name @nav-path)]
     (dispatch [::events/clear-module new-name new-parent (str/upper-case new-type)])
-    (if (= "component" new-type)
-      (apps-component-views/clear-module)
+    (case new-type
+      "component" (apps-component-views/clear-module)
+      "project" (apps-project-views/clear-module)
       (apps-project-views/clear-module))))
 
 
@@ -49,6 +51,7 @@
             is-root?    (empty? module-name)
             is-new?     (not (empty? new-type))]
         (dispatch [::events/is-new? (not (empty? new-type))])
+        (dispatch [::main-events/changes-protection? false])
         (if-not is-root?
           (do
             (if-not is-new?
@@ -62,9 +65,9 @@
   [path]
   (timbre/set-level! :info)
   [:div
+   [views-detail/validation-error-message]
    [views-detail/version-warning]
    [views-detail/add-modal]
    [views-detail/save-modal]
-   [views-detail/validation-error-message]
    [views-detail/logo-url-modal]
    [apps]])

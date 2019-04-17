@@ -7,36 +7,55 @@
 
 ;; Deserialization functions: module->db
 
+(defn image->db
+  [{:keys [registry repository image-name tag]}]
+  {::spec/registry   registry
+   ::spec/repository repository
+   ::spec/image-name image-name
+   ::spec/tag        tag})
+
+
 (defn urls->db
   [tuples]
   (into {}
         (for [[name url] tuples]
           (let [id (random-uuid)]
-            {id {:id id :name name :url url}}))))
+            {id {:id             id
+                 ::spec/url-name name
+                 ::spec/url      url}}))))
 
 
 (defn ports->db
   [ports]
   (into {}
-        (for [p ports]
+        (for [{:keys [target-port published-port protocol]} ports]
           (let [id (random-uuid)]
-            {id (assoc p :id id)}))))
+            {id {:id                   id
+                 ::spec/target-port    target-port
+                 ::spec/published-port published-port
+                 ::spec/protocol       protocol}}))))
 
 
 (defn mounts->db
   [mounts]
   (into {}
-        (for [m mounts]
+        (for [{:keys [source target read-only mount-type]} mounts]
           (let [id (random-uuid)]
-            {id (assoc m :id id)}))))
+            {id {:id                    id
+                 ::spec/mount-source    source
+                 ::spec/mount-target    target
+                 ::spec/mount-read-only read-only
+                 ::spec/mount-type      mount-type}}))))
 
 
 (defn output-parameters->db
   [params]
   (into {}
-        (for [p params]
+        (for [{:keys [name description]} params]
           (let [id (random-uuid)]
-            {id (assoc p :id id)}))))
+            {id {:id                id
+                 ::spec/name        name
+                 ::spec/description description}}))))
 
 
 (defn data-types->db
@@ -44,34 +63,49 @@
   (into {}
         (for [dt dts]
           (let [id (random-uuid)]
-            {id {:id id :data-type dt}}))))
+            {id {:id              id
+                 ::spec/data-type dt}}))))
 
 
 (defn module->db
-  [module db]
+  [db module]
   (-> db
-      (assoc-in [::spec/urls] (urls->db (get-in module [:content :urls])))
-      (assoc-in [::spec/architecture] (get-in module [:content :architecture]))
-      (assoc-in [::spec/output-parameters] (output-parameters->db (get-in module [:content :output-parameters])))
-      (assoc-in [::spec/data-types] (data-types->db (get-in module [:data-accept-content-types])))
-      (assoc-in [::spec/ports] (ports->db (get-in module [:content :ports])))
-      (assoc-in [::spec/mounts] (mounts->db (get-in module [:content :mounts])))))
+      (apps-utils/module->db module)
+      (assoc-in [::spec/module-component ::spec/image] (image->db (get-in module [:content :image])))
+      (assoc-in [::spec/module-component ::spec/urls] (urls->db (get-in module [:content :urls])))
+      (assoc-in [::spec/module-component ::spec/architecture] (get-in module [:content :architecture]))
+      (assoc-in [::spec/module-component ::spec/output-parameters] (output-parameters->db (get-in module [:content :output-parameters])))
+      (assoc-in [::spec/module-component ::spec/data-types] (data-types->db (get-in module [:data-accept-content-types])))
+      (assoc-in [::spec/module-component ::spec/ports] (ports->db (get-in module [:content :ports])))
+      (assoc-in [::spec/module-component ::spec/mounts] (mounts->db (get-in module [:content :mounts])))))
 
 
 ;; Serialization functions: db->module
 
+(defn image->module
+  [db]
+  (let [{:keys [::spec/registry ::spec/repository ::spec/image-name ::spec/tag]}
+        (get-in db [::spec/module-component ::spec/image])]
+    (conj {:image-name image-name}
+          (when (not (nil? registry)) {:registry registry})
+          (when (not (nil? repository)) {:repository repository})
+          (when (not (nil? tag)) {:tag tag}))))
+
+
 (defn urls->module
   [db]
   (into []
-        (for [[id u] (::spec/urls db)]
-          [(:name u) (:url u)])))
+        (for [[id u] (get-in db [::spec/module-component ::spec/urls])]
+          (do
+            [(::spec/url-name u) (::spec/url u)]))))
 
 
 (defn ports->module
   [db]
   (into []
-        (for [[id p] (::spec/ports db)]
-          (let [{:keys [target-port published-port protocol] :or {target-port nil published-port nil protocol "tcp"}} p]
+        (for [[id p] (get-in db [::spec/module-component ::spec/ports])]
+          (let [{:keys [::spec/target-port ::spec/published-port ::spec/protocol]
+                 :or   {target-port nil published-port nil protocol "tcp"}} p]
             (conj {:target-port target-port}
                   (when (not (nil? published-port)) {:published-port published-port})
                   (when (not (nil? protocol)) {:protocol protocol}))))))
@@ -81,19 +115,20 @@
 (defn mounts->module
   [db]
   (into []
-        (for [[id m] (::spec/mounts db)]
-          (let [{:keys [source target read-only mount-type] :or {read-only false}} m]
-            (conj {:source source}
-                  {:target target}
+        (for [[id m] (get-in db [::spec/module-component ::spec/mounts])]
+          (let [{:keys [::spec/mount-source ::spec/mount-target ::spec/mount-read-only ::spec/mount-type]
+                 :or   {mount-read-only false}} m]
+            (conj {:source mount-source}
+                  {:target mount-target}
                   {:mount-type mount-type}
-                  (when (not (nil? read-only)) {:read-only read-only}))))))
+                  (when (not (nil? mount-read-only)) {:read-only mount-read-only}))))))
 
 
 (defn output-parameters->module
   [db]
   (into []
-        (for [[id op] (::spec/output-parameters db)]
-          (let [{:keys [name description]} op]
+        (for [[id op] (get-in db [::spec/module-component ::spec/output-parameters])]
+          (let [{:keys [::spec/name ::spec/description]} op]
             (conj
               {:name name}
               {:description description})))))
@@ -102,8 +137,8 @@
 (defn data-binding->module
   [db]
   (into []
-        (for [[id binding] (::spec/data-types db)]
-          (let [{:keys [data-type]} binding]
+        (for [[id binding] (get-in db [::spec/module-component ::spec/data-types])]
+          (let [{:keys [::spec/data-type]} binding]
             (conj
               data-type)))))
 
@@ -111,16 +146,19 @@
 (defn db->module
   [module commit-map db]
   (let [{:keys [author commit]} commit-map
+        architecture      (get-in db [::spec/module-component ::spec/architecture])
+        image             (image->module db)
         urls              (urls->module db)
         ports             (ports->module db)
         mounts            (mounts->module db)
         output-parameters (output-parameters->module db)
         bindings          (data-binding->module db)]
+    (log/infof "arch.: %s" architecture)
     (as-> module m
-          (apps-utils/sanitize-base m)
           (assoc-in m [:content :author] author)
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
-          (assoc-in m [:content :architecture] (::spec/architecture db))
+          (assoc-in m [:content :architecture] architecture)
+          (assoc-in m [:content :image] image)
           (if (empty? urls) (update-in m [:content] dissoc :urls) (assoc-in m [:content :urls] urls))
           (assoc-in m [:content :ports] ports)
           (assoc-in m [:content :mounts] mounts)

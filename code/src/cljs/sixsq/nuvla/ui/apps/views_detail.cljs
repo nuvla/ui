@@ -2,7 +2,7 @@
   (:require
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as reagent]
     [sixsq.nuvla.ui.apps.events :as events]
     [sixsq.nuvla.ui.apps.spec :as spec]
@@ -44,48 +44,49 @@
                          (get-module-fn)))}]])))
 
 
-(defn validate-form
-  [module-spec module]
-  ;(log/infof "module: %s module-spec: %s" module module-spec)
-  (let [valid? (s/valid? module-spec module)]
-    ;(log/infof "form is valid? %s" valid?)
-    ;(s/explain module-spec module)
-    (true? valid?)
-    ; TODO: fix validation
-    true))
-
-
 (defn edit-button-disabled?
-  [page-changed?]
-  (not page-changed?))
+  [page-changed? form-valid?]
+  (log/infof "page-changed? %s form-valid? %s" page-changed? form-valid?)
+  (or (not page-changed?) (not form-valid?)))
 
 
-(defn control-bar [module-spec]
+(defn save-callback
+  []
+  (dispatch-sync [::events/set-validate-form? true])
+  (dispatch-sync [::events/validate-form])
+  (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)]
+    (when form-valid?
+      (do
+        (dispatch [::events/set-validate-form? false])
+        (dispatch [::events/is-new? false])
+        (dispatch [::events/open-save-modal])))))
+
+
+(defn control-bar []
   (let [tr            (subscribe [::i18n-subs/tr])
         module        (subscribe [::subs/module])
         is-new?       (subscribe [::subs/is-new?])
         cep           (subscribe [::api-subs/cloud-entry-point])
+        form-valid?   (subscribe [::subs/form-valid?])
         page-changed? (subscribe [::main-subs/changes-protection?])]
     (fn []
       (let [launchable?      (not= "PROJECT" (:type @module))
-            add?             (not= "PROJECT" (:type @module))
-            add-disabled?    @is-new?
-            launch-disabled? @is-new?
-            editable?        (utils/editable? @module @is-new?)
-            form-valid?      (validate-form module-spec @module)]
+            launch-disabled? (or @is-new? @page-changed?)
+            add?             (= "PROJECT" (:type @module))
+            add-disabled?    (or @is-new? @page-changed?)
+            editable?        (utils/editable? @module @is-new?)]
         (vec (concat [ui/Menu {:borderless true}]
 
                      (resource-details/format-operations nil @module (:base-uri @cep) nil)
 
-                     [
-                      (when launchable?
+                     [(when launchable?
                         [uix/MenuItemWithIcon
                          {:name      (@tr [:launch])
                           :icon-name "rocket"
                           :disabled  launch-disabled?
                           :on-click  #(dispatch [::deployment-dialog-events/create-deployment (:id @module) :credentials])}])
 
-                      (when (not add?)
+                      (when add?
                         [uix/MenuItemWithIcon
                          {:name      (@tr [:add])
                           :icon-name "add"
@@ -96,35 +97,26 @@
                         [uix/MenuItemWithIcon
                          {:name      (@tr [:save])
                           :icon-name "save"
-                          :disabled  (edit-button-disabled? @page-changed?)
-                          :on-click  #(if
-                                        form-valid?
-                                        (dispatch [::events/open-save-modal])
-                                        (dispatch [::events/form-invalid]))}])
-
+                          :disabled  (edit-button-disabled? @page-changed? @form-valid?)
+                          :on-click  save-callback}])
                       [refresh-button]]))))))
 
 
-(defn save-action [module-spec]
+(defn save-action []
   (let [page-changed? (subscribe [::main-subs/changes-protection?])
         tr            (subscribe [::i18n-subs/tr])
         module        (subscribe [::subs/module])
+        form-valid?   (subscribe [::subs/form-valid?])
         is-new?       (subscribe [::subs/is-new?])]
     (fn []
-      (let [form-valid? (validate-form module-spec @module)
-            editable?   (utils/editable? @module @is-new?)]
+      (let [editable? (utils/editable? @module @is-new?)]
         (when editable?
           [ui/Button {:primary  true
                       :style    {:margin-top 10}
-                      :disabled (edit-button-disabled? @page-changed?)
+                      :disabled (edit-button-disabled? @page-changed? @form-valid?)
                       :icon     "save"
                       :content  (@tr [:save])
-                      :on-click #(if
-                                   form-valid?
-                                   (do
-                                     (dispatch [::events/is-new? false])
-                                     (dispatch [::events/open-save-modal]))
-                                   (dispatch [::events/form-invalid]))}])))))
+                      :on-click save-callback}])))))
 
 
 (defn save-modal
@@ -243,7 +235,7 @@
   (let [version-warning? (subscribe [::subs/version-warning?])]
     (fn []
       (let []
-        [ui/Message {:hidden  (not (true? @version-warning?))
+        [ui/Message {:hidden  (not @version-warning?)
                      :warning true}
          [ui/MessageHeader "Warning!"]
          [ui/MessageContent "This is not the latest version. Click or tap "
@@ -256,7 +248,7 @@
   (let [form-valid? (subscribe [::subs/form-valid?])]
     (fn []
       (let []
-        [ui/Message {:hidden (true? @form-valid?)
+        [ui/Message {:hidden @form-valid?
                      :error  true}
          [ui/MessageHeader "Validation error!"]
          [ui/MessageContent "The form in invalid. Please review the fields in red."]]))))
@@ -329,13 +321,15 @@
 
 (defn summary-row
   [key name-kw value on-change-event editable? mandatory? value-spec]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        active-input (subscribe [::subs/active-input])
-        validate?    (reagent/atom false)]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        active-input    (subscribe [::subs/active-input])
+        local-validate? (reagent/atom false)
+        validate-form?     (subscribe [::subs/validate-form?])]
     (fn [key name-kw value on-change-event editable? mandatory? value-spec]
       (let [name-str      (name name-kw)
             name-label    (if (and editable? mandatory?) (utils/mandatory-name name-str) name-str)
             input-active? (= name-str @active-input)
+            validate?     (or @local-validate? @validate-form?)
             valid?        (s/valid? value-spec value)]
         [ui/TableRow
          [ui/TableCell {:collapsing true}
@@ -346,16 +340,17 @@
             [ui/Input {:default-value value
                        :placeholder   (str/capitalize (@tr [name-kw]))
                        :disabled      (not editable?)
-                       :error         (when (and @validate? (not valid?)) true)
+                       :error         (when (and validate? (not valid?)) true)
                        :fluid         true
                        :icon          (when input-active? :pencil)
                        :onMouseEnter  #(dispatch [::events/active-input name-str])
                        :onMouseLeave  #(dispatch [::events/active-input nil])
-                       :on-change     (do
-                                        (reset! validate? true)
-                                        (ui-callback/input-callback
-                                          #(do (dispatch [::main-events/changes-protection? true])
-                                               (dispatch [on-change-event %]))))}]
+                       :on-change     (ui-callback/input-callback
+                                        #(do
+                                           (reset! local-validate? true)
+                                           (dispatch [::main-events/changes-protection? true])
+                                           (dispatch [::events/validate-form])
+                                           (dispatch [on-change-event %])))}]
             [:span value])]]))))
 
 
@@ -364,21 +359,22 @@
   (let [tr               (subscribe [::i18n-subs/tr])
         default-logo-url (subscribe [::subs/default-logo-url])
         is-new?          (subscribe [::subs/is-new?])
-        module           (subscribe [::subs/module])]
+        module           (subscribe [::subs/module])
+        module-common    (subscribe [::subs/module-common])]
     (fn [extras]
       (let [editable? (utils/editable? @module @is-new?)
-            {name        :name
-             parent      :parent-path
-             description :description
-             logo-url    :logo-url
-             type        :type
-             path        :path
+            {name        ::spec/name
+             parent      ::spec/parent-path
+             description ::spec/description
+             logo-url    ::spec/logo-url
+             type        ::spec/type
+             path        ::spec/path
              :or         {name        ""
                           parent      ""
                           description ""
                           logo-url    @default-logo-url
                           type        "project"
-                          path        nil}} @module]
+                          path        nil}} @module-common]
         [ui/Grid {:style {:margin-bottom 5}}
          [ui/GridRow {:reversed :computer}
           [ui/GridColumn {:computer     2
@@ -392,8 +388,10 @@
                           :large-screen 14}
            [ui/Table (assoc style/definition :class :nuvla-ui-editable)
             [ui/TableBody
-             [summary-row (str parent "-name") :name name ::events/name editable? true ::spec/name]
-             [summary-row (str parent "-description") :description description ::events/description editable? true ::spec/description]
+             [summary-row (str parent "-name")
+              :name name ::events/name editable? true ::spec/name]
+             [summary-row (str parent "-description")
+              :description description ::events/description editable? true ::spec/description]
              (when (not-empty parent)
                (let [label (if (= "PROJECT" type) "parent project" "project")]
                  [ui/TableRow
@@ -401,8 +399,8 @@
                                  :style      {:padding-bottom 8}} label]
                   [ui/TableCell {:style {:padding-left (when editable? 24)}} parent]]))
              (for [x extras]
-               x)
-             ]]
+               x)]]
+
            (when (not @is-new?)
              [details-section])
            [views-versions/versions]]]]))))

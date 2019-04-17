@@ -20,4 +20,4 @@
                                          :data-record
                                          {:filter      filter
                                           :select      "id"
-                                          :aggregation "value_count:id, sum:data:bytes"})))))))))
+                                          :aggregation "value_count:id, sum:bytes"})))))))))

@@ -33,25 +33,6 @@
   (subs (str kw) 1))
 
 
-(defn data-records->mounts
-  [data-records]
-  (->> data-records
-       :resources
-       (map (fn [data-record]
-              [((keyword "data:nfsIP") data-record)
-               ((keyword "data:nfsDevice") data-record)
-               ((keyword "data:bucket") data-record)]))
-       distinct
-       (map (fn [[ip device bucket]]
-              {:mount-type     "volume"
-               :target         (str "/mnt/" bucket)
-               :volume-options [{:option-key   "o"
-                                 :option-value (str "addr=" ip)}
-                                {:option-key   "type"
-                                 :option-value "nfs"}
-                                {:option-key   "device"
-                                 :option-value (str ":" device "/" bucket)}]}))))
-
 ;;
 ;; may want to consider the following implementation for invert-dataset-map
 ;;

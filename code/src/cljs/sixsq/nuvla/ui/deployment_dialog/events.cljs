@@ -45,15 +45,19 @@
           selected-keys (map keyword (::data-spec/selected-data-set-ids db))
           datasets-map (select-keys (::data-spec/data-records-by-data-set db) selected-keys)
 
-          callback-data #(dispatch [::set-deployment
-                                    (-> updated-deployment
-                                        (assoc :data-records (utils/invert-dataset-map datasets-map))
-                                        (assoc-in [:module :content :mounts] (utils/data-records->mounts %)))])]
+          callback-data (fn [{:keys [resources] :as data-records}]
+                          (let [distinct-mounts (->> resources
+                                                     (map :mount)
+                                                     (distinct))]
+                            (dispatch [::set-deployment
+                                       (-> updated-deployment
+                                           (assoc :data-records (utils/invert-dataset-map datasets-map))
+                                           (assoc-in [:module :content :mounts] distinct-mounts))])))]
       (cond-> {:db (assoc db ::spec/selected-credential credential
                              ::spec/deployment updated-deployment)}
               infra-service-filter (assoc ::cimi-api-fx/search
                                           [client :data-record {:filter filter,
-                                                                :select "id, data:bucket, data:nfsIP, data:nfsDevice"}
+                                                                :select "id, mount"}
                                            callback-data])))))
 
 

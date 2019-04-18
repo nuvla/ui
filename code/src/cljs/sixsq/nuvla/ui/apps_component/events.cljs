@@ -53,7 +53,6 @@
                       (numeric? value)
                       (js/parseInt value)
                       (if (empty? value) nil value))]
-      (log/infof "value-int %s" value-int)
       (assoc-in db [::spec/module-component ::spec/ports id ::spec/published-port] value-int))))
 
 

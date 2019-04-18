@@ -32,7 +32,6 @@
         local-validate? (reagent/atom false)
         form-valid?     (subscribe [::apps-subs/form-valid?])]
     (fn [id name value placeholder update-event value-spec fluid?]
-      (log/infof "%s %s %s %s %s %s" id name value placeholder update-event value-spec)
       (let [input-name (str name "-" id)
             validate?  (or @local-validate? (not @form-valid?))]
         [ui/Input {:name          input-name
@@ -576,7 +575,6 @@
          [:h2 [ui/Icon {:name "th"}]
           parent (when (not-empty parent) "/") name]
          [apps-views-detail/control-bar]
-         [:div (pr-str @mc)]
          [summary]
          [ports-section]
          [:div {:style {:padding-top 10}}]

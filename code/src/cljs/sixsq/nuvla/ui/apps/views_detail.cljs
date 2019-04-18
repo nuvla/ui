@@ -46,7 +46,6 @@
 
 (defn edit-button-disabled?
   [page-changed? form-valid?]
-  (log/infof "page-changed? %s form-valid? %s" page-changed? form-valid?)
   (or (not page-changed?) (not form-valid?)))
 
 

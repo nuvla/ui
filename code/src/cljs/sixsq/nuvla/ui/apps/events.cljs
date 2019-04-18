@@ -263,7 +263,6 @@
   (fn [{{:keys [::spec/module ::client-spec/client] :as db} :db :as cofx} [_ commit-map]]
     (let [id               (:id module)
           sanitized-module (utils-detail/db->module module commit-map db)]
-      (log/infof "sanitized-module: %s" sanitized-module)
       (if (nil? id)
         {:db               db
          ::cimi-api-fx/add [client "module" sanitized-module

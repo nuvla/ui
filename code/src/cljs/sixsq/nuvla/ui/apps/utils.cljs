@@ -62,8 +62,6 @@
   sanitize-base
   [module]
   (let [path (contruct-path (:parent-path module) (:name module))]
-    (log/infof "module: %s" module)
-    (log/infof "path: %s %s" path (:path module))
     (if (nil? (:path module))
       (assoc module :path path)
       module)))

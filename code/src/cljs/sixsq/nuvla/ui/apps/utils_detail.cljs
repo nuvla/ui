@@ -10,7 +10,6 @@
   [module commit db]
   (let [type (::spec/module-type db)
         module (utils/db->module module commit db)]
-    (log/infof "IN... %s" type)
     (case type
       :component (apps-component-utils/db->module module commit db)
       :project (apps-project-utils/db->module module commit db)

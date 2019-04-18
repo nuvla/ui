@@ -153,7 +153,6 @@
         mounts            (mounts->module db)
         output-parameters (output-parameters->module db)
         bindings          (data-binding->module db)]
-    (log/infof "arch.: %s" architecture)
     (as-> module m
           (assoc-in m [:content :author] author)
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))

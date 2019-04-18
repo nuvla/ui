@@ -78,7 +78,14 @@
 
 ; Output parameters
 
-(s/def ::output-parameters any?)
+(s/def ::output-parameter-name apps-spec/nonblank-string)
+
+(s/def ::output-parameter-description apps-spec/nonblank-string)
+
+(s/def ::output-parameter (s/keys :req [::output-parameter-name
+                                        ::output-parameter-description]))
+
+(s/def ::output-parameters (s/map-of any? (s/merge ::output-parameter)))
 
 
 (s/def ::architecture string?)

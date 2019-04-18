@@ -53,9 +53,9 @@
   (into {}
         (for [{:keys [name description]} params]
           (let [id (random-uuid)]
-            {id {:id                id
-                 ::spec/name        name
-                 ::spec/description description}}))))
+            {id {:id                                 id
+                 ::spec/output-parameter-name        name
+                 ::spec/output-parameter-description description}}))))
 
 
 (defn data-types->db
@@ -128,10 +128,10 @@
   [db]
   (into []
         (for [[id op] (get-in db [::spec/module-component ::spec/output-parameters])]
-          (let [{:keys [::spec/name ::spec/description]} op]
+          (let [{:keys [::spec/output-parameter-name ::spec/output-parameter-description]} op]
             (conj
-              {:name name}
-              {:description description})))))
+              {:name output-parameter-name}
+              {:description output-parameter-description})))))
 
 
 (defn data-binding->module

@@ -39,16 +39,29 @@
     (update-in db [::spec/module-component ::spec/ports] dissoc id)))
 
 
+(defn numeric? [s]
+  (let [is-num? (int? s)
+        num (js/parseInt s)
+        num-str (str num)]
+    (or is-num? (= num-str s))))
+
+
 (reg-event-db
   ::update-port-published
   (fn [db [_ id value]]
-    (assoc-in db [::spec/module-component ::spec/ports id ::spec/published-port] value)))
+    (let [value-int (if
+                      (numeric? value)
+                      (js/parseInt value)
+                      (if (empty? value) nil value))]
+      (log/infof "value-int %s" value-int)
+      (assoc-in db [::spec/module-component ::spec/ports id ::spec/published-port] value-int))))
 
 
 (reg-event-db
   ::update-port-target
   (fn [db [_ id value]]
-    (assoc-in db [::spec/module-component ::spec/ports id ::spec/target-port] value)))
+    (let [value-int (if (numeric? value) (js/parseInt value) value)]
+      (assoc-in db [::spec/module-component ::spec/ports id ::spec/target-port] value-int))))
 
 
 (reg-event-db
@@ -149,13 +162,15 @@
 (reg-event-db
   ::update-output-parameter-name
   (fn [db [_ id name]]
-    (assoc-in db [::spec/module-component ::spec/output-parameters id ::spec/name] name)))
+    (assoc-in db [::spec/module-component ::spec/output-parameters id
+                  ::spec/output-parameter-name] name)))
 
 
 (reg-event-db
   ::update-output-parameter-description
   (fn [db [_ id description]]
-    (assoc-in db [::spec/module-component ::spec/output-parameters id ::spec/description] description)))
+    (assoc-in db [::spec/module-component ::spec/output-parameters id
+                  ::spec/output-parameter-description] description)))
 
 
 (reg-event-db
@@ -181,23 +196,23 @@
 
 (reg-event-db
   ::update-docker-image-name
-  (fn [db [_ image-name]]
+  (fn [db [_ id image-name]]
     (assoc-in db [::spec/module-component ::spec/image ::spec/image-name] image-name)))
 
 
 (reg-event-db
   ::update-docker-repository
-  (fn [db [_ repository]]
+  (fn [db [_ id repository]]
     (assoc-in db [::spec/module-component ::spec/image ::spec/repository] repository)))
 
 
 (reg-event-db
   ::update-docker-registry
-  (fn [db [_ registry]]
+  (fn [db [_ id registry]]
     (assoc-in db [::spec/module-component ::spec/image ::spec/registry] registry)))
 
 
 (reg-event-db
   ::update-docker-tag
-  (fn [db [_ tag]]
+  (fn [db [_ id tag]]
     (assoc-in db [::spec/module-component ::spec/image ::spec/tag] tag)))

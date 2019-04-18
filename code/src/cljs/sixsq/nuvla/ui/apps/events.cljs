@@ -65,8 +65,8 @@
                                               (s/valid? ::spec/module-common module-common)
                                               (if (nil? form-spec) true (s/valid? form-spec module)))
                                             true)]
-      (s/explain ::spec/module-common module-common)
-      (s/explain form-spec module)
+      ;(s/explain ::spec/module-common module-common)
+      ;(s/explain form-spec module)
       (assoc db ::spec/form-valid? valid?))))
 
 

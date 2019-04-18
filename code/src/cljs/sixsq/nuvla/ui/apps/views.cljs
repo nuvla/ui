@@ -21,6 +21,9 @@
 (defn module-details
   [new-type]
   (let [module (subscribe [::subs/module])]
+    (dispatch [::main-events/changes-protection? false])
+    (dispatch [::events/form-valid true])
+    (dispatch [::events/set-validate-form? false])
     (fn [new-type]
       (let [type (:type @module)]
         (if (or (= "component" new-type) (= "COMPONENT" type))
@@ -51,7 +54,6 @@
             is-root?    (empty? module-name)
             is-new?     (not (empty? new-type))]
         (dispatch [::events/is-new? (not (empty? new-type))])
-        (dispatch [::main-events/changes-protection? false])
         (if-not is-root?
           (do
             (if-not is-new?

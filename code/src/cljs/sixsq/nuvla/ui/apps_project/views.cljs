@@ -91,7 +91,6 @@
         (dispatch [::apps-events/set-form-spec ::spec/module-project])
         (dispatch [::apps-events/set-module-type :project])
         [ui/Container {:fluid true}
-         [:div (pr-str @module-common)]
          [:h2 [ui/Icon {:name "folder"}]
           parent (when (not-empty parent) "/") name]
          [apps-views-detail/control-bar]

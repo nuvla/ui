@@ -564,8 +564,7 @@
 
 (defn view-edit
   []
-  (let [module-common (subscribe [::apps-subs/module-common])
-        mc            (subscribe [::subs/module-component])]
+  (let [module-common (subscribe [::apps-subs/module-common])]
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]

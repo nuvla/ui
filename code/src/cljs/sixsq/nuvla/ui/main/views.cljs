@@ -18,6 +18,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
     [sixsq.nuvla.ui.infra-service.views]
+    [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
@@ -110,7 +111,8 @@
       [uix/Button {:text     (@tr [:ignore-changes]),
                    :positive true
                    :active   true
-                   :on-click #(dispatch [::main-events/ignore-changes true])}]]]))
+                   :on-click #(do (dispatch [::main-events/ignore-changes true])
+                                  (dispatch [::apps-events/form-valid]))}]]]))
 
 
 (defn contents

@@ -5,42 +5,54 @@
 
 
 (reg-sub
-  ::port-mappings
+  ::image
   (fn [db]
-    (::spec/port-mappings db)))
+    (get-in db [::spec/module-component ::spec/image])))
 
 
 (reg-sub
-  ::volumes
+  ::ports
   (fn [db]
-    (::spec/volumes db)))
+    (get-in db [::spec/module-component ::spec/ports])))
+
+
+(reg-sub
+  ::mounts
+  (fn [db]
+    (get-in db [::spec/module-component ::spec/mounts])))
 
 
 (reg-sub
   ::urls
   (fn [db]
-    (::spec/urls db)))
+    (get-in db [::spec/module-component ::spec/urls])))
 
 
 (reg-sub
   ::output-parameters
   (fn [db]
-    (::spec/output-parameters db)))
+    (get-in db [::spec/module-component ::spec/output-parameters])))
 
 
 (reg-sub
   ::architecture
   (fn [db]
-    (::spec/architecture db)))
+    (get-in db [::spec/module-component ::spec/architecture])))
 
 
 (reg-sub
   ::data-types
   (fn [db]
-    (::spec/data-types db)))
+    (get-in db [::spec/module-component ::spec/data-types])))
 
 
 (reg-sub
   ::docker-image
   (fn [db]
-    (::spec/docker-image db)))
+    (get-in db [::spec/module-component ::spec/image])))
+
+
+(reg-sub
+  ::module-component
+  (fn [db]
+    (get-in db [::spec/module-component])))

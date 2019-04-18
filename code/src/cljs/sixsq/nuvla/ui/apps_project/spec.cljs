@@ -6,4 +6,4 @@
 ; create an initial entry for new components
 (def defaults {})
 
-(s/def ::module-project (s/merge ::apps-spec/summary))
+(s/def ::module-project nil?)

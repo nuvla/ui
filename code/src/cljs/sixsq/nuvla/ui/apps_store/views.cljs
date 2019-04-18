@@ -122,9 +122,8 @@
           [ui/AccordionContent {:active @active?}
            [control-bar-projects]
            (when (and @module (not (instance? js/Error @module)))
-             (let [{:keys [children content]} @module]
-               [apps-project-views/format-module-children children]
-               ))]]]))))
+             (let [{:keys [children]} @module]
+               [apps-project-views/format-module-children children]))]]]))))
 
 
 (defn appstore

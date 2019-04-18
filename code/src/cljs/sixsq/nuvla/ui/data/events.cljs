@@ -65,7 +65,7 @@
   ::set-data
   (fn [db [_ data-set-id response]]
     (let [doc-count (get-in response [:aggregations :value_count:id :value])
-          total-bytes (get-in response [:aggregations :sum:data:bytes :value])
+          total-bytes (get-in response [:aggregations :sum:bytes :value])
           data-record-ids (mapv :id (:resources response))]
       (-> db
           (update ::spec/counts assoc data-set-id doc-count)

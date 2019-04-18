@@ -73,5 +73,45 @@
 
 (reg-sub
   ::form-data
-  (fn [db [_ form-id]]
-    (get-in db [::spec/form-data form-id])))
+  (fn [db]
+    (::spec/form-data db)))
+
+
+(reg-sub
+  ::fields-in-errors
+  :<- [::form-id]
+  :<- [::form-data]
+  (fn [[form-id form-data]]
+    (let [errors (case form-id
+                   "user-template/email-password" [(when-not
+                                                     (= (:password form-data)
+                                                        (:repeat-password form-data))
+                                                     "password")
+                                                   (when (empty? (:password form-data))
+                                                     "error")
+                                                   (when (empty? (:email form-data))
+                                                     "error")]
+                   "session-template/password" [(when-not (and (:username form-data)
+                                                               (:password form-data))
+                                                  "error")]
+                   "session-template/api-key" [(when-not (and (:key form-data)
+                                                              (:secret form-data))
+                                                 "error")]
+                   "session-template/password-reset" [(when-not
+                                                        (= (:new-password form-data)
+                                                           (:repeat-new-password form-data))
+                                                        "password")
+                                                      (when (empty? (:new-password form-data))
+                                                        "error")
+                                                      (when (empty? (:username form-data))
+                                                        "error")]
+                   nil ["error"]
+                   #{})]
+      (->> errors seq (remove nil?) set))))
+
+
+(reg-sub
+  ::form-error?
+  :<- [::fields-in-errors]
+  (fn [fields-in-errors]
+    (some? (seq fields-in-errors))))

@@ -36,9 +36,9 @@
 
 (defn create-time-period-filter
   [[time-start time-end]]
-  (str "(data:timestamp>='"
+  (str "(timestamp>='"
        (time/time->utc-str time-start)
-       "' and data:timestamp<'"
+       "' and timestamp<'"
        (time/time->utc-str time-end)
        "')"))
 

@@ -7,176 +7,211 @@
 
 
 (reg-event-db
-  ::docker-image
-  (fn [db [_ docker-image]]
-    (assoc-in db [::apps-spec/module :content :image] docker-image)))
-
+  ::clear-module
+  (fn [db [_]]
+    (-> db
+        (assoc-in [::spec/module-component ::spec/ports] {})
+        (assoc-in [::spec/module-component ::spec/mounts] {})
+        (assoc-in [::spec/module-component ::spec/urls] {})
+        (assoc-in [::spec/module-component ::spec/output-parameters] {})
+        (assoc-in [::spec/module-component ::spec/data-types] {})
+        (assoc-in [::spec/module-component ::spec/architecture] "x86")
+        (assoc-in [::spec/module-component ::spec/image] {}))))
 
 (reg-event-db
   ::architecture
   (fn [db [_ architecture]]
-    (assoc db ::spec/architecture architecture)))
+    (assoc-in db [::spec/module-component ::spec/architecture] architecture)))
 
+
+; Ports
 
 (reg-event-db
-  ::add-port-mapping
+  ::add-port
   (fn [db [_ id mapping]]
     ; overwrite the id
-    (assoc-in db [::spec/port-mappings id] (assoc mapping :id id))))
+    (assoc-in db [::spec/module-component ::spec/ports id] (assoc mapping :id id))))
 
 
 (reg-event-db
-  ::remove-port-mapping
+  ::remove-port
   (fn [db [_ id]]
-    (update-in db [::spec/port-mappings] dissoc id)))
+    (update-in db [::spec/module-component ::spec/ports] dissoc id)))
+
+
+(defn numeric? [s]
+  (let [is-num? (int? s)
+        num (js/parseInt s)
+        num-str (str num)]
+    (or is-num? (= num-str s))))
 
 
 (reg-event-db
-  ::update-mapping-source
+  ::update-port-published
   (fn [db [_ id value]]
-    (assoc-in db [::spec/port-mappings id :source] value)))
+    (let [value-int (if
+                      (numeric? value)
+                      (js/parseInt value)
+                      (if (empty? value) nil value))]
+      (assoc-in db [::spec/module-component ::spec/ports id ::spec/published-port] value-int))))
 
 
 (reg-event-db
-  ::update-mapping-destination
+  ::update-port-target
   (fn [db [_ id value]]
-    (assoc-in db [::spec/port-mappings id :destination] value)))
+    (let [value-int (if (numeric? value) (js/parseInt value) value)]
+      (assoc-in db [::spec/module-component ::spec/ports id ::spec/target-port] value-int))))
 
 
 (reg-event-db
-  ::update-mapping-port-type
+  ::update-port-protocol
   (fn [db [_ id value]]
-    (assoc-in db [::spec/port-mappings id :port-type] value)))
+    (assoc-in db [::spec/module-component ::spec/ports id ::spec/protocol] value)))
 
+
+; Volumes (mounts)
 
 (reg-event-db
-  ::add-volume
-  (fn [db [_ id volume]]
+  ::add-mount
+  (fn [db [_ id mount]]
     ; overwrite the id
-    (assoc-in db [::spec/volumes id] (assoc volume :id id))))
+    (assoc-in db [::spec/module-component ::spec/mounts id] (assoc mount :id id))))
 
 
 (reg-event-db
-  ::remove-volume
+  ::remove-mount
   (fn [db [_ id]]
-    (update-in db [::spec/volumes] dissoc id)))
+    (update-in db [::spec/module-component ::spec/mounts] dissoc id)))
 
 
 (reg-event-db
-  ::update-volume-type
+  ::update-mount-type
   (fn [db [_ id value]]
-    (assoc-in db [::spec/volumes id :type] value)))
+    (assoc-in db [::spec/module-component ::spec/mounts id ::spec/mount-type] value)))
 
 
 (reg-event-db
-  ::update-volume-source
+  ::update-mount-source
   (fn [db [_ id value]]
-    (assoc-in db [::spec/volumes id :source] value)))
+    (assoc-in db [::spec/module-component ::spec/mounts id ::spec/mount-source] value)))
 
 
 (reg-event-db
-  ::update-volume-destination
+  ::update-mount-target
   (fn [db [_ id value]]
-    (assoc-in db [::spec/volumes id :destination] value)))
+    (assoc-in db [::spec/module-component ::spec/mounts id ::spec/mount-target] value)))
+
+
+;(reg-event-db
+;  ::update-mount-options
+;  (fn [db [_ id value]]
+;    (assoc-in db [::spec/module-component ::spec/mounts id ::spec/mount-options] value)))
 
 
 (reg-event-db
-  ::update-volume-driver
+  ::update-mount-read-only?
   (fn [db [_ id value]]
-    (assoc-in db [::spec/volumes id :driver] value)))
-
-
-(reg-event-db
-  ::update-volume-options
-  (fn [db [_ id value]]
-    (assoc-in db [::spec/volumes id :options] value)))
-
-
-(reg-event-db
-  ::update-volume-read-only?
-  (fn [db [_ id value]]
-    (log/infof "checked: %s" value)
-    (assoc-in db [::spec/volumes id :read-only?] value)))
+    (assoc-in db [::spec/module-component ::spec/mounts id ::spec/mount-read-only] value)))
 
 
 (reg-event-db
   ::add-url
   (fn [db [_ id url]]
     ; overwrite the id
-    (assoc-in db [::spec/urls id] (assoc url :id id))))
+    (assoc-in db [::spec/module-component ::spec/urls id] (assoc url :id id))))
 
 
 (reg-event-db
   ::remove-url
   (fn [db [_ id]]
-    (update-in db [::spec/urls] dissoc id)))
+    (update-in db [::spec/module-component ::spec/urls] dissoc id)))
 
 
 (reg-event-db
   ::update-url-name
   (fn [db [_ id name]]
-    (assoc-in db [::spec/urls id :name] name)))
+    (assoc-in db [::spec/module-component ::spec/urls id ::spec/url-name] name)))
 
 
 (reg-event-db
   ::update-url-url
   (fn [db [_ id url]]
-    (assoc-in db [::spec/urls id :url] url)))
+    (assoc-in db [::spec/module-component ::spec/urls id ::spec/url] url)))
 
 
 (reg-event-db
   ::add-output-parameter
   (fn [db [_ id param]]
     ; overwrite the id
-    (assoc-in db [::spec/output-parameters id] (assoc param :id id))))
+    (assoc-in db [::spec/module-component ::spec/output-parameters id] (assoc param :id id))))
 
 
 (reg-event-db
   ::remove-output-parameter
   (fn [db [_ id]]
-    (update-in db [::spec/output-parameters] dissoc id)))
+    (update-in db [::spec/module-component ::spec/output-parameters] dissoc id)))
+
+
+(reg-event-db
+  ::remove-output-parameter
+  (fn [db [_ id]]
+    (update-in db [::spec/module-component ::spec/output-parameters] dissoc id)))
 
 
 (reg-event-db
   ::update-output-parameter-name
   (fn [db [_ id name]]
-    (assoc-in db [::spec/output-parameters id :name] name)))
+    (assoc-in db [::spec/module-component ::spec/output-parameters id
+                  ::spec/output-parameter-name] name)))
 
 
 (reg-event-db
   ::update-output-parameter-description
   (fn [db [_ id description]]
-    (assoc-in db [::spec/output-parameters id :description] description)))
+    (assoc-in db [::spec/module-component ::spec/output-parameters id
+                  ::spec/output-parameter-description] description)))
 
 
 (reg-event-db
   ::add-data-type
   (fn [db [_ id data-type]]
     ; overwrite the id
-    (assoc-in db [::spec/data-types id] (assoc data-type :id id))))
+    (assoc-in db [::spec/module-component ::spec/data-types id] (assoc data-type :id id))))
 
 
 (reg-event-db
   ::remove-data-type
   (fn [db [_ id]]
-    (update-in db [::spec/data-types] dissoc id)))
+    (update-in db [::spec/module-component ::spec/data-types] dissoc id)))
 
 
 (reg-event-db
   ::update-data-type
   (fn [db [_ id dt]]
-    (assoc-in db [::spec/data-types id] dt)))
+    (assoc-in db [::spec/module-component ::spec/data-types id] {:id id ::spec/data-type dt})))
 
 
-(defn urls-tuples->map
-  [tuples]
-  (log/infof "tuples: %s" tuples)
-  (for [[name url] tuples]
-    (let [id (random-uuid)]
-      (conj {id {:id id :name name :url url}}))))
+; Docker image
+
+(reg-event-db
+  ::update-docker-image-name
+  (fn [db [_ id image-name]]
+    (assoc-in db [::spec/module-component ::spec/image ::spec/image-name] image-name)))
 
 
 (reg-event-db
-  ::deserialize-module
-  (fn [db [_]]
-    (-> db (assoc-in [::spec/urls] (first (urls-tuples->map (get-in db [::apps-spec/module :content :urls])))))))
+  ::update-docker-repository
+  (fn [db [_ id repository]]
+    (assoc-in db [::spec/module-component ::spec/image ::spec/repository] repository)))
+
+
+(reg-event-db
+  ::update-docker-registry
+  (fn [db [_ id registry]]
+    (assoc-in db [::spec/module-component ::spec/image ::spec/registry] registry)))
+
+
+(reg-event-db
+  ::update-docker-tag
+  (fn [db [_ id tag]]
+    (assoc-in db [::spec/module-component ::spec/image ::spec/tag] tag)))

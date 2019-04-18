@@ -4,7 +4,8 @@
             [sixsq.nuvla.ui.apps.events :as events]
             [sixsq.nuvla.ui.apps.subs :as subs]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [taoensso.timbre :as log]))
 
 
 (defn is-latest? [module]
@@ -30,7 +31,7 @@
     (fn []
       (let [versions         (:versions @module)
             is-versioned?    (not (empty? versions))
-            versions-indexes (zipmap versions (range))
+            versions-indexes (sort #(compare (second %2) (second %1)) (zipmap versions (range)))
             current          (-> @module :content :id)]
         (if (not (is-latest? @module))
           (dispatch [::events/set-version-warning])
@@ -47,9 +48,7 @@
                 [ui/TableHeaderCell {:width "14"} "Commit message"]]]
               [ui/TableBody
                (for [[v i] versions-indexes]
-                 (let [href        (:href v)
-                       commit      (:commit v)
-                       author      (:author v)
+                 (let [{:keys [href commit author]} v
                        is-current? (= current href)]
                    ^{:key (str "version" i)}
                    [ui/TableRow (when is-current? {:active true})

@@ -7,7 +7,8 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [taoensso.timbre :as log]))
 
 
 (defn navigate
@@ -56,7 +57,6 @@
   []
   (let [show? (subscribe [::main-subs/sidebar-open?])
         iframe? (subscribe [::main-subs/iframe?])]
-
     [ui/Sidebar {:as        ui/MenuRaw
                  :className "medium thin"
                  :vertical  true

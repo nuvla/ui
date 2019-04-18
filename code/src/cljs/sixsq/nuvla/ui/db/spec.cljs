@@ -18,7 +18,8 @@
     [sixsq.nuvla.ui.main.spec :as main]
     [sixsq.nuvla.ui.messages.spec :as messages]
     [sixsq.nuvla.ui.nuvlabox-detail.spec :as nuvlabox-detail]
-    [sixsq.nuvla.ui.nuvlabox.spec :as nuvlabox]))
+    [sixsq.nuvla.ui.nuvlabox.spec :as nuvlabox]
+    [sixsq.nuvla.ui.profile.spec :as profile]))
 
 
 (s/def ::db (s/merge ::apps/db
@@ -37,7 +38,8 @@
                      ::main/db
                      ::messages/db
                      ::nuvlabox/db
-                     ::nuvlabox-detail/db))
+                     ::nuvlabox-detail/db
+                     ::profile/db))
 
 
 (def default-db
@@ -57,4 +59,5 @@
          main/defaults
          messages/defaults
          nuvlabox/defaults
-         nuvlabox-detail/defaults))
+         nuvlabox-detail/defaults
+         profile/defaults))

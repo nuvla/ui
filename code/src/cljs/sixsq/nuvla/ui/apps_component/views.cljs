@@ -72,7 +72,7 @@
 
 
 (defn docker-image-view
-  [{:keys [image-name registry repository tag]}]
+  [{:keys [::spec/image-name ::spec/registry ::spec/repository ::spec/tag] :as image}]
   [:span
    (when (not (empty? registry))
      [:span registry "/"])
@@ -80,8 +80,7 @@
      [:span repository "/"])
    [:span image-name]
    (when (not (empty? tag))
-     [:span ":" tag])
-   ])
+     [:span ":" tag])])
 
 
 (defn docker-image
@@ -117,7 +116,7 @@
              [:span ":"]
              [input "docker-tag" "docker-tag" tag
               (@tr [:module-docker-tag-placeholder]) ::events/update-docker-tag ::spec/tag]]
-            (docker-image-view image))]]))))
+            (docker-image-view @image))]]))))
 
 
 (defn architecture
@@ -325,111 +324,133 @@
 
 
 (defn single-url
-  [url-map]
+  [url-map editable?]
   (let [tr (subscribe [::i18n-subs/tr])
         {:keys [id ::spec/url-name ::spec/url]} url-map]
     [ui/TableRow {:key id}
      [ui/TableCell {:floated :left
                     :width   2}
-      [input id (str "url-name-" id) url-name
-       "name of this url" ::events/update-url-name ::spec/url-name false]]
+      (if editable?
+        [input id (str "url-name-" id) url-name
+         "name of this url" ::events/update-url-name ::spec/url-name false]
+        [:span url-name])]
      [ui/TableCell {:floated :left
                     :width   13}
-      [input id (str "url-url-" id) url
-       "url - e.g. http://${hostname}:${tcp.8888}/?token=${jupyter-token}" ::events/update-url-url ::spec/url true]]
-     [ui/TableCell {:floated :right
-                    :width   1
-                    :align   :right
-                    :style   {}}
-      [trash id ::events/remove-url]]]))
+      (if editable?
+        [input id (str "url-url-" id) url
+         "url - e.g. http://${hostname}:${tcp.8888}/?token=${jupyter-token}" ::events/update-url-url ::spec/url true]
+        [:span url])]
+     (when editable?
+       [ui/TableCell {:floated :right
+                      :width   1
+                      :align   :right
+                      :style   {}}
+        [trash id ::events/remove-url]])]))
 
 
 (defn urls-section []
   (let [tr      (subscribe [::i18n-subs/tr])
         active? (reagent/atom false)
-        urls    (subscribe [::subs/urls])]
+        urls    (subscribe [::subs/urls])
+        module  (subscribe [::apps-subs/module])
+        is-new? (subscribe [::apps-subs/is-new?])]
     (fn []
-      [ui/Accordion {:fluid     true
-                     :styled    true
-                     :exclusive false}
-       [ui/AccordionTitle {:active   @active?
-                           :index    1
-                           :on-click #(toggle active?)}
-        [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-        (@tr [:urls]) (show-count @urls)]
+      (let [editable? (apps-utils/editable? @module @is-new?)]
+        [ui/Accordion {:fluid     true
+                       :styled    true
+                       :exclusive false}
+         [ui/AccordionTitle {:active   @active?
+                             :index    1
+                             :on-click #(toggle active?)}
+          [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+          (@tr [:urls]) (show-count @urls)]
 
-       [ui/AccordionContent {:active @active?}
-        [:div (@tr [:urls])
-         [:span forms/nbsp (forms/help-popup (@tr [:module-urls-help]))]]
-        (if (empty? @urls)
-          [ui/Message
-           (str/capitalize (str (@tr [:no-urls]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}
-                           :class :nuvla-ui-editable}
-                 [ui/TableHeader
-                  [ui/TableRow
-                   [ui/TableHeaderCell {:content "Name"}]
-                   [ui/TableHeaderCell {:content "URL"}]
-                   [ui/TableHeaderCell {:content "Action"}]]]
-                 [ui/TableBody
-                  (for [[id url-map] @urls]
-                    ^{:key id}
-                    [single-url url-map])]]])
-        [:div {:style {:padding-top 10}}
-         [plus ::events/add-url]]]])))
+         [ui/AccordionContent {:active @active?}
+          [:div (@tr [:urls])
+           [:span forms/nbsp (forms/help-popup (@tr [:module-urls-help]))]]
+          (if (empty? @urls)
+            [ui/Message
+             (str/capitalize (str (@tr [:no-urls]) "."))]
+            [:div [ui/Table {:style {:margin-top 10}
+                             :class :nuvla-ui-editable}
+                   [ui/TableHeader
+                    [ui/TableRow
+                     [ui/TableHeaderCell {:content "Name"}]
+                     [ui/TableHeaderCell {:content "URL"}]
+                     (when editable?
+                       [ui/TableHeaderCell {:content "Action"}])]]
+                   [ui/TableBody
+                    (for [[id url-map] @urls]
+                      ^{:key id}
+                      [single-url url-map editable?])]]])
+          (when editable?
+            [:div {:style {:padding-top 10}}
+             [plus ::events/add-url]])]]))))
 
 
-(defn single-output-parameter [param]
+(defn single-output-parameter [param editable?]
   (let [tr (subscribe [::i18n-subs/tr])
         {:keys [id ::spec/output-parameter-name ::spec/output-parameter-description]} param]
     [ui/TableRow {:key id}
      [ui/TableCell {:floated :left
                     :width   2}
-      [input id (str "output-param-name-" id) output-parameter-name
-       "output parameter name" ::events/update-output-parameter-name ::spec/output-parameter-name false]]
+      (if editable?
+        [input id (str "output-param-name-" id) output-parameter-name
+         "output parameter name" ::events/update-output-parameter-name
+         ::spec/output-parameter-name false]
+        [:span output-parameter-name])]
      [ui/TableCell {:floated :left
                     :width   13}
-      [input id (str "output-param-description-" id) output-parameter-description
-       "output parameter name" ::events/update-output-parameter-description ::spec/output-parameter-description true]]
-     [ui/TableCell {:floated :right
-                    :width   1
-                    :align   :right}
-      [trash id ::events/remove-output-parameter]]]))
+      (if editable?
+        [input id (str "output-param-description-" id) output-parameter-description
+         "output parameter description" ::events/update-output-parameter-description
+         ::spec/output-parameter-description true]
+        [:span output-parameter-description])]
+     (when editable?
+       [ui/TableCell {:floated :right
+                      :width   1
+                      :align   :right}
+        [trash id ::events/remove-output-parameter]])]))
 
 
 (defn output-parameters-section []
   (let [tr                (subscribe [::i18n-subs/tr])
         active?           (reagent/atom false)
-        output-parameters (subscribe [::subs/output-parameters])]
+        output-parameters (subscribe [::subs/output-parameters])
+        module  (subscribe [::apps-subs/module])
+        is-new? (subscribe [::apps-subs/is-new?])]
     (fn []
-      [ui/Accordion {:fluid     true
-                     :styled    true
-                     :exclusive false}
-       [ui/AccordionTitle {:active   @active?
-                           :index    1
-                           :on-click #(toggle active?)}
-        [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-        (@tr [:module-output-parameters]) (show-count @output-parameters)]
+      (let [editable? (apps-utils/editable? @module @is-new?)]
+        [ui/Accordion {:fluid     true
+                       :styled    true
+                       :exclusive false}
+         [ui/AccordionTitle {:active   @active?
+                             :index    1
+                             :on-click #(toggle active?)}
+          [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+          (@tr [:module-output-parameters]) (show-count @output-parameters)]
 
-       [ui/AccordionContent {:active @active?}
-        [:div (@tr [:module-output-parameters])
-         [:span forms/nbsp (forms/help-popup (@tr [:module-output-parameters-help]))]]
-        (if (empty? @output-parameters)
-          [ui/Message
-           (str/capitalize (str (@tr [:no-output-parameters]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}
-                           :class :nuvla-ui-editable}
-                 [ui/TableHeader
-                  [ui/TableRow
-                   [ui/TableHeaderCell {:content "Name"}]
-                   [ui/TableHeaderCell {:content "Description"}]
-                   [ui/TableHeaderCell {:content "Action"}]]]
-                 [ui/TableBody
-                  (for [[id param] @output-parameters]
-                    ^{:key id}
-                    [single-output-parameter param])]]])
-        [:div {:style {:padding-top 10}}
-         [plus ::events/add-output-parameter]]]])))
+         [ui/AccordionContent {:active @active?}
+          [:div (@tr [:module-output-parameters])
+           [:span forms/nbsp (forms/help-popup (@tr [:module-output-parameters-help]))]]
+          (if (empty? @output-parameters)
+            [ui/Message
+             (str/capitalize (str (@tr [:no-output-parameters]) "."))]
+            [:div [ui/Table {:style {:margin-top 10}
+                             :class :nuvla-ui-editable}
+                   [ui/TableHeader
+                    [ui/TableRow
+                     [ui/TableHeaderCell {:content "Name"}]
+                     [ui/TableHeaderCell {:content "Description"}]
+                     (when editable?
+                       [ui/TableHeaderCell {:content "Action"}])]]
+                   [ui/TableBody
+                    (for [[id param] @output-parameters]
+                      ^{:key id}
+                      [single-output-parameter param editable?])]]])
+          (when editable?
+            [:div {:style {:padding-top 10}}
+             [plus ::events/add-output-parameter]])]]))))
 
 
 (def data-type-options (atom [{:key "application/x-hdr", :value "application/x-hdr", :text "application/x-hdr"}
@@ -442,60 +463,67 @@
   (swap! data-type-options conj {:key option :value option :text option}))
 
 
-(defn single-data-type [dt]
+(defn single-data-type [dt editable?]
   (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [dt]
+    (fn [dt editable?]
       (let [{:keys [id ::spec/data-type]} dt]
         [ui/GridRow {:key id}
          [ui/GridColumn {:floated :left
                          :width   2}
-          [ui/Label
-           [ui/Dropdown {:name           (str "data-type-" id)
-                         :default-value  (or data-type "\"text/plain\"")
-                         :allowAdditions true
-                         :selection      true
-                         :additionLabel  "Additional data type: "
-                         :search         true
-                         :options        @data-type-options
-                         :on-add-item    #(add-data-type-options (-> % .-target .-value))
-                         :on-change      (ui-callback/value
-                                           #(do (dispatch [::main-events/changes-protection? true])
-                                                (dispatch [::events/update-data-type id %])
-                                                (dispatch [::apps-events/validate-form])))}]]]
-         [ui/GridColumn {:floated :right
-                         :width   1
-                         :align   :right
-                         :style   {}}
-          [trash id ::events/remove-data-type]]]))))
+          (if editable?
+            [ui/Label
+             [ui/Dropdown {:name           (str "data-type-" id)
+                           :default-value  (or data-type "text/plain")
+                           :allowAdditions true
+                           :selection      true
+                           :additionLabel  "Additional data type: "
+                           :search         true
+                           :options        @data-type-options
+                           :on-add-item    #(add-data-type-options (-> % .-target .-value))
+                           :on-change      (ui-callback/value
+                                             #(do (dispatch [::main-events/changes-protection? true])
+                                                  (dispatch [::events/update-data-type id %])
+                                                  (dispatch [::apps-events/validate-form])))}]]
+            [:span [:b data-type]])]
+         (when editable?
+           [ui/GridColumn {:floated :right
+                           :width   1
+                           :align   :right
+                           :style   {}}
+            [trash id ::events/remove-data-type]])]))))
 
 
 (defn data-types-section []
   (let [tr         (subscribe [::i18n-subs/tr])
         active?    (reagent/atom false)
-        data-types (subscribe [::subs/data-types])]
+        data-types (subscribe [::subs/data-types])
+        module  (subscribe [::apps-subs/module])
+        is-new? (subscribe [::apps-subs/is-new?])]
     (fn []
-      [ui/Accordion {:fluid     true
-                     :styled    true
-                     :exclusive false}
-       [ui/AccordionTitle {:active   @active?
-                           :index    1
-                           :on-click #(toggle active?)}
-        [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-        (@tr [:data-binding]) (show-count @data-types)]
+      (let [editable? (apps-utils/editable? @module @is-new?)]
+        [ui/Accordion {:fluid     true
+                       :styled    true
+                       :exclusive false}
+         [ui/AccordionTitle {:active   @active?
+                             :index    1
+                             :on-click #(toggle active?)}
+          [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+          (@tr [:data-binding]) (show-count @data-types)]
 
-       [ui/AccordionContent {:active @active?}
-        [:div (@tr [:data-type])
-         [:span forms/nbsp (forms/help-popup (@tr [:module-data-type-help]))]]
-        (if (empty? @data-types)
-          [ui/Message
-           (str/capitalize (str (@tr [:no-datasets]) "."))]
-          [:div [ui/Grid {:style {:margin-top    5
-                                  :margin-bottom 5}}
-                 (for [[id dt] @data-types]
-                   ^{:key id}
-                   [single-data-type dt])]])
-        [:div
-         [plus ::events/add-data-type]]]])))
+         [ui/AccordionContent {:active @active?}
+          [:div (@tr [:data-type])
+           [:span forms/nbsp (forms/help-popup (@tr [:module-data-type-help]))]]
+          (if (empty? @data-types)
+            [ui/Message
+             (str/capitalize (str (@tr [:no-datasets]) "."))]
+            [:div [ui/Grid {:style {:margin-top    5
+                                    :margin-bottom 5}}
+                   (for [[id dt] @data-types]
+                     ^{:key id}
+                     [single-data-type dt editable?])]])
+          (when editable?
+            [:div
+             [plus ::events/add-data-type]])]]))))
 
 
 (defn generate-ports-args

@@ -19,3 +19,11 @@ code/resources/public/ui/js/*
 code/node_modules
 
 code/.shadow-cljs
+
+*.bck
+
+pom.xml.next
+pom.xml.releaseBackup
+pom.xml.tag
+release.properties
+versions.sh

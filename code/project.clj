@@ -1,6 +1,6 @@
-(def +sixsq-nuvla-api-version+ "0.0.1")
-
-(def +version+ "0.0.3-SNAPSHOT")
+(def parent-version "6.5.0")
+(def sixsq-nuvla-api-version "0.0.1")
+(def version "0.0.3-SNAPSHOT")
 
 (defproject sixsq.nuvla.ui/code "0.0.3-SNAPSHOT"
 
@@ -17,7 +17,7 @@
             [pdok/lein-filegen "0.1.0"]
             [lein-resource "16.9.1"]]
 
-  :parent-project {:coords  [sixsq.nuvla/parent "6.2.0"]
+  :parent-project {:coords  [sixsq.nuvla/parent ~parent-version]
                    :inherit [:plugins
                              :min-lein-version
                              :managed-dependencies
@@ -40,7 +40,7 @@
 
   :pom-location "target/"
 
-  :filegen [{:data        ["#release-version:after {content: '" ~+version+ "';}\n"]
+  :filegen [{:data        ["#release-version:after {content: '" ~version "';}\n"]
              :template-fn #(apply str %)
              :target      "target/version.css"}]
 
@@ -66,7 +66,7 @@
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
                  [com.taoensso/timbre :scope "provided"]
-                 [sixsq.nuvla/api ~+sixsq-nuvla-api-version+ :scope "provided"]
+                 [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]
                  [com.taoensso/tempura :scope "provided"]
                  [com.cemerick/url :scope "provided"]]
 

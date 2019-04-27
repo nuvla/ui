@@ -2,15 +2,33 @@
 
 [![Build Status](https://travis-ci.com/nuvla/ui.svg?branch=master)](https://travis-ci.com/nuvla/ui)
 
-This repository provides a Docker image containing the Nuvla
-browser-based user interface. This consists of Javascript code (built
-with ClojureScript) and other support files (HTML, CSS, etc.).
+This repository contains the web user interface of the Nuvla solution. It is built as a modern
+single page application.
+
+The ui is built entirely in Clojurescript (that's cool), using [re-frame](https://github.com/Day8/re-frame)
+and [reagent](https://github.com/reagent-project/reagent) as foundation, and
+[Semantic UI](https://semantic-ui.com) for basic widgets and styling.
+
+Our aim is to build a user experience such that users can start capturing, deploying and managing
+containers on any virtualised environments (e.g. public cloud, private cloud and infrastructue,
+as well as [NuvlaBox](https://github.com/nuvlabox) edge devices). And all this with no or minimum training.
+
+More details on the overall Nuvla eco-system is available [here](https://github.com/nuvla/nuvla).
 
 ## Artifacts
 
  - `nuvla/ui` - A Docker container containing the static content of
     the UI served by nginx.  Available from the [nuvla/ui
     repository](https://hub.docker.com/r/nuvla/ui) on Docker Hub.
+
+## Installation
+
+The ui can be installed on its own of as part of a full Nuvla stack. Stand alone installations
+must be configured to point to an existing Nuvla installation (see 
+[Development Environment](#dev-env) section for details).
+
+For full stack installation, please check instructions in the main
+[Nuvla repository](https://github.com/nuvla/nuvla).
 
 ## Contributing
 
@@ -40,14 +58,9 @@ To contribute code to this repository, please follow these steps:
 When the reviewer is happy with the pull request, he/she will "squash
 & merge" the pull request and delete the corresponding branch.
 
-### Testing
-
-Add appropriate tests that verify the changes or additions you make to
-the source code.
-
 ### Code Formatting
 
-The bulk of the code in this repository is written in Clojure.
+The bulk of the code in this repository is written in Clojurescript.
 
 The formatting follows the standard formatting provided by the Cursive
 IntelliJ plugin with all the default settings **except that map
@@ -72,21 +85,19 @@ formatting standardized.
 
 ## Frameworks and Libraries
 
-Nuvla dependency:
+Nuvla UI dependency:
 
  * [Nuvla Clojure(Script)
    API](https://github.com/nuvla/clojure-api): Provides
-   a ClojureScript API for the CIMI and CIMI-like resources within
-   Nuvla.
+   a ClojureScript API to interface with the Nuvla server.
 
 Frameworks:
 
  * [Reagent](https://github.com/reagent-project/reagent): Provides a
    ClojureScript interface to the
    [React](https://facebook.github.io/react/) framework.
- * [re-frame](https://github.com/Day8/re-frame): A framework that
-   relies on React for visualization and provides mechanisms for using
-   "FRP" for data flow and control.
+ * [re-frame](https://github.com/Day8/re-frame): "a pattern for writing
+   SPAs in ClojureScript, using Reagent".
 
 Widgets:
 
@@ -94,9 +105,13 @@ Widgets:
    React integration for Semantic UI.
 
 
-## Development Environment
+## [Development Environment](#dev-env)
 
 The essentials for using the development environment are below.
+
+### Nuvla local stack
+
+TODO...
 
 ### Browser
 
@@ -190,6 +205,10 @@ The default value is `:debug` which will log all of the HTTP requests
 and responses.  This is useful when debugging interactions with
 Nuvla, but annoying otherwise.
 
+## Release Process
+
+Release process instructions are available [here](RELEASE.md).
+
 ## Copyright
 
 Copyright &copy; 2019, SixSq Sàrl
@@ -207,7 +226,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
 implied.  See the License for the specific language governing
 permissions and limitations under the License.
-
-## Release Process
-
-Release process instructions are available [here](RELEASE.md).

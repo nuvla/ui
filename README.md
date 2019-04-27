@@ -2,9 +2,18 @@
 
 [![Build Status](https://travis-ci.com/nuvla/ui.svg?branch=master)](https://travis-ci.com/nuvla/ui)
 
-This repository provides a Docker image containing the Nuvla
-browser-based user interface. This consists of Javascript code (built
-with ClojureScript) and other support files (HTML, CSS, etc.).
+This repository contains the web user interface of the Nuvla solution. It is built as a modern
+single page application.
+
+The ui is built entirely in Clojurescript (that's cool), using [re-frame](https://github.com/Day8/re-frame)
+and [reagent](https://github.com/reagent-project/reagent) as foundation, and
+[Semantic UI](https://semantic-ui.com) for basic widgets and styling.
+
+Our aim is to build a user experience such that users can start capturing, deploying and managing
+containers on any virtualised environments (e.g. public cloud, private cloud and infrastructue,
+as well as [NuvlaBox](https://github.com/nuvlabox) edge devices). And all this with no or minimum training.
+
+More details on the overall Nuvla eco-system is available [here](https://github.com/nuvla/nuvla).
 
 ## Artifacts
 
@@ -12,37 +21,14 @@ with ClojureScript) and other support files (HTML, CSS, etc.).
     the UI served by nginx.  Available from the [nuvla/ui
     repository](https://hub.docker.com/r/nuvla/ui) on Docker Hub.
 
-## Release Process
+## Installation
 
-**Before** creating the release:
+The ui can be installed on its own or as part of a full Nuvla stack. Stand alone installations
+must be configured to point to an existing Nuvla server (see 
+[Development Environment](#development-environment) section for details).
 
- - Decide what semantic version to use for this release and change the
-   version, if necessary, in `code/project.clj` and all the `pom.xml`
-   files.  (It should still have the "-SNAPSHOT" suffix.)
-
- - Update the `CHANGELOG.md` file.
-
- - Push all changes to GitHub, including the updates to
-   `CHANGELOG.md`.
-
-Again, be sure to set the version **before** tagging the release.
-
-Check that everything builds correctly with:
-
-    mvn clean install
-
-To tag the code with the release version and to update the master
-branch to the next snapshot version, run the command:
-
-    ./release.sh true
-
-If you want to test what will happen with the release, leave off the
-"true" argument and the changes will only be made locally.
-
-When the tag is pushed to GitHub, Travis CI will build the repository,
-create the container, and push it to Docker Hub.  Check the Travis
-build and ensure that the new container version appears in the Docker
-Hub. 
+You can also run your own Nuvla test server locally, which is great for testing. You'll find instructions
+[here](https://github.com/nuvla/deployment/test).
 
 ## Contributing
 
@@ -72,14 +58,9 @@ To contribute code to this repository, please follow these steps:
 When the reviewer is happy with the pull request, he/she will "squash
 & merge" the pull request and delete the corresponding branch.
 
-### Testing
-
-Add appropriate tests that verify the changes or additions you make to
-the source code.
-
 ### Code Formatting
 
-The bulk of the code in this repository is written in Clojure.
+The bulk of the code in this repository is written in Clojurescript.
 
 The formatting follows the standard formatting provided by the Cursive
 IntelliJ plugin with all the default settings **except that map
@@ -104,21 +85,19 @@ formatting standardized.
 
 ## Frameworks and Libraries
 
-Nuvla dependency:
+Nuvla UI dependency:
 
  * [Nuvla Clojure(Script)
    API](https://github.com/nuvla/clojure-api): Provides
-   a ClojureScript API for the CIMI and CIMI-like resources within
-   Nuvla.
+   a ClojureScript API to interface with the Nuvla server.
 
 Frameworks:
 
  * [Reagent](https://github.com/reagent-project/reagent): Provides a
    ClojureScript interface to the
    [React](https://facebook.github.io/react/) framework.
- * [re-frame](https://github.com/Day8/re-frame): A framework that
-   relies on React for visualization and provides mechanisms for using
-   "FRP" for data flow and control.
+ * [re-frame](https://github.com/Day8/re-frame): "a pattern for writing
+   SPAs in ClojureScript, using Reagent".
 
 Widgets:
 
@@ -130,9 +109,31 @@ Widgets:
 
 The essentials for using the development environment are below.
 
+### Choose or deploy a Nuvla server
+
+You will need to point your development ui environment to a Nuvla server. For that 
+you have a few choices:
+
+ 1. [Deploy a test server](https://github.com/nuvla/deployment/tree/master/test)
+ 2. Point to an already deployed server (e.g. nuvla.io - soon)
+
+You then need to configure your local Nuvla ui to point to the Nuvla server.
+
+### Configure your ui for the right server
+
+Once you have cloned this repository, edit the file `shadow-cljs.edn`
+and modify the dev environment configuration to point to your server.
+
+For example, if you deploy a local test server running on your laptop, you might want to
+point your Nuvla ui environment to `localhost`:
+
+```
+:dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL "http://localhost"}`
+```
+
 ### Browser
 
-To test the code on a Nuvla server (e.g. https://nuv.la/) running
+To test the code on a Nuvla server (e.g. https://nuvla.io) running
 on a different machine, you'll need to start a browser with the XSS
 protections disabled.
 
@@ -221,6 +222,10 @@ in development mode. From the REPL do:
 The default value is `:debug` which will log all of the HTTP requests
 and responses.  This is useful when debugging interactions with
 Nuvla, but annoying otherwise.
+
+## Release Process
+
+Release process instructions are available [here](RELEASE.md).
 
 ## Copyright
 

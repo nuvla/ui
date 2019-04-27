@@ -25,7 +25,7 @@ More details on the overall Nuvla eco-system is available [here](https://github.
 
 The ui can be installed on its own of as part of a full Nuvla stack. Stand alone installations
 must be configured to point to an existing Nuvla installation (see 
-[Development Environment](#dev-env) section for details).
+[Development Environment](#development-environment) section for details).
 
 For full stack installation, please check instructions in the main
 [Nuvla repository](https://github.com/nuvla/nuvla).
@@ -105,7 +105,7 @@ Widgets:
    React integration for Semantic UI.
 
 
-## [Development Environment](#dev-env)
+## Development Environment
 
 The essentials for using the development environment are below.
 

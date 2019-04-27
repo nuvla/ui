@@ -109,13 +109,31 @@ Widgets:
 
 The essentials for using the development environment are below.
 
-### Nuvla local stack
+### Choose or deploy a Nuvla server
 
-TODO...
+You will need to point your development ui environment to a Nuvla server. For that 
+you have a few choices:
+
+ 1. [Deploy a test server](https://github.com/nuvla/deployment/tree/master/test)
+ 2. Point to an already deployed server (e.g. nuvla.io - soon)
+
+You then need to configure your local Nuvla ui to point to the Nuvla server.
+
+### Configure your ui for the right server
+
+Once you have cloned this repository, edit the file `shadow-cljs.edn`
+and modify the dev environment configuration to point to your server.
+
+For example, if you deploy a local test server running on your laptop, you might want to
+point your Nuvla ui environment to `localhost`:
+
+```
+:dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL "http://localhost"}`
+```
 
 ### Browser
 
-To test the code on a Nuvla server (e.g. https://nuv.la/) running
+To test the code on a Nuvla server (e.g. https://nuvla.io) running
 on a different machine, you'll need to start a browser with the XSS
 protections disabled.
 

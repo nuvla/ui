@@ -3,6 +3,46 @@
     [re-frame.core :refer [dispatch reg-sub subscribe]]
     [sixsq.nuvla.ui.profile.spec :as spec]))
 
+
+(reg-sub
+
+  ::is-new?
+  ::spec/is-new?)
+
+
+;; Validation
+
+; Is the form valid?
+
+(reg-sub
+  ::form-valid?
+  ::spec/form-valid?)
+
+
+; Should the form be validated?
+
+(reg-sub
+  ::validate-form?
+  ::spec/validate-form?)
+
+
+(reg-sub
+  ::active-input
+  ::spec/active-input)
+
+
+(reg-sub
+  ::credential
+  (fn [db]
+    (::spec/credential db)))
+
+
+(reg-sub
+  ::credentials
+  (fn [db]
+    (::spec/credentials db)))
+
+
 (reg-sub
   ::credential-password
   (fn [db]
@@ -10,9 +50,21 @@
 
 
 (reg-sub
+  ::add-credential-modal-visible?
+  (fn [db]
+    (::spec/add-credential-modal-visible? db)))
+
+
+(reg-sub
+  ::credential-modal-visible?
+  (fn [db]
+    (::spec/credential-modal-visible? db)))
+
+
+; TODO: make more specific
+(reg-sub
   ::open-modal
   ::spec/open-modal)
-
 
 
 (reg-sub

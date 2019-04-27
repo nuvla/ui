@@ -181,8 +181,7 @@
                        :positive true
                        :disabled (empty? @local-url)
                        :active   true
-                       :on-click #(dispatch [::events/save-logo-url @local-url])}]]
-         ]))))
+                       :on-click #(dispatch [::events/save-logo-url @local-url])}]]]))))
 
 
 (defn add-modal
@@ -191,11 +190,10 @@
         visible? (subscribe [::subs/add-modal-visible?])
         nav-path (subscribe [::main-subs/nav-path])]
     (fn []
-      (let [parent  (utils/nav-path->module-path @nav-path)
-            hide-fn #(dispatch [::events/close-add-modal])]
+      (let [parent  (utils/nav-path->module-path @nav-path)]
         [ui/Modal {:open       @visible?
                    :close-icon true
-                   :on-close   hide-fn}
+                   :on-close   #(dispatch [::events/close-add-modal])}
 
          [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
 
@@ -210,8 +208,7 @@
             [ui/CardContent {:text-align :center}
              [ui/Header "Project"]
              [ui/Icon {:name "folder"
-                       :size :massive
-                       }]]]
+                       :size :massive}]]]
 
            [ui/Card {:on-click (when parent
                                  #(do
@@ -225,8 +222,7 @@
              [:div]
              [ui/Icon {:name  "th"
                        :size  :massive
-                       :color (when-not parent :grey)
-                       }]]]]]
+                       :color (when-not parent :grey)}]]]]]
          [ui/ModalActions]]))))
 
 
@@ -241,16 +237,6 @@
           [:a {:on-click #(dispatch [::events/get-module])
                :style    {:cursor :pointer}} "here"]
           " to load the latest."]]))))
-
-
-(defn validation-error-message []
-  (let [form-valid? (subscribe [::subs/form-valid?])]
-    (fn []
-      (let []
-        [ui/Message {:hidden @form-valid?
-                     :error  true}
-         [ui/MessageHeader "Validation error!"]
-         [ui/MessageContent "The form in invalid. Please review the fields in red."]]))))
 
 
 (defn tuple-to-row [[v1 v2]]

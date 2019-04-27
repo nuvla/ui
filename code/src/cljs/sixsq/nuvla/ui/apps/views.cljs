@@ -15,7 +15,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [taoensso.timbre :as timbre]
     [taoensso.timbre :as log]
-    [clojure.string :as str]))
+    [clojure.string :as str]
+    [sixsq.nuvla.ui.utils.validation :as utils-validation]))
 
 
 (defn module-details
@@ -67,7 +68,7 @@
   [path]
   (timbre/set-level! :info)
   [:div
-   [views-detail/validation-error-message]
+   [utils-validation/validation-error-message ::subs/form-valid?]
    [views-detail/version-warning]
    [views-detail/add-modal]
    [views-detail/save-modal]

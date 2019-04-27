@@ -12,11 +12,14 @@
 ;; Validation
 
 ; Is the form valid?
+
 (reg-sub
   ::form-valid?
   ::spec/form-valid?)
 
+
 ; Should the form be validated?
+
 (reg-sub
   ::validate-form?
   ::spec/validate-form?)

@@ -138,8 +138,7 @@
         [ui/Container {:fluid true}
          [ui/Accordion {:fluid     true
                         :styled    true
-                        :exclusive false
-                        }
+                        :exclusive false}
           [ui/AccordionTitle {:active   @active?
                               :index    1
                               :on-click #(toggle active?)}
@@ -155,8 +154,7 @@
                {:totalitems   total-modules
                 :totalPages   total-pages
                 :activePage   @page
-                :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]
-             )]]]))))
+                :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]])]]]))))
 
 
 (defn root-view

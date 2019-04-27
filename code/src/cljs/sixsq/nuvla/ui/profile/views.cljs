@@ -14,7 +14,11 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.accordion :as util-accordion]
+    [sixsq.nuvla.ui.utils.values :as values]
+    [reagent.core :as reagent]
+    [sixsq.nuvla.ui.utils.form-fields :as forms]
+    [sixsq.nuvla.ui.profile.views-credential :as views-credential]))
 
 
 (defn tuple-to-row [[v1 v2]]
@@ -66,11 +70,11 @@
          (map rest))))
 
 (defn modal-change-password []
-  (let [open-modal (subscribe [::subs/open-modal])
-        error-message (subscribe [::subs/error-message])
-        tr (subscribe [::i18n-subs/tr])
+  (let [open-modal       (subscribe [::subs/open-modal])
+        error-message    (subscribe [::subs/error-message])
+        tr               (subscribe [::i18n-subs/tr])
         fields-in-errors (subscribe [::subs/fields-in-errors])
-        form-error? (subscribe [::subs/form-error?])]
+        form-error?      (subscribe [::subs/form-error?])]
     (fn []
       [ui/Modal
        {:size      :tiny
@@ -134,8 +138,8 @@
 
 (defn session-info
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        session (subscribe [::authn-subs/session])
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        session             (subscribe [::authn-subs/session])
         credential-password (subscribe [::subs/credential-password])]
     (fn []
       [ui/Segment style/basic
@@ -154,7 +158,7 @@
                (map data-to-tuple)
                (map tuple-to-row))])
        (when @credential-password
-         [ui/Button {:primary true
+         [ui/Button {:primary  true
                      :on-click #(dispatch [::events/open-modal :change-password])}
           (str/capitalize (@tr [:change-password]))])
        (when-not @session
@@ -165,5 +169,7 @@
   [path]
   [:div
    [session-info]
-   [modal-change-password]])
-
+   [views-credential/credentials]
+   [modal-change-password]
+   [views-credential/add-credential-modal]
+   [views-credential/credential-modal]])

@@ -1,14 +1,13 @@
 (ns sixsq.nuvla.ui.apps.spec
   (:require
     [clojure.spec.alpha :as s]
-    [clojure.string :as str]))
+    [clojure.string :as str]
+    [sixsq.nuvla.ui.utils.spec :as utils-spec]))
 
 ;; Utils
 
 (defn nonblank-string [s]
-  (let [str-s (str s)]
-    (when-not (str/blank? str-s)
-      str-s)))
+  (utils-spec/nonblank-string s))
 
 ;; Module
 

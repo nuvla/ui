@@ -31,9 +31,10 @@
       (let [name-str      (name name-kw)
             name-label    (if (and editable? mandatory?) (utils-general/mandatory-name name-str) name-str)
             input-active? (= name-str @active-input)
-            validate?     (or @local-validate? validate-form?)
+            validate?     (or @local-validate? @validate-form?)
             valid?        (s/valid? value-spec value)]
         (s/explain value-spec value)
+        (log/infof "local-validate?: %s validate-form?: %s" @local-validate? @validate-form?)
         [ui/TableRow
          [ui/TableCell {:collapsing true}
           name-label]
@@ -75,14 +76,10 @@
 
 (defn credential-swarm
   []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        is-new?         (subscribe [::subs/is-new?])
-        local-validate? (reagent/atom false)
-        form-valid?     (subscribe [::subs/form-valid?])
+  (let [is-new?         (subscribe [::subs/is-new?])
         credential      (subscribe [::subs/credential])]
     (fn []
       (let [editable? (utils-general/editable? @credential @is-new?)
-            validate? (or @local-validate? (not @form-valid?))
             {:keys [name description ca cert key]} @credential]
         (log/infof "credential-swarm: %s %s %s" name description @credential)
 
@@ -134,9 +131,10 @@
             "infrastructure-service-swarm" [credential-swarm]
             [credential-swarm])]
          [ui/ModalActions
+          (log/infof "form-valid? %s" @form-valid?)
           [uix/Button {:text     (if (true? @is-new?) (@tr [:create]) (@tr [:save]))
                        :positive true
-                       :disabled (when-not @form-valid?)
+                       :disabled (when-not @form-valid? true)
                        :active   true
                        :on-click #(save-callback)}]]]))))
 

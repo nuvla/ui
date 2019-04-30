@@ -14,11 +14,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.accordion :as util-accordion]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [reagent.core :as reagent]
-    [sixsq.nuvla.ui.utils.form-fields :as forms]
-    [sixsq.nuvla.ui.profile.views-credential :as views-credential]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (defn tuple-to-row [[v1 v2]]
@@ -169,7 +165,4 @@
   [path]
   [:div
    [session-info]
-   [views-credential/credentials]
-   [modal-change-password]
-   [views-credential/add-credential-modal]
-   [views-credential/credential-modal]])
+   [modal-change-password]])

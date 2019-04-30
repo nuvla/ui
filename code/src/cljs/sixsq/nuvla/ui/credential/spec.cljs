@@ -1,7 +1,8 @@
-(ns sixsq.nuvla.ui.profile.spec
+(ns sixsq.nuvla.ui.credential.spec
   (:require
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.utils.spec :as utils-spec]))
+
 
 (s/def ::credential any?)
 
@@ -76,9 +77,7 @@
                           ::form-valid?
                           ::validate-form?
                           ::credential-password
-                          ::open-modal
-                          ::error-message
-                          ::form-data]))
+                          ::error-message]))
 
 
 (def defaults {::add-credential-modal-visible? false
@@ -90,7 +89,5 @@
                ::form-valid?                   true
                ::validate-form?                false
                ::credential-password           nil
-               ::open-modal                    nil
-               ::error-message                 nil
-               ::form-data                     {}})
+               ::error-message                 nil})
 

@@ -27,7 +27,7 @@
 
 
 (defn id-selector-formatter [entry]
-  (let [v (:id entry)
+  (let [v     (:id entry)
         label (second (str/split v #"/"))]
     [history/link (str "api/" v) label]))
 
@@ -105,17 +105,17 @@
 
 (defn results-statistic
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr              (subscribe [::i18n-subs/tr])
         collection-name (subscribe [::subs/collection-name])
-        resources (subscribe [::subs/collection])
-        cep (subscribe [::subs/cloud-entry-point])]
+        resources       (subscribe [::subs/collection])
+        cep             (subscribe [::subs/cloud-entry-point])]
     (fn []
       (let [collection-name @collection-name
-            resources @resources]
+            resources       @resources]
         (when resources
           (let [collection-key (get (:collection-key @cep) collection-name)
-                total (:count resources)
-                n (count (get resources :resources []))]
+                total          (:count resources)
+                n              (count (get resources :resources []))]
             [ui/Statistic
              [ui/StatisticValue (str n " / " total)]
              [ui/StatisticLabel (@tr [:results])]]))))))
@@ -139,14 +139,14 @@
 
 
 (defn results-display []
-  (let [collection (subscribe [::subs/collection])
+  (let [collection      (subscribe [::subs/collection])
         collection-name (subscribe [::subs/collection-name])
         selected-fields (subscribe [::subs/selected-fields])
-        cep (subscribe [::subs/cloud-entry-point])]
+        cep             (subscribe [::subs/cloud-entry-point])]
     (fn []
       (let [{:keys [collection-key]} @cep
             resource-collection-key (get collection-key @collection-name)
-            results @collection]
+            results                 @collection]
         (if (instance? js/Error results)
           [ui/Segment style/basic
            [:pre (with-out-str (pprint (ex-data results)))]]
@@ -158,16 +158,16 @@
 
 (defn cloud-entry-point-title
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        cep (subscribe [::subs/cloud-entry-point])
+  (let [tr          (subscribe [::i18n-subs/tr])
+        cep         (subscribe [::subs/cloud-entry-point])
         selected-id (subscribe [::subs/collection-name])]
     (fn []
-      (let [options (->> @cep
-                         :collection-href
-                         vals
-                         sort
-                         (map (fn [k] {:value k :text k}))
-                         vec)
+      (let [options  (->> @cep
+                          :collection-href
+                          vals
+                          sort
+                          (map (fn [k] {:value k :text k}))
+                          vec)
             callback #(dispatch [::history-events/navigate (str "api/" %)])]
         [ui/Dropdown
          {:aria-label  (@tr [:resource-type])
@@ -181,9 +181,9 @@
 
 
 (defn search-header []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr           (subscribe [::i18n-subs/tr])
         query-params (subscribe [::subs/query-params])
-        selected-id (subscribe [::subs/collection-name])]
+        selected-id  (subscribe [::subs/collection-name])]
     (fn []
       ;; reset visible values of parameters
       (let [{$filter      :filter,
@@ -291,12 +291,12 @@
 
 
 (defn select-fields []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr               (subscribe [::i18n-subs/tr])
         available-fields (subscribe [::subs/available-fields])
-        selected-fields (subscribe [::subs/selected-fields])
-        selected-id (subscribe [::subs/collection-name])
-        selections (reagent/atom (set @selected-fields))
-        show? (reagent/atom false)]
+        selected-fields  (subscribe [::subs/selected-fields])
+        selected-id      (subscribe [::subs/collection-name])
+        selections       (reagent/atom (set @selected-fields))
+        show?            (reagent/atom false)]
     (fn []
       [ui/Modal
        {:closeIcon true
@@ -328,17 +328,17 @@
 
 (defn resource-add-form
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        show? (subscribe [::subs/show-add-modal?])
-        collection-name (subscribe [::subs/collection-name])
-        default-text (general/edn->json {})
-        text (atom default-text)
-        collection (subscribe [::subs/collection])
+  (let [tr               (subscribe [::i18n-subs/tr])
+        show?            (subscribe [::subs/show-add-modal?])
+        collection-name  (subscribe [::subs/collection-name])
+        default-text     (general/edn->json {})
+        text             (atom default-text)
+        collection       (subscribe [::subs/collection])
         selected-tmpl-id (reagent/atom nil)]
     (fn []
-      (let [resource-metadata (subscribe [::docs-subs/document @collection])
-            collection-template-href (some-> @collection-name cimi-utils/collection-template-href)
-            templates-info (subscribe [::subs/collection-templates collection-template-href])
+      (let [resource-metadata           (subscribe [::docs-subs/document @collection])
+            collection-template-href    (some-> @collection-name cimi-utils/collection-template-href)
+            templates-info              (subscribe [::subs/collection-templates collection-template-href])
             selected-tmpl-resource-meta (subscribe [::docs-subs/document (get @templates-info @selected-tmpl-id)])]
         (when @show?
           [ui/Modal
@@ -405,8 +405,8 @@
 
 (defn search-button
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::subs/loading?])
+  (let [tr          (subscribe [::i18n-subs/tr])
+        loading?    (subscribe [::subs/loading?])
         selected-id (subscribe [::subs/collection-name])]
     (fn []
       [uix/MenuItemForSearch {:name     (@tr [:search])
@@ -417,7 +417,7 @@
 
 (defn create-button
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr             (subscribe [::i18n-subs/tr])
         search-results (subscribe [::subs/collection])]
     (fn []
       (when (can-add? (:operations @search-results))
@@ -428,7 +428,7 @@
 
 
 (defn menu-bar []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr        (subscribe [::i18n-subs/tr])
         resources (subscribe [::subs/collection])]
     (fn []
       (when (instance? js/Error @resources)
@@ -452,21 +452,25 @@
 
 (defn cimi-resource
   []
-  (let [path (subscribe [::main-subs/nav-path])
+  (let [tr           (subscribe [::i18n-subs/tr])
+        path         (subscribe [::main-subs/nav-path])
         query-params (subscribe [::main-subs/nav-query-params])]
     (fn []
       (let [[_ resource-type resource-id] @path]
         (dispatch [::events/set-collection-name resource-type])
         (when @query-params
           (dispatch [::events/set-query-params @query-params])))
-      (let [n (count @path)
+      (let [n        (count @path)
             children (case n
                        1 [[menu-bar]]
                        2 [[menu-bar]
                           [results-display]]
                        3 [[cimi-detail-views/cimi-detail]]
-                       [[menu-bar]])]
-        (vec (concat [ui/Segment style/basic] children))))))
+                       [[menu-bar]])
+            header   [:h2 [ui/Icon {:name "code"}]
+                      " "
+                      (str/upper-case (@tr [:api]))]]
+        (vec (concat [:div] [header] children))))))
 
 
 (defmethod panel/render :api

@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.profile.effects
+(ns sixsq.nuvla.ui.credential.effects
   (:require-macros
     [cljs.core.async.macros :refer [go]])
   (:require
@@ -7,7 +7,6 @@
     [re-frame.core :refer [dispatch reg-fx]]
     [sixsq.nuvla.client.api :as api]
     [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 
@@ -17,4 +16,3 @@
     (go
       (let [credentials (-> (<! (api/get client "credential")) :resources)]
         (callback credentials)))))
-

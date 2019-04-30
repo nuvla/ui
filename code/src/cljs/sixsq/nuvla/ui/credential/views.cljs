@@ -13,7 +13,6 @@
     [sixsq.nuvla.ui.utils.accordion :as utils-accordion]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [reagent.core :as reagent]
-    [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
@@ -173,39 +172,38 @@
 
 
 (def infrastructure-service-validation-map
-  {"infrastructure-service-swarm"           {:event         ::events/validate-swarm-credential-form
-                                             :modal-content credential-swarm}
-   "infrastructure-service-minio"           {:event         ::events/validate-minio-credential-form
-                                             :modal-content credential-minio}
-   "store-infrastructure-service-azure"     {:event         ::events/validate-store-azure-form
-                                             :modal-content credential-store-azure}
-   "store-infrastructure-service-amazonec2" {:event         ::events/validate-store-amazonec2-form
-                                             :modal-content credential-store-amazonec2}
-   "store-infrastructure-service-exoscale"  {:event         ::events/validate-store-exoscale-form
-                                             :modal-content credential-store-exoscale}
-   ""                                       {:event         ::events/validate-swarm-credential-form
-                                             :modal-content credential-swarm}})
+  {"infrastructure-service-swarm"          {:validation-event ::events/validate-swarm-credential-form
+                                            :modal-content    credential-swarm}
+   "infrastructure-service-minio"          {:validation-event ::events/validate-minio-credential-form
+                                            :modal-content    credential-minio}
+   "infrastructure-service-azure"          {:validation-event ::events/validate-store-azure-form
+                                            :modal-content    credential-store-azure}
+   "infrastructure-service-amazonec2"      {:validation-event ::events/validate-store-amazonec2-form
+                                            :modal-content    credential-store-amazonec2}
+   "infrastructure-service-exoscale"       {:validation-event ::events/validate-store-exoscale-form
+                                            :modal-content    credential-store-exoscale}
+   "cloud-infrastructure-service-exoscale" {:validation-event ::events/validate-swarm-credential-form
+                                            :modal-content    credential-swarm
+                                            }
+   "cloud-infrastructure-service-azure"    {:validation-event ::events/validate-minio-credential-form
+                                            :modal-content    credential-minio}
+   ;""
+   ;{:validation-event ::events/validate-swarm-credential-form
+   ; :modal-content    credential-swarm}
+   })
 
 
 (def infrastructure-service-types
   (keys infrastructure-service-validation-map))
 
 
-(def cloud-validation-map
-  {"cloud-infrastructure-service-exoscale" {:event         ::events/validate-swarm-credential-form
-                                            :modal-content credential-swarm}
-   "cloud-infrastructure-service-azure"    {:event         ::events/validate-minio-credential-form
-                                            :modal-content credential-minio}
-   ""                                      {:event         ::events/validate-swarm-credential-form
-                                            :modal-content credential-swarm}})
-
-
 (def cloud-types
-  (keys cloud-validation-map))
+  ["cloud-infrastructure-service-exoscale"
+   "cloud-infrastructure-service-azure"])
 
 
 (defn credential-modal
-  [infrastructure-service-validation-map]
+  []
   (let [tr          (subscribe [::i18n-subs/tr])
         visible?    (subscribe [::subs/credential-modal-visible?])
         form-valid? (subscribe [::subs/form-valid?])
@@ -215,9 +213,14 @@
       (let [type             (:type @credential "")
             header           (str (if is-new? "New" "Update") " Credential: " type)
             validation-item  (get infrastructure-service-validation-map type)
-            validation-event (:event validation-item)
+            validation-event (:validation-event validation-item)
             modal-content    (:modal-content validation-item)]
-        (if (nil? type)
+        (log/infof "infrastructure-service-validation-map: %s" (keys infrastructure-service-validation-map))
+        (log/infof "type: %s" type)
+        (log/infof "type nil?: %s" (nil? type))
+        (log/infof "validation-item: %s" validation-item)
+        (log/infof "validation-event: %s" validation-event)
+        (if (empty? type)
           [:div]
           [ui/Modal {:open       @visible?
                      :close-icon true
@@ -227,10 +230,6 @@
 
            [ui/ModalContent {:scrolling false}
             [utils-validation/validation-error-message ::subs/form-valid?]
-            (log/infof "type: %s" type)
-            (log/infof "validation-item: %s" validation-item)
-            (log/infof "validation-event: %s" validation-event)
-            (log/infof "modal-content: %s" modal-content)
             [modal-content]]
            [ui/ModalActions
             [uix/Button {:text     (if (true? @is-new?) (@tr [:create]) (@tr [:save]))
@@ -282,7 +281,7 @@
                                   (dispatch [::events/set-validate-form? false])
                                   (dispatch [::events/form-valid])
                                   (dispatch [::events/close-add-credential-modal])
-                                  (dispatch [::events/open-credential-modal {:type "infrastructure-service-minio"}
+                                  (dispatch [::events/open-credential-modal {:type "store-infrastructure-service-exoscale"}
                                              true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Exoscale Store (S3)"]
@@ -293,7 +292,7 @@
                                   (dispatch [::events/set-validate-form? false])
                                   (dispatch [::events/form-valid])
                                   (dispatch [::events/close-add-credential-modal])
-                                  (dispatch [::events/open-credential-modal {:type "store-infrastructure-service-exoscale"}
+                                  (dispatch [::events/open-credential-modal {:type "store-infrastructure-service-azure"}
                                              true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Azure Store (S3)"]
@@ -304,7 +303,7 @@
                                   (dispatch [::events/set-validate-form? false])
                                   (dispatch [::events/form-valid])
                                   (dispatch [::events/close-add-credential-modal])
-                                  (dispatch [::events/open-credential-modal {:type "store-infrastructure-service-exoscale"}
+                                  (dispatch [::events/open-credential-modal {:type "store-infrastructure-service-amazonec2"}
                                              true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Amazon S3"]
@@ -335,6 +334,46 @@
                   [refresh-button]]))))
 
 
+(defn delete-confirmation-modal
+  []
+  (let [tr         (subscribe [::i18n-subs/tr])
+        visible?   (subscribe [::subs/delete-confirmation-modal-visible?])
+        credential (subscribe [::subs/credential])
+        confirmed? (reagent/atom false)]
+    (fn []
+      (let [id (:id @credential)
+            name (:name @credential)]
+        [ui/Modal {:open       @visible?
+                   :close-icon true
+                   :on-close   #(dispatch [::events/close-delete-confirmation-modal])}
+
+         [ui/ModalHeader (str "Delete Credential?")]
+
+         [ui/ModalContent {:scrolling false}
+          [:h3 name " (" (:description @credential) ")"]
+          [:div "(" id ")"]
+          [ui/Message {:error true}
+           [ui/MessageHeader "Danger - this cannot be undone!"]
+           [ui/MessageContent
+            [:p]
+            [ui/Checkbox {:name      "confirm-deletion"
+                          :checked   @confirmed?
+                          :fitted    true
+                          :on-change #(reset! confirmed? (not @confirmed?))}]
+            " "
+            (@tr [:credential-delete-warning])]]]
+
+         [ui/ModalActions
+          [uix/Button {:text     (@tr [:delete])
+                       :positive true
+                       :disabled (when-not @confirmed? true)
+                       :active   true
+                       :on-click #(do
+                                    (reset! confirmed? false)
+                                    (dispatch [::events/delete-credential id])
+                                    (dispatch [::events/close-delete-confirmation-modal]))}]]]))))
+
+
 ;type name description
 (defn single-credential
   [{:keys [id type name description] :as credential}]
@@ -353,7 +392,7 @@
                     :width   1
                     :align   :right
                     :style   {}}
-      [utils-accordion/trash id ::events/delete-credential nil]
+      [utils-accordion/trash id ::events/open-delete-confirmation-modal nil credential]
       [ui/Icon {:name     :cog
                 :color    :blue
                 :style    {:cursor :pointer}
@@ -419,25 +458,7 @@
 
           [ui/AccordionContent {:active @cloud-active?}
            [ui/Message
-            (str/capitalize (str (@tr [:coming-soon])))]
-           ;[:div (@tr [:credential-infra-service-section-sub-text])]
-           ;[control-bar-projects]
-           ;(if (empty? cloud-creds)
-           ;  [ui/Message
-           ;   (str/capitalize (str (@tr [:no-credentials]) "."))]
-           ;  [:div [ui/Table {:style {:margin-top 10}
-           ;                   :class :nuvla-ui-editable}
-           ;         [ui/TableHeader
-           ;          [ui/TableRow
-           ;           [ui/TableHeaderCell {:content "Name"}]
-           ;           [ui/TableHeaderCell {:content "Description"}]
-           ;           [ui/TableHeaderCell {:content "Type"}]
-           ;           [ui/TableHeaderCell {:content "Actions"}]]]
-           ;         [ui/TableBody
-           ;          (for [credential cloud-creds]
-           ;            ^{:key (:id credential)}
-           ;            [single-credential credential])]]])
-           ]]]))))
+            (str/capitalize (str (@tr [:coming-soon])))]]]]))))
 
 
 (defmethod panel/render :credential
@@ -446,5 +467,5 @@
   [:div
    [credentials]
    [add-credential-modal]
-   [credential-modal infrastructure-service-validation-map]
-   [credential-modal cloud-validation-map]])
+   [credential-modal]
+   [delete-confirmation-modal]])

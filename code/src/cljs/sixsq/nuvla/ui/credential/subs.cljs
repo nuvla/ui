@@ -42,8 +42,7 @@
 
 (reg-sub
   ::credential
-  (fn [db]
-    (::spec/credential db)))
+  ::spec/credential)
 
 
 (reg-sub
@@ -68,3 +67,7 @@
   ::credential-modal-visible?
   (fn [db]
     (::spec/credential-modal-visible? db)))
+
+(reg-sub
+  ::delete-confirmation-modal-visible?
+  ::spec/delete-confirmation-modal-visible?)

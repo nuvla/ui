@@ -88,7 +88,7 @@
   (fn [{{:keys [::client-spec/client] :as db} :db} [_]]
     (when client
       (let []
-        {:db                          (assoc db ::spec/completed? false)
+        {:db                             (assoc db ::spec/completed? false)
          ::credential-fx/get-credentials [client #(dispatch [::set-credentials %])]}))))
 
 
@@ -98,6 +98,7 @@
     (log/infof "credential: %s" credential)
     (let [id             (:id credential)
           new-credential (utils/db->new-credential db)]
+      (log/infof "new-credential: %s" new-credential)
       (if (nil? id)
         {:db               db
          ::cimi-api-fx/add [client "credential" new-credential
@@ -133,7 +134,6 @@
 (reg-event-fx
   ::delete-credential
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ id]]
-    (log/infof "deleting: '%s'" id)
     {:db                  db
      ::cimi-api-fx/delete [client id
                            #(if (instance? js/Error %)
@@ -173,6 +173,19 @@
   (fn [db _]
     (assoc db ::spec/credential-modal-visible? false)))
 
+
+(reg-event-db
+  ::open-delete-confirmation-modal
+  (fn [db [_ id credential]]
+    (-> db
+        (assoc ::spec/credential credential)
+        (assoc ::spec/delete-confirmation-modal-visible? true))))
+
+
+(reg-event-db
+  ::close-delete-confirmation-modal
+  (fn [db _]
+    (assoc db ::spec/delete-confirmation-modal-visible? false)))
 
 
 ; TODO: turn into fx

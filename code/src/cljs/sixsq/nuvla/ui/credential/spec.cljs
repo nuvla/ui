@@ -20,6 +20,8 @@
 
 (s/def ::credential-modal-visible? boolean?)
 
+(s/def ::delete-confirmation-modal-visible? boolean?)
+
 (s/def ::credential-form-valid? boolean?)
 
 (s/def ::active-input (s/nilable string?))
@@ -70,6 +72,7 @@
 
 (s/def ::db (s/keys :req [::add-credential-modal-visible?
                           ::credentials-modal-visible?
+                          ::delete-confirmation-modal-visible?
                           ::credential
                           ::credentials
                           ::active-input
@@ -80,14 +83,15 @@
                           ::error-message]))
 
 
-(def defaults {::add-credential-modal-visible? false
-               ::credential-modal-visible?     false
-               ::credentials                   []
-               ::credential                    {}
-               ::active-input                  nil
-               ::form-spec                     nil
-               ::form-valid?                   true
-               ::validate-form?                false
-               ::credential-password           nil
-               ::error-message                 nil})
+(def defaults {::add-credential-modal-visible?      false
+               ::credential-modal-visible?          false
+               ::delete-confirmation-modal-visible? false
+               ::credentials                        []
+               ::credential                         {}
+               ::active-input                       nil
+               ::form-spec                          nil
+               ::form-valid?                        true
+               ::validate-form?                     false
+               ::credential-password                nil
+               ::error-message                      nil})
 

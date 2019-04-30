@@ -48,6 +48,7 @@
         :created                                   "created"
         :credentials                               "credentials"
         :credentials-cloud-services                "Credentials for Cloud Services"
+        :credential-delete-warning                 "I understand that deleting this credential is permanent and cannot be undone. This action might affect services started or created with this credential."
         :credentials-help                          "Credentials allow you to access clouds and infrastructure services."
         :credentials-infra-services                "Credentials for Infrastructure Services"
         :credentials-sub-text                      "Credentials allow you to authenticate with the different cloud and infrastructure services Nuvla manages for you."

@@ -19,10 +19,12 @@
     [sixsq.nuvla.ui.messages.spec :as messages]
     [sixsq.nuvla.ui.nuvlabox-detail.spec :as nuvlabox-detail]
     [sixsq.nuvla.ui.nuvlabox.spec :as nuvlabox]
+    [sixsq.nuvla.ui.acl.spec :as acl]
     [sixsq.nuvla.ui.profile.spec :as profile]))
 
 
-(s/def ::db (s/merge ::apps/db
+(s/def ::db (s/merge ::acl/db
+                     ::apps/db
                      ::apps-component/db
                      ::apps-store/db
                      ::authn/db
@@ -43,7 +45,8 @@
 
 
 (def default-db
-  (merge apps/defaults
+  (merge acl/defaults
+         apps/defaults
          apps-component/defaults
          apps-store/defaults
          authn/defaults

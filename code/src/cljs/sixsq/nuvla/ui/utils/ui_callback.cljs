@@ -32,6 +32,9 @@
 (def value (partial callback :value))
 
 
+(def search-query (partial callback :searchQuery))
+
+
 (def checked (partial callback :checked))
 
 

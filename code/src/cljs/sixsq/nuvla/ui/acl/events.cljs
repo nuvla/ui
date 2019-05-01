@@ -17,7 +17,8 @@
 (reg-event-fx
   ::get-principal
   (fn [{{:keys [::client-spec/client] :as db} :db :as cofx} [_ principal]]
-    {::cimi-api-fx/get [client principal #(dispatch [::set-principal principal (:name %)])]}))
+    (when principal
+      {::cimi-api-fx/get [client principal #(dispatch [::set-principal principal (:name %)])]})))
 
 
 (reg-event-db

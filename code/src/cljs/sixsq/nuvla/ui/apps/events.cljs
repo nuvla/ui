@@ -1,13 +1,14 @@
 (ns sixsq.nuvla.ui.apps.events
   (:require
+    [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
     [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
+    [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
     [sixsq.nuvla.ui.apps-project.utils :as apps-project-utils]
     [sixsq.nuvla.ui.apps.effects :as apps-fx]
     [sixsq.nuvla.ui.apps.spec :as spec]
-    [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
-    [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
@@ -18,8 +19,7 @@
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]
-    [cljs.spec.alpha :as s]))
+    [taoensso.timbre :as log]))
 
 
 ;; Validation

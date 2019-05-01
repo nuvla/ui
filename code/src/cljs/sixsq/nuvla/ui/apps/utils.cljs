@@ -1,12 +1,12 @@
 (ns
   sixsq.nuvla.ui.apps.utils
   (:require
-    [re-frame.core :refer [subscribe]]
+    [cljs.spec.alpha :as s]
     [clojure.string :as str]
+    [re-frame.core :refer [subscribe]]
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [taoensso.timbre :as log]
-    [cljs.spec.alpha :as s]))
+    [taoensso.timbre :as log]))
 
 
 (defn nav-path->module-path

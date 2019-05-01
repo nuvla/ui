@@ -65,7 +65,7 @@
          (when @more?
            [table/definition-table rows])
          (when @more? [properties-table properties])
-         (when @more? [acl/acl-table {:acl acl, :read-only false}])]]])))
+         (when @more? [acl/acl-table {:acl acl, :read-only true}])]]])))
 
 
 (defn metadata-simple

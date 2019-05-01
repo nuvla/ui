@@ -14,8 +14,6 @@
     [clojure.set :as set]))
 
 
-(def local-acl (reagent/atom nil))
-
 (defn acl-table-headers
   []
   [ui/TableHeader
@@ -43,7 +41,7 @@
 
 
 (defn owner-item
-  [removable? principal]
+  [acl on-change removable? principal]
   ^{:key (str "owner_" principal)}
   (let [principal-name @(subscribe [::subs/principal-name principal])]
     [ui/ListItem
@@ -58,21 +56,21 @@
                    :link     true
                    :size     "small"
                    :color    "red"
-                   :on-click #(reset! local-acl (utils/remove-principal @local-acl [:owners] principal))}])]]]))
+                   :on-click #(on-change (utils/remove-principal acl [:owners] principal))}])]]]))
 
 
 (defn right-checkbox
-  [acl read-only principal right-kw]
+  [acl on-change read-only principal right-kw]
   (let [checked? (boolean (some #(= % principal) (right-kw acl)))]
     [ui/Checkbox {:checked   checked?
                   :on-change #(if checked?
-                                (reset! local-acl (utils/remove-principal acl [right-kw] principal))
-                                (reset! local-acl (utils/add-principal acl (utils/extent-right right-kw) principal)))
+                                (on-change (utils/remove-principal acl [right-kw] principal))
+                                (on-change (utils/add-principal acl (utils/extent-right right-kw) principal)))
                   :disabled  read-only}]))
 
 
 (defn principal-row
-  [acl read-only principal]
+  [acl on-change read-only principal]
   ^{:key (str "right_" principal)}
   (let [principal-name @(subscribe [::subs/principal-name principal])]
     [ui/TableRow
@@ -85,30 +83,30 @@
                    :trigger  (reagent/as-element [:span (or principal-name principal)])}]
         [:span (or principal-name principal)])]
      [ui/TableCell
-      [right-checkbox acl read-only principal :edit-acl]]
+      [right-checkbox acl on-change read-only principal :edit-acl]]
      [ui/TableCell
-      [right-checkbox acl read-only principal :edit-data]]
+      [right-checkbox acl on-change read-only principal :edit-data]]
      [ui/TableCell
-      [right-checkbox acl read-only principal :edit-meta]]
+      [right-checkbox acl on-change read-only principal :edit-meta]]
      [ui/TableCell
-      [right-checkbox acl read-only principal :view-acl]]
+      [right-checkbox acl on-change read-only principal :view-acl]]
      [ui/TableCell
-      [right-checkbox acl read-only principal :view-data]]
+      [right-checkbox acl on-change read-only principal :view-data]]
      [ui/TableCell
-      [right-checkbox acl read-only principal :view-meta]]
+      [right-checkbox acl on-change read-only principal :view-meta]]
      [ui/TableCell
-      [right-checkbox acl read-only principal :manage]]
+      [right-checkbox acl on-change read-only principal :manage]]
      [ui/TableCell
-      [right-checkbox acl read-only principal :delete]]
+      [right-checkbox acl on-change read-only principal :delete]]
      [ui/TableCell
       (when-not read-only
         [ui/Icon {:link     true
                   :name     "trash"
                   :color    "red"
-                  :on-click #(reset! local-acl (utils/remove-principal
-                                                 @local-acl
-                                                 utils/all-defined-rights
-                                                 principal))}])]]))
+                  :on-click #(on-change (utils/remove-principal
+                                          acl
+                                          utils/all-defined-rights
+                                          principal))}])]]))
 
 
 (defn dropdown-principals
@@ -164,10 +162,10 @@
 
 
 (defn additional-right
-  [on-change]
+  [acl on-change]
   (let [new-permission (reagent/atom {:principal nil
                                       :rights    #{}})]
-    (fn [on-change]
+    (fn [acl on-change]
       (vec (concat
              [ui/TableRow]
 
@@ -183,12 +181,10 @@
                     :on-change (ui-callback/checked
                                  (fn [checked]
                                    (if checked
-                                     (reset!
-                                       new-permission
-                                       (update @new-permission :rights set/union (utils/extent-right right-kw)))
-                                     (reset!
-                                       new-permission
-                                       (update @new-permission :rights disj right-kw)))
+                                     (reset! new-permission
+                                             (update @new-permission :rights set/union (utils/extent-right right-kw)))
+                                     (reset! new-permission
+                                             (update @new-permission :rights disj right-kw)))
 
                                    ))}]])
                utils/all-defined-rights)
@@ -199,46 +195,42 @@
                    [ui/Icon {:name     "plus"
                              :link     true
                              :color    "green"
-                             :on-click #(reset! local-acl (utils/add-principal @local-acl rights principal))
+                             :on-click #(on-change (utils/add-principal acl rights principal))
                              }]))]])))))
 
 
 
 (defn acl-table
   [{:keys [acl] :as opt}]
-  (reset! local-acl acl)
   (fn [{:keys [acl read-only on-change]
         :or   {acl       {:owners [@(subscribe [::authn-subs/user-id])]}
                read-only false
-               on-change #(reset! @local-acl %)}}]
-    (when @local-acl
-      (let [principals (->> (dissoc @local-acl :owners)
-                           (mapcat (fn [[right principal]] principal))
-                           (set)
-                           (sort))
-           owners (:owners @local-acl)]
-       [:div
-        [ui/Header {:as "h5" :attached "top"} "Owners"]
-        [ui/Segment {:attached true}
-         (vec (concat [ui/ListSA {:horizontal true}]
-                      (map (partial owner-item (pos-int? (dec (count owners)))) owners)
-                      (when-not read-only
-                        [[ui/ListItem
-                          [ui/ListContent
-                           [ui/ListHeader
-                            [dropdown-principals
-                             {:on-change #(reset! local-acl (utils/add-principal @local-acl [:owners] %))
-                              :fluid     false}]
-                            ]]]])))]
-        [ui/Segment (merge {:attached true} style/autoscroll-x)
-         [ui/Segment {:basic true}
-          [ui/Table {:unstackable true :basic "very" :text-align "center" :vertical-align "middle"}
-           [acl-table-headers]
+               on-change #()}}]
+    (let [principals (->> (dissoc acl :owners)
+                          (mapcat (fn [[right principal]] principal))
+                          (set)
+                          (sort))
+          owners (:owners acl)]
+      [:div
+       [ui/Header {:as "h5" :attached "top"} "Owners"]
+       [ui/Segment {:attached true}
+        (vec (concat [ui/ListSA {:horizontal true}]
+                     (map (partial owner-item acl on-change (pos-int? (dec (count owners)))) owners)
+                     (when-not read-only
+                       [[ui/ListItem
+                         [ui/ListContent
+                          [ui/ListHeader
+                           [dropdown-principals
+                            {:on-change #(on-change (utils/add-principal acl [:owners] %))
+                             :fluid     false}]
+                           ]]]])))]
+       [ui/Segment (merge {:attached true} style/autoscroll-x)
+        [ui/Segment {:basic true}
+         [ui/Table {:unstackable true :basic "very" :text-align "center" :vertical-align "middle"}
+          [acl-table-headers]
 
-           (vec (concat [ui/TableBody]
-                        (map (partial principal-row @local-acl read-only) principals)
+          (vec (concat [ui/TableBody]
+                       (map (partial principal-row acl on-change read-only) principals)
 
-                        (when-not read-only
-                          [[additional-right on-change]])))
-
-           ]]]]))))
+                       (when-not read-only
+                         [[additional-right acl on-change]])))]]]])))

@@ -2,6 +2,7 @@
   (:require-macros [sixsq.nuvla.ui.utils.spec :refer [only-keys]])
   (:require
     [clojure.spec.alpha :as s]
+    [sixsq.nuvla.ui.acl.spec :as acl]
     [sixsq.nuvla.ui.apps-component.spec :as apps-component]
     [sixsq.nuvla.ui.apps-store.spec :as apps-store]
     [sixsq.nuvla.ui.apps.spec :as apps]
@@ -19,7 +20,6 @@
     [sixsq.nuvla.ui.messages.spec :as messages]
     [sixsq.nuvla.ui.nuvlabox-detail.spec :as nuvlabox-detail]
     [sixsq.nuvla.ui.nuvlabox.spec :as nuvlabox]
-    [sixsq.nuvla.ui.acl.spec :as acl]
     [sixsq.nuvla.ui.profile.spec :as profile]))
 
 

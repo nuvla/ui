@@ -1,17 +1,17 @@
 (ns sixsq.nuvla.ui.acl.views
   (:require
+    [clojure.set :as set]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.acl.events :as events]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [reagent.core :as reagent]
-    [sixsq.nuvla.ui.acl.utils :as utils]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.acl.events :as events]
     [sixsq.nuvla.ui.acl.subs :as subs]
+    [sixsq.nuvla.ui.acl.utils :as utils]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
-    [clojure.set :as set]))
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn acl-table-headers

@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.apps.views
   (:require
     [cemerick.url :as url]
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
     [sixsq.nuvla.ui.apps-store.views :as apps-store-views]
@@ -10,12 +10,12 @@
     [sixsq.nuvla.ui.apps.subs :as subs]
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.views-detail :as views-detail]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [taoensso.timbre :as timbre]
-    [taoensso.timbre :as log]
-    [clojure.string :as str]))
+    [taoensso.timbre :as log]))
 
 
 (defn module-details

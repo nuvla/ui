@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.acl.subs
   (:require
-    [sixsq.nuvla.ui.acl.spec :as spec]
+    [re-frame.core :refer [dispatch reg-sub subscribe]]
     [sixsq.nuvla.ui.acl.events :as events]
-    [re-frame.core :refer [reg-sub subscribe dispatch]]
+    [sixsq.nuvla.ui.acl.spec :as spec]
     [taoensso.timbre :as log]))
 
 

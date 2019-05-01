@@ -38,7 +38,7 @@
 
 (defn process-button
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr        (subscribe [::i18n-subs/tr])
         data-sets (subscribe [::subs/selected-data-set-ids])]
     (fn []
       [uix/MenuItemWithIcon
@@ -50,9 +50,9 @@
 
 
 (defn search-header []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr          (subscribe [::i18n-subs/tr])
         time-period (subscribe [::subs/time-period])
-        locale (subscribe [::i18n-subs/locale])]
+        locale      (subscribe [::i18n-subs/locale])]
     (fn []
       (let [[time-start time-end] @time-period]
         [ui/Form
@@ -120,9 +120,9 @@
 
 (defn application-list
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr           (subscribe [::i18n-subs/tr])
         applications (subscribe [::subs/applications])
-        loading? (subscribe [::subs/loading-applications?])]
+        loading?     (subscribe [::subs/loading-applications?])]
     [ui/Segment {:loading @loading?
                  :basic   true}
      (if (seq @applications)
@@ -135,27 +135,27 @@
 
 (defn launch-button
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        visible? (subscribe [::subs/application-select-visible?])
+  (let [tr                      (subscribe [::i18n-subs/tr])
+        visible?                (subscribe [::subs/application-select-visible?])
         selected-application-id (subscribe [::subs/selected-application-id])
 
-        data-step-active? (subscribe [::deployment-dialog-subs/data-step-active?])
+        data-step-active?       (subscribe [::deployment-dialog-subs/data-step-active?])
 
-        deployment (subscribe [::deployment-dialog-subs/deployment])
-        data-completed? (subscribe [::deployment-dialog-subs/data-completed?])
-        credentials-completed? (subscribe [::deployment-dialog-subs/credentials-completed?])
-        parameters-completed? (subscribe [::deployment-dialog-subs/parameters-completed?])]
+        deployment              (subscribe [::deployment-dialog-subs/deployment])
+        data-completed?         (subscribe [::deployment-dialog-subs/data-completed?])
+        credentials-completed?  (subscribe [::deployment-dialog-subs/credentials-completed?])
+        parameters-completed?   (subscribe [::deployment-dialog-subs/parameters-completed?])]
     (fn []
-      (let [hide-fn #(do
-                       (dispatch [::events/close-application-select-modal])
-                       (dispatch [::events/delete-deployment]))
-            configure-fn (fn [id] (do
-                                    (dispatch [::events/close-application-select-modal])
-                                    (dispatch [::deployment-dialog-events/create-deployment id :data])))
+      (let [hide-fn          #(do
+                                (dispatch [::events/close-application-select-modal])
+                                (dispatch [::events/delete-deployment]))
+            configure-fn     (fn [id] (do
+                                        (dispatch [::events/close-application-select-modal])
+                                        (dispatch [::deployment-dialog-events/create-deployment id :data])))
 
-            launch-fn (fn [id] (do
-                                 (dispatch [::events/close-application-select-modal])
-                                 (dispatch [::deployment-dialog-events/edit-deployment])))
+            launch-fn        (fn [id] (do
+                                        (dispatch [::events/close-application-select-modal])
+                                        (dispatch [::deployment-dialog-events/edit-deployment])))
 
             launch-disabled? (or (not @deployment)
                                  (and (not @data-completed?) @data-step-active?)
@@ -188,27 +188,27 @@
 
 (defn application-select-modal
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        visible? (subscribe [::subs/application-select-visible?])
+  (let [tr                      (subscribe [::i18n-subs/tr])
+        visible?                (subscribe [::subs/application-select-visible?])
         selected-application-id (subscribe [::subs/selected-application-id])
 
-        data-step-active? (subscribe [::deployment-dialog-subs/data-step-active?])
+        data-step-active?       (subscribe [::deployment-dialog-subs/data-step-active?])
 
-        deployment (subscribe [::deployment-dialog-subs/deployment])
-        data-completed? (subscribe [::deployment-dialog-subs/data-completed?])
-        credentials-completed? (subscribe [::deployment-dialog-subs/credentials-completed?])
-        parameters-completed? (subscribe [::deployment-dialog-subs/parameters-completed?])]
+        deployment              (subscribe [::deployment-dialog-subs/deployment])
+        data-completed?         (subscribe [::deployment-dialog-subs/data-completed?])
+        credentials-completed?  (subscribe [::deployment-dialog-subs/credentials-completed?])
+        parameters-completed?   (subscribe [::deployment-dialog-subs/parameters-completed?])]
     (fn []
-      (let [hide-fn #(do
-                       (dispatch [::events/close-application-select-modal])
-                       (dispatch [::events/delete-deployment]))
-            configure-fn (fn [id] (do
-                                    (dispatch [::events/close-application-select-modal])
-                                    (dispatch [::deployment-dialog-events/create-deployment id :data])))
+      (let [hide-fn          #(do
+                                (dispatch [::events/close-application-select-modal])
+                                (dispatch [::events/delete-deployment]))
+            configure-fn     (fn [id] (do
+                                        (dispatch [::events/close-application-select-modal])
+                                        (dispatch [::deployment-dialog-events/create-deployment id :data])))
 
-            launch-fn (fn [id] (do
-                                 (dispatch [::events/close-application-select-modal])
-                                 (dispatch [::deployment-dialog-events/edit-deployment])))
+            launch-fn        (fn [id] (do
+                                        (dispatch [::events/close-application-select-modal])
+                                        (dispatch [::deployment-dialog-events/edit-deployment])))
 
             launch-disabled? (or (not @deployment)
                                  (and (not @data-completed?) @data-step-active?)
@@ -252,11 +252,11 @@
 
 (defn format-data-set
   [{:keys [id description] :as data-set}]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr     (subscribe [::i18n-subs/tr])
         counts (subscribe [::subs/counts])
-        sizes (subscribe [::subs/sizes])
-        count (get @counts id "...")
-        size (get @sizes id "...")]
+        sizes  (subscribe [::subs/sizes])
+        count  (get @counts id "...")
+        size   (get @sizes id "...")]
     ^{:key id}
     [ui/Card {:on-click #(dispatch [::events/toggle-data-set-id id])}
      [ui/CardContent
@@ -273,7 +273,7 @@
 
 (defn queries-cards-group
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr        (subscribe [::i18n-subs/tr])
         data-sets (subscribe [::subs/data-sets])]
     [ui/Segment style/basic
      (if (seq @data-sets)
@@ -290,13 +290,26 @@
                          (vals @data-sets)))))]))
 
 
+(defn main-action-button
+  []
+  (let [tr        (subscribe [::i18n-subs/tr])
+        data-sets (subscribe [::subs/selected-data-set-ids])]
+    [ui/ButtonGroup {:primary true}
+     [ui/Button
+      {:content     (@tr [:process])
+       :disabled (not (seq @data-sets))
+       :icon     "rocket"
+       :on-click #(dispatch [::events/open-application-select-modal])}]]))
+
+
 (defn data-set-resources
   []
   [ui/Container {:fluid true}
    [control-bar]
    [application-select-modal]
    [deployment-dialog-views/deploy-modal true]
-   [queries-cards-group]])
+   [queries-cards-group]
+   [main-action-button]])
 
 
 (defmethod panel/render :data

@@ -55,6 +55,7 @@
 
 (def Dropdown (reagent/adapt-react-class semantic/Dropdown))
 (def DropdownDivider (reagent/adapt-react-class semantic/DropdownDivider))
+(def DropdownHeader (reagent/adapt-react-class semantic/DropdownHeader))
 (def DropdownItem (reagent/adapt-react-class semantic/DropdownItem))
 (def DropdownMenu (reagent/adapt-react-class semantic/DropdownMenu))
 

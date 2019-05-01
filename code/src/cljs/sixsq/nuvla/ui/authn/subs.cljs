@@ -47,6 +47,13 @@
 
 
 (reg-sub
+  ::user-id
+  :<- [::session]
+  (fn [session _]
+    (:user session)))
+
+
+(reg-sub
   ::error-message
   ::spec/error-message)
 

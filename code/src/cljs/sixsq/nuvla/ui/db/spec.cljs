@@ -2,6 +2,7 @@
   (:require-macros [sixsq.nuvla.ui.utils.spec :refer [only-keys]])
   (:require
     [clojure.spec.alpha :as s]
+    [sixsq.nuvla.ui.acl.spec :as acl]
     [sixsq.nuvla.ui.apps-component.spec :as apps-component]
     [sixsq.nuvla.ui.apps-store.spec :as apps-store]
     [sixsq.nuvla.ui.apps.spec :as apps]
@@ -22,7 +23,8 @@
     [sixsq.nuvla.ui.profile.spec :as profile]))
 
 
-(s/def ::db (s/merge ::apps/db
+(s/def ::db (s/merge ::acl/db
+                     ::apps/db
                      ::apps-component/db
                      ::apps-store/db
                      ::authn/db
@@ -43,7 +45,8 @@
 
 
 (def default-db
-  (merge apps/defaults
+  (merge acl/defaults
+         apps/defaults
          apps-component/defaults
          apps-store/defaults
          authn/defaults

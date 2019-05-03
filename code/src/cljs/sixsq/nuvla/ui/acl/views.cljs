@@ -8,12 +8,10 @@
     [sixsq.nuvla.ui.acl.subs :as subs]
     [sixsq.nuvla.ui.acl.utils :as utils]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn is-advanced-mode?
@@ -86,8 +84,8 @@
   (let [checked? (boolean (some #(= % principal) (right-kw acl)))]
     [ui/Checkbox {:checked   checked?
                   :on-change #(if checked?
-                                (on-change (utils/remove-principal acl (utils/extent-right right-kw) principal))
-                                (on-change (utils/add-principal acl (utils/extent-right right-kw) principal)))
+                                (on-change (utils/remove-principal acl (utils/remove-right right-kw) principal))
+                                (on-change (utils/add-principal acl [right-kw] principal)))
                   :disabled  read-only}]))
 
 
@@ -202,9 +200,11 @@
                             (fn [checked]
                               (if checked
                                 (reset! new-permission
-                                        (update @new-permission :rights set/union (utils/extent-right right-kw)))
+                                        (update @new-permission :rights
+                                                set/union (utils/extent-right right-kw)))
                                 (reset! new-permission
-                                        (update @new-permission :rights disj right-kw)))))}]]))]
+                                        (update @new-permission :rights
+                                                set/difference (utils/remove-right right-kw))))))}]]))]
 
        [ui/TableCell
         (let [{:keys [principal rights]} @new-permission]

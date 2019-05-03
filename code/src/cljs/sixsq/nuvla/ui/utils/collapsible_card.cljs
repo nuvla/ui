@@ -46,7 +46,8 @@
 
 (defn metadata
   [{:keys [title subtitle description logo icon updated acl properties] :as module-meta} rows]
-  (let [more? (reagent/atom false)]
+  (let [more? (reagent/atom false)
+        acl-atom (reagent/atom acl)]
     (fn [{:keys [title subtitle description logo icon updated acl properties] :as module-meta} rows]
       [ui/Card {:fluid true}
        [ui/CardContent
@@ -65,7 +66,7 @@
          (when @more?
            [table/definition-table rows])
          (when @more? [properties-table properties])
-         (when @more? [acl/acl-table {:acl acl, :read-only true}])]]])))
+         (when @more? [acl/AclWidget {:acl @acl-atom, :read-only false, :on-change #(reset! acl-atom %)}])]]])))
 
 
 (defn metadata-simple
@@ -79,7 +80,7 @@
        (when @more?
          [table/definition-table rows])
        (when @more? [properties-table properties])
-       (when @more? [acl/acl-table {:acl acl, :read-only true}])
+       (when @more? [acl/AclWidget {:acl acl, :read-only true}])
        ])))
 
 

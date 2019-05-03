@@ -29,11 +29,13 @@
 
 (def all-defined-rights [:edit-acl :edit-data :edit-meta :view-acl :view-data :view-meta :manage :delete])
 
+(def subset-defined-rights [:edit-acl :view-acl :manage :delete])
+
 
 (defn update-acl-principal
-  [acl keys fn-update]
+  [acl right-keys fn-update]
   (loop [updated-acl acl
-         left-keys (vec keys)]
+         left-keys (vec right-keys)]
     (let [key (peek left-keys)
           new-acl (update updated-acl key fn-update)]
       (if (empty? left-keys)
@@ -42,15 +44,15 @@
 
 
 (defn remove-principal
-  [acl keys principal]
-  (update-acl-principal acl keys
+  [acl right-keys principal]
+  (update-acl-principal acl right-keys
                         (fn [collection]
                           (remove #(= % principal) collection))))
 
 
 (defn add-principal
-  [acl keys principal]
-  (update-acl-principal acl keys
+  [acl right-keys principal]
+  (update-acl-principal acl right-keys
                         (fn [collection]
                           (->> principal
                                (conj collection)

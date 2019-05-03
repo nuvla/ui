@@ -9,45 +9,67 @@
     [sixsq.nuvla.ui.acl.utils :as utils]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 
-(defn acl-table-headers
-  []
-  [ui/TableHeader
-   [ui/TableRow
-    [ui/TableHeaderCell {:row-span 2 :text-align "left"} "Rights"]
-    [ui/TableHeaderCell {:col-span 3} "Edit"]
-    [ui/TableHeaderCell {:col-span 3} "View"]
-    [ui/TableHeaderCell {:row-span 2} "Manage"]
-    [ui/TableHeaderCell {:row-span 2} "Delete"]]
-   [ui/TableRow
-    [ui/TableHeaderCell "acl"]
-    [ui/TableHeaderCell "data"]
-    [ui/TableHeaderCell "meta"]
-    [ui/TableHeaderCell "acl"]
-    [ui/TableHeaderCell "data"]
-    [ui/TableHeaderCell "meta"]
-    [ui/TableHeaderCell]]])
+(defn is-advanced-mode?
+  [mode]
+  (= mode :advanced))
 
 
-(defn principal-icon
+(defn rights-for-mode
+  [mode]
+  (if (is-advanced-mode? mode)
+    utils/all-defined-rights
+    utils/subset-defined-rights))
+
+
+(defn AclTableHeaders
+  [{:keys [mode] :as opts}]
+  (if (is-advanced-mode? @mode)
+    [ui/TableHeader
+     [ui/TableRow
+      [ui/TableHeaderCell {:row-span 2 :text-align "left"} "Rights"]
+      [ui/TableHeaderCell {:col-span 3} "Edit"]
+      [ui/TableHeaderCell {:col-span 3} "View"]
+      [ui/TableHeaderCell {:row-span 2} "Manage"]
+      [ui/TableHeaderCell {:row-span 2} "Delete"]]
+     [ui/TableRow
+      [ui/TableHeaderCell "acl"]
+      [ui/TableHeaderCell "data"]
+      [ui/TableHeaderCell "meta"]
+      [ui/TableHeaderCell "acl"]
+      [ui/TableHeaderCell "data"]
+      [ui/TableHeaderCell "meta"]
+      [ui/TableHeaderCell]]]
+    [ui/TableHeader
+     [ui/TableRow
+      [ui/TableHeaderCell {:text-align "left"} "Rights"]
+      [ui/TableHeaderCell "Edit"]
+      [ui/TableHeaderCell "View"]
+      [ui/TableHeaderCell "Manage"]
+      [ui/TableHeaderCell "Delete"]
+      [ui/TableHeaderCell]]]))
+
+
+(defn PrincipalIcon
   [principal]
   [ui/Icon {:name (if (str/starts-with? principal "user/")
                     "user"
                     "users")}])
 
 
-(defn owner-item
-  [acl on-change removable? principal]
-  ^{:key (str "owner_" principal)}
+(defn OwnerItem
+  [{:keys [acl on-change]} removable? principal]
   (let [principal-name @(subscribe [::subs/principal-name principal])]
     [ui/ListItem
      [ui/ListContent
       [ui/ListHeader
-       [principal-icon principal]
+       [PrincipalIcon principal]
        ff/nbsp
        (or principal-name principal)
        ff/nbsp
@@ -59,45 +81,35 @@
                    :on-click #(on-change (utils/remove-principal acl [:owners] principal))}])]]]))
 
 
-(defn right-checkbox
-  [acl on-change read-only principal right-kw]
+(defn RightCheckbox
+  [{:keys [acl on-change read-only] :as opts} principal right-kw]
   (let [checked? (boolean (some #(= % principal) (right-kw acl)))]
     [ui/Checkbox {:checked   checked?
                   :on-change #(if checked?
-                                (on-change (utils/remove-principal acl [right-kw] principal))
+                                (on-change (utils/remove-principal acl (utils/extent-right right-kw) principal))
                                 (on-change (utils/add-principal acl (utils/extent-right right-kw) principal)))
                   :disabled  read-only}]))
 
 
-(defn principal-row
-  [acl on-change read-only principal]
-  ^{:key (str "right_" principal)}
+(defn RightRow
+  [{:keys [acl on-change read-only mode] :as opts} principal]
   (let [principal-name @(subscribe [::subs/principal-name principal])]
     [ui/TableRow
+
      [ui/TableCell {:text-align "left"}
-      [principal-icon principal]
+      [PrincipalIcon principal]
       ff/nbsp
       (if principal-name
         [ui/Popup {:content  principal
                    :position "right center"
                    :trigger  (reagent/as-element [:span (or principal-name principal)])}]
         [:span (or principal-name principal)])]
-     [ui/TableCell
-      [right-checkbox acl on-change read-only principal :edit-acl]]
-     [ui/TableCell
-      [right-checkbox acl on-change read-only principal :edit-data]]
-     [ui/TableCell
-      [right-checkbox acl on-change read-only principal :edit-meta]]
-     [ui/TableCell
-      [right-checkbox acl on-change read-only principal :view-acl]]
-     [ui/TableCell
-      [right-checkbox acl on-change read-only principal :view-data]]
-     [ui/TableCell
-      [right-checkbox acl on-change read-only principal :view-meta]]
-     [ui/TableCell
-      [right-checkbox acl on-change read-only principal :manage]]
-     [ui/TableCell
-      [right-checkbox acl on-change read-only principal :delete]]
+
+     [:<>
+      (for [right-kw (rights-for-mode @mode)]
+        ^{:key (str principal right-kw)}
+        [ui/TableCell [RightCheckbox opts principal right-kw]])]
+
      [ui/TableCell
       (when-not read-only
         [ui/Icon {:link     true
@@ -109,128 +121,177 @@
                                           principal))}])]]))
 
 
-(defn dropdown-principals
+(defn DropdownPrincipals
   [opts]
-  (let [open (reagent/atom false)
-        selected (reagent/atom nil)
-        users (subscribe [::subs/users-options])
+  (let [open   (reagent/atom false)
+        users  (subscribe [::subs/users-options])
         groups (subscribe [::subs/groups-options])]
     (dispatch [::events/search-groups])
     (dispatch [::events/search-users ""])
-    (fn [{:keys [on-change fluid]
+    (fn [{:keys [on-change fluid value]
           :or   {on-change #()
-                 fluid     false}}]
-      ^{:key (str "additional-right-for-" @selected)}
-      [ui/Dropdown {:text      @selected
+                 fluid     false
+                 value     nil}}]
+      [ui/Dropdown {:text      (or (when value @(subscribe [::subs/principal-name value]))
+                                   value)
                     :fluid     fluid
+                    :style     {:width "250px"}
                     :on-open   #(reset! open true)
                     :open      @open
+                    :upward    false
                     :className "selection"
                     :on-blur   #(reset! open false)
                     :on-close  #()}
-       (vec (concat
-              [ui/DropdownMenu]
 
-              [[ui/DropdownHeader {:icon "user" :content "Users"}]
-               [ui/Input {:icon          "search"
-                          :icon-position "left"
-                          :name          "search"
-                          :auto-complete "off"
-                          :on-change     (ui-callback/input ::events/search-users)}]]
+       [ui/DropdownMenu {:style {:overflow-x "auto"
+                                 :min-height "250px"}}
 
-              (map
-                (fn [{user-id :id user-name :name}]
-                  [ui/DropdownItem {:text     (or user-name user-id)
-                                    :on-click (fn []
-                                                (on-change user-id)
-                                                (reset! selected (or user-name user-id))
-                                                (reset! open false))}]) @users)
+        [ui/DropdownHeader {:icon "user" :content "Users"}]
 
-              [[ui/DropdownDivider]
-               [ui/DropdownHeader {:icon "users" :content "Groups"}]]
+        [ui/Input {:icon          "search"
+                   :icon-position "left"
+                   :name          "search"
+                   :auto-complete "off"
+                   :on-click      #(reset! open true)
+                   :on-change     (ui-callback/input ::events/search-users)}]
 
-              (map
-                (fn [{user-id :id user-name :name}]
-                  [ui/DropdownItem {:text     (or user-name user-id)
-                                    :on-click (fn []
-                                                (on-change user-id)
-                                                (reset! selected (or user-name user-id))
-                                                (reset! open false))}]) @groups)
+        [:<>
+         (doall
+           (for [{user-id :id user-name :name} @users]
+             ^{:key user-id}
+             [ui/DropdownItem {:text     (or user-name user-id)
+                               :on-click (fn []
+                                           (on-change user-id)
+                                           (reset! open false))}]))]
 
-              ))
-       ])))
+        [ui/DropdownDivider]
 
+        [ui/DropdownHeader {:icon "users" :content "Groups"}]
 
-(defn additional-right
-  [acl on-change]
-  (let [new-permission (reagent/atom {:principal nil
-                                      :rights    #{}})]
-    (fn [acl on-change]
-      (vec (concat
-             [ui/TableRow]
-
-             [[ui/TableCell
-               [dropdown-principals {:on-change #(reset! new-permission (assoc @new-permission :principal %))
-                                     :fluid     true}]]]
-
-             (map
-               (fn [right-kw]
-                 [ui/TableCell
-                  [ui/Checkbox
-                   {:checked   (contains? (:rights @new-permission) right-kw)
-                    :on-change (ui-callback/checked
-                                 (fn [checked]
-                                   (if checked
-                                     (reset! new-permission
-                                             (update @new-permission :rights set/union (utils/extent-right right-kw)))
-                                     (reset! new-permission
-                                             (update @new-permission :rights disj right-kw)))
-
-                                   ))}]])
-               utils/all-defined-rights)
-
-             [[ui/TableCell
-               (let [{:keys [principal rights]} @new-permission]
-                 (when (and principal (not-empty rights))
-                   [ui/Icon {:name     "plus"
-                             :link     true
-                             :color    "green"
-                             :on-click #(on-change (utils/add-principal acl rights principal))
-                             }]))]])))))
+        [:<>
+         (doall
+           (for [{group-id :id group-name :name} @groups]
+             ^{:key group-id}
+             [ui/DropdownItem {:text     (or group-name group-id)
+                               :on-click (fn []
+                                           (on-change group-id)
+                                           (reset! open false))}]))]]])))
 
 
+(defn AddRight
+  [opts]
+  (let [empty-permission {:principal nil
+                          :rights    #{}}
+        new-permission   (reagent/atom empty-permission)]
+    (fn [{:keys [acl on-change mode] :as opts}]
+      [ui/TableRow
 
-(defn acl-table
-  [{:keys [acl] :as opt}]
-  (fn [{:keys [acl read-only on-change]
-        :or   {acl       {:owners [@(subscribe [::authn-subs/user-id])]}
-               read-only false
-               on-change #()}}]
-    (let [principals (->> (dissoc acl :owners)
-                          (mapcat (fn [[right principal]] principal))
-                          (set)
-                          (sort))
-          owners (:owners acl)]
-      [:div
-       [ui/Header {:as "h5" :attached "top"} "Owners"]
-       [ui/Segment {:attached true}
-        (vec (concat [ui/ListSA {:horizontal true}]
-                     (map (partial owner-item acl on-change (pos-int? (dec (count owners)))) owners)
-                     (when-not read-only
-                       [[ui/ListItem
-                         [ui/ListContent
-                          [ui/ListHeader
-                           [dropdown-principals
-                            {:on-change #(on-change (utils/add-principal acl [:owners] %))
-                             :fluid     false}]
-                           ]]]])))]
-       [ui/Segment (merge {:attached true} style/autoscroll-x)
-        [ui/Segment {:basic true}
-         [ui/Table {:unstackable true :basic "very" :text-align "center" :vertical-align "middle"}
-          [acl-table-headers]
+       [ui/TableCell
+        [DropdownPrincipals {:value     (:principal @new-permission)
+                             :on-change #(reset! new-permission (assoc @new-permission :principal %))
+                             :fluid     true}]]
 
-          (vec (concat [ui/TableBody]
-                       (map (partial principal-row acl on-change read-only) principals)
+       [:<>
+        (doall
+          (for [right-kw (rights-for-mode @mode)]
+            ^{:key right-kw}
+            [ui/TableCell
+             [ui/Checkbox
+              {:checked   (contains? (:rights @new-permission) right-kw)
+               :on-change (ui-callback/checked
+                            (fn [checked]
+                              (if checked
+                                (reset! new-permission
+                                        (update @new-permission :rights set/union (utils/extent-right right-kw)))
+                                (reset! new-permission
+                                        (update @new-permission :rights disj right-kw)))))}]]))]
 
-                       (when-not read-only
-                         [[additional-right acl on-change]])))]]]])))
+       [ui/TableCell
+        (let [{:keys [principal rights]} @new-permission]
+          (when (and principal (not-empty rights))
+            [ui/Icon {:name     "plus"
+                      :link     true
+                      :color    "green"
+                      :on-click #(do
+                                   (on-change (utils/add-principal acl rights principal))
+                                   (reset! new-permission empty-permission))}]))]])))
+
+
+(defn AclOwners
+  [{:keys [acl read-only on-change] :as opts}]
+  (let [owners  (:owners acl)
+        mobile? (subscribe [::main-subs/is-device? :mobile])]
+    [ui/Table {:unstackable true
+               :attached    "top"
+               :basic       true}
+
+     [ui/TableHeader
+      [ui/TableRow
+       [ui/TableHeaderCell "Owners"]]]
+
+     [ui/TableBody
+      [ui/TableRow
+       [ui/TableCell
+        [ui/ListSA {:horizontal (not @mobile?)
+                    :relaxed    true}
+
+         [:<>
+          (for [owner owners]
+            ^{:key owner}
+            [OwnerItem opts (>= (count owners) 2) owner])]
+
+         (when-not read-only
+           [ui/ListItem
+            [ui/ListContent
+             [ui/ListHeader
+              [DropdownPrincipals
+               {:on-change #(on-change (utils/add-principal acl [:owners] %))
+                :fluid     false}]]]])]]]]]))
+
+
+(defn AclRights
+  [{:keys [acl read-only] :as opts}]
+  (let [principals (->> (dissoc acl :owners)
+                        (mapcat (fn [[right principal]] principal))
+                        (set)
+                        (sort))]
+
+    [ui/Table {:unstackable    true
+               :attached       "bottom"
+               :basic          true
+               :text-align     "center"
+               :vertical-align "middle"}
+
+     [AclTableHeaders opts]
+
+     [ui/TableBody
+
+      [:<>
+       (for [principal principals]
+         ^{:key principal}
+         [RightRow opts principal])]
+
+      (when-not read-only
+        [AddRight opts])]]))
+
+
+(defn AclWidget
+  [{:keys [acl read-only on-change mode]
+    :or {acl {:owners [@(subscribe [::authn-subs/user-id])]}
+         read-only false
+         mode (reagent/atom :simple)
+         on-change #()} :as opts}]
+  (fn [opts]
+    (let [opts         (assoc opts :mode mode)
+          is-advanced? (is-advanced-mode? @mode)]
+      [:div (when @(subscribe [::main-subs/is-device? :mobile])
+              {:style {:overflow-x "auto"}})
+       [ui/Icon {:link     true
+                 :name     (if is-advanced? "compress" "expand")
+                 :style    {:float    "right"
+                            :top      "28px"
+                            :right    "10px"
+                            :position "relative"}
+                 :on-click #(reset! mode (if is-advanced? :simple :advanced))}]
+       [AclOwners opts]
+       [AclRights opts]])))

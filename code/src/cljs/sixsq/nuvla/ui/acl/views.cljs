@@ -319,18 +319,19 @@
          mode (reagent/atom :simple)
          on-change #()} :as opts}]
   (fn [opts]
-    (let [opts         (assoc opts :mode mode)
-          is-advanced? (is-advanced-mode? @mode)]
-      [:div (when @(subscribe [::main-subs/is-device? :mobile])
-              {:style {:overflow-x "auto"}})
-       [ui/Icon {:link     true
-                 :name     (if is-advanced? "compress" "expand")
-                 :style    {:float    "right"
-                            :top      "28px"
-                            :right    "10px"
-                            :position "relative"}
-                 :on-click #(reset! mode (if is-advanced? :simple :advanced))}]
-       [AclOwners opts]
-       (when-not (and read-only
-                      (< (count acl) 2))
-         [AclRights opts])])))
+    (when acl
+      (let [opts         (assoc opts :mode mode)
+            is-advanced? (is-advanced-mode? @mode)]
+        [:div (when @(subscribe [::main-subs/is-device? :mobile])
+                {:style {:overflow-x "auto"}})
+         [ui/Icon {:link     true
+                   :name     (if is-advanced? "compress" "expand")
+                   :style    {:float    "right"
+                              :top      "28px"
+                              :right    "10px"
+                              :position "relative"}
+                   :on-click #(reset! mode (if is-advanced? :simple :advanced))}]
+         [AclOwners opts]
+         (when-not (and read-only
+                        (< (count acl) 2))
+           [AclRights opts])]))))

@@ -13,8 +13,8 @@
 
 (reg-event-fx
   ::initialize
-  (fn [{:keys [db]} _]
-    (when-let [client (::client-spec/client db)]
+  (fn [{{:keys [::client-spec/client] :as db} :db} _]
+    (when client
       {::cimi-api-fx/session [client #(dispatch [::set-session %])]})))
 
 
@@ -23,10 +23,8 @@
   (fn [{:keys [db]} [_ session]]
     (let [redirect-uri (::spec/redirect-uri db)]
       (cond-> {:db (assoc db ::spec/session session)}
-
-              (and session redirect-uri) (assoc ::history-fx/navigate-js-location [redirect-uri])
-
-              session (assoc ::fx/automatic-logout-at-session-expiry [session])))))
+              session (assoc ::fx/automatic-logout-at-session-expiry [session])
+              (and session redirect-uri) (assoc ::history-fx/navigate-js-location [redirect-uri])))))
 
 
 (reg-event-fx
@@ -134,11 +132,11 @@
                                              (when success-msg
                                                (dispatch [::set-success-message success-msg]))
                                              (dispatch [::history-events/navigate "welcome"])))}} opts
-          template {:template (-> form-data
-                                  (dissoc :repeat-new-password
-                                          :repeat-password)
-                                  (assoc :href form-id
-                                         :redirect-url server-redirect-uri))}
+          template      {:template (-> form-data
+                                       (dissoc :repeat-new-password
+                                               :repeat-password)
+                                       (assoc :href form-id
+                                              :redirect-url server-redirect-uri))}
           collection-kw (cond
                           (str/starts-with? form-id "session-template/") :session
                           (str/starts-with? form-id "user-template/") :user)]

@@ -4,18 +4,35 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.infra-service.spec :as spec]
-    [sixsq.nuvla.ui.infra-service.utils :as utils]))
+    [sixsq.nuvla.ui.infra-service.utils :as utils]
+    [taoensso.timbre :as log]))
 
 (reg-event-db
   ::set-services
-  (fn [db [_ services]]
-    (assoc db ::spec/services services)))
+  (fn [db [_ data]]
+    (let [services (:resources data)
+          groups (group-by :parent services)]
+      ;(log/infof "event set-services services %s" services)
+      ;(log/infof "event set-services groups %s" groups)
+      (assoc db ::spec/services groups))))
 
 
 (reg-event-db
-  ::show-service-sidebar?
+  ::open-service-modal
   (fn [db [_ show?]]
-    (assoc db ::spec/show-service-sidebar? show?)))
+    (assoc db ::spec/service-modal-visible? show?)))
+
+
+(reg-event-db
+  ::open-add-service-modal
+  (fn [db [_]]
+    (assoc db ::spec/add-service-modal-visible? true)))
+
+
+(reg-event-db
+  ::close-add-service-modal
+  (fn [db [_]]
+    (assoc db ::spec/add-service-modal-visible? false)))
 
 
 (reg-event-fx

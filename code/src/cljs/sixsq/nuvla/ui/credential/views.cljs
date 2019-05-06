@@ -375,7 +375,6 @@
                                     (dispatch [::events/close-delete-confirmation-modal]))}]]]))))
 
 
-;type name description
 (defn single-credential
   [{:keys [id type name description] :as credential}]
   (let [tr (subscribe [::i18n-subs/tr])]

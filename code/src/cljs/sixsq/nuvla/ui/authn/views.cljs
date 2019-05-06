@@ -284,18 +284,18 @@
                           :login :signup
                           :reset-password :login
                           :signup :login)
-            f           (fn []
+            on-click    (fn []
                           (dispatch [::events/close-modal])
                           (dispatch [::events/set-selected-method-group nil])
                           (dispatch [::events/set-form-id nil])
                           (dispatch [::events/open-modal other-modal]))]
         (case modal-kw
           :login [:span (@tr [:no-account?]) " "
-                  [:a {:on-click f :style {:cursor "pointer"}} (str (@tr [:signup-link]))]]
+                  [:a {:on-click on-click :style {:cursor "pointer"}} (str (@tr [:signup-link]))]]
           :reset-password [:span (@tr [:already-registered?]) " "
-                           [:a {:on-click f :style {:cursor "pointer"}} (str (@tr [:login-link]))]]
+                           [:a {:on-click on-click :style {:cursor "pointer"}} (str (@tr [:login-link]))]]
           :signup [:span (@tr [:already-registered?]) " "
-                   [:a {:on-click f :style {:cursor "pointer"}} (str (@tr [:login-link]))]])))))
+                   [:a {:on-click on-click :style {:cursor "pointer"}} (str (@tr [:login-link]))]])))))
 
 
 (defn generic-modal
@@ -423,12 +423,12 @@
 
 (defn authn-dropdown-menu
   []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        user           (subscribe [::subs/user])
-        sign-out-fn    (fn []
-                         (dispatch [::events/logout])
-                         (dispatch [::history-events/navigate "welcome"]))
-        logged-in?     (boolean @user)]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        user        (subscribe [::subs/user])
+        sign-out-fn (fn []
+                      (dispatch [::events/logout])
+                      (dispatch [::history-events/navigate "welcome"]))
+        logged-in?  (boolean @user)]
     (vec
       (concat
         [ui/DropdownMenu]
@@ -464,12 +464,12 @@
 
 (defn authn-menu
   []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        user           (subscribe [::subs/user])
-        profile-fn     #(history-utils/navigate "profile")
-        login-fn       #(dispatch [::events/open-modal :login])
-        signup-fn      #(dispatch [::events/open-modal :signup])
-        logged-in?     (boolean @user)]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        user       (subscribe [::subs/user])
+        profile-fn #(history-utils/navigate "profile")
+        login-fn   #(dispatch [::events/open-modal :login])
+        signup-fn  #(dispatch [::events/open-modal :signup])
+        logged-in? (boolean @user)]
 
     (if logged-in?
       [ui/ButtonGroup {:primary true}
@@ -484,18 +484,21 @@
        [modal-login]
        [modal-reset-password]
        [modal-signup]]
-      [ui/ButtonGroup {:primary true}
-       [ui/Button {:on-click signup-fn}
+      [:div
+       [:span {:style    {:padding-right "10px"
+                          :cursor        "pointer"}
+               :on-click signup-fn}
         [ui/Icon {:name "signup"}]
         (@tr [:signup])]
-       [ui/Button {:on-click login-fn}
-        [ui/Icon {:name "sign in"}]
-        (@tr [:login])]
-       [ui/Dropdown {:inline    true
-                     :button    true
-                     :pointing  "top right"
-                     :className "icon"}
-        (authn-dropdown-menu)]
-       [modal-login]
-       [modal-reset-password]
-       [modal-signup]])))
+       [ui/ButtonGroup {:primary true}
+        [ui/Button {:on-click login-fn}
+         [ui/Icon {:name "sign in"}]
+         (@tr [:login])]
+        [ui/Dropdown {:inline    true
+                      :button    true
+                      :pointing  "top right"
+                      :className "icon"}
+         (authn-dropdown-menu)]
+        [modal-login]
+        [modal-reset-password]
+        [modal-signup]]])))

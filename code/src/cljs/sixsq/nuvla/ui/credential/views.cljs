@@ -277,39 +277,40 @@
              [:div]
              [ui/Image {:src  "/ui/images/minio.png"
                         :size :tiny}]]]
-           [ui/Card {:on-click #(do
-                                  (dispatch [::events/set-validate-form? false])
-                                  (dispatch [::events/form-valid])
-                                  (dispatch [::events/close-add-credential-modal])
-                                  (dispatch [::events/open-credential-modal {:type "store-infrastructure-service-exoscale"}
-                                             true]))}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "Exoscale Store (S3)"]
-             [:div]
-             [ui/Image {:src  "/ui/images/exoscale.png"
-                        :size :large}]]]
-           [ui/Card {:on-click #(do
-                                  (dispatch [::events/set-validate-form? false])
-                                  (dispatch [::events/form-valid])
-                                  (dispatch [::events/close-add-credential-modal])
-                                  (dispatch [::events/open-credential-modal {:type "store-infrastructure-service-azure"}
-                                             true]))}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "Azure Store (S3)"]
-             [:div]
-             [ui/Image {:src  "/ui/images/azure.png"
-                        :size :small}]]]
-           [ui/Card {:on-click #(do
-                                  (dispatch [::events/set-validate-form? false])
-                                  (dispatch [::events/form-valid])
-                                  (dispatch [::events/close-add-credential-modal])
-                                  (dispatch [::events/open-credential-modal {:type "store-infrastructure-service-amazonec2"}
-                                             true]))}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "Amazon S3"]
-             [:div]
-             [ui/Image {:src  "/ui/images/aws.png"
-                        :size :small}]]]]]
+           ;[ui/Card {:on-click #(do
+           ;                       (dispatch [::events/set-validate-form? false])
+           ;                       (dispatch [::events/form-valid])
+           ;                       (dispatch [::events/close-add-credential-modal])
+           ;                       (dispatch [::events/open-credential-modal {:type "store-infrastructure-service-exoscale"}
+           ;                                  true]))}
+           ; [ui/CardContent {:text-align :center}
+           ;  [ui/Header "Exoscale Store (S3)"]
+           ;  [:div]
+           ;  [ui/Image {:src  "/ui/images/exoscale.png"
+           ;             :size :large}]]]
+           ;[ui/Card {:on-click #(do
+           ;                       (dispatch [::events/set-validate-form? false])
+           ;                       (dispatch [::events/form-valid])
+           ;                       (dispatch [::events/close-add-credential-modal])
+           ;                       (dispatch [::events/open-credential-modal {:type "store-infrastructure-service-azure"}
+           ;                                  true]))}
+           ; [ui/CardContent {:text-align :center}
+           ;  [ui/Header "Azure Store (S3)"]
+           ;  [:div]
+           ;  [ui/Image {:src  "/ui/images/azure.png"
+           ;             :size :small}]]]
+           ;[ui/Card {:on-click #(do
+           ;                       (dispatch [::events/set-validate-form? false])
+           ;                       (dispatch [::events/form-valid])
+           ;                       (dispatch [::events/close-add-credential-modal])
+           ;                       (dispatch [::events/open-credential-modal {:type "store-infrastructure-service-amazonec2"}
+           ;                                  true]))}
+           ; [ui/CardContent {:text-align :center}
+           ;  [ui/Header "Amazon S3"]
+           ;  [:div]
+           ;  [ui/Image {:src  "/ui/images/aws.png"
+           ;             :size :small}]]]
+           ]]
          [ui/ModalActions]]))))
 
 

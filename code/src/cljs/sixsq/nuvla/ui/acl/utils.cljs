@@ -1,4 +1,5 @@
-(ns sixsq.nuvla.ui.acl.utils)
+(ns sixsq.nuvla.ui.acl.utils
+  (:require [clojure.set :as set]))
 
 
 (def rights-hierarchy (-> (make-hierarchy)
@@ -29,31 +30,88 @@
 
 (def all-defined-rights [:edit-acl :edit-data :edit-meta :view-acl :view-data :view-meta :manage :delete])
 
+(def subset-defined-rights [:edit-acl :view-acl :manage :delete])
+
+
+(defn val-as-set
+  [[k v]]
+  [k (set v)])
+
+(defn val-as-vector
+  [[k v]]
+  [k (vec (sort v))])
+
+
+(defn remove-owners-from-rights
+  [owners-set [right principals]]
+  [right (set/difference principals owners-set)])
+
+
+(defn merge-rights
+  ([] {})
+  ([acl-a] acl-a)
+  ([acl-a acl-b] (merge-with set/union acl-a acl-b)))
+
+
+(defn extend-rights
+  [[right principals]]
+  (let [sub-rights (ancestors rights-hierarchy right)]
+    (conj
+      (map (fn [sub-right] {sub-right principals}) sub-rights)
+      {right principals})))
+
+
+(defn normalize-acl
+  "Takes an ACL and returns a normalized version of the ACL where all
+   rights are listed explicitly and owners do not appear in the lists for
+   individual rights."
+  [{:keys [owners] :as acl}]
+  (let [owners-set        (set owners)
+        normalized-rights (->> (dissoc acl :owners)
+                               (map val-as-set)
+                               (map (partial remove-owners-from-rights owners-set))
+                               (remove (fn [[_ principals]] (empty? principals)))
+                               (mapcat extend-rights)
+                               (reduce merge-rights))]
+    (->> (assoc normalized-rights :owners owners-set)
+         (map val-as-vector)
+         (into {}))))
+
 
 (defn update-acl-principal
-  [acl keys fn-update]
+  [acl right-keys fn-update]
   (loop [updated-acl acl
-         left-keys (vec keys)]
-    (let [key (peek left-keys)
+         left-keys   (vec right-keys)]
+    (let [key     (peek left-keys)
           new-acl (update updated-acl key fn-update)]
       (if (empty? left-keys)
-        updated-acl
+        (normalize-acl updated-acl)
         (recur new-acl (pop left-keys))))))
 
 
 (defn remove-principal
-  [acl keys principal]
-  (update-acl-principal acl keys
+  [acl right-keys principal]
+  (update-acl-principal acl right-keys
                         (fn [collection]
                           (remove #(= % principal) collection))))
 
 
 (defn add-principal
-  [acl keys principal]
-  (update-acl-principal acl keys
+  [acl right-keys principal]
+  (update-acl-principal acl right-keys
                         (fn [collection]
                           (->> principal
                                (conj collection)
                                (set)
                                (sort)))))
 
+
+(defn remove-right
+  [right-kw]
+  (case right-kw
+    :edit-acl [:edit-acl :edit-data :edit-meta]
+    :edit-data [:edit-data :edit-meta]
+    :view-acl [:view-acl :view-data :view-meta]
+    :view-data [:view-data :view-meta]
+    :delete [:delete :view-meta]
+    [right-kw]))

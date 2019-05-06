@@ -14,10 +14,10 @@
 
 (defn more-or-less
   [state-atom]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr    (subscribe [::i18n-subs/tr])
         more? state-atom]
     (fn [state-atom]
-      (let [label (@tr (if @more? [:less-details] [:more-details]))
+      (let [label     (@tr (if @more? [:less-details] [:more-details]))
             icon-name (if @more? "caret down" "caret right")]
         [:a {:style    {:cursor "pointer"}
              :on-click #(reset! more? (not @more?))}
@@ -65,7 +65,7 @@
          (when @more?
            [table/definition-table rows])
          (when @more? [properties-table properties])
-         (when @more? [acl/acl-table {:acl acl, :read-only true}])]]])))
+         (when @more? [acl/AclWidget {:acl acl, :read-only true}])]]])))
 
 
 (defn metadata-simple
@@ -79,7 +79,7 @@
        (when @more?
          [table/definition-table rows])
        (when @more? [properties-table properties])
-       (when @more? [acl/acl-table {:acl acl, :read-only true}])
+       (when @more? [acl/AclWidget {:acl acl, :read-only true}])
        ])))
 
 

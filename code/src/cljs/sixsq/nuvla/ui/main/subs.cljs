@@ -15,6 +15,13 @@
 
 
 (reg-sub
+  ::is-device?
+  :<- [::device]
+  (fn [device [_ device-kw]]
+    (= device device-kw)))
+
+
+(reg-sub
   ::sidebar-open?
   ::spec/sidebar-open?)
 

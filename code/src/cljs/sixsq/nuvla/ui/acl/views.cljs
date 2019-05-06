@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.acl.subs :as subs]
     [sixsq.nuvla.ui.acl.utils :as utils]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -26,32 +27,63 @@
     utils/subset-defined-rights))
 
 
+(defn InfoIcon
+  [help-kw]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Popup {:trigger  (reagent/as-element
+                           [ui/Icon {:circular true
+                                     :size     "small"
+                                     :name     "info"
+                                     :style    {:cursor      "pointer"
+                                                :margin-left "4px"}}])
+               :content  (@tr [help-kw])
+               :on       "click"
+               :position "top left"}]))
+
+
 (defn AclTableHeaders
   [{:keys [mode] :as opts}]
-  (if (is-advanced-mode? @mode)
-    [ui/TableHeader
-     [ui/TableRow
-      [ui/TableHeaderCell {:row-span 2 :text-align "left"} "Rights"]
-      [ui/TableHeaderCell {:col-span 3} "Edit"]
-      [ui/TableHeaderCell {:col-span 3} "View"]
-      [ui/TableHeaderCell {:row-span 2} "Manage"]
-      [ui/TableHeaderCell {:row-span 2} "Delete"]]
-     [ui/TableRow
-      [ui/TableHeaderCell "acl"]
-      [ui/TableHeaderCell "data"]
-      [ui/TableHeaderCell "meta"]
-      [ui/TableHeaderCell "acl"]
-      [ui/TableHeaderCell "data"]
-      [ui/TableHeaderCell "meta"]
-      [ui/TableHeaderCell]]]
-    [ui/TableHeader
-     [ui/TableRow
-      [ui/TableHeaderCell {:text-align "left"} "Rights"]
-      [ui/TableHeaderCell "Edit"]
-      [ui/TableHeaderCell "View"]
-      [ui/TableHeaderCell "Manage"]
-      [ui/TableHeaderCell "Delete"]
-      [ui/TableHeaderCell]]]))
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (if (is-advanced-mode? @mode)
+      [ui/TableHeader
+       [ui/TableRow
+        [ui/TableHeaderCell {:row-span 2 :text-align "left"} (str/capitalize (@tr [:rights]))]
+        [ui/TableHeaderCell {:col-span 3}
+         (str/capitalize (@tr [:edit]))
+         [InfoIcon :acl-rights-edit]]
+        [ui/TableHeaderCell {:col-span 3}
+         (str/capitalize (@tr [:view]))
+         [InfoIcon :acl-rights-view]]
+        [ui/TableHeaderCell {:row-span 2}
+         (str/capitalize (@tr [:manage]))
+         [InfoIcon :acl-rights-manage]]
+        [ui/TableHeaderCell {:row-span 2}
+         (str/capitalize (@tr [:delete]))
+         [InfoIcon :acl-rights-delete]]]
+       [ui/TableRow
+        [ui/TableHeaderCell "Acl" [InfoIcon :acl-rights-edit-acl]]
+        [ui/TableHeaderCell "Data" [InfoIcon :acl-rights-edit-data]]
+        [ui/TableHeaderCell "Meta" [InfoIcon :acl-rights-edit-meta]]
+        [ui/TableHeaderCell "Acl" [InfoIcon :acl-rights-view-acl]]
+        [ui/TableHeaderCell "Data" [InfoIcon :acl-rights-view-data]]
+        [ui/TableHeaderCell "Meta" [InfoIcon :acl-rights-view-meta]]
+        [ui/TableHeaderCell]]]
+      [ui/TableHeader
+       [ui/TableRow
+        [ui/TableHeaderCell {:text-align "left"} (str/capitalize (@tr [:rights]))]
+        [ui/TableHeaderCell
+         (str/capitalize (@tr [:edit]))
+         [InfoIcon :acl-rights-edit]]
+        [ui/TableHeaderCell
+         (str/capitalize (@tr [:view]))
+         [InfoIcon :acl-rights-view]]
+        [ui/TableHeaderCell
+         (str/capitalize (@tr [:manage]))
+         [InfoIcon :acl-rights-manage]]
+        [ui/TableHeaderCell
+         (str/capitalize (@tr [:delete]))
+         [InfoIcon :acl-rights-delete]]
+        [ui/TableHeaderCell]]])))
 
 
 (defn PrincipalIcon
@@ -123,7 +155,8 @@
   [opts]
   (let [open   (reagent/atom false)
         users  (subscribe [::subs/users-options])
-        groups (subscribe [::subs/groups-options])]
+        groups (subscribe [::subs/groups-options])
+        tr     (subscribe [::i18n-subs/tr])]
     (dispatch [::events/search-groups])
     (dispatch [::events/search-users ""])
     (fn [{:keys [on-change fluid value]
@@ -144,7 +177,7 @@
        [ui/DropdownMenu {:style {:overflow-x "auto"
                                  :min-height "250px"}}
 
-        [ui/DropdownHeader {:icon "user" :content "Users"}]
+        [ui/DropdownHeader {:icon "user", :content (str/capitalize (@tr [:users]))}]
 
         [ui/Input {:icon          "search"
                    :icon-position "left"
@@ -164,7 +197,7 @@
 
         [ui/DropdownDivider]
 
-        [ui/DropdownHeader {:icon "users" :content "Groups"}]
+        [ui/DropdownHeader {:icon "users", :content (str/capitalize (@tr [:groups]))}]
 
         [:<>
          (doall
@@ -220,14 +253,18 @@
 (defn AclOwners
   [{:keys [acl read-only on-change] :as opts}]
   (let [owners  (:owners acl)
-        mobile? (subscribe [::main-subs/is-device? :mobile])]
+        mobile? (subscribe [::main-subs/is-device? :mobile])
+        tr      (subscribe [::i18n-subs/tr])]
     [ui/Table {:unstackable true
                :attached    "top"
                :basic       true}
 
      [ui/TableHeader
       [ui/TableRow
-       [ui/TableHeaderCell "Owners"]]]
+       [ui/TableHeaderCell
+        (@tr [:owners])
+        [InfoIcon :acl-owners]
+        ]]]
 
      [ui/TableBody
       [ui/TableRow
@@ -294,4 +331,6 @@
                             :position "relative"}
                  :on-click #(reset! mode (if is-advanced? :simple :advanced))}]
        [AclOwners opts]
-       [AclRights opts]])))
+       (when-not (and read-only
+                      (< (count acl) 2))
+         [AclRights opts])])))

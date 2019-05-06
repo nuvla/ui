@@ -176,6 +176,7 @@
           :scrolling   true
           :search      true
           :selection   true
+          :upward      false
           :options     options
           :on-change   (ui-callback/value callback)}]))))
 

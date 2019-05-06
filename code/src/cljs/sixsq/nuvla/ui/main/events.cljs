@@ -2,6 +2,9 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [sixsq.nuvla.ui.authn.events :as authn-events]
+    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.main.effects :as main-fx]
     [sixsq.nuvla.ui.main.spec :as spec]
     [taoensso.timbre :as log]))
@@ -10,9 +13,9 @@
 (reg-event-db
   ::check-iframe
   (fn [db _]
-    (let [location (.-location js/window)
+    (let [location        (.-location js/window)
           parent-location (.-location (.-parent js/window))
-          iframe? (and location parent-location (not= location parent-location))]
+          iframe?         (and location parent-location (not= location parent-location))]
       (log/info "running within iframe?" iframe?)
       (assoc db ::spec/iframe? iframe?))))
 
@@ -39,9 +42,10 @@
 
 (reg-event-fx
   ::visible
-  (fn [{:keys [db]} [_ v]]
-    {:db                       (assoc db ::spec/visible? v)
-     ::main-fx/action-interval (if v [{:action :resume}] [{:action :pause}])}))
+  (fn [{{:keys [::client-spec/client] :as db} :db} [_ v]]
+    (cond-> {:db                       (assoc db ::spec/visible? v)
+             ::main-fx/action-interval (if v [{:action :resume}] [{:action :pause}])}
+            v (assoc ::cimi-api-fx/session [client #(dispatch [::authn-events/set-session %])]))))
 
 
 (reg-event-fx
@@ -77,7 +81,7 @@
     (let [close-modal-db (assoc db ::spec/ignore-changes-modal nil)]
       (cond
         (map? ignore-changes-modal) (cond-> {:db (cond-> close-modal-db
-                                                  choice (assoc ::spec/changes-protection? false))}
+                                                         choice (assoc ::spec/changes-protection? false))}
                                             choice (merge ignore-changes-modal))
         (fn? ignore-changes-modal) (do (when choice (ignore-changes-modal))
                                        {:db close-modal-db})))))

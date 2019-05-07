@@ -46,7 +46,6 @@
 
 
 (reg-sub
-
   ::module
   ::spec/module)
 

@@ -23,7 +23,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.acl.views :as acl]))
 
 
 (defn input
@@ -592,15 +593,21 @@
 
 (defn view-edit
   []
-  (let [module-common (subscribe [::apps-subs/module-common])]
+  (let [module-common (subscribe [::apps-subs/module-common])
+        module (subscribe [::apps-subs/module])]
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
         (dispatch [::apps-events/set-form-spec ::spec/module-component])
         (dispatch [::apps-events/set-module-type :component])
+        (log/error (get @module-common ::apps-spec/acl))
         [ui/Container {:fluid true}
          [:h2 [ui/Icon {:name "th"}]
-          parent (when (not-empty parent) "/") name]
+          parent (when (not-empty parent) "/") name
+          [acl/AclButton {:acl (get @module-common ::apps-spec/acl)
+                          :on-change #(dispatch [::apps-events/acl %])
+                          :read-only false}]
+          ]
          [apps-views-detail/control-bar]
          [summary]
          [ports-section]

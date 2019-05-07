@@ -144,9 +144,7 @@
         selected-fields (subscribe [::subs/selected-fields])
         cep             (subscribe [::subs/cloud-entry-point])]
     (fn []
-      (let [{:keys [collection-key]} @cep
-            resource-collection-key (get collection-key @collection-name)
-            results                 @collection]
+      (let [results                 @collection]
         (if (instance? js/Error results)
           [ui/Segment style/basic
            [:pre (with-out-str (pprint (ex-data results)))]]

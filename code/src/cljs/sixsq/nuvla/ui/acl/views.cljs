@@ -12,7 +12,8 @@
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 
 (defn is-advanced-mode?
@@ -288,11 +289,7 @@
 
 (defn AclRights
   [{:keys [acl read-only] :as opts}]
-  (let [principals (->> (dissoc acl :owners)
-                        (mapcat (fn [[right principal]] principal))
-                        (set)
-                        (sort))]
-
+  (let [rights-principals (-> acl (dissoc :owners) utils/get-principals sort)]
     [ui/Table {:unstackable    true
                :attached       "bottom"
                :basic          true
@@ -304,7 +301,7 @@
      [ui/TableBody
 
       [:<>
-       (for [principal principals]
+       (for [principal rights-principals]
          ^{:key principal}
          [RightRow opts principal])]
 
@@ -315,23 +312,68 @@
 (defn AclWidget
   [{:keys [acl read-only on-change mode]
     :or {acl {:owners [@(subscribe [::authn-subs/user-id])]}
-         read-only false
+         read-only true
          mode (reagent/atom :simple)
          on-change #()} :as opts}]
   (fn [opts]
-    (when acl
-      (let [opts         (assoc opts :mode mode)
-            is-advanced? (is-advanced-mode? @mode)]
-        [:div (when @(subscribe [::main-subs/is-device? :mobile])
-                {:style {:overflow-x "auto"}})
-         [ui/Icon {:link     true
-                   :name     (if is-advanced? "compress" "expand")
-                   :style    {:float    "right"
-                              :top      "28px"
-                              :right    "10px"
-                              :position "relative"}
-                   :on-click #(reset! mode (if is-advanced? :simple :advanced))}]
-         [AclOwners opts]
-         (when-not (and read-only
-                        (< (count acl) 2))
-           [AclRights opts])]))))
+    (let [opts         (assoc opts :mode mode
+                                   :read-only read-only
+                                   :on-change on-change)
+          acl          (or (:acl opts) acl)
+          is-advanced? (is-advanced-mode? @mode)]
+      [:div (when @(subscribe [::main-subs/is-device? :mobile])
+              {:style {:overflow-x "auto"}})
+       [ui/Icon {:link     true
+                 :name     (if is-advanced? "compress" "expand")
+                 :style    {:float    "right"
+                            :top      "28px"
+                            :right    "10px"
+                            :position "relative"}
+                 :on-click #(reset! mode (if is-advanced? :simple :advanced))}]
+       [AclOwners opts]
+       (when-not (and read-only
+                      (< (count acl) 2))
+         [AclRights opts])])))
+
+
+(defn AclButton
+  [{:keys [acl read-only on-change mode]
+    :or {acl {:owners [@(subscribe [::authn-subs/user-id])]}
+         read-only true
+         mode (reagent/atom :simple)
+         on-change #()} :as opts}]
+  (let [open? (reagent/atom false)]
+    (fn [opts]
+      (let [opts            (assoc opts :mode mode
+                                        :read-only read-only
+                                        :on-change on-change)
+            acl             (or (:acl opts) acl)
+            owners          (:owners acl)
+            principals-set  (utils/get-principals acl)
+            some-groups?    (some #(str/starts-with? % "group/") principals-set)
+
+            icon-principals (cond
+                              (and owners (= (count owners) 1) (= (count acl) 1)) "lock"
+                              (contains? principals-set "group/nuvla-anon") "world"
+                              some-groups? "users"
+                              (not some-groups?) "user"
+                              :else nil)
+            rights-keys     (keys acl)
+            icon-right      (cond
+                              (some #(str/starts-with? (name %) "edit") rights-keys) "pencil"
+                              (some #(str/starts-with? (name %) "view") rights-keys) "eye"
+                              :else nil)]
+        [ui/Popup {:trigger   (reagent/as-element
+                                [ui/Button {:floated  "right",
+                                            :basic    true
+                                            :on-click #(reset! open? (not @open?))}
+                                 [ui/Icon {:name icon-principals}]
+                                 (when icon-right
+                                   [ui/Icon {:name icon-right}])
+                                 [ui/Icon {:name "caret down"}]])
+                   :flowing   true
+                   :open      @open?
+                   :wide      "very"
+                   :position  "bottom right"
+                   :hoverable true}
+         [AclWidget opts]]))))

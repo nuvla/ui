@@ -115,3 +115,10 @@
     :view-data [:view-data :view-meta]
     :delete [:delete :view-meta]
     [right-kw]))
+
+
+(defn get-principals
+  [acl]
+  (->> acl
+       (mapcat (fn [[right principal]] principal))
+       (set)))

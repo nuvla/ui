@@ -14,10 +14,9 @@
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [taoensso.timbre :as timbre]
-    [taoensso.timbre :as log]
-    [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.validation :as utils-validation]))
+    [taoensso.timbre :as log]))
 
 
 (defn module-details

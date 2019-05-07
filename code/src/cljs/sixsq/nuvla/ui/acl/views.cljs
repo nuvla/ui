@@ -262,7 +262,7 @@
      [ui/TableHeader
       [ui/TableRow
        [ui/TableHeaderCell
-        (@tr [:owners])
+        (str/capitalize (@tr [:owners]))
         [InfoIcon :acl-owners]
         ]]]
 

@@ -1,9 +1,8 @@
 (ns sixsq.nuvla.ui.utils.accordion
   (:require [re-frame.core :refer [dispatch dispatch-sync]]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.utils.form-fields :as form-fields]
-            [taoensso.timbre :as log]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defn toggle [v]
   (swap! v not))

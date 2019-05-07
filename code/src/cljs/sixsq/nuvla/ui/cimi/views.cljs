@@ -197,17 +197,12 @@
                   :on-key-press (partial forms/on-return-key
                                          #(when @selected-id
                                             (dispatch [::events/get-results])))}
-
-         [ui/FormGroup
-          [ui/Message {:info     true
-                       :on-click #(dispatch
-                                    [::history-events/navigate "documentation"])
-                       :style    {:cursor "pointer"}
-                       :floated  "right"
-                       :target   "_blank"
-                       :rel      "noreferrer"}
-           [ui/Icon {:name "info"}]
-           (@tr [:api-doc])]]
+         [ui/Button {:floated  "right"
+                     :icon     "info"
+                     :basic    true
+                     :color    "blue"
+                     :content  (@tr [:api-doc])
+                     :on-click #(dispatch [::history-events/navigate "documentation"])}]
 
          [ui/FormGroup
           [ui/FormField

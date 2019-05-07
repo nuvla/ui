@@ -1,7 +1,8 @@
-(ns sixsq.nuvla.ui.profile.spec
+(ns sixsq.nuvla.ui.credential.spec
   (:require
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.utils.spec :as utils-spec]))
+
 
 (s/def ::credential any?)
 
@@ -18,6 +19,8 @@
 (s/def ::add-credential-modal-visible? boolean?)
 
 (s/def ::credential-modal-visible? boolean?)
+
+(s/def ::delete-confirmation-modal-visible? boolean?)
 
 (s/def ::credential-form-valid? boolean?)
 
@@ -69,6 +72,7 @@
 
 (s/def ::db (s/keys :req [::add-credential-modal-visible?
                           ::credentials-modal-visible?
+                          ::delete-confirmation-modal-visible?
                           ::credential
                           ::credentials
                           ::active-input
@@ -76,21 +80,18 @@
                           ::form-valid?
                           ::validate-form?
                           ::credential-password
-                          ::open-modal
-                          ::error-message
-                          ::form-data]))
+                          ::error-message]))
 
 
-(def defaults {::add-credential-modal-visible? false
-               ::credential-modal-visible?     false
-               ::credentials                   []
-               ::credential                    {}
-               ::active-input                  nil
-               ::form-spec                     nil
-               ::form-valid?                   true
-               ::validate-form?                false
-               ::credential-password           nil
-               ::open-modal                    nil
-               ::error-message                 nil
-               ::form-data                     {}})
+(def defaults {::add-credential-modal-visible?      false
+               ::credential-modal-visible?          false
+               ::delete-confirmation-modal-visible? false
+               ::credentials                        []
+               ::credential                         {}
+               ::active-input                       nil
+               ::form-spec                          nil
+               ::form-valid?                        true
+               ::validate-form?                     false
+               ::credential-password                nil
+               ::error-message                      nil})
 

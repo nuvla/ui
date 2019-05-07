@@ -2,7 +2,8 @@
   (:require
     [cljs.tools.reader.edn :as edn]
     [clojure.set :as set]
-    [clojure.string :as str]))
+    [clojure.string :as str]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn str->int
@@ -145,3 +146,25 @@
 (defn operation-name [op-uri]
   (second (re-matches #"^(?:.*/)?(.+)$" op-uri)))
 
+
+;;
+;; ACL utils
+;;
+
+(defn can-operation? [operation data]
+  (->> data :operations (map :rel) (some #{(name operation)}) nil? not))
+
+
+(defn can-edit? [data]
+  (can-operation? :edit data))
+
+
+(defn editable?
+  [data is-new?]
+  (or is-new? (can-edit? data)))
+
+(defn mandatory-name
+  [name]
+  [:span name [:sup " " [ui/Icon {:name  :asterisk
+                                  :size  :tiny
+                                  :color :red}]]])

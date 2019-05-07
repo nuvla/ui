@@ -14,6 +14,7 @@
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [taoensso.timbre :as timbre]
     [taoensso.timbre :as log]))
 
@@ -67,7 +68,7 @@
   [path]
   (timbre/set-level! :info)
   [:div
-   [views-detail/validation-error-message]
+   [utils-validation/validation-error-message ::subs/form-valid?]
    [views-detail/version-warning]
    [views-detail/add-modal]
    [views-detail/save-modal]

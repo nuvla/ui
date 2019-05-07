@@ -41,7 +41,12 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Menu {:secondary true}
      [ui/MenuMenu {:position "left"}
-      [services-search]]
+      [services-search]
+      [uix/MenuItemWithIcon
+       {:name      (@tr [:add])
+        :icon-name "plus"
+        :position  "right"
+        :on-click  #(dispatch [::events/get-services])}]]
      [ui/MenuMenu {:position "right"}
       [refresh-button]]]))
 
@@ -87,24 +92,20 @@
 
 (defn infra-services
   []
-  (let [services          (subscribe [::subs/services])
+  (let [tr                (subscribe [::i18n-subs/tr])
+        services          (subscribe [::subs/services])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])
         active?           (reagent/atom true)]
     (fn []
       (let [total-services (get @services :count 0)
             total-pages    (general-utils/total-pages total-services @elements-per-page)]
-        [ui/Accordion {:fluid     true
-                       :styled    true
-                       :exclusive false
-                       }
-         [ui/AccordionTitle {:active   @active?
-                             :index    1
-                             :on-click #(toggle active?)}
-          [:h2
-           [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-           "Infrastructure Services"]]
-         [ui/AccordionContent {:active @active?}
+        [ui/Container {:fluid true}
+         [:h2
+          [ui/Icon {:name "mixcloud"}]
+          " "
+          (@tr [:infra-services])]
+         [ui/Segment
           [control-bar]
           [modules-cards-group (get @services :resources [])]
           (when (> total-pages 1)
@@ -113,8 +114,7 @@
               {:totalitems   total-services
                :totalPages   total-pages
                :activePage   @page
-               :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]
-            )]]))))
+               :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]])]]))))
 
 
 (defmethod panel/render :infra-service

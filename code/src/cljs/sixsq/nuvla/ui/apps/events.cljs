@@ -65,8 +65,8 @@
                                               (s/valid? ::spec/module-common module-common)
                                               (if (nil? form-spec) true (s/valid? form-spec module)))
                                             true)]
-      ;(s/explain ::spec/module-common module-common)
-      ;(s/explain form-spec module)
+      (s/explain ::spec/module-common module-common)
+      (s/explain form-spec module)
       (assoc db ::spec/form-valid? valid?))))
 
 
@@ -154,7 +154,6 @@
     (when client
       (let [path (utils/nav-path->module-path nav-path)]
         {:db                  (assoc db ::spec/completed? false
-                                        ::spec/module-path nil
                                         ::spec/module nil)
          ::apps-fx/get-module [client path version #(dispatch [::set-module %])]}))))
 
@@ -274,7 +273,7 @@
                                              :content message
                                              :type    :error}]))
                                (do (dispatch [::cimi-detail-events/get (:id %)])
-                                   (dispatch [::set-module sanitized-module])
+                                   (dispatch [::set-module sanitized-module]) ;Needed?
                                    (dispatch [::main-events/changes-protection? false])
                                    (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))])))]}
         {:db                db

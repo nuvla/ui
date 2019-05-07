@@ -75,5 +75,6 @@
        [item :data "data" "database"]
        ;       [item :deployment "deployment" "cloud"]
        (when-not @iframe? [item :infra-service-short "infra-service" "mixcloud"])
+       (when-not @iframe? [item :credentials "credential" "key"])
        ;(when-not @iframe? [item :nuvlabox-ctrl "nuvlabox" "desktop"])
        (when-not @iframe? [item :api "api" "code"])]]]))

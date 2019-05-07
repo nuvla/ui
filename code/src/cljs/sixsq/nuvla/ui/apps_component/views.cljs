@@ -274,13 +274,13 @@
         (do
           [:span " , "]
           [:span " " (@tr [:module-mount-read-only?]) " "
-           [ui/Checkbox {:name            "read-only"
-                         :default-checked (if (nil? mount-read-only) false mount-read-only)
-                         :on-change       (ui-callback/checked
-                                            #(do (dispatch [::main-events/changes-protection? true])
-                                                 (dispatch [::events/update-mount-read-only? id %])
-                                                 (dispatch [::apps-events/validate-form])))
-                         :align           :middle}]])
+           [ui/Checkbox {:name      "read-only"
+                         :checked   (if (nil? mount-read-only) false mount-read-only)
+                         :on-change (ui-callback/checked
+                                      #(do (dispatch [::main-events/changes-protection? true])
+                                           (dispatch [::events/update-mount-read-only? id %])
+                                           (dispatch [::apps-events/validate-form])))
+                         :align     :middle}]])
         (when mount-read-only (do [:span " , " [:b "readonly"]])))]
      (when editable?
        [ui/GridColumn {:floated :right
@@ -417,8 +417,8 @@
   (let [tr                (subscribe [::i18n-subs/tr])
         active?           (reagent/atom false)
         output-parameters (subscribe [::subs/output-parameters])
-        module  (subscribe [::apps-subs/module])
-        is-new? (subscribe [::apps-subs/is-new?])]
+        module            (subscribe [::apps-subs/module])
+        is-new?           (subscribe [::apps-subs/is-new?])]
     (fn []
       (let [editable? (apps-utils/editable? @module @is-new?)]
         [ui/Accordion {:fluid     true
@@ -497,8 +497,8 @@
   (let [tr         (subscribe [::i18n-subs/tr])
         active?    (reagent/atom false)
         data-types (subscribe [::subs/data-types])
-        module  (subscribe [::apps-subs/module])
-        is-new? (subscribe [::apps-subs/is-new?])]
+        module     (subscribe [::apps-subs/module])
+        is-new?    (subscribe [::apps-subs/is-new?])]
     (fn []
       (let [editable? (apps-utils/editable? @module @is-new?)]
         [ui/Accordion {:fluid     true

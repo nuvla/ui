@@ -11,6 +11,7 @@
     [sixsq.nuvla.ui.authn.views :as authn-views]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.cimi.views]
+    [sixsq.nuvla.ui.credential.views]
     [sixsq.nuvla.ui.data.views]
     [sixsq.nuvla.ui.deployment.views]
     [sixsq.nuvla.ui.docs.views]

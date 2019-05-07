@@ -70,7 +70,7 @@
 
 (defn signup-email-password-fields
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr              (subscribe [::i18n-subs/tr])
         fields-in-error (subscribe [::subs/fields-in-errors])]
     [[ui/FormInput {:name          "email"
                     :placeholder   "email"
@@ -107,13 +107,13 @@
 (defn generate-fields
   [method form-id form-data]
   (let [resource-metadata (subscribe [::docs-subs/document method])
-        inputs-method (->> (:attributes @resource-metadata)
-                           (filter (fn [{:keys [required group] :as attribute}]
-                                     (and (not (#{"metadata" "acl"} group))
-                                          required)))
-                           (sort-by :order))]
+        inputs-method     (->> (:attributes @resource-metadata)
+                               (filter (fn [{:keys [required group] :as attribute}]
+                                         (and (not (#{"metadata" "acl"} group))
+                                              required)))
+                               (sort-by :order))]
     (mapv (fn [{value-scope :value-scope param-name :name :as input-method}]
-            (let [value (get form-data param-name)
+            (let [value                (get form-data param-name)
                   input-method-updated (cond-> input-method
                                                value (assoc-in [:value-scope :value] value))]
               (dispatch [::events/update-form-data
@@ -127,16 +127,16 @@
 
 (defn login-method-form
   [[_ methods]]
-  (let [form-id (subscribe [::subs/form-id])
-        form-data (subscribe [::subs/form-data])
+  (let [form-id     (subscribe [::subs/form-id])
+        form-data   (subscribe [::subs/form-data])
         form-error? (subscribe [::subs/form-error?])]
     (fn [[_ methods]]
-      (let [dropdown? (> (count methods) 1)
-            method (u/select-method-by-id @form-id methods)
-            form-fields (case @form-id
-                          "session-template/password" (login-password-fields)
-                          "session-template/api-key" (login-api-key-fields)
-                          (generate-fields method @form-id @form-data))
+      (let [dropdown?        (> (count methods) 1)
+            method           (u/select-method-by-id @form-id methods)
+            form-fields      (case @form-id
+                               "session-template/password" (login-password-fields)
+                               "session-template/api-key" (login-api-key-fields)
+                               (generate-fields method @form-id @form-data))
             dropdown-options (map dropdown-method-option methods)]
 
         ^{:key @form-id}
@@ -160,18 +160,18 @@
 
 (defn signup-method-form
   [[_ methods]]
-  (let [tr (subscribe [::i18n-subs/tr])
-        form-id (subscribe [::subs/form-id])
-        form-data (subscribe [::subs/form-data])
+  (let [tr          (subscribe [::i18n-subs/tr])
+        form-id     (subscribe [::subs/form-id])
+        form-data   (subscribe [::subs/form-data])
         form-error? (subscribe [::subs/form-error?])]
     (fn [[_ methods]]
       ^{:key @form-id}
-      (let [dropdown? (> (count methods) 1)
-            method (u/select-method-by-id @form-id methods)
+      (let [dropdown?        (> (count methods) 1)
+            method           (u/select-method-by-id @form-id methods)
 
-            form-fields (case @form-id
-                          "user-template/email-password" (signup-email-password-fields)
-                          (generate-fields method @form-id @form-data))
+            form-fields      (case @form-id
+                               "user-template/email-password" (signup-email-password-fields)
+                               (generate-fields method @form-id @form-data))
 
             dropdown-options (map dropdown-method-option methods)]
 
@@ -209,9 +209,9 @@
   [method-groups]
   (let [selected-method-group (subscribe [::subs/selected-method-group])]
     (fn [method-groups]
-      (let [default (ffirst method-groups)
+      (let [default         (ffirst method-groups)
             default-form-id (-> method-groups first second first :id)
-            options (mapv authn-method-group-option method-groups)]
+            options         (mapv authn-method-group-option method-groups)]
 
         (when (nil? @selected-method-group)
           (dispatch [::events/set-selected-method-group default])
@@ -234,14 +234,14 @@
 (defn generic-form-container
   "Container that holds all of the authentication (login or sign up) forms."
   [collection-kw failed-kw method-form-fn]
-  (let [template-href (api-utils/collection-template-href collection-kw)
-        templates (subscribe [::api-subs/collection-templates template-href])
-        tr (subscribe [::i18n-subs/tr])
-        error-message (subscribe [::subs/error-message])
-        success-message (subscribe [::subs/success-message])
+  (let [template-href         (api-utils/collection-template-href collection-kw)
+        templates             (subscribe [::api-subs/collection-templates template-href])
+        tr                    (subscribe [::i18n-subs/tr])
+        error-message         (subscribe [::subs/error-message])
+        success-message       (subscribe [::subs/success-message])
         selected-method-group (subscribe [::subs/selected-method-group])]
     (fn [collection-kw failed-kw method-form-fn]
-      (let [method-groups (u/grouped-authn-methods @templates)
+      (let [method-groups               (u/grouped-authn-methods @templates)
             selected-authn-method-group (some->> method-groups
                                                  (filter #(-> % first (= @selected-method-group)))
                                                  first)]
@@ -284,24 +284,24 @@
                           :login :signup
                           :reset-password :login
                           :signup :login)
-            f (fn []
-                (dispatch [::events/close-modal])
-                (dispatch [::events/set-selected-method-group nil])
-                (dispatch [::events/set-form-id nil])
-                (dispatch [::events/open-modal other-modal]))]
+            on-click    (fn []
+                          (dispatch [::events/close-modal])
+                          (dispatch [::events/set-selected-method-group nil])
+                          (dispatch [::events/set-form-id nil])
+                          (dispatch [::events/open-modal other-modal]))]
         (case modal-kw
           :login [:span (@tr [:no-account?]) " "
-                  [:a {:on-click f :style {:cursor "pointer"}} (str (@tr [:signup-link]))]]
+                  [:a {:on-click on-click :style {:cursor "pointer"}} (str (@tr [:signup-link]))]]
           :reset-password [:span (@tr [:already-registered?]) " "
-                           [:a {:on-click f :style {:cursor "pointer"}} (str (@tr [:login-link]))]]
+                           [:a {:on-click on-click :style {:cursor "pointer"}} (str (@tr [:login-link]))]]
           :signup [:span (@tr [:already-registered?]) " "
-                   [:a {:on-click f :style {:cursor "pointer"}} (str (@tr [:login-link]))]])))))
+                   [:a {:on-click on-click :style {:cursor "pointer"}} (str (@tr [:login-link]))]])))))
 
 
 (defn generic-modal
   [id modal-kw form-fn submit-opts]
-  (let [tr (subscribe [::i18n-subs/tr])
-        open-modal (subscribe [::subs/open-modal])
+  (let [tr          (subscribe [::i18n-subs/tr])
+        open-modal  (subscribe [::subs/open-modal])
         form-error? (subscribe [::subs/form-error?])]
     (fn [id modal-kw form-fn]
       [ui/Modal
@@ -330,15 +330,15 @@
 
 
 (defn modal-reset-password []
-  (let [open-modal (subscribe [::subs/open-modal])
-        error-message (subscribe [::subs/error-message])
-        success-message (subscribe [::subs/success-message])
-        loading? (subscribe [::subs/loading?])
-        tr (subscribe [::i18n-subs/tr])
+  (let [open-modal       (subscribe [::subs/open-modal])
+        error-message    (subscribe [::subs/error-message])
+        success-message  (subscribe [::subs/success-message])
+        loading?         (subscribe [::subs/loading?])
+        tr               (subscribe [::i18n-subs/tr])
         fields-in-errors (subscribe [::subs/fields-in-errors])
-        form-error? (subscribe [::subs/form-error?])
-        submit-fn #(dispatch [::events/submit {:close-modal false
-                                               :success-msg (@tr [:validation-email-success-msg])}])]
+        form-error?      (subscribe [::subs/form-error?])
+        submit-fn        #(dispatch [::events/submit {:close-modal false
+                                                      :success-msg (@tr [:validation-email-success-msg])}])]
     (fn []
       [ui/Modal
        {:id        "modal-reset-password-id"
@@ -421,66 +421,84 @@
       :success-msg (@tr [:validation-email-success-msg])}]))
 
 
-(defn authn-menu
-  "Provides either a login or user dropdown depending on whether the user has
-   an active session. The login button will bring up a modal dialog."
+(defn authn-dropdown-menu
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        user (subscribe [::subs/user])
-        template-href (api-utils/collection-template-href :user)
-        user-templates (subscribe [::api-subs/collection-templates (keyword template-href)])
-        profile-fn #(history-utils/navigate "profile")
+  (let [tr          (subscribe [::i18n-subs/tr])
+        user        (subscribe [::subs/user])
         sign-out-fn (fn []
                       (dispatch [::events/logout])
                       (dispatch [::history-events/navigate "welcome"]))
-        login-fn #(dispatch [::events/open-modal :login])
-        logged-in? (boolean @user)
-        sign-up-ok? (get @user-templates (str (name template-href) "/email-password"))]
+        logged-in?  (boolean @user)]
+    (vec
+      (concat
+        [ui/DropdownMenu]
 
-    [ui/ButtonGroup {:primary true}
-     [ui/Button {:on-click (if logged-in? profile-fn login-fn)}
-      [ui/Icon {:name (if logged-in? "user" "sign in")}]
-      (if logged-in? (utils/truncate @user) (@tr [:login]))]
-     [ui/Dropdown {:inline    true
-                   :button    true
-                   :pointing  "top right"
-                   :className "icon"}
-      (vec
-        (concat
-          [ui/DropdownMenu]
+        (when logged-in?
+          [[ui/DropdownItem
+            {:key      "sign-out"
+             :text     (@tr [:logout])
+             :icon     "sign out"
+             :on-click sign-out-fn}]])
 
-          (when logged-in?
-            [[ui/DropdownItem
-              {:key      "sign-out"
-               :text     (@tr [:logout])
-               :icon     "sign out"
-               :on-click sign-out-fn}]])
+        (when (or logged-in?)
+          [[ui/DropdownDivider]])
 
-          (when (and sign-up-ok? (not logged-in?))
-            [[ui/DropdownItem {:icon     "signup"
-                               :text     (@tr [:signup])
-                               :on-click #(dispatch [::events/open-modal :signup])}]])
+        [[ui/DropdownItem {:aria-label (@tr [:documentation])
+                           :icon       "book"
+                           :text       (@tr [:documentation])
+                           :href       "https://ssdocs.sixsq.com/"
+                           :target     "_blank"
+                           :rel        "noreferrer"}]
+         [ui/DropdownItem {:aria-label (@tr [:knowledge-base])
+                           :icon       "info circle"
+                           :text       (@tr [:knowledge-base])
+                           :href       "https://support.sixsq.com/solution/categories"
+                           :target     "_blank"
+                           :rel        "noreferrer"}]
+         [ui/DropdownItem {:aria-label (@tr [:support])
+                           :icon       "mail"
+                           :text       (@tr [:support])
+                           :href       (str "mailto:support%40sixsq%2Ecom?subject=%5BSlipStream%5D%20Support%20"
+                                            "question%20%2D%20Not%20logged%20in")}]]))))
 
-          (when (or logged-in? sign-up-ok?)
-            [[ui/DropdownDivider]])
 
-          [[ui/DropdownItem {:aria-label (@tr [:documentation])
-                             :icon       "book"
-                             :text       (@tr [:documentation])
-                             :href       "https://ssdocs.sixsq.com/"
-                             :target     "_blank"
-                             :rel        "noreferrer"}]
-           [ui/DropdownItem {:aria-label (@tr [:knowledge-base])
-                             :icon       "info circle"
-                             :text       (@tr [:knowledge-base])
-                             :href       "https://support.sixsq.com/solution/categories"
-                             :target     "_blank"
-                             :rel        "noreferrer"}]
-           [ui/DropdownItem {:aria-label (@tr [:support])
-                             :icon       "mail"
-                             :text       (@tr [:support])
-                             :href       (str "mailto:support%40sixsq%2Ecom?subject=%5BSlipStream%5D%20Support%20"
-                                              "question%20%2D%20Not%20logged%20in")}]]))]
-     [modal-login]
-     [modal-reset-password]
-     [modal-signup]]))
+(defn authn-menu
+  []
+  (let [tr         (subscribe [::i18n-subs/tr])
+        user       (subscribe [::subs/user])
+        profile-fn #(history-utils/navigate "profile")
+        login-fn   #(dispatch [::events/open-modal :login])
+        signup-fn  #(dispatch [::events/open-modal :signup])
+        logged-in? (boolean @user)]
+
+    (if logged-in?
+      [ui/ButtonGroup {:primary true}
+       [ui/Button {:on-click profile-fn}
+        [ui/Icon {:name "user"}]
+        (utils/truncate @user)]
+       [ui/Dropdown {:inline    true
+                     :button    true
+                     :pointing  "top right"
+                     :className "icon"}
+        (authn-dropdown-menu)]
+       [modal-login]
+       [modal-reset-password]
+       [modal-signup]]
+      [:div
+       [:span {:style    {:padding-right "10px"
+                          :cursor        "pointer"}
+               :on-click signup-fn}
+        [ui/Icon {:name "signup"}]
+        (@tr [:signup])]
+       [ui/ButtonGroup {:primary true}
+        [ui/Button {:on-click login-fn}
+         [ui/Icon {:name "sign in"}]
+         (@tr [:login])]
+        [ui/Dropdown {:inline    true
+                      :button    true
+                      :pointing  "top right"
+                      :className "icon"}
+         (authn-dropdown-menu)]
+        [modal-login]
+        [modal-reset-password]
+        [modal-signup]]])))

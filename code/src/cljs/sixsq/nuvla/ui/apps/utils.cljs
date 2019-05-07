@@ -98,6 +98,7 @@
       (assoc-in [::apps-spec/module-common ::apps-spec/type] (get-in module [:type]))))
 
 
+; TODO: has moved to utils/general
 (defn can-operation? [operation data]
   (->> data :operations (map :rel) (some #{(name operation)}) nil? not))
 

@@ -10,6 +10,7 @@
     [sixsq.nuvla.ui.cimi-detail.spec :as api-detail]
     [sixsq.nuvla.ui.cimi.spec :as api]
     [sixsq.nuvla.ui.client.spec :as client]
+    [sixsq.nuvla.ui.credential.spec :as credential]
     [sixsq.nuvla.ui.data.spec :as data]
     [sixsq.nuvla.ui.deployment-dialog.spec :as deployment-dialog]
     [sixsq.nuvla.ui.deployment.spec :as deployment]
@@ -31,6 +32,7 @@
                      ::api/db
                      ::api-detail/db
                      ::client/db
+                     ::credential/db
                      ::deployment/db
                      ::deployment-dialog/db
                      ::data/db
@@ -56,6 +58,7 @@
          deployment/defaults
          deployment-dialog/defaults
          client/defaults
+         credential/defaults
          docs/defaults
          i18n/defaults
          infra-service/defaults

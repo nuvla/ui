@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.profile.events
   (:require
+    [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.authn.spec :as authn-spec]
@@ -44,7 +45,7 @@
 
 
 (reg-event-db
-  ::set-credential
+  ::set-password
   (fn [db [_ user]]
     (assoc db ::spec/credential-password (:credential-password user))))
 
@@ -54,7 +55,7 @@
   (fn [{{:keys [::client-spec/client
                 ::authn-spec/session] :as db} :db} _]
     (when-let [user (:user session)]
-      {::cimi-api-fx/get [client user #(dispatch [::set-credential %])]})))
+      {::cimi-api-fx/get [client user #(dispatch [::set-password %])]})))
 
 
 (reg-event-fx
@@ -63,7 +64,7 @@
                 ::spec/form-data
                 ::spec/credential-password
                 ::i18n-spec/tr] :as db} :db} _]
-    (let [body (dissoc form-data :repeat-new-password)
+    (let [body        (dissoc form-data :repeat-new-password)
           callback-fn #(if (instance? js/Error %)
                          (let [{:keys [message]} (response/parse-ex-info %)]
                            (dispatch [::set-error-message message]))

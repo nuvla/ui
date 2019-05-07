@@ -3,11 +3,8 @@
     [cljs.core.async.macros :refer [go]])
   (:require
     [cljs.core.async :refer [<!]]
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-fx]]
-    [sixsq.nuvla.client.api :as api]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.client.api :as api]))
 
 
 (reg-fx

@@ -1,9 +1,7 @@
 (ns sixsq.nuvla.ui.apps-component.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.apps-component.spec :as spec]
-    [sixsq.nuvla.ui.apps.spec :as apps-spec]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.apps-component.spec :as spec]))
 
 
 (reg-event-db
@@ -144,12 +142,6 @@
   (fn [db [_ id param]]
     ; overwrite the id
     (assoc-in db [::spec/module-component ::spec/output-parameters id] (assoc param :id id))))
-
-
-(reg-event-db
-  ::remove-output-parameter
-  (fn [db [_ id]]
-    (update-in db [::spec/module-component ::spec/output-parameters] dissoc id)))
 
 
 (reg-event-db

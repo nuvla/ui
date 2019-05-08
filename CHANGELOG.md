@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+  - Add ACL button to apps pages
+  - ACL button with rights summary as icon
   - Credential page
   - Better session expiry behavior
   - New ACL widget

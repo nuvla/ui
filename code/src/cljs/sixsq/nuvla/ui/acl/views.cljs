@@ -3,7 +3,7 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as reagent]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.acl.events :as events]
     [sixsq.nuvla.ui.acl.subs :as subs]
     [sixsq.nuvla.ui.acl.utils :as utils]
@@ -12,7 +12,8 @@
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 
 (defn is-advanced-mode?
@@ -30,7 +31,7 @@
 (defn InfoIcon
   [help-kw]
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Popup {:trigger  (reagent/as-element
+    [ui/Popup {:trigger  (r/as-element
                            [ui/Icon {:circular true
                                      :size     "small"
                                      :name     "info"
@@ -132,7 +133,7 @@
       (if principal-name
         [ui/Popup {:content  principal
                    :position "right center"
-                   :trigger  (reagent/as-element [:span (or principal-name principal)])}]
+                   :trigger  (r/as-element [:span (or principal-name principal)])}]
         [:span (or principal-name principal)])]
 
      [:<>
@@ -153,7 +154,7 @@
 
 (defn DropdownPrincipals
   [opts]
-  (let [open   (reagent/atom false)
+  (let [open   (r/atom false)
         users  (subscribe [::subs/users-options])
         groups (subscribe [::subs/groups-options])
         tr     (subscribe [::i18n-subs/tr])]
@@ -213,7 +214,7 @@
   [opts]
   (let [empty-permission {:principal nil
                           :rights    #{}}
-        new-permission   (reagent/atom empty-permission)]
+        new-permission   (r/atom empty-permission)]
     (fn [{:keys [acl on-change mode] :as opts}]
       [ui/TableRow
 
@@ -256,8 +257,7 @@
         mobile? (subscribe [::main-subs/is-device? :mobile])
         tr      (subscribe [::i18n-subs/tr])]
     [ui/Table {:unstackable true
-               :attached    "top"
-               :basic       true}
+               :attached    "top"}
 
      [ui/TableHeader
       [ui/TableRow
@@ -288,14 +288,9 @@
 
 (defn AclRights
   [{:keys [acl read-only] :as opts}]
-  (let [principals (->> (dissoc acl :owners)
-                        (mapcat (fn [[right principal]] principal))
-                        (set)
-                        (sort))]
-
+  (let [rights-principals (-> acl (dissoc :owners) utils/get-principals sort)]
     [ui/Table {:unstackable    true
                :attached       "bottom"
-               :basic          true
                :text-align     "center"
                :vertical-align "middle"}
 
@@ -304,7 +299,7 @@
      [ui/TableBody
 
       [:<>
-       (for [principal principals]
+       (for [principal rights-principals]
          ^{:key principal}
          [RightRow opts principal])]
 
@@ -315,23 +310,61 @@
 (defn AclWidget
   [{:keys [acl read-only on-change mode]
     :or {acl {:owners [@(subscribe [::authn-subs/user-id])]}
-         read-only false
-         mode (reagent/atom :simple)
+         read-only true
+         mode (r/atom :simple)
          on-change #()} :as opts}]
   (fn [opts]
-    (when acl
-      (let [opts         (assoc opts :mode mode)
-            is-advanced? (is-advanced-mode? @mode)]
-        [:div (when @(subscribe [::main-subs/is-device? :mobile])
-                {:style {:overflow-x "auto"}})
-         [ui/Icon {:link     true
-                   :name     (if is-advanced? "compress" "expand")
-                   :style    {:float    "right"
-                              :top      "28px"
-                              :right    "10px"
-                              :position "relative"}
-                   :on-click #(reset! mode (if is-advanced? :simple :advanced))}]
-         [AclOwners opts]
-         (when-not (and read-only
-                        (< (count acl) 2))
-           [AclRights opts])]))))
+    (let [opts         (assoc opts :mode mode
+                                   :read-only read-only
+                                   :on-change on-change)
+          acl          (or (:acl opts) acl)
+          is-advanced? (is-advanced-mode? @mode)]
+      [:div (when @(subscribe [::main-subs/is-device? :mobile])
+              {:style {:overflow-x "auto"}})
+       [ui/Icon {:link     true
+                 :name     (if is-advanced? "compress" "expand")
+                 :style    {:float    "right"
+                            :top      "28px"
+                            :right    "10px"
+                            :position "relative"}
+                 :on-click #(reset! mode (if is-advanced? :simple :advanced))}]
+       [AclOwners opts]
+       (when-not (and read-only
+                      (< (count acl) 2))
+         [AclRights opts])])))
+
+
+(defn AclButton
+  [{:keys [acl on-click]
+    :or {acl {:owners [@(subscribe [::authn-subs/user-id])]}
+         on-click #()} :as opts}]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn [opts]
+      (let [opts            (assoc opts :on-click on-click)
+            acl             (or (:acl opts) acl)
+            owners          (:owners acl)
+            principals-set  (utils/get-principals acl)
+            some-groups?    (some #(str/starts-with? % "group/") principals-set)
+
+            icon-principals (cond
+                              (and owners (= (count owners) 1) (= (count acl) 1)) "lock"
+                              (contains? principals-set "group/nuvla-anon") "world"
+                              some-groups? "users"
+                              (not some-groups?) "user"
+                              :else nil)
+            rights-keys     (keys acl)
+            icon-right      (cond
+                              (some #(str/starts-with? (name %) "edit") rights-keys) "pencil"
+                              (some #(str/starts-with? (name %) "view") rights-keys) "eye"
+                              :else nil)]
+        [ui/Button {:floated  "right",
+                    :basic    true
+                    :on-click on-click}
+         [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-principals}])
+                    :position "bottom center"
+                    :content  (@tr [:principals-icon])}]
+         (when icon-right
+           [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-right}])
+                      :position "bottom center"
+                      :content  (@tr [:rights-icon])}])
+         [ui/Icon {:name "caret down"}]]))))

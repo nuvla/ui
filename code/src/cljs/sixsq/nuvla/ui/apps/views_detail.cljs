@@ -190,7 +190,7 @@
         visible? (subscribe [::subs/add-modal-visible?])
         nav-path (subscribe [::main-subs/nav-path])]
     (fn []
-      (let [parent  (utils/nav-path->module-path @nav-path)]
+      (let [parent (utils/nav-path->module-path @nav-path)]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-modal])}
@@ -272,14 +272,12 @@
             icon         (-> @module :type category-icon)
             rows         (map tuple-to-row summary-info)
             name         (:name @module)
-            description  (:name @module)
-            acl          (:acl @module)]
+            description  (:name @module)]
         [cc/metadata-simple
          {:title       name
           :description (:startTime summary-info)
           :icon        icon
-          :subtitle    description
-          :acl         acl}
+          :subtitle    description}
          rows]))))
 
 
@@ -309,7 +307,7 @@
   (let [tr              (subscribe [::i18n-subs/tr])
         active-input    (subscribe [::subs/active-input])
         local-validate? (reagent/atom false)
-        validate-form?     (subscribe [::subs/validate-form?])]
+        validate-form?  (subscribe [::subs/validate-form?])]
     (fn [key name-kw value on-change-event editable? mandatory? value-spec]
       (let [name-str      (name name-kw)
             name-label    (if (and editable? mandatory?) (utils/mandatory-name name-str) name-str)

@@ -199,6 +199,11 @@
   (fn [db [_ path]]
     (assoc-in db [::spec/module-common :path] path)))
 
+(reg-event-db
+  ::acl
+  (fn [db [_ acl]]
+    (assoc-in db [::spec/module-common ::spec/acl] acl)))
+
 
 (reg-event-db
   ::parent

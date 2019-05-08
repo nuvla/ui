@@ -4,7 +4,8 @@
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as reagent]
+    [reagent.core :as r]
+    [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps-component.events :as events]
     [sixsq.nuvla.ui.apps-component.spec :as spec]
     [sixsq.nuvla.ui.apps-component.subs :as subs]
@@ -18,18 +19,14 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.form-fields :as form-fields]
-    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [taoensso.timbre :as log]))
 
 
 (defn input
   [id name value placeholder update-event value-spec fluid?]
-  (let [active-input    (subscribe [::apps-subs/active-input])
-        local-validate? (reagent/atom false)
+  (let [local-validate? (r/atom false)
         form-valid?     (subscribe [::apps-subs/form-valid?])]
     (fn [id name value placeholder update-event value-spec fluid?]
       (let [input-name (str name "-" id)
@@ -89,7 +86,7 @@
         module          (subscribe [::apps-subs/module])
         image           (subscribe [::subs/image])
         is-new?         (subscribe [::apps-subs/is-new?])
-        local-validate? (reagent/atom false)
+        local-validate? (r/atom false)
         form-valid?     (subscribe [::apps-subs/form-valid?])]
     (fn []
       (let [editable? (apps-utils/editable? @module @is-new?)
@@ -204,7 +201,7 @@
 
 (defn ports-section []
   (let [tr      (subscribe [::i18n-subs/tr])
-        active? (reagent/atom true)
+        active? (r/atom true)
         ports   (subscribe [::subs/ports])
         module  (subscribe [::apps-subs/module])
         is-new? (subscribe [::apps-subs/is-new?])]
@@ -292,7 +289,7 @@
 
 (defn mounts-section []
   (let [tr      (subscribe [::i18n-subs/tr])
-        active? (reagent/atom true)
+        active? (r/atom true)
         module  (subscribe [::apps-subs/module])
         mounts  (subscribe [::subs/mounts])
         is-new? (subscribe [::apps-subs/is-new?])]
@@ -350,7 +347,7 @@
 
 (defn urls-section []
   (let [tr      (subscribe [::i18n-subs/tr])
-        active? (reagent/atom false)
+        active? (r/atom false)
         urls    (subscribe [::subs/urls])
         module  (subscribe [::apps-subs/module])
         is-new? (subscribe [::apps-subs/is-new?])]
@@ -415,7 +412,7 @@
 
 (defn output-parameters-section []
   (let [tr                (subscribe [::i18n-subs/tr])
-        active?           (reagent/atom false)
+        active?           (r/atom false)
         output-parameters (subscribe [::subs/output-parameters])
         module            (subscribe [::apps-subs/module])
         is-new?           (subscribe [::apps-subs/is-new?])]
@@ -495,7 +492,7 @@
 
 (defn data-types-section []
   (let [tr         (subscribe [::i18n-subs/tr])
-        active?    (reagent/atom false)
+        active?    (r/atom false)
         data-types (subscribe [::subs/data-types])
         module     (subscribe [::apps-subs/module])
         is-new?    (subscribe [::apps-subs/is-new?])]
@@ -578,8 +575,8 @@
          [ui/MessageHeader (@tr [:module-docker-command-message])]
          [:p {:style {:padding-top 8}
               :class "nuvla-command"} [:b "$ " command " "]
-          [ui/Popup {:trigger  (reagent/as-element [ui/CopyToClipboard {:text command}
-                                                    [:a [ui/Icon {:name "clipboard outline"}]]])
+          [ui/Popup {:trigger  (r/as-element [ui/CopyToClipboard {:text command}
+                                              [:a [ui/Icon {:name "clipboard outline"}]]])
                      :position "top center"}
            "copy to clipboard"]]
          [:p "Note: ensure you have a recent installation of docker."]]))))
@@ -592,16 +589,29 @@
 
 (defn view-edit
   []
-  (let [module-common (subscribe [::apps-subs/module-common])]
+  (let [module-common (subscribe [::apps-subs/module-common])
+        module        (subscribe [::apps-subs/module])
+        is-new?       (subscribe [::apps-subs/is-new?])
+        acl-visible?  (r/atom false)]
     (fn []
-      (let [name   (get @module-common ::apps-spec/name)
-            parent (get @module-common ::apps-spec/parent-path)]
+      (let [name      (get @module-common ::apps-spec/name)
+            parent    (get @module-common ::apps-spec/parent-path)
+            editable? (apps-utils/editable? @module @is-new?)]
         (dispatch [::apps-events/set-form-spec ::spec/module-component])
         (dispatch [::apps-events/set-module-type :component])
         [ui/Container {:fluid true}
          [:h2 [ui/Icon {:name "th"}]
-          parent (when (not-empty parent) "/") name]
+          parent (when (not-empty parent) "/") name
+          [acl/AclButton {:acl      (get @module-common ::apps-spec/acl)
+                          :on-click #(swap! acl-visible? not)}]]
          [apps-views-detail/control-bar]
+         (when @acl-visible?
+           [:<>
+            [acl/AclWidget {:acl       (get @module-common ::apps-spec/acl)
+                            :on-change #(do (dispatch [::apps-events/acl %])
+                                            (dispatch [::main-events/changes-protection? true]))
+                            :read-only (not editable?)}]
+            [:div {:style {:padding-top 10}}]])
          [summary]
          [ports-section]
          [:div {:style {:padding-top 10}}]

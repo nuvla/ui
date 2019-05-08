@@ -3,7 +3,7 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as reagent]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.acl.events :as events]
     [sixsq.nuvla.ui.acl.subs :as subs]
     [sixsq.nuvla.ui.acl.utils :as utils]
@@ -31,7 +31,7 @@
 (defn InfoIcon
   [help-kw]
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Popup {:trigger  (reagent/as-element
+    [ui/Popup {:trigger  (r/as-element
                            [ui/Icon {:circular true
                                      :size     "small"
                                      :name     "info"
@@ -133,7 +133,7 @@
       (if principal-name
         [ui/Popup {:content  principal
                    :position "right center"
-                   :trigger  (reagent/as-element [:span (or principal-name principal)])}]
+                   :trigger  (r/as-element [:span (or principal-name principal)])}]
         [:span (or principal-name principal)])]
 
      [:<>
@@ -154,7 +154,7 @@
 
 (defn DropdownPrincipals
   [opts]
-  (let [open   (reagent/atom false)
+  (let [open   (r/atom false)
         users  (subscribe [::subs/users-options])
         groups (subscribe [::subs/groups-options])
         tr     (subscribe [::i18n-subs/tr])]
@@ -214,7 +214,7 @@
   [opts]
   (let [empty-permission {:principal nil
                           :rights    #{}}
-        new-permission   (reagent/atom empty-permission)]
+        new-permission   (r/atom empty-permission)]
     (fn [{:keys [acl on-change mode] :as opts}]
       [ui/TableRow
 
@@ -257,8 +257,7 @@
         mobile? (subscribe [::main-subs/is-device? :mobile])
         tr      (subscribe [::i18n-subs/tr])]
     [ui/Table {:unstackable true
-               :attached    "top"
-               :basic       true}
+               :attached    "top"}
 
      [ui/TableHeader
       [ui/TableRow
@@ -292,7 +291,6 @@
   (let [rights-principals (-> acl (dissoc :owners) utils/get-principals sort)]
     [ui/Table {:unstackable    true
                :attached       "bottom"
-               :basic          true
                :text-align     "center"
                :vertical-align "middle"}
 
@@ -313,7 +311,7 @@
   [{:keys [acl read-only on-change mode]
     :or {acl {:owners [@(subscribe [::authn-subs/user-id])]}
          read-only true
-         mode (reagent/atom :simple)
+         mode (r/atom :simple)
          on-change #()} :as opts}]
   (fn [opts]
     (let [opts         (assoc opts :mode mode
@@ -337,16 +335,12 @@
 
 
 (defn AclButton
-  [{:keys [acl read-only on-change mode]
+  [{:keys [acl on-click]
     :or {acl {:owners [@(subscribe [::authn-subs/user-id])]}
-         read-only true
-         mode (reagent/atom :simple)
-         on-change #()} :as opts}]
-  (let [open? (reagent/atom false)]
+         on-click #()} :as opts}]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (fn [opts]
-      (let [opts            (assoc opts :mode mode
-                                        :read-only read-only
-                                        :on-change on-change)
+      (let [opts            (assoc opts :on-click on-click)
             acl             (or (:acl opts) acl)
             owners          (:owners acl)
             principals-set  (utils/get-principals acl)
@@ -363,17 +357,14 @@
                               (some #(str/starts-with? (name %) "edit") rights-keys) "pencil"
                               (some #(str/starts-with? (name %) "view") rights-keys) "eye"
                               :else nil)]
-        [ui/Popup {:trigger   (reagent/as-element
-                                [ui/Button {:floated  "right",
-                                            :basic    true
-                                            :on-click #(reset! open? (not @open?))}
-                                 [ui/Icon {:name icon-principals}]
-                                 (when icon-right
-                                   [ui/Icon {:name icon-right}])
-                                 [ui/Icon {:name "caret down"}]])
-                   :flowing   true
-                   :open      @open?
-                   :wide      "very"
-                   :position  "bottom right"
-                   :hoverable true}
-         [AclWidget opts]]))))
+        [ui/Button {:floated  "right",
+                    :basic    true
+                    :on-click on-click}
+         [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-principals}])
+                    :position "bottom center"
+                    :content  (@tr [:principals-icon])}]
+         (when icon-right
+           [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-right}])
+                      :position "bottom center"
+                      :content  (@tr [:rights-icon])}])
+         [ui/Icon {:name "caret down"}]]))))

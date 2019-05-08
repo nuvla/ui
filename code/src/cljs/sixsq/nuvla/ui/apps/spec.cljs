@@ -17,6 +17,8 @@
 
 (s/def ::parent-path any?)
 
+(s/def ::acl any?)
+
 (s/def ::path any?)
 
 (s/def ::logo-url any?)
@@ -28,7 +30,8 @@
                                      ;::path
                                      ]
                                :opt [::description
-                                     ::logo-url]))
+                                     ::logo-url
+                                     ::acl]))
 
 ;; Validation
 

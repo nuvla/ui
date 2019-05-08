@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.profile.events
   (:require
+    [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.authn.spec :as authn-spec]

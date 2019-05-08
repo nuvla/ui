@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.credential.utils
-  (:require [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.credential.spec :as spec]
+  (:require [sixsq.nuvla.ui.credential.spec :as spec]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [taoensso.timbre :as log]))
 
 

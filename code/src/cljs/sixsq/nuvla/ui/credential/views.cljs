@@ -1,23 +1,21 @@
 (ns sixsq.nuvla.ui.credential.views
   (:require
+    [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [reagent.core :as reagent]
+    [sixsq.nuvla.ui.credential.events :as events]
+    [sixsq.nuvla.ui.credential.spec :as spec]
+    [sixsq.nuvla.ui.credential.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.credential.events :as events]
-    [sixsq.nuvla.ui.credential.subs :as subs]
-    [sixsq.nuvla.ui.credential.spec :as spec]
-    [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.utils.accordion :as utils-accordion]
+    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.accordion :as utils-accordion]
-    [sixsq.nuvla.ui.utils.validation :as utils-validation]
-    [reagent.core :as reagent]
-    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [cljs.spec.alpha :as s]
-    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [taoensso.timbre :as timbre]))
 
 
@@ -39,8 +37,6 @@
             input-active? (= name-str @active-input)
             validate?     (or @local-validate? @validate-form?)
             valid?        (s/valid? value-spec value)]
-        (s/explain value-spec value)
-        (log/infof "local-validate?: %s validate-form?: %s" @local-validate? @validate-form?)
         [ui/TableRow
          [ui/TableCell {:collapsing true}
           name-label]
@@ -60,7 +56,6 @@
                          :on-change     (ui-callback/input-callback
                                           #(do
                                              (reset! local-validate? true)
-                                             (dispatch [::main-events/changes-protection? true])
                                              (dispatch [validation-event])
                                              (dispatch [::events/update-credential name-kw %])))}]
               ; Semantic UI's textarea styling requires to be wrapped in a form
@@ -75,7 +70,6 @@
                               :on-change     (ui-callback/input-callback
                                                #(do
                                                   (reset! local-validate? true)
-                                                  (dispatch [::main-events/changes-protection? true])
                                                   (dispatch [validation-event])
                                                   (dispatch [::events/update-credential name-kw %])))}]]])
             [:span value])]]))))
@@ -164,7 +158,6 @@
   (dispatch-sync [::events/set-validate-form? true])
   (dispatch-sync [form-validation-event])
   (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)]
-    (log/infof "form valid? %s" form-valid?)
     (when form-valid?
       (do
         (dispatch [::events/set-validate-form? false])
@@ -215,11 +208,6 @@
             validation-item  (get infrastructure-service-validation-map type)
             validation-event (:validation-event validation-item)
             modal-content    (:modal-content validation-item)]
-        (log/infof "infrastructure-service-validation-map: %s" (keys infrastructure-service-validation-map))
-        (log/infof "type: %s" type)
-        (log/infof "type nil?: %s" (nil? type))
-        (log/infof "validation-item: %s" validation-item)
-        (log/infof "validation-event: %s" validation-event)
         (if (empty? type)
           [:div]
           [ui/Modal {:open       @visible?
@@ -277,41 +265,7 @@
              [:div]
              [ui/Image {:src  "/ui/images/minio.png"
                         :size :tiny}]]]
-           ;[ui/Card {:on-click #(do
-           ;                       (dispatch [::events/set-validate-form? false])
-           ;                       (dispatch [::events/form-valid])
-           ;                       (dispatch [::events/close-add-credential-modal])
-           ;                       (dispatch [::events/open-credential-modal {:type "store-infrastructure-service-exoscale"}
-           ;                                  true]))}
-           ; [ui/CardContent {:text-align :center}
-           ;  [ui/Header "Exoscale Store (S3)"]
-           ;  [:div]
-           ;  [ui/Image {:src  "/ui/images/exoscale.png"
-           ;             :size :large}]]]
-           ;[ui/Card {:on-click #(do
-           ;                       (dispatch [::events/set-validate-form? false])
-           ;                       (dispatch [::events/form-valid])
-           ;                       (dispatch [::events/close-add-credential-modal])
-           ;                       (dispatch [::events/open-credential-modal {:type "store-infrastructure-service-azure"}
-           ;                                  true]))}
-           ; [ui/CardContent {:text-align :center}
-           ;  [ui/Header "Azure Store (S3)"]
-           ;  [:div]
-           ;  [ui/Image {:src  "/ui/images/azure.png"
-           ;             :size :small}]]]
-           ;[ui/Card {:on-click #(do
-           ;                       (dispatch [::events/set-validate-form? false])
-           ;                       (dispatch [::events/form-valid])
-           ;                       (dispatch [::events/close-add-credential-modal])
-           ;                       (dispatch [::events/open-credential-modal {:type "store-infrastructure-service-amazonec2"}
-           ;                                  true]))}
-           ; [ui/CardContent {:text-align :center}
-           ;  [ui/Header "Amazon S3"]
-           ;  [:div]
-           ;  [ui/Image {:src  "/ui/images/aws.png"
-           ;             :size :small}]]]
-           ]]
-         [ui/ModalActions]]))))
+           ]]]))))
 
 
 (defn refresh-button
@@ -342,7 +296,7 @@
         credential (subscribe [::subs/credential])
         confirmed? (reagent/atom false)]
     (fn []
-      (let [id (:id @credential)
+      (let [id   (:id @credential)
             name (:name @credential)]
         [ui/Modal {:open       @visible?
                    :close-icon true
@@ -375,6 +329,7 @@
                                     (dispatch [::events/close-delete-confirmation-modal]))}]]]))))
 
 
+;type name description
 (defn single-credential
   [{:keys [id type name description] :as credential}]
   (let [tr (subscribe [::i18n-subs/tr])]

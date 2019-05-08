@@ -26,8 +26,6 @@
 
 (s/def ::active-input (s/nilable string?))
 
-(s/def ::is-new? boolean?)
-
 ;; Validation
 
 ; Is the form valid?

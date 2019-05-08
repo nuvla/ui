@@ -23,7 +23,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 
 (defn id-selector-formatter [entry]
@@ -144,9 +145,7 @@
         selected-fields (subscribe [::subs/selected-fields])
         cep             (subscribe [::subs/cloud-entry-point])]
     (fn []
-      (let [{:keys [collection-key]} @cep
-            resource-collection-key (get collection-key @collection-name)
-            results                 @collection]
+      (let [results @collection]
         (if (instance? js/Error results)
           [ui/Segment style/basic
            [:pre (with-out-str (pprint (ex-data results)))]]
@@ -197,17 +196,12 @@
                   :on-key-press (partial forms/on-return-key
                                          #(when @selected-id
                                             (dispatch [::events/get-results])))}
-
-         [ui/FormGroup
-          [ui/Message {:info     true
-                       :on-click #(dispatch
-                                    [::history-events/navigate "documentation"])
-                       :style    {:cursor "pointer"}
-                       :floated  "right"
-                       :target   "_blank"
-                       :rel      "noreferrer"}
-           [ui/Icon {:name "info"}]
-           (@tr [:api-doc])]]
+         [ui/Button {:floated   "right"
+                     :icon      "info"
+                     :basic     true
+                     :color     "blue"
+                     :content   (@tr [:api-doc])
+                     :on-click  #(dispatch [::history-events/navigate "documentation"])}]
 
          [ui/FormGroup
           [ui/FormField

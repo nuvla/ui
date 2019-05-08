@@ -1,17 +1,15 @@
 (ns sixsq.nuvla.ui.credential.events
   (:require
+    [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
-    [sixsq.nuvla.ui.credential.effects :as credential-fx]
     [sixsq.nuvla.ui.client.spec :as client-spec]
+    [sixsq.nuvla.ui.credential.effects :as credential-fx]
     [sixsq.nuvla.ui.credential.spec :as spec]
     [sixsq.nuvla.ui.credential.utils :as utils]
-    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [cljs.spec.alpha :as s]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 
@@ -95,10 +93,8 @@
 (reg-event-fx
   ::edit-credential
   (fn [{{:keys [::spec/credential ::client-spec/client] :as db} :db :as cofx} [_]]
-    (log/infof "credential: %s" credential)
     (let [id             (:id credential)
           new-credential (utils/db->new-credential db)]
-      (log/infof "new-credential: %s" new-credential)
       (if (nil? id)
         {:db               db
          ::cimi-api-fx/add [client "credential" new-credential
@@ -111,9 +107,6 @@
                                              :type    :error}]))
                                (do (dispatch [::cimi-detail-events/get (:id %)])
                                    (dispatch [::close-credential-modal])
-                                   ;(dispatch [::set-module sanitized-module])
-                                   ;(dispatch [::main-events/changes-protection? false])
-                                   ;(dispatch [::history-events/navigate (str "profile")])
                                    (dispatch [::get-credentials])))]}
         {:db                db
          ::cimi-api-fx/edit [client id credential
@@ -127,7 +120,6 @@
                                 (do (dispatch [::cimi-detail-events/get (:id %)])
                                     (dispatch [::close-credential-modal])
                                     (dispatch [::get-credentials])
-                                    ;(dispatch [::main-events/changes-protection? false])
                                     ))]}))))
 
 
@@ -143,8 +135,7 @@
                                                              status (str " (" status ")"))
                                             :content message
                                             :type    :error}]))
-                              (do (dispatch [::cimi-detail-events/get (:id %)])
-                                  (dispatch [::get-credentials])))]}))
+                              (dispatch [::get-credentials]))]}))
 
 
 (reg-event-db
@@ -186,12 +177,6 @@
   ::close-delete-confirmation-modal
   (fn [db _]
     (assoc db ::spec/delete-confirmation-modal-visible? false)))
-
-
-; TODO: turn into fx
-(reg-event-db
-  ::add-credential
-  (fn [db]))
 
 
 (reg-event-db

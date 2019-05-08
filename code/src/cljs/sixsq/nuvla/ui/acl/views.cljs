@@ -60,15 +60,15 @@
          [InfoIcon :acl-rights-manage]]
         [ui/TableHeaderCell {:row-span 2}
          (str/capitalize (@tr [:delete]))
-         [InfoIcon :acl-rights-delete]]]
+         [InfoIcon :acl-rights-delete]]
+        [ui/TableHeaderCell {:row-span 2}]]
        [ui/TableRow
         [ui/TableHeaderCell "Acl" [InfoIcon :acl-rights-edit-acl]]
         [ui/TableHeaderCell "Data" [InfoIcon :acl-rights-edit-data]]
         [ui/TableHeaderCell "Meta" [InfoIcon :acl-rights-edit-meta]]
         [ui/TableHeaderCell "Acl" [InfoIcon :acl-rights-view-acl]]
         [ui/TableHeaderCell "Data" [InfoIcon :acl-rights-view-data]]
-        [ui/TableHeaderCell "Meta" [InfoIcon :acl-rights-view-meta]]
-        [ui/TableHeaderCell]]]
+        [ui/TableHeaderCell "Meta" [InfoIcon :acl-rights-view-meta]]]]
       [ui/TableHeader
        [ui/TableRow
         [ui/TableHeaderCell {:text-align "left"} (str/capitalize (@tr [:rights]))]

@@ -272,14 +272,12 @@
             icon         (-> @module :type category-icon)
             rows         (map tuple-to-row summary-info)
             name         (:name @module)
-            description  (:name @module)
-            acl          (:acl @module)]
+            description  (:name @module)]
         [cc/metadata-simple
          {:title       name
           :description (:startTime summary-info)
           :icon        icon
-          :subtitle    description
-          :acl         acl}
+          :subtitle    description}
          rows]))))
 
 

@@ -79,7 +79,7 @@
        (when @more?
          [table/definition-table rows])
        (when @more? [properties-table properties])
-       (when @more? [acl/AclWidget {:acl acl, :read-only true}])
+       (when (and @more? acl) [acl/AclWidget {:acl acl, :read-only true}])
        ])))
 
 

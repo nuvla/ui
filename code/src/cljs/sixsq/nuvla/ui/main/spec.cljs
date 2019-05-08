@@ -28,6 +28,9 @@
 (s/def ::ignore-changes-modal (s/nilable any?))
 
 
+(s/def ::bootstrap-message (s/nilable keyword?))
+
+
 (s/def ::db (s/keys :req [::iframe?
                           ::device
                           ::sidebar-open?
@@ -35,7 +38,8 @@
                           ::nav-path
                           ::nav-query-params
                           ::changes-protection?
-                          ::ignore-changes-modal]))
+                          ::ignore-changes-modal
+                          ::bootstrap-message]))
 
 
 (def defaults {::iframe?              false
@@ -45,4 +49,5 @@
                ::nav-path             ["welcome"]
                ::nav-query-params     {}
                ::changes-protection?  false
-               ::ignore-changes-modal nil})
+               ::ignore-changes-modal nil
+               ::bootstrap-message    nil})

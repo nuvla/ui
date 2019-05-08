@@ -50,3 +50,8 @@
   ::ignore-changes-modal
   (fn [db]
     (::spec/ignore-changes-modal db)))
+
+(reg-sub
+  ::bootstrap-message
+  (fn [db]
+    (::spec/bootstrap-message db)))

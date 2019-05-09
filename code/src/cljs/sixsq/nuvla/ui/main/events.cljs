@@ -101,6 +101,7 @@
     (if response
 
       (case resource-type
+
         "infrastructure-service-collection"
         (if (> element-count 0)
           {:db (assoc db ::spec/bootstrap-message nil)

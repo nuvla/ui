@@ -44,29 +44,30 @@
 
 (defn AclTableHeaders
   [{:keys [mode] :as opts}]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr                (subscribe [::i18n-subs/tr])
+        border-left-style {:style {:border-left "1px solid rgba(34,36,38,.1)"}}]
     (if (is-advanced-mode? @mode)
       [ui/TableHeader
        [ui/TableRow
         [ui/TableHeaderCell {:row-span 2 :text-align "left"} (str/capitalize (@tr [:rights]))]
-        [ui/TableHeaderCell {:col-span 3}
+        [ui/TableHeaderCell (merge border-left-style {:col-span 3})
          (str/capitalize (@tr [:edit]))
          [InfoIcon :acl-rights-edit]]
-        [ui/TableHeaderCell {:col-span 3}
+        [ui/TableHeaderCell (merge border-left-style {:col-span 3})
          (str/capitalize (@tr [:view]))
          [InfoIcon :acl-rights-view]]
-        [ui/TableHeaderCell {:row-span 2}
+        [ui/TableHeaderCell (merge border-left-style {:row-span 2})
          (str/capitalize (@tr [:manage]))
          [InfoIcon :acl-rights-manage]]
-        [ui/TableHeaderCell {:row-span 2}
+        [ui/TableHeaderCell (merge border-left-style {:row-span 2})
          (str/capitalize (@tr [:delete]))
          [InfoIcon :acl-rights-delete]]
         [ui/TableHeaderCell {:row-span 2}]]
        [ui/TableRow
-        [ui/TableHeaderCell "Acl" [InfoIcon :acl-rights-edit-acl]]
+        [ui/TableHeaderCell border-left-style "Acl" [InfoIcon :acl-rights-edit-acl]]
         [ui/TableHeaderCell "Data" [InfoIcon :acl-rights-edit-data]]
         [ui/TableHeaderCell "Meta" [InfoIcon :acl-rights-edit-meta]]
-        [ui/TableHeaderCell "Acl" [InfoIcon :acl-rights-view-acl]]
+        [ui/TableHeaderCell border-left-style "Acl" [InfoIcon :acl-rights-view-acl]]
         [ui/TableHeaderCell "Data" [InfoIcon :acl-rights-view-data]]
         [ui/TableHeaderCell "Meta" [InfoIcon :acl-rights-view-meta]]]]
       [ui/TableHeader

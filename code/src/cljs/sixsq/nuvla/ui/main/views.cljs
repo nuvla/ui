@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.apps-project.views]
     [sixsq.nuvla.ui.apps-store.views]
     [sixsq.nuvla.ui.apps.events :as apps-events]
+    [sixsq.nuvla.ui.credential.events :as credential-events]
     [sixsq.nuvla.ui.apps.views]
     [sixsq.nuvla.ui.authn.views :as authn-views]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
@@ -122,28 +123,34 @@
 
 (defmethod BootstrapMessage :no-swarm
   [_]
-  [ui/Message {:icon       "inbox"
-               :info       true
-               :on-dismiss #(dispatch [::events/set-bootsrap-message])
-               :header     "You don't have any Swarm infrastructure yet!"
-               :content    (r/as-element [:p "Create your first by "
-                                          [:a
-                                           {:style    {:cursor "pointer"}
-                                            :on-click #(dispatch [::history-events/navigate "infra-service"])}
-                                           "clicking here"]])}])
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Message
+     {:icon       "inbox"
+      :info       true
+      :on-dismiss #(dispatch [::events/set-bootsrap-message])
+      :header     (@tr [:message-no-swarm])
+      :content    (r/as-element [:p (@tr [:message-to-create-one])
+                                 [:a
+                                  {:style    {:cursor "pointer"}
+                                   :on-click #(dispatch [::history-events/navigate "infra-service"])}
+                                  (str " " (@tr [:click-here]))]])}]))
 
 
 (defmethod BootstrapMessage :no-credential
   [_]
-  [ui/Message {:icon       "inbox"
-               :info       true
-               :on-dismiss #(dispatch [::events/set-bootsrap-message])
-               :header     "You don't have any Credential for your Swarm!"
-               :content    (r/as-element [:p "Create your first by "
-                                          [:a
-                                           {:style    {:cursor "pointer"}
-                                            :on-click #(dispatch [::history-events/navigate "credential"])}
-                                           "clicking here"]])}])
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Message
+     {:icon       "inbox"
+      :info       true
+      :on-dismiss #(dispatch [::events/set-bootsrap-message])
+      :header     (@tr [:message-no-credetnial])
+      :content    (r/as-element [:p (@tr [:message-to-create-one])
+                                 [:a
+                                  {:style    {:cursor "pointer"}
+                                   :on-click #(do (dispatch [::history-events/navigate "credential"])
+                                                  (dispatch [::credential-events/open-add-credential-modal]))}
+                                  (str " " (@tr [:click-here]))]])}]))
+
 
 (defn contents
   []

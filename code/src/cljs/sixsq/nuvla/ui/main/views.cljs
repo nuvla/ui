@@ -2,16 +2,17 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.about.views]
     [sixsq.nuvla.ui.apps-component.views]
     [sixsq.nuvla.ui.apps-project.views]
     [sixsq.nuvla.ui.apps-store.views]
     [sixsq.nuvla.ui.apps.events :as apps-events]
-    [sixsq.nuvla.ui.credential.events :as credential-events]
     [sixsq.nuvla.ui.apps.views]
     [sixsq.nuvla.ui.authn.views :as authn-views]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.cimi.views]
+    [sixsq.nuvla.ui.credential.events :as credential-events]
     [sixsq.nuvla.ui.credential.views]
     [sixsq.nuvla.ui.data.views]
     [sixsq.nuvla.ui.deployment.views]
@@ -34,7 +35,6 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.welcome.views]
-    [reagent.core :as r]
     [taoensso.timbre :as log]))
 
 

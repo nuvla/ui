@@ -11,13 +11,6 @@
     [taoensso.timbre :as log]))
 
 
-(reg-event-fx
-  ::initialize
-  (fn [cofx _]
-    (when-let [client (-> cofx :db ::client-spec/client)]
-      {::cimi-api-fx/session [client #(dispatch [::set-session %])]})))
-
-
 (reg-event-db
   ::set-first
   (fn [db [_ first-value]]

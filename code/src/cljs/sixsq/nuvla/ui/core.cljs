@@ -74,6 +74,5 @@
   (visibility-watcher)
   (routes/routes)
   (dispatch [::history-events/initialize @config/path-prefix])
-  (dispatch [::main-events/check-bootstrap-message])
   (mount-root)
   (log/info "finished initialization"))

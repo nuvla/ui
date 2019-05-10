@@ -20,11 +20,42 @@
 
 (s/def ::is-new? boolean?)
 
+(s/def ::active-input (s/nilable string?))
+
+;; Validation
+
+; Is the form valid?
+(s/def ::form-valid? boolean?)
+
+; Should the form be validated?
+(s/def ::validate-form? boolean?)
+
+; Spec to use when validating form
+(s/def ::form-spec any?)
+
 ; General
 
 (s/def ::name utils-spec/nonblank-string)
-
 (s/def ::description utils-spec/nonblank-string)
+
+; Service group
+
+(s/def ::documentation utils-spec/nonblank-string)
+
+(s/def ::service-group (s/keys :req-un [::name
+                                        ::description
+                                        ::documentation]))
+
+; Swarm
+
+(s/def ::parent utils-spec/nonblank-string)
+(s/def ::endpoint utils-spec/nonblank-string)
+
+(s/def ::swarm-service (s/keys :req-un [::name
+                                        ::description
+                                        ::endpoint]
+                               :opt-un [::parent]))
+
 
 (s/def ::db (s/keys :req [::services
                           ::full-text-search

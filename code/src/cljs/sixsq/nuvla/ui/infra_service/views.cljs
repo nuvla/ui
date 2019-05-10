@@ -37,20 +37,20 @@
   (swap! v not))
 
 
-(defn services-search []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Input {:placeholder (@tr [:search])
-               :icon        "search"
-               :on-change   (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))}]))
+;(defn services-search []
+;  (let [tr (subscribe [::i18n-subs/tr])]
+;    [ui/Input {:placeholder (@tr [:search])
+;               :icon        "search"
+;               :on-change   (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))}]))
 
 
 (defn control-bar []
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Menu {:secondary true}
      [ui/MenuMenu {:position "left"}
-      [services-search]
+      ;[services-search]
       [uix/MenuItemWithIcon
-       {:name      (@tr [:register])
+       {:name      (@tr [:add])
         :icon-name "plus"
         :position  "right"
         :on-click  #(dispatch [::events/open-add-service-modal])}]]
@@ -105,9 +105,7 @@
   [ui/Segment style/basic
    (vec (concat [ui/CardGroup {:centered true}]
                 (for [[group services] groups]
-                  (do
-                    (log/infof "XXX group %s services %s" group services)
-                    [service-group-card group services]))))])
+                  [service-group-card group services])))])
 
 
 (defn infra-services
@@ -178,7 +176,7 @@
                                              (reset! local-validate? true)
                                              (dispatch [::main-events/changes-protection? true])
                                              (dispatch [validation-event])
-                                             (dispatch [::events/update-credential name-kw %])))}]
+                                             (dispatch [::events/update-service name-kw %])))}]
               ; Semantic UI's textarea styling requires to be wrapped in a form
               [ui/Form
                [ui/FormField {:class (when (and validate? (not valid?)) :error)}
@@ -193,7 +191,7 @@
                                                   (reset! local-validate? true)
                                                   (dispatch [::main-events/changes-protection? true])
                                                   (dispatch [validation-event])
-                                                  (dispatch [::events/update-credential name-kw %])))}]]])
+                                                  (dispatch [::events/update-service name-kw %])))}]]])
             [:span value])]]))))
 
 
@@ -203,20 +201,16 @@
         service (subscribe [::subs/service])]
     (fn []
       (let [editable?             (utils-general/editable? @service @is-new?)
-            {:keys [name description ca cert key]} @service
-            form-validation-event ::events/validate-swarm-credential-form]
+            {:keys [name description endpoint]} @service
+            form-validation-event ::events/validate-swarm-service-form]
         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
          [ui/TableBody
           [row-with-label "name" :name name editable? true
            ::spec/name :input form-validation-event]
           [row-with-label "description" :description description editable? true
            ::spec/description :input form-validation-event]
-          [row-with-label "swarm-credential-ca" :ca ca editable? true
-           ::spec/ca :textarea form-validation-event]
-          [row-with-label "swarm-credential-cert" :cert cert editable? true
-           ::spec/cert :textarea form-validation-event]
-          [row-with-label "swarm-credential-key" :key key editable? true
-           ::spec/key :textarea form-validation-event]]]))))
+          [row-with-label "swarm-endpoint" :endpoint endpoint editable? true
+           ::spec/endpoint :input form-validation-event]]]))))
 
 
 (defn service-minio
@@ -226,7 +220,7 @@
     (fn []
       (let [editable?             (utils-general/editable? @service @is-new?)
             {:keys [name description access-key secret-key]} @service
-            form-validation-event ::events/validate-minio-credential-form]
+            form-validation-event ::events/validate-minio-service-form]
         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
          [ui/TableBody
           [row-with-label "name" :name name editable? true
@@ -240,9 +234,9 @@
 
 
 (def infrastructure-service-validation-map
-  {"infrastructure-service-swarm" {:validation-event ::events/validate-swarm-credential-form
+  {"infrastructure-service-swarm" {:validation-event ::events/validate-swarm-service-form
                                    :modal-content    service-swarm}
-   "infrastructure-service-minio" {:validation-event ::events/validate-minio-credential-form
+   "infrastructure-service-minio" {:validation-event ::events/validate-minio-service-form
                                    :modal-content    service-minio}})
 
 
@@ -267,20 +261,15 @@
         is-new?     (subscribe [::subs/is-new?])]
     (fn []
       (let [type             (:type @service "")
-            header           (str (if is-new? "New" "Update") " Credential: " type)
+            header           (str (if is-new? "New" "Update") " " type)
             validation-item  (get infrastructure-service-validation-map type)
             validation-event (:validation-event validation-item)
             modal-content    (:modal-content validation-item)]
-        (log/infof "infrastructure-service-validation-map: %s" (keys infrastructure-service-validation-map))
-        (log/infof "type: %s" type)
-        (log/infof "type nil?: %s" (nil? type))
-        (log/infof "validation-item: %s" validation-item)
-        (log/infof "validation-event: %s" validation-event)
         (if (empty? type)
           [:div]
           [ui/Modal {:open       @visible?
                      :close-icon true
-                     :on-close   #(dispatch [::events/close-credential-modal])}
+                     :on-close   #(dispatch [::events/close-service-modal])}
 
            [ui/ModalHeader header]
 
@@ -305,34 +294,31 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-service-modal])}
 
-         [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:register])]
+         [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
 
          [ui/ModalContent {:scrolling false}
-          [:div {:style {:padding-bottom 20}} "Choose the service type you want to add."]
+          [:div {:style {:padding-bottom 20}}
+           "Register an existing Container Orchestration Engine or deploy a new one?"]
           [ui/CardGroup {:centered true}
 
            [ui/Card {:on-click #(do
                                   (dispatch [::events/set-validate-form? false])
                                   (dispatch [::events/form-valid])
                                   (dispatch [::events/close-add-service-modal])
-                                  (dispatch [::events/open-service-modal {:type "infrastructure-service-swarm"}
-                                             true]))}
+                                  (dispatch [::events/open-service-modal {:type "infrastructure-service-swarm"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Swarm"]
              [ui/Icon {:name "docker"
-                       :size :massive}]]]
+                       :size :massive}]
+             [ui/Header "Register"]]]
 
-           [ui/Card {:on-click #(do
-                                  (dispatch [::events/set-validate-form? false])
-                                  (dispatch [::events/form-valid])
-                                  (dispatch [::events/close-add-service-modal])
-                                  (dispatch [::events/open-service-modal {:type "infrastructure-service-minio"}
-                                             true]))}
+           [ui/Card {:on-click nil}
             [ui/CardContent {:text-align :center}
-             [ui/Header "MinIO"]
-             [:div]
-             [ui/Image {:src  "/ui/images/minio.png"
-                        :size :tiny}]]]]]
+             [ui/Header "Swarm"]
+             [ui/Icon {:name  "docker"
+                       :size  :massive
+                       :color :grey}]
+             [ui/Header "Deploy (soon)"]]]]]
          [ui/ModalActions]]))))
 
 

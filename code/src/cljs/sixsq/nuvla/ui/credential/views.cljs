@@ -264,8 +264,7 @@
              [ui/Header "MinIO"]
              [:div]
              [ui/Image {:src  "/ui/images/minio.png"
-                        :size :tiny}]]]
-           ]]]))))
+                        :size :tiny}]]]]]]))))
 
 
 (defn refresh-button

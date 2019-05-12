@@ -44,7 +44,8 @@
 
 (s/def ::service-group (s/keys :req-un [::name
                                         ::description
-                                        ::documentation]))
+                                        ::documentation]
+                               :opt-un [::services]))
 
 ; Swarm
 
@@ -52,6 +53,14 @@
 (s/def ::endpoint utils-spec/nonblank-string)
 
 (s/def ::swarm-service (s/keys :req-un [::name
+                                        ::description
+                                        ::endpoint]
+                               :opt-un [::parent]))
+
+
+; MinIO
+
+(s/def ::minio-service (s/keys :req-un [::name
                                         ::description
                                         ::endpoint]
                                :opt-un [::parent]))

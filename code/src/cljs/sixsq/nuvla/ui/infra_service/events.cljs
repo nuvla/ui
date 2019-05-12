@@ -7,7 +7,6 @@
     [sixsq.nuvla.ui.infra-service.spec :as spec]
     [sixsq.nuvla.ui.infra-service.utils :as utils]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [taoensso.timbre :as log]
     [cljs.spec.alpha :as s]
     [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -47,22 +46,30 @@
   (fn [db [_ data]]
     (let [services (:resources data)
           groups   (group-by :parent services)]
-      ;(log/infof "event set-services services %s" services)
-      ;(log/infof "event set-services groups %s" groups)
-      (assoc db ::spec/services groups))))
+      (-> db
+          (assoc-in [::spec/services :groups] groups)
+          (assoc-in [::spec/services :count] (get data :count 0))))))
 
 
 (reg-event-db
   ::set-service-group
-  (fn [db [_ group-id]]
-    (assoc-in db [::spec/service :parent] group-id)))
+  (fn [db [_ group services]]
+    (-> db
+        (assoc-in [::spec/service :parent] (:id group))
+        (assoc-in [::spec/service-group :services] services))))
+
+
+(reg-event-db
+  ::reset-service-group
+  (fn [db [_]]
+    (-> db
+        (dissoc ::spec/service-group))))
 
 
 (reg-event-fx
   ::add-service-group
   (fn [{{:keys [::client-spec/client] :as db} :db :as cofx} [_]]
     (let [new-group (utils/db->new-service-group db)]
-      (log/infof "adding group")
       {:db               db
        ::cimi-api-fx/add [client "infrastructure-service-group" new-group
                           #(if (instance? js/Error %)
@@ -86,7 +93,6 @@
           new-service (utils/db->new-swarm-service db)]
       (if (nil? id)
         (do
-          (log/infof "adding service")
           (dispatch [::add-service-group])
           {:db               db
            ::cimi-api-fx/add [client "service" new-service

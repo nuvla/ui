@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.infra-service.utils
   (:require [clojure.string :as str]
-            [sixsq.nuvla.ui.infra-service.spec :as spec]
-            [taoensso.timbre :as log]))
+            [sixsq.nuvla.ui.infra-service.spec :as spec]))
 
 (defn get-query-params
   [full-text-search page elements-per-page]
@@ -22,7 +21,6 @@
                   (assoc g :description description)
                   ;(assoc g :documentation documentation)
                   )]
-      (log/infof "g: %s" g)
       g)))
 
 
@@ -32,9 +30,6 @@
         description (get-in db [::spec/service :description])
         group-id    (get-in db [::spec/service :parent])
         endpoint    (get-in db [::spec/service :endpoint])]
-    (log/infof "->service type %s" type)
-    (log/infof "->service desc. %s" description)
-    (log/infof "->service parent %s" group-id)
     (let [s (as-> {} s
                   (assoc-in s [:template :href] (str "infrastructure-service-template/generic")) ;TODO: no type?
                   (assoc-in s [:template :name] name)
@@ -44,6 +39,5 @@
                   (assoc-in s [:template :endpoint] endpoint)
                   (assoc-in s [:template :state] "STARTED") ;TODO: should this not be driven by the real state?
                   )]
-      (log/infof "s: %s" s)
       s)))
 

@@ -15,8 +15,6 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [taoensso.timbre :as timbre]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.accordion :as utils-accordion]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [sixsq.nuvla.ui.utils.general :as utils-general]
     [cljs.spec.alpha :as s]))
@@ -53,7 +51,9 @@
        {:name      (@tr [:add])
         :icon-name "plus"
         :position  "right"
-        :on-click  #(dispatch [::events/open-add-service-modal])}]]
+        :on-click  #(do
+                      (dispatch-sync [::events/reset-service-group])
+                      (dispatch [::events/open-add-service-modal]))}]]
      [ui/MenuMenu {:position "right"}
       [refresh-button]]]))
 
@@ -65,36 +65,36 @@
 
 (defn service-card
   [{:keys [id name description path type logo-url] :as service}]
-  (log/infof "service-card %s %s %s %s %s %s" id name description path type logo-url)
-  (let [{:keys [type]} service]
-    ^{:key id}
-    [ui/Card
-     (when logo-url
-       [ui/Image {:src   logo-url
-                  :style {:width      "auto"
-                          :height     "100px"
-                          :object-fit "contain"}}])
-     [ui/CardContent
-      [ui/CardHeader {:style {:word-wrap "break-word"}}
-       [ui/Icon {:name ((keyword type) service-icons)}]
-       [ui/Label {:corner   true
-                  :style    {:z-index 0
-                             :cursor  :pointer}
-                  :on-click #(dispatch [::events/open-service-modal true])}
-        [ui/Icon {:name  "info circle"
-                  :style {:cursor :pointer}}]               ; use content to work around bug in icon in label for cursor
-        ]
-       (or name id)]
-      [ui/CardMeta {:style {:word-wrap "break-word"}} path]
-      [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]]]))
+  ^{:key id}
+  [ui/Card {:on-click #(dispatch [::events/open-service-modal service false])}
+   (when logo-url
+     [ui/Image {:src   logo-url
+                :style {:width      "auto"
+                        :height     "100px"
+                        :object-fit "contain"}}])
+   [ui/CardContent
+    [ui/CardHeader {:style {:word-wrap "break-word"}}
+     [ui/Icon {:name ((keyword type) service-icons)}]
+     (or name id)]
+    [ui/CardMeta {:style {:word-wrap "break-word"}} path]
+    [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]]])
 
 
 (defn service-group-card
   [group services]
   (let []
-    (log/infof "service-group-card %s %s" group services)
     ^{:key group}
     [ui/Card
+     (when (< (count services) 2)
+       [ui/Label {:corner   true
+                  :style    {:z-index 0
+                             :cursor  :pointer}
+                  :on-click #(do
+                               (dispatch-sync [::events/set-service-group group services])
+                               (dispatch [::events/open-add-service-modal]))}
+        [ui/Icon {:name  "plus"
+                  :style {:cursor :pointer}}]               ; use content to work around bug in icon in label for cursor
+        ])
      [ui/CardContent
       [ui/CardHeader {:style {:word-wrap "break-word"}}]
       (for [service services] (service-card service))]]))
@@ -113,10 +113,10 @@
   (let [tr                (subscribe [::i18n-subs/tr])
         services          (subscribe [::subs/services])
         elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
-        active?           (reagent/atom true)]
+        page              (subscribe [::subs/page])]
     (fn []
-      (let [total-services (get @services :count 0)
+      (let [groups         (:groups @services)
+            total-services (get @services :count 0)
             total-pages    (general-utils/total-pages total-services @elements-per-page)]
         [ui/Container {:fluid true}
          [:h2
@@ -125,7 +125,7 @@
           (@tr [:infra-services])]
          [ui/Segment
           [control-bar]
-          [service-groups @services]
+          [service-groups groups]
           (when (> total-pages 1)
             [:div {:style {:padding-bottom 30}}
              [uix/Pagination
@@ -153,8 +153,7 @@
             input-active? (= name-str @active-input)
             validate?     (or @local-validate? @validate-form?)
             valid?        (s/valid? value-spec value)]
-        (s/explain value-spec value)
-        (log/infof "local-validate?: %s validate-form?: %s" @local-validate? @validate-form?)
+        ;        (s/explain value-spec value)
         [ui/TableRow
          [ui/TableCell {:collapsing true}
           name-label]
@@ -219,7 +218,7 @@
         service (subscribe [::subs/service])]
     (fn []
       (let [editable?             (utils-general/editable? @service @is-new?)
-            {:keys [name description access-key secret-key]} @service
+            {:keys [name description endpoint]} @service
             form-validation-event ::events/validate-minio-service-form]
         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
          [ui/TableBody
@@ -227,17 +226,15 @@
            ::spec/name :input form-validation-event]
           [row-with-label "description" :description description editable? true
            ::spec/description :input form-validation-event]
-          [row-with-label "access-key" :access-key access-key editable? true
-           ::spec/access-key :input form-validation-event]
-          [row-with-label "secret-key" :secret-key secret-key editable? true
-           ::spec/secret-key :password form-validation-event]]]))))
+          [row-with-label "endpoint" :endpoint endpoint editable? true
+           ::spec/endpoint :input form-validation-event]]]))))
 
 
 (def infrastructure-service-validation-map
-  {"infrastructure-service-swarm" {:validation-event ::events/validate-swarm-service-form
-                                   :modal-content    service-swarm}
-   "infrastructure-service-minio" {:validation-event ::events/validate-minio-service-form
-                                   :modal-content    service-minio}})
+  {"swarm" {:validation-event ::events/validate-swarm-service-form
+            :modal-content    service-swarm}
+   "s3"    {:validation-event ::events/validate-minio-service-form
+            :modal-content    service-minio}})
 
 
 (defn save-callback
@@ -245,7 +242,6 @@
   (dispatch-sync [::events/set-validate-form? true])
   (dispatch-sync [form-validation-event])
   (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)]
-    (log/infof "form valid? %s" form-valid?)
     (when form-valid?
       (do
         (dispatch [::events/set-validate-form? false])
@@ -261,10 +257,12 @@
         is-new?     (subscribe [::subs/is-new?])]
     (fn []
       (let [type             (:type @service "")
-            header           (str (if is-new? "New" "Update") " " type)
+            name             (:name @service type)
+            header           (str (if (true? @is-new?) (@tr [:new]) (@tr [:update])) " " name)
             validation-item  (get infrastructure-service-validation-map type)
             validation-event (:validation-event validation-item)
             modal-content    (:modal-content validation-item)]
+
         (if (empty? type)
           [:div]
           [ui/Modal {:open       @visible?
@@ -277,7 +275,7 @@
             [utils-validation/validation-error-message ::subs/form-valid?]
             [modal-content]]
            [ui/ModalActions
-            [uix/Button {:text     (if (true? @is-new?) (@tr [:create]) (@tr [:save]))
+            [uix/Button {:text     (if (true? @is-new?) (@tr [:create]) (@tr [:update]))
                          :positive true
                          :disabled (when-not @form-valid? true)
                          :active   true
@@ -287,9 +285,10 @@
 (defn add-service-modal
   []
   (let [tr       (subscribe [::i18n-subs/tr])
-        visible? (subscribe [::subs/add-service-modal-visible?])]
+        visible? (subscribe [::subs/add-service-modal-visible?])
+        group    (subscribe [::subs/service-group])]
     (fn []
-      (let []
+      (let [services (:services @group)]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-service-modal])}
@@ -297,28 +296,47 @@
          [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
 
          [ui/ModalContent {:scrolling false}
-          [:div {:style {:padding-bottom 20}}
-           "Register an existing Container Orchestration Engine or deploy a new one?"]
+
+          (when (not= 1 (count services))
+            [:div
+             [:div {:style {:padding-bottom 20}}
+              (@tr [:register-swarm-note])]
+             [ui/CardGroup {:centered true}
+
+              [ui/Card {:on-click #(do
+                                     (dispatch [::events/set-validate-form? false])
+                                     (dispatch [::events/form-valid])
+                                     (dispatch [::events/close-add-service-modal])
+                                     (dispatch [::events/open-service-modal {:type "swarm"} true]))}
+
+               [ui/CardContent {:text-align :center}
+                [ui/Header "Swarm"]
+                [ui/Icon {:name "docker"
+                          :size :massive}]
+                [ui/Header (@tr [:register])]]]
+
+              [ui/Card {:on-click nil}
+               [ui/CardContent {:text-align :center}
+                [ui/Header "Swarm"]
+                [ui/Icon {:name  "docker"
+                          :size  :massive
+                          :color :grey}]
+                [ui/Header (@tr [:deploy]) (str " (" (@tr [:soon]) ")")]]]]])
+          [:div {:style {:padding-top    20
+                         :padding-bottom 20}}
+           (@tr [:register-s3-note])]
           [ui/CardGroup {:centered true}
 
            [ui/Card {:on-click #(do
                                   (dispatch [::events/set-validate-form? false])
                                   (dispatch [::events/form-valid])
                                   (dispatch [::events/close-add-service-modal])
-                                  (dispatch [::events/open-service-modal {:type "infrastructure-service-swarm"} true]))}
+                                  (dispatch [::events/open-service-modal {:type "s3"} true]))}
             [ui/CardContent {:text-align :center}
-             [ui/Header "Swarm"]
-             [ui/Icon {:name "docker"
-                       :size :massive}]
-             [ui/Header "Register"]]]
-
-           [ui/Card {:on-click nil}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "Swarm"]
-             [ui/Icon {:name  "docker"
-                       :size  :massive
-                       :color :grey}]
-             [ui/Header "Deploy (soon)"]]]]]
+             [ui/Header "MinIO"]
+             [ui/Image {:src  "/ui/images/minio.png"
+                        :size :tiny}]
+             [ui/Header (@tr [:register])]]]]]
          [ui/ModalActions]]))))
 
 

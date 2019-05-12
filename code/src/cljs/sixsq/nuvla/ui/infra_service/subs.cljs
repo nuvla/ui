@@ -51,6 +51,11 @@
 
 
 (reg-sub
+  ::service-group
+  ::spec/service-group)
+
+
+(reg-sub
   ::service-modal-visible?
   (fn [db]
     (::spec/service-modal-visible? db)))

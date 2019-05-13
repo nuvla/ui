@@ -10,8 +10,7 @@
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.profile.spec :as spec]
     [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]
-    [cljs.spec.alpha :as s]))
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db

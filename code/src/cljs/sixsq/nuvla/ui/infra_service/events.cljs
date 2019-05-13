@@ -1,14 +1,16 @@
 (ns sixsq.nuvla.ui.infra-service.events
   (:require
+    [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch dispatch-sync reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.infra-service.spec :as spec]
     [sixsq.nuvla.ui.infra-service.utils :as utils]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [cljs.spec.alpha :as s]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 
 ; Perform form validation if validate-form? is true.
@@ -105,7 +107,8 @@
                                                :type    :error}]))
                                  (do (dispatch [::cimi-detail-events/get (:id %)])
                                      (dispatch [::close-service-modal])
-                                     (dispatch [::get-services])))]})
+                                     (dispatch [::get-services])
+                                     (dispatch [::main-events/check-bootstrap-message])))]})
         {:db                db
          ::cimi-api-fx/edit [client id service
                              #(if (instance? js/Error %)

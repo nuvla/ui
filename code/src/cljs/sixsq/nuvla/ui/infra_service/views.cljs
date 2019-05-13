@@ -1,23 +1,23 @@
 (ns sixsq.nuvla.ui.infra-service.views
   (:require
     [cljs.pprint :refer [cl-format]]
+    [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as reagent]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.infra-service.events :as events]
-    [sixsq.nuvla.ui.infra-service.subs :as subs]
     [sixsq.nuvla.ui.infra-service.spec :as spec]
+    [sixsq.nuvla.ui.infra-service.subs :as subs]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as timbre]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
-    [sixsq.nuvla.ui.utils.general :as utils-general]
-    [cljs.spec.alpha :as s]))
+    [taoensso.timbre :as timbre]))
 
 
 (defn refresh-button

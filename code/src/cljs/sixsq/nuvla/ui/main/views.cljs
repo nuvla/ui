@@ -21,6 +21,7 @@
     [sixsq.nuvla.ui.history.utils :as history-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
+    [sixsq.nuvla.ui.infra-service.events :as infra-service-events]
     [sixsq.nuvla.ui.infra-service.views]
     [sixsq.nuvla.ui.main.events :as events]
     [sixsq.nuvla.ui.main.subs :as subs]
@@ -132,7 +133,8 @@
       :content    (r/as-element [:p (@tr [:message-to-create-one])
                                  [:a
                                   {:style    {:cursor "pointer"}
-                                   :on-click #(dispatch [::history-events/navigate "infra-service"])}
+                                   :on-click #(do (dispatch [::history-events/navigate "infra-service"])
+                                                  (dispatch [::infra-service-events/open-add-service-modal]))}
                                   (str " " (@tr [:click-here]))]])}]))
 
 

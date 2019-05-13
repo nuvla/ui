@@ -18,6 +18,51 @@
   ::page
   ::spec/page)
 
+
 (reg-sub
-  ::show-service-sidebar?
-  ::spec/show-service-sidebar?)
+  ::is-new?
+  ::spec/is-new?)
+
+
+;; Validation
+
+; Is the form valid?
+
+(reg-sub
+  ::form-valid?
+  ::spec/form-valid?)
+
+
+; Should the form be validated?
+
+(reg-sub
+  ::validate-form?
+  ::spec/validate-form?)
+
+
+(reg-sub
+  ::active-input
+  ::spec/active-input)
+
+
+(reg-sub
+  ::service
+  ::spec/service)
+
+
+(reg-sub
+  ::service-group
+  ::spec/service-group)
+
+
+(reg-sub
+  ::service-modal-visible?
+  (fn [db]
+    (::spec/service-modal-visible? db)))
+
+
+(reg-sub
+  ::add-service-modal-visible?
+  (fn [db]
+    (::spec/add-service-modal-visible? db)))
+

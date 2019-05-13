@@ -2,6 +2,7 @@
   (:require
     [cemerick.url :as url]
     [clojure.string :as str]
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]

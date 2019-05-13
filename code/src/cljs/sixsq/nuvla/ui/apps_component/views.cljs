@@ -57,7 +57,8 @@
 
 (defn plus
   [add-event]
-  [ui/Icon {:name     "plus circle"
+  [ui/Icon {:name     "add"
+            :color    "green"
             :on-click #(do (dispatch [::main-events/changes-protection? true])
                            (dispatch [add-event (random-uuid) {}])
                            (dispatch [::apps-events/validate-form]))}])
@@ -600,7 +601,7 @@
         (dispatch [::apps-events/set-form-spec ::spec/module-component])
         (dispatch [::apps-events/set-module-type :component])
         [ui/Container {:fluid true}
-         [:h2 [ui/Icon {:name "th"}]
+         [:h2 [ui/Icon {:name "grid layout"}]
           parent (when (not-empty parent) "/") name
           [acl/AclButton {:acl      (get @module-common ::apps-spec/acl)
                           :on-click #(swap! acl-visible? not)}]]

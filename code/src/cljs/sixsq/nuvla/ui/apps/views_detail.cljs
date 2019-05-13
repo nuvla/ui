@@ -220,7 +220,7 @@
             [ui/CardContent {:text-align :center}
              [ui/Header "Component"]
              [:div]
-             [ui/Icon {:name  "th"
+             [ui/Icon {:name  "grid layout"
                        :size  :massive
                        :color (when-not parent :grey)}]]]]]
          [ui/ModalActions]]))))

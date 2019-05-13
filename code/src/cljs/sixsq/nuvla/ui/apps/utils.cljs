@@ -117,6 +117,6 @@
 
 (defn mandatory-name
   [name]
-  [:span name [:sup " " [ui/Icon {:name  :asterisk
+  [:span name [:sup " " [ui/Icon {:name  "asterisk"
                                   :size  :tiny
                                   :color :red}]]])

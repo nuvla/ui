@@ -1,13 +1,13 @@
-(ns sixsq.nuvla.ui.credential.events
+(ns sixsq.nuvla.ui.credentials.events
   (:require
     [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.client.spec :as client-spec]
-    [sixsq.nuvla.ui.credential.effects :as credential-fx]
-    [sixsq.nuvla.ui.credential.spec :as spec]
-    [sixsq.nuvla.ui.credential.utils :as utils]
+    [sixsq.nuvla.ui.credentials.effects :as credential-fx]
+    [sixsq.nuvla.ui.credentials.spec :as spec]
+    [sixsq.nuvla.ui.credentials.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]))

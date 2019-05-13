@@ -1,12 +1,12 @@
-(ns sixsq.nuvla.ui.infra-service.events
+(ns sixsq.nuvla.ui.infrastructures.events
   (:require
     [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch dispatch-sync reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.client.spec :as client-spec]
-    [sixsq.nuvla.ui.infra-service.spec :as spec]
-    [sixsq.nuvla.ui.infra-service.utils :as utils]
+    [sixsq.nuvla.ui.infrastructures.spec :as spec]
+    [sixsq.nuvla.ui.infrastructures.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]
@@ -64,53 +64,39 @@
 (reg-event-db
   ::reset-service-group
   (fn [db [_]]
-    (-> db
-        (dissoc ::spec/service-group))))
+    (dissoc db ::spec/service-group)))
+
+(reg-event-db
+  ::reset-service
+  (fn [db [_]]
+    (assoc db ::spec/service {})))
 
 
 (reg-event-fx
-  ::add-service-group
-  (fn [{{:keys [::client-spec/client] :as db} :db :as cofx} [_]]
-    (let [new-group (utils/db->new-service-group db)]
-      {:db               db
-       ::cimi-api-fx/add [client "infrastructure-service-group" new-group
+  ::add-service
+  (fn [{{:keys [::client-spec/client] :as db} :db :as cofx} [_ infra-service-group-id]]
+    (let [new-service (-> db
+                          (utils/db->new-service)
+                          (assoc-in [:template :parent] infra-service-group-id))]
+      {::cimi-api-fx/add [client "infrastructure-service" new-service
                           #(if (instance? js/Error %)
                              (let [{:keys [status message]} (response/parse-ex-info %)]
                                (dispatch [::messages-events/add
-                                          {:header  (cond-> (str "error creating new group")
+                                          {:header  (cond-> (str "error editing")
                                                             status (str " (" status ")"))
                                            :content message
                                            :type    :error}]))
-                             (do (dispatch [::cimi-detail-events/get (:id %)])
-                                 (dispatch [::set-service-group (:id %)])
+                             (do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                  (dispatch [::close-service-modal])
-                                 (dispatch [::get-services])))]})))
-
+                                 (dispatch [::get-services])
+                                 (dispatch [::main-events/check-bootstrap-message])))]})))
 
 (reg-event-fx
   ::edit-service
-  (fn [{{:keys [::spec/swarm-service ::client-spec/client] :as db} :db :as cofx} [_]]
-    (let [service     swarm-service
-          id          (:id service)
-          new-service (utils/db->new-swarm-service db)]
-      (if (nil? id)
-        (do
-          (dispatch [::add-service-group])
-          {:db               db
-           ::cimi-api-fx/add [client "service" new-service
-                              #(if (instance? js/Error %)
-                                 (let [{:keys [status message]} (response/parse-ex-info %)]
-                                   (dispatch [::messages-events/add
-                                              {:header  (cond-> (str "error editing")
-                                                                status (str " (" status ")"))
-                                               :content message
-                                               :type    :error}]))
-                                 (do (dispatch [::cimi-detail-events/get (:id %)])
-                                     (dispatch [::close-service-modal])
-                                     (dispatch [::get-services])
-                                     (dispatch [::main-events/check-bootstrap-message])))]})
-        {:db                db
-         ::cimi-api-fx/edit [client id service
+  (fn [{{:keys [::spec/service ::client-spec/client] :as db} :db :as cofx} _]
+    (let [{:keys [id, parent]} service]
+      (if id
+        {::cimi-api-fx/edit [client id service
                              #(if (instance? js/Error %)
                                 (let [{:keys [status message]} (response/parse-ex-info %)]
                                   (dispatch [::messages-events/add
@@ -120,14 +106,30 @@
                                               :type    :error}]))
                                 (do (dispatch [::cimi-detail-events/get (:id %)])
                                     (dispatch [::close-service-modal])
-                                    (dispatch [::get-services])))]}))))
+                                    (dispatch [::get-services])))]}
+        (if parent
+          (dispatch [::add-service parent])
+          (let [new-group (utils/db->new-service-group db)]
+            {::cimi-api-fx/add [client "infrastructure-service-group" new-group
+                                #(if (instance? js/Error %)
+                                   (let [{:keys [status message]} (response/parse-ex-info %)]
+                                     (dispatch [::messages-events/add
+                                                {:header  (cond-> (str "error creating new group")
+                                                                  status (str " (" status ")"))
+                                                 :content message
+                                                 :type    :error}]))
+                                   (do (dispatch [::cimi-detail-events/get (:resource-id %)])
+                                       (dispatch [::set-service-group (:resource-id %)])
+                                       (dispatch [::close-service-modal])
+                                       (dispatch [::get-services])
+                                       (dispatch [::add-service (:resource-id %)])))]}))
+        ))))
 
 
 (reg-event-fx
   ::delete-service
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ id]]
-    {:db                  db
-     ::cimi-api-fx/delete [client id
+    {::cimi-api-fx/delete [client id
                            #(if (instance? js/Error %)
                               (let [{:keys [status message]} (response/parse-ex-info %)]
                                 (dispatch [::messages-events/add
@@ -174,19 +176,21 @@
                 ::spec/elements-per-page] :as db} :db} _]
     (when client
       {:db                  (assoc db ::spec/services nil)
-       ::cimi-api-fx/search [client :infrastructure-service (utils/get-query-params full-text-search page elements-per-page)
+       ::cimi-api-fx/search [client :infrastructure-service
+                             (utils/get-query-params full-text-search page elements-per-page)
                              #(dispatch [::set-services %])]})))
 
 
-(reg-event-fx
-  ::set-full-text-search
-  (fn [{{:keys [::client-spec/client
-                ::spec/elements-per-page] :as db} :db} [_ full-text-search]]
-    (let [new-page 1]
-      {:db                  (assoc db ::spec/full-text-search full-text-search
-                                      ::spec/page new-page)
-       ::cimi-api-fx/search [client :infrastructure-service (utils/get-query-params full-text-search new-page elements-per-page)
-                             #(dispatch [::set-services %])]})))
+#_(reg-event-fx
+    ::set-full-text-search
+    (fn [{{:keys [::client-spec/client
+                  ::spec/elements-per-page] :as db} :db} [_ full-text-search]]
+      (let [new-page 1]
+        {:db                  (assoc db ::spec/full-text-search full-text-search
+                                        ::spec/page new-page)
+         ::cimi-api-fx/search [client :infrastructure-service
+                               (utils/get-query-params full-text-search new-page elements-per-page)
+                               #(dispatch [::set-services %])]})))
 
 
 (reg-event-fx
@@ -196,7 +200,8 @@
                 ::spec/page
                 ::spec/elements-per-page] :as db} :db} [_ page]]
     {:db                  (assoc db ::spec/page page)
-     ::cimi-api-fx/search [client :infrastructure-service (utils/get-query-params full-text-search page elements-per-page)
+     ::cimi-api-fx/search [client :infrastructure-service
+                           (utils/get-query-params full-text-search page elements-per-page)
                            #(dispatch [::set-services %])]}))
 
 

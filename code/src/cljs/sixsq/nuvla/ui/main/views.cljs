@@ -12,8 +12,8 @@
     [sixsq.nuvla.ui.authn.views :as authn-views]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.cimi.views]
-    [sixsq.nuvla.ui.credential.events :as credential-events]
-    [sixsq.nuvla.ui.credential.views]
+    [sixsq.nuvla.ui.credentials.events :as credential-events]
+    [sixsq.nuvla.ui.credentials.views]
     [sixsq.nuvla.ui.data.views]
     [sixsq.nuvla.ui.deployment.views]
     [sixsq.nuvla.ui.docs.views]
@@ -21,8 +21,8 @@
     [sixsq.nuvla.ui.history.utils :as history-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
-    [sixsq.nuvla.ui.infra-service.events :as infra-service-events]
-    [sixsq.nuvla.ui.infra-service.views]
+    [sixsq.nuvla.ui.infrastructures.events :as infra-service-events]
+    [sixsq.nuvla.ui.infrastructures.views]
     [sixsq.nuvla.ui.main.events :as events]
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
@@ -133,7 +133,7 @@
       :content    (r/as-element [:p (@tr [:message-to-create-one])
                                  [:a
                                   {:style    {:cursor "pointer"}
-                                   :on-click #(do (dispatch [::history-events/navigate "infra-service"])
+                                   :on-click #(do (dispatch [::history-events/navigate "infrastructures"])
                                                   (dispatch [::infra-service-events/open-add-service-modal]))}
                                   (str " " (@tr [:click-here]))]])}]))
 
@@ -149,7 +149,7 @@
       :content    (r/as-element [:p (@tr [:message-to-create-one])
                                  [:a
                                   {:style    {:cursor "pointer"}
-                                   :on-click #(do (dispatch [::history-events/navigate "credential"])
+                                   :on-click #(do (dispatch [::history-events/navigate "credentials"])
                                                   (dispatch [::credential-events/open-add-credential-modal]))}
                                   (str " " (@tr [:click-here]))]])}]))
 

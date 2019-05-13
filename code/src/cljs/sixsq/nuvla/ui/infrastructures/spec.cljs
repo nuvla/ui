@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.infra-service.spec
+(ns sixsq.nuvla.ui.infrastructures.spec
   (:require-macros [sixsq.nuvla.ui.utils.spec :refer [only-keys]])
   (:require
     [clojure.spec.alpha :as s]
@@ -75,6 +75,7 @@
                ::service-modal-visible?     false
                ::add-service-modal-visible? false
                ::is-new?                    false
+               ::service                    nil
                ::full-text-search           nil
                ::page                       1
                ::elements-per-page          8})

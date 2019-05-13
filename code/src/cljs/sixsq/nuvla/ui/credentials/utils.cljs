@@ -1,5 +1,5 @@
-(ns sixsq.nuvla.ui.credential.utils
-  (:require [sixsq.nuvla.ui.credential.spec :as spec]
+(ns sixsq.nuvla.ui.credentials.utils
+  (:require [sixsq.nuvla.ui.credentials.spec :as spec]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [taoensso.timbre :as log]))
 
@@ -20,19 +20,14 @@
         cert                    (get-in db [::spec/credential :cert])
         key                     (get-in db [::spec/credential :key])
         infrastructure-services (get-in db [:infrastructure-services] [])]
-    (log/infof "->credential type %s" type)
-    (log/infof "->credential desc. %s" description)
-    (let [c (as-> {} c
-                  (dissoc c)
-                  (assoc c :name name)
-                  (assoc c :description description)
-                  (assoc-in c [:template :href] (str "credential-template/" type))
-                  (assoc-in c [:template :infrastructure-services] infrastructure-services)
-                  (assoc-in c [:template :ca] ca)
-                  (assoc-in c [:template :cert] cert)
-                  (assoc-in c [:template :key] key))]
-      (log/infof "c: %s" c)
-      c)))
+    (-> {}
+        (assoc :name name)
+        (assoc :description description)
+        (assoc-in [:template :href] (str "credential-template/" type))
+        (assoc-in [:template :infrastructure-services] infrastructure-services)
+        (assoc-in [:template :ca] ca)
+        (assoc-in [:template :cert] cert)
+        (assoc-in [:template :key] key))))
 
 
 (defn db->new-minio-credential
@@ -43,16 +38,13 @@
         access-key              (get-in db [::spec/credential :access-key])
         secret-key              (get-in db [::spec/credential :secret-key])
         infrastructure-services (get-in db [:infrastructure-services] [])]
-    (let [c (as-> {} c
-                  (dissoc c)
-                  (assoc c :name name)
-                  (assoc c :description description)
-                  (assoc-in c [:template :href] (str "credential-template/" type))
-                  (assoc-in c [:template :infrastructure-services] infrastructure-services)
-                  (assoc-in c [:template :access-key] access-key)
-                  (assoc-in c [:template :secret-key] secret-key))]
-      (log/infof "c: %s" c)
-      c)))
+    (-> {}
+        (assoc :name name)
+        (assoc :description description)
+        (assoc-in [:template :href] (str "credential-template/" type))
+        (assoc-in [:template :infrastructure-services] infrastructure-services)
+        (assoc-in [:template :access-key] access-key)
+        (assoc-in [:template :secret-key] secret-key))))
 
 
 (defn db->new-credential

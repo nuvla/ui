@@ -74,7 +74,7 @@
        (when-not @iframe? [item :apps "apps" "play"])
        [item :data "data" "database"]
        ;       [item :deployment "deployment" "cloud"]
-       (when-not @iframe? [item :infra-service-short "infra-service" "mixcloud"])
-       (when-not @iframe? [item :credentials "credential" "key"])
+       (when-not @iframe? [item :infra-service-short "infrastructures" "cloud"])
+       (when-not @iframe? [item :credentials "credentials" "key"])
        ;(when-not @iframe? [item :nuvlabox-ctrl "nuvlabox" "desktop"])
        (when-not @iframe? [item :api "api" "code"])]]]))

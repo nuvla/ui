@@ -1,12 +1,12 @@
-(ns sixsq.nuvla.ui.credential.views
+(ns sixsq.nuvla.ui.credentials.views
   (:require
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as reagent]
-    [sixsq.nuvla.ui.credential.events :as events]
-    [sixsq.nuvla.ui.credential.spec :as spec]
-    [sixsq.nuvla.ui.credential.subs :as subs]
+    [sixsq.nuvla.ui.credentials.events :as events]
+    [sixsq.nuvla.ui.credentials.spec :as spec]
+    [sixsq.nuvla.ui.credentials.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.accordion :as utils-accordion]
@@ -415,7 +415,7 @@
             (str/capitalize (str (@tr [:coming-soon])))]]]]))))
 
 
-(defmethod panel/render :credential
+(defmethod panel/render :credentials
   [path]
   (timbre/set-level! :info)
   [:div

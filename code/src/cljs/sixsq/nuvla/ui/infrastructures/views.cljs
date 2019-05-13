@@ -1,14 +1,13 @@
-(ns sixsq.nuvla.ui.infra-service.views
+(ns sixsq.nuvla.ui.infrastructures.views
   (:require
     [cljs.pprint :refer [cl-format]]
     [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as reagent]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.infra-service.events :as events]
-    [sixsq.nuvla.ui.infra-service.spec :as spec]
-    [sixsq.nuvla.ui.infra-service.subs :as subs]
-    [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.infrastructures.events :as events]
+    [sixsq.nuvla.ui.infrastructures.spec :as spec]
+    [sixsq.nuvla.ui.infrastructures.subs :as subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.general :as utils-general]
@@ -17,7 +16,8 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
-    [taoensso.timbre :as timbre]))
+    [taoensso.timbre :as timbre]
+    [taoensso.timbre :as log]))
 
 
 (defn refresh-button
@@ -44,7 +44,7 @@
 
 (defn control-bar []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Menu {:secondary true}
+    [ui/Menu {:borderless true}
      [ui/MenuMenu {:position "left"}
       ;[services-search]
       [uix/MenuItemWithIcon
@@ -53,6 +53,7 @@
         :position  "right"
         :on-click  #(do
                       (dispatch-sync [::events/reset-service-group])
+                      (dispatch-sync [::events/reset-service])
                       (dispatch [::events/open-add-service-modal]))}]]
      [ui/MenuMenu {:position "right"}
       [refresh-button]]]))
@@ -82,22 +83,24 @@
 
 (defn service-group-card
   [group services]
-  (let []
-    ^{:key group}
-    [ui/Card
-     (when (< (count services) 2)
-       [ui/Label {:corner   true
-                  :style    {:z-index 0
-                             :cursor  :pointer}
-                  :on-click #(do
-                               (dispatch-sync [::events/set-service-group group services])
-                               (dispatch [::events/open-add-service-modal]))}
-        [ui/Icon {:name  "plus"
-                  :style {:cursor :pointer}}]               ; use content to work around bug in icon in label for cursor
-        ])
-     [ui/CardContent
-      [ui/CardHeader {:style {:word-wrap "break-word"}}]
-      (for [service services] (service-card service))]]))
+  ^{:key group}
+  [ui/Card
+   (when (< (count services) 2)
+     [ui/Label {:corner   true
+                :style    {:z-index 0
+                           :cursor  :pointer}
+                :size     "mini"
+                :on-click #(do
+                             (dispatch-sync [::events/set-service-group group services])
+                             (dispatch-sync [::events/reset-service])
+                             (dispatch-sync [::events/update-service :parent group])
+                             (dispatch [::events/open-add-service-modal]))}
+      [ui/Icon {:name  "plus"
+                :style {:cursor :pointer}}]                 ; use content to work around bug in icon in label for cursor
+      ])
+   [ui/CardContent
+    [ui/CardHeader {:style {:word-wrap "break-word"}}]
+    (for [service services] (service-card service))]])
 
 
 (defn service-groups
@@ -120,19 +123,21 @@
             total-pages    (general-utils/total-pages total-services @elements-per-page)]
         [ui/Container {:fluid true}
          [:h2
-          [ui/Icon {:name "mixcloud"}]
+          [ui/Icon {:name "cloud"}]
           " "
           (@tr [:infra-services])]
-         [ui/Segment
-          [control-bar]
-          [service-groups groups]
-          (when (> total-pages 1)
-            [:div {:style {:padding-bottom 30}}
-             [uix/Pagination
-              {:totalitems   total-services
-               :totalPages   total-pages
-               :activePage   @page
-               :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]])]]))))
+         [control-bar]
+
+         (when (pos-int? total-services)
+           [ui/Segment
+            [service-groups groups]
+            (when (> total-pages 1)
+              [:div {:style {:padding-bottom 30}}
+               [uix/Pagination
+                {:totalitems   total-services
+                 :totalPages   total-pages
+                 :activePage   @page
+                 :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]])])]))))
 
 
 (defn in?
@@ -173,7 +178,6 @@
                          :on-change     (ui-callback/input-callback
                                           #(do
                                              (reset! local-validate? true)
-                                             (dispatch [::main-events/changes-protection? true])
                                              (dispatch [validation-event])
                                              (dispatch [::events/update-service name-kw %])))}]
               ; Semantic UI's textarea styling requires to be wrapped in a form
@@ -188,7 +192,6 @@
                               :on-change     (ui-callback/input-callback
                                                #(do
                                                   (reset! local-validate? true)
-                                                  (dispatch [::main-events/changes-protection? true])
                                                   (dispatch [validation-event])
                                                   (dispatch [::events/update-service name-kw %])))}]]])
             [:span value])]]))))
@@ -286,7 +289,8 @@
   []
   (let [tr       (subscribe [::i18n-subs/tr])
         visible? (subscribe [::subs/add-service-modal-visible?])
-        group    (subscribe [::subs/service-group])]
+        group    (subscribe [::subs/service-group])
+        service  (subscribe [::subs/service])]
     (fn []
       (let [services (:services @group)]
         [ui/Modal {:open       @visible?
@@ -307,7 +311,7 @@
                                      (dispatch [::events/set-validate-form? false])
                                      (dispatch [::events/form-valid])
                                      (dispatch [::events/close-add-service-modal])
-                                     (dispatch [::events/open-service-modal {:type "swarm"} true]))}
+                                     (dispatch [::events/open-service-modal (assoc @service :type "swarm") true]))}
 
                [ui/CardContent {:text-align :center}
                 [ui/Header "Swarm"]
@@ -331,7 +335,7 @@
                                   (dispatch [::events/set-validate-form? false])
                                   (dispatch [::events/form-valid])
                                   (dispatch [::events/close-add-service-modal])
-                                  (dispatch [::events/open-service-modal {:type "s3"} true]))}
+                                  (dispatch [::events/open-service-modal (assoc @service :type "s3") true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "MinIO"]
              [ui/Image {:src  "/ui/images/minio.png"
@@ -340,7 +344,7 @@
          [ui/ModalActions]]))))
 
 
-(defmethod panel/render :infra-service
+(defmethod panel/render :infrastructures
   [path]
   (timbre/set-level! :info)
   (dispatch [::events/get-services])

@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.infra-service.events
   (:require
+    [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch dispatch-sync reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
@@ -7,7 +8,6 @@
     [sixsq.nuvla.ui.infra-service.spec :as spec]
     [sixsq.nuvla.ui.infra-service.utils :as utils]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [cljs.spec.alpha :as s]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 

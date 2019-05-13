@@ -2,6 +2,7 @@
   (:require
     [cemerick.url :as url]
     [clojure.string :as str]
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
@@ -16,9 +17,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [taoensso.timbre :as timbre]
-    [taoensso.timbre :as log]
-    [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.validation :as utils-validation]))
+    [taoensso.timbre :as log]))
 
 
 (defn module-details

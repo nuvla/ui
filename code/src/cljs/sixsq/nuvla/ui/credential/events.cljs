@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.credential.effects :as credential-fx]
     [sixsq.nuvla.ui.credential.spec :as spec]
     [sixsq.nuvla.ui.credential.utils :as utils]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -107,7 +108,8 @@
                                              :type    :error}]))
                                (do (dispatch [::cimi-detail-events/get (:id %)])
                                    (dispatch [::close-credential-modal])
-                                   (dispatch [::get-credentials])))]}
+                                   (dispatch [::get-credentials])
+                                   (dispatch [::main-events/check-bootstrap-message])))]}
         {:db                db
          ::cimi-api-fx/edit [client id credential
                              #(if (instance? js/Error %)

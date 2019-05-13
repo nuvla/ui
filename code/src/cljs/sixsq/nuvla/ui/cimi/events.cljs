@@ -7,14 +7,8 @@
     [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
-
-
-(reg-event-fx
-  ::initialize
-  (fn [cofx _]
-    (when-let [client (-> cofx :db ::client-spec/client)]
-      {::cimi-api-fx/session [client #(dispatch [::set-session %])]})))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db

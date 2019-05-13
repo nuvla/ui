@@ -91,3 +91,42 @@
   ::ignore-changes-modal
   (fn [db [_ callback-fn]]
     (assoc db ::spec/ignore-changes-modal callback-fn)))
+
+
+(reg-event-fx
+  ::set-bootsrap-message
+  (fn [{{:keys [::client-spec/client] :as db} :db} [_ {resources     :resources
+                                                       resource-type :resource-type
+                                                       element-count :count :as response}]]
+    (if response
+
+      (case resource-type
+
+        "infrastructure-service-collection"
+        (if (> element-count 0)
+          {:db (assoc db ::spec/bootstrap-message nil)
+           ::cimi-api-fx/search
+               [client
+                :credential
+                {:filter (str "type='infrastructure-service-swarm' and ("
+                              (str/join " or " (map #(str "infrastructure-services='" (:id %) "'") resources)) ")")
+                 :last   0}
+                #(dispatch [::set-bootsrap-message %])]}
+          {:db (assoc db ::spec/bootstrap-message :no-swarm)})
+
+        "credential-collection"
+        (if (> element-count 0)
+          {:db (assoc db ::spec/bootstrap-message nil)}
+          {:db (assoc db ::spec/bootstrap-message :no-credential)}))
+
+      {:db (assoc db ::spec/bootstrap-message nil)})))
+
+
+(reg-event-fx
+  ::check-bootstrap-message
+  (fn [{{:keys [::client-spec/client] :as db} :db} _]
+    {::cimi-api-fx/search [client
+                           :infrastructure-service
+                           {:filter "type='swarm'"
+                            :select "id"}
+                           #(dispatch [::set-bootsrap-message %])]}))

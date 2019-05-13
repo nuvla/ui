@@ -106,17 +106,13 @@
 
 (defn results-statistic
   []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        collection-name (subscribe [::subs/collection-name])
-        resources       (subscribe [::subs/collection])
-        cep             (subscribe [::subs/cloud-entry-point])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        resources (subscribe [::subs/collection])]
     (fn []
-      (let [collection-name @collection-name
-            resources       @resources]
+      (let [resources @resources]
         (when resources
-          (let [collection-key (get (:collection-key @cep) collection-name)
-                total          (:count resources)
-                n              (count (get resources :resources []))]
+          (let [total (:count resources)
+                n     (count (get resources :resources []))]
             [ui/Statistic
              [ui/StatisticValue (str n " / " total)]
              [ui/StatisticLabel (@tr [:results])]]))))))
@@ -141,9 +137,7 @@
 
 (defn results-display []
   (let [collection      (subscribe [::subs/collection])
-        collection-name (subscribe [::subs/collection-name])
-        selected-fields (subscribe [::subs/selected-fields])
-        cep             (subscribe [::subs/cloud-entry-point])]
+        selected-fields (subscribe [::subs/selected-fields])]
     (fn []
       (let [results @collection]
         (if (instance? js/Error results)
@@ -196,12 +190,6 @@
                   :on-key-press (partial forms/on-return-key
                                          #(when @selected-id
                                             (dispatch [::events/get-results])))}
-         [ui/Button {:floated   "right"
-                     :icon      "info"
-                     :basic     true
-                     :color     "blue"
-                     :content   (@tr [:api-doc])
-                     :on-click  #(dispatch [::history-events/navigate "documentation"])}]
 
          [ui/FormGroup
           [ui/FormField
@@ -422,6 +410,18 @@
           :on-click  #(dispatch [::events/show-add-modal])}]))))
 
 
+(defn documentation-button
+  []
+  (let [tr      (subscribe [::i18n-subs/tr])
+        mobile? (subscribe [::main-subs/is-device? :mobile])]
+    [ui/Button (cond-> {:icon     "info"
+                        :basic    true
+                        :color    "blue"
+                        :content  (@tr [:api-doc])
+                        :on-click #(dispatch [::history-events/navigate "documentation"])}
+                       (not @mobile?) (assoc :floated "right"))]))
+
+
 (defn menu-bar []
   (let [tr        (subscribe [::i18n-subs/tr])
         resources (subscribe [::subs/collection])]
@@ -442,6 +442,7 @@
         (when (can-add? (:operations @resources))
           [create-button])]
        [ui/Segment {:attached "bottom"}
+        [documentation-button]
         [search-header]]])))
 
 

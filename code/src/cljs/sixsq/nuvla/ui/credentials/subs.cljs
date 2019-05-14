@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.credentials.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.credentials.spec :as spec]))
+    [sixsq.nuvla.ui.credentials.spec :as spec]
+    [taoensso.timbre :as log]))
 
 
 (reg-sub
@@ -71,3 +72,8 @@
 (reg-sub
   ::delete-confirmation-modal-visible?
   ::spec/delete-confirmation-modal-visible?)
+
+(reg-sub
+  ::infrastructure-services-available
+  (fn [db [_ type]]
+    (get-in db [::spec/infrastructure-services-available type])))

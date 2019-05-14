@@ -277,7 +277,7 @@
                                                               status (str " (" status ")"))
                                              :content message
                                              :type    :error}]))
-                               (do (dispatch [::cimi-detail-events/get (:id %)])
+                               (do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                    (dispatch [::set-module sanitized-module]) ;Needed?
                                    (dispatch [::main-events/changes-protection? false])
                                    (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))])))]}

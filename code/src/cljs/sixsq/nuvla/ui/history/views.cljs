@@ -2,7 +2,8 @@
   (:require
     [re-frame.core :refer [dispatch]]
     [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.history.events :as history-events]))
+    [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn link
@@ -14,3 +15,10 @@
                    (dispatch [::history-events/navigate href])
                    (.preventDefault event))}
    (or label href)])
+
+
+(defn icon-link
+  [href]
+  (vec (conj (link href "")
+             [ui/Icon {:name "external alternate"
+                       :size "small"}])))

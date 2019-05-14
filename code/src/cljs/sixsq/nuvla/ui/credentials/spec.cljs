@@ -10,19 +10,11 @@
 
 (s/def ::credential-password string?)
 
-(s/def ::open-modal (s/nilable #{:change-password}))
-
-(s/def ::error-message (s/nilable string?))
-
-(s/def ::form-data any?)
-
 (s/def ::add-credential-modal-visible? boolean?)
 
 (s/def ::credential-modal-visible? boolean?)
 
 (s/def ::delete-confirmation-modal-visible? boolean?)
-
-(s/def ::credential-form-valid? boolean?)
 
 (s/def ::active-input (s/nilable string?))
 
@@ -47,14 +39,14 @@
 (s/def ::ca utils-spec/nonblank-string)
 (s/def ::cert utils-spec/nonblank-string)
 (s/def ::key utils-spec/nonblank-string)
-(s/def ::infrastructure-service-swarm any?)
+(s/def ::infrastructure-services any?)
 
 (s/def ::swarm-credential (s/keys :req-un [::name
                                            ::description
                                            ::ca
                                            ::cert
                                            ::key]
-                                  :opt-un [::infrastructure-service-swarm]))
+                                  :opt-un [::infrastructure-services]))
 
 
 ; MinIO
@@ -67,7 +59,10 @@
                                            ::description
                                            ::access-key
                                            ::secret-key]
-                                  :opt-un [::infrastructure-service-minio]))
+                                  :opt-un [::infrastructure-services]))
+
+
+(s/def ::infrastructure-services-available any?)
 
 
 (s/def ::db (s/keys :req [::add-credential-modal-visible?
@@ -80,7 +75,8 @@
                           ::form-valid?
                           ::validate-form?
                           ::credential-password
-                          ::error-message]))
+                          ::error-message
+                          ::infrastructure-services-available]))
 
 
 (def defaults {::add-credential-modal-visible?      false
@@ -93,5 +89,6 @@
                ::form-valid?                        true
                ::validate-form?                     false
                ::credential-password                nil
-               ::error-message                      nil})
+               ::error-message                      nil
+               ::infrastructure-services-available  {}})
 

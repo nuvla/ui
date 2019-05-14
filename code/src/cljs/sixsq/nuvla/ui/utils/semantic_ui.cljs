@@ -72,6 +72,7 @@
 
 (def Form (reagent/adapt-react-class semantic/Form))
 ;;(def FormButton (reagent/adapt-react-class semantic/FormButton))
+(def FormCheckbox (reagent/adapt-react-class semantic/FormCheckbox))
 (def FormDropdown (reagent/adapt-react-class semantic/FormDropdown))
 (def FormField (reagent/adapt-react-class semantic/FormField))
 (def FormGroup (reagent/adapt-react-class semantic/FormGroup))

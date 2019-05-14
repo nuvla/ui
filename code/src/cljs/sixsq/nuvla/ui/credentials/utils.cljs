@@ -1,15 +1,7 @@
 (ns sixsq.nuvla.ui.credentials.utils
   (:require [sixsq.nuvla.ui.credentials.spec :as spec]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [taoensso.timbre :as log]))
 
-
-(defn get-query-params
-  [full-text-search page elements-per-page]
-  {:first  (inc (* (dec page) elements-per-page))
-   :last   (* page elements-per-page)
-   :filter (str "type=='COMPONENT'"
-                (when (not-empty full-text-search) (str "and fulltext=='" full-text-search "*'")))})
 
 (defn db->new-swarm-credential
   [db]
@@ -19,7 +11,7 @@
         ca                      (get-in db [::spec/credential :ca])
         cert                    (get-in db [::spec/credential :cert])
         key                     (get-in db [::spec/credential :key])
-        infrastructure-services (get-in db [:infrastructure-services] [])]
+        infrastructure-services (get-in db [::spec/credential :infrastructure-services] [])]
     (-> {}
         (assoc :name name)
         (assoc :description description)
@@ -37,7 +29,7 @@
         type                    (get-in db [::spec/credential :type])
         access-key              (get-in db [::spec/credential :access-key])
         secret-key              (get-in db [::spec/credential :secret-key])
-        infrastructure-services (get-in db [:infrastructure-services] [])]
+        infrastructure-services (get-in db [::spec/credential :infrastructure-services] [])]
     (-> {}
         (assoc :name name)
         (assoc :description description)
@@ -67,10 +59,3 @@
 (defn editable?
   [module is-new?]
   (or is-new? (can-edit? module)))
-
-
-(defn mandatory-name
-  [name]
-  [:span name [:sup " " [ui/Icon {:name  :asterisk
-                                  :size  :tiny
-                                  :color :red}]]])

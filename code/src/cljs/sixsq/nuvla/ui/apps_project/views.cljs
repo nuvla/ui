@@ -99,7 +99,6 @@
           [acl/AclButton {:acl      (get @module-common ::apps-spec/acl)
                           :on-click #(swap! acl-visible? not)}]]
          [apps-views-detail/control-bar]
-         [summary]
          (when @acl-visible?
            [:<>
             [acl/AclWidget {:acl       (get @module-common ::apps-spec/acl)
@@ -107,6 +106,7 @@
                                             (dispatch [::main-events/changes-protection? true]))
                             :read-only (not editable?)}]
             [:div {:style {:padding-top 10}}]])
+         [summary]
          [apps-views-detail/save-action]
          [:div {:style {:padding-top 10}}]
          [modules-view]

@@ -135,10 +135,9 @@
                    :trigger  (r/as-element [:span (or principal-name principal)])}]
         [:span (or principal-name principal)])]
 
-     [:<>
-      (for [right-kw (rights-for-mode @mode)]
-        ^{:key (str principal right-kw)}
-        [ui/TableCell [RightCheckbox opts principal right-kw]])]
+     (for [right-kw (rights-for-mode @mode)]
+       ^{:key (str principal right-kw)}
+       [ui/TableCell [RightCheckbox opts principal right-kw]])
 
      [ui/TableCell
       (when-not read-only
@@ -186,27 +185,25 @@
                    :on-click      #(reset! open true)
                    :on-change     (ui-callback/input ::events/search-users)}]
 
-        [:<>
-         (doall
-           (for [{user-id :id user-name :name} @users]
-             ^{:key user-id}
-             [ui/DropdownItem {:text     (or user-name user-id)
-                               :on-click (fn []
-                                           (on-change user-id)
-                                           (reset! open false))}]))]
+        (doall
+          (for [{user-id :id user-name :name} @users]
+            ^{:key user-id}
+            [ui/DropdownItem {:text     (or user-name user-id)
+                              :on-click (fn []
+                                          (on-change user-id)
+                                          (reset! open false))}]))
 
         [ui/DropdownDivider]
 
         [ui/DropdownHeader {:icon "users", :content (str/capitalize (@tr [:groups]))}]
 
-        [:<>
-         (doall
-           (for [{group-id :id group-name :name} @groups]
-             ^{:key group-id}
-             [ui/DropdownItem {:text     (or group-name group-id)
-                               :on-click (fn []
-                                           (on-change group-id)
-                                           (reset! open false))}]))]]])))
+        (doall
+          (for [{group-id :id group-name :name} @groups]
+            ^{:key group-id}
+            [ui/DropdownItem {:text     (or group-name group-id)
+                              :on-click (fn []
+                                          (on-change group-id)
+                                          (reset! open false))}]))]])))
 
 
 (defn AddRight
@@ -222,22 +219,21 @@
                              :on-change #(reset! new-permission (assoc @new-permission :principal %))
                              :fluid     true}]]
 
-       [:<>
-        (doall
-          (for [right-kw (rights-for-mode @mode)]
-            ^{:key right-kw}
-            [ui/TableCell
-             [ui/Checkbox
-              {:checked   (contains? (:rights @new-permission) right-kw)
-               :on-change (ui-callback/checked
-                            (fn [checked]
-                              (if checked
-                                (reset! new-permission
-                                        (update @new-permission :rights
-                                                set/union (utils/extent-right right-kw)))
-                                (reset! new-permission
-                                        (update @new-permission :rights
-                                                set/difference (utils/remove-right right-kw))))))}]]))]
+       (doall
+         (for [right-kw (rights-for-mode @mode)]
+           ^{:key right-kw}
+           [ui/TableCell
+            [ui/Checkbox
+             {:checked   (contains? (:rights @new-permission) right-kw)
+              :on-change (ui-callback/checked
+                           (fn [checked]
+                             (if checked
+                               (reset! new-permission
+                                       (update @new-permission :rights
+                                               set/union (utils/extent-right right-kw)))
+                               (reset! new-permission
+                                       (update @new-permission :rights
+                                               set/difference (utils/remove-right right-kw))))))}]]))
 
        [ui/TableCell
         (let [{:keys [principal rights]} @new-permission]
@@ -271,10 +267,9 @@
         [ui/ListSA {:horizontal (not @mobile?)
                     :relaxed    true}
 
-         [:<>
-          (for [owner owners]
-            ^{:key owner}
-            [OwnerItem opts (>= (count owners) 2) owner])]
+         (for [owner owners]
+           ^{:key owner}
+           [OwnerItem opts (>= (count owners) 2) owner])
 
          (when-not read-only
            [ui/ListItem
@@ -297,10 +292,9 @@
 
      [ui/TableBody
 
-      [:<>
-       (for [principal rights-principals]
-         ^{:key principal}
-         [RightRow opts principal])]
+      (for [principal rights-principals]
+        ^{:key principal}
+        [RightRow opts principal])
 
       (when-not read-only
         [AddRight opts])]]))

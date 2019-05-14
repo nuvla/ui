@@ -3,20 +3,23 @@
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [reagent.core :as reagent]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.credentials.events :as events]
     [sixsq.nuvla.ui.credentials.spec :as spec]
     [sixsq.nuvla.ui.credentials.subs :as subs]
+    [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.accordion :as utils-accordion]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
-    [taoensso.timbre :as timbre]))
+    [taoensso.timbre :as timbre]
+    [taoensso.timbre :as log]))
 
 
 (defn in?
@@ -29,7 +32,7 @@
   [key name-kw value editable? mandatory? value-spec type validation-event]
   (let [tr              (subscribe [::i18n-subs/tr])
         active-input    (subscribe [::subs/active-input])
-        local-validate? (reagent/atom false)
+        local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
     (fn [key name-kw value editable? mandatory? value-spec type validation-event]
       (let [name-str      (name name-kw)
@@ -56,8 +59,8 @@
                          :on-change     (ui-callback/input-callback
                                           #(do
                                              (reset! local-validate? true)
-                                             (dispatch [validation-event])
-                                             (dispatch [::events/update-credential name-kw %])))}]
+                                             (dispatch [::events/update-credential name-kw %])
+                                             (dispatch [validation-event])))}]
               ; Semantic UI's textarea styling requires to be wrapped in a form
               [ui/Form
                [ui/FormField {:class (when (and validate? (not valid?)) :error)}
@@ -70,9 +73,44 @@
                               :on-change     (ui-callback/input-callback
                                                #(do
                                                   (reset! local-validate? true)
-                                                  (dispatch [validation-event])
-                                                  (dispatch [::events/update-credential name-kw %])))}]]])
+                                                  (dispatch [::events/update-credential name-kw %])
+                                                  (dispatch [validation-event])))}]]])
             [:span value])]]))))
+
+
+(defn row-infrastructure-services-selector
+  [type]
+  (let [infrastructure-services (subscribe [::subs/infrastructure-services-available type])
+        credential              (subscribe [::subs/credential])]
+    (dispatch [::events/fetch-infrastructure-services-available type])
+    (fn []
+      (let [cred-infra-services (or (:infrastructure-services @credential) [])]
+        [ui/TableRow
+         [ui/TableCell {:collapsing true}
+          "linked to" [:br] "infrastructure services"]
+         [ui/TableCell
+          [ui/Form {:style {:max-height "100px"
+                            :overflow-y "auto"}}
+           (for [{id :id, infra-name :name infra-descr :description} @infrastructure-services]
+             ^{:key id}
+             [ui/FormField
+              [:span
+               [ui/Checkbox {:label     ff/nbsp
+                             :checked   (boolean (some #(= % id) cred-infra-services))
+                             :on-change (ui-callback/checked
+                                          (fn [checked?]
+                                            (let [new-credential (if checked?
+                                                                   (->> id
+                                                                        (conj cred-infra-services)
+                                                                        (set)
+                                                                        (into []))
+                                                                   (remove #(= % id) cred-infra-services))]
+
+                                              (dispatch [::events/update-credential
+                                                         :infrastructure-services new-credential]))))}]
+               (or infra-name id)
+               ff/nbsp
+               [history/icon-link (str "api/" id)]]])]]]))))
 
 
 (defn credential-swarm
@@ -94,7 +132,8 @@
           [row-with-label "swarm-credential-cert" :cert cert editable? true
            ::spec/cert :textarea form-validation-event]
           [row-with-label "swarm-credential-key" :key key editable? true
-           ::spec/key :textarea form-validation-event]]]))))
+           ::spec/key :textarea form-validation-event]
+          [row-infrastructure-services-selector "swarm"]]]))))
 
 
 (defn credential-minio
@@ -114,7 +153,8 @@
           [row-with-label "access-key" :access-key access-key editable? true
            ::spec/access-key :input form-validation-event]
           [row-with-label "secret-key" :secret-key secret-key editable? true
-           ::spec/secret-key :password form-validation-event]]]))))
+           ::spec/secret-key :password form-validation-event]
+          [row-infrastructure-services-selector "s3"]]]))))
 
 
 (defn credential-store-azure
@@ -293,7 +333,7 @@
   (let [tr         (subscribe [::i18n-subs/tr])
         visible?   (subscribe [::subs/delete-confirmation-modal-visible?])
         credential (subscribe [::subs/credential])
-        confirmed? (reagent/atom false)]
+        confirmed? (r/atom false)]
     (fn []
       (let [id   (:id @credential)
             name (:name @credential)]
@@ -311,11 +351,10 @@
            [ui/MessageContent
             [:p]
             [ui/Checkbox {:name      "confirm-deletion"
+                          :label     (@tr [:credential-delete-warning])
                           :checked   @confirmed?
                           :fitted    true
-                          :on-change #(reset! confirmed? (not @confirmed?))}]
-            " "
-            (@tr [:credential-delete-warning])]]]
+                          :on-change #(reset! confirmed? (not @confirmed?))}]]]]
 
          [ui/ModalActions
           [uix/Button {:text     (@tr [:delete])
@@ -357,8 +396,8 @@
   []
   (let [tr                    (subscribe [::i18n-subs/tr])
         credentials           (subscribe [::subs/credentials])
-        infra-service-active? (reagent/atom true)
-        cloud-active?         (reagent/atom false)]
+        infra-service-active? (r/atom true)
+        cloud-active?         (r/atom false)]
     (fn []
       (let [infra-service-creds (filter #(in? infrastructure-service-types (:type %)) @credentials)
             cloud-creds         (filter #(in? cloud-types (:type %)) @credentials)]

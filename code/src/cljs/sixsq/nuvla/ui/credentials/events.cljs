@@ -5,12 +5,12 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.client.spec :as client-spec]
-    [sixsq.nuvla.ui.credentials.effects :as credential-fx]
     [sixsq.nuvla.ui.credentials.spec :as spec]
     [sixsq.nuvla.ui.credentials.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 
 
@@ -59,12 +59,6 @@
 
 
 (reg-event-db
-  ::form-invalid
-  (fn [db [_]]
-    (assoc db ::spec/form-valid? false)))
-
-
-(reg-event-db
   ::form-valid
   (fn [db [_]]
     (assoc db ::spec/form-valid? true)))
@@ -87,8 +81,8 @@
   (fn [{{:keys [::client-spec/client] :as db} :db} [_]]
     (when client
       (let []
-        {:db                             (assoc db ::spec/completed? false)
-         ::credential-fx/get-credentials [client #(dispatch [::set-credentials %])]}))))
+        {:db                  (assoc db ::spec/completed? false)
+         ::cimi-api-fx/search [client :credential {} #(dispatch [::set-credentials (:resources %)])]}))))
 
 
 (reg-event-fx
@@ -106,7 +100,7 @@
                                                               status (str " (" status ")"))
                                              :content message
                                              :type    :error}]))
-                               (do (dispatch [::cimi-detail-events/get (:id %)])
+                               (do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                    (dispatch [::close-credential-modal])
                                    (dispatch [::get-credentials])
                                    (dispatch [::main-events/check-bootstrap-message])))]}
@@ -185,3 +179,20 @@
   ::update-credential
   (fn [db [_ key value]]
     (assoc-in db [::spec/credential key] value)))
+
+
+(reg-event-db
+  ::set-infrastructure-services-available
+  (fn [db [_ type response]]
+    (let [infrastructure-services (:resources response)]
+      (assoc-in db [::spec/infrastructure-services-available type] infrastructure-services))))
+
+
+(reg-event-fx
+  ::fetch-infrastructure-services-available
+  (fn [{{:keys [::client-spec/client] :as db} :db} [_ type]]
+    (when client
+      {::cimi-api-fx/search [client :infrastructure-service
+                             {:filter (str "type='" type "'")
+                              :select "id, name, description"}
+                             #(dispatch [::set-infrastructure-services-available type %])]})))

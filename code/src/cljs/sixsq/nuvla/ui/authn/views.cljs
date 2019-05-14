@@ -429,37 +429,36 @@
                       (dispatch [::events/logout])
                       (dispatch [::history-events/navigate "welcome"]))
         logged-in?  (boolean @user)]
-    (vec
-      (concat
-        [ui/DropdownMenu]
 
-        (when logged-in?
-          [[ui/DropdownItem
-            {:key      "sign-out"
-             :text     (@tr [:logout])
-             :icon     "sign out"
-             :on-click sign-out-fn}]])
+    [ui/DropdownMenu
 
-        (when (or logged-in?)
-          [[ui/DropdownDivider]])
+     (when logged-in?
+       [:<>
+        [ui/DropdownItem
+         {:key      "sign-out"
+          :text     (@tr [:logout])
+          :icon     "sign out"
+          :on-click sign-out-fn}]
+        [ui/DropdownDivider]])
 
-        [[ui/DropdownItem {:aria-label (@tr [:documentation])
-                           :icon       "book"
-                           :text       (@tr [:documentation])
-                           :href       "https://ssdocs.sixsq.com/"
-                           :target     "_blank"
-                           :rel        "noreferrer"}]
-         [ui/DropdownItem {:aria-label (@tr [:knowledge-base])
-                           :icon       "info circle"
-                           :text       (@tr [:knowledge-base])
-                           :href       "https://support.sixsq.com/solution/categories"
-                           :target     "_blank"
-                           :rel        "noreferrer"}]
-         [ui/DropdownItem {:aria-label (@tr [:support])
-                           :icon       "mail"
-                           :text       (@tr [:support])
-                           :href       (str "mailto:support%40sixsq%2Ecom?subject=%5BSlipStream%5D%20Support%20"
-                                            "question%20%2D%20Not%20logged%20in")}]]))))
+     [:<>
+      [ui/DropdownItem {:aria-label (@tr [:documentation])
+                        :icon       "book"
+                        :text       (@tr [:documentation])
+                        :href       "https://docs.nuvla.io/"
+                        :target     "_blank"
+                        :rel        "noreferrer"}]
+      [ui/DropdownItem {:aria-label (@tr [:knowledge-base])
+                        :icon       "info circle"
+                        :text       (@tr [:knowledge-base])
+                        :href       "https://support.sixsq.com/solution/categories"
+                        :target     "_blank"
+                        :rel        "noreferrer"}]
+      [ui/DropdownItem {:aria-label (@tr [:support])
+                        :icon       "mail"
+                        :text       (@tr [:support])
+                        :href       (str "mailto:support%40sixsq%2Ecom?subject=%5BSlipStream%5D%20Support%20"
+                                         "question%20%2D%20Not%20logged%20in")}]]]))
 
 
 (defn authn-menu

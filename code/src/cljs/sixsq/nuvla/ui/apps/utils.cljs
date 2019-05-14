@@ -110,6 +110,10 @@
   (can-operation? :edit data))
 
 
+(defn can-delete? [data]
+  (can-operation? :delete data))
+
+
 (defn editable?
   [module is-new?]
   (or is-new? (can-edit? module)))

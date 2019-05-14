@@ -10,7 +10,6 @@
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.views-versions :as views-versions]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
-    [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -65,7 +64,6 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         module        (subscribe [::subs/module])
         is-new?       (subscribe [::subs/is-new?])
-        cep           (subscribe [::api-subs/cloud-entry-point])
         form-valid?   (subscribe [::subs/form-valid?])
         page-changed? (subscribe [::main-subs/changes-protection?])]
     (fn []
@@ -73,17 +71,16 @@
             launch-disabled? (or @is-new? @page-changed?)
             add?             (= "PROJECT" (:type @module))
             add-disabled?    (or @is-new? @page-changed?)
-            editable?        (utils/editable? @module @is-new?)]
+            editable?        (utils/editable? @module @is-new?)
+            id               (:id @module)]
         (vec (concat [ui/Menu {:borderless true}]
-
-                     (resource-details/format-operations nil @module (:base-uri @cep) nil)
 
                      [(when launchable?
                         [uix/MenuItemWithIcon
                          {:name      (@tr [:launch])
                           :icon-name "rocket"
                           :disabled  launch-disabled?
-                          :on-click  #(dispatch [::deployment-dialog-events/create-deployment (:id @module) :credentials])}])
+                          :on-click  #(dispatch [::deployment-dialog-events/create-deployment id :credentials])}])
 
                       (when add?
                         [uix/MenuItemWithIcon
@@ -91,6 +88,9 @@
                           :icon-name "add"
                           :disabled  add-disabled?
                           :on-click  #(dispatch [::events/open-add-modal])}])
+
+                      (when (utils/can-delete? @module)
+                        [resource-details/delete-button @module #(dispatch [::events/delete-module id])])
 
                       (when editable?
                         [uix/MenuItemWithIcon

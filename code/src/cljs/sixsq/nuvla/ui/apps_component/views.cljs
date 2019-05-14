@@ -41,8 +41,8 @@
                    :onMouseLeave  #(dispatch [::apps-events/active-input nil])
                    :on-change     (ui-callback/input-callback
                                     #(do (reset! local-validate? true)
-                                         (dispatch [::main-events/changes-protection? true])
                                          (dispatch [update-event id %])
+                                         (dispatch [::main-events/changes-protection? true])
                                          (dispatch [::apps-events/validate-form])))}]))))
 
 

@@ -174,6 +174,18 @@
           :on-change   (ui-callback/value callback)}]))))
 
 
+(defn DocumentationButton
+  []
+  (let [tr      (subscribe [::i18n-subs/tr])
+        mobile? (subscribe [::main-subs/is-device? :mobile])]
+    [ui/Button (cond-> {:icon     "info"
+                        :basic    true
+                        :color    "blue"
+                        :content  (@tr [:api-doc])
+                        :on-click #(dispatch [::history-events/navigate "documentation"])}
+                       (not @mobile?) (assoc :floated "right"))]))
+
+
 (defn search-header []
   (let [tr           (subscribe [::i18n-subs/tr])
         query-params (subscribe [::subs/query-params])
@@ -191,6 +203,7 @@
                                          #(when @selected-id
                                             (dispatch [::events/get-results])))}
 
+         [DocumentationButton]
          [ui/FormGroup
           [ui/FormField
            [cloud-entry-point-title]]]
@@ -410,18 +423,6 @@
           :on-click  #(dispatch [::events/show-add-modal])}]))))
 
 
-(defn documentation-button
-  []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        mobile? (subscribe [::main-subs/is-device? :mobile])]
-    [ui/Button (cond-> {:icon     "info"
-                        :basic    true
-                        :color    "blue"
-                        :content  (@tr [:api-doc])
-                        :on-click #(dispatch [::history-events/navigate "documentation"])}
-                       (not @mobile?) (assoc :floated "right"))]))
-
-
 (defn menu-bar []
   (let [tr        (subscribe [::i18n-subs/tr])
         resources (subscribe [::subs/collection])]
@@ -442,7 +443,6 @@
         (when (can-add? (:operations @resources))
           [create-button])]
        [ui/Segment {:attached "bottom"}
-        [documentation-button]
         [search-header]]])))
 
 

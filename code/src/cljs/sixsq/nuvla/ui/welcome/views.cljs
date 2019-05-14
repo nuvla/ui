@@ -40,8 +40,7 @@
       (@tr [:welcome-detail])]
 
      [ui/CardGroup {:centered true}
-      (when-not @iframe? [card :appstore :welcome-appstore-desc "play" "apps"])
-      (when-not @iframe? [card :application :welcome-application-desc "sitemap" "application"])
+      (when-not @iframe? [card :application :welcome-application-desc "play" "apps"])
       [card :data :welcome-data-desc "database" "data"]
       [card :deployment :welcome-deployment-desc "cloud" "deployment"]
       (when-not @iframe? [card :nuvlabox-ctrl :welcome-nuvlabox-desc "desktop" "nuvlabox"])

@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+  - Association of credentials with infrastructure services
+  - Infrastructure page
   - Add ACL button to apps pages
   - ACL button with rights summary as icon
   - Credential page

@@ -2,7 +2,7 @@
 (def sixsq-nuvla-api-version "2.0.0")
 (def version "0.0.3-SNAPSHOT")
 
-(defproject sixsq.nuvla.ui/code "0.0.3-SNAPSHOT"
+(defproject sixsq.nuvla.ui/code "2.0.0-SNAPSHOT"
 
   :description "Web Browser User Interface for Nuvla"
 

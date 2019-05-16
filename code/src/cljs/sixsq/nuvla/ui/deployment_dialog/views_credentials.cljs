@@ -4,7 +4,8 @@
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [taoensso.timbre :as log]))
 
 
 (defn cred-list-item
@@ -56,7 +57,9 @@
     ^{:key id}
     (let [{selected-id :id} @selected-credential
           options (assoc (item-options credential) :active (= id selected-id))
-          on-click-fn #(dispatch [::events/set-selected-credential credential])]
+          on-click-fn #(do
+                         (log/error "credential list-item" credential)
+                         (dispatch [::events/set-selected-credential credential]))]
 
       [cred-list-item (assoc options :on-click-fn on-click-fn)])))
 

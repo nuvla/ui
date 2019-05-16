@@ -5,18 +5,18 @@
 
 (defn db->new-swarm-credential
   [db]
-  (let [name                    (get-in db [::spec/credential :name])
-        description             (get-in db [::spec/credential :description])
-        type                    (get-in db [::spec/credential :type])
-        ca                      (get-in db [::spec/credential :ca])
-        cert                    (get-in db [::spec/credential :cert])
-        key                     (get-in db [::spec/credential :key])
-        infrastructure-services (get-in db [::spec/credential :infrastructure-services] [])]
+  (let [name        (get-in db [::spec/credential :name])
+        description (get-in db [::spec/credential :description])
+        type        (get-in db [::spec/credential :type])
+        ca          (get-in db [::spec/credential :ca])
+        cert        (get-in db [::spec/credential :cert])
+        key         (get-in db [::spec/credential :key])
+        parent      (get-in db [::spec/credential :parent] [])]
     (-> {}
         (assoc :name name)
         (assoc :description description)
         (assoc-in [:template :href] (str "credential-template/" type))
-        (assoc-in [:template :infrastructure-services] infrastructure-services)
+        (assoc-in [:template :parent] parent)
         (assoc-in [:template :ca] ca)
         (assoc-in [:template :cert] cert)
         (assoc-in [:template :key] key))))
@@ -29,12 +29,12 @@
         type                    (get-in db [::spec/credential :type])
         access-key              (get-in db [::spec/credential :access-key])
         secret-key              (get-in db [::spec/credential :secret-key])
-        infrastructure-services (get-in db [::spec/credential :infrastructure-services] [])]
+        infrastructure-services (get-in db [::spec/credential :parent] [])]
     (-> {}
         (assoc :name name)
         (assoc :description description)
         (assoc-in [:template :href] (str "credential-template/" type))
-        (assoc-in [:template :infrastructure-services] infrastructure-services)
+        (assoc-in [:template :parent] infrastructure-services)
         (assoc-in [:template :access-key] access-key)
         (assoc-in [:template :secret-key] secret-key))))
 

@@ -77,6 +77,7 @@
 (def FormField (reagent/adapt-react-class semantic/FormField))
 (def FormGroup (reagent/adapt-react-class semantic/FormGroup))
 (def FormInput (reagent/adapt-react-class semantic/FormInput))
+;(def FormRadio (reagent/adapt-react-class semantic/FormRadio))
 (def FormSelect (reagent/adapt-react-class semantic/FormSelect))
 
 (def Grid (reagent/adapt-react-class semantic/Grid))
@@ -143,6 +144,7 @@
 ;;(def Rail (reagent/adapt-react-class semantic/Rail))
 ;;(def Ref (reagent/adapt-react-class semantic/Ref))
 
+(def Radio (reagent/adapt-react-class semantic/Radio))
 (def Responsive (reagent/adapt-react-class semantic/Responsive))
 
 (def SegmentRaw semantic/Segment)

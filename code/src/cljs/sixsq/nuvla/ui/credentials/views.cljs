@@ -50,7 +50,7 @@
               [ui/Input {:default-value value
                          :placeholder   (@tr [name-kw])
                          :disabled      (not editable?)
-                         :error         (when (and validate? (not valid?)) true)
+                         :error         (and validate? (not valid?))
                          :fluid         true
                          :type          (if (= type :input) :text type)
                          :icon          (when input-active? :pencil)
@@ -79,38 +79,36 @@
 
 
 (defn row-infrastructure-services-selector
-  [type]
+  [type editable? value-spec validation-event]
   (let [infrastructure-services (subscribe [::subs/infrastructure-services-available type])
-        credential              (subscribe [::subs/credential])]
+        credential              (subscribe [::subs/credential])
+        local-validate?         (r/atom false)
+        validate-form?          (subscribe [::subs/validate-form?])]
     (dispatch [::events/fetch-infrastructure-services-available type])
-    (fn []
-      (let [cred-infra-services (or (:infrastructure-services @credential) [])]
+    (fn [type editable? value-spec validation-event]
+      (let [value     (:parent @credential)
+            validate? (or @local-validate? @validate-form?)
+            valid?    (s/valid? value-spec value)]
         [ui/TableRow
          [ui/TableCell {:collapsing true}
-          "linked to" [:br] "infrastructure services"]
-         [ui/TableCell
+          (utils-general/mandatory-name "parent")]
+         [ui/TableCell {:error (and validate? (not valid?))}
           [ui/Form {:style {:max-height "100px"
                             :overflow-y "auto"}}
            (for [{id :id, infra-name :name infra-descr :description} @infrastructure-services]
              ^{:key id}
              [ui/FormField
-              [:span
-               [ui/Checkbox {:label     ff/nbsp
-                             :checked   (boolean (some #(= % id) cred-infra-services))
-                             :on-change (ui-callback/checked
-                                          (fn [checked?]
-                                            (let [new-credential (if checked?
-                                                                   (->> id
-                                                                        (conj cred-infra-services)
-                                                                        (set)
-                                                                        (into []))
-                                                                   (remove #(= % id) cred-infra-services))]
-
-                                              (dispatch [::events/update-credential
-                                                         :infrastructure-services new-credential]))))}]
-               (or infra-name id)
-               ff/nbsp
-               [history/icon-link (str "api/" id)]]])]]]))))
+              [ui/Radio {:label    (or infra-name id)
+                         :checked  (= id value)
+                         :error    (boolean (and validate? (not valid?)))
+                         :disabled (not editable?)
+                         :on-click (ui-callback/value
+                                     #(do
+                                        (reset! local-validate? true)
+                                        (dispatch [::events/update-credential :parent id])
+                                        (dispatch [validation-event])))}]
+              ff/nbsp
+              [history/icon-link (str "api/" id)]])]]]))))
 
 
 (defn credential-swarm
@@ -133,7 +131,7 @@
            ::spec/cert :textarea form-validation-event]
           [row-with-label "swarm-credential-key" :key key editable? true
            ::spec/key :textarea form-validation-event]
-          [row-infrastructure-services-selector "swarm"]]]))))
+          [row-infrastructure-services-selector "swarm" editable? ::spec/parent form-validation-event]]]))))
 
 
 (defn credential-minio
@@ -154,7 +152,7 @@
            ::spec/access-key :input form-validation-event]
           [row-with-label "secret-key" :secret-key secret-key editable? true
            ::spec/secret-key :password form-validation-event]
-          [row-infrastructure-services-selector "s3"]]]))))
+          [row-infrastructure-services-selector "s3" editable? ::spec/parent form-validation-event]]]))))
 
 
 (defn credential-store-azure

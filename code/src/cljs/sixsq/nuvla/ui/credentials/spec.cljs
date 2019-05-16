@@ -33,6 +33,7 @@
 
 (s/def ::name utils-spec/nonblank-string)
 (s/def ::description utils-spec/nonblank-string)
+(s/def ::parent utils-spec/nonblank-string)
 
 ; Swarm
 
@@ -45,21 +46,20 @@
                                            ::description
                                            ::ca
                                            ::cert
-                                           ::key]
-                                  :opt-un [::infrastructure-services]))
+                                           ::key
+                                           ::parent]))
 
 
 ; MinIO
 
 (s/def ::access-key utils-spec/nonblank-string)
 (s/def ::secret-key utils-spec/nonblank-string)
-(s/def ::infrastructure-service-minio any?)
 
 (s/def ::minio-credential (s/keys :req-un [::name
                                            ::description
                                            ::access-key
-                                           ::secret-key]
-                                  :opt-un [::infrastructure-services]))
+                                           ::secret-key
+                                           ::parent]))
 
 
 (s/def ::infrastructure-services-available any?)
@@ -90,5 +90,5 @@
                ::validate-form?                     false
                ::credential-password                nil
                ::error-message                      nil
-               ::infrastructure-services-available  {}})
+               ::infrastructure-services-available  nil})
 

@@ -192,7 +192,8 @@
   ::fetch-infrastructure-services-available
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ type]]
     (when client
-      {::cimi-api-fx/search [client :infrastructure-service
+      {:db (assoc-in db [::spec/infrastructure-services-available type] nil)
+       ::cimi-api-fx/search [client :infrastructure-service
                              {:filter (str "type='" type "'")
                               :select "id, name, description"}
                              #(dispatch [::set-infrastructure-services-available type %])]})))

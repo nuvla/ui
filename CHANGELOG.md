@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+  - Credential spec changed, infra-services replaced by parent update
   - Association of credentials with infrastructure services
   - Infrastructure page
   - Add ACL button to apps pages

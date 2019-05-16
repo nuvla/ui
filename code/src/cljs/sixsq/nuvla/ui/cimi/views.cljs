@@ -181,8 +181,6 @@
     [ui/Button (cond-> {:icon         "info"
                         :basic        true
                         :color        "blue"
-                        :tabIndex     1000
-                        :on-key-press #(log/error "key press")
                         :content      (@tr [:api-doc])
                         :on-click     #(do
                                          (.preventDefault %)

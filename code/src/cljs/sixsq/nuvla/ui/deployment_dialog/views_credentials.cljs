@@ -4,7 +4,8 @@
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [taoensso.timbre :as log]))
 
 
 (defn cred-list-item

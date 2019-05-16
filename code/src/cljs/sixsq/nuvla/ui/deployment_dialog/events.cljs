@@ -9,7 +9,8 @@
     [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-evts]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-fx
@@ -37,10 +38,8 @@
                 ::spec/deployment
                 ::data-spec/time-period-filter
                 ::spec/infra-service-filter
-                ::spec/selected-infra-service
                 ::data-spec/content-type-filter] :as db} :db} [_ {credential-id :id :as credential}]]
-    (let [updated-deployment (assoc deployment :credential-id credential-id
-                                               :infrastructure-service-id selected-infra-service)
+    (let [updated-deployment (assoc deployment :credential-id credential-id)
           filter (data-utils/join-and time-period-filter infra-service-filter content-type-filter)
           selected-keys (map keyword (::data-spec/selected-data-set-ids db))
           datasets-map (select-keys (::data-spec/data-records-by-data-set db) selected-keys)
@@ -120,7 +119,7 @@
 (reg-event-fx
   ::get-credentials
   (fn [{{:keys [::client-spec/client
-                ::spec/infra-services-filter] :as db} :db :as cofx} _]
+                ::spec/selected-infra-service] :as db} :db :as cofx} _]
     (when client
       (let [search-creds-callback #(dispatch [::set-credentials (get % :resources [])])]
         {:db                  (assoc db ::spec/loading-credentials? true
@@ -129,8 +128,9 @@
          ::cimi-api-fx/search [client :credential
                                {:select "id, name, description, created, type"
                                 :filter (data-utils/join-and
-                                          infra-services-filter
-                                          (str "type^='infrastructure-service-'"))} search-creds-callback]}))))
+                                          (when selected-infra-service
+                                            (str "parent='" selected-infra-service "'"))
+                                          (str "type='infrastructure-service-swarm'"))} search-creds-callback]}))))
 
 
 (reg-event-fx

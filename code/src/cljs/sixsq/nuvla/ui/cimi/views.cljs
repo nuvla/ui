@@ -178,11 +178,13 @@
   []
   (let [tr      (subscribe [::i18n-subs/tr])
         mobile? (subscribe [::main-subs/is-device? :mobile])]
-    [ui/Button (cond-> {:icon     "info"
-                        :basic    true
-                        :color    "blue"
-                        :content  (@tr [:api-doc])
-                        :on-click #(dispatch [::history-events/navigate "documentation"])}
+    [ui/Button (cond-> {:icon         "info"
+                        :basic        true
+                        :color        "blue"
+                        :content      (@tr [:api-doc])
+                        :on-click     #(do
+                                         (.preventDefault %)
+                                         (dispatch [::history-events/navigate "documentation"]))}
                        (not @mobile?) (assoc :floated "right"))]))
 
 
@@ -204,6 +206,7 @@
                                             (dispatch [::events/get-results])))}
 
          [DocumentationButton]
+
          [ui/FormGroup
           [ui/FormField
            [cloud-entry-point-title]]]
@@ -458,15 +461,18 @@
           (dispatch [::events/set-query-params @query-params])))
       (let [n        (count @path)
             children (case n
-                       1 [[menu-bar]]
-                       2 [[menu-bar]
+                       1 [menu-bar]
+                       2 [:<>
+                          [menu-bar]
                           [results-display]]
-                       3 [[cimi-detail-views/cimi-detail]]
-                       [[menu-bar]])
+                       3 [cimi-detail-views/cimi-detail]
+                       [menu-bar])
             header   [:h2 [ui/Icon {:name "code"}]
                       " "
                       (str/upper-case (@tr [:api]))]]
-        (vec (concat [:div] [header] children))))))
+        [:div
+         header
+         children]))))
 
 
 (defmethod panel/render :api

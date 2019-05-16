@@ -44,12 +44,13 @@
   ::edit
   (fn [[client resource-id data callback]]
     (go
-      (<! (api/edit client resource-id data))
-
-      ;; This is done to get a fully updated resource.  If the return
-      ;; value of edit is used, then, for example, the operations are
-      ;; not updated.
-      (callback (<! (api/get client resource-id))))))
+      (let [response (<! (api/edit client resource-id data))]
+        (if (instance? js/Error response)
+          (callback response)
+          ;; This is done to get a fully updated resource.  If the return
+          ;; value of edit is used, then, for example, the operations are
+          ;; not updated.
+          (callback (<! (api/get client resource-id))))))))
 
 (reg-fx
   ::add

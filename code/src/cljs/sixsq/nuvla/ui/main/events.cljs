@@ -109,7 +109,7 @@
                [client
                 :credential
                 {:filter (str "type='infrastructure-service-swarm' and ("
-                              (str/join " or " (map #(str "infrastructure-services='" (:id %) "'") resources)) ")")
+                              (str/join " or " (map #(str "parent='" (:id %) "'") resources)) ")")
                  :last   0}
                 #(dispatch [::set-bootsrap-message %])]}
           {:db (assoc db ::spec/bootstrap-message :no-swarm)})

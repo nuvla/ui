@@ -163,7 +163,6 @@
     (when client
       (let [resource-id (:id deployment)
             edit-callback (fn [response]
-                            (log/error ::edit-deployment "response:" response)
                             (if (instance? js/Error response)
                               (let [{:keys [status message]} (response/parse-ex-info response)]
                                 (dispatch [::messages-events/add

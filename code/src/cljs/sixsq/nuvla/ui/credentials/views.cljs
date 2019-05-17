@@ -80,7 +80,8 @@
 
 (defn row-infrastructure-services-selector
   [type editable? value-spec validation-event]
-  (let [infrastructure-services (subscribe [::subs/infrastructure-services-available type])
+  (let [tr                      (subscribe [::i18n-subs/tr])
+        infrastructure-services (subscribe [::subs/infrastructure-services-available type])
         credential              (subscribe [::subs/credential])
         local-validate?         (r/atom false)
         validate-form?          (subscribe [::subs/validate-form?])]
@@ -95,20 +96,22 @@
          [ui/TableCell {:error (and validate? (not valid?))}
           [ui/Form {:style {:max-height "100px"
                             :overflow-y "auto"}}
-           (for [{id :id, infra-name :name infra-descr :description} @infrastructure-services]
-             ^{:key id}
-             [ui/FormField
-              [ui/Radio {:label    (or infra-name id)
-                         :checked  (= id value)
-                         :error    (boolean (and validate? (not valid?)))
-                         :disabled (not editable?)
-                         :on-click (ui-callback/value
-                                     #(do
-                                        (reset! local-validate? true)
-                                        (dispatch [::events/update-credential :parent id])
-                                        (dispatch [validation-event])))}]
-              ff/nbsp
-              [history/icon-link (str "api/" id)]])]]]))))
+           (if (pos-int? (count @infrastructure-services))
+             (for [{id :id, infra-name :name} @infrastructure-services]
+               ^{:key (str id value)}
+               [ui/FormField
+                [ui/Radio {:label    (or infra-name id)
+                           :checked  (= id value)
+                           :disabled (not editable?)
+                           :on-click (ui-callback/value
+                                       #(do
+                                          (reset! local-validate? true)
+                                          (dispatch [::events/update-credential :parent id])
+                                          (dispatch [validation-event])))}]
+                ff/nbsp
+                [history/icon-link (str "api/" id)]])
+             [ui/Message {:content (str (str/capitalize (@tr [:no-infra-service-of-type])) " " type ".")}]
+             )]]]))))
 
 
 (defn credential-swarm

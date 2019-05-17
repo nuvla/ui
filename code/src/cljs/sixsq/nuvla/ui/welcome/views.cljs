@@ -3,15 +3,17 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
+    [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [taoensso.timbre :as log]))
 
 
 (defn card [name-kw desc-kw icon target-resource]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr       (subscribe [::i18n-subs/tr])
         is-user? (subscribe [::authn-subs/is-user?])]
     [ui/Card
      [ui/CardContent {:as "h1"}
@@ -27,8 +29,14 @@
 
 (defmethod panel/render :welcome
   [path]
-  (let [tr (subscribe [::i18n-subs/tr])
-        iframe? (subscribe [::main-subs/iframe?])]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        iframe? (subscribe [::main-subs/iframe?])
+        query-params (subscribe [::main-subs/nav-query-params])]
+    (when @query-params
+      (when (contains? @query-params :reset-password)
+        (dispatch [::authn-events/set-form-id "session-template/password-reset"])
+        (dispatch [::authn-events/open-modal :reset-password]))
+      (dispatch [::history-events/navigate (str (first path) "/")]))
     [ui/Container {:textAlign "center"
                    :fluid     true
                    :class     "nuvla-ui-welcome-background"}

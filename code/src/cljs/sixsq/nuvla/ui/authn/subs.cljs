@@ -64,16 +64,6 @@
 
 
 (reg-sub
-  ::redirect-uri
-  ::spec/redirect-uri)
-
-
-(reg-sub
-  ::server-redirect-uri
-  ::spec/server-redirect-uri)
-
-
-(reg-sub
   ::form-id
   ::spec/form-id)
 
@@ -96,8 +86,11 @@
                                                      "password")
                                                    (when (empty? (:password form-data))
                                                      "error")
-                                                   (when (empty? (:email form-data))
+                                                   (when (:email form-data)
                                                      "error")]
+                   "user-template/email-invitation" [(when-not
+                                                       (:email form-data)
+                                                       "password")]
                    "session-template/password" [(when-not (and (:username form-data)
                                                                (:password form-data))
                                                   "error")]
@@ -122,3 +115,9 @@
   :<- [::fields-in-errors]
   (fn [fields-in-errors]
     (some? (seq fields-in-errors))))
+
+
+(reg-sub
+  ::server-redirect-uri
+  (fn [db]
+    (::spec/server-redirect-uri db)))

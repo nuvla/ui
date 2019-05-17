@@ -17,7 +17,8 @@
     [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 (defn dropdown-method-option
   [{:keys [id name] :as method}]
@@ -345,8 +346,7 @@
         :size      :tiny
         :open      (= @open-modal :reset-password)
         :closeIcon true
-        :on-close  (fn []
-                     (dispatch [::events/close-modal]))}
+        :on-close  #(dispatch [::events/close-modal])}
 
        [ui/ModalHeader (@tr [:reset-password])]
 
@@ -413,6 +413,71 @@
           :on-click submit-fn}]]])))
 
 
+(defn modal-create-user []
+  (let [open-modal          (subscribe [::subs/open-modal])
+        error-message       (subscribe [::subs/error-message])
+        success-message     (subscribe [::subs/success-message])
+        loading?            (subscribe [::subs/loading?])
+        tr                  (subscribe [::i18n-subs/tr])
+        fields-in-errors    (subscribe [::subs/fields-in-errors])
+        form-error?         (subscribe [::subs/form-error?])
+        server-redirect-uri (subscribe [::subs/server-redirect-uri])
+        submit-fn           #(dispatch [::events/submit {:close-modal false
+                                                         :error-msg   (@tr [:error-occured])
+                                                         :success-msg (@tr [:invitation-email-success-msg])
+                                                         :redirect-url (str @server-redirect-uri "?reset-password")}])]
+    (fn []
+      [ui/Modal
+       {:id        "modal-create-user"
+        :size      :tiny
+        :open      (= @open-modal :create-user)
+        :closeIcon true
+        :on-close  #(dispatch [::events/close-modal])}
+
+       [ui/ModalHeader (@tr [:create-user])]
+
+       [ui/ModalContent
+
+        (when @error-message
+          [ui/Message {:negative  true
+                       :size      "tiny"
+                       :onDismiss #(dispatch [::events/clear-error-message])}
+           [ui/MessageHeader (@tr [:error-occured])]
+           [:p @error-message]])
+
+        (when @success-message
+          [ui/Message {:negative  false
+                       :size      "tiny"
+                       :onDismiss #(dispatch [::events/clear-success-message])}
+           [ui/MessageHeader (@tr [:success])]
+           [:p @success-message]])
+
+        [ui/Form {:on-key-press (partial forms-utils/on-return-key
+                                         #(when-not @form-error?
+                                            (submit-fn)))}
+         [ui/FormInput {:name          "email"
+                        :placeholder   "user@example.com"
+                        :icon          "mail"
+                        :fluid         false
+                        :icon-position "left"
+                        :error         (contains? @fields-in-errors "email")
+                        :required      true
+                        :auto-focus    true
+                        :auto-complete "on"
+                        :on-change     (ui-callback/value
+                                         #(dispatch [::events/update-form-data :email %]))}]]
+
+        [:div {:style {:padding "10px 0"}} (@tr [:create-user-inst])]]
+
+       [ui/ModalActions
+        [uix/Button
+         {:text     (@tr [:create-user])
+          :positive true
+          :loading  @loading?
+          :disabled @form-error?
+          :on-click submit-fn}]]])))
+
+
 
 (defn modal-signup []
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -423,12 +488,15 @@
 
 (defn authn-dropdown-menu
   []
-  (let [tr          (subscribe [::i18n-subs/tr])
-        user        (subscribe [::subs/user])
-        sign-out-fn (fn []
-                      (dispatch [::events/logout])
-                      (dispatch [::history-events/navigate "welcome"]))
-        logged-in?  (boolean @user)]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        user           (subscribe [::subs/user])
+        sign-out-fn    (fn []
+                         (dispatch [::events/logout])
+                         (dispatch [::history-events/navigate "welcome"]))
+        create-user-fn #(do
+                          (dispatch [::events/set-form-id "user-template/email-invitation"])
+                          (dispatch [::events/open-modal :create-user]))
+        logged-in?     (boolean @user)]
 
     [ui/DropdownMenu
 
@@ -439,6 +507,12 @@
           :text     (@tr [:logout])
           :icon     "sign out"
           :on-click sign-out-fn}]
+        [ui/DropdownDivider]
+        [ui/DropdownItem
+         {:key      "invite"
+          :text     (@tr [:create-user])
+          :icon     "user add"
+          :on-click create-user-fn}]
         [ui/DropdownDivider]])
 
      [:<>
@@ -469,35 +543,33 @@
         login-fn   #(dispatch [::events/open-modal :login])
         signup-fn  #(dispatch [::events/open-modal :signup])
         logged-in? (boolean @user)]
-
-    (if logged-in?
-      [ui/ButtonGroup {:primary true}
-       [ui/Button {:on-click profile-fn}
-        [ui/Icon {:name "user"}]
-        (utils/truncate @user)]
-       [ui/Dropdown {:inline    true
-                     :button    true
-                     :pointing  "top right"
-                     :className "icon"}
-        (authn-dropdown-menu)]
-       [modal-login]
-       [modal-reset-password]
-       [modal-signup]]
-      [:div
-       [:span {:style    {:padding-right "10px"
-                          :cursor        "pointer"}
-               :on-click signup-fn}
-        [ui/Icon {:name "signup"}]
-        (@tr [:signup])]
+    [:<>
+     [modal-login]
+     [modal-reset-password]
+     [modal-signup]
+     [modal-create-user]
+     (if logged-in?
        [ui/ButtonGroup {:primary true}
-        [ui/Button {:on-click login-fn}
-         [ui/Icon {:name "sign in"}]
-         (@tr [:login])]
+        [ui/Button {:on-click profile-fn}
+         [ui/Icon {:name "user"}]
+         (utils/truncate @user)]
         [ui/Dropdown {:inline    true
                       :button    true
                       :pointing  "top right"
                       :className "icon"}
-         (authn-dropdown-menu)]
-        [modal-login]
-        [modal-reset-password]
-        [modal-signup]]])))
+         (authn-dropdown-menu)]]
+       [:div
+        [:span {:style    {:padding-right "10px"
+                           :cursor        "pointer"}
+                :on-click signup-fn}
+         [ui/Icon {:name "signup"}]
+         (@tr [:signup])]
+        [ui/ButtonGroup {:primary true}
+         [ui/Button {:on-click login-fn}
+          [ui/Icon {:name "sign in"}]
+          (@tr [:login])]
+         [ui/Dropdown {:inline    true
+                       :button    true
+                       :pointing  "top right"
+                       :className "icon"}
+          (authn-dropdown-menu)]]])]))

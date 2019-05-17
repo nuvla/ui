@@ -8,7 +8,8 @@
     [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.history.effects :as history-fx]
     [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-fx
@@ -50,6 +51,14 @@
               ::spec/form-data nil
               ::spec/error-message nil
               ::spec/success-message nil)))
+
+
+(reg-event-db
+  ::close-modal-no-session
+  (fn [{:keys [::spec/open-modal] :as db} _]
+    (when-not (contains? #{:create-user :reset-password} open-modal)
+      (dispatch [::close-modal]))
+    db))
 
 
 (reg-event-db
@@ -114,31 +123,44 @@
     (update db ::spec/form-data assoc param-name param-value)))
 
 
+(defn default-submit-callback
+  [close-modal success-msg response]
+  (dispatch [::clear-loading])
+  (if (instance? js/Error response)
+    (let [{:keys [message]} (response/parse-ex-info response)]
+      (dispatch [::set-error-message message]))
+    (do (dispatch [::initialize])
+        (when close-modal
+          (dispatch [::close-modal]))
+        (when success-msg
+          (dispatch [::set-success-message success-msg]))
+        (dispatch [::history-events/navigate "welcome"]))))
+
+
 (reg-event-fx
   ::submit
   (fn [{{:keys [::client-spec/client
                 ::spec/form-id
                 ::spec/form-data
                 ::spec/server-redirect-uri] :as db} :db} [_ opts]]
-    (let [{close-modal :close-modal,
-           success-msg :success-msg,
-           :or         {close-modal true}} opts
-          {callback-add :callback-add,
-           :or          {callback-add #(if (instance? js/Error %)
-                                         (let [{:keys [message]} (response/parse-ex-info %)]
-                                           (dispatch [::set-error-message message]))
-                                         (do (dispatch [::initialize])
-                                             (when close-modal
-                                               (dispatch [::close-modal]))
-                                             (when success-msg
-                                               (dispatch [::set-success-message success-msg]))
-                                             (dispatch [::history-events/navigate "welcome"])))}} opts
+    (let [{close-modal  :close-modal,
+           success-msg  :success-msg,
+           callback-add :callback-add,
+           redirect-url :redirect-url
+           :or          {close-modal  true
+                         redirect-url server-redirect-uri}} opts
+
+          callback-add  (or callback-add
+                            (partial default-submit-callback close-modal success-msg))
+
           template      {:template (-> form-data
                                        (dissoc :repeat-new-password
                                                :repeat-password)
                                        (assoc :href form-id
-                                              :redirect-url server-redirect-uri))}
+                                              :redirect-url redirect-url))}
           collection-kw (cond
                           (str/starts-with? form-id "session-template/") :session
                           (str/starts-with? form-id "user-template/") :user)]
-      {::cimi-api-fx/add [client collection-kw template callback-add]})))
+
+      {:db               (assoc db ::spec/loading? true)
+       ::cimi-api-fx/add [client collection-kw template callback-add]})))

@@ -7,15 +7,12 @@
    are taken from the Semantic UI React code; they are not available in a more
    convenient form."
   [width]
-  (try
-    (cond
-      (< width 767) :mobile
-      (< width 991) :tablet
-      (< width 1199) :computer
-      (< width 1919) :large-screen
-      :else :wide-screen)
-    (catch :default _
-      :computer)))
+  (cond
+    (< width 767) :mobile
+    (< width 991) :tablet
+    (< width 1199) :computer
+    (< width 1919) :large-screen
+    :else :wide-screen))
 
 
 (defn callback

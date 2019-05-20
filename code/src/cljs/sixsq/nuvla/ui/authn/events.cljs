@@ -16,8 +16,11 @@
   ::initialize
   (fn [{{:keys [::client-spec/client] :as db} :db} _]
     (when client
-      {::cimi-api-fx/session [client #(do (dispatch [::set-session %])
-                                          (dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message]))]})))
+      {::cimi-api-fx/session [client (fn [session]
+                                       (dispatch [::set-session session])
+
+                                       (when session
+                                         (dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])))]})))
 
 
 (reg-event-fx

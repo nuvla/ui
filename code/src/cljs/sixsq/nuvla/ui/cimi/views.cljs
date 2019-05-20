@@ -4,7 +4,7 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as reagent]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.utils :as cimi-api-utils]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
     [sixsq.nuvla.ui.cimi.events :as events]
@@ -166,6 +166,7 @@
          {:aria-label  (@tr [:resource-type])
           :value       @selected-id
           :placeholder (@tr [:resource-type])
+          :tab-index   1
           :scrolling   true
           :search      true
           :selection   true
@@ -176,16 +177,21 @@
 
 (defn DocumentationButton
   []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        mobile? (subscribe [::main-subs/is-device? :mobile])]
-    [ui/Button (cond-> {:icon         "info"
-                        :basic        true
-                        :color        "blue"
-                        :content      (@tr [:api-doc])
-                        :on-click     #(do
-                                         (.preventDefault %)
-                                         (dispatch [::history-events/navigate "documentation"]))}
-                       (not @mobile?) (assoc :floated "right"))]))
+  (let [tr        (subscribe [::i18n-subs/tr])
+        mobile?   (subscribe [::main-subs/is-device? :mobile])
+        on-button (r/atom false)]
+    (fn []
+      [ui/Button (cond-> {:icon           "info"
+                          :basic          true
+                          :color          "blue"
+                          :content        (@tr [:api-doc])
+                          ;; this is a workaround misbehavior when in an input of form and enter key,
+                          ;; for unknown reason the on-click fn of this button is called
+                          :on-mouse-enter #(reset! on-button true)
+                          :on-mouse-leave #(reset! on-button false)
+                          :on-click       #(when @on-button
+                                             (dispatch [::history-events/navigate "documentation"]))}
+                         (not @mobile?) (assoc :floated "right"))])))
 
 
 (defn search-header []
@@ -216,6 +222,7 @@
            ; this will force to re-render defaultValue on change of the value
            ^{:key (str "first:" $first)}
            [ui/Input {:aria-label   (@tr [:first])
+                      :tab-index    2
                       :type         "number"
                       :min          0
                       :label        (@tr [:first])
@@ -225,6 +232,7 @@
           [ui/FormField
            ^{:key (str "last:" $last)}
            [ui/Input {:aria-label   (@tr [:last])
+                      :tab-index    3
                       :type         "number"
                       :min          0
                       :label        (@tr [:last])
@@ -234,6 +242,7 @@
           [ui/FormField
            ^{:key (str "select:" $select)}
            [ui/Input {:aria-label   (@tr [:select])
+                      :tab-index    4
                       :type         "text"
                       :label        (@tr [:select])
                       :defaultValue $select
@@ -244,6 +253,7 @@
           [ui/FormField
            ^{:key (str "orderby:" $orderby)}
            [ui/Input {:aria-label   (@tr [:order])
+                      :tab-index    5
                       :type         "text"
                       :label        (@tr [:order])
                       :defaultValue $orderby
@@ -253,6 +263,7 @@
           [ui/FormField
            ^{:key (str "aggregation:" $aggregation)}
            [ui/Input {:aria-label   (@tr [:aggregation])
+                      :tab-index    6
                       :type         "text"
                       :label        (@tr [:aggregation])
                       :defaultValue $aggregation
@@ -264,6 +275,7 @@
            ^{:key (str "filter:" $filter)}
            [ui/Input
             {:aria-label   (@tr [:filter])
+             :tab-index    7
              :type         "text"
              :label        (@tr [:filter])
              :defaultValue $filter
@@ -294,14 +306,14 @@
         available-fields (subscribe [::subs/available-fields])
         selected-fields  (subscribe [::subs/selected-fields])
         selected-id      (subscribe [::subs/collection-name])
-        selections       (reagent/atom (set @selected-fields))
-        show?            (reagent/atom false)]
+        selections       (r/atom (set @selected-fields))
+        show?            (r/atom false)]
     (fn []
       [ui/Modal
        {:closeIcon true
         :open      @show?
         :on-close  #(reset! show? false)
-        :trigger   (reagent/as-element
+        :trigger   (r/as-element
                      [uix/MenuItemWithIcon
                       {:name      (@tr [:columns])
                        :icon-name "columns"
@@ -333,7 +345,7 @@
         default-text     (general/edn->json {})
         text             (atom default-text)
         collection       (subscribe [::subs/collection])
-        selected-tmpl-id (reagent/atom nil)]
+        selected-tmpl-id (r/atom nil)]
     (fn []
       (let [resource-metadata           (subscribe [::docs-subs/document @collection])
             collection-template-href    (some-> @collection-name cimi-utils/collection-template-href)

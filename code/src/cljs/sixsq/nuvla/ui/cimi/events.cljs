@@ -100,9 +100,9 @@
 
 (reg-event-fx
   ::get-results
-  (fn [{{:keys                            [::spec/collection-name
-                                           ::spec/cloud-entry-point
-                                           ::spec/query-params
+  (fn [{{:keys [::spec/collection-name
+                ::spec/cloud-entry-point
+                ::spec/query-params
                 ::client-spec/client] :as db} :db} _]
     (let [resource-type (-> cloud-entry-point
                             :collection-key
@@ -118,8 +118,8 @@
 
 (reg-event-fx
   ::create-resource
-  (fn [{{:keys                            [::spec/collection-name
-                                           ::spec/cloud-entry-point
+  (fn [{{:keys [::spec/collection-name
+                ::spec/cloud-entry-point
                 ::client-spec/client] :as db} :db} [_ data]]
     (let [resource-type (-> cloud-entry-point
                             :collection-key
@@ -132,6 +132,7 @@
                                               :content message
                                               :type    :error})
                                            (let [{:keys [status message resource-id]} (response/parse %)]
+                                             (dispatch [::get-results])
                                              {:header  (cond-> (str "added " resource-id)
                                                                status (str " (" status ")"))
                                               :content message
@@ -158,10 +159,10 @@
 (reg-event-db
   ::set-results
   (fn [db [_ resource-type listing]]
-    (let [error? (instance? js/Error listing)
-          entries (get listing :resources [])
+    (let [error?       (instance? js/Error listing)
+          entries      (get listing :resources [])
           aggregations (get listing :aggregations nil)
-          fields (general-utils/merge-keys (conj entries {:id "id"}))]
+          fields       (general-utils/merge-keys (conj entries {:id "id"}))]
       (when error?
         (dispatch [::messages-events/add
                    (let [{:keys [status message]} (response/parse-ex-info listing)]
@@ -179,7 +180,7 @@
   ::set-cloud-entry-point
   (fn [db [_ {:keys [base-uri] :as cep}]]
     (let [href-map (utils/collection-href-map cep)
-          key-map (utils/collection-key-map cep)]
+          key-map  (utils/collection-key-map cep)]
       (-> db
           (assoc ::spec/cloud-entry-point {:base-uri        base-uri
                                            :collection-href href-map

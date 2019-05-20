@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.cimi-detail.events
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.spec :as cimi-detail-spec]
@@ -8,8 +7,8 @@
     [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.general :as general]
     [sixsq.nuvla.ui.utils.response :as response]
+    [sixsq.nuvla.ui.cimi.events :as cimi-events]
     [taoensso.timbre :as log]))
 
 
@@ -61,7 +60,8 @@
                                                                status (str " (" status ")"))
                                               :content message
                                               :type    :success}])
-                                  (dispatch [::history-events/navigate (str "api/" collection-name)])))]})))
+                                  (dispatch [::history-events/navigate (str "api/" collection-name)])
+                                  (dispatch [::cimi-events/get-results])))]})))
 
 
 (reg-event-fx

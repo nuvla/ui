@@ -1,16 +1,22 @@
 # Changelog
 
 ## [Unreleased]
-  - Credential spec changed, infra-services replaced by parent update
-  - Association of credentials with infrastructure services
-  - Infrastructure page
+  
+## [2.0.0] - 2019-05-20
+
+### Changed
+
   - Add ACL button to apps pages
-  - ACL button with rights summary as icon
-  - Credential page
   - Better session expiry behavior
-  - New ACL widget
   - Update version of clojure API to 2.0.0
   - Update parent to version 6.5.0 and shadow-cljs
+  
+### Added
+
+   - Infrastructure page
+   - Credential page
+   - ACL button with rights summary as icon
+   - New ACL widget
 
 ## [0.0.1] - 2019-04-18
 

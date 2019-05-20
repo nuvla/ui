@@ -225,7 +225,7 @@
    [ui/TableCell state]
    [ui/TableCell progress]
    [ui/TableCell return-code]
-   [ui/TableCell status-message]])
+   [ui/TableCell {:style {:white-space "pre"}} status-message]])
 
 
 (defn jobs-table
@@ -233,7 +233,7 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [jobs]
       [ui/Segment style/autoscroll-x
-       [ui/Table style/single-line
+       [ui/Table
         [ui/TableHeader
          [ui/TableRow
           [ui/TableHeaderCell [:span (@tr [:job])]]

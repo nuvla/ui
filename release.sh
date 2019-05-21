@@ -81,7 +81,7 @@ update_project_versions() {
     fi
     echo 'Updating project.clj versions to ' ${v}
     find . -name project.clj -exec sed -i.bck "s/^(defproject sixsq.nuvla.ui\/code .*/(defproject sixsq.nuvla.ui\/code \"${v}\"/" {} \;
-    find . -name project.clj -exec sed -i.bck "s/^(def \+version\+ .*/(def \+version\+ \"${v}\")/" {} \;
+    find . -name project.clj -exec sed -i.bck "s/^(def version .*/(def version \"${v}\")/" {} \;
 }
 
 

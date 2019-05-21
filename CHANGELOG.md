@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 ### Changed
+
+  - Footer - Fix code version in footer
   - Authn - Fix signup and cleaner validatioi code
   - Page Deployment - Make job message multiline
   - Page api - Document button not activated on return

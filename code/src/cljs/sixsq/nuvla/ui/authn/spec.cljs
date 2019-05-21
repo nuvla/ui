@@ -2,7 +2,50 @@
   (:require-macros [sixsq.nuvla.ui.utils.spec :refer [only-keys]])
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.config :as config]))
+    [sixsq.nuvla.ui.config :as config]
+    [sixsq.nuvla.ui.utils.spec :as us]))
+
+
+;; VALIDATION SPEC
+
+(s/def ::email ::us/email)
+(s/def ::username ::us/username)
+(s/def ::password ::us/password)
+(s/def ::key ::us/key)
+(s/def ::secret ::us/secret)
+
+;;; user-template/email-password
+
+(s/def ::repeat-password ::us/password)
+
+(s/def ::user-template-email-password (s/keys :req-un [::password
+                                                       ::repeat-password
+                                                       ::email]))
+
+;;; user-template/email-invitation
+
+(s/def ::user-template-email-invitation (s/keys :req-un [::email]))
+
+;;; session-template/api-key
+
+(s/def ::session-template-api-key (s/keys :req-un [::key
+                                                   ::secret]))
+
+;;; session-template/password
+
+(s/def ::session-template-password (s/keys :req-un [::username
+                                                    ::password]))
+
+;;; session-template/password-reset
+
+(s/def ::new-password ::us/password)
+
+(s/def ::repeat-new-password ::us/password)
+
+(s/def ::session-template-password-reset (s/keys :req-un [::new-password
+                                                          ::repeat-new-password]))
+
+;;; RE-FRAME-DB SPEC
 
 
 (s/def ::open-modal (s/nilable #{:login :reset-password :signup}))
@@ -27,6 +70,7 @@
 
 (s/def ::loading? boolean?)
 
+
 (s/def ::db (s/keys :req [::open-modal
                           ::selected-method-group
                           ::session
@@ -37,7 +81,9 @@
                           ::server-redirect-uri
                           ::loading?
                           ::form-id
-                          ::form-data]))
+                          ::form-data
+                          ::form-spec]))
+
 
 (def defaults
   {::open-modal            nil

@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.authn.utils
   (:require
+    [cljs.spec.alpha :as s]
     [clojure.string :as str]))
 
 
@@ -38,3 +39,9 @@
    authn-methods]."
   [templates]
   (->> templates vals (remove :hidden) order-and-group vec))
+
+
+(defn error?
+  [field-key form-spec form-data]
+  (let [field-spec (some-> form-spec (name) (str "/" (name field-key)) (keyword))]
+    (s/valid? field-spec (field-key form-data))))

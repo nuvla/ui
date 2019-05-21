@@ -1,8 +1,11 @@
 (ns sixsq.nuvla.ui.authn.subs
   (:require
+    [cljs.spec.alpha :as s]
+    [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.authn.spec :as spec]
-    [sixsq.nuvla.ui.authn.utils :as utils]))
+    [sixsq.nuvla.ui.authn.utils :as utils]
+    [sixsq.nuvla.ui.utils.spec :as us]))
 
 
 (reg-sub
@@ -75,46 +78,16 @@
 
 
 (reg-sub
-  ::fields-in-errors
-  :<- [::form-id]
-  :<- [::form-data]
-  (fn [[form-id form-data]]
-    (let [errors (case form-id
-                   "user-template/email-password" [(when-not
-                                                     (= (:password form-data)
-                                                        (:repeat-password form-data))
-                                                     "password")
-                                                   (when (empty? (:password form-data))
-                                                     "error")
-                                                   (when (:email form-data)
-                                                     "error")]
-                   "user-template/email-invitation" [(when-not
-                                                       (:email form-data)
-                                                       "password")]
-                   "session-template/password" [(when-not (and (:username form-data)
-                                                               (:password form-data))
-                                                  "error")]
-                   "session-template/api-key" [(when-not (and (:key form-data)
-                                                              (:secret form-data))
-                                                 "error")]
-                   "session-template/password-reset" [(when-not
-                                                        (= (:new-password form-data)
-                                                           (:repeat-new-password form-data))
-                                                        "password")
-                                                      (when (empty? (:new-password form-data))
-                                                        "error")
-                                                      (when (empty? (:username form-data))
-                                                        "error")]
-                   nil ["error"]
-                   #{})]
-      (->> errors seq (remove nil?) set))))
+  ::form-spec
+  (fn [{:keys [::spec/form-id] :as db}]
 
-
-(reg-sub
-  ::form-error?
-  :<- [::fields-in-errors]
-  (fn [fields-in-errors]
-    (some? (seq fields-in-errors))))
+    (or (when form-id
+          (when-let [spec-key (some->> (str/replace form-id #"/" "-")
+                                       (str 'sixsq.nuvla.ui.authn.spec "/")
+                                       (keyword))]
+            (when (us/resolvable? spec-key)
+              spec-key)))
+        any?)))
 
 
 (reg-sub

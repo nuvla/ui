@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Changed
+  - Authn - Fix signup and cleaner validatioi code
   - Page Deployment - Make job message multiline
   - Page api - Document button not activated on return
   - Page api - Refresh results on delete or add resource

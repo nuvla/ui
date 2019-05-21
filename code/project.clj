@@ -2,7 +2,7 @@
 (def sixsq-nuvla-api-version "2.0.0")
 (def version "2.0.0-SNAPSHOT")
 
-(defproject sixsq.nuvla.ui/code "2.0.1-SNAPSHOT"
+(defproject sixsq.nuvla.ui/code "2.0.1"
 
   :description "Web Browser User Interface for Nuvla"
 
@@ -40,7 +40,7 @@
 
   :pom-location "target/"
 
-  :filegen [{:data        ["#release-version:after {content: '" ~version "';}\n"]
+  :filegen [{:data        ["#release-version:after {content: '" ~(System/getenv "TAG_VERSION") "';}\n"]
              :template-fn #(apply str %)
              :target      "target/version.css"}]
 

@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Changed
+  - Footer - Fix code version in footer
   - Page Deployment - Make job message multiline
   - Page api - Document button not activated on return
   - Page api - Refresh results on delete or add resource

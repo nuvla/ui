@@ -1,11 +1,13 @@
 (ns sixsq.nuvla.ui.authn.views
   (:require
+    [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as reagent]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.authn.events :as events]
+    [sixsq.nuvla.ui.authn.spec :as spec]
     [sixsq.nuvla.ui.authn.subs :as subs]
-    [sixsq.nuvla.ui.authn.utils :as u]
+    [sixsq.nuvla.ui.authn.utils :as utils]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.cimi.utils :as api-utils]
     [sixsq.nuvla.ui.docs.subs :as docs-subs]
@@ -14,7 +16,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.forms :as forms-utils]
-    [sixsq.nuvla.ui.utils.general :as utils]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
@@ -27,81 +29,110 @@
 
 (defn login-password-fields
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [[ui/FormInput {:name          "username"
-                    :placeholder   (str/capitalize (@tr [:username]))
-                    :icon          "user"
-                    :icon-position "left"
-                    :auto-focus    true
-                    :on-change     (ui-callback/value
-                                     #(dispatch [::events/update-form-data :username %]))}]
-     [ui/FormInput {:name          "password"
-                    :placeholder   (str/capitalize (@tr [:password]))
-                    :type          "password"
-                    :icon          "key"
-                    :icon-position "left"
-                    :on-change     (ui-callback/value
-                                     #(dispatch [::events/update-form-data :password %]))}]
-     [:div {:style {:text-align "right"}}
-      [:a {:style    {:cursor "pointer"}
-           :on-click (fn []
-                       (dispatch [::events/close-modal])
-                       (dispatch [::events/set-selected-method-group nil])
-                       (dispatch [::events/set-form-id "session-template/password-reset"])
-                       (dispatch [::events/open-modal :reset-password]))}
-       (@tr [:forgot-password])]]]))
+  (let [tr        (subscribe [::i18n-subs/tr])
+        form-data (subscribe [::subs/form-data])]
+    (fn []
+      (let [{:keys [username password]} @form-data]
+        [:<>
+         [ui/FormInput {:name          "username"
+                        :placeholder   (str/capitalize (@tr [:username]))
+                        :icon          "user"
+                        :icon-position "left"
+                        :auto-focus    true
+                        :error         (and
+                                         (some? username)
+                                         (not (s/valid? ::spec/username key)))
+                        :on-change     (ui-callback/value
+                                         #(dispatch [::events/update-form-data :username %]))}]
+         [ui/FormInput {:name          "password"
+                        :placeholder   (str/capitalize (@tr [:password]))
+                        :type          "password"
+                        :icon          "key"
+                        :icon-position "left"
+                        :error         (and
+                                         (some? password)
+                                         (not (s/valid? ::spec/password password)))
+                        :on-change     (ui-callback/value
+                                         #(dispatch [::events/update-form-data :password %]))}]
+         [:div {:style {:text-align "right"}}
+          [:a {:style    {:cursor "pointer"}
+               :on-click (fn []
+                           (dispatch [::events/close-modal])
+                           (dispatch [::events/set-selected-method-group nil])
+                           (dispatch [::events/set-form-id "session-template/password-reset"])
+                           (dispatch [::events/open-modal :reset-password]))}
+           (@tr [:forgot-password])]]]))))
 
 
 (defn login-api-key-fields
   []
-  [[ui/FormInput {:name          "key"
-                  :placeholder   "Key"
-                  :icon          "user"
-                  :icon-position "left"
-                  :auto-focus    true
-                  :on-change     (ui-callback/value
-                                   #(dispatch [::events/update-form-data :key %]))}]
-   [ui/FormInput {:name          "secret"
-                  :placeholder   "Secret"
-                  :icon          "key"
-                  :icon-position "left"
-                  :on-change     (ui-callback/value
-                                   #(dispatch [::events/update-form-data :secret %]))}]])
+  (let [form-data (subscribe [::subs/form-data])]
+    (fn []
+      (let [{:keys [key secret]} @form-data]
+        [:<>
+         [ui/FormInput {:name          "key"
+                        :placeholder   "Key"
+                        :icon          "user"
+                        :icon-position "left"
+                        :error         (and
+                                         (some? key)
+                                         (not (s/valid? ::spec/key key)))
+                        :auto-focus    true
+                        :on-change     (ui-callback/value
+                                         #(dispatch [::events/update-form-data :key %]))}]
+         [ui/FormInput {:name          "secret"
+                        :placeholder   "Secret"
+                        :icon          "key"
+                        :icon-position "left"
+                        :error         (and
+                                         (some? secret)
+                                         (not (s/valid? ::spec/secret secret)))
+                        :on-change     (ui-callback/value
+                                         #(dispatch [::events/update-form-data :secret %]))}]]))))
 
 
 (defn signup-email-password-fields
   []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        fields-in-error (subscribe [::subs/fields-in-errors])]
-    [[ui/FormInput {:name          "email"
-                    :placeholder   "email"
-                    :icon          "at"
-                    :icon-position "left"
-                    :auto-focus    true
-                    :auto-complete "on"
-                    :on-change     (ui-callback/value
-                                     #(dispatch [::events/update-form-data :email %]))}]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        form-data (subscribe [::subs/form-data])]
+    (fn []
+      (let [{:keys [email password repeat-password]} @form-data]
+        [:<>
+         [ui/FormInput {:name          "email"
+                        :placeholder   "email"
+                        :icon          "at"
+                        :icon-position "left"
+                        :auto-focus    true
+                        :auto-complete "on"
+                        :error         (and (some? email)
+                                            (not (s/valid? ::spec/email email)))
+                        :on-change     (ui-callback/value
+                                         #(dispatch [::events/update-form-data :email %]))}]
 
-     [ui/FormGroup {:widths 2}
-      [ui/FormInput {:name          "password"
-                     :type          "password"
-                     :placeholder   (str/capitalize (@tr [:password]))
-                     :icon          "key"
-                     :icon-position "left"
-                     :required      true
-                     :error         (contains? @fields-in-error "password")
-                     :auto-complete "off"
-                     :on-change     (ui-callback/value
-                                      #(dispatch [::events/update-form-data :password %]))}]
+         [ui/FormGroup {:widths 2}
+          [ui/FormInput {:name          "password"
+                         :type          "password"
+                         :placeholder   (str/capitalize (@tr [:password]))
+                         :icon          "key"
+                         :icon-position "left"
+                         :required      true
+                         :error         (and (some? password)
+                                             (or (not= password repeat-password)
+                                                 (not (s/valid? ::spec/password password))))
+                         :auto-complete "off"
+                         :on-change     (ui-callback/value
+                                          #(dispatch [::events/update-form-data :password %]))}]
 
-      [ui/FormInput {:name          "password"
-                     :type          "password"
-                     :placeholder   (str/capitalize (@tr [:password-repeat]))
-                     :required      true
-                     :error         (contains? @fields-in-error "password")
-                     :auto-complete "off"
-                     :on-change     (ui-callback/value
-                                      #(dispatch [::events/update-form-data :repeat-password %]))}]]]))
+          [ui/FormInput {:name          "password"
+                         :type          "password"
+                         :placeholder   (str/capitalize (@tr [:password-repeat]))
+                         :required      true
+                         :error         (and (some? password)
+                                             (or (not= password repeat-password)
+                                                 (not (s/valid? ::spec/repeat-password password))))
+                         :auto-complete "off"
+                         :on-change     (ui-callback/value
+                                          #(dispatch [::events/update-form-data :repeat-password %]))}]]]))))
 
 
 ;;TODO fix field generation when resource metadata finalized
@@ -113,94 +144,91 @@
                                          (and (not (#{"metadata" "acl"} group))
                                               required)))
                                (sort-by :order))]
-    (mapv (fn [{value-scope :value-scope param-name :name :as input-method}]
-            (let [value                (get form-data param-name)
-                  input-method-updated (cond-> input-method
-                                               value (assoc-in [:value-scope :value] value))]
-              (dispatch [::events/update-form-data
-                         param-name (or value
-                                        (:value value-scope)
-                                        (:default value-scope))])
-              (forms/form-field (fn [_ name value]
-                                  (dispatch [::events/update-form-data name value])
-                                  ) form-id input-method-updated))) inputs-method)))
+    (for [{value-scope :value-scope param-name :name :as input-method} inputs-method]
+      (let [value                (get form-data param-name)
+            input-method-updated (cond-> input-method
+                                         value (assoc-in [:value-scope :value] value))]
+        (dispatch [::events/update-form-data
+                   param-name (or value
+                                  (:value value-scope)
+                                  (:default value-scope))])
+        (forms/form-field (fn [_ name value]
+                            (dispatch [::events/update-form-data name value])
+                            ) form-id input-method-updated))
+      )))
 
 
 (defn login-method-form
   [[_ methods]]
-  (let [form-id     (subscribe [::subs/form-id])
-        form-data   (subscribe [::subs/form-data])
-        form-error? (subscribe [::subs/form-error?])]
+  (let [form-id   (subscribe [::subs/form-id])
+        form-data (subscribe [::subs/form-data])
+        form-spec (subscribe [::subs/form-spec])]
     (fn [[_ methods]]
       (let [dropdown?        (> (count methods) 1)
-            method           (u/select-method-by-id @form-id methods)
-            form-fields      (case @form-id
-                               "session-template/password" (login-password-fields)
-                               "session-template/api-key" (login-api-key-fields)
-                               (generate-fields method @form-id @form-data))
+            method           (utils/select-method-by-id @form-id methods)
             dropdown-options (map dropdown-method-option methods)]
 
         ^{:key @form-id}
         [ui/Form {:id           (or @form-id "authn-form-placeholder-id")
                   :on-key-press (partial forms-utils/on-return-key
-                                         #(when-not @form-error?
+                                         #(when (s/valid? @form-spec @form-data)
                                             (dispatch [::events/submit])))}
-         (vec (concat [ui/Segment {:style {:height     "35ex"
-                                           :overflow-y "auto"}}
-                       (when dropdown?
-                         [ui/FormDropdown
-                          {:options       dropdown-options
-                           :value         @form-id
-                           :fluid         true
-                           :selection     true
-                           :close-on-blur true
-                           :on-change     (ui-callback/dropdown ::events/set-form-id)}])]
+         [ui/Segment {:style {:height     "35ex"
+                              :overflow-y "auto"}}
+          (when dropdown?
+            [ui/FormDropdown
+             {:options       dropdown-options
+              :value         @form-id
+              :fluid         true
+              :selection     true
+              :close-on-blur true
+              :on-change     (ui-callback/dropdown ::events/set-form-id)}])
 
-                      form-fields))]))))
+          (case @form-id
+            "session-template/password" [login-password-fields]
+            "session-template/api-key" [login-api-key-fields]
+            [generate-fields method @form-id @form-data])]]))))
 
 
 (defn signup-method-form
   [[_ methods]]
-  (let [tr          (subscribe [::i18n-subs/tr])
-        form-id     (subscribe [::subs/form-id])
-        form-data   (subscribe [::subs/form-data])
-        form-error? (subscribe [::subs/form-error?])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        form-id   (subscribe [::subs/form-id])
+        form-data (subscribe [::subs/form-data])
+        form-spec (subscribe [::subs/form-spec])]
     (fn [[_ methods]]
       ^{:key @form-id}
       (let [dropdown?        (> (count methods) 1)
-            method           (u/select-method-by-id @form-id methods)
-
-            form-fields      (case @form-id
-                               "user-template/email-password" (signup-email-password-fields)
-                               (generate-fields method @form-id @form-data))
+            method           (utils/select-method-by-id @form-id methods)
 
             dropdown-options (map dropdown-method-option methods)]
 
         [ui/Form
          {:id           (or @form-id "authn-form-placeholder-id")
           :on-key-press (partial forms-utils/on-return-key
-                                 #(when-not @form-error?
+                                 #(when (s/valid? @form-spec @form-data)
                                     (dispatch [::events/submit {:close-modal false
                                                                 :success-msg (@tr [:validation-email-success-msg])}])))}
 
-         (vec (concat [ui/Segment {:style {:height     "35ex"
-                                           :overflow-y "auto"}}
-                       (when dropdown?
-                         [ui/FormDropdown
-                          {:options       dropdown-options
-                           :value         @form-id
-                           :fluid         true
-                           :selection     true
-                           :close-on-blur true
-                           :on-change     (ui-callback/dropdown ::events/set-form-id)}])]
-
-                      form-fields))]))))
+         [ui/Segment {:style {:height     "35ex"
+                              :overflow-y "auto"}}
+          (when dropdown?
+            [ui/FormDropdown
+             {:options       dropdown-options
+              :value         @form-id
+              :fluid         true
+              :selection     true
+              :close-on-blur true
+              :on-change     (ui-callback/dropdown ::events/set-form-id)}])
+          (case @form-id
+            "user-template/email-password" [signup-email-password-fields]
+            [generate-fields method @form-id @form-data])]]))))
 
 
 (defn authn-method-group-option
   [[group methods]]
   (let [{:keys [icon]} (first methods)
-        option-label (reagent/as-element [:span [ui/Icon {:name icon}] group])]
+        option-label (r/as-element [:span [ui/Icon {:name icon}] group])]
     {:text    option-label
      :value   group
      :content option-label}))
@@ -226,7 +254,7 @@
                       :on-change (ui-callback/value
                                    (fn [group-id]
                                      (dispatch [::events/set-selected-method-group group-id])
-                                     (let [form-id (-> (u/select-group-methods-by-id group-id method-groups)
+                                     (let [form-id (-> (utils/select-group-methods-by-id group-id method-groups)
                                                        first
                                                        :id)]
                                        (dispatch [::events/set-form-id form-id]))))}]))))
@@ -242,7 +270,7 @@
         success-message       (subscribe [::subs/success-message])
         selected-method-group (subscribe [::subs/selected-method-group])]
     (fn [collection-kw failed-kw method-form-fn]
-      (let [method-groups               (u/grouped-authn-methods @templates)
+      (let [method-groups               (utils/grouped-authn-methods @templates)
             selected-authn-method-group (some->> method-groups
                                                  (filter #(-> % first (= @selected-method-group)))
                                                  first)]
@@ -301,9 +329,10 @@
 
 (defn generic-modal
   [id modal-kw form-fn submit-opts]
-  (let [tr          (subscribe [::i18n-subs/tr])
-        open-modal  (subscribe [::subs/open-modal])
-        form-error? (subscribe [::subs/form-error?])]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        open-modal (subscribe [::subs/open-modal])
+        form-spec  (subscribe [::subs/form-spec])
+        form-data  (subscribe [::subs/form-data])]
     (fn [id modal-kw form-fn]
       [ui/Modal
        {:id        id
@@ -322,7 +351,7 @@
         [uix/Button
          {:text     (@tr [modal-kw])
           :positive true
-          :disabled @form-error?
+          :disabled (not (s/valid? @form-spec @form-data))
           :on-click #(dispatch [::events/submit submit-opts])}]]])))
 
 
@@ -331,151 +360,164 @@
 
 
 (defn modal-reset-password []
-  (let [open-modal       (subscribe [::subs/open-modal])
-        error-message    (subscribe [::subs/error-message])
-        success-message  (subscribe [::subs/success-message])
-        loading?         (subscribe [::subs/loading?])
-        tr               (subscribe [::i18n-subs/tr])
-        fields-in-errors (subscribe [::subs/fields-in-errors])
-        form-error?      (subscribe [::subs/form-error?])
-        submit-fn        #(dispatch [::events/submit {:close-modal false
-                                                      :success-msg (@tr [:validation-email-success-msg])}])]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        open-modal      (subscribe [::subs/open-modal])
+        error-message   (subscribe [::subs/error-message])
+        success-message (subscribe [::subs/success-message])
+        loading?        (subscribe [::subs/loading?])
+        form-data       (subscribe [::subs/form-data])
+        form-spec       (subscribe [::subs/form-spec])
+        submit-fn       #(dispatch [::events/submit {:close-modal false
+                                                     :success-msg (@tr [:validation-email-success-msg])}])]
     (fn []
-      [ui/Modal
-       {:id        "modal-reset-password-id"
-        :size      :tiny
-        :open      (= @open-modal :reset-password)
-        :closeIcon true
-        :on-close  #(dispatch [::events/close-modal])}
+      (let [form-valid?     (s/valid? @form-spec @form-data)
+            {:keys [username new-password repeat-new-password]} @form-data
+            passwords-error (not= new-password repeat-new-password)]
+        [ui/Modal
+         {:id        "modal-reset-password-id"
+          :size      :tiny
+          :open      (= @open-modal :reset-password)
+          :closeIcon true
+          :on-close  #(dispatch [::events/close-modal])}
 
-       [ui/ModalHeader (@tr [:reset-password])]
+         [ui/ModalHeader (@tr [:reset-password])]
 
-       [ui/ModalContent
+         [ui/ModalContent
 
-        (when @error-message
-          [ui/Message {:negative  true
-                       :size      "tiny"
-                       :onDismiss #(dispatch [::events/clear-error-message])}
-           [ui/MessageHeader (@tr [:reset-password-error])]
-           [:p @error-message]])
+          (when @error-message
+            [ui/Message {:negative  true
+                         :size      "tiny"
+                         :onDismiss #(dispatch [::events/clear-error-message])}
+             [ui/MessageHeader (@tr [:reset-password-error])]
+             [:p @error-message]])
 
-        (when @success-message
-          [ui/Message {:negative  false
-                       :size      "tiny"
-                       :onDismiss #(dispatch [::events/clear-success-message])}
-           [ui/MessageHeader (@tr [:success])]
-           [:p @success-message]])
+          (when @success-message
+            [ui/Message {:negative  false
+                         :size      "tiny"
+                         :onDismiss #(dispatch [::events/clear-success-message])}
+             [ui/MessageHeader (@tr [:success])]
+             [:p @success-message]])
 
-        [ui/Form {:on-key-press (partial forms-utils/on-return-key
-                                         #(when-not @form-error?
-                                            (submit-fn)))}
-         [ui/FormInput {:name          "username"
-                        :placeholder   (str/capitalize (@tr [:username]))
-                        :icon          "user"
-                        :fluid         false
-                        :icon-position "left"
-                        :required      true
-                        :auto-focus    true
-                        :auto-complete "on"
-                        :on-change     (ui-callback/value
-                                         #(dispatch [::events/update-form-data :username %]))}]
+          [ui/Form {:on-key-press (partial forms-utils/on-return-key
+                                           #(when form-valid?
+                                              (submit-fn)))}
+           [ui/FormInput {:name          "username"
+                          :placeholder   (str/capitalize (@tr [:username]))
+                          :icon          "user"
+                          :fluid         false
+                          :icon-position "left"
+                          :error         (and (some? username)
+                                              (not (s/valid? ::spec/username username)))
+                          :required      true
+                          :auto-focus    true
+                          :auto-complete "on"
+                          :on-change     (ui-callback/value
+                                           #(dispatch [::events/update-form-data :username %]))}]
 
-         [ui/FormGroup {:widths 2}
-          [ui/FormInput {:name          "password"
-                         :type          "password"
-                         :placeholder   (str/capitalize (@tr [:new-password]))
-                         :icon          "key"
-                         :icon-position "left"
-                         :required      true
-                         :error         (contains? @fields-in-errors "password")
-                         :auto-complete "off"
-                         :on-change     (ui-callback/value
-                                          #(dispatch [::events/update-form-data :new-password %]))}]
+           [ui/FormGroup {:widths 2}
+            [ui/FormInput {:name          "password"
+                           :type          "password"
+                           :placeholder   (str/capitalize (@tr [:new-password]))
+                           :icon          "key"
+                           :icon-position "left"
+                           :required      true
+                           :error         (and (some? new-password)
+                                               (or passwords-error
+                                                   (not (s/valid? ::spec/new-password new-password))))
+                           :auto-complete "off"
+                           :on-change     (ui-callback/value
+                                            #(dispatch [::events/update-form-data :new-password %]))}]
 
-          [ui/FormInput {:name          "password"
-                         :type          "password"
-                         :placeholder   (str/capitalize (@tr [:new-password-repeat]))
-                         :required      true
-                         :error         (contains? @fields-in-errors "password")
-                         :auto-complete "off"
-                         :on-change     (ui-callback/value
-                                          #(dispatch [::events/update-form-data :repeat-new-password %]))}]]]
+            [ui/FormInput {:name          "password"
+                           :type          "password"
+                           :placeholder   (str/capitalize (@tr [:new-password-repeat]))
+                           :required      true
+                           :error         (and (some? new-password)
+                                               (or passwords-error
+                                                   (not (s/valid? ::spec/repeat-new-password repeat-new-password))))
+                           :auto-complete "off"
+                           :on-change     (ui-callback/value
+                                            #(dispatch [::events/update-form-data :repeat-new-password %]))}]]]
 
-        [:div {:style {:padding "10px 0"}} (@tr [:reset-password-inst])]]
+          [:div {:style {:padding "10px 0"}} (@tr [:reset-password-inst])]]
 
-       [ui/ModalActions
-        [switch-panel-link :reset-password]
-        [uix/Button
-         {:text     (@tr [:reset-password])
-          :positive true
-          :loading  @loading?
-          :disabled @form-error?
-          :on-click submit-fn}]]])))
+         [ui/ModalActions
+          [switch-panel-link :reset-password]
+          [uix/Button
+           {:text     (@tr [:reset-password])
+            :positive true
+            :loading  @loading?
+            :disabled (or (not form-valid?)
+                          passwords-error)
+            :on-click submit-fn}]]]))))
 
 
 (defn modal-create-user []
-  (let [open-modal          (subscribe [::subs/open-modal])
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        open-modal          (subscribe [::subs/open-modal])
         error-message       (subscribe [::subs/error-message])
         success-message     (subscribe [::subs/success-message])
         loading?            (subscribe [::subs/loading?])
-        tr                  (subscribe [::i18n-subs/tr])
-        fields-in-errors    (subscribe [::subs/fields-in-errors])
-        form-error?         (subscribe [::subs/form-error?])
         server-redirect-uri (subscribe [::subs/server-redirect-uri])
-        submit-fn           #(dispatch [::events/submit {:close-modal false
-                                                         :error-msg   (@tr [:error-occured])
-                                                         :success-msg (@tr [:invitation-email-success-msg])
+        form-data           (subscribe [::subs/form-data])
+        form-spec           (subscribe [::subs/form-spec])
+        submit-fn           #(dispatch [::events/submit {:close-modal  false
+                                                         :error-msg    (@tr [:error-occured])
+                                                         :success-msg  (@tr [:invitation-email-success-msg])
                                                          :redirect-url (str @server-redirect-uri "?reset-password")}])]
     (fn []
-      [ui/Modal
-       {:id        "modal-create-user"
-        :size      :tiny
-        :open      (= @open-modal :create-user)
-        :closeIcon true
-        :on-close  #(dispatch [::events/close-modal])}
+      (let [form-valid? (s/valid? @form-spec @form-data)
+            {:keys [email]} @form-data]
+        [ui/Modal
+         {:id        "modal-create-user"
+          :size      :tiny
+          :open      (= @open-modal :create-user)
+          :closeIcon true
+          :on-close  #(dispatch [::events/close-modal])}
 
-       [ui/ModalHeader (@tr [:create-user])]
+         [ui/ModalHeader (@tr [:create-user])]
 
-       [ui/ModalContent
+         [ui/ModalContent
 
-        (when @error-message
-          [ui/Message {:negative  true
-                       :size      "tiny"
-                       :onDismiss #(dispatch [::events/clear-error-message])}
-           [ui/MessageHeader (@tr [:error-occured])]
-           [:p @error-message]])
+          (when @error-message
+            [ui/Message {:negative  true
+                         :size      "tiny"
+                         :onDismiss #(dispatch [::events/clear-error-message])}
+             [ui/MessageHeader (@tr [:error-occured])]
+             [:p @error-message]])
 
-        (when @success-message
-          [ui/Message {:negative  false
-                       :size      "tiny"
-                       :onDismiss #(dispatch [::events/clear-success-message])}
-           [ui/MessageHeader (@tr [:success])]
-           [:p @success-message]])
+          (when @success-message
+            [ui/Message {:negative  false
+                         :size      "tiny"
+                         :onDismiss #(dispatch [::events/clear-success-message])}
+             [ui/MessageHeader (@tr [:success])]
+             [:p @success-message]])
 
-        [ui/Form {:on-key-press (partial forms-utils/on-return-key
-                                         #(when-not @form-error?
-                                            (submit-fn)))}
-         [ui/FormInput {:name          "email"
-                        :placeholder   "user@example.com"
-                        :icon          "mail"
-                        :fluid         false
-                        :icon-position "left"
-                        :error         (contains? @fields-in-errors "email")
-                        :required      true
-                        :auto-focus    true
-                        :auto-complete "on"
-                        :on-change     (ui-callback/value
-                                         #(dispatch [::events/update-form-data :email %]))}]]
+          [ui/Form {:on-key-press (partial forms-utils/on-return-key
+                                           #(when form-valid?
+                                              (submit-fn)))}
+           [ui/FormInput {:name          "email"
+                          :placeholder   "user@example.com"
+                          :icon          "mail"
+                          :fluid         false
+                          :icon-position "left"
+                          :error         (and (some? email)
+                                              (not (s/valid? ::spec/email email)))
+                          :required      true
+                          :auto-focus    true
+                          :auto-complete "on"
+                          :on-change     (ui-callback/value
+                                           #(dispatch [::events/update-form-data :email %]))}]]
 
-        [:div {:style {:padding "10px 0"}} (@tr [:create-user-inst])]]
+          [:div {:style {:padding "10px 0"}} (@tr [:create-user-inst])]]
 
-       [ui/ModalActions
-        [uix/Button
-         {:text     (@tr [:create-user])
-          :positive true
-          :loading  @loading?
-          :disabled @form-error?
-          :on-click submit-fn}]]])))
+         [ui/ModalActions
+          [uix/Button
+           {:text     (@tr [:create-user])
+            :positive true
+            :loading  @loading?
+            :disabled (not form-valid?)
+            :on-click submit-fn}]]]))))
 
 
 
@@ -552,7 +594,7 @@
        [ui/ButtonGroup {:primary true}
         [ui/Button {:on-click profile-fn}
          [ui/Icon {:name "user"}]
-         (utils/truncate @user)]
+         (general-utils/truncate @user)]
         [ui/Dropdown {:inline    true
                       :button    true
                       :pointing  "top right"

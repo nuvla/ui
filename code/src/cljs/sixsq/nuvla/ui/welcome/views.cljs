@@ -2,8 +2,8 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.authn.events :as authn-events]
+    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]

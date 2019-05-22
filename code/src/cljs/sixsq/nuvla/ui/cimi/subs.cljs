@@ -2,7 +2,8 @@
   (:require
     [re-frame.core :refer [dispatch reg-sub]]
     [sixsq.nuvla.ui.cimi.events :as events]
-    [sixsq.nuvla.ui.cimi.spec :as spec]))
+    [sixsq.nuvla.ui.cimi.spec :as spec]
+    [taoensso.timbre :as log]))
 
 
 (reg-sub

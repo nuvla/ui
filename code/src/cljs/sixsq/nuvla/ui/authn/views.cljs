@@ -39,9 +39,6 @@
                         :icon          "user"
                         :icon-position "left"
                         :auto-focus    true
-                        :error         (and
-                                         (some? username)
-                                         (not (s/valid? ::spec/username key)))
                         :on-change     (ui-callback/value
                                          #(dispatch [::events/update-form-data :username %]))}]
          [ui/FormInput {:name          "password"
@@ -49,9 +46,6 @@
                         :type          "password"
                         :icon          "key"
                         :icon-position "left"
-                        :error         (and
-                                         (some? password)
-                                         (not (s/valid? ::spec/password password)))
                         :on-change     (ui-callback/value
                                          #(dispatch [::events/update-form-data :password %]))}]
          [:div {:style {:text-align "right"}}
@@ -307,7 +301,8 @@
 
 (defn switch-panel-link
   [modal-kw]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        signup-template? (subscribe [::subs/user-template-exist? "user-template/email-password"])]
     (fn [modal-kw]
       (let [other-modal (case modal-kw
                           :login :signup
@@ -319,8 +314,9 @@
                           (dispatch [::events/set-form-id nil])
                           (dispatch [::events/open-modal other-modal]))]
         (case modal-kw
-          :login [:span (@tr [:no-account?]) " "
-                  [:a {:on-click on-click :style {:cursor "pointer"}} (str (@tr [:signup-link]))]]
+          :login (when @signup-template?
+                   [:span (@tr [:no-account?]) " "
+                    [:a {:on-click on-click :style {:cursor "pointer"}} (str (@tr [:signup-link]))]])
           :reset-password [:span (@tr [:already-registered?]) " "
                            [:a {:on-click on-click :style {:cursor "pointer"}} (str (@tr [:login-link]))]]
           :signup [:span (@tr [:already-registered?]) " "
@@ -328,12 +324,12 @@
 
 
 (defn generic-modal
-  [id modal-kw form-fn submit-opts]
+  [id modal-kw form-fn submit-opts form-validation?]
   (let [tr         (subscribe [::i18n-subs/tr])
         open-modal (subscribe [::subs/open-modal])
         form-spec  (subscribe [::subs/form-spec])
         form-data  (subscribe [::subs/form-data])]
-    (fn [id modal-kw form-fn]
+    (fn [id modal-kw form-fn submit-opts form-validation?]
       [ui/Modal
        {:id        id
         :size      :tiny
@@ -351,12 +347,12 @@
         [uix/Button
          {:text     (@tr [modal-kw])
           :positive true
-          :disabled (not (s/valid? @form-spec @form-data))
+          :disabled (and form-validation? (not (s/valid? @form-spec @form-data)))
           :on-click #(dispatch [::events/submit submit-opts])}]]])))
 
 
 (defn modal-login []
-  [generic-modal "modal-login-id" :login login-form-container {}])
+  [generic-modal "modal-login-id" :login login-form-container {} false])
 
 
 (defn modal-reset-password []
@@ -520,25 +516,26 @@
             :on-click submit-fn}]]]))))
 
 
-
 (defn modal-signup []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [generic-modal "modal-signup-id" :signup signup-form-container
-     {:close-modal false
-      :success-msg (@tr [:validation-email-success-msg])}]))
+  (let [tr          (subscribe [::i18n-subs/tr])
+        submit-opts {:close-modal false
+                     :success-msg (@tr [:validation-email-success-msg])}]
+    [generic-modal "modal-signup-id" :signup signup-form-container submit-opts true]))
 
 
 (defn authn-dropdown-menu
   []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        user           (subscribe [::subs/user])
-        sign-out-fn    (fn []
-                         (dispatch [::events/logout])
-                         (dispatch [::history-events/navigate "welcome"]))
-        create-user-fn #(do
-                          (dispatch [::events/set-form-id "user-template/email-invitation"])
-                          (dispatch [::events/open-modal :create-user]))
-        logged-in?     (boolean @user)]
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        user                 (subscribe [::subs/user])
+        sign-out-fn          (fn []
+                               (dispatch [::events/logout])
+                               (dispatch [::history-events/navigate "welcome"]))
+        create-user-fn       #(do
+                                (dispatch [::events/set-form-id "user-template/email-invitation"])
+                                (dispatch [::events/open-modal :create-user]))
+        logged-in?           (boolean @user)
+
+        invitation-template? (subscribe [::subs/user-template-exist? "user-template/email-invitation"])]
 
     [ui/DropdownMenu
 
@@ -550,12 +547,15 @@
           :icon     "sign out"
           :on-click sign-out-fn}]
         [ui/DropdownDivider]
-        [ui/DropdownItem
-         {:key      "invite"
-          :text     (@tr [:create-user])
-          :icon     "user add"
-          :on-click create-user-fn}]
-        [ui/DropdownDivider]])
+
+        (when @invitation-template?
+          [:<>
+           [ui/DropdownItem
+            {:key      "invite"
+             :text     (@tr [:create-user])
+             :icon     "user add"
+             :on-click create-user-fn}]
+           [ui/DropdownDivider]])])
 
      [:<>
       [ui/DropdownItem {:aria-label (@tr [:documentation])
@@ -579,12 +579,13 @@
 
 (defn authn-menu
   []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        user       (subscribe [::subs/user])
-        profile-fn #(history-utils/navigate "profile")
-        login-fn   #(dispatch [::events/open-modal :login])
-        signup-fn  #(dispatch [::events/open-modal :signup])
-        logged-in? (boolean @user)]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        user             (subscribe [::subs/user])
+        profile-fn       #(history-utils/navigate "profile")
+        login-fn         #(dispatch [::events/open-modal :login])
+        signup-fn        #(dispatch [::events/open-modal :signup])
+        logged-in?       (boolean @user)
+        signup-template? (subscribe [::subs/user-template-exist? "user-template/email-password"])]
     [:<>
      [modal-login]
      [modal-reset-password]
@@ -601,11 +602,12 @@
                       :className "icon"}
          (authn-dropdown-menu)]]
        [:div
-        [:span {:style    {:padding-right "10px"
-                           :cursor        "pointer"}
-                :on-click signup-fn}
-         [ui/Icon {:name "signup"}]
-         (@tr [:signup])]
+        (when @signup-template?
+          [:span {:style    {:padding-right "10px"
+                             :cursor        "pointer"}
+                  :on-click signup-fn}
+           [ui/Icon {:name "signup"}]
+           (@tr [:signup])])
         [ui/ButtonGroup {:primary true}
          [ui/Button {:on-click login-fn}
           [ui/Icon {:name "sign in"}]

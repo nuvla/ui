@@ -20,9 +20,6 @@
 
 (defn resolve-metadata-id
   [{:keys [id resource-metadata resource-url] :as resource}]
-  ;(log/error "resource-metadata" resource-metadata)
-  ;(when id
-  ;  (log/error (str "resource-metadata/" (str/replace id #"/" "-"))))
   (cond
     resource-metadata resource-metadata
     (re-find #"-template/" (str id)) (str "resource-metadata/" (str/replace id #"/" "-"))
@@ -40,6 +37,5 @@
   (fn [documents [_ resource]]
     (if (seq documents)
       (let [resource-metadata-id (resolve-metadata-id resource)]
-        ;        (log/error "search for metadata id:" resource-metadata-id (sort (keys documents)))
         (get documents resource-metadata-id))
       (dispatch [::events/get-documents]))))

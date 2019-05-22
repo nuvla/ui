@@ -1,11 +1,11 @@
 (ns sixsq.nuvla.ui.authn.events
   (:require
-    [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.authn.effects :as fx]
     [sixsq.nuvla.ui.authn.spec :as spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [sixsq.nuvla.ui.cimi.events :as cimi-events]
     [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.history.effects :as history-fx]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -15,7 +15,7 @@
 
 (reg-event-fx
   ::initialize
-  (fn [{{:keys [::client-spec/client] :as db} :db} _]
+  (fn [{{:keys [::client-spec/client]} :db} _]
     (when client
       {::cimi-api-fx/session [client (fn [session]
                                        (dispatch [::set-session session])
@@ -26,19 +26,23 @@
 
 (reg-event-fx
   ::set-session
-  (fn [{:keys [db]} [_ session]]
-    (let [redirect-uri (::spec/redirect-uri db)]
-      (cond-> {:db (assoc db ::spec/session session)}
-              session (assoc ::fx/automatic-logout-at-session-expiry [session])
-              (and session redirect-uri) (assoc ::history-fx/navigate-js-location [redirect-uri])))))
+  (fn [{{:keys [::spec/redirect-uri
+                ::spec/session] :as db} :db} [_ session-arg]]
+    (when (not= session session-arg)
+      ;; force refresh templates collection cache
+      (dispatch [::cimi-events/get-cloud-entry-point]))
+
+    (cond-> {:db (assoc db ::spec/session session-arg)}
+            session-arg (assoc ::fx/automatic-logout-at-session-expiry [session-arg])
+            (and session-arg redirect-uri) (assoc ::history-fx/navigate-js-location [redirect-uri]))))
 
 
 (reg-event-fx
   ::logout
-  (fn [cofx _]
-    (when-let [client (-> cofx :db ::client-spec/client)]
-      {::cimi-api-fx/logout [client (fn []
-                                      (dispatch [::set-session nil]))]})))
+  (fn [{{:keys [::client-spec/client] :as db} :db} _]
+    (when client
+      {:db                  (assoc db :sixsq.nuvla.ui.main.spec/bootstrap-message nil)
+       ::cimi-api-fx/logout [client #(dispatch [::set-session nil])]})))
 
 
 (reg-event-db

@@ -27,9 +27,8 @@
 
 (defn collections-template-map
   "Creates a map with only templates collections href as key and nil as a value."
-  [cep]
-  (into {} (->> cep
-                collection-href-map
+  [collection-href-map]
+  (into {} (->> collection-href-map
                 (filter #(-> % second (str/ends-with? template-suffix)))
                 (map (juxt #(-> % second keyword) (constantly nil))))))
 

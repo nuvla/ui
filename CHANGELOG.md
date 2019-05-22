@@ -2,10 +2,11 @@
 
 ## [Unreleased]
 
-## [2.0.1] - 2019-05-22
+## [2.0.2] - 2019-05-22
 
 ### Changed
 
+  - Release script fix
   - Deployment - force refresh deployments on delete
   - Message bootstrap - hide on logout
   - Collection templates - force refresh on session change
@@ -16,7 +17,9 @@
   - Page api - Document button not activated on return
   - Page api - Refresh results on delete or add resource
   - Message bootstrap - check triggered if session not nil
-  
+
+## [2.0.1] - 2019-05-22 - broken tag
+
 ## [2.0.0] - 2019-05-20
 
 ### Changed

@@ -185,16 +185,14 @@
           (assoc ::spec/cloud-entry-point {:base-uri        base-uri
                                            :collection-href href-map
                                            :collection-key  key-map})
-          (assoc ::spec/collections-templates-cache (utils/collections-template-map cep))))))
+          (assoc ::spec/collections-templates-cache (utils/collections-template-map href-map))))))
 
 
 (reg-event-fx
   ::get-cloud-entry-point
   (fn [{{:keys [::client-spec/client] :as db} :db} _]
     (when client
-      {::cimi-api-fx/cloud-entry-point
-       [client (fn [cep]
-                 (dispatch [::set-cloud-entry-point cep]))]})))
+      {::cimi-api-fx/cloud-entry-point [client #(dispatch [::set-cloud-entry-point %])]})))
 
 
 (reg-event-fx

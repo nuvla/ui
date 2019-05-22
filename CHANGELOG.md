@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - Message bootstrap - hide on logout
+  - Collection templates - force refresh on session change
+  - Authn Signup/Create user visibility depend on ACLs
   - Footer - Fix code version in footer
   - Authn - Fix signup and cleaner validatioi code
   - Page Deployment - Make job message multiline

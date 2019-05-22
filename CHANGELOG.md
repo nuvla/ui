@@ -2,8 +2,11 @@
 
 ## [Unreleased]
 
+## [2.0.1] - 2019-05-22
+
 ### Changed
 
+  - Deployment - force refresh deployments on delete
   - Message bootstrap - hide on logout
   - Collection templates - force refresh on session change
   - Authn Signup/Create user visibility depend on ACLs

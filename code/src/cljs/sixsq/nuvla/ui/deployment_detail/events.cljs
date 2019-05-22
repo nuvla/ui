@@ -144,6 +144,7 @@
                                                                status (str " (" status ")"))
                                               :content message
                                               :type    :success}])
+                                  (dispatch [:sixsq.nuvla.ui.deployment.events/get-deployments])
                                   (dispatch [::history-events/navigate "deployment"])))]
        })))
 

@@ -39,9 +39,9 @@
 
 (reg-event-fx
   ::get-nuvlaboxes
-  (fn [{{:keys                            [::spec/state-selector
-                                           ::spec/page
-                                           ::spec/elements-per-page
+  (fn [{{:keys [::spec/state-selector
+                ::spec/page
+                ::spec/elements-per-page
                 ::client-spec/client] :as db} :db} _]
     {:db                   (assoc db ::spec/loading? true)
      ::cimi-api-fx/search  [client
@@ -66,9 +66,11 @@
                                      status (str " (" status ")"))
                     :content message
                     :type    :error})])
-      {:db                        (assoc db ::spec/nuvlaboxes nuvlaboxes
-                                            ::spec/loading? false)
-       ::fx/get-status-nuvlaboxes [client resources #(dispatch [::set-status-nuvlaboxes %])]})))
+      (cond->
+        {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
+                       ::spec/loading? false)}
+        (not-empty resources) (assoc ::fx/get-status-nuvlaboxes
+                                     [client resources #(dispatch [::set-status-nuvlaboxes %])])))))
 
 
 (reg-event-db

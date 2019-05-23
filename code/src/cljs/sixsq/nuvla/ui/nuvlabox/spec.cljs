@@ -13,7 +13,11 @@
                                       ::active-count
                                       ::healthy?]))
 
-(s/def ::nuvlabox-records any?)
+(s/def ::nuvlaboxes any?)
+
+(s/def ::state-nuvlaboxes any?)
+
+(s/def ::status-nuvlaboxes any?)
 
 (s/def ::page int?)
 (s/def ::elements-per-page int?)
@@ -24,7 +28,9 @@
 
 (s/def ::db (s/keys :req [::loading?
                           ::health-info
-                          ::nuvlabox-records
+                          ::nuvlaboxes
+                          ::state-nuvlaboxes
+                          ::status-nuvlaboxes
                           ::page
                           ::elements-per-page
                           ::total-elements
@@ -36,9 +42,11 @@
                                     :active-count 0
                                     :healthy?     {}}
 
-               ::nuvlabox-records  nil
+               ::nuvlaboxes        nil
+               ::state-nuvlaboxes  nil
+               ::status-nuvlaboxes nil
                ::page              1
                ::elements-per-page 10
                ::total-elements    0
-               ::state-selector    "all"})
+               ::state-selector    nil})
 

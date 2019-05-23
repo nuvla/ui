@@ -5,25 +5,26 @@
     [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.main.effects :as main-fx]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.nuvlabox.effects :as nuvlabox-fx]
-    [sixsq.nuvla.ui.nuvlabox.spec :as nuvlabox-spec]
+    [sixsq.nuvla.ui.nuvlabox.effects :as fx]
+    [sixsq.nuvla.ui.nuvlabox.spec :as spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [sixsq.nuvla.ui.nuvlabox.utils :as utils]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db
   ::set-health-info
   (fn [db [_ state-info]]
     (assoc db
-      ::nuvlabox-spec/health-info state-info)))
+      ::spec/health-info state-info)))
 
 
 (reg-event-fx
   ::fetch-health-info
-  (fn [{:keys [db]} _]
-    (if-let [client (::client-spec/client db)]
-      {::nuvlabox-fx/fetch-health-info [client #(dispatch [::set-health-info %])]}
-      {:db db})))
+  (fn [{{:keys [::client-spec/client]} :db} _]
+    (when client
+      {::fx/fetch-health-info [client #(dispatch [::set-health-info %])]})))
 
 
 ;; from CIMI
@@ -32,57 +33,59 @@
 (reg-event-fx
   ::set-page
   (fn [{db :db} [_ page]]
-    {:db                                (assoc db ::nuvlabox-spec/page page)
-     ::nuvlabox-fx/get-nuvlabox-records nil}))
+    (dispatch [::get-nuvlaboxes])
+    {:db (assoc db ::spec/page page)}))
 
 
 (reg-event-fx
-  ::get-nuvlabox-records
-  (fn [{{:keys [::nuvlabox-spec/state-selector
-                ::nuvlabox-spec/page
-                ::nuvlabox-spec/elements-per-page
+  ::get-nuvlaboxes
+  (fn [{{:keys                            [::spec/state-selector
+                                           ::spec/page
+                                           ::spec/elements-per-page
                 ::client-spec/client] :as db} :db} _]
-    (let [resource-type :nuvlaboxRecords
-          filter (case state-selector
-                   "new" "state='new'"
-                   "activated" "state='activated'"
-                   "quarantined" "state='quarantined'"
-                   nil)]
-      {:db                  (assoc db ::nuvlabox-spec/loading? true
-                                      ::nuvlabox-spec/nuvlabox-records nil)
-       ::cimi-api-fx/search [client
-                             resource-type
-                             (general-utils/prepare-params {:filter  filter
-                                                            :first   (inc (* (dec page) elements-per-page))
-                                                            :last    (* page elements-per-page)
-                                                            :orderby "created:desc"
-                                                            :select  "id, macAddress, state, name"})
-                             #(dispatch [::set-nuvlabox-records resource-type %])]})))
+    {:db                   (assoc db ::spec/loading? true)
+     ::cimi-api-fx/search  [client
+                            :nuvlabox
+                            (general-utils/prepare-params
+                              (cond-> {:first   (inc (* (dec page) elements-per-page))
+                                       :last    (* page elements-per-page)
+                                       :orderby "created:desc"
+                                       :select  "id, name, state"}
+                                      state-selector (assoc :filter (utils/state-filter state-selector))))
+                            #(dispatch [::set-nuvlaboxes %])]
+     ::fx/state-nuvlaboxes [client #(dispatch [::set-state-nuvlaboxes %])]}))
 
 
 (reg-event-fx
-  ::set-nuvlabox-records
-  (fn [{db :db} [_ resource-type listing]]
-    (let [error? (instance? js/Error listing)]
-      (when error?
-        (dispatch [::messages-events/add
-                   (let [{:keys [status message]} (response/parse-ex-info listing)]
-                     {:header  (cond-> (str "failure getting " (name resource-type))
-                                       status (str " (" status ")"))
-                      :content message
-                      :type    :error})]))
-      {:db                       (assoc db ::nuvlabox-spec/nuvlabox-records (when-not error? listing)
-                                           ::nuvlabox-spec/loading? false)
-       ::main-fx/action-interval [{:action    :start
-                                   :id        :nuvlabox-health-info
-                                   :frequency 30000
-                                   :event     [::fetch-health-info]}]})))
+  ::set-nuvlaboxes
+  (fn [{{:keys [::client-spec/client] :as db} :db} [_ {:keys [resources] :as nuvlaboxes}]]
+    (if (instance? js/Error nuvlaboxes)
+      (dispatch [::messages-events/add
+                 (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
+                   {:header  (cond-> (str "failure getting nuvlaboxes")
+                                     status (str " (" status ")"))
+                    :content message
+                    :type    :error})])
+      {:db                        (assoc db ::spec/nuvlaboxes nuvlaboxes
+                                            ::spec/loading? false)
+       ::fx/get-status-nuvlaboxes [client resources #(dispatch [::set-status-nuvlaboxes %])]})))
+
+
+(reg-event-db
+  ::set-state-nuvlaboxes
+  (fn [db [_ state-nuvlaboxes]]
+    (assoc db ::spec/state-nuvlaboxes state-nuvlaboxes)))
+
+
+(reg-event-db
+  ::set-status-nuvlaboxes
+  (fn [db [_ status-nuvlaboxes]]
+    (assoc db ::spec/status-nuvlaboxes status-nuvlaboxes)))
 
 
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
-    {:db                                (assoc db
-                                          ::nuvlabox-spec/state-selector state-selector
-                                          ::nuvlabox-spec/page 1)
-     ::nuvlabox-fx/get-nuvlabox-records nil}))
+    (dispatch [::get-nuvlaboxes])
+    {:db (assoc db ::spec/state-selector state-selector
+                   ::spec/page 1)}))

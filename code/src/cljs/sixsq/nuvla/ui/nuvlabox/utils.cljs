@@ -5,6 +5,34 @@
     [sixsq.nuvla.client.api :as api]
     [sixsq.nuvla.ui.cimi-api.utils :as cimi-api-utils]))
 
+(def state-new "NEW")
+(def state-activated "ACTIVATED")
+(def state-quarantined "QUARANTINED")
+(def state-decommissioning "DECOMMISSIONING")
+(def state-error "ERROR")
+
+
+(def nuvlabox-states [state-activated
+                      state-new
+                      state-error
+                      state-quarantined
+                      state-decommissioning])
+
+
+(defn state->icon
+  [state]
+  (let [icons-map {state-activated "check"
+                   state-new "dolly"
+                   state-quarantined "eraser"
+                   state-decommissioning "trash"
+                   state-error "exclamation"}]
+    (get icons-map state)))
+
+
+(defn state-filter
+  [state]
+  (str "state='" state "'"))
+
 
 (def default-params {:first 1, :last 10000})
 
@@ -18,9 +46,9 @@
                                               :select "nuvlabox"))
 
 
-(defn nuvlabox-search
+(defn nuvlabox-status-search
   [client params]
-  (api/search client "nuvlaboxStates" (cimi-api-utils/sanitize-params params)))
+  (api/search client :nuvlabox-status (cimi-api-utils/sanitize-params params)))
 
 
 (defn percentage

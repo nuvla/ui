@@ -147,6 +147,23 @@
   (second (re-matches #"^(?:.*/)?(.+)$" op-uri)))
 
 
+(defn join-filters
+  [op filters]
+  (->> filters
+       (remove nil?)
+       (map #(str "(" % ")"))
+       (str/join (str " " op " "))))
+
+
+(defn join-or
+  [& filters]
+  (join-filters "or" filters))
+
+
+(defn join-and
+  [& filters]
+  (join-filters "and" filters))
+
 ;;
 ;; ACL utils
 ;;

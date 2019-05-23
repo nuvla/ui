@@ -76,5 +76,5 @@
        ;       [item :deployment "deployment" "cloud"]
        (when-not @iframe? [item :infra-service-short "infrastructures" "cloud"])
        (when-not @iframe? [item :credentials "credentials" "key"])
-       ;(when-not @iframe? [item :nuvlabox-ctrl "nuvlabox" "desktop"])
+       (when-not @iframe? [item :edge "edge" "box"])
        (when-not @iframe? [item :api "api" "code"])]]]))

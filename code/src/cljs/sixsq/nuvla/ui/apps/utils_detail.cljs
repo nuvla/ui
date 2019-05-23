@@ -8,9 +8,9 @@
 
 (defn db->module
   [module commit db]
-  (let [type (::spec/module-type db)
-        module (utils/db->module module commit db)]
-    (case type
+  (let [subtype (::spec/module-subtype db)
+        module  (utils/db->module module commit db)]
+    (case subtype
       :component (apps-component-utils/db->module module commit db)
       :project (apps-project-utils/db->module module commit db)
       module)))

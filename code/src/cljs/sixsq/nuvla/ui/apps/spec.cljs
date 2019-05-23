@@ -45,7 +45,7 @@
 (s/def ::form-spec any?)
 
 ; TODO: should be set (:component, :project)
-(s/def ::module-type any?)
+(s/def ::module-subtype any?)
 
 ;; Page
 

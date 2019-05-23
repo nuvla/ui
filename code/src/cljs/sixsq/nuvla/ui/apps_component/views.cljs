@@ -599,7 +599,7 @@
             parent    (get @module-common ::apps-spec/parent-path)
             editable? (apps-utils/editable? @module @is-new?)]
         (dispatch [::apps-events/set-form-spec ::spec/module-component])
-        (dispatch [::apps-events/set-module-type :component])
+        (dispatch [::apps-events/set-module-subtype :component])
         [ui/Container {:fluid true}
          [:h2 [ui/Icon {:name "grid layout"}]
           parent (when (not-empty parent) "/") name

@@ -98,7 +98,7 @@
   (fn [{{:keys [::client-spec/client] :as db} :db} _]
     (when client
       {:db                  (assoc db ::spec/credentials nil)
-       ::cimi-api-fx/search [client :credential {:filter "type^='infrastructure-service-swarm'"
+       ::cimi-api-fx/search [client :credential {:filter "subtype^='infrastructure-service-swarm'"
                                                  :select "id, name, services"}
                              #(dispatch [::set-credentials %])]})))
 

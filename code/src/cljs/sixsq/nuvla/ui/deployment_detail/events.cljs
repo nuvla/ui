@@ -83,7 +83,7 @@
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ href]]
     (let [filter-str (str "content/resource/href='" href "'")
           order-by-str "timestamp:desc"
-          select-str "id, content, severity, timestamp, type"
+          select-str "id, content, severity, timestamp, category"
           query-params {:filter  filter-str
                         :orderby order-by-str
                         :select  select-str}]

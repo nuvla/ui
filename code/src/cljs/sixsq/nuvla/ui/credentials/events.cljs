@@ -184,6 +184,7 @@
 (reg-event-db
   ::set-infrastructure-services-available
   (fn [db [_ type response]]
+    ;FIXME check type or subtype
     (let [infrastructure-services (:resources response)]
       (assoc-in db [::spec/infrastructure-services-available type] infrastructure-services))))
 

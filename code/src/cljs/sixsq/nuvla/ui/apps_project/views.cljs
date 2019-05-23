@@ -22,10 +22,10 @@
 
 
 (defn format-module
-  [{:keys [type name path description] :as module}]
+  [{:keys [subtype name path description] :as module}]
   (when module
     (let [on-click  #(dispatch [::history-events/navigate (str "apps/" path)])
-          icon-name (apps-utils/category-icon type)]
+          icon-name (apps-utils/subtype-icon subtype)]
       [ui/ListItem {:on-click on-click}
        [ui/ListIcon {:name           icon-name
                      :size           "large"
@@ -92,7 +92,7 @@
             parent    (get @module-common ::apps-spec/parent-path)
             editable? (apps-utils/editable? @module @is-new?)]
         (dispatch [::apps-events/set-form-spec ::spec/module-project])
-        (dispatch [::apps-events/set-module-type :project])
+        (dispatch [::apps-events/set-module-subtype :project])
         [ui/Container {:fluid true}
          [:h2 [ui/Icon {:name "folder"}]
           parent (when (not-empty parent) "/") name

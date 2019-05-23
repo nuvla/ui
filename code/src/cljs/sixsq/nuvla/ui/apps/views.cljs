@@ -19,25 +19,25 @@
 
 
 (defn module-details
-  [new-type]
+  [new-subtype]
   (let [module (subscribe [::subs/module])]
     (dispatch [::main-events/changes-protection? false])
     (dispatch [::events/form-valid true])
     (dispatch [::events/set-validate-form? false])
-    (fn [new-type]
-      (let [type (:type @module)]
-        (if (or (= "component" new-type) (= "COMPONENT" type))
+    (fn [new-subtype]
+      (let [subtype (:subtype @module)]
+        (if (or (= "component" new-subtype) (= "component" subtype))
           [apps-component-views/view-edit]
           [apps-project-views/view-edit])))))
 
 
 (defn new-module
-  [new-type]
+  [new-subtype]
   (let [nav-path   (subscribe [::main-subs/nav-path])
         new-parent (utils/nav-path->parent-path @nav-path)
         new-name   (utils/nav-path->module-name @nav-path)]
-    (dispatch [::events/clear-module new-name new-parent (str/upper-case new-type)])
-    (case new-type
+    (dispatch [::events/clear-module new-name new-parent (str/upper-case new-subtype)])
+    (case new-subtype
       "component" (apps-component-views/clear-module)
       "project" (apps-project-views/clear-module)
       (apps-project-views/clear-module))))
@@ -49,17 +49,17 @@
     (fn []
       (let [module-name (utils/nav-path->module-name @nav-path)
             query       (clojure.walk/keywordize-keys (:query (url/url (-> js/window .-location .-href))))
-            new-type    (:type query)
+            new-subtype (:subtype query)
             version     (:version query nil)
             is-root?    (empty? module-name)
-            is-new?     (not (empty? new-type))]
-        (dispatch [::events/is-new? (not (empty? new-type))])
+            is-new?     (not (empty? new-subtype))]
+        (dispatch [::events/is-new? (not (empty? new-subtype))])
         (if-not is-root?
           (do
             (if-not is-new?
               (dispatch [::events/get-module version])
-              (new-module new-type))
-            [module-details new-type])
+              (new-module new-subtype))
+            [module-details new-subtype])
           [apps-store-views/root-view])))))
 
 

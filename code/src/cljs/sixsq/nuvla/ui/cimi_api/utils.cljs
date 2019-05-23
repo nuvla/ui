@@ -57,7 +57,7 @@
 (defn split-form-data
   [form-data]
   (let [common-attrs #{:name :description :properties}
-        common-map (select-keys form-data common-attrs)
+        common-map   (select-keys form-data common-attrs)
         template-map (into {} (remove #(common-attrs (first %)) form-data))]
     [common-map template-map]))
 

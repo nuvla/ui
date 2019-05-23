@@ -12,12 +12,12 @@
 
 (defn summary-row
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr           (subscribe [::i18n-subs/tr])
         input-params (subscribe [::subs/input-parameters])
-        completed? (subscribe [::subs/parameters-completed?])
+        completed?   (subscribe [::subs/parameters-completed?])
 
-        description (str "Number of parameters: " (count @input-params))
-        on-click-fn #(dispatch [::events/set-active-step :parameters])]
+        description  (str "Number of parameters: " (count @input-params))
+        on-click-fn  #(dispatch [::events/set-active-step :parameters])]
 
     ^{:key "parameters"}
     [ui/TableRow {:active   false
@@ -50,7 +50,7 @@
 
 (defn content
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr           (subscribe [::i18n-subs/tr])
         input-params (subscribe [::subs/input-parameters])]
 
     (if (seq @input-params)

@@ -28,8 +28,8 @@
 (reg-event-fx
   ::get-deployment-parameters
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ resource-id]]
-    (let [filter-depl-params {:filter  (str "deployment/href='" resource-id "'")
-                              :orderby "name"}
+    (let [filter-depl-params       {:filter  (str "deployment/href='" resource-id "'")
+                                    :orderby "name"}
           get-depl-params-callback #(dispatch [::set-deployment-parameters %])]
       {::cimi-api-fx/search [client :deployment-parameter filter-depl-params get-depl-params-callback]})))
 
@@ -81,9 +81,9 @@
 (reg-event-fx
   ::get-events
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ href]]
-    (let [filter-str (str "content/resource/href='" href "'")
+    (let [filter-str   (str "content/resource/href='" href "'")
           order-by-str "timestamp:desc"
-          select-str "id, content, severity, timestamp, category"
+          select-str   "id, content, severity, timestamp, category"
           query-params {:filter  filter-str
                         :orderby order-by-str
                         :select  select-str}]
@@ -102,9 +102,9 @@
 (reg-event-fx
   ::get-jobs
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ href]]
-    (let [filter-str (str "target-resource/href='" href "'")
+    (let [filter-str   (str "target-resource/href='" href "'")
           order-by-str "time-of-status-change:desc"
-          select-str "id, time-of-status-change, state, target-resource, return-code, progress, status-message"
+          select-str   "id, time-of-status-change, state, target-resource, return-code, progress, status-message"
           query-params {:filter  filter-str
                         :orderby order-by-str
                         :select  select-str}]

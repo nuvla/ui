@@ -77,7 +77,7 @@
   ::login
   (fn [[client creds callback]]
     (go
-      (let [resp (<! (authn/login client creds))
+      (let [resp    (<! (authn/login client creds))
             session (<! (cimi-api-utils/get-current-session client))]
         (callback resp session)))))
 

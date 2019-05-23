@@ -14,14 +14,14 @@
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ credentials-ids]]
     (when (not-empty credentials-ids)
       (let [filter-creds-ids (str/join " or " (map #(str "id='" % "'") credentials-ids))
-            query-params {:filter (str/join " and " [filter-creds-ids "name!=null"])
-                          :select "id, name"}
-            callback (fn [response]
-                       (when-not (instance? js/Error response)
-                         (dispatch [::set-creds-name-map (->> response
-                                                              :resources
-                                                              (map (juxt :id :name))
-                                                              (into {}))])))]
+            query-params     {:filter (str/join " and " [filter-creds-ids "name!=null"])
+                              :select "id, name"}
+            callback         (fn [response]
+                               (when-not (instance? js/Error response)
+                                 (dispatch [::set-creds-name-map (->> response
+                                                                      :resources
+                                                                      (map (juxt :id :name))
+                                                                      (into {}))])))]
         {::cimi-api-fx/search [client :credential query-params callback]}))))
 
 
@@ -42,13 +42,13 @@
   ::set-deployments
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ {:keys [resources] :as deployments}]]
     (let [deployments-resource-ids (map :id resources)
-          deployments-creds-ids (distinct (map :credential-id resources))
-          filter-deps-ids (str/join " or " (map #(str "deployment/href='" % "'") deployments-resource-ids))
-          query-params {:filter (str "(" filter-deps-ids ") and value!=null")
-                        :select "id, deployment, name, value"}
-          callback (fn [response]
-                     (when-not (instance? js/Error response)
-                       (dispatch [::set-deployments-params-map response])))]
+          deployments-creds-ids    (distinct (map :credential-id resources))
+          filter-deps-ids          (str/join " or " (map #(str "deployment/href='" % "'") deployments-resource-ids))
+          query-params             {:filter (str "(" filter-deps-ids ") and value!=null")
+                                    :select "id, deployment, name, value"}
+          callback                 (fn [response]
+                                     (when-not (instance? js/Error response)
+                                       (dispatch [::set-deployments-params-map response])))]
       (dispatch [::set-creds-ids deployments-creds-ids])
       (cond-> {:db (assoc db ::spec/loading? false
                              ::spec/deployments deployments)}
@@ -59,8 +59,8 @@
 (defn get-query-params
   [full-text-search active-only? page elements-per-page]
   (let [filter-active-only? (when active-only? "state!='STOPPED'")
-        full-text-search (when-not (str/blank? full-text-search) (str "description=='" full-text-search "*'"))
-        filter (str/join " and " (remove nil? [filter-active-only? full-text-search]))]
+        full-text-search    (when-not (str/blank? full-text-search) (str "description=='" full-text-search "*'"))
+        filter              (str/join " and " (remove nil? [filter-active-only? full-text-search]))]
     (cond-> {:first   (inc (* (dec page) elements-per-page))
              :last    (* page elements-per-page)
              :orderby "created:desc"}

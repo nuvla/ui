@@ -16,8 +16,8 @@
 
 (defn refresh-button
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::cimi-detail-subs/loading?])
+  (let [tr          (subscribe [::i18n-subs/tr])
+        loading?    (subscribe [::cimi-detail-subs/loading?])
         resource-id (subscribe [::cimi-detail-subs/resource-id])]
     (fn []
       [ui/MenuMenu {:position "right"}
@@ -35,13 +35,13 @@
 
 (defn cimi-detail
   []
-  (let [cep (subscribe [::cimi-subs/cloud-entry-point])
-        path (subscribe [::main-subs/nav-path])
-        loading? (subscribe [::cimi-detail-subs/loading?])
+  (let [cep                (subscribe [::cimi-subs/cloud-entry-point])
+        path               (subscribe [::main-subs/nav-path])
+        loading?           (subscribe [::cimi-detail-subs/loading?])
         cached-resource-id (subscribe [::cimi-detail-subs/resource-id])
-        resource (subscribe [::cimi-detail-subs/resource])]
+        resource           (subscribe [::cimi-detail-subs/resource])]
     (fn []
-      (let [resource-id (path->resource-id @path)
+      (let [resource-id       (path->resource-id @path)
             correct-resource? (= resource-id @cached-resource-id)
             resource-metadata (subscribe [::docs-subs/document @resource])]
 

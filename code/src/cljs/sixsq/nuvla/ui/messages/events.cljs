@@ -41,9 +41,9 @@
     (let [timestamped-message (assoc message :timestamp (time/now)
                                              :uuid (random-uuid))]
       (let [updated-messages (vec (cons timestamped-message messages))]
-        {:db (assoc db ::messages-spec/messages updated-messages
-                       ::messages-spec/alert-message timestamped-message
-                       ::messages-spec/alert-display :slider)
+        {:db             (assoc db ::messages-spec/messages updated-messages
+                                   ::messages-spec/alert-message timestamped-message
+                                   ::messages-spec/alert-display :slider)
          :dispatch-later [{:ms 5000 :dispatch [::close-slider]}]}))))
 
 

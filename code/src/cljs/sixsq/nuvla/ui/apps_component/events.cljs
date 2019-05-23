@@ -39,7 +39,7 @@
 
 (defn numeric? [s]
   (let [is-num? (int? s)
-        num (js/parseInt s)
+        num     (js/parseInt s)
         num-str (str num)]
     (or is-num? (= num-str s))))
 

@@ -18,7 +18,7 @@
 
 (defn controls-detail
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr       (subscribe [::i18n-subs/tr])
         loading? (subscribe [::nuvlabox-subs/loading?])]
     (fn []
       [ui/Menu
@@ -91,16 +91,16 @@
 
 (defn heartbeat
   [updated next-check]
-  (let [updated-moment (time/parse-iso8601 updated)
+  (let [updated-moment    (time/parse-iso8601 updated)
         next-check-moment (time/parse-iso8601 next-check)
 
-        check-ok? (time/after-now? next-check)
-        icon (if check-ok? "heartbeat" "warning sign")
+        check-ok?         (time/after-now? next-check)
+        icon              (if check-ok? "heartbeat" "warning sign")
 
-        msg-last (str "Last heartbeat was " (time/ago updated-moment) " (" updated ").")
-        msg-next (if check-ok?
-                   (str "Next heartbeat is expected " (time/ago next-check-moment) " (" next-check ").")
-                   (str "Next heartbeat was expected " (time/ago next-check-moment) " (" next-check ")."))]
+        msg-last          (str "Last heartbeat was " (time/ago updated-moment) " (" updated ").")
+        msg-next          (if check-ok?
+                            (str "Next heartbeat is expected " (time/ago next-check-moment) " (" next-check ").")
+                            (str "Next heartbeat was expected " (time/ago next-check-moment) " (" next-check ")."))]
 
     [cc/collapsible-segment
      [:span [ui/Icon {:name icon}] " heartbeat"]

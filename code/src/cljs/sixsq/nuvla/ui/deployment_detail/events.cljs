@@ -105,7 +105,7 @@
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ href]]
     (let [filter-str   (str "target-resource/href='" href "'")
           order-by-str "time-of-status-change:desc,updated:desc"
-          select-str   (str "id, time-of-status-change, updated, state, "
+          select-str   (str "id, action, time-of-status-change, updated, state, "
                             "target-resource, return-code, progress, status-message")
           query-params {:filter  filter-str
                         :orderby order-by-str

@@ -219,9 +219,10 @@
 
 
 (defn job-map-to-row
-  [{:keys [id time-of-status-change state progress return-code status-message] :as job}]
+  [{:keys [id action time-of-status-change state progress return-code status-message] :as job}]
   [ui/TableRow
    [ui/TableCell (format-id id)]
+   [ui/TableCell action]
    [ui/TableCell time-of-status-change]
    [ui/TableCell state]
    [ui/TableCell progress]
@@ -238,6 +239,7 @@
         [ui/TableHeader
          [ui/TableRow
           [ui/TableHeaderCell [:span (@tr [:job])]]
+          [ui/TableHeaderCell [:span (@tr [:action])]]
           [ui/TableHeaderCell [:span (@tr [:timestamp])]]
           [ui/TableHeaderCell [:span (@tr [:state])]]
           [ui/TableHeaderCell [:span (@tr [:progress])]]

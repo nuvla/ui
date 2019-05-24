@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Add job action to deployment details and limit jobs number to 10
   - Align with API-SERVER field type renamed subtype 
     (not backward compatible)
 

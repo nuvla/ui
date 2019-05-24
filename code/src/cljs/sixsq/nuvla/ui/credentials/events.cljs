@@ -183,18 +183,17 @@
 
 (reg-event-db
   ::set-infrastructure-services-available
-  (fn [db [_ type response]]
-    ;FIXME check type or subtype
+  (fn [db [_ subtype response]]
     (let [infrastructure-services (:resources response)]
-      (assoc-in db [::spec/infrastructure-services-available type] infrastructure-services))))
+      (assoc-in db [::spec/infrastructure-services-available subtype] infrastructure-services))))
 
 
 (reg-event-fx
   ::fetch-infrastructure-services-available
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ type]]
+  (fn [{{:keys [::client-spec/client] :as db} :db} [_ subtype]]
     (when client
-      {:db                  (assoc-in db [::spec/infrastructure-services-available type] nil)
+      {:db                  (assoc-in db [::spec/infrastructure-services-available subtype] nil)
        ::cimi-api-fx/search [client :infrastructure-service
-                             {:filter (str "type='" type "'")
+                             {:filter (str "subtype='" subtype "'")
                               :select "id, name, description"}
-                             #(dispatch [::set-infrastructure-services-available type %])]})))
+                             #(dispatch [::set-infrastructure-services-available subtype %])]})))

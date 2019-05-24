@@ -36,11 +36,8 @@
   (let [nav-path   (subscribe [::main-subs/nav-path])
         new-parent (utils/nav-path->parent-path @nav-path)
         new-name   (utils/nav-path->module-name @nav-path)]
-    (dispatch [::events/clear-module new-name new-parent (str/upper-case new-subtype)])
-    (case new-subtype
-      "component" (apps-component-views/clear-module)
-      "project" (apps-project-views/clear-module)
-      (apps-project-views/clear-module))))
+    (dispatch [::events/clear-module new-name new-parent new-subtype])
+    (apps-component-views/clear-module)))
 
 
 (defn apps

@@ -8,7 +8,8 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db
@@ -103,11 +104,13 @@
   ::get-jobs
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ href]]
     (let [filter-str   (str "target-resource/href='" href "'")
-          order-by-str "time-of-status-change:desc"
-          select-str   "id, time-of-status-change, state, target-resource, return-code, progress, status-message"
+          order-by-str "time-of-status-change:desc,updated:desc"
+          select-str   (str "id, time-of-status-change, updated, state, "
+                            "target-resource, return-code, progress, status-message")
           query-params {:filter  filter-str
                         :orderby order-by-str
-                        :select  select-str}]
+                        :select  select-str
+                        :last    10}]
       {::cimi-api-fx/search [client
                              :job
                              (general-utils/prepare-params query-params)

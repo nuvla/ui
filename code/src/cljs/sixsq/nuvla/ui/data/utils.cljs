@@ -14,9 +14,9 @@
 
 (defn update-parameter-in-list
   [name value parameters]
-  (let [f (partial matches-parameter-name? name)
+  (let [f       (partial matches-parameter-name? name)
         current (first (filter f parameters))               ;; FIXME: Use group-by instead?
-        others (remove f parameters)]
+        others  (remove f parameters)]
     (if current
       (->> (assoc current :value value)
            (conj others)
@@ -80,8 +80,8 @@
           units ["B" "KiB" "MiB" "GiB" "TiB" "PiB" "EiB"]]
       (if (< bytes scale)
         (str bytes " B")
-        (let [exp (int (/ (.log js/Math bytes) (.log js/Math scale)))
+        (let [exp    (int (/ (.log js/Math bytes) (.log js/Math scale)))
               prefix (get units exp)
-              v (/ bytes (.pow js/Math scale exp))]
+              v      (/ bytes (.pow js/Math scale exp))]
           (cl-format nil "~,1F ~a" v prefix))))
     "..."))

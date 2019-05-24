@@ -23,7 +23,7 @@
   (cond
     resource-metadata resource-metadata
     (re-find #"-template/" (str id)) (str "resource-metadata/" (str/replace id #"/" "-"))
-    :else (let [resource-name (-> resource-url str (str/split #"/") last str/lower-case)
+    :else (let [resource-name   (-> resource-url str (str/split #"/") last str/lower-case)
                 collection-name (cond-> resource-name
                                         (str/ends-with? resource-name "collection")
                                         (subs 0 (- (count resource-name)

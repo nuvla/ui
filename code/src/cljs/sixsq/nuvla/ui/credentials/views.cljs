@@ -79,14 +79,14 @@
 
 
 (defn row-infrastructure-services-selector
-  [type editable? value-spec validation-event]
+  [subtype editable? value-spec validation-event]
   (let [tr                      (subscribe [::i18n-subs/tr])
-        infrastructure-services (subscribe [::subs/infrastructure-services-available type])
+        infrastructure-services (subscribe [::subs/infrastructure-services-available subtype])
         credential              (subscribe [::subs/credential])
         local-validate?         (r/atom false)
         validate-form?          (subscribe [::subs/validate-form?])]
-    (dispatch [::events/fetch-infrastructure-services-available type])
-    (fn [type editable? value-spec validation-event]
+    (dispatch [::events/fetch-infrastructure-services-available subtype])
+    (fn [subtype editable? value-spec validation-event]
       (let [value     (:parent @credential)
             validate? (or @local-validate? @validate-form?)
             valid?    (s/valid? value-spec value)]
@@ -110,7 +110,7 @@
                                           (dispatch [validation-event])))}]
                 ff/nbsp
                 [history/icon-link (str "api/" id)]])
-             [ui/Message {:content (str (str/capitalize (@tr [:no-infra-service-of-type])) " " type ".")}]
+             [ui/Message {:content (str (str/capitalize (@tr [:no-infra-service-of-subtype])) " " subtype ".")}]
              )]]]))))
 
 
@@ -227,11 +227,11 @@
    })
 
 
-(def infrastructure-service-types
+(def infrastructure-service-subtypes
   (keys infrastructure-service-validation-map))
 
 
-(def cloud-types
+(def cloud-subtypes
   ["cloud-infrastructure-service-exoscale"
    "cloud-infrastructure-service-azure"])
 
@@ -244,12 +244,12 @@
         credential  (subscribe [::subs/credential])
         is-new?     (subscribe [::subs/is-new?])]
     (fn []
-      (let [type             (:type @credential "")
-            header           (str (if is-new? "New" "Update") " Credential: " type)
-            validation-item  (get infrastructure-service-validation-map type)
+      (let [subtype          (:subtype @credential "")
+            header           (str (if is-new? "New" "Update") " Credential: " subtype)
+            validation-item  (get infrastructure-service-validation-map subtype)
             validation-event (:validation-event validation-item)
             modal-content    (:modal-content validation-item)]
-        (if (empty? type)
+        (if (empty? subtype)
           [:div]
           [ui/Modal {:open       @visible?
                      :close-icon true
@@ -281,14 +281,14 @@
          [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
 
          [ui/ModalContent {:scrolling false}
-          [:div {:style {:padding-bottom 20}} "Choose the credential type you want to add."]
+          [:div {:style {:padding-bottom 20}} "Choose the credential subtype you want to add."]
           [ui/CardGroup {:centered true}
 
            [ui/Card {:on-click #(do
                                   (dispatch [::events/set-validate-form? false])
                                   (dispatch [::events/form-valid])
                                   (dispatch [::events/close-add-credential-modal])
-                                  (dispatch [::events/open-credential-modal {:type "infrastructure-service-swarm"}
+                                  (dispatch [::events/open-credential-modal {:subtype "infrastructure-service-swarm"}
                                              true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Swarm"]
@@ -299,7 +299,7 @@
                                   (dispatch [::events/set-validate-form? false])
                                   (dispatch [::events/form-valid])
                                   (dispatch [::events/close-add-credential-modal])
-                                  (dispatch [::events/open-credential-modal {:type "infrastructure-service-minio"}
+                                  (dispatch [::events/open-credential-modal {:subtype "infrastructure-service-minio"}
                                              true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "MinIO"]
@@ -368,9 +368,9 @@
                                     (dispatch [::events/close-delete-confirmation-modal]))}]]]))))
 
 
-;type name description
+;subtype name description
 (defn single-credential
-  [{:keys [id type name description] :as credential}]
+  [{:keys [id subtype name description] :as credential}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/TableRow                                            ;{:key id}
      [ui/TableCell {:floated :left
@@ -381,7 +381,7 @@
       [:span description]]
      [ui/TableCell {:floated :left
                     :width   4}
-      [:span type]]
+      [:span subtype]]
      [ui/TableCell {:floated :right
                     :width   1
                     :align   :right
@@ -400,8 +400,8 @@
         infra-service-active? (r/atom true)
         cloud-active?         (r/atom false)]
     (fn []
-      (let [infra-service-creds (filter #(in? infrastructure-service-types (:type %)) @credentials)
-            cloud-creds         (filter #(in? cloud-types (:type %)) @credentials)]
+      (let [infra-service-creds (filter #(in? infrastructure-service-subtypes (:subtype %)) @credentials)
+            cloud-creds         (filter #(in? cloud-subtypes (:subtype %)) @credentials)]
         (dispatch [::events/get-credentials])
         [ui/Container {:fluid true}
          [:h2 [ui/Icon {:name "key"}]

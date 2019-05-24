@@ -29,8 +29,8 @@
 
 (defmethod panel/render :welcome
   [path]
-  (let [tr      (subscribe [::i18n-subs/tr])
-        iframe? (subscribe [::main-subs/iframe?])
+  (let [tr           (subscribe [::i18n-subs/tr])
+        iframe?      (subscribe [::main-subs/iframe?])
         query-params (subscribe [::main-subs/nav-query-params])]
     (when @query-params
       (when (contains? @query-params :reset-password)

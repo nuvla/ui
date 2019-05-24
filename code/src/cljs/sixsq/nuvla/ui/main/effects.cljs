@@ -4,8 +4,8 @@
     [taoensso.timbre :as log]))
 
 (defonce interval-handler                                   ;; we use of defonce to avoid creation of multiple interval
-         (let [live-intervals (atom {})
-               paused-intevals (atom {})]                    ;; handler at each figwheel reload
+         (let [live-intervals  (atom {})
+               paused-intevals (atom {})]                   ;; handler at each figwheel reload
            (fn handler [[{:keys [action id frequency event] :as opts}]]
              (condp = action
                :clean (doseq [[id _] (map identity @live-intervals)]
@@ -30,7 +30,7 @@
                :end (do
                       (log/info "Deleting timer: " (-> @live-intervals id :timer))
                       (js/clearInterval (-> @live-intervals id :timer))
-                        (swap! live-intervals dissoc id))))))
+                      (swap! live-intervals dissoc id))))))
 
 ;; when this code is reloaded `:clean` existing intervals
 (interval-handler [{:action :clean}])

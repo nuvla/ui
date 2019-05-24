@@ -31,10 +31,10 @@
   [update-fn form-id {:keys [name display-name help hidden sensitive value-scope
                              required editable] :as attribute}]
   (let [{:keys [values value default]} value-scope
-        label (or display-name name)
+        label         (or display-name name)
         default-value (or value default "")
-        read-only (not editable)
-        on-change-fn (ui-callback/value #(update-fn form-id name %))]
+        read-only     (not editable)
+        on-change-fn  (ui-callback/value #(update-fn form-id name %))]
     ^{:key name}
     [ui/FormField {:required required}
      (when-not hidden [:label label nbsp (help-popup help)])
@@ -72,12 +72,12 @@
 
 (defn date-time-form
   [update-fn form-id {:keys [value-scope] :as attribute}]
-  (let [locale (subscribe [::i18n-subs/locale])
+  (let [locale        (subscribe [::i18n-subs/locale])
         {:keys [value default]} value-scope
         default-value (or value default)
-        date-atom (reagent/atom (when default-value (time/parse-iso8601 default-value)))]
+        date-atom     (reagent/atom (when default-value (time/parse-iso8601 default-value)))]
     (fn [update-fn form-id {:keys [name display-name help hidden required editable] :as attribute}]
-      (let [label (or display-name name)
+      (let [label     (or display-name name)
             read-only (not editable)]
         ^{:key name}
         [ui/FormField {:required required}

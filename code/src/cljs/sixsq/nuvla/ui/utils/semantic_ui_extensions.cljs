@@ -71,7 +71,7 @@
   (let [final-opts (-> options
                        (assoc :aria-label "toggle section visibility")
                        (dissoc :visible?))
-        icon-name (if visible? "chevron down" "chevron up")]
+        icon-name  (if visible? "chevron down" "chevron up")]
     [ui/MenuItem final-opts
      [ui/Icon {:name icon-name}]]))
 

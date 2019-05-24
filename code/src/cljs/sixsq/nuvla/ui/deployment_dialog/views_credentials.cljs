@@ -29,13 +29,13 @@
 
 (defn summary-row
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr                  (subscribe [::i18n-subs/tr])
         selected-credential (subscribe [::subs/selected-credential])
-        completed? (subscribe [::subs/credentials-completed?])
+        completed?          (subscribe [::subs/credentials-completed?])
 
         {:keys [header description]} (item-options @selected-credential)
 
-        on-click-fn #(dispatch [::events/set-active-step :credentials])]
+        on-click-fn         #(dispatch [::events/set-active-step :credentials])]
 
     ^{:key "credentials"}
     [ui/TableRow {:active   false
@@ -56,7 +56,7 @@
   (let [selected-credential (subscribe [::subs/selected-credential])]
     ^{:key id}
     (let [{selected-id :id} @selected-credential
-          options (assoc (item-options credential) :active (= id selected-id))
+          options     (assoc (item-options credential) :active (= id selected-id))
           on-click-fn #(dispatch [::events/set-selected-credential credential])]
 
       [cred-list-item (assoc options :on-click-fn on-click-fn)])))
@@ -65,7 +65,7 @@
 (defn content
   []
   (fn []
-    (let [tr (subscribe [::i18n-subs/tr])
+    (let [tr          (subscribe [::i18n-subs/tr])
           credentials (subscribe [::subs/credentials])]
 
       (if (seq @credentials)

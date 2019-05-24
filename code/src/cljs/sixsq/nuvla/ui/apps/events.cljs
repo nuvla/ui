@@ -25,10 +25,10 @@
 ;; Validation
 
 (defn get-module
-  [module-type db]
+  [module-subtype db]
   (let [component (get db ::apps-component-spec/module-component)
         project   (get db ::apps-project-spec/module-project)]
-    (case module-type
+    (case module-subtype
       :component component
       :project project
       project)))
@@ -47,9 +47,9 @@
 
 
 (reg-event-db
-  ::set-module-type
-  (fn [db [_ module-type]]
-    (assoc db ::spec/module-type module-type)))
+  ::set-module-subtype
+  (fn [db [_ module-subtype]]
+    (assoc db ::spec/module-subtype module-subtype)))
 
 
 ; Perform form validation if validate-form? is true.
@@ -57,9 +57,9 @@
   ::validate-form
   (fn [db [_]]
     (let [form-spec      (get db ::spec/form-spec)
-          module-type    (get db ::spec/module-type)
+          module-subtype (get db ::spec/module-subtype)
           module-common  (get db ::spec/module-common)
-          module         (get-module module-type db)
+          module         (get-module module-subtype db)
           validate-form? (get db ::spec/validate-form?)
           valid?         (if validate-form? (and
                                               (s/valid? ::spec/module-common module-common)
@@ -110,13 +110,13 @@
 (reg-event-db
   ::set-module
   (fn [db [_ module]]
-    (let [db   (assoc db ::spec/completed? true
-                         ::spec/module-path (:path module)
-                         ::spec/module (if (nil? module) {} module))
-          type (:type module)]
-      (case type
-        "COMPONENT" (apps-component-utils/module->db db module)
-        "PROJECT" (apps-project-utils/module->db db module)))))
+    (let [db      (assoc db ::spec/completed? true
+                            ::spec/module-path (:path module)
+                            ::spec/module (if (nil? module) {} module))
+          subtype (:subtype module)]
+      (case subtype
+        "component" (apps-component-utils/module->db db module)
+        "project" (apps-project-utils/module->db db module)))))
 
 
 (reg-event-db
@@ -135,7 +135,7 @@
 
 (reg-event-db
   ::clear-module
-  (fn [db [_ new-name new-parent new-type]]
+  (fn [db [_ new-name new-parent new-subtype]]
     (let [new-parent       (or new-parent "")
           default-logo-url (::spec/default-logo-url db)]
       (-> db
@@ -145,7 +145,7 @@
           (assoc-in [::spec/module-common ::spec/description] "")
           (assoc-in [::spec/module-common ::spec/logo-url] default-logo-url)
           (assoc-in [::spec/module-common ::spec/parent-path] new-parent)
-          (assoc-in [::spec/module-common ::spec/type] new-type)))))
+          (assoc-in [::spec/module-common ::spec/subtype] new-subtype)))))
 
 
 (reg-event-fx
@@ -189,9 +189,9 @@
 
 
 (reg-event-db
-  ::type
-  (fn [db [_ type]]
-    (assoc-in db [::spec/module-common :type] (if (nil? type) nil (str/upper-case type)))))
+  ::subtype
+  (fn [db [_ subtype]]
+    (assoc-in db [::spec/module-common :subtype] (if (nil? subtype) nil (str/upper-case subtype)))))
 
 
 (reg-event-db

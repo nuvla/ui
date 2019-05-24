@@ -106,13 +106,13 @@
 
 
 (defn application-list-item
-  [{:keys [id name description type created] :as application}]
+  [{:keys [id name description subtype created] :as application}]
   (let [selected-application-id (subscribe [::subs/selected-application-id])]
     (let [on-click-fn #(dispatch [::events/set-selected-application-id id])]
       ^{:key id}
       [ui/ListItem {:active   (and @selected-application-id (= id @selected-application-id))
                     :on-click on-click-fn}
-       [ui/ListIcon {:name (application-utils/category-icon type), :size "large"}]
+       [ui/ListIcon {:name (application-utils/subtype-icon subtype), :size "large"}]
        [ui/ListContent
         [ui/ListHeader (str (or name id) " (" (time/ago (time/parse-iso8601 created)) ")")]
         (or description "")]])))
@@ -296,7 +296,7 @@
         data-sets (subscribe [::subs/selected-data-set-ids])]
     [ui/ButtonGroup {:primary true}
      [ui/Button
-      {:content     (@tr [:process])
+      {:content  (@tr [:process])
        :disabled (not (seq @data-sets))
        :icon     "rocket"
        :on-click #(dispatch [::events/open-application-select-modal])}]]))

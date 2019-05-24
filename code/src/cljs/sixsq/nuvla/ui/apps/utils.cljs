@@ -1,7 +1,6 @@
 (ns
   sixsq.nuvla.ui.apps.utils
   (:require
-    [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [subscribe]]
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
@@ -24,21 +23,19 @@
   (some->> nav-path rest last))
 
 
-(defn category-icon
-  [category]
-  (case category
-    "PROJECT" "folder"
-    "APPLICATION" "sitemap"
-    "IMAGE" "file"
-    "COMPONENT" "microchip"
+(defn subtype-icon
+  [subtype]
+  (case subtype
+    "project" "folder"
+    "component" "microchip"
     "question circle"))
 
 
-(defn meta-category-icon
-  [category]
-  (if (= "PROJECT" category)
+(defn meta-subtype-icon
+  [subtype]
+  (if (= "project" subtype)
     "folder open"
-    (category-icon category)))
+    (subtype-icon subtype)))
 
 
 ;; Sanitize before serialization to server
@@ -74,15 +71,15 @@
         description (get-in db [::apps-spec/module-common ::apps-spec/description])
         parent-path (get-in db [::apps-spec/module-common ::apps-spec/parent-path])
         logo-url    (get-in db [::apps-spec/module-common ::apps-spec/logo-url])
-        type        (get-in db [::apps-spec/module-common ::apps-spec/type])
+        subtype     (get-in db [::apps-spec/module-common ::apps-spec/subtype])
         path        (get-in db [::apps-spec/module-common ::apps-spec/path])
-        acl        (get-in db [::apps-spec/module-common ::apps-spec/acl])]
+        acl         (get-in db [::apps-spec/module-common ::apps-spec/acl])]
     (as-> module m
           (assoc-in m [:name] name)
           (assoc-in m [:description] description)
           (assoc-in m [:parent-path] parent-path)
           (assoc-in m [:logo-url] logo-url)
-          (assoc-in m [:type] type)
+          (assoc-in m [:subtype] subtype)
           (assoc-in m [:path] path)
           (assoc-in m [:acl] acl)
           (sanitize-base m)
@@ -97,7 +94,7 @@
       (assoc-in [::apps-spec/module-common ::apps-spec/parent-path] (get-in module [:parent-path]))
       (assoc-in [::apps-spec/module-common ::apps-spec/path] (get-in module [:path]))
       (assoc-in [::apps-spec/module-common ::apps-spec/logo-url] (get-in module [:logo-url]))
-      (assoc-in [::apps-spec/module-common ::apps-spec/type] (get-in module [:type]))
+      (assoc-in [::apps-spec/module-common ::apps-spec/subtype] (get-in module [:subtype]))
       (assoc-in [::apps-spec/module-common ::apps-spec/acl] (get-in module [:acl]))))
 
 

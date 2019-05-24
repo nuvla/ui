@@ -43,11 +43,11 @@
                 ::nuvlabox-spec/elements-per-page
                 ::client-spec/client] :as db} :db} _]
     (let [resource-type :nuvlaboxRecords
-          filter (case state-selector
-                   "new" "state='new'"
-                   "activated" "state='activated'"
-                   "quarantined" "state='quarantined'"
-                   nil)]
+          filter        (case state-selector
+                          "new" "state='new'"
+                          "activated" "state='activated'"
+                          "quarantined" "state='quarantined'"
+                          nil)]
       {:db                  (assoc db ::nuvlabox-spec/loading? true
                                       ::nuvlabox-spec/nuvlabox-records nil)
        ::cimi-api-fx/search [client

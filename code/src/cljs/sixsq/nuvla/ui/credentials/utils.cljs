@@ -7,7 +7,7 @@
   [db]
   (let [name        (get-in db [::spec/credential :name])
         description (get-in db [::spec/credential :description])
-        type        (get-in db [::spec/credential :type])
+        subtype     (get-in db [::spec/credential :subtype])
         ca          (get-in db [::spec/credential :ca])
         cert        (get-in db [::spec/credential :cert])
         key         (get-in db [::spec/credential :key])
@@ -15,7 +15,7 @@
     (-> {}
         (assoc :name name)
         (assoc :description description)
-        (assoc-in [:template :href] (str "credential-template/" type))
+        (assoc-in [:template :href] (str "credential-template/" subtype))
         (assoc-in [:template :parent] parent)
         (assoc-in [:template :ca] ca)
         (assoc-in [:template :cert] cert)
@@ -26,14 +26,14 @@
   [db]
   (let [name                    (get-in db [::spec/credential :name])
         description             (get-in db [::spec/credential :description])
-        type                    (get-in db [::spec/credential :type])
+        subtype                 (get-in db [::spec/credential :subtype])
         access-key              (get-in db [::spec/credential :access-key])
         secret-key              (get-in db [::spec/credential :secret-key])
         infrastructure-services (get-in db [::spec/credential :parent] [])]
     (-> {}
         (assoc :name name)
         (assoc :description description)
-        (assoc-in [:template :href] (str "credential-template/" type))
+        (assoc-in [:template :href] (str "credential-template/" subtype))
         (assoc-in [:template :parent] infrastructure-services)
         (assoc-in [:template :access-key] access-key)
         (assoc-in [:template :secret-key] secret-key))))
@@ -41,8 +41,8 @@
 
 (defn db->new-credential
   [db]
-  (let [type (get-in db [::spec/credential :type])]
-    (case type
+  (let [subtype (get-in db [::spec/credential :subtype])]
+    (case subtype
       "infrastructure-service-swarm" (db->new-swarm-credential db)
       "infrastructure-service-minio" (db->new-minio-credential db))))
 

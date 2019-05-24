@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed
+
+  - Align with API-SERVER field type renamed subtype 
+    (not backward compatible)
+
 ## [2.0.2] - 2019-05-22
 
 ### Changed

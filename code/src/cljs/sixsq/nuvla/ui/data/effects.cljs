@@ -15,7 +15,7 @@
       (when client
         (doseq [{:keys [id] :as data-set} data-sets]
           (let [record-filter (:data-record-filter data-set)
-                filter (utils/join-and time-period-filter infra-services-filter full-text-search record-filter)]
+                filter        (utils/join-and time-period-filter infra-services-filter full-text-search record-filter)]
             (callback id (<! (api/search client
                                          :data-record
                                          {:filter      filter

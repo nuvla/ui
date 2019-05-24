@@ -20,15 +20,15 @@
 
 (defn db->new-service
   [db]
-  (let [service-name (get-in db [::spec/service :name])
-        description  (get-in db [::spec/service :description])
-        group-id     (get-in db [::spec/service :parent])
-        endpoint     (get-in db [::spec/service :endpoint])
-        service-type (get-in db [::spec/service :type])]
+  (let [service-name    (get-in db [::spec/service :name])
+        description     (get-in db [::spec/service :description])
+        group-id        (get-in db [::spec/service :parent])
+        endpoint        (get-in db [::spec/service :endpoint])
+        service-subtype (get-in db [::spec/service :subtype])]
     (-> {}
         (assoc-in [:template :href] (str "infrastructure-service-template/generic"))
         (assoc-in [:template :name] service-name)
         (assoc-in [:template :description] description)
         (assoc-in [:template :parent] group-id)
-        (assoc-in [:template :type] service-type)
+        (assoc-in [:template :subtype] service-subtype)
         (assoc-in [:template :endpoint] endpoint))))

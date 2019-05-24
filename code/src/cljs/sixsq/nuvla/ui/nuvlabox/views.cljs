@@ -29,9 +29,9 @@
 (defn health-summary
   []
   (let [nuvlabox-records (subscribe [::nuvlabox-subs/nuvlabox-records])
-        health-info (subscribe [::nuvlabox-subs/health-info])]
+        health-info      (subscribe [::nuvlabox-subs/health-info])]
     (let [{:keys [stale-count active-count]} @health-info
-          total (get @nuvlabox-records :count 0)
+          total   (get @nuvlabox-records :count 0)
           unknown (max (- total stale-count active-count) 0)]
       [ui/Segment style/evenly
        [stat total "computer" "black" "NuvlaBox"]
@@ -63,14 +63,14 @@
 
 (defn search-button
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr       (subscribe [::i18n-subs/tr])
         loading? (subscribe [::nuvlabox-subs/loading?])]
     (fn []
       [uix/MenuItemWithIcon
        {:name      (@tr [:refresh])
         :icon-name "refresh"
         :loading?  @loading?
-        :position "right"
+        :position  "right"
         :disabled  false #_(nil? @selected-id)
         :on-click  (fn []
                      (dispatch [::nuvlabox-events/fetch-health-info])
@@ -106,7 +106,7 @@
 
 (defn format-nb-row
   [healthy? {:keys [id macAddress state name] :as row}]
-  (let [uuid (second (str/split id #"/"))
+  (let [uuid     (second (str/split id #"/"))
         on-click (fn []
                    (dispatch [::nuvlabox-detail-events/clear-detail])
                    (dispatch [::history-events/navigate (str "nuvlabox/" uuid)]))]
@@ -120,10 +120,10 @@
 
 (defn nb-table
   []
-  (let [nuvlabox-records (subscribe [::nuvlabox-subs/nuvlabox-records])
+  (let [nuvlabox-records  (subscribe [::nuvlabox-subs/nuvlabox-records])
         elements-per-page (subscribe [::nuvlabox-subs/elements-per-page])
-        page (subscribe [::nuvlabox-subs/page])
-        health-info (subscribe [::nuvlabox-subs/health-info])]
+        page              (subscribe [::nuvlabox-subs/page])
+        health-info       (subscribe [::nuvlabox-subs/health-info])]
     (dispatch [::nuvlabox-events/get-nuvlabox-records])
     (fn []
       (let [{:keys [healthy?]} @health-info
@@ -146,7 +146,7 @@
   (let [path (subscribe [::main-subs/nav-path])]
     (fn []
       (let [[_ mac] @path
-            n (count @path)
+            n        (count @path)
             children (case n
                        1 [[menu-bar]
                           [health-summary]

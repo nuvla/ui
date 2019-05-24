@@ -7,7 +7,7 @@
 
 (def ^{:doc "Options for a Segment with no padding or special visual style.
              Can be used in place of a raw [:div]."}
-basic
+  basic
   {:basic  true
    :padded false
    :style  {:padding-top    "inherit"
@@ -17,12 +17,12 @@ basic
 
 
 (def ^{:doc "Options for a Segment with horizontal scroll."}
-autoscroll-x
+  autoscroll-x
   (assoc-in basic [:style :overflow-x] "auto"))
 
 
 (def ^{:doc "Options for a Segment with evenly spaced content."}
-evenly
+  evenly
   (merge basic
          {:style {:display         "flex"
                   :justify-content "space-evenly"}}))
@@ -33,7 +33,7 @@ evenly
 ;;
 
 (def ^{:doc "Common styles for single-line tables."}
-single-line
+  single-line
   {:compact     "very"
    :single-line true
    :padded      false
@@ -41,19 +41,19 @@ single-line
 
 
 (def ^{:doc "Common styles for single-line, selectable tables."}
-selectable
+  selectable
   (merge single-line {:selectable  true
                       :unstackable true}))
 
 
 (def ^{:doc "Style for very compact, single-line definition table."}
-definition
+  definition
   (merge single-line
          {:definition true}))
 
 
 (def ^{:doc "Style for very compact, single-line ACL table."}
-acl
+  acl
   (merge single-line
          {:celled      true
           :text-align  "center"

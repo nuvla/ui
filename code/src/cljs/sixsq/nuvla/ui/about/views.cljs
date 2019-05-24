@@ -29,7 +29,7 @@
                  :src      "/ui/images/by_sixsq_mark_red_on_transparent_128px.png"}]]
      [ui/ListSA
       [ui/ListItem (@tr [:version-number]) ": " [:span#release-version "v"]]
-      [ui/ListItem [:a {:href "https://sixsq.com/nuvla"} (str/capitalize (@tr [:product-info ]))]]
+      [ui/ListItem [:a {:href "https://sixsq.com/nuvla"} (str/capitalize (@tr [:product-info]))]]
       [ui/ListItem [:a {:href "https://ssdocs.sixsq.com/en/latest/tutorials/index.html"}
                     (str/capitalize (@tr [:tutorials]))]]
       [ui/ListItem [:a {:on-click #(dispatch

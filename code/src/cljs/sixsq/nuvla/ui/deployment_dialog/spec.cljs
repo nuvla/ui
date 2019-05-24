@@ -68,11 +68,11 @@
 
                ::active-step            :data
                ::data-step-active       true
-               ::step-states            {:data       {:step-id :data
-                                                      :icon    "database"}
-                                        :credentials {:step-id :credentials
-                                                      :icon    "key"}
-                                        :parameters  {:step-id :parameters
-                                                      :icon    "list alternate outline"}
-                                        :summary     {:step-id :summary
-                                                      :icon    "info"}}})
+               ::step-states            {:data        {:step-id :data
+                                                       :icon    "database"}
+                                         :credentials {:step-id :credentials
+                                                       :icon    "key"}
+                                         :parameters  {:step-id :parameters
+                                                       :icon    "list alternate outline"}
+                                         :summary     {:step-id :summary
+                                                       :icon    "info"}}})

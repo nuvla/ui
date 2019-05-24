@@ -17,7 +17,7 @@
                                 :devtools   {:after-load sixsq.nuvla.ui.core/mount-root
                                              :preloads   [devtools.preload]}
 
-                                :dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL "https://localhost" #_"https://nuv.la"}
+                                :dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL "https://localhost"}
                                              :compiler-options {:infer-externs :auto}}
 
 

@@ -64,7 +64,7 @@ The bulk of the code in this repository is written in Clojurescript.
 
 The formatting follows the standard formatting provided by the Cursive
 IntelliJ plugin with all the default settings **except that map
-entries should be aligned**.
+and let entries should be aligned**.
 
 Additional, formatting guidelines, not handled by the Cursive plugin:
 

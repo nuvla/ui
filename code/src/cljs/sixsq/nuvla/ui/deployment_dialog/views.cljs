@@ -15,11 +15,11 @@
 
 (defn deployment-step-state
   [{:keys [step-id completed? icon] :as step-state}]
-  (let [tr (subscribe [::i18n-subs/tr])
-        active-step (subscribe [::subs/active-step])
+  (let [tr                     (subscribe [::i18n-subs/tr])
+        active-step            (subscribe [::subs/active-step])
         credentials-completed? (subscribe [::subs/credentials-completed?])
-        parameters-completed? (subscribe [::subs/parameters-completed?])
-        data-completed? (subscribe [::subs/data-completed?])]
+        parameters-completed?  (subscribe [::subs/parameters-completed?])
+        data-completed?        (subscribe [::subs/data-completed?])]
     [ui/Step {:link      true
               :on-click  #(dispatch [::events/set-active-step step-id])
               :completed (case step-id
@@ -45,23 +45,23 @@
 
 (defn deploy-modal
   [show-data?]
-  (let [tr (subscribe [::i18n-subs/tr])
-        visible? (subscribe [::subs/deploy-modal-visible?])
-        deployment (subscribe [::subs/deployment])
-        loading? (subscribe [::subs/loading-deployment?])
-        active-step (subscribe [::subs/active-step])
-        data-step-active? (subscribe [::subs/data-step-active?])
-        step-states (subscribe [::subs/step-states])
+  (let [tr                     (subscribe [::i18n-subs/tr])
+        visible?               (subscribe [::subs/deploy-modal-visible?])
+        deployment             (subscribe [::subs/deployment])
+        loading?               (subscribe [::subs/loading-deployment?])
+        active-step            (subscribe [::subs/active-step])
+        data-step-active?      (subscribe [::subs/data-step-active?])
+        step-states            (subscribe [::subs/step-states])
 
-        data-completed? (subscribe [::subs/data-completed?])
+        data-completed?        (subscribe [::subs/data-completed?])
         credentials-completed? (subscribe [::subs/credentials-completed?])
-        parameters-completed? (subscribe [::subs/parameters-completed?])]
+        parameters-completed?  (subscribe [::subs/parameters-completed?])]
     (fn [show-data?]
-      (let [ready? (and (not @loading?) @deployment)
-            module-name (-> @deployment :module :name)
-            hide-fn #(dispatch [::events/close-deploy-modal])
-            submit-fn #(dispatch [::events/edit-deployment])
-            visible-steps (if show-data? spec/steps (rest spec/steps))
+      (let [ready?           (and (not @loading?) @deployment)
+            module-name      (-> @deployment :module :name)
+            hide-fn          #(dispatch [::events/close-deploy-modal])
+            submit-fn        #(dispatch [::events/edit-deployment])
+            visible-steps    (if show-data? spec/steps (rest spec/steps))
 
             launch-disabled? (or (not @deployment)
                                  (and (not @data-completed?) @data-step-active?)

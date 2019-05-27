@@ -34,8 +34,8 @@
   (fn [{{:keys [::client-spec/client] :as db} :db :as cofx} [_ users-search]]
     {::cimi-api-fx/search [client :user {:filter (str "fulltext=='" users-search "*'")
                                          :select "id, name"
-                                         :order "name:asc, id:asc"
-                                         :last 10} #(dispatch [::set-users-options %])]}))
+                                         :order  "name:asc, id:asc"
+                                         :last   10} #(dispatch [::set-users-options %])]}))
 
 
 (reg-event-db
@@ -50,4 +50,4 @@
   ::search-groups
   (fn [{{:keys [::client-spec/client] :as db} :db :as cofx} _]
     {::cimi-api-fx/search [client :group {:select "id, name"
-                                         :order "name:asc, id:asc"} #(dispatch [::set-groups-options %])]}))
+                                          :order  "name:asc, id:asc"} #(dispatch [::set-groups-options %])]}))

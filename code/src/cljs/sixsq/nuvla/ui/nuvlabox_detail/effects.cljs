@@ -12,6 +12,6 @@
   (fn [[client mac callback]]
     (go
       (when (and mac callback)
-        (let [state (<! (api/get client (str "nuvlabox-state/" mac)))
+        (let [state  (<! (api/get client (str "nuvlabox-state/" mac)))
               record (<! (api/get client (str "nuvlabox-record/" mac)))]
           (callback state record))))))

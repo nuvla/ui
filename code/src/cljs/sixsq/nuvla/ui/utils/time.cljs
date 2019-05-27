@@ -70,7 +70,7 @@
    (delta-duration start (now)))
   ([start end]
    (let [start-moment (parse-iso8601 start)
-         end-moment (parse-iso8601 end)]
+         end-moment   (parse-iso8601 end)]
      (.duration moment (.diff end-moment start-moment true)))))
 
 

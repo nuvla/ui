@@ -74,8 +74,10 @@
       (assoc-in [::spec/module-component ::spec/image] (image->db (get-in module [:content :image])))
       (assoc-in [::spec/module-component ::spec/urls] (urls->db (get-in module [:content :urls])))
       (assoc-in [::spec/module-component ::spec/architecture] (get-in module [:content :architecture]))
-      (assoc-in [::spec/module-component ::spec/output-parameters] (output-parameters->db (get-in module [:content :output-parameters])))
-      (assoc-in [::spec/module-component ::spec/data-types] (data-types->db (get-in module [:data-accept-content-types])))
+      (assoc-in [::spec/module-component ::spec/output-parameters] (output-parameters->db
+                                                                     (get-in module [:content :output-parameters])))
+      (assoc-in [::spec/module-component ::spec/data-types] (data-types->db
+                                                              (get-in module [:data-accept-content-types])))
       (assoc-in [::spec/module-component ::spec/ports] (ports->db (get-in module [:content :ports])))
       (assoc-in [::spec/module-component ::spec/mounts] (mounts->db (get-in module [:content :mounts])))))
 

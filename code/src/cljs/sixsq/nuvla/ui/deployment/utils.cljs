@@ -7,11 +7,11 @@
   [url-pattern deployment-parameters]
   (when url-pattern
     (let [pattern-in-params (re-seq #"\$\{([^}]+)\}+" url-pattern)
-          pattern-value (map (fn [[param-pattern param-name]]
-                               (some->> (get deployment-parameters param-name)
-                                        :value
-                                        (conj [param-pattern])))
-                             pattern-in-params)]
+          pattern-value     (map (fn [[param-pattern param-name]]
+                                   (some->> (get deployment-parameters param-name)
+                                            :value
+                                            (conj [param-pattern])))
+                                 pattern-in-params)]
       (when (every? some? pattern-value)
         (reduce
           (fn [url [param-pattern param-value]]

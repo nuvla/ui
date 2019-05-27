@@ -3,7 +3,6 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.client.spec :as client-spec]
-    [sixsq.nuvla.ui.main.effects :as main-fx]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.nuvlabox.effects :as fx]
     [sixsq.nuvla.ui.nuvlabox.spec :as spec]

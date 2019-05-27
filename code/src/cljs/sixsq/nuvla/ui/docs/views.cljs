@@ -25,8 +25,8 @@
 
 (defn documents-table
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::subs/loading?])
+  (let [tr        (subscribe [::i18n-subs/tr])
+        loading?  (subscribe [::subs/loading?])
         documents (subscribe [::subs/documents])]
     [ui/Segment (merge style/basic
                        {:class-name "nuvla-ui-x-autoscroll"
@@ -62,11 +62,11 @@
 
 (defn documentation-resource
   []
-  (let [path (subscribe [::main-subs/nav-path])
+  (let [path      (subscribe [::main-subs/nav-path])
         documents (subscribe [::subs/documents])]
     (dispatch [::events/get-documents])
     (fn []
-      (let [n (count @path)
+      (let [n        (count @path)
             children (case n
                        1 [[documents-view]]
                        2 [[docs-details-view/docs-detail (str "resource-metadata/" (second @path))]]

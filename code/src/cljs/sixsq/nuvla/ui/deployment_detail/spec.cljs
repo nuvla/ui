@@ -23,9 +23,9 @@
                           ::node-parameters]))
 
 
-(def defaults {::loading?                   false
-               ::deployment                 nil
-               ::deployment-parameters      nil
-               ::events                     nil
-               ::jobs                       nil
-               ::node-parameters            nil})
+(def defaults {::loading?              false
+               ::deployment            nil
+               ::deployment-parameters nil
+               ::events                nil
+               ::jobs                  nil
+               ::node-parameters       nil})

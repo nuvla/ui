@@ -65,7 +65,7 @@
 
 
 (defn service-card
-  [{:keys [id name description path type logo-url] :as service}]
+  [{:keys [id name description path subtype logo-url] :as service}]
   ^{:key id}
   [ui/Card {:on-click #(dispatch [::events/open-service-modal service false])}
    (when logo-url
@@ -75,7 +75,7 @@
                         :object-fit "contain"}}])
    [ui/CardContent
     [ui/CardHeader {:style {:word-wrap "break-word"}}
-     [ui/Icon {:name ((keyword type) service-icons)}]
+     [ui/Icon {:name ((keyword subtype) service-icons)}]
      (or name id)]
     [ui/CardMeta {:style {:word-wrap "break-word"}} path]
     [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]]])
@@ -259,14 +259,14 @@
         service     (subscribe [::subs/service])
         is-new?     (subscribe [::subs/is-new?])]
     (fn []
-      (let [type             (:type @service "")
-            name             (:name @service type)
+      (let [subtype          (:subtype @service "")
+            name             (:name @service subtype)
             header           (str (if (true? @is-new?) (@tr [:new]) (@tr [:update])) " " name)
-            validation-item  (get infrastructure-service-validation-map type)
+            validation-item  (get infrastructure-service-validation-map subtype)
             validation-event (:validation-event validation-item)
             modal-content    (:modal-content validation-item)]
 
-        (if (empty? type)
+        (if (empty? subtype)
           [:div]
           [ui/Modal {:open       @visible?
                      :close-icon true
@@ -311,7 +311,7 @@
                                      (dispatch [::events/set-validate-form? false])
                                      (dispatch [::events/form-valid])
                                      (dispatch [::events/close-add-service-modal])
-                                     (dispatch [::events/open-service-modal (assoc @service :type "swarm") true]))}
+                                     (dispatch [::events/open-service-modal (assoc @service :subtype "swarm") true]))}
 
                [ui/CardContent {:text-align :center}
                 [ui/Header "Swarm"]
@@ -335,7 +335,7 @@
                                   (dispatch [::events/set-validate-form? false])
                                   (dispatch [::events/form-valid])
                                   (dispatch [::events/close-add-service-modal])
-                                  (dispatch [::events/open-service-modal (assoc @service :type "s3") true]))}
+                                  (dispatch [::events/open-service-modal (assoc @service :subtype "s3") true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "MinIO"]
              [ui/Image {:src  "/ui/images/minio.png"

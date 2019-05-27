@@ -67,9 +67,9 @@
         form-valid?   (subscribe [::subs/form-valid?])
         page-changed? (subscribe [::main-subs/changes-protection?])]
     (fn []
-      (let [launchable?      (not= "PROJECT" (:type @module))
+      (let [launchable?      (not= "project" (:subtype @module))
             launch-disabled? (or @is-new? @page-changed?)
-            add?             (= "PROJECT" (:type @module))
+            add?             (= "project" (:subtype @module))
             add-disabled?    (or @is-new? @page-changed?)
             editable?        (utils/editable? @module @is-new?)
             id               (:id @module)]
@@ -204,7 +204,7 @@
                                     (dispatch [::history-events/navigate
                                                (str/join "/"
                                                          (remove str/blank?
-                                                                 ["apps" parent "New Project?type=project"]))]))}
+                                                                 ["apps" parent "New Project?subtype=project"]))]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Project"]
              [ui/Icon {:name "folder"
@@ -216,7 +216,8 @@
                                     (dispatch [::history-events/navigate
                                                (str/join "/"
                                                          (remove str/blank?
-                                                                 ["apps" parent "New Component?type=component"]))])))}
+                                                                 ["apps" parent
+                                                                  "New Component?subtype=component"]))])))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Component"]
              [:div]
@@ -251,25 +252,15 @@
                            :id})
 
 
-(defn category-icon
-  [category]
-  (case category
-    "PROJECT" "folder"
-    "APPLICATION" "sitemap"
-    "IMAGE" "file"
-    "COMPONENT" "microchip"
-    "question circle"))
-
-
 (defn details-section
   []
   (let [module (subscribe [::subs/module])]
     (fn []
       (let [summary-info (-> (select-keys @module module-summary-keys)
-                             (merge (select-keys @module #{:path :type})
+                             (merge (select-keys @module #{:path :subtype})
                                     {:owners (->> @module :acl :owners (str/join ", "))}
                                     {:author (->> @module :content :author)}))
-            icon         (-> @module :type category-icon)
+            icon         (-> @module :subtype utils/subtype-icon)
             rows         (map tuple-to-row summary-info)
             name         (:name @module)
             description  (:name @module)]
@@ -350,13 +341,13 @@
              parent      ::spec/parent-path
              description ::spec/description
              logo-url    ::spec/logo-url
-             type        ::spec/type
+             subtype     ::spec/subtype
              path        ::spec/path
              :or         {name        ""
                           parent      ""
                           description ""
                           logo-url    @default-logo-url
-                          type        "project"
+                          subtype     "project"
                           path        nil}} @module-common]
         [ui/Grid {:style {:margin-bottom 5}}
          [ui/GridRow {:reversed :computer}
@@ -376,7 +367,7 @@
              [summary-row (str parent "-description")
               :description description ::events/description editable? true ::spec/description]
              (when (not-empty parent)
-               (let [label (if (= "PROJECT" type) "parent project" "project")]
+               (let [label (if (= "project" subtype) "parent project" "project")]
                  [ui/TableRow
                   [ui/TableCell {:collapsing true
                                  :style      {:padding-bottom 8}} label]

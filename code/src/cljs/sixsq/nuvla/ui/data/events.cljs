@@ -65,8 +65,8 @@
 (reg-event-db
   ::set-data
   (fn [db [_ data-set-id response]]
-    (let [doc-count (get-in response [:aggregations :value_count:id :value])
-          total-bytes (get-in response [:aggregations :sum:bytes :value])
+    (let [doc-count       (get-in response [:aggregations :value_count:id :value])
+          total-bytes     (get-in response [:aggregations :sum:bytes :value])
           data-record-ids (mapv :id (:resources response))]
       (-> db
           (update ::spec/counts assoc data-set-id doc-count)
@@ -99,7 +99,7 @@
   (fn [{{:keys [::client-spec/client] :as db} :db} _]
     (when client
       {:db                  (assoc db ::spec/credentials nil)
-       ::cimi-api-fx/search [client :credential {:filter "type^='infrastructure-service-swarm'"
+       ::cimi-api-fx/search [client :credential {:filter "subtype^='infrastructure-service-swarm'"
                                                  :select "id, name, services"}
                              #(dispatch [::set-credentials %])]})))
 
@@ -121,7 +121,7 @@
 
 (reg-event-fx
   ::open-application-select-modal
-  (fn [{{:keys                                    [::client-spec/client
+  (fn [{{:keys [::client-spec/client
                 ::spec/data-sets
                 ::spec/selected-data-set-ids] :as db} :db} _]
     (let [selected-data-sets (vals (filter (fn [[k v]] (boolean (selected-data-set-ids k))) data-sets))

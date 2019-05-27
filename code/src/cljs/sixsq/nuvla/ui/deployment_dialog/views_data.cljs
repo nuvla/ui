@@ -23,9 +23,9 @@
 
 (defn summary-item
   []
-  (let [data-clouds (subscribe [::subs/data-clouds])
+  (let [data-clouds    (subscribe [::subs/data-clouds])
         selected-cloud (subscribe [::subs/selected-cloud])
-        connectors (subscribe [::subs/connectors])
+        connectors     (subscribe [::subs/connectors])
 
         {:keys [key doc_count]} (first (filter (fn [m] (= @selected-cloud (:key m))) @data-clouds))
         {:keys [name description]} (get @connectors key)]
@@ -40,16 +40,16 @@
 
 (defn summary-row
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        data-clouds (subscribe [::subs/data-clouds])
+  (let [tr             (subscribe [::i18n-subs/tr])
+        data-clouds    (subscribe [::subs/data-clouds])
         selected-cloud (subscribe [::subs/selected-cloud])
-        connectors (subscribe [::subs/connectors])
-        completed? (subscribe [::subs/data-completed?])
+        connectors     (subscribe [::subs/connectors])
+        completed?     (subscribe [::subs/data-completed?])
 
         {:keys [key doc_count]} (first (filter (fn [m] (= @selected-cloud (:key m))) @data-clouds))
         {:keys [name description]} (get @connectors key)
 
-        on-click-fn #(dispatch [::events/set-active-step :data])]
+        on-click-fn    #(dispatch [::events/set-active-step :data])]
 
     ^{:key "data"}
     [ui/TableRow {:active   false
@@ -70,14 +70,14 @@
 (defn list-item
   [{:keys [key doc_count]}]
   (let [selected-cloud (subscribe [::subs/selected-cloud])
-        connectors (subscribe [::subs/connectors])
+        connectors     (subscribe [::subs/connectors])
         {:keys [name description]} (get @connectors key)]
 
-    (let [options {:key         key
-                   :active      (= key @selected-cloud)
-                   :header      (or name key)
-                   :description description
-                   :doc_count   doc_count}
+    (let [options     {:key         key
+                       :active      (= key @selected-cloud)
+                       :header      (or name key)
+                       :description description
+                       :doc_count   doc_count}
           on-click-fn #(dispatch [::events/set-infra-service-filter key])]
 
       [cloud-list-item (assoc options :on-click-fn on-click-fn)])))
@@ -85,7 +85,7 @@
 
 (defn content
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr          (subscribe [::i18n-subs/tr])
         data-clouds (subscribe [::subs/data-clouds])]
     (if (seq @data-clouds)
       (vec (concat [ui/ListSA {:divided   true

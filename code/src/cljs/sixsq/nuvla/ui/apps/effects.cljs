@@ -16,21 +16,21 @@
       (let [path              (or path "")
             path-filter       (str "path='" path "'")
             children-filter   (str "parent-path='" path "'")
-            {:keys [type id] :as project-metadata} (if-not (str/blank? path)
-                                                     (-> (<! (api/search client "module" {:filter path-filter}))
-                                                         :resources
-                                                         first)
-                                                     {:type        "PROJECT"
-                                                      :name        "Applications"
-                                                      :description "cloud applications at your service"})
+            {:keys [subtype id] :as project-metadata} (if-not (str/blank? path)
+                                                        (-> (<! (api/search client "module" {:filter path-filter}))
+                                                            :resources
+                                                            first)
+                                                        {:subtype     "project"
+                                                         :name        "Applications"
+                                                         :description "cloud applications at your service"})
             path-with-version (str id (when
                                         (not (nil? version))
                                         (str "_" version)))
-            module            (if (not= "PROJECT" type)
+            module            (if (not= "project" subtype)
                                 (<! (api/get client path-with-version))
                                 project-metadata)
 
-            children          (when (= type "PROJECT")
+            children          (when (= subtype "project")
                                 (:resources (<! (api/search client "module" {:filter children-filter}))))
 
             module-data       (cond-> module

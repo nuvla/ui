@@ -30,8 +30,8 @@
 
 (defn resource-editor
   [form-id text & {:keys [resource-meta default-mode] :or {default-mode :form}}]
-  (let [mode (reagent/atom (if resource-meta default-mode :json))
-        json-error? (reagent/atom false)
+  (let [mode          (reagent/atom (if resource-meta default-mode :json))
+        json-error?   (reagent/atom false)
         check-json-fn (fn [success-action-fn]
                         (try
                           @text
@@ -64,14 +64,14 @@
                        [ui/Form]
                        (mapv
                          (fn [attribute-meta]
-                           (let [param-kw (-> attribute-meta :name keyword)
+                           (let [param-kw  (-> attribute-meta :name keyword)
                                  new-value (-> @text general/json->edn param-kw)]
                              (ff/form-field
                                (fn [form-id param-name param-value]
                                  (reset! text (-> @text
-                                                        general/json->edn
-                                                        (assoc (keyword param-name) param-value)
-                                                        general/edn->json)))
+                                                  general/json->edn
+                                                  (assoc (keyword param-name) param-value)
+                                                  general/edn->json)))
                                nil
                                (cond-> attribute-meta
                                        new-value (assoc-in [:value-scope :value] new-value)))))

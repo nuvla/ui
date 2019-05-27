@@ -108,7 +108,7 @@
            ::cimi-api-fx/search
                [client
                 :credential
-                {:filter (str "type='infrastructure-service-swarm' and ("
+                {:filter (str "subtype='infrastructure-service-swarm' and ("
                               (str/join " or " (map #(str "parent='" (:id %) "'") resources)) ")")
                  :last   0}
                 #(dispatch [::set-bootsrap-message %])]}
@@ -127,6 +127,6 @@
   (fn [{{:keys [::client-spec/client] :as db} :db} _]
     {::cimi-api-fx/search [client
                            :infrastructure-service
-                           {:filter "type='swarm'"
+                           {:filter "subtype='swarm'"
                             :select "id"}
                            #(dispatch [::set-bootsrap-message %])]}))

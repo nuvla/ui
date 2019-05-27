@@ -25,7 +25,7 @@
   (if (map? m)
     (vec
       (mapcat (fn [[k v]]
-                (let [sub (keys-in v)
+                (let [sub    (keys-in v)
                       nested (map #(into [(name k)] %) (filter (comp not empty?) sub))]
                   (if (seq nested)
                     nested

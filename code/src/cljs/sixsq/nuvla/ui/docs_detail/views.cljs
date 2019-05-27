@@ -38,7 +38,7 @@
                          ["hidden" hidden]
                          ["sensitive" sensitive]
                          ["value-scope" value-scope]]
-        row-span (inc (count characteristics))]
+        row-span        (inc (count characteristics))]
     (concat
       [[ui/TableRow
         [ui/TableCell {:collapsing true, :row-span row-span} name]

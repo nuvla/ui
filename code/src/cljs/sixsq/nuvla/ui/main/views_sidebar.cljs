@@ -23,7 +23,7 @@
 
 (defn item
   [label-kw url icon]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr       (subscribe [::i18n-subs/tr])
         nav-path (subscribe [::main-subs/nav-path])
         is-user? (subscribe [::authn-subs/is-user?])]
 
@@ -55,7 +55,7 @@
   "Provides the sidebar menu for selecting major components/panels of the
    application."
   []
-  (let [show? (subscribe [::main-subs/sidebar-open?])
+  (let [show?   (subscribe [::main-subs/sidebar-open?])
         iframe? (subscribe [::main-subs/iframe?])]
     [ui/Sidebar {:as        ui/MenuRaw
                  :className "medium thin"

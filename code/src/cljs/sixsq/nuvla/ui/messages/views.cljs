@@ -47,16 +47,16 @@
 
 (defn alert-slider
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr            (subscribe [::i18n-subs/tr])
         alert-message (subscribe [::message-subs/alert-message])
         alert-display (subscribe [::message-subs/alert-display])]
     (fn []
       (if-let [{:keys [type header]} @alert-message]
-        (let [icon-name (type->icon-name type)
-              open? (boolean (and @alert-message (= :slider @alert-display)))
+        (let [icon-name  (type->icon-name type)
+              open?      (boolean (and @alert-message (= :slider @alert-display)))
               transition (clj->js {:animation "slide left"
                                    :duration  500})
-              top-right {:position "fixed", :top "30px", :right "5px", :zIndex 1000}]
+              top-right  {:position "fixed", :top "30px", :right "5px", :zIndex 1000}]
           [ui/TransitionablePortal {:transition transition, :open open?}
            [ui/Message (merge (type->message-type type)
                               {:style      top-right
@@ -67,13 +67,13 @@
 
 (defn alert-modal
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr            (subscribe [::i18n-subs/tr])
         alert-message (subscribe [::message-subs/alert-message])
         alert-display (subscribe [::message-subs/alert-display])]
     (if-let [{:keys [type header content]} @alert-message]
       (let [icon-name (type->icon-name type)
-            visible? (= :modal @alert-display)
-            hide-fn #(dispatch [::message-events/hide])
+            visible?  (= :modal @alert-display)
+            hide-fn   #(dispatch [::message-events/hide])
             remove-fn #(dispatch [::message-events/remove @alert-message])]
         [ui/Modal {:open       visible?
                    :close-icon true
@@ -91,7 +91,7 @@
 
 (defn feed-item
   [locale {:keys [type header timestamp] :as message}]
-  (let [icon-name (type->icon-name type)
+  (let [icon-name       (type->icon-name type)
         message-options (type->message-type type)]
     [ui/ListItem {:on-click #(dispatch [::message-events/show message])}
      [ui/Message message-options
@@ -104,7 +104,7 @@
 
 (defn message-feed
   []
-  (let [locale (subscribe [::i18n-subs/locale])
+  (let [locale   (subscribe [::i18n-subs/locale])
         messages (subscribe [::message-subs/messages])]
     (when (seq @messages)
       (vec (concat [ui/ListSA {:selection true
@@ -119,12 +119,12 @@
    messages. If there are no messages, the item will be disabled. If there are
    messages, then a label will show the number of them."
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        session (subscribe [::authn-subs/session])
-        messages (subscribe [::message-subs/messages])
+  (let [tr          (subscribe [::i18n-subs/tr])
+        session     (subscribe [::authn-subs/session])
+        messages    (subscribe [::message-subs/messages])
         popup-open? (subscribe [::message-subs/popup-open?])]
     (when @session
-      (let [n (count @messages)
+      (let [n         (count @messages)
             disabled? (zero? n)]
         [ui/Popup {:flowing  true
                    :on       "click"

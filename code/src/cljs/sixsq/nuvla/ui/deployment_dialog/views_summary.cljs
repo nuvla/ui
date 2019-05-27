@@ -12,11 +12,11 @@
 
 (defn application-row
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        deployment (subscribe [::subs/deployment])
+  (let [tr          (subscribe [::i18n-subs/tr])
+        deployment  (subscribe [::subs/deployment])
 
         {:keys [name module]} @deployment
-        header (or name (-> module :path (str/split #"/") last))
+        header      (or name (-> module :path (str/split #"/") last))
         description (:path module)]
 
     ^{:key "application"}

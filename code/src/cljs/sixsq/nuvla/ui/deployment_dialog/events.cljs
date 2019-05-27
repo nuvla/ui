@@ -89,7 +89,7 @@
     (when client
       (when (= :data first-step)
         (dispatch [::get-data-records-by-cred]))
-      (let [data {:module {:href id}}
+      (let [data              {:module {:href id}}
             old-deployment-id (:id deployment)
             add-depl-callback (fn [response]
                                 (if (instance? js/Error response)
@@ -127,11 +127,16 @@
                                         ::spec/credentials nil
                                         ::spec/selected-credential nil)
          ::cimi-api-fx/search [client :credential
+<<<<<<< HEAD
                                {:select "id, name, description, created, type"
                                 :filter (general-utils/join-and
+=======
+                               {:select "id, name, description, created, subtype"
+                                :filter (data-utils/join-and
+>>>>>>> master
                                           (when selected-infra-service
                                             (str "parent='" selected-infra-service "'"))
-                                          (str "type='infrastructure-service-swarm'"))} search-creds-callback]}))))
+                                          (str "subtype='infrastructure-service-swarm'"))} search-creds-callback]}))))
 
 
 (reg-event-fx
@@ -162,7 +167,7 @@
   (fn [{{:keys [::client-spec/client
                 ::spec/deployment] :as db} :db :as cofx} _]
     (when client
-      (let [resource-id (:id deployment)
+      (let [resource-id   (:id deployment)
             edit-callback (fn [response]
                             (if (instance? js/Error response)
                               (let [{:keys [status message]} (response/parse-ex-info response)]
@@ -192,15 +197,19 @@
 (reg-event-fx
   ::set-data-infra-services
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ data-clouds-response]]
-    (let [buckets (get-in data-clouds-response [:aggregations (keyword "terms:infrastructure-service") :buckets])
+    (let [buckets        (get-in data-clouds-response [:aggregations (keyword "terms:infrastructure-service") :buckets])
           infra-services (map :key buckets)
+<<<<<<< HEAD
           filter (apply general-utils/join-or (map #(str "id='" % "'") infra-services))]
+=======
+          filter         (apply data-utils/join-or (map #(str "id='" % "'") infra-services))]
+>>>>>>> master
 
       {:db                  (cond-> (assoc db ::spec/data-infra-services buckets)
                                     (= 1 (count infra-services)) (set-infra-service-and-filter (first infra-services)))
        ::cimi-api-fx/search [client :infrastructure-service
                              {:filter filter
-                              :select "id, name, description, type"} #(dispatch [::set-infra-services %])]})))
+                              :select "id, name, description, subtype"} #(dispatch [::set-infra-services %])]})))
 
 
 (reg-event-fx

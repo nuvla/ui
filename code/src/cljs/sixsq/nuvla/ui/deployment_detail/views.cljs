@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as reagent]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.deployment-detail.events :as events]
     [sixsq.nuvla.ui.deployment-detail.subs :as subs]
@@ -108,16 +109,16 @@
   (let [deployment (subscribe [::subs/deployment])]
     (fn []
       (let [summary-info (-> (select-keys @deployment deployment-summary-keys)
-                             (merge (select-keys (:module @deployment) #{:name :path :type})
+                             (merge (select-keys (:module @deployment) #{:name :path :subtype})
                                     {:owners (->> @deployment :acl :owners (str/join ", "))}))
-            icon (-> @deployment :module :type deployment-detail-utils/category-icon)
-            rows (map tuple-to-row summary-info)
-            state (:state @deployment)]
+            icon         (-> @deployment :module :subtype apps-utils/subtype-icon)
+            rows         (map tuple-to-row summary-info)
+            state        (:state @deployment)]
         [cc/metadata
          {:title       (module-name @deployment)
           :description (:startTime summary-info)
           :icon        icon
-          :subtitle state}
+          :subtitle    state}
          rows]))))
 
 
@@ -140,7 +141,7 @@
 
 (defn parameters-section
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr                    (subscribe [::i18n-subs/tr])
         deployment-parameters (subscribe [::subs/deployment-parameters])]
     (fn []
       (let [params (vals @deployment-parameters)]
@@ -156,7 +157,7 @@
                           (map parameter-to-row params))))]]]))))
 
 
-(def event-fields #{:id :content :timestamp :type})
+(def event-fields #{:id :content :timestamp :category})
 
 
 (defn events-table-info
@@ -180,12 +181,12 @@
 
 
 (defn event-map-to-row
-  [{:keys [id content timestamp type delta-time] :as evt}]
+  [{:keys [id content timestamp category delta-time] :as evt}]
   [ui/TableRow
    [ui/TableCell (format-id id)]
    [ui/TableCell timestamp]
    [ui/TableCell (format-delta-time delta-time)]
-   [ui/TableCell type]
+   [ui/TableCell category]
    [ui/TableCell (:state content)]])
 
 
@@ -200,7 +201,7 @@
           [ui/TableHeaderCell [:span (@tr [:event])]]
           [ui/TableHeaderCell [:span (@tr [:timestamp])]]
           [ui/TableHeaderCell [:span (@tr [:delta-min])]]
-          [ui/TableHeaderCell [:span (@tr [:type])]]
+          [ui/TableHeaderCell [:span (@tr [:category])]]
           [ui/TableHeaderCell [:span (@tr [:state])]]]]
         (vec (concat [ui/TableBody]
                      (map event-map-to-row events)))]])))
@@ -208,7 +209,7 @@
 
 (defn events-section
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr     (subscribe [::i18n-subs/tr])
         events (subscribe [::subs/events])]
     (fn []
       (let [events (events-table-info @events)]
@@ -218,9 +219,10 @@
 
 
 (defn job-map-to-row
-  [{:keys [id time-of-status-change state progress return-code status-message] :as job}]
+  [{:keys [id action time-of-status-change state progress return-code status-message] :as job}]
   [ui/TableRow
    [ui/TableCell (format-id id)]
+   [ui/TableCell action]
    [ui/TableCell time-of-status-change]
    [ui/TableCell state]
    [ui/TableCell progress]
@@ -237,6 +239,7 @@
         [ui/TableHeader
          [ui/TableRow
           [ui/TableHeaderCell [:span (@tr [:job])]]
+          [ui/TableHeaderCell [:span (@tr [:action])]]
           [ui/TableHeaderCell [:span (@tr [:timestamp])]]
           [ui/TableHeaderCell [:span (@tr [:state])]]
           [ui/TableHeaderCell [:span (@tr [:progress])]]
@@ -248,7 +251,7 @@
 
 (defn jobs-section
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr   (subscribe [::i18n-subs/tr])
         jobs (subscribe [::subs/jobs])]
     (fn []
       (let [jobs @jobs]
@@ -259,8 +262,8 @@
 
 (defn refresh-button
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::subs/loading?])
+  (let [tr         (subscribe [::i18n-subs/tr])
+        loading?   (subscribe [::subs/loading?])
         deployment (subscribe [::subs/deployment])]
     (fn []
       [ui/MenuMenu {:position "right"}
@@ -288,7 +291,7 @@
   [node-name]
   (let [deployment (subscribe [::subs/deployment])
         [url-name url-pattern] (first (get-in @deployment [:module :content :urls]))
-        url @(subscribe [::subs/url url-pattern])]
+        url        @(subscribe [::subs/url url-pattern])]
     ^{:key node-name}
     [ui/Card
      [ui/CardContent
@@ -312,7 +315,7 @@
 (defn menu
   []
   (let [deployment (subscribe [::subs/deployment])
-        cep (subscribe [::api-subs/cloud-entry-point])]
+        cep        (subscribe [::api-subs/cloud-entry-point])]
     (vec (concat [ui/Menu {:borderless true}]
 
                  (operations/format-operations nil @deployment (:base-uri @cep) nil)

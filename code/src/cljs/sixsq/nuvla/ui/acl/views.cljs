@@ -32,9 +32,9 @@
   [help-kw]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Popup {:trigger  (r/as-element
-                           [ui/Icon {:name     "info circle"
-                                     :style    {:cursor      "pointer"
-                                                :margin-left "4px"}}])
+                           [ui/Icon {:name  "info circle"
+                                     :style {:cursor      "pointer"
+                                             :margin-left "4px"}}])
                :content  (@tr [help-kw])
                :on       "click"
                :position "top left"}]))

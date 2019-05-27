@@ -127,13 +127,8 @@
                                         ::spec/credentials nil
                                         ::spec/selected-credential nil)
          ::cimi-api-fx/search [client :credential
-<<<<<<< HEAD
-                               {:select "id, name, description, created, type"
-                                :filter (general-utils/join-and
-=======
                                {:select "id, name, description, created, subtype"
-                                :filter (data-utils/join-and
->>>>>>> master
+                                :filter (general-utils/join-and
                                           (when selected-infra-service
                                             (str "parent='" selected-infra-service "'"))
                                           (str "subtype='infrastructure-service-swarm'"))} search-creds-callback]}))))

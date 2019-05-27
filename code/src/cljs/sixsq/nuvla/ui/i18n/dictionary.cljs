@@ -125,7 +125,7 @@
         :last-7-days                               "last 7 days"
         :launch                                    "launch"
         :less                                      "less"
-        :less-details                              "less details"
+        :less-details                              "fewer details"
         :limit                                     "limit"
         :loading                                   "loading"
         :login                                     "login"

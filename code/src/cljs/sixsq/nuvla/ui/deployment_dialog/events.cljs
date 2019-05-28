@@ -7,7 +7,7 @@
     [sixsq.nuvla.ui.data.utils :as data-utils]
     [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
     [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
-    [sixsq.nuvla.ui.history.events :as history-evts]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]
     [taoensso.timbre :as log]))
@@ -151,7 +151,7 @@
                                                   :content message
                                                   :type    :success}]
                                  (dispatch [::messages-events/add success-msg])
-                                 (dispatch [::history-evts/navigate "deployment"]))))]
+                                 (dispatch [::history-events/navigate "deployment"]))))]
         {:db                     (assoc db ::spec/deploy-modal-visible? false)
          ::cimi-api-fx/operation [client id "start" start-callback]}))))
 

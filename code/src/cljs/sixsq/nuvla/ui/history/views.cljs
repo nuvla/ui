@@ -3,7 +3,8 @@
     [re-frame.core :refer [dispatch]]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [taoensso.timbre :as log]))
 
 
 (defn link
@@ -11,9 +12,11 @@
    value will also be used as the label, unless an explicit label is provided."
   [href & [label]]
   [:a {:href     (str @config/path-prefix "/" href)
+       :target   "_blank"
        :on-click (fn [event]
-                   (dispatch [::history-events/navigate href])
-                   (.preventDefault event))}
+                   (when-not (.-metaKey event)            ;;cmd key not pressed
+                     (dispatch [::history-events/navigate href])
+                     (.preventDefault event)))}
    (or label href)])
 
 

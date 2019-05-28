@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Fix redirection behavior when loading new tab
+  - CMD + click on history link open in new tab
   - Add job action to deployment details and limit jobs number to 10
   - Align with API-SERVER field type renamed subtype 
     (not backward compatible)

@@ -20,7 +20,6 @@
                                 :dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL "https://localhost"}
                                              :compiler-options {:infer-externs :auto}}
 
-
                                 :release    {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL ""}
                                              :compiler-options {:infer-externs :auto
                                                                 :optimizations :advanced}}}}}

@@ -8,7 +8,8 @@
     [sixsq.nuvla.ui.data.spec :as spec]
     [sixsq.nuvla.ui.data.utils :as utils]
     [sixsq.nuvla.ui.deployment-dialog.events :as dialog-events]
-    [sixsq.nuvla.ui.deployment-dialog.spec :as dialog-spec]))
+    [sixsq.nuvla.ui.deployment-dialog.spec :as dialog-spec]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (defn fetch-data-cofx
@@ -124,8 +125,8 @@
                 ::spec/data-sets
                 ::spec/selected-data-set-ids] :as db} :db} _]
     (let [selected-data-sets (vals (filter (fn [[k v]] (boolean (selected-data-set-ids k))) data-sets))
-          query-application  (apply utils/join-and (map :module-filter selected-data-sets))
-          query-objects      (apply utils/join-or (map :data-record-filter selected-data-sets))]
+          query-application (apply general-utils/join-and (map :module-filter selected-data-sets))
+          query-objects (apply general-utils/join-or (map :data-record-filter selected-data-sets))]
       {:db                  (assoc db ::spec/application-select-visible? true
                                       ::spec/loading-applications? true
                                       ::spec/selected-application-id nil

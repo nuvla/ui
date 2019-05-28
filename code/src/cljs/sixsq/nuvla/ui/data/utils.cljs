@@ -55,24 +55,6 @@
              (str/join " or "))))
 
 
-(defn join-filters
-  [op filters]
-  (->> filters
-       (remove nil?)
-       (map #(str "(" % ")"))
-       (str/join (str " " op " "))))
-
-
-(defn join-or
-  [& filters]
-  (join-filters "or" filters))
-
-
-(defn join-and
-  [& filters]
-  (join-filters "and" filters))
-
-
 (defn format-bytes
   [bytes]
   (if (number? bytes)

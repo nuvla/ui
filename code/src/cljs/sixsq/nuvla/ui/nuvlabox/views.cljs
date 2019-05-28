@@ -8,28 +8,53 @@
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.nuvlabox-detail.events :as nuvlabox-detail-events]
     [sixsq.nuvla.ui.nuvlabox-detail.views :as nuvlabox-detail]
-    [sixsq.nuvla.ui.nuvlabox.events :as nuvlabox-events]
-    [sixsq.nuvla.ui.nuvlabox.subs :as nuvlabox-subs]
+    [sixsq.nuvla.ui.nuvlabox.events :as events]
+    [sixsq.nuvla.ui.nuvlabox.subs :as subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.forms :as forms]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.nuvlabox.utils :as utils]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]
+    [reagent.core :as r]))
 
 
 (defn stat
   [value icon color label]
+
   [ui/Statistic {:size "tiny"}
-   [ui/StatisticValue value "\u2002" [ui/Icon {:name icon :color color}]]
+
+   [ui/StatisticValue (or value "-")
+
+    "\u2002"
+
+    [ui/Icon {:name icon :color color}]]
+
    [ui/StatisticLabel label]])
+
+
+(defn state-summary
+  []
+  (let [nuvlaboxes (subscribe [::subs/nuvlaboxes])
+        {:keys [new activated quarantined decommissioning error]} @(subscribe [::subs/state-nuvlaboxes])
+        total      (:count @nuvlaboxes)]
+
+    [ui/Segment style/evenly
+     [stat total "box" "black" "Total"]
+     [stat activated "check" "black" "Activated"]
+     [stat new "dolly" "black" "New"]
+     [stat quarantined "eraser" "black" "Quarantined"]
+     [stat decommissioning "trash" "black" "Decommissioning"]
+     [stat error "exclamation" "black" "Error"]]))
 
 
 (defn health-summary
   []
-  (let [nuvlabox-records (subscribe [::nuvlabox-subs/nuvlabox-records])
-        health-info      (subscribe [::nuvlabox-subs/health-info])]
+  (let [nuvlabox-records (subscribe [::subs/nuvlaboxes])
+        health-info      (subscribe [::subs/health-info])]
     (let [{:keys [stale-count active-count]} @health-info
           total   (get @nuvlabox-records :count 0)
           unknown (max (- total stale-count active-count) 0)]
@@ -40,31 +65,25 @@
        [stat unknown "ellipsis horizontal" "yellow" "unknown"]])))
 
 
-(defn search-header []
-  (let [state-selector (subscribe [::nuvlabox-subs/state-selector])]
-    (fn []
-      ;; reset visible values of parameters
-      [ui/Form {:on-key-press (partial forms/on-return-key #(dispatch [::nuvlabox-events/get-nuvlabox-records]))}
-
-       [ui/FormGroup
-
-        [ui/FormField
-         ^{:key (str "state:" @state-selector)}
-         [ui/Dropdown
-          {:value     @state-selector
-           :scrolling false
-           :selection true
-           :options   [{:value "all", :text "all states"}
-                       {:value "new", :text "new state"}
-                       {:value "activated", :text "activated state"}
-                       {:value "quarantined", :text "quarantined state"}]
-           :on-change (ui-callback/value #(dispatch [::nuvlabox-events/set-state-selector %]))}]]]])))
+(defn filter-state []
+  (let [state-selector (subscribe [::subs/state-selector])]
+    ^{:key (str "state:" @state-selector)}
+    [ui/Dropdown
+     {:value     (or @state-selector "ALL")
+      :scrolling false
+      :selection true
+      :options   (->>
+                   utils/nuvlabox-states
+                   (map (fn [state] {:value state, :text state}))
+                   (cons {:value "ALL", :text "ALL"}))
+      :on-change (ui-callback/value
+                   #(dispatch [::events/set-state-selector (if (= % "ALL") nil %)]))}]))
 
 
-(defn search-button
+(defn refresh-button
   []
   (let [tr       (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::nuvlabox-subs/loading?])]
+        loading? (subscribe [::subs/loading?])]
     (fn []
       [uix/MenuItemWithIcon
        {:name      (@tr [:refresh])
@@ -73,27 +92,15 @@
         :position  "right"
         :disabled  false #_(nil? @selected-id)
         :on-click  (fn []
-                     (dispatch [::nuvlabox-events/fetch-health-info])
-                     (dispatch [::nuvlabox-events/get-nuvlabox-records]))}])))
+                     (dispatch [::events/fetch-health-info])
+                     (dispatch [::events/get-nuvlaboxes]))}])))
 
 
 (defn menu-bar []
   [ui/Segment style/basic
    [ui/Menu {:attached   "top"
              :borderless true}
-    [search-button]]
-   [ui/Segment {:attached "bottom"}
-    [search-header]]])
-
-
-(defn format-nb-header
-  []
-  [ui/TableHeader
-   [ui/TableRow
-    [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
-    [ui/TableHeaderCell "mac"]
-    [ui/TableHeaderCell "state"]
-    [ui/TableHeaderCell "name"]]])
+    [refresh-button]]])
 
 
 (defn health-icon
@@ -105,40 +112,63 @@
 
 
 (defn format-nb-row
-  [healthy? {:keys [id macAddress state name] :as row}]
-  (let [uuid     (second (str/split id #"/"))
+  [{:keys [id state name] :as row}]
+  (let [status   (subscribe [::subs/status-nuvlabox id])
+        uuid     (second (str/split id #"/"))
         on-click (fn []
                    (dispatch [::nuvlabox-detail-events/clear-detail])
-                   (dispatch [::history-events/navigate (str "nuvlabox/" uuid)]))]
-    [ui/TableRow {:on-click on-click
+                   (dispatch [::history-events/navigate (str "edge/" uuid)]))]
+    [ui/TableRow #_{:on-click on-click
                   :style    {:cursor "pointer"}}
-     [ui/TableCell {:collapsing true} (health-icon (get healthy? id))]
-     [ui/TableCell {:collapsing true} [:a {:on-click on-click} macAddress]]
-     [ui/TableCell {:collapsing true} state]
-     [ui/TableCell name]]))
+     [ui/TableCell {:collapsing true}
+      [ui/Popup
+       {:content @status
+        :trigger (r/as-element
+                   [ui/Icon {:name  "power",
+                             :color (case @status
+                                      :online "green"
+                                      :offline "red"
+                                      :unknown "yellow")}])}]]
+     [ui/TableCell {:collapsing true}
+      [ui/Icon {:name (utils/state->icon state)}]]
+     [ui/TableCell (or name uuid)]]))
 
 
 (defn nb-table
   []
-  (let [nuvlabox-records  (subscribe [::nuvlabox-subs/nuvlabox-records])
-        elements-per-page (subscribe [::nuvlabox-subs/elements-per-page])
-        page              (subscribe [::nuvlabox-subs/page])
-        health-info       (subscribe [::nuvlabox-subs/health-info])]
-    (dispatch [::nuvlabox-events/get-nuvlabox-records])
+  (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
+        elements-per-page (subscribe [::subs/elements-per-page])
+        page              (subscribe [::subs/page])
+        health-info       (subscribe [::subs/health-info])]
+
+    (dispatch [::main-events/action-interval
+               {:action    :start
+                :id        :nuvlabox-get-nuvlaboxes
+                :frequency 30000
+                :event     [::events/get-nuvlaboxes]}])
     (fn []
       (let [{:keys [healthy?]} @health-info
-            total-elements (get @nuvlabox-records :count 0)]
+            total-elements (get @nuvlaboxes :count 0)]
         [:div
 
+         [filter-state]
+
          [ui/Table {:compact "very", :selectable true}
-          (format-nb-header)
-          (vec (concat [ui/TableBody]
-                       (mapv (partial format-nb-row healthy?) (get @nuvlabox-records :resources []))))]
+          [ui/TableHeader
+           [ui/TableRow
+            [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
+            [ui/TableHeaderCell "state"]
+            [ui/TableHeaderCell "name"]]]
+
+          [ui/TableBody
+           (doall
+             (for [{:keys [id] :as nuvlabox} (:resources @nuvlaboxes)]
+               ^{:key id}
+               [format-nb-row nuvlabox]))]]
 
          [uix/Pagination {:totalPages   (general-utils/total-pages total-elements @elements-per-page)
                           :activePage   @page
-                          :onPageChange (ui-callback/callback :activePage #(dispatch [::nuvlabox-events/set-page %]))}]
-         ]))))
+                          :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]))))
 
 
 (defn nb-info
@@ -149,7 +179,7 @@
             n        (count @path)
             children (case n
                        1 [[menu-bar]
-                          [health-summary]
+                          [state-summary]
                           [nb-table]]
                        2 [[nuvlabox-detail/nb-detail]]
                        [[menu-bar]
@@ -159,6 +189,6 @@
         (vec (concat [ui/Segment style/basic] children))))))
 
 
-(defmethod panel/render :nuvlabox
+(defmethod panel/render :edge
   [path]
   [nb-info])

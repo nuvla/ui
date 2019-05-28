@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+  - Edge page. Nuvlabox details still hidden wip
+
 ### Changed
 
   - Fix redirection behavior when loading new tab

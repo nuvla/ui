@@ -10,11 +10,11 @@
 (defn routes []
 
   (defroute "/*" {path :* query-params :query-params}
-            (log/info "routing /*:" path query-params)
+            (log/debug "routing /*:" path query-params)
             (when (not-empty path)
               (dispatch [::main-events/set-navigation-info path query-params])))
 
   (defroute "*" {path :*}
-            (log/info "routing *:" path)
+            (log/debug "routing *:" path)
             (when (not-empty path)
               (dispatch [::main-events/set-navigation-info path nil]))))

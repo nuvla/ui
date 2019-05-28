@@ -36,7 +36,6 @@
       (when (contains? @query-params :reset-password)
         (dispatch [::authn-events/set-form-id "session-template/password-reset"])
         (dispatch [::authn-events/open-modal :reset-password]))
-      (log/error "panel/render welcome")
       (dispatch [::history-events/navigate (str (first path) "/")]))
     [ui/Container {:textAlign "center"
                    :fluid     true

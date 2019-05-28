@@ -118,7 +118,7 @@
         on-click (fn []
                    (dispatch [::nuvlabox-detail-events/clear-detail])
                    (dispatch [::history-events/navigate (str "edge/" uuid)]))]
-    [ui/TableRow {:on-click on-click
+    [ui/TableRow #_{:on-click on-click
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
       [ui/Popup

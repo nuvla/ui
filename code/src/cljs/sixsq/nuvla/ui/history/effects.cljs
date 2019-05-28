@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.history.effects
   (:require
     [re-frame.core :refer [reg-fx]]
-    [sixsq.nuvla.ui.history.utils :as utils]))
+    [sixsq.nuvla.ui.history.utils :as utils]
+    [taoensso.timbre :as log]))
 
 
 (reg-fx
@@ -16,7 +17,7 @@
   (fn [[url]]
     (utils/navigate url)))
 
-(reg-fx
+#_(reg-fx
   ::navigate-js-location
   (fn [[url]]
     (.replace js/location url)))

@@ -29,12 +29,12 @@
   (fn [{{:keys [::spec/redirect-uri
                 ::spec/session] :as db} :db} [_ session-arg]]
     (when (not= session session-arg)
-      ;; force refresh templates collection cache
+      ;; force refresh templates collection cache when not the same user (different session)
       (dispatch [::cimi-events/get-cloud-entry-point]))
 
     (cond-> {:db (assoc db ::spec/session session-arg)}
             session-arg (assoc ::fx/automatic-logout-at-session-expiry [session-arg])
-            (and session-arg redirect-uri) (assoc ::history-fx/navigate-js-location [redirect-uri]))))
+            )))
 
 
 (reg-event-fx
@@ -106,13 +106,13 @@
     (assoc db ::spec/success-message nil)))
 
 
-(reg-event-db
+#_(reg-event-db
   ::redirect-uri
   (fn [db [_ uri]]
     (assoc db ::spec/redirect-uri uri)))
 
 
-(reg-event-db
+#_(reg-event-db
   ::server-redirect-uri
   (fn [db [_ uri]]
     (assoc db ::spec/server-redirect-uri uri)))

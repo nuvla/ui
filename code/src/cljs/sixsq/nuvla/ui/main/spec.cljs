@@ -46,7 +46,7 @@
                ::device               :computer
                ::sidebar-open?        false
                ::visible?             true
-               ::nav-path             ["welcome"]
+               ::nav-path             []
                ::nav-query-params     {}
                ::changes-protection?  false
                ::ignore-changes-modal nil

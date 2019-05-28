@@ -12,7 +12,6 @@
     [sixsq.nuvla.ui.cimi.utils :as api-utils]
     [sixsq.nuvla.ui.docs.subs :as docs-subs]
     [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.history.utils :as history-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.forms :as forms-utils]
@@ -581,7 +580,7 @@
   []
   (let [tr               (subscribe [::i18n-subs/tr])
         user             (subscribe [::subs/user])
-        profile-fn       #(history-utils/navigate "profile")
+        profile-fn       #(dispatch [::history-events/navigate "profile"])
         login-fn         #(dispatch [::events/open-modal :login])
         signup-fn        #(dispatch [::events/open-modal :signup])
         logged-in?       (boolean @user)

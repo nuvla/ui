@@ -24,7 +24,7 @@
           nav-effect)))))
 
 
-(reg-event-fx
+#_(reg-event-fx
   ::navigate-js-location
   (fn [_ [_ url]]
     (log/info "triggering navigate js location effect " url)

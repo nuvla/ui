@@ -112,13 +112,21 @@
 
 
 (defn RightCheckbox
-  [{:keys [acl on-change read-only] :as opts} principal right-kw]
-  (let [checked? (boolean (some #(= % principal) (right-kw acl)))]
-    [ui/Checkbox {:checked   checked?
-                  :on-change #(if checked?
-                                (on-change (utils/remove-principal acl (utils/remove-right right-kw) principal))
-                                (on-change (utils/add-principal acl [right-kw] principal)))
-                  :disabled  read-only}]))
+  [{:keys [acl on-change read-only mode] :as opts} principal right-kw]
+  (let [checked?       (utils/some-principal? principal (right-kw acl))
+        indeterminate? (and
+                         (= @mode :simple)
+                         (not checked?)
+                         (utils/some-principal? principal
+                                                (->> (utils/same-base-right right-kw)
+                                                     (select-keys acl)
+                                                     (mapcat (fn [[_ principals]] principals)))))]
+    [ui/Checkbox {:checked       checked?
+                  :indeterminate indeterminate?
+                  :on-change     #(if checked?
+                                    (on-change (utils/remove-principal acl (utils/same-base-right right-kw) principal))
+                                    (on-change (utils/add-principal acl [right-kw] principal)))
+                  :disabled      read-only}]))
 
 
 (defn RightRow
@@ -233,7 +241,7 @@
                                                set/union (utils/extent-right right-kw)))
                                (reset! new-permission
                                        (update @new-permission :rights
-                                               set/difference (utils/remove-right right-kw))))))}]]))
+                                               set/difference (utils/same-base-right right-kw))))))}]]))
 
        [ui/TableCell
         (let [{:keys [principal rights]} @new-permission]

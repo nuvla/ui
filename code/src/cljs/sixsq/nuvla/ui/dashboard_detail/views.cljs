@@ -330,13 +330,17 @@
 
 
 (defn deployment-detail
-  [resource-id]
-  (let [deployment (subscribe [::subs/deployment])]
+  [uuid]
+  (let [deployment (subscribe [::subs/deployment])
+        resource-id (str "deployment/" uuid)]
     (automatic-refresh resource-id)
-    (fn [resource-id]
-      ^{:key resource-id}
+    (fn [uuid]
+      ^{:key uuid}
       [ui/Segment (merge style/basic
-                         {:loading (not= resource-id (:id @deployment))})
+                         {:loading (not= uuid (-> @deployment
+                                                  :id
+                                                  (str/split #"/")
+                                                  second))})
        [ui/Container {:fluid true}
         [menu]
         [metadata-section]

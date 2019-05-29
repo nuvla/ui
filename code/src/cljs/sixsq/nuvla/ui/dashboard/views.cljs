@@ -167,7 +167,8 @@
         logo-url      (:logo-url module)
         cred-info     (get @creds-name credential-id credential-id)
         [url-name url] @(subscribe [::subs/deployment-url deployment])
-        started?      (dashboard-detail-utils/is-started? state)]
+        started?      (dashboard-detail-utils/is-started? state)
+        uuid (second (str/split id "/"))]
     ^{:key id}
     [ui/Card
      [ui/Image {:src      (or logo-url "")
@@ -179,13 +180,13 @@
 
      (cond
        (dashboard-detail-utils/stop-action? deployment) [ui/Label {:corner true, :size "small"}
-                                                          [stop-button deployment]]
+                                                         [stop-button deployment]]
        (dashboard-detail-utils/delete-action? deployment) [ui/Label {:corner true, :size "small"}
-                                                            [delete-button deployment]])
+                                                           [delete-button deployment]])
 
      [ui/CardContent {:href     id
                       :on-click (fn [event]
-                                  (dispatch [::history-events/navigate id])
+                                  (dispatch [::history-events/navigate (str "dashboard/" uuid)])
                                   (.preventDefault event))}
 
 
@@ -238,7 +239,7 @@
          [vertical-data-table deployments-list])])))
 
 
-(defn deployments-main
+(defn dashboard-main
   []
   (let [elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])
@@ -274,11 +275,11 @@
   (let [path (subscribe [::main-subs/nav-path])]
     (fn []
       (let [n        (count @path)
-            [collection-name resource-id] @path
+            [_ uuid] @path
             children (case n
-                       1 [[deployments-main]]
-                       2 [[dashboard-detail-views/deployment-detail (str collection-name "/" resource-id)]]
-                       [[deployments-main]])]
+                       1 [[dashboard-main]]
+                       2 [[dashboard-detail-views/deployment-detail uuid]]
+                       [[dashboard-main]])]
         (vec (concat [ui/Segment style/basic] children))))))
 
 

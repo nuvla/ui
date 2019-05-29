@@ -107,15 +107,15 @@
 
 
 #_(reg-event-db
-  ::redirect-uri
-  (fn [db [_ uri]]
-    (assoc db ::spec/redirect-uri uri)))
+    ::redirect-uri
+    (fn [db [_ uri]]
+      (assoc db ::spec/redirect-uri uri)))
 
 
 #_(reg-event-db
-  ::server-redirect-uri
-  (fn [db [_ uri]]
-    (assoc db ::spec/server-redirect-uri uri)))
+    ::server-redirect-uri
+    (fn [db [_ uri]]
+      (assoc db ::spec/server-redirect-uri uri)))
 
 
 (reg-event-db
@@ -170,5 +170,7 @@
                           (str/starts-with? form-id "session-template/") :session
                           (str/starts-with? form-id "user-template/") :user)]
 
-      {:db               (assoc db ::spec/loading? true)
+      {:db               (assoc db ::spec/loading? true
+                                   ::spec/success-message nil
+                                   ::spec/error-message nil)
        ::cimi-api-fx/add [client collection-kw template callback-add]})))

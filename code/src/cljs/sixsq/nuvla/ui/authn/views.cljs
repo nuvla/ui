@@ -327,7 +327,8 @@
   (let [tr         (subscribe [::i18n-subs/tr])
         open-modal (subscribe [::subs/open-modal])
         form-spec  (subscribe [::subs/form-spec])
-        form-data  (subscribe [::subs/form-data])]
+        form-data  (subscribe [::subs/form-data])
+        loading?   (subscribe [::subs/loading?])]
     (fn [id modal-kw form-fn submit-opts form-validation?]
       [ui/Modal
        {:id        id
@@ -346,6 +347,7 @@
         [uix/Button
          {:text     (@tr [modal-kw])
           :positive true
+          :loading  @loading?
           :disabled (and form-validation? (not (s/valid? @form-spec @form-data)))
           :on-click #(dispatch [::events/submit submit-opts])}]]])))
 

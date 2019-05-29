@@ -331,7 +331,7 @@
 
 (defn deployment-detail
   [uuid]
-  (let [deployment (subscribe [::subs/deployment])
+  (let [deployment  (subscribe [::subs/deployment])
         resource-id (str "deployment/" uuid)]
     (automatic-refresh resource-id)
     (fn [uuid]

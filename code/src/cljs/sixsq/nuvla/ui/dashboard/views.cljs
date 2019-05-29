@@ -168,7 +168,7 @@
         cred-info     (get @creds-name credential-id credential-id)
         [url-name url] @(subscribe [::subs/deployment-url deployment])
         started?      (dashboard-detail-utils/is-started? state)
-        uuid (second (str/split id "/"))]
+        uuid          (second (str/split id "/"))]
     ^{:key id}
     [ui/Card
      [ui/Image {:src      (or logo-url "")

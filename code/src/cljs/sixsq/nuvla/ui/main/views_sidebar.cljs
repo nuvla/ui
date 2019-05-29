@@ -29,12 +29,10 @@
 
     ^{:key (name label-kw)}
     [uix/MenuItemWithIcon
-     {:name      (@tr [label-kw])
-      :icon-name icon
-      :active    (= (first @nav-path) url)
-      :on-click  (fn []
-                   (when @is-user?
-                     (navigate url)))}]))
+     (cond-> {:name      (@tr [label-kw])
+              :icon-name icon
+              :active    (= (first @nav-path) url)}
+             @is-user? (assoc :on-click #(navigate url)))]))
 
 
 (defn logo-item

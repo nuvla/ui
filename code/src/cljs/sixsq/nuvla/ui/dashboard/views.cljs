@@ -7,7 +7,7 @@
     [sixsq.nuvla.ui.dashboard-detail.utils :as dashboard-detail-utils]
     [sixsq.nuvla.ui.dashboard-detail.views :as dashboard-detail-views]
     [sixsq.nuvla.ui.dashboard.events :as events]
-    [sixsq.nuvla.ui.deployment.subs :as subs]
+    [sixsq.nuvla.ui.dashboard.subs :as subs]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]

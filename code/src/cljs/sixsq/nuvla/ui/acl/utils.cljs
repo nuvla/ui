@@ -106,7 +106,7 @@
                                (sort)))))
 
 
-(defn remove-right
+(defn same-base-right
   [right-kw]
   (case right-kw
     :edit-acl [:edit-acl :edit-data :edit-meta]
@@ -122,3 +122,8 @@
   (->> acl
        (mapcat (fn [[right principal]] principal))
        (set)))
+
+
+(defn some-principal?
+  [principal principals]
+  (boolean (some #(= % principal) principals)))

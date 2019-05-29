@@ -8,6 +8,7 @@
 
 ### Changed
 
+  - ACL widget - indeterminate state in simple mode
   - Dashboard page - URL in deployment card url is only visible when 
     deployment state is started. Rename namespace to dashboard
   - Redirect to welcome page when token is root

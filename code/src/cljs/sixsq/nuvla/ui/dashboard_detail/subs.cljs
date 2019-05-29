@@ -1,8 +1,8 @@
-(ns sixsq.nuvla.ui.deployment-detail.subs
+(ns sixsq.nuvla.ui.dashboard-detail.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.deployment-detail.spec :as spec]
-    [sixsq.nuvla.ui.deployment.utils :as deployment-utils]))
+    [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
+    [sixsq.nuvla.ui.dashboard.utils :as dashboard-utils]))
 
 
 (reg-sub
@@ -42,4 +42,4 @@
   ::url
   :<- [::deployment-parameters]
   (fn [deployment-parameters [_ url-pattern]]
-    (deployment-utils/resolve-url-pattern url-pattern deployment-parameters)))
+    (dashboard-utils/resolve-url-pattern url-pattern deployment-parameters)))

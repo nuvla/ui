@@ -8,6 +8,8 @@
 
 ### Changed
 
+  - Dashboard page - URL in deployment card url is only visible when 
+    deployment state is started. Rename namespace to dashboard
   - Redirect to welcome page when token is root
   - Fix redirection behavior when loading new tab
   - CMD + click on history link open in new tab

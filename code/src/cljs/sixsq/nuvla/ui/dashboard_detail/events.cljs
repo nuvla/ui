@@ -1,10 +1,9 @@
-(ns sixsq.nuvla.ui.deployment-detail.events
+(ns sixsq.nuvla.ui.dashboard-detail.events
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.client.spec :as client-spec]
-    [sixsq.nuvla.ui.deployment-detail.spec :as spec]
+    [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -47,7 +46,7 @@
                                                                 status (str " (" status ")"))
                                                :content message
                                                :type    :error}])
-                                   (dispatch [::history-events/navigate "deployment"]))
+                                   (dispatch [::history-events/navigate "dashboard"]))
                                  (dispatch [::set-deployment %]))]
         {:db               (cond-> (assoc db ::spec/loading? true)
                                    (not= (:id deployment) resource-id) (assoc ::spec/deployment nil
@@ -148,7 +147,7 @@
                                               :content message
                                               :type    :success}])
                                   (dispatch [:sixsq.nuvla.ui.deployment.events/get-deployments])
-                                  (dispatch [::history-events/navigate "deployment"])))]
+                                  (dispatch [::history-events/navigate "dashboard"])))]
        })))
 
 

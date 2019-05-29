@@ -152,7 +152,7 @@
                                                   :content message
                                                   :type    :success}]
                                  (dispatch [::messages-events/add success-msg])
-                                 (dispatch [::history-events/navigate "deployment"]))))]
+                                 (dispatch [::history-events/navigate "dashboard"]))))]
         {:db                     (assoc db ::spec/deploy-modal-visible? false)
          ::cimi-api-fx/operation [client id "start" start-callback]}))))
 

@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.deployment-detail.utils
+(ns sixsq.nuvla.ui.dashboard-detail.utils
   (:require
     [sixsq.nuvla.ui.utils.time :as time]))
 
@@ -22,3 +22,8 @@
 
 
 (def delete-action? (partial has-action? "delete"))
+
+
+(defn is-started?
+  [state]
+  (= state "STARTED"))

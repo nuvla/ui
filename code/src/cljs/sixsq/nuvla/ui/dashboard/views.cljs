@@ -1,14 +1,13 @@
-(ns sixsq.nuvla.ui.deployment.views
+(ns sixsq.nuvla.ui.dashboard.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as reagent]
-    [sixsq.nuvla.ui.deployment-detail.events :as deployment-detail-events]
-    [sixsq.nuvla.ui.deployment-detail.utils :as deployment-detail-utils]
-    [sixsq.nuvla.ui.deployment-detail.views :as deployment-detail-views]
-    [sixsq.nuvla.ui.deployment.events :as events]
-    [sixsq.nuvla.ui.deployment.subs :as subs]
-    [sixsq.nuvla.ui.deployment.utils :as utils]
+    [sixsq.nuvla.ui.dashboard-detail.events :as dashboard-detail-events]
+    [sixsq.nuvla.ui.dashboard-detail.utils :as dashboard-detail-utils]
+    [sixsq.nuvla.ui.dashboard-detail.views :as dashboard-detail-views]
+    [sixsq.nuvla.ui.dashboard.events :as events]
+    [sixsq.nuvla.ui.dashboard.subs :as subs]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -80,7 +79,7 @@
 
 (defn delete-button
   [{:keys [id] :as deployment}]
-  [action-button :delete "trash" ::deployment-detail-events/delete id])
+  [action-button :delete "trash" ::dashboard-detail-events/delete id])
 
 
 (defn menu-bar
@@ -133,8 +132,8 @@
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}} (get @creds-name credential-id credential-id)]
      [ui/TableCell (cond
-                     (deployment-detail-utils/stop-action? deployment) [stop-button deployment]
-                     (deployment-detail-utils/delete-action? deployment) [delete-button deployment])]]))
+                     (dashboard-detail-utils/stop-action? deployment) [stop-button deployment]
+                     (dashboard-detail-utils/delete-action? deployment) [delete-button deployment])]]))
 
 
 
@@ -167,7 +166,8 @@
         credential-id (:credential-id deployment)
         logo-url      (:logo-url module)
         cred-info     (get @creds-name credential-id credential-id)
-        [url-name url] @(subscribe [::subs/deployment-url deployment])]
+        [url-name url] @(subscribe [::subs/deployment-url deployment])
+        started?      (dashboard-detail-utils/is-started? state)]
     ^{:key id}
     [ui/Card
      [ui/Image {:src      (or logo-url "")
@@ -178,9 +178,9 @@
                            :object-fit "contain"}}]
 
      (cond
-       (deployment-detail-utils/stop-action? deployment) [ui/Label {:corner true, :size "small"}
+       (dashboard-detail-utils/stop-action? deployment) [ui/Label {:corner true, :size "small"}
                                                           [stop-button deployment]]
-       (deployment-detail-utils/delete-action? deployment) [ui/Label {:corner true, :size "small"}
+       (dashboard-detail-utils/delete-action? deployment) [ui/Label {:corner true, :size "small"}
                                                             [delete-button deployment]])
 
      [ui/CardContent {:href     id
@@ -204,7 +204,7 @@
 
       [ui/CardDescription (when-not (str/blank? cred-info)
                             [:div [ui/Icon {:name "key"}] cred-info])]]
-     (when url
+     (when (and started? url)
        [ui/Button {:color   "green"
                    :icon    "external"
                    :content url-name
@@ -246,7 +246,7 @@
         tr                (subscribe [::i18n-subs/tr])]
     (dispatch [::main-events/action-interval
                {:action    :start
-                :id        :deployment-get-deployments
+                :id        :dashboard-get-deployments
                 :frequency 20000
                 :event     [::events/get-deployments]}])
     (fn []
@@ -277,11 +277,11 @@
             [collection-name resource-id] @path
             children (case n
                        1 [[deployments-main]]
-                       2 [[deployment-detail-views/deployment-detail (str collection-name "/" resource-id)]]
+                       2 [[dashboard-detail-views/deployment-detail (str collection-name "/" resource-id)]]
                        [[deployments-main]])]
         (vec (concat [ui/Segment style/basic] children))))))
 
 
-(defmethod panel/render :deployment
+(defmethod panel/render :dashboard
   [path]
   [deployment-resources])

@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.deployment.utils
+(ns sixsq.nuvla.ui.dashboard.utils
   (:require [clojure.string :as str]))
 
 (defn resolve-url-pattern

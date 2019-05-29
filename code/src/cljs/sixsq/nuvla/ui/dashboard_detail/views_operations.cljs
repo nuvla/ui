@@ -1,7 +1,7 @@
-(ns sixsq.nuvla.ui.deployment-detail.views-operations
+(ns sixsq.nuvla.ui.dashboard-detail.views-operations
   (:require
     [re-frame.core :refer [dispatch]]
-    [sixsq.nuvla.ui.deployment-detail.events :as events]
+    [sixsq.nuvla.ui.dashboard-detail.events :as events]
     [sixsq.nuvla.ui.utils.general :as general]
     [sixsq.nuvla.ui.utils.resource-details :as resource-details]))
 

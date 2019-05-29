@@ -1,8 +1,8 @@
-(ns sixsq.nuvla.ui.deployment.subs
+(ns sixsq.nuvla.ui.dashboard.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.deployment.spec :as spec]
-    [sixsq.nuvla.ui.deployment.utils :as utils]))
+    [sixsq.nuvla.ui.dashboard.spec :as spec]
+    [sixsq.nuvla.ui.dashboard.utils :as utils]))
 
 
 (reg-sub

@@ -1,10 +1,10 @@
-(ns sixsq.nuvla.ui.deployment.events
+(ns sixsq.nuvla.ui.dashboard.events
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.client.spec :as client-spec]
-    [sixsq.nuvla.ui.deployment.spec :as spec]
+    [sixsq.nuvla.ui.dashboard.spec :as spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]))
 

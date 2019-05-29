@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.deployment-detail.spec
+(ns sixsq.nuvla.ui.dashboard-detail.spec
   (:require
     [clojure.spec.alpha :as s]))
 

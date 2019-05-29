@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.deployment-detail.views
+(ns sixsq.nuvla.ui.dashboard-detail.views
   (:require
     [clojure.pprint :refer [cl-format]]
     [clojure.string :as str]
@@ -6,10 +6,10 @@
     [reagent.core :as reagent]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
-    [sixsq.nuvla.ui.deployment-detail.events :as events]
-    [sixsq.nuvla.ui.deployment-detail.subs :as subs]
-    [sixsq.nuvla.ui.deployment-detail.utils :as deployment-detail-utils]
-    [sixsq.nuvla.ui.deployment-detail.views-operations :as operations]
+    [sixsq.nuvla.ui.dashboard-detail.events :as events]
+    [sixsq.nuvla.ui.dashboard-detail.subs :as subs]
+    [sixsq.nuvla.ui.dashboard-detail.utils :as dashboard-detail-utils]
+    [sixsq.nuvla.ui.dashboard-detail.views-operations :as views-operations]
     [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -30,22 +30,22 @@
   [resource-id]
   (dispatch [::main-events/action-interval
              {:action    :start
-              :id        :deployment-detail-get-deployment
+              :id        :dashboard-detail-get-deployment
               :frequency 30000
               :event     [::events/get-deployment resource-id]}])
   (dispatch [::main-events/action-interval
              {:action    :start
-              :id        :deployment-detail-deployment-parameters
+              :id        :dashboard-detail-deployment-parameters
               :frequency 20000
               :event     [::events/get-deployment-parameters resource-id]}])
   (dispatch [::main-events/action-interval
              {:action    :start
-              :id        :deployment-detail-events
+              :id        :dashboard-detail-events
               :frequency 30000
               :event     [::events/get-events resource-id]}])
   (dispatch [::main-events/action-interval
              {:action    :start
-              :id        :deployment-detail-jobs
+              :id        :dashboard-detail-jobs
               :frequency 30000
               :event     [::events/get-jobs resource-id]}]))
 
@@ -163,7 +163,7 @@
 (defn events-table-info
   [events]
   (when-let [start (-> events last :timestamp)]
-    (let [dt-fn (partial deployment-detail-utils/assoc-delta-time start)]
+    (let [dt-fn (partial dashboard-detail-utils/assoc-delta-time start)]
       (->> events
            (map #(select-keys % event-fields))
            (map dt-fn)))))
@@ -318,7 +318,7 @@
         cep        (subscribe [::api-subs/cloud-entry-point])]
     (vec (concat [ui/Menu {:borderless true}]
 
-                 (operations/format-operations nil @deployment (:base-uri @cep) nil)
+                 (views-operations/format-operations nil @deployment (:base-uri @cep) nil)
 
                  [[service-link-button]
                   [refresh-button]]))))

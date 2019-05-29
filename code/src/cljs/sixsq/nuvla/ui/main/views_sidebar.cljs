@@ -70,7 +70,7 @@
                 :compact  true
                 :inverted true}
        (when-not @iframe? [logo-item])
-       (when-not @iframe? [item :dashboard "deployment" "dashboard"])
+       (when-not @iframe? [item :dashboard "dashboard" "dashboard"])
        (when-not @iframe? [item :apps "apps" "play"])
        [item :data "data" "database"]
        ;       [item :deployment "deployment" "cloud"]

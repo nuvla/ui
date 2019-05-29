@@ -111,7 +111,7 @@
         :hide-versions                             "hide versions"
         :id                                        "id"
         :ignore-changes                            "ignore changes"
-        :ignore-changes-content                    "This page contains unsaved changes. Are you sure you want to loose these changes?"
+        :ignore-changes-content                    "This page contains unsaved changes. Are you sure you want to lose these changes?"
         :ignore-changes?                           "Ignore changes?"
         :image                                     "image"
         :infra-service-short                       "infrastructures"

@@ -8,6 +8,7 @@
 
 ### Changed
 
+  - Redirect to welcome page when token is root
   - Fix redirection behavior when loading new tab
   - CMD + click on history link open in new tab
   - Add job action to deployment details and limit jobs number to 10

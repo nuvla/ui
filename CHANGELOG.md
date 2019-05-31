@@ -8,6 +8,8 @@
 
 ### Changed
 
+  - Deployment owners replaced by metadata widget
+  - Metadata widget - doesn't show acl when acl is null
   - ACL widget - indeterminate state in simple mode
   - Dashboard page - URL in deployment card url is only visible when 
     deployment state is started. Rename namespace to dashboard

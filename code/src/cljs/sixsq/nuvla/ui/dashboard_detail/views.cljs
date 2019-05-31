@@ -109,8 +109,7 @@
   (let [deployment (subscribe [::subs/deployment])]
     (fn []
       (let [summary-info (-> (select-keys @deployment deployment-summary-keys)
-                             (merge (select-keys (:module @deployment) #{:name :path :subtype})
-                                    {:owners (->> @deployment :acl :owners (str/join ", "))}))
+                             (merge (select-keys (:module @deployment) #{:name :path :subtype})))
             icon         (-> @deployment :module :subtype apps-utils/subtype-icon)
             rows         (map tuple-to-row summary-info)
             state        (:state @deployment)]
@@ -118,7 +117,8 @@
          {:title       (module-name @deployment)
           :description (:startTime summary-info)
           :icon        icon
-          :subtitle    state}
+          :subtitle    state
+          :acl         (:acl @deployment)}
          rows]))))
 
 

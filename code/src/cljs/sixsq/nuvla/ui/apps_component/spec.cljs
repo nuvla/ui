@@ -49,9 +49,9 @@
                          #(re-matches env-var-regex %)
                          #(not (re-matches reserved-env-var-regex %))))
 
-(s/def ::env-description apps-spec/nonblank-string)
+(s/def ::env-description (s/nilable apps-spec/nonblank-string))
 
-(s/def ::env-value apps-spec/nonblank-string)
+(s/def ::env-value (s/nilable apps-spec/nonblank-string))
 
 (s/def ::env-required boolean?)
 

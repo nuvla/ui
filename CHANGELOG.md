@@ -8,6 +8,8 @@
 
 ### Changed
 
+  - Deployment modal - support env variables
+  - Apps page - add env variables to module component
   - Deployment owners replaced by metadata widget
   - Metadata widget - doesn't show acl when acl is null
   - ACL widget - indeterminate state in simple mode

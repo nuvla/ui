@@ -86,19 +86,19 @@
 
 
 (reg-sub
-  ::input-parameters
-  (fn [_ _]
-    [(subscribe [::deployment])
-     (subscribe [::selected-credential])])
-  (fn [[deployment selected-credential] _]
-    (-> deployment :module :content :inputParameters)))
+  ::env-variables
+  :<- [::deployment]
+  (fn [deployment _]
+    (->> deployment :module :content :environmental-variables (sort-by :name))))
 
 
 (reg-sub
-  ::parameters-completed?
-  :<- [::input-parameters]
-  (fn [input-params _]
-    (every? #(not (str/blank? (:value %))) input-params)))
+  ::env-variables-completed?
+  :<- [::env-variables]
+  (fn [env-variables _]
+    (->> env-variables
+         (filter #(:required %))
+         (every? #(not (str/blank? (:value %)))))))
 
 
 (reg-sub

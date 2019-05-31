@@ -19,9 +19,9 @@
 
 (s/def ::infra-services any?)
 
-(s/def ::step-id #{:data :credentials :parameters :summary})
+(s/def ::step-id #{:data :credentials :env-variables :summary})
 
-(def steps [:data :credentials :parameters :summary])
+(def steps [:data :credentials :env-variables :summary])
 
 (s/def ::active-step ::step-id)
 
@@ -68,11 +68,11 @@
 
                ::active-step            :data
                ::data-step-active       true
-               ::step-states            {:data        {:step-id :data
-                                                       :icon    "database"}
-                                         :credentials {:step-id :credentials
-                                                       :icon    "key"}
-                                         :parameters  {:step-id :parameters
-                                                       :icon    "list alternate outline"}
-                                         :summary     {:step-id :summary
-                                                       :icon    "info"}}})
+               ::step-states            {:data          {:step-id :data
+                                                         :icon    "database"}
+                                         :credentials   {:step-id :credentials
+                                                         :icon    "key"}
+                                         :env-variables {:step-id :environmental-variables
+                                                         :icon    "list alternate outline"}
+                                         :summary       {:step-id :summary
+                                                         :icon    "info"}}})

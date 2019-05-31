@@ -7,6 +7,7 @@
 (def dictionary
   {:en {:lang                                      "english"
 
+        :environmental-variables                   "environmental variables"
         :about                                     "about"
         :about-subtitle                            "This software is brought to you"
         :access-deployment                         "access deployment"
@@ -298,6 +299,7 @@
 
    :fr {:lang                            "français"
 
+        :environmental-variables         "variables d'environnement"
         :about                           "à propos"
         :about-subtitle                  "Ce logiciel vous est fournit"
         :access-deployment               "accéder déploiement"

@@ -6,9 +6,9 @@
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.nuvlabox.effects :as fx]
     [sixsq.nuvla.ui.nuvlabox.spec :as spec]
+    [sixsq.nuvla.ui.nuvlabox.utils :as utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.nuvlabox.utils :as utils]
     [taoensso.timbre :as log]))
 
 

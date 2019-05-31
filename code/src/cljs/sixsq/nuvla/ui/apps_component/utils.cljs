@@ -44,8 +44,20 @@
             {id {:id                    id
                  ::spec/mount-source    source
                  ::spec/mount-target    target
-                 ::spec/mount-read-only (if (nil? read-only) false read-only)
+                 ::spec/mount-read-only (or read-only false)
                  ::spec/mount-type      mount-type}}))))
+
+
+(defn env-variables->db
+  [env-variables]
+  (into {}
+        (for [{:keys [name description value required]} env-variables]
+          (let [id (random-uuid)]
+            {id {:id                    id
+                 ::spec/env-name        name
+                 ::spec/env-value       value
+                 ::spec/env-description description
+                 ::spec/env-required    (or required false)}}))))
 
 
 (defn output-parameters->db
@@ -68,18 +80,19 @@
 
 
 (defn module->db
-  [db module]
-  (-> db
-      (apps-utils/module->db module)
-      (assoc-in [::spec/module-component ::spec/image] (image->db (get-in module [:content :image])))
-      (assoc-in [::spec/module-component ::spec/urls] (urls->db (get-in module [:content :urls])))
-      (assoc-in [::spec/module-component ::spec/architecture] (get-in module [:content :architecture]))
-      (assoc-in [::spec/module-component ::spec/output-parameters] (output-parameters->db
-                                                                     (get-in module [:content :output-parameters])))
-      (assoc-in [::spec/module-component ::spec/data-types] (data-types->db
-                                                              (get-in module [:data-accept-content-types])))
-      (assoc-in [::spec/module-component ::spec/ports] (ports->db (get-in module [:content :ports])))
-      (assoc-in [::spec/module-component ::spec/mounts] (mounts->db (get-in module [:content :mounts])))))
+  [db {:keys [content] :as module}]
+  (let [{:keys [image urls architecture output-parameters
+                data-accept-content-types ports mounts environmental-variables]} content]
+    (-> db
+        (apps-utils/module->db module)
+        (assoc-in [::spec/module-component ::spec/image] (image->db image))
+        (assoc-in [::spec/module-component ::spec/urls] (urls->db urls))
+        (assoc-in [::spec/module-component ::spec/architecture] architecture)
+        (assoc-in [::spec/module-component ::spec/output-parameters] (output-parameters->db output-parameters))
+        (assoc-in [::spec/module-component ::spec/data-types] (data-types->db data-accept-content-types))
+        (assoc-in [::spec/module-component ::spec/ports] (ports->db ports))
+        (assoc-in [::spec/module-component ::spec/mounts] (mounts->db mounts))
+        (assoc-in [::spec/module-component ::spec/env-variables] (env-variables->db environmental-variables)))))
 
 
 ;; Serialization functions: db->module
@@ -126,6 +139,18 @@
                   (when (not (nil? mount-read-only)) {:read-only mount-read-only}))))))
 
 
+(defn env-variables->module
+  [db]
+  (into []
+        (for [[id m] (get-in db [::spec/module-component ::spec/env-variables])]
+          (let [{:keys [::spec/env-name ::spec/env-description ::spec/env-value ::spec/env-required]
+                 :or   {env-required false}} m]
+            (cond-> {:name     env-name
+                     :required env-required}
+                    env-value (assoc :value env-value)
+                    env-description (assoc :description env-description))))))
+
+
 (defn output-parameters->module
   [db]
   (into []
@@ -153,6 +178,7 @@
         urls              (urls->module db)
         ports             (ports->module db)
         mounts            (mounts->module db)
+        env-variables     (env-variables->module db)
         output-parameters (output-parameters->module db)
         bindings          (data-binding->module db)]
     (as-> module m
@@ -160,8 +186,13 @@
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
           (assoc-in m [:content :architecture] architecture)
           (assoc-in m [:content :image] image)
-          (if (empty? urls) (update-in m [:content] dissoc :urls) (assoc-in m [:content :urls] urls))
+          (if (empty? urls)
+            (update-in m [:content] dissoc :urls)
+            (assoc-in m [:content :urls] urls))
           (assoc-in m [:content :ports] ports)
           (assoc-in m [:content :mounts] mounts)
+          (if (empty? env-variables)
+            (update-in m [:content] dissoc :environmental-variables)
+            (assoc-in m [:content :environmental-variables] env-variables))
           (assoc-in m [:content :output-parameters] output-parameters)
           (assoc-in m [:data-accept-content-types] bindings))))

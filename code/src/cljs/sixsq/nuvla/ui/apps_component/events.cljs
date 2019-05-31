@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.apps-component.events
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.apps-component.spec :as spec]))
 
@@ -110,6 +111,45 @@
   ::update-mount-read-only?
   (fn [db [_ id value]]
     (assoc-in db [::spec/module-component ::spec/mounts id ::spec/mount-read-only] value)))
+
+
+; Environmental variables
+
+(reg-event-db
+  ::add-env-variable
+  (fn [db [_ id env-variable]]
+    ; overwrite the id
+    (assoc-in db [::spec/module-component ::spec/env-variables id] (assoc env-variable :id id))))
+
+
+(reg-event-db
+  ::remove-env-variable
+  (fn [db [_ id]]
+    (update-in db [::spec/module-component ::spec/env-variables] dissoc id)))
+
+
+(reg-event-db
+  ::update-env-name
+  (fn [db [_ id value]]
+    (assoc-in db [::spec/module-component ::spec/env-variables id ::spec/env-name] (str/upper-case value))))
+
+
+(reg-event-db
+  ::update-env-value
+  (fn [db [_ id value]]
+    (assoc-in db [::spec/module-component ::spec/env-variables id ::spec/env-value] value)))
+
+
+(reg-event-db
+  ::update-env-description
+  (fn [db [_ id value]]
+    (assoc-in db [::spec/module-component ::spec/env-variables id ::spec/env-description] value)))
+
+
+(reg-event-db
+  ::update-env-required
+  (fn [db [_ id value]]
+    (assoc-in db [::spec/module-component ::spec/env-variables id ::spec/env-required] value)))
 
 
 (reg-event-db

@@ -3,23 +3,23 @@
     [cljs.pprint :refer [cl-format pprint]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.nuvlabox-detail.events :as nuvlabox-detail-events]
     [sixsq.nuvla.ui.nuvlabox-detail.views :as nuvlabox-detail]
     [sixsq.nuvla.ui.nuvlabox.events :as events]
     [sixsq.nuvla.ui.nuvlabox.subs :as subs]
+    [sixsq.nuvla.ui.nuvlabox.utils :as utils]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.nuvlabox.utils :as utils]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]
-    [reagent.core :as r]))
+    [taoensso.timbre :as log]))
 
 
 (defn stat

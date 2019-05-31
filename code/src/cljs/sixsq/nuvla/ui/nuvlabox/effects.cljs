@@ -4,11 +4,11 @@
   (:require
     [cljs.core.async :refer [<!]]
     [re-frame.core :refer [dispatch reg-fx]]
-    [sixsq.nuvla.ui.nuvlabox.utils :as u]
     [sixsq.nuvla.client.api :as api]
-    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.nuvlabox.utils :as u]
     [sixsq.nuvla.ui.nuvlabox.utils :as utils]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [taoensso.timbre :as log]))
 
 
 (defn strip-health-info

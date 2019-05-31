@@ -1,31 +1,30 @@
 (ns sixsq.nuvla.ui.deployment-dialog.utils)
 
 
-(defn matches-parameter-name?
-  [parameter-name parameter]
-  (and parameter-name (= parameter-name (:parameter parameter))))
+(defn matches-env-name?
+  [env-name env-variable]
+  (and env-name (= env-name (:name env-variable))))
 
 
-(defn update-parameter-in-list
-  [name value parameters]
-  (let [f       (partial matches-parameter-name? name)
-        current (first (filter f parameters))               ;; FIXME: Use group-by instead?
-        others  (remove f parameters)]
+(defn update-env-variable-in-list
+  [env-name env-value env-variables]
+  (let [f       (partial matches-env-name? env-name)
+        current (first (filter f env-variables))            ;; FIXME: Use group-by instead?
+        others  (remove f env-variables)]
     (if current
-      (->> (assoc current :value value)
+      (->> (assoc current :value env-value)
            (conj others)
-           (sort-by :parameter)
            vec))))
 
 
-(defn update-parameter-in-deployment
-  [name value deployment]
+(defn update-env-variable-in-deployment
+  [env-name env-value deployment]
   (->> deployment
        :module
        :content
-       :inputParameters
-       (update-parameter-in-list name value)
-       (assoc-in deployment [:module :content :inputParameters])))
+       :environmental-variables
+       (update-env-variable-in-list env-name env-value)
+       (assoc-in deployment [:module :content :environmental-variables])))
 
 (defn kw->str
   "Convert a keyword to a string, retaining any namespace."

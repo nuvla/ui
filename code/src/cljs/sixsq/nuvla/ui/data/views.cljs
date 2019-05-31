@@ -135,16 +135,16 @@
 
 (defn launch-button
   []
-  (let [tr                      (subscribe [::i18n-subs/tr])
-        visible?                (subscribe [::subs/application-select-visible?])
-        selected-application-id (subscribe [::subs/selected-application-id])
+  (let [tr                       (subscribe [::i18n-subs/tr])
+        visible?                 (subscribe [::subs/application-select-visible?])
+        selected-application-id  (subscribe [::subs/selected-application-id])
 
-        data-step-active?       (subscribe [::deployment-dialog-subs/data-step-active?])
+        data-step-active?        (subscribe [::deployment-dialog-subs/data-step-active?])
 
-        deployment              (subscribe [::deployment-dialog-subs/deployment])
-        data-completed?         (subscribe [::deployment-dialog-subs/data-completed?])
-        credentials-completed?  (subscribe [::deployment-dialog-subs/credentials-completed?])
-        parameters-completed?   (subscribe [::deployment-dialog-subs/parameters-completed?])]
+        deployment               (subscribe [::deployment-dialog-subs/deployment])
+        data-completed?          (subscribe [::deployment-dialog-subs/data-completed?])
+        credentials-completed?   (subscribe [::deployment-dialog-subs/credentials-completed?])
+        env-variables-completed? (subscribe [::deployment-dialog-subs/env-variables-completed?])]
     (fn []
       (let [hide-fn          #(do
                                 (dispatch [::events/close-application-select-modal])
@@ -160,7 +160,7 @@
             launch-disabled? (or (not @deployment)
                                  (and (not @data-completed?) @data-step-active?)
                                  (not @credentials-completed?)
-                                 (not @parameters-completed?))]
+                                 (not @env-variables-completed?))]
 
         [ui/Modal {:open       @visible?
                    :close-icon true
@@ -188,16 +188,16 @@
 
 (defn application-select-modal
   []
-  (let [tr                      (subscribe [::i18n-subs/tr])
-        visible?                (subscribe [::subs/application-select-visible?])
-        selected-application-id (subscribe [::subs/selected-application-id])
+  (let [tr                       (subscribe [::i18n-subs/tr])
+        visible?                 (subscribe [::subs/application-select-visible?])
+        selected-application-id  (subscribe [::subs/selected-application-id])
 
-        data-step-active?       (subscribe [::deployment-dialog-subs/data-step-active?])
+        data-step-active?        (subscribe [::deployment-dialog-subs/data-step-active?])
 
-        deployment              (subscribe [::deployment-dialog-subs/deployment])
-        data-completed?         (subscribe [::deployment-dialog-subs/data-completed?])
-        credentials-completed?  (subscribe [::deployment-dialog-subs/credentials-completed?])
-        parameters-completed?   (subscribe [::deployment-dialog-subs/parameters-completed?])]
+        deployment               (subscribe [::deployment-dialog-subs/deployment])
+        data-completed?          (subscribe [::deployment-dialog-subs/data-completed?])
+        credentials-completed?   (subscribe [::deployment-dialog-subs/credentials-completed?])
+        env-variables-completed? (subscribe [::deployment-dialog-subs/env-variables-completed?])]
     (fn []
       (let [hide-fn          #(do
                                 (dispatch [::events/close-application-select-modal])
@@ -213,7 +213,7 @@
             launch-disabled? (or (not @deployment)
                                  (and (not @data-completed?) @data-step-active?)
                                  (not @credentials-completed?)
-                                 (not @parameters-completed?))]
+                                 (not @env-variables-completed?))]
 
         [ui/Modal {:open       @visible?
                    :close-icon true

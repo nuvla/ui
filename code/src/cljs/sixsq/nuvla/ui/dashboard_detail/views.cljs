@@ -139,7 +139,7 @@
         :trigger (reagent/as-element table-row)}]
       table-row)))
 
-(defn parameters-section                                    ;;FIXME env vars
+(defn env-variables-section
   []
   (let [tr                    (subscribe [::i18n-subs/tr])
         deployment-parameters (subscribe [::subs/deployment-parameters])]
@@ -345,6 +345,6 @@
         [menu]
         [metadata-section]
         [summary-section]
-        [parameters-section]
+        [env-variables-section]
         [events-section]
         [jobs-section]]])))

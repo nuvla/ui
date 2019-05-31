@@ -13,7 +13,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 
-(defn deployment-step-state                                 ;;FIXME env vars
+(defn deployment-step-state
   [{:keys [step-id completed? icon] :as step-state}]
   (let [tr                       (subscribe [::i18n-subs/tr])
         active-step              (subscribe [::subs/active-step])

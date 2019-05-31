@@ -14,8 +14,8 @@
     [sixsq.nuvla.ui.cimi.views]
     [sixsq.nuvla.ui.credentials.events :as credential-events]
     [sixsq.nuvla.ui.credentials.views]
-    [sixsq.nuvla.ui.data.views]
     [sixsq.nuvla.ui.dashboard.views]
+    [sixsq.nuvla.ui.data.views]
     [sixsq.nuvla.ui.docs.views]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.utils :as history-utils]
@@ -145,7 +145,7 @@
      {:icon       "inbox"
       :info       true
       :on-dismiss #(dispatch [::events/set-bootsrap-message])
-      :header     (@tr [:message-no-credetnial])
+      :header     (@tr [:message-no-credential])
       :content    (r/as-element [:p (@tr [:message-to-create-one])
                                  [:a
                                   {:style    {:cursor "pointer"}

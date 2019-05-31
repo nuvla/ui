@@ -87,15 +87,16 @@
 
 
 (defn module->db
-  [db module]
+  [db {:keys [name description parent-path
+              path logo-url subtype acl] :as module}]
   (-> db
-      (assoc-in [::apps-spec/module-common ::apps-spec/name] (get-in module [:name]))
-      (assoc-in [::apps-spec/module-common ::apps-spec/description] (get-in module [:description]))
-      (assoc-in [::apps-spec/module-common ::apps-spec/parent-path] (get-in module [:parent-path]))
-      (assoc-in [::apps-spec/module-common ::apps-spec/path] (get-in module [:path]))
-      (assoc-in [::apps-spec/module-common ::apps-spec/logo-url] (get-in module [:logo-url]))
-      (assoc-in [::apps-spec/module-common ::apps-spec/subtype] (get-in module [:subtype]))
-      (assoc-in [::apps-spec/module-common ::apps-spec/acl] (get-in module [:acl]))))
+      (assoc-in [::apps-spec/module-common ::apps-spec/name] name)
+      (assoc-in [::apps-spec/module-common ::apps-spec/description] description)
+      (assoc-in [::apps-spec/module-common ::apps-spec/parent-path] parent-path)
+      (assoc-in [::apps-spec/module-common ::apps-spec/path] path)
+      (assoc-in [::apps-spec/module-common ::apps-spec/logo-url] logo-url)
+      (assoc-in [::apps-spec/module-common ::apps-spec/subtype] subtype)
+      (assoc-in [::apps-spec/module-common ::apps-spec/acl] acl)))
 
 
 ; TODO: has moved to utils/general

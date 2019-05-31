@@ -41,6 +41,28 @@
 (s/def ::ports (s/map-of any? (s/merge ::port)))
 
 
+; Environmental-variables
+
+(def env-var-regex #"^[A-Z_]+$")
+(def reserved-env-var-regex #"NUVLA_.*")
+(s/def ::env-name (s/and apps-spec/nonblank-string
+                         #(re-matches env-var-regex %)
+                         #(not (re-matches reserved-env-var-regex %))))
+
+(s/def ::env-description apps-spec/nonblank-string)
+
+(s/def ::env-value apps-spec/nonblank-string)
+
+(s/def ::env-required boolean?)
+
+
+(s/def ::env-variable
+  (s/keys :req [::env-name]
+          :opt [::env-description ::env-required ::env-value]))
+
+(s/def ::env-variables (s/map-of any? (s/merge ::env-variable)))
+
+
 ; Volumes (mounts)
 
 (s/def ::mount-source apps-spec/nonblank-string)

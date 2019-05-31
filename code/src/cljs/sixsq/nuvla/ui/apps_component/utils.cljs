@@ -44,7 +44,7 @@
             {id {:id                    id
                  ::spec/mount-source    source
                  ::spec/mount-target    target
-                 ::spec/mount-read-only (or read-only false)
+                 ::spec/mount-read-only (boolean read-only)
                  ::spec/mount-type      mount-type}}))))
 
 

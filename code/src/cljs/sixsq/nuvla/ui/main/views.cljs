@@ -145,7 +145,7 @@
      {:icon       "inbox"
       :info       true
       :on-dismiss #(dispatch [::events/set-bootsrap-message])
-      :header     (@tr [:message-no-credetnial])
+      :header     (@tr [:message-no-credential])
       :content    (r/as-element [:p (@tr [:message-to-create-one])
                                  [:a
                                   {:style    {:cursor "pointer"}

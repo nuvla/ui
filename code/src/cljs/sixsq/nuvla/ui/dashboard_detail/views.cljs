@@ -14,16 +14,10 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
-    [sixsq.nuvla.ui.utils.general :as general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]))
-
-
-(defn nodes-list                                            ;FIXME
-  []
-  ["machine"])
 
 
 (defn automatic-refresh
@@ -122,12 +116,6 @@
          rows]))))
 
 
-(defn node-parameter-table
-  [params]
-  [ui/Table style/definition
-   (vec (concat [ui/TableBody] (map tuple-to-row params)))])
-
-
 (defn parameter-to-row
   [{:keys [name description value] :as param}]
   (let [table-row [ui/TableRow
@@ -153,8 +141,10 @@
              [ui/TableHeaderCell [:span (@tr [:name])]]
              [ui/TableHeaderCell [:span (@tr [:value])]]]]
            (when-not (empty? params)
-             (vec (concat [ui/TableBody]
-                          (map parameter-to-row params))))]]]))))
+             [ui/TableBody
+              (for [{param-name :name :as param} params]
+                ^{:key param-name}
+                [parameter-to-row param])])]]]))))
 
 
 (def event-fields #{:id :content :timestamp :category})
@@ -203,8 +193,10 @@
           [ui/TableHeaderCell [:span (@tr [:delta-min])]]
           [ui/TableHeaderCell [:span (@tr [:category])]]
           [ui/TableHeaderCell [:span (@tr [:state])]]]]
-        (vec (concat [ui/TableBody]
-                     (map event-map-to-row events)))]])))
+        [ui/TableBody
+         (for [{:keys [id] :as event} events]
+           ^{:key id}
+           [event-map-to-row event])]]])))
 
 
 (defn events-section
@@ -245,8 +237,10 @@
           [ui/TableHeaderCell [:span (@tr [:progress])]]
           [ui/TableHeaderCell [:span (@tr [:return-code])]]
           [ui/TableHeaderCell [:span (@tr [:message])]]]]
-        (vec (concat [ui/TableBody]
-                     (map job-map-to-row jobs)))]])))
+        [ui/TableBody
+         (for [{:keys [id] :as job} jobs]
+           ^{:key id}
+           [job-map-to-row job])]]])))
 
 
 (defn jobs-section
@@ -274,33 +268,27 @@
          :on-click  #(dispatch [::events/get-deployment (:id @deployment)])}]])))
 
 
-(defn service-link-button
-  []
-  (let [deployment (subscribe [::subs/deployment])]
-    (fn []
-      (let [link @(subscribe [::subs/url (-> @deployment :module :content :urls first second)])]
-        (when link
-          [uix/MenuItemWithIcon
-           {:name      (general/truncate link 35)
-            :icon-name "external"
-            :position  "right"
-            :on-click  #(dispatch [::main-events/open-link link])}])))))
+(defn node-url
+  [url-name url-pattern]
+  (let [url (subscribe [::subs/url url-pattern])]
+    (when @url
+      [:div {:key url-name}
+       [ui/Icon {:name "external"}]
+       [:a {:href @url, :target "_blank"} (str url-name ": " @url)]])))
 
 
 (defn node-card
   [node-name]
   (let [deployment (subscribe [::subs/deployment])
-        [url-name url-pattern] (first (get-in @deployment [:module :content :urls]))
-        url        @(subscribe [::subs/url url-pattern])]
+        urls       (get-in @deployment [:module :content :urls])]
     ^{:key node-name}
     [ui/Card
      [ui/CardContent
       [ui/CardHeader [ui/Header node-name]]
       [ui/CardDescription
-       (when url
-         [:div
-          [ui/Icon {:name "external"}]
-          [:a {:href url, :target "_blank"} (str url-name ": " url)]])]]]))
+       (for [[url-name url-pattern] urls]
+         ^{:key url-name}
+         [node-url url-name url-pattern])]]]))
 
 
 (defn summary-section
@@ -308,20 +296,17 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [cc/collapsible-segment
      (@tr [:summary])
-     (vec (concat [ui/CardGroup {:centered true}]
-                  (map node-card (nodes-list))))]))
+     [ui/CardGroup {:centered true}
+      [node-card "machine"]]]))
 
 
 (defn menu
   []
   (let [deployment (subscribe [::subs/deployment])
         cep        (subscribe [::api-subs/cloud-entry-point])]
-    (vec (concat [ui/Menu {:borderless true}]
-
-                 (views-operations/format-operations nil @deployment (:base-uri @cep) nil)
-
-                 [[service-link-button]
-                  [refresh-button]]))))
+    [ui/Menu {:borderless true}
+     [views-operations/format-operations @deployment (:base-uri @cep) nil]
+     [refresh-button]]))
 
 
 (defn event-get-timestamp

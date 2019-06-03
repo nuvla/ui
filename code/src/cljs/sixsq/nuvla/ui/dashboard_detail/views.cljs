@@ -68,7 +68,7 @@
 
 (defn format-module-link
   [module]
-  [history/link (str "application/" module) module])
+  [history/link (str "apps/" module) module])
 
 
 (defn format-parameter-value
@@ -76,7 +76,7 @@
   (let [value (str v)]
     (cond
       (re-matches #"^.*:url.*$" (name k)) [:a {:href value} value]
-      (= :module k) (format-module-link value)
+      (= :path k) (format-module-link value)
       :else value)))
 
 
@@ -278,13 +278,13 @@
 
 
 (defn node-card
-  [node-name]
+  []
   (let [deployment (subscribe [::subs/deployment])
-        urls       (get-in @deployment [:module :content :urls])]
-    ^{:key node-name}
+        module     (:module @deployment)
+        urls       (get-in module [:content :urls])]
     [ui/Card
      [ui/CardContent
-      [ui/CardHeader [ui/Header node-name]]
+      [ui/CardHeader [ui/Header (:name module)]]
       [ui/CardDescription
        (for [[url-name url-pattern] urls]
          ^{:key url-name}
@@ -297,7 +297,7 @@
     [cc/collapsible-segment
      (@tr [:summary])
      [ui/CardGroup {:centered true}
-      [node-card "machine"]]]))
+      [node-card]]]))
 
 
 (defn menu

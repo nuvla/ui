@@ -8,6 +8,8 @@
 
 ### Changed
 
+  - Deployment page - all urls are visible in deployment details 
+    and module link is present in details
   - Deployment modal - support env variables
   - Apps page - add env variables to module component
   - Deployment owners replaced by metadata widget

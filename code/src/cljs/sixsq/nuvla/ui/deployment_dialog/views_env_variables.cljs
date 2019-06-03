@@ -42,9 +42,10 @@
        :default-value (or env-value "")
        :read-only     false
        :fluid         true
-       :on-blur       (ui-callback/input-callback
+       :on-change     (ui-callback/input-callback
                         (fn [new-value]
-                          (let [updated-deployment (utils/update-env-variable-in-deployment env-name new-value @deployment)]
+                          (let [updated-deployment (utils/update-env-variable-in-deployment
+                                                     env-name new-value @deployment)]
                             (dispatch [::events/set-deployment updated-deployment]))))}]]))
 
 

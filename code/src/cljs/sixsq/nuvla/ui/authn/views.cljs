@@ -489,14 +489,17 @@
         loading?            (subscribe [::subs/loading?])
         server-redirect-uri (subscribe [::subs/server-redirect-uri])
         form-data           (subscribe [::subs/form-data])
-        form-spec           (subscribe [::subs/form-spec])
-        submit-fn           #(dispatch [::events/submit {:close-modal  false
-                                                         :error-msg    (@tr [:error-occured])
-                                                         :success-msg  (@tr [:invitation-email-success-msg])
-                                                         :redirect-url (str @server-redirect-uri "?reset-password")}])]
+        form-spec           (subscribe [::subs/form-spec])]
     (fn []
-      (let [form-valid? (s/valid? @form-spec @form-data)
+      (let [email-encoded-uri (-> @form-data :email js/encodeURI)
+            submit-fn   #(dispatch [::events/submit {:close-modal  false
+                                                     :error-msg    (@tr [:error-occured])
+                                                     :success-msg  (@tr [:invitation-email-success-msg])
+                                                     :redirect-url (str @server-redirect-uri
+                                                                        "?reset-password=" email-encoded-uri)}])
+            form-valid? (s/valid? @form-spec @form-data)
             {:keys [email]} @form-data]
+        (log/error email-encoded-uri)
         [ui/Modal
          {:id        "modal-create-user"
           :size      :tiny

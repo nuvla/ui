@@ -35,6 +35,7 @@
     (when @query-params
       (when (contains? @query-params :reset-password)
         (dispatch [::authn-events/set-form-id "session-template/password-reset"])
+        (dispatch [::authn-events/update-form-data :username (:reset-password @query-params)])
         (dispatch [::authn-events/open-modal :reset-password]))
       (dispatch [::history-events/navigate (str (first path) "/")]))
     [ui/Container {:textAlign "center"

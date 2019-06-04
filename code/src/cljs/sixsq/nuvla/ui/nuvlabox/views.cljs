@@ -119,7 +119,7 @@
                    (dispatch [::nuvlabox-detail-events/clear-detail])
                    (dispatch [::history-events/navigate (str "edge/" uuid)]))]
     [ui/TableRow #_{:on-click on-click
-                  :style    {:cursor "pointer"}}
+                    :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
       [ui/Popup
        {:content @status

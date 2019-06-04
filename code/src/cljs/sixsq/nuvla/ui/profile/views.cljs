@@ -66,11 +66,13 @@
          (map rest))))
 
 (defn modal-change-password []
-  (let [open-modal       (subscribe [::subs/open-modal])
-        error-message    (subscribe [::subs/error-message])
-        tr               (subscribe [::i18n-subs/tr])
-        fields-in-errors (subscribe [::subs/fields-in-errors])
-        form-error?      (subscribe [::subs/form-error?])]
+  (let [open-modal                      (subscribe [::subs/open-modal])
+        error-message                   (subscribe [::subs/error-message])
+        tr                              (subscribe [::i18n-subs/tr])
+        form-current-password-error?    (subscribe [::subs/form-current-password-error?])
+        form-passwords-doesnt-match?    (subscribe [::subs/form-passwords-doesnt-match?])
+        form-password-constraint-error? (subscribe [::subs/form-password-constraint-error?])
+        form-spec-error?                (subscribe [::subs/form-spec-error?])]
     (fn []
       [ui/Modal
        {:size      :tiny
@@ -90,7 +92,18 @@
            [ui/MessageHeader (str/capitalize (@tr [:error]))]
            [:p @error-message]])
 
-        [ui/Form
+        [ui/Form {:error true}
+
+         (let [errors-list (cond-> []
+                                   @form-passwords-doesnt-match? (conj (@tr [:passwords-doesnt-match]))
+                                   @form-password-constraint-error? (conj (@tr [:password-constraint])))]
+
+           [ui/Message {:hidden (empty? errors-list)
+                        :size   "tiny"
+                        :error  true
+                        :header (@tr [:validation-error])
+                        :list   errors-list}])
+
          [ui/FormInput {:name          "current password"
                         :type          "password"
                         :placeholder   (str/capitalize (@tr [:current-password]))
@@ -98,6 +111,7 @@
                         :fluid         false
                         :icon-position "left"
                         :required      true
+                        :error         @form-current-password-error?
                         :auto-focus    true
                         :auto-complete "off"
                         :on-change     (ui-callback/value
@@ -110,7 +124,8 @@
                          :icon          "key"
                          :icon-position "left"
                          :required      true
-                         :error         (contains? @fields-in-errors "password")
+                         :error         (or @form-password-constraint-error?
+                                            @form-passwords-doesnt-match?)
                          :auto-complete "off"
                          :on-change     (ui-callback/value
                                           #(dispatch [::events/update-form-data :new-password %]))}]
@@ -119,7 +134,8 @@
                          :type          "password"
                          :placeholder   (str/capitalize (@tr [:new-password-repeat]))
                          :required      true
-                         :error         (contains? @fields-in-errors "password")
+                         :error         (or @form-password-constraint-error?
+                                            @form-passwords-doesnt-match?)
                          :auto-complete "off"
                          :on-change     (ui-callback/value
                                           #(dispatch [::events/update-form-data :repeat-new-password %]))}]]]]
@@ -128,7 +144,7 @@
         [uix/Button
          {:text     (str/capitalize (@tr [:change-password]))
           :positive true
-          :disabled @form-error?
+          :disabled @form-spec-error?
           :on-click #(dispatch [::events/change-password])}]]])))
 
 

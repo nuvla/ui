@@ -91,26 +91,22 @@
         form-data                  (subscribe [::subs/form-data])
         email-invalid?             (subscribe [::subs/form-signup-email-invalid?])
         passwords-doesnt-match?    (subscribe [::subs/form-signup-passwords-doesnt-match?])
-        password-constraint-error? (subscribe [::subs/form-signup-password-constraint-error?])
-        form-valid?                (subscribe [::subs/form-signup-valid?])
-        validation-hidden          (r/atom true)
-        on-blur-fn                 #(reset! validation-hidden false)]
+        password-constraint-error? (subscribe [::subs/form-signup-password-constraint-error?])]
     (fn []
       (let [{:keys [email password repeat-password]} @form-data]
-
-        (when @form-valid? (reset! validation-hidden true))
 
         ^{:key @form-id}
         [:<>
 
-         [ui/Message {:hidden (or @validation-hidden
-                                  @form-valid?)
-                      :size   "tiny"
-                      :error  true
-                      :header (@tr [:validation-error])
-                      :list   [(when @email-invalid? (@tr [:email-invalid-format]))
-                               (when @passwords-doesnt-match? (@tr [:passwords-doesnt-match]))
-                               (when @password-constraint-error? (@tr [:password-constraint]))]}]
+         (let [errors-list (cond-> []
+                                   @email-invalid? (conj (@tr [:email-invalid-format]))
+                                   @passwords-doesnt-match? (conj (@tr [:passwords-doesnt-match]))
+                                   @password-constraint-error? (conj (@tr [:password-constraint])))]
+           [ui/Message {:hidden (empty? errors-list)
+                        :size   "tiny"
+                        :error  true
+                        :header (@tr [:validation-error])
+                        :list   errors-list}])
 
          [ui/FormInput {:name          "email"
                         :placeholder   "email"
@@ -118,7 +114,6 @@
                         :icon-position "left"
                         :auto-focus    true
                         :auto-complete "on"
-                        :on-blur       on-blur-fn
                         :value         (or email "")
                         :error         @email-invalid?
                         :on-change     (ui-callback/value
@@ -130,7 +125,6 @@
                          :placeholder   (str/capitalize (@tr [:password]))
                          :icon          "key"
                          :icon-position "left"
-                         :on-blur       on-blur-fn
                          :required      true
                          :value         (or password "")
                          :error         (or @passwords-doesnt-match?
@@ -143,7 +137,6 @@
                          :type          "password"
                          :placeholder   (str/capitalize (@tr [:password-repeat]))
                          :required      true
-                         :on-blur       on-blur-fn
                          :value         (or repeat-password "")
                          :error         (or @passwords-doesnt-match?
                                             @password-constraint-error?)
@@ -394,13 +387,12 @@
         username-invalid?          (subscribe [::subs/form-password-reset-username-invalid?])
         passwords-doesnt-match?    (subscribe [::subs/form-password-reset-passwords-doesnt-match?])
         password-constraint-error? (subscribe [::subs/form-password-reset-password-constraint-error?])
-        form-valid?                (subscribe [::subs/form-password-reset-valid?])
-        validation-hidden          (r/atom true)
-        on-blur-fn                 #(reset! validation-hidden false)]
+        form-valid?                (subscribe [::subs/form-password-reset-valid?])]
     (fn []
-      (let [{:keys [username new-password repeat-new-password]} @form-data]
-
-        (when @form-valid? (reset! validation-hidden true))
+      (let [{:keys [username new-password repeat-new-password]} @form-data
+            errors-list (cond-> []
+                                @passwords-doesnt-match? (conj (@tr [:passwords-doesnt-match]))
+                                @password-constraint-error? (conj (@tr [:password-constraint])))]
 
         ^{:key @form-id}
         [ui/Modal
@@ -433,13 +425,11 @@
                                            #(when @form-valid?
                                               (submit-fn)))}
 
-           [ui/Message {:hidden (or @validation-hidden
-                                    @form-valid?)
+           [ui/Message {:hidden (empty? errors-list)
                         :size   "tiny"
                         :error  true
                         :header (@tr [:validation-error])
-                        :list   [(when @passwords-doesnt-match? (@tr [:passwords-doesnt-match]))
-                                 (when @password-constraint-error? (@tr [:password-constraint]))]}]
+                        :list   errors-list}]
 
            [ui/FormInput {:name          "username"
                           :placeholder   (str/capitalize (@tr [:username]))
@@ -450,7 +440,6 @@
                           :value         (or username "")
                           :required      true
                           :auto-focus    true
-                          :on-blur       on-blur-fn
                           :auto-complete "on"
                           :on-change     (ui-callback/value
                                            #(dispatch [::events/update-form-data :username %]))}]
@@ -463,7 +452,6 @@
                            :icon-position "left"
                            :value         (or new-password "")
                            :required      true
-                           :on-blur       on-blur-fn
                            :error         (or @password-constraint-error?
                                               @passwords-doesnt-match?)
                            :auto-complete "off"
@@ -475,7 +463,6 @@
                            :placeholder   (str/capitalize (@tr [:new-password-repeat]))
                            :required      true
                            :value         (or repeat-new-password "")
-                           :on-blur       on-blur-fn
                            :error         (or @password-constraint-error?
                                               @passwords-doesnt-match?)
                            :auto-complete "off"

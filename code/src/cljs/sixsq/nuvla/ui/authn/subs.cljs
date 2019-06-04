@@ -147,9 +147,7 @@
   ::form-signup-email-invalid?
   :<- [::form-data-signup]
   (fn [{:keys [email] :as form-data} _]
-    (and
-      (some? email)
-      (not (s/valid? ::spec/email email)))))
+    (not (s/valid? (s/nilable ::spec/email) email))))
 
 
 (reg-sub
@@ -164,8 +162,16 @@
   ::form-signup-password-constraint-error?
   :<- [::form-data-signup]
   (fn [{:keys [password] :as form-data} _]
-    (and (some? password)
-         (not (s/valid? ::spec/password password)))))
+    (not (s/valid? (s/nilable ::spec/password) password))))
+
+
+(reg-sub
+  ::form-spec-error?
+  (fn [_ _]
+    [(subscribe [::form-spec])
+     (subscribe [::form-data])])
+  (fn [[form-spec form-data]]
+    (not (s/valid? form-spec form-data))))
 
 
 (reg-sub
@@ -173,7 +179,8 @@
   (fn [_ _]
     [(subscribe [::form-signup-email-invalid?])
      (subscribe [::form-signup-passwords-doesnt-match?])
-     (subscribe [::form-signup-password-constraint-error?])])
+     (subscribe [::form-signup-password-constraint-error?])
+     (subscribe [::form-spec-error?])])
   (fn [errors]
     (every? false? errors)))
 
@@ -188,9 +195,7 @@
   ::form-password-reset-username-invalid?
   :<- [::form-data-password-reset]
   (fn [{:keys [username] :as form-data} _]
-    (and
-      (some? username)
-      (not (s/valid? ::spec/username username)))))
+    (not (s/valid? (s/nilable ::spec/username) username))))
 
 
 (reg-sub
@@ -205,8 +210,7 @@
   ::form-password-reset-password-constraint-error?
   :<- [::form-data-password-reset]
   (fn [{:keys [new-password] :as form-data} _]
-    (and (some? new-password)
-         (not (s/valid? ::spec/new-password new-password)))))
+    (not (s/valid? (s/nilable ::spec/new-password) new-password))))
 
 
 (reg-sub
@@ -214,7 +218,8 @@
   (fn [_ _]
     [(subscribe [::form-password-reset-username-invalid?])
      (subscribe [::form-password-reset-passwords-doesnt-match?])
-     (subscribe [::form-password-reset-password-constraint-error?])])
+     (subscribe [::form-password-reset-password-constraint-error?])
+     (subscribe [::form-spec-error?])])
   (fn [errors]
     (every? false? errors)))
 

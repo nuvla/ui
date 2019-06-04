@@ -7,7 +7,6 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.events :as cimi-events]
     [sixsq.nuvla.ui.client.spec :as client-spec]
-    [sixsq.nuvla.ui.history.effects :as history-fx]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.utils.response :as response]
     [taoensso.timbre :as log]))
@@ -131,18 +130,26 @@
     (update db ::spec/form-data assoc param-name param-value)))
 
 
+(reg-event-db
+  ::clear-form-data
+  (fn [db _]
+    (assoc db ::spec/form-data {})))
+
+
 (defn default-submit-callback
   [close-modal success-msg response]
   (dispatch [::clear-loading])
   (if (instance? js/Error response)
     (let [{:keys [message]} (response/parse-ex-info response)]
       (dispatch [::set-error-message message]))
-    (do (dispatch [::initialize])
-        (when close-modal
-          (dispatch [::close-modal]))
-        (when success-msg
-          (dispatch [::set-success-message success-msg]))
-        (dispatch [::history-events/navigate "welcome"]))))
+    (do
+      (dispatch [::clear-form-data])
+      (dispatch [::initialize])
+      (when close-modal
+        (dispatch [::close-modal]))
+      (when success-msg
+        (dispatch [::set-success-message success-msg]))
+      (dispatch [::history-events/navigate "welcome"]))))
 
 
 (reg-event-fx

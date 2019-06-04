@@ -499,7 +499,7 @@
                                                                         "?reset-password=" email-encoded-uri)}])
             form-valid? (s/valid? @form-spec @form-data)
             {:keys [email]} @form-data]
-        (log/error email-encoded-uri)
+
         [ui/Modal
          {:id        "modal-create-user"
           :size      :tiny
@@ -553,9 +553,13 @@
 
 
 (defn modal-signup []
-  (let [tr          (subscribe [::i18n-subs/tr])
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        server-redirect-uri (subscribe [::subs/server-redirect-uri])
+        callback-message-on-validation (js/encodeURI "signup-validation-success")
         submit-opts {:close-modal false
-                     :success-msg (@tr [:validation-email-success-msg])}]
+                     :success-msg (@tr [:validation-email-success-msg])
+                     :redirect-url (str @server-redirect-uri
+                                        "?message=" callback-message-on-validation)}]
     [generic-modal "modal-signup-id" :signup signup-form-container submit-opts]))
 
 

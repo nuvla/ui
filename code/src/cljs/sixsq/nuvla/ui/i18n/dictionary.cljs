@@ -7,6 +7,7 @@
 (def dictionary
   {:en {:lang                                      "english"
 
+        :signup-validation-success                 "Congratulation, you successfully validated your account."
         :password-constraint                       "Password must contain at least one uppercase character, one lowercase character, one digit, one special character, and at least 8 characters in total."
         :email-invalid-format                      "Email format is invalid."
         :passwords-doesnt-match                    "Passwords do not match."
@@ -302,6 +303,7 @@
 
    :fr {:lang                            "français"
 
+        :signup-validation-success       "Féclicitation, vous avez validé votre compte avec succès."
         :email-invalid-format            "Le format de courriel est invalide."
         :passwords-doesnt-match          "Les mots de passe entrés ne se correspondent pas."
         :password-constraint             "Le mot de passe doit contenir au moins un caractère majuscule, un caractère minuscule, un chiffre, un caractère spécial et au moins 8 caractères au total."

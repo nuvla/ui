@@ -14,6 +14,8 @@
   - Create user - email of invited user is prefilled
   - Session and User templates based modals display clear validation 
     and human readable errors 
+  - Deployment page - all urls are visible in deployment details 
+    and module link is present in details
   - Deployment modal - support env variables
   - Apps page - add env variables to module component
   - Deployment owners replaced by metadata widget

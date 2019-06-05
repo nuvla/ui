@@ -4,10 +4,19 @@
   (:require
     [cljs.core.async :refer [<! >! chan]]
     [clojure.set :as set]
+    [clojure.string :as str]
     [clojure.walk :as walk]
     [re-frame.core :refer [dispatch reg-fx]]
     [sixsq.nuvla.client.api :as api]
+    [sixsq.nuvla.client.async :as async-client]
+    [sixsq.nuvla.ui.history.utils :as utils]
+    [sixsq.nuvla.ui.utils.defines :as defines]
     [taoensso.timbre :as log]))
+
+
+(def NUVLA_URL (delay (if (str/blank? defines/HOST_URL) (utils/host-url) defines/HOST_URL)))
+
+(def CLIENT (delay (async-client/instance (str @NUVLA_URL "/api/cloud-entry-point"))))
 
 
 (def ^:const common-attrs #{:id, :resource-url, :created, :updated, :name, :description
@@ -33,7 +42,7 @@
 (defn get-current-session
   [client]
   (go
-    (let [session-collection (<! (api/search client :session))]
+    (let [session-collection (<! (api/search @CLIENT :session))]
       (when-not (instance? js/Error session-collection)
         (-> session-collection :resources first)))))
 

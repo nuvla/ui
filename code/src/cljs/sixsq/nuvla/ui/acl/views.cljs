@@ -321,10 +321,10 @@
          mode (r/atom :simple)
          on-change #()} :as opts}]
   (fn [opts]
-    (let [opts         (assoc opts :mode mode
-                                   :read-only read-only
-                                   :on-change on-change)
-          acl          (or (:acl opts) acl)]
+    (let [opts (assoc opts :mode mode
+                           :read-only read-only
+                           :on-change on-change)
+          acl  (or (:acl opts) acl)]
       [:div (when @(subscribe [::main-subs/is-device? :mobile])
               {:style {:overflow-x "auto"}})
        [AclOwners opts]

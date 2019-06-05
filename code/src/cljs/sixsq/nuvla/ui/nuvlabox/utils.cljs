@@ -3,7 +3,7 @@
     [cljs.pprint :refer [cl-format]]
     [clojure.string :as str]
     [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.ui.cimi-api.utils :as cimi-api-utils]))
+    [sixsq.nuvla.ui.cimi-api.utils :as cimi-api-utils :refer [CLIENT]]))
 
 (def state-new "NEW")
 (def state-activated "ACTIVATED")
@@ -47,8 +47,8 @@
 
 
 (defn nuvlabox-status-search
-  [client params]
-  (api/search client :nuvlabox-status (cimi-api-utils/sanitize-params params)))
+  [params]
+  (api/search @CLIENT :nuvlabox-status (cimi-api-utils/sanitize-params params)))
 
 
 (defn percentage

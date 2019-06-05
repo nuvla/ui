@@ -6,12 +6,14 @@
 
 (reg-sub
   ::iframe?
-  ::spec/iframe?)
+  (fn [db]
+    (::spec/iframe? db)))
 
 
 (reg-sub
   ::device
-  ::spec/device)
+  (fn [db]
+    (::spec/device db)))
 
 
 (reg-sub
@@ -23,27 +25,32 @@
 
 (reg-sub
   ::sidebar-open?
-  ::spec/sidebar-open?)
+  (fn [db]
+    (::spec/sidebar-open? db)))
 
 
 (reg-sub
   ::visible?
-  ::spec/visible?)
+  (fn [db]
+    (::spec/visible? db)))
 
 
 (reg-sub
   ::nav-path
-  ::spec/nav-path)
+  (fn [db]
+    (::spec/nav-path db)))
 
 
 (reg-sub
   ::nav-query-params
-  ::spec/nav-query-params)
+  (fn [db]
+    (::spec/nav-query-params db)))
 
 
 (reg-sub
   ::changes-protection?
-  ::spec/changes-protection?)
+  (fn [db]
+    (::spec/changes-protection? db)))
 
 
 (reg-sub

@@ -42,21 +42,23 @@
 
 (defn apps
   []
-  (let [nav-path (subscribe [::main-subs/nav-path])]
+  (let [nav-path         (subscribe [::main-subs/nav-path])
+        nav-query-params (subscribe [::main-subs/nav-query-params])]
     (fn []
       (let [module-name (utils/nav-path->module-name @nav-path)
-            query       (clojure.walk/keywordize-keys (:query (url/url (-> js/window .-location .-href))))
-            new-subtype (:subtype query)
-            version     (:version query nil)
+            new-subtype (:subtype @nav-query-params)
+            version     (:version @nav-query-params nil)
             is-root?    (empty? module-name)
             is-new?     (not (empty? new-subtype))]
         (dispatch [::events/is-new? (not (empty? new-subtype))])
         (if-not is-root?
           (do
-            (if-not is-new?
-              (dispatch [::events/get-module version])
-              (new-module new-subtype))
-            [module-details new-subtype])
+            (if is-new?
+              (new-module new-subtype)
+              (dispatch [::events/get-module version]))
+            (if new-subtype
+              [module-details new-subtype]
+              [:p " not found"]))
           [apps-store-views/root-view])))))
 
 

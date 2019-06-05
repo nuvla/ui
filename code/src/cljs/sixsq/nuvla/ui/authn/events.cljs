@@ -6,7 +6,6 @@
     [sixsq.nuvla.ui.authn.spec :as spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.events :as cimi-events]
-    [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.utils.response :as response]
     [taoensso.timbre :as log]))
@@ -14,13 +13,12 @@
 
 (reg-event-fx
   ::initialize
-  (fn [{{:keys [::client-spec/client]} :db} _]
-    (when client
-      {::cimi-api-fx/session [client (fn [session]
-                                       (dispatch [::set-session session])
+  (fn [_ _]
+    {::cimi-api-fx/session [(fn [session]
+                              (dispatch [::set-session session])
 
-                                       (when session
-                                         (dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])))]})))
+                              (when session
+                                (dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])))]}))
 
 
 (reg-event-fx
@@ -38,10 +36,9 @@
 
 (reg-event-fx
   ::logout
-  (fn [{{:keys [::client-spec/client] :as db} :db} _]
-    (when client
-      {:db                  (assoc db :sixsq.nuvla.ui.main.spec/bootstrap-message nil)
-       ::cimi-api-fx/logout [client #(dispatch [::set-session nil])]})))
+  (fn [{:keys [db]} _]
+    {:db                  (assoc db :sixsq.nuvla.ui.main.spec/bootstrap-message nil)
+     ::cimi-api-fx/logout [#(dispatch [::set-session nil])]}))
 
 
 (reg-event-db
@@ -154,8 +151,7 @@
 
 (reg-event-fx
   ::submit
-  (fn [{{:keys [::client-spec/client
-                ::spec/form-id
+  (fn [{{:keys [::spec/form-id
                 ::spec/form-data
                 ::spec/server-redirect-uri] :as db} :db} [_ opts]]
     (let [{close-modal  :close-modal,
@@ -180,4 +176,4 @@
       {:db               (assoc db ::spec/loading? true
                                    ::spec/success-message nil
                                    ::spec/error-message nil)
-       ::cimi-api-fx/add [client collection-kw template callback-add]})))
+       ::cimi-api-fx/add [collection-kw template callback-add]})))

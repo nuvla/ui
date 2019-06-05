@@ -3,7 +3,6 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.dashboard.spec :as spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]))
@@ -11,7 +10,7 @@
 
 (reg-event-fx
   ::set-creds-ids
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ credentials-ids]]
+  (fn [_ [_ credentials-ids]]
     (when (not-empty credentials-ids)
       (let [filter-creds-ids (str/join " or " (map #(str "id='" % "'") credentials-ids))
             query-params     {:filter (str/join " and " [filter-creds-ids "name!=null"])
@@ -22,7 +21,7 @@
                                                                       :resources
                                                                       (map (juxt :id :name))
                                                                       (into {}))])))]
-        {::cimi-api-fx/search [client :credential query-params callback]}))))
+        {::cimi-api-fx/search [:credential query-params callback]}))))
 
 
 (reg-event-db
@@ -40,7 +39,7 @@
 
 (reg-event-fx
   ::set-deployments
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ {:keys [resources] :as deployments}]]
+  (fn [{:keys [db]} [_ {:keys [resources] :as deployments}]]
     (let [deployments-resource-ids (map :id resources)
           deployments-creds-ids    (distinct (map :credential-id resources))
           filter-deps-ids          (str/join " or " (map #(str "deployment/href='" % "'") deployments-resource-ids))
@@ -53,7 +52,7 @@
       (cond-> {:db (assoc db ::spec/loading? false
                              ::spec/deployments deployments)}
               (not-empty deployments-resource-ids) (assoc ::cimi-api-fx/search
-                                                          [client :deployment-parameter query-params callback])))))
+                                                          [:deployment-parameter query-params callback])))))
 
 
 (defn get-query-params
@@ -69,49 +68,45 @@
 
 (reg-event-fx
   ::get-deployments
-  (fn [{{:keys [::client-spec/client
-                ::spec/full-text-search
+  (fn [{{:keys [::spec/full-text-search
                 ::spec/active-only?
                 ::spec/page
                 ::spec/elements-per-page] :as db} :db} _]
-    {::cimi-api-fx/search [client :deployment (get-query-params full-text-search active-only? page elements-per-page)
+    {::cimi-api-fx/search [:deployment (get-query-params full-text-search active-only? page elements-per-page)
                            #(dispatch [::set-deployments %])]}))
 
 
 (reg-event-fx
   ::set-page
-  (fn [{{:keys [::client-spec/client
-                ::spec/full-text-search
+  (fn [{{:keys [::spec/full-text-search
                 ::spec/page
                 ::spec/active-only?
                 ::spec/elements-per-page] :as db} :db} [_ page]]
     {:db                  (assoc db ::spec/page page)
-     ::cimi-api-fx/search [client :deployment (get-query-params full-text-search active-only? page elements-per-page)
+     ::cimi-api-fx/search [:deployment (get-query-params full-text-search active-only? page elements-per-page)
                            #(dispatch [::set-deployments %])]}))
 
 
 (reg-event-fx
   ::set-active-only?
-  (fn [{{:keys [::client-spec/client
-                ::spec/full-text-search
+  (fn [{{:keys [::spec/full-text-search
                 ::spec/page
                 ::spec/elements-per-page] :as db} :db} [_ active-only?]]
     {:db                  (-> db
                               (assoc ::spec/active-only? active-only?)
                               (assoc ::spec/page 1))
-     ::cimi-api-fx/search [client :deployment (get-query-params full-text-search active-only? page elements-per-page)
+     ::cimi-api-fx/search [:deployment (get-query-params full-text-search active-only? page elements-per-page)
                            #(dispatch [::set-deployments %])]}))
 
 (reg-event-fx
   ::set-full-text-search
-  (fn [{{:keys [::client-spec/client
-                ::spec/page
+  (fn [{{:keys [::spec/page
                 ::spec/active-only?
                 ::spec/elements-per-page] :as db} :db} [_ full-text-search]]
     {:db                  (-> db
                               (assoc ::spec/full-text-search full-text-search)
                               (assoc ::spec/page 1))
-     ::cimi-api-fx/search [client :deployment (get-query-params full-text-search active-only? page elements-per-page)
+     ::cimi-api-fx/search [:deployment (get-query-params full-text-search active-only? page elements-per-page)
                            #(dispatch [::set-deployments %])]}))
 
 (reg-event-db
@@ -122,8 +117,8 @@
 
 (reg-event-fx
   ::stop-deployment
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ href]]
-    {::cimi-api-fx/operation [client href "stop"
+  (fn [_ [_ href]]
+    {::cimi-api-fx/operation [href "stop"
                               #(if (instance? js/Error %)
                                  (let [{:keys [status message]} (response/parse-ex-info %)]
                                    (dispatch [::messages-events/add

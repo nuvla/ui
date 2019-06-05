@@ -8,7 +8,8 @@
     [sixsq.nuvla.ui.messages.subs :as message-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [taoensso.timbre :as log]))
 
 
 (defn type->icon-name
@@ -129,7 +130,7 @@
         [ui/Popup {:flowing  true
                    :on       "click"
                    :position "bottom right"
-                   :open     @popup-open?
+                   :open     (boolean @popup-open?)
                    :on-open  #(dispatch [::message-events/open-popup])
                    :on-close #(dispatch [::message-events/close-popup])
                    :trigger  (reagent/as-element

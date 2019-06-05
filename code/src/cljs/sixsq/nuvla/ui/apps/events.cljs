@@ -13,7 +13,6 @@
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
-    [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
@@ -116,7 +115,8 @@
           subtype (:subtype module)]
       (case subtype
         "component" (apps-component-utils/module->db db module)
-        "project" (apps-project-utils/module->db db module)))))
+        "project" (apps-project-utils/module->db db module)
+        nil))))
 
 
 (reg-event-db
@@ -150,12 +150,11 @@
 
 (reg-event-fx
   ::get-module
-  (fn [{{:keys [::client-spec/client ::main-spec/nav-path] :as db} :db} [_ version]]
-    (when client
-      (let [path (utils/nav-path->module-path nav-path)]
-        {:db                  (assoc db ::spec/completed? false
-                                        ::spec/module nil)
-         ::apps-fx/get-module [client path version #(dispatch [::set-module %])]}))))
+  (fn [{{:keys [::main-spec/nav-path] :as db} :db} [_ version]]
+    (let [path (utils/nav-path->module-path nav-path)]
+      {:db                  (assoc db ::spec/completed? false
+                                      ::spec/module nil)
+       ::apps-fx/get-module [path version #(dispatch [::set-module %])]})))
 
 
 (reg-event-db
@@ -264,11 +263,11 @@
 
 (reg-event-fx
   ::edit-module
-  (fn [{{:keys [::spec/module ::client-spec/client] :as db} :db :as cofx} [_ commit-map]]
+  (fn [{{:keys [::spec/module] :as db} :db} [_ commit-map]]
     (let [id               (:id module)
           sanitized-module (utils-detail/db->module module commit-map db)]
       (if (nil? id)
-        {::cimi-api-fx/add [client :module sanitized-module
+        {::cimi-api-fx/add [:module sanitized-module
                             #(if (instance? js/Error %)
                                (let [{:keys [status message]} (response/parse-ex-info %)]
                                  (dispatch [::messages-events/add
@@ -280,7 +279,7 @@
                                    (dispatch [::set-module sanitized-module]) ;Needed?
                                    (dispatch [::main-events/changes-protection? false])
                                    (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))])))]}
-        {::cimi-api-fx/edit [client id sanitized-module
+        {::cimi-api-fx/edit [id sanitized-module
                              #(if (instance? js/Error %)
                                 (let [{:keys [status message]} (response/parse-ex-info %)]
                                   (dispatch [::messages-events/add
@@ -294,9 +293,8 @@
 
 (reg-event-fx
   ::delete-module
-  (fn [{{:keys [::client-spec/client] :as db} :db :as cofx} [_ id]]
+  (fn [{:keys [db]} [_ id]]
     {:db                  (dissoc db ::spec/module)
-     ::cimi-api-fx/delete [client id
-                           #(do
-                              (dispatch [::main-events/changes-protection? false])
-                              (dispatch [::history-events/navigate "apps/"]))]}))
+     ::cimi-api-fx/delete [id #(do
+                                 (dispatch [::main-events/changes-protection? false])
+                                 (dispatch [::history-events/navigate "apps/"]))]}))

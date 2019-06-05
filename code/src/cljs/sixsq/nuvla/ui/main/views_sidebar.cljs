@@ -31,7 +31,7 @@
     [uix/MenuItemWithIcon
      (cond-> {:name      (@tr [label-kw])
               :icon-name icon
-              :active    (= (first @nav-path) url)}
+              :active    (= (some-> @nav-path seq first) url)}
              @is-user? (assoc :on-click #(navigate url)))]))
 
 
@@ -59,7 +59,7 @@
                  :className "medium thin"
                  :vertical  true
                  :inverted  true
-                 :visible   @show?
+                 :visible   (boolean @show?)
                  :animation "uncover"}
      [:nav {:aria-label "sidebar"}
       [ui/Menu {:icon     "labeled"

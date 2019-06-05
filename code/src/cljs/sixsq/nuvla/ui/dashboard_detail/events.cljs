@@ -2,7 +2,6 @@
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -27,41 +26,39 @@
 
 (reg-event-fx
   ::get-deployment-parameters
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ resource-id]]
+  (fn [_ [_ resource-id]]
     (let [filter-depl-params       {:filter  (str "deployment/href='" resource-id "'")
                                     :orderby "name"}
           get-depl-params-callback #(dispatch [::set-deployment-parameters %])]
-      {::cimi-api-fx/search [client :deployment-parameter filter-depl-params get-depl-params-callback]})))
+      {::cimi-api-fx/search [:deployment-parameter filter-depl-params get-depl-params-callback]})))
 
 
 (reg-event-fx
   ::get-deployment
-  (fn [{{:keys [::client-spec/client
-                ::spec/deployment] :as db} :db} [_ resource-id]]
-    (when client
-      (let [get-depl-callback #(if (instance? js/Error %)
-                                 (let [{:keys [status message]} (response/parse-ex-info %)]
-                                   (dispatch [::messages-events/add
-                                              {:header  (cond-> (str "error getting deployment " resource-id)
-                                                                status (str " (" status ")"))
-                                               :content message
-                                               :type    :error}])
-                                   (dispatch [::history-events/navigate "dashboard"]))
-                                 (dispatch [::set-deployment %]))]
-        {:db               (cond-> (assoc db ::spec/loading? true)
-                                   (not= (:id deployment) resource-id) (assoc ::spec/deployment nil
-                                                                              ::spec/deployment-parameters nil
-                                                                              ::spec/events nil
-                                                                              ::spec/node-parameters nil)
-                                   )
-         ::cimi-api-fx/get [client resource-id get-depl-callback]}))))
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ resource-id]]
+    (let [get-depl-callback #(if (instance? js/Error %)
+                               (let [{:keys [status message]} (response/parse-ex-info %)]
+                                 (dispatch [::messages-events/add
+                                            {:header  (cond-> (str "error getting deployment " resource-id)
+                                                              status (str " (" status ")"))
+                                             :content message
+                                             :type    :error}])
+                                 (dispatch [::history-events/navigate "dashboard"]))
+                               (dispatch [::set-deployment %]))]
+      {:db               (cond-> (assoc db ::spec/loading? true)
+                                 (not= (:id deployment) resource-id) (assoc ::spec/deployment nil
+                                                                            ::spec/deployment-parameters nil
+                                                                            ::spec/events nil
+                                                                            ::spec/node-parameters nil)
+                                 )
+       ::cimi-api-fx/get [resource-id get-depl-callback]})))
 
 
 (reg-event-fx
   ::stop-deployment
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ href]]
+  (fn [{:keys [db]} [_ href]]
     {:db                     db
-     ::cimi-api-fx/operation [client href "stop"
+     ::cimi-api-fx/operation [href "stop"
                               #(if (instance? js/Error %)
                                  (let [{:keys [status message]} (response/parse-ex-info %)]
                                    (dispatch [::messages-events/add
@@ -80,15 +77,14 @@
 
 (reg-event-fx
   ::get-events
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ href]]
+  (fn [_ [_ href]]
     (let [filter-str   (str "content/resource/href='" href "'")
           order-by-str "timestamp:desc"
           select-str   "id, content, severity, timestamp, category"
           query-params {:filter  filter-str
                         :orderby order-by-str
                         :select  select-str}]
-      {::cimi-api-fx/search [client
-                             :event
+      {::cimi-api-fx/search [:event
                              (general-utils/prepare-params query-params)
                              #(dispatch [::set-events (:resources %)])]})))
 
@@ -101,7 +97,7 @@
 
 (reg-event-fx
   ::get-jobs
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ href]]
+  (fn [{:keys [db]} [_ href]]
     (let [filter-str   (str "target-resource/href='" href "'")
           order-by-str "time-of-status-change:desc,updated:desc"
           select-str   (str "id, action, time-of-status-change, updated, state, "
@@ -110,8 +106,7 @@
                         :orderby order-by-str
                         :select  select-str
                         :last    10}]
-      {::cimi-api-fx/search [client
-                             :job
+      {::cimi-api-fx/search [:job
                              (general-utils/prepare-params query-params)
                              #(dispatch [::set-jobs (:resources %)])]})))
 
@@ -130,46 +125,43 @@
 
 (reg-event-fx
   ::delete
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ resource-id]]
-    (when client
-      {::cimi-api-fx/delete [client resource-id
-                             #(if (instance? js/Error %)
-                                (let [{:keys [status message]} (response/parse-ex-info %)]
-                                  (dispatch [::messages-events/add
-                                             {:header  (cond-> (str "error deleting " resource-id)
-                                                               status (str " (" status ")"))
-                                              :content message
-                                              :type    :error}]))
-                                (let [{:keys [status message]} (response/parse %)]
-                                  (dispatch [::messages-events/add
-                                             {:header  (cond-> (str "deleted " resource-id)
-                                                               status (str " (" status ")"))
-                                              :content message
-                                              :type    :success}])
-                                  (dispatch [:sixsq.nuvla.ui.dashboard.events/get-deployments])
-                                  (dispatch [::history-events/navigate "dashboard"])))]
-       })))
+  (fn [_ [_ resource-id]]
+    {::cimi-api-fx/delete [resource-id
+                           #(if (instance? js/Error %)
+                              (let [{:keys [status message]} (response/parse-ex-info %)]
+                                (dispatch [::messages-events/add
+                                           {:header  (cond-> (str "error deleting " resource-id)
+                                                             status (str " (" status ")"))
+                                            :content message
+                                            :type    :error}]))
+                              (let [{:keys [status message]} (response/parse %)]
+                                (dispatch [::messages-events/add
+                                           {:header  (cond-> (str "deleted " resource-id)
+                                                             status (str " (" status ")"))
+                                            :content message
+                                            :type    :success}])
+                                (dispatch [:sixsq.nuvla.ui.dashboard.events/get-deployments])
+                                (dispatch [::history-events/navigate "dashboard"])))]}))
 
 
 (reg-event-fx
   ::edit
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ resource-id data]]
-    (when client
-      {::cimi-api-fx/edit [client resource-id data
-                           #(if (instance? js/Error %)
-                              (let [{:keys [status message]} (response/parse-ex-info %)]
-                                (dispatch [::messages-events/add
-                                           {:header  (cond-> (str "error editing " resource-id)
-                                                             status (str " (" status ")"))
-                                            :content message
-                                            :type    :error}]))
-                              (dispatch [::set-deployment %]))]})))
+  (fn [_ [_ resource-id data]]
+    {::cimi-api-fx/edit [resource-id data
+                         #(if (instance? js/Error %)
+                            (let [{:keys [status message]} (response/parse-ex-info %)]
+                              (dispatch [::messages-events/add
+                                         {:header  (cond-> (str "error editing " resource-id)
+                                                           status (str " (" status ")"))
+                                          :content message
+                                          :type    :error}]))
+                            (dispatch [::set-deployment %]))]}))
 
 
 (reg-event-fx
   ::operation
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ resource-id operation]]
-    {::cimi-api-fx/operation [client resource-id operation
+  (fn [_ [_ resource-id operation]]
+    {::cimi-api-fx/operation [resource-id operation
                               #(let [op (second (re-matches #"(?:.*/)?(.*)" operation))]
                                  (if (instance? js/Error %)
                                    (let [{:keys [status message]} (response/parse-ex-info %)]

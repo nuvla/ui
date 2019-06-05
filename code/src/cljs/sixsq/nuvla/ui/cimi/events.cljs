@@ -4,7 +4,6 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.spec :as spec]
     [sixsq.nuvla.ui.cimi.utils :as utils]
-    [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
@@ -102,16 +101,14 @@
   ::get-results
   (fn [{{:keys [::spec/collection-name
                 ::spec/cloud-entry-point
-                ::spec/query-params
-                ::client-spec/client] :as db} :db} _]
+                ::spec/query-params] :as db} :db} _]
     (let [resource-type (-> cloud-entry-point
                             :collection-key
                             (get collection-name))]
       {:db                  (assoc db ::spec/loading? true
                                       ::spec/aggregations nil
                                       ::spec/collection nil)
-       ::cimi-api-fx/search [client
-                             resource-type
+       ::cimi-api-fx/search [resource-type
                              (general-utils/prepare-params query-params)
                              #(dispatch [::set-results resource-type %])]})))
 
@@ -119,12 +116,11 @@
 (reg-event-fx
   ::create-resource
   (fn [{{:keys [::spec/collection-name
-                ::spec/cloud-entry-point
-                ::client-spec/client] :as db} :db} [_ data]]
+                ::spec/cloud-entry-point]} :db} [_ data]]
     (let [resource-type (-> cloud-entry-point
                             :collection-key
                             (get collection-name))]
-      {::cimi-api-fx/add [client resource-type data
+      {::cimi-api-fx/add [resource-type data
                           #(let [msg-map (if (instance? js/Error %)
                                            (let [{:keys [status message]} (response/parse-ex-info %)]
                                              {:header  (cond-> (str "failure adding " (name resource-type))
@@ -141,8 +137,8 @@
 
 (reg-event-fx
   ::create-resource-independent
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ resource-type data]]
-    {::cimi-api-fx/add [client resource-type data
+  (fn [_ [_ resource-type data]]
+    {::cimi-api-fx/add [resource-type data
                         #(let [msg-map (if (instance? js/Error %)
                                          (let [{:keys [status message]} (response/parse-ex-info %)]
                                            {:header  (cond-> (str "failure adding " (name resource-type))
@@ -190,21 +186,19 @@
 
 (reg-event-fx
   ::get-cloud-entry-point
-  (fn [{{:keys [::client-spec/client] :as db} :db} _]
-    (when client
-      {::cimi-api-fx/cloud-entry-point [client #(dispatch [::set-cloud-entry-point %])]})))
+  (fn [_ _]
+    {::cimi-api-fx/cloud-entry-point [#(dispatch [::set-cloud-entry-point %])]}))
 
 
 (reg-event-fx
   ::get-templates
   (fn [{{:keys [::spec/cloud-entry-point
-                ::spec/collections-templates-cache
-                ::client-spec/client] :as db} :db}
+                ::spec/collections-templates-cache]} :db}
        [_ template-href]]
     (let [resource-type (-> cloud-entry-point
                             :collection-key
                             (get (name template-href)))]
-      {::cimi-api-fx/search [client resource-type {:orderby "id"}
+      {::cimi-api-fx/search [resource-type {:orderby "id"}
                              #(dispatch [::set-templates template-href (:resources %)])]})))
 
 

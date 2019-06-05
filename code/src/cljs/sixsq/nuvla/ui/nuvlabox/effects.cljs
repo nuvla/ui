@@ -5,8 +5,8 @@
     [cljs.core.async :refer [<!]]
     [re-frame.core :refer [dispatch reg-fx]]
     [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.ui.nuvlabox.utils :as u]
     [sixsq.nuvla.ui.nuvlabox.utils :as utils]
+    [sixsq.nuvla.ui.cimi-api.utils :refer [CLIENT]]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [taoensso.timbre :as log]))
 
@@ -21,10 +21,10 @@
 
 (reg-fx
   ::fetch-health-info
-  (fn [[client callback]]
+  (fn [[callback]]
     (go
-      (let [[stale-count stale] (strip-health-info (<! (u/nuvlabox-status-search client u/stale-nb-machines)))
-            [active-count active] (strip-health-info (<! (u/nuvlabox-status-search client u/active-nb-machines)))
+      (let [[stale-count stale] (strip-health-info (<! (utils/nuvlabox-status-search utils/stale-nb-machines)))
+            [active-count active] (strip-health-info (<! (utils/nuvlabox-status-search utils/active-nb-machines)))
             unhealthy (into {} (map #(vector % false) stale))
             healthy   (into {} (map #(vector % true) active))
             healthy?  (merge unhealthy healthy)]
@@ -34,20 +34,20 @@
 
 
 (defn get-state-count
-  [client state]
-  (api/search client :nuvlabox {:filter (utils/state-filter state)
-                                :last   0}))
+  [state]
+  (api/search @CLIENT :nuvlabox {:filter (utils/state-filter state)
+                                 :last   0}))
 
 
 (reg-fx
   ::state-nuvlaboxes
-  (fn [[client callback]]
+  (fn [[callback]]
     (go
-      (let [new             (<! (get-state-count client utils/state-new))
-            activated       (<! (get-state-count client utils/state-activated))
-            quarantined     (<! (get-state-count client utils/state-quarantined))
-            decommissioning (<! (get-state-count client utils/state-decommissioning))
-            error           (<! (get-state-count client utils/state-error))]
+      (let [new             (<! (get-state-count utils/state-new))
+            activated       (<! (get-state-count utils/state-activated))
+            quarantined     (<! (get-state-count utils/state-quarantined))
+            decommissioning (<! (get-state-count utils/state-decommissioning))
+            error           (<! (get-state-count utils/state-error))]
 
         (callback {:new             (:count new)
                    :activated       (:count activated)
@@ -58,26 +58,26 @@
 
 
 (defn get-status-collection
-  [client nuvlaboxes filter-heartbeat]
+  [nuvlaboxes filter-heartbeat]
   (let [filter-nuvlabox-ids (->> nuvlaboxes
                                  (map #(str "parent='" (:id %) "'"))
                                  (apply general-utils/join-or))
         filter              (general-utils/join-and filter-nuvlabox-ids filter-heartbeat)]
 
-    (api/search client :nuvlabox-status {:filter filter
-                                         :select "id, parent"})))
+    (api/search @CLIENT :nuvlabox-status {:filter filter
+                                          :select "id, parent"})))
 
 
 (reg-fx
   ::get-status-nuvlaboxes
-  (fn [[client nuvlaboxes callback]]
+  (fn [[nuvlaboxes callback]]
     (go
       (let [floating-time-tolerance "-10s"
             offline-nuvlaboxes      (<! (get-status-collection
-                                          client nuvlaboxes
+                                          nuvlaboxes
                                           (str "next-heartbeat < 'now" floating-time-tolerance "'")))
             online-nuvlaboxes       (<! (get-status-collection
-                                          client nuvlaboxes
+                                          nuvlaboxes
                                           (str "next-heartbeat >= 'now" floating-time-tolerance "'")))]
 
         (callback {:offline (->> offline-nuvlaboxes

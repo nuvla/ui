@@ -3,7 +3,6 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.acl.spec :as spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.client.spec :as client-spec]
     [taoensso.timbre :as log]))
 
 
@@ -16,9 +15,9 @@
 
 (reg-event-fx
   ::get-principal
-  (fn [{{:keys [::client-spec/client] :as db} :db :as cofx} [_ principal]]
+  (fn [_ [_ principal]]
     (when principal
-      {::cimi-api-fx/get [client principal #(dispatch [::set-principal principal (:name %)])]})))
+      {::cimi-api-fx/get [principal #(dispatch [::set-principal principal (:name %)])]})))
 
 
 (reg-event-db
@@ -31,11 +30,11 @@
 
 (reg-event-fx
   ::search-users
-  (fn [{{:keys [::client-spec/client] :as db} :db :as cofx} [_ users-search]]
-    {::cimi-api-fx/search [client :user {:filter (str "fulltext=='" users-search "*'")
-                                         :select "id, name"
-                                         :order  "name:asc, id:asc"
-                                         :last   10} #(dispatch [::set-users-options %])]}))
+  (fn [_ [_ users-search]]
+    {::cimi-api-fx/search [:user {:filter (str "fulltext=='" users-search "*'")
+                                  :select "id, name"
+                                  :order  "name:asc, id:asc"
+                                  :last   10} #(dispatch [::set-users-options %])]}))
 
 
 (reg-event-db
@@ -48,6 +47,6 @@
 
 (reg-event-fx
   ::search-groups
-  (fn [{{:keys [::client-spec/client] :as db} :db :as cofx} _]
-    {::cimi-api-fx/search [client :group {:select "id, name"
-                                          :order  "name:asc, id:asc"} #(dispatch [::set-groups-options %])]}))
+  (fn [_ _]
+    {::cimi-api-fx/search [:group {:select "id, name"
+                                   :order  "name:asc, id:asc"} #(dispatch [::set-groups-options %])]}))

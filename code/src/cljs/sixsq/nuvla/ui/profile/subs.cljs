@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.profile.subs
   (:require
+    [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch reg-sub subscribe]]
     [sixsq.nuvla.ui.profile.spec :as spec]))
 
@@ -28,22 +29,29 @@
 
 
 (reg-sub
-  ::fields-in-errors
+  ::form-current-password-error?
   :<- [::form-data]
-  (fn [form-data]
-    (let [errors [(when-not
-                    (= (:new-password form-data)
-                       (:repeat-new-password form-data))
-                    "password")
-                  (when (empty? (:current-password form-data))
-                    "error")
-                  (when (empty? (:new-password form-data))
-                    "error")]]
-      (->> errors seq (remove nil?) set))))
+  (fn [{:keys [current-password] :as form-data} _]
+    (not (s/valid? (s/nilable ::spec/current-password) current-password))))
 
 
 (reg-sub
-  ::form-error?
-  :<- [::fields-in-errors]
-  (fn [fields-in-errors]
-    (some? (seq fields-in-errors))))
+  ::form-passwords-doesnt-match?
+  :<- [::form-data]
+  (fn [{:keys [new-password repeat-new-password] :as form-data} _]
+    (and (some? new-password)
+         (not= new-password repeat-new-password))))
+
+
+(reg-sub
+  ::form-password-constraint-error?
+  :<- [::form-data]
+  (fn [{:keys [new-password] :as form-data} _]
+    (not (s/valid? (s/nilable ::spec/new-password) new-password))))
+
+
+(reg-sub
+  ::form-spec-error?
+  :<- [::form-data]
+  (fn [form-data]
+    (not (s/valid? ::spec/change-password-form form-data))))

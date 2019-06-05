@@ -55,3 +55,8 @@
   ::bootstrap-message
   (fn [db]
     (::spec/bootstrap-message db)))
+
+(reg-sub
+  ::welcome-message
+  (fn [db]
+    (::spec/welcome-message db)))

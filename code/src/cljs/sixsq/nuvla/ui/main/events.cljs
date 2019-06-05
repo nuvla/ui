@@ -130,3 +130,9 @@
                            {:filter "subtype='swarm'"
                             :select "id"}
                            #(dispatch [::set-bootsrap-message %])]}))
+
+
+(reg-event-db
+  ::set-welcome-message
+  (fn [db [_ welcome-message]]
+    (assoc db ::spec/welcome-message welcome-message)))

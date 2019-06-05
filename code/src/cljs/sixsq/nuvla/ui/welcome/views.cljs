@@ -33,8 +33,13 @@
         iframe?      (subscribe [::main-subs/iframe?])
         query-params (subscribe [::main-subs/nav-query-params])]
     (when @query-params
+
+      (when (contains? @query-params :message)
+        (dispatch [:sixsq.nuvla.ui.main.events/set-welcome-message (-> @query-params :message keyword)]))
+
       (when (contains? @query-params :reset-password)
         (dispatch [::authn-events/set-form-id "session-template/password-reset"])
+        (dispatch [::authn-events/update-form-data :username (:reset-password @query-params)])
         (dispatch [::authn-events/open-modal :reset-password]))
       (dispatch [::history-events/navigate (str (first path) "/")]))
     [ui/Container {:textAlign "center"

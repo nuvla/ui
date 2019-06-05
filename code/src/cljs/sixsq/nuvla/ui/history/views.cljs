@@ -14,7 +14,7 @@
   [:a {:href     (str @config/path-prefix "/" href)
        :target   "_blank"
        :on-click (fn [event]
-                   (when-not (.-metaKey event)            ;;cmd key not pressed
+                   (when-not (.-metaKey event)              ;;cmd key not pressed
                      (dispatch [::history-events/navigate href])
                      (.preventDefault event)))}
    (or label href)])

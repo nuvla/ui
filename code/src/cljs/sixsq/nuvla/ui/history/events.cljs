@@ -25,7 +25,7 @@
 
 
 #_(reg-event-fx
-  ::navigate-js-location
-  (fn [_ [_ url]]
-    (log/info "triggering navigate js location effect " url)
-    {::fx/navigate-js-location [url]}))
+    ::navigate-js-location
+    (fn [_ [_ url]]
+      (log/info "triggering navigate js location effect " url)
+      {::fx/navigate-js-location [url]}))

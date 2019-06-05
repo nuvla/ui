@@ -31,6 +31,9 @@
 (s/def ::bootstrap-message (s/nilable keyword?))
 
 
+(s/def ::welcome-message (s/nilable keyword?))
+
+
 (s/def ::db (s/keys :req [::iframe?
                           ::device
                           ::sidebar-open?
@@ -39,7 +42,8 @@
                           ::nav-query-params
                           ::changes-protection?
                           ::ignore-changes-modal
-                          ::bootstrap-message]))
+                          ::bootstrap-message
+                          ::welcome-message]))
 
 
 (def defaults {::iframe?              false
@@ -50,4 +54,5 @@
                ::nav-query-params     {}
                ::changes-protection?  false
                ::ignore-changes-modal nil
-               ::bootstrap-message    nil})
+               ::bootstrap-message    nil
+               ::welcome-message      nil})

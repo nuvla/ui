@@ -86,19 +86,36 @@
 
 (defn signup-email-password-fields
   []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        form-data (subscribe [::subs/form-data])]
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        form-id                    (subscribe [::subs/form-id])
+        form-data                  (subscribe [::subs/form-data])
+        email-invalid?             (subscribe [::subs/form-signup-email-invalid?])
+        passwords-doesnt-match?    (subscribe [::subs/form-signup-passwords-doesnt-match?])
+        password-constraint-error? (subscribe [::subs/form-signup-password-constraint-error?])]
     (fn []
       (let [{:keys [email password repeat-password]} @form-data]
+
+        ^{:key @form-id}
         [:<>
+
+         (let [errors-list (cond-> []
+                                   @email-invalid? (conj (@tr [:email-invalid-format]))
+                                   @passwords-doesnt-match? (conj (@tr [:passwords-doesnt-match]))
+                                   @password-constraint-error? (conj (@tr [:password-constraint])))]
+           [ui/Message {:hidden (empty? errors-list)
+                        :size   "tiny"
+                        :error  true
+                        :header (@tr [:validation-error])
+                        :list   errors-list}])
+
          [ui/FormInput {:name          "email"
                         :placeholder   "email"
                         :icon          "at"
                         :icon-position "left"
                         :auto-focus    true
                         :auto-complete "on"
-                        :error         (and (some? email)
-                                            (not (s/valid? ::spec/email email)))
+                        :value         (or email "")
+                        :error         @email-invalid?
                         :on-change     (ui-callback/value
                                          #(dispatch [::events/update-form-data :email %]))}]
 
@@ -109,9 +126,9 @@
                          :icon          "key"
                          :icon-position "left"
                          :required      true
-                         :error         (and (some? password)
-                                             (or (not= password repeat-password)
-                                                 (not (s/valid? ::spec/password password))))
+                         :value         (or password "")
+                         :error         (or @passwords-doesnt-match?
+                                            @password-constraint-error?)
                          :auto-complete "off"
                          :on-change     (ui-callback/value
                                           #(dispatch [::events/update-form-data :password %]))}]
@@ -120,9 +137,9 @@
                          :type          "password"
                          :placeholder   (str/capitalize (@tr [:password-repeat]))
                          :required      true
-                         :error         (and (some? password)
-                                             (or (not= password repeat-password)
-                                                 (not (s/valid? ::spec/repeat-password password))))
+                         :value         (or repeat-password "")
+                         :error         (or @passwords-doesnt-match?
+                                            @password-constraint-error?)
                          :auto-complete "off"
                          :on-change     (ui-callback/value
                                           #(dispatch [::events/update-form-data :repeat-password %]))}]]]))))
@@ -185,10 +202,10 @@
 
 (defn signup-method-form
   [[_ methods]]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        form-id   (subscribe [::subs/form-id])
-        form-data (subscribe [::subs/form-data])
-        form-spec (subscribe [::subs/form-spec])]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        form-id     (subscribe [::subs/form-id])
+        form-data   (subscribe [::subs/form-data])
+        form-valid? (subscribe [::subs/form-valid?])]
     (fn [[_ methods]]
       ^{:key @form-id}
       (let [dropdown?        (> (count methods) 1)
@@ -198,8 +215,9 @@
 
         [ui/Form
          {:id           (or @form-id "authn-form-placeholder-id")
+          :error        true                                ;; Needed to show validation Message
           :on-key-press (partial forms-utils/on-return-key
-                                 #(when (s/valid? @form-spec @form-data)
+                                 #(when @form-valid?
                                     (dispatch [::events/submit {:close-modal false
                                                                 :success-msg (@tr [:validation-email-success-msg])}])))}
 
@@ -323,13 +341,12 @@
 
 
 (defn generic-modal
-  [id modal-kw form-fn submit-opts form-validation?]
-  (let [tr         (subscribe [::i18n-subs/tr])
-        open-modal (subscribe [::subs/open-modal])
-        form-spec  (subscribe [::subs/form-spec])
-        form-data  (subscribe [::subs/form-data])
-        loading?   (subscribe [::subs/loading?])]
-    (fn [id modal-kw form-fn submit-opts form-validation?]
+  [id modal-kw form-fn submit-opts]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        open-modal  (subscribe [::subs/open-modal])
+        loading?    (subscribe [::subs/loading?])
+        form-valid? (subscribe [::subs/form-valid?])]
+    (fn [id modal-kw form-fn submit-opts]
       [ui/Modal
        {:id        id
         :size      :tiny
@@ -348,28 +365,36 @@
          {:text     (@tr [modal-kw])
           :positive true
           :loading  @loading?
-          :disabled (and form-validation? (not (s/valid? @form-spec @form-data)))
+          :disabled (not @form-valid?)
           :on-click #(dispatch [::events/submit submit-opts])}]]])))
 
 
-(defn modal-login []
-  [generic-modal "modal-login-id" :login login-form-container {} false])
+(defn modal-login
+  []
+  [generic-modal "modal-login-id" :login login-form-container {}])
 
 
 (defn modal-reset-password []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        open-modal      (subscribe [::subs/open-modal])
-        error-message   (subscribe [::subs/error-message])
-        success-message (subscribe [::subs/success-message])
-        loading?        (subscribe [::subs/loading?])
-        form-data       (subscribe [::subs/form-data])
-        form-spec       (subscribe [::subs/form-spec])
-        submit-fn       #(dispatch [::events/submit {:close-modal false
-                                                     :success-msg (@tr [:validation-email-success-msg])}])]
+  (let [tr                         (subscribe [::i18n-subs/tr])
+        open-modal                 (subscribe [::subs/open-modal])
+        error-message              (subscribe [::subs/error-message])
+        success-message            (subscribe [::subs/success-message])
+        loading?                   (subscribe [::subs/loading?])
+        submit-fn                  #(dispatch [::events/submit {:close-modal false
+                                                                :success-msg (@tr [:validation-email-success-msg])}])
+        form-id                    (subscribe [::subs/form-id])
+        form-data                  (subscribe [::subs/form-data])
+        username-invalid?          (subscribe [::subs/form-password-reset-username-invalid?])
+        passwords-doesnt-match?    (subscribe [::subs/form-password-reset-passwords-doesnt-match?])
+        password-constraint-error? (subscribe [::subs/form-password-reset-password-constraint-error?])
+        form-valid?                (subscribe [::subs/form-password-reset-valid?])]
     (fn []
-      (let [form-valid?     (s/valid? @form-spec @form-data)
-            {:keys [username new-password repeat-new-password]} @form-data
-            passwords-error (not= new-password repeat-new-password)]
+      (let [{:keys [username new-password repeat-new-password]} @form-data
+            errors-list (cond-> []
+                                @passwords-doesnt-match? (conj (@tr [:passwords-doesnt-match]))
+                                @password-constraint-error? (conj (@tr [:password-constraint])))]
+
+        ^{:key @form-id}
         [ui/Modal
          {:id        "modal-reset-password-id"
           :size      :tiny
@@ -395,16 +420,24 @@
              [ui/MessageHeader (@tr [:success])]
              [:p @success-message]])
 
-          [ui/Form {:on-key-press (partial forms-utils/on-return-key
-                                           #(when form-valid?
+          [ui/Form {:error        true                      ;; Needed to show validation Message
+                    :on-key-press (partial forms-utils/on-return-key
+                                           #(when @form-valid?
                                               (submit-fn)))}
+
+           [ui/Message {:hidden (empty? errors-list)
+                        :size   "tiny"
+                        :error  true
+                        :header (@tr [:validation-error])
+                        :list   errors-list}]
+
            [ui/FormInput {:name          "username"
                           :placeholder   (str/capitalize (@tr [:username]))
                           :icon          "user"
                           :fluid         false
                           :icon-position "left"
-                          :error         (and (some? username)
-                                              (not (s/valid? ::spec/username username)))
+                          :error         @username-invalid?
+                          :value         (or username "")
                           :required      true
                           :auto-focus    true
                           :auto-complete "on"
@@ -417,10 +450,10 @@
                            :placeholder   (str/capitalize (@tr [:new-password]))
                            :icon          "key"
                            :icon-position "left"
+                           :value         (or new-password "")
                            :required      true
-                           :error         (and (some? new-password)
-                                               (or passwords-error
-                                                   (not (s/valid? ::spec/new-password new-password))))
+                           :error         (or @password-constraint-error?
+                                              @passwords-doesnt-match?)
                            :auto-complete "off"
                            :on-change     (ui-callback/value
                                             #(dispatch [::events/update-form-data :new-password %]))}]
@@ -429,9 +462,9 @@
                            :type          "password"
                            :placeholder   (str/capitalize (@tr [:new-password-repeat]))
                            :required      true
-                           :error         (and (some? new-password)
-                                               (or passwords-error
-                                                   (not (s/valid? ::spec/repeat-new-password repeat-new-password))))
+                           :value         (or repeat-new-password "")
+                           :error         (or @password-constraint-error?
+                                              @passwords-doesnt-match?)
                            :auto-complete "off"
                            :on-change     (ui-callback/value
                                             #(dispatch [::events/update-form-data :repeat-new-password %]))}]]]
@@ -444,8 +477,7 @@
            {:text     (@tr [:reset-password])
             :positive true
             :loading  @loading?
-            :disabled (or (not form-valid?)
-                          passwords-error)
+            :disabled (not @form-valid?)
             :on-click submit-fn}]]]))))
 
 
@@ -457,14 +489,17 @@
         loading?            (subscribe [::subs/loading?])
         server-redirect-uri (subscribe [::subs/server-redirect-uri])
         form-data           (subscribe [::subs/form-data])
-        form-spec           (subscribe [::subs/form-spec])
-        submit-fn           #(dispatch [::events/submit {:close-modal  false
-                                                         :error-msg    (@tr [:error-occured])
-                                                         :success-msg  (@tr [:invitation-email-success-msg])
-                                                         :redirect-url (str @server-redirect-uri "?reset-password")}])]
+        form-spec           (subscribe [::subs/form-spec])]
     (fn []
-      (let [form-valid? (s/valid? @form-spec @form-data)
+      (let [email-encoded-uri (-> @form-data :email js/encodeURI)
+            submit-fn         #(dispatch [::events/submit {:close-modal  false
+                                                           :error-msg    (@tr [:error-occured])
+                                                           :success-msg  (@tr [:invitation-email-success-msg])
+                                                           :redirect-url (str @server-redirect-uri
+                                                                              "?reset-password=" email-encoded-uri)}])
+            form-valid?       (s/valid? @form-spec @form-data)
             {:keys [email]} @form-data]
+
         [ui/Modal
          {:id        "modal-create-user"
           :size      :tiny
@@ -518,10 +553,14 @@
 
 
 (defn modal-signup []
-  (let [tr          (subscribe [::i18n-subs/tr])
-        submit-opts {:close-modal false
-                     :success-msg (@tr [:validation-email-success-msg])}]
-    [generic-modal "modal-signup-id" :signup signup-form-container submit-opts true]))
+  (let [tr                             (subscribe [::i18n-subs/tr])
+        server-redirect-uri            (subscribe [::subs/server-redirect-uri])
+        callback-message-on-validation (js/encodeURI "signup-validation-success")
+        submit-opts                    {:close-modal  false
+                                        :success-msg  (@tr [:validation-email-success-msg])
+                                        :redirect-url (str @server-redirect-uri
+                                                           "?message=" callback-message-on-validation)}]
+    [generic-modal "modal-signup-id" :signup signup-form-container submit-opts]))
 
 
 (defn authn-dropdown-menu

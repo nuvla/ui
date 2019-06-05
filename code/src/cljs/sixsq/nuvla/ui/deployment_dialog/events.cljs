@@ -41,18 +41,18 @@
                 ::spec/infra-service-filter
                 ::data-spec/content-type-filter] :as db} :db} [_ {credential-id :id :as credential}]]
     (let [updated-deployment (assoc deployment :credential-id credential-id)
-          filter (general-utils/join-and time-period-filter infra-service-filter content-type-filter)
-          selected-keys (map keyword (::data-spec/selected-data-set-ids db))
-          datasets-map (select-keys (::data-spec/data-records-by-data-set db) selected-keys)
+          filter             (general-utils/join-and time-period-filter infra-service-filter content-type-filter)
+          selected-keys      (map keyword (::data-spec/selected-data-set-ids db))
+          datasets-map       (select-keys (::data-spec/data-records-by-data-set db) selected-keys)
 
-          callback-data (fn [{:keys [resources] :as data-records}]
-                          (let [distinct-mounts (->> resources
-                                                     (map :mount)
-                                                     (distinct))]
-                            (dispatch [::set-deployment
-                                       (-> updated-deployment
-                                           (assoc :data-records (utils/invert-dataset-map datasets-map))
-                                           (assoc-in [:module :content :mounts] distinct-mounts))])))]
+          callback-data      (fn [{:keys [resources] :as data-records}]
+                               (let [distinct-mounts (->> resources
+                                                          (map :mount)
+                                                          (distinct))]
+                                 (dispatch [::set-deployment
+                                            (-> updated-deployment
+                                                (assoc :data-records (utils/invert-dataset-map datasets-map))
+                                                (assoc-in [:module :content :mounts] distinct-mounts))])))]
       (cond-> {:db (assoc db ::spec/selected-credential credential
                              ::spec/deployment updated-deployment)}
               infra-service-filter (assoc ::cimi-api-fx/search
@@ -194,7 +194,7 @@
   (fn [{{:keys [::client-spec/client] :as db} :db} [_ data-clouds-response]]
     (let [buckets        (get-in data-clouds-response [:aggregations (keyword "terms:infrastructure-service") :buckets])
           infra-services (map :key buckets)
-          filter (apply general-utils/join-or (map #(str "id='" % "'") infra-services))]
+          filter         (apply general-utils/join-or (map #(str "id='" % "'") infra-services))]
 
       {:db                  (cond-> (assoc db ::spec/data-infra-services buckets)
                                     (= 1 (count infra-services)) (set-infra-service-and-filter (first infra-services)))

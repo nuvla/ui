@@ -18,7 +18,7 @@
     (utils/navigate url)))
 
 #_(reg-fx
-  ::navigate-js-location
-  (fn [[url]]
-    (.replace js/location url)))
+    ::navigate-js-location
+    (fn [[url]]
+      (.replace js/location url)))
 

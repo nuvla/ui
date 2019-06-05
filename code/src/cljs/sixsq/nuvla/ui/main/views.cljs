@@ -154,6 +154,21 @@
                                   (str " " (@tr [:click-here]))]])}]))
 
 
+(defn WelcomeMessage
+  []
+  (let [tr              (subscribe [::i18n-subs/tr])
+        welcome-message (subscribe [::subs/welcome-message])]
+    (fn []
+      (when @welcome-message
+        (js/setTimeout #(dispatch [::events/set-welcome-message nil]) 10000) ;; hide after 20s
+
+        [ui/Container {:text-align :center}
+         [ui/Message
+          {:success true
+           :content (@tr [@welcome-message])}]
+         [:br]]))))
+
+
 (defn contents
   []
   (let [resource-path     (subscribe [::subs/nav-path])
@@ -162,6 +177,9 @@
       [ui/Container {:as         "main"
                      :class-name "nuvla-ui-content"
                      :fluid      true}
+
+       [WelcomeMessage]
+
        (when @bootstrap-message
          [BootstrapMessage @bootstrap-message])
        (panel/render @resource-path)])))

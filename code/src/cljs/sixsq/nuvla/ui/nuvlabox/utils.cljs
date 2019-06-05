@@ -21,11 +21,11 @@
 
 (defn state->icon
   [state]
-  (let [icons-map {state-activated "check"
-                   state-new "dolly"
-                   state-quarantined "eraser"
+  (let [icons-map {state-activated       "check"
+                   state-new             "dolly"
+                   state-quarantined     "eraser"
                    state-decommissioning "trash"
-                   state-error "exclamation"}]
+                   state-error           "exclamation"}]
     (get icons-map state)))
 
 

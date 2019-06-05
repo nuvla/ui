@@ -176,6 +176,10 @@
   (can-operation? :edit data))
 
 
+(defn can-delete? [data]
+  (can-operation? :edit data))
+
+
 (defn editable?
   [data is-new?]
   (or is-new? (can-edit? data)))

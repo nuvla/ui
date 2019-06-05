@@ -67,7 +67,8 @@
 (defn service-card
   [{:keys [id name description path subtype logo-url] :as service}]
   ^{:key id}
-  [ui/Card {:on-click #(dispatch [::events/open-service-modal service false])}
+  [ui/Card (when (general-utils/can-edit? service)
+             {:on-click #(dispatch [::events/open-service-modal service false])})
    (when logo-url
      [ui/Image {:src   logo-url
                 :style {:width      "auto"

@@ -255,37 +255,43 @@
 
 
 (defn AclOwners
-  [{:keys [acl read-only on-change] :as opts}]
-  (let [owners  (:owners acl)
-        mobile? (subscribe [::main-subs/is-device? :mobile])
+  [{:keys [acl read-only on-change mode] :as opts}]
+  (let [mobile? (subscribe [::main-subs/is-device? :mobile])
         tr      (subscribe [::i18n-subs/tr])]
-    [ui/Table {:unstackable true
-               :attached    "top"}
+    (fn [{:keys [acl read-only on-change mode] :as opts}]
+      (let [is-advanced? (is-advanced-mode? @mode)
+            owners       (:owners acl)]
+        [ui/Table {:unstackable true
+                   :attached    "top"}
 
-     [ui/TableHeader
-      [ui/TableRow
-       [ui/TableHeaderCell
-        (str/capitalize (@tr [:owners]))
-        [InfoIcon :acl-owners]
-        ]]]
+         [ui/TableHeader
+          [ui/TableRow
+           [ui/TableHeaderCell
+            (str/capitalize (@tr [:owners]))
+            [InfoIcon :acl-owners]
 
-     [ui/TableBody
-      [ui/TableRow
-       [ui/TableCell
-        [ui/ListSA {:horizontal (not @mobile?)
-                    :relaxed    true}
+            [ui/Icon {:name     (if is-advanced? "compress" "expand")
+                      :style    {:float "right"}
+                      :link     true
+                      :on-click #(reset! mode (if is-advanced? :simple :advanced))}]]]]
 
-         (for [owner owners]
-           ^{:key owner}
-           [OwnerItem opts (>= (count owners) 2) owner])
+         [ui/TableBody
+          [ui/TableRow
+           [ui/TableCell
+            [ui/ListSA {:horizontal (not @mobile?)
+                        :relaxed    true}
 
-         (when-not read-only
-           [ui/ListItem
-            [ui/ListContent
-             [ui/ListHeader
-              [DropdownPrincipals
-               {:on-change #(on-change (utils/add-principal acl [:owners] %))
-                :fluid     false}]]]])]]]]]))
+             (for [owner owners]
+               ^{:key owner}
+               [OwnerItem opts (>= (count owners) 2) owner])
+
+             (when-not read-only
+               [ui/ListItem
+                [ui/ListContent
+                 [ui/ListHeader
+                  [DropdownPrincipals
+                   {:on-change #(on-change (utils/add-principal acl [:owners] %))
+                    :fluid     false}]]]])]]]]]))))
 
 
 (defn AclRights
@@ -318,17 +324,9 @@
     (let [opts         (assoc opts :mode mode
                                    :read-only read-only
                                    :on-change on-change)
-          acl          (or (:acl opts) acl)
-          is-advanced? (is-advanced-mode? @mode)]
+          acl          (or (:acl opts) acl)]
       [:div (when @(subscribe [::main-subs/is-device? :mobile])
               {:style {:overflow-x "auto"}})
-       [ui/Icon {:link     true
-                 :name     (if is-advanced? "compress" "expand")
-                 :style    {:float    "right"
-                            :top      "28px"
-                            :right    "10px"
-                            :position "relative"}
-                 :on-click #(reset! mode (if is-advanced? :simple :advanced))}]
        [AclOwners opts]
        (when-not (and read-only
                       (< (count acl) 2))

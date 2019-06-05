@@ -13,13 +13,15 @@
     [sixsq.nuvla.ui.utils.accordion :as utils-accordion]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as utils-general]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [taoensso.timbre :as timbre]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.acl.views :as acl]))
 
 
 (defn in?
@@ -386,11 +388,15 @@
                     :width   1
                     :align   :right
                     :style   {}}
-      [utils-accordion/trash id ::events/open-delete-confirmation-modal nil credential]
-      [ui/Icon {:name     :cog
-                :color    :blue
-                :style    {:cursor :pointer}
-                :on-click #(dispatch [::events/open-credential-modal credential false])}]]]))
+
+      (when (general-utils/can-delete? credential)
+        [utils-accordion/trash id ::events/open-delete-confirmation-modal nil credential])
+
+      (when (general-utils/can-edit? credential)
+        [ui/Icon {:name     :cog
+                  :color    :blue
+                  :style    {:cursor :pointer}
+                  :on-click #(dispatch [::events/open-credential-modal credential false])}])]]))
 
 
 (defn credentials

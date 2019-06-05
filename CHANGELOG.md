@@ -8,6 +8,8 @@
 
 ### Changed
 
+  - Infrastructures - edit depend now on credentials acls
+  - Credentials - displayed actions depend now on credentials acls
   - Signup - Validation of an email show a signup success message
   - Signup - Submit button is disabled and form cleared after a 
     successful submit

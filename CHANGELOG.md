@@ -8,6 +8,12 @@
 
 ### Changed
 
+  - Signup - Validation of an email show a signup success message
+  - Signup - Submit button is disabled and form cleared after a 
+    successful submit
+  - Create user - email of invited user is prefilled
+  - Session and User templates based modals display clear validation 
+    and human readable errors 
   - Deployment modal - support env variables
   - Apps page - add env variables to module component
   - Deployment owners replaced by metadata widget

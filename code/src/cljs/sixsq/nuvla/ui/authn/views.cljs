@@ -492,12 +492,12 @@
         form-spec           (subscribe [::subs/form-spec])]
     (fn []
       (let [email-encoded-uri (-> @form-data :email js/encodeURI)
-            submit-fn   #(dispatch [::events/submit {:close-modal  false
-                                                     :error-msg    (@tr [:error-occured])
-                                                     :success-msg  (@tr [:invitation-email-success-msg])
-                                                     :redirect-url (str @server-redirect-uri
-                                                                        "?reset-password=" email-encoded-uri)}])
-            form-valid? (s/valid? @form-spec @form-data)
+            submit-fn         #(dispatch [::events/submit {:close-modal  false
+                                                           :error-msg    (@tr [:error-occured])
+                                                           :success-msg  (@tr [:invitation-email-success-msg])
+                                                           :redirect-url (str @server-redirect-uri
+                                                                              "?reset-password=" email-encoded-uri)}])
+            form-valid?       (s/valid? @form-spec @form-data)
             {:keys [email]} @form-data]
 
         [ui/Modal
@@ -553,13 +553,13 @@
 
 
 (defn modal-signup []
-  (let [tr                  (subscribe [::i18n-subs/tr])
-        server-redirect-uri (subscribe [::subs/server-redirect-uri])
+  (let [tr                             (subscribe [::i18n-subs/tr])
+        server-redirect-uri            (subscribe [::subs/server-redirect-uri])
         callback-message-on-validation (js/encodeURI "signup-validation-success")
-        submit-opts {:close-modal false
-                     :success-msg (@tr [:validation-email-success-msg])
-                     :redirect-url (str @server-redirect-uri
-                                        "?message=" callback-message-on-validation)}]
+        submit-opts                    {:close-modal  false
+                                        :success-msg  (@tr [:validation-email-success-msg])
+                                        :redirect-url (str @server-redirect-uri
+                                                           "?message=" callback-message-on-validation)}]
     [generic-modal "modal-signup-id" :signup signup-form-container submit-opts]))
 
 

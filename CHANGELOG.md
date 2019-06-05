@@ -8,6 +8,7 @@
 
 ### Changed
 
+  - Apps - saving a project do not interrupt for a commit message
   - Infrastructures - edit depend now on credentials acls
   - Credentials - displayed actions depend now on credentials acls
   - Signup - Validation of an email show a signup success message

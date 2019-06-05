@@ -12,5 +12,5 @@
         module  (utils/db->module module commit db)]
     (case subtype
       :component (apps-component-utils/db->module module commit db)
-      :project (apps-project-utils/db->module module commit db)
+      :project module
       module)))

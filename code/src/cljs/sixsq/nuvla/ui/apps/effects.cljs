@@ -31,7 +31,7 @@
                                 (<! (api/get @CLIENT path-with-version))
                                 project-metadata)
 
-            children          (when (= subtype "projecft")
+            children          (when (= subtype "project")
                                 (:resources (<! (api/search @CLIENT :module {:filter children-filter}))))
 
             module-data       (cond-> module

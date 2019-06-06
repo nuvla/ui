@@ -5,8 +5,8 @@
     [cljs.core.async :refer [<!]]
     [re-frame.core :refer [dispatch reg-fx]]
     [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.ui.nuvlabox.utils :as utils]
     [sixsq.nuvla.ui.cimi-api.utils :refer [CLIENT]]
+    [sixsq.nuvla.ui.nuvlabox.utils :as utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [taoensso.timbre :as log]))
 

@@ -1,7 +1,5 @@
 (ns sixsq.nuvla.ui.apps.views
   (:require
-    [cemerick.url :as url]
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
@@ -51,15 +49,13 @@
             is-root?    (empty? module-name)
             is-new?     (not (empty? new-subtype))]
         (dispatch [::events/is-new? (not (empty? new-subtype))])
-        (if-not is-root?
+        (if is-root?
+          [apps-store-views/root-view]
           (do
             (if is-new?
               (new-module new-subtype)
               (dispatch [::events/get-module version]))
-            (if new-subtype
-              [module-details new-subtype]
-              [:p " not found"]))
-          [apps-store-views/root-view])))))
+            [module-details new-subtype]))))))
 
 
 (defmethod panel/render :apps

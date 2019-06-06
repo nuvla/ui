@@ -6,19 +6,23 @@
 
 (reg-sub
   ::messages
-  ::messages-spec/messages)
+  (fn [db]
+    (::messages-spec/messages db)))
 
 
 (reg-sub
   ::alert-message
-  ::messages-spec/alert-message)
+  (fn [db]
+    (::messages-spec/alert-message db)))
 
 
 (reg-sub
   ::alert-display
-  ::messages-spec/alert-display)
+  (fn [db]
+    (::messages-spec/alert-display db)))
 
 
 (reg-sub
   ::popup-open?
-  ::messages-spec/popup-open?)
+  (fn [db]
+    (::messages-spec/popup-open? db)))

@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.nuvlabox-detail.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.nuvlabox-detail.effects :as nuvlabox-fx]
     [sixsq.nuvla.ui.nuvlabox-detail.spec :as nuvlabox-spec]))
 
@@ -37,9 +36,6 @@
 (reg-event-fx
   ::fetch-detail
   (fn [{{:keys [::nuvlabox-spec/mac] :as db} :db} _]
-    (if-let [client (::client-spec/client db)]
-      {:db                        (assoc db ::nuvlabox-spec/loading? true)
-       ::nuvlabox-fx/fetch-detail [client mac
-                                   (fn [state record]
-                                     (dispatch [::set-detail state record]))]}
-      {:db db})))
+    {:db                        (assoc db ::nuvlabox-spec/loading? true)
+     ::nuvlabox-fx/fetch-detail [mac (fn [state record]
+                                       (dispatch [::set-detail state record]))]}))

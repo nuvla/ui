@@ -4,7 +4,6 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.main.effects :as main-fx]
     [sixsq.nuvla.ui.main.spec :as spec]
     [taoensso.timbre :as log]))
@@ -37,15 +36,15 @@
 (reg-event-db
   ::toggle-sidebar
   (fn [{:keys [::spec/sidebar-open?] :as db} _]
-    (update db ::spec/sidebar-open? not ::spec/sidebar-open?)))
+    (update db ::spec/sidebar-open? not sidebar-open?)))
 
 
 (reg-event-fx
   ::visible
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ v]]
+  (fn [{:keys [db]} [_ v]]
     (cond-> {:db                       (assoc db ::spec/visible? v)
              ::main-fx/action-interval (if v [{:action :resume}] [{:action :pause}])}
-            v (assoc ::cimi-api-fx/session [client #(dispatch [::authn-events/set-session %])]))))
+            v (assoc ::cimi-api-fx/session [#(dispatch [::authn-events/set-session %])]))))
 
 
 (reg-event-fx
@@ -95,23 +94,21 @@
 
 (reg-event-fx
   ::set-bootsrap-message
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ {resources     :resources
-                                                       resource-type :resource-type
-                                                       element-count :count :as response}]]
+  (fn [{:keys [db]} [_ {resources     :resources
+                        resource-type :resource-type
+                        element-count :count :as response}]]
     (if response
 
       (case resource-type
 
         "infrastructure-service-collection"
         (if (> element-count 0)
-          {:db (assoc db ::spec/bootstrap-message nil)
-           ::cimi-api-fx/search
-               [client
-                :credential
-                {:filter (str "subtype='infrastructure-service-swarm' and ("
-                              (str/join " or " (map #(str "parent='" (:id %) "'") resources)) ")")
-                 :last   0}
-                #(dispatch [::set-bootsrap-message %])]}
+          {:db                  (assoc db ::spec/bootstrap-message nil)
+           ::cimi-api-fx/search [:credential
+                                 {:filter (str "subtype='infrastructure-service-swarm' and ("
+                                               (str/join " or " (map #(str "parent='" (:id %) "'") resources)) ")")
+                                  :last   0}
+                                 #(dispatch [::set-bootsrap-message %])]}
           {:db (assoc db ::spec/bootstrap-message :no-swarm)})
 
         "credential-collection"
@@ -124,9 +121,8 @@
 
 (reg-event-fx
   ::check-bootstrap-message
-  (fn [{{:keys [::client-spec/client] :as db} :db} _]
-    {::cimi-api-fx/search [client
-                           :infrastructure-service
+  (fn [_ _]
+    {::cimi-api-fx/search [:infrastructure-service
                            {:filter "subtype='swarm'"
                             :select "id"}
                            #(dispatch [::set-bootsrap-message %])]}))

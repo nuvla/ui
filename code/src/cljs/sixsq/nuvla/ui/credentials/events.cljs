@@ -4,7 +4,6 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
-    [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.credentials.spec :as spec]
     [sixsq.nuvla.ui.credentials.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -78,21 +77,19 @@
 
 (reg-event-fx
   ::get-credentials
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_]]
-    (when client
-      (let []
-        {:db                  (assoc db ::spec/completed? false)
-         ::cimi-api-fx/search [client :credential {} #(dispatch [::set-credentials (:resources %)])]}))))
+  (fn [{:keys [db]} [_]]
+    {:db                  (assoc db ::spec/completed? false)
+     ::cimi-api-fx/search [:credential {} #(dispatch [::set-credentials (:resources %)])]}))
 
 
 (reg-event-fx
   ::edit-credential
-  (fn [{{:keys [::spec/credential ::client-spec/client] :as db} :db :as cofx} [_]]
+  (fn [{{:keys [::spec/credential] :as db} :db} [_]]
     (let [id             (:id credential)
           new-credential (utils/db->new-credential db)]
       (if (nil? id)
         {:db               db
-         ::cimi-api-fx/add [client "credential" new-credential
+         ::cimi-api-fx/add [:credential new-credential
                             #(if (instance? js/Error %)
                                (let [{:keys [status message]} (response/parse-ex-info %)]
                                  (dispatch [::messages-events/add
@@ -105,7 +102,7 @@
                                    (dispatch [::get-credentials])
                                    (dispatch [::main-events/check-bootstrap-message])))]}
         {:db                db
-         ::cimi-api-fx/edit [client id credential
+         ::cimi-api-fx/edit [id credential
                              #(if (instance? js/Error %)
                                 (let [{:keys [status message]} (response/parse-ex-info %)]
                                   (dispatch [::messages-events/add
@@ -115,15 +112,14 @@
                                               :type    :error}]))
                                 (do (dispatch [::cimi-detail-events/get (:id %)])
                                     (dispatch [::close-credential-modal])
-                                    (dispatch [::get-credentials])
-                                    ))]}))))
+                                    (dispatch [::get-credentials])))]}))))
 
 
 (reg-event-fx
   ::delete-credential
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ id]]
+  (fn [{:keys [db]} [_ id]]
     {:db                  db
-     ::cimi-api-fx/delete [client id
+     ::cimi-api-fx/delete [id
                            #(if (instance? js/Error %)
                               (let [{:keys [status message]} (response/parse-ex-info %)]
                                 (dispatch [::messages-events/add
@@ -190,10 +186,9 @@
 
 (reg-event-fx
   ::fetch-infrastructure-services-available
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ subtype]]
-    (when client
-      {:db                  (assoc-in db [::spec/infrastructure-services-available subtype] nil)
-       ::cimi-api-fx/search [client :infrastructure-service
-                             {:filter (str "subtype='" subtype "'")
-                              :select "id, name, description"}
-                             #(dispatch [::set-infrastructure-services-available subtype %])]})))
+  (fn [{:keys [db]} [_ subtype]]
+    {:db                  (assoc-in db [::spec/infrastructure-services-available subtype] nil)
+     ::cimi-api-fx/search [:infrastructure-service
+                           {:filter (str "subtype='" subtype "'")
+                            :select "id, name, description"}
+                           #(dispatch [::set-infrastructure-services-available subtype %])]}))

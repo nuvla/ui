@@ -1,7 +1,5 @@
 (ns sixsq.nuvla.ui.apps.views
   (:require
-    [cemerick.url :as url]
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
@@ -42,22 +40,22 @@
 
 (defn apps
   []
-  (let [nav-path (subscribe [::main-subs/nav-path])]
+  (let [nav-path         (subscribe [::main-subs/nav-path])
+        nav-query-params (subscribe [::main-subs/nav-query-params])]
     (fn []
       (let [module-name (utils/nav-path->module-name @nav-path)
-            query       (clojure.walk/keywordize-keys (:query (url/url (-> js/window .-location .-href))))
-            new-subtype (:subtype query)
-            version     (:version query nil)
+            new-subtype (:subtype @nav-query-params)
+            version     (:version @nav-query-params nil)
             is-root?    (empty? module-name)
             is-new?     (not (empty? new-subtype))]
         (dispatch [::events/is-new? (not (empty? new-subtype))])
-        (if-not is-root?
+        (if is-root?
+          [apps-store-views/root-view]
           (do
-            (if-not is-new?
-              (dispatch [::events/get-module version])
-              (new-module new-subtype))
-            [module-details new-subtype])
-          [apps-store-views/root-view])))))
+            (if is-new?
+              (new-module new-subtype)
+              (dispatch [::events/get-module version]))
+            [module-details new-subtype]))))))
 
 
 (defmethod panel/render :apps

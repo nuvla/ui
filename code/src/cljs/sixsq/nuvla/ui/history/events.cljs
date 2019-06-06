@@ -16,6 +16,7 @@
 (reg-event-fx
   ::navigate
   (fn [{{:keys [::main-spec/changes-protection?] :as db} :db} [_ relative-url]]
+    (log/warn ::navigate relative-url)
     (let [nav-effect {::fx/navigate [relative-url]}]
       (if changes-protection?
         {:db (assoc db ::main-spec/ignore-changes-modal nav-effect)}

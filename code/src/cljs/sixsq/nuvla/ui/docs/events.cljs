@@ -2,17 +2,15 @@
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.docs.spec :as spec]))
 
 
 (reg-event-fx
   ::get-documents
-  (fn [{{:keys [::client-spec/client] :as db} :db} _]
+  (fn [{:keys [db]} _]
     {:db                  (assoc db ::spec/loading? true
                                     ::spec/documents nil)
-     ::cimi-api-fx/search [client
-                           :resource-metadata
+     ::cimi-api-fx/search [:resource-metadata
                            nil
                            #(dispatch [::set-documents %])]}))
 

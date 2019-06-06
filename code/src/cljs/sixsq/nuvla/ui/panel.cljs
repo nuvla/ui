@@ -1,5 +1,8 @@
 (ns sixsq.nuvla.ui.panel
-  (:require [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+  (:require
+    [re-frame.core :refer [subscribe]]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defmulti render
           "Dispatches the rendering of a panel based on the first element of
@@ -10,7 +13,8 @@
 
 (defmethod render :default
   [path query-parameters]
-  (let [reason-text (str "Unknown resource: " path)]
+  (let [nav-path    (subscribe [::main-subs/nav-path])
+        reason-text (str "Unknown resource: " @nav-path)]
     [ui/Container {:textAlign "center"}
      [ui/Header {:as   "h3"
                  :icon true}

@@ -5,7 +5,6 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.cimi.events :as api-events]
-    [sixsq.nuvla.ui.client.events :as client-events]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.db.events :as db-events]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -15,11 +14,6 @@
     [sixsq.nuvla.ui.routes :as routes]
     [sixsq.nuvla.ui.utils.defines :as defines]
     [taoensso.timbre :as log]))
-
-;;
-;; determine the host url
-;;
-(def NUVLA_URL (delay (if-not (str/blank? defines/HOST_URL) defines/HOST_URL (utils/host-url))))
 
 
 (defn dev-setup []
@@ -67,7 +61,6 @@
   (patch-process)
   (dev-setup)
   (dispatch-sync [::db-events/initialize-db])
-  (dispatch-sync [::client-events/initialize @NUVLA_URL])
   (dispatch-sync [::api-events/get-cloud-entry-point])
   (dispatch-sync [::authn-events/initialize])
   (dispatch-sync [::main-events/check-iframe])

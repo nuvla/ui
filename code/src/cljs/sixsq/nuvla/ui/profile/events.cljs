@@ -5,7 +5,6 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.authn.spec :as authn-spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.profile.spec :as spec]
@@ -53,16 +52,14 @@
 
 (reg-event-fx
   ::get-user
-  (fn [{{:keys [::client-spec/client
-                ::authn-spec/session] :as db} :db} _]
+  (fn [{{:keys [::authn-spec/session] :as db} :db} _]
     (when-let [user (:user session)]
-      {::cimi-api-fx/get [client user #(dispatch [::set-password %])]})))
+      {::cimi-api-fx/get [user #(dispatch [::set-password %])]})))
 
 
 (reg-event-fx
   ::change-password
-  (fn [{{:keys [::client-spec/client
-                ::spec/form-data
+  (fn [{{:keys [::spec/form-data
                 ::spec/credential-password
                 ::i18n-spec/tr] :as db} :db} _]
     (let [body        (dissoc form-data :repeat-new-password)
@@ -78,4 +75,4 @@
                                            :content (str/capitalize (tr [:password-updated]))
                                            :type    :success}]))
                              (dispatch [::set-error-message (str message " (" status ")")]))))]
-      {::cimi-api-fx/operation [client credential-password "change-password" callback-fn body]})))
+      {::cimi-api-fx/operation [credential-password "change-password" callback-fn body]})))

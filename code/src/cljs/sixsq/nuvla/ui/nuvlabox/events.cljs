@@ -2,7 +2,6 @@
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.client.spec :as client-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.nuvlabox.effects :as fx]
     [sixsq.nuvla.ui.nuvlabox.spec :as spec]
@@ -21,9 +20,8 @@
 
 (reg-event-fx
   ::fetch-health-info
-  (fn [{{:keys [::client-spec/client]} :db} _]
-    (when client
-      {::fx/fetch-health-info [client #(dispatch [::set-health-info %])]})))
+  (fn [_ _]
+    {::fx/fetch-health-info [#(dispatch [::set-health-info %])]}))
 
 
 ;; from CIMI
@@ -40,11 +38,9 @@
   ::get-nuvlaboxes
   (fn [{{:keys [::spec/state-selector
                 ::spec/page
-                ::spec/elements-per-page
-                ::client-spec/client] :as db} :db} _]
+                ::spec/elements-per-page] :as db} :db} _]
     {:db                   (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search  [client
-                            :nuvlabox
+     ::cimi-api-fx/search  [:nuvlabox
                             (general-utils/prepare-params
                               (cond-> {:first   (inc (* (dec page) elements-per-page))
                                        :last    (* page elements-per-page)
@@ -52,12 +48,12 @@
                                        :select  "id, name, state"}
                                       state-selector (assoc :filter (utils/state-filter state-selector))))
                             #(dispatch [::set-nuvlaboxes %])]
-     ::fx/state-nuvlaboxes [client #(dispatch [::set-state-nuvlaboxes %])]}))
+     ::fx/state-nuvlaboxes [#(dispatch [::set-state-nuvlaboxes %])]}))
 
 
 (reg-event-fx
   ::set-nuvlaboxes
-  (fn [{{:keys [::client-spec/client] :as db} :db} [_ {:keys [resources] :as nuvlaboxes}]]
+  (fn [{:keys [db]} [_ {:keys [resources] :as nuvlaboxes}]]
     (if (instance? js/Error nuvlaboxes)
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
@@ -69,7 +65,7 @@
         {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
                        ::spec/loading? false)}
         (not-empty resources) (assoc ::fx/get-status-nuvlaboxes
-                                     [client resources #(dispatch [::set-status-nuvlaboxes %])])))))
+                                     [resources #(dispatch [::set-status-nuvlaboxes %])])))))
 
 
 (reg-event-db

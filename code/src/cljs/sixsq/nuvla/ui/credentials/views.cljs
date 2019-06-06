@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.credentials.events :as events]
     [sixsq.nuvla.ui.credentials.spec :as spec]
     [sixsq.nuvla.ui.credentials.subs :as subs]
@@ -20,8 +21,7 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [taoensso.timbre :as timbre]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.acl.views :as acl]))
+    [taoensso.timbre :as log]))
 
 
 (defn in?

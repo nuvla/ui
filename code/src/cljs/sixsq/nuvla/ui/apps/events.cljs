@@ -113,10 +113,9 @@
                             ::spec/module-path (:path module)
                             ::spec/module (if (nil? module) {} module))
           subtype (:subtype module)]
-      (case subtype
+      (case subtype                                         ;;FIXME no default case cause stack trace
         "component" (apps-component-utils/module->db db module)
-        "project" (apps-project-utils/module->db db module)
-        nil))))
+        "project" (apps-project-utils/module->db db module)))))
 
 
 (reg-event-db

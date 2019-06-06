@@ -63,18 +63,19 @@
                              :trigger  (reagent/as-element
                                          [ui/Icon {:name  icon-name
                                                    :style {:cursor "pointer"}
-                                                   :color "red"
-                                                   :size  "large"}])}]])
+                                                   :color "red"}])}]])
       :header  (@tr [popup-text])
       :content (@tr [:are-you-sure?])
-      :actions [{:key "cancel", :content (@tr [:cancel])}
-                {:key     "yes", :content (@tr [:yes]), :positive true,
+      :actions [{:key     "cancel"
+                 :content (@tr [:cancel])}
+                {:key     "yes"
+                 :content (@tr [:yes]), :positive true
                  :onClick #(dispatch [event-kw deployment-id])}]}]))
 
 
 (defn stop-button
   [{:keys [id] :as deployment}]
-  [action-button :stop "close" ::events/stop-deployment id])
+  [action-button :stop "stop" ::events/stop-deployment id])
 
 
 (defn delete-button
@@ -105,10 +106,15 @@
         [control-bar]]])))
 
 
-(defn format-href
-  [href]
-  (let [tag (subs href 11 19)]
-    [history/link (str href) tag]))
+(defn detail-href
+  [id]
+  (str "dashboard/" (general-utils/id->uuid id)))
+
+
+(defn format-id
+  [id]
+  (let [tag (general-utils/id->short-uuid id)]
+    [history/link (detail-href id) tag]))
 
 
 (defn row-fn
@@ -116,9 +122,8 @@
   (let [credential-id (:credential-id deployment)
         creds-name    (subscribe [::subs/creds-name-map])
         [url-name url] @(subscribe [::subs/deployment-url deployment])]
-    ^{:key id}
     [ui/TableRow
-     [ui/TableCell [format-href id]]
+     [ui/TableCell [format-id id]]
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}} (:name module)]
@@ -153,10 +158,12 @@
          [ui/TableHeaderCell (@tr [:status])]
          [ui/TableHeaderCell (@tr [:url])]
          [ui/TableHeaderCell (@tr [:created])]
-         [ui/TableHeaderCell (@tr [:cloud])]
+         [ui/TableHeaderCell (@tr [:infrastructure])]
          [ui/TableHeaderCell (@tr [:actions])]]]
-       (vec (concat [ui/TableBody]
-                    (map row-fn deployments-list)))])))
+       [ui/TableBody
+        (for [{:keys [id] :as deployment} deployments-list]
+          ^{:key id}
+          [row-fn deployment])]])))
 
 
 (defn card-fn
@@ -186,7 +193,7 @@
 
      [ui/CardContent {:href     id
                       :on-click (fn [event]
-                                  (dispatch [::history-events/navigate (str "dashboard/" uuid)])
+                                  (dispatch [::history-events/navigate (detail-href id)])
                                   (.preventDefault event))}
 
 

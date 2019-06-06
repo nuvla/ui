@@ -107,22 +107,21 @@
                                            ::spec/infra-services nil
                                            ::spec/data-infra-services nil)
                ::cimi-api-fx/add [:deployment data add-depl-callback]}
-              old-deployment-id (assoc ::cimi-api-fx/delete [old-deployment-id #()])))
+              old-deployment-id (assoc ::cimi-api-fx/delete [old-deployment-id #()])))))
 
-
-    (reg-event-fx
-      ::get-credentials
-      (fn [{{:keys [::spec/selected-infra-service] :as db} :db :as cofx} _]
-        (let [search-creds-callback #(dispatch [::set-credentials (get % :resources [])])]
-          {:db                  (assoc db ::spec/loading-credentials? true
-                                          ::spec/credentials nil
-                                          ::spec/selected-credential nil)
-           ::cimi-api-fx/search [:credential
-                                 {:select "id, name, description, created, subtype"
-                                  :filter (general-utils/join-and
-                                            (when selected-infra-service
-                                              (str "parent='" selected-infra-service "'"))
-                                            (str "subtype='infrastructure-service-swarm'"))} search-creds-callback]})))))
+(reg-event-fx
+  ::get-credentials
+  (fn [{{:keys [::spec/selected-infra-service] :as db} :db} _]
+    (let [search-creds-callback #(dispatch [::set-credentials (get % :resources [])])]
+      {:db                  (assoc db ::spec/loading-credentials? true
+                                      ::spec/credentials nil
+                                      ::spec/selected-credential nil)
+       ::cimi-api-fx/search [:credential
+                             {:select "id, name, description, created, subtype"
+                              :filter (general-utils/join-and
+                                        (when selected-infra-service
+                                          (str "parent='" selected-infra-service "'"))
+                                        (str "subtype='infrastructure-service-swarm'"))} search-creds-callback]})))
 
 
 (reg-event-fx

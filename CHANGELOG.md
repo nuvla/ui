@@ -8,6 +8,9 @@
 
 ### Changed
 
+  - ACLs - Fix bug in indeterminate state
+  - Avoid as much as possible blank page at initialization
+  - Move client out of DB
   - Apps - saving a project do not interrupt for a commit message
   - Infrastructures - edit depend now on credentials acls
   - Credentials - displayed actions depend now on credentials acls

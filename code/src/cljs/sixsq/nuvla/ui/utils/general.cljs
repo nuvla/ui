@@ -134,9 +134,14 @@
           true (quot elements-per-page)
           (pos? (mod total-elements elements-per-page)) inc))
 
-(defn resource-id->uuid
-  [resource-id]
-  (-> resource-id (str/split #"/") second))
+(defn id->uuid
+  [id]
+  (-> id (str/split #"/") (nth 1 nil)))
+
+
+(defn id->short-uuid
+  [id]
+  (some-> id id->uuid (str/split #"-") seq first))
 
 
 ;;

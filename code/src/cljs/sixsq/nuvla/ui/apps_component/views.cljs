@@ -426,7 +426,7 @@
                       ^{:key id}
                       [single-env-variable env-variable editable?])]]])
           (when editable?
-            [:div
+            [:div {:style {:padding-top 10}}
              [plus ::events/add-env-variable]])]]))))
 
 

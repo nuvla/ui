@@ -16,7 +16,7 @@
 
 (defn row-fn [{:keys [id] :as entry}]
   [ui/TableRow {:on-click #(dispatch [::history-events/navigate
-                                      (str "documentation/" (general-utils/resource-id->uuid id))])}
+                                      (str "documentation/" (general-utils/id->uuid id))])}
    [ui/CopyToClipboard {:text (:name entry)} [ui/TableCell {:collapsing true} (:name entry)]]
    [ui/TableCell {:style {:max-width     "150px"
                           :overflow      "hidden"

@@ -94,7 +94,7 @@
             valid?    (s/valid? value-spec value)]
         [ui/TableRow
          [ui/TableCell {:collapsing true}
-          (utils-general/mandatory-name "parent")]
+          (utils-general/mandatory-name (@tr [:infrastructure]))]
          [ui/TableCell {:error (and validate? (not valid?))}
           [ui/Form {:style {:max-height "100px"
                             :overflow-y "auto"}}

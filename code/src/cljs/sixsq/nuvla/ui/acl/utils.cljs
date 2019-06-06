@@ -113,7 +113,6 @@
     :edit-data [:edit-data :edit-meta]
     :view-acl [:view-acl :view-data :view-meta]
     :view-data [:view-data :view-meta]
-    :delete [:delete :view-meta]
     [right-kw]))
 
 

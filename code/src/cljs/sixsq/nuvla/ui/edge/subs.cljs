@@ -1,51 +1,55 @@
-(ns sixsq.nuvla.ui.nuvlabox.subs
+(ns sixsq.nuvla.ui.edge.subs
   (:require
     [re-frame.core :refer [dispatch reg-sub subscribe]]
-    [sixsq.nuvla.ui.nuvlabox.spec :as spec]))
+    [sixsq.nuvla.ui.edge.spec :as spec]))
 
 
 (reg-sub
   ::loading?
-  ::spec/loading?)
-
-
-(reg-sub
-  ::health-info
-  ::spec/health-info)
+  (fn [db]
+    (::spec/loading? db)))
 
 
 (reg-sub
   ::query-params
-  ::spec/query-params)
+  (fn [db]
+    (::spec/query-params db)))
 
 
 (reg-sub
   ::nuvlaboxes
-  ::spec/nuvlaboxes)
+  (fn [db]
+    (::spec/nuvlaboxes db)))
 
 
 (reg-sub
   ::state-selector
-  ::spec/state-selector)
+  (fn [db]
+    (::spec/state-selector db)))
+
 
 (reg-sub
   ::elements-per-page
-  ::spec/elements-per-page)
+  (fn [db]
+    (::spec/elements-per-page db)))
 
 
 (reg-sub
   ::page
-  ::spec/page)
+  (fn [db]
+    (::spec/page db)))
 
 
 (reg-sub
   ::state-nuvlaboxes
-  ::spec/state-nuvlaboxes)
+  (fn [db]
+    (::spec/state-nuvlaboxes db)))
 
 
 (reg-sub
   ::status-nuvlaboxes
-  ::spec/status-nuvlaboxes)
+  (fn [db]
+    (::spec/status-nuvlaboxes db)))
 
 
 (reg-sub
@@ -56,9 +60,3 @@
       (contains? online nuvlabox-id) :online
       (contains? offline nuvlabox-id) :offline
       :else :unknown)))
-
-;(reg-sub
-;  ::user-id
-;  :<- [::session]
-;  (fn [session _]
-;    (:user session)))

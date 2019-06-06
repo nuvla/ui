@@ -6,7 +6,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-fx]]
     [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.ui.cimi-api.utils :refer [CLIENT]]
+    [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]
     [taoensso.timbre :as log]))
 
 

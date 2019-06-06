@@ -1,30 +1,34 @@
-(ns sixsq.nuvla.ui.nuvlabox.utils
+(ns sixsq.nuvla.ui.edge.utils
   (:require
     [cljs.pprint :refer [cl-format]]
     [clojure.string :as str]
     [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.ui.cimi-api.utils :as cimi-api-utils :refer [CLIENT]]))
+    [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (def state-new "NEW")
 (def state-activated "ACTIVATED")
-(def state-quarantined "QUARANTINED")
+(def state-commissioned "COMMISSIONED")
 (def state-decommissioning "DECOMMISSIONING")
+(def state-decommissioned "DECOMMISSIONED")
 (def state-error "ERROR")
 
 
-(def nuvlabox-states [state-activated
-                      state-new
-                      state-error
-                      state-quarantined
-                      state-decommissioning])
+(def nuvlabox-states [state-new
+                      state-activated
+                      state-commissioned
+                      state-decommissioning
+                      state-decommissioned
+                      state-error])
 
 
 (defn state->icon
   [state]
-  (let [icons-map {state-activated       "check"
+  (let [icons-map {state-activated       "handshake"
                    state-new             "dolly"
-                   state-quarantined     "eraser"
-                   state-decommissioning "trash"
+                   state-commissioned    "check"
+                   state-decommissioning "eraser"
+                   state-decommissioned  "trash"
                    state-error           "exclamation"}]
     (get icons-map state)))
 
@@ -48,7 +52,7 @@
 
 (defn nuvlabox-status-search
   [params]
-  (api/search @CLIENT :nuvlabox-status (cimi-api-utils/sanitize-params params)))
+  (api/search @CLIENT :nuvlabox-status (general-utils/prepare-params params)))
 
 
 (defn percentage

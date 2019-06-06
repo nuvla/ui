@@ -85,8 +85,7 @@
      (when (:totalitems options)
        [ui/Label {:style {:float      :left
                           :margin-top 10}
-                  :size  :medium
-                  }
+                  :size  :medium}
         (str (@tr [:total]) ": " (:totalitems options))])
      [ui/Pagination
       (merge {:firstItem {:content (reagent/as-element [ui/Icon {:name "angle double left"}]) :icon true}

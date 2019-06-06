@@ -3,12 +3,12 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
-    [sixsq.nuvla.ui.cimi-api.utils :as cimi-api-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.profile.events :as events]
     [sixsq.nuvla.ui.profile.subs :as subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
@@ -163,7 +163,7 @@
            :icon        "user"
            :description (str (@tr [:session-expires]) " " (-> @session :expiry time/parse-iso8601 time/ago))}
           (->> @session
-               cimi-api-utils/remove-common-attrs
+               general-utils/remove-common-attrs
                user-as-link
                format-roles
                process-session-data

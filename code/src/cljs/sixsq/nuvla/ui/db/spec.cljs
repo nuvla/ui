@@ -14,12 +14,12 @@
     [sixsq.nuvla.ui.data.spec :as data]
     [sixsq.nuvla.ui.deployment-dialog.spec :as deployment-dialog]
     [sixsq.nuvla.ui.docs.spec :as docs]
+    [sixsq.nuvla.ui.edge-detail.spec :as edge-detail]
+    [sixsq.nuvla.ui.edge.spec :as edge]
     [sixsq.nuvla.ui.i18n.spec :as i18n]
     [sixsq.nuvla.ui.infrastructures.spec :as infra-service]
     [sixsq.nuvla.ui.main.spec :as main]
     [sixsq.nuvla.ui.messages.spec :as messages]
-    [sixsq.nuvla.ui.nuvlabox-detail.spec :as nuvlabox-detail]
-    [sixsq.nuvla.ui.nuvlabox.spec :as nuvlabox]
     [sixsq.nuvla.ui.profile.spec :as profile]))
 
 
@@ -39,8 +39,8 @@
                      ::infra-service/db
                      ::main/db
                      ::messages/db
-                     ::nuvlabox/db
-                     ::nuvlabox-detail/db
+                     ::edge/db
+                     ::edge-detail/db
                      ::profile/db))
 
 
@@ -61,6 +61,6 @@
          infra-service/defaults
          main/defaults
          messages/defaults
-         nuvlabox/defaults
-         nuvlabox-detail/defaults
+         edge/defaults
+         edge-detail/defaults
          profile/defaults))

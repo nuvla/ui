@@ -5,7 +5,6 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.cimi-api.utils :as cimi-api-utils]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
     [sixsq.nuvla.ui.cimi.events :as events]
     [sixsq.nuvla.ui.cimi.subs :as subs]
@@ -18,7 +17,7 @@
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.forms :as forms]
-    [sixsq.nuvla.ui.utils.general :as general]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -342,7 +341,7 @@
   (let [tr               (subscribe [::i18n-subs/tr])
         show?            (subscribe [::subs/show-add-modal?])
         collection-name  (subscribe [::subs/collection-name])
-        default-text     (general/edn->json {})
+        default-text     (general-utils/edn->json {})
         text             (atom default-text)
         collection       (subscribe [::subs/collection])
         selected-tmpl-id (r/atom nil)]
@@ -370,9 +369,9 @@
                                               (reset! text
                                                       (-> @templates-info
                                                           (get value)
-                                                          cimi-api-utils/remove-common-attrs
+                                                          general-utils/remove-common-attrs
                                                           (assoc :href @selected-tmpl-id)
-                                                          general/edn->json))))}])
+                                                          general-utils/edn->json))))}])
 
              [:br]
              [:br]
@@ -393,8 +392,8 @@
               :primary  true
               :on-click (fn []
                           (try
-                            (let [data (cond->> (general/json->edn @text)
-                                                @selected-tmpl-id (cimi-api-utils/create-template @collection-name))]
+                            (let [data (cond->> (general-utils/json->edn @text)
+                                                @selected-tmpl-id (general-utils/create-template @collection-name))]
                               (dispatch [::events/create-resource data]))
                             (catch :default e
                               (dispatch [::messages-events/add

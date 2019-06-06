@@ -1,32 +1,42 @@
-(ns sixsq.nuvla.ui.nuvlabox-detail.views
+(ns sixsq.nuvla.ui.edge-detail.views
   (:require
     [cljs.pprint :refer [cl-format]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.cimi-api.utils :as cimi-api-utils]
+    [sixsq.nuvla.ui.edge-detail.events :as events]
+    [sixsq.nuvla.ui.edge-detail.subs :as subs]
+    [sixsq.nuvla.ui.edge.utils :as u]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.nuvlabox-detail.events :as nuvlabox-events]
-    [sixsq.nuvla.ui.nuvlabox-detail.subs :as nuvlabox-subs]
-    [sixsq.nuvla.ui.nuvlabox.utils :as u]
     [sixsq.nuvla.ui.plot.plot :as plot]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.resource-details :as details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 
-(defn controls-detail
+(defn refresh-button
   []
   (let [tr       (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::nuvlabox-subs/loading?])]
+        loading? (subscribe [::subs/loading?])
+        nuvlabox (subscribe [::subs/nuvlabox])]
     (fn []
-      [ui/Menu
-       [uix/MenuItemWithIcon
-        {:name      (@tr [:refresh])
-         :icon-name "refresh"
-         :loading?  @loading?
-         :on-click  #(dispatch [::nuvlabox-events/fetch-detail])}]])))
+      [uix/MenuItemWithIcon
+       {:name      (@tr [:refresh])
+        :icon-name "refresh"
+        :loading?  @loading?
+        :position  "right"
+        :on-click  #(dispatch [::events/get-nuvlabox (:id @nuvlabox)])}])))
+
+
+(defn menu-bar []
+  [ui/Segment style/basic
+   [ui/Menu {:attached   "top"
+             :borderless true}
+    [refresh-button]]])
 
 
 (defn hw-id
@@ -76,6 +86,7 @@
 (defn load
   [cpu ram disks]
   [cc/collapsible-segment
+
    [:span [ui/Icon {:name "thermometer half"}] " load"]
    [load-chartjs {} {:cpu cpu :ram ram :disks disks}]])
 
@@ -121,11 +132,11 @@
   [ui/TableRow [ui/TableCell {:collapsing true} k] [ui/TableCell v]])
 
 
-(defn nb-metadata
+(defn summary
   []
-  (let [record (subscribe [::nuvlabox-subs/record])]
+  (let [nuvlabox (subscribe [::subs/nuvlabox])]
     (fn []
-      (let [{:keys [id name description updated acl] :as data} @record
+      (let [{:keys [id name description updated acl] :as data} @nuvlabox
             rows (->> data
                       select-metadata
                       (map metadata-row)
@@ -135,40 +146,46 @@
                                        (str/split #"/")
                                        second)
                       :description description
-                      :icon        "computer"
+                      :icon        "box"
                       :updated     updated
                       :acl         acl}
          rows]))))
 
 
-(defn state-table
+(defn status-table
   []
-  (let [detail (subscribe [::nuvlabox-subs/state])]
+  (let [nuvlabox-status (subscribe [::subs/nuvlabox-status])]
     (fn []
-      (when @detail
-        (let [{:keys [cpu ram disks usb updated nextCheck]} @detail]
+      (when @nuvlabox-status
+        (let [{:keys [cpu ram disks usb updated next-check]} @nuvlabox-status]
           [ui/Container {:fluid true}
-           [heartbeat updated nextCheck]
+           [heartbeat updated next-check]
            [load cpu ram disks]
            [usb-devices usb]])))))
 
 
 (defn record-info
   []
-  (let [record (subscribe [::nuvlabox-subs/record])]
+  (let [record (subscribe [::subs/record])]
     (when @record
-      (details/group-table-sui (cimi-api-utils/remove-common-attrs @record) nil))))
+      (details/group-table-sui (general-utils/remove-common-attrs @record) nil))))
 
 
-(defn nb-detail
-  []
-  (let [detail (subscribe [::nuvlabox-subs/state])
-        record (subscribe [::nuvlabox-subs/record])]
-    (fn []
-      (when (or (nil? @detail) (nil? @record))
-        (dispatch [::nuvlabox-events/fetch-detail]))
+(defn nuvlabox-detail
+  [uuid]
+  (let []
+    (dispatch [::main-events/action-interval
+               {:action    :start
+                :id        :nuvlabox-get-nuvlabox
+                :frequency 30000
+                :event     [::events/get-nuvlabox (str "nuvlabox/" uuid)]}])
+    (fn [uuid]
+      #_(when (or (nil? @detail) (nil? @record))
+          (dispatch [::events/fetch-detail]))
+      ^{:key uuid}
       [ui/Container {:fluid true}
-       [controls-detail]
-       [nb-metadata]
-       [state-table]
-       [record-info]])))
+       [menu-bar]
+       [summary]
+       [status-table]
+       #_[state-table]
+       #_[record-info]])))

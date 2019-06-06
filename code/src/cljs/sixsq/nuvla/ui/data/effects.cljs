@@ -5,7 +5,7 @@
     [cljs.core.async :refer [<!]]
     [re-frame.core :refer [dispatch reg-fx]]
     [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.ui.cimi-api.utils :refer [CLIENT]]
+    [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 

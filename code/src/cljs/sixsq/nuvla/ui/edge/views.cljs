@@ -1,0 +1,150 @@
+(ns sixsq.nuvla.ui.edge.views
+  (:require
+    [cljs.pprint :refer [cl-format pprint]]
+    [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
+    [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
+    [sixsq.nuvla.ui.edge.events :as events]
+    [sixsq.nuvla.ui.edge.subs :as subs]
+    [sixsq.nuvla.ui.edge.utils :as utils]
+    [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
+
+
+(defn stat
+  [value icon label]
+  [ui/Statistic {:size "tiny"}
+   [ui/StatisticValue (or value "-")
+    "\u2002"
+    [ui/Icon {:name icon}]]
+   [ui/StatisticLabel label]])
+
+
+(defn state-summary
+  []
+  (let [{:keys [total new activated commissioned
+                decommissioning decommissioned error]} @(subscribe [::subs/state-nuvlaboxes])]
+    [ui/Segment style/evenly
+     [stat total "box" "Total"]
+     [stat new (utils/state->icon utils/state-new) "New"]
+     [stat activated (utils/state->icon utils/state-activated) "Activated"]
+     [stat commissioned (utils/state->icon utils/state-commissioned) "Commissioned"]
+     [stat decommissioning (utils/state->icon utils/state-decommissioning) "Decommissioning"]
+     [stat decommissioned (utils/state->icon utils/state-decommissioned) "Decommissioned"]
+     [stat error (utils/state->icon utils/state-error) "Error"]]))
+
+
+(defn filter-state []
+  (let [state-selector (subscribe [::subs/state-selector])]
+    ^{:key (str "state:" @state-selector)}
+    [ui/Dropdown
+     {:value     (or @state-selector "ALL")
+      :scrolling false
+      :selection true
+      :options   (->>
+                   utils/nuvlabox-states
+                   (map (fn [state] {:value state, :text state}))
+                   (cons {:value "ALL", :text "ALL"}))
+      :on-change (ui-callback/value
+                   #(dispatch [::events/set-state-selector (if (= % "ALL") nil %)]))}]))
+
+
+(defn refresh-button
+  []
+  (let [tr       (subscribe [::i18n-subs/tr])
+        loading? (subscribe [::subs/loading?])]
+    (fn []
+      [uix/MenuItemWithIcon
+       {:name      (@tr [:refresh])
+        :icon-name "refresh"
+        :loading?  @loading?
+        :position  "right"
+        :on-click  #(dispatch [::events/get-nuvlaboxes])}])))
+
+
+(defn menu-bar []
+  [ui/Segment style/basic
+   [ui/Menu {:attached   "top"
+             :borderless true}
+    [refresh-button]]])
+
+
+(defn nuvlabox-row
+  [{:keys [id state name] :as nuvlabox}]
+  (let [status   (subscribe [::subs/status-nuvlabox id])
+        uuid     (general-utils/id->uuid id)
+        on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
+    [ui/TableRow {:on-click on-click
+                  :style    {:cursor "pointer"}}
+     [ui/TableCell {:collapsing true}
+      [ui/Popup
+       {:content @status
+        :trigger (r/as-element
+                   [ui/Icon {:name  "power",
+                             :color (case @status
+                                      :online "green"
+                                      :offline "red"
+                                      :unknown "yellow")}])}]]
+     [ui/TableCell {:collapsing true}
+      [ui/Icon {:name (utils/state->icon state)}]]
+     [ui/TableCell (or name uuid)]]))
+
+
+(defn nuvlabox-table
+  []
+  (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
+        elements-per-page (subscribe [::subs/elements-per-page])
+        page              (subscribe [::subs/page])]
+
+    (dispatch [::main-events/action-interval
+               {:action    :start
+                :id        :nuvlabox-get-nuvlaboxes
+                :frequency 30000
+                :event     [::events/get-nuvlaboxes]}])
+    (fn []
+      (let [total-elements (get @nuvlaboxes :count 0)
+            total-pages    (general-utils/total-pages total-elements @elements-per-page)]
+        [:div
+
+         [filter-state]
+
+         [ui/Table {:compact "very", :selectable true}
+          [ui/TableHeader
+           [ui/TableRow
+            [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
+            [ui/TableHeaderCell "state"]
+            [ui/TableHeaderCell "name"]]]
+
+          [ui/TableBody
+           (doall
+             (for [{:keys [id] :as nuvlabox} (:resources @nuvlaboxes)]
+               ^{:key id}
+               [nuvlabox-row nuvlabox]))]]
+
+         (when (> total-pages 1)
+           [uix/Pagination {:totalPages   total-pages
+                            :activePage   @page
+                            :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}])]))))
+
+
+(defmethod panel/render :edge
+  [path]
+  (let [[_ uuid] path
+        n        (count path)
+        root     [:<>
+                  [menu-bar]
+                  [state-summary]
+                  [nuvlabox-table]]
+        children (case n
+                   1 root
+                   2 [edge-detail/nuvlabox-detail uuid]
+                   root)]
+    [ui/Segment style/basic children]))

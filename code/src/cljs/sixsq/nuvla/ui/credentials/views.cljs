@@ -444,7 +444,7 @@
                        ^{:key (:id credential)}
                        [single-credential credential])]]])]]
 
-         [ui/Accordion {:fluid     true
+         #_[ui/Accordion {:fluid     true
                         :styled    true
                         :exclusive false
                         :style     {:margin-top 10}}

@@ -60,3 +60,13 @@
       (contains? online nuvlabox-id) :online
       (contains? offline nuvlabox-id) :offline
       :else :unknown)))
+
+(reg-sub
+  ::modal-visible?
+  (fn [db [_ modal-id]]
+    (= modal-id (::spec/open-modal db))))
+
+(reg-sub
+  ::nuvlabox-created-id
+  (fn [db]
+    (::spec/nuvlabox-created-id db)))

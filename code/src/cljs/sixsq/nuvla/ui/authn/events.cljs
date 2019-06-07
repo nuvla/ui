@@ -136,17 +136,13 @@
 (defn default-submit-callback
   [close-modal success-msg response]
   (dispatch [::clear-loading])
-  (if (instance? js/Error response)
-    (let [{:keys [message]} (response/parse-ex-info response)]
-      (dispatch [::set-error-message message]))
-    (do
-      (dispatch [::clear-form-data])
-      (dispatch [::initialize])
-      (when close-modal
-        (dispatch [::close-modal]))
-      (when success-msg
-        (dispatch [::set-success-message success-msg]))
-      (dispatch [::history-events/navigate "welcome"]))))
+  (dispatch [::clear-form-data])
+  (dispatch [::initialize])
+  (when close-modal
+    (dispatch [::close-modal]))
+  (when success-msg
+    (dispatch [::set-success-message success-msg]))
+  (dispatch [::history-events/navigate "welcome"]))
 
 
 (reg-event-fx
@@ -161,8 +157,12 @@
            :or          {close-modal  true
                          redirect-url server-redirect-uri}} opts
 
-          callback-add  (or callback-add
+          on-success    (or callback-add
                             (partial default-submit-callback close-modal success-msg))
+
+          on-error      #(let [{:keys [message]} (response/parse-ex-info %)]
+                           (dispatch [::clear-loading])
+                           (dispatch [::set-error-message message]))
 
           template      {:template (-> form-data
                                        (dissoc :repeat-new-password
@@ -176,4 +176,4 @@
       {:db               (assoc db ::spec/loading? true
                                    ::spec/success-message nil
                                    ::spec/error-message nil)
-       ::cimi-api-fx/add [collection-kw template callback-add]})))
+       ::cimi-api-fx/add [collection-kw template on-success :on-error on-error]})))

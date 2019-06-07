@@ -2,14 +2,9 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as reagent]
-    [sixsq.nuvla.ui.dashboard-detail.events :as dashboard-detail-events]
-    [sixsq.nuvla.ui.dashboard-detail.utils :as dashboard-detail-utils]
     [sixsq.nuvla.ui.dashboard-detail.views :as dashboard-detail-views]
     [sixsq.nuvla.ui.dashboard.events :as events]
     [sixsq.nuvla.ui.dashboard.subs :as subs]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
@@ -20,12 +15,8 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
-
-
-(defn deployment-active?
-  [state]
-  (str/ends-with? state "ING"))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.dashboard.utils :as utils]))
 
 
 (defn control-bar []
@@ -51,38 +42,6 @@
       :on-click  #(dispatch [::events/get-deployments])}]))
 
 
-(defn action-button
-  [popup-text icon-name event-kw deployment-id]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Modal
-     {:trigger (reagent/as-element
-                 [:div
-                  [ui/Popup {:content  (@tr [popup-text])
-                             :size     "tiny"
-                             :position "top center"
-                             :trigger  (reagent/as-element
-                                         [ui/Icon {:name  icon-name
-                                                   :style {:cursor "pointer"}
-                                                   :color "red"}])}]])
-      :header  (@tr [popup-text])
-      :content (@tr [:are-you-sure?])
-      :actions [{:key     "cancel"
-                 :content (@tr [:cancel])}
-                {:key     "yes"
-                 :content (@tr [:yes]), :positive true
-                 :onClick #(dispatch [event-kw deployment-id])}]}]))
-
-
-(defn stop-button
-  [{:keys [id] :as deployment}]
-  [action-button :stop "stop" ::events/stop-deployment id])
-
-
-(defn delete-button
-  [{:keys [id] :as deployment}]
-  [action-button :delete "trash" ::dashboard-detail-events/delete id])
-
-
 (defn menu-bar
   []
   (let [view (subscribe [::subs/view])]
@@ -106,24 +65,13 @@
         [control-bar]]])))
 
 
-(defn detail-href
-  [id]
-  (str "dashboard/" (general-utils/id->uuid id)))
-
-
-(defn format-id
-  [id]
-  (let [tag (general-utils/id->short-uuid id)]
-    [history/link (detail-href id) tag]))
-
-
 (defn row-fn
   [{:keys [id state module] :as deployment}]
   (let [credential-id (:credential-id deployment)
         creds-name    (subscribe [::subs/creds-name-map])
         [url-name url] @(subscribe [::subs/deployment-url deployment])]
     [ui/TableRow
-     [ui/TableCell [format-id id]]
+     [ui/TableCell [dashboard-detail-views/link-short-uuid id]]
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}} (:name module)]
@@ -136,9 +84,10 @@
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}} (get @creds-name credential-id credential-id)]
-     [ui/TableCell (cond
-                     (dashboard-detail-utils/stop-action? deployment) [stop-button deployment]
-                     (dashboard-detail-utils/delete-action? deployment) [delete-button deployment])]]))
+     [ui/TableCell
+      (cond
+        (utils/stop-action? deployment) [dashboard-detail-views/stop-button deployment]
+        (utils/delete-action? deployment) [dashboard-detail-views/delete-button deployment])]]))
 
 
 
@@ -166,62 +115,6 @@
           [row-fn deployment])]])))
 
 
-(defn card-fn
-  [{:keys [id state module] :as deployment}]
-  (let [tr            (subscribe [::i18n-subs/tr])
-        creds-name    (subscribe [::subs/creds-name-map])
-        credential-id (:credential-id deployment)
-        logo-url      (:logo-url module)
-        cred-info     (get @creds-name credential-id credential-id)
-        [url-name url] @(subscribe [::subs/deployment-url deployment])
-        started?      (dashboard-detail-utils/is-started? state)
-        uuid          (second (str/split id "/"))]
-    ^{:key id}
-    [ui/Card
-     [ui/Image {:src      (or logo-url "")
-                :bordered true
-                :style    {:width      "auto"
-                           :height     "100px"
-                           :padding    "20px"
-                           :object-fit "contain"}}]
-
-     (cond
-       (dashboard-detail-utils/stop-action? deployment) [ui/Label {:corner true, :size "small"}
-                                                         [stop-button deployment]]
-       (dashboard-detail-utils/delete-action? deployment) [ui/Label {:corner true, :size "small"}
-                                                           [delete-button deployment]])
-
-     [ui/CardContent {:href     id
-                      :on-click (fn [event]
-                                  (dispatch [::history-events/navigate (detail-href id)])
-                                  (.preventDefault event))}
-
-
-
-
-      [ui/Segment (merge style/basic {:floated "right"})
-       [:p state]
-       [ui/Loader {:active        (deployment-active? state)
-                   :indeterminate true}]]
-
-      [ui/CardHeader [:span [:p {:style {:overflow      "hidden",
-                                         :text-overflow "ellipsis",
-                                         :max-width     "20ch"}} (:name module)]]]
-
-      [ui/CardMeta (str (@tr [:created]) " " (-> deployment :created time/parse-iso8601 time/ago))]
-
-      [ui/CardDescription (when-not (str/blank? cred-info)
-                            [:div [ui/Icon {:name "key"}] cred-info])]]
-     (when (and started? url)
-       [ui/Button {:color   "green"
-                   :icon    "external"
-                   :content url-name
-                   :fluid   true
-                   :href    url
-                   :target  "_blank"
-                   :rel     "noreferrer"}])]))
-
-
 (defn cards-data-table
   [deployments-list]
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -229,8 +122,10 @@
       [:div [ui/Message {:info true}
              [ui/Icon {:name "info"}]
              (@tr [:click-for-depl-details])]
-       (vec (concat [ui/CardGroup {:centered true}]
-                    (map card-fn deployments-list)))])))
+       [ui/CardGroup {:centered true}
+        (for [{:keys [id] :as deployment} deployments-list]
+          ^{:key id}
+          [dashboard-detail-views/DeploymentCard deployment])]])))
 
 
 (defn deployments-display
@@ -277,19 +172,13 @@
              :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}])]))))
 
 
-(defn deployment-resources
-  []
-  (let [path (subscribe [::main-subs/nav-path])]
-    (fn []
-      (let [n        (count @path)
-            [_ uuid] @path
-            children (case n
-                       1 [[dashboard-main]]
-                       2 [[dashboard-detail-views/deployment-detail uuid]]
-                       [[dashboard-main]])]
-        (vec (concat [ui/Segment style/basic] children))))))
-
-
 (defmethod panel/render :dashboard
   [path]
-  [deployment-resources])
+  (let [n        (count path)
+        [_ uuid] path
+        root     [dashboard-main]
+        children (case n
+                   1 root
+                   2 [dashboard-detail-views/deployment-detail uuid]
+                   root)]
+    [ui/Segment style/basic children]))

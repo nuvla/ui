@@ -12,7 +12,10 @@
     [sixsq.nuvla.client.authn :as authn]
     [sixsq.nuvla.ui.history.utils :as utils]
     [sixsq.nuvla.ui.utils.defines :as defines]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 
 (def NUVLA_URL (delay (if (str/blank? defines/HOST_URL) (utils/host-url) defines/HOST_URL)))
@@ -27,6 +30,16 @@
     (let [session-collection (<! (api/search @CLIENT :session))]
       (when-not (instance? js/Error session-collection)
         (-> session-collection :resources first)))))
+
+
+(defn default-add-on-error
+  [resource-type response]
+  (dispatch [::messages-events/add
+             (let [{:keys [status message]} (response/parse-ex-info response)]
+               {:header  (cond-> (str "failure creating " (name resource-type))
+                                 status (str " (" status ")"))
+                :content message
+                :type    :error})]))
 
 
 (reg-fx
@@ -74,12 +87,17 @@
             ;; not updated.
             (callback (<! (api/get @CLIENT resource-id)))))))))
 
+
 (reg-fx
   ::add
-  (fn [[resource-type data callback]]
+  (fn [[resource-type data on-success & {:keys [on-error]}]]
     (when resource-type
       (go
-        (callback (<! (api/add @CLIENT resource-type data)))))))
+        (let [on-error (or on-error (partial default-add-on-error resource-type))
+              response (<! (api/add @CLIENT resource-type data))]
+          (if (instance? js/Error response)
+            (on-error response)
+            (on-success response)))))))
 
 
 (reg-fx

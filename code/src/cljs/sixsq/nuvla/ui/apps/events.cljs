@@ -113,7 +113,7 @@
                             ::spec/module-path (:path module)
                             ::spec/module (if (nil? module) {} module))
           subtype (:subtype module)]
-      (case subtype                                         ;;FIXME no default case cause stack trace
+      (case subtype                                         ;;FIXME case without default cause error in logs
         "component" (apps-component-utils/module->db db module)
         "project" (apps-project-utils/module->db db module)))))
 
@@ -267,17 +267,10 @@
           sanitized-module (utils-detail/db->module module commit-map db)]
       (if (nil? id)
         {::cimi-api-fx/add [:module sanitized-module
-                            #(if (instance? js/Error %)
-                               (let [{:keys [status message]} (response/parse-ex-info %)]
-                                 (dispatch [::messages-events/add
-                                            {:header  (cond-> (str "error editing " id)
-                                                              status (str " (" status ")"))
-                                             :content message
-                                             :type    :error}]))
-                               (do (dispatch [::cimi-detail-events/get (:resource-id %)])
-                                   (dispatch [::set-module sanitized-module]) ;Needed?
-                                   (dispatch [::main-events/changes-protection? false])
-                                   (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))])))]}
+                            #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
+                                 (dispatch [::set-module sanitized-module]) ;Needed?
+                                 (dispatch [::main-events/changes-protection? false])
+                                 (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))]))]}
         {::cimi-api-fx/edit [id sanitized-module
                              #(if (instance? js/Error %)
                                 (let [{:keys [status message]} (response/parse-ex-info %)]

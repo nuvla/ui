@@ -16,6 +16,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [taoensso.timbre :as log]))
 
 
@@ -61,20 +62,59 @@
   []
   (let [tr       (subscribe [::i18n-subs/tr])
         loading? (subscribe [::subs/loading?])]
-    (fn []
-      [uix/MenuItemWithIcon
-       {:name      (@tr [:refresh])
-        :icon-name "refresh"
-        :loading?  @loading?
-        :position  "right"
-        :on-click  #(dispatch [::events/get-nuvlaboxes])}])))
+    [uix/MenuItemWithIcon
+     {:name      (@tr [:refresh])
+      :icon-name "refresh"
+      :loading?  @loading?
+      :position  "right"
+      :on-click  #(dispatch [::events/get-nuvlaboxes])}]))
+
+
+(defn add-button
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/MenuItemWithIcon
+     {:name      (@tr [:add])
+      :icon-name "add"
+      :on-click  #(dispatch [::events/open-modal :add])}]))
 
 
 (defn menu-bar []
-  [ui/Segment style/basic
-   [ui/Menu {:attached   "top"
-             :borderless true}
-    [refresh-button]]])
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Menu {:borderless true}
+     [add-button]
+     [refresh-button]]))
+
+(defn add-modal
+  []
+  (let [modal-id    :add
+        tr          (subscribe [::i18n-subs/tr])
+        visible?    (subscribe [::subs/modal-visible? modal-id])
+        user-id     (subscribe [::authn-subs/user-id])
+        nuvlabox-id (subscribe [::subs/nuvlabox-created-id])
+        owner-id    @user-id]
+    [ui/Modal {:open       @visible?
+               :close-icon true
+               :on-close   #(do
+                              (dispatch [::events/set-created-nuvlabox-id nil])
+                              (dispatch [::events/open-modal nil]))}
+
+     [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
+
+     [ui/ModalContent
+      [ui/CardGroup {:centered true}
+
+       [ui/Card (when-not @nuvlabox-id {:on-click #(dispatch [::events/create-nuvlabox owner-id])})
+        [ui/CardContent {:text-align :center}
+         [ui/Header "NuvlaBox"]
+         [ui/Icon (cond-> {:name "box"
+                           :size :massive}
+                          @nuvlabox-id (assoc :color "green"))]]
+        (when @nuvlabox-id
+          [ui/CopyToClipboard {:text @nuvlabox-id}
+          [ui/Button {:primary true
+                      :icon    "clipboard"
+                      :content "Copy your Nuvlabox ID"}]])]]]]))
 
 
 (defn nuvlabox-row
@@ -142,7 +182,8 @@
         root     [:<>
                   [menu-bar]
                   [state-summary]
-                  [nuvlabox-table]]
+                  [nuvlabox-table]
+                  [add-modal]]
         children (case n
                    1 root
                    2 [edge-detail/nuvlabox-detail uuid]

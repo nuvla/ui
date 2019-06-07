@@ -68,36 +68,30 @@
   (cl-format nil "~,1F" (/ mb 1000.)))
 
 (defn cpu-stats
-  [cpu]
-  {:label      "CPU"
-   :percentage cpu
-   :value      (str cpu "%")})
+  [{:keys [capacity load]}]
+  {:label      (str "CPU ( " capacity " core(s) )")
+   :percentage load
+   :value      (str load "%")})
 
 
 (defn ram-stats
   [{:keys [capacity used] :as ram}]
   (let [percent (percentage used capacity)]
-    {:label      (str "RAM (" (mb->gb capacity) " GB)")
+    {:label      (str "RAM ( " (mb->gb capacity) " GB )")
      :percentage percent
      :value      (str percent "% - " (mb->gb capacity) " GB")}))
 
 
 (defn disk-stats
-  [[partition {:keys [capacity used] :as disk}]]
+  [{:keys [device capacity used]}]
   (let [percent (percentage used capacity)]
-    {:label      (str (str/lower-case (name partition)) " partition (" (mb->gb capacity) " GB)")
+    {:label      (str device " partition ( " (mb->gb capacity) " GB )")
      :percentage percent
      :value      (str percent "% - " (mb->gb capacity) " GB")}))
 
 
-(defn disks-stats
-  [disks]
-  (mapv disk-stats (sort-by #(-> % first name) disks)))
-
-
 (defn load-statistics
-  [{:keys [cpu ram disks] :as nb-detail}]
-  (vec
-    (concat [(cpu-stats cpu)]
-            [(ram-stats ram)]
-            (disks-stats disks))))
+  [{:keys [cpu ram disks]}]
+  (concat [(cpu-stats cpu)
+           (ram-stats ram)]
+          (map disk-stats (sort-by :device disks))))

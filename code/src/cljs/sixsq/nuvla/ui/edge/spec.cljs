@@ -15,6 +15,11 @@
 
 (s/def ::status-nuvlaboxes any?)
 
+(s/def ::open-modal (s/nilable keyword?))
+
+
+(s/def ::nuvlabox-created-id (s/nilable string?))
+
 (s/def ::page int?)
 (s/def ::elements-per-page int?)
 (s/def ::total-elements int?)
@@ -29,14 +34,18 @@
                           ::page
                           ::elements-per-page
                           ::total-elements
-                          ::state-selector]))
+                          ::state-selector
+                          ::open-modal
+                          ::nuvlabox-created-id]))
 
 
-(def defaults {::loading?          false
-               ::nuvlaboxes        nil
-               ::state-nuvlaboxes  nil
-               ::status-nuvlaboxes nil
-               ::page              1
-               ::elements-per-page 10
-               ::total-elements    0
-               ::state-selector    nil})
+(def defaults {::loading?            false
+               ::nuvlaboxes          nil
+               ::state-nuvlaboxes    nil
+               ::status-nuvlaboxes   nil
+               ::page                1
+               ::elements-per-page   10
+               ::total-elements      0
+               ::state-selector      nil
+               ::open-modal          nil
+               ::nuvlabox-created-id nil})

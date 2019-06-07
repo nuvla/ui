@@ -15,7 +15,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.utils.style :as style]))
+    [sixsq.nuvla.ui.utils.style :as style]
+    [taoensso.timbre :as log]))
 
 
 (defn refresh-button
@@ -44,19 +45,24 @@
   (str bus-id "." device-id))
 
 
-(defn device-row-header
-  []
-  [ui/TableHeader
-   [ui/TableRow
-    [ui/TableHeaderCell "busy"]
-    [ui/TableHeaderCell "bus"]
-    [ui/TableHeaderCell "device"]
-    [ui/TableHeaderCell "vendor"]
-    [ui/TableHeaderCell "product"]
-    [ui/TableHeaderCell "description"]]])
 
+(defn Load
+  [resources]
+  [uix/Accordion
+   (let [load-stats (u/load-statistics resources)]
+     [ui/Container
+      [plot/HorizontalBar {:width 600
+                           :height 200
+                           :data    {:labels   (map :label load-stats)
+                                     :datasets [{:data (map :percentage load-stats)}]}
+                           :options {:scales {:xAxes [{:type  "linear"
+                                                       :ticks {:beginAtZero true
+                                                               :max         100}}]
+                                              :yAxes [{:gridLines {:display false}}]}}}]])
+   :label "Load Percentages"
+   :icon "thermometer half"])
 
-(defn device-row
+(defn UsbDeviceRow
   [{:keys [bus-id device-id vendor-id product-id busy description] :as device}]
   ^{:key (hw-id device)}
   [ui/TableRow
@@ -68,56 +74,45 @@
    [ui/TableCell description]])
 
 
-(defn load-chartjs
-  [_ load]
-  (let [load-stats (u/load-statistics load)]
-    [ui/CardGroup {:doubling true, :items-per-row 2}
-     [ui/Card
-      [ui/CardContent
-       [ui/CardHeader "Load Percentages"]
-       [plot/HorizontalBar {:data    {:labels   (mapv :label load-stats)
-                                      :datasets [{:data (mapv :percentage load-stats)}]}
-                            :options {:scales {:xAxes [{:type  "linear"
-                                                        :ticks {:beginAtZero true
-                                                                :max         100}}]
-                                               :yAxes [{:gridLines {:display false}}]}}}]]]]))
-
-
-(defn load
-  [cpu ram disks]
-  [cc/collapsible-segment
-
-   [:span [ui/Icon {:name "thermometer half"}] " load"]
-   [load-chartjs {} {:cpu cpu :ram ram :disks disks}]])
-
-
-(defn usb-devices
-  [usb]
-  [cc/collapsible-segment
-   [:span [ui/Icon {:name "usb"}] " usb devices"]
+(defn Peripherals
+  [{usb-list :usb}]
+  [uix/Accordion
    [ui/Table
-    [device-row-header]
-    (vec (concat [ui/TableBody] (mapv device-row (sort-by hw-id usb))))]])
+    [ui/TableHeader
+     [ui/TableRow
+      [ui/TableHeaderCell "busy"]
+      [ui/TableHeaderCell "bus"]
+      [ui/TableHeaderCell "device"]
+      [ui/TableHeaderCell "vendor"]
+      [ui/TableHeaderCell "product"]
+      [ui/TableHeaderCell "description"]]]
+    [ui/TableBody
+     (for [usb (sort-by hw-id usb-list)]
+       ^{:key (hw-id usb)}
+       [UsbDeviceRow usb])]]
+   :label "Peripherals"
+   :icon "usb"])
 
 
-(defn heartbeat
-  [updated next-check]
+(defn Heartbeat
+  [updated next-heartbeat]
   (let [updated-moment    (time/parse-iso8601 updated)
-        next-check-moment (time/parse-iso8601 next-check)
+        next-check-moment (time/parse-iso8601 next-heartbeat)
 
-        check-ok?         (time/after-now? next-check)
+        check-ok?         (time/after-now? next-heartbeat)
         icon              (if check-ok? "heartbeat" "warning sign")
 
         msg-last          (str "Last heartbeat was " (time/ago updated-moment) " (" updated ").")
         msg-next          (if check-ok?
-                            (str "Next heartbeat is expected " (time/ago next-check-moment) " (" next-check ").")
-                            (str "Next heartbeat was expected " (time/ago next-check-moment) " (" next-check ")."))]
+                            (str "Next heartbeat is expected " (time/ago next-check-moment) " (" next-heartbeat ").")
+                            (str "Next heartbeat was expected " (time/ago next-check-moment) " (" next-heartbeat ")."))]
 
-    [cc/collapsible-segment
-     [:span [ui/Icon {:name icon}] " heartbeat"]
-     [:div
-      [:div msg-last]
-      [:div msg-next]]]))
+    [uix/Accordion
+     [ui/Container
+      [:p msg-last]
+      [:p msg-next]]
+     :label "Heartbeat"
+     :icon "heartbeat"]))
 
 
 (defn select-metadata
@@ -132,6 +127,27 @@
   [ui/TableRow [ui/TableCell {:collapsing true} k] [ui/TableCell v]])
 
 
+
+(defn NuvlaboxCard
+  [nuvlabox]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn [{:keys [id name description created] :as nuvlabox}]
+      ^{:key id}
+      [ui/Card
+       [ui/CardContent
+        [ui/Segment (merge style/basic {:floated "right"})
+         [:p "stateeee"]]
+
+        [ui/CardHeader [:span [:p {:style {:overflow      "hidden",
+                                           :text-overflow "ellipsis",
+                                           :max-width     "20ch"}} (or name id)]]]
+
+        [ui/CardMeta (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))]
+
+        [ui/CardDescription (when-not (str/blank? description)
+                              [:div [ui/Icon {:name "key"}] description])]]])))
+
+
 (defn summary
   []
   (let [nuvlabox (subscribe [::subs/nuvlabox])]
@@ -141,27 +157,21 @@
                       select-metadata
                       (map metadata-row)
                       vec)]
-        [cc/metadata {:title       (or name id)
-                      :subtitle    (-> (or id "unknown/unknown")
-                                       (str/split #"/")
-                                       second)
-                      :description description
-                      :icon        "box"
-                      :updated     updated
-                      :acl         acl}
-         rows]))))
+        [ui/CardGroup {:centered true}
+         [NuvlaboxCard @nuvlabox]]))))
 
 
-(defn status-table
+(defn StatusSection
   []
   (let [nuvlabox-status (subscribe [::subs/nuvlabox-status])]
     (fn []
       (when @nuvlabox-status
-        (let [{:keys [cpu ram disks usb updated next-check]} @nuvlabox-status]
+        (let [{:keys [resources peripherals updated next-heartbeat]} @nuvlabox-status]
           [ui/Container {:fluid true}
-           [heartbeat updated next-check]
-           [load cpu ram disks]
-           [usb-devices usb]])))))
+           [Heartbeat updated next-heartbeat]
+           (when resources
+             [Load resources])
+           [Peripherals peripherals]])))))
 
 
 (defn record-info
@@ -169,6 +179,7 @@
   (let [record (subscribe [::subs/record])]
     (when @record
       (details/group-table-sui (general-utils/remove-common-attrs @record) nil))))
+
 
 
 (defn nuvlabox-detail
@@ -180,12 +191,8 @@
                 :frequency 30000
                 :event     [::events/get-nuvlabox (str "nuvlabox/" uuid)]}])
     (fn [uuid]
-      #_(when (or (nil? @detail) (nil? @record))
-          (dispatch [::events/fetch-detail]))
       ^{:key uuid}
       [ui/Container {:fluid true}
        [menu-bar]
        [summary]
-       [status-table]
-       #_[state-table]
-       #_[record-info]])))
+       [StatusSection]])))

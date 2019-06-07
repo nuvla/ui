@@ -72,3 +72,24 @@
     (dispatch [::get-nuvlaboxes])
     {:db (assoc db ::spec/state-selector state-selector
                    ::spec/page 1)}))
+
+
+(reg-event-db
+  ::open-modal
+  (fn [db [_ modal-id]]
+    (assoc db ::spec/open-modal modal-id)))
+
+
+(reg-event-fx
+  ::create-nuvlabox
+  (fn [_ [_ owner-id]]
+    {::cimi-api-fx/add [:nuvlabox {:owner            owner-id
+                                   :refresh-interval 30}
+                        #(dispatch [::set-created-nuvlabox-id %])]}))
+
+
+(reg-event-db
+  ::set-created-nuvlabox-id
+  (fn [db [_ {:keys [resource-id]}]]
+    (dispatch [::get-nuvlaboxes])
+    (assoc db ::spec/nuvlabox-created-id resource-id)))

@@ -4,20 +4,24 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as reagent]
-    [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.dashboard-detail.events :as events]
+    [sixsq.nuvla.ui.dashboard.subs :as dashboard-subs]
     [sixsq.nuvla.ui.dashboard-detail.subs :as subs]
-    [sixsq.nuvla.ui.dashboard-detail.utils :as dashboard-detail-utils]
+    [sixsq.nuvla.ui.dashboard.utils :as utils]
     [sixsq.nuvla.ui.dashboard-detail.views-operations :as views-operations]
-    [sixsq.nuvla.ui.history.views :as history]
+    [sixsq.nuvla.ui.history.views :as history-views]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [taoensso.timbre :as log]
+    [reagent.core :as r]))
 
 
 (defn automatic-refresh
@@ -44,76 +48,9 @@
               :event     [::events/get-jobs resource-id]}]))
 
 
-(def deployment-summary-keys #{:created
-                               :updated
-                               :resource-url
-                               :state
-                               :id
-                               :name
-                               :description})
-
-
-(defn module-name
-  [deployment]
-  (-> deployment :module :name))
-
-
-(defn format-parameter-key
-  [k]
-  (let [key-as-string (name k)]
-    (if-let [abbrev-name (second (re-matches #"^.*:(.*)$" key-as-string))]
-      abbrev-name
-      key-as-string)))
-
-
 (defn format-module-link
   [module]
-  [history/link (str "apps/" module) module])
-
-
-(defn format-parameter-value
-  [k v]
-  (let [value (str v)]
-    (cond
-      (re-matches #"^.*:url.*$" (name k)) [:a {:href value} value]
-      (= :path k) (format-module-link value)
-      :else value)))
-
-
-(defn tuple-to-row
-  [[key value]]
-  [ui/TableRow
-   [ui/TableCell {:collapsing true} (format-parameter-key key)]
-   [ui/TableCell {:style {:max-width     "80ex"             ;; FIXME: need to get this from parent container
-                          :text-overflow "ellipsis"
-                          :overflow      "hidden"}} (format-parameter-value key value)]])
-
-
-(defn visible-state
-  [state ss-state]
-  (let [lower-state (str/lower-case state)]
-    (case state
-      "STARTED" (or ss-state lower-state)
-      "STOPPED" (or ss-state lower-state)
-      lower-state)))
-
-
-(defn metadata-section
-  []
-  (let [deployment (subscribe [::subs/deployment])]
-    (fn []
-      (let [summary-info (-> (select-keys @deployment deployment-summary-keys)
-                             (merge (select-keys (:module @deployment) #{:name :path :subtype})))
-            icon         (-> @deployment :module :subtype apps-utils/subtype-icon)
-            rows         (map tuple-to-row summary-info)
-            state        (:state @deployment)]
-        [cc/metadata
-         {:title       (module-name @deployment)
-          :description (:startTime summary-info)
-          :icon        icon
-          :subtitle    state
-          :acl         (:acl @deployment)}
-         rows]))))
+  [history-views/link (str "apps/" module) module])
 
 
 (defn parameter-to-row
@@ -127,24 +64,26 @@
         :trigger (reagent/as-element table-row)}]
       table-row)))
 
-(defn env-variables-section
+(defn parameters-section
   []
   (let [tr                    (subscribe [::i18n-subs/tr])
-        deployment-parameters (subscribe [::subs/deployment-parameters])]
+        deployment-parameters (subscribe [::subs/deployment-parameters])
+        params                (vals @deployment-parameters)]
     (fn []
-      (let [params (vals @deployment-parameters)]
-        [cc/collapsible-segment (@tr [:parameters])
-         [ui/Segment style/autoscroll-x
-          [ui/Table style/single-line
-           [ui/TableHeader
-            [ui/TableRow
-             [ui/TableHeaderCell [:span (@tr [:name])]]
-             [ui/TableHeaderCell [:span (@tr [:value])]]]]
-           (when-not (empty? params)
-             [ui/TableBody
-              (for [{param-name :name :as param} params]
-                ^{:key param-name}
-                [parameter-to-row param])])]]]))))
+      [uix/Accordion
+       [ui/Segment style/autoscroll-x
+        [ui/Table style/single-line
+         [ui/TableHeader
+          [ui/TableRow
+           [ui/TableHeaderCell [:span (@tr [:name])]]
+           [ui/TableHeaderCell [:span (@tr [:value])]]]]
+         (when-not (empty? params)
+           [ui/TableBody
+            (for [{param-name :name :as param} params]
+              ^{:key param-name}
+              [parameter-to-row param])])]]
+       :count (count params)
+       :label (@tr [:module-output-parameters])])))
 
 
 (def event-fields #{:id :content :timestamp :category})
@@ -153,16 +92,16 @@
 (defn events-table-info
   [events]
   (when-let [start (-> events last :timestamp)]
-    (let [dt-fn (partial dashboard-detail-utils/assoc-delta-time start)]
+    (let [dt-fn (partial utils/assoc-delta-time start)]
       (->> events
            (map #(select-keys % event-fields))
            (map dt-fn)))))
 
 
-(defn format-id
+(defn link-short-uuid
   [id]
-  (let [tag (second (re-matches #"^.*/([^-]+).*$" id))]
-    [history/link (str "api/" id) tag]))
+  (let [tag (general-utils/id->short-uuid id)]
+    [history-views/link (utils/detail-href id) tag]))
 
 
 (defn format-delta-time
@@ -173,7 +112,7 @@
 (defn event-map-to-row
   [{:keys [id content timestamp category delta-time] :as evt}]
   [ui/TableRow
-   [ui/TableCell (format-id id)]
+   [ui/TableCell (link-short-uuid id)]
    [ui/TableCell timestamp]
    [ui/TableCell (format-delta-time delta-time)]
    [ui/TableCell category]
@@ -201,19 +140,16 @@
 
 (defn events-section
   []
-  (let [tr     (subscribe [::i18n-subs/tr])
-        events (subscribe [::subs/events])]
-    (fn []
-      (let [events (events-table-info @events)]
-        [cc/collapsible-segment
-         (@tr [:events])
-         [events-table events]]))))
+  (let [tr          (subscribe [::i18n-subs/tr])
+        events      (subscribe [::subs/events])
+        events-info (events-table-info @events)]
+    [uix/Accordion [events-table events-info], :label (@tr [:events]), :count (count events-info)]))
 
 
 (defn job-map-to-row
   [{:keys [id action time-of-status-change state progress return-code status-message] :as job}]
   [ui/TableRow
-   [ui/TableCell (format-id id)]
+   [ui/TableCell (link-short-uuid id)]
    [ui/TableCell action]
    [ui/TableCell time-of-status-change]
    [ui/TableCell state]
@@ -247,11 +183,7 @@
   []
   (let [tr   (subscribe [::i18n-subs/tr])
         jobs (subscribe [::subs/jobs])]
-    (fn []
-      (let [jobs @jobs]
-        [cc/collapsible-segment
-         (@tr [:job])
-         [jobs-table jobs]]))))
+    [uix/Accordion [jobs-table @jobs], :label (@tr [:job]), :count (count @jobs)]))
 
 
 (defn refresh-button
@@ -277,27 +209,118 @@
        [:a {:href @url, :target "_blank"} (str url-name ": " @url)]])))
 
 
-(defn node-card
-  []
-  (let [deployment (subscribe [::subs/deployment])
-        module     (:module @deployment)
-        urls       (get-in module [:content :urls])]
-    [ui/Card
-     [ui/CardContent
-      [ui/CardHeader [ui/Header (:name module)]]
-      [ui/CardDescription
-       (for [[url-name url-pattern] urls]
-         ^{:key url-name}
-         [node-url url-name url-pattern])]]]))
-
-
-(defn summary-section
-  []
+(defn action-button
+  [popup-text icon-name event-kw deployment-id]
   (let [tr (subscribe [::i18n-subs/tr])]
-    [cc/collapsible-segment
-     (@tr [:summary])
-     [ui/CardGroup {:centered true}
-      [node-card]]]))
+    [ui/Modal
+     {:trigger (reagent/as-element
+                 [:div
+                  [ui/Popup {:content  (@tr [popup-text])
+                             :size     "tiny"
+                             :position "top center"
+                             :trigger  (reagent/as-element
+                                         [ui/Icon {:name  icon-name
+                                                   :style {:cursor "pointer"}
+                                                   :color "red"}])}]])
+      :header  (@tr [popup-text])
+      :content (@tr [:are-you-sure?])
+      :actions [{:key     "cancel"
+                 :content (@tr [:cancel])}
+                {:key     "yes"
+                 :content (@tr [:yes]), :positive true
+                 :onClick #(dispatch [event-kw deployment-id])}]}]))
+
+
+(defn stop-button
+  [{:keys [id] :as deployment}]
+  [action-button :stop "stop" ::events/stop-deployment id])
+
+
+(defn delete-button
+  [{:keys [id] :as deployment}]
+  [action-button :delete "trash" ::events/delete id])
+
+
+(defn DeploymentCard
+  [{:keys [id state module] :as deployment} & {:keys [clickable?]
+                                               :or   {clickable? true}}]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        creds-name     (subscribe [::dashboard-subs/creds-name-map])
+        credential-id  (:credential-id deployment)
+        {module-logo-url :logo-url
+         module-name     :name
+         module-path     :path
+         module-content  :content} module
+        cred-info      (get @creds-name credential-id credential-id)
+        urls           (get module-content :urls [])
+        secondary-urls (rest urls)
+        [primary-url-name
+         primary-url-pattern] (first urls)
+        primary-url    (subscribe [::subs/url primary-url-pattern])
+        started?       (utils/is-started? state)]
+
+    ^{:key id}
+    [ui/Card
+     [ui/Image {:src      (or module-logo-url "")
+                :bordered true
+                :style    {:width      "auto"
+                           :height     "100px"
+                           :padding    "20px"
+                           :object-fit "contain"}}]
+
+     (cond
+       (utils/stop-action? deployment) [ui/Label {:corner true, :size "small"}
+                                        [stop-button deployment]]
+       (utils/delete-action? deployment) [ui/Label {:corner true, :size "small"}
+                                          [delete-button deployment]])
+
+     [ui/CardContent (when clickable?
+                       {:href     (utils/detail-href id)
+                        :on-click (fn [event]
+                                    (dispatch [::history-events/navigate (utils/detail-href id)])
+                                    (.preventDefault event))})
+
+
+
+
+      [ui/Segment (merge style/basic {:floated "right"})
+       [:p {:style {:color "initial"}} state]
+       [ui/Loader {:active        (utils/deployment-active? state)
+                   :indeterminate true}]]
+
+      [ui/CardHeader (if clickable?
+                       [:span [:p {:style {:overflow      "hidden",
+                                           :text-overflow "ellipsis",
+                                           :max-width     "20ch"}} module-name]]
+                       [history-views/link (str "apps/" module-path) module-name])]
+
+      [ui/CardMeta (str (@tr [:created]) " " (-> deployment :created time/parse-iso8601 time/ago))]
+
+      [ui/CardDescription
+
+       (when-not (str/blank? cred-info)
+         [:div [ui/Icon {:name "key"}] cred-info])]]
+
+     (when-not clickable?
+       (when (and started? (seq secondary-urls))
+         [ui/CardContent {:extra true}
+          (for [[url-name url-pattern] secondary-urls]
+            ^{:key url-name}
+            [node-url url-name url-pattern])]))
+
+     (when (and started? @primary-url)
+       [ui/Button {:color   "green"
+                   :icon    "external"
+                   :content primary-url-name
+                   :fluid   true
+                   :href    @primary-url
+                   :target  "_blank"
+                   :rel     "noreferrer"}])]))
+
+(defn summary
+  [deployment]
+  [ui/CardGroup {:centered true}
+   [DeploymentCard deployment :clickable? false]])
 
 
 (defn menu
@@ -318,6 +341,7 @@
   [uuid]
   (let [deployment  (subscribe [::subs/deployment])
         resource-id (str "deployment/" uuid)]
+
     (automatic-refresh resource-id)
     (fn [uuid]
       ^{:key uuid}
@@ -328,8 +352,7 @@
                                                   second))})
        [ui/Container {:fluid true}
         [menu]
-        [metadata-section]
-        [summary-section]
-        [env-variables-section]
+        [summary @deployment]
+        [parameters-section]
         [events-section]
         [jobs-section]]])))

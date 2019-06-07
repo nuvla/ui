@@ -4,7 +4,6 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.credentials.events :as events]
     [sixsq.nuvla.ui.credentials.spec :as spec]
     [sixsq.nuvla.ui.credentials.subs :as subs]
@@ -402,30 +401,19 @@
 (defn credentials
   []
   (let [tr                    (subscribe [::i18n-subs/tr])
-        credentials           (subscribe [::subs/credentials])
-        infra-service-active? (r/atom true)
-        cloud-active?         (r/atom false)]
+        credentials           (subscribe [::subs/credentials])]
     (fn []
       (let [infra-service-creds (filter #(in? infrastructure-service-subtypes (:subtype %)) @credentials)
-            cloud-creds         (filter #(in? cloud-subtypes (:subtype %)) @credentials)]
+            ;cloud-creds         (filter #(in? cloud-subtypes (:subtype %)) @credentials)
+            ]
         (dispatch [::events/get-credentials])
         [ui/Container {:fluid true}
          [:h2 [ui/Icon {:name "key"}]
           " "
           (str/capitalize (@tr [:credentials]))]
 
-         [ui/Accordion {:fluid     true
-                        :styled    true
-                        :exclusive false}
-          [ui/AccordionTitle {:active   @infra-service-active?
-                              :index    1
-                              :on-click #(utils-accordion/toggle infra-service-active?)}
-           [:h3
-            [ui/Icon {:name (if @infra-service-active? "dropdown" "caret right")}]
-            (@tr [:credential-infra-service-section])
-            (utils-accordion/show-count infra-service-creds)]]
-
-          [ui/AccordionContent {:active @infra-service-active?}
+         [uix/Accordion
+          [:<>
            [:div (@tr [:credential-infra-service-section-sub-text])]
            [control-bar-projects]
            (if (empty? infra-service-creds)
@@ -442,23 +430,9 @@
                     [ui/TableBody
                      (for [credential infra-service-creds]
                        ^{:key (:id credential)}
-                       [single-credential credential])]]])]]
-
-         #_[ui/Accordion {:fluid     true
-                        :styled    true
-                        :exclusive false
-                        :style     {:margin-top 10}}
-          [ui/AccordionTitle {:active   @cloud-active?
-                              :index    1
-                              :on-click #(utils-accordion/toggle cloud-active?)}
-           [:h3
-            [ui/Icon {:name (if @cloud-active? "dropdown" "caret right")}]
-            (@tr [:credential-cloud-section])
-            (utils-accordion/show-count cloud-creds)]]
-
-          [ui/AccordionContent {:active @cloud-active?}
-           [ui/Message
-            (str/capitalize (str (@tr [:coming-soon])))]]]]))))
+                       [single-credential credential])]]])]
+          :label (@tr [:credential-infra-service-section])
+          :count (count infra-service-creds)]]))))
 
 
 (defmethod panel/render :credentials

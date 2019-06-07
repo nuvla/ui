@@ -90,17 +90,10 @@
       (if (nil? id)
         {:db               db
          ::cimi-api-fx/add [:credential new-credential
-                            #(if (instance? js/Error %)
-                               (let [{:keys [status message]} (response/parse-ex-info %)]
-                                 (dispatch [::messages-events/add
-                                            {:header  (cond-> (str "error editing " id)
-                                                              status (str " (" status ")"))
-                                             :content message
-                                             :type    :error}]))
-                               (do (dispatch [::cimi-detail-events/get (:resource-id %)])
-                                   (dispatch [::close-credential-modal])
-                                   (dispatch [::get-credentials])
-                                   (dispatch [::main-events/check-bootstrap-message])))]}
+                            #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
+                                 (dispatch [::close-credential-modal])
+                                 (dispatch [::get-credentials])
+                                 (dispatch [::main-events/check-bootstrap-message]))]}
         {:db                db
          ::cimi-api-fx/edit [id credential
                              #(if (instance? js/Error %)

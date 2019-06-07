@@ -21,7 +21,8 @@
     [sixsq.nuvla.ui.utils.form-fields :as form-fields]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 
 (defn input
@@ -151,10 +152,6 @@
       [architecture]]]))
 
 
-(defn toggle [v]
-  (swap! v not))
-
-
 (defn show-count
   [coll]
   [:span form-fields/nbsp [ui/Label {:circular true} (count coll)]])
@@ -202,21 +199,13 @@
 
 (defn ports-section []
   (let [tr      (subscribe [::i18n-subs/tr])
-        active? (r/atom true)
         ports   (subscribe [::subs/ports])
         module  (subscribe [::apps-subs/module])
         is-new? (subscribe [::apps-subs/is-new?])]
     (fn []
       (let [editable? (apps-utils/editable? @module @is-new?)]
-        [ui/Accordion {:fluid     true
-                       :styled    true
-                       :exclusive false}
-         [ui/AccordionTitle {:active   @active?
-                             :index    1
-                             :on-click #(toggle active?)}
-          [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-          (@tr [:module-ports]) (show-count @ports)]
-         [ui/AccordionContent {:active @active?}
+        [uix/Accordion
+         [:<>
           [:div (@tr [:module-publish-port]) " "
            [:span forms/nbsp (forms/help-popup (@tr [:module-ports-help]))]]
           (if (empty? @ports)
@@ -230,7 +219,10 @@
                    ]])
           (when editable?
             [:div
-             [plus ::events/add-port]])]]))))
+             [plus ::events/add-port]])
+          ]
+         :label (@tr [:module-ports])
+         :count (count @ports)]))))
 
 
 (defn single-mount [mount editable?]
@@ -290,22 +282,13 @@
 
 (defn mounts-section []
   (let [tr      (subscribe [::i18n-subs/tr])
-        active? (r/atom true)
         module  (subscribe [::apps-subs/module])
         mounts  (subscribe [::subs/mounts])
         is-new? (subscribe [::apps-subs/is-new?])]
     (fn []
       (let [editable? (apps-utils/editable? @module @is-new?)]
-        [ui/Accordion {:fluid     true
-                       :styled    true
-                       :exclusive false}
-         [ui/AccordionTitle {:active   @active?
-                             :index    1
-                             :on-click #(toggle active?)}
-          [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-          (@tr [:module-mounts]) (show-count @mounts)]
-
-         [ui/AccordionContent {:active @active?}
+        [uix/Accordion
+         [:<>
           [:div "Container volumes (i.e. mounts) "
            [:span forms/nbsp (forms/help-popup (@tr [:module-mount-help]))]]
           (if (empty? @mounts)
@@ -318,7 +301,9 @@
                      [single-mount mount editable?])]])
           (when editable?
             [:div
-             [plus ::events/add-mount]])]]))))
+             [plus ::events/add-mount]])]
+         :label (@tr [:module-mounts])
+         :count (count @mounts)]))))
 
 
 (defn single-env-variable
@@ -390,22 +375,13 @@
 
 (defn env-variables-section []
   (let [tr            (subscribe [::i18n-subs/tr])
-        active?       (r/atom true)
         module        (subscribe [::apps-subs/module])
         env-variables (subscribe [::subs/env-variables])
         is-new?       (subscribe [::apps-subs/is-new?])]
     (fn []
       (let [editable? (apps-utils/editable? @module @is-new?)]
-        [ui/Accordion {:fluid     true
-                       :styled    true
-                       :exclusive false}
-         [ui/AccordionTitle {:active   @active?
-                             :index    1
-                             :on-click #(toggle active?)}
-          [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-          (@tr [:module-env-variables]) (show-count @env-variables)]
-
-         [ui/AccordionContent {:active @active?}
+        [uix/Accordion
+         [:<>
           [:div "Container Environmental variables (i.e. env) "
            [:span forms/nbsp (forms/help-popup (@tr [:module-env-variables-help]))]]
           (if (empty? @env-variables)
@@ -427,7 +403,9 @@
                       [single-env-variable env-variable editable?])]]])
           (when editable?
             [:div {:style {:padding-top 10}}
-             [plus ::events/add-env-variable]])]]))))
+             [plus ::events/add-env-variable]])]
+         :label (@tr [:module-env-variables])
+         :count (count @env-variables)]))))
 
 
 (defn single-url
@@ -457,22 +435,13 @@
 
 (defn urls-section []
   (let [tr      (subscribe [::i18n-subs/tr])
-        active? (r/atom false)
         urls    (subscribe [::subs/urls])
         module  (subscribe [::apps-subs/module])
         is-new? (subscribe [::apps-subs/is-new?])]
     (fn []
       (let [editable? (apps-utils/editable? @module @is-new?)]
-        [ui/Accordion {:fluid     true
-                       :styled    true
-                       :exclusive false}
-         [ui/AccordionTitle {:active   @active?
-                             :index    1
-                             :on-click #(toggle active?)}
-          [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-          (@tr [:urls]) (show-count @urls)]
-
-         [ui/AccordionContent {:active @active?}
+        [uix/Accordion
+         [:<>
           [:div (@tr [:urls])
            [:span forms/nbsp (forms/help-popup (@tr [:module-urls-help]))]]
           (if (empty? @urls)
@@ -492,7 +461,10 @@
                       [single-url url-map editable?])]]])
           (when editable?
             [:div {:style {:padding-top 10}}
-             [plus ::events/add-url]])]]))))
+             [plus ::events/add-url]])]
+         :label (@tr [:urls])
+         :count (count @urls)
+         :default-open false]))))
 
 
 (defn single-output-parameter [param editable?]
@@ -522,22 +494,14 @@
 
 (defn output-parameters-section []
   (let [tr                (subscribe [::i18n-subs/tr])
-        active?           (r/atom false)
         output-parameters (subscribe [::subs/output-parameters])
         module            (subscribe [::apps-subs/module])
         is-new?           (subscribe [::apps-subs/is-new?])]
     (fn []
       (let [editable? (apps-utils/editable? @module @is-new?)]
-        [ui/Accordion {:fluid     true
-                       :styled    true
-                       :exclusive false}
-         [ui/AccordionTitle {:active   @active?
-                             :index    1
-                             :on-click #(toggle active?)}
-          [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-          (@tr [:module-output-parameters]) (show-count @output-parameters)]
+        [uix/Accordion
 
-         [ui/AccordionContent {:active @active?}
+         [:<>
           [:div (@tr [:module-output-parameters])
            [:span forms/nbsp (forms/help-popup (@tr [:module-output-parameters-help]))]]
           (if (empty? @output-parameters)
@@ -557,7 +521,10 @@
                       [single-output-parameter param editable?])]]])
           (when editable?
             [:div {:style {:padding-top 10}}
-             [plus ::events/add-output-parameter]])]]))))
+             [plus ::events/add-output-parameter]])]
+         :label (@tr [:module-output-parameters])
+         :count (count @output-parameters)
+         :default-open false]))))
 
 
 (def data-type-options (atom [{:key "application/x-hdr", :value "application/x-hdr", :text "application/x-hdr"}
@@ -602,22 +569,13 @@
 
 (defn data-types-section []
   (let [tr         (subscribe [::i18n-subs/tr])
-        active?    (r/atom false)
         data-types (subscribe [::subs/data-types])
         module     (subscribe [::apps-subs/module])
         is-new?    (subscribe [::apps-subs/is-new?])]
     (fn []
       (let [editable? (apps-utils/editable? @module @is-new?)]
-        [ui/Accordion {:fluid     true
-                       :styled    true
-                       :exclusive false}
-         [ui/AccordionTitle {:active   @active?
-                             :index    1
-                             :on-click #(toggle active?)}
-          [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-          (@tr [:data-binding]) (show-count @data-types)]
-
-         [ui/AccordionContent {:active @active?}
+        [uix/Accordion
+         [:<>
           [:div (@tr [:data-type])
            [:span forms/nbsp (forms/help-popup (@tr [:module-data-type-help]))]]
           (if (empty? @data-types)
@@ -630,7 +588,10 @@
                      [single-data-type dt editable?])]])
           (when editable?
             [:div
-             [plus ::events/add-data-type]])]]))))
+             [plus ::events/add-data-type]])]]
+        :label (@tr [:data-binding])
+        :count (count @data-types)
+        :default-open false))))
 
 
 (defn generate-ports-args
@@ -724,17 +685,11 @@
             [:div {:style {:padding-top 10}}]])
          [summary]
          [ports-section]
-         [:div {:style {:padding-top 10}}]
          [env-variables-section]
-         [:div {:style {:padding-top 10}}]
          [mounts-section]
-         [:div {:style {:padding-top 10}}]
          [urls-section]
-         [:div {:style {:padding-top 10}}]
          [output-parameters-section]
-         [:div {:style {:padding-top 10}}]
          [data-types-section]
-         [:div {:style {:padding-top 10}}]
          [test-command]
          [apps-views-detail/save-action]
          [apps-views-detail/add-modal]

@@ -8,18 +8,16 @@
     [sixsq.nuvla.ui.edge.utils :as u]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.plot.plot :as plot]
-    [sixsq.nuvla.ui.utils.collapsible-card :as cc]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.resource-details :as details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.edge.utils :as utils]
+    [reagent.core :as r]))
 
 
-(defn refresh-button
+(defn RefreshButton
   []
   (let [tr       (subscribe [::i18n-subs/tr])
         loading? (subscribe [::subs/loading?])
@@ -33,38 +31,25 @@
         :on-click  #(dispatch [::events/get-nuvlabox (:id @nuvlabox)])}])))
 
 
-(defn menu-bar []
-  [ui/Segment style/basic
-   [ui/Menu {:attached   "top"
-             :borderless true}
-    [refresh-button]]])
+(defn DecommissionButton
+  []
+  [uix/MenuItemWithIcon
+   {:name      "Decommission"
+    :icon-name "eraser"
+    :on-click  #(dispatch [::events/decommission])}])
 
 
-(defn hw-id
-  [{:keys [bus-id device-id] :as device}]
-  (str bus-id "." device-id))
+(defn MenuBar []
+  (let [can-decommission? (subscribe [::subs/can-decommission?])]
+    [ui/Menu {:borderless true}
+     (when @can-decommission?
+       [DecommissionButton])
+    [RefreshButton]]))
 
-
-
-(defn Load
-  [resources]
-  [uix/Accordion
-   (let [load-stats (u/load-statistics resources)]
-     [ui/Container
-      [plot/HorizontalBar {:width 600
-                           :height 200
-                           :data    {:labels   (map :label load-stats)
-                                     :datasets [{:data (map :percentage load-stats)}]}
-                           :options {:scales {:xAxes [{:type  "linear"
-                                                       :ticks {:beginAtZero true
-                                                               :max         100}}]
-                                              :yAxes [{:gridLines {:display false}}]}}}]])
-   :label "Load Percentages"
-   :icon "thermometer half"])
 
 (defn UsbDeviceRow
   [{:keys [bus-id device-id vendor-id product-id busy description] :as device}]
-  ^{:key (hw-id device)}
+  ^{:key (utils/usb-hw-id device)}
   [ui/TableRow
    [ui/TableCell {:collapsing true} (if busy "busy" "free")]
    [ui/TableCell {:collapsing true} bus-id]
@@ -87,102 +72,104 @@
       [ui/TableHeaderCell "product"]
       [ui/TableHeaderCell "description"]]]
     [ui/TableBody
-     (for [usb (sort-by hw-id usb-list)]
-       ^{:key (hw-id usb)}
+     (for [usb (sort-by utils/usb-hw-id usb-list)]
+       ^{:key (utils/usb-hw-id usb)}
        [UsbDeviceRow usb])]]
    :label "Peripherals"
    :icon "usb"])
 
 
+(defn StatusIcon
+  [status]
+  [ui/Popup
+   {:position "right center"
+    :content  status
+    :trigger  (r/as-element
+                [ui/Icon {:name  "power"
+                          :color (utils/status->color status)}])}])
+
+
 (defn Heartbeat
-  [updated next-heartbeat]
-  (let [updated-moment    (time/parse-iso8601 updated)
-        next-check-moment (time/parse-iso8601 next-heartbeat)
+  [updated]
+  (let [updated-moment           (time/parse-iso8601 updated)
+        status                   (subscribe [::subs/status-nuvlabox])
+        next-heartbeat-moment    (subscribe [::subs/next-heartbeat-moment])
+        next-heartbeat-times-ago (time/ago @next-heartbeat-moment)
 
-        check-ok?         (time/after-now? next-heartbeat)
-        icon              (if check-ok? "heartbeat" "warning sign")
-
-        msg-last          (str "Last heartbeat was " (time/ago updated-moment) " (" updated ").")
-        msg-next          (if check-ok?
-                            (str "Next heartbeat is expected " (time/ago next-check-moment) " (" next-heartbeat ").")
-                            (str "Next heartbeat was expected " (time/ago next-check-moment) " (" next-heartbeat ")."))]
+        last-heartbeat-msg       (str "Last heartbeat was " (time/ago updated-moment))
+        next-heartbeat-msg       (if @status
+                                   (str "Next heartbeat is expected " next-heartbeat-times-ago)
+                                   (str "Next heartbeat was expected " next-heartbeat-times-ago))]
 
     [uix/Accordion
-     [ui/Container
-      [:p msg-last]
-      [:p msg-next]]
+     [:<>
+      [:p last-heartbeat-msg]
+      [:p next-heartbeat-msg]]
      :label "Heartbeat"
      :icon "heartbeat"]))
 
 
-(defn select-metadata
-  [data]
-  (let [metadata-keys #{:id :resource-url :name :description :created :updated}]
-    (select-keys data metadata-keys)))
-
-
-(defn metadata-row
-  [[k v]]
-  ^{:key k}
-  [ui/TableRow [ui/TableCell {:collapsing true} k] [ui/TableCell v]])
-
-
-
-(defn NuvlaboxCard
-  [nuvlabox]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [id name description created] :as nuvlabox}]
-      ^{:key id}
-      [ui/Card
-       [ui/CardContent
-        [ui/Segment (merge style/basic {:floated "right"})
-         [:p "stateeee"]]
-
-        [ui/CardHeader [:span [:p {:style {:overflow      "hidden",
-                                           :text-overflow "ellipsis",
-                                           :max-width     "20ch"}} (or name id)]]]
-
-        [ui/CardMeta (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))]
-
-        [ui/CardDescription (when-not (str/blank? description)
-                              [:div [ui/Icon {:name "key"}] description])]]])))
-
-
-(defn summary
-  []
-  (let [nuvlabox (subscribe [::subs/nuvlabox])]
-    (fn []
-      (let [{:keys [id name description updated acl] :as data} @nuvlabox
-            rows (->> data
-                      select-metadata
-                      (map metadata-row)
-                      vec)]
-        [ui/CardGroup {:centered true}
-         [NuvlaboxCard @nuvlabox]]))))
+(defn Load
+  [resources]
+  [uix/Accordion
+   (let [load-stats (u/load-statistics resources)]
+     [plot/HorizontalBar {:height  50
+                          :data    {:labels   (map :label load-stats)
+                                    :datasets [{:data (map :percentage load-stats)}]}
+                          :options {:scales {:xAxes [{:type  "linear"
+                                                      :ticks {:beginAtZero true
+                                                              :max         100}}]
+                                             :yAxes [{:gridLines {:display false}}]}}}])
+   :label "Load Percentages"
+   :icon "thermometer half"])
 
 
 (defn StatusSection
   []
   (let [nuvlabox-status (subscribe [::subs/nuvlabox-status])]
     (fn []
-      (when @nuvlabox-status
+      (if @nuvlabox-status
         (let [{:keys [resources peripherals updated next-heartbeat]} @nuvlabox-status]
           [ui/Container {:fluid true}
            [Heartbeat updated next-heartbeat]
            (when resources
              [Load resources])
-           [Peripherals peripherals]])))))
+           [Peripherals peripherals]])
+        [ui/Message
+         {:warning true
+          :content "NuvlaBox status not available."}]))))
 
 
-(defn record-info
+(defn NuvlaboxCard
+  [nuvlabox status]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn [{:keys [id name description created state] :as nuvlabox} status]
+      ^{:key id}
+      [ui/Card
+       [ui/CardContent
+
+        [ui/CardHeader {:style {:word-wrap "break-word"}}
+         [:div {:style {:float "right"}}
+          [StatusIcon status :corner "top right"]]
+         [ui/Icon {:name "box"}] (or name id)]
+
+        [ui/CardMeta (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))]
+
+        [:p {:style {:float "right"}} state]
+
+        (when-not (str/blank? description)
+          [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description])]])))
+
+
+(defn SummarySection
   []
-  (let [record (subscribe [::subs/record])]
-    (when @record
-      (details/group-table-sui (general-utils/remove-common-attrs @record) nil))))
+  (let [nuvlabox (subscribe [::subs/nuvlabox])
+        status   (subscribe [::subs/status-nuvlabox])]
+    [ui/CardGroup {:centered true}
+     [NuvlaboxCard @nuvlabox @status]]))
 
 
-
-(defn nuvlabox-detail
+(defn EdgeDetails
   [uuid]
   (let []
     (dispatch [::main-events/action-interval
@@ -193,6 +180,6 @@
     (fn [uuid]
       ^{:key uuid}
       [ui/Container {:fluid true}
-       [menu-bar]
-       [summary]
+       [MenuBar]
+       [SummarySection]
        [StatusSection]])))

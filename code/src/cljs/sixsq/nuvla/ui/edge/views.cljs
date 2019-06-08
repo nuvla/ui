@@ -20,7 +20,7 @@
     [taoensso.timbre :as log]))
 
 
-(defn stat
+(defn StatisticState
   [value icon label]
   [ui/Statistic {:size "tiny"}
    [ui/StatisticValue (or value "-")
@@ -29,21 +29,21 @@
    [ui/StatisticLabel label]])
 
 
-(defn state-summary
+(defn StatisticStates
   []
   (let [{:keys [total new activated commissioned
                 decommissioning decommissioned error]} @(subscribe [::subs/state-nuvlaboxes])]
     [ui/Segment style/evenly
-     [stat total "box" "Total"]
-     [stat new (utils/state->icon utils/state-new) "New"]
-     [stat activated (utils/state->icon utils/state-activated) "Activated"]
-     [stat commissioned (utils/state->icon utils/state-commissioned) "Commissioned"]
-     [stat decommissioning (utils/state->icon utils/state-decommissioning) "Decommissioning"]
-     [stat decommissioned (utils/state->icon utils/state-decommissioned) "Decommissioned"]
-     [stat error (utils/state->icon utils/state-error) "Error"]]))
+     [StatisticState total "box" "Total"]
+     [StatisticState new (utils/state->icon utils/state-new) "New"]
+     [StatisticState activated (utils/state->icon utils/state-activated) "Activated"]
+     [StatisticState commissioned (utils/state->icon utils/state-commissioned) "Commissioned"]
+     [StatisticState decommissioning (utils/state->icon utils/state-decommissioning) "Decommissioning"]
+     [StatisticState decommissioned (utils/state->icon utils/state-decommissioned) "Decommissioned"]
+     [StatisticState error (utils/state->icon utils/state-error) "Error"]]))
 
 
-(defn filter-state []
+(defn StateFilter []
   (let [state-selector (subscribe [::subs/state-selector])]
     ^{:key (str "state:" @state-selector)}
     [ui/Dropdown
@@ -58,7 +58,7 @@
                    #(dispatch [::events/set-state-selector (if (= % "ALL") nil %)]))}]))
 
 
-(defn refresh-button
+(defn RefreshButton
   []
   (let [tr       (subscribe [::i18n-subs/tr])
         loading? (subscribe [::subs/loading?])]
@@ -70,7 +70,7 @@
       :on-click  #(dispatch [::events/get-nuvlaboxes])}]))
 
 
-(defn add-button
+(defn AddButton
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [uix/MenuItemWithIcon
@@ -79,13 +79,12 @@
       :on-click  #(dispatch [::events/open-modal :add])}]))
 
 
-(defn menu-bar []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Menu {:borderless true}
-     [add-button]
-     [refresh-button]]))
+(defn MenuBar []
+  [ui/Menu {:borderless true}
+   [AddButton]
+   [RefreshButton]])
 
-(defn add-modal
+(defn AddModal
   []
   (let [modal-id    :add
         tr          (subscribe [::i18n-subs/tr])
@@ -103,7 +102,6 @@
 
      [ui/ModalContent
       [ui/CardGroup {:centered true}
-
        [ui/Card (when-not @nuvlabox-id {:on-click #(dispatch [::events/create-nuvlabox owner-id])})
         [ui/CardContent {:text-align :center}
          [ui/Header "NuvlaBox"]
@@ -117,7 +115,7 @@
                       :content "Copy your Nuvlabox ID"}]])]]]]))
 
 
-(defn nuvlabox-row
+(defn NuvlaboxRow
   [{:keys [id state name] :as nuvlabox}]
   (let [status   (subscribe [::subs/status-nuvlabox id])
         uuid     (general-utils/id->uuid id)
@@ -125,20 +123,13 @@
     [ui/TableRow {:on-click on-click
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
-      [ui/Popup
-       {:content @status
-        :trigger (r/as-element
-                   [ui/Icon {:name  "power",
-                             :color (case @status
-                                      :online "green"
-                                      :offline "red"
-                                      :unknown "yellow")}])}]]
+      [edge-detail/StatusIcon @status]]
      [ui/TableCell {:collapsing true}
       [ui/Icon {:name (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]]))
 
 
-(defn nuvlabox-table
+(defn NuvlaboxTable
   []
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         elements-per-page (subscribe [::subs/elements-per-page])
@@ -154,7 +145,7 @@
             total-pages    (general-utils/total-pages total-elements @elements-per-page)]
         [:div
 
-         [filter-state]
+         [StateFilter]
 
          [ui/Table {:compact "very", :selectable true}
           [ui/TableHeader
@@ -167,7 +158,7 @@
            (doall
              (for [{:keys [id] :as nuvlabox} (:resources @nuvlaboxes)]
                ^{:key id}
-               [nuvlabox-row nuvlabox]))]]
+               [NuvlaboxRow nuvlabox]))]]
 
          (when (> total-pages 1)
            [uix/Pagination {:totalPages   total-pages
@@ -180,12 +171,12 @@
   (let [[_ uuid] path
         n        (count path)
         root     [:<>
-                  [menu-bar]
-                  [state-summary]
-                  [nuvlabox-table]
-                  [add-modal]]
+                  [MenuBar]
+                  [StatisticStates]
+                  [NuvlaboxTable]
+                  [AddModal]]
         children (case n
                    1 root
-                   2 [edge-detail/nuvlabox-detail uuid]
+                   2 [edge-detail/EdgeDetails uuid]
                    root)]
     [ui/Segment style/basic children]))

@@ -27,3 +27,11 @@
     (cond-> {::cimi-api-fx/get [id #(dispatch [::set-nuvlabox %])]}
             (not= (:id nuvlabox) id) (assoc :db (merge db spec/defaults)))))
 
+
+(reg-event-fx
+  ::decommission
+  (fn [{{:keys [::spec/nuvlabox]} :db} _]
+    (let [nuvlabox-id (:id nuvlabox)]
+      {::cimi-api-fx/operation [nuvlabox-id "decommission"
+                                #(dispatch [::get-nuvlabox nuvlabox-id])]})))
+

@@ -33,6 +33,21 @@
     (get icons-map state)))
 
 
+(defn status->color
+  [status]
+  (case status
+    :online "green"
+    :offline "red"
+    :unknown "yellow"
+    nil))
+
+(def STATUS-FLOATING-TIME-TOLERANCE 10)                     ;; in seconds
+
+(def filter-offline-status (str "next-heartbeat < 'now-" STATUS-FLOATING-TIME-TOLERANCE "s'"))
+
+(def filter-online-status (str "next-heartbeat >= 'now-" STATUS-FLOATING-TIME-TOLERANCE "s'"))
+
+
 (defn state-filter
   [state]
   (str "state='" state "'"))
@@ -95,3 +110,8 @@
   (concat [(cpu-stats cpu)
            (ram-stats ram)]
           (map disk-stats (sort-by :device disks))))
+
+
+(defn usb-hw-id
+  [{:keys [bus-id device-id] :as device}]
+  (str bus-id "." device-id))

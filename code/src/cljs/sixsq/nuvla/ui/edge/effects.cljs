@@ -54,13 +54,12 @@
   ::get-status-nuvlaboxes
   (fn [[nuvlaboxes callback]]
     (go
-      (let [floating-time-tolerance "-10s"
-            offline-nuvlaboxes      (<! (get-status-collection
+      (let [offline-nuvlaboxes      (<! (get-status-collection
                                           nuvlaboxes
-                                          (str "next-heartbeat < 'now" floating-time-tolerance "'")))
+                                          utils/filter-offline-status))
             online-nuvlaboxes       (<! (get-status-collection
                                           nuvlaboxes
-                                          (str "next-heartbeat >= 'now" floating-time-tolerance "'")))]
+                                          utils/filter-online-status))]
 
         (callback {:offline (->> offline-nuvlaboxes
                                  :resources

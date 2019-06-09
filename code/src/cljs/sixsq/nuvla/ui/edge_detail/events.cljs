@@ -14,17 +14,17 @@
 
 (reg-event-fx
   ::set-nuvlabox
-  (fn [{:keys [db]} [_ {nuvlabox-status-id :nuvlabox-status :as nuvlabox}]]
-    (cond-> {:db (assoc db ::spec/nuvlabox nuvlabox)}
-            nuvlabox-status-id (assoc ::cimi-api-fx/get
-                                      [nuvlabox-status-id
-                                       #(dispatch [::set-nuvlabox-status %])]))))
+  (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status :as nuvlabox}]]
+    {:db               (assoc db ::spec/nuvlabox nuvlabox
+                                 ::spec/loading? false)
+     ::cimi-api-fx/get [nb-status-id #(dispatch [::set-nuvlabox-status %])
+                        :on-error #(dispatch [::set-nuvlabox-status nil])]}))
 
 
 (reg-event-fx
   ::get-nuvlabox
   (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ id]]
-    (cond-> {::cimi-api-fx/get [id #(dispatch [::set-nuvlabox %])]}
+    (cond-> {::cimi-api-fx/get [id #(dispatch [::set-nuvlabox %]) :on-error #(dispatch [::set-nuvlabox nil])]}
             (not= (:id nuvlabox) id) (assoc :db (merge db spec/defaults)))))
 
 

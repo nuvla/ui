@@ -13,6 +13,6 @@
                           ::nuvlabox-status]))
 
 
-(def defaults {::loading?        false
+(def defaults {::loading?        true
                ::nuvlabox        nil
                ::nuvlabox-status nil})

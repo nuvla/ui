@@ -175,7 +175,7 @@
     (dispatch [::main-events/action-interval
                {:action    :start
                 :id        :nuvlabox-get-nuvlabox
-                :frequency 30000
+                :frequency 10000
                 :event     [::events/get-nuvlabox (str "nuvlabox/" uuid)]}])
     (fn [uuid]
       ^{:key uuid}

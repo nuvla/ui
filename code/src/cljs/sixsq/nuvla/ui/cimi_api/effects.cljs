@@ -36,10 +36,30 @@
   [resource-type response]
   (dispatch [::messages-events/add
              (let [{:keys [status message]} (response/parse-ex-info response)]
-               {:header  (cond-> (str "failure creating " (name resource-type))
+               {:header  (cond-> (str "failure adding " (name resource-type))
                                  status (str " (" status ")"))
                 :content message
                 :type    :error})]))
+
+
+(defn default-get-on-error
+  [resource-id response]
+  (dispatch [::messages-events/add
+             (let [{:keys [status message]} (response/parse-ex-info response)]
+               [::messages-events/add
+                {:header  (cond-> (str "error getting " resource-id)
+                                  status (str " (" status ")"))
+                 :content message
+                 :type    :error}])]))
+
+
+(defn api-call-error-check
+  [api-call on-success on-error]
+  (go
+    (let [response (<! (api-call))]
+      (if (instance? js/Error response)
+        (on-error response)
+        (on-success response)))))
 
 
 (reg-fx
@@ -51,10 +71,11 @@
 
 (reg-fx
   ::get
-  (fn [[resource-id callback]]
+  (fn [[resource-id on-success & {:keys [on-error]}]]
     (when resource-id
-      (go
-        (callback (<! (api/get @CLIENT resource-id)))))))
+      (let [api-call #(api/get @CLIENT resource-id)
+            on-error (or on-error (partial default-get-on-error resource-id))]
+        (api-call-error-check api-call on-success on-error)))))
 
 
 (reg-fx
@@ -92,12 +113,9 @@
   ::add
   (fn [[resource-type data on-success & {:keys [on-error]}]]
     (when resource-type
-      (go
-        (let [on-error (or on-error (partial default-add-on-error resource-type))
-              response (<! (api/add @CLIENT resource-type data))]
-          (if (instance? js/Error response)
-            (on-error response)
-            (on-success response)))))))
+      (let [api-call #(api/add @CLIENT resource-type data)
+            on-error (or on-error (partial default-add-on-error resource-type))]
+        (api-call-error-check api-call on-success on-error)))))
 
 
 (reg-fx

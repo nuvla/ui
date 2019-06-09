@@ -16,16 +16,10 @@
   (fn [{{:keys [::cimi-spec/collection-name] :as db} :db} [_ resource-id]]
     {:db               (assoc db ::cimi-detail-spec/loading? true
                                  ::cimi-detail-spec/resource-id resource-id)
-     ::cimi-api-fx/get [resource-id #(if (instance? js/Error %)
-                                       (let [{:keys [status message]} (response/parse-ex-info %)]
-                                         (dispatch [::messages-events/add
-                                                    {:header  (cond-> (str "error getting " resource-id)
-                                                                      status (str " (" status ")"))
-                                                     :content message
-                                                     :type    :error}])
-                                         (dispatch [::history-events/navigate
-                                                    (str "api/" collection-name)]))
-                                       (dispatch [::set-resource %]))]}))
+     ::cimi-api-fx/get [resource-id #(dispatch [::set-resource %])
+                        :on-error #(do
+                                     (cimi-api-fx/default-get-on-error resource-id %)
+                                     (dispatch [::history-events/navigate (str "api/" collection-name)]))]}))
 
 
 (reg-event-db

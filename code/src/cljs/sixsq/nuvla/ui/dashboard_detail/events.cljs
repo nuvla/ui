@@ -36,15 +36,7 @@
 (reg-event-fx
   ::get-deployment
   (fn [{{:keys [::spec/deployment] :as db} :db} [_ id]]
-    (let [get-depl-callback #(if (instance? js/Error %)
-                               (let [{:keys [status message]} (response/parse-ex-info %)]
-                                 (dispatch [::messages-events/add
-                                            {:header  (cond-> (str "error getting deployment " id)
-                                                              status (str " (" status ")"))
-                                             :content message
-                                             :type    :error}])
-                                 (dispatch [::history-events/navigate "dashboard"]))
-                               (dispatch [::set-deployment %]))]
+    (let [get-depl-callback #(dispatch [::history-events/navigate "dashboard"])]
       {:db               (cond-> (assoc db ::spec/loading? true)
                                  (not= (:id deployment) id) (merge db spec/defaults))
        ::cimi-api-fx/get [id get-depl-callback]})))

@@ -33,11 +33,6 @@
   ::status-nuvlabox
   :<- [::next-heartbeat-moment]
   (fn [next-heartbeat-moment _]
-    (log/warn next-heartbeat-moment (if next-heartbeat-moment
-                                      (if (time/after-now? next-heartbeat-moment)
-                                        :online
-                                        :offline)
-                                      :unknown))
     (if next-heartbeat-moment
       (if (time/after-now? next-heartbeat-moment)
         :online

@@ -113,9 +113,10 @@
                             ::spec/module-path (:path module)
                             ::spec/module (if (nil? module) {} module))
           subtype (:subtype module)]
-      (case subtype                                         ;;FIXME case without default cause error in logs
+      (case subtype                                         ;;FIXME default case make nav-path equal to nil!!
         "component" (apps-component-utils/module->db db module)
-        "project" (apps-project-utils/module->db db module)))))
+        "project" (apps-project-utils/module->db db module)
+        nil))))
 
 
 (reg-event-db

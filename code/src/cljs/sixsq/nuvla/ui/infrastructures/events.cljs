@@ -78,17 +78,10 @@
                           (utils/db->new-service)
                           (assoc-in [:template :parent] infra-service-group-id))]
       {::cimi-api-fx/add [:infrastructure-service new-service
-                          #(if (instance? js/Error %)
-                             (let [{:keys [status message]} (response/parse-ex-info %)]
-                               (dispatch [::messages-events/add
-                                          {:header  (cond-> (str "error editing")
-                                                            status (str " (" status ")"))
-                                           :content message
-                                           :type    :error}]))
-                             (do (dispatch [::cimi-detail-events/get (:resource-id %)])
-                                 (dispatch [::close-service-modal])
-                                 (dispatch [::get-services])
-                                 (dispatch [::main-events/check-bootstrap-message])))]})))
+                          #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
+                               (dispatch [::close-service-modal])
+                               (dispatch [::get-services])
+                               (dispatch [::main-events/check-bootstrap-message]))]})))
 
 (reg-event-fx
   ::edit-service
@@ -110,18 +103,11 @@
           (dispatch [::add-service parent])
           (let [new-group (utils/db->new-service-group db)]
             {::cimi-api-fx/add [:infrastructure-service-group new-group
-                                #(if (instance? js/Error %)
-                                   (let [{:keys [status message]} (response/parse-ex-info %)]
-                                     (dispatch [::messages-events/add
-                                                {:header  (cond-> (str "error creating new group")
-                                                                  status (str " (" status ")"))
-                                                 :content message
-                                                 :type    :error}]))
-                                   (do (dispatch [::cimi-detail-events/get (:resource-id %)])
-                                       (dispatch [::set-service-group (:resource-id %)])
-                                       (dispatch [::close-service-modal])
-                                       (dispatch [::get-services])
-                                       (dispatch [::add-service (:resource-id %)])))]}))))))
+                                #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
+                                     (dispatch [::set-service-group (:resource-id %)])
+                                     (dispatch [::close-service-modal])
+                                     (dispatch [::get-services])
+                                     (dispatch [::add-service (:resource-id %)]))]}))))))
 
 
 (reg-event-fx

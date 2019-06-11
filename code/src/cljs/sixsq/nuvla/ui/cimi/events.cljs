@@ -119,38 +119,16 @@
                 ::spec/cloud-entry-point]} :db} [_ data]]
     (let [resource-type (-> cloud-entry-point
                             :collection-key
-                            (get collection-name))]
-      {::cimi-api-fx/add [resource-type data
-                          #(let [msg-map (if (instance? js/Error %)
-                                           (let [{:keys [status message]} (response/parse-ex-info %)]
-                                             {:header  (cond-> (str "failure adding " (name resource-type))
-                                                               status (str " (" status ")"))
-                                              :content message
-                                              :type    :error})
-                                           (let [{:keys [status message resource-id]} (response/parse %)]
-                                             (dispatch [::get-results])
-                                             {:header  (cond-> (str "added " resource-id)
-                                                               status (str " (" status ")"))
-                                              :content message
-                                              :type    :success}))]
-                             (dispatch [::messages-events/add msg-map]))]})))
+                            (get collection-name))
+          on-success    #(let [{:keys [status message resource-id]} (response/parse %)]
+                           (dispatch [::get-results])
+                           (dispatch [::messages-events/add {:header  (cond-> (str "added " resource-id)
+                                                                              status (str " (" status ")"))
+                                                             :content message
+                                                             :type    :success}]))]
+      {::cimi-api-fx/add [resource-type data on-success]})))
 
-(reg-event-fx
-  ::create-resource-independent
-  (fn [_ [_ resource-type data]]
-    {::cimi-api-fx/add [resource-type data
-                        #(let [msg-map (if (instance? js/Error %)
-                                         (let [{:keys [status message]} (response/parse-ex-info %)]
-                                           {:header  (cond-> (str "failure adding " (name resource-type))
-                                                             status (str " (" status ")"))
-                                            :content message
-                                            :type    :error})
-                                         (let [{:keys [status message resource-id]} (response/parse %)]
-                                           {:header  (cond-> (str "added " resource-id)
-                                                             status (str " (" status ")"))
-                                            :content message
-                                            :type    :success}))]
-                           (dispatch [::messages-events/add msg-map]))]}))
+
 
 (reg-event-db
   ::set-results

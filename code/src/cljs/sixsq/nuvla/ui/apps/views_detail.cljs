@@ -292,10 +292,6 @@
           (error-text tr error)]]))))
 
 
-(defn toggle [v]
-  (swap! v not))
-
-
 (defn summary-row
   [key name-kw value on-change-event editable? mandatory? value-spec]
   (let [tr              (subscribe [::i18n-subs/tr])

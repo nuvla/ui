@@ -2,7 +2,10 @@
   (:require
     [re-frame.core :refer [subscribe]]
     [reagent.core :as reagent]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
+    [sixsq.nuvla.ui.utils.form-fields :as form-fields]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
@@ -85,8 +88,7 @@
      (when (:totalitems options)
        [ui/Label {:style {:float      :left
                           :margin-top 10}
-                  :size  :medium
-                  }
+                  :size  :medium}
         (str (@tr [:total]) ": " (:totalitems options))])
      [ui/Pagination
       (merge {:firstItem {:content (reagent/as-element [ui/Icon {:name "angle double left"}]) :icon true}
@@ -111,3 +113,32 @@
                       :on-change (fn [editor data value]
                                    (reset! text value))}])))
 
+
+(defn Accordion
+  [content & {:keys [label count icon default-open title-size] :or {default-open true
+                                                                    title-size   :h3}}]
+  (let [active? (r/atom default-open)]
+    (fn [content & {:keys [label count icon default-open title-size] :or {default-open true
+                                                                          title-size   :h3}}]
+      [ui/Accordion {:fluid     true
+                     :styled    true
+                     :style     {:margin-top    "10px"
+                                 :margin-bottom "10px"}
+                     :exclusive false}
+
+       [ui/AccordionTitle {:active   @active?
+                           :index    1
+                           :on-click #(accordion-utils/toggle active?)}
+        [title-size
+         [ui/Icon {:name (if @active? "dropdown" "caret right")}]
+
+         (when icon
+           [ui/Icon {:name icon}])
+
+         label
+
+         (when count
+           [:span form-fields/nbsp form-fields/nbsp [ui/Label {:circular true} count]])]]
+
+       [ui/AccordionContent {:active @active?}
+        content]])))

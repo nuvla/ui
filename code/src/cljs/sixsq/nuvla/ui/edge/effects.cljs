@@ -1,58 +1,40 @@
-(ns sixsq.nuvla.ui.nuvlabox.effects
+(ns sixsq.nuvla.ui.edge.effects
   (:require-macros
     [cljs.core.async.macros :refer [go]])
   (:require
     [cljs.core.async :refer [<!]]
     [re-frame.core :refer [dispatch reg-fx]]
     [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.ui.cimi-api.utils :refer [CLIENT]]
-    [sixsq.nuvla.ui.nuvlabox.utils :as utils]
+    [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]
+    [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [taoensso.timbre :as log]))
 
 
-(defn strip-health-info
-  [{:keys [count] :as states-collection}]
-  [count (->> states-collection
-              :nuvlaboxStates
-              (map :nuvlabox)
-              (map :href))])
-
-
-(reg-fx
-  ::fetch-health-info
-  (fn [[callback]]
-    (go
-      (let [[stale-count stale] (strip-health-info (<! (utils/nuvlabox-status-search utils/stale-nb-machines)))
-            [active-count active] (strip-health-info (<! (utils/nuvlabox-status-search utils/active-nb-machines)))
-            unhealthy (into {} (map #(vector % false) stale))
-            healthy   (into {} (map #(vector % true) active))
-            healthy?  (merge unhealthy healthy)]
-        (callback {:stale-count  stale-count
-                   :active-count active-count
-                   :healthy?     healthy?})))))
-
-
 (defn get-state-count
   [state]
-  (api/search @CLIENT :nuvlabox {:filter (utils/state-filter state)
-                                 :last   0}))
+  (api/search @CLIENT :nuvlabox (cond-> {:last 0}
+                                        state (assoc :filter (utils/state-filter state)))))
 
 
 (reg-fx
   ::state-nuvlaboxes
   (fn [[callback]]
     (go
-      (let [new             (<! (get-state-count utils/state-new))
+      (let [total           (<! (get-state-count nil))
+            new             (<! (get-state-count utils/state-new))
             activated       (<! (get-state-count utils/state-activated))
-            quarantined     (<! (get-state-count utils/state-quarantined))
+            commissioned    (<! (get-state-count utils/state-commissioned))
             decommissioning (<! (get-state-count utils/state-decommissioning))
+            decommissioned  (<! (get-state-count utils/state-decommissioned))
             error           (<! (get-state-count utils/state-error))]
 
-        (callback {:new             (:count new)
+        (callback {:total           (:count total)
+                   :new             (:count new)
                    :activated       (:count activated)
-                   :quarantined     (:count quarantined)
+                   :commissioned    (:count commissioned)
                    :decommissioning (:count decommissioning)
+                   :decommissioned  (:count decommissioned)
                    :error           (:count error)})))))
 
 
@@ -72,13 +54,12 @@
   ::get-status-nuvlaboxes
   (fn [[nuvlaboxes callback]]
     (go
-      (let [floating-time-tolerance "-10s"
-            offline-nuvlaboxes      (<! (get-status-collection
+      (let [offline-nuvlaboxes      (<! (get-status-collection
                                           nuvlaboxes
-                                          (str "next-heartbeat < 'now" floating-time-tolerance "'")))
+                                          utils/filter-offline-status))
             online-nuvlaboxes       (<! (get-status-collection
                                           nuvlaboxes
-                                          (str "next-heartbeat >= 'now" floating-time-tolerance "'")))]
+                                          utils/filter-online-status))]
 
         (callback {:offline (->> offline-nuvlaboxes
                                  :resources

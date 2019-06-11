@@ -1,5 +1,9 @@
 (ns sixsq.nuvla.ui.dashboard.utils
-  (:require [clojure.string :as str]))
+  (:require
+    [clojure.string :as str]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.time :as time]))
+
 
 (defn resolve-url-pattern
   "When url-pattern is passed and all used params in pattern has values in
@@ -17,3 +21,39 @@
           (fn [url [param-pattern param-value]]
             (str/replace url param-pattern param-value))
           url-pattern pattern-value)))))
+
+
+(defn deployment-active?
+  [state]
+  (str/ends-with? (str state) "ING"))
+
+
+(defn assoc-delta-time
+  "Given the start (as a string), this adds a :delta-time entry in minutes."
+  [start {end :timestamp :as evt}]
+  (assoc evt :delta-time (time/delta-minutes start end)))
+
+
+(defn has-action?
+  [action deployment]
+  (->> deployment
+       :operations
+       (filter #(= action (:rel %)))
+       not-empty
+       boolean))
+
+
+(def stop-action? (partial has-action? "stop"))
+
+
+(def delete-action? (partial has-action? "delete"))
+
+
+(defn is-started?
+  [state]
+  (= state "STARTED"))
+
+
+(defn detail-href
+  [id]
+  (str "dashboard/" (general-utils/id->uuid id)))

@@ -3,7 +3,6 @@
     [cljs.pprint :refer [pprint]]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.cimi-api.utils :as cimi-api-utils]
     [sixsq.nuvla.ui.cimi-detail.events :as api-detail-events]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.docs.subs :as docs-subs]
@@ -12,6 +11,7 @@
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.general :as general]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
@@ -230,4 +230,4 @@
          [ui/Segment style/basic
           (detail-menu refresh-button data base-uri description)
           (detail-header data)
-          (group-table-sui (cimi-api-utils/remove-common-attrs data) description)])))
+          (group-table-sui (general-utils/remove-common-attrs data) description)])))

@@ -56,24 +56,12 @@
 
 
 (defmethod panel/render :documentation
-  [_]
-  [documents-view])
-
-
-(defn documentation-resource
-  []
-  (let [path      (subscribe [::main-subs/nav-path])
-        documents (subscribe [::subs/documents])]
-    (dispatch [::events/get-documents])
-    (fn []
-      (let [n        (count @path)
-            children (case n
-                       1 [[documents-view]]
-                       2 [[docs-details-view/docs-detail (str "resource-metadata/" (second @path))]]
-                       [[documents-view]])]
-        (vec (concat [ui/Segment style/basic] children))))))
-
-
-(defmethod panel/render :documentation
   [path]
-  [documentation-resource])
+  (dispatch [::events/get-documents])
+  (fn [path]
+    (let [n        (count path)
+          children (case n
+                     1 [documents-view]
+                     2 [docs-details-view/docs-detail (str "resource-metadata/" (second path))]
+                     [documents-view])]
+      [ui/Segment style/basic children])))

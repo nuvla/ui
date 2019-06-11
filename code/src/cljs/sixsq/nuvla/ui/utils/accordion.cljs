@@ -26,6 +26,7 @@
 (defn plus
   [add-event validate-event]
   [ui/Icon {:name     "plus circle"
+            :link     true
             :on-click #(do (dispatch [::main-events/changes-protection? true])
                            (dispatch [add-event (random-uuid) {}])
                            (dispatch [validate-event]))}])

@@ -17,7 +17,7 @@
 
 (defn prepare-params [params]
   (->> params
-       (filter (fn [[k v]] (not (or (nil? v) (str/blank? v)))))
+       (remove (fn [[_ v]] (or (nil? v) (str/blank? (str v)))))
        (into {})))
 
 
@@ -134,19 +134,53 @@
           true (quot elements-per-page)
           (pos? (mod total-elements elements-per-page)) inc))
 
-(defn id->uuid
-  [id]
-  (-> id (str/split #"/") (nth 1 nil)))
-
-
-(defn id->short-uuid
-  [id]
-  (some-> id id->uuid (str/split #"-") seq first))
-
 
 ;;
 ;; cimi
 ;;
+
+
+(def ^:const common-attrs #{:id, :resource-type, :created, :updated, :name, :description, :tags, :parent, :subtype,
+                            :properties, :resource-metadata, :operations, :acl})
+
+(defn select-common-attrs
+  [resource]
+  (select-keys resource common-attrs))
+
+
+(defn remove-common-attrs
+  [resource]
+  (->> common-attrs
+       (set/difference (set (keys resource)))
+       (select-keys resource)))
+
+
+(defn split-form-data
+  [form-data]
+  (let [common-attrs #{:name :description :properties}
+        common-map   (select-keys form-data common-attrs)
+        template-map (into {} (remove #(common-attrs (first %)) form-data))]
+    [common-map template-map]))
+
+
+(defn create-template
+  [resource-type form-data]
+  (let [[common-map template-map] (split-form-data form-data)]
+    (assoc common-map :template template-map)))
+
+
+(defn id->uuid
+  [id]
+  (let [[_ uuid] (str/split id #"/")]
+    uuid))
+
+
+(defn id->short-uuid
+  [id]
+  (let [uuid (id->uuid id)
+        [short-uuid] (str/split uuid #"-")]
+    short-uuid))
+
 
 (defn operation-name [op-uri]
   (second (re-matches #"^(?:.*/)?(.+)$" op-uri)))

@@ -1,27 +1,14 @@
-(ns sixsq.nuvla.ui.nuvlabox.events
+(ns sixsq.nuvla.ui.edge.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [sixsq.nuvla.ui.edge.effects :as fx]
+    [sixsq.nuvla.ui.edge.spec :as spec]
+    [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.nuvlabox.effects :as fx]
-    [sixsq.nuvla.ui.nuvlabox.spec :as spec]
-    [sixsq.nuvla.ui.nuvlabox.utils :as utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
     [taoensso.timbre :as log]))
-
-
-(reg-event-db
-  ::set-health-info
-  (fn [db [_ state-info]]
-    (assoc db
-      ::spec/health-info state-info)))
-
-
-(reg-event-fx
-  ::fetch-health-info
-  (fn [_ _]
-    {::fx/fetch-health-info [#(dispatch [::set-health-info %])]}))
 
 
 ;; from CIMI
@@ -44,8 +31,7 @@
                             (general-utils/prepare-params
                               (cond-> {:first   (inc (* (dec page) elements-per-page))
                                        :last    (* page elements-per-page)
-                                       :orderby "created:desc"
-                                       :select  "id, name, state"}
+                                       :orderby "created:desc"}
                                       state-selector (assoc :filter (utils/state-filter state-selector))))
                             #(dispatch [::set-nuvlaboxes %])]
      ::fx/state-nuvlaboxes [#(dispatch [::set-state-nuvlaboxes %])]}))
@@ -86,3 +72,24 @@
     (dispatch [::get-nuvlaboxes])
     {:db (assoc db ::spec/state-selector state-selector
                    ::spec/page 1)}))
+
+
+(reg-event-db
+  ::open-modal
+  (fn [db [_ modal-id]]
+    (assoc db ::spec/open-modal modal-id)))
+
+
+(reg-event-fx
+  ::create-nuvlabox
+  (fn [_ [_ owner-id]]
+    {::cimi-api-fx/add [:nuvlabox {:owner            owner-id
+                                   :refresh-interval 30}
+                        #(dispatch [::set-created-nuvlabox-id %])]}))
+
+
+(reg-event-db
+  ::set-created-nuvlabox-id
+  (fn [db [_ {:keys [resource-id]}]]
+    (dispatch [::get-nuvlaboxes])
+    (assoc db ::spec/nuvlabox-created-id resource-id)))

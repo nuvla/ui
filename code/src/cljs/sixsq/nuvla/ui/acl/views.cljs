@@ -325,8 +325,9 @@
                            :read-only read-only
                            :on-change on-change)
           acl  (or (:acl opts) acl)]
-      [:div (when @(subscribe [::main-subs/is-device? :mobile])
-              {:style {:overflow-x "auto"}})
+      [:div {:style (cond-> {:margin-bottom "10px"
+                             :margin-top    "10px"}
+                            @(subscribe [::main-subs/is-device? :mobile]) (assoc :overflow-x "auto"))}
        [AclOwners opts]
        (when-not (and read-only
                       (< (count acl) 2))

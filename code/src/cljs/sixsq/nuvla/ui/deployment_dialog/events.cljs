@@ -84,18 +84,9 @@
       (dispatch [::get-data-records-by-cred]))
     (let [data              {:module {:href id}}
           old-deployment-id (:id deployment)
-          add-depl-callback (fn [response]
-                              (if (instance? js/Error response)
-                                (let [{:keys [status message]} (response/parse-ex-info response)]
-                                  (dispatch [::messages-events/add
-                                             {:header  (cond-> (str "error create deployment")
-                                                               status (str " (" status ")"))
-                                              :content message
-                                              :type    :error}])
-                                  (dispatch [::close-deploy-modal]))
-                                (do
-                                  (dispatch [::get-credentials])
-                                  (dispatch [::get-deployment (:resource-id response)]))))]
+          on-success        #(do
+                               (dispatch [::get-credentials])
+                               (dispatch [::get-deployment (:resource-id %)]))]
       (cond-> {:db               (assoc db ::spec/loading-deployment? true
                                            ::spec/deployment nil
                                            ::spec/selected-credential nil
@@ -106,7 +97,7 @@
                                            ::spec/selected-infra-service nil
                                            ::spec/infra-services nil
                                            ::spec/data-infra-services nil)
-               ::cimi-api-fx/add [:deployment data add-depl-callback]}
+               ::cimi-api-fx/add [:deployment data on-success]}
               old-deployment-id (assoc ::cimi-api-fx/delete [old-deployment-id #()])))))
 
 (reg-event-fx

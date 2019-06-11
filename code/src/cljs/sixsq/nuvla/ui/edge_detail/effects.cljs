@@ -1,11 +1,11 @@
-(ns sixsq.nuvla.ui.nuvlabox-detail.effects
+(ns sixsq.nuvla.ui.edge-detail.effects
   (:require-macros
     [cljs.core.async.macros :refer [go]])
   (:require
     [cljs.core.async :refer [<!]]
     [re-frame.core :refer [reg-fx]]
     [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.ui.cimi-api.utils :refer [CLIENT]]))
+    [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]))
 
 
 (reg-fx

@@ -14,6 +14,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [taoensso.timbre :as log]))
 
@@ -47,14 +48,9 @@
                          [format-module module]) module-children)))]))
 
 
-(defn toggle [v]
-  (swap! v not))
-
-
 (defn modules-view []
   (let [tr      (subscribe [::i18n-subs/tr])
-        module  (subscribe [::apps-subs/module])
-        active? (r/atom true)]
+        module  (subscribe [::apps-subs/module])]
     (fn []
       (let [children (:children @module)]
         (if (empty? children)
@@ -62,18 +58,10 @@
            [ui/Icon {:name "warning sign"}]
            (@tr [:no-children-modules])]
 
-          [ui/Accordion {:fluid     true
-                         :styled    true
-                         :exclusive false
-                         }
-           [ui/AccordionTitle {:active   @active?
-                               :index    1
-                               :on-click #(toggle active?)}
-            [:h2
-             [ui/Icon {:name (if @active? "dropdown" "caret right")}]
-             "Sub-modules"]]
-           [ui/AccordionContent {:active @active?}
-            [format-module-children children]]])))))
+          [uix/Accordion
+           [format-module-children children]
+           :label "Sub-modules"
+           :title-size :h2])))))
 
 
 (defn
@@ -100,15 +88,12 @@
                           :on-click #(swap! acl-visible? not)}]]
          [apps-views-detail/control-bar]
          (when @acl-visible?
-           [:<>
-            [acl/AclWidget {:acl       (get @module-common ::apps-spec/acl)
-                            :on-change #(do (dispatch [::apps-events/acl %])
-                                            (dispatch [::main-events/changes-protection? true]))
-                            :read-only (not editable?)}]
-            [:div {:style {:padding-top 10}}]])
+           [acl/AclWidget {:acl       (get @module-common ::apps-spec/acl)
+                           :on-change #(do (dispatch [::apps-events/acl %])
+                                           (dispatch [::main-events/changes-protection? true]))
+                           :read-only (not editable?)}])
          [summary]
          [apps-views-detail/save-action]
-         [:div {:style {:padding-top 10}}]
          [modules-view]
          [apps-views-detail/save-modal]
          [apps-views-detail/logo-url-modal]]))))

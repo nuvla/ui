@@ -31,10 +31,6 @@
         :on-click  #(dispatch [::events/get-services])}])))
 
 
-(defn toggle [v]
-  (swap! v not))
-
-
 ;(defn services-search []
 ;  (let [tr (subscribe [::i18n-subs/tr])]
 ;    [ui/Input {:placeholder (@tr [:search])

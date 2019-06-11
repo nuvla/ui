@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.1.0] - 2019-06.11
+
 ### Added
 
   - Edge page. Nuvlabox details

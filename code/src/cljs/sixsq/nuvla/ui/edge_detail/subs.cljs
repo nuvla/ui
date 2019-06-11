@@ -24,9 +24,7 @@
   ::next-heartbeat-moment
   :<- [::nuvlabox-status]
   (fn [{:keys [next-heartbeat]}]
-    (some-> next-heartbeat
-            time/parse-iso8601
-            (.add (- utils/STATUS-FLOATING-TIME-TOLERANCE) "seconds"))))
+    (some-> next-heartbeat time/parse-iso8601)))
 
 
 (reg-sub

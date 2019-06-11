@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.edge.utils
   (:require
     [cljs.pprint :refer [cl-format]]
-    [clojure.string :as str]
     [sixsq.nuvla.client.api :as api]
     [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
@@ -41,7 +40,7 @@
     :unknown "yellow"
     nil))
 
-(def STATUS-FLOATING-TIME-TOLERANCE 10)                     ;; in seconds
+(def STATUS-FLOATING-TIME-TOLERANCE 3)                     ;; in seconds
 
 (def filter-offline-status (str "next-heartbeat < 'now-" STATUS-FLOATING-TIME-TOLERANCE "s'"))
 
@@ -54,16 +53,6 @@
 
 
 (def default-params {:first 1, :last 10000})
-
-(def floating-time-tolerance "-10s")
-
-(def stale-nb-machines (assoc default-params :filter (str "nextCheck < 'now" floating-time-tolerance "'")
-                                             :select "nuvlabox"))
-
-
-(def active-nb-machines (assoc default-params :filter (str "nextCheck >= 'now" floating-time-tolerance "'")
-                                              :select "nuvlabox"))
-
 
 (defn nuvlabox-status-search
   [params]

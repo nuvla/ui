@@ -36,7 +36,7 @@
 (reg-event-fx
   ::get-deployment
   (fn [{{:keys [::spec/deployment] :as db} :db} [_ id]]
-    (let [get-depl-callback #(dispatch [::history-events/navigate "dashboard"])]
+    (let [get-depl-callback #(dispatch [::set-deployment %])]
       {:db               (cond-> (assoc db ::spec/loading? true)
                                  (not= (:id deployment) id) (merge db spec/defaults))
        ::cimi-api-fx/get [id get-depl-callback]})))

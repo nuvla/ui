@@ -180,7 +180,7 @@
      [ui/TableCell
       (if editable?
         [ui/Dropdown {:name      (str "protocol-" id)
-                      :inline    true
+                      :selection true
                       :value     (or protocol "tcp")
                       :options   [{:key "TCP", :value "tcp", :text "TCP"}
                                   {:key "UDP", :value "udp", :text "UDP"}
@@ -243,18 +243,17 @@
 
      [ui/TableCell
       (if editable?
-        [ui/Label
-         [ui/Dropdown {:name          (str "type-" id)
-                       :default-value mount-type
-                       :selection     true
-                       :options       [{:key "volume", :value "volume", :text "volume"}
-                                       {:key "bind", :value "bind", :text "bind"}
-                                       ;{:key "tmpfs", :value "tmpfs", :text "tmpfs"}
-                                       ]
-                       :on-change     (ui-callback/value
-                                        #(do (dispatch [::main-events/changes-protection? true])
-                                             (dispatch [::events/update-mount-type id %])
-                                             (dispatch [::apps-events/validate-form])))}]]
+        [ui/Dropdown {:name          (str "type-" id)
+                      :default-value mount-type
+                      :selection     true
+                      :options       [{:key "volume", :value "volume", :text "volume"}
+                                      {:key "bind", :value "bind", :text "bind"}
+                                      ;{:key "tmpfs", :value "tmpfs", :text "tmpfs"}
+                                      ]
+                      :on-change     (ui-callback/value
+                                       #(do (dispatch [::main-events/changes-protection? true])
+                                            (dispatch [::events/update-mount-type id %])
+                                            (dispatch [::apps-events/validate-form])))}]
         [:span "type=" [:b mount-type]])]
 
      [ui/TableCell

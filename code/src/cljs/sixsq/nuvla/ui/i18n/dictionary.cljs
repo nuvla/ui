@@ -151,7 +151,7 @@
         :module-docker-image-placeholder           "image - e.g. ubuntu"
         :module-docker-name-help                   "Docker image name"
         :module-docker-registry-placeholder        "hub.docker.com"
-        :module-docker-repository-placeholder      "org. - e.g. ubuntu"
+        :module-docker-repository-placeholder      "repository - e.g. ubuntu"
         :module-docker-tag-placeholder             "latest"
         :module-env-variables                      "Environmental variables"
         :module-env-variables-help                 "Environmental variables definitions for the container with some extra option as description and required fields."

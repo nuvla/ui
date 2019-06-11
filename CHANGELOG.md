@@ -4,11 +4,12 @@
 
 ### Added
 
-  - Edge page. Nuvlabox details still hidden wip
+  - Edge page. Nuvlabox details
 
 ### Changed
 
-  - Edge details page
+  - Deployment details - jobs section are paginated
+  - Deployment page - ame eployment card is visible in details
   - ACLs - Fix bug in indeterminate state
   - Avoid as much as possible blank page at initialization
   - Move client out of DB

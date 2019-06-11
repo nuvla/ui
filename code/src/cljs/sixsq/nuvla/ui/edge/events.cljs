@@ -14,11 +14,11 @@
 ;; from CIMI
 
 
-(reg-event-fx
+(reg-event-db
   ::set-page
-  (fn [{db :db} [_ page]]
+  (fn [db [_ page]]
     (dispatch [::get-nuvlaboxes])
-    {:db (assoc db ::spec/page page)}))
+    (assoc db ::spec/page page)))
 
 
 (reg-event-fx

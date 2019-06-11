@@ -12,6 +12,10 @@
 
 (s/def ::jobs any?)
 
+(s/def ::jobs-per-page pos-int?)
+
+(s/def ::job-page nat-int?)
+
 (s/def ::node-parameters any?)
 
 
@@ -20,7 +24,9 @@
                           ::deployment-parameters
                           ::events
                           ::jobs
-                          ::node-parameters]))
+                          ::node-parameters
+                          ::jobs-per-page
+                          ::job-page]))
 
 
 (def defaults {::loading?              false
@@ -28,4 +34,6 @@
                ::deployment-parameters nil
                ::events                nil
                ::jobs                  nil
+               ::jobs-per-page         10
+               ::job-page              1
                ::node-parameters       nil})

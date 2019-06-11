@@ -21,6 +21,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [taoensso.timbre :as log]))
 
 
@@ -160,30 +161,41 @@
 
 (defn jobs-table
   [jobs]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [jobs]
-      [ui/Segment style/autoscroll-x
-       [ui/Table
-        [ui/TableHeader
-         [ui/TableRow
-          [ui/TableHeaderCell [:span (@tr [:job])]]
-          [ui/TableHeaderCell [:span (@tr [:action])]]
-          [ui/TableHeaderCell [:span (@tr [:timestamp])]]
-          [ui/TableHeaderCell [:span (@tr [:state])]]
-          [ui/TableHeaderCell [:span (@tr [:progress])]]
-          [ui/TableHeaderCell [:span (@tr [:return-code])]]
-          [ui/TableHeaderCell [:span (@tr [:message])]]]]
-        [ui/TableBody
-         (for [{:keys [id] :as job} jobs]
-           ^{:key id}
-           [job-map-to-row job])]]])))
+  (let [tr (subscribe [::i18n-subs/tr])
+        elements-per-page (subscribe [::subs/jobs-per-page])
+        page              (subscribe [::subs/job-page])]
+    (fn [{:keys [resources] :as jobs}]
+      (let [total-elements (get jobs :count 0)
+            total-pages    (general-utils/total-pages total-elements @elements-per-page)]
+        [ui/Segment style/autoscroll-x
+        [ui/Table
+         [ui/TableHeader
+          [ui/TableRow
+           [ui/TableHeaderCell [:span (@tr [:job])]]
+           [ui/TableHeaderCell [:span (@tr [:action])]]
+           [ui/TableHeaderCell [:span (@tr [:timestamp])]]
+           [ui/TableHeaderCell [:span (@tr [:state])]]
+           [ui/TableHeaderCell [:span (@tr [:progress])]]
+           [ui/TableHeaderCell [:span (@tr [:return-code])]]
+           [ui/TableHeaderCell [:span (@tr [:message])]]]]
+         [ui/TableBody
+          (for [{:keys [id] :as job} resources]
+            ^{:key id}
+            [job-map-to-row job])]]
+
+        (when (> total-pages 1)
+          [uix/Pagination {:totalPages   total-pages
+                           :activePage   @page
+                           :onPageChange (ui-callback/callback
+                                           :activePage #(dispatch [::events/set-job-page %]))}])]))))
 
 
 (defn jobs-section
   []
   (let [tr   (subscribe [::i18n-subs/tr])
-        jobs (subscribe [::subs/jobs])]
-    [uix/Accordion [jobs-table @jobs], :label (@tr [:job]), :count (count @jobs)]))
+        jobs (subscribe [::subs/jobs])
+        {:keys [resources]} @jobs]
+    [uix/Accordion [jobs-table @jobs], :label (@tr [:job]), :count (count resources)]))
 
 
 (defn refresh-button

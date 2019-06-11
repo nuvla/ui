@@ -77,6 +77,14 @@
                              #(dispatch [::set-events (:resources %)])]})))
 
 
+
+(reg-event-db
+  ::set-job-page
+  (fn [{:keys [::spec/deployment] :as db} [_ page]]
+    (dispatch [::get-jobs (:id deployment)])
+    (assoc db ::spec/job-page page)))
+
+
 (reg-event-db
   ::set-jobs
   (fn [db [_ jobs]]
@@ -85,18 +93,19 @@
 
 (reg-event-fx
   ::get-jobs
-  (fn [{:keys [db]} [_ href]]
+  (fn [{{:keys [::spec/job-page
+                ::spec/jobs-per-page]} :db} [_ href]]
     (let [filter-str   (str "target-resource/href='" href "'")
-          order-by-str "time-of-status-change:desc,updated:desc"
           select-str   (str "id, action, time-of-status-change, updated, state, "
                             "target-resource, return-code, progress, status-message")
           query-params {:filter  filter-str
-                        :orderby order-by-str
                         :select  select-str
-                        :last    10}]
+                        :first   (inc (* (dec job-page) jobs-per-page))
+                        :last    (* job-page jobs-per-page)
+                        :orderby "created:desc"}]
       {::cimi-api-fx/search [:job
                              (general-utils/prepare-params query-params)
-                             #(dispatch [::set-jobs (:resources %)])]})))
+                             #(dispatch [::set-jobs %])]})))
 
 
 (reg-event-db

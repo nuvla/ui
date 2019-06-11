@@ -3,18 +3,18 @@
     [cljs.pprint :refer [cl-format]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.edge-detail.events :as events]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]
     [sixsq.nuvla.ui.edge.utils :as u]
+    [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.plot.plot :as plot]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.edge.utils :as utils]
-    [reagent.core :as r]))
+    [taoensso.timbre :as log]))
 
 
 (defn RefreshButton
@@ -33,10 +33,26 @@
 
 (defn DecommissionButton
   []
-  [uix/MenuItemWithIcon
-   {:name      "Decommission"
-    :icon-name "eraser"
-    :on-click  #(dispatch [::events/decommission])}])
+  (let [tr          (subscribe [::i18n-subs/tr])
+        modal-open? (r/atom false)
+        on-close    #(reset! modal-open? false)]
+    (fn []
+      [ui/Modal
+       {:trigger    (r/as-element
+                      [uix/MenuItemWithIcon
+                       {:name      "Decommission"
+                        :icon-name "eraser"
+                        :on-click  #(reset! modal-open? true)}])
+        :close-icon true
+        :on-close   on-close
+        :open       @modal-open?
+        :header     "Decommission"
+        :content    (@tr [:are-you-sure?])
+        :actions    [{:key     "cancel"
+                      :content (@tr [:cancel])}
+                     {:key     "yes"
+                      :content (@tr [:yes]), :color "red"
+                      :onClick #(dispatch [::events/decommission])}]}])))
 
 
 (defn MenuBar []
@@ -44,7 +60,7 @@
     [ui/Menu {:borderless true}
      (when @can-decommission?
        [DecommissionButton])
-    [RefreshButton]]))
+     [RefreshButton]]))
 
 
 (defn UsbDeviceRow

@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.dashboard.utils
   (:require
-    [sixsq.nuvla.ui.utils.time :as time]
     [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (defn resolve-url-pattern

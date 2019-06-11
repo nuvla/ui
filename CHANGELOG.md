@@ -8,6 +8,7 @@
 
 ### Changed
 
+  - Edge details page
   - ACLs - Fix bug in indeterminate state
   - Avoid as much as possible blank page at initialization
   - Move client out of DB

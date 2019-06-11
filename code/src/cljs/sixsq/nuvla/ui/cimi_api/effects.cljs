@@ -11,9 +11,9 @@
     [sixsq.nuvla.client.async :as async-client]
     [sixsq.nuvla.client.authn :as authn]
     [sixsq.nuvla.ui.history.utils :as utils]
+    [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.defines :as defines]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]
     [taoensso.timbre :as log]))
 

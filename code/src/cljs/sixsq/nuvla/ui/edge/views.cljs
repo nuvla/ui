@@ -3,6 +3,7 @@
     [cljs.pprint :refer [cl-format pprint]]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
     [sixsq.nuvla.ui.edge.events :as events]
     [sixsq.nuvla.ui.edge.subs :as subs]
@@ -16,7 +17,6 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [taoensso.timbre :as log]))
 
 

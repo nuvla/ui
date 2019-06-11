@@ -3,9 +3,9 @@
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.edge-detail.spec :as spec]
     [sixsq.nuvla.ui.edge.utils :as utils]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [taoensso.timbre :as log]))
 
 
 (reg-sub

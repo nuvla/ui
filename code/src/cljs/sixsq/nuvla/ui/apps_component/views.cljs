@@ -20,9 +20,9 @@
     [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.form-fields :as form-fields]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+    [taoensso.timbre :as log]))
 
 
 (defn input

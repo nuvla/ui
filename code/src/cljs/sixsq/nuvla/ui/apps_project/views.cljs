@@ -14,9 +14,9 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+    [taoensso.timbre :as log]))
 
 (defn summary []
   [apps-views-detail/summary])

@@ -34,4 +34,3 @@
     (let [nuvlabox-id (:id nuvlabox)]
       {::cimi-api-fx/operation [nuvlabox-id "decommission"
                                 #(dispatch [::get-nuvlabox nuvlabox-id])]})))
-

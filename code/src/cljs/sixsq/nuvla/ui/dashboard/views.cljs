@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.dashboard-detail.views :as dashboard-detail-views]
     [sixsq.nuvla.ui.dashboard.events :as events]
     [sixsq.nuvla.ui.dashboard.subs :as subs]
+    [sixsq.nuvla.ui.dashboard.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
@@ -15,8 +16,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.dashboard.utils :as utils]))
+    [taoensso.timbre :as log]))
 
 
 (defn control-bar []

@@ -157,43 +157,43 @@
   [:span form-fields/nbsp [ui/Label {:circular true} (count coll)]])
 
 
-(defn single-port [port editable? tr]
+(defn single-port
+  [port editable? tr]
   (let [{:keys [id
                 ::spec/published-port
                 ::spec/target-port
                 ::spec/protocol]} port]
-    [ui/GridRow {:key id}
-     [ui/GridColumn {:floated :left
-                     :width   11}
+    [ui/TableRow
+
+     [ui/TableCell
       (if editable?
         [input id "published-port" published-port (@tr [:module-ports-published-port-placeholder])
          ::events/update-port-published ::spec/published-port]
-        (when (number? published-port) [:span [:b published-port] " "]))
-      [:span ": "]
+        (when (number? published-port) [:span [:b published-port] " "]))]
+
+     [ui/TableCell
       (if editable?
         [input id "target-port" target-port "dest. - e.g. 22 or 22-23"
          ::events/update-port-target ::spec/target-port]
-        [:span [:b target-port]])
+        [:span [:b target-port]])]
+
+     [ui/TableCell
       (if editable?
-        (do
-          [:span " / "]
-          [ui/Label
-           [ui/Dropdown {:name      (str "protocol-" id)
-                         :inline    true
-                         :value     (or protocol "tcp")
-                         :options   [{:key "TCP", :value "tcp", :text "TCP"}
-                                     {:key "UDP", :value "udp", :text "UDP"}
-                                     {:key "SCTP", :value "sctp", :text "SCTP"}]
-                         :on-change (ui-callback/value
-                                      #(do (dispatch [::main-events/changes-protection? true])
-                                           (dispatch [::events/update-port-protocol id %])
-                                           (dispatch [::apps-events/validate-form])))}]])
+        [ui/Dropdown {:name      (str "protocol-" id)
+                      :inline    true
+                      :value     (or protocol "tcp")
+                      :options   [{:key "TCP", :value "tcp", :text "TCP"}
+                                  {:key "UDP", :value "udp", :text "UDP"}
+                                  {:key "SCTP", :value "sctp", :text "SCTP"}]
+                      :on-change (ui-callback/value
+                                   #(do (dispatch [::main-events/changes-protection? true])
+                                        (dispatch [::events/update-port-protocol id %])
+                                        (dispatch [::apps-events/validate-form])))}]
         (when (and (not (empty? protocol)) (not= "tcp" protocol))
-          [:span " / " [:b protocol]]))]
+          [:b protocol]))]
+
      (when editable?
-       [ui/GridColumn {:floated :right
-                       :align   :right
-                       :style   {}}
+       [ui/TableCell
         [trash id ::events/remove-port]])]))
 
 
@@ -211,16 +211,22 @@
           (if (empty? @ports)
             [ui/Message
              (str/capitalize (str (@tr [:no-ports]) "."))]
-            [:div [ui/Grid {:style {:margin-top    5
-                                    :margin-bottom 5}}
-                   (for [[id port] @ports]
-                     ^{:key id}
-                     [single-port port editable? tr])
-                   ]])
+            [:div [ui/Table {:style {:margin-top 10}
+                             :class :nuvla-ui-editable}
+                   [ui/TableHeader
+                    [ui/TableRow
+                     [ui/TableHeaderCell {:content "Source (Internal)"}]
+                     [ui/TableHeaderCell {:content "Destination (External)"}]
+                     [ui/TableHeaderCell {:content "Protocol"}]
+                     (when editable?
+                       [ui/TableHeaderCell {:content "Action"}])]]
+                   [ui/TableBody
+                    (for [[id port] @ports]
+                      ^{:key id}
+                      [single-port port editable? tr])]]])
           (when editable?
-            [:div
-             [plus ::events/add-port]])
-          ]
+            [:div {:style {:padding-top 10}}
+             [plus ::events/add-port]])]
          :label (@tr [:module-ports])
          :count (count @ports)]))))
 
@@ -232,9 +238,10 @@
                 ::spec/mount-source
                 ::spec/mount-target
                 ::spec/mount-read-only]} mount]
-    [ui/GridRow {:key id}
-     [ui/GridColumn {:floated :left
-                     :width   15}
+
+    [ui/TableRow
+
+     [ui/TableCell
       (if editable?
         [ui/Label
          [ui/Dropdown {:name          (str "type-" id)
@@ -248,35 +255,34 @@
                                         #(do (dispatch [::main-events/changes-protection? true])
                                              (dispatch [::events/update-mount-type id %])
                                              (dispatch [::apps-events/validate-form])))}]]
-        [:span "type=" [:b mount-type]])
-      [:span " , "]
+        [:span "type=" [:b mount-type]])]
+
+     [ui/TableCell
       (if editable?
         ;id name value placeholder update-event value-spec
         [input id "vol-source" mount-source "source"
          ::events/update-mount-source ::spec/mount-source false]
-        [:span "src=" [:b mount-source]])
-      [:span " , "]
+        [:span "src=" [:b mount-source]])]
+
+     [ui/TableCell
       (if editable?
         [input id "vol-dest" mount-target "target"
          ::events/update-mount-target ::spec/mount-target false]
-        [:span "dst=" [:b mount-target]])
+        [:span "dst=" [:b mount-target]])]
+
+     [ui/TableCell
       (if editable?
-        (do
-          [:span " , "]
-          [:span " " (@tr [:module-mount-read-only?]) " "
-           [ui/Checkbox {:name      "read-only"
-                         :checked   (if (nil? mount-read-only) false mount-read-only)
-                         :on-change (ui-callback/checked
-                                      #(do (dispatch [::main-events/changes-protection? true])
-                                           (dispatch [::events/update-mount-read-only? id %])
-                                           (dispatch [::apps-events/validate-form])))
-                         :align     :middle}]])
-        (when mount-read-only (do [:span " , " [:b "readonly"]])))]
+        [ui/Checkbox {:name      "read-only"
+                      :checked   (if (nil? mount-read-only) false mount-read-only)
+                      :on-change (ui-callback/checked
+                                   #(do (dispatch [::main-events/changes-protection? true])
+                                        (dispatch [::events/update-mount-read-only? id %])
+                                        (dispatch [::apps-events/validate-form])))
+                      :align     :middle}]
+        (when mount-read-only [:b "readonly"]))]
+
      (when editable?
-       [ui/GridColumn {:floated :right
-                       :width   1
-                       :align   :right
-                       :style   {}}
+       [ui/TableCell
         [trash id ::events/remove-mount]])]))
 
 
@@ -294,11 +300,20 @@
           (if (empty? @mounts)
             [ui/Message
              (str/capitalize (str (@tr [:no-mounts]) "."))]
-            [:div [ui/Grid {:style {:margin-top    5
-                                    :margin-bottom 5}}
-                   (for [[id mount] @mounts]
-                     ^{:key id}
-                     [single-mount mount editable?])]])
+            [:div [ui/Table {:style {:margin-top 10}
+                             :class :nuvla-ui-editable}
+                   [ui/TableHeader
+                    [ui/TableRow
+                     [ui/TableHeaderCell {:content "Type"}]
+                     [ui/TableHeaderCell {:content "Source"}]
+                     [ui/TableHeaderCell {:content "Target"}]
+                     [ui/TableHeaderCell {:content "Read only?"}]
+                     (when editable?
+                       [ui/TableHeaderCell {:content "Action"}])]]
+                   [ui/TableBody
+                    (for [[id mount] @mounts]
+                      ^{:key id}
+                      [single-mount mount editable?])]]])
           (when editable?
             [:div
              [plus ::events/add-mount]])]

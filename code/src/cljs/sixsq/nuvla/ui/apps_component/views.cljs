@@ -215,8 +215,8 @@
                              :class :nuvla-ui-editable}
                    [ui/TableHeader
                     [ui/TableRow
-                     [ui/TableHeaderCell {:content "Source (Internal)"}]
                      [ui/TableHeaderCell {:content "Destination (External)"}]
+                     [ui/TableHeaderCell {:content "Source (Internal)"}]
                      [ui/TableHeaderCell {:content "Protocol"}]
                      (when editable?
                        [ui/TableHeaderCell {:content "Action"}])]]

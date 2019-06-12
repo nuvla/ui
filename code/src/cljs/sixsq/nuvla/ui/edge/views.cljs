@@ -110,9 +110,9 @@
                           @nuvlabox-id (assoc :color "green"))]]
         (when @nuvlabox-id
           [ui/CopyToClipboard {:text @nuvlabox-id}
-          [ui/Button {:primary true
-                      :icon    "clipboard"
-                      :content "Copy your Nuvlabox ID"}]])]]]]))
+           [ui/Button {:primary true
+                       :icon    "clipboard"
+                       :content (@tr [:copy-nuvlabox-id])}]])]]]]))
 
 
 (defn NuvlaboxRow

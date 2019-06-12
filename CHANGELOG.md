@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - app component creation - fix app component ports headers 
   - invite user - rename create user to invite user
   - fn can-delete? fix a bug
   - cimi api effects - delete support by default on-error

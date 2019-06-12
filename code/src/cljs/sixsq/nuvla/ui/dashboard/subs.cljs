@@ -60,7 +60,6 @@
                                          (map (juxt :name identity))
                                          (into {}))
           first-url                 (first (get-in module [:content :urls]))
-          url-name                  (first first-url)
           url-pattern               (second first-url)
           url                       (utils/resolve-url-pattern url-pattern deployment-params-by-name)]
-      [url-name url])))
+      url)))

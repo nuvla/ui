@@ -14,7 +14,6 @@
     [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -267,7 +266,10 @@
         secondary-urls (rest urls)
         [primary-url-name
          primary-url-pattern] (first urls)
-        primary-url    (subscribe [::subs/url primary-url-pattern])
+        deployment-url (when clickable? (subscribe [::dashboard-subs/deployment-url deployment]))
+        primary-url    (if clickable?
+                         deployment-url
+                         (subscribe [::subs/url primary-url-pattern]))
         started?       (utils/is-started? state)]
 
     ^{:key id}

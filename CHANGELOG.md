@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - deployment card - fix regression in deployment card
   - app component creation - fix app component ports headers 
   - invite user - rename create user to invite user
   - fn can-delete? fix a bug

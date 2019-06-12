@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - invite user - rename create user to invite user
   - fn can-delete? fix a bug
   - cimi api effects - delete support by default on-error
   - Edge details - delete operation added

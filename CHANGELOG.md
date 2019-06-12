@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed
+
+  - cimi api effects - delete support by default on-error
+  - Edge details - delete operation added
+
 ## [2.1.0] - 2019-06.11
 
 ### Added

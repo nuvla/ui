@@ -3,7 +3,6 @@
     [clojure.pprint :refer [cl-format]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as reagent]
     [reagent.core :as r]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.dashboard-detail.events :as events]
@@ -61,8 +60,8 @@
                    [ui/TableCell value]]]
     (if description
       [ui/Popup
-       {:content (reagent/as-element [:p description])
-        :trigger (reagent/as-element table-row)}]
+       {:content (r/as-element [:p description])
+        :trigger (r/as-element table-row)}]
       table-row)))
 
 (defn parameters-section
@@ -225,12 +224,12 @@
   [popup-text icon-name event-kw deployment-id]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Modal
-     {:trigger (reagent/as-element
+     {:trigger (r/as-element
                  [:div
                   [ui/Popup {:content  (@tr [popup-text])
                              :size     "tiny"
                              :position "top center"
-                             :trigger  (reagent/as-element
+                             :trigger  (r/as-element
                                          [ui/Icon {:name  icon-name
                                                    :style {:cursor "pointer"}
                                                    :color "red"}])}]])

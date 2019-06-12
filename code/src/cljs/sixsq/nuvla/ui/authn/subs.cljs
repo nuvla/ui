@@ -12,17 +12,20 @@
 
 (reg-sub
   ::open-modal
-  ::spec/open-modal)
+  (fn [db]
+    (::spec/open-modal db)))
 
 
 (reg-sub
   ::selected-method-group
-  ::spec/selected-method-group)
+  (fn [db]
+    (::spec/selected-method-group db)))
 
 
 (reg-sub
   ::session
-  ::spec/session)
+  (fn [db]
+    (::spec/session db)))
 
 
 (reg-sub

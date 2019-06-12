@@ -11,6 +11,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.plot.plot :as plot]
+    [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
@@ -56,10 +57,14 @@
 
 
 (defn MenuBar []
-  (let [can-decommission? (subscribe [::subs/can-decommission?])]
+  (let [can-decommission? (subscribe [::subs/can-decommission?])
+        can-delete?       (subscribe [::subs/can-delete?])
+        nuvlabox          (subscribe [::subs/nuvlabox])]
     [ui/Menu {:borderless true}
      (when @can-decommission?
        [DecommissionButton])
+     (when @can-delete?
+       [resource-details/delete-button @nuvlabox #(dispatch [::events/delete])])
      [RefreshButton]]))
 
 

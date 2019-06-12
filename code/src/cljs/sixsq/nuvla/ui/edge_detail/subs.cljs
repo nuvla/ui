@@ -49,3 +49,10 @@
   :<- [::nuvlabox]
   (fn [nuvlabox _]
     (general-utils/can-operation? "decommission" nuvlabox)))
+
+
+(reg-sub
+  ::can-delete?
+  :<- [::nuvlabox]
+  (fn [nuvlabox _]
+    (general-utils/can-delete? nuvlabox)))

@@ -3,6 +3,7 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.edge-detail.spec :as spec]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [taoensso.timbre :as log]))
 
 
@@ -34,3 +35,10 @@
     (let [nuvlabox-id (:id nuvlabox)]
       {::cimi-api-fx/operation [nuvlabox-id "decommission"
                                 #(dispatch [::get-nuvlabox nuvlabox-id])]})))
+
+
+(reg-event-fx
+  ::delete
+  (fn [{{:keys [::spec/nuvlabox]} :db} _]
+    (let [nuvlabox-id (:id nuvlabox)]
+      {::cimi-api-fx/delete [nuvlabox-id #(dispatch [::history-events/navigate "edge"])]})))

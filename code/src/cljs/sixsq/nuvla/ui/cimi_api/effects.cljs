@@ -32,25 +32,28 @@
         (-> session-collection :resources first)))))
 
 
-(defn default-add-on-error
-  [resource-type response]
+(defn default-error-message
+  [response error-msg]
   (dispatch [::messages-events/add
              (let [{:keys [status message]} (response/parse-ex-info response)]
-               {:header  (cond-> (str "failure adding " (name resource-type))
+               {:header  (cond-> error-msg
                                  status (str " (" status ")"))
                 :content message
                 :type    :error})]))
 
+(defn default-add-on-error
+  [resource-type response]
+  (default-error-message response (str "failure adding " (name resource-type))))
+
 
 (defn default-get-on-error
   [resource-id response]
-  (dispatch [::messages-events/add
-             (let [{:keys [status message]} (response/parse-ex-info response)]
-               [::messages-events/add
-                {:header  (cond-> (str "error getting " resource-id)
-                                  status (str " (" status ")"))
-                 :content message
-                 :type    :error}])]))
+  (default-error-message response (str "error getting " resource-id)))
+
+
+(defn default-delete-on-error
+  [resource-id response]
+  (default-error-message response (str "error deleting " resource-id)))
 
 
 (defn api-call-error-check
@@ -88,11 +91,12 @@
 
 (reg-fx
   ::delete
-  (fn [[resource-id callback]]
+  (fn [[resource-id on-success & {:keys [on-error]}]]
     (when resource-id
-      (go
-        ;; FIXME: Using 2-arg form doesn't work with advanced optimization. Why?
-        (callback (<! (api/delete @CLIENT resource-id {})))))))
+      ;; FIXME: Using 2-arg form doesn't work with advanced optimization. Why?
+      (let [api-call #(api/delete @CLIENT resource-id {})
+            on-error (or on-error (partial default-delete-on-error resource-id))]
+        (api-call-error-check api-call on-success on-error)))))
 
 
 (reg-fx

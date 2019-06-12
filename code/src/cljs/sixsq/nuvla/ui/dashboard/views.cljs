@@ -85,8 +85,8 @@
                             :max-width     "20ch"}} (get @creds-name credential-id credential-id)]
      [ui/TableCell
       (cond
-        (utils/stop-action? deployment) [dashboard-detail-views/stop-button deployment]
-        (utils/delete-action? deployment) [dashboard-detail-views/delete-button deployment])]]))
+        (general-utils/can-operation? "stop" deployment) [dashboard-detail-views/stop-button deployment]
+        (general-utils/can-delete? deployment) [dashboard-detail-views/delete-button deployment])]]))
 
 
 

@@ -32,39 +32,18 @@
         :on-click  #(dispatch [::events/get-nuvlabox (:id @nuvlabox)])}])))
 
 
-(defn DecommissionButton
-  []
-  (let [tr          (subscribe [::i18n-subs/tr])
-        modal-open? (r/atom false)
-        on-close    #(reset! modal-open? false)]
-    (fn []
-      [ui/Modal
-       {:trigger    (r/as-element
-                      [uix/MenuItemWithIcon
-                       {:name      "Decommission"
-                        :icon-name "eraser"
-                        :on-click  #(reset! modal-open? true)}])
-        :close-icon true
-        :on-close   on-close
-        :open       @modal-open?
-        :header     "Decommission"
-        :content    (@tr [:are-you-sure?])
-        :actions    [{:key     "cancel"
-                      :content (@tr [:cancel])}
-                     {:key     "yes"
-                      :content (@tr [:yes]), :color "red"
-                      :onClick #(dispatch [::events/decommission])}]}])))
-
-
 (defn MenuBar []
-  (let [can-decommission? (subscribe [::subs/can-decommission?])
+  (let [tr                (subscribe [::i18n-subs/tr])
+        can-decommission? (subscribe [::subs/can-decommission?])
         can-delete?       (subscribe [::subs/can-delete?])
-        nuvlabox          (subscribe [::subs/nuvlabox])]
+        nuvlabox          (subscribe [::subs/nuvlabox])
+        {:keys [id name] :as nuvlabox} @nuvlabox]
     [ui/Menu {:borderless true}
      (when @can-decommission?
-       [DecommissionButton])
+       [resource-details/action-button-icon "Decommission" (@tr [:yes]) "eraser" (str "Decommission " (or id name))
+        (@tr [:are-you-sure?]) #(dispatch [::events/decommission]) (constantly nil)])
      (when @can-delete?
-       [resource-details/delete-button @nuvlabox #(dispatch [::events/delete])])
+       [resource-details/delete-button nuvlabox #(dispatch [::events/delete])])
      [RefreshButton]]))
 
 

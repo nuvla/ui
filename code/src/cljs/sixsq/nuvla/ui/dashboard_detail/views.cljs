@@ -15,6 +15,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
@@ -159,33 +160,33 @@
 
 (defn jobs-table
   [jobs]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr                (subscribe [::i18n-subs/tr])
         elements-per-page (subscribe [::subs/jobs-per-page])
         page              (subscribe [::subs/job-page])]
     (fn [{:keys [resources] :as jobs}]
       (let [total-elements (get jobs :count 0)
             total-pages    (general-utils/total-pages total-elements @elements-per-page)]
         [ui/Segment style/autoscroll-x
-        [ui/Table
-         [ui/TableHeader
-          [ui/TableRow
-           [ui/TableHeaderCell [:span (@tr [:job])]]
-           [ui/TableHeaderCell [:span (@tr [:action])]]
-           [ui/TableHeaderCell [:span (@tr [:timestamp])]]
-           [ui/TableHeaderCell [:span (@tr [:state])]]
-           [ui/TableHeaderCell [:span (@tr [:progress])]]
-           [ui/TableHeaderCell [:span (@tr [:return-code])]]
-           [ui/TableHeaderCell [:span (@tr [:message])]]]]
-         [ui/TableBody
-          (for [{:keys [id] :as job} resources]
-            ^{:key id}
-            [job-map-to-row job])]]
+         [ui/Table
+          [ui/TableHeader
+           [ui/TableRow
+            [ui/TableHeaderCell [:span (@tr [:job])]]
+            [ui/TableHeaderCell [:span (@tr [:action])]]
+            [ui/TableHeaderCell [:span (@tr [:timestamp])]]
+            [ui/TableHeaderCell [:span (@tr [:state])]]
+            [ui/TableHeaderCell [:span (@tr [:progress])]]
+            [ui/TableHeaderCell [:span (@tr [:return-code])]]
+            [ui/TableHeaderCell [:span (@tr [:message])]]]]
+          [ui/TableBody
+           (for [{:keys [id] :as job} resources]
+             ^{:key id}
+             [job-map-to-row job])]]
 
-        (when (> total-pages 1)
-          [uix/Pagination {:totalPages   total-pages
-                           :activePage   @page
-                           :onPageChange (ui-callback/callback
-                                           :activePage #(dispatch [::events/set-job-page %]))}])]))))
+         (when (> total-pages 1)
+           [uix/Pagination {:totalPages   total-pages
+                            :activePage   @page
+                            :onPageChange (ui-callback/callback
+                                            :activePage #(dispatch [::events/set-job-page %]))}])]))))
 
 
 (defn jobs-section
@@ -237,7 +238,7 @@
       :actions [{:key     "cancel"
                  :content (@tr [:cancel])}
                 {:key     "yes"
-                 :content (@tr [:yes]), :positive true
+                 :content (@tr [:yes]), :primary true
                  :onClick #(dispatch [event-kw deployment-id])}]}]))
 
 
@@ -281,11 +282,12 @@
                            :padding    "20px"
                            :object-fit "contain"}}]
 
-     (cond
-       (utils/stop-action? deployment) [ui/Label {:corner true, :size "small"}
-                                        [stop-button deployment]]
-       (utils/delete-action? deployment) [ui/Label {:corner true, :size "small"}
-                                          [delete-button deployment]])
+     (when clickable?
+       (cond
+         (general-utils/can-operation? "stop" deployment) [ui/Label {:corner true, :size "small"}
+                                                           [stop-button deployment]]
+         (general-utils/can-delete? deployment) [ui/Label {:corner true, :size "small"}
+                                                 [delete-button deployment]]))
 
      [ui/CardContent (when clickable?
                        {:href     (utils/detail-href id)
@@ -338,10 +340,14 @@
 
 (defn menu
   []
-  (let [deployment (subscribe [::subs/deployment])
-        cep        (subscribe [::api-subs/cloud-entry-point])]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        deployment (subscribe [::subs/deployment])]
     [ui/Menu {:borderless true}
-     [views-operations/format-operations @deployment (:base-uri @cep) nil]
+     (when (general-utils/can-delete? @deployment)
+       [resource-details/delete-button @deployment #(dispatch [::events/delete (:id @deployment)])])
+     (when (general-utils/can-operation? "stop" @deployment)
+       [resource-details/action-button-icon (@tr [:stop]) (@tr [:yes]) "stop" (@tr [:stop]) (@tr [:are-you-sure?])
+        #(dispatch [::events/stop-deployment (:id @deployment)]) (constantly nil)])
      [refresh-button]]))
 
 

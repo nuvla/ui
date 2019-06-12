@@ -3,6 +3,7 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
+    [sixsq.nuvla.ui.dashboard.events :as dashboard-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -54,7 +55,9 @@
                                                                 status (str " (" status ")"))
                                                :content message
                                                :type    :error}]))
-                                 (dispatch [::get-deployment href]))]}))
+                                 (do
+                                   (dispatch [::get-deployment href])
+                                   (dispatch [::dashboard-events/get-deployments])))]}))
 
 
 (reg-event-db

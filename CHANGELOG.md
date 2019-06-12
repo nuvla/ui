@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - reuse action-button and delete duplicated code
+  - fix broken link in welcome page
   - deployment card - fix regression in deployment card
   - app component creation - fix app component ports headers 
   - invite user - rename create user to invite user

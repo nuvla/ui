@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - fn can-delete? fix a bug
   - cimi api effects - delete support by default on-error
   - Edge details - delete operation added
 

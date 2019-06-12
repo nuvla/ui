@@ -216,7 +216,7 @@
 
 
 (defn can-delete? [data]
-  (can-operation? :edit data))
+  (can-operation? :delete data))
 
 
 (defn editable?

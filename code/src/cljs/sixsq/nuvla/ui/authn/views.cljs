@@ -503,11 +503,11 @@
         [ui/Modal
          {:id        "modal-create-user"
           :size      :tiny
-          :open      (= @open-modal :create-user)
+          :open      (= @open-modal :invite-user)
           :closeIcon true
           :on-close  #(dispatch [::events/close-modal])}
 
-         [ui/ModalHeader (@tr [:create-user])]
+         [ui/ModalHeader (@tr [:invite-user])]
 
          [ui/ModalContent
 
@@ -541,11 +541,11 @@
                           :on-change     (ui-callback/value
                                            #(dispatch [::events/update-form-data :email %]))}]]
 
-          [:div {:style {:padding "10px 0"}} (@tr [:create-user-inst])]]
+          [:div {:style {:padding "10px 0"}} (@tr [:invite-user-inst])]]
 
          [ui/ModalActions
           [uix/Button
-           {:text     (@tr [:create-user])
+           {:text     (@tr [:invite-user])
             :positive true
             :loading  @loading?
             :disabled (not form-valid?)
@@ -572,7 +572,7 @@
                                (dispatch [::history-events/navigate "welcome"]))
         create-user-fn       #(do
                                 (dispatch [::events/set-form-id "user-template/email-invitation"])
-                                (dispatch [::events/open-modal :create-user]))
+                                (dispatch [::events/open-modal :invite-user]))
         logged-in?           (boolean @user)
 
         invitation-template? (subscribe [::subs/user-template-exist? "user-template/email-invitation"])]
@@ -592,7 +592,7 @@
           [:<>
            [ui/DropdownItem
             {:key      "invite"
-             :text     (@tr [:create-user])
+             :text     (@tr [:invite-user])
              :icon     "user add"
              :on-click create-user-fn}]
            [ui/DropdownDivider]])])

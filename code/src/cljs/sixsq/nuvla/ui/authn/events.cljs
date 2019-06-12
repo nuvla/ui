@@ -60,7 +60,7 @@
 (reg-event-db
   ::close-modal-no-session
   (fn [{:keys [::spec/open-modal] :as db} _]
-    (when-not (contains? #{:create-user :reset-password} open-modal)
+    (when-not (contains? #{:invite-user :reset-password} open-modal)
       (dispatch [::close-modal]))
     db))
 

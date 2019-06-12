@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.1.1] - 2019-06.12
+
 ### Changed
 
   - reuse action-button and delete duplicated code

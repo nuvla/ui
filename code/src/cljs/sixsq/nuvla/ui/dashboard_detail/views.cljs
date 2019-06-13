@@ -64,26 +64,27 @@
         :trigger (r/as-element table-row)}]
       table-row)))
 
+
 (defn parameters-section
   []
   (let [tr                    (subscribe [::i18n-subs/tr])
-        deployment-parameters (subscribe [::subs/deployment-parameters])
-        params                (vals @deployment-parameters)]
+        deployment-parameters (subscribe [::subs/deployment-parameters])]
     (fn []
-      [uix/Accordion
-       [ui/Segment style/autoscroll-x
-        [ui/Table style/single-line
-         [ui/TableHeader
-          [ui/TableRow
-           [ui/TableHeaderCell [:span (@tr [:name])]]
-           [ui/TableHeaderCell [:span (@tr [:value])]]]]
-         (when-not (empty? params)
-           [ui/TableBody
-            (for [{param-name :name :as param} params]
-              ^{:key param-name}
-              [parameter-to-row param])])]]
-       :count (count params)
-       :label (@tr [:module-output-parameters])])))
+      (let [params (vals @deployment-parameters)]
+        [uix/Accordion
+         [ui/Segment style/autoscroll-x
+          [ui/Table style/single-line
+           [ui/TableHeader
+            [ui/TableRow
+             [ui/TableHeaderCell [:span (@tr [:name])]]
+             [ui/TableHeaderCell [:span (@tr [:value])]]]]
+           (when-not (empty? params)
+             [ui/TableBody
+              (for [{param-name :name :as param} params]
+                ^{:key param-name}
+                [parameter-to-row param])])]]
+         :count (count params)
+         :label (@tr [:module-output-parameters])]))))
 
 
 (def event-fields #{:id :content :timestamp :category})

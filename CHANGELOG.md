@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+  - dashboard detail - issue with refreshing deployment output parameter
+
 ## [2.1.1] - 2019-06.12
 
 ### Changed

@@ -3,6 +3,8 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.edge-detail.spec :as spec]
+    [sixsq.nuvla.ui.edge.effects :as edge-fx]
+    [sixsq.nuvla.ui.edge.events :as edge-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [taoensso.timbre :as log]))
 
@@ -15,11 +17,12 @@
 
 (reg-event-fx
   ::set-nuvlabox
-  (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status :as nuvlabox}]]
+  (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status id :id :as nuvlabox}]]
     {:db               (assoc db ::spec/nuvlabox nuvlabox
                                  ::spec/loading? false)
      ::cimi-api-fx/get [nb-status-id #(dispatch [::set-nuvlabox-status %])
-                        :on-error #(dispatch [::set-nuvlabox-status nil])]}))
+                        :on-error #(dispatch [::set-nuvlabox-status nil])]
+     ::edge-fx/get-status-nuvlaboxes [[id] #(dispatch [::edge-events/set-status-nuvlaboxes %])]}))
 
 
 (reg-event-fx

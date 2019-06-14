@@ -40,11 +40,9 @@
     :unknown "yellow"
     nil))
 
-(def STATUS-FLOATING-TIME-TOLERANCE 3)                     ;; in seconds
+(def filter-offline-status (str "next-heartbeat < 'now'"))
 
-(def filter-offline-status (str "next-heartbeat < 'now-" STATUS-FLOATING-TIME-TOLERANCE "s'"))
-
-(def filter-online-status (str "next-heartbeat >= 'now-" STATUS-FLOATING-TIME-TOLERANCE "s'"))
+(def filter-online-status (str "next-heartbeat >= 'now'"))
 
 
 (defn state-filter

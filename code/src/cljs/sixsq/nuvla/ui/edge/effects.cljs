@@ -40,25 +40,25 @@
 
 
 (defn get-status-collection
-  [nuvlaboxes filter-heartbeat]
-  (let [filter-nuvlabox-ids (->> nuvlaboxes
-                                 (map #(str "parent='" (:id %) "'"))
+  [nuvlabox-ids filter-heartbeat]
+  (let [filter-nuvlabox-ids (->> nuvlabox-ids
+                                 (map #(str "parent='" % "'"))
                                  (apply general-utils/join-or))
         filter              (general-utils/join-and filter-nuvlabox-ids filter-heartbeat)]
 
     (api/search @CLIENT :nuvlabox-status {:filter filter
-                                          :select "id, parent"})))
+                                          :select "id, parent, updated, next-heartbeat"})))
 
 
 (reg-fx
   ::get-status-nuvlaboxes
-  (fn [[nuvlaboxes callback]]
+  (fn [[nuvlaboxes-ids callback]]
     (go
       (let [offline-nuvlaboxes      (<! (get-status-collection
-                                          nuvlaboxes
+                                          nuvlaboxes-ids
                                           utils/filter-offline-status))
             online-nuvlaboxes       (<! (get-status-collection
-                                          nuvlaboxes
+                                          nuvlaboxes-ids
                                           utils/filter-online-status))]
 
         (callback {:offline (->> offline-nuvlaboxes

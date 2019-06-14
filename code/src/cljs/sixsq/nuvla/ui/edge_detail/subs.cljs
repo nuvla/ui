@@ -21,24 +21,6 @@
 
 
 (reg-sub
-  ::next-heartbeat-moment
-  :<- [::nuvlabox-status]
-  (fn [{:keys [next-heartbeat]}]
-    (some-> next-heartbeat time/parse-iso8601)))
-
-
-(reg-sub
-  ::status-nuvlabox
-  :<- [::next-heartbeat-moment]
-  (fn [next-heartbeat-moment _]
-    (if next-heartbeat-moment
-      (if (time/after-now? next-heartbeat-moment)
-        :online
-        :offline)
-      :unknown)))
-
-
-(reg-sub
   ::nuvlabox
   (fn [db]
     (::spec/nuvlabox db)))

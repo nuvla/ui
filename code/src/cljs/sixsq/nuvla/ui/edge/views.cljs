@@ -138,7 +138,7 @@
     (dispatch [::main-events/action-interval
                {:action    :start
                 :id        :nuvlabox-get-nuvlaboxes
-                :frequency 30000
+                :frequency 10000
                 :event     [::events/get-nuvlaboxes]}])
     (fn []
       (let [total-elements (get @nuvlaboxes :count 0)

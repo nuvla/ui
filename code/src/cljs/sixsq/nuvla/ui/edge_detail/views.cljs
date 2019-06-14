@@ -6,6 +6,7 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.edge-detail.events :as events]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]
+    [sixsq.nuvla.ui.edge.subs :as edge-subs]
     [sixsq.nuvla.ui.edge.utils :as u]
     [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -163,10 +164,10 @@
 
 (defn SummarySection
   []
-  (let [nuvlabox (subscribe [::subs/nuvlabox])
-        status   (subscribe [::subs/status-nuvlabox])]
+  (let [{:keys [id] :as nuvlabox} @(subscribe [::subs/nuvlabox])
+        status @(subscribe [::edge-subs/status-nuvlabox id])]
     [ui/CardGroup {:centered true}
-     [NuvlaboxCard @nuvlabox @status]]))
+     [NuvlaboxCard nuvlabox status]]))
 
 
 (defn EdgeDetails

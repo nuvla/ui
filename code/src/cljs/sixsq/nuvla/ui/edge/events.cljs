@@ -51,7 +51,7 @@
         {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
                        ::spec/loading? false)}
         (not-empty resources) (assoc ::fx/get-status-nuvlaboxes
-                                     [resources #(dispatch [::set-status-nuvlaboxes %])])))))
+                                     [(map :id resources) #(dispatch [::set-status-nuvlaboxes %])])))))
 
 
 (reg-event-db

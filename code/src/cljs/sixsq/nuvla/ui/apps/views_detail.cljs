@@ -67,41 +67,34 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         module        (subscribe [::subs/module])
         is-new?       (subscribe [::subs/is-new?])
-        form-valid?   (subscribe [::subs/form-valid?])
         page-changed? (subscribe [::main-subs/changes-protection?])]
     (fn []
       (let [launchable?      (not= "project" (:subtype @module))
             launch-disabled? (or @is-new? @page-changed?)
             add?             (= "project" (:subtype @module))
             add-disabled?    (or @is-new? @page-changed?)
-            editable?        (utils/editable? @module @is-new?)
             id               (:id @module)]
-        (vec (concat [ui/Menu {:borderless true}]
 
-                     [(when launchable?
-                        [uix/MenuItemWithIcon
-                         {:name      (@tr [:launch])
-                          :icon-name "rocket"
-                          :disabled  launch-disabled?
-                          :on-click  #(dispatch [::deployment-dialog-events/create-deployment id :credentials])}])
+        [ui/Menu {:borderless true}
 
-                      (when add?
-                        [uix/MenuItemWithIcon
-                         {:name      (@tr [:add])
-                          :icon-name "add"
-                          :disabled  add-disabled?
-                          :on-click  #(dispatch [::events/open-add-modal])}])
+         (when launchable?
+           [uix/MenuItemWithIcon
+            {:name      (@tr [:launch])
+             :icon-name "rocket"
+             :disabled  launch-disabled?
+             :on-click  #(dispatch [::deployment-dialog-events/create-deployment id :credentials])}])
 
-                      (when (utils/can-delete? @module)
-                        [resource-details/delete-button @module #(dispatch [::events/delete-module id])])
+         (when add?
+           [uix/MenuItemWithIcon
+            {:name      (@tr [:add])
+             :icon-name "add"
+             :disabled  add-disabled?
+             :on-click  #(dispatch [::events/open-add-modal])}])
 
-                      (when editable?
-                        [uix/MenuItemWithIcon
-                         {:name      (@tr [:save])
-                          :icon-name "save"
-                          :disabled  (edit-button-disabled? @page-changed? @form-valid?)
-                          :on-click  save-callback}])
-                      [refresh-button]]))))))
+         (when (utils/can-delete? @module)
+           [resource-details/delete-button @module #(dispatch [::events/delete-module id])])
+
+         [refresh-button]]))))
 
 
 (defn save-action []

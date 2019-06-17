@@ -2,9 +2,12 @@
 
 ## [Unreleased]
 
-  - edge - refresh set to 10 seconds and remove floating time tolerance
-  - edge detail - re-use status from edge page
-  - dashboard detail - issue with refreshing deployment output parameter
+### Changed
+
+  - Apps - remove save button on top bar
+  - Edge - refresh set to 10 seconds and remove floating time tolerance
+  - Edge detail - re-use status from edge page
+  - Dashboard detail - issue with refreshing deployment output parameter
 
 ## [2.1.1] - 2019-06.12
 

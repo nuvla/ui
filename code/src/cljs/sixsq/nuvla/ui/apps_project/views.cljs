@@ -95,5 +95,4 @@
          [summary]
          [apps-views-detail/save-action]
          [modules-view]
-         [apps-views-detail/save-modal]
          [apps-views-detail/logo-url-modal]]))))

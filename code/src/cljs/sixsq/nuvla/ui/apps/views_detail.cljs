@@ -53,12 +53,12 @@
   (dispatch-sync [::events/set-validate-form? true])
   (dispatch-sync [::events/validate-form])
   (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)
-        {:keys [subtype]} (get @re-frame.db/app-db ::spec/module)]
+        {:keys [subtype]} (get @re-frame.db/app-db ::spec/module)
+        new-subtype (:subtype @(subscribe [::main-subs/nav-query-params]))]
     (when form-valid?
       (do
         (dispatch [::events/set-validate-form? false])
-        (dispatch [::events/is-new? false])
-        (if (= subtype "project")
+        (if (= (or subtype new-subtype) "project")
           (dispatch [::events/edit-module nil])
           (dispatch [::events/open-save-modal]))))))
 

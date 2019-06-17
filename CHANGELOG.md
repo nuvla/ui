@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - Apps - Project save should not show commit message 
+    and cancelling a commit message when saving a component 
+    should not remove is-new? flag
   - Apps - remove save button on top bar
   - Edge - refresh set to 10 seconds and remove floating time tolerance
   - Edge detail - re-use status from edge page

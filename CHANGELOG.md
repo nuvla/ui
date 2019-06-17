@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - ACLs - Automatically add new rights when user select a principal 
+    and a right in new permissions row
   - Apps - Project save should not show commit message 
     and cancelling a commit message when saving a component 
     should not remove is-new? flag

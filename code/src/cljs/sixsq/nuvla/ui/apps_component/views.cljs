@@ -314,7 +314,7 @@
                       ^{:key id}
                       [single-mount mount editable?])]]])
           (when editable?
-            [:div
+            [:div {:style {:padding-top 10}}
              [plus ::events/add-mount]])]
          :label (@tr [:module-mounts])
          :count (count @mounts)]))))

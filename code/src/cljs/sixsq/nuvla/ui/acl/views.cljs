@@ -220,6 +220,12 @@
                           :rights    #{}}
         new-permission   (r/atom empty-permission)]
     (fn [{:keys [acl on-change mode] :as opts}]
+      (let [{:keys [principal rights]} @new-permission]
+
+        (when (and (not-empty rights) principal)
+          (on-change (utils/add-principal acl rights principal))
+          (reset! new-permission empty-permission)))
+
       [ui/TableRow
 
        [ui/TableCell
@@ -242,16 +248,7 @@
                                (reset! new-permission
                                        (update @new-permission :rights
                                                set/difference (utils/same-base-right right-kw))))))}]]))
-
-       [ui/TableCell
-        (let [{:keys [principal rights]} @new-permission]
-          (when (and principal (not-empty rights))
-            [ui/Icon {:name     "plus"
-                      :link     true
-                      :color    "green"
-                      :on-click #(do
-                                   (on-change (utils/add-principal acl rights principal))
-                                   (reset! new-permission empty-permission))}]))]])))
+       [ui/TableCell]])))
 
 
 (defn AclOwners

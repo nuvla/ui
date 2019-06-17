@@ -676,8 +676,7 @@
   []
   (let [module-common (subscribe [::apps-subs/module-common])
         module        (subscribe [::apps-subs/module])
-        is-new?       (subscribe [::apps-subs/is-new?])
-        acl-visible?  (r/atom false)]
+        is-new?       (subscribe [::apps-subs/is-new?])]
     (fn []
       (let [name      (get @module-common ::apps-spec/name)
             parent    (get @module-common ::apps-spec/parent-path)
@@ -685,18 +684,14 @@
         (dispatch [::apps-events/set-form-spec ::spec/module-component])
         (dispatch [::apps-events/set-module-subtype :component])
         [ui/Container {:fluid true}
-         [:h2 [ui/Icon {:name "grid layout"}]
-          parent (when (not-empty parent) "/") name
-          [acl/AclButton {:acl      (get @module-common ::apps-spec/acl)
-                          :on-click #(swap! acl-visible? not)}]]
+         [:h2 {:style {:display :inline}}
+          [ui/Icon {:name "grid layout"}]
+          parent (when (not-empty parent) "/") name]
+         [acl/AclButton {:acl       (get @module-common ::apps-spec/acl)
+                         :on-change #(do (dispatch [::apps-events/acl %])
+                                         (dispatch [::main-events/changes-protection? true]))
+                         :read-only (not editable?)}]
          [apps-views-detail/control-bar]
-         (when @acl-visible?
-           [:<>
-            [acl/AclWidget {:acl       (get @module-common ::apps-spec/acl)
-                            :on-change #(do (dispatch [::apps-events/acl %])
-                                            (dispatch [::main-events/changes-protection? true]))
-                            :read-only (not editable?)}]
-            [:div {:style {:padding-top 10}}]])
          [summary]
          [ports-section]
          [env-variables-section]

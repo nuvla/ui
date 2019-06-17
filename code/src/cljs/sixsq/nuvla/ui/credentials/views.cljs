@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.credentials.events :as events]
     [sixsq.nuvla.ui.credentials.spec :as spec]
     [sixsq.nuvla.ui.credentials.subs :as subs]
@@ -123,19 +124,26 @@
       (let [editable?             (utils-general/editable? @credential @is-new?)
             {:keys [name description ca cert key]} @credential
             form-validation-event ::events/validate-swarm-credential-form]
-        [ui/Table (assoc style/definition :class :nuvla-ui-editable)
-         [ui/TableBody
-          [row-with-label "name" :name name editable? true
-           ::spec/name :input form-validation-event]
-          [row-with-label "description" :description description editable? true
-           ::spec/description :input form-validation-event]
-          [row-with-label "swarm-credential-ca" :ca ca editable? true
-           ::spec/ca :textarea form-validation-event]
-          [row-with-label "swarm-credential-cert" :cert cert editable? true
-           ::spec/cert :textarea form-validation-event]
-          [row-with-label "swarm-credential-key" :key key editable? true
-           ::spec/key :textarea form-validation-event]
-          [row-infrastructure-services-selector "swarm" editable? ::spec/parent form-validation-event]]]))))
+
+        [:<>
+
+         [acl/AclButton {:acl       (:acl @credential)
+                         :read-only (not editable?)
+                         :on-change #(dispatch [::events/update-credential :acl %])}]
+
+         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+          [ui/TableBody
+           [row-with-label "name" :name name editable? true
+            ::spec/name :input form-validation-event]
+           [row-with-label "description" :description description editable? true
+            ::spec/description :input form-validation-event]
+           [row-with-label "swarm-credential-ca" :ca ca editable? true
+            ::spec/ca :textarea form-validation-event]
+           [row-with-label "swarm-credential-cert" :cert cert editable? true
+            ::spec/cert :textarea form-validation-event]
+           [row-with-label "swarm-credential-key" :key key editable? true
+            ::spec/key :textarea form-validation-event]
+           [row-infrastructure-services-selector "swarm" editable? ::spec/parent form-validation-event]]]]))))
 
 
 (defn credential-minio
@@ -146,17 +154,23 @@
       (let [editable?             (utils-general/editable? @credential @is-new?)
             {:keys [name description access-key secret-key]} @credential
             form-validation-event ::events/validate-minio-credential-form]
-        [ui/Table (assoc style/definition :class :nuvla-ui-editable)
-         [ui/TableBody
-          [row-with-label "name" :name name editable? true
-           ::spec/name :input form-validation-event]
-          [row-with-label "description" :description description editable? true
-           ::spec/description :input form-validation-event]
-          [row-with-label "access-key" :access-key access-key editable? true
-           ::spec/access-key :input form-validation-event]
-          [row-with-label "secret-key" :secret-key secret-key editable? true
-           ::spec/secret-key :password form-validation-event]
-          [row-infrastructure-services-selector "s3" editable? ::spec/parent form-validation-event]]]))))
+
+        [:<>
+         [acl/AclButton {:acl       (:acl @credential)
+                         :read-only (not editable?)
+                         :on-change #(dispatch [::events/update-credential :acl %])}]
+
+         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+          [ui/TableBody
+           [row-with-label "name" :name name editable? true
+            ::spec/name :input form-validation-event]
+           [row-with-label "description" :description description editable? true
+            ::spec/description :input form-validation-event]
+           [row-with-label "access-key" :access-key access-key editable? true
+            ::spec/access-key :input form-validation-event]
+           [row-with-label "secret-key" :secret-key secret-key editable? true
+            ::spec/secret-key :password form-validation-event]
+           [row-infrastructure-services-selector "s3" editable? ::spec/parent form-validation-event]]]]))))
 
 
 (defn credential-store-azure
@@ -400,8 +414,8 @@
 
 (defn credentials
   []
-  (let [tr                    (subscribe [::i18n-subs/tr])
-        credentials           (subscribe [::subs/credentials])]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        credentials (subscribe [::subs/credentials])]
     (fn []
       (let [infra-service-creds (filter #(in? infrastructure-service-subtypes (:subtype %)) @credentials)
             ;cloud-creds         (filter #(in? cloud-subtypes (:subtype %)) @credentials)

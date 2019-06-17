@@ -4,6 +4,7 @@
     [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as reagent]
+    [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.infrastructures.events :as events]
     [sixsq.nuvla.ui.infrastructures.spec :as spec]
@@ -202,14 +203,20 @@
       (let [editable?             (utils-general/editable? @service @is-new?)
             {:keys [name description endpoint]} @service
             form-validation-event ::events/validate-swarm-service-form]
-        [ui/Table (assoc style/definition :class :nuvla-ui-editable)
-         [ui/TableBody
-          [row-with-label "name" :name name editable? true
-           ::spec/name :input form-validation-event]
-          [row-with-label "description" :description description editable? true
-           ::spec/description :input form-validation-event]
-          [row-with-label "swarm-endpoint" :endpoint endpoint editable? true
-           ::spec/endpoint :input form-validation-event]]]))))
+        [:<>
+
+         [acl/AclButton {:acl       (:acl @service)
+                         :read-only (not editable?)
+                         :on-change #(dispatch [::events/update-service :acl %])}]
+
+         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+          [ui/TableBody
+           [row-with-label "name" :name name editable? true
+            ::spec/name :input form-validation-event]
+           [row-with-label "description" :description description editable? true
+            ::spec/description :input form-validation-event]
+           [row-with-label "swarm-endpoint" :endpoint endpoint editable? true
+            ::spec/endpoint :input form-validation-event]]]]))))
 
 
 (defn service-minio
@@ -220,14 +227,19 @@
       (let [editable?             (utils-general/editable? @service @is-new?)
             {:keys [name description endpoint]} @service
             form-validation-event ::events/validate-minio-service-form]
-        [ui/Table (assoc style/definition :class :nuvla-ui-editable)
-         [ui/TableBody
-          [row-with-label "name" :name name editable? true
-           ::spec/name :input form-validation-event]
-          [row-with-label "description" :description description editable? true
-           ::spec/description :input form-validation-event]
-          [row-with-label "endpoint" :endpoint endpoint editable? true
-           ::spec/endpoint :input form-validation-event]]]))))
+        [:<>
+         [acl/AclButton {:acl       (:acl @service)
+                         :read-only (not editable?)
+                         :on-change #(dispatch [::events/update-service :acl %])}]
+
+         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+          [ui/TableBody
+           [row-with-label "name" :name name editable? true
+            ::spec/name :input form-validation-event]
+           [row-with-label "description" :description description editable? true
+            ::spec/description :input form-validation-event]
+           [row-with-label "endpoint" :endpoint endpoint editable? true
+            ::spec/endpoint :input form-validation-event]]]]))))
 
 
 (def infrastructure-service-validation-map

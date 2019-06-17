@@ -10,6 +10,7 @@
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
@@ -31,13 +32,12 @@
 (defn InfoIcon
   [help-kw]
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Popup {:trigger  (r/as-element
-                           [ui/Icon {:name  "info circle"
-                                     :style {:cursor      "pointer"
-                                             :margin-left "4px"}}])
-               :content  (@tr [help-kw])
-               :on       "click"
-               :position "top left"}]))
+    [ui/Popup {:trigger (r/as-element
+                          [ui/Icon {:name "info circle"
+                                    :link true}])
+               :basic   true
+               :content (@tr [help-kw])
+               :on      "click"}]))
 
 
 (defn AclTableHeaders
@@ -332,13 +332,11 @@
 
 
 (defn AclButton
-  [{:keys [acl on-click]
-    :or {acl {:owners [@(subscribe [::authn-subs/user-id])]}
-         on-click #()} :as opts}]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [opts]
-      (let [opts            (assoc opts :on-click on-click)
-            acl             (or (:acl opts) acl)
+  [opts]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        active? (r/atom false)]
+    (fn [{:keys [acl] :as opts}]
+      (let [acl             (or (:acl opts) acl)
             owners          (:owners acl)
             principals-set  (utils/get-principals acl)
             some-groups?    (some #(str/starts-with? % "group/") principals-set)
@@ -354,14 +352,18 @@
                               (some #(str/starts-with? (name %) "edit") rights-keys) "pencil"
                               (some #(str/starts-with? (name %) "view") rights-keys) "eye"
                               :else nil)]
-        [ui/Button {:floated  "right",
-                    :basic    true
-                    :on-click on-click}
-         [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-principals}])
-                    :position "bottom center"
-                    :content  (@tr [:principals-icon])}]
-         (when icon-right
-           [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-right}])
-                      :position "bottom center"
-                      :content  (@tr [:rights-icon])}])
-         [ui/Icon {:name "caret down"}]]))))
+        [:<>
+         [ui/Button {:floated  "right"
+                     :style {:margin-bottom "5px"}
+                     :basic    true
+                     :on-click #(accordion-utils/toggle active?)}
+          [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-principals}])
+                     :position "bottom center"
+                     :content  (@tr [:principals-icon])}]
+          (when icon-right
+            [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-right}])
+                       :position "bottom center"
+                       :content  (@tr [:rights-icon])}])
+          [ui/Icon {:name (if @active? "caret down" "caret left")}]]
+         (when @active?
+           [AclWidget opts])]))))

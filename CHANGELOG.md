@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - Infrastructure - Add ACL button to crud modals
+  - Credentials - Add ACL button to crud modals
+  - Acl - Enhance acl button
   - ACLs - Automatically add new rights when user select a principal 
     and a right in new permissions row
   - Apps - Project save should not show commit message 

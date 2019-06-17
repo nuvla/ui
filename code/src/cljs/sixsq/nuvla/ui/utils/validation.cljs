@@ -7,7 +7,7 @@
   [form-valid-spec]
   (let [tr          (subscribe [::i18n-subs/tr])
         form-valid? (subscribe [form-valid-spec])]
-    [ui/Message {:hidden @form-valid?
+    [ui/Message {:hidden (boolean @form-valid?)
                  :error  true}
      [ui/MessageHeader (@tr [:validation-error])]
      [ui/MessageContent (@tr [:validation-error-message])]]))

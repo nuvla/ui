@@ -93,12 +93,13 @@
 (defn Heartbeat
   [updated]
   (let [updated-moment           (time/parse-iso8601 updated)
-        status                   (subscribe [::subs/status-nuvlabox])
+        {:keys [id]}             @(subscribe [::subs/nuvlabox])
+        status                   (subscribe [::edge-subs/status-nuvlabox id])
         next-heartbeat-moment    (subscribe [::subs/next-heartbeat-moment])
         next-heartbeat-times-ago (time/ago @next-heartbeat-moment)
 
         last-heartbeat-msg       (str "Last heartbeat was " (time/ago updated-moment))
-        next-heartbeat-msg       (if @status
+        next-heartbeat-msg       (if (= @status :online)
                                    (str "Next heartbeat is expected " next-heartbeat-times-ago)
                                    (str "Next heartbeat was expected " next-heartbeat-times-ago))]
 

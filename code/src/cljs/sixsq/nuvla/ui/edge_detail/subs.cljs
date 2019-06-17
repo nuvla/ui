@@ -21,6 +21,13 @@
 
 
 (reg-sub
+  ::next-heartbeat-moment
+  :<- [::nuvlabox-status]
+  (fn [{:keys [next-heartbeat]}]
+    (some-> next-heartbeat time/parse-iso8601)))
+
+
+(reg-sub
   ::nuvlabox
   (fn [db]
     (::spec/nuvlabox db)))

@@ -2,8 +2,17 @@
 
 ## [Unreleased]
 
+
+### Added
+
+  - Main components - Refresh Menu is now reusable and generalize it to 
+    all pages
+  - Action intervals - countdown feature and adding it on all 
+    automatically refreshed pages 
+
 ### Changed
 
+  - Action intervals - moved to reframe db and refactored
   - Dasboard details - Add ACL button
   - Infrastructure - Add ACL button to crud modals
   - Credentials - Add ACL button to crud modals

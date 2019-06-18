@@ -10,6 +10,7 @@
     [sixsq.nuvla.ui.credentials.subs :as subs]
     [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.accordion :as utils-accordion]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -323,25 +324,15 @@
                         :size :tiny}]]]]]]))))
 
 
-(defn refresh-button
-  []
+(defn control-bar []
   (let [tr (subscribe [::i18n-subs/tr])]
-    (fn []
-      [uix/MenuItemWithIcon
-       {:name      (@tr [:refresh])
-        :icon-name "refresh"
-        :position  "right"
-        :on-click  #(dispatch [::events/get-credentials])}])))
-
-
-(defn control-bar-projects []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (vec (concat [ui/Menu {:borderless true}
-                  [uix/MenuItemWithIcon
-                   {:name      (@tr [:add])
-                    :icon-name "add"
-                    :on-click  #(dispatch [::events/open-add-credential-modal])}]
-                  [refresh-button]]))))
+    [ui/Menu {:borderless true}
+     [uix/MenuItemWithIcon
+      {:name      (@tr [:add])
+       :icon-name "add"
+       :on-click  #(dispatch [::events/open-add-credential-modal])}]
+     [main-components/RefreshMenu
+      {:on-refresh #(dispatch [::events/get-credentials])}]]))
 
 
 (defn delete-confirmation-modal
@@ -429,7 +420,7 @@
          [uix/Accordion
           [:<>
            [:div (@tr [:credential-infra-service-section-sub-text])]
-           [control-bar-projects]
+           [control-bar]
            (if (empty? infra-service-creds)
              [ui/Message
               (str/capitalize (str (@tr [:no-credentials]) "."))]

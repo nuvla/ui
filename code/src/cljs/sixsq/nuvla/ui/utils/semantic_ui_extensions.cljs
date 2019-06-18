@@ -12,7 +12,7 @@
 (defn Button
   "This button requires a single options map that contains the :text key. The
    value of the :text key is used to define the button text as well as the
-   accessibility label :aria-label.  The button may not specify children."
+   accessibility label :aria-label. The button may not specify children."
   [{:keys [text] :as options}]
   (let [final-opts (-> options
                        (dissoc :text)
@@ -96,6 +96,7 @@
               :prevItem  {:content (reagent/as-element [ui/Icon {:name "angle left"}]) :icon true}
               :nextItem  {:content (reagent/as-element [ui/Icon {:name "angle right"}]) :icon true}}
              (merge {:floated :right, :size "tiny"} options))]]))
+
 
 (defn EditorJson
   "A convenience function to setup the CodeMirror editor component for JSON."

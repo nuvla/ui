@@ -1,10 +1,10 @@
 (ns sixsq.nuvla.ui.main.events
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
     [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.main.effects :as main-fx]
+    [sixsq.nuvla.ui.main.effects :as fx]
     [sixsq.nuvla.ui.main.spec :as spec]
     [taoensso.timbre :as log]))
 
@@ -41,31 +41,89 @@
 
 (reg-event-fx
   ::visible
-  (fn [{:keys [db]} [_ v]]
-    (cond-> {:db                       (assoc db ::spec/visible? v)
-             ::main-fx/action-interval (if v [{:action :resume}] [{:action :pause}])}
-            v (assoc ::cimi-api-fx/session [#(dispatch [::authn-events/set-session %])]))))
+  (fn [{{:keys [::spec/actions-interval] :as db} :db} [_ visible?]]
+    (cond-> {:db                        (assoc db ::spec/visible? visible?)
+             ::fx/bulk-actions-interval [(if visible?
+                                           ::action-interval-resume
+                                           ::action-interval-pause) actions-interval]}
+            visible? (assoc ::cimi-api-fx/session [#(dispatch [::authn-events/set-session %])]))))
 
 
 (reg-event-fx
   ::set-navigation-info
-  (fn [{:keys [db]} [_ path query-params]]
+  (fn [{{:keys [::spec/actions-interval] :as db} :db} [_ path query-params]]
     (let [path-vec (vec (str/split path #"/"))]
-      {:db                       (assoc db ::spec/nav-path path-vec
-                                           ::spec/nav-query-params query-params)
-       ::main-fx/action-interval [{:action :clean}]})))
+      {:db                        (assoc db ::spec/nav-path path-vec
+                                            ::spec/nav-query-params query-params)
+       ::fx/bulk-actions-interval [::action-interval-delete actions-interval]})))
 
 
-(reg-event-fx
-  ::action-interval
-  (fn [_ [_ opts]]
-    {::main-fx/action-interval [opts]}))
+(def TICK_INTERVAL 1000)
+
+
+(reg-event-db
+  ::action-interval-tick
+  (fn [{:keys [::spec/actions-interval] :as db} [_ action-id]]
+    (let [{:keys [frequency event refresh-in]} (get actions-interval action-id)
+          new-refresh-in (- (or refresh-in frequency) TICK_INTERVAL)]
+      (if (pos-int? new-refresh-in)
+        (assoc-in db [::spec/actions-interval action-id :refresh-in] new-refresh-in)
+        (do
+          (dispatch event)
+          (assoc-in db [::spec/actions-interval action-id :refresh-in] frequency))))))
+
+
+(reg-event-db
+  ::action-interval-start
+  (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id event frequency] :as action-opts}]]
+    (log/info "Start action-interval: " action-opts)
+    (let [existing-action (get actions-interval id)
+          timer           (or (:timer existing-action)
+                              (js/setInterval #(dispatch [::action-interval-tick id]) TICK_INTERVAL))]
+      (dispatch event)
+      (assoc-in db [::spec/actions-interval id] (assoc action-opts :timer timer
+                                                                   :refresh-in frequency)))))
+
+
+(reg-event-db
+  ::action-interval-pause
+  (fn [{:keys [::spec/actions-interval] :as db} [_ action-id]]
+    (log/info "Pause action-interval:" action-id)
+    (let [{existing-timer :timer :as existing-action} (get actions-interval action-id)]
+      (when existing-timer
+        (js/clearInterval existing-timer))
+      (cond-> db
+              existing-action (update-in [::spec/actions-interval action-id] dissoc :timer)))))
+
+
+(reg-event-db
+  ::action-interval-resume
+  (fn [{:keys [::spec/actions-interval] :as db} [_ action-id]]
+    (log/info "Resume action-interval: " action-id)
+    (if-let [{:keys [event frequency] :as existing-action} (get actions-interval action-id)]
+      (let [timer (or (:timer existing-action)
+                      (js/setInterval #(dispatch [::action-interval-tick action-id]) TICK_INTERVAL))]
+        (dispatch event)
+        (update-in db [::spec/actions-interval action-id] assoc
+                   :timer timer
+                   :refresh-in frequency))
+      db)))
+
+
+(reg-event-db
+  ::action-interval-delete
+  (fn [{:keys [::spec/actions-interval] :as db} [_ action-id]]
+    (log/info "Delete action-interval: " action-id)
+    (let [{existing-timer :timer} (get actions-interval action-id)]
+      (when existing-timer
+        (js/clearInterval existing-timer))
+      (assoc db ::spec/actions-interval (dissoc actions-interval action-id)))))
 
 
 (reg-event-fx
   ::open-link
   (fn [_ [_ uri]]
-    {::main-fx/open-new-window [uri]}))
+    {::fx/open-new-window [uri]}))
 
 
 (reg-event-db

@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.dashboard-detail.events :as events]
     [sixsq.nuvla.ui.dashboard-detail.subs :as subs]
     [sixsq.nuvla.ui.dashboard.subs :as dashboard-subs]
@@ -11,6 +12,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.resource-details :as resource-details]
@@ -19,32 +21,18 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.acl.views :as acl]))
+    [taoensso.timbre :as log]))
 
 
-(defn automatic-refresh
+(def refresh-action-id :dashboard-detail-get-deployment)
+
+
+(defn refresh
   [resource-id]
-  (dispatch [::main-events/action-interval
-             {:action    :start
-              :id        :dashboard-detail-get-deployment
+  (dispatch [::main-events/action-interval-start
+             {:id        refresh-action-id
               :frequency 30000
-              :event     [::events/get-deployment resource-id]}])
-  (dispatch [::main-events/action-interval
-             {:action    :start
-              :id        :dashboard-detail-deployment-parameters
-              :frequency 20000
-              :event     [::events/get-deployment-parameters resource-id]}])
-  (dispatch [::main-events/action-interval
-             {:action    :start
-              :id        :dashboard-detail-events
-              :frequency 30000
-              :event     [::events/get-events resource-id]}])
-  (dispatch [::main-events/action-interval
-             {:action    :start
-              :id        :dashboard-detail-jobs
-              :frequency 30000
-              :event     [::events/get-jobs resource-id]}]))
+              :event     [::events/get-deployment resource-id]}]))
 
 
 (defn format-module-link
@@ -197,20 +185,6 @@
     [uix/Accordion [jobs-table @jobs], :label (@tr [:job]), :count (count resources)]))
 
 
-(defn refresh-button
-  []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        loading?   (subscribe [::subs/loading?])
-        deployment (subscribe [::subs/deployment])]
-    (fn []
-      [ui/MenuMenu {:position "right"}
-       [uix/MenuItemWithIcon
-        {:name      (@tr [:refresh])
-         :icon-name "refresh"
-         :loading?  @loading?
-         :on-click  #(dispatch [::events/get-deployment (:id @deployment)])}]])))
-
-
 (defn node-url
   [url-name url-pattern]
   (let [url (subscribe [::subs/url url-pattern])]
@@ -340,15 +314,19 @@
 
 (defn menu
   []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        deployment (subscribe [::subs/deployment])]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        loading? (subscribe [::subs/loading?])
+        {:keys [id] :as deployment} @(subscribe [::subs/deployment])]
     [ui/Menu {:borderless true}
-     (when (general-utils/can-delete? @deployment)
-       [resource-details/delete-button @deployment #(dispatch [::events/delete (:id @deployment)])])
-     (when (general-utils/can-operation? "stop" @deployment)
+     (when (general-utils/can-delete? deployment)
+       [resource-details/delete-button deployment #(dispatch [::events/delete id])])
+     (when (general-utils/can-operation? "stop" deployment)
        [resource-details/action-button-icon (@tr [:stop]) (@tr [:yes]) "stop" (@tr [:stop]) (@tr [:are-you-sure?])
-        #(dispatch [::events/stop-deployment (:id @deployment)]) (constantly nil)])
-     [refresh-button]]))
+        #(dispatch [::events/stop-deployment id]) (constantly nil)])
+     [main-components/RefreshMenu
+      {:action-id  refresh-action-id
+       :loading?   @loading?
+       :on-refresh #(refresh id)}]]))
 
 
 (defn event-get-timestamp
@@ -362,7 +340,7 @@
         deployment  (subscribe [::subs/deployment])
         resource-id (str "deployment/" uuid)]
 
-    (automatic-refresh resource-id)
+    (refresh resource-id)
     (fn [uuid]
       (let [{:keys [id acl] :as dep} @deployment]
         ^{:key uuid}

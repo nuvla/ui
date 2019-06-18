@@ -12,6 +12,7 @@
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -20,17 +21,11 @@
     [taoensso.timbre :as log]))
 
 
-(defn refresh-button
+(defn refresh-menu
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn []
-      [uix/MenuItemWithIcon
-       {:name      (@tr [:refresh])
-        :icon-name "refresh"
-        :position  "right"
-        :on-click  #(do (dispatch [::events/get-modules])
-                        (dispatch [::apps-events/get-module]))}])))
-
+  [main-components/RefreshMenu
+   {:on-refresh #(do (dispatch [::events/get-modules])
+                     (dispatch [::apps-events/get-module]))}])
 
 (defn module-card
   [{:keys [id name description path parent-path subtype logo-url] :as module}]
@@ -80,18 +75,17 @@
     [ui/Menu {:secondary true}
      [ui/MenuMenu {:position "left"}
       [appstore-search]]
-     [ui/MenuMenu {:position "right"}
-      [refresh-button]]]))
+     [refresh-menu]]))
 
 
 (defn control-bar-projects []
   (let [tr (subscribe [::i18n-subs/tr])]
-    (vec (concat [ui/Menu {:borderless true}
-                  [uix/MenuItemWithIcon
-                   {:name      (@tr [:add])
-                    :icon-name "add"
-                    :on-click  #(dispatch [::apps-events/open-add-modal])}]
-                  [refresh-button]]))))
+    [ui/Menu {:borderless true}
+     [uix/MenuItemWithIcon
+      {:name      (@tr [:add])
+       :icon-name "add"
+       :on-click  #(dispatch [::apps-events/open-add-modal])}]
+     [refresh-menu]]))
 
 
 (defn root-projects []

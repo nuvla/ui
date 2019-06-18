@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.dashboard.events :as events]
     [sixsq.nuvla.ui.dashboard.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -15,6 +16,16 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [taoensso.timbre :as log]))
+
+
+(def refresh-action-id :dashboard-get-deployments)
+
+(defn refresh
+  []
+  (dispatch [::main-events/action-interval-start
+            {:id        refresh-action-id
+             :frequency 20000
+             :event     [::events/get-deployments]}]))
 
 
 (defn control-bar []
@@ -29,20 +40,10 @@
                                     #(dispatch [::events/set-active-only? %]))}]))
 
 
-(defn refresh-button
-  []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::subs/loading?])]
-    [uix/MenuItemWithIcon
-     {:name      (@tr [:refresh])
-      :icon-name "refresh"
-      :loading?  @loading?
-      :on-click  #(dispatch [::events/get-deployments])}]))
-
-
 (defn menu-bar
   []
-  (let [view (subscribe [::subs/view])]
+  (let [view     (subscribe [::subs/view])
+        loading? (subscribe [::subs/loading?])]
     (fn []
       [:div
        [ui/Menu {:attached "top", :borderless true}
@@ -56,8 +57,11 @@
         [ui/MenuItem {:icon     "table"
                       :active   (= @view "table")
                       :on-click #(dispatch [::events/set-view "table"])}]
-        [ui/MenuMenu {:position "right"}
-         [refresh-button]]]
+
+        [main-components/RefreshMenu
+         {:action-id  refresh-action-id
+          :loading?   @loading?
+          :on-refresh refresh}]]
 
        [ui/Segment {:attached "bottom"}
         [control-bar]]])))
@@ -145,11 +149,7 @@
         page              (subscribe [::subs/page])
         deployments       (subscribe [::subs/deployments])
         tr                (subscribe [::i18n-subs/tr])]
-    (dispatch [::main-events/action-interval
-               {:action    :start
-                :id        :dashboard-get-deployments
-                :frequency 20000
-                :event     [::events/get-deployments]}])
+    (refresh)
     (fn []
       (let [total-deployments (:count @deployments)
             total-pages       (general-utils/total-pages (get @deployments :count 0) @elements-per-page)

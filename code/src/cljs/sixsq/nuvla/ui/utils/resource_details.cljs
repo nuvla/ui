@@ -226,8 +226,7 @@
 (defn resource-detail
   "Provides a generic visualization of a CIMI resource document."
   [refresh-button data base-uri description]
-  (vec (concat
-         [ui/Segment style/basic
-          (detail-menu refresh-button data base-uri description)
-          (detail-header data)
-          (group-table-sui (general-utils/remove-common-attrs data) description)])))
+  [ui/Segment style/basic
+   (detail-menu refresh-button data base-uri description)
+   (detail-header data)
+   (group-table-sui (general-utils/remove-common-attrs data) description)])

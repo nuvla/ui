@@ -13,6 +13,7 @@
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
@@ -23,24 +24,6 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [taoensso.timbre :as log]))
-
-
-(defn refresh-button
-  []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        page-changed? (subscribe [::main-subs/changes-protection?])
-        is-new?       (subscribe [::subs/is-new?])]
-    (fn []
-      [ui/MenuMenu {:position "right"}
-       [uix/MenuItemWithIcon
-        {:name      (@tr [:refresh])
-         :icon-name "refresh"
-         :disabled  @is-new?
-         :loading?  false                                   ;; FIXME: Add loading flag for module.
-         :on-click  #(let [get-module-fn (fn [] (dispatch [::events/get-module]))]
-                       (if @page-changed?
-                         (dispatch [::main-events/ignore-changes-modal get-module-fn])
-                         (get-module-fn)))}]])))
 
 
 (defn edit-button-disabled?
@@ -94,7 +77,12 @@
          (when (utils/can-delete? @module)
            [resource-details/delete-button @module #(dispatch [::events/delete-module id])])
 
-         [refresh-button]]))))
+         [main-components/RefreshMenu
+          {:refresh-disabled? @is-new?
+           :on-refresh        #(let [get-module-fn (fn [] (dispatch [::events/get-module]))]
+                                 (if @page-changed?
+                                   (dispatch [::main-events/ignore-changes-modal get-module-fn])
+                                   (get-module-fn)))}]]))))
 
 
 (defn save-action []

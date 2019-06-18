@@ -10,6 +10,7 @@
     [sixsq.nuvla.ui.deployment-dialog.subs :as deployment-dialog-subs]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -24,16 +25,6 @@
 
 (defn refresh-data-sets []
   (dispatch [::events/get-data-sets]))
-
-
-(defn refresh-button
-  []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn []
-      [uix/MenuItemWithIcon
-       {:name      (@tr [:refresh])
-        :icon-name "refresh"
-        :on-click  #(dispatch [::events/get-data-sets])}])))
 
 
 (defn process-button
@@ -99,8 +90,8 @@
   [:div
    [ui/Menu {:attached "top", :borderless true}
     [process-button]
-    [ui/MenuMenu {:position "right"}
-     [refresh-button]]]
+    [main-components/RefreshMenu
+     {:on-refresh #(dispatch [::events/get-data-sets])}]]
    [ui/Segment {:attached "bottom"}
     [search-header]]])
 

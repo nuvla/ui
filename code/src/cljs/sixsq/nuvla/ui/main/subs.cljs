@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.main.subs
   (:require
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.main.spec :as spec]))
+    [re-frame.core :refer [reg-sub subscribe]]
+    [sixsq.nuvla.ui.main.spec :as spec]
+    [taoensso.timbre :as log]))
 
 
 (reg-sub
@@ -58,12 +59,20 @@
   (fn [db]
     (::spec/ignore-changes-modal db)))
 
+
 (reg-sub
   ::bootstrap-message
   (fn [db]
     (::spec/bootstrap-message db)))
 
+
 (reg-sub
   ::welcome-message
   (fn [db]
     (::spec/welcome-message db)))
+
+
+(reg-sub
+  ::refresh-in
+  (fn [{:keys [::spec/actions-interval]} [_ action-id]]
+    (get-in actions-interval [action-id :refresh-in])))

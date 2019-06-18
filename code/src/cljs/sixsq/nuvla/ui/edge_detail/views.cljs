@@ -10,6 +10,7 @@
     [sixsq.nuvla.ui.edge.utils :as u]
     [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.plot.plot :as plot]
     [sixsq.nuvla.ui.utils.resource-details :as resource-details]
@@ -19,25 +20,22 @@
     [taoensso.timbre :as log]))
 
 
-(defn RefreshButton
-  []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::subs/loading?])
-        nuvlabox (subscribe [::subs/nuvlabox])]
-    (fn []
-      [uix/MenuItemWithIcon
-       {:name      (@tr [:refresh])
-        :icon-name "refresh"
-        :loading?  @loading?
-        :position  "right"
-        :on-click  #(dispatch [::events/get-nuvlabox (:id @nuvlabox)])}])))
+(def refresh-action-id :nuvlabox-get-nuvlabox)
 
 
-(defn MenuBar []
+(defn refresh
+  [uuid]
+  (dispatch [::main-events/action-interval-start {:id        refresh-action-id
+                                                  :frequency 10000
+                                                  :event     [::events/get-nuvlabox (str "nuvlabox/" uuid)]}]))
+
+
+(defn MenuBar [uuid]
   (let [tr                (subscribe [::i18n-subs/tr])
         can-decommission? (subscribe [::subs/can-decommission?])
         can-delete?       (subscribe [::subs/can-delete?])
         nuvlabox          (subscribe [::subs/nuvlabox])
+        loading?          (subscribe [::subs/loading?])
         {:keys [id name] :as nuvlabox} @nuvlabox]
     [ui/Menu {:borderless true}
      (when @can-decommission?
@@ -45,7 +43,11 @@
         (@tr [:are-you-sure?]) #(dispatch [::events/decommission]) (constantly nil)])
      (when @can-delete?
        [resource-details/delete-button nuvlabox #(dispatch [::events/delete])])
-     [RefreshButton]]))
+
+     [main-components/RefreshMenu
+      {:action-id  refresh-action-id
+       :loading?   @loading?
+       :on-refresh #(refresh uuid)}]]))
 
 
 (defn UsbDeviceRow
@@ -93,7 +95,7 @@
 (defn Heartbeat
   [updated]
   (let [updated-moment           (time/parse-iso8601 updated)
-        {:keys [id]}             @(subscribe [::subs/nuvlabox])
+        {:keys [id]} @(subscribe [::subs/nuvlabox])
         status                   (subscribe [::edge-subs/status-nuvlabox id])
         next-heartbeat-moment    (subscribe [::subs/next-heartbeat-moment])
         next-heartbeat-times-ago (time/ago @next-heartbeat-moment)
@@ -174,14 +176,10 @@
 (defn EdgeDetails
   [uuid]
   (let []
-    (dispatch [::main-events/action-interval
-               {:action    :start
-                :id        :nuvlabox-get-nuvlabox
-                :frequency 10000
-                :event     [::events/get-nuvlabox (str "nuvlabox/" uuid)]}])
+    (refresh uuid)
     (fn [uuid]
       ^{:key uuid}
       [ui/Container {:fluid true}
-       [MenuBar]
+       [MenuBar uuid]
        [SummarySection]
        [StatusSection]])))

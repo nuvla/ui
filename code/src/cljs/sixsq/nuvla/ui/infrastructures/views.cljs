@@ -9,6 +9,7 @@
     [sixsq.nuvla.ui.infrastructures.events :as events]
     [sixsq.nuvla.ui.infrastructures.spec :as spec]
     [sixsq.nuvla.ui.infrastructures.subs :as subs]
+    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.general :as utils-general]
@@ -19,17 +20,6 @@
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [taoensso.timbre :as timbre]
     [taoensso.timbre :as log]))
-
-
-(defn refresh-button
-  []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn []
-      [uix/MenuItemWithIcon
-       {:name      (@tr [:refresh])
-        :icon-name "refresh"
-        :position  "right"
-        :on-click  #(dispatch [::events/get-services])}])))
 
 
 ;(defn services-search []
@@ -52,8 +42,8 @@
                       (dispatch-sync [::events/reset-service-group])
                       (dispatch-sync [::events/reset-service])
                       (dispatch [::events/open-add-service-modal]))}]]
-     [ui/MenuMenu {:position "right"}
-      [refresh-button]]]))
+     [main-components/RefreshMenu
+      {:on-refresh #(dispatch [::events/get-services])}]]))
 
 
 (def service-icons

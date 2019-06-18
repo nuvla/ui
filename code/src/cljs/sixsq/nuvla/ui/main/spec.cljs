@@ -34,6 +34,9 @@
 (s/def ::welcome-message (s/nilable keyword?))
 
 
+(s/def ::actions-interval map?)
+
+
 (s/def ::db (s/keys :req [::iframe?
                           ::device
                           ::sidebar-open?
@@ -43,7 +46,8 @@
                           ::changes-protection?
                           ::ignore-changes-modal
                           ::bootstrap-message
-                          ::welcome-message]))
+                          ::welcome-message
+                          ::actions-interval]))
 
 
 (def defaults {::iframe?              false
@@ -55,4 +59,5 @@
                ::changes-protection?  false
                ::ignore-changes-modal nil
                ::bootstrap-message    nil
-               ::welcome-message      nil})
+               ::welcome-message      nil
+               ::actions-interval     {}})

@@ -37,10 +37,12 @@
 (reg-event-fx
   ::get-deployment
   (fn [{{:keys [::spec/deployment] :as db} :db} [_ id]]
-    (let [get-depl-callback #(dispatch [::set-deployment %])]
-      {:db               (cond-> (assoc db ::spec/loading? true)
-                                 (not= (:id deployment) id) (merge db spec/defaults))
-       ::cimi-api-fx/get [id get-depl-callback]})))
+    (dispatch [::get-deployment-parameters id])
+    (dispatch [::get-events id])
+    (dispatch [::get-jobs id])
+    {:db               (cond-> (assoc db ::spec/loading? true)
+                               (not= (:id deployment) id) (merge db spec/defaults))
+     ::cimi-api-fx/get [id #(dispatch [::set-deployment %])]}))
 
 
 (reg-event-fx

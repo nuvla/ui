@@ -2,30 +2,14 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
-    [sixsq.nuvla.ui.cimi-detail.subs :as cimi-detail-subs]
+    [sixsq.nuvla.ui.cimi-detail.events :as events]
+    [sixsq.nuvla.ui.cimi-detail.subs :as subs]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.docs.subs :as docs-subs]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.resource-details :as details]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [taoensso.timbre :as log]))
-
-
-(defn refresh-button
-  []
-  (let [tr          (subscribe [::i18n-subs/tr])
-        loading?    (subscribe [::cimi-detail-subs/loading?])
-        resource-id (subscribe [::cimi-detail-subs/resource-id])]
-    (fn []
-      [ui/MenuMenu {:position "right"}
-       [uix/MenuItemWithIcon
-        {:name      (@tr [:refresh])
-         :icon-name "refresh"
-         :loading?  @loading?
-         :on-click  #(dispatch [::cimi-detail-events/get @resource-id])}]])))
 
 
 (defn path->resource-id
@@ -37,9 +21,9 @@
   []
   (let [cep                (subscribe [::cimi-subs/cloud-entry-point])
         path               (subscribe [::main-subs/nav-path])
-        loading?           (subscribe [::cimi-detail-subs/loading?])
-        cached-resource-id (subscribe [::cimi-detail-subs/resource-id])
-        resource           (subscribe [::cimi-detail-subs/resource])]
+        loading?           (subscribe [::subs/loading?])
+        cached-resource-id (subscribe [::subs/resource-id])
+        resource           (subscribe [::subs/resource])]
     (fn []
       (let [resource-id       (path->resource-id @path)
             correct-resource? (= resource-id @cached-resource-id)
@@ -47,11 +31,13 @@
 
         ;; forces a refresh when the correct resource isn't cached
         (when-not correct-resource?
-          (dispatch [::cimi-detail-events/get (path->resource-id @path)]))
+          (dispatch [::events/get (path->resource-id @path)]))
 
         ;; render the (possibly empty) detail
         [details/resource-detail
-         [refresh-button]
+         [main-components/RefreshMenu
+          {:on-refresh #(dispatch [::events/get resource-id])
+           :loading?   @loading?}]
          (when (and (not @loading?) correct-resource?) @resource)
          (:base-uri @cep)
          @resource-metadata]))))

@@ -10,6 +10,7 @@
     [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -18,6 +19,16 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [taoensso.timbre :as log]))
+
+
+(def refresh-action-id :nuvlabox-get-nuvlaboxes)
+
+
+(defn refresh
+  []
+  (dispatch [::main-events/action-interval-start {:id        refresh-action-id
+                                                  :frequency 10000
+                                                  :event     [::events/get-nuvlaboxes]}]))
 
 
 (defn StatisticState
@@ -58,18 +69,6 @@
                    #(dispatch [::events/set-state-selector (if (= % "ALL") nil %)]))}]))
 
 
-(defn RefreshButton
-  []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::subs/loading?])]
-    [uix/MenuItemWithIcon
-     {:name      (@tr [:refresh])
-      :icon-name "refresh"
-      :loading?  @loading?
-      :position  "right"
-      :on-click  #(dispatch [::events/get-nuvlaboxes])}]))
-
-
 (defn AddButton
   []
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -80,9 +79,13 @@
 
 
 (defn MenuBar []
-  [ui/Menu {:borderless true}
-   [AddButton]
-   [RefreshButton]])
+  (let [loading? (subscribe [::subs/loading?])]
+    [ui/Menu {:borderless true}
+     [AddButton]
+     [main-components/RefreshMenu
+      {:action-id  refresh-action-id
+       :loading?   @loading?
+       :on-refresh refresh}]]))
 
 (defn AddModal
   []
@@ -134,12 +137,7 @@
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])]
-
-    (dispatch [::main-events/action-interval
-               {:action    :start
-                :id        :nuvlabox-get-nuvlaboxes
-                :frequency 10000
-                :event     [::events/get-nuvlaboxes]}])
+    (refresh)
     (fn []
       (let [total-elements (get @nuvlaboxes :count 0)
             total-pages    (general-utils/total-pages total-elements @elements-per-page)]

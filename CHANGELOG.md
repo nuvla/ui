@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Dasboard details - Add ACL button
   - Infrastructure - Add ACL button to crud modals
   - Credentials - Add ACL button to crud modals
   - Acl - Enhance acl button

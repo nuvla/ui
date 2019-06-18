@@ -5,7 +5,6 @@
     [sixsq.nuvla.ui.dashboard-detail.views :as dashboard-detail-views]
     [sixsq.nuvla.ui.dashboard.events :as events]
     [sixsq.nuvla.ui.dashboard.subs :as subs]
-    [sixsq.nuvla.ui.dashboard.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]

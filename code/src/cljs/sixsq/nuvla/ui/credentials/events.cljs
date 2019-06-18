@@ -112,15 +112,7 @@
   ::delete-credential
   (fn [{:keys [db]} [_ id]]
     {:db                  db
-     ::cimi-api-fx/delete [id
-                           #(if (instance? js/Error %)
-                              (let [{:keys [status message]} (response/parse-ex-info %)]
-                                (dispatch [::messages-events/add
-                                           {:header  (cond-> (str "error deleting credential " id)
-                                                             status (str " (" status ")"))
-                                            :content message
-                                            :type    :error}]))
-                              (dispatch [::get-credentials]))]}))
+     ::cimi-api-fx/delete [id #(dispatch [::get-credentials])]}))
 
 
 (reg-event-db

@@ -127,21 +127,14 @@
   ::delete
   (fn [_ [_ resource-id]]
     {::cimi-api-fx/delete [resource-id
-                           #(if (instance? js/Error %)
-                              (let [{:keys [status message]} (response/parse-ex-info %)]
-                                (dispatch [::messages-events/add
-                                           {:header  (cond-> (str "error deleting " resource-id)
-                                                             status (str " (" status ")"))
-                                            :content message
-                                            :type    :error}]))
-                              (let [{:keys [status message]} (response/parse %)]
-                                (dispatch [::messages-events/add
-                                           {:header  (cond-> (str "deleted " resource-id)
-                                                             status (str " (" status ")"))
-                                            :content message
-                                            :type    :success}])
-                                (dispatch [:sixsq.nuvla.ui.dashboard.events/get-deployments])
-                                (dispatch [::history-events/navigate "dashboard"])))]}))
+                           #(let [{:keys [status message]} (response/parse %)]
+                              (dispatch [::messages-events/add
+                                         {:header  (cond-> (str "deleted " resource-id)
+                                                           status (str " (" status ")"))
+                                          :content message
+                                          :type    :success}])
+                              (dispatch [:sixsq.nuvla.ui.dashboard.events/get-deployments])
+                              (dispatch [::history-events/navigate "dashboard"]))]}))
 
 
 (reg-event-fx

@@ -98,7 +98,8 @@
                                            ::spec/infra-services nil
                                            ::spec/data-infra-services nil)
                ::cimi-api-fx/add [:deployment data on-success]}
-              old-deployment-id (assoc ::cimi-api-fx/delete [old-deployment-id #()])))))
+              old-deployment-id (assoc ::cimi-api-fx/delete [old-deployment-id #() :on-error #()])))))
+
 
 (reg-event-fx
   ::get-credentials

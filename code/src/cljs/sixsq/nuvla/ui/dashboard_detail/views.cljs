@@ -4,10 +4,8 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.dashboard-detail.events :as events]
     [sixsq.nuvla.ui.dashboard-detail.subs :as subs]
-    [sixsq.nuvla.ui.dashboard-detail.views-operations :as views-operations]
     [sixsq.nuvla.ui.dashboard.subs :as dashboard-subs]
     [sixsq.nuvla.ui.dashboard.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -21,7 +19,8 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.acl.views :as acl]))
 
 
 (defn automatic-refresh
@@ -359,20 +358,26 @@
 
 (defn deployment-detail
   [uuid]
-  (let [deployment  (subscribe [::subs/deployment])
+  (let [tr          (subscribe [::i18n-subs/tr])
+        deployment  (subscribe [::subs/deployment])
         resource-id (str "deployment/" uuid)]
 
     (automatic-refresh resource-id)
     (fn [uuid]
-      ^{:key uuid}
-      [ui/Segment (merge style/basic
-                         {:loading (not= uuid (-> @deployment
-                                                  :id
-                                                  (str/split #"/")
-                                                  second))})
-       [ui/Container {:fluid true}
-        [menu]
-        [summary @deployment]
-        [parameters-section]
-        [events-section]
-        [jobs-section]]])))
+      (let [{:keys [id acl] :as dep} @deployment]
+        ^{:key uuid}
+        [ui/Segment (merge style/basic
+                           {:loading (not= uuid (general-utils/id->uuid id))})
+         [ui/Container {:fluid true}
+          [:h2 {:style {:display :inline}}
+           [ui/Icon {:name "dashboard"}]
+           " "
+           (str/capitalize (@tr [:dashboard]))]
+          [acl/AclButton {:acl       acl
+                          :read-only (not (general-utils/can-edit? dep))
+                          :on-change #(dispatch [::events/edit id (assoc dep :acl %)])}]
+          [menu]
+          [summary dep]
+          [parameters-section]
+          [events-section]
+          [jobs-section]]]))))

@@ -113,15 +113,7 @@
 (reg-event-fx
   ::delete-service
   (fn [{:keys [db]} [_ id]]
-    {::cimi-api-fx/delete [id
-                           #(if (instance? js/Error %)
-                              (let [{:keys [status message]} (response/parse-ex-info %)]
-                                (dispatch [::messages-events/add
-                                           {:header  (cond-> (str "error deleting service " id)
-                                                             status (str " (" status ")"))
-                                            :content message
-                                            :type    :error}]))
-                              (dispatch [::get-services]))]}))
+    {::cimi-api-fx/delete [id #(dispatch [::get-services])]}))
 
 
 (reg-event-db

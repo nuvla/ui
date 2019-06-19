@@ -34,7 +34,7 @@
   ::set-deployments-params-map
   (fn [db [_ {deployment-params :resources}]]
     (assoc db ::spec/deployments-params-map
-              (group-by (comp :href :deployment) deployment-params))))
+              (group-by :parent deployment-params))))
 
 
 (reg-event-fx
@@ -42,7 +42,7 @@
   (fn [{:keys [db]} [_ {:keys [resources] :as deployments}]]
     (let [deployments-resource-ids (map :id resources)
           deployments-creds-ids    (distinct (map :credential-id resources))
-          filter-deps-ids          (str/join " or " (map #(str "deployment/href='" % "'") deployments-resource-ids))
+          filter-deps-ids          (str/join " or " (map #(str "parent='" % "'") deployments-resource-ids))
           query-params             {:filter (str "(" filter-deps-ids ") and value!=null")
                                     :select "id, deployment, name, value"}
           callback                 (fn [response]

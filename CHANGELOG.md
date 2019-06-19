@@ -13,6 +13,7 @@
 
 ### Changed
 
+  - Docs - loading animation on segment
   - Deployment - credential-id renamed parent
   - Deployment parameter - field deployment/href renamed parent
   - Dashboard refresh interval is set to 10s

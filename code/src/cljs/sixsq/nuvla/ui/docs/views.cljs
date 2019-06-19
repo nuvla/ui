@@ -7,7 +7,6 @@
     [sixsq.nuvla.ui.docs.subs :as subs]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -51,17 +50,18 @@
 
 (defn documents-view
   []
-  [ui/Container {:fluid true}
-   [documents-table]])
+  (dispatch [::events/get-documents])
+  (fn []
+    [ui/Container {:fluid true}
+    [documents-table]]))
 
 
 (defmethod panel/render :documentation
   [path]
-  (dispatch [::events/get-documents])
-  (fn [path]
-    (let [n        (count path)
-          children (case n
-                     1 [documents-view]
-                     2 [docs-details-view/docs-detail (str "resource-metadata/" (second path))]
-                     [documents-view])]
-      [ui/Segment style/basic children])))
+  (let [loading? (subscribe [::subs/loading?])
+        n        (count path)
+        children (case n
+                   1 [documents-view]
+                   2 [docs-details-view/docs-detail (str "resource-metadata/" (second path))]
+                   [documents-view])]
+    [ui/Segment (merge style/basic {:loading @loading?}) children]))

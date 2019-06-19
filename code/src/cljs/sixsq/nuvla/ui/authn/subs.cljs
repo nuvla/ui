@@ -157,7 +157,7 @@
   ::form-signup-passwords-doesnt-match?
   :<- [::form-data-signup]
   (fn [{:keys [password repeat-password] :as form-data} _]
-    (and (some? password)
+    (and (some? repeat-password)
          (not= password repeat-password))))
 
 
@@ -205,7 +205,7 @@
   ::form-password-reset-passwords-doesnt-match?
   :<- [::form-data-password-reset]
   (fn [{:keys [new-password repeat-new-password] :as form-data} _]
-    (and (some? new-password)
+    (and (some? repeat-new-password)
          (not= new-password repeat-new-password))))
 
 

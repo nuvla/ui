@@ -13,6 +13,9 @@
 
 ### Changed
 
+  - Dashboard refresh interval is set to 10s
+  - Authn - login button and form on key enter same behavior 
+  - Authn - make validation in signup and reset password less eager
   - Authn modals - disable autocomplete on singup, reset-password modals
   - Action intervals - moved to reframe db and refactored
   - Dasboard details - Add ACL button

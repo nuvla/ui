@@ -31,7 +31,7 @@
   [resource-id]
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
-              :frequency 30000
+              :frequency 10000
               :event     [::events/get-deployment resource-id]}]))
 
 

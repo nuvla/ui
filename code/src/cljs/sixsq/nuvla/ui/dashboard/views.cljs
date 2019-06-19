@@ -69,7 +69,7 @@
 
 (defn row-fn
   [{:keys [id state module] :as deployment}]
-  (let [credential-id (:credential-id deployment)
+  (let [credential-id (:parent deployment)
         creds-name    (subscribe [::subs/creds-name-map])
         [url-name url] @(subscribe [::subs/deployment-url deployment])]
     [ui/TableRow

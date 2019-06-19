@@ -41,7 +41,7 @@
   ::set-deployments
   (fn [{:keys [db]} [_ {:keys [resources] :as deployments}]]
     (let [deployments-resource-ids (map :id resources)
-          deployments-creds-ids    (distinct (map :credential-id resources))
+          deployments-creds-ids    (distinct (map :parent resources))
           filter-deps-ids          (str/join " or " (map #(str "parent='" % "'") deployments-resource-ids))
           query-params             {:filter (str "(" filter-deps-ids ") and value!=null")
                                     :select "id, deployment, name, value"}

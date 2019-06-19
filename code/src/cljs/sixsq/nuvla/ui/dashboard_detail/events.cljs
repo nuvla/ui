@@ -28,7 +28,7 @@
 (reg-event-fx
   ::get-deployment-parameters
   (fn [_ [_ resource-id]]
-    (let [filter-depl-params       {:filter  (str "deployment/href='" resource-id "'")
+    (let [filter-depl-params       {:filter  (str "parent='" resource-id "'")
                                     :orderby "name"}
           get-depl-params-callback #(dispatch [::set-deployment-parameters %])]
       {::cimi-api-fx/search [:deployment-parameter filter-depl-params get-depl-params-callback]})))

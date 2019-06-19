@@ -13,6 +13,7 @@
 
 ### Changed
 
+  - Deployment parameter - field deployment/href renamed parent
   - Dashboard refresh interval is set to 10s
   - Authn - login button and form on key enter same behavior 
   - Authn - make validation in signup and reset password less eager

@@ -13,6 +13,7 @@
 
 ### Changed
 
+  - Authn - make validation in signup and reset password less eager
   - Authn modals - disable autocomplete on singup, reset-password modals
   - Action intervals - moved to reframe db and refactored
   - Dasboard details - Add ACL button

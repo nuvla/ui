@@ -38,14 +38,14 @@
                         :icon          "user"
                         :icon-position "left"
                         :auto-focus    true
-                        :on-change     (ui-callback/value
+                        :on-change     (ui-callback/input-callback
                                          #(dispatch [::events/update-form-data :username %]))}]
          [ui/FormInput {:name          "password"
                         :placeholder   (str/capitalize (@tr [:password]))
                         :type          "password"
                         :icon          "key"
                         :icon-position "left"
-                        :on-change     (ui-callback/value
+                        :on-change     (ui-callback/input-callback
                                          #(dispatch [::events/update-form-data :password %]))}]
          [:div {:style {:text-align "right"}}
           [:a {:style    {:cursor "pointer"}
@@ -71,7 +71,7 @@
                                          (some? key)
                                          (not (s/valid? ::spec/key key)))
                         :auto-focus    true
-                        :on-change     (ui-callback/value
+                        :on-change     (ui-callback/input-callback
                                          #(dispatch [::events/update-form-data :key %]))}]
          [ui/FormInput {:name          "secret"
                         :placeholder   "Secret"
@@ -80,7 +80,7 @@
                         :error         (and
                                          (some? secret)
                                          (not (s/valid? ::spec/secret secret)))
-                        :on-change     (ui-callback/value
+                        :on-change     (ui-callback/input-callback
                                          #(dispatch [::events/update-form-data :secret %]))}]]))))
 
 
@@ -91,22 +91,27 @@
         form-data                  (subscribe [::subs/form-data])
         email-invalid?             (subscribe [::subs/form-signup-email-invalid?])
         passwords-doesnt-match?    (subscribe [::subs/form-signup-passwords-doesnt-match?])
-        password-constraint-error? (subscribe [::subs/form-signup-password-constraint-error?])]
+        password-constraint-error? (subscribe [::subs/form-signup-password-constraint-error?])
+        update-email-callback      (ui-callback/input-callback
+                                     #(dispatch [::events/update-form-data :email %]))
+        update-password-callback   (ui-callback/input-callback
+                                     #(dispatch [::events/update-form-data :password %]))]
     (fn []
-      (let [{:keys [email password repeat-password]} @form-data]
+      (let [password-field-error? (or @passwords-doesnt-match?
+                                      @password-constraint-error?)
+            errors-list           (cond-> []
+                                          @email-invalid? (conj (@tr [:email-invalid-format]))
+                                          @passwords-doesnt-match? (conj (@tr [:passwords-doesnt-match]))
+                                          @password-constraint-error? (conj (@tr [:password-constraint])))]
 
         ^{:key @form-id}
         [:<>
 
-         (let [errors-list (cond-> []
-                                   @email-invalid? (conj (@tr [:email-invalid-format]))
-                                   @passwords-doesnt-match? (conj (@tr [:passwords-doesnt-match]))
-                                   @password-constraint-error? (conj (@tr [:password-constraint])))]
-           [ui/Message {:hidden (empty? errors-list)
-                        :size   "tiny"
-                        :error  true
-                        :header (@tr [:validation-error])
-                        :list   errors-list}])
+         [ui/Message {:hidden (empty? errors-list)
+                      :size   "tiny"
+                      :error  true
+                      :header (@tr [:validation-error])
+                      :list   errors-list}]
 
          [ui/FormInput {:name          "signup-email"
                         :placeholder   "email"
@@ -114,10 +119,10 @@
                         :icon-position "left"
                         :auto-focus    true
                         :auto-complete "off"
-                        :value         (or email "")
                         :error         @email-invalid?
-                        :on-change     (ui-callback/value
-                                         #(dispatch [::events/update-form-data :email %]))}]
+                        :on-blur       update-email-callback
+                        :on-change     (when @email-invalid?
+                                         update-email-callback)}]
 
          [ui/FormGroup {:widths 2}
           [ui/FormInput {:name          "singup-password"
@@ -126,23 +131,23 @@
                          :icon          "key"
                          :icon-position "left"
                          :required      true
-                         :value         (or password "")
-                         :error         (or @passwords-doesnt-match?
-                                            @password-constraint-error?)
+                         :error         password-field-error?
                          :auto-complete "new-password"
-                         :on-change     (ui-callback/value
-                                          #(dispatch [::events/update-form-data :password %]))}]
+                         :on-blur       update-password-callback
+                         :on-change     (when password-field-error? update-password-callback)}]
 
           [ui/FormInput {:name          "singup-password-repeat"
                          :type          "password"
                          :placeholder   (str/capitalize (@tr [:password-repeat]))
                          :required      true
-                         :value         (or repeat-password "")
                          :error         (or @passwords-doesnt-match?
                                             @password-constraint-error?)
                          :auto-complete "off"
-                         :on-change     (ui-callback/value
-                                          #(dispatch [::events/update-form-data :repeat-password %]))}]]]))))
+                         :on-blur       (ui-callback/input-callback
+                                          #(dispatch [::events/update-form-data :repeat-password %]))
+                         :on-change     (ui-callback/input-callback
+                                          #(when (= (:password @form-data) %)
+                                             (dispatch [::events/update-form-data :repeat-password %])))}]]]))))
 
 
 ;;TODO fix field generation when resource metadata finalized
@@ -387,12 +392,18 @@
         username-invalid?          (subscribe [::subs/form-password-reset-username-invalid?])
         passwords-doesnt-match?    (subscribe [::subs/form-password-reset-passwords-doesnt-match?])
         password-constraint-error? (subscribe [::subs/form-password-reset-password-constraint-error?])
-        form-valid?                (subscribe [::subs/form-password-reset-valid?])]
+        form-valid?                (subscribe [::subs/form-password-reset-valid?])
+        update-username-callback   (ui-callback/input-callback
+                                     #(dispatch [::events/update-form-data :username %]))
+        update-password-callback   (ui-callback/input-callback
+                                     #(dispatch [::events/update-form-data :new-password %]))]
     (fn []
       (let [{:keys [username new-password repeat-new-password]} @form-data
-            errors-list (cond-> []
-                                @passwords-doesnt-match? (conj (@tr [:passwords-doesnt-match]))
-                                @password-constraint-error? (conj (@tr [:password-constraint])))]
+            password-field-error? (or @password-constraint-error?
+                                      @passwords-doesnt-match?)
+            errors-list           (cond-> []
+                                          @passwords-doesnt-match? (conj (@tr [:passwords-doesnt-match]))
+                                          @password-constraint-error? (conj (@tr [:password-constraint])))]
 
         ^{:key @form-id}
         [ui/Modal
@@ -437,12 +448,12 @@
                           :fluid         false
                           :icon-position "left"
                           :error         @username-invalid?
-                          :value         (or username "")
+                          :default-value (or username "")
                           :required      true
                           :auto-focus    true
                           :auto-complete "on"
-                          :on-change     (ui-callback/value
-                                           #(dispatch [::events/update-form-data :username %]))}]
+                          :on-blur       update-username-callback
+                          :on-change     (when @username-invalid? update-username-callback)}]
 
            [ui/FormGroup {:widths 2}
             [ui/FormInput {:name          "reset-new-password"
@@ -450,23 +461,23 @@
                            :placeholder   (str/capitalize (@tr [:new-password]))
                            :icon          "key"
                            :icon-position "left"
-                           :value         (or new-password "")
                            :required      true
-                           :error         (or @password-constraint-error?
-                                              @passwords-doesnt-match?)
+                           :error         password-field-error?
                            :auto-complete "new-password"
-                           :on-change     (ui-callback/value
-                                            #(dispatch [::events/update-form-data :new-password %]))}]
+                           :on-blur       update-password-callback
+                           :on-change     (when password-field-error? update-password-callback)}]
 
             [ui/FormInput {:name          "reset-new-password-repeat"
                            :type          "password"
                            :placeholder   (str/capitalize (@tr [:new-password-repeat]))
                            :required      true
-                           :value         (or repeat-new-password "")
                            :error         (or @password-constraint-error?
                                               @passwords-doesnt-match?)
                            :auto-complete "off"
-                           :on-change     (ui-callback/value
+                           :on-change     (ui-callback/input-callback
+                                            #(when (= new-password %)
+                                               (dispatch [::events/update-form-data :repeat-new-password %])))
+                           :on-blur       (ui-callback/input-callback
                                             #(dispatch [::events/update-form-data :repeat-new-password %]))}]]]
 
           [:div {:style {:padding "10px 0"}} (@tr [:reset-password-inst])]]
@@ -538,7 +549,7 @@
                           :required      true
                           :auto-focus    true
                           :auto-complete "on"
-                          :on-change     (ui-callback/value
+                          :on-change     (ui-callback/input-callback
                                            #(dispatch [::events/update-form-data :email %]))}]]
 
           [:div {:style {:padding "10px 0"}} (@tr [:invite-user-inst])]]

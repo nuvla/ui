@@ -168,9 +168,7 @@
                                   (:value value-scope)
                                   (:default value-scope))])
         (forms/form-field (fn [_ name value]
-                            (dispatch [::events/update-form-data name value])
-                            ) form-id input-method-updated))
-      )))
+                            (dispatch [::events/update-form-data name value])) form-id input-method-updated)))))
 
 
 (defn login-method-form
@@ -186,8 +184,7 @@
         ^{:key @form-id}
         [ui/Form {:id           (or @form-id "authn-form-placeholder-id")
                   :on-key-press (partial forms-utils/on-return-key
-                                         #(when (s/valid? @form-spec @form-data)
-                                            (dispatch [::events/submit])))}
+                                         #(dispatch [::events/submit]))}
          [ui/Segment {:style {:height     "35ex"
                               :overflow-y "auto"}}
           (when dropdown?

@@ -231,7 +231,7 @@
                                                :or   {clickable? true}}]
   (let [tr             (subscribe [::i18n-subs/tr])
         creds-name     (subscribe [::dashboard-subs/creds-name-map])
-        credential-id  (:credential-id deployment)
+        credential-id  (:parent deployment)
         {module-logo-url :logo-url
          module-name     :name
          module-path     :path

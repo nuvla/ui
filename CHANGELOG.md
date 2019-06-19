@@ -13,6 +13,7 @@
 
 ### Changed
 
+  - Deployment - credential-id renamed parent
   - Deployment parameter - field deployment/href renamed parent
   - Dashboard refresh interval is set to 10s
   - Authn - login button and form on key enter same behavior 

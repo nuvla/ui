@@ -36,7 +36,7 @@
                 ::data-spec/time-period-filter
                 ::spec/infra-service-filter
                 ::data-spec/content-type-filter] :as db} :db} [_ {credential-id :id :as credential}]]
-    (let [updated-deployment (assoc deployment :credential-id credential-id)
+    (let [updated-deployment (assoc deployment :parent credential-id)
           filter             (general-utils/join-and time-period-filter infra-service-filter content-type-filter)
           selected-keys      (map keyword (::data-spec/selected-data-set-ids db))
           datasets-map       (select-keys (::data-spec/data-records-by-data-set db) selected-keys)

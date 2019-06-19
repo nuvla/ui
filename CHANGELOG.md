@@ -5,6 +5,7 @@
 
 ### Added
 
+  - Set document title when navigating to simplify history navigation
   - Main components - Refresh Menu is now reusable and generalize it to 
     all pages
   - Action intervals - countdown feature and adding it on all 

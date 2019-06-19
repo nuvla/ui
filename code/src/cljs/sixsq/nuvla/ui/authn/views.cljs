@@ -108,19 +108,19 @@
                         :header (@tr [:validation-error])
                         :list   errors-list}])
 
-         [ui/FormInput {:name          "email"
+         [ui/FormInput {:name          "signup-email"
                         :placeholder   "email"
                         :icon          "at"
                         :icon-position "left"
                         :auto-focus    true
-                        :auto-complete "on"
+                        :auto-complete "off"
                         :value         (or email "")
                         :error         @email-invalid?
                         :on-change     (ui-callback/value
                                          #(dispatch [::events/update-form-data :email %]))}]
 
          [ui/FormGroup {:widths 2}
-          [ui/FormInput {:name          "password"
+          [ui/FormInput {:name          "singup-password"
                          :type          "password"
                          :placeholder   (str/capitalize (@tr [:password]))
                          :icon          "key"
@@ -129,11 +129,11 @@
                          :value         (or password "")
                          :error         (or @passwords-doesnt-match?
                                             @password-constraint-error?)
-                         :auto-complete "off"
+                         :auto-complete "new-password"
                          :on-change     (ui-callback/value
                                           #(dispatch [::events/update-form-data :password %]))}]
 
-          [ui/FormInput {:name          "password"
+          [ui/FormInput {:name          "singup-password-repeat"
                          :type          "password"
                          :placeholder   (str/capitalize (@tr [:password-repeat]))
                          :required      true
@@ -431,7 +431,7 @@
                         :header (@tr [:validation-error])
                         :list   errors-list}]
 
-           [ui/FormInput {:name          "username"
+           [ui/FormInput {:name          "reset-username"
                           :placeholder   (str/capitalize (@tr [:username]))
                           :icon          "user"
                           :fluid         false
@@ -445,7 +445,7 @@
                                            #(dispatch [::events/update-form-data :username %]))}]
 
            [ui/FormGroup {:widths 2}
-            [ui/FormInput {:name          "password"
+            [ui/FormInput {:name          "reset-new-password"
                            :type          "password"
                            :placeholder   (str/capitalize (@tr [:new-password]))
                            :icon          "key"
@@ -454,11 +454,11 @@
                            :required      true
                            :error         (or @password-constraint-error?
                                               @passwords-doesnt-match?)
-                           :auto-complete "off"
+                           :auto-complete "new-password"
                            :on-change     (ui-callback/value
                                             #(dispatch [::events/update-form-data :new-password %]))}]
 
-            [ui/FormInput {:name          "password"
+            [ui/FormInput {:name          "reset-new-password-repeat"
                            :type          "password"
                            :placeholder   (str/capitalize (@tr [:new-password-repeat]))
                            :required      true

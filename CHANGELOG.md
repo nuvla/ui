@@ -12,6 +12,7 @@
 
 ### Changed
 
+  - Authn modals - disable autocomplete on singup, reset-password modals
   - Action intervals - moved to reframe db and refactored
   - Dasboard details - Add ACL button
   - Infrastructure - Add ACL button to crud modals

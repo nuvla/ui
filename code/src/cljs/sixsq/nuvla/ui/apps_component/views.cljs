@@ -36,7 +36,7 @@
                    :placeholder   placeholder
                    :default-value value
                    :type          :text
-                   :error         (when (and validate? (not (s/valid? value-spec value))) true)
+                   :error         (and validate? (not (s/valid? value-spec value)))
                    :fluid         fluid?
                    :onMouseEnter  #(dispatch [::apps-events/active-input input-name])
                    :onMouseLeave  #(dispatch [::apps-events/active-input nil])
@@ -84,18 +84,15 @@
 
 (defn docker-image
   []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        module          (subscribe [::apps-subs/module])
-        image           (subscribe [::subs/image])
-        is-new?         (subscribe [::apps-subs/is-new?])
-        local-validate? (r/atom false)
-        form-valid?     (subscribe [::apps-subs/form-valid?])]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        module  (subscribe [::apps-subs/module])
+        image   (subscribe [::subs/image])
+        is-new? (subscribe [::apps-subs/is-new?])]
     (fn []
       (let [editable? (apps-utils/editable? @module @is-new?)
             {:keys [::spec/image-name ::spec/registry ::spec/repository ::spec/tag]
              :or   {registry "" repository "" image "" tag ""}} @image
-            label     (@tr [:module-docker-image-label])
-            validate? (or @local-validate? (not @form-valid?))]
+            label     (@tr [:module-docker-image-label])]
         [ui/TableRow
          [ui/TableCell {:collapsing true} (if editable? (apps-utils/mandatory-name label) label)]
 
@@ -118,28 +115,38 @@
             (docker-image-view @image))]]))))
 
 
-(defn architecture
+(defn architectures
   []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        arch      (subscribe [::subs/architecture])
-        module    (subscribe [::apps-subs/module])
-        is-new?   (subscribe [::apps-subs/is-new?])
-        editable? (apps-utils/editable? @module @is-new?)]
-    [ui/TableRow
-     [ui/TableCell {:collapsing true
-                    :style      {:padding-bottom 8}} "architecture"]
-     [ui/TableCell
-      (if editable?
-        [ui/Label
-         [ui/Dropdown {:name          (str "architecture")
-                       :inline        true
-                       :default-value @arch
-                       :options       [{:key "x86", :value "x86", :text "x86"}
-                                       {:key "ARM", :value "ARM", :text "ARM"}]
-                       :on-change     (ui-callback/value
-                                        #(do (dispatch [::main-events/changes-protection? true])
-                                             (dispatch [::events/architecture %])))}]]
-        [:span @arch])]]))
+  (let [architectures         (subscribe [::subs/architectures])
+        module                (subscribe [::apps-subs/module])
+        is-new?               (subscribe [::apps-subs/is-new?])
+        architectures-options (subscribe [::subs/architectures-options])
+        form-valid?           (subscribe [::apps-subs/form-valid?])
+        local-validate?       (r/atom false)
+        label                 "architectures"]
+    (fn []
+      (let [editable? (apps-utils/editable? @module @is-new?)
+            validate? (or @local-validate? (not @form-valid?))]
+        (log/warn @architectures)
+        ^{:key @architectures}
+        [ui/TableRow
+         [ui/TableCell {:collapsing true
+                        :style      {:padding-bottom 8}} (if editable? (apps-utils/mandatory-name label) label)]
+         [ui/TableCell
+          (if editable?
+            [ui/Dropdown {:name          "architectures"
+                          :multiple      true
+                          :selection     true
+                          :default-value @architectures
+                          :options       @architectures-options
+                          :error         (and validate? (not (s/valid? ::spec/architectures @architectures)))
+                          :on-change     (ui-callback/value
+                                           #(do
+                                              (reset! local-validate? true)
+                                              (dispatch [::events/architectures %])
+                                              (dispatch [::main-events/changes-protection? true])
+                                              (dispatch [::apps-events/validate-form])))}]
+            [:span @architectures])]]))))
 
 
 (defn summary []
@@ -148,8 +155,8 @@
      [
       ^{:key "summary-docker-image"}
       [docker-image]
-      ^{:key "summary-architecture"}
-      [architecture]]]))
+      ^{:key "summary-architectures"}
+      [architectures]]]))
 
 
 (defn show-count

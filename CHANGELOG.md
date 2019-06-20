@@ -13,6 +13,7 @@
 
 ### Changed
 
+  - Module component - Architecture field changed to an array on server
   - Docs - loading animation on segment
   - Deployment - credential-id renamed parent
   - Deployment parameter - field deployment/href renamed parent

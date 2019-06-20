@@ -81,13 +81,13 @@
 
 (defn module->db
   [db {:keys [content] :as module}]
-  (let [{:keys [image urls architecture output-parameters
+  (let [{:keys [image urls architectures output-parameters
                 data-accept-content-types ports mounts environmental-variables]} content]
     (-> db
         (apps-utils/module->db module)
         (assoc-in [::spec/module-component ::spec/image] (image->db image))
         (assoc-in [::spec/module-component ::spec/urls] (urls->db urls))
-        (assoc-in [::spec/module-component ::spec/architecture] architecture)
+        (assoc-in [::spec/module-component ::spec/architectures] architectures)
         (assoc-in [::spec/module-component ::spec/output-parameters] (output-parameters->db output-parameters))
         (assoc-in [::spec/module-component ::spec/data-types] (data-types->db data-accept-content-types))
         (assoc-in [::spec/module-component ::spec/ports] (ports->db ports))
@@ -173,7 +173,7 @@
 (defn db->module
   [module commit-map db]
   (let [{:keys [author commit]} commit-map
-        architecture      (get-in db [::spec/module-component ::spec/architecture])
+        architectures      (get-in db [::spec/module-component ::spec/architectures])
         image             (image->module db)
         urls              (urls->module db)
         ports             (ports->module db)
@@ -184,7 +184,7 @@
     (as-> module m
           (assoc-in m [:content :author] author)
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
-          (assoc-in m [:content :architecture] architecture)
+          (assoc-in m [:content :architectures] architectures)
           (assoc-in m [:content :image] image)
           (if (empty? urls)
             (update-in m [:content] dissoc :urls)

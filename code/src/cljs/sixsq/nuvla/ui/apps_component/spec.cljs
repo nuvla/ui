@@ -11,7 +11,7 @@
                                    ::mounts            {}
                                    ::urls              {}
                                    ::output-parameters {}
-                                   ::architecture      "x86"
+                                   ::architectures     ["amd64"]
                                    ::data-types        {}}})
 
 
@@ -110,7 +110,7 @@
 (s/def ::output-parameters (s/map-of any? (s/merge ::output-parameter)))
 
 
-(s/def ::architecture string?)
+(s/def ::architectures (s/coll-of string? :min-count 1))
 
 (s/def ::data-type string?)
 
@@ -118,7 +118,7 @@
 ; Module
 
 (s/def ::module-component (s/keys :req [::image
-                                        ::architecture]
+                                        ::architectures]
                                   :opt [::ports
                                         ::mounts
                                         ::output-parameters

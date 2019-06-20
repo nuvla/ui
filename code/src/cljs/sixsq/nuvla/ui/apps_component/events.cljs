@@ -14,13 +14,13 @@
         (assoc-in [::spec/module-component ::spec/urls] {})
         (assoc-in [::spec/module-component ::spec/output-parameters] {})
         (assoc-in [::spec/module-component ::spec/data-types] {})
-        (assoc-in [::spec/module-component ::spec/architecture] "x86")
+        (assoc-in [::spec/module-component ::spec/architectures] ["amd64"])
         (assoc-in [::spec/module-component ::spec/image] {}))))
 
 (reg-event-db
-  ::architecture
-  (fn [db [_ architecture]]
-    (assoc-in db [::spec/module-component ::spec/architecture] architecture)))
+  ::architectures
+  (fn [db [_ architectures]]
+    (assoc-in db [::spec/module-component ::spec/architectures] architectures)))
 
 
 ; Ports

@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+  - About page - Links update
+
 ## [2.2.0] - 2019-06.20
 
 ### Added

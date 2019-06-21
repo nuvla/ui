@@ -30,14 +30,14 @@
      [ui/ListSA
       [ui/ListItem (@tr [:version-number]) ": " [:span#release-version "v"]]
       [ui/ListItem [:a {:href "https://sixsq.com/nuvla"} (str/capitalize (@tr [:product-info]))]]
-      [ui/ListItem [:a {:href "https://ssdocs.sixsq.com/en/latest/tutorials/index.html"}
-                    (str/capitalize (@tr [:tutorials]))]]
+      [ui/ListItem [:a {:href "https://docs.nuvla.io"}
+                    (str/capitalize (@tr [:documentation]))]]
       [ui/ListItem [:a {:on-click #(dispatch
                                      [::history-events/navigate "documentation"])
                         :style    {:cursor "pointer"}}
                     (@tr [:api-doc])]]
       [ui/ListItem [:a {:href "https://sixsq.com/personae"} (@tr [:personae-desc])]]
-      [ui/ListItem [:a {:href "https://ssdocs.sixsq.com/en/latest/release_notes/index.html"}
+      [ui/ListItem [:a {:href "https://github.com/nuvla/deployment/releases"}
                     (str/capitalize (@tr [:release-notes]))]]
       [ui/ListItem [:a {:href "https://github.com/nuvla"}
                     (str/capitalize (@tr [:source-code-on]))

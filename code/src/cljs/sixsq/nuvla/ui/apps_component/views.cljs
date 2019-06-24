@@ -127,7 +127,6 @@
     (fn []
       (let [editable? (apps-utils/editable? @module @is-new?)
             validate? (or @local-validate? (not @form-valid?))]
-        (log/warn @architectures)
         ^{:key @architectures}
         [ui/TableRow
          [ui/TableCell {:collapsing true

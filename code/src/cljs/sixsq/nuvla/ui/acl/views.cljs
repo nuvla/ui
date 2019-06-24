@@ -17,6 +17,35 @@
     [taoensso.timbre :as log]))
 
 
+(defn acl->ui-acl-format
+  [acl]
+  (let [normalized-acl     (utils/normalize-acl acl)
+        local-owners       (-> normalized-acl
+                               :owners
+                               sort
+                               vec)
+        acl-without-owners (dissoc normalized-acl :owners)
+        principals-rights  (sort
+                             (reduce
+                               (partial merge-with concat)
+                               (map
+                                 (fn [[right-kw principals]]
+                                   (into {} (map (fn [principal] [principal [right-kw]]) principals)))
+                                 acl-without-owners)))]
+    {:owners     local-owners
+     :principals principals-rights}))
+
+
+(defn ui-acl-format->acl
+  [{:keys [owners principals] :as acl-in-ui-format}]
+  (let [rights-principals (reduce (partial merge-with concat) (mapcat (fn [[principal rights]]
+                                                                        (map (fn [right]
+                                                                               {right [principal]}) rights)
+
+                                                                        ) principals))]
+    (assoc rights-principals
+      :owners owners)))
+
 (defn is-advanced-mode?
   [mode]
   (= mode :advanced))
@@ -108,7 +137,9 @@
                    :link     true
                    :size     "small"
                    :color    "red"
-                   :on-click #(on-change (utils/remove-principal acl [:owners] principal))}])]]]))
+                   :on-click (fn []
+                               (swap! acl update :owners (partial filterv #(not= principal %)))
+                               (on-change (ui-acl-format->acl @acl)))}])]]]))
 
 
 (defn RightCheckbox
@@ -257,7 +288,8 @@
         tr      (subscribe [::i18n-subs/tr])]
     (fn [{:keys [acl read-only on-change mode] :as opts}]
       (let [is-advanced? (is-advanced-mode? @mode)
-            owners       (:owners acl)]
+            owners       (:owners @acl)]
+        (log/warn "AclOwners" owners)
         [ui/Table {:unstackable true
                    :attached    "top"}
 
@@ -287,7 +319,14 @@
                 [ui/ListContent
                  [ui/ListHeader
                   [DropdownPrincipals
-                   {:on-change #(on-change (utils/add-principal acl [:owners] %))
+                   {:on-change (fn [new-owner]
+                                 (when-not (contains? (set owners) new-owner)
+                                   (let [new-acl (-> @acl
+                                                     (update :owners conj new-owner)
+                                                     (update :principals
+                                                             (partial filterv #(not= new-owner (first %)))))]
+                                     (reset! acl new-acl)
+                                     (on-change (ui-acl-format->acl @acl)))))
                     :fluid     false}]]]])]]]]]))))
 
 
@@ -317,18 +356,19 @@
          read-only true
          mode (r/atom :simple)
          on-change #()} :as opts}]
-  (fn [opts]
-    (let [opts (assoc opts :mode mode
-                           :read-only read-only
-                           :on-change on-change)
-          acl  (or (:acl opts) acl)]
-      [:div {:style (cond-> {:margin-bottom "10px"
-                             :margin-top    "10px"}
-                            @(subscribe [::main-subs/is-device? :mobile]) (assoc :overflow-x "auto"))}
-       [AclOwners opts]
-       (when-not (and read-only
-                      (< (count acl) 2))
-         [AclRights opts])])))
+  (let [local-acl (r/atom (acl->ui-acl-format acl))]
+    (fn [opts]
+      (let [opts (assoc opts :mode mode
+                             :read-only read-only
+                             :on-change on-change)]
+
+        [:div {:style (cond-> {:margin-bottom "10px"
+                               :margin-top    "10px"}
+                              @(subscribe [::main-subs/is-device? :mobile]) (assoc :overflow-x "auto"))}
+         [AclOwners (assoc opts :acl local-acl)]
+         (when-not (and read-only
+                        (< (count acl) 2))
+           [AclRights opts])]))))
 
 
 (defn AclButton
@@ -354,7 +394,7 @@
                               :else nil)]
         [:<>
          [ui/Button {:floated  "right"
-                     :style {:margin-bottom "5px"}
+                     :style    {:margin-bottom "5px"}
                      :basic    true
                      :on-click #(accordion-utils/toggle active?)}
           [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-principals}])

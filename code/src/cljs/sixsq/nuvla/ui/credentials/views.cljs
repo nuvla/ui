@@ -128,9 +128,9 @@
 
         [:<>
 
-         [acl/AclButton {:acl       (:acl @credential)
-                         :read-only (not editable?)
-                         :on-change #(dispatch [::events/update-credential :acl %])}]
+         [acl/AclButton {:default-value (:acl @credential)
+                         :read-only     (not editable?)
+                         :on-change     #(dispatch [::events/update-credential :acl %])}]
 
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody
@@ -157,9 +157,9 @@
             form-validation-event ::events/validate-minio-credential-form]
 
         [:<>
-         [acl/AclButton {:acl       (:acl @credential)
-                         :read-only (not editable?)
-                         :on-change #(dispatch [::events/update-credential :acl %])}]
+         [acl/AclButton {:default-value (:acl @credential)
+                         :read-only     (not editable?)
+                         :on-change     #(dispatch [::events/update-credential :acl %])}]
 
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody

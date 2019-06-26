@@ -3,6 +3,10 @@
 ## [Unreleased]
 
 ### Changed
+
+  - Infrastructure page - take into account acl at creation
+  - Credential page - take into account acl at creation
+  - ACL - refactor to get ui-acl format to be able to keep order
   - About page - Links update
 
 ## [2.2.0] - 2019-06.20

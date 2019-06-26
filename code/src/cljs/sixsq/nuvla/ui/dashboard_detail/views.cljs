@@ -351,9 +351,9 @@
            [ui/Icon {:name "dashboard"}]
            " "
            (str/capitalize (@tr [:dashboard]))]
-          [acl/AclButton {:acl       acl
-                          :read-only (not (general-utils/can-edit? dep))
-                          :on-change #(dispatch [::events/edit id (assoc dep :acl %)])}]
+          [acl/AclButton {:default-value acl
+                          :read-only     (not (general-utils/can-edit? dep))
+                          :on-change     #(dispatch [::events/edit id (assoc dep :acl %)])}]
           [menu]
           [summary dep]
           [parameters-section]

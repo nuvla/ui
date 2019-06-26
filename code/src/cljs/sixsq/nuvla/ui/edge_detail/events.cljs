@@ -18,10 +18,10 @@
 (reg-event-fx
   ::set-nuvlabox
   (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status id :id :as nuvlabox}]]
-    {:db               (assoc db ::spec/nuvlabox nuvlabox
-                                 ::spec/loading? false)
-     ::cimi-api-fx/get [nb-status-id #(dispatch [::set-nuvlabox-status %])
-                        :on-error #(dispatch [::set-nuvlabox-status nil])]
+    {:db                             (assoc db ::spec/nuvlabox nuvlabox
+                                               ::spec/loading? false)
+     ::cimi-api-fx/get               [nb-status-id #(dispatch [::set-nuvlabox-status %])
+                                      :on-error #(dispatch [::set-nuvlabox-status nil])]
      ::edge-fx/get-status-nuvlaboxes [[id] #(dispatch [::edge-events/set-status-nuvlaboxes %])]}))
 
 

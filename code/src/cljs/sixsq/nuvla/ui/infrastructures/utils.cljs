@@ -24,11 +24,14 @@
         description     (get-in db [::spec/service :description])
         group-id        (get-in db [::spec/service :parent])
         endpoint        (get-in db [::spec/service :endpoint])
-        service-subtype (get-in db [::spec/service :subtype])]
+        service-subtype (get-in db [::spec/service :subtype])
+        acl             (get-in db [::spec/service :acl])]
     (-> {}
         (assoc-in [:template :href] (str "infrastructure-service-template/generic"))
         (assoc-in [:template :name] service-name)
         (assoc-in [:template :description] description)
         (assoc-in [:template :parent] group-id)
         (assoc-in [:template :subtype] service-subtype)
-        (assoc-in [:template :endpoint] endpoint))))
+        (assoc-in [:template :endpoint] endpoint)
+        (cond-> acl (assoc-in [:template :acl] acl))
+        )))

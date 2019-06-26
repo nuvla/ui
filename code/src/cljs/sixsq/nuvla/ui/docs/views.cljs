@@ -53,7 +53,7 @@
   (dispatch [::events/get-documents])
   (fn []
     [ui/Container {:fluid true}
-    [documents-table]]))
+     [documents-table]]))
 
 
 (defmethod panel/render :documentation

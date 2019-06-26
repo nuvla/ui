@@ -195,9 +195,9 @@
             form-validation-event ::events/validate-swarm-service-form]
         [:<>
 
-         [acl/AclButton {:acl       (:acl @service)
-                         :read-only (not editable?)
-                         :on-change #(dispatch [::events/update-service :acl %])}]
+         [acl/AclButton {:default-value (:acl @service)
+                         :read-only     (not editable?)
+                         :on-change     #(dispatch [::events/update-service :acl %])}]
 
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody
@@ -218,9 +218,9 @@
             {:keys [name description endpoint]} @service
             form-validation-event ::events/validate-minio-service-form]
         [:<>
-         [acl/AclButton {:acl       (:acl @service)
-                         :read-only (not editable?)
-                         :on-change #(dispatch [::events/update-service :acl %])}]
+         [acl/AclButton {:default-value (:acl @service)
+                         :read-only     (not editable?)
+                         :on-change     #(dispatch [::events/update-service :acl %])}]
 
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody

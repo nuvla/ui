@@ -131,7 +131,7 @@
                                                           set)
                                                      (apply conj rights (utils/extent-right right-kw)))]
                                     (swap! ui-acl utils/acl-change-rights-for-row row-number principal new-rights)
-                                    (on-change @ui-acl))
+                                    (on-change (utils/ui-acl-format->acl @ui-acl)))
                   :disabled      read-only}]))
 
 
@@ -320,18 +320,14 @@
 
 
 (defn AclWidget
-  [{:keys [acl mode] :as opts} & [ui-id ui-acl]]
+  [{:keys [default-value mode] :as opts} & [ui-acl]]
   (let [mode   (r/atom (or mode :simple))
-        acl    (or acl {:owners [@(subscribe [::authn-subs/user-id])]})
-        ui-id  (or ui-id (r/atom :not-defined))
-        ui-acl (or ui-acl (r/atom :not-defined))]
-    (fn [{:keys [id on-change read-only] :as opts}]
-      (when (not= id @ui-id)                                ;;Trick to force reload ui-acl when user change key
-        (reset! ui-acl (utils/acl->ui-acl-format acl))
-        (reset! ui-id id))
-
-      (let [opts (assoc opts :ui-acl ui-acl
-                             :mode mode
+        ui-acl (or ui-acl
+                   (r/atom
+                     (let [acl (or default-value {:owners #{@(subscribe [::authn-subs/user-id])}})]
+                       (utils/acl->ui-acl-format acl))))]
+    (fn [{:keys [on-change read-only] :as opts}]
+      (let [opts (assoc opts :mode mode
                              :read-only (or (nil? read-only) read-only)
                              :on-change (or on-change #()))]
 
@@ -345,22 +341,14 @@
 
 
 (defn AclButton
-  [{:keys [acl] :as opts}]
+  [{:keys [default-value] :as opts}]
   (let [tr      (subscribe [::i18n-subs/tr])
         active? (r/atom false)
-        acl     (or acl {:owners [@(subscribe [::authn-subs/user-id])]})
-        ui-id   (r/atom :not-defined)
-        ui-acl  (r/atom :not-defined)]
-    (fn [{:keys [id] :as opts}]
-      (log/warn "id" id "ui-id" @ui-id "acl" acl)
-
-      (when (not= id @ui-id)                                ;;Trick to force reload ui-acl when user change key
-        (reset! ui-acl (utils/acl->ui-acl-format acl))
-        (reset! active? false)
-        (reset! ui-id id))
-
+        acl     (or default-value {:owners [@(subscribe [::authn-subs/user-id])]})
+        ui-acl  (r/atom (utils/acl->ui-acl-format acl))]
+    (fn [opts]
       (let [owners          (utils/acl-get-owners-set @ui-acl)
-            principals-set  (utils/acl-get-principals-set @ui-acl)
+            principals-set  (utils/acl-get-all-principals-set @ui-acl)
             some-groups?    (some #(str/starts-with? % "group/") principals-set)
 
             icon-principals (cond
@@ -388,4 +376,4 @@
                        :content  (@tr [:rights-icon])}])
           [ui/Icon {:name (if @active? "caret down" "caret left")}]]
          (when @active?
-           [AclWidget opts ui-id ui-acl])]))))
+           [AclWidget opts ui-acl])]))))

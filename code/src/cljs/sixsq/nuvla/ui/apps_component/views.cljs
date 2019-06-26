@@ -693,10 +693,10 @@
          [:h2 {:style {:display :inline}}
           [ui/Icon {:name "grid layout"}]
           parent (when (not-empty parent) "/") name]
-         [acl/AclButton {:acl       (get @module-common ::apps-spec/acl)
-                         :on-change #(do (dispatch [::apps-events/acl %])
-                                         (dispatch [::main-events/changes-protection? true]))
-                         :read-only (not editable?)}]
+         [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)
+                         :on-change     #(do (dispatch [::apps-events/acl %])
+                                             (dispatch [::main-events/changes-protection? true]))
+                         :read-only     (not editable?)}]
          [apps-views-detail/control-bar]
          [summary]
          [ports-section]

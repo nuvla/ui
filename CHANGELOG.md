@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Login - disable login for password and api-key when 
+    not all required fields are complete
   - Infrastructure page - take into account acl at creation
   - Credential page - take into account acl at creation
   - ACL - refactor to get ui-acl format to be able to keep order

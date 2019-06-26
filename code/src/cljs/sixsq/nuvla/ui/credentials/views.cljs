@@ -54,6 +54,7 @@
                          :placeholder   (@tr [name-kw])
                          :disabled      (not editable?)
                          :error         (and validate? (not valid?))
+                         :auto-complete "off"
                          :fluid         true
                          :type          (if (= type :input) :text type)
                          :icon          (when input-active? :pencil)

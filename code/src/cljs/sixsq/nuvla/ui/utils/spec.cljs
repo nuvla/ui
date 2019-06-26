@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.utils.spec
   (:require
     [clojure.spec.alpha :as s]
-    [clojure.string :as str]))
+    [clojure.string :as str]
+    [taoensso.timbre :as log]))
 
 
 (defn nonblank-string [s]
@@ -47,7 +48,6 @@
 (defn resolvable?
   [spec]
   (try
-    (s/describe spec)
+    (do (s/describe spec) true)
     (catch :default e
-      false))
-  true)
+      false)))

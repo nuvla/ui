@@ -187,6 +187,7 @@
   (fn [errors]
     (every? false? errors)))
 
+
 (reg-sub
   ::form-data-password-reset
   :<- [::form-data-when-form-id-is "session-template/password-reset"]
@@ -231,8 +232,14 @@
   ::form-valid?
   (fn [_ _]
     [(subscribe [::form-id])
+     (subscribe [::form-data])
+     (subscribe [::form-spec-error?])
      (subscribe [::form-signup-valid?])])
-  (fn [[form-id form-signup-valid?]]
+  (fn [[form-id form-data form-spec-error? form-signup-valid?]]
     (case form-id
       "user-template/email-password" form-signup-valid?
+      "session-template/password" (and
+                                    (s/valid? ::us/username (:username form-data))
+                                    (s/valid? us/nonblank-string (:password form-data)))
+      "session-template/api-key" (not form-spec-error?)
       true)))

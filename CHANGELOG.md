@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Infrastructure page - add on service group allows creation of more 
+    than one service of the same type fix
   - Login - disable login for password and api-key when 
     not all required fields are complete
   - Infrastructure page - take into account acl at creation

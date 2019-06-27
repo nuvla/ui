@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - App component - Creating a new component sees previously used env 
+    vars #175
   - ACL Button - ACL Button hide itself when no acl and in read-only 
     mode #173
   - Apps component - architectures should be separated in read-only 

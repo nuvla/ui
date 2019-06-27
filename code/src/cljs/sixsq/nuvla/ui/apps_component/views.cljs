@@ -145,7 +145,7 @@
                                               (dispatch [::events/architectures %])
                                               (dispatch [::main-events/changes-protection? true])
                                               (dispatch [::apps-events/validate-form])))}]
-            [:span @architectures])]]))))
+            [:span (str/join ", " @architectures)])]]))))
 
 
 (defn summary []

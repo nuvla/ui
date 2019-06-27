@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Apps component - architectures spaced in read only #174
   - Infrastructure page - add on service group allows creation of more 
     than one service of the same type fix
   - Login - disable login for password and api-key when 

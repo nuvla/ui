@@ -4,7 +4,10 @@
 
 ### Changed
 
-  - Apps component - architectures spaced in read only #174
+  - ACL Button - ACL Button hide itself when no acl and in read-only 
+    mode #173
+  - Apps component - architectures should be separated in read-only 
+    mode #174
   - Infrastructure page - add on service group allows creation of more 
     than one service of the same type fix
   - Login - disable login for password and api-key when 

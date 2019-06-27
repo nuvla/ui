@@ -320,11 +320,11 @@
 
 
 (defn AclWidget
-  [{:keys [default-value mode] :as opts} & [ui-acl]]
+  [{:keys [default-value read-only mode] :as opts} & [ui-acl]]
   (let [mode   (r/atom (or mode :simple))
         ui-acl (or ui-acl
                    (r/atom
-                     (let [acl (or default-value {:owners #{@(subscribe [::authn-subs/user-id])}})]
+                     (let [acl (or default-value (when-not read-only {:owners #{@(subscribe [::authn-subs/user-id])}}))]
                        (utils/acl->ui-acl-format acl))))]
     (fn [{:keys [on-change read-only] :as opts}]
       (let [opts (assoc opts :mode mode
@@ -341,39 +341,40 @@
 
 
 (defn AclButton
-  [{:keys [default-value] :as opts}]
+  [{:keys [default-value read-only] :as opts}]
   (let [tr      (subscribe [::i18n-subs/tr])
         active? (r/atom false)
-        acl     (or default-value {:owners [@(subscribe [::authn-subs/user-id])]})
-        ui-acl  (r/atom (utils/acl->ui-acl-format acl))]
+        acl     (or default-value (when-not read-only {:owners [@(subscribe [::authn-subs/user-id])]}))
+        ui-acl  (when acl (r/atom (utils/acl->ui-acl-format acl)))]
     (fn [opts]
-      (let [owners          (utils/acl-get-owners-set @ui-acl)
-            principals-set  (utils/acl-get-all-principals-set @ui-acl)
-            some-groups?    (some #(str/starts-with? % "group/") principals-set)
+      (when ui-acl
+        (let [owners          (utils/acl-get-owners-set @ui-acl)
+              principals-set  (utils/acl-get-all-principals-set @ui-acl)
+              some-groups?    (some #(str/starts-with? % "group/") principals-set)
 
-            icon-principals (cond
-                              (and owners (= (count owners) 1) (empty? principals-set)) "lock"
-                              (contains? principals-set "group/nuvla-anon") "world"
-                              some-groups? "users"
-                              (not some-groups?) "user"
-                              :else nil)
-            rights-keys     (utils/acl-get-all-used-rights-set @ui-acl)
-            icon-right      (cond
-                              (some #(str/starts-with? (name %) "edit") rights-keys) "pencil"
-                              (some #(str/starts-with? (name %) "view") rights-keys) "eye"
-                              :else nil)]
-        [:<>
-         [ui/Button {:floated  "right"
-                     :style    {:margin-bottom "5px"}
-                     :basic    true
-                     :on-click #(accordion-utils/toggle active?)}
-          [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-principals}])
-                     :position "bottom center"
-                     :content  (@tr [:principals-icon])}]
-          (when icon-right
-            [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-right}])
+              icon-principals (cond
+                                (and owners (= (count owners) 1) (empty? principals-set)) "lock"
+                                (contains? principals-set "group/nuvla-anon") "world"
+                                some-groups? "users"
+                                (not some-groups?) "user"
+                                :else nil)
+              rights-keys     (utils/acl-get-all-used-rights-set @ui-acl)
+              icon-right      (cond
+                                (some #(str/starts-with? (name %) "edit") rights-keys) "pencil"
+                                (some #(str/starts-with? (name %) "view") rights-keys) "eye"
+                                :else nil)]
+          [:<>
+           [ui/Button {:floated  "right"
+                       :style    {:margin-bottom "5px"}
+                       :basic    true
+                       :on-click #(accordion-utils/toggle active?)}
+            [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-principals}])
                        :position "bottom center"
-                       :content  (@tr [:rights-icon])}])
-          [ui/Icon {:name (if @active? "caret down" "caret left")}]]
-         (when @active?
-           [AclWidget opts ui-acl])]))))
+                       :content  (@tr [:principals-icon])}]
+            (when icon-right
+              [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-right}])
+                         :position "bottom center"
+                         :content  (@tr [:rights-icon])}])
+            [ui/Icon {:name (if @active? "caret down" "caret left")}]]
+           (when @active?
+             [AclWidget opts ui-acl])])))))

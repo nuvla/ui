@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 ### Changed
+
+  - Upgrade to parent 6.5.1, nuvla api 2.0.1, shadow-cljs 2.8.39 
   - About page - Links update
 
 ## [2.2.0] - 2019-06.20

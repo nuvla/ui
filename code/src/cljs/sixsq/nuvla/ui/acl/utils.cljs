@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.acl.utils
-  (:require [clojure.set :as set]))
+  (:require [clojure.set :as set]
+            [taoensso.timbre :as log]))
 
 
 (def rights-hierarchy (-> (make-hierarchy)
@@ -78,34 +79,6 @@
          (into {}))))
 
 
-(defn update-acl-principal
-  [acl right-keys fn-update]
-  (loop [updated-acl acl
-         left-keys   (vec right-keys)]
-    (let [key     (peek left-keys)
-          new-acl (update updated-acl key fn-update)]
-      (if (empty? left-keys)
-        (normalize-acl updated-acl)
-        (recur new-acl (pop left-keys))))))
-
-
-(defn remove-principal
-  [acl right-keys principal]
-  (update-acl-principal acl right-keys
-                        (fn [collection]
-                          (remove #(= % principal) collection))))
-
-
-(defn add-principal
-  [acl right-keys principal]
-  (update-acl-principal acl right-keys
-                        (fn [collection]
-                          (->> principal
-                               (conj collection)
-                               (set)
-                               (sort)))))
-
-
 (defn same-base-right
   [right-kw]
   (case right-kw
@@ -123,6 +96,92 @@
        (set)))
 
 
-(defn some-principal?
-  [principal principals]
-  (boolean (some #(= % principal) principals)))
+(defn acl->ui-acl-format
+  [acl]
+  (let [normalized-acl     (normalize-acl acl)
+        local-owners       (-> normalized-acl
+                               :owners
+                               sort
+                               vec)
+        acl-without-owners (dissoc normalized-acl :owners)
+        principals-rights  (vec
+                             (sort
+                               (reduce
+                                 (partial merge-with set/union)
+                                 (map
+                                   (fn [[right-kw principals]]
+                                     (into {} (map (fn [principal] [principal #{right-kw}]) principals)))
+                                   acl-without-owners))))]
+    {:owners     local-owners
+     :principals principals-rights}))
+
+
+(defn ui-acl-format->acl
+  [{:keys [owners principals] :as acl-in-ui-format}]
+  (let [rights-principals (reduce (partial merge-with concat)
+                                  (mapcat (fn [[principal rights]]
+                                            (map (fn [right]
+                                                   {right [principal]}) rights))
+                                          principals))]
+    (assoc rights-principals :owners owners)))
+
+
+(defn acl-remove-owner
+  [{:keys [owners] :as ui-acl} principal]
+  (->> owners
+       (filterv #(not= principal %))
+       (assoc ui-acl :owners)))
+
+
+(defn acl-get-owners-set
+  [{:keys [owners] :as ui-acl}]
+  (set owners))
+
+
+(defn acl-get-principals-set
+  [{:keys [principals] :as ui-acl}]
+  (set (map first principals)))
+
+
+(defn acl-get-all-principals-set
+  [ui-acl]
+  (set/union
+    (acl-get-owners-set ui-acl)
+    (acl-get-principals-set ui-acl)))
+
+
+(defn acl-add-owner
+  [ui-acl principal]
+  (update ui-acl :owners conj principal))
+
+
+(defn acl-remove-principle-from-rights
+  [{:keys [principals] :as ui-acl} principal]
+  (->> principals
+       (filterv #(not= principal (first %)))
+       (assoc ui-acl :principals)))
+
+
+(defn acl-get-all-used-rights-set
+  [{:keys [principals] :as ui-acl}]
+  (set (mapcat second principals)))
+
+
+(defn acl-rights-empty?
+  [{:keys [principals] :as ui-acl}]
+  (empty? principals))
+
+
+(defn acl-principal-exist-in-acl?
+  [ui-acl principal]
+  (contains? (acl-get-all-principals-set ui-acl) principal))
+
+
+(defn acl-add-principal-with-right
+  [ui-acl principal right]
+  (update ui-acl :principals conj [principal (extent-right right)]))
+
+
+(defn acl-change-rights-for-row
+  [ui-acl row-nubmer principal rights]
+  (update ui-acl :principals assoc row-nubmer [principal rights]))

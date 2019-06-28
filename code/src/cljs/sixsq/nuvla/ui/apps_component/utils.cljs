@@ -173,7 +173,7 @@
 (defn db->module
   [module commit-map db]
   (let [{:keys [author commit]} commit-map
-        architectures      (get-in db [::spec/module-component ::spec/architectures])
+        architectures     (get-in db [::spec/module-component ::spec/architectures])
         image             (image->module db)
         urls              (urls->module db)
         ports             (ports->module db)

@@ -175,7 +175,7 @@
   [[_ methods]]
   (let [form-id   (subscribe [::subs/form-id])
         form-data (subscribe [::subs/form-data])
-        form-spec (subscribe [::subs/form-spec])]
+        form-valid? (subscribe [::subs/form-valid?])]
     (fn [[_ methods]]
       (let [dropdown?        (> (count methods) 1)
             method           (utils/select-method-by-id @form-id methods)
@@ -183,8 +183,9 @@
 
         ^{:key @form-id}
         [ui/Form {:id           (or @form-id "authn-form-placeholder-id")
-                  :on-key-press (partial forms-utils/on-return-key
-                                         #(dispatch [::events/submit]))}
+                  :on-key-press (when @form-valid?
+                                  (partial forms-utils/on-return-key
+                                          #(dispatch [::events/submit])))}
          [ui/Segment {:style {:height     "35ex"
                               :overflow-y "auto"}}
           (when dropdown?

@@ -66,8 +66,7 @@
 
 (defn db->module
   [module commit-map db]
-  (let [{:keys [author commit]} commit-map
-        name        (get-in db [::apps-spec/module-common ::apps-spec/name])
+  (let [name        (get-in db [::apps-spec/module-common ::apps-spec/name])
         description (get-in db [::apps-spec/module-common ::apps-spec/description])
         parent-path (get-in db [::apps-spec/module-common ::apps-spec/parent-path])
         logo-url    (get-in db [::apps-spec/module-common ::apps-spec/logo-url])
@@ -81,7 +80,7 @@
           (assoc-in m [:logo-url] logo-url)
           (assoc-in m [:subtype] subtype)
           (assoc-in m [:path] path)
-          (assoc-in m [:acl] acl)
+          (cond-> m acl (assoc-in [:acl] acl))
           (sanitize-base m)
           (dissoc m :children))))
 

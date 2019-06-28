@@ -127,7 +127,6 @@
     (fn []
       (let [editable? (apps-utils/editable? @module @is-new?)
             validate? (or @local-validate? (not @form-valid?))]
-        (log/warn @architectures)
         ^{:key @architectures}
         [ui/TableRow
          [ui/TableCell {:collapsing true
@@ -146,7 +145,7 @@
                                               (dispatch [::events/architectures %])
                                               (dispatch [::main-events/changes-protection? true])
                                               (dispatch [::apps-events/validate-form])))}]
-            [:span @architectures])]]))))
+            [:span (str/join ", " @architectures)])]]))))
 
 
 (defn summary []
@@ -694,10 +693,10 @@
          [:h2 {:style {:display :inline}}
           [ui/Icon {:name "grid layout"}]
           parent (when (not-empty parent) "/") name]
-         [acl/AclButton {:acl       (get @module-common ::apps-spec/acl)
-                         :on-change #(do (dispatch [::apps-events/acl %])
-                                         (dispatch [::main-events/changes-protection? true]))
-                         :read-only (not editable?)}]
+         [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)
+                         :on-change     #(do (dispatch [::apps-events/acl %])
+                                             (dispatch [::main-events/changes-protection? true]))
+                         :read-only     (not editable?)}]
          [apps-views-detail/control-bar]
          [summary]
          [ports-section]

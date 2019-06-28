@@ -5,6 +5,19 @@
 ### Changed
 
   - Upgrade to parent 6.5.1, nuvla api 2.0.1, shadow-cljs 2.8.39 
+  - App component - Creating a new component sees previously used env 
+    vars #175
+  - ACL Button - ACL Button hide itself when no acl and in read-only 
+    mode #173
+  - Apps component - architectures should be separated in read-only 
+    mode #174
+  - Infrastructure page - add on service group allows creation of more 
+    than one service of the same type fix
+  - Login - disable login for password and api-key when 
+    not all required fields are complete
+  - Infrastructure page - take into account acl at creation
+  - Credential page - take into account acl at creation
+  - ACL - refactor to get ui-acl format to be able to keep order
   - About page - Links update
 
 ## [2.2.0] - 2019-06.20

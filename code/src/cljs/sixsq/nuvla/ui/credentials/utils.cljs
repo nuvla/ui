@@ -11,7 +11,8 @@
         ca          (get-in db [::spec/credential :ca])
         cert        (get-in db [::spec/credential :cert])
         key         (get-in db [::spec/credential :key])
-        parent      (get-in db [::spec/credential :parent] [])]
+        parent      (get-in db [::spec/credential :parent] [])
+        acl         (get-in db [::spec/credential :acl])]
     (-> {}
         (assoc :name name)
         (assoc :description description)
@@ -19,7 +20,8 @@
         (assoc-in [:template :parent] parent)
         (assoc-in [:template :ca] ca)
         (assoc-in [:template :cert] cert)
-        (assoc-in [:template :key] key))))
+        (assoc-in [:template :key] key)
+        (cond-> acl (assoc-in [:template :acl] acl)))))
 
 
 (defn db->new-minio-credential
@@ -29,14 +31,16 @@
         subtype                 (get-in db [::spec/credential :subtype])
         access-key              (get-in db [::spec/credential :access-key])
         secret-key              (get-in db [::spec/credential :secret-key])
-        infrastructure-services (get-in db [::spec/credential :parent] [])]
+        infrastructure-services (get-in db [::spec/credential :parent] [])
+        acl                     (get-in db [::spec/credential :acl])]
     (-> {}
         (assoc :name name)
         (assoc :description description)
         (assoc-in [:template :href] (str "credential-template/" subtype))
         (assoc-in [:template :parent] infrastructure-services)
         (assoc-in [:template :access-key] access-key)
-        (assoc-in [:template :secret-key] secret-key))))
+        (assoc-in [:template :secret-key] secret-key)
+        (cond-> acl (assoc-in [:template :acl] acl)))))
 
 
 (defn db->new-credential

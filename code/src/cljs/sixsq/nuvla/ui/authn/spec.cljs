@@ -31,11 +31,6 @@
 (s/def ::session-template-api-key (s/keys :req-un [::key
                                                    ::secret]))
 
-;;; session-template/password
-
-(s/def ::session-template-password (s/keys :req-un [::username
-                                                    ::password]))
-
 ;;; session-template/password-reset
 
 (s/def ::new-password ::us/password)

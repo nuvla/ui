@@ -15,6 +15,7 @@
         (assoc-in [::spec/module-component ::spec/output-parameters] {})
         (assoc-in [::spec/module-component ::spec/data-types] {})
         (assoc-in [::spec/module-component ::spec/architectures] ["amd64"])
+        (assoc-in [::spec/module-component ::spec/env-variables] {})
         (assoc-in [::spec/module-component ::spec/image] {}))))
 
 (reg-event-db

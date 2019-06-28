@@ -23,9 +23,9 @@
 (defn refresh
   []
   (dispatch [::main-events/action-interval-start
-            {:id        refresh-action-id
-             :frequency 20000
-             :event     [::events/get-deployments]}]))
+             {:id        refresh-action-id
+              :frequency 20000
+              :event     [::events/get-deployments]}]))
 
 
 (defn control-bar []

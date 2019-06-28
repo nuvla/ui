@@ -53,7 +53,6 @@
 
 (defn service-card
   [{:keys [id name description path subtype logo-url] :as service}]
-  ^{:key id}
   [ui/Card (when (general-utils/can-edit? service)
              {:on-click #(dispatch [::events/open-service-modal service false])})
    (when logo-url
@@ -71,7 +70,6 @@
 
 (defn service-group-card
   [group services]
-  ^{:key group}
   [ui/Card
    (when (< (count services) 2)
      [ui/Label {:corner   true
@@ -88,15 +86,18 @@
       ])
    [ui/CardContent
     [ui/CardHeader {:style {:word-wrap "break-word"}}]
-    (for [service services] (service-card service))]])
+    (for [{service-id :id :as service} services]
+      ^{:key service-id}
+      [service-card service])]])
 
 
 (defn service-groups
   [groups]
   [ui/Segment style/basic
-   (vec (concat [ui/CardGroup {:centered true}]
-                (for [[group services] groups]
-                  [service-group-card group services])))])
+   [ui/CardGroup {:centered true}
+    (for [[group-id services] groups]
+      ^{:key group-id}
+      [service-group-card group-id services])]])
 
 
 (defn infra-services
@@ -195,9 +196,9 @@
             form-validation-event ::events/validate-swarm-service-form]
         [:<>
 
-         [acl/AclButton {:acl       (:acl @service)
-                         :read-only (not editable?)
-                         :on-change #(dispatch [::events/update-service :acl %])}]
+         [acl/AclButton {:default-value (:acl @service)
+                         :read-only     (not editable?)
+                         :on-change     #(dispatch [::events/update-service :acl %])}]
 
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody
@@ -218,9 +219,9 @@
             {:keys [name description endpoint]} @service
             form-validation-event ::events/validate-minio-service-form]
         [:<>
-         [acl/AclButton {:acl       (:acl @service)
-                         :read-only (not editable?)
-                         :on-change #(dispatch [::events/update-service :acl %])}]
+         [acl/AclButton {:default-value (:acl @service)
+                         :read-only     (not editable?)
+                         :on-change     #(dispatch [::events/update-service :acl %])}]
 
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody
@@ -300,11 +301,11 @@
 
          [ui/ModalContent {:scrolling false}
 
-          (when (not= 1 (count services))
+          (when-not (some #(= (:subtype %) "swarm") services)
             [:div
-             [:div {:style {:padding-bottom 20}}
-              (@tr [:register-swarm-note])]
-             [ui/CardGroup {:centered true}
+             [:p (@tr [:register-swarm-note])]
+             [ui/CardGroup {:centered true
+                            :style {:margin-bottom "10px"}}
 
               [ui/Card {:on-click #(do
                                      (dispatch [::events/set-validate-form? false])
@@ -316,31 +317,23 @@
                 [ui/Header "Swarm"]
                 [ui/Icon {:name "docker"
                           :size :massive}]
-                [ui/Header (@tr [:register])]]]
+                [ui/Header (@tr [:register])]]]]])
 
-              [ui/Card {:on-click nil}
+          (when-not (some #(= (:subtype %) "s3") services)
+            [:div
+             [:p (@tr [:register-s3-note])]
+             [ui/CardGroup {:centered true}
+
+              [ui/Card {:on-click #(do
+                                     (dispatch [::events/set-validate-form? false])
+                                     (dispatch [::events/form-valid])
+                                     (dispatch [::events/close-add-service-modal])
+                                     (dispatch [::events/open-service-modal (assoc @service :subtype "s3") true]))}
                [ui/CardContent {:text-align :center}
-                [ui/Header "Swarm"]
-                [ui/Icon {:name  "docker"
-                          :size  :massive
-                          :color :grey}]
-                [ui/Header (@tr [:deploy]) (str " (" (@tr [:soon]) ")")]]]]])
-          [:div {:style {:padding-top    20
-                         :padding-bottom 20}}
-           (@tr [:register-s3-note])]
-          [ui/CardGroup {:centered true}
-
-           [ui/Card {:on-click #(do
-                                  (dispatch [::events/set-validate-form? false])
-                                  (dispatch [::events/form-valid])
-                                  (dispatch [::events/close-add-service-modal])
-                                  (dispatch [::events/open-service-modal (assoc @service :subtype "s3") true]))}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "MinIO"]
-             [ui/Image {:src  "/ui/images/minio.png"
-                        :size :tiny}]
-             [ui/Header (@tr [:register])]]]]]
-         [ui/ModalActions]]))))
+                [ui/Header "MinIO"]
+                [ui/Image {:src  "/ui/images/minio.png"
+                           :size :tiny}]
+                [ui/Header (@tr [:register])]]]]])]]))))
 
 
 (defmethod panel/render :infrastructures

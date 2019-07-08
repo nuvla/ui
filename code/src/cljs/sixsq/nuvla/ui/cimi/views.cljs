@@ -405,14 +405,6 @@
            ])))))
 
 
-(defn can-add?
-  [ops]
-  (->> ops
-       (map :rel)
-       (filter #(= "add" %))
-       not-empty))
-
-
 (defn search-button
   []
   (let [tr          (subscribe [::i18n-subs/tr])
@@ -430,7 +422,7 @@
   (let [tr             (subscribe [::i18n-subs/tr])
         search-results (subscribe [::subs/collection])]
     (fn []
-      (when (can-add? (:operations @search-results))
+      (when (general-utils/can-add? @search-results)
         [uix/MenuItemWithIcon
          {:name      (@tr [:add])
           :icon-name "add"
@@ -454,7 +446,7 @@
                  :borderless true}
         [search-button]
         [select-fields]
-        (when (can-add? (:operations @resources))
+        (when (general-utils/can-add? @resources)
           [create-button])]
        [ui/Segment {:attached "bottom"}
         [search-header]]])))

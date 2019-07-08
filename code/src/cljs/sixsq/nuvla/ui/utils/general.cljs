@@ -211,6 +211,10 @@
   (->> data :operations (map :rel) (some #{(name operation)}) nil? not))
 
 
+(defn can-add? [data]
+  (can-operation? :add data))
+
+
 (defn can-edit? [data]
   (can-operation? :edit data))
 

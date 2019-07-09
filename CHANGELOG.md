@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Deployment detail - add a section for "Environment Variables" #183
   - Deployment - Harmonize cards between deployment details 
     and deployment page #185
   - Deployment detail - add a section for "URLs" #184

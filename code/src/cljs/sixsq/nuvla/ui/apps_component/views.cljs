@@ -353,7 +353,7 @@
                        :on-change    (ui-callback/input-callback
                                        #(do
                                           (reset! local-validate? true)
-                                          (dispatch [::events/update-env-name id (str/upper-case %)])
+                                          (dispatch [::events/update-env-name id %])
                                           (dispatch [::main-events/changes-protection? true])
                                           (dispatch [::apps-events/validate-form])))}])
 

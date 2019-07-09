@@ -55,11 +55,8 @@
 (reg-sub
   ::deployment-url
   :<- [::deployments-params-map]
-  (fn [deployments-params-map [_ {:keys [id module] :as deployment}]]
+  (fn [deployments-params-map [_ id url-pattern]]
     (let [deployment-params-by-name (->> (get deployments-params-map id)
                                          (map (juxt :name identity))
-                                         (into {}))
-          first-url                 (first (get-in module [:content :urls]))
-          url-pattern               (second first-url)
-          url                       (utils/resolve-url-pattern url-pattern deployment-params-by-name)]
-      url)))
+                                         (into {}))]
+      (utils/resolve-url-pattern url-pattern deployment-params-by-name))))

@@ -249,23 +249,20 @@
 (defn DeploymentCard
   [{:keys [id state module] :as deployment} & {:keys [clickable?]
                                                :or   {clickable? true}}]
-  (let [tr             (subscribe [::i18n-subs/tr])
-        creds-name     (subscribe [::dashboard-subs/creds-name-map])
-        credential-id  (:parent deployment)
+  (let [tr            (subscribe [::i18n-subs/tr])
+        creds-name    (subscribe [::dashboard-subs/creds-name-map])
+        credential-id (:parent deployment)
         {module-logo-url :logo-url
          module-name     :name
          module-path     :path
          module-content  :content} module
-        cred-info      (get @creds-name credential-id credential-id)
-        urls           (get module-content :urls [])
-        secondary-urls (rest urls)
+        cred-info     (get @creds-name credential-id credential-id)
         [primary-url-name
-         primary-url-pattern] (first urls)
-        deployment-url (when clickable? (subscribe [::dashboard-subs/deployment-url deployment]))
-        primary-url    (if clickable?
-                         deployment-url
-                         (subscribe [::subs/url primary-url-pattern]))
-        started?       (utils/is-started? state)]
+         primary-url-pattern] (-> module-content (get :urls []) first)
+        primary-url   (if clickable?
+                        (subscribe [::dashboard-subs/deployment-url id primary-url-pattern])
+                        (subscribe [::subs/url primary-url-pattern]))
+        started?      (utils/is-started? state)]
 
     ^{:key id}
     [ui/Card
@@ -289,9 +286,6 @@
                                     (dispatch [::history-events/navigate (utils/detail-href id)])
                                     (.preventDefault event))})
 
-
-
-
       [ui/Segment (merge style/basic {:floated "right"})
        [:p {:style {:color "initial"}} state]
        [ui/Loader {:active        (utils/deployment-active? state)
@@ -309,13 +303,6 @@
 
        (when-not (str/blank? cred-info)
          [:div [ui/Icon {:name "key"}] cred-info])]]
-
-     #_(when-not clickable?
-         (when (and started? (seq secondary-urls))
-           [ui/CardContent {:extra true}
-            (for [[url-name url-pattern] secondary-urls]
-              ^{:key url-name}
-              [node-url url-name url-pattern])]))
 
      (when (and started? @primary-url)
        [ui/Button {:color   "green"

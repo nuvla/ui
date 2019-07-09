@@ -12,11 +12,12 @@
 
 
 (defn fetch-data-cofx
-  [credentials time-period-filter infra-services-filter full-text-search data-sets]
+  [cofx credentials time-period-filter infra-services-filter full-text-search data-sets]
   (if (empty? credentials)
-    {}
-    {::fx/fetch-data [time-period-filter infra-services-filter full-text-search (vals data-sets)
-                      #(dispatch [::set-data %1 %2])]}))
+    cofx
+    (assoc cofx ::fx/fetch-data
+                [time-period-filter infra-services-filter full-text-search (vals data-sets)
+                 #(dispatch [::set-data %1 %2])])))
 
 
 (reg-event-fx
@@ -26,13 +27,13 @@
                 ::spec/data-sets
                 ::spec/full-text-search] :as db} :db} [_ time-period]]
     (let [time-period-filter (utils/create-time-period-filter time-period)]
-      (merge {:db (assoc db ::spec/time-period time-period
-                            ::spec/time-period-filter time-period-filter)}
-             (fetch-data-cofx credentials
-                              time-period-filter
-                              infra-services-filter
-                              full-text-search
-                              data-sets)))))
+      (-> {:db (assoc db ::spec/time-period time-period
+                         ::spec/time-period-filter time-period-filter)}
+          (fetch-data-cofx credentials
+                           time-period-filter
+                           infra-services-filter
+                           full-text-search
+                           data-sets)))))
 
 
 (reg-event-fx
@@ -43,12 +44,12 @@
                 ::spec/time-period-filter] :as db} :db} [_ full-text-search]]
     (let [full-text-query (when (and full-text-search (not (str/blank? full-text-search)))
                             (str "fulltext=='" full-text-search "*'"))]
-      (merge {:db (assoc db ::spec/full-text-search full-text-query)}
-             (fetch-data-cofx credentials
-                              time-period-filter
-                              infra-services-filter
-                              full-text-query
-                              data-sets)))))
+      (-> {:db (assoc db ::spec/full-text-search full-text-query)}
+          (fetch-data-cofx credentials
+                           time-period-filter
+                           infra-services-filter
+                           full-text-query
+                           data-sets)))))
 
 
 (reg-event-db
@@ -75,15 +76,15 @@
                 ::spec/data-sets
                 ::spec/full-text-search] :as db} :db} [_ {credentials :resources}]]
     (let [infra-services-filter (utils/create-infra-service-filter credentials)]
-      (merge {:db (assoc db ::spec/credentials credentials
-                            ::spec/infra-services-filter infra-services-filter
-                            ::spec/counts nil
-                            ::spec/sizes nil)}
-             (fetch-data-cofx credentials
-                              time-period-filter
-                              infra-services-filter
-                              full-text-search
-                              data-sets)))))
+      (-> {:db (assoc db ::spec/credentials credentials
+                         ::spec/infra-services-filter infra-services-filter
+                         ::spec/counts nil
+                         ::spec/sizes nil)}
+          (fetch-data-cofx credentials
+                           time-period-filter
+                           infra-services-filter
+                           full-text-search
+                           data-sets)))))
 
 
 (reg-event-fx
@@ -144,17 +145,15 @@
                 ::spec/time-period-filter
                 ::spec/data-sets
                 ::spec/full-text-search] :as db} :db} [_ {:keys [resources]}]]
-    (let []
-      (assoc db ::spec/data-sets data-sets))
     (let [data-sets (into {} (map (juxt :id identity) resources))]
-      (merge {:db (assoc db ::spec/counts nil
-                            ::spec/sizes nil
-                            ::spec/data-sets data-sets)}
-             (fetch-data-cofx credentials
-                              time-period-filter
-                              infra-services-filter
-                              full-text-search
-                              data-sets)))))
+      (-> {:db (assoc db ::spec/counts nil
+                         ::spec/sizes nil
+                         ::spec/data-sets data-sets)}
+          (fetch-data-cofx credentials
+                           time-period-filter
+                           infra-services-filter
+                           full-text-search
+                           data-sets)))))
 
 
 (reg-event-fx

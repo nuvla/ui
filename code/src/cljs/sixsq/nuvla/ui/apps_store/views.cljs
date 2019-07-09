@@ -31,7 +31,6 @@
   [{:keys [id name description path parent-path subtype logo-url] :as module}]
   (let [tr          (subscribe [::i18n-subs/tr])
         detail-href (str "apps/" path)]
-    ^{:key id}
     [ui/Card
      (when logo-url
        [ui/Image {:src   logo-url
@@ -57,10 +56,10 @@
 (defn modules-cards-group
   [modules-list]
   [ui/Segment style/basic
-   (vec (concat [ui/CardGroup {:centered true}]
-                (map (fn [module]
-                       [module-card module])
-                     modules-list)))])
+   [ui/CardGroup {:centered true}
+    (for [{:keys [id] :as module} modules-list]
+      ^{:key id}
+      [module-card module])]])
 
 
 (defn appstore-search []
@@ -91,6 +90,7 @@
 (defn root-projects []
   (let [tr     (subscribe [::i18n-subs/tr])
         module (subscribe [::apps-subs/module])]
+    (dispatch [::apps-events/get-module])
     (fn []
       (let []
         [ui/Container {:fluid true}
@@ -111,6 +111,7 @@
   (let [modules           (subscribe [::subs/modules])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])]
+    (dispatch [::events/set-full-text-search nil])
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
@@ -132,8 +133,6 @@
 
 (defn root-view
   []
-  (dispatch [::events/get-modules])
-  (dispatch [::apps-events/get-module])
   [ui/Container {:fluid true}
    [appstore]
    [root-projects]

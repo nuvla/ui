@@ -28,10 +28,11 @@
 (reg-event-fx
   ::get-deployment-parameters
   (fn [_ [_ resource-id]]
-    (let [filter-depl-params       {:filter  (str "parent='" resource-id "'")
-                                    :orderby "name"}
+    (let [query-params             {:filter  (str "parent='" resource-id "'")
+                                    :orderby "name"
+                                    :last    10000}
           get-depl-params-callback #(dispatch [::set-deployment-parameters %])]
-      {::cimi-api-fx/search [:deployment-parameter filter-depl-params get-depl-params-callback]})))
+      {::cimi-api-fx/search [:deployment-parameter query-params get-depl-params-callback]})))
 
 
 (reg-event-fx

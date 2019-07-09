@@ -21,6 +21,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.utils.values :as values]
     [taoensso.timbre :as log]))
 
 
@@ -86,12 +87,6 @@
            (map dt-fn)))))
 
 
-(defn link-short-uuid
-  [id]
-  (let [tag (general-utils/id->short-uuid id)]
-    [history-views/link (utils/detail-href id) tag]))
-
-
 (defn format-delta-time
   [delta-time]
   (cl-format nil "~,2F" delta-time))
@@ -100,7 +95,7 @@
 (defn event-map-to-row
   [{:keys [id content timestamp category delta-time] :as evt}]
   [ui/TableRow
-   [ui/TableCell (link-short-uuid id)]
+   [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
    [ui/TableCell timestamp]
    [ui/TableCell (format-delta-time delta-time)]
    [ui/TableCell category]
@@ -137,7 +132,7 @@
 (defn job-map-to-row
   [{:keys [id action time-of-status-change state progress return-code status-message] :as job}]
   [ui/TableRow
-   [ui/TableCell (link-short-uuid id)]
+   [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
    [ui/TableCell action]
    [ui/TableCell time-of-status-change]
    [ui/TableCell state]

@@ -22,8 +22,8 @@
 
 (defn as-link
   "Renders a link to the API detail page associated with the href."
-  [href & [label]]
-  [history/link (str "api/" href) (or label href)])
+  [href & {:keys [label page]}]
+  [history/link (str (or page "api") "/" href) (or label href)])
 
 
 (defn href-coll?

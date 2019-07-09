@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Deployment detail - clicking on an event or job link shows 
+    spinner (forever) #179 
   - App Component - fix  Validation error remains when deleting a 
     component #196
   - App Component - empty env values are allowed #186

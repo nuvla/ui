@@ -15,6 +15,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.utils.values :as values]
     [taoensso.timbre :as log]))
 
 
@@ -73,7 +74,8 @@
         creds-name    (subscribe [::subs/creds-name-map])
         [url-name url] @(subscribe [::subs/deployment-url deployment])]
     [ui/TableRow
-     [ui/TableCell [dashboard-detail-views/link-short-uuid id]]
+     [ui/TableCell [values/as-link (general-utils/id->uuid id)
+                    :page "dashboard" :label (general-utils/id->short-uuid id)]]
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}} (:name module)]

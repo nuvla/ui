@@ -140,7 +140,7 @@
                 ^{:key (str "env-var-" name)}
                 [env-var-to-row env-var])])]]
          :count (count env-vars)
-         :label (@tr [:environmental-variables])]))))
+         :label (str/capitalize (@tr [:environmental-variables]))]))))
 
 
 (def event-fields #{:id :content :timestamp :category})
@@ -194,7 +194,9 @@
   (let [tr          (subscribe [::i18n-subs/tr])
         events      (subscribe [::subs/events])
         events-info (events-table-info @events)]
-    [uix/Accordion [events-table events-info], :label (@tr [:events]), :count (count events-info)]))
+    [uix/Accordion [events-table events-info]
+     :label (str/capitalize (@tr [:events]))
+     :count (count events-info)]))
 
 
 (defn job-map-to-row
@@ -245,7 +247,9 @@
   (let [tr   (subscribe [::i18n-subs/tr])
         jobs (subscribe [::subs/jobs])
         {:keys [resources]} @jobs]
-    [uix/Accordion [jobs-table @jobs], :label (@tr [:job]), :count (count resources)]))
+    [uix/Accordion [jobs-table @jobs]
+     :label (str/capitalize (@tr [:job]))
+     :count (count resources)]))
 
 
 (defn action-button

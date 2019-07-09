@@ -109,6 +109,40 @@
          :label (@tr [:module-output-parameters])]))))
 
 
+(defn env-var-to-row
+  [{env-name :name env-value :value env-description :description}]
+  (let [table-row [ui/TableRow
+                   [ui/TableCell env-name]
+                   [ui/TableCell env-value]
+                   ]]
+    (if env-description
+      [ui/Popup
+       (cond-> {:content (r/as-element [:p env-description])
+                :trigger (r/as-element table-row)})]
+      table-row)))
+
+
+(defn env-vars-section
+  [{:keys [module] :as deployment}]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn [{:keys [module] :as deployment}]
+      (let [env-vars (get-in module [:content :environmental-variables] [])]
+        [uix/Accordion
+         [ui/Segment style/autoscroll-x
+          [ui/Table style/single-line
+           [ui/TableHeader
+            [ui/TableRow
+             [ui/TableHeaderCell [:span (@tr [:name])]]
+             [ui/TableHeaderCell [:span (@tr [:value])]]]]
+           (when-not (empty? env-vars)
+             [ui/TableBody
+              (for [{:keys [name] :as env-var} env-vars]
+                ^{:key (str "env-var-" name)}
+                [env-var-to-row env-var])])]]
+         :count (count env-vars)
+         :label (@tr [:environmental-variables])]))))
+
+
 (def event-fields #{:id :content :timestamp :category})
 
 
@@ -366,5 +400,6 @@
           [summary dep]
           [urls-section dep]
           [parameters-section]
+          [env-vars-section dep]
           [events-section]
           [jobs-section]]]))))

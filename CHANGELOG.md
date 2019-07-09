@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Edge -  When creating new NuvlaBox, show id and don't put 
+    "nuvlabox/" in clipboard #178
   - Upgrade to parent 6.5.1, nuvla api 2.0.1, shadow-cljs 2.8.39 
   - App component - Creating a new component sees previously used env 
     vars #175

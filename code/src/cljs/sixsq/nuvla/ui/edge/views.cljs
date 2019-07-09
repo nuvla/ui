@@ -112,7 +112,7 @@
                            :size :massive}
                           @nuvlabox-id (assoc :color "green"))]]
         (when @nuvlabox-id
-          [ui/CopyToClipboard {:text @nuvlabox-id}
+          [ui/CopyToClipboard {:text (general-utils/id->uuid @nuvlabox-id)}
            [ui/Button {:primary true
                        :icon    "clipboard"
                        :content (@tr [:copy-nuvlabox-id])}]])]]]]))

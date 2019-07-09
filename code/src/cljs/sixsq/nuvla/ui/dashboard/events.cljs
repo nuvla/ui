@@ -44,7 +44,8 @@
           deployments-creds-ids    (distinct (map :parent resources))
           filter-deps-ids          (str/join " or " (map #(str "parent='" % "'") deployments-resource-ids))
           query-params             {:filter (str "(" filter-deps-ids ") and value!=null")
-                                    :select "id, deployment, name, value"}
+                                    :select "parent, id, deployment, name, value"
+                                    :last   10000}
           callback                 (fn [response]
                                      (when-not (instance? js/Error response)
                                        (dispatch [::set-deployments-params-map response])))]

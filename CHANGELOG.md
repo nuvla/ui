@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - Deployment - Harmonize cards between deployment details 
+    and deployment page #185
+  - Deployment detail - add a section for "URLs" #184
   - Deployment detail - clicking on an event or job link shows 
     spinner (forever) #179 
   - App Component - fix  Validation error remains when deleting a 

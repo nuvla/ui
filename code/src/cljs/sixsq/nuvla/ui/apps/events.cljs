@@ -287,7 +287,9 @@
 (reg-event-fx
   ::delete-module
   (fn [{:keys [db]} [_ id]]
-    {:db                  (dissoc db ::spec/module)
+    {:db                  (-> db
+                              (dissoc ::spec/module)
+                              (assoc ::spec/form-valid? true))
      ::cimi-api-fx/delete [id #(do
                                  (dispatch [::main-events/changes-protection? false])
                                  (dispatch [::history-events/navigate "apps/"]))]}))

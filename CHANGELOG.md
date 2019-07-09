@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - App Component - fix  Validation error remains when deleting a 
+    component #196
+  - App Component - empty env values are allowed #186
   - Apps - old search is applied even if search field is empty
   - Upgrade to parent 6.5.1, nuvla api 2.0.1, shadow-cljs 2.8.39 
   - App component - Creating a new component sees previously used env 

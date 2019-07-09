@@ -138,7 +138,8 @@
 (reg-event-db
   ::update-env-value
   (fn [db [_ id value]]
-    (assoc-in db [::spec/module-component ::spec/env-variables id ::spec/env-value] value)))
+    (assoc-in db [::spec/module-component ::spec/env-variables id ::spec/env-value]
+              (when-not (str/blank? value) value))))
 
 
 (reg-event-db

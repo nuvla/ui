@@ -302,9 +302,9 @@
                        :on-change     (ui-callback/input-callback
                                         #(do
                                            (reset! local-validate? true)
+                                           (dispatch [on-change-event (when-not (str/blank? %) %)])
                                            (dispatch [::main-events/changes-protection? true])
-                                           (dispatch [::events/validate-form])
-                                           (dispatch [on-change-event %])))}]
+                                           (dispatch [::events/validate-form])))}]
             [:span value])]]))))
 
 

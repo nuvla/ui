@@ -42,7 +42,7 @@
                    :onMouseLeave  #(dispatch [::apps-events/active-input nil])
                    :on-change     (ui-callback/input-callback
                                     #(do (reset! local-validate? true)
-                                         (dispatch [update-event id %])
+                                         (dispatch [update-event id (when-not (str/blank? %) %)])
                                          (dispatch [::main-events/changes-protection? true])
                                          (dispatch [::apps-events/validate-form])))}]))))
 
@@ -103,12 +103,10 @@
             [:div
              [input "docker-registry" "docker-registry" registry
               (@tr [:module-docker-registry-placeholder]) ::events/update-docker-registry ::spec/registry]
-             [:span "/"]
-             [input "docker-repository" "docker-repository" repository
-              (@tr [:module-docker-repository-placeholder]) ::events/update-docker-repository ::spec/repository]
-             [:span "/"]
-             [input "docker-image-name" "docker-image-name" image-name
-              (@tr [:module-docker-image-placeholder]) ::events/update-docker-image-name ::spec/image-name]
+             [:span " "]
+             [input "docker-repository-image-name" "docker-repository-image-name"
+              (str/join "/" (remove nil? [repository image-name]))
+              (@tr [:module-docker-image-placeholder]) ::events/update-docker-image ::spec/image-name]
              [:span ":"]
              [input "docker-tag" "docker-tag" tag
               (@tr [:module-docker-tag-placeholder]) ::events/update-docker-tag ::spec/tag]]

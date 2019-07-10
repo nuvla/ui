@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - App Component - Unclear how to fill docker image fields #96 #118 
+    #199
   - Deployment detail - add a section for "Environment Variables" #183
   - Deployment - Harmonize cards between deployment details 
     and deployment page #185

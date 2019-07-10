@@ -138,8 +138,7 @@
 (reg-event-db
   ::update-env-value
   (fn [db [_ id value]]
-    (assoc-in db [::spec/module-component ::spec/env-variables id ::spec/env-value]
-              (when-not (str/blank? value) value))))
+    (assoc-in db [::spec/module-component ::spec/env-variables id ::spec/env-value] value)))
 
 
 (reg-event-db
@@ -228,15 +227,15 @@
 ; Docker image
 
 (reg-event-db
-  ::update-docker-image-name
-  (fn [db [_ id image-name]]
-    (assoc-in db [::spec/module-component ::spec/image ::spec/image-name] image-name)))
-
-
-(reg-event-db
-  ::update-docker-repository
-  (fn [db [_ id repository]]
-    (assoc-in db [::spec/module-component ::spec/image ::spec/repository] repository)))
+  ::update-docker-image
+  (fn [db [_ id repo_image]]
+    (let [temp       (if (string? repo_image) (str/split repo_image "/") nil)
+          two_parts? (= (count temp) 2)
+          repository (if two_parts? (first temp) nil)
+          image-name (if two_parts? (second temp) repo_image)]
+      (-> db
+          (assoc-in [::spec/module-component ::spec/image ::spec/image-name] image-name)
+          (assoc-in [::spec/module-component ::spec/image ::spec/repository] repository)))))
 
 
 (reg-event-db

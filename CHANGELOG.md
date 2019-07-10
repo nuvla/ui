@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - App Component - Server conflict now on same path, notify user to 
+    choose another name #108
   - App Component - Unclear how to fill docker image fields #96 #118 
     #199
   - Deployment detail - add a section for "Environment Variables" #183

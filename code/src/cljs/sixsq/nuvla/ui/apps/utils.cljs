@@ -61,7 +61,7 @@
   (let [path (contruct-path (:parent-path module) (:name module))]
     (if (nil? (:path module))
       (assoc module :path path)
-      module)))
+      module)))                                             ;; ui forcing path immutability to not loose children
 
 
 (defn db->module

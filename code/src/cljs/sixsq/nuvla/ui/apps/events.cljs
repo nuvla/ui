@@ -271,7 +271,12 @@
                             #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                  (dispatch [::set-module sanitized-module]) ;Needed?
                                  (dispatch [::main-events/changes-protection? false])
-                                 (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))]))]}
+                                 (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))]))
+                            :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
+                                         (cimi-api-fx/default-add-on-error :module %)
+                                         (when (= status 409)
+                                           (dispatch [::name nil])
+                                           (dispatch [::validate-form])))]}
         {::cimi-api-fx/edit [id sanitized-module
                              #(if (instance? js/Error %)
                                 (let [{:keys [status message]} (response/parse-ex-info %)]

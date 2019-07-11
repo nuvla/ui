@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.3.0] - 2019-07-11
+
 ### Changed
 
   - App Component - Server conflict now on same path, notify user to 
@@ -34,7 +36,7 @@
   - ACL - refactor to get ui-acl format to be able to keep order
   - About page - Links update
 
-## [2.2.0] - 2019-06.20
+## [2.2.0] - 2019-06-20
 
 ### Added
 
@@ -69,7 +71,7 @@
   - Edge detail - re-use status from edge page
   - Dashboard detail - issue with refreshing deployment output parameter
 
-## [2.1.1] - 2019-06.12
+## [2.1.1] - 2019-06-12
 
 ### Changed
 
@@ -82,7 +84,7 @@
   - cimi api effects - delete support by default on-error
   - Edge details - delete operation added
 
-## [2.1.0] - 2019-06.11
+## [2.1.0] - 2019-06-11
 
 ### Added
 

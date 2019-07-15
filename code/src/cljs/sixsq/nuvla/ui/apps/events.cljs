@@ -3,6 +3,8 @@
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [sixsq.nuvla.ui.apps-application.spec :as apps-application-spec]
+    [sixsq.nuvla.ui.apps-application.utils :as apps-application-utils]
     [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
     [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
     [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
@@ -25,11 +27,13 @@
 
 (defn get-module
   [module-subtype db]
-  (let [component (get db ::apps-component-spec/module-component)
-        project   (get db ::apps-project-spec/module-project)]
+  (let [component   (get db ::apps-component-spec/module-component)
+        project     (get db ::apps-project-spec/module-project)
+        application (get db ::apps-application-spec/module-application)]
     (case module-subtype
       :component component
       :project project
+      :application application
       project)))
 
 
@@ -60,10 +64,11 @@
           module-common  (get db ::spec/module-common)
           module         (get-module module-subtype db)
           validate-form? (get db ::spec/validate-form?)
-          valid?         (if validate-form? (and
-                                              (s/valid? ::spec/module-common module-common)
-                                              (if (nil? form-spec) true (s/valid? form-spec module)))
-                                            true)]
+          valid?         (if validate-form?
+                           (and
+                             (s/valid? ::spec/module-common module-common)
+                             (or (nil? form-spec) (s/valid? form-spec module)))
+                           true)]
       (s/explain ::spec/module-common module-common)
       (s/explain form-spec module)
       (assoc db ::spec/form-valid? valid?))))
@@ -113,10 +118,11 @@
                             ::spec/module-path (:path module)
                             ::spec/module (if (nil? module) {} module))
           subtype (:subtype module)]
-      (case subtype                                         ;;FIXME default case make nav-path equal to nil!!
+      (case subtype
         "component" (apps-component-utils/module->db db module)
         "project" (apps-project-utils/module->db db module)
-        nil))))
+        "application" (apps-application-utils/module->db db module)
+        db))))
 
 
 (reg-event-db
@@ -190,7 +196,7 @@
 (reg-event-db
   ::subtype
   (fn [db [_ subtype]]
-    (assoc-in db [::spec/module-common :subtype] (if (nil? subtype) nil (str/upper-case subtype)))))
+    (assoc-in db [::spec/module-common :subtype] (some-> subtype str/upper-case))))
 
 
 (reg-event-db
@@ -271,7 +277,8 @@
                             #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                  (dispatch [::set-module sanitized-module]) ;Needed?
                                  (dispatch [::main-events/changes-protection? false])
-                                 (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))]))
+                                 (dispatch [::history-events/navigate
+                                            (str "apps/" (:path sanitized-module))]))
                             :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                          (cimi-api-fx/default-add-on-error :module %)
                                          (when (= status 409)

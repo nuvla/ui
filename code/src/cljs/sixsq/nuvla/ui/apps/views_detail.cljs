@@ -65,7 +65,8 @@
             {:name      (@tr [:launch])
              :icon-name "rocket"
              :disabled  launch-disabled?
-             :on-click  #(dispatch [::deployment-dialog-events/create-deployment id :credentials])}])
+             :on-click  #(dispatch [::deployment-dialog-events/create-deployment
+                                    id :credentials])}])
 
          (when add?
            [uix/MenuItemWithIcon
@@ -124,10 +125,12 @@
                      :default-value @commit-message
                      :auto-focus    true
                      :focus         true
-                     :on-change     (ui-callback/input-callback #(dispatch [::events/commit-message %]))
-                     :on-key-press  (partial forms/on-return-key #(do (dispatch [::events/edit-module commit-map])
-                                                                      (dispatch [::events/close-save-modal])
-                                                                      (dispatch [::events/commit-message nil])))}]]
+                     :on-change     (ui-callback/input-callback
+                                      #(dispatch [::events/commit-message %]))
+                     :on-key-press  (partial forms/on-return-key
+                                             #(do (dispatch [::events/edit-module commit-map])
+                                                  (dispatch [::events/close-save-modal])
+                                                  (dispatch [::events/commit-message nil])))}]]
 
          [ui/ModalActions
           [uix/Button {:text     (@tr [:save])
@@ -158,7 +161,8 @@
                      :fluid         true
                      :auto-focus    true
                      :on-change     (ui-callback/input-callback #(reset! local-url %))
-                     :on-key-press  (partial forms/on-return-key #(dispatch [::events/save-logo-url @local-url]))}]]
+                     :on-key-press  (partial forms/on-return-key
+                                             #(dispatch [::events/save-logo-url @local-url]))}]]
 
          [ui/ModalActions
           [uix/Button {:text     "Ok"
@@ -184,31 +188,50 @@
          [ui/ModalContent {:scrolling false}
           [ui/CardGroup {:centered true}
 
-           [ui/Card {:on-click #(do (dispatch [::events/close-add-modal])
-                                    (dispatch [::history-events/navigate
-                                               (str/join "/"
-                                                         (remove str/blank?
-                                                                 ["apps" parent "New Project?subtype=project"]))]))}
+           [ui/Card
+            {:on-click #(do (dispatch [::events/close-add-modal])
+                            (dispatch [::history-events/navigate
+                                       (str/join
+                                         "/" (remove str/blank?
+                                                     ["apps" parent
+                                                      "New Project?subtype=project"]))]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Project"]
              [ui/Icon {:name "folder"
                        :size :massive}]]]
 
-           [ui/Card {:on-click (when parent
-                                 #(do
-                                    (dispatch [::events/close-add-modal])
-                                    (dispatch [::history-events/navigate
-                                               (str/join "/"
-                                                         (remove str/blank?
-                                                                 ["apps" parent
-                                                                  "New Component?subtype=component"]))])))}
+           [ui/Card
+            {:on-click (when parent
+                         #(do
+                            (dispatch [::events/close-add-modal])
+                            (dispatch [::history-events/navigate
+                                       (str/join
+                                         "/" (remove str/blank?
+                                                     ["apps" parent
+                                                      "New Component?subtype=component"]))])))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Component"]
              [:div]
              [ui/Icon {:name  "grid layout"
                        :size  :massive
-                       :color (when-not parent :grey)}]]]]]
-         [ui/ModalActions]]))))
+                       :color (when-not parent :grey)}]]]
+
+           [ui/Card
+            {:on-click (when parent
+                         #(do
+                            (dispatch [::events/close-add-modal])
+                            (dispatch [::history-events/navigate
+                                       (str/join
+                                         "/" (remove str/blank?
+                                                     ["apps" parent
+                                                      "New Application?subtype=application"]))])))}
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Application"]
+             [:div]
+             [ui/Icon {:name  "cubes"
+                       :size  :massive
+                       :color (when-not parent :grey)}]]]
+           ]]]))))
 
 
 (defn version-warning []

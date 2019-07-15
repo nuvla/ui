@@ -2,6 +2,7 @@
   (:require
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
+    [sixsq.nuvla.ui.apps-application.views :as apps-application-views]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
     [sixsq.nuvla.ui.apps-store.views :as apps-store-views]
     [sixsq.nuvla.ui.apps.events :as events]
@@ -23,9 +24,10 @@
     (dispatch [::events/form-valid true])
     (dispatch [::events/set-validate-form? false])
     (fn [new-subtype]
-      (let [subtype (:subtype @module)]
-        (if (or (= "component" new-subtype) (= "component" subtype))
-          [apps-component-views/view-edit]
+      (let [subtype     (or (:subtype @module) new-subtype)]
+        (case subtype
+          "component" [apps-component-views/view-edit]
+          "application" [apps-application-views/view-edit]
           [apps-project-views/view-edit])))))
 
 
@@ -35,7 +37,8 @@
         new-parent (utils/nav-path->parent-path @nav-path)
         new-name   (utils/nav-path->module-name @nav-path)]
     (dispatch [::events/clear-module new-name new-parent new-subtype])
-    (apps-component-views/clear-module)))
+    (apps-component-views/clear-module)
+    (apps-application-views/clear-module)))
 
 
 (defn apps

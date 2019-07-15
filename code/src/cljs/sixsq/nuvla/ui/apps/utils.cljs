@@ -27,7 +27,8 @@
   [subtype]
   (case subtype
     "project" "folder"
-    "component" "microchip"
+    "component" "grid layout"
+    "application" "cubes"
     "question circle"))
 
 

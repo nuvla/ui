@@ -12,7 +12,8 @@
                                    ::urls              {}
                                    ::output-parameters {}
                                    ::architectures     ["amd64"]
-                                   ::data-types        {}}})
+                                   ::data-types        {}
+                                   ::env-variables     {}}})
 
 
 ; Image
@@ -123,4 +124,5 @@
                                         ::mounts
                                         ::output-parameters
                                         ::urls
-                                        ::data-types]))
+                                        ::data-types
+                                        ::env-variables]))

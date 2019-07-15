@@ -8,15 +8,8 @@
 (reg-event-db
   ::clear-module
   (fn [db [_]]
-    (-> db
-        (assoc-in [::spec/module-component ::spec/ports] {})
-        (assoc-in [::spec/module-component ::spec/mounts] {})
-        (assoc-in [::spec/module-component ::spec/urls] {})
-        (assoc-in [::spec/module-component ::spec/output-parameters] {})
-        (assoc-in [::spec/module-component ::spec/data-types] {})
-        (assoc-in [::spec/module-component ::spec/architectures] ["amd64"])
-        (assoc-in [::spec/module-component ::spec/env-variables] {})
-        (assoc-in [::spec/module-component ::spec/image] {}))))
+    (merge db spec/defaults)))
+
 
 (reg-event-db
   ::architectures

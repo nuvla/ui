@@ -3,7 +3,7 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [subscribe]]
-    [sixsq.nuvla.ui.apps.spec :as apps-spec]
+    [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [taoensso.timbre :as log]))
 
@@ -65,15 +65,27 @@
       module)))                                             ;; ui forcing path immutability to not loose children
 
 
+(defn env-variables->module
+  [db]
+  (into []
+        (for [[id m] (get-in db [::spec/module-common ::spec/env-variables])]
+          (let [{:keys [::spec/env-name ::spec/env-description ::spec/env-value ::spec/env-required]
+                 :or   {env-required false}} m]
+            (cond-> {:name     env-name
+                     :required env-required}
+                    env-value (assoc :value env-value)
+                    env-description (assoc :description env-description))))))
+
 (defn db->module
   [module commit-map db]
-  (let [name        (get-in db [::apps-spec/module-common ::apps-spec/name])
-        description (get-in db [::apps-spec/module-common ::apps-spec/description])
-        parent-path (get-in db [::apps-spec/module-common ::apps-spec/parent-path])
-        logo-url    (get-in db [::apps-spec/module-common ::apps-spec/logo-url])
-        subtype     (get-in db [::apps-spec/module-common ::apps-spec/subtype])
-        path        (get-in db [::apps-spec/module-common ::apps-spec/path])
-        acl         (get-in db [::apps-spec/module-common ::apps-spec/acl])]
+  (let [name          (get-in db [::spec/module-common ::spec/name])
+        description   (get-in db [::spec/module-common ::spec/description])
+        parent-path   (get-in db [::spec/module-common ::spec/parent-path])
+        logo-url      (get-in db [::spec/module-common ::spec/logo-url])
+        subtype       (get-in db [::spec/module-common ::spec/subtype])
+        path          (get-in db [::spec/module-common ::spec/path])
+        acl           (get-in db [::spec/module-common ::spec/acl])
+        env-variables (env-variables->module db)]
     (as-> module m
           (assoc-in m [:name] name)
           (assoc-in m [:description] description)
@@ -82,21 +94,38 @@
           (assoc-in m [:subtype] subtype)
           (assoc-in m [:path] path)
           (cond-> m acl (assoc-in [:acl] acl))
+          (if (empty? env-variables)
+            (update-in m [:content] dissoc :environmental-variables)
+            (assoc-in m [:content :environmental-variables] env-variables))
           (sanitize-base m)
           (dissoc m :children))))
 
 
+(defn env-variables->db
+  [env-variables]
+  (into {}
+        (for [{:keys [name description value required]} env-variables]
+          (let [id (random-uuid)]
+            {id {:id                    id
+                 ::spec/env-name        name
+                 ::spec/env-value       value
+                 ::spec/env-description description
+                 ::spec/env-required    (or required false)}}))))
+
+
 (defn module->db
-  [db {:keys [name description parent-path
+  [db {:keys [name description parent-path content
               path logo-url subtype acl] :as module}]
   (-> db
-      (assoc-in [::apps-spec/module-common ::apps-spec/name] name)
-      (assoc-in [::apps-spec/module-common ::apps-spec/description] description)
-      (assoc-in [::apps-spec/module-common ::apps-spec/parent-path] parent-path)
-      (assoc-in [::apps-spec/module-common ::apps-spec/path] path)
-      (assoc-in [::apps-spec/module-common ::apps-spec/logo-url] logo-url)
-      (assoc-in [::apps-spec/module-common ::apps-spec/subtype] subtype)
-      (assoc-in [::apps-spec/module-common ::apps-spec/acl] acl)))
+      (assoc-in [::spec/module-common ::spec/name] name)
+      (assoc-in [::spec/module-common ::spec/description] description)
+      (assoc-in [::spec/module-common ::spec/parent-path] parent-path)
+      (assoc-in [::spec/module-common ::spec/path] path)
+      (assoc-in [::spec/module-common ::spec/logo-url] logo-url)
+      (assoc-in [::spec/module-common ::spec/subtype] subtype)
+      (assoc-in [::spec/module-common ::spec/acl] acl)
+      (assoc-in [::spec/module-common ::spec/env-variables]
+                (env-variables->db (:environmental-variables content)))))
 
 
 ; TODO: has moved to utils/general

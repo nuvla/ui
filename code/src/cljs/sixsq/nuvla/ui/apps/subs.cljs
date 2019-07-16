@@ -51,6 +51,12 @@
 
 
 (reg-sub
+  ::env-variables
+  (fn [db]
+    (get-in db [::spec/module-common ::spec/env-variables])))
+
+
+(reg-sub
   ::add-modal-visible?
   ::spec/add-modal-visible?)
 

@@ -48,18 +48,6 @@
                  ::spec/mount-type      mount-type}}))))
 
 
-(defn env-variables->db
-  [env-variables]
-  (into {}
-        (for [{:keys [name description value required]} env-variables]
-          (let [id (random-uuid)]
-            {id {:id                    id
-                 ::spec/env-name        name
-                 ::spec/env-value       value
-                 ::spec/env-description description
-                 ::spec/env-required    (or required false)}}))))
-
-
 (defn output-parameters->db
   [params]
   (into {}
@@ -82,7 +70,7 @@
 (defn module->db
   [db {:keys [content] :as module}]
   (let [{:keys [image urls architectures output-parameters
-                data-accept-content-types ports mounts environmental-variables]} content]
+                data-accept-content-types ports mounts]} content]
     (-> db
         (apps-utils/module->db module)
         (assoc-in [::spec/module-component ::spec/image] (image->db image))
@@ -91,8 +79,7 @@
         (assoc-in [::spec/module-component ::spec/output-parameters] (output-parameters->db output-parameters))
         (assoc-in [::spec/module-component ::spec/data-types] (data-types->db data-accept-content-types))
         (assoc-in [::spec/module-component ::spec/ports] (ports->db ports))
-        (assoc-in [::spec/module-component ::spec/mounts] (mounts->db mounts))
-        (assoc-in [::spec/module-component ::spec/env-variables] (env-variables->db environmental-variables)))))
+        (assoc-in [::spec/module-component ::spec/mounts] (mounts->db mounts)))))
 
 
 ;; Serialization functions: db->module
@@ -139,18 +126,6 @@
                   (when (not (nil? mount-read-only)) {:read-only mount-read-only}))))))
 
 
-(defn env-variables->module
-  [db]
-  (into []
-        (for [[id m] (get-in db [::spec/module-component ::spec/env-variables])]
-          (let [{:keys [::spec/env-name ::spec/env-description ::spec/env-value ::spec/env-required]
-                 :or   {env-required false}} m]
-            (cond-> {:name     env-name
-                     :required env-required}
-                    env-value (assoc :value env-value)
-                    env-description (assoc :description env-description))))))
-
-
 (defn output-parameters->module
   [db]
   (into []
@@ -178,7 +153,6 @@
         urls              (urls->module db)
         ports             (ports->module db)
         mounts            (mounts->module db)
-        env-variables     (env-variables->module db)
         output-parameters (output-parameters->module db)
         bindings          (data-binding->module db)]
     (as-> module m
@@ -191,8 +165,5 @@
             (assoc-in m [:content :urls] urls))
           (assoc-in m [:content :ports] ports)
           (assoc-in m [:content :mounts] mounts)
-          (if (empty? env-variables)
-            (update-in m [:content] dissoc :environmental-variables)
-            (assoc-in m [:content :environmental-variables] env-variables))
           (assoc-in m [:content :output-parameters] output-parameters)
           (assoc-in m [:data-accept-content-types] bindings))))

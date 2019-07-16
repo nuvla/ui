@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.apps.spec
   (:require
     [clojure.spec.alpha :as s]
-    [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.spec :as utils-spec]))
+    [sixsq.nuvla.ui.utils.spec :as utils-spec]
+    [sixsq.nuvla.ui.utils.spec :as spec-utils]))
 
 ;; Utils
 
@@ -23,6 +23,27 @@
 
 (s/def ::logo-url any?)
 
+; Environmental-variables
+
+(def env-var-regex #"^[A-Z_]+$")
+(def reserved-env-var-regex #"NUVLA_.*")
+(s/def ::env-name (s/and spec-utils/nonblank-string
+                         #(re-matches env-var-regex %)
+                         #(not (re-matches reserved-env-var-regex %))))
+
+(s/def ::env-description (s/nilable spec-utils/nonblank-string))
+
+(s/def ::env-value (s/nilable spec-utils/nonblank-string))
+
+(s/def ::env-required boolean?)
+
+
+(s/def ::env-variable
+  (s/keys :req [::env-name]
+          :opt [::env-description ::env-required ::env-value]))
+
+(s/def ::env-variables (s/map-of any? (s/merge ::env-variable)))
+
 (s/def ::module-common (s/keys :req [::name
                                      ::parent-path
                                      ; needed by the server, but not the ui
@@ -31,7 +52,8 @@
                                      ]
                                :opt [::description
                                      ::logo-url
-                                     ::acl]))
+                                     ::acl
+                                     ::env-variables]))
 
 ;; Validation
 

@@ -25,12 +25,6 @@
 
 
 (reg-sub
-  ::env-variables
-  (fn [db]
-    (get-in db [::spec/module-component ::spec/env-variables])))
-
-
-(reg-sub
   ::urls
   (fn [db]
     (get-in db [::spec/module-component ::spec/urls])))

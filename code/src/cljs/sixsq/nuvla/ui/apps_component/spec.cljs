@@ -12,8 +12,7 @@
                                    ::urls              {}
                                    ::output-parameters {}
                                    ::architectures     ["amd64"]
-                                   ::data-types        {}
-                                   ::env-variables     {}}})
+                                   ::data-types        {}}})
 
 
 ; Image
@@ -40,28 +39,6 @@
                             ::published-port]))
 
 (s/def ::ports (s/map-of any? (s/merge ::port)))
-
-
-; Environmental-variables
-
-(def env-var-regex #"^[A-Z_]+$")
-(def reserved-env-var-regex #"NUVLA_.*")
-(s/def ::env-name (s/and spec-utils/nonblank-string
-                         #(re-matches env-var-regex %)
-                         #(not (re-matches reserved-env-var-regex %))))
-
-(s/def ::env-description (s/nilable spec-utils/nonblank-string))
-
-(s/def ::env-value (s/nilable spec-utils/nonblank-string))
-
-(s/def ::env-required boolean?)
-
-
-(s/def ::env-variable
-  (s/keys :req [::env-name]
-          :opt [::env-description ::env-required ::env-value]))
-
-(s/def ::env-variables (s/map-of any? (s/merge ::env-variable)))
 
 
 ; Volumes (mounts)
@@ -124,5 +101,4 @@
                                         ::mounts
                                         ::output-parameters
                                         ::urls
-                                        ::data-types
-                                        ::env-variables]))
+                                        ::data-types]))

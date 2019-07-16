@@ -23,7 +23,9 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
+    [reagent.core :as r]))
 
 
 (defn edit-button-disabled?
@@ -381,3 +383,148 @@
            (when (not @is-new?)
              [details-section])
            [views-versions/versions]]]]))))
+
+
+(defn input
+  [id name value placeholder update-event value-spec fluid?]
+  (let [local-validate? (r/atom false)
+        form-valid?     (subscribe [::subs/form-valid?])]
+    (fn [id name value placeholder update-event value-spec fluid?]
+      (let [input-name (str name "-" id)
+            validate?  (or @local-validate? (not @form-valid?))]
+        [ui/Input {:name          input-name
+                   :placeholder   placeholder
+                   :default-value value
+                   :type          :text
+                   :error         (and validate? (not (s/valid? value-spec value)))
+                   :fluid         fluid?
+                   :onMouseEnter  #(dispatch [::events/active-input input-name])
+                   :onMouseLeave  #(dispatch [::events/active-input nil])
+                   :on-change     (ui-callback/input-callback
+                                    #(do (reset! local-validate? true)
+                                         (dispatch [update-event id (when-not (str/blank? %) %)])
+                                         (dispatch [::main-events/changes-protection? true])
+                                         (dispatch [::events/validate-form])))}]))))
+
+
+(defn trash
+  [id remove-event]
+  [ui/Icon {:name     "trash"
+            :on-click #(do (dispatch [::main-events/changes-protection? true])
+                           (dispatch [remove-event id])
+                           (dispatch [::events/validate-form]))
+            :color    :red}])
+
+
+(defn plus
+  [add-event]
+  [ui/Icon {:name     "add"
+            :color    "green"
+            :on-click #(do (dispatch [::main-events/changes-protection? true])
+                           (dispatch [add-event (random-uuid) {}])
+                           (dispatch [::events/validate-form]))}])
+
+
+(defn single-env-variable
+  [env-variable editable?]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        form-valid?     (subscribe [::subs/form-valid?])
+        local-validate? (r/atom false)]
+    (let [{:keys [id
+                  ::spec/env-name
+                  ::spec/env-description
+                  ::spec/env-value
+                  ::spec/env-required]} env-variable
+          validate? (or @local-validate? (not @form-valid?))]
+      [ui/TableRow {:key id}
+       [ui/TableCell {:floated :left
+                      :width   3}
+        (if editable?
+          (let [input-name (str name "-" id)]
+            [ui/Input {:name         (str name "-" id)
+                       :placeholder  "name"
+                       :type         :text
+                       :value        (or env-name "")
+                       :error        (when (and validate?
+                                                (not (s/valid? ::spec/env-name env-name))) true)
+                       :fluid        true
+                       :onMouseEnter #(dispatch [::events/active-input input-name])
+                       :onMouseLeave #(dispatch [::events/active-input nil])
+                       :on-change    (ui-callback/input-callback
+                                       #(do
+                                          (reset! local-validate? true)
+                                          (dispatch [::events/update-env-name id %])
+                                          (dispatch [::main-events/changes-protection? true])
+                                          (dispatch [::events/validate-form])))}])
+
+          [:span env-name])]
+
+       [ui/TableCell {:floated :left
+                      :width   3}
+        (if editable?
+          [input id "value" env-value "value"
+           ::events/update-env-value ::spec/env-value true]
+          [:span env-value])]
+
+       [ui/TableCell {:floated :left
+                      :width   8}
+        (if editable?
+          [input id "description" env-description "description"
+           ::events/update-env-description ::spec/env-description true]
+          [:span env-description])]
+
+       [ui/TableCell {:floated    :left
+                      :text-align :center
+                      :width      1}
+        [ui/Checkbox {:name      (@tr [:required])
+                      :checked   (or env-required false)
+                      :disabled  (not editable?)
+                      :on-change (ui-callback/checked
+                                   #(do (dispatch [::main-events/changes-protection? true])
+                                        (dispatch [::events/update-env-required id %])
+                                        (dispatch [::events/validate-form])))
+                      :align     :middle}]]
+
+       (when editable?
+         [ui/TableCell {:floated :right
+                        :width   1
+                        :align   :right
+                        :style   {}}
+          [trash id ::events/remove-env-variable]])])))
+
+
+(defn env-variables-section []
+  (let [tr            (subscribe [::i18n-subs/tr])
+        module        (subscribe [::subs/module])
+        env-variables (subscribe [::subs/env-variables])
+        is-new?       (subscribe [::subs/is-new?])]
+    (fn []
+      (let [editable? (utils/editable? @module @is-new?)]
+        [uix/Accordion
+         [:<>
+          [:div "Container Environmental variables (i.e. env) "
+           [:span ff/nbsp (ff/help-popup (@tr [:module-env-variables-help]))]]
+          (if (empty? @env-variables)
+            [ui/Message
+             (str/capitalize (str (@tr [:module-no-env-variables]) "."))]
+            [:div [ui/Table {:style {:margin-top 10}
+                             :class :nuvla-ui-editable}
+                   [ui/TableHeader
+                    [ui/TableRow
+                     [ui/TableHeaderCell {:content "Name"}]
+                     [ui/TableHeaderCell {:content "Value"}]
+                     [ui/TableHeaderCell {:content "Description"}]
+                     [ui/TableHeaderCell {:content "Required"}]
+                     (when editable?
+                       [ui/TableHeaderCell {:content "Action"}])]]
+                   [ui/TableBody
+                    (for [[id env-variable] @env-variables]
+                      ^{:key id}
+                      [single-env-variable env-variable editable?])]]])
+          (when editable?
+            [:div {:style {:padding-top 10}}
+             [plus ::events/add-env-variable]])]
+         :label (@tr [:module-env-variables])
+         :count (count @env-variables)]))))
+
+

@@ -151,7 +151,8 @@
           (assoc-in [::spec/module-common ::spec/description] "")
           (assoc-in [::spec/module-common ::spec/logo-url] default-logo-url)
           (assoc-in [::spec/module-common ::spec/parent-path] new-parent)
-          (assoc-in [::spec/module-common ::spec/subtype] new-subtype)))))
+          (assoc-in [::spec/module-common ::spec/subtype] new-subtype)
+          (assoc-in [::spec/module-common ::spec/env-variables] {})))))
 
 
 (reg-event-fx
@@ -265,6 +266,45 @@
   ::close-logo-url-modal
   (fn [db _]
     (assoc db ::spec/logo-url-modal-visible? false)))
+
+
+; Environmental variables
+
+(reg-event-db
+  ::add-env-variable
+  (fn [db [_ id env-variable]]
+    ; overwrite the id
+    (assoc-in db [::spec/module-common ::spec/env-variables id] (assoc env-variable :id id))))
+
+
+(reg-event-db
+  ::remove-env-variable
+  (fn [db [_ id]]
+    (update-in db [::spec/module-common ::spec/env-variables] dissoc id)))
+
+
+(reg-event-db
+  ::update-env-name
+  (fn [db [_ id value]]
+    (assoc-in db [::spec/module-common ::spec/env-variables id ::spec/env-name] (str/upper-case value))))
+
+
+(reg-event-db
+  ::update-env-value
+  (fn [db [_ id value]]
+    (assoc-in db [::spec/module-common ::spec/env-variables id ::spec/env-value] value)))
+
+
+(reg-event-db
+  ::update-env-description
+  (fn [db [_ id value]]
+    (assoc-in db [::spec/module-common ::spec/env-variables id ::spec/env-description] value)))
+
+
+(reg-event-db
+  ::update-env-required
+  (fn [db [_ id value]]
+    (assoc-in db [::spec/module-common ::spec/env-variables id ::spec/env-required] value)))
 
 
 (reg-event-fx

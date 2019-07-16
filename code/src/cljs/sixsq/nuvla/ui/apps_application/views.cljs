@@ -704,31 +704,31 @@
         is-new?        (subscribe [::apps-subs/is-new?])
         docker-compose (subscribe [::subs/docker-compose])
         form-valid?    (subscribe [::apps-subs/form-valid?])
-        ;local-validate? (r/atom false)
-        ]
-    (let [editable? (apps-utils/editable? @module @is-new?)]
-      [uix/Accordion
-       [ui/Form
-        [ui/FormField
-         [ui/Transition {:visible (not @form-valid?)}
-          [ui/Label {:pointing "below", :basic true, :color "red"}
-           "Please fill in the docker compose"]]
+        default-value  @docker-compose]
+    (fn []
+      (let [editable? (apps-utils/editable? @module @is-new?)]
+        [uix/Accordion
+         [ui/Form
+          [ui/FormField
+           [ui/Transition {:visible (not @form-valid?)}
+            [ui/Label {:pointing "below", :basic true, :color "red"}
+             "Please fill in the docker compose"]]
 
-         [ui/CodeMirror {:value @docker-compose
-                         :autoCursor    true
-                         :options       {:mode              "text/x-yaml"
-                                         :read-only         (not editable?)
-                                         :line-numbers      true
-                                         :style-active-line true
-                                         :fold-gutter       true
-                                         :gutters           ["CodeMirror-foldgutter"]}
-                         :on-change     (fn [editor data value]
-                                          (dispatch [::events/update-docker-compose nil value])
-                                          (dispatch [::main-events/changes-protection? true])
-                                          (dispatch [::apps-events/validate-form]))
-                         }]]]
-       :label "docker-compose.yaml"
-       :default-open true])))
+           [ui/CodeMirror {:value      default-value
+                           :autoCursor true
+                           :options    {:mode              "text/x-yaml"
+                                        :read-only         (not editable?)
+                                        :line-numbers      true
+                                        :style-active-line true
+                                        :fold-gutter       true
+                                        :gutters           ["CodeMirror-foldgutter"]}
+                           :on-change  (fn [editor data value]
+                                         (dispatch [::events/update-docker-compose nil value])
+                                         (dispatch [::main-events/changes-protection? true])
+                                         (dispatch [::apps-events/validate-form]))
+                           }]]]
+         :label "docker-compose.yaml"
+         :default-open true]))))
 
 
 (defn clear-module

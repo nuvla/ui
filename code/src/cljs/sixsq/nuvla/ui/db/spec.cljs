@@ -3,8 +3,8 @@
   (:require
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.acl.spec :as acl]
-    [sixsq.nuvla.ui.apps-component.spec :as apps-component]
     [sixsq.nuvla.ui.apps-application.spec :as apps-application]
+    [sixsq.nuvla.ui.apps-component.spec :as apps-component]
     [sixsq.nuvla.ui.apps-store.spec :as apps-store]
     [sixsq.nuvla.ui.apps.spec :as apps]
     [sixsq.nuvla.ui.authn.spec :as authn]

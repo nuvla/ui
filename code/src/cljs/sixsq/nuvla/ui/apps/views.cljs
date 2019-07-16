@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.apps.views
   (:require
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
     [sixsq.nuvla.ui.apps-application.views :as apps-application-views]
+    [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
     [sixsq.nuvla.ui.apps-store.views :as apps-store-views]
     [sixsq.nuvla.ui.apps.events :as events]

@@ -172,7 +172,7 @@
       (assoc-in [::spec/module-common ::spec/env-variables]
                 (env-variables->db (:environmental-variables content)))
       (assoc-in [::spec/module-common ::spec/urls] (urls->db (:urls content)))
-      (assoc-in [::spec/module-component ::spec/output-parameters]
+      (assoc-in [::spec/module-common ::spec/output-parameters]
                 (output-parameters->db (:output-parameters content)))))
 
 

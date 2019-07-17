@@ -528,3 +528,122 @@
          :count (count @env-variables)]))))
 
 
+(defn single-url
+  [url-map editable?]
+  (let [tr (subscribe [::i18n-subs/tr])
+        {:keys [id ::spec/url-name ::spec/url]} url-map]
+    [ui/TableRow {:key id}
+     [ui/TableCell {:floated :left
+                    :width   2}
+      (if editable?
+        [input id (str "url-name-" id) url-name
+         "name of this url" ::events/update-url-name ::spec/url-name false]
+        [:span url-name])]
+     [ui/TableCell {:floated :left
+                    :width   13}
+      (if editable?
+        [input id (str "url-url-" id) url
+         "url - e.g. http://${hostname}:${tcp.8888}/?token=${jupyter-token}"
+         ::events/update-url-url ::spec/url true]
+        [:span url])]
+     (when editable?
+       [ui/TableCell {:floated :right
+                      :width   1
+                      :align   :right
+                      :style   {}}
+        [trash id ::events/remove-url]])]))
+
+
+(defn urls-section []
+  (let [tr      (subscribe [::i18n-subs/tr])
+        urls    (subscribe [::subs/urls])
+        module  (subscribe [::subs/module])
+        is-new? (subscribe [::subs/is-new?])]
+    (fn []
+      (let [editable? (utils/editable? @module @is-new?)]
+        [uix/Accordion
+         [:<>
+          [:div (@tr [:urls])
+           [:span ff/nbsp (ff/help-popup (@tr [:module-urls-help]))]]
+          (if (empty? @urls)
+            [ui/Message
+             (str/capitalize (str (@tr [:no-urls]) "."))]
+            [:div [ui/Table {:style {:margin-top 10}
+                             :class :nuvla-ui-editable}
+                   [ui/TableHeader
+                    [ui/TableRow
+                     [ui/TableHeaderCell {:content "Name"}]
+                     [ui/TableHeaderCell {:content "URL"}]
+                     (when editable?
+                       [ui/TableHeaderCell {:content "Action"}])]]
+                   [ui/TableBody
+                    (for [[id url-map] @urls]
+                      ^{:key id}
+                      [single-url url-map editable?])]]])
+          (when editable?
+            [:div {:style {:padding-top 10}}
+             [plus ::events/add-url]])]
+         :label (@tr [:urls])
+         :count (count @urls)
+         :default-open false]))))
+
+
+(defn single-output-parameter [param editable?]
+  (let [tr (subscribe [::i18n-subs/tr])
+        {:keys [id ::spec/output-parameter-name ::spec/output-parameter-description]} param]
+    [ui/TableRow {:key id}
+     [ui/TableCell {:floated :left
+                    :width   2}
+      (if editable?
+        [input id (str "output-param-name-" id) output-parameter-name
+         "output parameter name" ::events/update-output-parameter-name
+         ::spec/output-parameter-name false]
+        [:span output-parameter-name])]
+     [ui/TableCell {:floated :left
+                    :width   13}
+      (if editable?
+        [input id (str "output-param-description-" id)
+         output-parameter-description "output parameter description"
+         ::events/update-output-parameter-description
+         ::spec/output-parameter-description true]
+        [:span output-parameter-description])]
+     (when editable?
+       [ui/TableCell {:floated :right
+                      :width   1
+                      :align   :right}
+        [trash id ::events/remove-output-parameter]])]))
+
+
+(defn output-parameters-section []
+  (let [tr                (subscribe [::i18n-subs/tr])
+        output-parameters (subscribe [::subs/output-parameters])
+        module            (subscribe [::subs/module])
+        is-new?           (subscribe [::subs/is-new?])]
+    (fn []
+      (let [editable? (utils/editable? @module @is-new?)]
+        [uix/Accordion
+
+         [:<>
+          [:div (@tr [:module-output-parameters])
+           [:span ff/nbsp (ff/help-popup (@tr [:module-output-parameters-help]))]]
+          (if (empty? @output-parameters)
+            [ui/Message
+             (str/capitalize (str (@tr [:no-output-parameters]) "."))]
+            [:div [ui/Table {:style {:margin-top 10}
+                             :class :nuvla-ui-editable}
+                   [ui/TableHeader
+                    [ui/TableRow
+                     [ui/TableHeaderCell {:content "Name"}]
+                     [ui/TableHeaderCell {:content "Description"}]
+                     (when editable?
+                       [ui/TableHeaderCell {:content "Action"}])]]
+                   [ui/TableBody
+                    (for [[id param] @output-parameters]
+                      ^{:key id}
+                      [single-output-parameter param editable?])]]])
+          (when editable?
+            [:div {:style {:padding-top 10}}
+             [plus ::events/add-output-parameter]])]
+         :label (@tr [:module-output-parameters])
+         :count (count @output-parameters)
+         :default-open false]))))

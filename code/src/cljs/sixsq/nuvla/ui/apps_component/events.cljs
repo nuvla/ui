@@ -108,58 +108,6 @@
 
 
 (reg-event-db
-  ::add-url
-  (fn [db [_ id url]]
-    ; overwrite the id
-    (assoc-in db [::spec/module-component ::spec/urls id] (assoc url :id id))))
-
-
-(reg-event-db
-  ::remove-url
-  (fn [db [_ id]]
-    (update-in db [::spec/module-component ::spec/urls] dissoc id)))
-
-
-(reg-event-db
-  ::update-url-name
-  (fn [db [_ id name]]
-    (assoc-in db [::spec/module-component ::spec/urls id ::spec/url-name] name)))
-
-
-(reg-event-db
-  ::update-url-url
-  (fn [db [_ id url]]
-    (assoc-in db [::spec/module-component ::spec/urls id ::spec/url] url)))
-
-
-(reg-event-db
-  ::add-output-parameter
-  (fn [db [_ id param]]
-    ; overwrite the id
-    (assoc-in db [::spec/module-component ::spec/output-parameters id] (assoc param :id id))))
-
-
-(reg-event-db
-  ::remove-output-parameter
-  (fn [db [_ id]]
-    (update-in db [::spec/module-component ::spec/output-parameters] dissoc id)))
-
-
-(reg-event-db
-  ::update-output-parameter-name
-  (fn [db [_ id name]]
-    (assoc-in db [::spec/module-component ::spec/output-parameters id
-                  ::spec/output-parameter-name] name)))
-
-
-(reg-event-db
-  ::update-output-parameter-description
-  (fn [db [_ id description]]
-    (assoc-in db [::spec/module-component ::spec/output-parameters id
-                  ::spec/output-parameter-description] description)))
-
-
-(reg-event-db
   ::add-data-type
   (fn [db [_ id data-type]]
     ; overwrite the id

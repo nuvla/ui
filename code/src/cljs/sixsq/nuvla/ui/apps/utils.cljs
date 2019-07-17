@@ -76,16 +76,37 @@
                     env-value (assoc :value env-value)
                     env-description (assoc :description env-description))))))
 
+
+(defn urls->module
+  [db]
+  (into []
+        (for [[id u] (get-in db [::spec/module-common ::spec/urls])]
+          (do
+            [(::spec/url-name u) (::spec/url u)]))))
+
+
+(defn output-parameters->module
+  [db]
+  (into []
+        (for [[id op] (get-in db [::spec/module-common ::spec/output-parameters])]
+          (let [{:keys [::spec/output-parameter-name ::spec/output-parameter-description]} op]
+            (conj
+              {:name output-parameter-name}
+              {:description output-parameter-description})))))
+
+
 (defn db->module
   [module commit-map db]
-  (let [name          (get-in db [::spec/module-common ::spec/name])
-        description   (get-in db [::spec/module-common ::spec/description])
-        parent-path   (get-in db [::spec/module-common ::spec/parent-path])
-        logo-url      (get-in db [::spec/module-common ::spec/logo-url])
-        subtype       (get-in db [::spec/module-common ::spec/subtype])
-        path          (get-in db [::spec/module-common ::spec/path])
-        acl           (get-in db [::spec/module-common ::spec/acl])
-        env-variables (env-variables->module db)]
+  (let [name              (get-in db [::spec/module-common ::spec/name])
+        description       (get-in db [::spec/module-common ::spec/description])
+        parent-path       (get-in db [::spec/module-common ::spec/parent-path])
+        logo-url          (get-in db [::spec/module-common ::spec/logo-url])
+        subtype           (get-in db [::spec/module-common ::spec/subtype])
+        path              (get-in db [::spec/module-common ::spec/path])
+        acl               (get-in db [::spec/module-common ::spec/acl])
+        env-variables     (env-variables->module db)
+        urls              (urls->module db)
+        output-parameters (output-parameters->module db)]
     (as-> module m
           (assoc-in m [:name] name)
           (assoc-in m [:description] description)
@@ -97,6 +118,10 @@
           (if (empty? env-variables)
             (update-in m [:content] dissoc :environmental-variables)
             (assoc-in m [:content :environmental-variables] env-variables))
+          (if (empty? urls)
+            (update-in m [:content] dissoc :urls)
+            (assoc-in m [:content :urls] urls))
+          (assoc-in m [:content :output-parameters] output-parameters)
           (sanitize-base m)
           (dissoc m :children))))
 
@@ -113,6 +138,26 @@
                  ::spec/env-required    (or required false)}}))))
 
 
+(defn urls->db
+  [tuples]
+  (into {}
+        (for [[name url] tuples]
+          (let [id (random-uuid)]
+            {id {:id             id
+                 ::spec/url-name name
+                 ::spec/url      url}}))))
+
+
+(defn output-parameters->db
+  [params]
+  (into {}
+        (for [{:keys [name description]} params]
+          (let [id (random-uuid)]
+            {id {:id                                 id
+                 ::spec/output-parameter-name        name
+                 ::spec/output-parameter-description description}}))))
+
+
 (defn module->db
   [db {:keys [name description parent-path content
               path logo-url subtype acl] :as module}]
@@ -125,7 +170,10 @@
       (assoc-in [::spec/module-common ::spec/subtype] subtype)
       (assoc-in [::spec/module-common ::spec/acl] acl)
       (assoc-in [::spec/module-common ::spec/env-variables]
-                (env-variables->db (:environmental-variables content)))))
+                (env-variables->db (:environmental-variables content)))
+      (assoc-in [::spec/module-common ::spec/urls] (urls->db (:urls content)))
+      (assoc-in [::spec/module-component ::spec/output-parameters]
+                (output-parameters->db (:output-parameters content)))))
 
 
 ; TODO: has moved to utils/general

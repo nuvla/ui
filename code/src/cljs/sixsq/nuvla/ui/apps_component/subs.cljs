@@ -25,18 +25,6 @@
 
 
 (reg-sub
-  ::urls
-  (fn [db]
-    (get-in db [::spec/module-component ::spec/urls])))
-
-
-(reg-sub
-  ::output-parameters
-  (fn [db]
-    (get-in db [::spec/module-component ::spec/output-parameters])))
-
-
-(reg-sub
   ::architectures
   (fn [db]
     (get-in db [::spec/module-component ::spec/architectures])))

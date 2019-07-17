@@ -283,127 +283,6 @@
          :count (count @mounts)]))))
 
 
-(defn single-url
-  [url-map editable?]
-  (let [tr (subscribe [::i18n-subs/tr])
-        {:keys [id ::spec/url-name ::spec/url]} url-map]
-    [ui/TableRow {:key id}
-     [ui/TableCell {:floated :left
-                    :width   2}
-      (if editable?
-        [apps-views-detail/input id (str "url-name-" id) url-name
-         "name of this url" ::events/update-url-name ::spec/url-name false]
-        [:span url-name])]
-     [ui/TableCell {:floated :left
-                    :width   13}
-      (if editable?
-        [apps-views-detail/input id (str "url-url-" id) url
-         "url - e.g. http://${hostname}:${tcp.8888}/?token=${jupyter-token}"
-         ::events/update-url-url ::spec/url true]
-        [:span url])]
-     (when editable?
-       [ui/TableCell {:floated :right
-                      :width   1
-                      :align   :right
-                      :style   {}}
-        [apps-views-detail/trash id ::events/remove-url]])]))
-
-
-(defn urls-section []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        urls    (subscribe [::subs/urls])
-        module  (subscribe [::apps-subs/module])
-        is-new? (subscribe [::apps-subs/is-new?])]
-    (fn []
-      (let [editable? (apps-utils/editable? @module @is-new?)]
-        [uix/Accordion
-         [:<>
-          [:div (@tr [:urls])
-           [:span forms/nbsp (forms/help-popup (@tr [:module-urls-help]))]]
-          (if (empty? @urls)
-            [ui/Message
-             (str/capitalize (str (@tr [:no-urls]) "."))]
-            [:div [ui/Table {:style {:margin-top 10}
-                             :class :nuvla-ui-editable}
-                   [ui/TableHeader
-                    [ui/TableRow
-                     [ui/TableHeaderCell {:content "Name"}]
-                     [ui/TableHeaderCell {:content "URL"}]
-                     (when editable?
-                       [ui/TableHeaderCell {:content "Action"}])]]
-                   [ui/TableBody
-                    (for [[id url-map] @urls]
-                      ^{:key id}
-                      [single-url url-map editable?])]]])
-          (when editable?
-            [:div {:style {:padding-top 10}}
-             [apps-views-detail/plus ::events/add-url]])]
-         :label (@tr [:urls])
-         :count (count @urls)
-         :default-open false]))))
-
-
-(defn single-output-parameter [param editable?]
-  (let [tr (subscribe [::i18n-subs/tr])
-        {:keys [id ::spec/output-parameter-name ::spec/output-parameter-description]} param]
-    [ui/TableRow {:key id}
-     [ui/TableCell {:floated :left
-                    :width   2}
-      (if editable?
-        [apps-views-detail/input id (str "output-param-name-" id) output-parameter-name
-         "output parameter name" ::events/update-output-parameter-name
-         ::spec/output-parameter-name false]
-        [:span output-parameter-name])]
-     [ui/TableCell {:floated :left
-                    :width   13}
-      (if editable?
-        [apps-views-detail/input id (str "output-param-description-" id)
-         output-parameter-description "output parameter description"
-         ::events/update-output-parameter-description
-         ::spec/output-parameter-description true]
-        [:span output-parameter-description])]
-     (when editable?
-       [ui/TableCell {:floated :right
-                      :width   1
-                      :align   :right}
-        [apps-views-detail/trash id ::events/remove-output-parameter]])]))
-
-
-(defn output-parameters-section []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        output-parameters (subscribe [::subs/output-parameters])
-        module            (subscribe [::apps-subs/module])
-        is-new?           (subscribe [::apps-subs/is-new?])]
-    (fn []
-      (let [editable? (apps-utils/editable? @module @is-new?)]
-        [uix/Accordion
-
-         [:<>
-          [:div (@tr [:module-output-parameters])
-           [:span forms/nbsp (forms/help-popup (@tr [:module-output-parameters-help]))]]
-          (if (empty? @output-parameters)
-            [ui/Message
-             (str/capitalize (str (@tr [:no-output-parameters]) "."))]
-            [:div [ui/Table {:style {:margin-top 10}
-                             :class :nuvla-ui-editable}
-                   [ui/TableHeader
-                    [ui/TableRow
-                     [ui/TableHeaderCell {:content "Name"}]
-                     [ui/TableHeaderCell {:content "Description"}]
-                     (when editable?
-                       [ui/TableHeaderCell {:content "Action"}])]]
-                   [ui/TableBody
-                    (for [[id param] @output-parameters]
-                      ^{:key id}
-                      [single-output-parameter param editable?])]]])
-          (when editable?
-            [:div {:style {:padding-top 10}}
-             [apps-views-detail/plus ::events/add-output-parameter]])]
-         :label (@tr [:module-output-parameters])
-         :count (count @output-parameters)
-         :default-open false]))))
-
-
 (def data-type-options
   (atom [{:key "application/x-hdr", :value "application/x-hdr", :text "application/x-hdr"}
          {:key "application/x-clk", :value "application/x-clk", :text "application/x-clk"}
@@ -467,10 +346,10 @@
                      [single-data-type dt editable?])]])
           (when editable?
             [:div
-             [apps-views-detail/plus ::events/add-data-type]])]]
-        :label (@tr [:data-binding])
-        :count (count @data-types)
-        :default-open false))))
+             [apps-views-detail/plus ::events/add-data-type]])]
+         :label (@tr [:data-binding])
+         :count (count @data-types)
+         :default-open false]))))
 
 
 (defn generate-ports-args
@@ -561,8 +440,8 @@
          [ports-section]
          [apps-views-detail/env-variables-section]
          [mounts-section]
-         [urls-section]
-         [output-parameters-section]
+         [apps-views-detail/urls-section]
+         [apps-views-detail/output-parameters-section]
          [data-types-section]
          [test-command]
          [apps-views-detail/save-action]

@@ -57,6 +57,18 @@
 
 
 (reg-sub
+  ::urls
+  (fn [db]
+    (get-in db [::spec/module-common ::spec/urls])))
+
+
+(reg-sub
+  ::output-parameters
+  (fn [db]
+    (get-in db [::spec/module-common ::spec/output-parameters])))
+
+
+(reg-sub
   ::add-modal-visible?
   ::spec/add-modal-visible?)
 

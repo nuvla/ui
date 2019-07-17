@@ -9,8 +9,6 @@
 (def defaults {::module-component {::image             {}
                                    ::ports             {}
                                    ::mounts            {}
-                                   ::urls              {}
-                                   ::output-parameters {}
                                    ::architectures     ["amd64"]
                                    ::data-types        {}}})
 
@@ -64,30 +62,6 @@
 (s/def ::input-value spec-utils/nonblank-string)
 
 
-; URLs
-
-(s/def ::url-name spec-utils/nonblank-string)
-
-(s/def ::url spec-utils/nonblank-string)
-
-(s/def ::single-url (s/keys :req [::url-name
-                                  ::url]))
-
-(s/def ::urls (s/map-of any? (s/merge ::single-url)))
-
-
-; Output parameters
-
-(s/def ::output-parameter-name spec-utils/nonblank-string)
-
-(s/def ::output-parameter-description spec-utils/nonblank-string)
-
-(s/def ::output-parameter (s/keys :req [::output-parameter-name
-                                        ::output-parameter-description]))
-
-(s/def ::output-parameters (s/map-of any? (s/merge ::output-parameter)))
-
-
 (s/def ::architectures (s/coll-of string? :min-count 1))
 
 (s/def ::data-type string?)
@@ -99,6 +73,4 @@
                                         ::architectures]
                                   :opt [::ports
                                         ::mounts
-                                        ::output-parameters
-                                        ::urls
                                         ::data-types]))

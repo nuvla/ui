@@ -15,16 +15,6 @@
    ::spec/tag        tag})
 
 
-(defn urls->db
-  [tuples]
-  (into {}
-        (for [[name url] tuples]
-          (let [id (random-uuid)]
-            {id {:id             id
-                 ::spec/url-name name
-                 ::spec/url      url}}))))
-
-
 (defn ports->db
   [ports]
   (into {}
@@ -48,16 +38,6 @@
                  ::spec/mount-type      mount-type}}))))
 
 
-(defn output-parameters->db
-  [params]
-  (into {}
-        (for [{:keys [name description]} params]
-          (let [id (random-uuid)]
-            {id {:id                                 id
-                 ::spec/output-parameter-name        name
-                 ::spec/output-parameter-description description}}))))
-
-
 (defn data-types->db
   [dts]
   (into {}
@@ -74,10 +54,9 @@
     (-> db
         (apps-utils/module->db module)
         (assoc-in [::spec/module-component ::spec/image] (image->db image))
-        (assoc-in [::spec/module-component ::spec/urls] (urls->db urls))
         (assoc-in [::spec/module-component ::spec/architectures] architectures)
-        (assoc-in [::spec/module-component ::spec/output-parameters] (output-parameters->db output-parameters))
-        (assoc-in [::spec/module-component ::spec/data-types] (data-types->db data-accept-content-types))
+        (assoc-in [::spec/module-component ::spec/data-types]
+                  (data-types->db data-accept-content-types))
         (assoc-in [::spec/module-component ::spec/ports] (ports->db ports))
         (assoc-in [::spec/module-component ::spec/mounts] (mounts->db mounts)))))
 
@@ -92,14 +71,6 @@
           (when (not (nil? registry)) {:registry registry})
           (when (not (nil? repository)) {:repository repository})
           (when (not (nil? tag)) {:tag tag}))))
-
-
-(defn urls->module
-  [db]
-  (into []
-        (for [[id u] (get-in db [::spec/module-component ::spec/urls])]
-          (do
-            [(::spec/url-name u) (::spec/url u)]))))
 
 
 (defn ports->module
@@ -118,22 +89,13 @@
   [db]
   (into []
         (for [[id m] (get-in db [::spec/module-component ::spec/mounts])]
-          (let [{:keys [::spec/mount-source ::spec/mount-target ::spec/mount-read-only ::spec/mount-type]
+          (let [{:keys [::spec/mount-source ::spec/mount-target
+                        ::spec/mount-read-only ::spec/mount-type]
                  :or   {mount-read-only false}} m]
             (conj {:source mount-source}
                   {:target mount-target}
                   {:mount-type mount-type}
                   (when (not (nil? mount-read-only)) {:read-only mount-read-only}))))))
-
-
-(defn output-parameters->module
-  [db]
-  (into []
-        (for [[id op] (get-in db [::spec/module-component ::spec/output-parameters])]
-          (let [{:keys [::spec/output-parameter-name ::spec/output-parameter-description]} op]
-            (conj
-              {:name output-parameter-name}
-              {:description output-parameter-description})))))
 
 
 (defn data-binding->module
@@ -150,20 +112,14 @@
   (let [{:keys [author commit]} commit-map
         architectures     (get-in db [::spec/module-component ::spec/architectures])
         image             (image->module db)
-        urls              (urls->module db)
         ports             (ports->module db)
         mounts            (mounts->module db)
-        output-parameters (output-parameters->module db)
         bindings          (data-binding->module db)]
     (as-> module m
           (assoc-in m [:content :author] author)
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
           (assoc-in m [:content :architectures] architectures)
           (assoc-in m [:content :image] image)
-          (if (empty? urls)
-            (update-in m [:content] dissoc :urls)
-            (assoc-in m [:content :urls] urls))
           (assoc-in m [:content :ports] ports)
           (assoc-in m [:content :mounts] mounts)
-          (assoc-in m [:content :output-parameters] output-parameters)
           (assoc-in m [:data-accept-content-types] bindings))))

@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as reagent]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.apps.events :as events]
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.subs :as subs]
@@ -17,15 +18,14 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [reagent.core :as r]))
+    [taoensso.timbre :as log]))
 
 
 (defn edit-button-disabled?

@@ -12,6 +12,12 @@
 
 
 (reg-sub
+  ::files
+  (fn [db]
+    (get-in db [::spec/module-application ::spec/files])))
+
+
+(reg-sub
   ::module-application
   (fn [db]
     (get-in db [::spec/module-application])))

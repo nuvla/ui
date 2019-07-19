@@ -135,7 +135,8 @@
                    :on-close #(dispatch [::message-events/close-popup])
                    :trigger  (reagent/as-element
                                [ui/MenuItem {:disabled disabled?}
-                                [ui/Button {:aria-label "notifications", :primary true, :disabled disabled?}
+                                [ui/Button {:aria-label "notifications", :primary true,
+                                            :disabled disabled?}
                                  [ui/Icon {:name (if disabled? "bell slash" "bell")}]
                                  (str n)]])}
          [ui/PopupHeader (@tr [:notifications])]

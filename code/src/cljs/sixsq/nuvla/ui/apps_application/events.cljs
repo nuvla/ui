@@ -10,6 +10,36 @@
   (fn [db [_]]
     (merge db spec/defaults)))
 
+
+; Files
+
+(reg-event-db
+  ::add-file
+  (fn [db [_ id file]]
+    ; overwrite the id
+    (assoc-in db [::spec/module-application ::spec/files id] (assoc file :id id))))
+
+
+(reg-event-db
+  ::remove-file
+  (fn [db [_ id]]
+    (update-in db [::spec/module-application ::spec/files] dissoc id)))
+
+
+(reg-event-db
+  ::update-file-name
+  (fn [db [_ id file-name]]
+    (assoc-in db [::spec/module-application ::spec/files id
+                  ::spec/file-name] file-name)))
+
+
+(reg-event-db
+  ::update-file-content
+  (fn [db [_ id file-content]]
+    (assoc-in db [::spec/module-application ::spec/files id
+                  ::spec/file-content] file-content)))
+
+
 ; Docker compose
 
 (reg-event-db

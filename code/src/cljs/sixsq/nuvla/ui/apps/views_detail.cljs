@@ -442,7 +442,7 @@
         (if editable?
           (let [input-name (str name "-" id)]
             [ui/Input {:name         (str name "-" id)
-                       :placeholder  "name"
+                       :placeholder  (@tr [:name])
                        :type         :text
                        :value        (or env-name "")
                        :error        (when (and validate?
@@ -462,14 +462,14 @@
        [ui/TableCell {:floated :left
                       :width   3}
         (if editable?
-          [input id "value" env-value "value"
+          [input id "value" env-value (@tr [:value])
            ::events/update-env-value ::spec/env-value true]
           [:span env-value])]
 
        [ui/TableCell {:floated :left
                       :width   8}
         (if editable?
-          [input id "description" env-description "description"
+          [input id "description" env-description (@tr [:description])
            ::events/update-env-description ::spec/env-description true]
           [:span env-description])]
 
@@ -502,7 +502,7 @@
       (let [editable? (utils/editable? @module @is-new?)]
         [uix/Accordion
          [:<>
-          [:div "Container Environmental variables (i.e. env) "
+          [:div (str/capitalize (@tr [:environmental-variables]))
            [:span ff/nbsp (ff/help-popup (@tr [:module-env-variables-help]))]]
           (if (empty? @env-variables)
             [ui/Message
@@ -511,12 +511,12 @@
                              :class :nuvla-ui-editable}
                    [ui/TableHeader
                     [ui/TableRow
-                     [ui/TableHeaderCell {:content "Name"}]
-                     [ui/TableHeaderCell {:content "Value"}]
-                     [ui/TableHeaderCell {:content "Description"}]
-                     [ui/TableHeaderCell {:content "Required"}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:value]))}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:required]))}]
                      (when editable?
-                       [ui/TableHeaderCell {:content "Action"}])]]
+                       [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
                    [ui/TableBody
                     (for [[id env-variable] @env-variables]
                       ^{:key id}
@@ -572,10 +572,10 @@
                              :class :nuvla-ui-editable}
                    [ui/TableHeader
                     [ui/TableRow
-                     [ui/TableHeaderCell {:content "Name"}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
                      [ui/TableHeaderCell {:content "URL"}]
                      (when editable?
-                       [ui/TableHeaderCell {:content "Action"}])]]
+                       [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
                    [ui/TableBody
                     (for [[id url-map] @urls]
                       ^{:key id}
@@ -596,14 +596,14 @@
                     :width   2}
       (if editable?
         [input id (str "output-param-name-" id) output-parameter-name
-         "output parameter name" ::events/update-output-parameter-name
+         (@tr [:name]) ::events/update-output-parameter-name
          ::spec/output-parameter-name false]
         [:span output-parameter-name])]
      [ui/TableCell {:floated :left
                     :width   13}
       (if editable?
         [input id (str "output-param-description-" id)
-         output-parameter-description "output parameter description"
+         output-parameter-description (@tr [:description])
          ::events/update-output-parameter-description
          ::spec/output-parameter-description true]
         [:span output-parameter-description])]
@@ -633,10 +633,10 @@
                              :class :nuvla-ui-editable}
                    [ui/TableHeader
                     [ui/TableRow
-                     [ui/TableHeaderCell {:content "Name"}]
-                     [ui/TableHeaderCell {:content "Description"}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
                      (when editable?
-                       [ui/TableHeaderCell {:content "Action"}])]]
+                       [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
                    [ui/TableBody
                     (for [[id param] @output-parameters]
                       ^{:key id}

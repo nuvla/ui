@@ -15,9 +15,9 @@
 
 (reg-event-db
   ::add-file
-  (fn [db [_ id file]]
+  (fn [db [_ id _]]
     ; overwrite the id
-    (assoc-in db [::spec/module-application ::spec/files id] (assoc file :id id))))
+    (assoc-in db [::spec/module-application ::spec/files id] {:id id, ::spec/file-content ""})))
 
 
 (reg-event-db

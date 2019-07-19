@@ -57,8 +57,7 @@
                          :on-change     (ui-callback/value
                                           #(do
                                              (reset! local-validate? true)
-                                             (dispatch [::events/update-file-content id
-                                                        (when-not (str/blank? %) %)])
+                                             (dispatch [::events/update-file-content id %])
                                              (dispatch [::main-events/changes-protection? true])
                                              (dispatch [::apps-events/validate-form])))}]]]
          (when editable?
@@ -86,10 +85,10 @@
                              :class :nuvla-ui-editable}
                    [ui/TableHeader
                     [ui/TableRow
-                     [ui/TableHeaderCell {:content "Filename"}]
-                     [ui/TableHeaderCell {:content "File content"}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:content]))}]
                      (when editable?
-                       [ui/TableHeaderCell {:content "Action"}])]]
+                       [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
                    [ui/TableBody
                     (for [[id file] @files]
                       ^{:key id}
@@ -99,11 +98,12 @@
              [apps-views-detail/plus ::events/add-file]])]
          :label (@tr [:module-files])
          :count (count @files)
-         :default-open true]))))
+         :default-open false]))))
 
 
 (defn docker-compose-section []
-  (let [module          (subscribe [::apps-subs/module])
+  (let [tr              (subscribe [::i18n-subs/tr])
+        module          (subscribe [::apps-subs/module])
         is-new?         (subscribe [::apps-subs/is-new?])
         docker-compose  (subscribe [::subs/docker-compose])
         form-valid?     (subscribe [::apps-subs/form-valid?])
@@ -114,10 +114,12 @@
             validate? (or @local-validate? (not @form-valid?))]
         [uix/Accordion
          [:<>
-          [ui/Transition {:visible (and validate?
-                                        (not (s/valid? ::spec/docker-compose docker-compose)))}
-           [ui/Label {:pointing "below", :basic true, :color "red"}
-            "Please fill in the docker compose"]]
+          [:div {:style {:margin-bottom "10px"}} "Docker compose"
+           [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]]
+
+          (when (and validate? (not (s/valid? ::spec/docker-compose @docker-compose)))
+            [ui/Label {:pointing "below", :basic true, :color "red"}
+             (@tr [:module-docker-compose-error])])
 
           [ui/CodeMirror {:value      default-value
                           :autoCursor true
@@ -128,10 +130,10 @@
                                        :fold-gutter       true
                                        :gutters           ["CodeMirror-foldgutter"]}
                           :on-change  (fn [editor data value]
-                                        (reset! local-validate? true)
                                         (dispatch [::events/update-docker-compose nil value])
                                         (dispatch [::main-events/changes-protection? true])
-                                        (dispatch [::apps-events/validate-form]))}]]
+                                        (dispatch [::apps-events/validate-form])
+                                        (reset! local-validate? true))}]]
          :label "Docker compose"
          :default-open true]))))
 
@@ -162,7 +164,6 @@
          [docker-compose-section]
          [apps-views-detail/urls-section]
          [apps-views-detail/output-parameters-section]
-         #_[data-types-section]
          [apps-views-detail/save-action]
          [apps-views-detail/add-modal]
          [apps-views-detail/save-modal]

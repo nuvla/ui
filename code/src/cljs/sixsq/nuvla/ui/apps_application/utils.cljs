@@ -46,4 +46,6 @@
           (assoc-in m [:content :author] author)
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
           (assoc-in m [:content :docker-compose] docker-compose)
-          (assoc-in m [:content :files] files))))
+          (if (empty? files)
+            (update-in m [:content] dissoc :files)
+            (assoc-in m [:content :files] files)))))

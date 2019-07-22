@@ -3,7 +3,6 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
-    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -31,9 +30,9 @@
 
 
 (defn as-form-input
-  [{env-name :name env-description :description env-value :value env-required :required :as env-variable}]
+  [index {env-name     :name env-description :description env-value :value
+          env-required :required :as env-variable}]
   (let [deployment (subscribe [::subs/deployment])]
-    ^{:key env-name}
     [ui/FormField {:required env-required}
      [:label env-name ff/nbsp (ff/help-popup env-description)]
      [ui/Input
@@ -43,10 +42,11 @@
        :read-only     false
        :fluid         true
        :on-change     (ui-callback/input-callback
-                        (fn [new-value]
-                          (let [updated-deployment (utils/update-env-variable-in-deployment
-                                                     env-name new-value @deployment)]
-                            (dispatch [::events/set-deployment updated-deployment]))))}]]))
+                        #(dispatch [::events/set-deployment (assoc-in
+                                                              @deployment
+                                                              [:module :content
+                                                               :environmental-variables
+                                                               index :value] %)]))}]]))
 
 
 (defn content
@@ -55,6 +55,9 @@
         env-variables (subscribe [::subs/env-variables])]
 
     (if (seq @env-variables)
-      (vec (concat [ui/Form]
-                   (map as-form-input @env-variables)))
-      [ui/Message {:success true} (@tr [:no-input-parameters])])))
+      [ui/Form
+       (doall
+         (for [[index env-variable] (map-indexed vector @env-variables)]
+           ^{:key (:name env-variable)}
+           [as-form-input index env-variable]))]
+      [ui/Message {:success true} (@tr [:no-env-variables-parameters])])))

@@ -1,31 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-dialog.utils)
 
 
-(defn matches-env-name?
-  [env-name env-variable]
-  (and env-name (= env-name (:name env-variable))))
-
-
-(defn update-env-variable-in-list
-  [env-name env-value env-variables]
-  (let [f       (partial matches-env-name? env-name)
-        current (first (filter f env-variables))            ;; FIXME: Use group-by instead?
-        others  (remove f env-variables)]
-    (if current
-      (->> (assoc current :value env-value)
-           (conj others)
-           vec))))
-
-
-(defn update-env-variable-in-deployment
-  [env-name env-value deployment]
-  (->> deployment
-       :module
-       :content
-       :environmental-variables
-       (update-env-variable-in-list env-name env-value)
-       (assoc-in deployment [:module :content :environmental-variables])))
-
 (defn kw->str
   "Convert a keyword to a string, retaining any namespace."
   [kw]

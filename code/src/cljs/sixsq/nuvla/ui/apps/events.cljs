@@ -249,13 +249,13 @@
     (assoc db ::spec/validation-error-modal-visible? false)))
 
 
-(reg-event-db
+(reg-event-fx
   ::save-logo-url
-  (fn [db [_ logo-url]]
-    (dispatch [::main-events/changes-protection? true])
-    (-> db
-        (assoc-in [::spec/module-common ::spec/logo-url] logo-url)
-        (assoc-in [::spec/logo-url-modal-visible?] false))))
+  (fn [{:keys [db]} [_ logo-url]]
+    {:db       (-> db
+                   (assoc-in [::spec/module-common ::spec/logo-url] logo-url)
+                   (assoc-in [::spec/logo-url-modal-visible?] false))
+     :dispatch [::main-events/changes-protection? true]}))
 
 
 (reg-event-db

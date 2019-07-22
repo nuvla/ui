@@ -154,7 +154,8 @@
           (assoc-in [::spec/module-common ::spec/subtype] new-subtype)
           (assoc-in [::spec/module-common ::spec/env-variables] {})
           (assoc-in [::spec/module-common ::spec/urls] {})
-          (assoc-in [::spec/module-common ::spec/output-parameters] {})))))
+          (assoc-in [::spec/module-common ::spec/output-parameters] {})
+          (assoc-in [::spec/module-common ::spec/data-types] {})))))
 
 
 (reg-event-fx
@@ -363,6 +364,27 @@
   (fn [db [_ id description]]
     (assoc-in db [::spec/module-common ::spec/output-parameters id
                   ::spec/output-parameter-description] description)))
+
+
+; Data types
+
+(reg-event-db
+  ::add-data-type
+  (fn [db [_ id data-type]]
+    ; overwrite the id
+    (assoc-in db [::spec/module-common ::spec/data-types id] (assoc data-type :id id))))
+
+
+(reg-event-db
+  ::remove-data-type
+  (fn [db [_ id]]
+    (update-in db [::spec/module-common ::spec/data-types] dissoc id)))
+
+
+(reg-event-db
+  ::update-data-type
+  (fn [db [_ id dt]]
+    (assoc-in db [::spec/module-common ::spec/data-types id] {:id id ::spec/data-type dt})))
 
 
 (reg-event-fx

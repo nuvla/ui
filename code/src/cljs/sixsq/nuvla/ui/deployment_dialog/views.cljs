@@ -6,8 +6,8 @@
     [sixsq.nuvla.ui.deployment-dialog.views-credentials :as credentials-step]
     [sixsq.nuvla.ui.deployment-dialog.views-data :as data-step]
     [sixsq.nuvla.ui.deployment-dialog.views-env-variables :as env-variables-step]
-    [sixsq.nuvla.ui.deployment-dialog.views-summary :as summary-step]
     [sixsq.nuvla.ui.deployment-dialog.views-files :as files-step]
+    [sixsq.nuvla.ui.deployment-dialog.views-summary :as summary-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [taoensso.timbre :as log]))

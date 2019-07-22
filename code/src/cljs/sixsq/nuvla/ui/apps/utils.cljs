@@ -95,6 +95,15 @@
               {:description output-parameter-description})))))
 
 
+(defn data-binding->module
+  [db]
+  (into []
+        (for [[id binding] (get-in db [::spec/module-common ::spec/data-types])]
+          (let [{:keys [::spec/data-type]} binding]
+            (conj
+              data-type)))))
+
+
 (defn db->module
   [module commit-map db]
   (let [name              (get-in db [::spec/module-common ::spec/name])
@@ -106,7 +115,8 @@
         acl               (get-in db [::spec/module-common ::spec/acl])
         env-variables     (env-variables->module db)
         urls              (urls->module db)
-        output-parameters (output-parameters->module db)]
+        output-parameters (output-parameters->module db)
+        data-bindings     (data-binding->module db)]
     (as-> module m
           (assoc-in m [:name] name)
           (assoc-in m [:description] description)
@@ -122,6 +132,7 @@
             (update-in m [:content] dissoc :urls)
             (assoc-in m [:content :urls] urls))
           (assoc-in m [:content :output-parameters] output-parameters)
+          (assoc-in m [:data-accept-content-types] data-bindings)
           (sanitize-base m)
           (dissoc m :children))))
 
@@ -158,8 +169,17 @@
                  ::spec/output-parameter-description description}}))))
 
 
+(defn data-types->db
+  [dts]
+  (into {}
+        (for [dt dts]
+          (let [id (random-uuid)]
+            {id {:id              id
+                 ::spec/data-type dt}}))))
+
+
 (defn module->db
-  [db {:keys [name description parent-path content
+  [db {:keys [name description parent-path content data-accept-content-types
               path logo-url subtype acl] :as module}]
   (-> db
       (assoc-in [::spec/module-common ::spec/name] name)
@@ -173,7 +193,9 @@
                 (env-variables->db (:environmental-variables content)))
       (assoc-in [::spec/module-common ::spec/urls] (urls->db (:urls content)))
       (assoc-in [::spec/module-common ::spec/output-parameters]
-                (output-parameters->db (:output-parameters content)))))
+                (output-parameters->db (:output-parameters content)))
+      (assoc-in [::spec/module-common ::spec/data-types]
+                (data-types->db data-accept-content-types))))
 
 
 ; TODO: has moved to utils/general

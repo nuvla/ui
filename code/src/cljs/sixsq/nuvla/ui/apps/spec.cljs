@@ -67,6 +67,16 @@
 
 (s/def ::output-parameters (s/map-of any? (s/merge ::output-parameter)))
 
+; Data types
+
+(s/def ::data-type string?)
+
+
+(s/def ::data-type-map (s/keys :req [::data-type]))
+
+(s/def ::data-types (s/map-of any? (s/merge ::data-type-map)))
+
+
 (s/def ::module-common (s/keys :req [::name
                                      ::parent-path
                                      ; needed by the server, but not the ui
@@ -78,7 +88,8 @@
                                      ::acl
                                      ::env-variables
                                      ::urls
-                                     ::output-parameters]))
+                                     ::output-parameters
+                                     ::data-types]))
 
 
 ;; Validation

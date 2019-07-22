@@ -69,6 +69,12 @@
 
 
 (reg-sub
+  ::data-types
+  (fn [db]
+    (get-in db [::spec/module-common ::spec/data-types])))
+
+
+(reg-sub
   ::add-modal-visible?
   ::spec/add-modal-visible?)
 

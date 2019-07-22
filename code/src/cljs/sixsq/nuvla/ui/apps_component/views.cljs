@@ -283,75 +283,6 @@
          :count (count @mounts)]))))
 
 
-(def data-type-options
-  (atom [{:key "application/x-hdr", :value "application/x-hdr", :text "application/x-hdr"}
-         {:key "application/x-clk", :value "application/x-clk", :text "application/x-clk"}
-         {:key "text/plain", :value "text/plain", :text "text/plain"}]))
-
-
-(defn add-data-type-options
-  [option]
-  (swap! data-type-options conj {:key option :value option :text option}))
-
-
-(defn single-data-type [dt editable?]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [dt editable?]
-      (let [{:keys [id ::spec/data-type]} dt]
-        [ui/GridRow {:key id}
-         [ui/GridColumn {:floated :left
-                         :width   2}
-          (if editable?
-            [ui/Label
-             [ui/Dropdown {:name           (str "data-type-" id)
-                           :default-value  (or data-type "text/plain")
-                           :allowAdditions true
-                           :selection      true
-                           :additionLabel  "Additional data type: "
-                           :search         true
-                           :options        @data-type-options
-                           :on-add-item    #(add-data-type-options (-> % .-target .-value))
-                           :on-change      (ui-callback/value
-                                             #(do
-                                                (dispatch [::main-events/changes-protection? true])
-                                                (dispatch [::events/update-data-type id %])
-                                                (dispatch [::apps-events/validate-form])))}]]
-            [:span [:b data-type]])]
-         (when editable?
-           [ui/GridColumn {:floated :right
-                           :width   1
-                           :align   :right
-                           :style   {}}
-            [apps-views-detail/trash id ::events/remove-data-type]])]))))
-
-
-(defn data-types-section []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        data-types (subscribe [::subs/data-types])
-        module     (subscribe [::apps-subs/module])
-        is-new?    (subscribe [::apps-subs/is-new?])]
-    (fn []
-      (let [editable? (apps-utils/editable? @module @is-new?)]
-        [uix/Accordion
-         [:<>
-          [:div (@tr [:data-type])
-           [:span forms/nbsp (forms/help-popup (@tr [:module-data-type-help]))]]
-          (if (empty? @data-types)
-            [ui/Message
-             (str/capitalize (str (@tr [:no-datasets]) "."))]
-            [:div [ui/Grid {:style {:margin-top    5
-                                    :margin-bottom 5}}
-                   (for [[id dt] @data-types]
-                     ^{:key id}
-                     [single-data-type dt editable?])]])
-          (when editable?
-            [:div
-             [apps-views-detail/plus ::events/add-data-type]])]
-         :label (@tr [:data-binding])
-         :count (count @data-types)
-         :default-open false]))))
-
-
 (defn generate-ports-args
   [ports]
   (let [ports-args
@@ -442,7 +373,7 @@
          [mounts-section]
          [apps-views-detail/urls-section]
          [apps-views-detail/output-parameters-section]
-         [data-types-section]
+         [apps-views-detail/data-types-section]
          [test-command]
          [apps-views-detail/save-action]
          [apps-views-detail/add-modal]

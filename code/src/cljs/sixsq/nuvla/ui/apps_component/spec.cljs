@@ -9,8 +9,7 @@
 (def defaults {::module-component {::image             {}
                                    ::ports             {}
                                    ::mounts            {}
-                                   ::architectures     ["amd64"]
-                                   ::data-types        {}}})
+                                   ::architectures     ["amd64"]}})
 
 
 ; Image
@@ -63,8 +62,6 @@
 
 
 (s/def ::architectures (s/coll-of string? :min-count 1))
-
-(s/def ::data-type string?)
 
 
 ; Module

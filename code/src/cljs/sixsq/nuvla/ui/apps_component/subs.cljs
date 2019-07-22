@@ -31,12 +31,6 @@
 
 
 (reg-sub
-  ::data-types
-  (fn [db]
-    (get-in db [::spec/module-component ::spec/data-types])))
-
-
-(reg-sub
   ::docker-image
   (fn [db]
     (get-in db [::spec/module-component ::spec/image])))

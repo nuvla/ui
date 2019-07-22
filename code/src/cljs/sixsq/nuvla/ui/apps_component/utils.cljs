@@ -1,8 +1,6 @@
 (ns sixsq.nuvla.ui.apps-component.utils
   (:require [sixsq.nuvla.ui.apps-component.spec :as spec]
-            [sixsq.nuvla.ui.apps.spec :as apps-spec]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]
-            [sixsq.nuvla.ui.utils.general :as utils-general]
             [taoensso.timbre :as log]))
 
 ;; Deserialization functions: module->db
@@ -38,25 +36,13 @@
                  ::spec/mount-type      mount-type}}))))
 
 
-(defn data-types->db
-  [dts]
-  (into {}
-        (for [dt dts]
-          (let [id (random-uuid)]
-            {id {:id              id
-                 ::spec/data-type dt}}))))
-
-
 (defn module->db
   [db {:keys [content] :as module}]
-  (let [{:keys [image urls architectures output-parameters
-                data-accept-content-types ports mounts]} content]
+  (let [{:keys [image architectures ports mounts]} content]
     (-> db
         (apps-utils/module->db module)
         (assoc-in [::spec/module-component ::spec/image] (image->db image))
         (assoc-in [::spec/module-component ::spec/architectures] architectures)
-        (assoc-in [::spec/module-component ::spec/data-types]
-                  (data-types->db data-accept-content-types))
         (assoc-in [::spec/module-component ::spec/ports] (ports->db ports))
         (assoc-in [::spec/module-component ::spec/mounts] (mounts->db mounts)))))
 
@@ -98,28 +84,17 @@
                   (when (not (nil? mount-read-only)) {:read-only mount-read-only}))))))
 
 
-(defn data-binding->module
-  [db]
-  (into []
-        (for [[id binding] (get-in db [::spec/module-component ::spec/data-types])]
-          (let [{:keys [::spec/data-type]} binding]
-            (conj
-              data-type)))))
-
-
 (defn db->module
   [module commit-map db]
   (let [{:keys [author commit]} commit-map
         architectures     (get-in db [::spec/module-component ::spec/architectures])
         image             (image->module db)
         ports             (ports->module db)
-        mounts            (mounts->module db)
-        bindings          (data-binding->module db)]
+        mounts            (mounts->module db)]
     (as-> module m
           (assoc-in m [:content :author] author)
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
           (assoc-in m [:content :architectures] architectures)
           (assoc-in m [:content :image] image)
           (assoc-in m [:content :ports] ports)
-          (assoc-in m [:content :mounts] mounts)
-          (assoc-in m [:data-accept-content-types] bindings))))
+          (assoc-in m [:content :mounts] mounts))))

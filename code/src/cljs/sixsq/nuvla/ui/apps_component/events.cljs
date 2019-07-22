@@ -107,25 +107,6 @@
     (assoc-in db [::spec/module-component ::spec/mounts id ::spec/mount-read-only] value)))
 
 
-(reg-event-db
-  ::add-data-type
-  (fn [db [_ id data-type]]
-    ; overwrite the id
-    (assoc-in db [::spec/module-component ::spec/data-types id] (assoc data-type :id id))))
-
-
-(reg-event-db
-  ::remove-data-type
-  (fn [db [_ id]]
-    (update-in db [::spec/module-component ::spec/data-types] dissoc id)))
-
-
-(reg-event-db
-  ::update-data-type
-  (fn [db [_ id dt]]
-    (assoc-in db [::spec/module-component ::spec/data-types id] {:id id ::spec/data-type dt})))
-
-
 ; Docker image
 
 (reg-event-db

@@ -56,8 +56,9 @@
 
     (if (seq @env-variables)
       [ui/Form
-       (doall
-         (for [[index env-variable] (map-indexed vector @env-variables)]
+       (map-indexed
+         (fn [i env-variable]
            ^{:key (:name env-variable)}
-           [as-form-input index env-variable]))]
+           [as-form-input i env-variable])
+         @env-variables)]
       [ui/Message {:success true} (@tr [:no-env-variables-parameters])])))

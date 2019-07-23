@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed
+
+  - Deployment modal - Ensure that a credential is set in deployment 
+    before start action
+
 ### Added
 
   - Application/Module - support deployement of application with 

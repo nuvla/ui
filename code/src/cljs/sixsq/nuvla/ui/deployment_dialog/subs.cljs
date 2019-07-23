@@ -124,8 +124,9 @@
 (reg-sub
   ::credentials-completed?
   :<- [::selected-credential]
-  (fn [selected-credential _]
-    (boolean selected-credential)))
+  :<- [::deployment]
+  (fn [[selected-credential deployment]]
+    (and selected-credential (:parent deployment))))
 
 
 (reg-sub

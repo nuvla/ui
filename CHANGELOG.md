@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-### Changed
+### Added
 
   - Application/Module - support deployement of application with 
     docker-compose and files

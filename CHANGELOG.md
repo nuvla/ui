@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed
+
+  - Application/Module - support deployement of application with 
+    docker-compose and files
+
 ## [2.3.0] - 2019-07-11
 
 ### Changed

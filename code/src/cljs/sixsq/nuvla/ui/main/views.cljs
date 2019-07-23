@@ -4,6 +4,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.about.views]
+    [sixsq.nuvla.ui.apps-application.views]
     [sixsq.nuvla.ui.apps-component.views]
     [sixsq.nuvla.ui.apps-project.views]
     [sixsq.nuvla.ui.apps-store.views]

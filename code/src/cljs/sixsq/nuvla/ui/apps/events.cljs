@@ -3,6 +3,8 @@
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [sixsq.nuvla.ui.apps-application.spec :as apps-application-spec]
+    [sixsq.nuvla.ui.apps-application.utils :as apps-application-utils]
     [sixsq.nuvla.ui.apps-component.spec :as apps-component-spec]
     [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
     [sixsq.nuvla.ui.apps-project.spec :as apps-project-spec]
@@ -25,11 +27,13 @@
 
 (defn get-module
   [module-subtype db]
-  (let [component (get db ::apps-component-spec/module-component)
-        project   (get db ::apps-project-spec/module-project)]
+  (let [component   (get db ::apps-component-spec/module-component)
+        project     (get db ::apps-project-spec/module-project)
+        application (get db ::apps-application-spec/module-application)]
     (case module-subtype
       :component component
       :project project
+      :application application
       project)))
 
 
@@ -60,10 +64,11 @@
           module-common  (get db ::spec/module-common)
           module         (get-module module-subtype db)
           validate-form? (get db ::spec/validate-form?)
-          valid?         (if validate-form? (and
-                                              (s/valid? ::spec/module-common module-common)
-                                              (if (nil? form-spec) true (s/valid? form-spec module)))
-                                            true)]
+          valid?         (if validate-form?
+                           (and
+                             (s/valid? ::spec/module-common module-common)
+                             (or (nil? form-spec) (s/valid? form-spec module)))
+                           true)]
       (s/explain ::spec/module-common module-common)
       (s/explain form-spec module)
       (assoc db ::spec/form-valid? valid?))))
@@ -113,10 +118,11 @@
                             ::spec/module-path (:path module)
                             ::spec/module (if (nil? module) {} module))
           subtype (:subtype module)]
-      (case subtype                                         ;;FIXME default case make nav-path equal to nil!!
+      (case subtype
         "component" (apps-component-utils/module->db db module)
         "project" (apps-project-utils/module->db db module)
-        nil))))
+        "application" (apps-application-utils/module->db db module)
+        db))))
 
 
 (reg-event-db
@@ -145,7 +151,11 @@
           (assoc-in [::spec/module-common ::spec/description] "")
           (assoc-in [::spec/module-common ::spec/logo-url] default-logo-url)
           (assoc-in [::spec/module-common ::spec/parent-path] new-parent)
-          (assoc-in [::spec/module-common ::spec/subtype] new-subtype)))))
+          (assoc-in [::spec/module-common ::spec/subtype] new-subtype)
+          (assoc-in [::spec/module-common ::spec/env-variables] {})
+          (assoc-in [::spec/module-common ::spec/urls] {})
+          (assoc-in [::spec/module-common ::spec/output-parameters] {})
+          (assoc-in [::spec/module-common ::spec/data-types] {})))))
 
 
 (reg-event-fx
@@ -190,7 +200,7 @@
 (reg-event-db
   ::subtype
   (fn [db [_ subtype]]
-    (assoc-in db [::spec/module-common :subtype] (if (nil? subtype) nil (str/upper-case subtype)))))
+    (assoc-in db [::spec/module-common :subtype] (some-> subtype str/upper-case))))
 
 
 (reg-event-db
@@ -240,13 +250,13 @@
     (assoc db ::spec/validation-error-modal-visible? false)))
 
 
-(reg-event-db
+(reg-event-fx
   ::save-logo-url
-  (fn [db [_ logo-url]]
-    (dispatch [::main-events/changes-protection? true])
-    (-> db
-        (assoc-in [::spec/module-common ::spec/logo-url] logo-url)
-        (assoc-in [::spec/logo-url-modal-visible?] false))))
+  (fn [{:keys [db]} [_ logo-url]]
+    {:db       (-> db
+                   (assoc-in [::spec/module-common ::spec/logo-url] logo-url)
+                   (assoc-in [::spec/logo-url-modal-visible?] false))
+     :dispatch [::main-events/changes-protection? true]}))
 
 
 (reg-event-db
@@ -261,6 +271,122 @@
     (assoc db ::spec/logo-url-modal-visible? false)))
 
 
+; Environmental variables
+
+(reg-event-db
+  ::add-env-variable
+  (fn [db [_ id env-variable]]
+    ; overwrite the id
+    (assoc-in db [::spec/module-common ::spec/env-variables id] (assoc env-variable :id id))))
+
+
+(reg-event-db
+  ::remove-env-variable
+  (fn [db [_ id]]
+    (update-in db [::spec/module-common ::spec/env-variables] dissoc id)))
+
+
+(reg-event-db
+  ::update-env-name
+  (fn [db [_ id value]]
+    (assoc-in db [::spec/module-common ::spec/env-variables id ::spec/env-name] (str/upper-case value))))
+
+
+(reg-event-db
+  ::update-env-value
+  (fn [db [_ id value]]
+    (assoc-in db [::spec/module-common ::spec/env-variables id ::spec/env-value] value)))
+
+
+(reg-event-db
+  ::update-env-description
+  (fn [db [_ id value]]
+    (assoc-in db [::spec/module-common ::spec/env-variables id ::spec/env-description] value)))
+
+
+(reg-event-db
+  ::update-env-required
+  (fn [db [_ id value]]
+    (assoc-in db [::spec/module-common ::spec/env-variables id ::spec/env-required] value)))
+
+
+; URLs
+
+(reg-event-db
+  ::add-url
+  (fn [db [_ id url]]
+    ; overwrite the id
+    (assoc-in db [::spec/module-common ::spec/urls id] (assoc url :id id))))
+
+
+(reg-event-db
+  ::remove-url
+  (fn [db [_ id]]
+    (update-in db [::spec/module-common ::spec/urls] dissoc id)))
+
+
+(reg-event-db
+  ::update-url-name
+  (fn [db [_ id name]]
+    (assoc-in db [::spec/module-common ::spec/urls id ::spec/url-name] name)))
+
+
+(reg-event-db
+  ::update-url-url
+  (fn [db [_ id url]]
+    (assoc-in db [::spec/module-common ::spec/urls id ::spec/url] url)))
+
+
+; Output-parameters
+
+(reg-event-db
+  ::add-output-parameter
+  (fn [db [_ id param]]
+    ; overwrite the id
+    (assoc-in db [::spec/module-common ::spec/output-parameters id] (assoc param :id id))))
+
+
+(reg-event-db
+  ::remove-output-parameter
+  (fn [db [_ id]]
+    (update-in db [::spec/module-common ::spec/output-parameters] dissoc id)))
+
+
+(reg-event-db
+  ::update-output-parameter-name
+  (fn [db [_ id name]]
+    (assoc-in db [::spec/module-common ::spec/output-parameters id
+                  ::spec/output-parameter-name] name)))
+
+
+(reg-event-db
+  ::update-output-parameter-description
+  (fn [db [_ id description]]
+    (assoc-in db [::spec/module-common ::spec/output-parameters id
+                  ::spec/output-parameter-description] description)))
+
+
+; Data types
+
+(reg-event-db
+  ::add-data-type
+  (fn [db [_ id data-type]]
+    ; overwrite the id
+    (assoc-in db [::spec/module-common ::spec/data-types id] (assoc data-type :id id))))
+
+
+(reg-event-db
+  ::remove-data-type
+  (fn [db [_ id]]
+    (update-in db [::spec/module-common ::spec/data-types] dissoc id)))
+
+
+(reg-event-db
+  ::update-data-type
+  (fn [db [_ id dt]]
+    (assoc-in db [::spec/module-common ::spec/data-types id] {:id id ::spec/data-type dt})))
+
+
 (reg-event-fx
   ::edit-module
   (fn [{{:keys [::spec/module] :as db} :db} [_ commit-map]]
@@ -271,7 +397,8 @@
                             #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                  (dispatch [::set-module sanitized-module]) ;Needed?
                                  (dispatch [::main-events/changes-protection? false])
-                                 (dispatch [::history-events/navigate (str "apps/" (:path sanitized-module))]))
+                                 (dispatch [::history-events/navigate
+                                            (str "apps/" (:path sanitized-module))]))
                             :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                          (cimi-api-fx/default-add-on-error :module %)
                                          (when (= status 409)

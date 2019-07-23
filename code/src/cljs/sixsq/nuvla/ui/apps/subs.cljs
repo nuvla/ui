@@ -51,6 +51,30 @@
 
 
 (reg-sub
+  ::env-variables
+  (fn [db]
+    (get-in db [::spec/module-common ::spec/env-variables])))
+
+
+(reg-sub
+  ::urls
+  (fn [db]
+    (get-in db [::spec/module-common ::spec/urls])))
+
+
+(reg-sub
+  ::output-parameters
+  (fn [db]
+    (get-in db [::spec/module-common ::spec/output-parameters])))
+
+
+(reg-sub
+  ::data-types
+  (fn [db]
+    (get-in db [::spec/module-common ::spec/data-types])))
+
+
+(reg-sub
   ::add-modal-visible?
   ::spec/add-modal-visible?)
 

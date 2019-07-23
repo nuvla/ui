@@ -8,15 +8,8 @@
 (reg-event-db
   ::clear-module
   (fn [db [_]]
-    (-> db
-        (assoc-in [::spec/module-component ::spec/ports] {})
-        (assoc-in [::spec/module-component ::spec/mounts] {})
-        (assoc-in [::spec/module-component ::spec/urls] {})
-        (assoc-in [::spec/module-component ::spec/output-parameters] {})
-        (assoc-in [::spec/module-component ::spec/data-types] {})
-        (assoc-in [::spec/module-component ::spec/architectures] ["amd64"])
-        (assoc-in [::spec/module-component ::spec/env-variables] {})
-        (assoc-in [::spec/module-component ::spec/image] {}))))
+    (merge db spec/defaults)))
+
 
 (reg-event-db
   ::architectures
@@ -112,116 +105,6 @@
   ::update-mount-read-only?
   (fn [db [_ id value]]
     (assoc-in db [::spec/module-component ::spec/mounts id ::spec/mount-read-only] value)))
-
-
-; Environmental variables
-
-(reg-event-db
-  ::add-env-variable
-  (fn [db [_ id env-variable]]
-    ; overwrite the id
-    (assoc-in db [::spec/module-component ::spec/env-variables id] (assoc env-variable :id id))))
-
-
-(reg-event-db
-  ::remove-env-variable
-  (fn [db [_ id]]
-    (update-in db [::spec/module-component ::spec/env-variables] dissoc id)))
-
-
-(reg-event-db
-  ::update-env-name
-  (fn [db [_ id value]]
-    (assoc-in db [::spec/module-component ::spec/env-variables id ::spec/env-name] (str/upper-case value))))
-
-
-(reg-event-db
-  ::update-env-value
-  (fn [db [_ id value]]
-    (assoc-in db [::spec/module-component ::spec/env-variables id ::spec/env-value] value)))
-
-
-(reg-event-db
-  ::update-env-description
-  (fn [db [_ id value]]
-    (assoc-in db [::spec/module-component ::spec/env-variables id ::spec/env-description] value)))
-
-
-(reg-event-db
-  ::update-env-required
-  (fn [db [_ id value]]
-    (assoc-in db [::spec/module-component ::spec/env-variables id ::spec/env-required] value)))
-
-
-(reg-event-db
-  ::add-url
-  (fn [db [_ id url]]
-    ; overwrite the id
-    (assoc-in db [::spec/module-component ::spec/urls id] (assoc url :id id))))
-
-
-(reg-event-db
-  ::remove-url
-  (fn [db [_ id]]
-    (update-in db [::spec/module-component ::spec/urls] dissoc id)))
-
-
-(reg-event-db
-  ::update-url-name
-  (fn [db [_ id name]]
-    (assoc-in db [::spec/module-component ::spec/urls id ::spec/url-name] name)))
-
-
-(reg-event-db
-  ::update-url-url
-  (fn [db [_ id url]]
-    (assoc-in db [::spec/module-component ::spec/urls id ::spec/url] url)))
-
-
-(reg-event-db
-  ::add-output-parameter
-  (fn [db [_ id param]]
-    ; overwrite the id
-    (assoc-in db [::spec/module-component ::spec/output-parameters id] (assoc param :id id))))
-
-
-(reg-event-db
-  ::remove-output-parameter
-  (fn [db [_ id]]
-    (update-in db [::spec/module-component ::spec/output-parameters] dissoc id)))
-
-
-(reg-event-db
-  ::update-output-parameter-name
-  (fn [db [_ id name]]
-    (assoc-in db [::spec/module-component ::spec/output-parameters id
-                  ::spec/output-parameter-name] name)))
-
-
-(reg-event-db
-  ::update-output-parameter-description
-  (fn [db [_ id description]]
-    (assoc-in db [::spec/module-component ::spec/output-parameters id
-                  ::spec/output-parameter-description] description)))
-
-
-(reg-event-db
-  ::add-data-type
-  (fn [db [_ id data-type]]
-    ; overwrite the id
-    (assoc-in db [::spec/module-component ::spec/data-types id] (assoc data-type :id id))))
-
-
-(reg-event-db
-  ::remove-data-type
-  (fn [db [_ id]]
-    (update-in db [::spec/module-component ::spec/data-types] dissoc id)))
-
-
-(reg-event-db
-  ::update-data-type
-  (fn [db [_ id dt]]
-    (assoc-in db [::spec/module-component ::spec/data-types id] {:id id ::spec/data-type dt})))
 
 
 ; Docker image

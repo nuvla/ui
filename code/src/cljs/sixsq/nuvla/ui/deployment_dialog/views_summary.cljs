@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.deployment-dialog.views-credentials :as credentials-step]
     [sixsq.nuvla.ui.deployment-dialog.views-data :as data-step]
     [sixsq.nuvla.ui.deployment-dialog.views-env-variables :as env-variables-step]
+    [sixsq.nuvla.ui.deployment-dialog.views-files :as files-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
@@ -32,12 +33,13 @@
 
 (defn content
   []
-  (let [data-step-active? (subscribe [::subs/data-step-active?])]
+  (let [data-step-active? (subscribe [::subs/data-step-active?])
+        is-application?   (subscribe [::subs/is-application?])]
     [ui/Table
      [ui/TableBody
       [application-row]
       (when @data-step-active?
         [data-step/summary-row])
       [credentials-step/summary-row]
-      [env-variables-step/summary-row]
-      ]]))
+      (when @is-application? [files-step/summary-row])
+      [env-variables-step/summary-row]]]))

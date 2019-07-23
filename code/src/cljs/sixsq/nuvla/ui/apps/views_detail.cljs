@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as reagent]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.apps.events :as events]
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.subs :as subs]
@@ -17,6 +18,7 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -65,7 +67,8 @@
             {:name      (@tr [:launch])
              :icon-name "rocket"
              :disabled  launch-disabled?
-             :on-click  #(dispatch [::deployment-dialog-events/create-deployment id :credentials])}])
+             :on-click  #(dispatch [::deployment-dialog-events/create-deployment
+                                    id :credentials])}])
 
          (when add?
            [uix/MenuItemWithIcon
@@ -124,10 +127,12 @@
                      :default-value @commit-message
                      :auto-focus    true
                      :focus         true
-                     :on-change     (ui-callback/input-callback #(dispatch [::events/commit-message %]))
-                     :on-key-press  (partial forms/on-return-key #(do (dispatch [::events/edit-module commit-map])
-                                                                      (dispatch [::events/close-save-modal])
-                                                                      (dispatch [::events/commit-message nil])))}]]
+                     :on-change     (ui-callback/input-callback
+                                      #(dispatch [::events/commit-message %]))
+                     :on-key-press  (partial forms/on-return-key
+                                             #(do (dispatch [::events/edit-module commit-map])
+                                                  (dispatch [::events/close-save-modal])
+                                                  (dispatch [::events/commit-message nil])))}]]
 
          [ui/ModalActions
           [uix/Button {:text     (@tr [:save])
@@ -158,7 +163,8 @@
                      :fluid         true
                      :auto-focus    true
                      :on-change     (ui-callback/input-callback #(reset! local-url %))
-                     :on-key-press  (partial forms/on-return-key #(dispatch [::events/save-logo-url @local-url]))}]]
+                     :on-key-press  (partial forms/on-return-key
+                                             #(dispatch [::events/save-logo-url @local-url]))}]]
 
          [ui/ModalActions
           [uix/Button {:text     "Ok"
@@ -184,31 +190,50 @@
          [ui/ModalContent {:scrolling false}
           [ui/CardGroup {:centered true}
 
-           [ui/Card {:on-click #(do (dispatch [::events/close-add-modal])
-                                    (dispatch [::history-events/navigate
-                                               (str/join "/"
-                                                         (remove str/blank?
-                                                                 ["apps" parent "New Project?subtype=project"]))]))}
+           [ui/Card
+            {:on-click #(do (dispatch [::events/close-add-modal])
+                            (dispatch [::history-events/navigate
+                                       (str/join
+                                         "/" (remove str/blank?
+                                                     ["apps" parent
+                                                      "New Project?subtype=project"]))]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Project"]
              [ui/Icon {:name "folder"
                        :size :massive}]]]
 
-           [ui/Card {:on-click (when parent
-                                 #(do
-                                    (dispatch [::events/close-add-modal])
-                                    (dispatch [::history-events/navigate
-                                               (str/join "/"
-                                                         (remove str/blank?
-                                                                 ["apps" parent
-                                                                  "New Component?subtype=component"]))])))}
+           [ui/Card
+            {:on-click (when parent
+                         #(do
+                            (dispatch [::events/close-add-modal])
+                            (dispatch [::history-events/navigate
+                                       (str/join
+                                         "/" (remove str/blank?
+                                                     ["apps" parent
+                                                      "New Component?subtype=component"]))])))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Component"]
              [:div]
              [ui/Icon {:name  "grid layout"
                        :size  :massive
-                       :color (when-not parent :grey)}]]]]]
-         [ui/ModalActions]]))))
+                       :color (when-not parent :grey)}]]]
+
+           [ui/Card
+            {:on-click (when parent
+                         #(do
+                            (dispatch [::events/close-add-modal])
+                            (dispatch [::history-events/navigate
+                                       (str/join
+                                         "/" (remove str/blank?
+                                                     ["apps" parent
+                                                      "New Application?subtype=application"]))])))}
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Application"]
+             [:div]
+             [ui/Icon {:name  "cubes"
+                       :size  :massive
+                       :color (when-not parent :grey)}]]]
+           ]]]))))
 
 
 (defn version-warning []
@@ -358,3 +383,336 @@
            (when (not @is-new?)
              [details-section])
            [views-versions/versions]]]]))))
+
+
+(defn input
+  [id name value placeholder update-event value-spec fluid?]
+  (let [local-validate? (r/atom false)
+        form-valid?     (subscribe [::subs/form-valid?])]
+    (fn [id name value placeholder update-event value-spec fluid?]
+      (let [input-name (str name "-" id)
+            validate?  (or @local-validate? (not @form-valid?))]
+        [ui/Input {:name          input-name
+                   :placeholder   placeholder
+                   :default-value value
+                   :type          :text
+                   :error         (and validate? (not (s/valid? value-spec value)))
+                   :fluid         fluid?
+                   :onMouseEnter  #(dispatch [::events/active-input input-name])
+                   :onMouseLeave  #(dispatch [::events/active-input nil])
+                   :on-change     (ui-callback/input-callback
+                                    #(do (reset! local-validate? true)
+                                         (dispatch [update-event id (when-not (str/blank? %) %)])
+                                         (dispatch [::main-events/changes-protection? true])
+                                         (dispatch [::events/validate-form])))}]))))
+
+
+(defn trash
+  [id remove-event]
+  [ui/Icon {:name     "trash"
+            :on-click #(do (dispatch [::main-events/changes-protection? true])
+                           (dispatch [remove-event id])
+                           (dispatch [::events/validate-form]))
+            :color    :red}])
+
+
+(defn plus
+  [add-event]
+  [ui/Icon {:name     "add"
+            :color    "green"
+            :on-click #(do (dispatch [::main-events/changes-protection? true])
+                           (dispatch [add-event (random-uuid) {}])
+                           (dispatch [::events/validate-form]))}])
+
+
+(defn single-env-variable
+  [env-variable editable?]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        form-valid?     (subscribe [::subs/form-valid?])
+        local-validate? (r/atom false)]
+    (let [{:keys [id
+                  ::spec/env-name
+                  ::spec/env-description
+                  ::spec/env-value
+                  ::spec/env-required]} env-variable
+          validate? (or @local-validate? (not @form-valid?))]
+      [ui/TableRow {:key id}
+       [ui/TableCell {:floated :left
+                      :width   3}
+        (if editable?
+          (let [input-name (str name "-" id)]
+            [ui/Input {:name         (str name "-" id)
+                       :placeholder  (@tr [:name])
+                       :type         :text
+                       :value        (or env-name "")
+                       :error        (when (and validate?
+                                                (not (s/valid? ::spec/env-name env-name))) true)
+                       :fluid        true
+                       :onMouseEnter #(dispatch [::events/active-input input-name])
+                       :onMouseLeave #(dispatch [::events/active-input nil])
+                       :on-change    (ui-callback/input-callback
+                                       #(do
+                                          (reset! local-validate? true)
+                                          (dispatch [::events/update-env-name id %])
+                                          (dispatch [::main-events/changes-protection? true])
+                                          (dispatch [::events/validate-form])))}])
+
+          [:span env-name])]
+
+       [ui/TableCell {:floated :left
+                      :width   3}
+        (if editable?
+          [input id "value" env-value (@tr [:value])
+           ::events/update-env-value ::spec/env-value true]
+          [:span env-value])]
+
+       [ui/TableCell {:floated :left
+                      :width   8}
+        (if editable?
+          [input id "description" env-description (@tr [:description])
+           ::events/update-env-description ::spec/env-description true]
+          [:span env-description])]
+
+       [ui/TableCell {:floated    :left
+                      :text-align :center
+                      :width      1}
+        [ui/Checkbox {:name      (@tr [:required])
+                      :checked   (or env-required false)
+                      :disabled  (not editable?)
+                      :on-change (ui-callback/checked
+                                   #(do (dispatch [::main-events/changes-protection? true])
+                                        (dispatch [::events/update-env-required id %])
+                                        (dispatch [::events/validate-form])))
+                      :align     :middle}]]
+
+       (when editable?
+         [ui/TableCell {:floated :right
+                        :width   1
+                        :align   :right
+                        :style   {}}
+          [trash id ::events/remove-env-variable]])])))
+
+
+(defn env-variables-section []
+  (let [tr            (subscribe [::i18n-subs/tr])
+        module        (subscribe [::subs/module])
+        env-variables (subscribe [::subs/env-variables])
+        is-new?       (subscribe [::subs/is-new?])]
+    (fn []
+      (let [editable? (utils/editable? @module @is-new?)]
+        [uix/Accordion
+         [:<>
+          [:div (str/capitalize (@tr [:environmental-variables]))
+           [:span ff/nbsp (ff/help-popup (@tr [:module-env-variables-help]))]]
+          (if (empty? @env-variables)
+            [ui/Message
+             (str/capitalize (str (@tr [:module-no-env-variables]) "."))]
+            [:div [ui/Table {:style {:margin-top 10}
+                             :class :nuvla-ui-editable}
+                   [ui/TableHeader
+                    [ui/TableRow
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:value]))}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:required]))}]
+                     (when editable?
+                       [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
+                   [ui/TableBody
+                    (for [[id env-variable] @env-variables]
+                      ^{:key id}
+                      [single-env-variable env-variable editable?])]]])
+          (when editable?
+            [:div {:style {:padding-top 10}}
+             [plus ::events/add-env-variable]])]
+         :label (@tr [:module-env-variables])
+         :count (count @env-variables)]))))
+
+
+(defn single-url
+  [url-map editable?]
+  (let [tr (subscribe [::i18n-subs/tr])
+        {:keys [id ::spec/url-name ::spec/url]} url-map]
+    [ui/TableRow {:key id}
+     [ui/TableCell {:floated :left
+                    :width   2}
+      (if editable?
+        [input id (str "url-name-" id) url-name
+         "name of this url" ::events/update-url-name ::spec/url-name false]
+        [:span url-name])]
+     [ui/TableCell {:floated :left
+                    :width   13}
+      (if editable?
+        [input id (str "url-url-" id) url
+         "url - e.g. http://${hostname}:${tcp.8888}/?token=${jupyter-token}"
+         ::events/update-url-url ::spec/url true]
+        [:span url])]
+     (when editable?
+       [ui/TableCell {:floated :right
+                      :width   1
+                      :align   :right
+                      :style   {}}
+        [trash id ::events/remove-url]])]))
+
+
+(defn urls-section []
+  (let [tr      (subscribe [::i18n-subs/tr])
+        urls    (subscribe [::subs/urls])
+        module  (subscribe [::subs/module])
+        is-new? (subscribe [::subs/is-new?])]
+    (fn []
+      (let [editable? (utils/editable? @module @is-new?)]
+        [uix/Accordion
+         [:<>
+          [:div (@tr [:urls])
+           [:span ff/nbsp (ff/help-popup (@tr [:module-urls-help]))]]
+          (if (empty? @urls)
+            [ui/Message
+             (str/capitalize (str (@tr [:no-urls]) "."))]
+            [:div [ui/Table {:style {:margin-top 10}
+                             :class :nuvla-ui-editable}
+                   [ui/TableHeader
+                    [ui/TableRow
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
+                     [ui/TableHeaderCell {:content "URL"}]
+                     (when editable?
+                       [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
+                   [ui/TableBody
+                    (for [[id url-map] @urls]
+                      ^{:key id}
+                      [single-url url-map editable?])]]])
+          (when editable?
+            [:div {:style {:padding-top 10}}
+             [plus ::events/add-url]])]
+         :label (@tr [:urls])
+         :count (count @urls)
+         :default-open false]))))
+
+
+(defn single-output-parameter [param editable?]
+  (let [tr (subscribe [::i18n-subs/tr])
+        {:keys [id ::spec/output-parameter-name ::spec/output-parameter-description]} param]
+    [ui/TableRow {:key id}
+     [ui/TableCell {:floated :left
+                    :width   2}
+      (if editable?
+        [input id (str "output-param-name-" id) output-parameter-name
+         (@tr [:name]) ::events/update-output-parameter-name
+         ::spec/output-parameter-name false]
+        [:span output-parameter-name])]
+     [ui/TableCell {:floated :left
+                    :width   13}
+      (if editable?
+        [input id (str "output-param-description-" id)
+         output-parameter-description (@tr [:description])
+         ::events/update-output-parameter-description
+         ::spec/output-parameter-description true]
+        [:span output-parameter-description])]
+     (when editable?
+       [ui/TableCell {:floated :right
+                      :width   1
+                      :align   :right}
+        [trash id ::events/remove-output-parameter]])]))
+
+
+(defn output-parameters-section []
+  (let [tr                (subscribe [::i18n-subs/tr])
+        output-parameters (subscribe [::subs/output-parameters])
+        module            (subscribe [::subs/module])
+        is-new?           (subscribe [::subs/is-new?])]
+    (fn []
+      (let [editable? (utils/editable? @module @is-new?)]
+        [uix/Accordion
+
+         [:<>
+          [:div (@tr [:module-output-parameters])
+           [:span ff/nbsp (ff/help-popup (@tr [:module-output-parameters-help]))]]
+          (if (empty? @output-parameters)
+            [ui/Message
+             (str/capitalize (str (@tr [:no-output-parameters]) "."))]
+            [:div [ui/Table {:style {:margin-top 10}
+                             :class :nuvla-ui-editable}
+                   [ui/TableHeader
+                    [ui/TableRow
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
+                     (when editable?
+                       [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
+                   [ui/TableBody
+                    (for [[id param] @output-parameters]
+                      ^{:key id}
+                      [single-output-parameter param editable?])]]])
+          (when editable?
+            [:div {:style {:padding-top 10}}
+             [plus ::events/add-output-parameter]])]
+         :label (@tr [:module-output-parameters])
+         :count (count @output-parameters)
+         :default-open false]))))
+
+
+(def data-type-options
+  (atom [{:key "application/x-hdr", :value "application/x-hdr", :text "application/x-hdr"}
+         {:key "application/x-clk", :value "application/x-clk", :text "application/x-clk"}
+         {:key "text/plain", :value "text/plain", :text "text/plain"}]))
+
+
+(defn add-data-type-options
+  [option]
+  (swap! data-type-options conj {:key option :value option :text option}))
+
+
+(defn single-data-type [dt editable?]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn [dt editable?]
+      (let [{:keys [id ::spec/data-type]} dt]
+        [ui/GridRow {:key id}
+         [ui/GridColumn {:floated :left
+                         :width   2}
+          (if editable?
+            [ui/Label
+             [ui/Dropdown {:name           (str "data-type-" id)
+                           :default-value  (or data-type "text/plain")
+                           :allowAdditions true
+                           :selection      true
+                           :additionLabel  "Additional data type: "
+                           :search         true
+                           :options        @data-type-options
+                           :on-add-item    #(add-data-type-options (-> % .-target .-value))
+                           :on-change      (ui-callback/value
+                                             #(do
+                                                (dispatch [::main-events/changes-protection? true])
+                                                (dispatch [::events/update-data-type id %])
+                                                (dispatch [::events/validate-form])))}]]
+            [:span [:b data-type]])]
+         (when editable?
+           [ui/GridColumn {:floated :right
+                           :width   1
+                           :align   :right
+                           :style   {}}
+            [trash id ::events/remove-data-type]])]))))
+
+
+(defn data-types-section []
+  (let [tr         (subscribe [::i18n-subs/tr])
+        data-types (subscribe [::subs/data-types])
+        module     (subscribe [::subs/module])
+        is-new?    (subscribe [::subs/is-new?])]
+    (fn []
+      (let [editable? (utils/editable? @module @is-new?)]
+        [uix/Accordion
+         [:<>
+          [:div (@tr [:data-type])
+           [:span ff/nbsp (ff/help-popup (@tr [:module-data-type-help]))]]
+          (if (empty? @data-types)
+            [ui/Message
+             (str/capitalize (str (@tr [:no-datasets]) "."))]
+            [:div [ui/Grid {:style {:margin-top    5
+                                    :margin-bottom 5}}
+                   (for [[id dt] @data-types]
+                     ^{:key id}
+                     [single-data-type dt editable?])]])
+          (when editable?
+            [:div
+             [plus ::events/add-data-type]])]
+         :label (@tr [:data-binding])
+         :count (count @data-types)
+         :default-open false]))))

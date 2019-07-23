@@ -45,6 +45,12 @@
 (s/def ::secret nonblank-string)
 
 
+(defn filename? [s] (re-matches #"^[\w-\.]+$" s))
+
+
+(s/def ::filename (s/and string? filename?))
+
+
 (defn resolvable?
   [spec]
   (try

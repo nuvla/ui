@@ -19,9 +19,7 @@
 
 (s/def ::infra-services any?)
 
-(s/def ::step-id #{:data :credentials :env-variables :summary})
-
-(def steps [:data :credentials :env-variables :summary])
+(s/def ::step-id #{:data :credentials :env-variables :files :summary})
 
 (s/def ::active-step ::step-id)
 
@@ -74,5 +72,7 @@
                                                          :icon    "key"}
                                          :env-variables {:step-id :environmental-variables
                                                          :icon    "list alternate outline"}
+                                         :files         {:step-id :files
+                                                         :icon    "file alternate outline"}
                                          :summary       {:step-id :summary
                                                          :icon    "info"}}})

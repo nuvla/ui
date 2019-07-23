@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.apps.spec
   (:require
     [clojure.spec.alpha :as s]
-    [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.spec :as utils-spec]))
+    [sixsq.nuvla.ui.utils.spec :as utils-spec]
+    [sixsq.nuvla.ui.utils.spec :as spec-utils]))
 
 ;; Utils
 
@@ -23,6 +23,60 @@
 
 (s/def ::logo-url any?)
 
+; Environmental-variables
+
+(def env-var-regex #"^[A-Z_]+$")
+(def reserved-env-var-regex #"NUVLA_.*")
+(s/def ::env-name (s/and spec-utils/nonblank-string
+                         #(re-matches env-var-regex %)
+                         #(not (re-matches reserved-env-var-regex %))))
+
+(s/def ::env-description (s/nilable spec-utils/nonblank-string))
+
+(s/def ::env-value (s/nilable spec-utils/nonblank-string))
+
+(s/def ::env-required boolean?)
+
+
+(s/def ::env-variable
+  (s/keys :req [::env-name]
+          :opt [::env-description ::env-required ::env-value]))
+
+(s/def ::env-variables (s/map-of any? (s/merge ::env-variable)))
+
+; URLs
+
+(s/def ::url-name spec-utils/nonblank-string)
+
+(s/def ::url spec-utils/nonblank-string)
+
+(s/def ::single-url (s/keys :req [::url-name
+                                  ::url]))
+
+(s/def ::urls (s/map-of any? (s/merge ::single-url)))
+
+
+; Output parameters
+
+(s/def ::output-parameter-name spec-utils/nonblank-string)
+
+(s/def ::output-parameter-description spec-utils/nonblank-string)
+
+(s/def ::output-parameter (s/keys :req [::output-parameter-name
+                                        ::output-parameter-description]))
+
+(s/def ::output-parameters (s/map-of any? (s/merge ::output-parameter)))
+
+; Data types
+
+(s/def ::data-type string?)
+
+
+(s/def ::data-type-map (s/keys :req [::data-type]))
+
+(s/def ::data-types (s/map-of any? (s/merge ::data-type-map)))
+
+
 (s/def ::module-common (s/keys :req [::name
                                      ::parent-path
                                      ; needed by the server, but not the ui
@@ -31,7 +85,12 @@
                                      ]
                                :opt [::description
                                      ::logo-url
-                                     ::acl]))
+                                     ::acl
+                                     ::env-variables
+                                     ::urls
+                                     ::output-parameters
+                                     ::data-types]))
+
 
 ;; Validation
 

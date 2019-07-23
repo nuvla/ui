@@ -122,10 +122,11 @@
                             (get collection-name))
           on-success    #(let [{:keys [status message resource-id]} (response/parse %)]
                            (dispatch [::get-results])
-                           (dispatch [::messages-events/add {:header  (cond-> (str "added " resource-id)
-                                                                              status (str " (" status ")"))
-                                                             :content message
-                                                             :type    :success}]))]
+                           (dispatch [::messages-events/add
+                                      {:header  (cond-> (str "added " resource-id)
+                                                        status (str " (" status ")"))
+                                       :content message
+                                       :type    :success}]))]
       {::cimi-api-fx/add [resource-type data on-success]})))
 
 

@@ -18,51 +18,10 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.form-fields :as forms]
-    [sixsq.nuvla.ui.utils.form-fields :as form-fields]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [taoensso.timbre :as log]))
-
-
-(defn input
-  [id name value placeholder update-event value-spec fluid?]
-  (let [local-validate? (r/atom false)
-        form-valid?     (subscribe [::apps-subs/form-valid?])]
-    (fn [id name value placeholder update-event value-spec fluid?]
-      (let [input-name (str name "-" id)
-            validate?  (or @local-validate? (not @form-valid?))]
-        [ui/Input {:name          input-name
-                   :placeholder   placeholder
-                   :default-value value
-                   :type          :text
-                   :error         (and validate? (not (s/valid? value-spec value)))
-                   :fluid         fluid?
-                   :onMouseEnter  #(dispatch [::apps-events/active-input input-name])
-                   :onMouseLeave  #(dispatch [::apps-events/active-input nil])
-                   :on-change     (ui-callback/input-callback
-                                    #(do (reset! local-validate? true)
-                                         (dispatch [update-event id (when-not (str/blank? %) %)])
-                                         (dispatch [::main-events/changes-protection? true])
-                                         (dispatch [::apps-events/validate-form])))}]))))
-
-
-(defn trash
-  [id remove-event]
-  [ui/Icon {:name     "trash"
-            :on-click #(do (dispatch [::main-events/changes-protection? true])
-                           (dispatch [remove-event id])
-                           (dispatch [::apps-events/validate-form]))
-            :color    :red}])
-
-
-(defn plus
-  [add-event]
-  [ui/Icon {:name     "add"
-            :color    "green"
-            :on-click #(do (dispatch [::main-events/changes-protection? true])
-                           (dispatch [add-event (random-uuid) {}])
-                           (dispatch [::apps-events/validate-form]))}])
 
 
 (defn registry-url
@@ -101,14 +60,16 @@
          [ui/TableCell
           (if editable?
             [:div
-             [input "docker-registry" "docker-registry" registry
-              (@tr [:module-docker-registry-placeholder]) ::events/update-docker-registry ::spec/registry]
+             [apps-views-detail/input "docker-registry" "docker-registry" registry
+              (@tr [:module-docker-registry-placeholder])
+              ::events/update-docker-registry ::spec/registry]
              [:span " "]
-             [input "docker-repository-image-name" "docker-repository-image-name"
+             [apps-views-detail/input "docker-repository-image-name" "docker-repository-image-name"
               (str/join "/" (remove nil? [repository image-name]))
-              (@tr [:module-docker-image-placeholder]) ::events/update-docker-image ::spec/image-name]
+              (@tr [:module-docker-image-placeholder])
+              ::events/update-docker-image ::spec/image-name]
              [:span ":"]
-             [input "docker-tag" "docker-tag" tag
+             [apps-views-detail/input "docker-tag" "docker-tag" tag
               (@tr [:module-docker-tag-placeholder]) ::events/update-docker-tag ::spec/tag]]
             (docker-image-view @image))]]))))
 
@@ -128,7 +89,8 @@
         ^{:key @architectures}
         [ui/TableRow
          [ui/TableCell {:collapsing true
-                        :style      {:padding-bottom 8}} (if editable? (apps-utils/mandatory-name label) label)]
+                        :style      {:padding-bottom 8}}
+          (if editable? (apps-utils/mandatory-name label) label)]
          [ui/TableCell
           (if editable?
             [ui/Dropdown {:name          "architectures"
@@ -136,7 +98,8 @@
                           :selection     true
                           :default-value @architectures
                           :options       @architectures-options
-                          :error         (and validate? (not (s/valid? ::spec/architectures @architectures)))
+                          :error         (and validate?
+                                              (not (s/valid? ::spec/architectures @architectures)))
                           :on-change     (ui-callback/value
                                            #(do
                                               (reset! local-validate? true)
@@ -156,11 +119,6 @@
       [architectures]]]))
 
 
-(defn show-count
-  [coll]
-  [:span form-fields/nbsp [ui/Label {:circular true} (count coll)]])
-
-
 (defn single-port
   [port editable? tr]
   (let [{:keys [id
@@ -171,13 +129,14 @@
 
      [ui/TableCell
       (if editable?
-        [input id "published-port" published-port (@tr [:module-ports-published-port-placeholder])
-         ::events/update-port-published ::spec/published-port]
+        [apps-views-detail/input id "published-port" published-port
+         (@tr [:module-ports-published-port-placeholder]) ::events/update-port-published
+         ::spec/published-port]
         (when (number? published-port) [:span [:b published-port] " "]))]
 
      [ui/TableCell
       (if editable?
-        [input id "target-port" target-port "dest. - e.g. 22 or 22-23"
+        [apps-views-detail/input id "target-port" target-port "dest. - e.g. 22 or 22-23"
          ::events/update-port-target ::spec/target-port]
         [:span [:b target-port]])]
 
@@ -198,7 +157,7 @@
 
      (when editable?
        [ui/TableCell
-        [trash id ::events/remove-port]])]))
+        [apps-views-detail/trash id ::events/remove-port]])]))
 
 
 (defn ports-section []
@@ -230,7 +189,7 @@
                       [single-port port editable? tr])]]])
           (when editable?
             [:div {:style {:padding-top 10}}
-             [plus ::events/add-port]])]
+             [apps-views-detail/plus ::events/add-port]])]
          :label (@tr [:module-ports])
          :count (count @ports)]))))
 
@@ -263,13 +222,13 @@
      [ui/TableCell
       (if editable?
         ;id name value placeholder update-event value-spec
-        [input id "vol-source" mount-source "source"
+        [apps-views-detail/input id "vol-source" mount-source "source"
          ::events/update-mount-source ::spec/mount-source false]
         [:span "src=" [:b mount-source]])]
 
      [ui/TableCell
       (if editable?
-        [input id "vol-dest" mount-target "target"
+        [apps-views-detail/input id "vol-dest" mount-target "target"
          ::events/update-mount-target ::spec/mount-target false]
         [:span "dst=" [:b mount-target]])]
 
@@ -286,7 +245,7 @@
 
      (when editable?
        [ui/TableCell
-        [trash id ::events/remove-mount]])]))
+        [apps-views-detail/trash id ::events/remove-mount]])]))
 
 
 (defn mounts-section []
@@ -319,297 +278,9 @@
                       [single-mount mount editable?])]]])
           (when editable?
             [:div {:style {:padding-top 10}}
-             [plus ::events/add-mount]])]
+             [apps-views-detail/plus ::events/add-mount]])]
          :label (@tr [:module-mounts])
          :count (count @mounts)]))))
-
-
-(defn single-env-variable
-  [env-variable editable?]
-  (let [tr              (subscribe [::i18n-subs/tr])
-        form-valid?     (subscribe [::apps-subs/form-valid?])
-        local-validate? (r/atom false)]
-    (let [{:keys [id
-                  ::spec/env-name
-                  ::spec/env-description
-                  ::spec/env-value
-                  ::spec/env-required]} env-variable
-          validate? (or @local-validate? (not @form-valid?))]
-      [ui/TableRow {:key id}
-       [ui/TableCell {:floated :left
-                      :width   3}
-        (if editable?
-          (let [input-name (str name "-" id)]
-            [ui/Input {:name         (str name "-" id)
-                       :placeholder  "name"
-                       :type         :text
-                       :value        (or env-name "")
-                       :error        (when (and validate? (not (s/valid? ::spec/env-name env-name))) true)
-                       :fluid        true
-                       :onMouseEnter #(dispatch [::apps-events/active-input input-name])
-                       :onMouseLeave #(dispatch [::apps-events/active-input nil])
-                       :on-change    (ui-callback/input-callback
-                                       #(do
-                                          (reset! local-validate? true)
-                                          (dispatch [::events/update-env-name id %])
-                                          (dispatch [::main-events/changes-protection? true])
-                                          (dispatch [::apps-events/validate-form])))}])
-
-          [:span env-name])]
-
-       [ui/TableCell {:floated :left
-                      :width   3}
-        (if editable?
-          [input id "value" env-value "value"
-           ::events/update-env-value ::spec/env-value true]
-          [:span env-value])]
-
-       [ui/TableCell {:floated :left
-                      :width   8}
-        (if editable?
-          [input id "description" env-description "description"
-           ::events/update-env-description ::spec/env-description true]
-          [:span env-description])]
-
-       [ui/TableCell {:floated    :left
-                      :text-align :center
-                      :width      1}
-        [ui/Checkbox {:name      (@tr [:required])
-                      :checked   (or env-required false)
-                      :disabled  (not editable?)
-                      :on-change (ui-callback/checked
-                                   #(do (dispatch [::main-events/changes-protection? true])
-                                        (dispatch [::events/update-env-required id %])
-                                        (dispatch [::apps-events/validate-form])))
-                      :align     :middle}]]
-
-       (when editable?
-         [ui/TableCell {:floated :right
-                        :width   1
-                        :align   :right
-                        :style   {}}
-          [trash id ::events/remove-env-variable]])])))
-
-
-(defn env-variables-section []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        module        (subscribe [::apps-subs/module])
-        env-variables (subscribe [::subs/env-variables])
-        is-new?       (subscribe [::apps-subs/is-new?])]
-    (fn []
-      (let [editable? (apps-utils/editable? @module @is-new?)]
-        [uix/Accordion
-         [:<>
-          [:div "Container Environmental variables (i.e. env) "
-           [:span forms/nbsp (forms/help-popup (@tr [:module-env-variables-help]))]]
-          (if (empty? @env-variables)
-            [ui/Message
-             (str/capitalize (str (@tr [:module-no-env-variables]) "."))]
-            [:div [ui/Table {:style {:margin-top 10}
-                             :class :nuvla-ui-editable}
-                   [ui/TableHeader
-                    [ui/TableRow
-                     [ui/TableHeaderCell {:content "Name"}]
-                     [ui/TableHeaderCell {:content "Value"}]
-                     [ui/TableHeaderCell {:content "Description"}]
-                     [ui/TableHeaderCell {:content "Required"}]
-                     (when editable?
-                       [ui/TableHeaderCell {:content "Action"}])]]
-                   [ui/TableBody
-                    (for [[id env-variable] @env-variables]
-                      ^{:key id}
-                      [single-env-variable env-variable editable?])]]])
-          (when editable?
-            [:div {:style {:padding-top 10}}
-             [plus ::events/add-env-variable]])]
-         :label (@tr [:module-env-variables])
-         :count (count @env-variables)]))))
-
-
-(defn single-url
-  [url-map editable?]
-  (let [tr (subscribe [::i18n-subs/tr])
-        {:keys [id ::spec/url-name ::spec/url]} url-map]
-    [ui/TableRow {:key id}
-     [ui/TableCell {:floated :left
-                    :width   2}
-      (if editable?
-        [input id (str "url-name-" id) url-name
-         "name of this url" ::events/update-url-name ::spec/url-name false]
-        [:span url-name])]
-     [ui/TableCell {:floated :left
-                    :width   13}
-      (if editable?
-        [input id (str "url-url-" id) url
-         "url - e.g. http://${hostname}:${tcp.8888}/?token=${jupyter-token}" ::events/update-url-url ::spec/url true]
-        [:span url])]
-     (when editable?
-       [ui/TableCell {:floated :right
-                      :width   1
-                      :align   :right
-                      :style   {}}
-        [trash id ::events/remove-url]])]))
-
-
-(defn urls-section []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        urls    (subscribe [::subs/urls])
-        module  (subscribe [::apps-subs/module])
-        is-new? (subscribe [::apps-subs/is-new?])]
-    (fn []
-      (let [editable? (apps-utils/editable? @module @is-new?)]
-        [uix/Accordion
-         [:<>
-          [:div (@tr [:urls])
-           [:span forms/nbsp (forms/help-popup (@tr [:module-urls-help]))]]
-          (if (empty? @urls)
-            [ui/Message
-             (str/capitalize (str (@tr [:no-urls]) "."))]
-            [:div [ui/Table {:style {:margin-top 10}
-                             :class :nuvla-ui-editable}
-                   [ui/TableHeader
-                    [ui/TableRow
-                     [ui/TableHeaderCell {:content "Name"}]
-                     [ui/TableHeaderCell {:content "URL"}]
-                     (when editable?
-                       [ui/TableHeaderCell {:content "Action"}])]]
-                   [ui/TableBody
-                    (for [[id url-map] @urls]
-                      ^{:key id}
-                      [single-url url-map editable?])]]])
-          (when editable?
-            [:div {:style {:padding-top 10}}
-             [plus ::events/add-url]])]
-         :label (@tr [:urls])
-         :count (count @urls)
-         :default-open false]))))
-
-
-(defn single-output-parameter [param editable?]
-  (let [tr (subscribe [::i18n-subs/tr])
-        {:keys [id ::spec/output-parameter-name ::spec/output-parameter-description]} param]
-    [ui/TableRow {:key id}
-     [ui/TableCell {:floated :left
-                    :width   2}
-      (if editable?
-        [input id (str "output-param-name-" id) output-parameter-name
-         "output parameter name" ::events/update-output-parameter-name
-         ::spec/output-parameter-name false]
-        [:span output-parameter-name])]
-     [ui/TableCell {:floated :left
-                    :width   13}
-      (if editable?
-        [input id (str "output-param-description-" id) output-parameter-description
-         "output parameter description" ::events/update-output-parameter-description
-         ::spec/output-parameter-description true]
-        [:span output-parameter-description])]
-     (when editable?
-       [ui/TableCell {:floated :right
-                      :width   1
-                      :align   :right}
-        [trash id ::events/remove-output-parameter]])]))
-
-
-(defn output-parameters-section []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        output-parameters (subscribe [::subs/output-parameters])
-        module            (subscribe [::apps-subs/module])
-        is-new?           (subscribe [::apps-subs/is-new?])]
-    (fn []
-      (let [editable? (apps-utils/editable? @module @is-new?)]
-        [uix/Accordion
-
-         [:<>
-          [:div (@tr [:module-output-parameters])
-           [:span forms/nbsp (forms/help-popup (@tr [:module-output-parameters-help]))]]
-          (if (empty? @output-parameters)
-            [ui/Message
-             (str/capitalize (str (@tr [:no-output-parameters]) "."))]
-            [:div [ui/Table {:style {:margin-top 10}
-                             :class :nuvla-ui-editable}
-                   [ui/TableHeader
-                    [ui/TableRow
-                     [ui/TableHeaderCell {:content "Name"}]
-                     [ui/TableHeaderCell {:content "Description"}]
-                     (when editable?
-                       [ui/TableHeaderCell {:content "Action"}])]]
-                   [ui/TableBody
-                    (for [[id param] @output-parameters]
-                      ^{:key id}
-                      [single-output-parameter param editable?])]]])
-          (when editable?
-            [:div {:style {:padding-top 10}}
-             [plus ::events/add-output-parameter]])]
-         :label (@tr [:module-output-parameters])
-         :count (count @output-parameters)
-         :default-open false]))))
-
-
-(def data-type-options (atom [{:key "application/x-hdr", :value "application/x-hdr", :text "application/x-hdr"}
-                              {:key "application/x-clk", :value "application/x-clk", :text "application/x-clk"}
-                              {:key "text/plain", :value "text/plain", :text "text/plain"}]))
-
-
-(defn add-data-type-options
-  [option]
-  (swap! data-type-options conj {:key option :value option :text option}))
-
-
-(defn single-data-type [dt editable?]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [dt editable?]
-      (let [{:keys [id ::spec/data-type]} dt]
-        [ui/GridRow {:key id}
-         [ui/GridColumn {:floated :left
-                         :width   2}
-          (if editable?
-            [ui/Label
-             [ui/Dropdown {:name           (str "data-type-" id)
-                           :default-value  (or data-type "text/plain")
-                           :allowAdditions true
-                           :selection      true
-                           :additionLabel  "Additional data type: "
-                           :search         true
-                           :options        @data-type-options
-                           :on-add-item    #(add-data-type-options (-> % .-target .-value))
-                           :on-change      (ui-callback/value
-                                             #(do (dispatch [::main-events/changes-protection? true])
-                                                  (dispatch [::events/update-data-type id %])
-                                                  (dispatch [::apps-events/validate-form])))}]]
-            [:span [:b data-type]])]
-         (when editable?
-           [ui/GridColumn {:floated :right
-                           :width   1
-                           :align   :right
-                           :style   {}}
-            [trash id ::events/remove-data-type]])]))))
-
-
-(defn data-types-section []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        data-types (subscribe [::subs/data-types])
-        module     (subscribe [::apps-subs/module])
-        is-new?    (subscribe [::apps-subs/is-new?])]
-    (fn []
-      (let [editable? (apps-utils/editable? @module @is-new?)]
-        [uix/Accordion
-         [:<>
-          [:div (@tr [:data-type])
-           [:span forms/nbsp (forms/help-popup (@tr [:module-data-type-help]))]]
-          (if (empty? @data-types)
-            [ui/Message
-             (str/capitalize (str (@tr [:no-datasets]) "."))]
-            [:div [ui/Grid {:style {:margin-top    5
-                                    :margin-bottom 5}}
-                   (for [[id dt] @data-types]
-                     ^{:key id}
-                     [single-data-type dt editable?])]])
-          (when editable?
-            [:div
-             [plus ::events/add-data-type]])]]
-        :label (@tr [:data-binding])
-        :count (count @data-types)
-        :default-open false))))
 
 
 (defn generate-ports-args
@@ -698,11 +369,11 @@
          [apps-views-detail/control-bar]
          [summary]
          [ports-section]
-         [env-variables-section]
+         [apps-views-detail/env-variables-section]
          [mounts-section]
-         [urls-section]
-         [output-parameters-section]
-         [data-types-section]
+         [apps-views-detail/urls-section]
+         [apps-views-detail/output-parameters-section]
+         [apps-views-detail/data-types-section]
          [test-command]
          [apps-views-detail/save-action]
          [apps-views-detail/add-modal]

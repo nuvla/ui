@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.4.0] - 2019-07-24
+
 ### Changed
 
   - Deployment modal - deployment should not get mounts fields when no 

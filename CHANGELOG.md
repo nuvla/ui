@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Deployment modal - deployment should not get mounts fields when no 
+    distinct mounts
   - Apps pages - Reuse editable as a subscription and remove duplicated 
     code
   - Cimi detail - Fix ACL not visible

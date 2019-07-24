@@ -47,13 +47,17 @@
           callback-data      (fn [{:keys [resources] :as data-records}]
                                (let [distinct-mounts (->> resources
                                                           (map :mount)
+                                                          (remove nil?)
                                                           (distinct))]
                                  (dispatch [::set-deployment
-                                            (-> updated-deployment
-                                                (assoc :data-records
-                                                       (utils/invert-dataset-map datasets-map))
-                                                (assoc-in
-                                                  [:module :content :mounts] distinct-mounts))])))]
+                                            (cond->
+                                              (assoc updated-deployment
+                                                :data-records
+                                                (utils/invert-dataset-map datasets-map))
+
+                                              (seq distinct-mounts) (assoc-in
+                                                                      [:module :content :mounts]
+                                                                      distinct-mounts))])))]
       (cond-> {:db (assoc db ::spec/selected-credential credential
                              ::spec/deployment updated-deployment)}
               infra-service-filter (assoc ::cimi-api-fx/search

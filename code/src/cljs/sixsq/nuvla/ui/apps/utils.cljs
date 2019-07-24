@@ -198,24 +198,6 @@
                 (data-types->db data-accept-content-types))))
 
 
-; TODO: has moved to utils/general
-(defn can-operation? [operation data]
-  (->> data :operations (map :rel) (some #{(name operation)}) nil? not))
-
-
-(defn can-edit? [data]
-  (can-operation? :edit data))
-
-
-(defn can-delete? [data]
-  (can-operation? :delete data))
-
-
-(defn editable?
-  [module is-new?]
-  (or is-new? (can-edit? module)))
-
-
 (defn mandatory-name
   [name]
   [:span name [:sup " " [ui/Icon {:name  "asterisk"

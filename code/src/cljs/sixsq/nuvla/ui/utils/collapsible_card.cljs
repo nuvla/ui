@@ -9,7 +9,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.table :as table]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [taoensso.timbre :as log]))
 
 
 (defn more-or-less
@@ -65,22 +66,19 @@
          (when @more?
            [table/definition-table rows])
          (when @more? [properties-table properties])
-         (when (and @more? acl) [acl/AclWidget {:acl acl, :read-only true}])]]])))
+         (when (and @more? acl) [acl/AclWidget {:default-value acl, :read-only true}])]]])))
 
 
 (defn metadata-simple
-  [{:keys [acl properties]} rows]
+  [rows]
   (let [more? (reagent/atom false)]
-    (fn [{:keys [acl properties]} rows]
+    (fn [rows]
       [:div {:style {:padding-top    5
                      :padding-bottom 5}}
-       (when (or (seq rows) (seq properties) acl)
+       (when (or (seq rows))
          [more-or-less more?])
        (when @more?
-         [table/definition-table rows])
-       (when @more? [properties-table properties])
-       (when (and @more? acl) [acl/AclWidget {:acl acl, :read-only true}])
-       ])))
+         [table/definition-table rows])])))
 
 
 (defn title-card

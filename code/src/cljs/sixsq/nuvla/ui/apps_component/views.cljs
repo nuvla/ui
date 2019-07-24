@@ -43,22 +43,21 @@
 
 (defn docker-image
   []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        module  (subscribe [::apps-subs/module])
-        image   (subscribe [::subs/image])
-        is-new? (subscribe [::apps-subs/is-new?])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        module    (subscribe [::apps-subs/module])
+        image     (subscribe [::subs/image])
+        editable? (subscribe [::apps-subs/editable?])]
     (fn []
-      (let [editable? (apps-utils/editable? @module @is-new?)
-            {:keys [::spec/image-name ::spec/registry ::spec/repository ::spec/tag]
+      (let [{:keys [::spec/image-name ::spec/registry ::spec/repository ::spec/tag]
              :or   {registry "" repository "" image "" tag ""}} @image
-            label     (@tr [:module-docker-image-label])]
+            label (@tr [:module-docker-image-label])]
         [ui/TableRow
-         [ui/TableCell {:collapsing true} (if editable? (apps-utils/mandatory-name label) label)]
+         [ui/TableCell {:collapsing true} (if @editable? (apps-utils/mandatory-name label) label)]
 
          ; force react to regenerate the content of this cell with a random key
          ^{:key (:id @module "1")}
          [ui/TableCell
-          (if editable?
+          (if @editable?
             [:div
              [apps-views-detail/input "docker-registry" "docker-registry" registry
               (@tr [:module-docker-registry-placeholder])
@@ -77,22 +76,20 @@
 (defn architectures
   []
   (let [architectures         (subscribe [::subs/architectures])
-        module                (subscribe [::apps-subs/module])
-        is-new?               (subscribe [::apps-subs/is-new?])
         architectures-options (subscribe [::subs/architectures-options])
         form-valid?           (subscribe [::apps-subs/form-valid?])
+        editable?             (subscribe [::apps-subs/editable?])
         local-validate?       (r/atom false)
         label                 "architectures"]
     (fn []
-      (let [editable? (apps-utils/editable? @module @is-new?)
-            validate? (or @local-validate? (not @form-valid?))]
+      (let [validate? (or @local-validate? (not @form-valid?))]
         ^{:key @architectures}
         [ui/TableRow
          [ui/TableCell {:collapsing true
                         :style      {:padding-bottom 8}}
-          (if editable? (apps-utils/mandatory-name label) label)]
+          (if @editable? (apps-utils/mandatory-name label) label)]
          [ui/TableCell
-          (if editable?
+          (if @editable?
             [ui/Dropdown {:name          "architectures"
                           :multiple      true
                           :selection     true
@@ -120,28 +117,30 @@
 
 
 (defn single-port
-  [port editable? tr]
-  (let [{:keys [id
+  [port]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        editable? (subscribe [::apps-subs/editable?])
+        {:keys [id
                 ::spec/published-port
                 ::spec/target-port
                 ::spec/protocol]} port]
     [ui/TableRow
 
      [ui/TableCell
-      (if editable?
+      (if @editable?
         [apps-views-detail/input id "published-port" published-port
          (@tr [:module-ports-published-port-placeholder]) ::events/update-port-published
          ::spec/published-port]
         (when (number? published-port) [:span [:b published-port] " "]))]
 
      [ui/TableCell
-      (if editable?
+      (if @editable?
         [apps-views-detail/input id "target-port" target-port "dest. - e.g. 22 or 22-23"
          ::events/update-port-target ::spec/target-port]
         [:span [:b target-port]])]
 
      [ui/TableCell
-      (if editable?
+      (if @editable?
         [ui/Dropdown {:name      (str "protocol-" id)
                       :selection true
                       :value     (or protocol "tcp")
@@ -155,47 +154,45 @@
         (when (and (not (empty? protocol)) (not= "tcp" protocol))
           [:b protocol]))]
 
-     (when editable?
+     (when @editable?
        [ui/TableCell
         [apps-views-detail/trash id ::events/remove-port]])]))
 
 
 (defn ports-section []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        ports   (subscribe [::subs/ports])
-        module  (subscribe [::apps-subs/module])
-        is-new? (subscribe [::apps-subs/is-new?])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        ports     (subscribe [::subs/ports])
+        editable? (subscribe [::apps-subs/editable?])]
     (fn []
-      (let [editable? (apps-utils/editable? @module @is-new?)]
-        [uix/Accordion
-         [:<>
-          [:div (@tr [:module-publish-port]) " "
-           [:span forms/nbsp (forms/help-popup (@tr [:module-ports-help]))]]
-          (if (empty? @ports)
-            [ui/Message
-             (str/capitalize (str (@tr [:no-ports]) "."))]
-            [:div [ui/Table {:style {:margin-top 10}
-                             :class :nuvla-ui-editable}
-                   [ui/TableHeader
-                    [ui/TableRow
-                     [ui/TableHeaderCell {:content "Destination (External)"}]
-                     [ui/TableHeaderCell {:content "Source (Internal)"}]
-                     [ui/TableHeaderCell {:content "Protocol"}]
-                     (when editable?
-                       [ui/TableHeaderCell {:content "Action"}])]]
-                   [ui/TableBody
-                    (for [[id port] @ports]
-                      ^{:key id}
-                      [single-port port editable? tr])]]])
-          (when editable?
-            [:div {:style {:padding-top 10}}
-             [apps-views-detail/plus ::events/add-port]])]
-         :label (@tr [:module-ports])
-         :count (count @ports)]))))
+      [uix/Accordion
+       [:<>
+        [:div (@tr [:module-publish-port]) " "
+         [:span forms/nbsp (forms/help-popup (@tr [:module-ports-help]))]]
+        (if (empty? @ports)
+          [ui/Message
+           (str/capitalize (str (@tr [:no-ports]) "."))]
+          [:div [ui/Table {:style {:margin-top 10}
+                           :class :nuvla-ui-editable}
+                 [ui/TableHeader
+                  [ui/TableRow
+                   [ui/TableHeaderCell {:content "Destination (External)"}]
+                   [ui/TableHeaderCell {:content "Source (Internal)"}]
+                   [ui/TableHeaderCell {:content "Protocol"}]
+                   (when @editable?
+                     [ui/TableHeaderCell {:content "Action"}])]]
+                 [ui/TableBody
+                  (for [[id port] @ports]
+                    ^{:key id}
+                    [single-port port])]]])
+        (when @editable?
+          [:div {:style {:padding-top 10}}
+           [apps-views-detail/plus ::events/add-port]])]
+       :label (@tr [:module-ports])
+       :count (count @ports)])))
 
 
-(defn single-mount [mount editable?]
-  (let [tr (subscribe [::i18n-subs/tr])
+(defn single-mount [mount]
+  (let [editable? (subscribe [::apps-subs/editable?])
         {:keys [id
                 ::spec/mount-type
                 ::spec/mount-source
@@ -205,7 +202,7 @@
     [ui/TableRow
 
      [ui/TableCell
-      (if editable?
+      (if @editable?
         [ui/Dropdown {:name          (str "type-" id)
                       :default-value mount-type
                       :selection     true
@@ -220,20 +217,20 @@
         [:span "type=" [:b mount-type]])]
 
      [ui/TableCell
-      (if editable?
+      (if @editable?
         ;id name value placeholder update-event value-spec
         [apps-views-detail/input id "vol-source" mount-source "source"
          ::events/update-mount-source ::spec/mount-source false]
         [:span "src=" [:b mount-source]])]
 
      [ui/TableCell
-      (if editable?
+      (if @editable?
         [apps-views-detail/input id "vol-dest" mount-target "target"
          ::events/update-mount-target ::spec/mount-target false]
         [:span "dst=" [:b mount-target]])]
 
      [ui/TableCell
-      (if editable?
+      (if @editable?
         [ui/Checkbox {:name      "read-only"
                       :checked   (if (nil? mount-read-only) false mount-read-only)
                       :on-change (ui-callback/checked
@@ -243,44 +240,42 @@
                       :align     :middle}]
         (when mount-read-only [:b "readonly"]))]
 
-     (when editable?
+     (when @editable?
        [ui/TableCell
         [apps-views-detail/trash id ::events/remove-mount]])]))
 
 
 (defn mounts-section []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        module  (subscribe [::apps-subs/module])
-        mounts  (subscribe [::subs/mounts])
-        is-new? (subscribe [::apps-subs/is-new?])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        mounts    (subscribe [::subs/mounts])
+        editable? (subscribe [::apps-subs/editable?])]
     (fn []
-      (let [editable? (apps-utils/editable? @module @is-new?)]
-        [uix/Accordion
-         [:<>
-          [:div "Container volumes (i.e. mounts) "
-           [:span forms/nbsp (forms/help-popup (@tr [:module-mount-help]))]]
-          (if (empty? @mounts)
-            [ui/Message
-             (str/capitalize (str (@tr [:no-mounts]) "."))]
-            [:div [ui/Table {:style {:margin-top 10}
-                             :class :nuvla-ui-editable}
-                   [ui/TableHeader
-                    [ui/TableRow
-                     [ui/TableHeaderCell {:content "Type"}]
-                     [ui/TableHeaderCell {:content "Source"}]
-                     [ui/TableHeaderCell {:content "Target"}]
-                     [ui/TableHeaderCell {:content "Read only?"}]
-                     (when editable?
-                       [ui/TableHeaderCell {:content "Action"}])]]
-                   [ui/TableBody
-                    (for [[id mount] @mounts]
-                      ^{:key id}
-                      [single-mount mount editable?])]]])
-          (when editable?
-            [:div {:style {:padding-top 10}}
-             [apps-views-detail/plus ::events/add-mount]])]
-         :label (@tr [:module-mounts])
-         :count (count @mounts)]))))
+      [uix/Accordion
+       [:<>
+        [:div "Container volumes (i.e. mounts) "
+         [:span forms/nbsp (forms/help-popup (@tr [:module-mount-help]))]]
+        (if (empty? @mounts)
+          [ui/Message
+           (str/capitalize (str (@tr [:no-mounts]) "."))]
+          [:div [ui/Table {:style {:margin-top 10}
+                           :class :nuvla-ui-editable}
+                 [ui/TableHeader
+                  [ui/TableRow
+                   [ui/TableHeaderCell {:content "Type"}]
+                   [ui/TableHeaderCell {:content "Source"}]
+                   [ui/TableHeaderCell {:content "Target"}]
+                   [ui/TableHeaderCell {:content "Read only?"}]
+                   (when @editable?
+                     [ui/TableHeaderCell {:content "Action"}])]]
+                 [ui/TableBody
+                  (for [[id mount] @mounts]
+                    ^{:key id}
+                    [single-mount mount])]]])
+        (when @editable?
+          [:div {:style {:padding-top 10}}
+           [apps-views-detail/plus ::events/add-mount]])]
+       :label (@tr [:module-mounts])
+       :count (count @mounts)])))
 
 
 (defn generate-ports-args
@@ -350,12 +345,10 @@
 (defn view-edit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        module        (subscribe [::apps-subs/module])
-        is-new?       (subscribe [::apps-subs/is-new?])]
+        editable?     (subscribe [::apps-subs/editable?])]
     (fn []
-      (let [name      (get @module-common ::apps-spec/name)
-            parent    (get @module-common ::apps-spec/parent-path)
-            editable? (apps-utils/editable? @module @is-new?)]
+      (let [name   (get @module-common ::apps-spec/name)
+            parent (get @module-common ::apps-spec/parent-path)]
         (dispatch [::apps-events/set-form-spec ::spec/module-component])
         (dispatch [::apps-events/set-module-subtype :component])
         [ui/Container {:fluid true}
@@ -365,7 +358,7 @@
          [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)
                          :on-change     #(do (dispatch [::apps-events/acl %])
                                              (dispatch [::main-events/changes-protection? true]))
-                         :read-only     (not editable?)}]
+                         :read-only     (not @editable?)}]
          [apps-views-detail/control-bar]
          [summary]
          [ports-section]

@@ -64,20 +64,17 @@
            :title-size :h2])))))
 
 
-(defn
-  clear-module
-  [])
+(defn clear-module [])
 
 
 (defn view-edit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
         module        (subscribe [::apps-subs/module])
-        is-new?       (subscribe [::apps-subs/is-new?])]
+        editable?     (subscribe [::apps-subs/editable?])]
     (fn []
-      (let [name      (get @module-common ::apps-spec/name)
-            parent    (get @module-common ::apps-spec/parent-path)
-            editable? (apps-utils/editable? @module @is-new?)]
+      (let [name   (get @module-common ::apps-spec/name)
+            parent (get @module-common ::apps-spec/parent-path)]
         (dispatch [::apps-events/set-form-spec ::spec/module-project])
         (dispatch [::apps-events/set-module-subtype :project])
         [ui/Container {:fluid true}
@@ -89,7 +86,7 @@
                          :on-change     #(do
                                            (dispatch [::apps-events/acl %])
                                            (dispatch [::main-events/changes-protection? true]))
-                         :read-only     (not editable?)}]
+                         :read-only     (not @editable?)}]
          [apps-views-detail/control-bar]
          [summary]
          [apps-views-detail/save-action]

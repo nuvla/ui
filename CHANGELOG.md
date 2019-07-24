@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - Apps pages - Reuse editable as a subscription and remove duplicated 
+    code
+  - Cimi detail - Fix ACL not visible
   - Deployment modal - Ensure that a credential is set in deployment 
     before start action
 

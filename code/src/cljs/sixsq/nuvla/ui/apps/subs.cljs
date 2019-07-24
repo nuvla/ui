@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.apps.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.apps.spec :as spec]))
+    [sixsq.nuvla.ui.apps.spec :as spec]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-sub
@@ -48,6 +49,14 @@
 (reg-sub
   ::module
   ::spec/module)
+
+
+(reg-sub
+  ::editable?
+  :<- [::module]
+  :<- [::is-new?]
+  (fn [[module is-new?]]
+    (general-utils/editable? module is-new?)))
 
 
 (reg-sub

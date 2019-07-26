@@ -78,9 +78,7 @@
         (dispatch [::apps-events/set-form-spec ::spec/module-project])
         (dispatch [::apps-events/set-module-subtype :project])
         [ui/Container {:fluid true}
-         [:h2 {:style {:display :inline}}
-          [ui/Icon {:name "folder"}]
-          parent (when (not-empty parent) "/") name]
+         [uix/PageHeader "folder" (str parent (when (not-empty parent) "/") name)]
          ^{:key (:id @module)}
          [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)
                          :on-change     #(do

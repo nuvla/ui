@@ -296,10 +296,7 @@
 (defn data-set-resources
   []
   [ui/Container {:fluid true}
-   [:h2
-    [ui/Icon {:name "database"}]
-    " "
-    "Data Processing"]
+   [uix/PageHeader "database" "Data Processing"]
    [control-bar]
    [application-select-modal]
    [deployment-dialog-views/deploy-modal true]

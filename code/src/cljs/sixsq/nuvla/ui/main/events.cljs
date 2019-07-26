@@ -51,11 +51,13 @@
 
 (reg-event-fx
   ::set-navigation-info
-  (fn [{{:keys [::spec/actions-interval] :as db} :db} [_ path query-params]]
+  (fn [{{:keys [::spec/actions-interval
+                ::spec/changes-protection?] :as db} :db} [_ path query-params]]
     (let [path-vec (vec (str/split path #"/"))]
-      {:db                        (assoc db ::spec/nav-path path-vec
-                                            ::spec/nav-query-params query-params)
-       ::fx/bulk-actions-interval [::action-interval-delete actions-interval]})))
+      (when (not changes-protection?)
+        {:db                        (assoc db ::spec/nav-path path-vec
+                                              ::spec/nav-query-params query-params)
+         ::fx/bulk-actions-interval [::action-interval-delete actions-interval]}))))
 
 
 (def TICK_INTERVAL 1000)

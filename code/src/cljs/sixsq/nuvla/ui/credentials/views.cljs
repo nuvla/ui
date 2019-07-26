@@ -414,10 +414,7 @@
             ]
         (dispatch [::events/get-credentials])
         [ui/Container {:fluid true}
-         [:h2 [ui/Icon {:name "key"}]
-          " "
-          (str/capitalize (@tr [:credentials]))]
-
+         [uix/PageHeader "key" (str/capitalize (@tr [:credentials])) :inline true]
          [uix/Accordion
           [:<>
            [:div (@tr [:credential-infra-service-section-sub-text])]

@@ -4,7 +4,6 @@
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.authn.spec :as spec]
-    [sixsq.nuvla.ui.authn.utils :as utils]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.utils.spec :as us]
     [taoensso.timbre :as log]))
@@ -34,30 +33,44 @@
 
 
 (reg-sub
-  ::is-admin?
+  ::roles
   :<- [::session]
-  (fn [session _]
-    (utils/has-role? session "group/nuvla-admin")))
+  (fn [session]
+    (set (some-> session :roles (str/split #"\s+")))))
+
+
+(reg-sub
+  ::has-role?
+  :<- [::roles]
+  (fn [roles [_ role]]
+    (contains? roles role)))
+
+
+(reg-sub
+  ::is-admin?
+  :<- [::has-role? "group/nuvla-admin"]
+  (fn [is-admin?]
+    is-admin?))
 
 
 (reg-sub
   ::is-user?
-  :<- [::session]
-  (fn [session _]
-    (utils/has-role? session "group/nuvla-user")))
+  :<- [::has-role? "group/nuvla-user"]
+  (fn [is-user?]
+    is-user?))
 
 
 (reg-sub
   ::user
   :<- [::session]
-  (fn [session _]
+  (fn [session]
     (:identifier session)))
 
 
 (reg-sub
   ::user-id
   :<- [::session]
-  (fn [session _]
+  (fn [session]
     (:user session)))
 
 
@@ -85,7 +98,6 @@
 (reg-sub
   ::form-spec
   (fn [{:keys [::spec/form-id] :as db}]
-
     (or (when form-id
           (when-let [spec-key (some->> (str/replace form-id #"/" "-")
                                        (str 'sixsq.nuvla.ui.authn.spec "/")
@@ -104,7 +116,7 @@
 (reg-sub
   ::user-templates
   :<- [::cimi-subs/collection-templates :user-template]
-  (fn [user-templates _]
+  (fn [user-templates]
     user-templates))
 
 
@@ -131,9 +143,8 @@
 
 (reg-sub
   ::form-data-when-form-id-is
-  (fn [_ [_ id]]
-    [(subscribe [::form-id])
-     (subscribe [::form-data])])
+  :<- [::form-id]
+  :<- [::form-data]
   (fn [[form-id form-data] [_ id]]
     (when (= form-id id)
       form-data)))
@@ -149,14 +160,14 @@
 (reg-sub
   ::form-signup-email-invalid?
   :<- [::form-data-signup]
-  (fn [{:keys [email] :as form-data} _]
+  (fn [{:keys [email] :as form-data}]
     (not (s/valid? (s/nilable ::spec/email) email))))
 
 
 (reg-sub
   ::form-signup-passwords-doesnt-match?
   :<- [::form-data-signup]
-  (fn [{:keys [password repeat-password] :as form-data} _]
+  (fn [{:keys [password repeat-password] :as form-data}]
     (and (some? repeat-password)
          (not= password repeat-password))))
 
@@ -164,26 +175,24 @@
 (reg-sub
   ::form-signup-password-constraint-error?
   :<- [::form-data-signup]
-  (fn [{:keys [password] :as form-data} _]
+  (fn [{:keys [password] :as form-data}]
     (not (s/valid? (s/nilable ::spec/password) password))))
 
 
 (reg-sub
   ::form-spec-error?
-  (fn [_ _]
-    [(subscribe [::form-spec])
-     (subscribe [::form-data])])
+  :<- [::form-spec]
+  :<- [::form-data]
   (fn [[form-spec form-data]]
     (not (s/valid? form-spec form-data))))
 
 
 (reg-sub
   ::form-signup-valid?
-  (fn [_ _]
-    [(subscribe [::form-signup-email-invalid?])
-     (subscribe [::form-signup-passwords-doesnt-match?])
-     (subscribe [::form-signup-password-constraint-error?])
-     (subscribe [::form-spec-error?])])
+  :<- [::form-signup-email-invalid?]
+  :<- [::form-signup-passwords-doesnt-match?]
+  :<- [::form-signup-password-constraint-error?]
+  :<- [::form-spec-error?]
   (fn [errors]
     (every? false? errors)))
 
@@ -198,7 +207,7 @@
 (reg-sub
   ::form-password-reset-username-invalid?
   :<- [::form-data-password-reset]
-  (fn [{:keys [username] :as form-data} _]
+  (fn [{:keys [username] :as form-data}]
     (not (s/valid? (s/nilable ::spec/username) username))))
 
 
@@ -213,28 +222,26 @@
 (reg-sub
   ::form-password-reset-password-constraint-error?
   :<- [::form-data-password-reset]
-  (fn [{:keys [new-password] :as form-data} _]
+  (fn [{:keys [new-password] :as form-data}]
     (not (s/valid? (s/nilable ::spec/new-password) new-password))))
 
 
 (reg-sub
   ::form-password-reset-valid?
-  (fn [_ _]
-    [(subscribe [::form-password-reset-username-invalid?])
-     (subscribe [::form-password-reset-passwords-doesnt-match?])
-     (subscribe [::form-password-reset-password-constraint-error?])
-     (subscribe [::form-spec-error?])])
+  :<- [::form-password-reset-username-invalid?]
+  :<- [::form-password-reset-passwords-doesnt-match?]
+  :<- [::form-password-reset-password-constraint-error?]
+  :<- [::form-spec-error?]
   (fn [errors]
     (every? false? errors)))
 
 
 (reg-sub
   ::form-valid?
-  (fn [_ _]
-    [(subscribe [::form-id])
-     (subscribe [::form-data])
-     (subscribe [::form-spec-error?])
-     (subscribe [::form-signup-valid?])])
+  :<- [::form-id]
+  :<- [::form-data]
+  :<- [::form-spec-error?]
+  :<- [::form-signup-valid?]
   (fn [[form-id form-data form-spec-error? form-signup-valid?]]
     (case form-id
       "user-template/email-password" form-signup-valid?

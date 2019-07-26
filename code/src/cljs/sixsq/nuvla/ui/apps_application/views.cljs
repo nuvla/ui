@@ -144,9 +144,7 @@
         (dispatch [::apps-events/set-form-spec ::spec/module-application])
         (dispatch [::apps-events/set-module-subtype :application])
         [ui/Container {:fluid true}
-         [:h2 {:style {:display :inline}}
-          [ui/Icon {:name "cubes"}]
-          parent (when (not-empty parent) "/") name]
+         [uix/PageHeader "cubes" (str parent (when (not-empty parent) "/") name) :inline true]
          [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)
                          :on-change     #(do (dispatch [::apps-events/acl %])
                                              (dispatch [::main-events/changes-protection? true]))

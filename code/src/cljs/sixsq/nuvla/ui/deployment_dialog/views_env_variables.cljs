@@ -6,7 +6,8 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 
 (defn summary-row
@@ -58,7 +59,7 @@
       [ui/Form
        (map-indexed
          (fn [i env-variable]
-           ^{:key (:name env-variable)}
+           ^{:key (str (:name env-variable) "_" i)}
            [as-form-input i env-variable])
          @env-variables)]
       [ui/Message {:success true} (@tr [:no-env-variables-parameters])])))

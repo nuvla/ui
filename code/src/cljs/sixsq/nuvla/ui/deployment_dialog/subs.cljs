@@ -2,7 +2,8 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.deployment-dialog.spec :as spec]))
+    [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
+    [taoensso.timbre :as log]))
 
 
 (reg-sub
@@ -126,14 +127,14 @@
   :<- [::selected-credential]
   :<- [::deployment]
   (fn [[selected-credential deployment]]
-    (and selected-credential (:parent deployment))))
+    (boolean (and selected-credential (:parent deployment)))))
 
 
 (reg-sub
   ::env-variables
   :<- [::module-content]
   (fn [module-content]
-    (->> module-content :environmental-variables (sort-by :name))))
+    (->> module-content :environmental-variables)))
 
 
 (reg-sub

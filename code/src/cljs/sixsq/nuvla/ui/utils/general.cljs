@@ -140,8 +140,8 @@
 ;;
 
 
-(def ^:const common-attrs #{:id, :resource-type, :created, :updated, :name, :description, :tags, :parent, :subtype,
-                            :properties, :resource-metadata, :operations, :acl})
+(def ^:const common-attrs #{:id, :resource-type, :created, :updated, :name, :description, :tags,
+                            :parent, :subtype, :properties, :resource-metadata, :operations, :acl})
 
 (defn select-common-attrs
   [resource]

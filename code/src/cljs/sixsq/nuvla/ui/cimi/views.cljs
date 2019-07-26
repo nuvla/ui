@@ -463,18 +463,16 @@
         (when @query-params
           (dispatch [::events/set-query-params @query-params])))
       (let [n        (count @path)
+            inline   (= n 3)
             children (case n
                        1 [menu-bar]
                        2 [:<>
                           [menu-bar]
                           [results-display]]
                        3 [cimi-detail-views/cimi-detail]
-                       [menu-bar])
-            header   [:h2 [ui/Icon {:name "code"}]
-                      " "
-                      (str/upper-case (@tr [:api]))]]
-        [:div
-         header
+                       [menu-bar])]
+        [:<>
+         [uix/PageHeader "code" (str/upper-case (@tr [:api])) :inline inline]
          children]))))
 
 

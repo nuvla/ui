@@ -158,9 +158,7 @@
             deployments-list  (get @deployments :resources [])]
 
         [ui/Container {:fluid true}
-         [:h2 [ui/Icon {:name "dashboard"}]
-          " "
-          (str/capitalize (@tr [:dashboard]))]
+         [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard]))]
          [menu-bar]
          [ui/Segment style/basic
           [deployments-display deployments-list]]

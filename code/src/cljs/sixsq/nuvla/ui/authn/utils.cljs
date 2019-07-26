@@ -1,11 +1,6 @@
 (ns sixsq.nuvla.ui.authn.utils
   (:require
-    [cljs.spec.alpha :as s]
-    [clojure.string :as str]))
-
-
-(defn has-role? [session role]
-  (some-> session :roles (str/split #"\s+") set (contains? role)))
+    [cljs.spec.alpha :as s]))
 
 
 (defn order-and-group

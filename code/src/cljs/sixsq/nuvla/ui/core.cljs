@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.core
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.authn.events :as authn-events]
@@ -8,7 +7,6 @@
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.db.events :as db-events]
     [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.history.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.views :as main-views]
     [sixsq.nuvla.ui.routes :as routes]

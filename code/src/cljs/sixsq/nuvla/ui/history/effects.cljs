@@ -15,6 +15,7 @@
 (reg-fx
   ::navigate
   (fn [[url]]
+    (log/warn "navigate effect")
     (utils/navigate url)))
 
 #_(reg-fx

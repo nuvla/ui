@@ -1,11 +1,11 @@
 (ns sixsq.nuvla.ui.messages.views
   (:require
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as reagent]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.messages.events :as message-events]
-    [sixsq.nuvla.ui.messages.subs :as message-subs]
+    [sixsq.nuvla.ui.messages.events :as events]
+    [sixsq.nuvla.ui.messages.subs :as subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
@@ -49,8 +49,8 @@
 (defn alert-slider
   []
   (let [tr            (subscribe [::i18n-subs/tr])
-        alert-message (subscribe [::message-subs/alert-message])
-        alert-display (subscribe [::message-subs/alert-display])]
+        alert-message (subscribe [::subs/alert-message])
+        alert-display (subscribe [::subs/alert-display])]
     (fn []
       (if-let [{:keys [type header]} @alert-message]
         (let [icon-name  (type->icon-name type)
@@ -61,21 +61,21 @@
           [ui/TransitionablePortal {:transition transition, :open open?}
            [ui/Message (merge (type->message-type type)
                               {:style      top-right
-                               :on-dismiss #(dispatch [::message-events/hide])})
+                               :on-dismiss #(dispatch [::events/hide])})
             [ui/MessageHeader [ui/Icon {:name icon-name}] header "\u2001\u00a0"]
-            [:a {:on-click #(dispatch [::message-events/open-modal])} (@tr [:more-info])]]])))))
+            [:a {:on-click #(dispatch [::events/open-modal])} (@tr [:more-info])]]])))))
 
 
 (defn alert-modal
   []
   (let [tr            (subscribe [::i18n-subs/tr])
-        alert-message (subscribe [::message-subs/alert-message])
-        alert-display (subscribe [::message-subs/alert-display])]
+        alert-message (subscribe [::subs/alert-message])
+        alert-display (subscribe [::subs/alert-display])]
     (if-let [{:keys [type header content]} @alert-message]
       (let [icon-name (type->icon-name type)
             visible?  (= :modal @alert-display)
-            hide-fn   #(dispatch [::message-events/hide])
-            remove-fn #(dispatch [::message-events/remove @alert-message])]
+            hide-fn   #(dispatch [::events/hide])
+            remove-fn #(dispatch [::events/remove @alert-message])]
         [ui/Modal {:open       visible?
                    :close-icon true
                    :on-close   hide-fn}
@@ -94,7 +94,7 @@
   [locale {:keys [type header timestamp] :as message}]
   (let [icon-name       (type->icon-name type)
         message-options (type->message-type type)]
-    [ui/ListItem {:on-click #(dispatch [::message-events/show message])}
+    [ui/ListItem {:on-click #(dispatch [::events/show message])}
      [ui/Message message-options
       [ui/MessageHeader
        [ui/Icon {:name icon-name}]
@@ -106,7 +106,7 @@
 (defn message-feed
   []
   (let [locale   (subscribe [::i18n-subs/locale])
-        messages (subscribe [::message-subs/messages])]
+        messages (subscribe [::subs/messages])]
     (when (seq @messages)
       (vec (concat [ui/ListSA {:selection true
                                :style     {:height     "100%"
@@ -121,22 +121,22 @@
    messages, then a label will show the number of them."
   []
   (let [tr          (subscribe [::i18n-subs/tr])
-        session     (subscribe [::authn-subs/session])
-        messages    (subscribe [::message-subs/messages])
-        popup-open? (subscribe [::message-subs/popup-open?])]
-    (when @session
+        is-user?    (subscribe [::authn-subs/is-user?])
+        messages    (subscribe [::subs/messages])
+        popup-open? (subscribe [::subs/popup-open?])]
+    (when @is-user?
       (let [n         (count @messages)
             disabled? (zero? n)]
         [ui/Popup {:flowing  true
                    :on       "click"
                    :position "bottom right"
                    :open     (boolean @popup-open?)
-                   :on-open  #(dispatch [::message-events/open-popup])
-                   :on-close #(dispatch [::message-events/close-popup])
-                   :trigger  (reagent/as-element
+                   :on-open  #(dispatch [::events/open-popup])
+                   :on-close #(dispatch [::events/close-popup])
+                   :trigger  (r/as-element
                                [ui/MenuItem {:disabled disabled?}
                                 [ui/Button {:aria-label "notifications", :primary true,
-                                            :disabled disabled?}
+                                            :disabled   disabled?}
                                  [ui/Icon {:name (if disabled? "bell slash" "bell")}]
                                  (str n)]])}
          [ui/PopupHeader (@tr [:notifications])]
@@ -148,4 +148,4 @@
                        :fluid    true
                        :negative true
                        :compact  true
-                       :on-click #(dispatch [::message-events/clear-all])}]]]))))
+                       :on-click #(dispatch [::events/clear-all])}]]]))))

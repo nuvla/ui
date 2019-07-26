@@ -2,7 +2,7 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as reagent]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -10,7 +10,8 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.table :as table]
     [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (defn more-or-less
@@ -46,9 +47,9 @@
 
 
 (defn metadata
-  [{:keys [title subtitle description logo icon updated acl properties] :as module-meta} rows]
-  (let [more? (reagent/atom false)]
-    (fn [{:keys [title subtitle description logo icon updated acl properties] :as module-meta} rows]
+  [{:keys [title subtitle description logo icon updated properties] :as meta} rows]
+  (let [more? (r/atom false)]
+    (fn [{:keys [title subtitle description logo icon updated properties] :as meta} rows]
       [ui/Card {:fluid true}
        [ui/CardContent
         (when logo
@@ -61,17 +62,16 @@
          (when description [:p description])
          (when updated [:p (-> updated time/parse-iso8601 time/ago)])]
         [ui/CardDescription
-         (when (or (seq rows) (seq properties) acl)
+         (when (or (seq rows) (seq properties))
            [more-or-less more?])
          (when @more?
            [table/definition-table rows])
-         (when @more? [properties-table properties])
-         (when (and @more? acl) [acl/AclWidget {:default-value acl, :read-only true}])]]])))
+         (when @more? [properties-table properties])]]])))
 
 
 (defn metadata-simple
   [rows]
-  (let [more? (reagent/atom false)]
+  (let [more? (r/atom false)]
     (fn [rows]
       [:div {:style {:padding-top    5
                      :padding-bottom 5}}
@@ -94,7 +94,7 @@
 
 (defn collapsible-card
   [title & children]
-  (let [visible? (reagent/atom true)]
+  (let [visible? (r/atom true)]
     (fn [title & children]
       [ui/Card {:fluid true}
        [ui/CardContent
@@ -110,7 +110,7 @@
 
 (defn collapsible-segment
   [title & children]
-  (let [visible? (reagent/atom true)]
+  (let [visible? (r/atom true)]
     (fn [title & children]
       [ui/Segment style/basic
        [ui/Menu {:attached "top", :borderless true, :class "nuvla-ui-section-header"}

@@ -111,10 +111,7 @@
             total-services (get @services :count 0)
             total-pages    (general-utils/total-pages total-services @elements-per-page)]
         [ui/Container {:fluid true}
-         [:h2
-          [ui/Icon {:name "cloud"}]
-          " "
-          (@tr [:infra-services])]
+         [uix/PageHeader "cloud" (@tr [:infra-services])]
          [control-bar]
 
          (when (pos-int? total-services)

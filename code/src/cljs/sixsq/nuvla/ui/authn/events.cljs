@@ -18,20 +18,18 @@
                               (dispatch [::set-session session])
 
                               (when session
-                                (dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])))]}))
+                                (dispatch
+                                  [:sixsq.nuvla.ui.main.events/check-bootstrap-message])))]}))
 
 
 (reg-event-fx
   ::set-session
   (fn [{{:keys [::spec/redirect-uri
                 ::spec/session] :as db} :db} [_ session-arg]]
-    (when (not= session session-arg)
-      ;; force refresh templates collection cache when not the same user (different session)
-      (dispatch [::cimi-events/get-cloud-entry-point]))
-
     (cond-> {:db (assoc db ::spec/session session-arg)}
             session-arg (assoc ::fx/automatic-logout-at-session-expiry [session-arg])
-            )))
+            ;; force refresh templates collection cache when not the same user (different session)
+            (not= session session-arg) (assoc :dispatch [::cimi-events/get-cloud-entry-point]))))
 
 
 (reg-event-fx

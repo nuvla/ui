@@ -12,7 +12,8 @@
   (let [tr         (subscribe [::i18n-subs/tr])
         refresh-in (subscribe [::subs/refresh-in action-id])]
     (fn []
-      [ui/MenuItem {:disabled true} (str (@tr [:automatic-refresh-in]) " " (/ @refresh-in 1000) "s")])))
+      [ui/MenuItem {:disabled true}
+       (str (@tr [:automatic-refresh-in]) " " (/ @refresh-in 1000) "s")])))
 
 
 (defn RefreshButton

@@ -393,10 +393,7 @@
         [ui/Segment (merge style/basic
                            {:loading (not= uuid (general-utils/id->uuid id))})
          [ui/Container {:fluid true}
-          [:h2 {:style {:display :inline}}
-           [ui/Icon {:name "dashboard"}]
-           " "
-           (str/capitalize (@tr [:dashboard]))]
+          [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard])) :inline true]
           [acl/AclButton {:default-value acl
                           :read-only     (not (general-utils/can-edit? dep))
                           :on-change     #(dispatch [::events/edit id (assoc dep :acl %)])}]

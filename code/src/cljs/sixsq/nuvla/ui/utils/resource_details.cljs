@@ -10,14 +10,14 @@
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as forms]
-    [sixsq.nuvla.ui.utils.general :as general]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.table :as table]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [taoensso.timbre :as log]))
 
 
 (defn action-buttons
@@ -59,11 +59,7 @@
          [ui/ModalContent (cond-> {}
                                   scrolling? (assoc :scrolling true)) body]
          [ui/ModalActions
-          [action-buttons
-           button-confirm-label
-           "cancel"
-           action-fn
-           cancel-fn]]]))))
+          [action-buttons button-confirm-label "cancel" action-fn cancel-fn]]]))))
 
 
 (defn action-button
@@ -76,7 +72,7 @@
    modified resource when saved."
   [{:keys [id] :as data} description action-fn]
   (let [tr                (subscribe [::i18n-subs/tr])
-        text              (atom (general/edn->json data))
+        text              (atom (general-utils/edn->json data))
         collection        (subscribe [::cimi-subs/collection-name])
         resource-metadata (subscribe [::docs-subs/document @collection])]
     (fn [{:keys [id] :as data} description action-fn]
@@ -88,10 +84,10 @@
        [forms/resource-editor id text :resource-meta @resource-metadata]
        (fn []
          (try
-           (action-fn (general/json->edn @text))
+           (action-fn (general-utils/json->edn @text))
            (catch :default e
              (action-fn e))))
-       #(reset! text (general/edn->json data))
+       #(reset! text (general-utils/edn->json data))
        true])))
 
 
@@ -145,7 +141,7 @@
 
 
 (defn format-operations [refresh-button {:keys [operations] :as data} base-uri description]
-  (let [ops (map (juxt #(general/operation-name (:rel %)) #(str base-uri (:href %)) :rel) operations)]
+  (let [ops (map (juxt #(general-utils/operation-name (:rel %)) #(str base-uri (:href %)) :rel) operations)]
     (vec (concat [refresh-button] (map (partial operation-button data description) ops)))))
 
 
@@ -161,7 +157,7 @@
 
 
 (defn detail-header
-  [{:keys [id resource-url created updated name description properties acl] :as data}]
+  [{:keys [id created updated name description properties acl parent operations] :as data}]
   (when data
     [cc/metadata
      {:title       (or name id)
@@ -173,11 +169,11 @@
       :properties  properties}
      (cond-> []
              id (conj (metadata-row "id" id))
-             resource-url (conj (metadata-row "resource-url" resource-url))
              name (conj (metadata-row "name" name))
              description (conj (metadata-row "description" description))
              created (conj (metadata-row "created" (time/time-value created)))
-             updated (conj (metadata-row "updated" (time/time-value updated))))]))
+             updated (conj (metadata-row "updated" (time/time-value updated)))
+             parent (conj (metadata-row "parent" parent)))]))
 
 
 (defn strip-attr-ns
@@ -225,8 +221,8 @@
 
 (defn resource-detail
   "Provides a generic visualization of a CIMI resource document."
-  [refresh-button data base-uri description]
-  [ui/Segment style/basic
+  [refresh-button {:keys [acl] :as data} base-uri description]
+  [:<>
    (detail-menu refresh-button data base-uri description)
    (detail-header data)
    (group-table-sui (general-utils/remove-common-attrs data) description)])

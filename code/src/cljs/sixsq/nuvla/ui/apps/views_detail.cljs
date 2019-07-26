@@ -437,7 +437,7 @@
           [ui/Input {:name         (str name "-" id)
                      :placeholder  (@tr [:name])
                      :type         :text
-                     :value        (or env-name "")
+                     :default-value        (or env-name "")
                      :error        (when (and validate?
                                               (not (s/valid? ::spec/env-name env-name))) true)
                      :fluid        true

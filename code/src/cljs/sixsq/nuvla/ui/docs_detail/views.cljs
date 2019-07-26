@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.docs-detail.views
   (:require
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.docs.subs :as docs-subs]
+    [sixsq.nuvla.ui.docs.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -25,9 +25,8 @@
        [ui/ReactMarkdown {:source description}]])))
 
 
-(defn row-attribute-fn [{:keys [name description type
-                                provider-mandatory required template-mutable mutable editable
-                                display-name help group order hidden sensitive value-scope] :as entry
+(defn row-attribute-fn [{:keys [name description type required template-mutable editable help group
+                                display-name order hidden sensitive value-scope] :as entry
                          :or {template-mutable false}}]
   (let [characteristics [["display-name" display-name]
                          ["help" help]
@@ -137,7 +136,7 @@
 
 (defn docs-detail
   [resource-id]
-  (let [documents (subscribe [::docs-subs/documents])]
+  (let [documents (subscribe [::subs/documents])]
     (fn [resource-id]
       (let [document (get @documents resource-id)]
         [ui/Container {:fluid true}

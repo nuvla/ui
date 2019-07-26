@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed
+
+  - Reuse subs apps, deployment-modals, authn
+  - Apps - Fix issue in controlled env variables
+  - Deployment modal - fix bug in eddition of env varialbes
+  - Page Header - Reuse page header
+
 ## [2.4.0] - 2019-07-24
 
 ### Changed

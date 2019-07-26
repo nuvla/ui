@@ -6,7 +6,8 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as form-fields]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [taoensso.timbre :as log]))
 
 
 (defn Button
@@ -143,3 +144,9 @@
 
        [ui/AccordionContent {:active @active?}
         content]])))
+
+
+(defn PageHeader
+  [icon title & {:keys [inline]}]
+  [:h2 (when inline {:style {:display :inline}})
+   [ui/Icon {:name icon}] " " title])

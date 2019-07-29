@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Apps application - Remove fold-gutters from Docker-compose editor resolve visiblity issue
   - Reuse subs apps, deployment-modals, authn
   - Apps - Fix issue in controlled env variables
   - Deployment modal - fix bug in eddition of env varialbes

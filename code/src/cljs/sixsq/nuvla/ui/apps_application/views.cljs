@@ -122,9 +122,7 @@
                           :options    {:mode              "text/x-yaml"
                                        :read-only         (not @editable?)
                                        :line-numbers      true
-                                       :style-active-line true
-                                       :fold-gutter       true
-                                       :gutters           ["CodeMirror-foldgutter"]}
+                                       :style-active-line true}
                           :on-change  (fn [editor data value]
                                         (dispatch [::events/update-docker-compose nil value])
                                         (dispatch [::main-events/changes-protection? true])

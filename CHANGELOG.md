@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.4.1] - 2019-07-29
+
 ### Changed
 
   - Apps application - Remove fold-gutters from Docker-compose editor resolve visiblity issue

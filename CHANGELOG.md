@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added
+
+  - SpanBlockJustified - Component to display long description cleanly
+
+### Changed
+
+  - PageHeader - Breakline to allow very long name to be properly rendered
+  - Apps - Component fix test command mounts misbehaviour
+  - Apps - Summary is now a Textarea
+  - Apps - Change logo and summary missbihaving responsive fix
+  - Apps - Make plus button and trash cursor visible
+
 ## [2.4.1] - 2019-07-29
 
 ### Changed

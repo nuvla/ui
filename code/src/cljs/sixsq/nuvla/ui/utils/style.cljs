@@ -46,6 +46,12 @@
                       :unstackable true}))
 
 
+(def ^{:doc "Common styles for span block justified."}
+  span-block-justified
+  {:display    :block
+   :text-align :justify})
+
+
 (def ^{:doc "Style for very compact, single-line definition table."}
   definition
   (merge single-line

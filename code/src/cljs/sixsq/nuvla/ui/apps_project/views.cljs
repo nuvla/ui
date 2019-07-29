@@ -33,7 +33,8 @@
                      :vertical-align "middle"}]
        [ui/ListContent
         [ui/ListHeader [:a {:on-click on-click} name]]
-        [ui/ListDescription [:span description]]]])))
+        [ui/ListDescription
+         [uix/SpanBlockJustified description]]]])))
 
 
 (defn format-module-children

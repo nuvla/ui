@@ -294,12 +294,13 @@
 (defn generate-mounts-args
   [mounts]
   (let [mounts-commands
-        (for [[id {:keys [::spec/mount-type ::spec/source ::spec/target ::spec/read-only]}] mounts]
+        (for [[id {:keys [::spec/mount-type ::spec/mount-source
+                          ::spec/mount-target ::spec/mount-read-only]}] mounts]
           (conj (str
                   "--mount type=" mount-type
-                  ",src=" source
-                  ",dst=" target
-                  (when read-only ",readonly"))))]
+                  ",src=" mount-source
+                  ",dst=" mount-target
+                  (when mount-read-only ",readonly"))))]
     (str/join " " mounts-commands)))
 
 
@@ -331,7 +332,8 @@
          [:p {:style {:padding-top 8}
               :class "nuvla-command"} [:b "$ " command " "]
           [ui/Popup {:trigger  (r/as-element [ui/CopyToClipboard {:text command}
-                                              [:a [ui/Icon {:name "clipboard outline"}]]])
+                                              [:a [ui/Icon {:name "clipboard outline"
+                                                            :link true}]]])
                      :position "top center"}
            "copy to clipboard"]]
          [:p "Note: ensure you have a recent installation of docker."]]))))

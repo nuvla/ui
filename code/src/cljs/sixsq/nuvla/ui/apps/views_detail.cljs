@@ -3,7 +3,6 @@
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [reagent.core :as reagent]
     [reagent.core :as r]
     [sixsq.nuvla.ui.apps.events :as events]
     [sixsq.nuvla.ui.apps.spec :as spec]
@@ -24,7 +23,6 @@
     [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [taoensso.timbre :as log]))
 
@@ -144,7 +142,7 @@
 
 (defn logo-url-modal
   []
-  (let [local-url (reagent/atom "")
+  (let [local-url (r/atom "")
         tr        (subscribe [::i18n-subs/tr])
         visible?  (subscribe [::subs/logo-url-modal-visible?])
         module    (subscribe [::subs/module])]
@@ -291,13 +289,13 @@
 
 
 (defn summary-row
-  [key name-kw value on-change-event mandatory? value-spec]
+  [key name-kw value on-change-event mandatory? value-spec multiline]
   (let [tr              (subscribe [::i18n-subs/tr])
         active-input    (subscribe [::subs/active-input])
         validate-form?  (subscribe [::subs/validate-form?])
         editable?       (subscribe [::subs/editable?])
-        local-validate? (reagent/atom false)]
-    (fn [key name-kw value on-change-event mandatory? value-spec]
+        local-validate? (r/atom false)]
+    (fn [key name-kw value on-change-event mandatory? value-spec multiline]
       (let [name-str      (name name-kw)
             name-label    (if (and @editable? mandatory?) (utils/mandatory-name name-str) name-str)
             input-active? (= name-str @active-input)
@@ -309,21 +307,37 @@
          [ui/TableCell
           (if @editable?
             ^{:key key}
-            [ui/Input {:default-value value
-                       :placeholder   (str/capitalize (@tr [name-kw]))
-                       :disabled      (not @editable?)
-                       :error         (when (and validate? (not valid?)) true)
-                       :fluid         true
-                       :icon          (when input-active? :pencil)
-                       :onMouseEnter  #(dispatch [::events/active-input name-str])
-                       :onMouseLeave  #(dispatch [::events/active-input nil])
-                       :on-change     (ui-callback/input-callback
-                                        #(do
-                                           (reset! local-validate? true)
-                                           (dispatch [on-change-event (when-not (str/blank? %) %)])
-                                           (dispatch [::main-events/changes-protection? true])
-                                           (dispatch [::events/validate-form])))}]
-            [:span value])]]))))
+            (if multiline
+              [ui/Form {:fluid true}
+               [ui/FormField {:error (when (and validate? (not valid?)) true)}
+                [:div {:className "ui input icon"}
+                 [ui/TextArea
+                  {:default-value value
+                   :placeholder   (str/capitalize (@tr [name-kw]))
+                   :onMouseEnter  #(dispatch [::events/active-input name-str])
+                   :onMouseLeave  #(dispatch [::events/active-input nil])
+                   :on-change     (ui-callback/input-callback
+                                    #(do
+                                       (reset! local-validate? true)
+                                       (dispatch [on-change-event (when-not (str/blank? %) %)])
+                                       (dispatch [::main-events/changes-protection? true])
+                                       (dispatch [::events/validate-form])))}]
+                 (when input-active?
+                   [ui/Icon {:name "pencil"}])]]]
+              [ui/Input {:default-value value
+                         :placeholder   (str/capitalize (@tr [name-kw]))
+                         :error         (when (and validate? (not valid?)) true)
+                         :fluid         true
+                         :icon          (when input-active? :pencil)
+                         :onMouseEnter  #(dispatch [::events/active-input name-str])
+                         :onMouseLeave  #(dispatch [::events/active-input nil])
+                         :on-change     (ui-callback/input-callback
+                                          #(do
+                                             (reset! local-validate? true)
+                                             (dispatch [on-change-event (when-not (str/blank? %) %)])
+                                             (dispatch [::main-events/changes-protection? true])
+                                             (dispatch [::events/validate-form])))}])
+            [uix/SpanBlockJustified value])]]))))
 
 
 (defn summary
@@ -346,35 +360,33 @@
                           logo-url    @default-logo-url
                           subtype     "project"
                           path        nil}} @module-common]
-        [ui/Grid {:style {:margin-bottom 5}}
-         [ui/GridRow {:reversed :computer}
-          [ui/GridColumn {:computer     2
-                          :large-screen 2}
-           [ui/Image {:src (or logo-url @default-logo-url)}]
-           (when @editable?
-             [ui/Button {:fluid    true
-                         :on-click #(dispatch [::events/open-logo-url-modal])}
-              (@tr [:module-change-logo])])]
-          [ui/GridColumn {:computer     14
-                          :large-screen 14}
-           [ui/Table (assoc style/definition :class :nuvla-ui-editable)
-            [ui/TableBody
-             [summary-row (str parent "-name")
-              :name name ::events/name true ::spec/name]
-             [summary-row (str parent "-description")
-              :description description ::events/description true ::spec/description]
-             (when (not-empty parent)
-               (let [label (if (= "project" subtype) "parent project" "project")]
-                 [ui/TableRow
-                  [ui/TableCell {:collapsing true
-                                 :style      {:padding-bottom 8}} label]
-                  [ui/TableCell {:style {:padding-left (when @editable? 24)}} parent]]))
-             (for [x extras]
-               x)]]
+        [ui/Grid {:stackable true, :reversed :mobile}
+         [ui/GridColumn {:width 13}
+          [ui/Table {:compact    true
+                     :definition true}
+           [ui/TableBody
+            [summary-row (str parent "-name")
+             :name name ::events/name true ::spec/name false]
+            [summary-row (str parent "-description")
+             :description description ::events/description true ::spec/description true]
+            (when (not-empty parent)
+              (let [label (if (= "project" subtype) "parent project" "project")]
+                [ui/TableRow
+                 [ui/TableCell {:collapsing true
+                                :style      {:padding-bottom 8}} label]
+                 [ui/TableCell {:style {:padding-left (when @editable? 24)}} parent]]))
+            (for [x extras]
+              x)]]
 
-           (when (not @is-new?)
-             [details-section])
-           [views-versions/versions]]]]))))
+          (when (not @is-new?)
+            [details-section])
+          [views-versions/versions]]
+         [ui/GridColumn {:width 3 :floated "right"}
+          [ui/Image {:src (or logo-url @default-logo-url)}]
+          (when @editable?
+            [ui/Button {:fluid    true
+                        :on-click #(dispatch [::events/open-logo-url-modal])}
+             (@tr [:module-change-logo])])]]))))
 
 
 (defn input
@@ -402,6 +414,7 @@
 (defn trash
   [id remove-event]
   [ui/Icon {:name     "trash"
+            :link     true
             :on-click #(do (dispatch [::main-events/changes-protection? true])
                            (dispatch [remove-event id])
                            (dispatch [::events/validate-form]))
@@ -411,6 +424,7 @@
 (defn plus
   [add-event]
   [ui/Icon {:name     "add"
+            :link     true
             :color    "green"
             :on-click #(do (dispatch [::main-events/changes-protection? true])
                            (dispatch [add-event (random-uuid) {}])
@@ -434,21 +448,21 @@
                     :width   3}
       (if @editable?
         (let [input-name (str name "-" id)]
-          [ui/Input {:name         (str name "-" id)
-                     :placeholder  (@tr [:name])
-                     :type         :text
-                     :default-value        (or env-name "")
-                     :error        (when (and validate?
-                                              (not (s/valid? ::spec/env-name env-name))) true)
-                     :fluid        true
-                     :onMouseEnter #(dispatch [::events/active-input input-name])
-                     :onMouseLeave #(dispatch [::events/active-input nil])
-                     :on-change    (ui-callback/input-callback
-                                     #(do
-                                        (reset! local-validate? true)
-                                        (dispatch [::events/update-env-name id %])
-                                        (dispatch [::main-events/changes-protection? true])
-                                        (dispatch [::events/validate-form])))}])
+          [ui/Input {:name          (str name "-" id)
+                     :placeholder   (@tr [:name])
+                     :type          :text
+                     :default-value (or env-name "")
+                     :error         (when (and validate?
+                                               (not (s/valid? ::spec/env-name env-name))) true)
+                     :fluid         true
+                     :onMouseEnter  #(dispatch [::events/active-input input-name])
+                     :onMouseLeave  #(dispatch [::events/active-input nil])
+                     :on-change     (ui-callback/input-callback
+                                      #(do
+                                         (reset! local-validate? true)
+                                         (dispatch [::events/update-env-name id %])
+                                         (dispatch [::main-events/changes-protection? true])
+                                         (dispatch [::events/validate-form])))}])
 
         [:span env-name])]
 

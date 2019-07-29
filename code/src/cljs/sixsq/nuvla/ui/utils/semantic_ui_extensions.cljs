@@ -148,5 +148,13 @@
 
 (defn PageHeader
   [icon title & {:keys [inline]}]
-  [:h2 (when inline {:style {:display :inline}})
+  [:h2 (when inline {:style {:display    :inline
+                             :word-break :break-all}})
    [ui/Icon {:name icon}] " " title])
+
+
+(defn SpanBlockJustified
+  [text]
+  [:span {:style {:display    :block
+                  :text-align :justify}}
+   text])

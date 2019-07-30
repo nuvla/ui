@@ -8,6 +8,10 @@
 
 ### Changed
 
+  - Deployment modal - no files message not visible fix
+  - Full text search should apply an and for spaces instead of or 
+  - Fix issue with IE11 Modal and footer
+  - Update project dependencies
   - PageHeader - Breakline to allow very long name to be properly rendered
   - Apps - Component fix test command mounts misbehaviour
   - Apps - Summary is now a Textarea

@@ -1,5 +1,5 @@
-(def parent-version "6.5.1")
-(def sixsq-nuvla-api-version "2.0.1")
+(def parent-version "6.6.0")
+(def sixsq-nuvla-api-version "2.0.2")
 (def version "2.4.2-SNAPSHOT")
 
 (defproject sixsq.nuvla.ui/code "2.4.2-SNAPSHOT"
@@ -61,13 +61,15 @@
 
   ;; mark all dependencies as provided to avoid having transitive
   ;; dependencies pulled in by those that depend on this
-  :dependencies [[reagent :scope "provided"]
-                 [re-frame :scope "provided"]
+  :dependencies [[reagent "0.9.0-SNAPSHOT" :scope "provided"
+                  :exclusions [cljsjs/react
+                               cljsjs/react-dom]]
+                 [re-frame "0.10.8" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
-                 [com.taoensso/timbre :scope "provided"]
+                 [com.taoensso/timbre "4.10.0"  :scope "provided"]
                  [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]
-                 [com.taoensso/tempura :scope "provided"]
+                 [com.taoensso/tempura "1.2.1" :scope "provided"]
                  [com.cemerick/url :scope "provided"]]
 
   :source-paths ["src/clj" "src/cljs"]
@@ -75,14 +77,23 @@
   :profiles
   {:dev   {:dependencies [[org.clojure/clojure]
                           [org.clojure/clojurescript]
-                          [binaryage/devtools]]}
+                          [binaryage/devtools "0.9.10" :scope "test"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs]            ;; WARNING: also in package.json
-                          [com.google.javascript/closure-compiler-unshaded]]}}
+   :scljs {:dependencies [[thheller/shadow-cljs "2.8.41"]   ;; WARNING: also in package.json
+                          [com.google.javascript/closure-compiler-unshaded "v20190709"]]}}
 
 
 
-  :aliases {"prepare"   ["do" ["filegen"] ["resource"]]
-            "dev"       ["do" "prepare" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli" "watch" "nuvla-ui"]]
-            "cljs-repl" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli" "cljs-repl" "nuvla-ui"]
-            "install"   ["do" "prepare" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli" "release" "nuvla-ui"] ["install"]]})
+  :aliases {"prepare"   ["do"
+                         ["filegen"]
+                         ["resource"]]
+            "dev"       ["do"
+                         "prepare"
+                         ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
+                          "watch" "nuvla-ui"]]
+            "cljs-repl" ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
+                         "cljs-repl" "nuvla-ui"]
+            "install"   ["do" "prepare"
+                         ["with-profile" "+scljs" "run" "-m" "shadow.cljs.devtools.cli"
+                          "release" "nuvla-ui"]
+                         ["install"]]})

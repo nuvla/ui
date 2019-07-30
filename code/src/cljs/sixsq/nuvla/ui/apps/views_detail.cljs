@@ -308,7 +308,7 @@
           (if @editable?
             ^{:key key}
             (if multiline
-              [ui/Form {:fluid true}
+              [ui/Form
                [ui/FormField {:error (when (and validate? (not valid?)) true)}
                 [:div {:className "ui input icon"}
                  [ui/TextArea

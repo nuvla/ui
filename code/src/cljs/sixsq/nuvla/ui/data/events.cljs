@@ -41,9 +41,8 @@
   (fn [{{:keys [::spec/infra-services-filter
                 ::spec/credentials
                 ::spec/data-sets
-                ::spec/time-period-filter] :as db} :db} [_ full-text-search]]
-    (let [full-text-query (when (and full-text-search (not (str/blank? full-text-search)))
-                            (str "fulltext=='" full-text-search "*'"))]
+                ::spec/time-period-filter] :as db} :db} [_ full-text]]
+    (let [full-text-query (general-utils/fulltext-query-string full-text)]
       (-> {:db (assoc db ::spec/full-text-search full-text-query)}
           (fetch-data-cofx credentials
                            time-period-filter

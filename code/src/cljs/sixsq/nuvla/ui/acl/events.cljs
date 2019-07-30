@@ -3,7 +3,8 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.acl.spec :as spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-event-db
@@ -27,11 +28,10 @@
       (assoc db ::spec/users-options resources))))
 
 
-
 (reg-event-fx
   ::search-users
   (fn [_ [_ users-search]]
-    {::cimi-api-fx/search [:user {:filter (str "fulltext=='" users-search "*'")
+    {::cimi-api-fx/search [:user {:filter (general-utils/fulltext-query-string users-search)
                                   :select "id, name"
                                   :order  "name:asc, id:asc"
                                   :last   10} #(dispatch [::set-users-options %])]}))
@@ -44,9 +44,9 @@
       (assoc db ::spec/groups-options resources))))
 
 
-
 (reg-event-fx
   ::search-groups
   (fn [_ _]
     {::cimi-api-fx/search [:group {:select "id, name"
-                                   :order  "name:asc, id:asc"} #(dispatch [::set-groups-options %])]}))
+                                   :order  "name:asc, id:asc"}
+                           #(dispatch [::set-groups-options %])]}))

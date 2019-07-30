@@ -2,16 +2,16 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
+    [sixsq.nuvla.ui.acl.views :as acl-views]
     [sixsq.nuvla.ui.cimi-detail.events :as events]
     [sixsq.nuvla.ui.cimi-detail.subs :as subs]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.docs.subs :as docs-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.resource-details :as details]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.acl.views :as acl-views]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [taoensso.timbre :as log]))
 
 
 (defn path->resource-id

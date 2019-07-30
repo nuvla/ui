@@ -3,9 +3,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
-    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
@@ -56,4 +54,4 @@
            ^{:key (str (:file-name file) "-" i)}
            [as-form-text-area i file])
          @files)]
-      [ui/Message {:success true} (@tr [:no-input-parameters])])))
+      [ui/Message {:success true} (@tr [:no-files])])))

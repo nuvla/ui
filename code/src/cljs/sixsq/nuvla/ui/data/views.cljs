@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.data.views
   (:require
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as reagent]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.apps.utils :as application-utils]
     [sixsq.nuvla.ui.data.events :as events]
     [sixsq.nuvla.ui.data.subs :as subs]
@@ -50,8 +50,8 @@
          [ui/FormGroup {:widths 3}
           [ui/FormField
            ;; FIXME: Find a better way to set the field width.
-           [ui/DatePicker {:custom-input     (reagent/as-element [ui/Input {:label (@tr [:from])
-                                                                            :style {:min-width "25em"}}])
+           [ui/DatePicker {:custom-input     (r/as-element [ui/Input {:label (@tr [:from])
+                                                                      :style {:min-width "25em"}}])
                            :selected         time-start
                            :start-date       time-start
                            :end-date         time-end
@@ -66,8 +66,8 @@
                            :on-change        #(dispatch [::events/set-time-period [% time-end]])}]]
           ;; FIXME: Find a better way to set the field width.
           [ui/FormField
-           [ui/DatePicker {:custom-input     (reagent/as-element [ui/Input {:label (@tr [:to])
-                                                                            :style {:min-width "25em"}}])
+           [ui/DatePicker {:custom-input     (r/as-element [ui/Input {:label (@tr [:to])
+                                                                      :style {:min-width "25em"}}])
                            :selected         time-end
                            :start-date       time-start
                            :end-date         time-end
@@ -80,10 +80,12 @@
                            :locale           @locale
                            :fixed-height     true
                            :date-format      "LLL"
-                           :on-change        #(dispatch [::events/set-time-period [time-start %]])}]]
+                           :on-change        #(dispatch
+                                                [::events/set-time-period [time-start %]])}]]
           [ui/FormInput {:placeholder (@tr [:search])
                          :icon        "search"
-                         :on-change   (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))}]]]))))
+                         :on-change   (ui-callback/input-callback
+                                        #(dispatch [::events/set-full-text-search %]))}]]]))))
 
 
 (defn control-bar []
@@ -126,32 +128,32 @@
 
 (defn launch-button
   []
-  (let [tr                       (subscribe [::i18n-subs/tr])
-        visible?                 (subscribe [::subs/application-select-visible?])
-        selected-application-id  (subscribe [::subs/selected-application-id])
+  (let [tr                     (subscribe [::i18n-subs/tr])
+        visible?               (subscribe [::subs/application-select-visible?])
+        selected-app-id        (subscribe [::subs/selected-application-id])
 
-        data-step-active?        (subscribe [::deployment-dialog-subs/data-step-active?])
+        data-step-active?      (subscribe [::deployment-dialog-subs/data-step-active?])
 
-        deployment               (subscribe [::deployment-dialog-subs/deployment])
-        data-completed?          (subscribe [::deployment-dialog-subs/data-completed?])
-        credentials-completed?   (subscribe [::deployment-dialog-subs/credentials-completed?])
-        env-variables-completed? (subscribe [::deployment-dialog-subs/env-variables-completed?])]
+        deployment             (subscribe [::deployment-dialog-subs/deployment])
+        data-completed?        (subscribe [::deployment-dialog-subs/data-completed?])
+        credentials-completed? (subscribe [::deployment-dialog-subs/credentials-completed?])
+        env-completed?         (subscribe [::deployment-dialog-subs/env-variables-completed?])
+        hide-fn                #(do
+                                  (dispatch [::events/close-application-select-modal])
+                                  (dispatch [::events/delete-deployment]))
+        configure-fn           (fn [id]
+                                 (dispatch [::events/close-application-select-modal])
+                                 (dispatch [::deployment-dialog-events/create-deployment id :data]))
+
+        launch-fn              #(do
+                                  (dispatch [::events/close-application-select-modal])
+                                  (dispatch [::deployment-dialog-events/edit-deployment]))]
+
     (fn []
-      (let [hide-fn          #(do
-                                (dispatch [::events/close-application-select-modal])
-                                (dispatch [::events/delete-deployment]))
-            configure-fn     (fn [id] (do
-                                        (dispatch [::events/close-application-select-modal])
-                                        (dispatch [::deployment-dialog-events/create-deployment id :data])))
-
-            launch-fn        (fn [id] (do
-                                        (dispatch [::events/close-application-select-modal])
-                                        (dispatch [::deployment-dialog-events/edit-deployment])))
-
-            launch-disabled? (or (not @deployment)
+      (let [launch-disabled? (or (not @deployment)
                                  (and (not @data-completed?) @data-step-active?)
                                  (not @credentials-completed?)
-                                 (not @env-variables-completed?))]
+                                 (not @env-completed?))]
 
         [ui/Modal {:open       @visible?
                    :close-icon true
@@ -163,12 +165,12 @@
           [ui/ModalDescription
            [application-list]]]
          [ui/ModalActions
-          [ui/Button {:disabled (nil? @selected-application-id)
+          [ui/Button {:disabled (nil? @selected-app-id)
                       :primary  true
-                      :on-click #(configure-fn @selected-application-id)}
+                      :on-click #(configure-fn @selected-app-id)}
            [ui/Icon {:name "settings"}]
            (@tr [:configure])]
-          [ui/Button {:disabled (nil? @selected-application-id)
+          [ui/Button {:disabled (nil? @selected-app-id)
                       :primary  true
                       :on-click #()}
            [ui/Icon {:name     "rocket"
@@ -179,32 +181,31 @@
 
 (defn application-select-modal
   []
-  (let [tr                       (subscribe [::i18n-subs/tr])
-        visible?                 (subscribe [::subs/application-select-visible?])
-        selected-application-id  (subscribe [::subs/selected-application-id])
+  (let [tr                     (subscribe [::i18n-subs/tr])
+        visible?               (subscribe [::subs/application-select-visible?])
+        selected-app-id        (subscribe [::subs/selected-application-id])
 
-        data-step-active?        (subscribe [::deployment-dialog-subs/data-step-active?])
+        data-step-active?      (subscribe [::deployment-dialog-subs/data-step-active?])
 
-        deployment               (subscribe [::deployment-dialog-subs/deployment])
-        data-completed?          (subscribe [::deployment-dialog-subs/data-completed?])
-        credentials-completed?   (subscribe [::deployment-dialog-subs/credentials-completed?])
-        env-variables-completed? (subscribe [::deployment-dialog-subs/env-variables-completed?])]
+        deployment             (subscribe [::deployment-dialog-subs/deployment])
+        data-completed?        (subscribe [::deployment-dialog-subs/data-completed?])
+        credentials-completed? (subscribe [::deployment-dialog-subs/credentials-completed?])
+        env-completed?         (subscribe [::deployment-dialog-subs/env-variables-completed?])
+        hide-fn                #(do
+                                  (dispatch [::events/close-application-select-modal])
+                                  (dispatch [::events/delete-deployment]))
+        configure-fn           (fn [id]
+                                 (dispatch [::events/close-application-select-modal])
+                                 (dispatch [::deployment-dialog-events/create-deployment id :data]))
+
+        launch-fn              #(do
+                                  (dispatch [::events/close-application-select-modal])
+                                  (dispatch [::deployment-dialog-events/edit-deployment]))]
     (fn []
-      (let [hide-fn          #(do
-                                (dispatch [::events/close-application-select-modal])
-                                (dispatch [::events/delete-deployment]))
-            configure-fn     (fn [id] (do
-                                        (dispatch [::events/close-application-select-modal])
-                                        (dispatch [::deployment-dialog-events/create-deployment id :data])))
-
-            launch-fn        (fn [id] (do
-                                        (dispatch [::events/close-application-select-modal])
-                                        (dispatch [::deployment-dialog-events/edit-deployment])))
-
-            launch-disabled? (or (not @deployment)
+      (let [launch-disabled? (or (not @deployment)
                                  (and (not @data-completed?) @data-step-active?)
                                  (not @credentials-completed?)
-                                 (not @env-variables-completed?))]
+                                 (not @env-completed?))]
 
         [ui/Modal {:open       @visible?
                    :close-icon true
@@ -216,12 +217,12 @@
           [ui/ModalDescription
            [application-list]]]
          [ui/ModalActions
-          [ui/Button {:disabled (nil? @selected-application-id)
+          [ui/Button {:disabled (nil? @selected-app-id)
                       :primary  true
-                      :on-click #(configure-fn @selected-application-id)}
+                      :on-click #(configure-fn @selected-app-id)}
            [ui/Icon {:name "settings"}]
            (@tr [:configure])]
-          [ui/Button {:disabled (or (nil? @selected-application-id)
+          [ui/Button {:disabled (or (nil? @selected-app-id)
                                     launch-disabled?)
                       :primary  true
                       :on-click launch-fn}
@@ -306,7 +307,6 @@
 
 (defmethod panel/render :data
   [path]
-
   ;; FIXME: find a better way to initialize credentials and data-sets
   (refresh-credentials)
   (refresh-data-sets)

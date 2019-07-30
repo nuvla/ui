@@ -232,3 +232,14 @@
   [:span name [:sup " " [ui/Icon {:name  :asterisk
                                   :size  :tiny
                                   :color :red}]]])
+
+
+(defn fulltext-query-string
+  [fulltext]
+  (when-not (str/blank? fulltext)
+    (str "fulltext=='"
+         (->> (str/split fulltext #" ")
+              (remove str/blank?)
+              (map #(str % "*"))
+              (str/join "+"))
+         "'")))

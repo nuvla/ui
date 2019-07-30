@@ -81,9 +81,8 @@
 */
 .nuvla-ui-content {
     display: flex;
-    flex: 1;
+    flex-grow: 1;
     padding: 1ex;
-    min-height: 100vh;
 }
 
 

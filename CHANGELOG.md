@@ -8,6 +8,7 @@
 
 ### Changed
 
+  - ACL - Tooltip activation on hover #123
   - Edge - Statistics is now responsive
   - Shadow-cljs updated to version 2.8.42
   - Deployment modal - no files message not visible fix

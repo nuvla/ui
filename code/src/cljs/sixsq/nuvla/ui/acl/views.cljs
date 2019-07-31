@@ -36,8 +36,7 @@
                           [ui/Icon {:name "info circle"
                                     :link true}])
                :basic   true
-               :content (@tr [help-kw])
-               :on      "click"}]))
+               :content (@tr [help-kw])}]))
 
 
 (defn AclTableHeaders

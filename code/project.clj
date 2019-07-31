@@ -79,7 +79,7 @@
                           [org.clojure/clojurescript]
                           [binaryage/devtools "0.9.10" :scope "test"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.8.41"]   ;; WARNING: also in package.json
+   :scljs {:dependencies [[thheller/shadow-cljs "2.8.42"]   ;; WARNING: also in package.json
                           [com.google.javascript/closure-compiler-unshaded "v20190709"]]}}
 
 

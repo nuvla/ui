@@ -8,6 +8,8 @@
 
 ### Changed
 
+  - Edge - Statistics is now responsive
+  - Shadow-cljs updated to version 2.8.42
   - Deployment modal - no files message not visible fix
   - Full text search should apply an and for spaces instead of or 
   - Fix issue with IE11 Modal and footer
@@ -36,7 +38,7 @@
     distinct mounts
   - Apps pages - Reuse editable as a subscription and remove duplicated 
     code
-  - Cimi detail - Fix ACL not visible
+  - Cimi detail - Fix ACL not visible and make it editable
   - Deployment modal - Ensure that a credential is set in deployment 
     before start action
 

@@ -33,7 +33,7 @@
 
 (defn StatisticState
   [value icon label]
-  [ui/Statistic {:size "tiny"}
+  [ui/Statistic
    [ui/StatisticValue (or value "-")
     "\u2002"
     [ui/Icon {:name icon}]]
@@ -44,7 +44,7 @@
   []
   (let [{:keys [total new activated commissioned
                 decommissioning decommissioned error]} @(subscribe [::subs/state-nuvlaboxes])]
-    [ui/Segment style/evenly
+    [ui/StatisticGroup (merge {:size "tiny"} style/center-block)
      [StatisticState total "box" "Total"]
      [StatisticState new (utils/state->icon utils/state-new) "New"]
      [StatisticState activated (utils/state->icon utils/state-activated) "Activated"]

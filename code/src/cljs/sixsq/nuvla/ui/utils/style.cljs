@@ -27,6 +27,12 @@
          {:style {:display         "flex"
                   :justify-content "space-evenly"}}))
 
+(def center-block
+  {:style {:margin     "25px auto"
+           :display    "block"
+           :text-align "center"
+           :width      "100%"}})
+
 
 ;;
 ;; common styles for Tables

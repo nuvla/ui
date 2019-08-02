@@ -173,8 +173,8 @@
 
 (defn login-method-form
   [[_ methods]]
-  (let [form-id   (subscribe [::subs/form-id])
-        form-data (subscribe [::subs/form-data])
+  (let [form-id     (subscribe [::subs/form-id])
+        form-data   (subscribe [::subs/form-data])
         form-valid? (subscribe [::subs/form-valid?])]
     (fn [[_ methods]]
       (let [dropdown?        (> (count methods) 1)
@@ -185,7 +185,7 @@
         [ui/Form {:id           (or @form-id "authn-form-placeholder-id")
                   :on-key-press (when @form-valid?
                                   (partial forms-utils/on-return-key
-                                          #(dispatch [::events/submit])))}
+                                           #(dispatch [::events/submit])))}
          [ui/Segment {:style {:height     "35ex"
                               :overflow-y "auto"}}
           (when dropdown?
@@ -201,6 +201,16 @@
             "session-template/password" [login-password-fields]
             "session-template/api-key" [login-api-key-fields]
             [generate-fields method @form-id @form-data])]]))))
+
+
+(defn submit-signup-opts
+  []
+  (let [tr                             (subscribe [::i18n-subs/tr])
+        server-redirect-uri            (subscribe [::subs/server-redirect-uri])
+        callback-message-on-validation (js/encodeURI "signup-validation-success")]
+    {:close-modal  false
+     :success-msg  (@tr [:validation-email-success-msg])
+     :redirect-url (str @server-redirect-uri "?message=" callback-message-on-validation)}))
 
 
 (defn signup-method-form
@@ -221,8 +231,7 @@
           :error        true                                ;; Needed to show validation Message
           :on-key-press (partial forms-utils/on-return-key
                                  #(when @form-valid?
-                                    (dispatch [::events/submit {:close-modal false
-                                                                :success-msg (@tr [:validation-email-success-msg])}])))}
+                                    (dispatch [::events/submit (submit-signup-opts)])))}
 
          [ui/Segment {:style {:height     "35ex"
                               :overflow-y "auto"}}
@@ -293,14 +302,14 @@
          (when @error-message
            [ui/Message {:negative  true
                         :size      "tiny"
-                        :onDismiss #(dispatch [::events/clear-error-message])}
+                        :onDismiss #(dispatch [::events/set-error-message nil])}
             [ui/MessageHeader (@tr [failed-kw])]
             [:p @error-message]])
 
          (when @success-message
            [ui/Message {:negative  false
                         :size      "tiny"
-                        :onDismiss #(dispatch [::events/clear-success-message])}
+                        :onDismiss #(dispatch [::events/set-success-message nil])}
             [ui/MessageHeader (@tr [:success])]
             [:p @success-message]])
 
@@ -418,7 +427,7 @@
           (when @error-message
             [ui/Message {:negative  true
                          :size      "tiny"
-                         :onDismiss #(dispatch [::events/clear-error-message])}
+                         :onDismiss #(dispatch [::events/set-error-message nil])}
              [ui/MessageHeader (@tr [:reset-password-error])]
              [:p @error-message]])
 
@@ -523,14 +532,14 @@
           (when @error-message
             [ui/Message {:negative  true
                          :size      "tiny"
-                         :onDismiss #(dispatch [::events/clear-error-message])}
+                         :onDismiss #(dispatch [::events/set-error-message nil])}
              [ui/MessageHeader (@tr [:error-occured])]
              [:p @error-message]])
 
           (when @success-message
             [ui/Message {:negative  false
                          :size      "tiny"
-                         :onDismiss #(dispatch [::events/clear-success-message])}
+                         :onDismiss #(dispatch [::events/set-success-message nil])}
              [ui/MessageHeader (@tr [:success])]
              [:p @success-message]])
 
@@ -562,14 +571,7 @@
 
 
 (defn modal-signup []
-  (let [tr                             (subscribe [::i18n-subs/tr])
-        server-redirect-uri            (subscribe [::subs/server-redirect-uri])
-        callback-message-on-validation (js/encodeURI "signup-validation-success")
-        submit-opts                    {:close-modal  false
-                                        :success-msg  (@tr [:validation-email-success-msg])
-                                        :redirect-url (str @server-redirect-uri
-                                                           "?message=" callback-message-on-validation)}]
-    [generic-modal "modal-signup-id" :signup signup-form-container submit-opts]))
+  [generic-modal "modal-signup-id" :signup signup-form-container (submit-signup-opts)])
 
 
 (defn authn-dropdown-menu

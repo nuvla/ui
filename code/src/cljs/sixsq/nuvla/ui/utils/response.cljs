@@ -2,6 +2,7 @@
   "parses JSON responses from the CIMI API"
   (:require
     [cljs.pprint :refer [pprint]]
+    [clojure.string :as str]
     [sixsq.nuvla.ui.utils.general :as utils]
     [taoensso.timbre :as log]))
 
@@ -24,6 +25,6 @@
   "Extracts the data from the ExceptionInfo object and parses the body as
    JSON."
   [exception-info]
-  (if-let [body (-> exception-info ex-data :body)]
+  (if-let [body (some-> exception-info ex-data :body not-empty)]
     (parse body)
     (parse exception-info)))

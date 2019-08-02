@@ -8,6 +8,15 @@
 
 ### Changed
 
+  - Api page - Changed to be a non protected page
+  - Side bar - Enhance detection of selected item #106 and click on protected pages open login 
+    page when no session #212
+  - Login - Force refresh main content on set-session
+  - Login - Login modal open automatically on protected pages
+  - Refresh - Allow force refresh main content
+  - Pages - Metadata for pages moved to db
+  - Signup - Submit options differ between submit by enter or click fix
+  - Dependencies - Update source-map-support to 0.5.13
   - ACL - Tooltip activation on hover #123
   - Edge - Statistics is now responsive
   - Shadow-cljs updated to version 2.8.42

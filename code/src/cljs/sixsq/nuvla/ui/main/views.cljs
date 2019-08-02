@@ -42,11 +42,11 @@
 
 (defn crumb
   [index segment]
-  (let [nav-path    (subscribe [::subs/nav-path])
-        callback-fn #(dispatch [::history-events/navigate (history-utils/trim-path @nav-path index)])]
+  (let [nav-path (subscribe [::subs/nav-path])
+        click-fn #(dispatch [::history-events/navigate (history-utils/trim-path @nav-path index)])]
     ^{:key (str index "_" segment)}
     [ui/BreadcrumbSection
-     [:a {:on-click callback-fn
+     [:a {:on-click click-fn
           :style    {:cursor "pointer"}}
       (utils/truncate (str segment))]]))
 
@@ -131,12 +131,13 @@
       :info       true
       :on-dismiss #(dispatch [::events/set-bootsrap-message])
       :header     (@tr [:message-no-swarm])
-      :content    (r/as-element [:p (@tr [:message-to-create-one])
-                                 [:a
-                                  {:style    {:cursor "pointer"}
-                                   :on-click #(do (dispatch [::history-events/navigate "infrastructures"])
-                                                  (dispatch [::infra-service-events/open-add-service-modal]))}
-                                  (str " " (@tr [:click-here]))]])}]))
+      :content    (r/as-element
+                    [:p (@tr [:message-to-create-one])
+                     [:a
+                      {:style    {:cursor "pointer"}
+                       :on-click #(do (dispatch [::history-events/navigate "infrastructures"])
+                                      (dispatch [::infra-service-events/open-add-service-modal]))}
+                      (str " " (@tr [:click-here]))]])}]))
 
 
 (defmethod BootstrapMessage :no-credential
@@ -147,12 +148,13 @@
       :info       true
       :on-dismiss #(dispatch [::events/set-bootsrap-message])
       :header     (@tr [:message-no-credential])
-      :content    (r/as-element [:p (@tr [:message-to-create-one])
-                                 [:a
-                                  {:style    {:cursor "pointer"}
-                                   :on-click #(do (dispatch [::history-events/navigate "credentials"])
-                                                  (dispatch [::credential-events/open-add-credential-modal]))}
-                                  (str " " (@tr [:click-here]))]])}]))
+      :content    (r/as-element
+                    [:p (@tr [:message-to-create-one])
+                     [:a
+                      {:style    {:cursor "pointer"}
+                       :on-click #(do (dispatch [::history-events/navigate "credentials"])
+                                      (dispatch [::credential-events/open-add-credential-modal]))}
+                      (str " " (@tr [:click-here]))]])}]))
 
 
 (defn WelcomeMessage
@@ -173,9 +175,11 @@
 (defn contents
   []
   (let [resource-path     (subscribe [::subs/nav-path])
-        bootstrap-message (subscribe [::subs/bootstrap-message])]
+        bootstrap-message (subscribe [::subs/bootstrap-message])
+        content-key       (subscribe [::subs/content-key])]
     (fn []
       [ui/Container {:as         "main"
+                     :key        @content-key
                      :class-name "nuvla-ui-content"
                      :fluid      true}
 

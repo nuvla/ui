@@ -3,8 +3,8 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.acl.spec :as spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db

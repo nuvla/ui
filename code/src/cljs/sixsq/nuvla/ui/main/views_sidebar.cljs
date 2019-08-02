@@ -1,11 +1,12 @@
 (ns sixsq.nuvla.ui.main.views-sidebar
   (:require
     [re-frame.core :refer [dispatch subscribe]]
+    [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.main.events :as events]
+    [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [taoensso.timbre :as log]))
@@ -15,32 +16,35 @@
   "Fires a navigation event to the given URL. On small devices, this also
    forces the sidebar to close."
   [url]
-  (let [device (subscribe [::main-subs/device])]
+  (let [device (subscribe [::subs/device])]
     (when (#{:mobile :tablet} @device)
-      (dispatch [::main-events/close-sidebar]))
+      (dispatch [::events/close-sidebar]))
     (dispatch [::history-events/navigate url])))
 
 
 (defn item
-  [label-kw url icon]
+  [label-kw url icon protected?]
   (let [tr       (subscribe [::i18n-subs/tr])
-        nav-path (subscribe [::main-subs/nav-path])
-        is-user? (subscribe [::authn-subs/is-user?])]
+        is-user? (subscribe [::authn-subs/is-user?])
+        active?  (subscribe [::subs/nav-url-active? url])]
 
     ^{:key (name label-kw)}
     [uix/MenuItemWithIcon
-     (cond-> {:name      (@tr [label-kw])
-              :icon-name icon
-              :active    (= (some-> @nav-path seq first) url)}
-             @is-user? (assoc :on-click #(navigate url)))]))
+     {:name      (@tr [label-kw])
+      :icon-name icon
+      :active    @active?
+      :on-click  (if (and protected? (not @is-user?))
+                   #(dispatch [::authn-events/open-modal :login])
+                   #(navigate url))}]))
 
 
 (defn logo-item
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        welcome-page (subscribe [::subs/page-info "welcome"])]
     ^{:key "welcome"}
     [ui/MenuItem {:aria-label (@tr [:welcome])
-                  :on-click   #(navigate "welcome")}
+                  :on-click   #(navigate (:url @welcome-page))}
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"
                 :size     "tiny"
@@ -53,8 +57,9 @@
   "Provides the sidebar menu for selecting major components/panels of the
    application."
   []
-  (let [show?   (subscribe [::main-subs/sidebar-open?])
-        iframe? (subscribe [::main-subs/iframe?])]
+  (let [show?      (subscribe [::subs/sidebar-open?])
+        iframe?    (subscribe [::subs/iframe?])
+        pages-list (subscribe [::subs/pages-list])]
     [ui/Sidebar {:as        ui/MenuRaw
                  :className "medium thin"
                  :vertical  true
@@ -68,11 +73,8 @@
                 :compact  true
                 :inverted true}
        (when-not @iframe? [logo-item])
-       (when-not @iframe? [item :dashboard "dashboard" "dashboard"])
-       (when-not @iframe? [item :apps "apps" "play"])
-       [item :data "data" "database"]
-       ;       [item :deployment "deployment" "cloud"]
-       (when-not @iframe? [item :infra-service-short "infrastructures" "cloud"])
-       (when-not @iframe? [item :credentials "credentials" "key"])
-       (when-not @iframe? [item :edge "edge" "box"])
-       (when-not @iframe? [item :api "api" "code"])]]]))
+       (doall
+         (for [{:keys [url label-kw icon protected? iframe-visble?]} @pages-list]
+           (when (or (not @iframe?) iframe-visble?)
+             ^{:key url}
+             [item label-kw url icon protected?])))]]]))

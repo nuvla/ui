@@ -6,7 +6,7 @@
     [sixsq.nuvla.ui.authn.spec :as spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.events :as cimi-events]
-    [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.utils.response :as response]
     [taoensso.timbre :as log]))
 
@@ -14,22 +14,27 @@
 (reg-event-fx
   ::initialize
   (fn [_ _]
-    {::cimi-api-fx/session [(fn [session]
-                              (dispatch [::set-session session])
-
-                              (when session
-                                (dispatch
-                                  [:sixsq.nuvla.ui.main.events/check-bootstrap-message])))]}))
+    {::cimi-api-fx/session
+     [(fn [session]
+        (dispatch [::set-session session])
+        (when session
+          (dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])))]}))
 
 
 (reg-event-fx
   ::set-session
   (fn [{{:keys [::spec/redirect-uri
-                ::spec/session] :as db} :db} [_ session-arg]]
-    (cond-> {:db (assoc db ::spec/session session-arg)}
-            session-arg (assoc ::fx/automatic-logout-at-session-expiry [session-arg])
-            ;; force refresh templates collection cache when not the same user (different session)
-            (not= session session-arg) (assoc :dispatch [::cimi-events/get-cloud-entry-point]))))
+                ::spec/session
+                ::main-spec/nav-path
+                ::main-spec/pages] :as db} :db} [_ session-arg]]
+    (let [no-session-protected-page? (and (nil? session-arg)
+                                          (->> nav-path first (get pages) :protected?))]
+      (cond-> {:db (assoc db ::spec/session session-arg)}
+              no-session-protected-page? (assoc :dispatch [::open-modal :login])
+              session-arg (assoc ::fx/automatic-logout-at-session-expiry [session-arg])
+              ;; force refresh templates collection cache when not the same user (different session)
+              (not= session session-arg) (assoc :dispatch-n [[::cimi-events/get-cloud-entry-point]
+                                                             [:sixsq.nuvla.ui.main.events/force-refresh-content]])))))
 
 
 (reg-event-fx
@@ -80,36 +85,11 @@
     (assoc db ::spec/error-message error-message)))
 
 
-(reg-event-db
-  ::clear-error-message
-  (fn [db _]
-    (assoc db ::spec/error-message nil)))
-
-
-(reg-event-db
+(reg-event-fx
   ::set-success-message
-  (fn [db [_ success-message]]
-    (dispatch [::clear-loading])
-    (assoc db ::spec/success-message success-message)))
-
-
-(reg-event-db
-  ::clear-success-message
-  (fn [db _]
-    (dispatch [::clear-loading])
-    (assoc db ::spec/success-message nil)))
-
-
-#_(reg-event-db
-    ::redirect-uri
-    (fn [db [_ uri]]
-      (assoc db ::spec/redirect-uri uri)))
-
-
-#_(reg-event-db
-    ::server-redirect-uri
-    (fn [db [_ uri]]
-      (assoc db ::spec/server-redirect-uri uri)))
+  (fn [{db :db} [_ success-message]]
+    {:db       (assoc db ::spec/success-message success-message)
+     :dispatch [::clear-loading]}))
 
 
 (reg-event-db
@@ -139,8 +119,7 @@
   (when close-modal
     (dispatch [::close-modal]))
   (when success-msg
-    (dispatch [::set-success-message success-msg]))
-  (dispatch [::history-events/navigate "welcome"]))
+    (dispatch [::set-success-message success-msg])))
 
 
 (reg-event-fx
@@ -160,7 +139,7 @@
 
           on-error      #(let [{:keys [message]} (response/parse-ex-info %)]
                            (dispatch [::clear-loading])
-                           (dispatch [::set-error-message message]))
+                           (dispatch [::set-error-message (or message %)]))
 
           template      {:template (-> form-data
                                        (dissoc :repeat-new-password

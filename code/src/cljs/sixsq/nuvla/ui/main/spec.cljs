@@ -37,6 +37,12 @@
 (s/def ::actions-interval map?)
 
 
+(s/def ::content-key string?)
+
+
+(s/def ::pages map?)
+
+
 (s/def ::db (s/keys :req [::iframe?
                           ::device
                           ::sidebar-open?
@@ -47,7 +53,8 @@
                           ::ignore-changes-modal
                           ::bootstrap-message
                           ::welcome-message
-                          ::actions-interval]))
+                          ::actions-interval
+                          ::content-key]))
 
 
 (def defaults {::iframe?              false
@@ -60,4 +67,47 @@
                ::ignore-changes-modal nil
                ::bootstrap-message    nil
                ::welcome-message      nil
-               ::actions-interval     {}})
+               ::actions-interval     {}
+               ::content-key          (random-uuid)
+               ::pages                {"welcome"         {:url        "welcome"
+                                                          :protected? false}
+                                       "documentation"   {:url        "documentation"
+                                                          :label-kw   :api-doc
+                                                          :icon       "info"
+                                                          :protected? false}
+                                       "dashboard"       {:url        "dashboard"
+                                                          :label-kw   :dashboard
+                                                          :icon       "dashboard"
+                                                          :protected? true
+                                                          :order      1}
+                                       "apps"            {:url        "apps"
+                                                          :label-kw   :apps
+                                                          :icon       "play"
+                                                          :protected? true
+                                                          :order      2}
+                                       "data"            {:url             "data"
+                                                          :label-kw        :data
+                                                          :icon            "database"
+                                                          :protected?      true
+                                                          :iframe-visible? true
+                                                          :order           3}
+                                       "infrastructures" {:url        "infrastructures"
+                                                          :label-kw   :infra-service-short
+                                                          :icon       "cloud"
+                                                          :protected? true
+                                                          :order      4}
+                                       "credentials"     {:url        "credentials"
+                                                          :label-kw   :credentials
+                                                          :icon       "key"
+                                                          :protected? true
+                                                          :order      5}
+                                       "edge"            {:url        "edge"
+                                                          :label-kw   :edge
+                                                          :icon       "box"
+                                                          :protected? true
+                                                          :order      6}
+                                       "api"             {:url        "api"
+                                                          :label-kw   :api
+                                                          :icon       "code"
+                                                          :protected? false
+                                                          :order      7}}})

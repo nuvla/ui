@@ -18,7 +18,7 @@
   "homepage": "https://github.com/nuvla/ui",
   "devDependencies": {
     "shadow-cljs": "2.8.42",
-    "source-map-support": "^0.5.10"
+    "source-map-support": "^0.5.13"
   },
   "dependencies": {
     "bluebird": "^3.5.3",

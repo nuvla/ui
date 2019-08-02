@@ -49,6 +49,20 @@
 
 
 (reg-sub
+  ::nav-path-first
+  :<- [::nav-path]
+  (fn [nav-path]
+    (first nav-path)))
+
+
+(reg-sub
+  ::nav-url-active?
+  :<- [::nav-path-first]
+  (fn [nav-path-first [_ url]]
+    (boolean (= nav-path-first url))))
+
+
+(reg-sub
   ::changes-protection?
   (fn [db]
     (::spec/changes-protection? db)))
@@ -76,3 +90,29 @@
   ::refresh-in
   (fn [{:keys [::spec/actions-interval]} [_ action-id]]
     (get-in actions-interval [action-id :refresh-in])))
+
+
+(reg-sub
+  ::content-key
+  (fn [db]
+    (::spec/content-key db)))
+
+
+(reg-sub
+  ::pages
+  (fn [db]
+    (::spec/pages db)))
+
+
+(reg-sub
+  ::pages-list
+  :<- [::pages]
+  (fn [pages]
+    (->> pages vals (filter :order) (sort-by :order))))
+
+
+(reg-sub
+  ::page-info
+  :<- [::pages]
+  (fn [pages [_ url]]
+    (get pages url)))

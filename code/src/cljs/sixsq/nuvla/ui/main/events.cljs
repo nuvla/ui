@@ -192,3 +192,9 @@
   ::set-welcome-message
   (fn [db [_ welcome-message]]
     (assoc db ::spec/welcome-message welcome-message)))
+
+
+(reg-event-db
+  ::force-refresh-content
+  (fn [db]
+    (assoc db ::spec/content-key (random-uuid))))

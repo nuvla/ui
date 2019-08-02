@@ -293,14 +293,14 @@
          (when @error-message
            [ui/Message {:negative  true
                         :size      "tiny"
-                        :onDismiss #(dispatch [::events/clear-error-message])}
+                        :onDismiss #(dispatch [::events/set-success-message nil])}
             [ui/MessageHeader (@tr [failed-kw])]
             [:p @error-message]])
 
          (when @success-message
            [ui/Message {:negative  false
                         :size      "tiny"
-                        :onDismiss #(dispatch [::events/clear-success-message])}
+                        :onDismiss #(dispatch [::events/set-success-message nil])}
             [ui/MessageHeader (@tr [:success])]
             [:p @success-message]])
 
@@ -530,7 +530,7 @@
           (when @success-message
             [ui/Message {:negative  false
                          :size      "tiny"
-                         :onDismiss #(dispatch [::events/clear-success-message])}
+                         :onDismiss #(dispatch [::events/set-success-message nil])}
              [ui/MessageHeader (@tr [:success])]
              [:p @success-message]])
 

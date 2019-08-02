@@ -176,21 +176,25 @@
 
 (defn DocumentationButton
   []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        mobile?   (subscribe [::main-subs/is-device? :mobile])
-        on-button (r/atom false)]
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        mobile?            (subscribe [::main-subs/is-device? :mobile])
+        documentation-page (subscribe [::main-subs/page-info "documentation"])
+        on-button          (r/atom false)]
     (fn []
-      [ui/Button (cond-> {:icon           "info"
-                          :basic          true
-                          :color          "blue"
-                          :content        (@tr [:api-doc])
-                          ;; this is a workaround misbehavior when in an input of form and enter key,
-                          ;; for unknown reason the on-click fn of this button is called
-                          :on-mouse-enter #(reset! on-button true)
-                          :on-mouse-leave #(reset! on-button false)
-                          :on-click       #(when @on-button
-                                             (dispatch [::history-events/navigate "documentation"]))}
-                         (not @mobile?) (assoc :floated "right"))])))
+      [ui/Button
+       (cond->
+         {:icon           (:icon @documentation-page)
+          :basic          true
+          :color          "blue"
+          :content        (@tr [(:label-kw @documentation-page)])
+          ;; this is an ugly workaround about a misbehavior when a user push enter
+          ;; in an input of form for unknown reason the on-click fn of this button
+          ;; was called
+          :on-mouse-enter #(reset! on-button true)
+          :on-mouse-leave #(reset! on-button false)
+          :on-click       #(when @on-button
+                             (dispatch [::history-events/navigate (:url @documentation-page)]))}
+         (not @mobile?) (assoc :floated "right"))])))
 
 
 (defn search-header []

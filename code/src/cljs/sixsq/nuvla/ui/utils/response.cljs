@@ -3,7 +3,8 @@
   (:require
     [cljs.pprint :refer [pprint]]
     [sixsq.nuvla.ui.utils.general :as utils]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [clojure.string :as str]))
 
 
 (defn parse
@@ -24,6 +25,6 @@
   "Extracts the data from the ExceptionInfo object and parses the body as
    JSON."
   [exception-info]
-  (if-let [body (-> exception-info ex-data :body)]
+  (if-let [body (some-> exception-info ex-data :body not-empty)]
     (parse body)
     (parse exception-info)))

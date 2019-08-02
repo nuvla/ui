@@ -85,12 +85,6 @@
     (assoc db ::spec/error-message error-message)))
 
 
-(reg-event-db
-  ::clear-error-message
-  (fn [db _]
-    (assoc db ::spec/error-message nil)))
-
-
 (reg-event-fx
   ::set-success-message
   (fn [{db :db} [_ success-message]]
@@ -145,7 +139,7 @@
 
           on-error      #(let [{:keys [message]} (response/parse-ex-info %)]
                            (dispatch [::clear-loading])
-                           (dispatch [::set-error-message message]))
+                           (dispatch [::set-error-message (or message %)]))
 
           template      {:template (-> form-data
                                        (dissoc :repeat-new-password

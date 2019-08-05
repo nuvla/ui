@@ -21,10 +21,10 @@
 
 (reg-event-db
   ::set-device
-  (fn [db [_ device]]
-    (log/info "setting device:" device)
-    (cond-> (assoc db ::spec/device device)
-            (not (#{:mobile :table} device)) (assoc ::spec/sidebar-open? true))))
+  (fn [{:keys [::spec/device] :as db} [_ new-device]]
+    (log/info "setting device:" new-device)
+    (cond-> (assoc db ::spec/device new-device)
+            (not= device new-device) (assoc ::spec/sidebar-open? (= new-device :computer)))))
 
 
 (reg-event-db

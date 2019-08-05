@@ -32,6 +32,8 @@
     [uix/MenuItemWithIcon
      {:name      (@tr [label-kw])
       :icon-name icon
+      :style     {:min-width  "15rem"
+                  :overflow-x "hidden"}
       :active    @active?
       :on-click  (if (and protected? (not @is-user?))
                    #(dispatch [::authn-events/open-modal :login])
@@ -44,6 +46,8 @@
         welcome-page (subscribe [::subs/page-info "welcome"])]
     ^{:key "welcome"}
     [ui/MenuItem {:aria-label (@tr [:welcome])
+                  :style      {:overflow-x "hidden"
+                               :min-width  "15rem"}
                   :on-click   #(navigate (:url @welcome-page))}
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"
@@ -60,13 +64,15 @@
   (let [show?      (subscribe [::subs/sidebar-open?])
         iframe?    (subscribe [::subs/iframe?])
         pages-list (subscribe [::subs/pages-list])]
-    [ui/Sidebar {:as        ui/MenuRaw
-                 :className "medium thin"
-                 :id        "nuvla-ui-sidebar"
-                 :vertical  true
-                 :inverted  true
-                 :visible   (boolean @show?)
-                 :animation "uncover"}
+    [ui/Menu {:id         "nuvla-ui-sidebar2"
+              :style      {:transition "0.5s"
+                           :width      (if @show? "15rem" "0")
+                           :overflow-x "hidden"}
+              :vertical   true
+              :borderless true
+              :inverted   true
+              :fixed      "left"
+              }
      (when-not @iframe? [logo-item])
      (doall
        (for [{:keys [url label-kw icon protected? iframe-visble?]} @pages-list]

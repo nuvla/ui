@@ -178,10 +178,10 @@
         bootstrap-message (subscribe [::subs/bootstrap-message])
         content-key       (subscribe [::subs/content-key])]
     (fn []
-      [ui/Container {:as         "main"
-                     :key        @content-key
-                     :class-name "nuvla-ui-content"
-                     :fluid      true}
+      [ui/Container {:as    "main"
+                     :key   @content-key
+                     :id    "nuvla-ui-content"
+                     :fluid true}
 
        [WelcomeMessage]
 
@@ -216,21 +216,19 @@
   (fn []
     (let [show?   (subscribe [::subs/sidebar-open?])
           cep     (subscribe [::api-subs/cloud-entry-point])
-          iframe? (subscribe [::subs/iframe?])]
-
+          iframe? (subscribe [::subs/iframe?])
+          is-mobile? (subscribe [::subs/is-device? :mobile])]
       (if @cep
         [ui/Responsive {:as            "div"
+                        :id            "nuvla-ui-main"
                         :fire-on-mount true
                         :on-update     (responsive/callback #(dispatch [::events/set-device %]))}
-         [ui/SidebarPushable {:as    ui/SegmentRaw
-                              :basic true}
-
+         [:<>
           [sidebar/menu]
-          [ui/SidebarPusher
-           [ui/Container (cond-> {:id "nuvla-ui-main" :fluid true}
-                                 @show? (assoc :className "sidebar-visible"))
-            [header]
-            [contents]
-            [ignore-changes-modal]
-            (when-not @iframe? [footer])]]]]
-        [ui/Container [ui/Loader {:active true :size "massive"}]]))))
+          [:div {:style {:transition  "0.5s"
+                         :margin-left (if @show? "15rem" "0")}}
+           [header]
+           [contents]
+           [ignore-changes-modal]
+           (when-not @iframe? [footer])]]]
+        [ui/Container {:style {:min-height "100vh"}} [ui/Loader {:active true :size "massive"}]]))))

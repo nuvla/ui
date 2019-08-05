@@ -87,16 +87,15 @@
 
 (defn footer
   []
-  [:footer.nuvla-ui-footer
-   [:div.nuvla-ui-footer-left
-    [:span "© 2019, SixSq Sàrl"]]
-   [:div.nuvla-ui-footer-centre
-    [:a {:on-click #(dispatch
-                      [::history-events/navigate "about"])
-         :style    {:cursor "pointer"}}
-     [:span#release-version (str "v")]]]
-   [:div.nuvla-ui-footer-right
-    [i18n-views/locale-dropdown]]])
+  [ui/Segment {:style {:border-radius 0}}
+   [ui/Grid {:columns 3}
+    [ui/GridColumn "© 2019, SixSq Sàrl"]
+    [ui/GridColumn {:text-align "center"}
+     [:a {:on-click #(dispatch [::history-events/navigate "about"])
+          :style    {:cursor "pointer"}}
+      [:span#release-version (str "v")]]]
+    [ui/GridColumn {:text-align "right"}
+     [i18n-views/locale-dropdown]]]])
 
 
 (defn ignore-changes-modal

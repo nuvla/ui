@@ -87,10 +87,10 @@
 (defn db->module
   [module commit-map db]
   (let [{:keys [author commit]} commit-map
-        architectures     (get-in db [::spec/module-component ::spec/architectures])
-        image             (image->module db)
-        ports             (ports->module db)
-        mounts            (mounts->module db)]
+        architectures (get-in db [::spec/module-component ::spec/architectures])
+        image         (image->module db)
+        ports         (ports->module db)
+        mounts        (mounts->module db)]
     (as-> module m
           (assoc-in m [:content :author] author)
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))

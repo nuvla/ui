@@ -300,7 +300,7 @@
             [:div
              [:p (@tr [:register-swarm-note])]
              [ui/CardGroup {:centered true
-                            :style {:margin-bottom "10px"}}
+                            :style    {:margin-bottom "10px"}}
 
               [ui/Card {:on-click #(do
                                      (dispatch [::events/set-validate-form? false])

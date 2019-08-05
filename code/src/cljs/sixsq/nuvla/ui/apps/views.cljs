@@ -24,7 +24,7 @@
     (dispatch [::events/form-valid true])
     (dispatch [::events/set-validate-form? false])
     (fn [new-subtype]
-      (let [subtype     (or (:subtype @module) new-subtype)]
+      (let [subtype (or (:subtype @module) new-subtype)]
         (case subtype
           "component" [apps-component-views/view-edit]
           "application" [apps-application-views/view-edit]

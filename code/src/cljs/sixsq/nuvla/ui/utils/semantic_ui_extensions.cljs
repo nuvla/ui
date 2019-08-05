@@ -86,10 +86,10 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Grid {:vertical-align "middle"}
      (when (:totalitems options)
-       [ui/GridColumn {:floated "left", :width 5}
+       [ui/GridColumn {:floated "left", :width 3}
         [ui/Label {:size :medium}
          (str (@tr [:total]) ": " (:totalitems options))]])
-     [ui/GridColumn {:floated "right", :width 11, :text-align "right"}
+     [ui/GridColumn {:floated "right", :width 13, :text-align "right"}
       [ui/Pagination
        (merge {:size      "tiny"
                :firstItem {:content (r/as-element [ui/Icon {:name "angle double left"}]) :icon true}

@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.main.views-sidebar
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
@@ -30,7 +31,7 @@
 
     ^{:key (name label-kw)}
     [uix/MenuItemWithIcon
-     {:name      (@tr [label-kw])
+     {:name      (str/capitalize (@tr [label-kw]))
       :icon-name icon
       :style     {:min-width  "15rem"
                   :overflow-x "hidden"}

@@ -62,19 +62,14 @@
         pages-list (subscribe [::subs/pages-list])]
     [ui/Sidebar {:as        ui/MenuRaw
                  :className "medium thin"
+                 :id        "nuvla-ui-sidebar"
                  :vertical  true
                  :inverted  true
                  :visible   (boolean @show?)
                  :animation "uncover"}
-     [:nav {:aria-label "sidebar"}
-      [ui/Menu {:icon     "labeled"
-                :size     "large"
-                :vertical true
-                :compact  true
-                :inverted true}
-       (when-not @iframe? [logo-item])
-       (doall
-         (for [{:keys [url label-kw icon protected? iframe-visble?]} @pages-list]
-           (when (or (not @iframe?) iframe-visble?)
-             ^{:key url}
-             [item label-kw url icon protected?])))]]]))
+     (when-not @iframe? [logo-item])
+     (doall
+       (for [{:keys [url label-kw icon protected? iframe-visble?]} @pages-list]
+         (when (or (not @iframe?) iframe-visble?)
+           ^{:key url}
+           [item label-kw url icon protected?])))]))

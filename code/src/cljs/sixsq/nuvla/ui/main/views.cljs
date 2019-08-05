@@ -224,6 +224,7 @@
                         :on-update     (responsive/callback #(dispatch [::events/set-device %]))}
          [ui/SidebarPushable {:as    ui/SegmentRaw
                               :basic true}
+
           [sidebar/menu]
           [ui/SidebarPusher
            [ui/Container (cond-> {:id "nuvla-ui-main" :fluid true}

@@ -232,6 +232,7 @@
                          :margin-left (if (and (not @is-small-device?) @show?) "15rem" "0")}}
            [ui/Dimmer {:active   (and @is-small-device? @show?)
                        :inverted true
+                       :style {:z-index 999}
                        :on-click #(dispatch [::events/close-sidebar])}]
            [header]
            [contents]

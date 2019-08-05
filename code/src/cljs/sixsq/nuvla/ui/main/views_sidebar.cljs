@@ -68,7 +68,6 @@
               :style      {:transition "0.5s"
                            :width      (if @show? "15rem" "0")}
               :vertical   true
-              :compact    true
               :borderless true
               :inverted   true
               :fixed      "left"}

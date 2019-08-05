@@ -1,37 +1,21 @@
-#nuvla-ui-sidebar:after {
-    background: url(/ui/images/mountain.jpg);
-    background-size: cover;
-    z-index: -1;
-    opacity: 0.2;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    position: absolute;
-    height: unset;
-    visibility: unset;
-    clear: unset;
+#nuvla-ui-sidebar {
+    z-index: 1001;
+    overflow: hidden;
 }
 
-#nuvla-ui-sidebar2:after {
+#nuvla-ui-sidebar:after {
     background-image: url(/ui/images/mountains.jpg);
     background-color: black;
-    /*background-size: cover;*/
     background-repeat: no-repeat;
     z-index: -1;
-    opacity: 0.2;
+    opacity: 0.5;
     top: 0;
-    left: 0;
+    left: -40px;
     right: 0;
     bottom: 0;
     position: absolute;
     height: 100vh;
     visibility: unset;
-    clear: unset;
-}
-
-#nuvla-ui-sidebar-menu {
-    background-color: rgba(0, 0, 0, 0);
 }
 
 /*
@@ -56,7 +40,7 @@
 
 #nuvla-ui-content {
     padding: 1ex;
-    min-height: calc(100vh - 80px);
+    min-height: calc(100vh - 70px);
 }
 
 
@@ -65,12 +49,9 @@
     display: flex;
     flex-direction: row;
     color: black;
+    background-color: white;
     padding: 1ex;
     height: 30px;
-    border-top-style: solid;
-    border-top-width: 1px;
-    border-top-color: black;
-    margin: 1ex 0 0 0;
 }
 
 .nuvla-ui-footer-left {

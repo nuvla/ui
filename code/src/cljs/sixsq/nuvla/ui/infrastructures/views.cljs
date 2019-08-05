@@ -93,11 +93,10 @@
 
 (defn service-groups
   [groups]
-  [ui/Segment style/basic
-   [ui/CardGroup {:centered true}
-    (for [[group-id services] groups]
-      ^{:key group-id}
-      [service-group-card group-id services])]])
+  [ui/CardGroup {:centered true}
+   (for [[group-id services] groups]
+     ^{:key group-id}
+     [service-group-card group-id services])])
 
 
 (defn infra-services
@@ -118,12 +117,11 @@
            [ui/Segment
             [service-groups groups]
             (when (> total-pages 1)
-              [:div {:style {:padding-bottom 30}}
-               [uix/Pagination
-                {:totalitems   total-services
-                 :totalPages   total-pages
-                 :activePage   @page
-                 :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]])])]))))
+              [uix/Pagination
+               {:totalitems   total-services
+                :totalPages   total-pages
+                :activePage   @page
+                :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}])])]))))
 
 
 (defn in?

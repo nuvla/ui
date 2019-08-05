@@ -24,7 +24,8 @@
   (fn [{:keys [::spec/device] :as db} [_ new-device]]
     (log/info "setting device:" new-device)
     (cond-> (assoc db ::spec/device new-device)
-            (not= device new-device) (assoc ::spec/sidebar-open? (= new-device :computer)))))
+            (not= device new-device) (assoc ::spec/sidebar-open?
+                                            (not (#{:mobile :tablet} new-device))))))
 
 
 (reg-event-db

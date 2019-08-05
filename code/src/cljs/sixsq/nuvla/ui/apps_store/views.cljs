@@ -121,12 +121,11 @@
            [control-bar]
            [modules-cards-group (get @modules :resources [])]
            (when (> total-pages 1)
-             [:div {:style {:padding-bottom 30}}
-              [uix/Pagination
-               {:totalitems   total-modules
-                :totalPages   total-pages
-                :activePage   @page
-                :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]])]
+             [uix/Pagination
+              {:totalitems   total-modules
+               :totalPages   total-pages
+               :activePage   @page
+               :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}])]
           :label "App Store"
           :title-size :h2]]))))
 

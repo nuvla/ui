@@ -84,18 +84,19 @@
    interfere with React DOM attributes."
   [options]
   (let [tr (subscribe [::i18n-subs/tr])]
-    [:div
+    [ui/Grid {:vertical-align "middle"}
      (when (:totalitems options)
-       [ui/Label {:style {:float      :left
-                          :margin-top 10}
-                  :size  :medium}
-        (str (@tr [:total]) ": " (:totalitems options))])
-     [ui/Pagination
-      (merge {:firstItem {:content (r/as-element [ui/Icon {:name "angle double left"}]) :icon true}
-              :lastItem  {:content (r/as-element [ui/Icon {:name "angle double right"}]) :icon true}
-              :prevItem  {:content (r/as-element [ui/Icon {:name "angle left"}]) :icon true}
-              :nextItem  {:content (r/as-element [ui/Icon {:name "angle right"}]) :icon true}}
-             (merge {:floated :right, :size "tiny"} options))]]))
+       [ui/GridColumn {:floated "left", :width 5}
+        [ui/Label {:size :medium}
+         (str (@tr [:total]) ": " (:totalitems options))]])
+     [ui/GridColumn {:floated "right", :width 11, :text-align "right"}
+      [ui/Pagination
+       (merge {:size      "tiny"
+               :firstItem {:content (r/as-element [ui/Icon {:name "angle double left"}]) :icon true}
+               :lastItem  {:content (r/as-element [ui/Icon {:name "angle double right"}]) :icon true}
+               :prevItem  {:content (r/as-element [ui/Icon {:name "angle left"}]) :icon true}
+               :nextItem  {:content (r/as-element [ui/Icon {:name "angle right"}]) :icon true}}
+              options)]]]))
 
 
 (defn EditorJson

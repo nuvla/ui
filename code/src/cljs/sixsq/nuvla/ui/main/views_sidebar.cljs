@@ -64,15 +64,14 @@
   (let [show?      (subscribe [::subs/sidebar-open?])
         iframe?    (subscribe [::subs/iframe?])
         pages-list (subscribe [::subs/pages-list])]
-    [ui/Menu {:id         "nuvla-ui-sidebar2"
+    [ui/Menu {:id         "nuvla-ui-sidebar"
               :style      {:transition "0.5s"
-                           :width      (if @show? "15rem" "0")
-                           :overflow-x "hidden"}
+                           :width      (if @show? "15rem" "0")}
               :vertical   true
+              :compact    true
               :borderless true
               :inverted   true
-              :fixed      "left"
-              }
+              :fixed      "left"}
      (when-not @iframe? [logo-item])
      (doall
        (for [{:keys [url label-kw icon protected? iframe-visble?]} @pages-list]

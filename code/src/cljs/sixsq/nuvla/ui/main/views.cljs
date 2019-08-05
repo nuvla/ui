@@ -176,12 +176,15 @@
   []
   (let [resource-path     (subscribe [::subs/nav-path])
         bootstrap-message (subscribe [::subs/bootstrap-message])
-        content-key       (subscribe [::subs/content-key])]
+        content-key       (subscribe [::subs/content-key])
+        is-small-device?  (subscribe [::subs/is-small-device?])]
     (fn []
-      [ui/Container {:as    "main"
-                     :key   @content-key
-                     :id    "nuvla-ui-content"
-                     :fluid true}
+      [ui/Container
+       (cond-> {:as    "main"
+                :key   @content-key
+                :id    "nuvla-ui-content"
+                :fluid true}
+               @is-small-device? (assoc :on-click #(dispatch [::events/close-sidebar])))
 
        [WelcomeMessage]
 
@@ -214,10 +217,10 @@
 
 (defn app []
   (fn []
-    (let [show?   (subscribe [::subs/sidebar-open?])
-          cep     (subscribe [::api-subs/cloud-entry-point])
-          iframe? (subscribe [::subs/iframe?])
-          is-mobile? (subscribe [::subs/is-device? :mobile])]
+    (let [show?            (subscribe [::subs/sidebar-open?])
+          cep              (subscribe [::api-subs/cloud-entry-point])
+          iframe?          (subscribe [::subs/iframe?])
+          is-small-device? (subscribe [::subs/is-small-device?])]
       (if @cep
         [ui/Responsive {:as            "div"
                         :id            "nuvla-ui-main"
@@ -226,9 +229,13 @@
          [:<>
           [sidebar/menu]
           [:div {:style {:transition  "0.5s"
-                         :margin-left (if @show? "15rem" "0")}}
+                         :margin-left (if (and (not @is-small-device?) @show?) "15rem" "0")}}
+           [ui/Dimmer {:active   (and @is-small-device? @show?)
+                       :inverted true
+                       :on-click #(dispatch [::events/close-sidebar])}]
            [header]
            [contents]
            [ignore-changes-modal]
            (when-not @iframe? [footer])]]]
-        [ui/Container {:style {:min-height "100vh"}} [ui/Loader {:active true :size "massive"}]]))))
+        [ui/Container
+         [ui/Loader {:active true :size "massive"}]]))))

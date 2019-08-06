@@ -87,15 +87,17 @@
 
 (defn footer
   []
-  [ui/Segment {:style {:border-radius 0}}
-   [ui/Grid {:columns 3}
-    [ui/GridColumn "© 2019, SixSq Sàrl"]
-    [ui/GridColumn {:text-align "center"}
-     [:a {:on-click #(dispatch [::history-events/navigate "about"])
-          :style    {:cursor "pointer"}}
-      [:span#release-version (str "v")]]]
-    [ui/GridColumn {:text-align "right"}
-     [i18n-views/locale-dropdown]]]])
+  (let [grid-style {:style {:padding-top    5
+                            :padding-bottom 5}}]
+    [ui/Segment {:style {:border-radius 0}}
+     [ui/Grid {:columns 3}
+      [ui/GridColumn grid-style "© 2019, SixSq Sàrl"]
+      [ui/GridColumn (assoc grid-style :text-align "center")
+       [:a {:on-click #(dispatch [::history-events/navigate "about"])
+            :style    {:cursor "pointer"}}
+        [:span#release-version (str "v")]]]
+      [ui/GridColumn (assoc grid-style :text-align "right")
+       [i18n-views/locale-dropdown]]]]))
 
 
 (defn ignore-changes-modal
@@ -228,7 +230,8 @@
          [:<>
           [sidebar/menu]
           [:div {:style {:transition  "0.5s"
-                         :margin-left (if (and (not @is-small-device?) @show?) "15rem" "0")}}
+                         :margin-left (if (and (not @is-small-device?) @show?)
+                                        sidebar/sidebar-width "0")}}
            [ui/Dimmer {:active   (and @is-small-device? @show?)
                        :inverted true
                        :style    {:z-index 999}

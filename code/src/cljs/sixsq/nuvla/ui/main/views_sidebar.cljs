@@ -12,6 +12,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [taoensso.timbre :as log]))
 
+(def sidebar-width "10rem")
 
 (defn navigate
   "Fires a navigation event to the given URL. On small devices, this also
@@ -33,7 +34,7 @@
     [uix/MenuItemWithIcon
      {:name      (str/capitalize (@tr [label-kw]))
       :icon-name icon
-      :style     {:min-width  "15rem"
+      :style     {:min-width  sidebar-width
                   :overflow-x "hidden"}
       :active    @active?
       :on-click  (if (and protected? (not @is-user?))
@@ -48,7 +49,7 @@
     ^{:key "welcome"}
     [ui/MenuItem {:aria-label (@tr [:welcome])
                   :style      {:overflow-x "hidden"
-                               :min-width  "15rem"}
+                               :min-width  sidebar-width}
                   :on-click   #(navigate (:url @welcome-page))}
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"
@@ -67,8 +68,9 @@
         pages-list (subscribe [::subs/pages-list])]
     [ui/Menu {:id         "nuvla-ui-sidebar"
               :style      {:transition "0.5s"
-                           :width      (if @show? "15rem" "0")}
+                           :width      (if @show? sidebar-width "0")}
               :vertical   true
+              :icon       "labeled"
               :borderless true
               :inverted   true
               :fixed      "left"}

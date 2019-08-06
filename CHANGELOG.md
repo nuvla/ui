@@ -8,6 +8,8 @@
 
 ### Changed
 
+  - Footer - Visual changes made
+  - Side bar - Visual changes made
   - Api page - Changed to be a non protected page
   - Side bar - Enhance detection of selected item #106 and click on protected pages open login 
     page when no session #212

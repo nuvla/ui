@@ -25,6 +25,14 @@
 
 
 (reg-sub
+  ::is-small-device?
+  :<- [::is-device? :mobile]
+  :<- [::is-device? :tablet]
+  (fn [[is-mobile? is-tablet?]]
+    (boolean (or is-mobile? is-tablet?))))
+
+
+(reg-sub
   ::sidebar-open?
   (fn [db]
     (::spec/sidebar-open? db)))

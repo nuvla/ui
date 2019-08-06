@@ -87,16 +87,17 @@
 
 (defn footer
   []
-  [:footer.nuvla-ui-footer
-   [:div.nuvla-ui-footer-left
-    [:span "© 2019, SixSq Sàrl"]]
-   [:div.nuvla-ui-footer-centre
-    [:a {:on-click #(dispatch
-                      [::history-events/navigate "about"])
-         :style    {:cursor "pointer"}}
-     [:span#release-version (str "v")]]]
-   [:div.nuvla-ui-footer-right
-    [i18n-views/locale-dropdown]]])
+  (let [grid-style {:style {:padding-top    5
+                            :padding-bottom 5}}]
+    [ui/Segment {:style {:border-radius 0}}
+     [ui/Grid {:columns 3}
+      [ui/GridColumn grid-style "© 2019, SixSq Sàrl"]
+      [ui/GridColumn (assoc grid-style :text-align "center")
+       [:a {:on-click #(dispatch [::history-events/navigate "about"])
+            :style    {:cursor "pointer"}}
+        [:span#release-version (str "v")]]]
+      [ui/GridColumn (assoc grid-style :text-align "right")
+       [i18n-views/locale-dropdown]]]]))
 
 
 (defn ignore-changes-modal
@@ -176,12 +177,15 @@
   []
   (let [resource-path     (subscribe [::subs/nav-path])
         bootstrap-message (subscribe [::subs/bootstrap-message])
-        content-key       (subscribe [::subs/content-key])]
+        content-key       (subscribe [::subs/content-key])
+        is-small-device?  (subscribe [::subs/is-small-device?])]
     (fn []
-      [ui/Container {:as         "main"
-                     :key        @content-key
-                     :class-name "nuvla-ui-content"
-                     :fluid      true}
+      [ui/Container
+       (cond-> {:as    "main"
+                :key   @content-key
+                :id    "nuvla-ui-content"
+                :fluid true}
+               @is-small-device? (assoc :on-click #(dispatch [::events/close-sidebar])))
 
        [WelcomeMessage]
 
@@ -214,22 +218,27 @@
 
 (defn app []
   (fn []
-    (let [show?   (subscribe [::subs/sidebar-open?])
-          cep     (subscribe [::api-subs/cloud-entry-point])
-          iframe? (subscribe [::subs/iframe?])]
-
+    (let [show?            (subscribe [::subs/sidebar-open?])
+          cep              (subscribe [::api-subs/cloud-entry-point])
+          iframe?          (subscribe [::subs/iframe?])
+          is-small-device? (subscribe [::subs/is-small-device?])]
       (if @cep
         [ui/Responsive {:as            "div"
+                        :id            "nuvla-ui-main"
                         :fire-on-mount true
                         :on-update     (responsive/callback #(dispatch [::events/set-device %]))}
-         [ui/SidebarPushable {:as    ui/SegmentRaw
-                              :basic true}
+         [:<>
           [sidebar/menu]
-          [ui/SidebarPusher
-           [ui/Container (cond-> {:id "nuvla-ui-main" :fluid true}
-                                 @show? (assoc :className "sidebar-visible"))
-            [header]
-            [contents]
-            [ignore-changes-modal]
-            (when-not @iframe? [footer])]]]]
-        [ui/Container [ui/Loader {:active true :size "massive"}]]))))
+          [:div {:style {:transition  "0.5s"
+                         :margin-left (if (and (not @is-small-device?) @show?)
+                                        sidebar/sidebar-width "0")}}
+           [ui/Dimmer {:active   (and @is-small-device? @show?)
+                       :inverted true
+                       :style    {:z-index 999}
+                       :on-click #(dispatch [::events/close-sidebar])}]
+           [header]
+           [contents]
+           [ignore-changes-modal]
+           (when-not @iframe? [footer])]]]
+        [ui/Container
+         [ui/Loader {:active true :size "massive"}]]))))

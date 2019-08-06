@@ -6,10 +6,10 @@
 
 
 ; create an initial entry for new components
-(def defaults {::module-component {::image             {}
-                                   ::ports             {}
-                                   ::mounts            {}
-                                   ::architectures     ["amd64"]}})
+(def defaults {::module-component {::image         {}
+                                   ::ports         {}
+                                   ::mounts        {}
+                                   ::architectures ["amd64"]}})
 
 
 ; Image

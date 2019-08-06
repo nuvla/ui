@@ -59,7 +59,7 @@
 
 (def defaults {::iframe?              false
                ::device               :computer
-               ::sidebar-open?        false
+               ::sidebar-open?        true
                ::visible?             true
                ::nav-path             []
                ::nav-query-params     {}

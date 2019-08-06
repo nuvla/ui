@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.main.views-sidebar
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
@@ -11,6 +12,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [taoensso.timbre :as log]))
 
+(def sidebar-width "10rem")
 
 (defn navigate
   "Fires a navigation event to the given URL. On small devices, this also
@@ -30,8 +32,10 @@
 
     ^{:key (name label-kw)}
     [uix/MenuItemWithIcon
-     {:name      (@tr [label-kw])
+     {:name      (str/capitalize (@tr [label-kw]))
       :icon-name icon
+      :style     {:min-width  sidebar-width
+                  :overflow-x "hidden"}
       :active    @active?
       :on-click  (if (and protected? (not @is-user?))
                    #(dispatch [::authn-events/open-modal :login])
@@ -44,6 +48,8 @@
         welcome-page (subscribe [::subs/page-info "welcome"])]
     ^{:key "welcome"}
     [ui/MenuItem {:aria-label (@tr [:welcome])
+                  :style      {:overflow-x "hidden"
+                               :min-width  sidebar-width}
                   :on-click   #(navigate (:url @welcome-page))}
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"
@@ -60,21 +66,17 @@
   (let [show?      (subscribe [::subs/sidebar-open?])
         iframe?    (subscribe [::subs/iframe?])
         pages-list (subscribe [::subs/pages-list])]
-    [ui/Sidebar {:as        ui/MenuRaw
-                 :className "medium thin"
-                 :vertical  true
-                 :inverted  true
-                 :visible   (boolean @show?)
-                 :animation "uncover"}
-     [:nav {:aria-label "sidebar"}
-      [ui/Menu {:icon     "labeled"
-                :size     "large"
-                :vertical true
-                :compact  true
-                :inverted true}
-       (when-not @iframe? [logo-item])
-       (doall
-         (for [{:keys [url label-kw icon protected? iframe-visble?]} @pages-list]
-           (when (or (not @iframe?) iframe-visble?)
-             ^{:key url}
-             [item label-kw url icon protected?])))]]]))
+    [ui/Menu {:id         "nuvla-ui-sidebar"
+              :style      {:transition "0.5s"
+                           :width      (if @show? sidebar-width "0")}
+              :vertical   true
+              :icon       "labeled"
+              :borderless true
+              :inverted   true
+              :fixed      "left"}
+     (when-not @iframe? [logo-item])
+     (doall
+       (for [{:keys [url label-kw icon protected? iframe-visble?]} @pages-list]
+         (when (or (not @iframe?) iframe-visble?)
+           ^{:key url}
+           [item label-kw url icon protected?])))]))

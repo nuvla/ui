@@ -146,7 +146,7 @@
 
 (def SegmentRaw semantic/Segment)
 (def Segment (r/adapt-react-class semantic/Segment))
-;;(def SegmentGroup (r/adapt-react-class semantic/SegmentGroup))
+(def SegmentGroup (r/adapt-react-class semantic/SegmentGroup))
 
 (def Sidebar (r/adapt-react-class semantic/Sidebar))
 (def SidebarPushable (r/adapt-react-class semantic/SidebarPushable))

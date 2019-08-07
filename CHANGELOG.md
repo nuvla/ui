@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.4.2] - 2019-08-07
+
 ### Added
 
   - Authn - Support Github external authentication, API-SERVER version >=4.2.2 required to work 

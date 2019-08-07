@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.authn.spec :as spec]
+    [sixsq.nuvla.ui.authn.utils :as utils]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.utils.spec :as us]
     [taoensso.timbre :as log]))
@@ -142,6 +143,13 @@
 
 
 (reg-sub
+  ::internal-auth?
+  :<- [::form-id]
+  (fn [form-id]
+    (boolean (utils/internal-templates form-id))))
+
+
+(reg-sub
   ::form-data-when-form-id-is
   :<- [::form-id]
   :<- [::form-data]
@@ -152,7 +160,7 @@
 
 (reg-sub
   ::form-data-signup
-  :<- [::form-data-when-form-id-is "user-template/email-password"]
+  :<- [::form-data-when-form-id-is utils/user-tmpl-email-password]
   (fn [form-data]
     form-data))
 
@@ -199,7 +207,7 @@
 
 (reg-sub
   ::form-data-password-reset
-  :<- [::form-data-when-form-id-is "session-template/password-reset"]
+  :<- [::form-data-when-form-id-is utils/session-tmpl-password-reset]
   (fn [form-data]
     form-data))
 
@@ -244,9 +252,9 @@
   :<- [::form-signup-valid?]
   (fn [[form-id form-data form-spec-error? form-signup-valid?]]
     (case form-id
-      "user-template/email-password" form-signup-valid?
-      "session-template/password" (and
+      utils/user-tmpl-email-password form-signup-valid?
+      utils/session-tmpl-password (and
                                     (s/valid? ::us/username (:username form-data))
                                     (s/valid? us/nonblank-string (:password form-data)))
-      "session-template/api-key" (not form-spec-error?)
+      utils/session-tmpl-api-key (not form-spec-error?)
       true)))

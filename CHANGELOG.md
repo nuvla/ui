@@ -4,10 +4,14 @@
 
 ### Added
 
+  - Authn - Support Github external authentication, API-SERVER version >=4.2.2 required to work 
+    properly
+  - Welcome - Show error message coded in url sent by the server
   - SpanBlockJustified - Component to display long description cleanly
 
 ### Changed
 
+  - Dependencies - Update shadow-cljs to version 2.8.42 and clojure-library to version 2.0.3
   - Footer - Visual changes made
   - Side bar - Visual changes made
   - Api page - Changed to be a non protected page

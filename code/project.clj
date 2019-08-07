@@ -1,5 +1,5 @@
 (def parent-version "6.6.0")
-(def sixsq-nuvla-api-version "2.0.2")
+(def sixsq-nuvla-api-version "2.0.3")
 (def version "2.4.2-SNAPSHOT")
 
 (defproject sixsq.nuvla.ui/code "2.4.2-SNAPSHOT"
@@ -79,7 +79,7 @@
                           [org.clojure/clojurescript]
                           [binaryage/devtools "0.9.10" :scope "test"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.8.42"]   ;; WARNING: also in package.json
+   :scljs {:dependencies [[thheller/shadow-cljs "2.8.44"]   ;; WARNING: also in package.json
                           [com.google.javascript/closure-compiler-unshaded "v20190709"]]}}
 
 

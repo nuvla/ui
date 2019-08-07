@@ -8,12 +8,11 @@
     [sixsq.nuvla.ui.authn.spec :as spec]
     [sixsq.nuvla.ui.authn.subs :as subs]
     [sixsq.nuvla.ui.authn.utils :as utils]
+    [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.cimi.utils :as api-utils]
-    [sixsq.nuvla.ui.docs.subs :as docs-subs]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.forms :as forms-utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -21,10 +20,21 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [taoensso.timbre :as log]))
 
+
 (defn dropdown-method-option
   [{:keys [id name] :as method}]
   {:key id, :text name, :value id})
 
+
+(defn generic-submit
+  [submit-opts]
+  (let [internal-auth? (subscribe [::subs/internal-auth?])
+        form-id        (subscribe [::subs/form-id])]
+    (if @internal-auth?
+      #(dispatch [::events/submit submit-opts])
+      #(some->> @form-id
+                (.getElementById js/document)
+                (.submit)))))
 
 (defn login-password-fields
   []
@@ -52,7 +62,7 @@
                :on-click (fn []
                            (dispatch [::events/close-modal])
                            (dispatch [::events/set-selected-method-group nil])
-                           (dispatch [::events/set-form-id "session-template/password-reset"])
+                           (dispatch [::events/set-form-id utils/session-tmpl-password-reset])
                            (dispatch [::events/open-modal :reset-password]))}
            (@tr [:forgot-password])]]]))))
 
@@ -93,9 +103,11 @@
         passwords-doesnt-match?    (subscribe [::subs/form-signup-passwords-doesnt-match?])
         password-constraint-error? (subscribe [::subs/form-signup-password-constraint-error?])
         update-email-callback      (ui-callback/input-callback
-                                     #(dispatch [::events/update-form-data :email %]))
+                                     #(when-not (str/blank? %)
+                                        (dispatch [::events/update-form-data :email %])))
         update-password-callback   (ui-callback/input-callback
-                                     #(dispatch [::events/update-form-data :password %]))]
+                                     #(when-not (str/blank? %)
+                                        (dispatch [::events/update-form-data :password %])))]
     (fn []
       (let [password-field-error? (or @passwords-doesnt-match?
                                       @password-constraint-error?)
@@ -150,25 +162,20 @@
                                              (dispatch [::events/update-form-data :repeat-password %])))}]]]))))
 
 
-;;TODO fix field generation when resource metadata finalized
 (defn generate-fields
   [method form-id form-data]
-  (let [resource-metadata (subscribe [::docs-subs/document method])
-        inputs-method     (->> (:attributes @resource-metadata)
-                               (filter (fn [{:keys [required group] :as attribute}]
-                                         (and (not (#{"metadata" "acl"} group))
-                                              required)))
-                               (sort-by :order))]
-    (for [{value-scope :value-scope param-name :name :as input-method} inputs-method]
-      (let [value                (get form-data param-name)
-            input-method-updated (cond-> input-method
-                                         value (assoc-in [:value-scope :value] value))]
-        (dispatch [::events/update-form-data
-                   param-name (or value
-                                  (:value value-scope)
-                                  (:default value-scope))])
-        (forms/form-field (fn [_ name value]
-                            (dispatch [::events/update-form-data name value])) form-id input-method-updated)))))
+  (let [server-redirect-uri (subscribe [::subs/server-redirect-uri])]
+    [:<>
+     [ui/FormField
+      [:input {:name      "href"
+               :value     (or form-id "")
+               :read-only true
+               :hidden    true}]]
+     [ui/FormField
+      [:input {:name      "redirect-url"
+               :hidden    true
+               :read-only true
+               :value     (str @server-redirect-uri)}]]]))
 
 
 (defn login-method-form
@@ -179,13 +186,16 @@
     (fn [[_ methods]]
       (let [dropdown?        (> (count methods) 1)
             method           (utils/select-method-by-id @form-id methods)
-            dropdown-options (map dropdown-method-option methods)]
+            dropdown-options (map dropdown-method-option methods)
+            post-uri         (str @cimi-fx/NUVLA_URL "/api/session")]
 
         ^{:key @form-id}
-        [ui/Form {:id           (or @form-id "authn-form-placeholder-id")
+        [ui/Form {:id           @form-id
+                  :action       post-uri
+                  :method       "post"
                   :on-key-press (when @form-valid?
                                   (partial forms-utils/on-return-key
-                                           #(dispatch [::events/submit])))}
+                                           (generic-submit {})))}
          [ui/Segment {:style {:height     "35ex"
                               :overflow-y "auto"}}
           (when dropdown?
@@ -198,8 +208,8 @@
               :on-change     (ui-callback/dropdown ::events/set-form-id)}])
 
           (case @form-id
-            "session-template/password" [login-password-fields]
-            "session-template/api-key" [login-api-key-fields]
+            utils/session-tmpl-password [login-password-fields]
+            utils/session-tmpl-api-key [login-api-key-fields]
             [generate-fields method @form-id @form-data])]]))))
 
 
@@ -224,14 +234,17 @@
       (let [dropdown?        (> (count methods) 1)
             method           (utils/select-method-by-id @form-id methods)
 
-            dropdown-options (map dropdown-method-option methods)]
+            dropdown-options (map dropdown-method-option methods)
+            post-uri         (str @cimi-fx/NUVLA_URL "/api/user")]
 
         [ui/Form
-         {:id           (or @form-id "authn-form-placeholder-id")
+         {:id           @form-id
+          :action       post-uri
+          :method       "post"
           :error        true                                ;; Needed to show validation Message
           :on-key-press (partial forms-utils/on-return-key
                                  #(when @form-valid?
-                                    (dispatch [::events/submit (submit-signup-opts)])))}
+                                    (generic-submit (submit-signup-opts))))}
 
          [ui/Segment {:style {:height     "35ex"
                               :overflow-y "auto"}}
@@ -244,7 +257,7 @@
               :close-on-blur true
               :on-change     (ui-callback/dropdown ::events/set-form-id)}])
           (case @form-id
-            "user-template/email-password" [signup-email-password-fields]
+            utils/user-tmpl-email-password [signup-email-password-fields]
             [generate-fields method @form-id @form-data])]]))))
 
 
@@ -331,7 +344,7 @@
 (defn switch-panel-link
   [modal-kw]
   (let [tr               (subscribe [::i18n-subs/tr])
-        signup-template? (subscribe [::subs/user-template-exist? "user-template/email-password"])]
+        signup-template? (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])]
     (fn [modal-kw]
       (let [other-modal (case modal-kw
                           :login :signup
@@ -378,7 +391,7 @@
           :positive true
           :loading  @loading?
           :disabled (not @form-valid?)
-          :on-click #(dispatch [::events/submit submit-opts])}]]])))
+          :on-click (generic-submit submit-opts)}]]])))
 
 
 (defn modal-login
@@ -582,11 +595,11 @@
                                (dispatch [::events/logout])
                                (dispatch [::history-events/navigate "welcome"]))
         create-user-fn       #(do
-                                (dispatch [::events/set-form-id "user-template/email-invitation"])
+                                (dispatch [::events/set-form-id utils/user-tmpl-email-invitation])
                                 (dispatch [::events/open-modal :invite-user]))
         logged-in?           (boolean @user)
 
-        invitation-template? (subscribe [::subs/user-template-exist? "user-template/email-invitation"])]
+        invitation-template? (subscribe [::subs/user-template-exist? utils/user-tmpl-email-invitation])]
 
     [ui/DropdownMenu
 
@@ -636,22 +649,19 @@
         login-fn         #(dispatch [::events/open-modal :login])
         signup-fn        #(dispatch [::events/open-modal :signup])
         logged-in?       (boolean @user)
-        signup-template? (subscribe [::subs/user-template-exist? "user-template/email-password"])]
+        signup-template? (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
+        dropdown-menu    [ui/Dropdown {:inline    true
+                                       :button    true
+                                       :pointing  "top right"
+                                       :className "icon"}
+                          (authn-dropdown-menu)]]
     [:<>
-     [modal-login]
-     [modal-reset-password]
-     [modal-signup]
-     [modal-create-user]
      (if logged-in?
        [ui/ButtonGroup {:primary true}
         [ui/Button {:on-click profile-fn}
          [ui/Icon {:name "user"}]
          (general-utils/truncate @user)]
-        [ui/Dropdown {:inline    true
-                      :button    true
-                      :pointing  "top right"
-                      :className "icon"}
-         (authn-dropdown-menu)]]
+        dropdown-menu]
        [:div
         (when @signup-template?
           [:span {:style    {:padding-right "10px"
@@ -663,8 +673,8 @@
          [ui/Button {:on-click login-fn}
           [ui/Icon {:name "sign in"}]
           (@tr [:login])]
-         [ui/Dropdown {:inline    true
-                       :button    true
-                       :pointing  "top right"
-                       :className "icon"}
-          (authn-dropdown-menu)]]])]))
+         dropdown-menu]])
+     [modal-login]
+     [modal-reset-password]
+     [modal-signup]
+     [modal-create-user]]))

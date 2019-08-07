@@ -89,9 +89,9 @@
 
 
 (reg-sub
-  ::welcome-message
+  ::message
   (fn [db]
-    (::spec/welcome-message db)))
+    (::spec/message db)))
 
 
 (reg-sub

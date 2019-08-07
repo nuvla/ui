@@ -31,7 +31,7 @@
 (s/def ::bootstrap-message (s/nilable keyword?))
 
 
-(s/def ::welcome-message (s/nilable keyword?))
+(s/def ::message any?)
 
 
 (s/def ::actions-interval map?)
@@ -52,7 +52,7 @@
                           ::changes-protection?
                           ::ignore-changes-modal
                           ::bootstrap-message
-                          ::welcome-message
+                          ::message
                           ::actions-interval
                           ::content-key]))
 
@@ -66,7 +66,7 @@
                ::changes-protection?  false
                ::ignore-changes-modal nil
                ::bootstrap-message    nil
-               ::welcome-message      nil
+               ::message              nil
                ::actions-interval     {}
                ::content-key          (random-uuid)
                ::pages                {"welcome"         {:url        "welcome"

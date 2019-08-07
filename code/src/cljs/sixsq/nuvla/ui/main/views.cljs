@@ -158,19 +158,21 @@
                       (str " " (@tr [:click-here]))]])}]))
 
 
-(defn WelcomeMessage
+(defn Message
   []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        welcome-message (subscribe [::subs/welcome-message])]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        message (subscribe [::subs/message])]
     (fn []
-      (when @welcome-message
-        (js/setTimeout #(dispatch [::events/set-welcome-message nil]) 10000) ;; hide after 20s
-
-        [ui/Container {:text-align :center}
-         [ui/Message
-          {:success true
-           :content (@tr [@welcome-message])}]
-         [:br]]))))
+      (let [[type content] @message]
+        (when content
+         [ui/Container {:text-align :center}
+          [ui/Message
+           (if (= type :success)
+             {:success true
+              :content (@tr [(keyword content)])}
+             {:error   true
+              :content content})]
+          [:br]])))))
 
 
 (defn contents
@@ -187,7 +189,7 @@
                 :fluid true}
                @is-small-device? (assoc :on-click #(dispatch [::events/close-sidebar])))
 
-       [WelcomeMessage]
+       [Message]
 
        (when @bootstrap-message
          [BootstrapMessage @bootstrap-message])

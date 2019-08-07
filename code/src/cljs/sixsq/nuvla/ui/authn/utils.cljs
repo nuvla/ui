@@ -2,6 +2,18 @@
   (:require
     [cljs.spec.alpha :as s]))
 
+(def ^:const user-tmpl-email-password "user-template/email-password")
+(def ^:const user-tmpl-email-invitation "user-template/email-invitation")
+(def ^:const session-tmpl-password "session-template/password")
+(def ^:const session-tmpl-api-key "session-template/api-key")
+(def ^:const session-tmpl-password-reset "session-template/password-reset")
+
+(def ^:const internal-templates #{user-tmpl-email-password
+                                  user-tmpl-email-invitation
+                                  session-tmpl-password
+                                  session-tmpl-api-key
+                                  session-tmpl-password-reset})
+
 
 (defn order-and-group
   "Sorts the methods by ID, then the order attribute, and then groups them on

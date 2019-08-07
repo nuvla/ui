@@ -18,8 +18,9 @@
                                              :preloads   [devtools.preload]}
 
                                 :dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL
+                                                                "https://159.100.240.64"
                                                                 #_"https://nuvla.io"
-                                                                "https://localhost"}
+                                                                #_"https://localhost"}
                                              :compiler-options {:infer-externs :auto}}
 
                                 :release    {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL ""}

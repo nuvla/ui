@@ -61,7 +61,7 @@
 
   ;; mark all dependencies as provided to avoid having transitive
   ;; dependencies pulled in by those that depend on this
-  :dependencies [[reagent "0.9.0-SNAPSHOT" :scope "provided"
+  :dependencies [[reagent "0.9.0-20190110.190613-2" :scope "provided"
                   :exclusions [cljsjs/react
                                cljsjs/react-dom]]
                  [re-frame "0.10.8" :scope "provided"]

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+  - Signup modal - submit on return key regression fix
+
 ## [2.4.2] - 2019-08-07
 
 ### Added

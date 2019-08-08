@@ -243,8 +243,8 @@
           :method       "post"
           :error        true                                ;; Needed to show validation Message
           :on-key-press (partial forms-utils/on-return-key
-                                 #(when @form-valid?
-                                    (generic-submit (submit-signup-opts))))}
+                                 (when @form-valid?
+                                   (generic-submit (submit-signup-opts))))}
 
          [ui/Segment {:style {:height     "35ex"
                               :overflow-y "auto"}}

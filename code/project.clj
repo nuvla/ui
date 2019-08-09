@@ -32,7 +32,9 @@
                                     "resources/public/ui/css/codemirror.css"
                                     "resources/public/ui/css/foldgutter.css"
                                     "resources/public/ui/css/react-datepicker.min.css"
-                                    "resources/public/ui/css/codemirror.css"]
+                                    "resources/public/ui/css/codemirror.css"
+                                    "resources/public/ui/css/dialog.css"
+                                    "resources/public/ui/css/matchesonscrollbar.css"]
 
   :auto-clean false
 
@@ -56,6 +58,10 @@
                              {:target-path "resources/public/ui/css/codemirror.css"}]
                             ["node_modules/codemirror/addon/fold/foldgutter.css"
                              {:target-path "resources/public/ui/css/foldgutter.css"}]
+                            ["node_modules/codemirror/addon/dialog/dialog.css"
+                             {:target-path "resources/public/ui/css/dialog.css"}]
+                            ["node_modules/codemirror/addon/search/matchesonscrollbar.css"
+                             {:target-path "resources/public/ui/css/matchesonscrollbar.css"}]
                             ["target/version.css"
                              {:target-path "resources/public/ui/css/version.css"}]]}
 
@@ -79,7 +85,7 @@
                           [org.clojure/clojurescript]
                           [binaryage/devtools "0.9.10" :scope "test"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.8.44"]   ;; WARNING: also in package.json
+   :scljs {:dependencies [[thheller/shadow-cljs "2.8.45"]   ;; WARNING: also in package.json
                           [com.google.javascript/closure-compiler-unshaded "v20190709"]]}}
 
 

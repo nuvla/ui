@@ -1,6 +1,7 @@
 #nuvla-ui-sidebar {
     z-index: 1000;
     overflow: hidden;
+    overflow-y: auto;
 }
 
 #nuvla-ui-sidebar:after {
@@ -10,10 +11,11 @@
     z-index: -1;
     opacity: 0.5;
     top: 0;
-    left: -45px;
+    left: 0;
     right: 0;
     bottom: 0;
-    position: absolute;
+    position: fixed;
+    width: inherit;
     height: 100vh;
     visibility: unset;
 }

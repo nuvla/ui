@@ -4,6 +4,11 @@
 
 ### Changed
 
+  - Dependencies - Update shadow-cljs to version 2.8.45
+  - Sidebar - Css scroll y set to auto to support paysage mode
+  - Apps project - pageheader inline display
+  - Codemirror - add search ability and highlight in scrollbar visible
+  - Cimi detail - make coherent changes between raw and acl widget
   - Signup modal - submit on return key regression fix
 
 ## [2.4.2] - 2019-08-07

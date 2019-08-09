@@ -3,12 +3,16 @@
    namespace has no real functionality; it just keeps Cursive from complaining
    about undefined symbols."
   (:require
+    ["codemirror/addon/dialog/dialog"]
     ["codemirror/addon/edit/closebrackets"]
     ["codemirror/addon/edit/matchbrackets"]
     ["codemirror/addon/fold/brace-fold"]
     ["codemirror/addon/fold/foldcode"]
     ["codemirror/addon/fold/foldgutter"]
     ["codemirror/addon/fold/indent-fold"]
+    ["codemirror/addon/search/matchesonscrollbar"]
+    ["codemirror/addon/search/search"]
+    ["codemirror/addon/search/searchcursor"]
     ["codemirror/addon/selection/active-line"]
     ["codemirror/mode/javascript/javascript"]
     ["codemirror/mode/shell/shell"]

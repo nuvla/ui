@@ -29,7 +29,7 @@
     (fn []
       (let [resource-id       (path->resource-id @path)
             correct-resource? (= resource-id @cached-resource-id)
-            {:keys [acl] :as resource-value} @resource
+            {:keys [updated acl] :as resource-value} @resource
             resource-metadata (subscribe [::docs-subs/document resource-value])]
 
         ;; forces a refresh when the correct resource isn't cached
@@ -39,6 +39,7 @@
         ;; render the (possibly empty) detail
         [:<>
          (when acl
+           ^{:key (str resource-id "-" updated)}
            [acl-views/AclButton {:default-value acl
                                  :read-only     (not (general-utils/can-edit? resource-value))
                                  :on-change     #(dispatch [::events/edit

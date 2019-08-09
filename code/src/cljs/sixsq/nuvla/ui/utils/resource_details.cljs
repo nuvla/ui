@@ -75,6 +75,7 @@
         collection        (subscribe [::cimi-subs/collection-name])
         resource-metadata (subscribe [::docs-subs/document @collection])]
     (fn [{:keys [id] :as data} description action-fn]
+      (reset! text (general-utils/edn->json data))
       [action-button-icon
        (@tr [:raw])
        (@tr [:save])

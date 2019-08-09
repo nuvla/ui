@@ -26,6 +26,8 @@
 
   :clean-targets ^{:protect false} ["resources/public/ui/js/"
                                     "target"
+                                    "node_modules"
+                                    ".shadow-cljs"
                                     "resources/public/ui/css/semantic.min.css"
                                     "resources/public/ui/css/themes"
                                     "resources/public/ui/css/version.css"

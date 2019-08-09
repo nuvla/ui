@@ -22,8 +22,6 @@ code/node_modules
 
 code/.shadow-cljs
 
-code/package-lock.json
-
 *.bck
 
 pom.xml.next

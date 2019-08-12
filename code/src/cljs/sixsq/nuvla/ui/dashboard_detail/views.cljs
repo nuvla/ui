@@ -102,7 +102,7 @@
              [ui/TableHeaderCell [:span (@tr [:value])]]]]
            (when-not (empty? params)
              [ui/TableBody
-              (for [{param-name :name :as param} (sort-by :name params)]
+              (for [{param-name :name :as param} params]
                 ^{:key param-name}
                 [parameter-to-row param])])]]
          :count (count params)

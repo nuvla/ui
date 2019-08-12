@@ -46,7 +46,9 @@
 (reg-sub
   ::deployment-parameters
   (fn [db]
-    (::spec/deployment-parameters db)))
+    (->> db
+         ::spec/deployment-parameters
+         (sort-by :name))))
 
 
 (reg-sub

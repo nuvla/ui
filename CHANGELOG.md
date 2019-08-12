@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Only show deployment URLs when number of running replicas is positive
+  - Order output parameters alphabetically
   - Dependencies - Update shadow-cljs to version 2.8.45
   - Sidebar - Css scroll y set to auto to support paysage mode
   - Apps project - pageheader inline display

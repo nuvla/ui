@@ -23,6 +23,16 @@
           url-pattern pattern-value)))))
 
 
+(defn running-replica?
+  "Extracts the number of running replicas and returns true if the number is
+   positive. Returns false is all other cases."
+  [deployment-parameters]
+  (let [n (some->> (get deployment-parameters "replicas.running")
+                   :value
+                   general-utils/str->int)]
+    (and (number? n) (pos? n))))
+
+
 (defn deployment-active?
   [state]
   (str/ends-with? (str state) "ING"))

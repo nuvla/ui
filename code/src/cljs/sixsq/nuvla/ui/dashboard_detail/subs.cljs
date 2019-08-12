@@ -49,9 +49,9 @@
     (::spec/deployment-parameters db)))
 
 
-
 (reg-sub
   ::url
   :<- [::deployment-parameters]
   (fn [deployment-parameters [_ url-pattern]]
-    (dashboard-utils/resolve-url-pattern url-pattern deployment-parameters)))
+    (when (dashboard-utils/running-replica? deployment-parameters)
+      (dashboard-utils/resolve-url-pattern url-pattern deployment-parameters))))

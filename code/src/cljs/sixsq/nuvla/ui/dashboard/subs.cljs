@@ -2,7 +2,8 @@
   (:require
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.dashboard.spec :as spec]
-    [sixsq.nuvla.ui.dashboard.utils :as utils]))
+    [sixsq.nuvla.ui.dashboard.utils :as utils]
+    [sixsq.nuvla.ui.dashboard.utils :as dashboard-utils]))
 
 
 (reg-sub
@@ -59,4 +60,5 @@
     (let [deployment-params-by-name (->> (get deployments-params-map id)
                                          (map (juxt :name identity))
                                          (into {}))]
-      (utils/resolve-url-pattern url-pattern deployment-params-by-name))))
+      (when (dashboard-utils/running-replica? deployment-params-by-name)
+        (utils/resolve-url-pattern url-pattern deployment-params-by-name)))))

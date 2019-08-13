@@ -48,7 +48,7 @@
   (fn [db]
     (->> db
          ::spec/deployment-parameters
-         (sort-by :name))))
+         (into (sorted-map)))))
 
 
 (reg-sub

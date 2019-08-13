@@ -89,6 +89,31 @@
        :on-refresh refresh}]]))
 
 
+(defn CreatedNuvlaBox
+  [nuvlabox-id creation-data on-close-fn tr]
+  (let [nuvlabox-name-or-id (str "NuvlaBox " (or (:name creation-data)
+                                                 (general-utils/id->short-uuid nuvlabox-id)))]
+    [:<>
+     [ui/ModalHeader
+      [ui/Icon {:name "box"}] (str nuvlabox-name-or-id " created")]
+
+     [ui/ModalContent
+      [ui/CardGroup {:centered true}
+       [ui/Card
+        [ui/CardContent {:text-align :center}
+         [ui/Header [:span {:style {:overflow-wrap "break-word"}} nuvlabox-name-or-id]]
+         [ui/Icon {:name  "box"
+                   :color "green"
+                   :size  :massive}]]
+        [ui/CopyToClipboard {:text nuvlabox-id}
+         [ui/Button {:positive true
+                     :icon     "clipboard"
+                     :content  (@tr [:copy-nuvlabox-id])}]]]]]
+
+     [ui/ModalActions
+      [ui/Button {:on-click on-close-fn} (@tr [:close])]]]))
+
+
 (defn AddModal
   []
   (let [modal-id      :add
@@ -109,43 +134,33 @@
       [ui/Modal {:open       @visible?
                  :close-icon true
                  :on-close   on-close-fn}
-
        (if @nuvlabox-id
-         [ui/ModalHeader [ui/Icon {:name "box"}]
-          (str "NuvlaBox "
-               (or (:name @creation-data)
-                   (general-utils/id->short-uuid @nuvlabox-id)) " created")]
-         [ui/ModalHeader [ui/Icon {:name "add"}] (str "New NuvlaBox " (:name @creation-data))])
-       [ui/ModalContent
-        [ui/CardGroup {:centered true}
-         [ui/Card
-          [ui/CardContent {:text-align :center}
-           [ui/Header "NuvlaBox"]
-           [ui/Icon {:name  "box"
-                     :color (if @nuvlabox-id "green" "blue")
-                     :size  :massive}]]
-          (when-not @nuvlabox-id
-            [ui/CardContent {:extra true}
-             [ui/Form
-              [ui/FormInput {:placeholder "Name - optional"
-                             :on-change   (ui-callback/input-callback
-                                            #(swap! creation-data assoc :name %))}]
-              [ui/FormInput {:placeholder "Schema version - optional"
-                             :on-change   (ui-callback/input-callback
-                                            #(swap! creation-data assoc
-                                                    :version (general-utils/str->int %)))}]]])
-          (when @nuvlabox-id
-            [ui/CopyToClipboard {:text @nuvlabox-id}
-             [ui/Button {:positive true
-                         :icon     "clipboard"
-                         :content  (@tr [:copy-nuvlabox-id])}]])]]]
-       [ui/ModalActions
-        (if @nuvlabox-id
-          [ui/Button {:on-click on-close-fn}
-           (@tr [:close])]
-          [ui/Button {:positive true
-                      :on-click on-add-fn}
-           (@tr [:create])])]])))
+         [CreatedNuvlaBox @nuvlabox-id @creation-data on-close-fn tr]
+         [:<>
+          [ui/ModalHeader
+           [ui/Icon {:name "add"}] (str "New NuvlaBox " (:name @creation-data))]
+
+          [ui/ModalContent
+           [ui/Form
+            [ui/FormGroup {:widths "equal"}
+             [ui/FormInput {:label       (str/capitalize (@tr [:name]))
+                            :placeholder "Name"
+                            :on-change   (ui-callback/input-callback
+                                           #(swap! creation-data assoc :name %))}]
+             [ui/FormInput {:label       "Version"
+                            :placeholder "Schema version"
+                            :on-change   (ui-callback/input-callback
+                                           #(swap! creation-data assoc
+                                                   :version (general-utils/str->int %)))}]]
+            [ui/FormField #_{:label (str/capitalize (@tr [:description]))}
+             [ui/TextArea {:placeholder (str/capitalize (@tr [:description]))
+                           :on-change   (ui-callback/input-callback
+                                          #(swap! creation-data assoc :description %))}]]]]
+
+          [ui/ModalActions
+           [ui/Button {:positive true
+                       :on-click on-add-fn}
+            (@tr [:create])]]])])))
 
 
 (defn NuvlaboxRow

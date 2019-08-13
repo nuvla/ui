@@ -6,7 +6,11 @@
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as form-fields]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [cljs.spec.alpha :as s]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [clojure.string :as str]))
 
 
 (defn Button
@@ -158,3 +162,45 @@
   [:span {:style {:display    :block
                   :text-align :justify}}
    text])
+
+
+(defn TableRowField
+  [name & {:keys [key placeholder default-value spec on-change
+                  required? editable? validate-form? type]}]
+  (let [local-validate? (r/atom false)
+        active-input?   (r/atom false)
+        value           (r/atom default-value)]
+    (fn [name & {:keys [key placeholder spec on-change required?
+                        editable? validate-form? type]
+                 :or   {editable? true, spec any?, type :input}}]
+      (let [name-label  (cond-> name
+                                (and editable? required?) (general-utils/mandatory-name))
+            validate?   (boolean (or @local-validate? validate-form?))
+            error?      (and validate? (not (s/valid? spec @value)))
+            common-opts {:default-value @value
+                         :placeholder   (or placeholder name)
+                         :onMouseEnter  #(reset! active-input? true)
+                         :onMouseLeave  #(reset! active-input? false)
+                         :on-change     (ui-callback/input-callback
+                                          #(let [text (when-not (str/blank? %) %)]
+                                             (reset! local-validate? true)
+                                             (reset! value text)
+                                             (on-change text)))}]
+        [ui/TableRow
+         [ui/TableCell {:collapsing true} name-label]
+         ^{:key (or key name)}
+         [ui/TableCell
+          (if editable?
+            (if (#{:input :password} type)
+              [ui/Input (assoc common-opts
+                          :error error?
+                          :fluid true
+                          :type type
+                          :auto-complete "nope"
+                          :icon (when @active-input? :pencil))]
+              [ui/Form
+               [ui/FormField {:error error?}
+                [:div {:className "ui input icon"}
+                 [ui/TextArea common-opts]
+                 (when @active-input? [ui/Icon {:name "pencil"}])]]])
+            [SpanBlockJustified @value])]]))))

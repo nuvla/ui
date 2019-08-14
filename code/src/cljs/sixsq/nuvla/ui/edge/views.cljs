@@ -19,7 +19,8 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [taoensso.timbre :as log]
-    [clojure.string :as str]))
+    [clojure.string :as str]
+    [cljs.spec.alpha :as s]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlaboxes)
@@ -121,15 +122,19 @@
         visible?      (subscribe [::subs/modal-visible? modal-id])
         user-id       (subscribe [::authn-subs/user-id])
         nuvlabox-id   (subscribe [::subs/nuvlabox-created-id])
-        creation-data (r/atom {:owner            @user-id
-                               :refresh-interval 30})
+        default-data  {:owner            @user-id
+                       :refresh-interval 30}
+        creation-data (r/atom default-data)
         on-close-fn   #(do
                          (dispatch [::events/set-created-nuvlabox-id nil])
-                         (dispatch [::events/open-modal nil]))
-        on-add-fn     #(dispatch [::events/create-nuvlabox
-                                  (->> @creation-data
-                                       (remove (fn [[_ v]] (str/blank? v)))
-                                       (into {}))])]
+                         (dispatch [::events/open-modal nil])
+                         (reset! creation-data default-data))
+        on-add-fn     #(do
+                         (dispatch [::events/create-nuvlabox
+                                   (->> @creation-data
+                                        (remove (fn [[_ v]] (str/blank? v)))
+                                        (into {}))])
+                         (reset! creation-data default-data))]
     (fn []
       [ui/Modal {:open       @visible?
                  :close-icon true
@@ -141,21 +146,14 @@
            [ui/Icon {:name "add"}] (str "New NuvlaBox " (:name @creation-data))]
 
           [ui/ModalContent
-           [ui/Form
-            [ui/FormGroup {:widths "equal"}
-             [ui/FormInput {:label       (str/capitalize (@tr [:name]))
-                            :placeholder "Name"
-                            :on-change   (ui-callback/input-callback
-                                           #(swap! creation-data assoc :name %))}]
-             [ui/FormInput {:label       "Version"
-                            :placeholder "Schema version"
-                            :on-change   (ui-callback/input-callback
-                                           #(swap! creation-data assoc
-                                                   :version (general-utils/str->int %)))}]]
-            [ui/FormField #_{:label (str/capitalize (@tr [:description]))}
-             [ui/TextArea {:placeholder (str/capitalize (@tr [:description]))
-                           :on-change   (ui-callback/input-callback
-                                          #(swap! creation-data assoc :description %))}]]]]
+           [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+            [ui/TableBody
+             [uix/TableRowField (@tr [:name]), :on-change #(swap! creation-data assoc :name %)]
+             [uix/TableRowField "version", :spec (s/nilable int?),
+              :default-value (:version @creation-data),
+              :on-change #(swap! creation-data assoc :version (general-utils/str->int %))]
+             [uix/TableRowField (@tr [:description]), :type :textarea,
+              :on-change #(swap! creation-data assoc :description %)]]]]
 
           [ui/ModalActions
            [ui/Button {:positive true

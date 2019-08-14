@@ -168,23 +168,21 @@
   [name & {:keys [key placeholder default-value spec on-change
                   required? editable? validate-form? type]}]
   (let [local-validate? (r/atom false)
-        active-input?   (r/atom false)
-        value           (r/atom default-value)]
-    (fn [name & {:keys [key placeholder spec on-change required?
+        active-input?   (r/atom false)]
+    (fn [name & {:keys [key placeholder default-value spec on-change required?
                         editable? validate-form? type]
                  :or   {editable? true, spec any?, type :input}}]
       (let [name-label  (cond-> name
                                 (and editable? required?) (general-utils/mandatory-name))
             validate?   (boolean (or @local-validate? validate-form?))
-            error?      (and validate? (not (s/valid? spec @value)))
-            common-opts {:default-value @value
+            error?      (and validate? (not (s/valid? spec default-value)))
+            common-opts {:default-value default-value
                          :placeholder   (or placeholder name)
                          :onMouseEnter  #(reset! active-input? true)
                          :onMouseLeave  #(reset! active-input? false)
                          :on-change     (ui-callback/input-callback
                                           #(let [text (when-not (str/blank? %) %)]
                                              (reset! local-validate? true)
-                                             (reset! value text)
                                              (on-change text)))}]
         [ui/TableRow
          [ui/TableCell {:collapsing true} name-label]
@@ -203,4 +201,4 @@
                 [:div {:className "ui input icon"}
                  [ui/TextArea common-opts]
                  (when @active-input? [ui/Icon {:name "pencil"}])]]])
-            [SpanBlockJustified @value])]]))))
+            [SpanBlockJustified default-value])]]))))

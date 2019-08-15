@@ -31,66 +31,15 @@
   (some #(= elm %) coll))
 
 
-(defn row-with-label
-  [key name-kw value editable? mandatory? value-spec type validation-event]
-  (let [tr              (subscribe [::i18n-subs/tr])
-        active-input    (subscribe [::subs/active-input])
-        local-validate? (r/atom false)
-        validate-form?  (subscribe [::subs/validate-form?])]
-    (fn [key name-kw value editable? mandatory? value-spec type validation-event]
-      (let [name-str      (name name-kw)
-            name-label    (if (and editable? mandatory?) (utils-general/mandatory-name name-str) name-str)
-            input-active? (= name-str @active-input)
-            validate?     (or @local-validate? @validate-form?)
-            valid?        (s/valid? value-spec value)]
-        [ui/TableRow
-         [ui/TableCell {:collapsing true}
-          name-label]
-         [ui/TableCell
-          (if editable?
-            ^{:key key}
-            (if (in? [:input :password] type)
-              [ui/Input {:default-value value
-                         :placeholder   (@tr [name-kw])
-                         :disabled      (not editable?)
-                         :error         (and validate? (not valid?))
-                         :auto-complete "off"
-                         :fluid         true
-                         :type          (if (= type :input) :text type)
-                         :icon          (when input-active? :pencil)
-                         :onMouseEnter  #(dispatch [::events/active-input name-str])
-                         :onMouseLeave  #(dispatch [::events/active-input nil])
-                         :on-change     (ui-callback/input-callback
-                                          #(do
-                                             (reset! local-validate? true)
-                                             (dispatch [::events/update-credential name-kw %])
-                                             (dispatch [validation-event])))}]
-              ; Semantic UI's textarea styling requires to be wrapped in a form
-              [ui/Form
-               [ui/FormField {:class (when (and validate? (not valid?)) :error)}
-                [ui/TextArea {:default-value value
-                              :placeholder   (@tr [name-kw])
-                              :disabled      (not editable?)
-                              :icon          (when input-active? :pencil)
-                              :onMouseEnter  #(dispatch [::events/active-input name-str])
-                              :onMouseLeave  #(dispatch [::events/active-input nil])
-                              :on-change     (ui-callback/input-callback
-                                               #(do
-                                                  (reset! local-validate? true)
-                                                  (dispatch [::events/update-credential name-kw %])
-                                                  (dispatch [validation-event])))}]]])
-            [:span value])]]))))
-
-
 (defn row-infrastructure-services-selector
-  [subtype editable? value-spec validation-event]
+  [subtype editable? value-spec on-change]
   (let [tr                      (subscribe [::i18n-subs/tr])
         infrastructure-services (subscribe [::subs/infrastructure-services-available subtype])
         credential              (subscribe [::subs/credential])
         local-validate?         (r/atom false)
         validate-form?          (subscribe [::subs/validate-form?])]
     (dispatch [::events/fetch-infrastructure-services-available subtype])
-    (fn [subtype editable? value-spec validation-event]
+    (fn [subtype editable? value-spec on-change]
       (let [value     (:parent @credential)
             validate? (or @local-validate? @validate-form?)
             valid?    (s/valid? value-spec value)]
@@ -110,22 +59,25 @@
                            :on-click (ui-callback/value
                                        #(do
                                           (reset! local-validate? true)
-                                          (dispatch [::events/update-credential :parent id])
-                                          (dispatch [validation-event])))}]
+                                          (on-change id)))}]
                 ff/nbsp
                 [history/icon-link (str "api/" id)]])
-             [ui/Message {:content (str (str/capitalize (@tr [:no-infra-service-of-subtype])) " " subtype ".")}]
-             )]]]))))
+             [ui/Message {:content (str (str/capitalize (@tr [:no-infra-service-of-subtype]))
+                                        " " subtype ".")}])]]]))))
 
 
 (defn credential-swarm
   []
-  (let [is-new?    (subscribe [::subs/is-new?])
-        credential (subscribe [::subs/credential])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        credential     (subscribe [::subs/credential])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-credential name-kw value])
+                         (dispatch [::events/validate-swarm-credential-form]))]
     (fn []
-      (let [editable?             (utils-general/editable? @credential @is-new?)
-            {:keys [name description ca cert key]} @credential
-            form-validation-event ::events/validate-swarm-credential-form]
+      (let [editable? (utils-general/editable? @credential @is-new?)
+            {:keys [name description ca cert key]} @credential]
 
         [:<>
 
@@ -135,27 +87,37 @@
 
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody
-           [row-with-label "name" :name name editable? true
-            ::spec/name :input form-validation-event]
-           [row-with-label "description" :description description editable? true
-            ::spec/description :input form-validation-event]
-           [row-with-label "swarm-credential-ca" :ca ca editable? true
-            ::spec/ca :textarea form-validation-event]
-           [row-with-label "swarm-credential-cert" :cert cert editable? true
-            ::spec/cert :textarea form-validation-event]
-           [row-with-label "swarm-credential-key" :key key editable? true
-            ::spec/key :textarea form-validation-event]
-           [row-infrastructure-services-selector "swarm" editable? ::spec/parent form-validation-event]]]]))))
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :validate-form? @validate-form?, :default-value name, :spec ::spec/name,
+            :on-change (partial on-change :name)]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
+            :on-change (partial on-change :description)]
+           [uix/TableRowField "ca", :placeholder (@tr [:ca]), :editable? editable?, :required? true,
+            :default-value ca, :spec ::spec/ca, :type :textarea, :validate-form? @validate-form?,
+            :on-change (partial on-change :ca)]
+           [uix/TableRowField "cert", :placeholder (@tr [:cert]), :editable? editable?,
+            :required? true, :default-value cert, :spec ::spec/cert, :type :textarea,
+            :on-change (partial on-change :cert), :validate-form? @validate-form?]
+           [uix/TableRowField "key", :placeholder (@tr [:key]), :editable? editable?,
+            :required? true, :default-value key, :spec ::spec/key, :type :textarea,
+            :on-change (partial on-change :key), :validate-form? @validate-form?]
+           [row-infrastructure-services-selector "swarm" editable? ::spec/parent
+            (partial on-change :parent)]]]]))))
 
 
 (defn credential-minio
   []
-  (let [is-new?    (subscribe [::subs/is-new?])
-        credential (subscribe [::subs/credential])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        credential     (subscribe [::subs/credential])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-credential name-kw value])
+                         (dispatch [::events/validate-minio-credential-form]))]
     (fn []
-      (let [editable?             (utils-general/editable? @credential @is-new?)
-            {:keys [name description access-key secret-key]} @credential
-            form-validation-event ::events/validate-minio-credential-form]
+      (let [editable? (utils-general/editable? @credential @is-new?)
+            {:keys [name description access-key secret-key]} @credential]
 
         [:<>
          [acl/AclButton {:default-value (:acl @credential)
@@ -164,51 +126,20 @@
 
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody
-           [row-with-label "name" :name name editable? true
-            ::spec/name :input form-validation-event]
-           [row-with-label "description" :description description editable? true
-            ::spec/description :input form-validation-event]
-           [row-with-label "access-key" :access-key access-key editable? true
-            ::spec/access-key :input form-validation-event]
-           [row-with-label "secret-key" :secret-key secret-key editable? true
-            ::spec/secret-key :password form-validation-event]
-           [row-infrastructure-services-selector "s3" editable? ::spec/parent form-validation-event]]]]))))
-
-
-(defn credential-store-azure
-  []
-  (let [is-new?    (subscribe [::subs/is-new?])
-        credential (subscribe [::subs/credential])]
-    (fn []
-      (let [editable?             (utils-general/editable? @credential @is-new?)
-            {:keys [name description access-key secret-key]} @credential
-            form-validation-event ::events/validate-minio-credential-form]
-        [ui/Table (assoc style/definition :class :nuvla-ui-editable)
-         [ui/TableBody]]))))
-
-
-(defn credential-store-amazonec2
-  []
-  (let [is-new?    (subscribe [::subs/is-new?])
-        credential (subscribe [::subs/credential])]
-    (fn []
-      (let [editable?             (utils-general/editable? @credential @is-new?)
-            {:keys [name description access-key secret-key]} @credential
-            form-validation-event ::events/validate-minio-credential-form]
-        [ui/Table (assoc style/definition :class :nuvla-ui-editable)
-         [ui/TableBody]]))))
-
-
-(defn credential-store-exoscale
-  []
-  (let [is-new?    (subscribe [::subs/is-new?])
-        credential (subscribe [::subs/credential])]
-    (fn []
-      (let [editable?             (utils-general/editable? @credential @is-new?)
-            {:keys [name description access-key secret-key]} @credential
-            form-validation-event ::events/validate-minio-credential-form]
-        [ui/Table (assoc style/definition :class :nuvla-ui-editable)
-         [ui/TableBody]]))))
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
+            :validate-form? @validate-form?]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
+            :on-change (partial on-change :description)]
+           [uix/TableRowField "access-key", :editable? editable?, :required? true,
+            :default-value access-key, :spec ::spec/access-key, :validate-form? @validate-form?,
+            :on-change (partial on-change :access-key)]
+           [uix/TableRowField "secret-key", :editable? editable?, :required? true,
+            :default-value secret-key, :spec ::spec/secret-key, :validate-form? @validate-form?,
+            :on-change (partial on-change :secret-key)]
+           [row-infrastructure-services-selector "s3" editable? ::spec/parent
+            (partial on-change :parent)]]]]))))
 
 
 (defn save-callback
@@ -223,25 +154,18 @@
 
 
 (def infrastructure-service-validation-map
-  {"infrastructure-service-swarm"          {:validation-event ::events/validate-swarm-credential-form
-                                            :modal-content    credential-swarm}
-   "infrastructure-service-minio"          {:validation-event ::events/validate-minio-credential-form
-                                            :modal-content    credential-minio}
-   "infrastructure-service-azure"          {:validation-event ::events/validate-store-azure-form
-                                            :modal-content    credential-store-azure}
-   "infrastructure-service-amazonec2"      {:validation-event ::events/validate-store-amazonec2-form
-                                            :modal-content    credential-store-amazonec2}
-   "infrastructure-service-exoscale"       {:validation-event ::events/validate-store-exoscale-form
-                                            :modal-content    credential-store-exoscale}
-   "cloud-infrastructure-service-exoscale" {:validation-event ::events/validate-swarm-credential-form
-                                            :modal-content    credential-swarm
-                                            }
-   "cloud-infrastructure-service-azure"    {:validation-event ::events/validate-minio-credential-form
-                                            :modal-content    credential-minio}
-   ;""
-   ;{:validation-event ::events/validate-swarm-credential-form
-   ; :modal-content    credential-swarm}
-   })
+  {"infrastructure-service-swarm"
+   {:validation-event ::events/validate-swarm-credential-form
+    :modal-content    credential-swarm},
+   "infrastructure-service-minio"
+   {:validation-event ::events/validate-minio-credential-form
+    :modal-content    credential-minio},
+   "cloud-infrastructure-service-exoscale"
+   {:validation-event ::events/validate-swarm-credential-form
+    :modal-content    credential-swarm},
+   "cloud-infrastructure-service-azure"
+   {:validation-event ::events/validate-minio-credential-form
+    :modal-content    credential-minio}})
 
 
 (def infrastructure-service-subtypes
@@ -301,23 +225,25 @@
           [:div {:style {:padding-bottom 20}} "Choose the credential subtype you want to add."]
           [ui/CardGroup {:centered true}
 
-           [ui/Card {:on-click #(do
-                                  (dispatch [::events/set-validate-form? false])
-                                  (dispatch [::events/form-valid])
-                                  (dispatch [::events/close-add-credential-modal])
-                                  (dispatch [::events/open-credential-modal {:subtype "infrastructure-service-swarm"}
-                                             true]))}
+           [ui/Card
+            {:on-click #(do
+                          (dispatch [::events/set-validate-form? false])
+                          (dispatch [::events/form-valid])
+                          (dispatch [::events/close-add-credential-modal])
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-swarm"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Swarm"]
              [ui/Icon {:name "docker"
                        :size :massive}]]]
 
-           [ui/Card {:on-click #(do
-                                  (dispatch [::events/set-validate-form? false])
-                                  (dispatch [::events/form-valid])
-                                  (dispatch [::events/close-add-credential-modal])
-                                  (dispatch [::events/open-credential-modal {:subtype "infrastructure-service-minio"}
-                                             true]))}
+           [ui/Card
+            {:on-click #(do
+                          (dispatch [::events/set-validate-form? false])
+                          (dispatch [::events/form-valid])
+                          (dispatch [::events/close-add-credential-modal])
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-minio"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "MinIO"]
              [:div]
@@ -409,7 +335,8 @@
   (let [tr          (subscribe [::i18n-subs/tr])
         credentials (subscribe [::subs/credentials])]
     (fn []
-      (let [infra-service-creds (filter #(in? infrastructure-service-subtypes (:subtype %)) @credentials)
+      (let [infra-service-creds (filter #(in? infrastructure-service-subtypes (:subtype %))
+                                        @credentials)
             ;cloud-creds         (filter #(in? cloud-subtypes (:subtype %)) @credentials)
             ]
         (dispatch [::events/get-credentials])

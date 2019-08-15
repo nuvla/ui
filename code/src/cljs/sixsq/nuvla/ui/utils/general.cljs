@@ -1,18 +1,18 @@
 (ns sixsq.nuvla.ui.utils.general
   (:require
-    [cljs.tools.reader.edn :as edn]
     [clojure.set :as set]
     [clojure.string :as str]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn str->int
-  "Converts a string that contains a decimal representation of an integer into
-   an integer. Returns nil for any invalid input."
+  "Converts a string into an integer. Returns input unchanged for any invalid input."
   [s]
-  (when (and (string? s)
-             (re-find #"^-?(0|[1-9]\d*)$" s))
-    (edn/read-string s)))
+  (if (and (string? s)
+           (not (str/blank? s)))
+    (let [res (js/Number s)]
+      (if (js/isNaN res) s res))
+    s))
 
 
 (defn prepare-params [params]

@@ -1,11 +1,15 @@
 (ns sixsq.nuvla.ui.utils.semantic-ui-extensions
   (:require
+    [cljs.spec.alpha :as s]
+    [clojure.string :as str]
     [re-frame.core :refer [subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as form-fields]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [taoensso.timbre :as log]))
 
 
@@ -158,3 +162,43 @@
   [:span {:style {:display    :block
                   :text-align :justify}}
    text])
+
+
+(defn TableRowField
+  [name & {:keys [key placeholder default-value spec on-change
+                  required? editable? validate-form? type]}]
+  (let [local-validate? (r/atom false)
+        active-input?   (r/atom false)]
+    (fn [name & {:keys [key placeholder default-value spec on-change required?
+                        editable? validate-form? type]
+                 :or   {editable? true, spec any?, type :input}}]
+      (let [name-label  (cond-> name
+                                (and editable? required?) (general-utils/mandatory-name))
+            validate?   (boolean (or @local-validate? validate-form?))
+            error?      (and validate? (not (s/valid? spec default-value)))
+            common-opts {:default-value default-value
+                         :placeholder   (or placeholder name)
+                         :onMouseEnter  #(reset! active-input? true)
+                         :onMouseLeave  #(reset! active-input? false)
+                         :on-change     (ui-callback/input-callback
+                                          #(let [text (when-not (str/blank? %) %)]
+                                             (reset! local-validate? true)
+                                             (on-change text)))}]
+        [ui/TableRow
+         [ui/TableCell {:collapsing true} name-label]
+         ^{:key (or key name)}
+         [ui/TableCell
+          (if editable?
+            (if (#{:input :password} type)
+              [ui/Input (assoc common-opts
+                          :error error?
+                          :fluid true
+                          :type type
+                          :auto-complete "nope"
+                          :icon (when @active-input? :pencil))]
+              [ui/Form
+               [ui/FormField {:error error?}
+                [:div {:className "ui input icon"}
+                 [ui/TextArea common-opts]
+                 (when @active-input? [ui/Icon {:name "pencil"}])]]])
+            [SpanBlockJustified default-value])]]))))

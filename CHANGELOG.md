@@ -2,8 +2,13 @@
 
 ## [Unreleased]
 
+### Add
+
+  - Component - TableRowField
+
 ### Changed
 
+  - Credentials, Infrastructure, App - Use TableRowField 
   - Only show deployment URLs when number of running replicas is positive
   - Order output parameters alphabetically
   - Dependencies - Update shadow-cljs to version 2.8.45

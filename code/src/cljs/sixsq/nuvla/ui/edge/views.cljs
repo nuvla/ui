@@ -1,6 +1,8 @@
 (ns sixsq.nuvla.ui.edge.views
   (:require
     [cljs.pprint :refer [cl-format pprint]]
+    [cljs.spec.alpha :as s]
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
@@ -87,35 +89,76 @@
        :loading?   @loading?
        :on-refresh refresh}]]))
 
-(defn AddModal
-  []
-  (let [modal-id    :add
-        tr          (subscribe [::i18n-subs/tr])
-        visible?    (subscribe [::subs/modal-visible? modal-id])
-        user-id     (subscribe [::authn-subs/user-id])
-        nuvlabox-id (subscribe [::subs/nuvlabox-created-id])
-        owner-id    @user-id]
-    [ui/Modal {:open       @visible?
-               :close-icon true
-               :on-close   #(do
-                              (dispatch [::events/set-created-nuvlabox-id nil])
-                              (dispatch [::events/open-modal nil]))}
 
-     [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
+(defn CreatedNuvlaBox
+  [nuvlabox-id creation-data on-close-fn tr]
+  (let [nuvlabox-name-or-id (str "NuvlaBox " (or (:name creation-data)
+                                                 (general-utils/id->short-uuid nuvlabox-id)))]
+    [:<>
+     [ui/ModalHeader
+      [ui/Icon {:name "box"}] (str nuvlabox-name-or-id " created")]
 
      [ui/ModalContent
       [ui/CardGroup {:centered true}
-       [ui/Card (when-not @nuvlabox-id {:on-click #(dispatch [::events/create-nuvlabox owner-id])})
+       [ui/Card
         [ui/CardContent {:text-align :center}
-         [ui/Header "NuvlaBox"]
-         [ui/Icon (cond-> {:name "box"
-                           :size :massive}
-                          @nuvlabox-id (assoc :color "green"))]]
-        (when @nuvlabox-id
-          [ui/CopyToClipboard {:text @nuvlabox-id}
-           [ui/Button {:primary true
-                       :icon    "clipboard"
-                       :content (@tr [:copy-nuvlabox-id])}]])]]]]))
+         [ui/Header [:span {:style {:overflow-wrap "break-word"}} nuvlabox-name-or-id]]
+         [ui/Icon {:name  "box"
+                   :color "green"
+                   :size  :massive}]]
+        [ui/CopyToClipboard {:text nuvlabox-id}
+         [ui/Button {:positive true
+                     :icon     "clipboard"
+                     :content  (@tr [:copy-nuvlabox-id])}]]]]]
+
+     [ui/ModalActions
+      [ui/Button {:on-click on-close-fn} (@tr [:close])]]]))
+
+
+(defn AddModal
+  []
+  (let [modal-id      :add
+        tr            (subscribe [::i18n-subs/tr])
+        visible?      (subscribe [::subs/modal-visible? modal-id])
+        user-id       (subscribe [::authn-subs/user-id])
+        nuvlabox-id   (subscribe [::subs/nuvlabox-created-id])
+        default-data  {:owner            @user-id
+                       :refresh-interval 30}
+        creation-data (r/atom default-data)
+        on-close-fn   #(do
+                         (dispatch [::events/set-created-nuvlabox-id nil])
+                         (dispatch [::events/open-modal nil])
+                         (reset! creation-data default-data))
+        on-add-fn     #(do
+                         (dispatch [::events/create-nuvlabox
+                                   (->> @creation-data
+                                        (remove (fn [[_ v]] (str/blank? v)))
+                                        (into {}))])
+                         (reset! creation-data default-data))]
+    (fn []
+      [ui/Modal {:open       @visible?
+                 :close-icon true
+                 :on-close   on-close-fn}
+       (if @nuvlabox-id
+         [CreatedNuvlaBox @nuvlabox-id @creation-data on-close-fn tr]
+         [:<>
+          [ui/ModalHeader
+           [ui/Icon {:name "add"}] (str "New NuvlaBox " (:name @creation-data))]
+
+          [ui/ModalContent
+           [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+            [ui/TableBody
+             [uix/TableRowField (@tr [:name]), :on-change #(swap! creation-data assoc :name %)]
+             [uix/TableRowField "version", :spec (s/nilable int?),
+              :default-value (:version @creation-data),
+              :on-change #(swap! creation-data assoc :version (general-utils/str->int %))]
+             [uix/TableRowField (@tr [:description]), :type :textarea,
+              :on-change #(swap! creation-data assoc :description %)]]]]
+
+          [ui/ModalActions
+           [ui/Button {:positive true
+                       :on-click on-add-fn}
+            (@tr [:create])]]])])))
 
 
 (defn NuvlaboxRow

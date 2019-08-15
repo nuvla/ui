@@ -1,9 +1,7 @@
 (ns sixsq.nuvla.ui.infrastructures.views
   (:require
     [cljs.pprint :refer [cl-format]]
-    [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [reagent.core :as reagent]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.infrastructures.events :as events]
@@ -12,7 +10,6 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
@@ -130,65 +127,18 @@
   (some #(= elm %) coll))
 
 
-(defn row-with-label
-  [key name-kw value editable? mandatory? value-spec type validation-event]
-  (let [tr              (subscribe [::i18n-subs/tr])
-        active-input    (subscribe [::subs/active-input])
-        local-validate? (reagent/atom false)
-        validate-form?  (subscribe [::subs/validate-form?])]
-    (fn [key name-kw value editable? mandatory? value-spec type validation-event]
-      (let [name-str      (name name-kw)
-            name-label    (if (and editable? mandatory?) (utils-general/mandatory-name name-str) name-str)
-            input-active? (= name-str @active-input)
-            validate?     (or @local-validate? @validate-form?)
-            valid?        (s/valid? value-spec value)]
-        ;        (s/explain value-spec value)
-        [ui/TableRow
-         [ui/TableCell {:collapsing true}
-          name-label]
-         [ui/TableCell
-          (if editable?
-            ^{:key key}
-            (if (in? [:input :password] type)
-              [ui/Input {:default-value value
-                         :placeholder   (@tr [name-kw])
-                         :disabled      (not editable?)
-                         :error         (when (and validate? (not valid?)) true)
-                         :fluid         true
-                         :type          (if (= type :input) :text type)
-                         :icon          (when input-active? :pencil)
-                         :onMouseEnter  #(dispatch [::events/active-input name-str])
-                         :onMouseLeave  #(dispatch [::events/active-input nil])
-                         :on-change     (ui-callback/input-callback
-                                          #(do
-                                             (reset! local-validate? true)
-                                             (dispatch [validation-event])
-                                             (dispatch [::events/update-service name-kw %])))}]
-              ; Semantic UI's textarea styling requires to be wrapped in a form
-              [ui/Form
-               [ui/FormField {:class (when (and validate? (not valid?)) :error)}
-                [ui/TextArea {:default-value value
-                              :placeholder   (@tr [name-kw])
-                              :disabled      (not editable?)
-                              :icon          (when input-active? :pencil)
-                              :onMouseEnter  #(dispatch [::events/active-input name-str])
-                              :onMouseLeave  #(dispatch [::events/active-input nil])
-                              :on-change     (ui-callback/input-callback
-                                               #(do
-                                                  (reset! local-validate? true)
-                                                  (dispatch [validation-event])
-                                                  (dispatch [::events/update-service name-kw %])))}]]])
-            [:span value])]]))))
-
-
 (defn service-swarm
   []
-  (let [is-new? (subscribe [::subs/is-new?])
-        service (subscribe [::subs/service])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        service        (subscribe [::subs/service])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-service name-kw value])
+                         (dispatch [::events/validate-swarm-service-form]))]
     (fn []
-      (let [editable?             (utils-general/editable? @service @is-new?)
-            {:keys [name description endpoint]} @service
-            form-validation-event ::events/validate-swarm-service-form]
+      (let [editable? (general-utils/editable? @service @is-new?)
+            {:keys [name description endpoint]} @service]
         [:<>
 
          [acl/AclButton {:default-value (:acl @service)
@@ -197,22 +147,29 @@
 
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody
-           [row-with-label "name" :name name editable? true
-            ::spec/name :input form-validation-event]
-           [row-with-label "description" :description description editable? true
-            ::spec/description :input form-validation-event]
-           [row-with-label "swarm-endpoint" :endpoint endpoint editable? true
-            ::spec/endpoint :input form-validation-event]]]]))))
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
+            :validate-form? @validate-form?]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description,
+            :on-change (partial on-change :description), :validate-form? @validate-form?]
+           [uix/TableRowField (@tr [:endpoint]), :placeholder "https://swarm-example.io::2376",
+            :default-value endpoint, :spec ::spec/endpoint, :editable? editable?, :required? true,
+            :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]]))))
 
 
 (defn service-minio
   []
-  (let [is-new? (subscribe [::subs/is-new?])
-        service (subscribe [::subs/service])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        service        (subscribe [::subs/service])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-service name-kw value])
+                         (dispatch [::events/validate-minio-service-form]))]
     (fn []
-      (let [editable?             (utils-general/editable? @service @is-new?)
-            {:keys [name description endpoint]} @service
-            form-validation-event ::events/validate-minio-service-form]
+      (let [editable? (general-utils/editable? @service @is-new?)
+            {:keys [name description endpoint]} @service]
         [:<>
          [acl/AclButton {:default-value (:acl @service)
                          :read-only     (not editable?)
@@ -220,12 +177,15 @@
 
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody
-           [row-with-label "name" :name name editable? true
-            ::spec/name :input form-validation-event]
-           [row-with-label "description" :description description editable? true
-            ::spec/description :input form-validation-event]
-           [row-with-label "endpoint" :endpoint endpoint editable? true
-            ::spec/endpoint :input form-validation-event]]]]))))
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
+            :validate-form? @validate-form?]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
+            :on-change (partial on-change :description)]
+           [uix/TableRowField (@tr [:endpoint]), :placeholder "http://minio-example.io:9000",
+            :default-value endpoint, :spec ::spec/endpoint, :editable? editable?, :required? true,
+            :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]]))))
 
 
 (def infrastructure-service-validation-map

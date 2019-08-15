@@ -1,6 +1,8 @@
 (ns sixsq.nuvla.ui.edge.views
   (:require
     [cljs.pprint :refer [cl-format pprint]]
+    [cljs.spec.alpha :as s]
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
@@ -18,9 +20,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]
-    [clojure.string :as str]
-    [cljs.spec.alpha :as s]))
+    [taoensso.timbre :as log]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlaboxes)

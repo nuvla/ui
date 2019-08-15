@@ -1,16 +1,16 @@
 (ns sixsq.nuvla.ui.utils.semantic-ui-extensions
   (:require
+    [cljs.spec.alpha :as s]
+    [clojure.string :as str]
     [re-frame.core :refer [subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as form-fields]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [cljs.spec.alpha :as s]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [clojure.string :as str]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 
 (defn Button

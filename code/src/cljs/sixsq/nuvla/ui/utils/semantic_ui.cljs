@@ -174,8 +174,7 @@
 (def TableHeaderCell (r/adapt-react-class semantic/TableHeaderCell))
 (def TableRow (r/adapt-react-class semantic/TableRow))
 
-(def TextAreaRaw semantic/TextArea)
-(def TextArea (r/adapt-react-class TextAreaRaw))
+(def TextArea (r/adapt-react-class semantic/TextArea))
 
 (def Transition (r/adapt-react-class semantic/Transition))
 

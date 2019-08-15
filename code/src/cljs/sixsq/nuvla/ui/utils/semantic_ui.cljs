@@ -117,8 +117,6 @@
 
 (def Loader (r/adapt-react-class semantic/Loader))
 
-(def MenuRaw semantic/Menu)
-
 (def Menu (r/adapt-react-class semantic/Menu))
 (def MenuItem (r/adapt-react-class semantic/MenuItem))
 (def MenuMenu (r/adapt-react-class semantic/MenuMenu))
@@ -148,7 +146,6 @@
 (def Radio (r/adapt-react-class semantic/Radio))
 (def Responsive (r/adapt-react-class semantic/Responsive))
 
-(def SegmentRaw semantic/Segment)
 (def Segment (r/adapt-react-class semantic/Segment))
 (def SegmentGroup (r/adapt-react-class semantic/SegmentGroup))
 
@@ -200,4 +197,4 @@
 ;; code mirror
 ;;
 (def CodeMirror (r/adapt-react-class code-mirror/UnControlled))
-(def CodeMirrorControlled (r/adapt-react-class code-mirror/Controlled))
+;;(def CodeMirrorControlled (r/adapt-react-class code-mirror/Controlled))

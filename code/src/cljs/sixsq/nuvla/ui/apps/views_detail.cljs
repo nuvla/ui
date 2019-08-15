@@ -288,65 +288,18 @@
           (error-text tr error)]]))))
 
 
-(defn summary-row
-  [key name-kw value on-change-event mandatory? value-spec multiline]
-  (let [tr              (subscribe [::i18n-subs/tr])
-        active-input    (subscribe [::subs/active-input])
-        validate-form?  (subscribe [::subs/validate-form?])
-        editable?       (subscribe [::subs/editable?])
-        local-validate? (r/atom false)]
-    (fn [key name-kw value on-change-event mandatory? value-spec multiline]
-      (let [name-str      (name name-kw)
-            name-label    (if (and @editable? mandatory?) (utils/mandatory-name name-str) name-str)
-            input-active? (= name-str @active-input)
-            validate?     (or @local-validate? @validate-form?)
-            valid?        (s/valid? value-spec value)]
-        [ui/TableRow
-         [ui/TableCell {:collapsing true}
-          name-label]
-         [ui/TableCell
-          (if @editable?
-            ^{:key key}
-            (if multiline
-              [ui/Form
-               [ui/FormField {:error (when (and validate? (not valid?)) true)}
-                [:div {:className "ui input icon"}
-                 [ui/TextArea
-                  {:default-value value
-                   :placeholder   (str/capitalize (@tr [name-kw]))
-                   :onMouseEnter  #(dispatch [::events/active-input name-str])
-                   :onMouseLeave  #(dispatch [::events/active-input nil])
-                   :on-change     (ui-callback/input-callback
-                                    #(do
-                                       (reset! local-validate? true)
-                                       (dispatch [on-change-event (when-not (str/blank? %) %)])
-                                       (dispatch [::main-events/changes-protection? true])
-                                       (dispatch [::events/validate-form])))}]
-                 (when input-active?
-                   [ui/Icon {:name "pencil"}])]]]
-              [ui/Input {:default-value value
-                         :placeholder   (str/capitalize (@tr [name-kw]))
-                         :error         (when (and validate? (not valid?)) true)
-                         :fluid         true
-                         :icon          (when input-active? :pencil)
-                         :onMouseEnter  #(dispatch [::events/active-input name-str])
-                         :onMouseLeave  #(dispatch [::events/active-input nil])
-                         :on-change     (ui-callback/input-callback
-                                          #(do
-                                             (reset! local-validate? true)
-                                             (dispatch [on-change-event (when-not (str/blank? %) %)])
-                                             (dispatch [::main-events/changes-protection? true])
-                                             (dispatch [::events/validate-form])))}])
-            [uix/SpanBlockJustified value])]]))))
-
-
 (defn summary
   [extras]
   (let [tr               (subscribe [::i18n-subs/tr])
         default-logo-url (subscribe [::subs/default-logo-url])
         is-new?          (subscribe [::subs/is-new?])
         module-common    (subscribe [::subs/module-common])
-        editable?        (subscribe [::subs/editable?])]
+        editable?        (subscribe [::subs/editable?])
+        validate-form?   (subscribe [::subs/validate-form?])
+        on-change        #(fn [update-event-kw value]
+                            (dispatch [update-event-kw value])
+                            (dispatch [::main-events/changes-protection? true])
+                            (dispatch [::events/validate-form]))]
     (fn [extras]
       (let [{name        ::spec/name
              parent      ::spec/parent-path
@@ -365,10 +318,16 @@
           [ui/Table {:compact    true
                      :definition true}
            [ui/TableBody
-            [summary-row (str parent "-name")
-             :name name ::events/name true ::spec/name false]
-            [summary-row (str parent "-description")
-             :description description ::events/description true ::spec/description true]
+
+            [uix/TableRowField (@tr [:name]), :key (str parent "-name"), :editable? @editable?,
+             :spec ::spec/name, :validate-form? @validate-form?, :required? true,
+             :default-value name, :on-change (partial on-change ::events/name)]
+
+            [uix/TableRowField (@tr [:description]), :key (str parent "-description"),
+             :editable? @editable?, :spec ::spec/description, :validate-form? @validate-form?,
+             :required? true, :default-value description,
+             :on-change (partial on-change ::events/description)]
+
             (when (not-empty parent)
               (let [label (if (= "project" subtype) "parent project" "project")]
                 [ui/TableRow

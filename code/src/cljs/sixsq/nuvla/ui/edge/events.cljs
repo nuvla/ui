@@ -82,9 +82,8 @@
 
 (reg-event-fx
   ::create-nuvlabox
-  (fn [_ [_ owner-id]]
-    {::cimi-api-fx/add [:nuvlabox {:owner            owner-id
-                                   :refresh-interval 30}
+  (fn [_ [_ creation-data]]
+    {::cimi-api-fx/add [:nuvlabox creation-data
                         #(dispatch [::set-created-nuvlabox-id %])]}))
 
 

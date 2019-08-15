@@ -120,6 +120,40 @@
     (assoc db ::spec/node-parameters node-parameters)))
 
 
+(reg-event-db
+  ::set-deployment-log
+  (fn [db [_ deployment-log]]
+    (assoc db ::spec/deployment-log deployment-log)))
+
+
+(reg-event-db
+  ::set-deployment-log-id
+  (fn [db [_ deployment-log-id]]
+    (assoc db ::spec/deployment-log-id deployment-log-id)))
+
+
+(reg-event-fx
+  ::create-log
+  (fn [_ [_ resource-id service-name]]
+    {::cimi-api-fx/operation [resource-id "create-log"
+                              #(dispatch [::set-deployment-log-id (:resource-id %)])
+                              {:service service-name}
+                              ]}))
+
+(reg-event-fx
+  ::fetch-deployment-log
+  (fn [{{:keys [::spec/deployment-log-id]} :db} _]
+    (when deployment-log-id
+      {::cimi-api-fx/operation [deployment-log-id "fetch" #()]})))
+
+
+(reg-event-fx
+  ::get-deployment-log
+  (fn [{{:keys [::spec/deployment-log-id]} :db} _]
+    (when deployment-log-id
+      {::cimi-api-fx/get [deployment-log-id #(dispatch [::set-deployment-log %])]})))
+
+
 ;;
 ;; events used for cimi operations
 ;;

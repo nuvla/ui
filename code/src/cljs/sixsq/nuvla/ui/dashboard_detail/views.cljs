@@ -252,6 +252,62 @@
      :count (count resources)]))
 
 
+(defn log-controller
+  []
+  (let [{:keys [id]} @(subscribe [::subs/deployment])]
+    [ui/Menu
+
+     [ui/MenuItem {:on-click #(dispatch [::events/create-log id "fake-service-name"])} "create log"]
+
+     [ui/MenuItem
+      {:on-click #(do
+                    (dispatch [::main-events/action-interval-start
+                               {:id        :dashboard-detail-fetch-deployment-log
+                                :frequency 3000
+                                :event     [::events/fetch-deployment-log]}])
+                    (dispatch [::main-events/action-interval-start
+                               {:id        :dashboard-detail-get-deployment-log
+                                :frequency 5000
+                                :event     [::events/get-deployment-log]}]))}
+      "start fetch action interval"]
+
+     [ui/MenuItem {:on-click #(do
+                              (dispatch [::main-events/action-interval-delete
+                                         :dashboard-detail-fetch-deployment-log])
+                              (dispatch [::main-events/action-interval-delete
+                                         :dashboard-detail-get-deployment-log]))}
+      "stop fetch action interval"]
+
+     ])
+  )
+
+(defn logs-viewer
+  []
+  (let [deployment-log (subscribe [::subs/deployment-log])
+        log            (:log @deployment-log)]
+    [:div
+     [ui/Segment {:id "log-segment"
+                  :style {:max-height 300
+                          :overflow-y "auto"}}
+      (for [[i line] (map-indexed vector log)]
+        ^{:key (str "log_" i)}
+        [:pre {:style {:margin-top    3
+                       :margin-bottom 3}} line])]
+
+     [ui/Label (str "line count:")
+      [ui/LabelDetail (count log)]]
+     ]))
+
+
+(defn logs-section
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/Accordion [:div
+                    [log-controller]
+                    [logs-viewer]]
+     :label (str/capitalize (@tr [:logs]))]))
+
+
 (defn action-button
   [popup-text icon-name event-kw deployment-id]
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -403,4 +459,5 @@
           [parameters-section]
           [env-vars-section dep]
           [events-section]
+          [logs-section]
           [jobs-section]]]))))

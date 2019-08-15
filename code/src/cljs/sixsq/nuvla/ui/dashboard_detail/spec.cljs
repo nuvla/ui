@@ -18,6 +18,10 @@
 
 (s/def ::node-parameters any?)
 
+(s/def ::deployment-log-id (s/nilable string?))
+
+(s/def ::deployment-log any?)
+
 
 (s/def ::db (s/keys :req [::loading?
                           ::deployment
@@ -26,7 +30,9 @@
                           ::jobs
                           ::node-parameters
                           ::jobs-per-page
-                          ::job-page]))
+                          ::job-page
+                          ::deployment-log-id
+                          ::deployment-log]))
 
 
 (def defaults {::loading?              false
@@ -36,4 +42,6 @@
                ::jobs                  nil
                ::jobs-per-page         10
                ::job-page              1
-               ::node-parameters       nil})
+               ::node-parameters       nil
+               ::deployment-log-id     nil
+               ::deployment-log        nil})

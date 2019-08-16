@@ -253,58 +253,75 @@
 
 
 (defn log-controller
-  []
-  (let [{:keys [id]} @(subscribe [::subs/deployment])]
-    [ui/Menu
+  [follow?]
+  (let [{:keys [id]} @(subscribe [::subs/deployment])
+        play? (r/atom false)]
+    (fn [follow?]
+      [ui/Menu {:compact true}
 
-     [ui/MenuItem {:on-click #(dispatch [::events/create-log id "fake-service-name"])} "create log"]
+       [ui/MenuItem {:on-click #(dispatch [::events/create-log id "fake-service-name"])}
+        [ui/Icon {:name "add"}]]
 
-     [ui/MenuItem
-      {:on-click #(do
-                    (dispatch [::main-events/action-interval-start
-                               {:id        :dashboard-detail-fetch-deployment-log
-                                :frequency 3000
-                                :event     [::events/fetch-deployment-log]}])
-                    (dispatch [::main-events/action-interval-start
-                               {:id        :dashboard-detail-get-deployment-log
-                                :frequency 5000
-                                :event     [::events/get-deployment-log]}]))}
-      "start fetch action interval"]
+       [ui/MenuItem
+        {:on-click #(do
+                      (if @play?
+                        (dispatch [::main-events/action-interval-start
+                                   {:id        :dashboard-detail-get-deployment-log
+                                    :frequency 5000
+                                    :event     [::events/get-deployment-log]}])
+                        (dispatch [::main-events/action-interval-delete
+                                   :dashboard-detail-get-deployment-log]))
+                      (swap! play? not))}
+        [ui/Icon {:name (if @play? "play" "pause")}]]
+       [ui/MenuItem
+        {:active   @follow?
+         :on-click #(swap! follow? not)}
+        [ui/Icon {:name "caret down"}]]
 
-     [ui/MenuItem {:on-click #(do
-                              (dispatch [::main-events/action-interval-delete
-                                         :dashboard-detail-fetch-deployment-log])
-                              (dispatch [::main-events/action-interval-delete
-                                         :dashboard-detail-get-deployment-log]))}
-      "stop fetch action interval"]
+       [ui/MenuItem {:on-click #(dispatch [::events/clear-deployment-log])}
+        [ui/Icon {:name "trash"}]]
 
-     ])
+       ]))
   )
 
 (defn logs-viewer
   []
   (let [deployment-log (subscribe [::subs/deployment-log])
-        log            (:log @deployment-log)]
-    [:div
-     [ui/Segment {:id "log-segment"
-                  :style {:max-height 300
-                          :overflow-y "auto"}}
-      (for [[i line] (map-indexed vector log)]
-        ^{:key (str "log_" i)}
-        [:pre {:style {:margin-top    3
-                       :margin-bottom 3}} line])]
+        follow?        (r/atom true)
+        scroll-info    (r/atom nil)]
+    (fn []
+      (let [log (:log @deployment-log)]
+        [:<>
+         [log-controller follow?]
+         [ui/Segment {:loading (nil? @deployment-log)}
+          ^{:key (str "logger" @follow?)}
+          [ui/CodeMirror (cond-> {:value    (str/join "\n" log)
+                                  :scroll {:x (if @follow? 0 (:left @scroll-info))
+                                           :y (if @follow? (.-MAX_VALUE js/Number) (:top @scroll-info))}
+                                  :onScroll #(reset! scroll-info
+                                                     (js->clj %2 :keywordize-keys true))
+                                  :options  {:mode     ""
+                                             :readOnly true}})]]
+         [ui/Label (str "line count:")
+          [ui/LabelDetail (count log)]]
+         ]))
 
-     [ui/Label (str "line count:")
-      [ui/LabelDetail (count log)]]
-     ]))
+    #_[ui/Segment {:loading (nil? @deployment-log)
+                   :style   {:height     300
+                             :overflow-y "scroll"}}
+
+       (for [[i line] (map-indexed vector log)]
+         ^{:key (str "log_" i)}
+         [:pre {:style {:margin-top    3
+                        :margin-bottom 3}} line])]
+
+    ))
 
 
 (defn logs-section
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [uix/Accordion [:div
-                    [log-controller]
-                    [logs-viewer]]
+    [uix/Accordion [logs-viewer]
      :label (str/capitalize (@tr [:logs]))]))
 
 

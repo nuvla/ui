@@ -8,7 +8,8 @@
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (reg-event-db
@@ -120,10 +121,22 @@
     (assoc db ::spec/node-parameters node-parameters)))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-deployment-log
-  (fn [db [_ deployment-log]]
-    (assoc db ::spec/deployment-log deployment-log)))
+  (fn [{{:keys [::spec/deployment-log-id
+                ::spec/deployment-log] :as db} :db} [_ new-deployment-log]]
+    (let [concat-log (-> (:log deployment-log)
+                         (concat (:log new-deployment-log))
+                         (dedupe))]
+      {:db                     (assoc db ::spec/deployment-log
+                                         (assoc new-deployment-log :log concat-log))
+       ::cimi-api-fx/operation [deployment-log-id "fetch" #()]})))
+
+
+(reg-event-db
+  ::clear-deployment-log
+  (fn [db _]
+    (assoc db ::spec/deployment-log nil)))
 
 
 (reg-event-db
@@ -137,14 +150,9 @@
   (fn [_ [_ resource-id service-name]]
     {::cimi-api-fx/operation [resource-id "create-log"
                               #(dispatch [::set-deployment-log-id (:resource-id %)])
-                              {:service service-name}
+                              {:service service-name
+                               :since   (-> (time/now) (time/time->utc-str))}
                               ]}))
-
-(reg-event-fx
-  ::fetch-deployment-log
-  (fn [{{:keys [::spec/deployment-log-id]} :db} _]
-    (when deployment-log-id
-      {::cimi-api-fx/operation [deployment-log-id "fetch" #()]})))
 
 
 (reg-event-fx

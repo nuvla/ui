@@ -55,10 +55,11 @@
 
 
 (defn urls-section
-  [{:keys [module] :as deployment}]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [module] :as deployment}]
-      (let [urls (get-in module [:content :urls] [])]
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        module-content (subscribe [::subs/deployment-module-content])]
+    (fn []
+      (let [urls (get @module-content :urls [])]
         [uix/Accordion
          [ui/Segment style/autoscroll-x
           [ui/Table style/single-line
@@ -123,10 +124,11 @@
 
 
 (defn env-vars-section
-  [{:keys [module] :as deployment}]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [module] :as deployment}]
-      (let [env-vars (get-in module [:content :environmental-variables] [])]
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        module-content (subscribe [::subs/deployment-module-content])]
+    (fn []
+      (let [env-vars (get @module-content :environmental-variables [])]
         [uix/Accordion
          [ui/Segment style/autoscroll-x
           [ui/Table style/single-line
@@ -254,68 +256,92 @@
 
 (defn log-controller
   [follow?]
-  (let [{:keys [id]} @(subscribe [::subs/deployment])
-        play? (r/atom false)]
+  (let [locale        (subscribe [::i18n-subs/locale])
+        services-list (subscribe [::subs/deployment-services-list])
+        id            (subscribe [::subs/deployment-log-id])
+        since         (subscribe [::subs/deployment-log-since])
+        service       (subscribe [::subs/deployment-log-service])
+        play?         (subscribe [::subs/deployment-log-play?])]
+    (when (= (count @services-list) 1)
+      (dispatch [::events/set-deployment-log-service (first @services-list)]))
     (fn [follow?]
-      [ui/Menu {:compact true}
+      (let [deployment-log-doesnt-exist? (-> @id not boolean)]
+        [ui/Menu {:size "small", :attached "top"}
+         (when (> (count @services-list) 1)
+           [ui/MenuItem
+            [:span
+             [:b "Service: "]
+             [ui/Dropdown
+              {:value     @service
+               :on-change (ui-callback/value #(dispatch [::events/set-deployment-log-service %]))
+               :options   (map (fn [service]
+                                 {:key service, :text service, :value service}) @services-list)}]]])
+         [ui/MenuItem
+          [:span
+           [:b "Since:  "]
+           [ui/DatePicker
+            {:custom-input     (r/as-element
+                                 [ui/Input {:transparent true
+                                            :style       {:width "17em"}}])
+             :locale           @locale
+             :date-format      "LLL"
+             :disabled         deployment-log-doesnt-exist?
+             :show-time-select true
+             :timeIntervals    1
+             :popper-placement "top-end"
+             :popperModifiers  {:style {:width "25em"}}
+             :selected         @since
+             :on-change        #(dispatch [::events/set-deployment-log-since %])}]]]
 
-       [ui/MenuItem {:on-click #(dispatch [::events/create-log id "fake-service-name"])}
-        [ui/Icon {:name "add"}]]
+         [ui/MenuItem
+          {:disabled deployment-log-doesnt-exist?
+           :on-click #(dispatch [::events/set-deployment-log-play? (not @play?)])}
+          [ui/Icon {:name (if @play? "pause" "play")}]]
+         [ui/MenuMenu {:position "right"}
+          [ui/MenuItem
+           {:active   @follow?
+            :on-click #(swap! follow? not)}
+           [ui/IconGroup {:size "large"}
+            [ui/Icon {:name "bars"}]
+            [ui/Icon {:name "chevron circle down", :corner true}]]
+           "Scroll down"]
+          [ui/MenuItem {:on-click #(dispatch [::events/clear-deployment-log])}
+           [ui/IconGroup {:size "large"}
+            [ui/Icon {:name "bars"}]
+            [ui/Icon {:name "trash", :corner true}]]
+           "Clear log"]]]))))
 
-       [ui/MenuItem
-        {:on-click #(do
-                      (if @play?
-                        (dispatch [::main-events/action-interval-start
-                                   {:id        :dashboard-detail-get-deployment-log
-                                    :frequency 5000
-                                    :event     [::events/get-deployment-log]}])
-                        (dispatch [::main-events/action-interval-delete
-                                   :dashboard-detail-get-deployment-log]))
-                      (swap! play? not))}
-        [ui/Icon {:name (if @play? "play" "pause")}]]
-       [ui/MenuItem
-        {:active   @follow?
-         :on-click #(swap! follow? not)}
-        [ui/Icon {:name "caret down"}]]
-
-       [ui/MenuItem {:on-click #(dispatch [::events/clear-deployment-log])}
-        [ui/Icon {:name "trash"}]]
-
-       ]))
-  )
 
 (defn logs-viewer
   []
-  (let [deployment-log (subscribe [::subs/deployment-log])
-        follow?        (r/atom true)
-        scroll-info    (r/atom nil)]
+  (let [deployment-log       (subscribe [::subs/deployment-log])
+        id    (subscribe [::subs/deployment-log-id])
+        play? (subscribe [::subs/deployment-log-play?])
+        follow?              (r/atom true)
+        scroll-info          (r/atom nil)]
     (fn []
       (let [log (:log @deployment-log)]
-        [:<>
+        [:div
          [log-controller follow?]
-         [ui/Segment {:loading (nil? @deployment-log)}
-          ^{:key (str "logger" @follow?)}
-          [ui/CodeMirror (cond-> {:value    (str/join "\n" log)
-                                  :scroll {:x (if @follow? 0 (:left @scroll-info))
-                                           :y (if @follow? (.-MAX_VALUE js/Number) (:top @scroll-info))}
-                                  :onScroll #(reset! scroll-info
-                                                     (js->clj %2 :keywordize-keys true))
-                                  :options  {:mode     ""
-                                             :readOnly true}})]]
-         [ui/Label (str "line count:")
-          [ui/LabelDetail (count log)]]
-         ]))
-
-    #_[ui/Segment {:loading (nil? @deployment-log)
-                   :style   {:height     300
-                             :overflow-y "scroll"}}
-
-       (for [[i line] (map-indexed vector log)]
-         ^{:key (str "log_" i)}
-         [:pre {:style {:margin-top    3
-                        :margin-bottom 3}} line])]
-
-    ))
+         (when @id
+           [:<>
+            ^{:key (str "logger" @follow?)}
+            [ui/Segment {:attached "bottom"
+                         :loading  (and (nil? @deployment-log)
+                                        @play?)
+                         :style    {:padding 0}}
+             [ui/CodeMirror (cond-> {:value    (str/join "\n" log)
+                                     :style    {:z-index 0}
+                                     :scroll   {:x (:left @scroll-info)
+                                                :y (if @follow?
+                                                     (.-MAX_VALUE js/Number)
+                                                     (:top @scroll-info))}
+                                     :onScroll #(reset! scroll-info
+                                                        (js->clj %2 :keywordize-keys true))
+                                     :options  {:mode     ""
+                                                :readOnly true}})]]
+            [ui/Label (str "line count:")
+             [ui/LabelDetail (count log)]]])]))))
 
 
 (defn logs-section
@@ -457,24 +483,26 @@
   [uuid]
   (let [tr          (subscribe [::i18n-subs/tr])
         deployment  (subscribe [::subs/deployment])
-        resource-id (str "deployment/" uuid)]
+        read-only?  (subscribe [::subs/is-read-only?])
+        acl         (subscribe [::subs/deployment-acl])
+        resource-id (str "deployment/" uuid)
+        loading?    (subscribe [::subs/loading? resource-id])]
 
     (refresh resource-id)
     (fn [uuid]
-      (let [{:keys [id acl] :as dep} @deployment]
-        ^{:key uuid}
-        [ui/Segment (merge style/basic
-                           {:loading (not= uuid (general-utils/id->uuid id))})
-         [ui/Container {:fluid true}
-          [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard])) :inline true]
-          [acl/AclButton {:default-value acl
-                          :read-only     (not (general-utils/can-edit? dep))
-                          :on-change     #(dispatch [::events/edit id (assoc dep :acl %)])}]
-          [menu]
-          [summary dep]
-          [urls-section dep]
-          [parameters-section]
-          [env-vars-section dep]
-          [events-section]
-          [logs-section]
-          [jobs-section]]]))))
+      ^{:key uuid}
+      [ui/Segment (merge style/basic {:loading @loading?})
+       [ui/Container {:fluid true}
+        [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard])) :inline true]
+        [acl/AclButton
+         {:default-value @acl
+          :read-only     @read-only?
+          :on-change     #(dispatch [::events/edit resource-id (assoc @deployment :acl %)])}]
+        [menu]
+        [summary @deployment]
+        [urls-section]
+        [parameters-section]
+        [env-vars-section]
+        [events-section]
+        [logs-section]
+        [jobs-section]]])))

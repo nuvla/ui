@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.utils.general
   (:require
+    ["js-yaml" :as js-yaml]
     [clojure.set :as set]
     [clojure.string :as str]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
@@ -102,6 +103,12 @@
 
 (defn json->edn [json & {:keys [keywordize-keys] :or {keywordize-keys true}}]
   (js->clj (.parse js/JSON json) :keywordize-keys keywordize-keys))
+
+
+(defn yaml->obj
+  [yaml]
+  (js-yaml/load yaml))
+
 
 ;;
 ;; utilities for random element identifiers

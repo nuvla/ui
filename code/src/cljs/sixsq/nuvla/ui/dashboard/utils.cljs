@@ -36,6 +36,14 @@
   (and (number? n) (pos? n)))
 
 
+(defn is-replicas-positive?
+  [entry]
+  (->> entry
+       second
+       general-utils/str->int
+       positive-number?))
+
+
 (defn running-replicas?
   "Extracts the number of running replicas and returns true if the number is
    positive. Returns false is all other cases."
@@ -43,10 +51,7 @@
   (if (seq deployment-parameters)
     (->> deployment-parameters
          (filter is-replicas-running?)
-         (map second)
-         (map :value)
-         (map general-utils/str->int)
-         (map positive-number?)
+         (map is-replicas-positive?)
          (every? true?))                                    ;; careful, this returns true for an empty collection!
     false))
 

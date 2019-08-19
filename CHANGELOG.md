@@ -8,6 +8,7 @@
 
 ### Changed
 
+  - Apps - Allow urls only when all replicas.running parameters are positive #227 
   - Credentials, Infrastructure, App - Use TableRowField 
   - Only show deployment URLs when number of running replicas is positive
   - Order output parameters alphabetically

@@ -36,10 +36,11 @@
   (and (number? n) (pos? n)))
 
 
-(defn is-replicas-positive?
+(defn is-value-positive?
   [entry]
   (->> entry
        second
+       :value
        general-utils/str->int
        positive-number?))
 
@@ -51,7 +52,7 @@
   (if (seq deployment-parameters)
     (->> deployment-parameters
          (filter is-replicas-running?)
-         (map is-replicas-positive?)
+         (map is-value-positive?)
          (every? true?))                                    ;; careful, this returns true for an empty collection!
     false))
 

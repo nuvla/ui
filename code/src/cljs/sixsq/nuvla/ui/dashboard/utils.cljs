@@ -23,14 +23,32 @@
           url-pattern pattern-value)))))
 
 
-(defn running-replica?
+(defn is-replicas-running?
+  "Select all strings that end with 'replicas.running'."
+  [[k _]]
+  (and (string? k) (str/ends-with? k "replicas.running")))
+
+
+(defn positive-number?
+  "Determines if the value is a positive number. Will not throw an exception
+   if the argument is not a number."
+  [n]
+  (and (number? n) (pos? n)))
+
+
+(defn running-replicas?
   "Extracts the number of running replicas and returns true if the number is
    positive. Returns false is all other cases."
   [deployment-parameters]
-  (let [n (some->> (get deployment-parameters "replicas.running")
-                   :value
-                   general-utils/str->int)]
-    (and (number? n) (pos? n))))
+  (if (seq deployment-parameters)
+    (->> deployment-parameters
+         (filter is-replicas-running?)
+         (map second)
+         (map :value)
+         (map general-utils/str->int)
+         (map positive-number?)
+         (every? true?))                                    ;; careful, this returns true for an empty collection!
+    false))
 
 
 (defn deployment-active?

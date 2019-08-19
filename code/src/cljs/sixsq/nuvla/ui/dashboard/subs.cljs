@@ -59,5 +59,5 @@
     (let [deployment-params-by-name (->> (get deployments-params-map id)
                                          (map (juxt :name identity))
                                          (into {}))]
-      (when (utils/running-replica? deployment-params-by-name)
+      (when (utils/running-replicas? deployment-params-by-name)
         (utils/resolve-url-pattern url-pattern deployment-params-by-name)))))

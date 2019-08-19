@@ -55,7 +55,7 @@
   ::url
   :<- [::deployment-parameters]
   (fn [deployment-parameters [_ url-pattern]]
-    (when (dashboard-utils/running-replica? deployment-parameters)
+    (when (dashboard-utils/running-replicas? deployment-parameters)
       (dashboard-utils/resolve-url-pattern url-pattern deployment-parameters))))
 
 

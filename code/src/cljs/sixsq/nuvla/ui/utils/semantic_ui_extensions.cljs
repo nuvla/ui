@@ -121,11 +121,11 @@
 
 
 (defn Accordion
-  [content & {:keys [label count icon default-open title-size] :or {default-open true
-                                                                    title-size   :h3}}]
+  [content & {:keys [label count icon default-open title-size on-open on-close]
+              :or {default-open true, title-size   :h3, on-open #(), on-close #()}}]
   (let [active? (r/atom default-open)]
-    (fn [content & {:keys [label count icon default-open title-size] :or {default-open true
-                                                                          title-size   :h3}}]
+    (fn [content & {:keys [label count icon default-open title-size]
+                    :or {default-open true, title-size   :h3, on-open #(), on-close #()}}]
       [ui/Accordion {:fluid     true
                      :styled    true
                      :style     {:margin-top    "10px"
@@ -134,7 +134,9 @@
 
        [ui/AccordionTitle {:active   @active?
                            :index    1
-                           :on-click #(accordion-utils/toggle active?)}
+                           :on-click #(do
+                                        (accordion-utils/toggle active?)
+                                        (if @active? (on-open) (on-close)))}
         [title-size
          [ui/Icon {:name (if @active? "dropdown" "caret right")}]
 

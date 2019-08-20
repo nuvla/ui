@@ -296,10 +296,10 @@
         module-common    (subscribe [::subs/module-common])
         editable?        (subscribe [::subs/editable?])
         validate-form?   (subscribe [::subs/validate-form?])
-        on-change        #(fn [update-event-kw value]
-                            (dispatch [update-event-kw value])
-                            (dispatch [::main-events/changes-protection? true])
-                            (dispatch [::events/validate-form]))]
+        on-change        (fn [update-event-kw value]
+                           (dispatch [update-event-kw value])
+                           (dispatch [::main-events/changes-protection? true])
+                           (dispatch [::events/validate-form]))]
     (fn [extras]
       (let [{name        ::spec/name
              parent      ::spec/parent-path

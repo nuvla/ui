@@ -25,6 +25,7 @@
     "chart.js": "^2.7.3",
     "codemirror": "^5.43.0",
     "create-react-class": "15.6.3",
+    "js-yaml": "^3.13.1",
     "license-checker": "^25.0.1",
     "moment": "^2.24.0",
     "react": "^16.8.6",

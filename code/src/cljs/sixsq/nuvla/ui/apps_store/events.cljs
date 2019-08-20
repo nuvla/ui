@@ -25,7 +25,7 @@
                 ::spec/page
                 ::spec/elements-per-page] :as db} :db} _]
     (-> {:db (assoc db ::spec/modules nil)}
-        (search-modules-cofx full-text-search page elements-per-page))))
+        (search-modules-cofx full-text-search elements-per-page page))))
 
 
 (reg-event-fx

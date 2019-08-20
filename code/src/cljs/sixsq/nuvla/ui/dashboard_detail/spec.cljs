@@ -45,6 +45,9 @@
                           ::deployment-log]))
 
 
+(defn default-since []
+  (-> (time/now) (.seconds 0)))
+
 (def defaults {::loading?                  true
                ::deployment                nil
                ::deployment-parameters     nil
@@ -56,6 +59,6 @@
                ::deployment-log-controller nil
                ::deployment-log-id         nil
                ::deployment-log-service    nil
-               ::deployment-log-since      (-> (time/now) (.seconds 0))
+               ::deployment-log-since      (default-since)
                ::deployment-log-play?      false
                ::deployment-log            nil})

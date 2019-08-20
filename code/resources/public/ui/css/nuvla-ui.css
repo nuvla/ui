@@ -80,3 +80,11 @@ div.search.dropdown > input {
 .nuvla-command {
     font-family: "Courier New", Courier, monospace;
 }
+
+.react-datepicker-popper {
+    z-index: 11 !important;
+}
+
+.cms-s-logger {
+    background: transparent;
+}

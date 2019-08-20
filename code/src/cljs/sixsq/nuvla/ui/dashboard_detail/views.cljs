@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.dashboard-detail.events :as events]
     [sixsq.nuvla.ui.dashboard-detail.subs :as subs]
+    [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
     [sixsq.nuvla.ui.dashboard.subs :as dashboard-subs]
     [sixsq.nuvla.ui.dashboard.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -265,73 +266,76 @@
     (when (= (count @services-list) 1)
       (dispatch [::events/set-deployment-log-service (first @services-list)]))
     (fn [follow?]
-      (let [deployment-log-doesnt-exist? (-> @id not boolean)]
-        [ui/Menu {:size "small", :attached "top"}
-         (when (> (count @services-list) 1)
-           [ui/MenuItem
-            [:span
-             [:b "Service: "]
-             [ui/Dropdown
-              {:value     @service
-               :on-change (ui-callback/value #(dispatch [::events/set-deployment-log-service %]))
-               :options   (map (fn [service]
-                                 {:key service, :text service, :value service}) @services-list)}]]])
-         [ui/MenuItem
-          [:span
-           [:b "Since:  "]
-           [ui/DatePicker
-            {:custom-input     (r/as-element
-                                 [ui/Input {:transparent true
-                                            :style       {:width "17em"}}])
-             :locale           @locale
-             :date-format      "LLL"
-             :disabled         deployment-log-doesnt-exist?
-             :show-time-select true
-             :timeIntervals    1
-             :popper-placement "top-end"
-             :popperModifiers  {:style {:width "25em"}}
-             :selected         @since
-             :on-change        #(dispatch [::events/set-deployment-log-since %])}]]]
+      [ui/Menu {:size "small", :attached "top"}
 
-         [ui/MenuItem
-          {:disabled deployment-log-doesnt-exist?
-           :on-click #(dispatch [::events/set-deployment-log-play? (not @play?)])}
-          [ui/Icon {:name (if @play? "pause" "play")}]]
-         [ui/MenuMenu {:position "right"}
-          [ui/MenuItem
-           {:active   @follow?
-            :on-click #(swap! follow? not)}
-           [ui/IconGroup {:size "large"}
-            [ui/Icon {:name "bars"}]
-            [ui/Icon {:name "chevron circle down", :corner true}]]
-           "Scroll down"]
-          [ui/MenuItem {:on-click #(dispatch [::events/clear-deployment-log])}
-           [ui/IconGroup {:size "large"}
-            [ui/Icon {:name "bars"}]
-            [ui/Icon {:name "trash", :corner true}]]
-           "Clear log"]]]))))
+       [ui/MenuItem
+        {:disabled (not @service)
+         :on-click #(dispatch [::events/set-deployment-log-play? (not @play?)])}
+        [ui/Icon {:name (if @play? "pause" "play")}]]
+
+       (when (> (count @services-list) 1)
+         [ui/Dropdown
+          {:value     @service
+           :text      (if @service @service "Select a service")
+           :item      true
+           :on-change (ui-callback/value #(dispatch [::events/set-deployment-log-service %]))
+           :options   (map (fn [service]
+                             {:key service, :text service, :value service}) @services-list)}])
+       [ui/MenuItem
+        [:span
+         "Since:  "
+         [ui/DatePicker
+          {:custom-input     (r/as-element
+                               [ui/Input {:transparent true
+                                          :style       {:width "17em"}}])
+           :locale           @locale
+           :date-format      "LLL"
+           :show-time-select true
+           :timeIntervals    1
+           :selected         @since
+           :on-change        #(dispatch [::events/set-deployment-log-since %])}]]]
+
+       [ui/MenuMenu {:position "right"}
+
+        [ui/MenuItem
+         {:active   @follow?
+          :on-click #(swap! follow? not)}
+         [ui/IconGroup {:size "large"}
+          [ui/Icon {:name "bars"}]
+          [ui/Icon {:name "chevron circle down", :corner true}]]
+         "Scroll down"]
+
+        [ui/MenuItem {:on-click #(dispatch [::events/clear-deployment-log])}
+         [ui/IconGroup {:size "large"}
+          [ui/Icon {:name "bars"}]
+          [ui/Icon {:name "trash", :corner true}]]
+         "Clear log"]]])))
 
 
 (defn logs-viewer
   []
-  (let [deployment-log       (subscribe [::subs/deployment-log])
-        id    (subscribe [::subs/deployment-log-id])
-        play? (subscribe [::subs/deployment-log-play?])
-        follow?              (r/atom true)
-        scroll-info          (r/atom nil)]
+  (let [deployment-log (subscribe [::subs/deployment-log])
+        id             (subscribe [::subs/deployment-log-id])
+        play?          (subscribe [::subs/deployment-log-play?])
+        follow?        (r/atom true)
+        scroll-info    (r/atom nil)]
     (fn []
       (let [log (:log @deployment-log)]
         [:div
          [log-controller follow?]
-         (when @id
-           [:<>
-            ^{:key (str "logger" @follow?)}
-            [ui/Segment {:attached "bottom"
-                         :loading  (and (nil? @deployment-log)
-                                        @play?)
-                         :style    {:padding 0}}
+         [:<>
+          ^{:key (str "logger" @follow?)}
+          [ui/Segment {:attached  "bottom"
+                       :loading   (and (nil? @deployment-log)
+                                       @play?)
+                       :secondary true
+                       :placeholder true
+                       :style     {:padding 0
+                                   :z-index 0
+                                   :height 300}}
+
+           (if @id
              [ui/CodeMirror (cond-> {:value    (str/join "\n" log)
-                                     :style    {:z-index 0}
                                      :scroll   {:x (:left @scroll-info)
                                                 :y (if @follow?
                                                      (.-MAX_VALUE js/Number)
@@ -339,16 +343,37 @@
                                      :onScroll #(reset! scroll-info
                                                         (js->clj %2 :keywordize-keys true))
                                      :options  {:mode     ""
-                                                :readOnly true}})]]
-            [ui/Label (str "line count:")
-             [ui/LabelDetail (count log)]]])]))))
+                                                :readOnly true
+                                                :theme    "logger"}})]
+             [ui/Header {:icon true}
+              [ui/Icon {:name "search"}]
+              "Get service logs"]
+             )]
+          [ui/Label (str "line count:")
+           [ui/LabelDetail (count log)]]]]))))
+
+
+(defn logs-viewer-wrapper
+  []
+  (r/create-class
+    {:component-will-unmount #(do
+                                (dispatch [::events/delete-deployment-log])
+                                (dispatch [::events/set-deployment-log-since (spec/default-since)])
+                                (dispatch [::events/set-deployment-log-service nil]))
+     :reagent-render         logs-viewer}))
 
 
 (defn logs-section
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [uix/Accordion [logs-viewer]
-     :label (str/capitalize (@tr [:logs]))]))
+  (let [tr            (subscribe [::i18n-subs/tr])
+        services-list (subscribe [::subs/deployment-services-list])
+        id            (subscribe [::subs/deployment-log-id])]
+    [uix/Accordion [logs-viewer-wrapper]
+     :label (str/capitalize (@tr [:logs]))
+     :default-open false
+     :on-open #(when (and (= (count @services-list) 1) (not @id))
+                 (dispatch [::events/set-deployment-log-since (spec/default-since)])
+                 (dispatch [::events/set-deployment-log-service (first @services-list)]))]))
 
 
 (defn action-button

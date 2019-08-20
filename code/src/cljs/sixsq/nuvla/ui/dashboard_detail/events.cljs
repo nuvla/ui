@@ -121,6 +121,7 @@
   (fn [db [_ node-parameters]]
     (assoc db ::spec/node-parameters node-parameters)))
 
+
 (reg-event-fx
   ::fetch-deployment-log
   (fn [{{:keys [::spec/deployment-log-id]} :db} _]
@@ -154,16 +155,21 @@
 (reg-event-fx
   ::create-log
   (fn [{{:keys [::spec/deployment
-                ::spec/deployment-log-id
                 ::spec/deployment-log-service
                 ::spec/deployment-log-since] :as db} :db} _]
-    (cond-> {:db                     (assoc db ::spec/deployment-log-id nil
-                                               ::spec/deployment-log nil)
-             ::cimi-api-fx/operation [(:id deployment) "create-log"
-                                      #(dispatch [::set-deployment-log-id (:resource-id %)])
-                                      {:service deployment-log-service
-                                       :since   (time/time->utc-str deployment-log-since)}]}
-            deployment-log-id (assoc ::cimi-api-fx/delete [deployment-log-id #()]))))
+    {::cimi-api-fx/operation [(:id deployment) "create-log"
+                              #(dispatch [::set-deployment-log-id (:resource-id %)])
+                              {:service deployment-log-service
+                               :since   (time/time->utc-str deployment-log-since)}]}))
+
+
+(reg-event-fx
+  ::delete-deployment-log
+  (fn [{{:keys [::spec/deployment-log-id] :as db} :db} _]
+    (cond-> {:db (assoc db ::spec/deployment-log-id nil
+                           ::spec/deployment-log nil)}
+            deployment-log-id (assoc ::cimi-api-fx/delete [deployment-log-id #()]
+                                     :dispatch [::set-deployment-log-play? false]))))
 
 
 (reg-event-fx
@@ -172,34 +178,39 @@
     (when deployment-log-id
       {::cimi-api-fx/get [deployment-log-id #(dispatch [::set-deployment-log %])]})))
 
+
 (reg-event-fx
   ::set-deployment-log-service
-  (fn [{db :db} [_ service]]
-    {:db       (assoc db ::spec/deployment-log-service service)
-     :dispatch [::create-log]}))
+  (fn [{{:keys [::spec/deployment-log-id] :as db} :db} [_ service]]
+    (cond-> {:db         (assoc db ::spec/deployment-log-service service)}
+            deployment-log-id (assoc :dispatch [::delete-deployment-log]))))
 
 
 (reg-event-fx
   ::set-deployment-log-since
-  (fn [{db :db} [_ since]]
-    {:db       (assoc db ::spec/deployment-log-since since)
-     :dispatch [::create-log]}))
+  (fn [{{:keys [::spec/deployment-log-id] :as db} :db} [_ since]]
+    (cond-> {:db         (assoc db ::spec/deployment-log-since since)}
+            deployment-log-id (assoc :dispatch [::delete-deployment-log]))))
 
 
 (reg-event-fx
   ::set-deployment-log-play?
-  (fn [{db :db} [_ play?]]
+  (fn [{{:keys [::spec/deployment-log-id] :as db} :db} [_ play?]]
     (cond-> {:db       (assoc db ::spec/deployment-log-play? play?)
              :dispatch (if play?
-                         [::fetch-deployment-log]
+                         (if deployment-log-id
+                           [::fetch-deployment-log]
+                           [::create-log])
                          [::main-events/action-interval-delete
                           :dashboard-detail-get-deployment-log])}
-            play? (assoc :dispatch-later
-                         [{:ms       5000
-                           :dispatch [::main-events/action-interval-start
-                                      {:id        :dashboard-detail-get-deployment-log
-                                       :frequency 10000
-                                       :event     [::get-deployment-log]}]}]))))
+            (and play?
+                 deployment-log-id)
+            (assoc :dispatch-later
+                   [{:ms       5000
+                     :dispatch [::main-events/action-interval-start
+                                {:id        :dashboard-detail-get-deployment-log
+                                 :frequency 10000
+                                 :event     [::get-deployment-log]}]}]))))
 
 ;;
 ;; events used for cimi operations

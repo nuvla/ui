@@ -325,14 +325,14 @@
          [log-controller follow?]
          [:<>
           ^{:key (str "logger" @follow?)}
-          [ui/Segment {:attached  "bottom"
-                       :loading   (and (nil? @deployment-log)
-                                       @play?)
-                       :secondary true
+          [ui/Segment {:attached    "bottom"
+                       :loading     (and (nil? @deployment-log)
+                                         @play?)
+                       :secondary   true
                        :placeholder true
-                       :style     {:padding 0
-                                   :z-index 0
-                                   :height 300}}
+                       :style       {:padding 0
+                                     :z-index 0
+                                     :height  300}}
 
            (if @id
              [ui/CodeMirror (cond-> {:value    (str/join "\n" log)

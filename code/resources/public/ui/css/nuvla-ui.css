@@ -85,6 +85,6 @@ div.search.dropdown > input {
     z-index: 11 !important;
 }
 
-.cms-s-logger {
-    background: transparent;
+.cm-s-logger {
+    background: transparent !important;
 }

@@ -4,10 +4,14 @@
 
 ### Add
 
+  - Dashboard detail - log accordion
+  - Yaml parser dependency
   - Component - TableRowField
 
 ### Changed
 
+  - Apps store - Fix refresh
+  - Apps - Fix summary fields on-change
   - Apps - Allow urls only when all replicas.running parameters are positive #227 
   - Credentials, Infrastructure, App - Use TableRowField 
   - Only show deployment URLs when number of running replicas is positive

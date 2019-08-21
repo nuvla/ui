@@ -3,6 +3,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
     [sixsq.nuvla.ui.authn.events :as authn-events]
+    [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.main.effects :as fx]
     [sixsq.nuvla.ui.main.spec :as spec]
@@ -187,6 +188,21 @@
                            {:filter "subtype='swarm'"
                             :select "id"}
                            #(dispatch [::set-bootsrap-message %])]}))
+(reg-event-fx
+  ::set-notifications
+  (fn [_ [_ {:keys [resources]}]]
+    {:dispatch-n (map (fn [{:keys [id message] :as notification}]
+                        [::messages-events/add {:header  id
+                                                :content message
+                                                :data notification
+                                                :type    :notif}]) resources)}))
+
+(reg-event-fx
+  ::check-notifications
+  (fn [_ _]
+    {::cimi-api-fx/search [:notification
+                           {:filter "expiry>'now' and (not-before=null or not-before<='now')"}
+                           #(dispatch [::set-notifications %])]}))
 
 
 (reg-event-fx

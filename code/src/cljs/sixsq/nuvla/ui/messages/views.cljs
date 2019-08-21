@@ -5,11 +5,13 @@
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.messages.events :as events]
+    [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.messages.subs :as subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (defn type->icon-name
@@ -18,6 +20,7 @@
     :error "warning circle"
     :info "info circle"
     :success "check circle"
+    :notif "bullhorn"
     "warning circle"))
 
 
@@ -71,7 +74,7 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         alert-message (subscribe [::subs/alert-message])
         alert-display (subscribe [::subs/alert-display])]
-    (if-let [{:keys [type header content]} @alert-message]
+    (if-let [{:keys [type header content data]} @alert-message]
       (let [icon-name (type->icon-name type)
             visible?  (= :modal @alert-display)
             hide-fn   #(dispatch [::events/hide])
@@ -87,7 +90,24 @@
 
          [ui/ModalActions
           [uix/Button {:text (@tr [:close]), :on-click hide-fn}]
-          [uix/Button {:text (@tr [:clear]), :negative true, :on-click remove-fn}]]]))))
+          [uix/Button {:text (@tr [:clear]), :negative true, :on-click remove-fn}]
+          (when (= type :notif)
+            (let [{callback-id     :callback
+                   notification-id :id} data]
+              [:<>
+               (when (general-utils/can-operation? "defer" data)
+                 [uix/Button
+                  {:secondary true
+                   :text      "defer"
+                   :on-click  #(dispatch
+                                 [::cimi-detail-events/operation notification-id "defer"])}])
+               (when (:callback data)
+                 [uix/Button
+                  {:primary  true
+                   :text     "apply"
+                   :on-click #(dispatch
+                                [::cimi-detail-events/operation callback-id "execute"])}])]))
+          ]]))))
 
 
 (defn feed-item
@@ -108,11 +128,14 @@
   (let [locale   (subscribe [::i18n-subs/locale])
         messages (subscribe [::subs/messages])]
     (when (seq @messages)
-      (vec (concat [ui/ListSA {:selection true
-                               :style     {:height     "100%"
-                                           :max-height "40ex"
-                                           :overflow-y "auto"}}]
-                   (mapv (partial feed-item @locale) @messages))))))
+      [ui/ListSA {:selection true
+                  :style     {:height     "100%"
+                              :max-height "40ex"
+                              :overflow-y "auto"}}
+       (doall
+         (for [{:keys [uuid] :as message} @messages]
+           ^{:key uuid}
+           [feed-item @locale message]))])))
 
 
 (defn bell-menu
@@ -135,7 +158,8 @@
                    :on-close #(dispatch [::events/close-popup])
                    :trigger  (r/as-element
                                [ui/MenuItem {:disabled disabled?}
-                                [ui/Button {:aria-label "notifications", :primary true,
+                                [ui/Button {:aria-label "notifications",
+                                            :primary    true,
                                             :disabled   disabled?}
                                  [ui/Icon {:name (if disabled? "bell slash" "bell")}]
                                  (str n)]])}

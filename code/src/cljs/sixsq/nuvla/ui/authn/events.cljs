@@ -18,7 +18,8 @@
      [(fn [session]
         (dispatch [::set-session session])
         (when session
-          (dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])))]}))
+          (dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])
+          (dispatch [:sixsq.nuvla.ui.main.events/check-notifications])))]}))
 
 
 (reg-event-fx

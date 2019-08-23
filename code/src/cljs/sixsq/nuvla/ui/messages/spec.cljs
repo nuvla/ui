@@ -14,11 +14,14 @@
 
 (s/def :message/uuid string?)
 
+(s/def :message/data any?)
+
 (s/def ::message (only-keys :req-un [:message/header
                                      :message/content
                                      :message/type
                                      :message/timestamp
-                                     :message/uuid]))
+                                     :message/uuid]
+                            :opt-un [:message/data]))
 
 (s/def ::messages (s/coll-of ::message))
 

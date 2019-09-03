@@ -289,7 +289,7 @@
 (reg-event-db
   ::update-env-name
   (fn [db [_ id value]]
-    (assoc-in db [::spec/module-common ::spec/env-variables id ::spec/env-name] (str/upper-case value))))
+    (assoc-in db [::spec/module-common ::spec/env-variables id ::spec/env-name] value)))
 
 
 (reg-event-db

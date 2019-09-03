@@ -55,7 +55,7 @@
         alert-message (subscribe [::subs/alert-message])
         alert-display (subscribe [::subs/alert-display])]
     (fn []
-      (if-let [{:keys [type header]} @alert-message]
+      (when-let [{:keys [type header]} @alert-message]
         (let [icon-name  (type->icon-name type)
               open?      (boolean (and @alert-message (= :slider @alert-display)))
               transition (clj->js {:animation "slide left"
@@ -74,7 +74,7 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         alert-message (subscribe [::subs/alert-message])
         alert-display (subscribe [::subs/alert-display])]
-    (if-let [{:keys [type header content data]} @alert-message]
+    (when-let [{:keys [type header content data]} @alert-message]
       (let [icon-name (type->icon-name type)
             visible?  (= :modal @alert-display)
             hide-fn   #(dispatch [::events/hide])

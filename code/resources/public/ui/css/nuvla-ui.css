@@ -84,7 +84,3 @@ div.search.dropdown > input {
 .react-datepicker-popper {
     z-index: 11 !important;
 }
-
-.cm-s-logger {
-    background: transparent !important;
-}

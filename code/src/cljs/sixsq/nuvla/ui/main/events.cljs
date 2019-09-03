@@ -4,10 +4,11 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
     [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
     [sixsq.nuvla.ui.main.effects :as fx]
     [sixsq.nuvla.ui.main.spec :as spec]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.general :as u]))
 
 
 (reg-event-db
@@ -48,7 +49,7 @@
              ::fx/bulk-actions-interval [(if visible?
                                            ::action-interval-resume
                                            ::action-interval-pause) actions-interval]}
-            visible? (assoc ::cimi-api-fx/session [#(dispatch [::authn-events/set-session %])]))))
+            visible? (assoc ::api-fx/session [#(dispatch [::authn-events/set-session %])]))))
 
 
 (reg-event-fx
@@ -59,7 +60,8 @@
       (when (not changes-protection?)
         {:db                        (assoc db ::spec/nav-path path-vec
                                               ::spec/nav-query-params query-params)
-         ::fx/bulk-actions-interval [::action-interval-delete actions-interval]}))))
+         ::fx/bulk-actions-interval [::action-interval-delete
+                                     (remove :detached? actions-interval)]}))))
 
 
 (def TICK_INTERVAL 1000)
@@ -83,7 +85,8 @@
     (log/info "Start action-interval: " action-opts)
     (let [existing-action (get actions-interval id)
           timer           (or (:timer existing-action)
-                              (js/setInterval #(dispatch [::action-interval-tick id]) TICK_INTERVAL))]
+                              (js/setInterval
+                                #(dispatch [::action-interval-tick id]) TICK_INTERVAL))]
       (dispatch event)
       (assoc-in db [::spec/actions-interval id] (assoc action-opts :timer timer
                                                                    :refresh-in frequency)))))
@@ -106,7 +109,8 @@
     (log/info "Resume action-interval: " action-id)
     (if-let [{:keys [event frequency] :as existing-action} (get actions-interval action-id)]
       (let [timer (or (:timer existing-action)
-                      (js/setInterval #(dispatch [::action-interval-tick action-id]) TICK_INTERVAL))]
+                      (js/setInterval
+                        #(dispatch [::action-interval-tick action-id]) TICK_INTERVAL))]
         (dispatch event)
         (update-in db [::spec/actions-interval action-id] assoc
                    :timer timer
@@ -141,11 +145,15 @@
   (fn [{{:keys [::spec/ignore-changes-modal] :as db} :db} [_ choice]]
     (let [close-modal-db (assoc db ::spec/ignore-changes-modal nil)]
       (cond
-        (map? ignore-changes-modal) (cond-> {:db (cond-> close-modal-db
-                                                         choice (assoc ::spec/changes-protection? false))}
-                                            choice (merge ignore-changes-modal))
-        (fn? ignore-changes-modal) (do (when choice (ignore-changes-modal))
-                                       {:db close-modal-db})))))
+
+        (map? ignore-changes-modal)
+        (cond-> {:db (cond-> close-modal-db
+                             choice (assoc ::spec/changes-protection? false))}
+                choice (merge ignore-changes-modal))
+
+        (fn? ignore-changes-modal)
+        (do (when choice (ignore-changes-modal))
+            {:db close-modal-db})))))
 
 
 (reg-event-db
@@ -165,12 +173,14 @@
 
         "infrastructure-service-collection"
         (if (> element-count 0)
-          {:db                  (assoc db ::spec/bootstrap-message nil)
-           ::cimi-api-fx/search [:credential
-                                 {:filter (str "subtype='infrastructure-service-swarm' and ("
-                                               (str/join " or " (map #(str "parent='" (:id %) "'") resources)) ")")
-                                  :last   0}
-                                 #(dispatch [::set-bootsrap-message %])]}
+          {:db             (assoc db ::spec/bootstrap-message nil)
+           ::api-fx/search [:credential
+                            {:filter (u/join-and
+                                       "subtype='infrastructure-service-swarm'"
+                                       (apply u/join-or
+                                              (map #(str "parent='" (:id %) "'") resources)))
+                             :last   0}
+                            #(dispatch [::set-bootsrap-message %])]}
           {:db (assoc db ::spec/bootstrap-message :no-swarm)})
 
         "credential-collection"
@@ -184,25 +194,27 @@
 (reg-event-fx
   ::check-bootstrap-message
   (fn [_ _]
-    {::cimi-api-fx/search [:infrastructure-service
-                           {:filter "subtype='swarm'"
-                            :select "id"}
-                           #(dispatch [::set-bootsrap-message %])]}))
+    {::api-fx/search [:infrastructure-service
+                      {:filter "subtype='swarm'"
+                       :select "id"}
+                      #(dispatch [::set-bootsrap-message %])]}))
 (reg-event-fx
   ::set-notifications
   (fn [_ [_ {:keys [resources]}]]
     {:dispatch-n (map (fn [{:keys [id message] :as notification}]
                         [::messages-events/add {:header  id
                                                 :content message
-                                                :data notification
+                                                :data    notification
                                                 :type    :notif}]) resources)}))
 
 (reg-event-fx
   ::check-notifications
   (fn [_ _]
-    {::cimi-api-fx/search [:notification
-                           {:filter "expiry>'now' and (not-before=null or not-before<='now')"}
-                           #(dispatch [::set-notifications %])]}))
+    {::api-fx/search [:notification
+                      {:filter (u/join-and
+                                 "expiry>'now'"
+                                 (u/join-or "not-before=null" "not-before<='now'"))}
+                      #(dispatch [::set-notifications %])]}))
 
 
 (reg-event-fx

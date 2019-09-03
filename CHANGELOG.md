@@ -10,6 +10,7 @@
 
 ### Changed
 
+  - Dashboard detail - remove transparency to make search dialog visible and minors
   - Apps store - Fix refresh
   - Apps - Fix summary fields on-change
   - Apps - Allow urls only when all replicas.running parameters are positive #227 

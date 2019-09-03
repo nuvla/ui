@@ -328,7 +328,6 @@
           [ui/Segment {:attached    "bottom"
                        :loading     (and (nil? @deployment-log)
                                          @play?)
-                       :secondary   true
                        :placeholder true
                        :style       {:padding 0
                                      :z-index 0

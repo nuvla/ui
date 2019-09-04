@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.4.3] - 2019-09-04
+
 ### Add
 
   - Dashboard detail - log accordion

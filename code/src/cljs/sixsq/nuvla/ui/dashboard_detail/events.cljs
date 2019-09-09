@@ -131,11 +131,12 @@
 (reg-event-fx
   ::set-deployment-log
   (fn [{{:keys [::spec/deployment-log] :as db} :db} [_ new-deployment-log]]
-    (let [concat-log (-> (:log deployment-log)
-                         (concat (:log new-deployment-log))
-                         (dedupe))]
+    (let [new-log               (:log new-deployment-log)
+          old-log               (:log deployment-log)
+          removed-duplicate-log (remove (set new-log) old-log)
+          concatenated-log      (concat removed-duplicate-log new-log)]
       {:db       (assoc db ::spec/deployment-log
-                           (assoc new-deployment-log :log concat-log))
+                           (assoc new-deployment-log :log concatenated-log))
        :dispatch [::fetch-deployment-log]})))
 
 
@@ -182,14 +183,14 @@
 (reg-event-fx
   ::set-deployment-log-service
   (fn [{{:keys [::spec/deployment-log-id] :as db} :db} [_ service]]
-    (cond-> {:db         (assoc db ::spec/deployment-log-service service)}
+    (cond-> {:db (assoc db ::spec/deployment-log-service service)}
             deployment-log-id (assoc :dispatch [::delete-deployment-log]))))
 
 
 (reg-event-fx
   ::set-deployment-log-since
   (fn [{{:keys [::spec/deployment-log-id] :as db} :db} [_ since]]
-    (cond-> {:db         (assoc db ::spec/deployment-log-since since)}
+    (cond-> {:db (assoc db ::spec/deployment-log-since since)}
             deployment-log-id (assoc :dispatch [::delete-deployment-log]))))
 
 

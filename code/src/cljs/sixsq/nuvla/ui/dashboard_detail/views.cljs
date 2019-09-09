@@ -256,7 +256,7 @@
 
 
 (defn log-controller
-  [follow?]
+  [go-live?]
   (let [locale        (subscribe [::i18n-subs/locale])
         services-list (subscribe [::subs/deployment-services-list])
         id            (subscribe [::subs/deployment-log-id])
@@ -265,7 +265,7 @@
         play?         (subscribe [::subs/deployment-log-play?])]
     (when (= (count @services-list) 1)
       (dispatch [::events/set-deployment-log-service (first @services-list)]))
-    (fn [follow?]
+    (fn [go-live?]
       [ui/Menu {:size "small", :attached "top"}
 
        [ui/MenuItem
@@ -298,18 +298,19 @@
        [ui/MenuMenu {:position "right"}
 
         [ui/MenuItem
-         {:active   @follow?
-          :on-click #(swap! follow? not)}
+         {:active   @go-live?
+          :color    (if @go-live? "green" "black")
+          :on-click #(swap! go-live? not)}
          [ui/IconGroup {:size "large"}
           [ui/Icon {:name "bars"}]
           [ui/Icon {:name "chevron circle down", :corner true}]]
-         "Scroll down"]
+         "Go Live"]
 
         [ui/MenuItem {:on-click #(dispatch [::events/clear-deployment-log])}
          [ui/IconGroup {:size "large"}
           [ui/Icon {:name "bars"}]
           [ui/Icon {:name "trash", :corner true}]]
-         "Clear log"]]])))
+         "Clear"]]])))
 
 
 (defn logs-viewer
@@ -317,14 +318,14 @@
   (let [deployment-log (subscribe [::subs/deployment-log])
         id             (subscribe [::subs/deployment-log-id])
         play?          (subscribe [::subs/deployment-log-play?])
-        follow?        (r/atom true)
+        go-live?       (r/atom true)
         scroll-info    (r/atom nil)]
     (fn []
       (let [log (:log @deployment-log)]
         [:div
-         [log-controller follow?]
+         [log-controller go-live?]
          [:<>
-          ^{:key (str "logger" @follow?)}
+          ^{:key (str "logger" @go-live?)}
           [ui/Segment {:attached    "bottom"
                        :loading     (and (nil? @deployment-log)
                                          @play?)
@@ -336,7 +337,7 @@
            (if @id
              [ui/CodeMirror (cond-> {:value    (str/join "\n" log)
                                      :scroll   {:x (:left @scroll-info)
-                                                :y (if @follow?
+                                                :y (if @go-live?
                                                      (.-MAX_VALUE js/Number)
                                                      (:top @scroll-info))}
                                      :onScroll #(reset! scroll-info

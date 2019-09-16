@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Favicon added
   - Dashboard detail - fix concatenate log duplicates and rename scroll down to go live
 
 ## [2.4.3] - 2019-09-04

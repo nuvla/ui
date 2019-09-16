@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Messages - Polling notifications enhance title and lifecycle management
   - Favicon added
   - Dashboard detail - fix concatenate log duplicates and rename scroll down to go live
 

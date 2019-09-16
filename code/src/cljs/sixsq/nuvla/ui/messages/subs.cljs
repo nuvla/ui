@@ -26,3 +26,9 @@
   ::popup-open?
   (fn [db]
     (::spec/popup-open? db)))
+
+(reg-sub
+  ::show-clear-all?
+  :<- [::messages]
+  (fn [messages]
+    (boolean (some (fn [{message-type :type}] (not= message-type :notif)) messages))))

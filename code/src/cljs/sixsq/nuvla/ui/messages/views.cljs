@@ -3,15 +3,16 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.messages.events :as events]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.messages.events :as events]
     [sixsq.nuvla.ui.messages.subs :as subs]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [taoensso.timbre :as log]))
 
 
 (defn type->icon-name
@@ -76,9 +77,11 @@
         alert-display (subscribe [::subs/alert-display])]
     (when-let [{:keys [type header content data]} @alert-message]
       (let [icon-name (type->icon-name type)
+            uuid      (:uuid @alert-message)
+            is-notif? (= type :notif)
             visible?  (= :modal @alert-display)
             hide-fn   #(dispatch [::events/hide])
-            remove-fn #(dispatch [::events/remove @alert-message])]
+            remove-fn #(dispatch [::events/remove uuid])]
         [ui/Modal {:open       visible?
                    :close-icon true
                    :on-close   hide-fn}
@@ -90,8 +93,9 @@
 
          [ui/ModalActions
           [uix/Button {:text (@tr [:close]), :on-click hide-fn}]
-          [uix/Button {:text (@tr [:clear]), :negative true, :on-click remove-fn}]
-          (when (= type :notif)
+          (when-not is-notif?
+            [uix/Button {:text (@tr [:clear]), :negative true, :on-click remove-fn}])
+          (when is-notif?
             (let [{callback-id     :callback
                    notification-id :id} data]
               [:<>
@@ -99,14 +103,16 @@
                  [uix/Button
                   {:secondary true
                    :text      "defer"
-                   :on-click  #(dispatch
-                                 [::cimi-detail-events/operation notification-id "defer"])}])
+                   :on-click  #(do (dispatch
+                                     [::cimi-detail-events/operation notification-id "defer"])
+                                   (remove-fn))}])
                (when (:callback data)
                  [uix/Button
                   {:primary  true
                    :text     "apply"
-                   :on-click #(dispatch
-                                [::cimi-detail-events/operation callback-id "execute"])}])]))
+                   :on-click #(do
+                                (dispatch [::cimi-detail-events/operation callback-id "execute"])
+                                (remove-fn))}])]))
           ]]))))
 
 
@@ -143,10 +149,11 @@
    messages. If there are no messages, the item will be disabled. If there are
    messages, then a label will show the number of them."
   []
-  (let [tr          (subscribe [::i18n-subs/tr])
-        is-user?    (subscribe [::authn-subs/is-user?])
-        messages    (subscribe [::subs/messages])
-        popup-open? (subscribe [::subs/popup-open?])]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        is-user?        (subscribe [::authn-subs/is-user?])
+        messages        (subscribe [::subs/messages])
+        popup-open?     (subscribe [::subs/popup-open?])
+        show-clear-all? (subscribe [::subs/show-clear-all?])]
     (when @is-user?
       (let [n         (count @messages)
             disabled? (zero? n)]
@@ -166,10 +173,11 @@
          [ui/PopupHeader (@tr [:notifications])]
          [ui/PopupContent [ui/Divider]]
          [ui/PopupContent [message-feed]]
-         [ui/PopupContent
-          [ui/Divider]
-          [uix/Button {:text     (@tr [:clear-all])
-                       :fluid    true
-                       :negative true
-                       :compact  true
-                       :on-click #(dispatch [::events/clear-all])}]]]))))
+         (when @show-clear-all?
+           [ui/PopupContent
+            [ui/Divider]
+            [uix/Button {:text     (@tr [:clear-all])
+                         :fluid    true
+                         :negative true
+                         :compact  true
+                         :on-click #(dispatch [::events/clear-all])}]])]))))

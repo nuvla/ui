@@ -2,7 +2,8 @@
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.messages.spec :as spec]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db
@@ -37,9 +38,9 @@
 
 (reg-event-fx
   ::add
-  (fn [{{:keys [::spec/messages] :as db} :db} [_ message]]
+  (fn [{{:keys [::spec/messages] :as db} :db} [_ message uuid]]
     (let [timestamped-message (assoc message :timestamp (time/now)
-                                             :uuid (random-uuid))]
+                                             :uuid (or uuid (random-uuid)))]
       (let [updated-messages (vec (cons timestamped-message messages))]
         {:db             (assoc db ::spec/messages updated-messages
                                    ::spec/alert-message timestamped-message
@@ -49,7 +50,7 @@
 
 (reg-event-db
   ::remove
-  (fn [{:keys [::spec/messages] :as db} [_ {:keys [uuid] :as timestamped-message}]]
+  (fn [{:keys [::spec/messages] :as db} [_ uuid]]
     (let [trimmed-messages (vec (remove (fn [m] (= uuid (:uuid m))) messages))]
       (assoc db ::spec/messages trimmed-messages
                 ::spec/alert-message nil
@@ -68,8 +69,8 @@
 
 (reg-event-db
   ::clear-all
-  (fn [db _]
-    (assoc db ::spec/messages []
+  (fn [{:keys [::spec/messages] :as db} _]
+    (assoc db ::spec/messages (vec (filter (fn [{:keys [type]}] (= type :notif)) messages))
               ::spec/alert-message nil
               ::spec/alert-display :none
               ::spec/popup-open? false)))

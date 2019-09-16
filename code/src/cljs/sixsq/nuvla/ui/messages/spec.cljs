@@ -8,7 +8,7 @@
 
 (s/def :message/content string?)
 
-(s/def :message/type #{:success :info :error})
+(s/def :message/type #{:success :info :error :notif})
 
 (s/def :message/timestamp any?)
 

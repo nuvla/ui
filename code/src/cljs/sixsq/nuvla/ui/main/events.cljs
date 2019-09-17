@@ -1,14 +1,19 @@
 (ns sixsq.nuvla.ui.main.events
   (:require
+    [clojure.set :as set]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
     [sixsq.nuvla.ui.authn.events :as authn-events]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
     [sixsq.nuvla.ui.main.effects :as fx]
     [sixsq.nuvla.ui.main.spec :as spec]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.general :as u]))
+    [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.messages.spec :as messages-spec]
+    [sixsq.nuvla.ui.utils.general :as u]
+    [taoensso.timbre :as log]))
+
+
+(def notification-polling-id :notifications-polling)
 
 
 (reg-event-db
@@ -61,7 +66,7 @@
         {:db                        (assoc db ::spec/nav-path path-vec
                                               ::spec/nav-query-params query-params)
          ::fx/bulk-actions-interval [::action-interval-delete
-                                     (remove :detached? actions-interval)]}))))
+                                     (dissoc actions-interval notification-polling-id)]}))))
 
 
 (def TICK_INTERVAL 1000)
@@ -198,14 +203,32 @@
                       {:filter "subtype='swarm'"
                        :select "id"}
                       #(dispatch [::set-bootsrap-message %])]}))
+
+
 (reg-event-fx
   ::set-notifications
-  (fn [_ [_ {:keys [resources]}]]
-    {:dispatch-n (map (fn [{:keys [id message] :as notification}]
-                        [::messages-events/add {:header  id
-                                                :content message
-                                                :data    notification
-                                                :type    :notif}]) resources)}))
+  (fn [{{:keys [::messages-spec/messages] :as db} :db} [_ {:keys [resources]}]]
+    (let [existing-notifs  (->> messages
+                                (filter (fn [{message-type :type}] (= message-type :notif)))
+                                (map :uuid)
+                                (set))
+          fetched-notifs   (->> resources (map :id) set)
+          notifs-to-remove (set/difference existing-notifs fetched-notifs)
+          notifs-to-add    (set/difference fetched-notifs existing-notifs)
+          dispatch-adds    (map
+                             (fn [{:keys [id message] :as notification}]
+                               (when (contains? notifs-to-add id)
+                                 [::messages-events/add
+                                  {:header  (-> message
+                                                (str/split #"\n")
+                                                first)
+                                   :content message
+                                   :data    notification
+                                   :type    :notif}
+                                  id])) resources)
+          dispatch-removes (map (fn [id] [::messages-events/remove id]) notifs-to-remove)]
+      {:dispatch-n (concat dispatch-adds dispatch-removes)})))
+
 
 (reg-event-fx
   ::check-notifications
@@ -218,10 +241,20 @@
 
 
 (reg-event-fx
+  ::notifications-polling
+  (fn [_ _]
+    {:dispatch [::action-interval-start
+                {:id        notification-polling-id
+                 :frequency 60000
+                 :event     [::check-notifications]}]}))
+
+
+(reg-event-fx
   ::set-message
   (fn [{db :db} [_ type message]]
     (cond-> {:db (assoc db ::spec/message [type, message])}
-            message (assoc :dispatch-later [{:ms 10000 :dispatch [::set-message nil]}]))))
+            message (assoc :dispatch-later [{:ms       10000
+                                             :dispatch [::set-message nil]}]))))
 
 
 (reg-event-db

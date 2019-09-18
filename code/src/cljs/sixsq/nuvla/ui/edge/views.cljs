@@ -131,10 +131,11 @@
                          (reset! creation-data default-data))
         on-add-fn     #(do
                          (dispatch [::events/create-nuvlabox
-                                   (->> @creation-data
-                                        (remove (fn [[_ v]] (str/blank? v)))
-                                        (into {}))])
-                         (reset! creation-data default-data))]
+                                    (->> @creation-data
+                                         (remove (fn [[_ v]] (str/blank? v)))
+                                         (into {}))])
+                         (reset! creation-data default-data))
+        active?       (r/atom false)]
     (fn []
       [ui/Modal {:open       @visible?
                  :close-icon true
@@ -149,11 +150,17 @@
            [ui/Table (assoc style/definition :class :nuvla-ui-editable)
             [ui/TableBody
              [uix/TableRowField (@tr [:name]), :on-change #(swap! creation-data assoc :name %)]
-             [uix/TableRowField "version", :spec (s/nilable int?),
-              :default-value (:version @creation-data),
-              :on-change #(swap! creation-data assoc :version (general-utils/str->int %))]
              [uix/TableRowField (@tr [:description]), :type :textarea,
-              :on-change #(swap! creation-data assoc :description %)]]]]
+              :on-change #(swap! creation-data assoc :description %)]]]
+           [ui/Accordion
+            [ui/AccordionTitle {:active   @active?, :icon "dropdown", :content "Advanced"
+                                :on-click #(swap! active? not)}]
+            [ui/AccordionContent {:active @active?}
+             [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+              [ui/TableBody
+               [uix/TableRowField "version", :spec (s/nilable int?),
+                :default-value (:version @creation-data),
+                :on-change #(swap! creation-data assoc :version (general-utils/str->int %))]]]]]]
 
           [ui/ModalActions
            [ui/Button {:positive true

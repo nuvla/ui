@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.4.4] - 2019-09-18
+
 ### Changed
 
   - Dependencies - Update dependencies

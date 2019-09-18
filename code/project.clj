@@ -72,7 +72,7 @@
   :dependencies [[reagent "0.9.0-20190110.190613-2" :scope "provided"
                   :exclusions [cljsjs/react
                                cljsjs/react-dom]]
-                 [re-frame "0.10.8" :scope "provided"]
+                 [re-frame "0.10.9" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
                  [com.taoensso/timbre "4.10.0"  :scope "provided"]
@@ -87,8 +87,8 @@
                           [org.clojure/clojurescript]
                           [binaryage/devtools "0.9.10" :scope "test"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.8.45"]   ;; WARNING: also in package.json
-                          [com.google.javascript/closure-compiler-unshaded "v20190709"]]}}
+   :scljs {:dependencies [[thheller/shadow-cljs "2.8.52"]   ;; WARNING: also in package.json
+                          [com.google.javascript/closure-compiler-unshaded "v20190909"]]}}
 
 
 

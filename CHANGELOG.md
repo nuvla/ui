@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Dependencies - Update dependencies
   - Edge - Add modal version moved to an advanced section
   - Messages - Polling notifications enhance title and lifecycle management
   - Favicon added

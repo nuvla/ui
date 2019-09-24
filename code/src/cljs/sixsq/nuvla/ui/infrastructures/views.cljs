@@ -23,7 +23,8 @@
 ;  (let [tr (subscribe [::i18n-subs/tr])]
 ;    [ui/Input {:placeholder (@tr [:search])
 ;               :icon        "search"
-;               :on-change   (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))}]))
+;               :on-change   (ui-callback/input-callback
+;                              #(dispatch [::events/set-full-text-search %]))}]))
 
 
 (defn control-bar []
@@ -68,19 +69,18 @@
 (defn service-group-card
   [group services]
   [ui/Card
-   (when (< (count services) 2)
-     [ui/Label {:corner   true
-                :style    {:z-index 0
-                           :cursor  :pointer}
-                :size     "mini"
-                :on-click #(do
-                             (dispatch-sync [::events/set-service-group group services])
-                             (dispatch-sync [::events/reset-service])
-                             (dispatch-sync [::events/update-service :parent group])
-                             (dispatch [::events/open-add-service-modal]))}
-      [ui/Icon {:name  "plus"
-                :style {:cursor :pointer}}]                 ; use content to work around bug in icon in label for cursor
-      ])
+   [ui/Label {:corner   true
+              :style    {:z-index 0
+                         :cursor  :pointer}
+              :size     "mini"
+              :on-click #(do
+                           (dispatch-sync [::events/set-service-group group services])
+                           (dispatch-sync [::events/reset-service])
+                           (dispatch-sync [::events/update-service :parent group])
+                           (dispatch [::events/open-add-service-modal]))}
+    [ui/Icon {:name "plus", :style {:cursor :pointer}}]
+    ; use content to work around bug in icon in label for cursor
+    ]
    [ui/CardContent
     [ui/CardHeader {:style {:word-wrap "break-word"}}]
     (for [{service-id :id :as service} services]
@@ -118,7 +118,8 @@
                {:totalitems   total-services
                 :totalPages   total-pages
                 :activePage   @page
-                :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}])])]))))
+                :onPageChange (ui-callback/callback
+                                :activePage #(dispatch [::events/set-page %]))}])])]))))
 
 
 (defn in?
@@ -256,39 +257,41 @@
 
          [ui/ModalContent {:scrolling false}
 
-          (when-not (some #(= (:subtype %) "swarm") services)
-            [:div
-             [:p (@tr [:register-swarm-note])]
-             [ui/CardGroup {:centered true
-                            :style    {:margin-bottom "10px"}}
+          [:div
+           [:p (@tr [:register-swarm-note])]
+           [ui/CardGroup {:centered true
+                          :style    {:margin-bottom "10px"}}
 
-              [ui/Card {:on-click #(do
-                                     (dispatch [::events/set-validate-form? false])
-                                     (dispatch [::events/form-valid])
-                                     (dispatch [::events/close-add-service-modal])
-                                     (dispatch [::events/open-service-modal (assoc @service :subtype "swarm") true]))}
+            [ui/Card
+             {:on-click #(do
+                           (dispatch [::events/set-validate-form? false])
+                           (dispatch [::events/form-valid])
+                           (dispatch [::events/close-add-service-modal])
+                           (dispatch [::events/open-service-modal
+                                      (assoc @service :subtype "swarm") true]))}
 
-               [ui/CardContent {:text-align :center}
-                [ui/Header "Swarm"]
-                [ui/Icon {:name "docker"
-                          :size :massive}]
-                [ui/Header (@tr [:register])]]]]])
+             [ui/CardContent {:text-align :center}
+              [ui/Header "Swarm"]
+              [ui/Icon {:name "docker"
+                        :size :massive}]
+              [ui/Header (@tr [:register])]]]]]
 
-          (when-not (some #(= (:subtype %) "s3") services)
-            [:div
-             [:p (@tr [:register-s3-note])]
-             [ui/CardGroup {:centered true}
+          [:div
+           [:p (@tr [:register-s3-note])]
+           [ui/CardGroup {:centered true}
 
-              [ui/Card {:on-click #(do
-                                     (dispatch [::events/set-validate-form? false])
-                                     (dispatch [::events/form-valid])
-                                     (dispatch [::events/close-add-service-modal])
-                                     (dispatch [::events/open-service-modal (assoc @service :subtype "s3") true]))}
-               [ui/CardContent {:text-align :center}
-                [ui/Header "MinIO"]
-                [ui/Image {:src  "/ui/images/minio.png"
-                           :size :tiny}]
-                [ui/Header (@tr [:register])]]]]])]]))))
+            [ui/Card
+             {:on-click #(do
+                           (dispatch [::events/set-validate-form? false])
+                           (dispatch [::events/form-valid])
+                           (dispatch [::events/close-add-service-modal])
+                           (dispatch [::events/open-service-modal
+                                      (assoc @service :subtype "s3") true]))}
+             [ui/CardContent {:text-align :center}
+              [ui/Header "MinIO"]
+              [ui/Image {:src  "/ui/images/minio.png"
+                         :size :tiny}]
+              [ui/Header (@tr [:register])]]]]]]]))))
 
 
 (defmethod panel/render :infrastructures

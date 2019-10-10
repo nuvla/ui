@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.4.5] - 2019-10-10
+
 ### Changed
 
   - Infrastructure - Allow multiple instances of same service subtype in infrastructure group

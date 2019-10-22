@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+  - ACL - search users escape chars
+
 ## [2.4.5] - 2019-10-10
 
 ### Changed

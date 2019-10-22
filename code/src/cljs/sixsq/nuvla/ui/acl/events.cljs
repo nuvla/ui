@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.acl.events
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.acl.spec :as spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
@@ -31,10 +32,13 @@
 (reg-event-fx
   ::search-users
   (fn [_ [_ users-search]]
-    {::cimi-api-fx/search [:user {:filter (general-utils/fulltext-query-string users-search)
-                                  :select "id, name"
-                                  :order  "name:asc, id:asc"
-                                  :last   10} #(dispatch [::set-users-options %])]}))
+    (let [users-search-escaped (str/escape users-search {\' "\\'"
+                                                         \\ "\\\\"})
+          filter-str           (general-utils/fulltext-query-string users-search-escaped)]
+      {::cimi-api-fx/search [:user {:filter filter-str
+                                    :select "id, name"
+                                    :order  "name:asc, id:asc"
+                                    :last   10} #(dispatch [::set-users-options %])]})))
 
 
 (reg-event-db

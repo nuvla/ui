@@ -50,36 +50,81 @@
        :on-refresh #(refresh uuid)}]]))
 
 
-(defn UsbDeviceRow
-  [{:keys [bus-id device-id vendor-id product-id busy description] :as device}]
-  ^{:key (utils/usb-hw-id device)}
-  [ui/TableRow
-   [ui/TableCell {:collapsing true} (if busy "busy" "free")]
-   [ui/TableCell {:collapsing true} bus-id]
-   [ui/TableCell {:collapsing true} device-id]
-   [ui/TableCell {:collapsing true} vendor-id]
-   [ui/TableCell {:collapsing true} product-id]
-   [ui/TableCell description]])
+(defn Peripheral
+  [{p-name        :name
+    p-product     :product
+    p-created     :created
+    p-updated     :updated
+    p-descr       :description
+    p-interface   :interface
+    p-device-path :device-path
+    p-available   :available
+    p-vendor      :vendor
+    p-classes     :classes
+    p-indentifier :identifier}]
+  (let [locale (subscribe [::i18n-subs/locale])]
+    [uix/Accordion
+     [ui/Table {:basic "very"}
+      [ui/TableBody
+       (when p-product
+         [ui/TableRow
+          [ui/TableCell "Name"]
+          [ui/TableCell (str p-name " " p-product)]])
+       (when p-descr
+         [ui/TableRow
+          [ui/TableCell "Description"]
+          [ui/TableCell p-descr]])
+       [ui/TableRow
+        [ui/TableCell "Classes"]
+        [ui/TableCell (str/join ", " p-classes)]]
+       [ui/TableRow
+        [ui/TableCell "Available"]
+        [ui/TableCell
+         [ui/Icon {:name "circle", :color (if p-available "green" "red")}]
+         (if p-available "Yes" "No")]]
+       (when p-interface
+         [ui/TableRow
+          [ui/TableCell "Interface"]
+          [ui/TableCell p-interface]])
+       (when p-device-path
+         [ui/TableRow
+          [ui/TableCell "Device path"]
+          [ui/TableCell p-device-path]])
+       [ui/TableRow
+        [ui/TableCell "Identifier"]
+        [ui/TableCell p-indentifier]]
+       [ui/TableRow
+        [ui/TableCell "Vendor"]
+        [ui/TableCell p-vendor]]
+       [ui/TableRow
+        [ui/TableCell "Created"]
+        [ui/TableCell (time/ago (time/parse-iso8601 p-created) @locale)]]
+       [ui/TableRow
+        [ui/TableCell "Updated"]
+        [ui/TableCell (time/ago (time/parse-iso8601 p-updated) @locale)]]]
+      ]
+     :label (or p-name p-product)
+     :title-size :h4
+     :default-open false
+     :icon (case p-interface
+             "USB" "usb"
+             nil)]))
 
 
 (defn Peripherals
-  [{usb-list :usb}]
-  [uix/Accordion
-   [ui/Table
-    [ui/TableHeader
-     [ui/TableRow
-      [ui/TableHeaderCell "busy"]
-      [ui/TableHeaderCell "bus"]
-      [ui/TableHeaderCell "device"]
-      [ui/TableHeaderCell "vendor"]
-      [ui/TableHeaderCell "product"]
-      [ui/TableHeaderCell "description"]]]
-    [ui/TableBody
-     (for [usb (sort-by utils/usb-hw-id usb-list)]
-       ^{:key (utils/usb-hw-id usb)}
-       [UsbDeviceRow usb])]]
-   :label "Peripherals"
-   :icon "usb"])
+  []
+  (let [nuvlabox-peripherals (subscribe [::subs/nuvlabox-peripherals])]
+    [uix/Accordion
+     [:div
+      (doall
+        (for [{p-indentifier :identifier
+               p-created     :created
+               :as           peripheral} @nuvlabox-peripherals]
+          ^{:key (str p-indentifier p-created)}
+          [Peripheral peripheral]))]
+     :label "Peripherals"
+     :icon "usb"
+     :count (count @nuvlabox-peripherals)]))
 
 
 (defn StatusIcon
@@ -133,12 +178,12 @@
   (let [nuvlabox-status (subscribe [::subs/nuvlabox-status])]
     (fn []
       (if @nuvlabox-status
-        (let [{:keys [resources peripherals updated next-heartbeat]} @nuvlabox-status]
+        (let [{:keys [resources updated next-heartbeat]} @nuvlabox-status]
           [ui/Container {:fluid true}
            [Heartbeat updated next-heartbeat]
            (when resources
              [Load resources])
-           [Peripherals peripherals]])
+           [Peripherals]])
         [ui/Message
          {:warning true
           :content "NuvlaBox status not available."}]))))

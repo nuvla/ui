@@ -6,13 +6,20 @@
     [sixsq.nuvla.ui.edge.effects :as edge-fx]
     [sixsq.nuvla.ui.edge.events :as edge-events]
     [sixsq.nuvla.ui.history.events :as history-events]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-event-db
   ::set-nuvlabox-status
   (fn [db [_ nuvlabox-status]]
     (assoc db ::spec/nuvlabox-status nuvlabox-status)))
+
+
+(reg-event-db
+  ::set-nuvlabox-peripherals
+  (fn [db [_ nuvlabox-peripherals]]
+    (assoc db ::spec/nuvlabox-peripherals (get nuvlabox-peripherals :resources []))))
 
 
 (reg-event-fx
@@ -28,7 +35,13 @@
 (reg-event-fx
   ::get-nuvlabox
   (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ id]]
-    (cond-> {::cimi-api-fx/get [id #(dispatch [::set-nuvlabox %]) :on-error #(dispatch [::set-nuvlabox nil])]}
+    (cond-> {::cimi-api-fx/get    [id #(dispatch [::set-nuvlabox %])
+                                   :on-error #(dispatch [::set-nuvlabox nil])]
+             ::cimi-api-fx/search [:nuvlabox-peripheral
+                                   {:filter (str "parent='" id "'")
+                                    :last   10000
+                                    :orderby "id"}
+                                   #(dispatch [::set-nuvlabox-peripherals %])]}
             (not= (:id nuvlabox) id) (assoc :db (merge db spec/defaults)))))
 
 

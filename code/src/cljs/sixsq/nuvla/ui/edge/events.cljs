@@ -32,7 +32,8 @@
                               (cond-> {:first   (inc (* (dec page) elements-per-page))
                                        :last    (* page elements-per-page)
                                        :orderby "created:desc"}
-                                      state-selector (assoc :filter (utils/state-filter state-selector))))
+                                      state-selector (assoc :filter
+                                                            (utils/state-filter state-selector))))
                             #(dispatch [::set-nuvlaboxes %])]
      ::fx/state-nuvlaboxes [#(dispatch [::set-state-nuvlaboxes %])]}))
 
@@ -51,7 +52,8 @@
         {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
                        ::spec/loading? false)}
         (not-empty resources) (assoc ::fx/get-status-nuvlaboxes
-                                     [(map :id resources) #(dispatch [::set-status-nuvlaboxes %])])))))
+                                     [(map :id resources)
+                                      #(dispatch [::set-status-nuvlaboxes %])])))))
 
 
 (reg-event-db

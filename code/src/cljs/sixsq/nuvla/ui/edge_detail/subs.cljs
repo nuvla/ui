@@ -21,6 +21,12 @@
 
 
 (reg-sub
+  ::nuvlabox-peripherals
+  (fn [db]
+    (::spec/nuvlabox-peripherals db)))
+
+
+(reg-sub
   ::next-heartbeat-moment
   :<- [::nuvlabox-status]
   (fn [{:keys [next-heartbeat]}]

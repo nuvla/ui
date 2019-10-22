@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+  - Edge details - Support nuvlabox-peripherals resource
+
 ## [2.4.5] - 2019-10-10
 
 ### Changed

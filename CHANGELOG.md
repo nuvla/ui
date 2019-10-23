@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - Application detail - validate yaml syntax and print 
+    and show error and hints messages
+  - Dashboard detail - If not valid yaml blank page fix
   - Edge details - Support nuvlabox-peripherals resource
   - ACL - search users escape chars
 

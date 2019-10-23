@@ -49,15 +49,16 @@
   ::deployment-services-list
   :<- [::is-deployment-application?]
   :<- [::deployment-module-content]
-  (fn [[is-application? content]]
+  (fn [[is-application? {:keys [docker-compose]}]]
     (if is-application?
-      (-> content
-          :docker-compose
-          general-utils/yaml->obj
-          js->clj
-          (get "services" {})
-          keys
-          sort)
+      (let [yaml (try
+                   (general-utils/yaml->obj docker-compose)
+                   (catch :default _))]
+        (some-> yaml
+                js->clj
+                (get "services" {})
+                keys
+                sort))
       ["machine"])))
 
 

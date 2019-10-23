@@ -17,6 +17,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
@@ -113,10 +114,6 @@
           [:div {:style {:margin-bottom "10px"}} "Docker compose"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]]
 
-          (when (and validate? (not (s/valid? ::spec/docker-compose @docker-compose)))
-            [ui/Label {:pointing "below", :basic true, :color "red"}
-             (@tr [:module-docker-compose-error])])
-
           [ui/CodeMirror {:value      default-value
                           :autoCursor true
                           :options    {:mode              "text/x-yaml"
@@ -127,7 +124,13 @@
                                         (dispatch [::events/update-docker-compose nil value])
                                         (dispatch [::main-events/changes-protection? true])
                                         (dispatch [::apps-events/validate-form])
-                                        (reset! local-validate? true))}]]
+                                        (reset! local-validate? true))}]
+          (when (and validate? (not (s/valid? ::spec/docker-compose @docker-compose)))
+            (let [error-msg (-> @docker-compose general-utils/check-yaml second)]
+              [ui/Label {:pointing "above", :basic true, :color "red"}
+               (if (str/blank? error-msg)
+                 (@tr [:module-docker-compose-error])
+                 error-msg)]))]
          :label "Docker compose"
          :default-open true]))))
 

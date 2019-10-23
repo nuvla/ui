@@ -6,8 +6,7 @@
     [sixsq.nuvla.ui.edge.effects :as edge-fx]
     [sixsq.nuvla.ui.edge.events :as edge-events]
     [sixsq.nuvla.ui.history.events :as history-events]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db

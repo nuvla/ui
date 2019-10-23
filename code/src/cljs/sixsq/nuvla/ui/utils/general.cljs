@@ -110,6 +110,14 @@
   (js-yaml/load yaml))
 
 
+(defn check-yaml
+  [yaml]
+  (try
+    [true (yaml->obj yaml)]
+    (catch :default e
+      [false (str (js->clj e))])))
+
+
 ;;
 ;; utilities for random element identifiers
 ;;

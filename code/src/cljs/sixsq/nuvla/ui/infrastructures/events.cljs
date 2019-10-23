@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.infrastructures.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
     [taoensso.timbre :as log]))
 
@@ -18,9 +19,10 @@
   ::validate-swarm-service-form
   (fn [db [_]]
     (let [form-spec      ::spec/swarm-service
-          service        (get db ::spec/service)
+          service        (get db ::spec/infra-service)
           validate-form? (get db ::spec/validate-form?)
-          valid?         (if validate-form? (if (nil? form-spec) true (s/valid? form-spec service)) true)]
+          valid?         (if validate-form?
+                           (if (nil? form-spec) true (s/valid? form-spec service)) true)]
       (s/explain form-spec service)
       (assoc db ::spec/form-valid? valid?))))
 
@@ -29,34 +31,33 @@
   ::validate-minio-service-form
   (fn [db [_]]
     (let [form-spec      ::spec/minio-service
-          service        (get db ::spec/service)
+          service        (get db ::spec/infra-service)
           validate-form? (get db ::spec/validate-form?)
-          valid?         (if validate-form? (if (nil? form-spec) true (s/valid? form-spec service)) true)]
+          valid?         (if validate-form?
+                           (if (nil? form-spec) true (s/valid? form-spec service)) true)]
       (s/explain form-spec service)
       (assoc db ::spec/form-valid? valid?))))
 
 
 (reg-event-db
-  ::set-service
+  ::set-infra-service
   (fn [db [_ service]]
-    (assoc db ::spec/service service)))
+    (assoc db ::spec/infra-service service)))
 
 
 (reg-event-db
-  ::set-services
+  ::set-infra-services
   (fn [db [_ data]]
     (let [services (:resources data)
           groups   (group-by :parent services)]
-      (-> db
-          (assoc-in [::spec/services :groups] groups)
-          (assoc-in [::spec/services :count] (get data :count 0))))))
+      (assoc-in db [::spec/infra-services :groups] groups))))
 
 
 (reg-event-db
   ::set-service-group
   (fn [db [_ group services]]
     (-> db
-        (assoc-in [::spec/service :parent] (:id group))
+        (assoc-in [::spec/infra-service :parent] (:id group))
         (assoc-in [::spec/service-group :services] services))))
 
 
@@ -66,13 +67,13 @@
     (dissoc db ::spec/service-group)))
 
 (reg-event-db
-  ::reset-service
+  ::reset-infra-service
   (fn [db [_]]
-    (assoc db ::spec/service {})))
+    (assoc db ::spec/infra-service {})))
 
 
 (reg-event-fx
-  ::add-service
+  ::add-infra-service
   (fn [{:keys [db]} [_ infra-service-group-id]]
     (let [new-service (-> db
                           (utils/db->new-service)
@@ -80,15 +81,15 @@
       {::cimi-api-fx/add [:infrastructure-service new-service
                           #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                (dispatch [::close-service-modal])
-                               (dispatch [::get-services])
+                               (dispatch [::get-infra-services])
                                (dispatch [::main-events/check-bootstrap-message]))]})))
 
 (reg-event-fx
-  ::edit-service
-  (fn [{{:keys [::spec/service] :as db} :db} _]
-    (let [{:keys [id, parent]} service]
+  ::edit-infra-service
+  (fn [{{:keys [::spec/infra-service] :as db} :db} _]
+    (let [{:keys [id, parent]} infra-service]
       (if id
-        {::cimi-api-fx/edit [id service
+        {::cimi-api-fx/edit [id infra-service
                              #(if (instance? js/Error %)
                                 (let [{:keys [status message]} (response/parse-ex-info %)]
                                   (dispatch [::messages-events/add
@@ -98,29 +99,23 @@
                                               :type    :error}]))
                                 (do (dispatch [::cimi-detail-events/get (:id %)])
                                     (dispatch [::close-service-modal])
-                                    (dispatch [::get-services])))]}
+                                    (dispatch [::get-infra-services])))]}
         (if parent
-          (dispatch [::add-service parent])
+          (dispatch [::add-infra-service parent])
           (let [new-group (utils/db->new-service-group db)]
             {::cimi-api-fx/add [:infrastructure-service-group new-group
                                 #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                      (dispatch [::set-service-group (:resource-id %)])
                                      (dispatch [::close-service-modal])
-                                     (dispatch [::get-services])
-                                     (dispatch [::add-service (:resource-id %)]))]}))))))
-
-
-(reg-event-fx
-  ::delete-service
-  (fn [{:keys [db]} [_ id]]
-    {::cimi-api-fx/delete [id #(dispatch [::get-services])]}))
+                                     (dispatch [::get-infra-services])
+                                     (dispatch [::add-infra-service (:resource-id %)]))]}))))))
 
 
 (reg-event-db
   ::open-service-modal
   (fn [db [_ service is-new?]]
     (-> db
-        (assoc ::spec/service service)
+        (assoc ::spec/infra-service service)
         (assoc ::spec/service-modal-visible? true)
         (assoc ::spec/is-new? is-new?))))
 
@@ -145,36 +140,46 @@
 
 
 (reg-event-fx
-  ::get-services
-  (fn [{{:keys [::spec/full-text-search
-                ::spec/page
+  ::get-infra-service-groups
+  (fn [{{:keys [::spec/page
                 ::spec/elements-per-page] :as db} :db} _]
-    {:db                  (assoc db ::spec/services nil)
+    {:db                  (assoc db ::spec/infra-service-groups nil)
+     ::cimi-api-fx/search [:infrastructure-service-group
+                           (utils/get-query-params page elements-per-page)
+                           #(dispatch [::set-infra-service-groups %])]}))
+
+
+(reg-event-fx
+  ::set-infra-service-groups
+  (fn [{db :db} [_ {:keys [count resources]}]]
+    (let [infra-service-groups (map #(select-keys % [:id :name]) resources)
+          ids                  (map :id infra-service-groups)
+          filter-services      (apply general-utils/join-or (map #(str "parent='" % "'") ids))]
+      {:db                  (assoc db ::spec/infra-service-groups {:resources infra-service-groups
+                                                                   :count     count})
+       ::cimi-api-fx/search [:infrastructure-service
+                             {:filter filter-services}
+                             #(dispatch [::set-infra-services %])]})))
+
+
+(reg-event-fx
+  ::get-infra-services
+  (fn [{{:keys [::spec/page
+                ::spec/elements-per-page] :as db} :db} _]
+    {:db                  (assoc db ::spec/infra-services nil)
      ::cimi-api-fx/search [:infrastructure-service
-                           (utils/get-query-params full-text-search page elements-per-page)
-                           #(dispatch [::set-services %])]}))
-
-
-#_(reg-event-fx
-    ::set-full-text-search
-    (fn [{{:keys [::spec/elements-per-page] :as db} :db} [_ full-text-search]]
-      (let [new-page 1]
-        {:db                  (assoc db ::spec/full-text-search full-text-search
-                                        ::spec/page new-page)
-         ::cimi-api-fx/search [:infrastructure-service
-                               (utils/get-query-params full-text-search new-page elements-per-page)
-                               #(dispatch [::set-services %])]})))
+                           (utils/get-query-params page elements-per-page)
+                           #(dispatch [::set-infra-services %])]}))
 
 
 (reg-event-fx
   ::set-page
-  (fn [{{:keys [::spec/full-text-search
-                ::spec/page
+  (fn [{{:keys [::spec/page
                 ::spec/elements-per-page] :as db} :db} [_ page]]
     {:db                  (assoc db ::spec/page page)
-     ::cimi-api-fx/search [:infrastructure-service
-                           (utils/get-query-params full-text-search page elements-per-page)
-                           #(dispatch [::set-services %])]}))
+     ::cimi-api-fx/search [:infrastructure-service-group
+                           (utils/get-query-params page elements-per-page)
+                           #(dispatch [::set-infra-service-groups %])]}))
 
 
 (reg-event-db
@@ -184,24 +189,12 @@
 
 
 (reg-event-db
-  ::active-input
-  (fn [db [_ input-name]]
-    (assoc db ::spec/active-input input-name)))
-
-
-(reg-event-db
-  ::form-invalid
-  (fn [db [_]]
-    (assoc db ::spec/form-valid? false)))
-
-
-(reg-event-db
   ::form-valid
   (fn [db [_]]
     (assoc db ::spec/form-valid? true)))
 
 
 (reg-event-db
-  ::update-service
+  ::update-infra-service
   (fn [db [_ key value]]
-    (assoc-in db [::spec/service key] value)))
+    (assoc-in db [::spec/infra-service key] value)))

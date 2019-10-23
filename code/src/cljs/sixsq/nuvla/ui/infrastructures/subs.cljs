@@ -1,12 +1,28 @@
 (ns sixsq.nuvla.ui.infrastructures.subs
   (:require
     [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.infrastructures.spec :as spec]))
+    [sixsq.nuvla.ui.infrastructures.spec :as spec]
+    [taoensso.timbre :as log]))
 
 
 (reg-sub
-  ::services
-  ::spec/services)
+  ::infra-service-groups
+  ::spec/infra-service-groups)
+
+
+(reg-sub
+  ::infra-services
+  (fn [db]
+    (::spec/infra-services db)))
+
+
+(reg-sub
+  ::services-in-group
+  :<- [::infra-services]
+  (fn [services [_ group-id]]
+    (-> services
+        :groups
+        (get group-id))))
 
 
 (reg-sub
@@ -46,8 +62,8 @@
 
 
 (reg-sub
-  ::service
-  ::spec/service)
+  ::infra-service
+  ::spec/infra-service)
 
 
 (reg-sub

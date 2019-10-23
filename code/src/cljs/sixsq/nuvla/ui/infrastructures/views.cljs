@@ -19,29 +19,20 @@
     [taoensso.timbre :as log]))
 
 
-;(defn services-search []
-;  (let [tr (subscribe [::i18n-subs/tr])]
-;    [ui/Input {:placeholder (@tr [:search])
-;               :icon        "search"
-;               :on-change   (ui-callback/input-callback
-;                              #(dispatch [::events/set-full-text-search %]))}]))
-
-
-(defn control-bar []
+(defn ControlBar []
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Menu {:borderless true}
      [ui/MenuMenu {:position "left"}
-      ;[services-search]
       [uix/MenuItemWithIcon
        {:name      (@tr [:add])
         :icon-name "plus"
         :position  "right"
         :on-click  #(do
                       (dispatch-sync [::events/reset-service-group])
-                      (dispatch-sync [::events/reset-service])
+                      (dispatch-sync [::events/reset-infra-service])
                       (dispatch [::events/open-add-service-modal]))}]]
      [main-components/RefreshMenu
-      {:on-refresh #(dispatch [::events/get-services])}]]))
+      {:on-refresh #(dispatch [::events/get-infra-service-groups])}]]))
 
 
 (def service-icons
@@ -49,7 +40,7 @@
    :s3    :aws})
 
 
-(defn service-card
+(defn ServiceCard
   [{:keys [id name description path subtype logo-url] :as service}]
   [ui/Card (when (general-utils/can-edit? service)
              {:on-click #(dispatch [::events/open-service-modal service false])})
@@ -66,56 +57,58 @@
     [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]]])
 
 
-(defn service-group-card
-  [group services]
-  [ui/Card
-   [ui/Label {:corner   true
-              :style    {:z-index 0
-                         :cursor  :pointer}
-              :size     "mini"
-              :on-click #(do
-                           (dispatch-sync [::events/set-service-group group services])
-                           (dispatch-sync [::events/reset-service])
-                           (dispatch-sync [::events/update-service :parent group])
-                           (dispatch [::events/open-add-service-modal]))}
-    [ui/Icon {:name "plus", :style {:cursor :pointer}}]
-    ; use content to work around bug in icon in label for cursor
-    ]
-   [ui/CardContent
-    [ui/CardHeader {:style {:word-wrap "break-word"}}]
-    (for [{service-id :id :as service} services]
-      ^{:key service-id}
-      [service-card service])]])
+(defn ServiceGroupCard
+  [id name]
+  (let [services (subscribe [::subs/services-in-group id])]
+    [ui/Card
+     [ui/Label {:corner   true
+                :style    {:z-index 0
+                           :cursor  :pointer}
+                :size     "mini"
+                :on-click #(do
+                             (dispatch-sync [::events/set-service-group id services])
+                             (dispatch-sync [::events/reset-infra-service])
+                             (dispatch-sync [::events/update-infra-service :parent id])
+                             (dispatch [::events/open-add-service-modal]))}
+      [ui/Icon {:name "plus", :style {:cursor :pointer}}]
+      ; use content to work around bug in icon in label for cursor
+      ]
+     [ui/CardContent
+      [ui/CardDescription name]
+      [ui/CardHeader {:style {:word-wrap "break-word"}}]
+      (if @services
+        (for [{service-id :id :as service} @services]
+          ^{:key service-id}
+          [ServiceCard service])
+        [ui/CardMeta "Empty infrastructure group"])]]))
 
 
-(defn service-groups
-  [groups]
+(defn ServiceGroups
+  [isgs]
   [ui/CardGroup {:centered true}
-   (for [[group-id services] groups]
-     ^{:key group-id}
-     [service-group-card group-id services])])
+   (for [{:keys [id name]} (:resources isgs)]
+     ^{:key id}
+     [ServiceGroupCard id name])])
 
 
-(defn infra-services
+(defn InfraServices
   []
   (let [tr                (subscribe [::i18n-subs/tr])
-        services          (subscribe [::subs/services])
+        isgs              (subscribe [::subs/infra-service-groups])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])]
     (fn []
-      (let [groups         (:groups @services)
-            total-services (get @services :count 0)
-            total-pages    (general-utils/total-pages total-services @elements-per-page)]
-        [ui/Container {:fluid true}
+      (let [infra-group-count (get @isgs :count 0)
+            total-pages       (general-utils/total-pages infra-group-count @elements-per-page)]
+        [:<>
          [uix/PageHeader "cloud" (@tr [:infra-services])]
-         [control-bar]
-
-         (when (pos-int? total-services)
-           [ui/Segment
-            [service-groups groups]
+         [ControlBar]
+         (when (pos-int? infra-group-count)
+           [:<>
+            [ServiceGroups @isgs]
             (when (> total-pages 1)
               [uix/Pagination
-               {:totalitems   total-services
+               {:totalitems   infra-group-count
                 :totalPages   total-pages
                 :activePage   @page
                 :onPageChange (ui-callback/callback
@@ -132,10 +125,10 @@
   []
   (let [tr             (subscribe [::i18n-subs/tr])
         is-new?        (subscribe [::subs/is-new?])
-        service        (subscribe [::subs/service])
+        service        (subscribe [::subs/infra-service])
         validate-form? (subscribe [::subs/validate-form?])
         on-change      (fn [name-kw value]
-                         (dispatch [::events/update-service name-kw value])
+                         (dispatch [::events/update-infra-service name-kw value])
                          (dispatch [::events/validate-swarm-service-form]))]
     (fn []
       (let [editable? (general-utils/editable? @service @is-new?)
@@ -144,7 +137,7 @@
 
          [acl/AclButton {:default-value (:acl @service)
                          :read-only     (not editable?)
-                         :on-change     #(dispatch [::events/update-service :acl %])}]
+                         :on-change     #(dispatch [::events/update-infra-service :acl %])}]
 
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody
@@ -163,10 +156,10 @@
   []
   (let [tr             (subscribe [::i18n-subs/tr])
         is-new?        (subscribe [::subs/is-new?])
-        service        (subscribe [::subs/service])
+        service        (subscribe [::subs/infra-service])
         validate-form? (subscribe [::subs/validate-form?])
         on-change      (fn [name-kw value]
-                         (dispatch [::events/update-service name-kw value])
+                         (dispatch [::events/update-infra-service name-kw value])
                          (dispatch [::events/validate-minio-service-form]))]
     (fn []
       (let [editable? (general-utils/editable? @service @is-new?)
@@ -174,7 +167,7 @@
         [:<>
          [acl/AclButton {:default-value (:acl @service)
                          :read-only     (not editable?)
-                         :on-change     #(dispatch [::events/update-service :acl %])}]
+                         :on-change     #(dispatch [::events/update-infra-service :acl %])}]
 
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody
@@ -204,7 +197,7 @@
     (when form-valid?
       (do
         (dispatch [::events/set-validate-form? false])
-        (dispatch [::events/edit-service])))))
+        (dispatch [::events/edit-infra-service])))))
 
 
 (defn service-modal
@@ -212,7 +205,7 @@
   (let [tr          (subscribe [::i18n-subs/tr])
         visible?    (subscribe [::subs/service-modal-visible?])
         form-valid? (subscribe [::subs/form-valid?])
-        service     (subscribe [::subs/service])
+        service     (subscribe [::subs/infra-service])
         is-new?     (subscribe [::subs/is-new?])]
     (fn []
       (let [subtype          (:subtype @service "")
@@ -246,7 +239,7 @@
   (let [tr       (subscribe [::i18n-subs/tr])
         visible? (subscribe [::subs/add-service-modal-visible?])
         group    (subscribe [::subs/service-group])
-        service  (subscribe [::subs/service])]
+        service  (subscribe [::subs/infra-service])]
     (fn []
       (let [services (:services @group)]
         [ui/Modal {:open       @visible?
@@ -297,8 +290,8 @@
 (defmethod panel/render :infrastructures
   [path]
   (timbre/set-level! :info)
-  (dispatch [::events/get-services])
-  [:div
-   [infra-services]
+  (dispatch [::events/get-infra-service-groups])
+  [:<>
+   [InfraServices]
    [service-modal]
    [add-service-modal]])

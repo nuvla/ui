@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Infrastructure page - fix inconsistency between pages
   - Application detail - validate yaml syntax and print 
     and show error and hints messages
   - Dashboard detail - If not valid yaml blank page fix

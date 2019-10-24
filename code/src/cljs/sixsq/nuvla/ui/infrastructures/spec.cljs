@@ -4,11 +4,11 @@
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.utils.spec :as utils-spec]))
 
-(s/def ::services any?)
+(s/def ::infra-service-groups any?)
 
-(s/def ::service any?)
+(s/def ::infra-services any?)
 
-(s/def ::full-text-search (s/nilable string?))
+(s/def ::infra-service any?)
 
 (s/def ::page int?)
 
@@ -45,7 +45,7 @@
 (s/def ::service-group (s/keys :req-un [::name
                                         ::description
                                         ::documentation]
-                               :opt-un [::services]))
+                               :opt-un [::infra-services]))
 
 ; Swarm
 
@@ -66,16 +66,16 @@
                                :opt-un [::parent]))
 
 
-(s/def ::db (s/keys :req [::services
-                          ::full-text-search
+(s/def ::db (s/keys :req [::infra-service-groups
+                          ::infra-services
                           ::page
                           ::elements-per-page]))
 
-(def defaults {::services                   {}
+(def defaults {::infra-service-groups       nil
+               ::infra-services             {}
                ::service-modal-visible?     false
                ::add-service-modal-visible? false
                ::is-new?                    false
-               ::service                    nil
-               ::full-text-search           nil
+               ::infra-service              nil
                ::page                       1
                ::elements-per-page          8})

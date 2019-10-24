@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - App store - order cards by created time
   - Infrastructure page - fix inconsistency between pages
   - Application detail - validate yaml syntax and print 
     and show error and hints messages

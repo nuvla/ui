@@ -25,6 +25,7 @@
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
     [sixsq.nuvla.ui.infrastructures.events :as infra-service-events]
     [sixsq.nuvla.ui.infrastructures.views]
+    [sixsq.nuvla.ui.infrastructures-detail.views]
     [sixsq.nuvla.ui.main.events :as events]
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.main.views-sidebar :as sidebar]

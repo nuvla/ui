@@ -81,7 +81,7 @@
       {::cimi-api-fx/add [:infrastructure-service new-service
                           #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                (dispatch [::close-service-modal])
-                               (dispatch [::get-infra-services])
+                               (dispatch [::get-infra-service-groups])
                                (dispatch [::main-events/check-bootstrap-message]))]})))
 
 (reg-event-fx
@@ -107,7 +107,7 @@
                                 #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                      (dispatch [::set-service-group (:resource-id %)])
                                      (dispatch [::close-service-modal])
-                                     (dispatch [::get-infra-services])
+                                     (dispatch [::get-infra-service-groups])
                                      (dispatch [::add-infra-service (:resource-id %)]))]}))))))
 
 

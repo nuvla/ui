@@ -3,20 +3,21 @@
     [cljs.pprint :refer [cl-format]]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.infrastructures-detail.views :as infra-detail]
     [sixsq.nuvla.ui.infrastructures.events :as events]
     [sixsq.nuvla.ui.infrastructures.spec :as spec]
     [sixsq.nuvla.ui.infrastructures.subs :as subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.infrastructures-detail.views :as infra-detail]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
+    [sixsq.nuvla.ui.utils.values :as values]
     [taoensso.timbre :as timbre]
     [taoensso.timbre :as log]))
 
@@ -77,7 +78,8 @@
       ; use content to work around bug in icon in label for cursor
       ]
      [ui/CardContent
-      [ui/CardDescription name]
+      [ui/CardDescription
+       [values/as-link id :label name]]
       [ui/CardHeader {:style {:word-wrap "break-word"}}]
       (if @services
         (for [{service-id :id :as service} @services]
@@ -203,7 +205,7 @@
         (dispatch [::events/edit-infra-service])))))
 
 
-(defn service-modal
+(defn ServiceModal
   []
   (let [tr          (subscribe [::i18n-subs/tr])
         visible?    (subscribe [::subs/service-modal-visible?])
@@ -237,7 +239,7 @@
                          :on-click #(save-callback validation-event)}]]])))))
 
 
-(defn add-service-modal
+(defn AddServiceModal
   []
   (let [tr       (subscribe [::i18n-subs/tr])
         visible? (subscribe [::subs/add-service-modal-visible?])
@@ -296,8 +298,8 @@
         n        (count path)
         root     [:<>
                   [InfraServices]
-                  [service-modal]
-                  [add-service-modal]]
+                  [ServiceModal]
+                  [AddServiceModal]]
         children (case n
                    1 root
                    2 [infra-detail/InfrastructureDetails uuid]

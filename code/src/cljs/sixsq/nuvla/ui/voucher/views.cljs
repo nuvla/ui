@@ -59,6 +59,10 @@
 
 (def file-content (r/atom nil))
 
+(def upload-state (atom nil))
+
+(def progress (r/atom 0))
+
 
 (defn put-upload [e]
   (let [target (.-currentTarget e)
@@ -98,9 +102,6 @@
       :href      (str "data:text/plain;charset=utf-8," (js/encodeURIComponent csv-content))
       :icon-name "arrow alternate circle up"}]))
 
-(def upload-state (atom nil))
-
-(def progress (r/atom 0))
 
 (defn csv->edn
   [header-fields line]
@@ -137,7 +138,11 @@
     [ui/Modal
      {:open       (some? @show-modal-import)
       :close-icon true
-      :on-close   #(reset! show-modal-import nil)}
+      :on-close   #(do
+                     (reset! file-content nil)
+                     (reset! upload-state nil)
+                     (reset! progress 0)
+                     (reset! show-modal-import nil))}
 
      [ui/ModalHeader (some-> @show-modal-import name str/capitalize)]
 
@@ -148,10 +153,13 @@
          [ui/MessageHeader "Validation of selected file failed!"]
          [ui/MessageContent
           [ui/MessageList
-           (for [line-error (cond->> lines-error
-                                     (not header-valid?) (cons (str " Header invalid: " header)))]
-             ^{:key (random-uuid)}
-             [ui/MessageItem (str line-error)])]]])
+           (let [error-displayed 4
+                 sub-line-error  (cond-> (subvec (vec lines-error) 0 (min (count lines-error) error-displayed))
+                                         (> (count lines-error) error-displayed) (conj "..."))]
+             (for [line-error (cond->> sub-line-error
+                                       (not header-valid?) (cons (str " Header invalid: " header)))]
+               ^{:key (random-uuid)}
+               [ui/MessageItem (str line-error)]))]]])
 
       [:input {:style     {:width         "100%"
                            :margin-bottom 30}

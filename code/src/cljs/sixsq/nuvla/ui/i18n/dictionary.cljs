@@ -298,6 +298,7 @@
         :view                                      "view"
         :vms                                       "VMs"
         :volumes                                   "Volumes"
+        :voucher                                   "voucher"
         :welcome                                   "welcome"
         :welcome-api-desc                          "Explore and play with our rich API"
         :welcome-application-desc                  "Manage apps, components and images. Collaborate, share and explore one-click deployable applications"

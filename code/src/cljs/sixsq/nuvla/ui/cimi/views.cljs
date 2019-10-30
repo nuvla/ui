@@ -79,7 +79,8 @@
 
 
 (defn results-table [selected-fields entries]
-  (when (pos? (count entries))
+  (when (and (pos? (count entries))
+             (pos? (count selected-fields)))
     (let [row-fn (results-table-row-fn selected-fields)]
       [:div {:class-name "nuvla-ui-x-autoscroll"}
        [ui/Table

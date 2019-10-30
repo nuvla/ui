@@ -110,4 +110,9 @@
                                                           :label-kw   :api
                                                           :icon       "code"
                                                           :protected? false
-                                                          :order      7}}})
+                                                          :order      7}
+                                       "voucher"         {:url        "voucher"
+                                                          :label-kw   :voucher
+                                                          :icon       "credit card outline"
+                                                          :protected? false
+                                                          :order      8}}})

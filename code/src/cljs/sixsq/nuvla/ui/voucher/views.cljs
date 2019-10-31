@@ -16,6 +16,7 @@
     [sixsq.nuvla.ui.cimi.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -25,6 +26,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [taoensso.timbre :as log]
     [clojure.spec.alpha :as s]
+    ["Papaparse" :as papa]
     [sixsq.nuvla.ui.utils.spec :as spec-utils]))
 
 (s/def ::amount (s/and float? #(> % 0)))
@@ -44,7 +46,7 @@
   (only-keys :req-un [::amount
                       ::currency
                       ::code
-                      ;::state
+                      ::state
                       ::target-audience
                       ::supplier]
              :opt-un [::expiry
@@ -66,8 +68,10 @@
 
 (defn put-upload [e]
   (let [target (.-currentTarget e)
-        file   (-> target .-files (aget 0))
-        reader (js/FileReader.)]
+        file   (-> target .-files (aget 0))]
+    (js/console.log (papa/parse file #js {:header true
+                                          :transformHeader #(str/lower-case %)
+                                          :complete #(js/console.log "Complete" %)}))
     (set! (.-onload reader) #(reset! file-content (-> % .-target .-result)))
     (.readAsText reader file)))
 
@@ -103,30 +107,51 @@
       :icon-name "arrow alternate circle up"}]))
 
 
+(defn transform-value
+  [header-fields fields i]
+  (let [k (some->> i (nth header-fields) (str/lower-case) keyword)
+        v (nth fields i "")
+        v (case k
+            :amount (js/parseFloat v)
+            :state (str/upper-case v)
+            :currency (str/upper-case v)
+            v)]
+    [k v]))
+
+
 (defn csv->edn
   [header-fields line]
-  (let [fields (str/split line #",|;")]
-    (when (= (count header-fields) (count fields))
-      (into {} (map (fn [i]
-                      (let [k (some->> i (nth header-fields) (str/lower-case) keyword)
-                            v (nth fields i)
-                            v (case k
-                                :amount (js/parseFloat v)
-                                :state (str/upper-case v)
-                                :currency (str/upper-case v)
-                                v)]
-                        [k v])
-                      ) (range (count header-fields)))))))
+  (let [fields (str/split line #",|;")
+        range-index (range (count header-fields))
+        map-csv     (->> range-index
+                         (map (partial transform-value header-fields fields))
+                         (remove #(str/blank? (str (second %))))
+                         (into {}))
+        edn         (select-keys map-csv [:amount
+                                          :currency
+                                          :code
+                                          :state
+                                          :target-audience
+                                          :supplier
+                                          :expiry
+                                          :activated
+                                          :service-info-url
+                                          :redeemed
+                                          :wave
+                                          :batch])]
+    (cond-> edn
+            (nil? (:state edn)) (assoc :state "NEW"))))
 
 
 (defn ModalImport
   []
-  (let [lines         (str/split @file-content #"\r?\n")
+  (let [user-id       (subscribe [::authn-subs/user-id])
+        lines         (str/split @file-content #"\r?\n")
         header        (first lines)
-        header-fields (map str/lower-case (some-> header (str/split #",|;")))
+        header-fields (map str/lower-case (some-> header (str/split #",|;|\t")))
         header-valid? (clojure.set/subset?
-                        (set header-fields)
-                        #{"code", "amount", "currency", "supplier", "target-audience"})
+                        #{"code", "amount", "currency", "supplier", "target-audience"}
+                        (set header-fields))
         lines-edn     (->> lines
                            rest
                            (map #(csv->edn header-fields %)))
@@ -154,13 +179,15 @@
          [ui/MessageContent
           [ui/MessageList
            (let [error-displayed 4
-                 sub-line-error  (cond-> (subvec (vec lines-error) 0 (min (count lines-error) error-displayed))
+                 sub-line-error  (cond-> (subvec (vec lines-error)
+                                                 0 (min (count lines-error) error-displayed))
                                          (> (count lines-error) error-displayed) (conj "..."))]
              (for [line-error (cond->> sub-line-error
                                        (not header-valid?) (cons (str " Header invalid: " header)))]
                ^{:key (random-uuid)}
                [ui/MessageItem (str line-error)]))]]])
 
+      ^{:key "file-input"}
       [:input {:style     {:width         "100%"
                            :margin-bottom 30}
                :type      "file"
@@ -170,31 +197,26 @@
                :accept    ".csv"
                :on-change put-upload}]
 
-      (when @file-content
-        [:div
-         [:p
-          [:span
-           [:b "Line count: "]
-           (dec (count (str/split @file-content #"\n")))]]])
-
       (when (pos? @progress)
-        [ui/Progress {
-                      :progress   true
-                      :indicating true
-                      :percent    @progress}])]
+        [ui/Progress {:progress   true
+                      :value @progress
+                      :size "medium"
+                      :total (-> lines-edn count dec)}])]
      [ui/ModalActions
       [uix/Button
        {:text     "Import"
         :positive true
-        :disabled error?
+        :disabled (or error? (= @upload-state :started))
         :on-click (fn []
                     (reset! upload-state :started)
                     (go-loop [upload-edn lines-edn]
                              (<! (timeout 5))
                              (log/warn (first upload-edn))
-                             #_(<! (api/add @CLIENT
-                                            :voucher
-                                            (first upload-edn)))
+                             (dispatch [::events/create-resource (-> upload-edn
+                                                                     first
+                                                                     (assoc :owner @user-id
+                                                                            :user @user-id))])
+                             (swap! progress inc)
                              (when-not (empty? (rest upload-edn)) (recur (rest upload-edn))))
                     )}]]]))
 
@@ -236,19 +258,20 @@
   (let [tr           (subscribe [::i18n-subs/tr])
         path         (subscribe [::main-subs/nav-path])
         query-params (subscribe [::main-subs/nav-query-params])]
-    (dispatch [::events/set-selected-fields ["code", "amount", "currency", "supplier", "target-audience", "state", "created"]])
+    (dispatch [::events/set-selected-fields ["code", "amount", "currency", "supplier",
+                                             "target-audience", "state", "created"]])
     (dispatch [::events/set-collection-name "voucher"])
     (dispatch [::events/get-results])
     (fn []
       (let [[resource-type resource-id] @path]
-        (dispatch [::events/set-collection-name resource-type])
+        (dispatch [::events/set-collection-name "voucher"])
         (when @query-params
           (dispatch [::events/set-query-params @query-params])))
       [:<>
-       [uix/PageHeader "code" (str/capitalize (@tr [:voucher]))]
+       [uix/PageHeader "credit card outline" "OCRE"]
        [menu-bar]
        [cimi-views/results-display]])))
 
-(defmethod panel/render :voucher
+(defmethod panel/render :ocre
   []
   [View])

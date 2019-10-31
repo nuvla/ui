@@ -213,6 +213,7 @@
         :nuvlabox-ctrl                             "edge control"
         :object-count                              "Number of data objects: %1"
         :objects                                   "objects"
+        :ocre                                      "Ocre"
         :offset                                    "offset"
         :order                                     "order"
         :owners                                    "owners"

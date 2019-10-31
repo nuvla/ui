@@ -57,9 +57,9 @@
                       ::batch]))
 
 
-(def show-modal-import (r/atom nil))
+(def show-modal (r/atom nil))
 
-(def file-content (r/atom nil))
+(def parsing-result (r/atom nil))
 
 (def upload-state (atom nil))
 
@@ -69,11 +69,12 @@
 (defn put-upload [e]
   (let [target (.-currentTarget e)
         file   (-> target .-files (aget 0))]
-    (js/console.log (papa/parse file #js {:header true
-                                          :transformHeader #(str/lower-case %)
-                                          :complete #(js/console.log "Complete" %)}))
-    (set! (.-onload reader) #(reset! file-content (-> % .-target .-result)))
-    (.readAsText reader file)))
+    (papa/parse
+      file
+      #js {:header          true
+           :transformHeader #(str/lower-case %)
+           :complete        #(reset! parsing-result
+                                     (js->clj % :keywordize-keys true))})))
 
 
 (defn export-collection
@@ -91,7 +92,7 @@
   [uix/MenuItemWithIcon
    {:name      "Import"
     :icon-name "arrow alternate circle down"
-    :on-click  #(reset! show-modal-import :import)}])
+    :on-click  #(reset! show-modal :import)}])
 
 
 (defn ExportButton
@@ -108,10 +109,8 @@
 
 
 (defn transform-value
-  [header-fields fields i]
-  (let [k (some->> i (nth header-fields) (str/lower-case) keyword)
-        v (nth fields i "")
-        v (case k
+  [[k v]]
+  (let [v (case k
             :amount (js/parseFloat v)
             :state (str/upper-case v)
             :currency (str/upper-case v)
@@ -120,72 +119,65 @@
 
 
 (defn csv->edn
-  [header-fields line]
-  (let [fields (str/split line #",|;")
-        range-index (range (count header-fields))
-        map-csv     (->> range-index
-                         (map (partial transform-value header-fields fields))
-                         (remove #(str/blank? (str (second %))))
-                         (into {}))
-        edn         (select-keys map-csv [:amount
-                                          :currency
-                                          :code
-                                          :state
-                                          :target-audience
-                                          :supplier
-                                          :expiry
-                                          :activated
-                                          :service-info-url
-                                          :redeemed
-                                          :wave
-                                          :batch])]
-    (cond-> edn
-            (nil? (:state edn)) (assoc :state "NEW"))))
+  [json-line]
+  (->> (select-keys json-line
+                    [:amount :currency :code :state :target-audience :supplier :expiry
+                     :activated :service-info-url :redeemed :wave :batch])
+       (remove #(nil? (second %)))
+       (map transform-value)
+       (into {})))
 
 
 (defn ModalImport
   []
   (let [user-id       (subscribe [::authn-subs/user-id])
-        lines         (str/split @file-content #"\r?\n")
-        header        (first lines)
-        header-fields (map str/lower-case (some-> header (str/split #",|;|\t")))
-        header-valid? (clojure.set/subset?
-                        #{"code", "amount", "currency", "supplier", "target-audience"}
-                        (set header-fields))
-        lines-edn     (->> lines
-                           rest
-                           (map #(csv->edn header-fields %)))
+        headers       (some-> @parsing-result :meta :fields set)
+        required-headers #{"code", "amount", "currency", "supplier", "target-audience"}
+        header-valid? (clojure.set/subset? required-headers headers)
+        lines-edn     (some->> @parsing-result
+                               :data
+                               (map #(csv->edn %)))
+        csv-errors    (:errors @parsing-result)
+        csv-valid?   (empty? csv-errors)
         lines-error   (->> lines-edn
                            (map #(when-not (s/valid? ::voucher %) %))
                            (remove nil?))
         lines-valid?  (empty? lines-error)
-        error?        (and @file-content (or (not header-valid?) (not lines-valid?)))]
+        error?        (and @parsing-result (or
+                                             (not csv-valid?)
+                                             (not header-valid?)
+                                             (not lines-valid?)))]
     [ui/Modal
-     {:open       (some? @show-modal-import)
+     {:open       (some? @show-modal)
       :close-icon true
       :on-close   #(do
-                     (reset! file-content nil)
+                     (reset! parsing-result nil)
                      (reset! upload-state nil)
                      (reset! progress 0)
-                     (reset! show-modal-import nil))}
+                     (reset! show-modal nil))}
 
-     [ui/ModalHeader (some-> @show-modal-import name str/capitalize)]
+     [ui/ModalHeader (some-> @show-modal name str/capitalize)]
 
      [ui/ModalContent
+
+      #_(log/warn (str "parsing-result: " @parsing-result " csv-errors?: " csv-valid?
+                     " header-valid?: " header-valid? " lines-valid?: " lines-valid?
+                     " csv-errors: " csv-errors))
 
       (when error?
         [ui/Message {:error true}
          [ui/MessageHeader "Validation of selected file failed!"]
          [ui/MessageContent
           [ui/MessageList
-           (let [error-displayed 4
-                 sub-line-error  (cond-> (subvec (vec lines-error)
-                                                 0 (min (count lines-error) error-displayed))
-                                         (> (count lines-error) error-displayed) (conj "..."))]
-             (for [line-error (cond->> sub-line-error
-                                       (not header-valid?) (cons (str " Header invalid: " header)))]
-               ^{:key (random-uuid)}
-               [ui/MessageItem (str line-error)]))]]])
+           (for [csv-error (take 3 csv-errors)]
+             ^{:key (random-uuid)}
+             [ui/MessageItem (or (:message csv-error) csv-error)])
+           (when-not header-valid?
+             [ui/MessageItem (str "Required headers are missing: "
+                                  (clojure.set/difference required-headers headers))])
+           (for [line-error (take 3 lines-error)]
+             ^{:key (random-uuid)}
+             [ui/MessageItem (str line-error)])]]])
 
       ^{:key "file-input"}
       [:input {:style     {:width         "100%"
@@ -198,10 +190,10 @@
                :on-change put-upload}]
 
       (when (pos? @progress)
-        [ui/Progress {:progress   true
-                      :value @progress
-                      :size "medium"
-                      :total (-> lines-edn count dec)}])]
+        [ui/Progress {:progress true
+                      :value    @progress
+                      :size     "medium"
+                      :total    (-> lines-edn count dec)}])]
      [ui/ModalActions
       [uix/Button
        {:text     "Import"
@@ -211,7 +203,6 @@
                     (reset! upload-state :started)
                     (go-loop [upload-edn lines-edn]
                              (<! (timeout 5))
-                             (log/warn (first upload-edn))
                              (dispatch [::events/create-resource (-> upload-edn
                                                                      first
                                                                      (assoc :owner @user-id

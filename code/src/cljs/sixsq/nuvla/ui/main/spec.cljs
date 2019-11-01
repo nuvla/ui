@@ -111,8 +111,8 @@
                                                           :icon       "code"
                                                           :protected? false
                                                           :order      7}
-                                       "ocre"         {:url        "ocre"
-                                                          :label-kw   :ocre
+                                       "ocra"            {:url        "ocra"
+                                                          :label-kw   :ocra
                                                           :icon       "credit card outline"
-                                                          :protected? false
+                                                          :protected? true
                                                           :order      8}}})

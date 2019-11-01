@@ -25,7 +25,6 @@
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
     [sixsq.nuvla.ui.infrastructures.events :as infra-service-events]
     [sixsq.nuvla.ui.infrastructures.views]
-    [sixsq.nuvla.ui.voucher.views]
     [sixsq.nuvla.ui.main.events :as events]
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
@@ -37,6 +36,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.voucher.views]
     [sixsq.nuvla.ui.welcome.views]
     [taoensso.timbre :as log]))
 

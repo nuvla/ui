@@ -1,33 +1,31 @@
 (ns sixsq.nuvla.ui.voucher.views
   (:require-macros
-    [cljs.core.async.macros :refer [go-loop]]
+    [cljs.core.async.macros :refer [go go-loop]]
     [sixsq.nuvla.ui.utils.spec :refer [only-keys]])
   (:require
-    [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.cimi.views :as cimi-views]
+    ["Papaparse" :as papa]
     [cljs.core.async :refer [<! timeout]]
     [cljs.pprint :refer [cl-format pprint]]
+    [clojure.spec.alpha :as s]
     [clojure.string :as str]
-    [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.client.api :as api]
+    [sixsq.nuvla.ui.authn.subs :as authn-subs]
+    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.events :as events]
     [sixsq.nuvla.ui.cimi.subs :as subs]
+    [sixsq.nuvla.ui.cimi.views :as cimi-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.spec :as spec-utils]
     [sixsq.nuvla.ui.utils.style :as style]
-    [taoensso.timbre :as log]
-    [clojure.spec.alpha :as s]
-    ["Papaparse" :as papa]
-    [sixsq.nuvla.ui.utils.spec :as spec-utils]))
+    [taoensso.timbre :as log]))
 
 (s/def ::amount (s/and float? #(> % 0)))
 (s/def ::currency #{"EUR", "CHF", "USD"})
@@ -41,14 +39,18 @@
 (s/def ::batch spec-utils/nonblank-string)
 (s/def ::wave spec-utils/nonblank-string)
 (s/def ::supplier spec-utils/nonblank-string)
+(s/def ::user spec-utils/nonblank-string)
+(s/def ::owner spec-utils/nonblank-string)
 
 (s/def ::voucher
   (only-keys :req-un [::amount
                       ::currency
-                      ::code
                       ::state
+                      ::code
                       ::target-audience
-                      ::supplier]
+                      ::supplier
+                      ::owner
+                      ::user]
              :opt-un [::expiry
                       ::activated
                       ::service-info-url
@@ -56,25 +58,102 @@
                       ::wave
                       ::batch]))
 
+(def required-headers #{"code", "amount", "currency", "supplier", "target-audience"})
+
 
 (def show-modal (r/atom nil))
 
-(def parsing-result (r/atom nil))
+(def file-errors (r/atom nil))
+
+(def valid-file (atom nil))
 
 (def upload-state (atom nil))
 
 (def progress (r/atom 0))
 
+(def total (r/atom nil))
 
-(defn put-upload [e]
+(defn reset-state!
+  []
+  (reset! show-modal nil)
+  (reset! file-errors nil)
+  (reset! valid-file nil)
+  (reset! upload-state nil)
+  (reset! progress 0)
+  (reset! total nil))
+
+
+(defn transform-value
+  [[k v]]
+  (let [v (case k
+            :amount (js/parseFloat v)
+            :state (str/upper-case v)
+            :currency (str/upper-case v)
+            v)]
+    [k v]))
+
+
+(defn cimi-voucher
+  [user-id json-line]
+  (->> (select-keys json-line
+                    [:amount :currency :code :state :target-audience :supplier :expiry
+                     :activated :service-info-url :redeemed :wave :batch])
+       (remove #(nil? (second %)))
+       (map transform-value)
+       (into {})
+       (merge {:state "NEW"
+               :owner user-id
+               :user  user-id})))
+
+
+(defn check-file [e]
   (let [target (.-currentTarget e)
-        file   (-> target .-files (aget 0))]
+        file (-> target .-files (aget 0))]
     (papa/parse
       file
       #js {:header          true
            :transformHeader #(str/lower-case %)
-           :complete        #(reset! parsing-result
-                                     (js->clj % :keywordize-keys true))})))
+           :preview         10
+           :complete        (fn [results, _]
+                              (let [results-edn (js->clj results :keywordize-keys true)
+                                    headers (some-> results-edn :meta :fields set)
+                                    headers-error? (not (clojure.set/subset? required-headers headers))
+                                    csv-errors (:errors results-edn)
+                                    spec-error? (->> results-edn
+                                                     :data
+                                                     (map #(s/valid? ::voucher (cimi-voucher "user/fake" %)))
+                                                     (some false?))
+                                    errors-list (cond-> (mapv :message csv-errors)
+                                                        headers-error? (conj
+                                                                         (str "Required headers are missing: "
+                                                                              (clojure.set/difference
+                                                                                required-headers headers)))
+                                                        spec-error? (conj "CSV rows are failing voucher spec."))]
+
+                                (reset! file-errors errors-list)
+                                (when (empty? errors-list)
+                                  (reset! valid-file file))))})))
+
+
+(defn import-vouchers
+  [user-id]
+
+  (papa/parse
+    @valid-file
+    #js {:header          true
+         :complete        (fn [rows]
+                            (go
+                              (let [data (js->clj rows :keywordize-keys true)
+                                    vouchers (->> data :data (map (partial cimi-voucher user-id)))]
+                                (reset! total (count vouchers))
+                                (doseq [voucher vouchers]
+                                  (let [response (<! (api/add @cimi-api-fx/CLIENT :voucher voucher))]
+                                    (when (instance? js/Error response)
+                                      (cimi-api-fx/default-error-message response "Add voucher failed"))
+                                    (swap! progress inc)))
+                                (reset! upload-state :finished)
+                                (dispatch [::events/get-results]))))
+         :transformHeader #(str/lower-case %)}))
 
 
 (defn export-collection
@@ -97,9 +176,9 @@
 
 (defn ExportButton
   []
-  (let [collection      (subscribe [::subs/collection])
+  (let [collection (subscribe [::subs/collection])
         selected-fields (subscribe [::subs/selected-fields])
-        csv-content     (export-collection @selected-fields (:resources @collection))]
+        csv-content (export-collection @selected-fields (:resources @collection))]
     [uix/MenuItemWithIcon
      {:name      "Export"
       :download  "vouchers-export.csv"
@@ -108,76 +187,27 @@
       :icon-name "arrow alternate circle up"}]))
 
 
-(defn transform-value
-  [[k v]]
-  (let [v (case k
-            :amount (js/parseFloat v)
-            :state (str/upper-case v)
-            :currency (str/upper-case v)
-            v)]
-    [k v]))
-
-
-(defn csv->edn
-  [json-line]
-  (->> (select-keys json-line
-                    [:amount :currency :code :state :target-audience :supplier :expiry
-                     :activated :service-info-url :redeemed :wave :batch])
-       (remove #(nil? (second %)))
-       (map transform-value)
-       (into {})))
-
-
 (defn ModalImport
   []
-  (let [user-id       (subscribe [::authn-subs/user-id])
-        headers       (some-> @parsing-result :meta :fields set)
-        required-headers #{"code", "amount", "currency", "supplier", "target-audience"}
-        header-valid? (clojure.set/subset? required-headers headers)
-        lines-edn     (some->> @parsing-result
-                               :data
-                               (map #(csv->edn %)))
-        csv-errors    (:errors @parsing-result)
-        csv-valid?   (empty? csv-errors)
-        lines-error   (->> lines-edn
-                           (map #(when-not (s/valid? ::voucher %) %))
-                           (remove nil?))
-        lines-valid?  (empty? lines-error)
-        error?        (and @parsing-result (or
-                                             (not csv-valid?)
-                                             (not header-valid?)
-                                             (not lines-valid?)))]
+  (let [user-id (subscribe [::authn-subs/user-id])
+        finished? (= @upload-state :finished)]
     [ui/Modal
      {:open       (some? @show-modal)
       :close-icon true
-      :on-close   #(do
-                     (reset! parsing-result nil)
-                     (reset! upload-state nil)
-                     (reset! progress 0)
-                     (reset! show-modal nil))}
+      :on-close   reset-state!}
 
      [ui/ModalHeader (some-> @show-modal name str/capitalize)]
 
      [ui/ModalContent
 
-      #_(log/warn (str "parsing-result: " @parsing-result " csv-errors?: " csv-valid?
-                     " header-valid?: " header-valid? " lines-valid?: " lines-valid?
-                     " csv-errors: " csv-errors))
-
-      (when error?
+      (when-not (empty? @file-errors)
         [ui/Message {:error true}
          [ui/MessageHeader "Validation of selected file failed!"]
          [ui/MessageContent
           [ui/MessageList
-           (for [csv-error (take 3 csv-errors)]
+           (for [error @file-errors]
              ^{:key (random-uuid)}
-             [ui/MessageItem (or (:message csv-error) csv-error)])
-           (when-not header-valid?
-             [ui/MessageItem (str "Required headers are missing: "
-                                  (clojure.set/difference required-headers headers))])
-           (for [line-error (take 3 lines-error)]
-             ^{:key (random-uuid)}
-             [ui/MessageItem (str line-error)])]]])
+             [ui/MessageItem error])]]])
 
       ^{:key "file-input"}
       [:input {:style     {:width         "100%"
@@ -187,29 +217,30 @@
                :name      "file"
                :disabled  (some? @upload-state)
                :accept    ".csv"
-               :on-change put-upload}]
+               :on-change check-file}]
 
       (when (pos? @progress)
-        [ui/Progress {:progress true
-                      :value    @progress
-                      :size     "medium"
-                      :total    (-> lines-edn count dec)}])]
+        [ui/Progress {:progress     "percent"
+                      :total        @total
+                      :value        @progress
+                      :precision    0
+                      :auto-success true
+                      :size         "medium"}])]
      [ui/ModalActions
-      [uix/Button
-       {:text     "Import"
-        :positive true
-        :disabled (or error? (= @upload-state :started))
-        :on-click (fn []
-                    (reset! upload-state :started)
-                    (go-loop [upload-edn lines-edn]
-                             (<! (timeout 5))
-                             (dispatch [::events/create-resource (-> upload-edn
-                                                                     first
-                                                                     (assoc :owner @user-id
-                                                                            :user @user-id))])
-                             (swap! progress inc)
-                             (when-not (empty? (rest upload-edn)) (recur (rest upload-edn))))
-                    )}]]]))
+      (when-not finished?
+        [uix/Button
+         {:text     "Import"
+          :positive true
+          :disabled (boolean (or (not-empty @file-errors) (= @upload-state :started)))
+          :on-click (fn []
+                      (reset! upload-state :started)
+                      (import-vouchers @user-id)
+                      )}])
+      (when finished?
+        [uix/Button
+         {:text     "Close"
+          :on-click reset-state!}])
+      ]]))
 
 
 (defn ImportExportMenu
@@ -221,7 +252,7 @@
    [ModalImport]])
 
 (defn menu-bar []
-  (let [tr        (subscribe [::i18n-subs/tr])
+  (let [tr (subscribe [::i18n-subs/tr])
         resources (subscribe [::subs/collection])]
     (fn []
       (when (instance? js/Error @resources)
@@ -246,23 +277,17 @@
 
 (defn View
   []
-  (let [tr           (subscribe [::i18n-subs/tr])
-        path         (subscribe [::main-subs/nav-path])
-        query-params (subscribe [::main-subs/nav-query-params])]
-    (dispatch [::events/set-selected-fields ["code", "amount", "currency", "supplier",
-                                             "target-audience", "state", "created"]])
-    (dispatch [::events/set-collection-name "voucher"])
-    (dispatch [::events/get-results])
-    (fn []
-      (let [[resource-type resource-id] @path]
-        (dispatch [::events/set-collection-name "voucher"])
-        (when @query-params
-          (dispatch [::events/set-query-params @query-params])))
-      [:<>
-       [uix/PageHeader "credit card outline" "OCRE"]
-       [menu-bar]
-       [cimi-views/results-display]])))
+  (dispatch [::events/set-selected-fields ["code", "amount", "currency", "supplier",
+                                           "target-audience", "state", "created"]])
+  (dispatch [::events/set-collection-name "voucher"])
+  (dispatch [::events/get-results])
+  (fn []
+    [:<>
+     [uix/PageHeader "credit card outline" "OCRA"]
+     [menu-bar]
+     [cimi-views/results-display]]))
 
-(defmethod panel/render :ocre
+
+(defmethod panel/render :ocra
   []
   [View])

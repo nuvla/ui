@@ -18,6 +18,7 @@
     [sixsq.nuvla.ui.edge-detail.spec :as edge-detail]
     [sixsq.nuvla.ui.edge.spec :as edge]
     [sixsq.nuvla.ui.i18n.spec :as i18n]
+    [sixsq.nuvla.ui.infrastructures-detail.spec :as infra-service-detail]
     [sixsq.nuvla.ui.infrastructures.spec :as infra-service]
     [sixsq.nuvla.ui.main.spec :as main]
     [sixsq.nuvla.ui.messages.spec :as messages]
@@ -37,6 +38,7 @@
                      ::docs/db
                      ::i18n/db
                      ::infra-service/db
+                     ::infra-service-detail/db
                      ::main/db
                      ::messages/db
                      ::edge/db
@@ -60,6 +62,7 @@
          docs/defaults
          i18n/defaults
          infra-service/defaults
+         infra-service-detail/defaults
          main/defaults
          messages/defaults
          edge/defaults

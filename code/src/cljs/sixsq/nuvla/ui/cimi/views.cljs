@@ -69,7 +69,7 @@
 (defn results-table-row [row-fn entry]
   (when entry
     (let [data (row-fn entry)]
-      (vec (concat [ui/TableRow]
+      (vec (concat [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "api/" (:id entry))])}]
                    (mapv (fn [v] [ui/TableCell v]) data))))))
 
 
@@ -88,6 +88,7 @@
          :compact     "very"
          :unstackable true
          :single-line true
+         :selectable  true
          :padded      false}
         (results-table-header selected-fields)
         (results-table-body row-fn entries)]])))

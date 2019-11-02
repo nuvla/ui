@@ -108,27 +108,27 @@
 
 (defn check-file [e]
   (let [target (.-currentTarget e)
-        file (-> target .-files (aget 0))]
+        file   (-> target .-files (aget 0))]
     (papa/parse
       file
       #js {:header          true
            :transformHeader #(str/lower-case %)
            :preview         10
            :complete        (fn [results, _]
-                              (let [results-edn (js->clj results :keywordize-keys true)
-                                    headers (some-> results-edn :meta :fields set)
+                              (let [results-edn    (js->clj results :keywordize-keys true)
+                                    headers        (some-> results-edn :meta :fields set)
                                     headers-error? (not (clojure.set/subset? required-headers headers))
-                                    csv-errors (:errors results-edn)
-                                    spec-error? (->> results-edn
-                                                     :data
-                                                     (map #(s/valid? ::voucher (cimi-voucher "user/fake" %)))
-                                                     (some false?))
-                                    errors-list (cond-> (mapv :message csv-errors)
-                                                        headers-error? (conj
-                                                                         (str "Required headers are missing: "
-                                                                              (clojure.set/difference
-                                                                                required-headers headers)))
-                                                        spec-error? (conj "CSV rows are failing voucher spec."))]
+                                    csv-errors     (:errors results-edn)
+                                    spec-error?    (->> results-edn
+                                                        :data
+                                                        (map #(s/valid? ::voucher (cimi-voucher "user/fake" %)))
+                                                        (some false?))
+                                    errors-list    (cond-> (mapv :message csv-errors)
+                                                           headers-error? (conj
+                                                                            (str "Required headers are missing: "
+                                                                                 (clojure.set/difference
+                                                                                   required-headers headers)))
+                                                           spec-error? (conj "CSV rows are failing voucher spec."))]
 
                                 (reset! file-errors errors-list)
                                 (when (empty? errors-list)
@@ -137,13 +137,12 @@
 
 (defn import-vouchers
   [user-id]
-
   (papa/parse
     @valid-file
     #js {:header          true
          :complete        (fn [rows]
                             (go
-                              (let [data (js->clj rows :keywordize-keys true)
+                              (let [data     (js->clj rows :keywordize-keys true)
                                     vouchers (->> data :data (map (partial cimi-voucher user-id)))]
                                 (reset! total (count vouchers))
                                 (doseq [voucher vouchers]
@@ -176,9 +175,9 @@
 
 (defn ExportButton
   []
-  (let [collection (subscribe [::subs/collection])
+  (let [collection      (subscribe [::subs/collection])
         selected-fields (subscribe [::subs/selected-fields])
-        csv-content (export-collection @selected-fields (:resources @collection))]
+        csv-content     (export-collection @selected-fields (:resources @collection))]
     [uix/MenuItemWithIcon
      {:name      "Export"
       :download  "vouchers-export.csv"
@@ -189,7 +188,7 @@
 
 (defn ModalImport
   []
-  (let [user-id (subscribe [::authn-subs/user-id])
+  (let [user-id   (subscribe [::authn-subs/user-id])
         finished? (= @upload-state :finished)]
     [ui/Modal
      {:open       (some? @show-modal)
@@ -252,7 +251,7 @@
    [ModalImport]])
 
 (defn menu-bar []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr        (subscribe [::i18n-subs/tr])
         resources (subscribe [::subs/collection])]
     (fn []
       (when (instance? js/Error @resources)

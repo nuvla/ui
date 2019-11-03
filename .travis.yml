@@ -5,8 +5,8 @@ jdk:
 before_install:
 - sudo apt-get install -y zopfli
 cache:
-  npm: false
   directories:
+  - code/node_modules
   - "$HOME/.m2"
 deploy:
   provider: script

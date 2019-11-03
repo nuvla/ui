@@ -25,7 +25,7 @@
 
           <execution>
             <id>npm-install</id>
-            <phase>validate</phase>
+            <phase>generate-sources</phase>
             <goals>
               <goal>exec</goal>
             </goals>

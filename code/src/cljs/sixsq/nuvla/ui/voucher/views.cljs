@@ -3,7 +3,7 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [sixsq.nuvla.ui.utils.spec :refer [only-keys]])
   (:require
-    ["Papaparse" :as papa]
+    ["papaparse" :as papa]
     [cljs.core.async :refer [<! timeout]]
     [cljs.pprint :refer [cl-format pprint]]
     [clojure.spec.alpha :as s]

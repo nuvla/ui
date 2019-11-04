@@ -3,7 +3,9 @@
 ## [Unreleased]
 
 ### Changed
-
+ 
+  - OCRE PAGE - ocre page added visible for admin and ocre users
+  - CIMI page - rows are now clickable
   - App store - order cards by created time
   - Infrastructure page - fix inconsistency between pages
   - Application detail - validate yaml syntax and print 

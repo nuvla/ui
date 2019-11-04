@@ -69,7 +69,7 @@
 (defn results-table-row [row-fn entry]
   (when entry
     (let [data (row-fn entry)]
-      (vec (concat [ui/TableRow]
+      (vec (concat [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "api/" (:id entry))])}]
                    (mapv (fn [v] [ui/TableCell v]) data))))))
 
 
@@ -79,7 +79,8 @@
 
 
 (defn results-table [selected-fields entries]
-  (when (pos? (count entries))
+  (when (and (pos? (count entries))
+             (pos? (count selected-fields)))
     (let [row-fn (results-table-row-fn selected-fields)]
       [:div {:class-name "nuvla-ui-x-autoscroll"}
        [ui/Table
@@ -87,6 +88,7 @@
          :compact     "very"
          :unstackable true
          :single-line true
+         :selectable  true
          :padded      false}
         (results-table-header selected-fields)
         (results-table-body row-fn entries)]])))

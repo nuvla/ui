@@ -124,8 +124,8 @@
 (def Message (r/adapt-react-class semantic/Message))
 (def MessageHeader (r/adapt-react-class semantic/MessageHeader))
 (def MessageContent (r/adapt-react-class semantic/MessageContent))
-;;(def MessageList (r/adapt-react-class semantic/MessageList))
-;;(def MessageItem (r/adapt-react-class semantic/MessageItem))
+(def MessageList (r/adapt-react-class semantic/MessageList))
+(def MessageItem (r/adapt-react-class semantic/MessageItem))
 
 (def Modal (r/adapt-react-class semantic/Modal))
 (def ModalActions (r/adapt-react-class semantic/ModalActions))

@@ -42,6 +42,24 @@
                    #(navigate url))}]))
 
 
+(defn item-ocre
+  []
+  (let [tr       (subscribe [::i18n-subs/tr])
+        url      "ocre"
+        active?  (subscribe [::subs/nav-url-active? url])
+
+        label-kw :ocre
+        icon     "credit card outline"]
+    ^{:key (name label-kw)}
+    [uix/MenuItemWithIcon
+     {:name      (str/capitalize (@tr [label-kw]))
+      :icon-name icon
+      :style     {:min-width  sidebar-width
+                  :overflow-x "hidden"}
+      :active    @active?
+      :on-click  #(navigate url)}]))
+
+
 (defn logo-item
   []
   (let [tr           (subscribe [::i18n-subs/tr])
@@ -79,4 +97,8 @@
        (for [{:keys [url label-kw icon protected? iframe-visble?]} @pages-list]
          (when (or (not @iframe?) iframe-visble?)
            ^{:key url}
-           [item label-kw url icon protected?])))]))
+           [item label-kw url icon protected?])))
+     (let [is-admin?     (subscribe [::authn-subs/is-admin?])
+           is-ocre-user? (subscribe [::authn-subs/has-role? "group/ocre-user"])]
+       (when (or @is-admin? @is-ocre-user?)
+         [item-ocre]))]))

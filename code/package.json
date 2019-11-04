@@ -28,6 +28,7 @@
     "js-yaml": "^3.13.1",
     "license-checker": "^25.0.1",
     "moment": "^2.24.0",
+    "papaparse": "^5.1.0",
     "react": "^16.8.6",
     "react-chartjs-2": "^2.7.4",
     "react-codemirror2": "^6.0.0",

@@ -30,6 +30,7 @@
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
     [sixsq.nuvla.ui.messages.views :as messages]
+    [sixsq.nuvla.ui.ocre.views]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.profile.views]
     [sixsq.nuvla.ui.utils.general :as utils]
@@ -37,7 +38,6 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.voucher.views]
     [sixsq.nuvla.ui.welcome.views]
     [taoensso.timbre :as log]))
 

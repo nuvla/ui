@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.voucher.views
+(ns sixsq.nuvla.ui.ocre.views
   (:require-macros
     [cljs.core.async.macros :refer [go go-loop]]
     [sixsq.nuvla.ui.utils.spec :refer [only-keys]])

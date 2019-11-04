@@ -3,7 +3,9 @@
     [cljs.pprint :refer [cl-format]]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.infrastructures-detail.views :as infra-detail]
     [sixsq.nuvla.ui.infrastructures.events :as events]
     [sixsq.nuvla.ui.infrastructures.spec :as spec]
     [sixsq.nuvla.ui.infrastructures.subs :as subs]
@@ -15,6 +17,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
+    [sixsq.nuvla.ui.utils.values :as values]
     [taoensso.timbre :as timbre]
     [taoensso.timbre :as log]))
 
@@ -43,7 +46,8 @@
 (defn ServiceCard
   [{:keys [id name description path subtype logo-url] :as service}]
   [ui/Card (when (general-utils/can-edit? service)
-             {:on-click #(dispatch [::events/open-service-modal service false])})
+             {:on-click #(dispatch [::history-events/navigate
+                                    (str "infrastructures/" (general-utils/id->uuid id))])})
    (when logo-url
      [ui/Image {:src   logo-url
                 :style {:width      "auto"
@@ -74,7 +78,8 @@
       ; use content to work around bug in icon in label for cursor
       ]
      [ui/CardContent
-      [ui/CardDescription name]
+      [ui/CardDescription
+       [values/as-link id :label name]]
       [ui/CardHeader {:style {:word-wrap "break-word"}}]
       (if @services
         (for [{service-id :id :as service} @services]
@@ -200,7 +205,7 @@
         (dispatch [::events/edit-infra-service])))))
 
 
-(defn service-modal
+(defn ServiceModal
   []
   (let [tr          (subscribe [::i18n-subs/tr])
         visible?    (subscribe [::subs/service-modal-visible?])
@@ -234,64 +239,69 @@
                          :on-click #(save-callback validation-event)}]]])))))
 
 
-(defn add-service-modal
+(defn AddServiceModal
   []
   (let [tr       (subscribe [::i18n-subs/tr])
         visible? (subscribe [::subs/add-service-modal-visible?])
-        group    (subscribe [::subs/service-group])
         service  (subscribe [::subs/infra-service])]
     (fn []
-      (let [services (:services @group)]
-        [ui/Modal {:open       @visible?
-                   :close-icon true
-                   :on-close   #(dispatch [::events/close-add-service-modal])}
+      [ui/Modal {:open       @visible?
+                 :close-icon true
+                 :on-close   #(dispatch [::events/close-add-service-modal])}
 
-         [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
+       [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
 
-         [ui/ModalContent {:scrolling false}
+       [ui/ModalContent {:scrolling false}
 
-          [:div
-           [:p (@tr [:register-swarm-note])]
-           [ui/CardGroup {:centered true
-                          :style    {:margin-bottom "10px"}}
+        [:div
+         [:p (@tr [:register-swarm-note])]
+         [ui/CardGroup {:centered true
+                        :style    {:margin-bottom "10px"}}
 
-            [ui/Card
-             {:on-click #(do
-                           (dispatch [::events/set-validate-form? false])
-                           (dispatch [::events/form-valid])
-                           (dispatch [::events/close-add-service-modal])
-                           (dispatch [::events/open-service-modal
-                                      (assoc @service :subtype "swarm") true]))}
+          [ui/Card
+           {:on-click #(do
+                         (dispatch [::events/set-validate-form? false])
+                         (dispatch [::events/form-valid])
+                         (dispatch [::events/close-add-service-modal])
+                         (dispatch [::events/open-service-modal
+                                    (assoc @service :subtype "swarm") true]))}
 
-             [ui/CardContent {:text-align :center}
-              [ui/Header "Swarm"]
-              [ui/Icon {:name "docker"
-                        :size :massive}]
-              [ui/Header (@tr [:register])]]]]]
+           [ui/CardContent {:text-align :center}
+            [ui/Header "Swarm"]
+            [ui/Icon {:name "docker"
+                      :size :massive}]
+            [ui/Header (@tr [:register])]]]]]
 
-          [:div
-           [:p (@tr [:register-s3-note])]
-           [ui/CardGroup {:centered true}
+        [:div
+         [:p (@tr [:register-s3-note])]
+         [ui/CardGroup {:centered true}
 
-            [ui/Card
-             {:on-click #(do
-                           (dispatch [::events/set-validate-form? false])
-                           (dispatch [::events/form-valid])
-                           (dispatch [::events/close-add-service-modal])
-                           (dispatch [::events/open-service-modal
-                                      (assoc @service :subtype "s3") true]))}
-             [ui/CardContent {:text-align :center}
-              [ui/Header "MinIO"]
-              [ui/Image {:src  "/ui/images/minio.png"
-                         :size :tiny}]
-              [ui/Header (@tr [:register])]]]]]]]))))
+          [ui/Card
+           {:on-click #(do
+                         (dispatch [::events/set-validate-form? false])
+                         (dispatch [::events/form-valid])
+                         (dispatch [::events/close-add-service-modal])
+                         (dispatch [::events/open-service-modal
+                                    (assoc @service :subtype "s3") true]))}
+           [ui/CardContent {:text-align :center}
+            [ui/Header "MinIO"]
+            [ui/Image {:src  "/ui/images/minio.png"
+                       :size :tiny}]
+            [ui/Header (@tr [:register])]]]]]]])))
 
 
 (defmethod panel/render :infrastructures
   [path]
   (timbre/set-level! :info)
   (dispatch [::events/get-infra-service-groups])
-  [:<>
-   [InfraServices]
-   [service-modal]
-   [add-service-modal]])
+  (let [[_ uuid] path
+        n        (count path)
+        root     [:<>
+                  [InfraServices]
+                  [ServiceModal]
+                  [AddServiceModal]]
+        children (case n
+                   1 root
+                   2 [infra-detail/InfrastructureDetails uuid]
+                   root)]
+    [ui/Segment style/basic children]))

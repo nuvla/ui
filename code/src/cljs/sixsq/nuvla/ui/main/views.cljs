@@ -23,6 +23,7 @@
     [sixsq.nuvla.ui.history.utils :as history-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
+    [sixsq.nuvla.ui.infrastructures-detail.views]
     [sixsq.nuvla.ui.infrastructures.events :as infra-service-events]
     [sixsq.nuvla.ui.infrastructures.views]
     [sixsq.nuvla.ui.main.events :as events]

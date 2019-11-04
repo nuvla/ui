@@ -110,9 +110,4 @@
                                                           :label-kw   :api
                                                           :icon       "code"
                                                           :protected? false
-                                                          :order      7}
-                                       "ocra"            {:url        "ocra"
-                                                          :label-kw   :ocra
-                                                          :icon       "credit card outline"
-                                                          :protected? true
-                                                          :order      8}}})
+                                                          :order      7}}})

@@ -282,11 +282,11 @@
   (dispatch [::events/get-results])
   (fn []
     [:<>
-     [uix/PageHeader "credit card outline" "OCRA"]
+     [uix/PageHeader "credit card outline" "OCRE"]
      [menu-bar]
      [cimi-views/results-display]]))
 
 
-(defmethod panel/render :ocra
+(defmethod panel/render :ocre
   []
   [View])

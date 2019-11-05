@@ -100,6 +100,15 @@
 
 
 (reg-fx
+  ::delete-bulk
+  (fn [[resource-type on-success filter & {:keys [on-error]}]]
+    (when resource-type
+      (let [api-call #(api/delete-bulk @CLIENT resource-type {:filter filter})
+            on-error (or on-error (partial default-delete-on-error resource-type))]
+        (api-call-error-check api-call on-success on-error)))))
+
+
+(reg-fx
   ::edit
   (fn [[resource-id data callback]]
     (when resource-id

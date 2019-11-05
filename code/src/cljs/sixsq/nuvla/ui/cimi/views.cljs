@@ -55,8 +55,12 @@
 
 (defn results-table-header [selected-fields]
   [ui/TableHeader
-   (vec (concat [ui/TableRow]
-                (mapv table-header-cell selected-fields)))])
+   [ui/TableRow
+    [ui/TableHeaderCell
+     [ui/Checkbox {:on-change (ui-callback/checked #(dispatch [::events/select-all-row %]))}]]
+    (for [selected-field selected-fields]
+      ^{:key selected-field}
+      [table-header-cell selected-field])]])
 
 
 (defn results-table-row-fn [selected-fields]
@@ -66,16 +70,30 @@
                    selected-fields)))
 
 
-(defn results-table-row [row-fn entry]
-  (when entry
-    (let [data (row-fn entry)]
-      (vec (concat [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "api/" (:id entry))])}]
-                   (mapv (fn [v] [ui/TableCell v]) data))))))
+(defn results-table-row [row-fn entry i]
+  (let [over-checkbox? (atom false)]
+    (fn [row-fn entry i]
+      (when entry
+        (let [data          (row-fn entry)
+              id            (:id entry)
+              row-selected? (subscribe [::subs/row-selected? id])]
+          [ui/TableRow {:on-click #(when-not @over-checkbox?
+                                     (dispatch [::history-events/navigate (str "api/" id)]))}
+           [ui/TableCell
+            [ui/Checkbox {:checked       @row-selected?
+                          :on-mouse-over #(reset! over-checkbox? true)
+                          :on-mouse-out  #(reset! over-checkbox? false)
+                          :on-click      #(dispatch [::events/select-row @row-selected? id])}]]
+           (for [[j v] (map-indexed vector data)]
+             ^{:key (str "row-" i "-cell-" j)}
+             [ui/TableCell v])])))))
 
 
 (defn results-table-body [row-fn entries]
-  (vec (concat [ui/TableBody]
-               (mapv (partial results-table-row row-fn) entries))))
+  [ui/TableBody
+   (for [[i entry] (map-indexed vector entries)]
+     ^{:key (str "row-" i)}
+     [results-table-row row-fn entry i])])
 
 
 (defn results-table [selected-fields entries]

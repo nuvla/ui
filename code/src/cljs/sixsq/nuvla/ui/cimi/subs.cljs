@@ -64,3 +64,15 @@
 (reg-sub
   ::loading?
   ::spec/loading?)
+
+
+(reg-sub
+  ::selected-rows
+  (fn [{:keys [::spec/selected-rows]}]
+    selected-rows))
+
+(reg-sub
+  ::row-selected?
+  :<- [::selected-rows]
+  (fn [selected-rows [_ id]]
+    (contains? selected-rows id)))

@@ -18,6 +18,7 @@
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.response :as response]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -54,13 +55,15 @@
 
 
 (defn results-table-header [selected-fields]
-  [ui/TableHeader
-   [ui/TableRow
-    [ui/TableHeaderCell
-     [ui/Checkbox {:on-change (ui-callback/checked #(dispatch [::events/select-all-row %]))}]]
-    (for [selected-field selected-fields]
-      ^{:key selected-field}
-      [table-header-cell selected-field])]])
+  (let [can-bulk-delete? (subscribe [::subs/can-bulk-delete?])]
+    [ui/TableHeader
+     [ui/TableRow
+      (when @can-bulk-delete?
+        [ui/TableHeaderCell
+         [ui/Checkbox {:on-change (ui-callback/checked #(dispatch [::events/select-all-row %]))}]])
+      (for [selected-field selected-fields]
+        ^{:key selected-field}
+        [table-header-cell selected-field])]]))
 
 
 (defn results-table-row-fn [selected-fields]
@@ -71,7 +74,8 @@
 
 
 (defn results-table-row [row-fn entry i]
-  (let [over-checkbox? (atom false)]
+  (let [over-checkbox?   (atom false)
+        can-bulk-delete? (subscribe [::subs/can-bulk-delete?])]
     (fn [row-fn entry i]
       (when entry
         (let [data          (row-fn entry)
@@ -79,11 +83,12 @@
               row-selected? (subscribe [::subs/row-selected? id])]
           [ui/TableRow {:on-click #(when-not @over-checkbox?
                                      (dispatch [::history-events/navigate (str "api/" id)]))}
-           [ui/TableCell
-            [ui/Checkbox {:checked       @row-selected?
-                          :on-mouse-over #(reset! over-checkbox? true)
-                          :on-mouse-out  #(reset! over-checkbox? false)
-                          :on-click      #(dispatch [::events/select-row @row-selected? id])}]]
+           (when @can-bulk-delete?
+             [ui/TableCell
+              [ui/Checkbox {:checked       @row-selected?
+                            :on-mouse-over #(reset! over-checkbox? true)
+                            :on-mouse-out  #(reset! over-checkbox? false)
+                            :on-click      #(dispatch [::events/select-row @row-selected? id])}]])
            (for [[j v] (map-indexed vector data)]
              ^{:key (str "row-" i "-cell-" j)}
              [ui/TableCell v])])))))
@@ -443,19 +448,30 @@
 
 (defn create-button
   []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        search-results (subscribe [::subs/collection])]
-    (fn []
-      (when (general-utils/can-add? @search-results)
-        [uix/MenuItemWithIcon
-         {:name      (@tr [:add])
-          :icon-name "add"
-          :on-click  #(dispatch [::events/show-add-modal])}]))))
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/MenuItemWithIcon
+     {:name      (@tr [:add])
+      :icon-name "add"
+      :on-click  #(dispatch [::events/show-add-modal])}]))
+
+
+(defn delete-resources-button
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [resource-details/action-button-icon
+     (@tr [:delete-resources])
+     (@tr [:yes])
+     "trash"
+     (@tr [:delete-resources])
+     (@tr [:are-you-sure?])
+     #(dispatch [::events/delete-selected-rows]) (constantly nil)]))
 
 
 (defn menu-bar []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        resources (subscribe [::subs/collection])]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        resources        (subscribe [::subs/collection])
+        selected-rows    (subscribe [::subs/selected-rows])
+        can-bulk-delete? (subscribe [::subs/can-bulk-delete?])]
     (fn []
       (when (instance? js/Error @resources)
         (dispatch [::messages-events/add
@@ -471,7 +487,10 @@
         [search-button]
         [select-fields]
         (when (general-utils/can-add? @resources)
-          [create-button])]
+          [create-button])
+        (when (and (not-empty @selected-rows)
+                   @can-bulk-delete?)
+          [delete-resources-button])]
        [ui/Segment {:attached "bottom"}
         [search-header]]])))
 

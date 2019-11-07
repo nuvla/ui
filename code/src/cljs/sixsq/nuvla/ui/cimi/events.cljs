@@ -218,3 +218,17 @@
                                set)
                           #{})]
       (assoc db ::spec/selected-rows selected-rows))))
+
+
+(reg-event-fx
+  ::delete-selected-rows
+  (fn [{{:keys [::spec/cloud-entry-point
+                ::spec/collection-name
+                ::spec/selected-rows]} :db} _]
+    (let [resource-type (-> cloud-entry-point
+                            :collection-key
+                            (get collection-name))
+          filter-str    (apply general-utils/join-or (map #(str "id='" % "'") selected-rows))
+          on-success    #(do (dispatch [::select-all-row false])
+                             (dispatch [::get-results]))]
+      {::cimi-api-fx/delete-bulk [resource-type on-success filter-str]})))

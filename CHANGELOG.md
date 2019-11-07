@@ -3,7 +3,9 @@
 ## [Unreleased]
 
 ### Changed
- 
+
+  - OCRE PAGE - Support bulk delete
+  - CIMI PAGE - Support bulk delete 
   - OCRE PAGE - ocre page added visible for admin and ocre users
   - CIMI page - rows are now clickable
   - App store - order cards by created time

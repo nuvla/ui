@@ -3,6 +3,7 @@
     [re-frame.core :refer [dispatch reg-sub]]
     [sixsq.nuvla.ui.cimi.events :as events]
     [sixsq.nuvla.ui.cimi.spec :as spec]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [taoensso.timbre :as log]))
 
 
@@ -18,7 +19,15 @@
 
 (reg-sub
   ::collection
-  ::spec/collection)
+  (fn [db]
+    (::spec/collection db)))
+
+
+(reg-sub
+  ::can-bulk-delete?
+  :<- [::collection]
+  (fn [collection]
+    (general-utils/can-bulk-delete? collection)))
 
 
 (reg-sub

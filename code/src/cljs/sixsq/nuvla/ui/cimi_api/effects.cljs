@@ -55,6 +55,10 @@
   [resource-id response]
   (default-error-message response (str "error deleting " resource-id)))
 
+(defn default-delete-bulk-on-error
+  [resource-type response]
+  (default-error-message response (str "error bulk delete on " resource-type)))
+
 
 (defn api-call-error-check
   [api-call on-success on-error]
@@ -103,8 +107,8 @@
   ::delete-bulk
   (fn [[resource-type on-success filter & {:keys [on-error]}]]
     (when resource-type
-      (let [api-call #(api/delete-bulk @CLIENT resource-type {:filter filter})
-            on-error (or on-error (partial default-delete-on-error resource-type))]
+      (let [api-call #(api/delete-bulk @CLIENT resource-type filter)
+            on-error (or on-error (partial default-delete-bulk-on-error resource-type))]
         (api-call-error-check api-call on-success on-error)))))
 
 

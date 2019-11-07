@@ -43,6 +43,8 @@
 
 (s/def ::collections-templates-cache (s/map-of keyword? any?))
 
+(s/def ::selected-rows (s/nilable set?))
+
 (s/def ::db (s/keys :req [::cloud-entry-point
                           ::query-params
                           ::loading?
@@ -52,7 +54,8 @@
                           ::selected-fields
                           ::available-fields
                           ::show-add-modal?
-                          ::collections-templates-cache]))
+                          ::collections-templates-cache
+                          ::selected-rows]))
 
 (def defaults {::cloud-entry-point           nil
                ::query-params                {:first       0
@@ -68,4 +71,5 @@
                ::selected-fields             ["id"]
                ::available-fields            ["id"]
                ::show-add-modal?             false
-               ::collections-templates-cache {}})
+               ::collections-templates-cache {}
+               ::selected-rows               #{}})

@@ -3,6 +3,7 @@
     [re-frame.core :refer [dispatch reg-sub]]
     [sixsq.nuvla.ui.cimi.events :as events]
     [sixsq.nuvla.ui.cimi.spec :as spec]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [taoensso.timbre :as log]))
 
 
@@ -18,7 +19,15 @@
 
 (reg-sub
   ::collection
-  ::spec/collection)
+  (fn [db]
+    (::spec/collection db)))
+
+
+(reg-sub
+  ::can-bulk-delete?
+  :<- [::collection]
+  (fn [collection]
+    (general-utils/can-bulk-delete? collection)))
 
 
 (reg-sub
@@ -64,3 +73,15 @@
 (reg-sub
   ::loading?
   ::spec/loading?)
+
+
+(reg-sub
+  ::selected-rows
+  (fn [{:keys [::spec/selected-rows]}]
+    selected-rows))
+
+(reg-sub
+  ::row-selected?
+  :<- [::selected-rows]
+  (fn [selected-rows [_ id]]
+    (contains? selected-rows id)))

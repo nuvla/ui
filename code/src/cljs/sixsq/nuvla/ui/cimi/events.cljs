@@ -64,13 +64,17 @@
 
 (reg-event-db
   ::set-collection-name
-  (fn [{:keys [::spec/cloud-entry-point] :as db} [_ collection-name]]
-    (if (or (empty? collection-name) (-> cloud-entry-point
-                                         :collection-key
-                                         (get collection-name)))
-      (assoc db ::spec/collection-name collection-name)
-      (let [msg-map {:header  (cond-> (str "invalid resource type: " collection-name))
-                     :content (str "The resource type '" collection-name "' is not valid. "
+  (fn [{:keys [::spec/cloud-entry-point
+               ::spec/collection-name] :as db} [_ coll-name]]
+    (if (or (empty? coll-name) (-> cloud-entry-point
+                                   :collection-key
+                                   (get coll-name)))
+      (cond-> db
+              (not= coll-name collection-name) (assoc ::spec/collection-name coll-name
+                                                      ::spec/selected-rows #{}
+                                                      ::spec/collection nil))
+      (let [msg-map {:header  (cond-> (str "invalid resource type: " coll-name))
+                     :content (str "The resource type '" coll-name "' is not valid. "
                                    "Please choose another resource type.")
                      :type    :error}]
 
@@ -195,3 +199,36 @@
                 (->> templates
                      (map (juxt :id identity))
                      (into {}))))))
+
+
+(reg-event-db
+  ::select-row
+  (fn [{:keys [::spec/selected-rows] :as db} [_ checked? id]]
+    (let [f (if checked? disj conj)]
+      (assoc db ::spec/selected-rows (f selected-rows id)))))
+
+
+(reg-event-db
+  ::select-all-row
+  (fn [{:keys [::spec/collection] :as db} [_ checked?]]
+    (let [selected-rows (if checked?
+                          (->> collection
+                               :resources
+                               (map :id)
+                               set)
+                          #{})]
+      (assoc db ::spec/selected-rows selected-rows))))
+
+
+(reg-event-fx
+  ::delete-selected-rows
+  (fn [{{:keys [::spec/cloud-entry-point
+                ::spec/collection-name
+                ::spec/selected-rows]} :db} _]
+    (let [resource-type (-> cloud-entry-point
+                            :collection-key
+                            (get collection-name))
+          filter-str    (apply general-utils/join-or (map #(str "id='" % "'") selected-rows))
+          on-success    #(do (dispatch [::select-all-row false])
+                             (dispatch [::get-results]))]
+      {::cimi-api-fx/delete-bulk [resource-type on-success filter-str]})))

@@ -60,7 +60,6 @@
 
 (def required-headers #{"code", "amount", "currency", "supplier", "target-audience"})
 
-
 (def show-modal (r/atom nil))
 
 (def file-errors (r/atom nil))
@@ -244,15 +243,15 @@
 
 (defn ImportExportMenu
   []
-  [:<>
-   [ui/MenuMenu {:position :right}
-    [ImportButton]
-    [ExportButton]]
-   [ModalImport]])
+  [ui/MenuMenu {:position :right}
+   [ImportButton]
+   [ExportButton]])
+
 
 (defn menu-bar []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        resources (subscribe [::subs/collection])]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        resources     (subscribe [::subs/collection])
+        selected-rows (subscribe [::subs/selected-rows])]
     (fn []
       (when (instance? js/Error @resources)
         (dispatch [::messages-events/add
@@ -269,10 +268,14 @@
         [cimi-views/select-fields]
         (when (general-utils/can-add? @resources)
           [cimi-views/create-button])
+        (when (and (not-empty @selected-rows)
+                   (general-utils/can-bulk-delete? @resources))
+          [cimi-views/delete-resources-button])
         (when (= (:resource-type @resources) "voucher-collection")
           [ImportExportMenu])]
        [ui/Segment {:attached "bottom"}
         [cimi-views/search-header]]])))
+
 
 (defn View
   []
@@ -284,7 +287,8 @@
     [:<>
      [uix/PageHeader "credit card outline" "OCRE"]
      [menu-bar]
-     [cimi-views/results-display]]))
+     [cimi-views/results-display]
+     [ModalImport]]))
 
 
 (defmethod panel/render :ocre

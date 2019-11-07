@@ -238,6 +238,10 @@
   (can-operation? :delete data))
 
 
+(defn can-bulk-delete? [data]
+  (can-operation? :bulk-delete data))
+
+
 (defn editable?
   [data is-new?]
   (or is-new? (can-edit? data)))

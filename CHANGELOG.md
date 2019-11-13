@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.4.6] - 2019-11-13
+
 ### Changed
 
   - OCRE PAGE - Support bulk delete

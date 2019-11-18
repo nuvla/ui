@@ -9,28 +9,18 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 
 ; Perform form validation if validate-form? is true.
 
-(reg-event-db
-  ::validate-swarm-credential-form
-  (fn [db [_]]
-    (let [form-spec      ::spec/swarm-credential
-          credential     (get db ::spec/credential)
-          validate-form? (get db ::spec/validate-form?)
-          valid?         (if validate-form? (if (nil? form-spec) true (s/valid? form-spec credential)) true)]
-      (s/explain form-spec credential)
-      (assoc db ::spec/form-valid? valid?))))
-
 
 (reg-event-db
-  ::validate-minio-credential-form
-  (fn [db [_]]
-    (let [form-spec      ::spec/minio-credential
-          credential     (get db ::spec/credential)
+  ::validate-credential-form
+  (fn [db [_ form-spec]]
+    (let [credential     (get db ::spec/credential)
           validate-form? (get db ::spec/validate-form?)
           valid?         (if validate-form? (if (nil? form-spec) true (s/valid? form-spec credential)) true)]
       (s/explain form-spec credential)
@@ -171,9 +161,11 @@
 
 (reg-event-fx
   ::fetch-infrastructure-services-available
-  (fn [{:keys [db]} [_ subtype]]
+  (fn [{:keys [db]} [_ subtype additional-filter]]
     {:db                  (assoc-in db [::spec/infrastructure-services-available subtype] nil)
      ::cimi-api-fx/search [:infrastructure-service
-                           {:filter (str "subtype='" subtype "'")
+                           {:filter (cond-> (str "subtype='" subtype "'")
+                                            additional-filter (general-utils/join-and
+                                                                additional-filter))
                             :select "id, name, description"}
                            #(dispatch [::set-infrastructure-services-available subtype %])]}))

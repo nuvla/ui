@@ -43,9 +43,23 @@
         (cond-> acl (assoc-in [:template :acl] acl)))))
 
 
+(defn db->new-vpn-credential
+  [db]
+  (let [name                    (get-in db [::spec/credential :name])
+        description             (get-in db [::spec/credential :description])
+        subtype                 (get-in db [::spec/credential :subtype])
+        infrastructure-services (get-in db [::spec/credential :parent] [])]
+    (-> {}
+        (assoc :name name)
+        (assoc :description description)
+        (assoc-in [:template :href] (str "credential-template/create-credential-vpn-customer"))
+        (assoc-in [:template :parent] infrastructure-services))))
+
+
 (defn db->new-credential
   [db]
   (let [subtype (get-in db [::spec/credential :subtype])]
     (case subtype
       "infrastructure-service-swarm" (db->new-swarm-credential db)
-      "infrastructure-service-minio" (db->new-minio-credential db))))
+      "infrastructure-service-minio" (db->new-minio-credential db)
+      "infrastructure-service-vpn" (db->new-vpn-credential db))))

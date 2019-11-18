@@ -32,14 +32,14 @@
 
 
 (defn row-infrastructure-services-selector
-  [subtype editable? value-spec on-change]
+  [subtype additional-filter editable? value-spec on-change]
   (let [tr                      (subscribe [::i18n-subs/tr])
         infrastructure-services (subscribe [::subs/infrastructure-services-available subtype])
         credential              (subscribe [::subs/credential])
         local-validate?         (r/atom false)
         validate-form?          (subscribe [::subs/validate-form?])]
-    (dispatch [::events/fetch-infrastructure-services-available subtype])
-    (fn [subtype editable? value-spec on-change]
+    (dispatch [::events/fetch-infrastructure-services-available subtype additional-filter])
+    (fn [subtype additional-filter editable? value-spec on-change]
       (let [value     (:parent @credential)
             validate? (or @local-validate? @validate-form?)
             valid?    (s/valid? value-spec value)]
@@ -74,7 +74,7 @@
         validate-form? (subscribe [::subs/validate-form?])
         on-change      (fn [name-kw value]
                          (dispatch [::events/update-credential name-kw value])
-                         (dispatch [::events/validate-swarm-credential-form]))]
+                         (dispatch [::events/validate-credential-form ::spec/swarm-credential]))]
     (fn []
       (let [editable? (utils-general/editable? @credential @is-new?)
             {:keys [name description ca cert key]} @credential]
@@ -102,7 +102,7 @@
            [uix/TableRowField "key", :placeholder (@tr [:key]), :editable? editable?,
             :required? true, :default-value key, :spec ::spec/key, :type :textarea,
             :on-change (partial on-change :key), :validate-form? @validate-form?]
-           [row-infrastructure-services-selector "swarm" editable? ::spec/parent
+           [row-infrastructure-services-selector "swarm" nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
 
 
@@ -114,7 +114,7 @@
         validate-form? (subscribe [::subs/validate-form?])
         on-change      (fn [name-kw value]
                          (dispatch [::events/update-credential name-kw value])
-                         (dispatch [::events/validate-minio-credential-form]))]
+                         (dispatch [::events/validate-credential-form ::spec/minio-credential]))]
     (fn []
       (let [editable? (utils-general/editable? @credential @is-new?)
             {:keys [name description access-key secret-key]} @credential]
@@ -138,14 +138,42 @@
            [uix/TableRowField "secret-key", :editable? editable?, :required? true,
             :default-value secret-key, :spec ::spec/secret-key, :validate-form? @validate-form?,
             :on-change (partial on-change :secret-key)]
-           [row-infrastructure-services-selector "s3" editable? ::spec/parent
+           [row-infrastructure-services-selector "s3" nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
 
 
+
+(defn credential-vpn
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        credential     (subscribe [::subs/credential])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-credential name-kw value])
+                         (dispatch [::events/validate-credential-form ::spec/vpn-credential]))]
+    (fn []
+      (let [editable? (utils-general/editable? @credential @is-new?)
+            {:keys [name description access-key secret-key]} @credential]
+
+        [:<>
+
+         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+          [ui/TableBody
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
+            :validate-form? @validate-form?]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
+            :on-change (partial on-change :description)]
+           [row-infrastructure-services-selector "vpn" "vpn-scope='customer'" editable?
+            ::spec/parent (partial on-change :parent)]]]]))))
+
+
 (defn save-callback
-  [form-validation-event]
+  [form-validation-spec]
   (dispatch-sync [::events/set-validate-form? true])
-  (dispatch-sync [form-validation-event])
+  (dispatch-sync [::events/validate-credential-form form-validation-spec])
   (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)]
     (when form-valid?
       (do
@@ -155,26 +183,18 @@
 
 (def infrastructure-service-validation-map
   {"infrastructure-service-swarm"
-   {:validation-event ::events/validate-swarm-credential-form
-    :modal-content    credential-swarm},
+   {:validation-spec ::spec/swarm-credential
+    :modal-content   credential-swarm},
    "infrastructure-service-minio"
-   {:validation-event ::events/validate-minio-credential-form
-    :modal-content    credential-minio},
-   "cloud-infrastructure-service-exoscale"
-   {:validation-event ::events/validate-swarm-credential-form
-    :modal-content    credential-swarm},
-   "cloud-infrastructure-service-azure"
-   {:validation-event ::events/validate-minio-credential-form
-    :modal-content    credential-minio}})
+   {:validation-spec ::spec/minio-credential
+    :modal-content   credential-minio},
+   "infrastructure-service-vpn"
+   {:validation-spec ::spec/vpn-credential
+    :modal-content   credential-vpn}})
 
 
 (def infrastructure-service-subtypes
   (keys infrastructure-service-validation-map))
-
-
-(def cloud-subtypes
-  ["cloud-infrastructure-service-exoscale"
-   "cloud-infrastructure-service-azure"])
 
 
 (defn credential-modal
@@ -185,11 +205,11 @@
         credential  (subscribe [::subs/credential])
         is-new?     (subscribe [::subs/is-new?])]
     (fn []
-      (let [subtype          (:subtype @credential "")
-            header           (str (if is-new? "New" "Update") " Credential: " subtype)
-            validation-item  (get infrastructure-service-validation-map subtype)
-            validation-event (:validation-event validation-item)
-            modal-content    (:modal-content validation-item)]
+      (let [subtype         (:subtype @credential "")
+            header          (str (if is-new? "New" "Update") " Credential: " subtype)
+            validation-item (get infrastructure-service-validation-map subtype)
+            validation-spec (:validation-spec validation-item)
+            modal-content   (:modal-content validation-item)]
         (if (empty? subtype)
           [:div]
           [ui/Modal {:open       @visible?
@@ -206,7 +226,7 @@
                          :positive true
                          :disabled (when-not @form-valid? true)
                          :active   true
-                         :on-click #(save-callback validation-event)}]]])))))
+                         :on-click #(save-callback validation-spec)}]]])))))
 
 
 (defn add-credential-modal
@@ -248,7 +268,21 @@
              [ui/Header "MinIO"]
              [:div]
              [ui/Image {:src  "/ui/images/minio.png"
-                        :size :tiny}]]]]]]))))
+                        :size :tiny}]]]
+
+           [ui/Card
+            {:on-click #(do
+                          (dispatch [::events/set-validate-form? false])
+                          (dispatch [::events/form-valid])
+                          (dispatch [::events/close-add-credential-modal])
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-vpn"} true]))}
+            [ui/CardContent {:text-align :center}
+             [ui/Header "OpenVPN"]
+             [:div]
+             [ui/Image {:src  "/ui/images/openvpn.png"
+                        :size "small"}]]]
+           ]]]))))
 
 
 (defn control-bar []
@@ -304,30 +338,29 @@
 ;subtype name description
 (defn single-credential
   [{:keys [id subtype name description] :as credential}]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/TableRow                                            ;{:key id}
-     [ui/TableCell {:floated :left
-                    :width   2}
-      [:span name]]
-     [ui/TableCell {:floated :left
-                    :width   9}
-      [:span description]]
-     [ui/TableCell {:floated :left
-                    :width   4}
-      [:span subtype]]
-     [ui/TableCell {:floated :right
-                    :width   1
-                    :align   :right
-                    :style   {}}
+  [ui/TableRow
+   [ui/TableCell {:floated :left
+                  :width   2}
+    [:span name]]
+   [ui/TableCell {:floated :left
+                  :width   9}
+    [:span description]]
+   [ui/TableCell {:floated :left
+                  :width   4}
+    [:span subtype]]
+   [ui/TableCell {:floated :right
+                  :width   1
+                  :align   :right
+                  :style   {}}
 
-      (when (general-utils/can-delete? credential)
-        [utils-accordion/trash id ::events/open-delete-confirmation-modal nil credential])
+    (when (general-utils/can-delete? credential)
+      [utils-accordion/trash id ::events/open-delete-confirmation-modal nil credential])
 
-      (when (general-utils/can-edit? credential)
-        [ui/Icon {:name     :cog
-                  :color    :blue
-                  :style    {:cursor :pointer}
-                  :on-click #(dispatch [::events/open-credential-modal credential false])}])]]))
+    (when (general-utils/can-edit? credential)
+      [ui/Icon {:name     :cog
+                :color    :blue
+                :style    {:cursor :pointer}
+                :on-click #(dispatch [::events/open-credential-modal credential false])}])]])
 
 
 (defn credentials
@@ -336,9 +369,7 @@
         credentials (subscribe [::subs/credentials])]
     (fn []
       (let [infra-service-creds (filter #(in? infrastructure-service-subtypes (:subtype %))
-                                        @credentials)
-            ;cloud-creds         (filter #(in? cloud-subtypes (:subtype %)) @credentials)
-            ]
+                                        @credentials)]
         (dispatch [::events/get-credentials])
         [ui/Container {:fluid true}
          [uix/PageHeader "key" (str/capitalize (@tr [:credentials])) :inline true]

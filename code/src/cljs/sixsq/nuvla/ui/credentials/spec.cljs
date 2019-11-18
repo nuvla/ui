@@ -62,6 +62,13 @@
                                            ::parent]))
 
 
+; VPN
+
+(s/def ::vpn-credential (s/keys :req-un [::name
+                                         ::description
+                                         ::parent]))
+
+
 (s/def ::infrastructure-services-available any?)
 
 

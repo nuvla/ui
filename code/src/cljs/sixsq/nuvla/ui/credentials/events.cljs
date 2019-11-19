@@ -72,6 +72,12 @@
      ::cimi-api-fx/search [:credential {} #(dispatch [::set-credentials (:resources %)])]}))
 
 
+(reg-event-db
+  ::set-generated-credential-modal
+  (fn [db [_ credential]]
+    (assoc db ::spec/generated-credential-modal credential)))
+
+
 (reg-event-fx
   ::edit-credential
   (fn [{{:keys [::spec/credential] :as db} :db} [_]]
@@ -83,7 +89,13 @@
                             #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                  (dispatch [::close-credential-modal])
                                  (dispatch [::get-credentials])
-                                 (dispatch [::main-events/check-bootstrap-message]))]}
+                                 (dispatch [::main-events/check-bootstrap-message])
+                                 (when
+                                   (contains?
+                                     #{"credential-template/create-credential-vpn-customer"}
+                                     (get-in new-credential [:template :href]))
+                                   (dispatch [::set-generated-credential-modal %]))
+                                 )]}
         {:db                db
          ::cimi-api-fx/edit [id credential
                              #(if (instance? js/Error %)
@@ -166,6 +178,5 @@
      ::cimi-api-fx/search [:infrastructure-service
                            {:filter (cond-> (str "subtype='" subtype "'")
                                             additional-filter (general-utils/join-and
-                                                                additional-filter))
-                            :select "id, name, description"}
+                                                                additional-filter))}
                            #(dispatch [::set-infrastructure-services-available subtype %])]}))

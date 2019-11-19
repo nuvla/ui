@@ -47,12 +47,11 @@
   [db]
   (let [name                    (get-in db [::spec/credential :name])
         description             (get-in db [::spec/credential :description])
-        subtype                 (get-in db [::spec/credential :subtype])
         infrastructure-services (get-in db [::spec/credential :parent] [])]
     (-> {}
         (assoc :name name)
         (assoc :description description)
-        (assoc-in [:template :href] (str "credential-template/create-credential-vpn-customer"))
+        (assoc-in [:template :href] "credential-template/create-credential-vpn-customer")
         (assoc-in [:template :parent] infrastructure-services))))
 
 

@@ -33,11 +33,11 @@
 
 (defn row-infrastructure-services-selector
   [subtype additional-filter editable? value-spec on-change]
-  (let [tr                      (subscribe [::i18n-subs/tr])
-        infrastructure-services (subscribe [::subs/infrastructure-services-available subtype])
-        credential              (subscribe [::subs/credential])
-        local-validate?         (r/atom false)
-        validate-form?          (subscribe [::subs/validate-form?])]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        infra-services  (subscribe [::subs/infrastructure-services-available subtype])
+        credential      (subscribe [::subs/credential])
+        local-validate? (r/atom false)
+        validate-form?  (subscribe [::subs/validate-form?])]
     (dispatch [::events/fetch-infrastructure-services-available subtype additional-filter])
     (fn [subtype additional-filter editable? value-spec on-change]
       (let [value     (:parent @credential)
@@ -49,8 +49,8 @@
          [ui/TableCell {:error (and validate? (not valid?))}
           [ui/Form {:style {:max-height "100px"
                             :overflow-y "auto"}}
-           (if (pos-int? (count @infrastructure-services))
-             (for [{id :id, infra-name :name} @infrastructure-services]
+           (if (pos-int? (count @infra-services))
+             (for [{id :id, infra-name :name} @infra-services]
                ^{:key (str id value)}
                [ui/FormField
                 [ui/Radio {:label    (or infra-name id)
@@ -284,6 +284,74 @@
                         :size "small"}]]]
            ]]]))))
 
+(defn vpn-config
+  [infra-ca-cert infra-vpn-intermediate-ca cred-vpn-intermediate-ca cred-certificate
+   cred-private-key infra-shared-key infra-common-name-prefix infra-vpn-endpoints]
+  (when
+    (and infra-ca-cert infra-vpn-intermediate-ca cred-vpn-intermediate-ca cred-certificate
+         cred-private-key infra-shared-key infra-common-name-prefix infra-vpn-endpoints)
+    (str "client\n\ndev tap\n\nnobind\n\n# Certificate Configuration\n\n# CA certificate\n<ca>\n"
+         infra-ca-cert
+         "\n"
+         (str/join "\n" infra-vpn-intermediate-ca)
+         "\n"
+         (str/join "\n" cred-vpn-intermediate-ca)
+         "\n</ca>\n\n# Client Certificate\n<cert>\n"
+         cred-certificate
+         "</cert>\n\n# Client Key\n<key>"
+         cred-private-key
+         "</key>\n\n# Shared key\n<tls-crypt>\n"
+         infra-shared-key
+         "\n</tls-crypt>\n\nremote-cert-tls server\n\nverify-x509-name "
+         infra-common-name-prefix
+         " name-prefix\n\n#script-security 2\n"
+         "#tls-verify \"/etc/openvpn/cmd/tls-verify dnQualifier Server\"\n\nauth-nocache\n\n"
+         "ping 60\nping-restart 120\n# ping-exit 300\ncompress lz4\n\n"
+         (str/join
+           "\n\n"
+           (map
+             #(str "<connection>\nremote "
+                   (:endpoint %) " " (:port %) " " (:protocol %)
+                   "\n</connection>") infra-vpn-endpoints))
+         "\n\n#verb 4\n")))
+
+
+(defn generated-credential-modal
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        generated-cred (subscribe [::subs/generated-credential-modal])
+        cred           (subscribe [::subs/credential])
+        infra-services (subscribe [::subs/infrastructure-services-available "vpn"])]
+    (fn []
+      (let [infra  (some #(when (= (:parent @cred) (:id %)) %) @infra-services)
+            config (vpn-config (:vpn-ca-certificate infra)
+                               (:vpn-intermediate-ca infra)
+                               (:intermediate-ca @generated-cred)
+                               (:certificate @generated-cred)
+                               (:private-key @generated-cred)
+                               (:vpn-shared-key infra)
+                               (:vpn-common-name-prefix infra)
+                               (:vpn-endpoints infra))]
+        [ui/Modal {:open       (boolean @generated-cred)
+                   :close-icon true
+                   :on-close   #(dispatch [::events/set-generated-credential-modal nil])}
+
+         [ui/ModalHeader "Generated credential"]
+
+         [ui/ModalContent {:scrolling false}
+
+          [ui/CardGroup {:centered true}
+
+           [ui/Card
+            {:href     (str "data:text/plain;charset=utf-8," (js/encodeURIComponent config))
+             :download "vpn.conf"
+             :disabled (not config)}
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Save credential"]
+             [ui/Icon {:name "file text"
+                       :size :massive}]]]]
+          ]]))))
+
 
 (defn control-bar []
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -403,4 +471,5 @@
    [credentials]
    [add-credential-modal]
    [credential-modal]
+   [generated-credential-modal]
    [delete-confirmation-modal]])

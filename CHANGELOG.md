@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Changed
+
+  - EDGE DETAILS PAGE - Add openVPN support
+  - CREDENTIAL PAGE - Add openVPN support
+  - Dependencies - udpate parent and local dependencies
+
 ## [2.4.6] - 2019-11-13
 
 ### Changed

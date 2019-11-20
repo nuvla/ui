@@ -69,11 +69,19 @@
   (fn [db]
     (::spec/credential-modal-visible? db)))
 
+
 (reg-sub
   ::delete-confirmation-modal-visible?
   ::spec/delete-confirmation-modal-visible?)
+
 
 (reg-sub
   ::infrastructure-services-available
   (fn [db [_ subtype]]
     (get-in db [::spec/infrastructure-services-available subtype])))
+
+
+(reg-sub
+  ::generated-credential-modal
+  (fn [db]
+    (::spec/generated-credential-modal db)))

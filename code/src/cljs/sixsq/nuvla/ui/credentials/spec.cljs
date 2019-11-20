@@ -12,6 +12,8 @@
 
 (s/def ::add-credential-modal-visible? boolean?)
 
+(s/def ::generated-credential-modal any?)
+
 (s/def ::credential-modal-visible? boolean?)
 
 (s/def ::delete-confirmation-modal-visible? boolean?)
@@ -62,12 +64,20 @@
                                            ::parent]))
 
 
+; VPN
+
+(s/def ::vpn-credential (s/keys :req-un [::name
+                                         ::description
+                                         ::parent]))
+
+
 (s/def ::infrastructure-services-available any?)
 
 
 (s/def ::db (s/keys :req [::add-credential-modal-visible?
                           ::credentials-modal-visible?
                           ::delete-confirmation-modal-visible?
+                          ::generated-credential-modal
                           ::credential
                           ::credentials
                           ::active-input
@@ -82,6 +92,7 @@
 (def defaults {::add-credential-modal-visible?      false
                ::credential-modal-visible?          false
                ::delete-confirmation-modal-visible? false
+               ::generated-credential-modal         nil
                ::credentials                        []
                ::credential                         {}
                ::active-input                       nil

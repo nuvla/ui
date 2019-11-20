@@ -117,25 +117,27 @@
 
 (defn AddModal
   []
-  (let [modal-id      :add
-        tr            (subscribe [::i18n-subs/tr])
-        visible?      (subscribe [::subs/modal-visible? modal-id])
-        user-id       (subscribe [::authn-subs/user-id])
-        nuvlabox-id   (subscribe [::subs/nuvlabox-created-id])
-        default-data  {:owner            @user-id
+  (let [modal-id       :add
+        tr             (subscribe [::i18n-subs/tr])
+        visible?       (subscribe [::subs/modal-visible? modal-id])
+        user-id        (subscribe [::authn-subs/user-id])
+        nuvlabox-id    (subscribe [::subs/nuvlabox-created-id])
+        vpn-infra-opts (subscribe [::subs/vpn-infra-options])
+        default-data   {:owner           @user-id
                        :refresh-interval 30}
-        creation-data (r/atom default-data)
-        on-close-fn   #(do
+        creation-data  (r/atom default-data)
+        on-close-fn    #(do
                          (dispatch [::events/set-created-nuvlabox-id nil])
                          (dispatch [::events/open-modal nil])
                          (reset! creation-data default-data))
-        on-add-fn     #(do
+        on-add-fn      #(do
                          (dispatch [::events/create-nuvlabox
                                     (->> @creation-data
                                          (remove (fn [[_ v]] (str/blank? v)))
                                          (into {}))])
                          (reset! creation-data default-data))
-        active?       (r/atom false)]
+        active?        (r/atom false)]
+    (dispatch [::events/get-vpn-infra])
     (fn []
       [ui/Modal {:open       @visible?
                  :close-icon true
@@ -151,7 +153,19 @@
             [ui/TableBody
              [uix/TableRowField (@tr [:name]), :on-change #(swap! creation-data assoc :name %)]
              [uix/TableRowField (@tr [:description]), :type :textarea,
-              :on-change #(swap! creation-data assoc :description %)]]]
+              :on-change #(swap! creation-data assoc :description %)]
+             [ui/TableRow
+              [ui/TableCell {:collapsing true} "vpn"]
+              ^{:key (or key name)}
+              [ui/TableCell
+               [ui/Dropdown {:clearable   true
+                             :selection   true
+                             :fluid       true
+                             :placeholder (@tr [:none])
+                             :on-change   (ui-callback/callback
+                                            :value #(swap! creation-data assoc :vpn-server-id %))
+                             :options     @vpn-infra-opts}]]]
+             ]]
            [ui/Accordion
             [ui/AccordionTitle {:active   @active?, :icon "dropdown", :content "Advanced"
                                 :on-click #(swap! active? not)}]

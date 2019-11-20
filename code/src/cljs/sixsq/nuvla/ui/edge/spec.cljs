@@ -17,14 +17,16 @@
 
 (s/def ::open-modal (s/nilable keyword?))
 
-
 (s/def ::nuvlabox-created-id (s/nilable string?))
 
 (s/def ::page int?)
 (s/def ::elements-per-page int?)
 (s/def ::total-elements int?)
 
-(s/def ::state-selector #{"all" "new" "activated" "commissioned" "decommissioning" "decommissioned" "error"})
+(s/def ::state-selector #{"all" "new" "activated" "commissioned"
+                          "decommissioning" "decommissioned" "error"})
+
+(s/def ::vpn-infra any?)
 
 
 (s/def ::db (s/keys :req [::loading?
@@ -36,7 +38,8 @@
                           ::total-elements
                           ::state-selector
                           ::open-modal
-                          ::nuvlabox-created-id]))
+                          ::nuvlabox-created-id
+                          ::vpn-infra]))
 
 
 (def defaults {::loading?            false
@@ -48,4 +51,5 @@
                ::total-elements      0
                ::state-selector      nil
                ::open-modal          nil
-               ::nuvlabox-created-id nil})
+               ::nuvlabox-created-id nil
+               ::vpn-infra           nil})

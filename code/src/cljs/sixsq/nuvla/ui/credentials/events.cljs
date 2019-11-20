@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.credentials.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
     [taoensso.timbre :as log]))
 
@@ -15,22 +16,11 @@
 
 ; Perform form validation if validate-form? is true.
 
-(reg-event-db
-  ::validate-swarm-credential-form
-  (fn [db [_]]
-    (let [form-spec      ::spec/swarm-credential
-          credential     (get db ::spec/credential)
-          validate-form? (get db ::spec/validate-form?)
-          valid?         (if validate-form? (if (nil? form-spec) true (s/valid? form-spec credential)) true)]
-      (s/explain form-spec credential)
-      (assoc db ::spec/form-valid? valid?))))
-
 
 (reg-event-db
-  ::validate-minio-credential-form
-  (fn [db [_]]
-    (let [form-spec      ::spec/minio-credential
-          credential     (get db ::spec/credential)
+  ::validate-credential-form
+  (fn [db [_ form-spec]]
+    (let [credential     (get db ::spec/credential)
           validate-form? (get db ::spec/validate-form?)
           valid?         (if validate-form? (if (nil? form-spec) true (s/valid? form-spec credential)) true)]
       (s/explain form-spec credential)
@@ -82,6 +72,12 @@
      ::cimi-api-fx/search [:credential {} #(dispatch [::set-credentials (:resources %)])]}))
 
 
+(reg-event-db
+  ::set-generated-credential-modal
+  (fn [db [_ credential]]
+    (assoc db ::spec/generated-credential-modal credential)))
+
+
 (reg-event-fx
   ::edit-credential
   (fn [{{:keys [::spec/credential] :as db} :db} [_]]
@@ -93,7 +89,13 @@
                             #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                  (dispatch [::close-credential-modal])
                                  (dispatch [::get-credentials])
-                                 (dispatch [::main-events/check-bootstrap-message]))]}
+                                 (dispatch [::main-events/check-bootstrap-message])
+                                 (when
+                                   (contains?
+                                     #{"credential-template/create-credential-vpn-customer"}
+                                     (get-in new-credential [:template :href]))
+                                   (dispatch [::set-generated-credential-modal %]))
+                                 )]}
         {:db                db
          ::cimi-api-fx/edit [id credential
                              #(if (instance? js/Error %)
@@ -171,9 +173,11 @@
 
 (reg-event-fx
   ::fetch-infrastructure-services-available
-  (fn [{:keys [db]} [_ subtype]]
+  (fn [{:keys [db]} [_ subtype additional-filter]]
     {:db                  (assoc-in db [::spec/infrastructure-services-available subtype] nil)
      ::cimi-api-fx/search [:infrastructure-service
-                           {:filter (str "subtype='" subtype "'")
-                            :select "id, name, description"}
+                           {:filter (cond-> (str "subtype='" subtype "'")
+                                            additional-filter (general-utils/join-and
+                                                                additional-filter))
+                            :last   10000}
                            #(dispatch [::set-infrastructure-services-available subtype %])]}))

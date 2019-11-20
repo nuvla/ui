@@ -155,10 +155,7 @@
              [uix/TableRowField (@tr [:description]), :type :textarea,
               :on-change #(swap! creation-data assoc :description %)]
              [ui/TableRow
-              [ui/TableCell {:collapsing true} "vpn"
-
-
-               ]
+              [ui/TableCell {:collapsing true} "vpn"]
               ^{:key (or key name)}
               [ui/TableCell
                [ui/Dropdown {:clearable   true

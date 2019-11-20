@@ -8,9 +8,9 @@
     [sixsq.nuvla.ui.credentials.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [taoensso.timbre :as log]))
 
 
 
@@ -178,5 +178,6 @@
      ::cimi-api-fx/search [:infrastructure-service
                            {:filter (cond-> (str "subtype='" subtype "'")
                                             additional-filter (general-utils/join-and
-                                                                additional-filter))}
+                                                                additional-filter))
+                            :last   10000}
                            #(dispatch [::set-infrastructure-services-available subtype %])]}))

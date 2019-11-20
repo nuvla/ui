@@ -8,13 +8,13 @@
     [sixsq.nuvla.ui.credentials.events :as events]
     [sixsq.nuvla.ui.credentials.spec :as spec]
     [sixsq.nuvla.ui.credentials.subs :as subs]
+    [sixsq.nuvla.ui.credentials.utils :as utils]
     [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.accordion :as utils-accordion]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -45,7 +45,7 @@
             valid?    (s/valid? value-spec value)]
         [ui/TableRow
          [ui/TableCell {:collapsing true}
-          (utils-general/mandatory-name (@tr [:infrastructure]))]
+          (general-utils/mandatory-name (@tr [:infrastructure]))]
          [ui/TableCell {:error (and validate? (not valid?))}
           [ui/Form {:style {:max-height "100px"
                             :overflow-y "auto"}}
@@ -76,7 +76,7 @@
                          (dispatch [::events/update-credential name-kw value])
                          (dispatch [::events/validate-credential-form ::spec/swarm-credential]))]
     (fn []
-      (let [editable? (utils-general/editable? @credential @is-new?)
+      (let [editable? (general-utils/editable? @credential @is-new?)
             {:keys [name description ca cert key]} @credential]
 
         [:<>
@@ -116,7 +116,7 @@
                          (dispatch [::events/update-credential name-kw value])
                          (dispatch [::events/validate-credential-form ::spec/minio-credential]))]
     (fn []
-      (let [editable? (utils-general/editable? @credential @is-new?)
+      (let [editable? (general-utils/editable? @credential @is-new?)
             {:keys [name description access-key secret-key]} @credential]
 
         [:<>
@@ -153,7 +153,7 @@
                          (dispatch [::events/update-credential name-kw value])
                          (dispatch [::events/validate-credential-form ::spec/vpn-credential]))]
     (fn []
-      (let [editable? (utils-general/editable? @credential @is-new?)
+      (let [editable? (general-utils/editable? @credential @is-new?)
             {:keys [name description access-key secret-key]} @credential]
 
         [:<>
@@ -284,37 +284,6 @@
                         :size "small"}]]]
            ]]]))))
 
-(defn vpn-config
-  [infra-ca-cert infra-vpn-intermediate-ca cred-vpn-intermediate-ca cred-certificate
-   cred-private-key infra-shared-key infra-common-name-prefix infra-vpn-endpoints]
-  (when
-    (and infra-ca-cert infra-vpn-intermediate-ca cred-vpn-intermediate-ca cred-certificate
-         cred-private-key infra-shared-key infra-common-name-prefix infra-vpn-endpoints)
-    (str "client\n\ndev tap\n\nnobind\n\n# Certificate Configuration\n\n# CA certificate\n<ca>\n"
-         infra-ca-cert
-         "\n"
-         (str/join "\n" infra-vpn-intermediate-ca)
-         "\n"
-         (str/join "\n" cred-vpn-intermediate-ca)
-         "\n</ca>\n\n# Client Certificate\n<cert>\n"
-         cred-certificate
-         "</cert>\n\n# Client Key\n<key>"
-         cred-private-key
-         "</key>\n\n# Shared key\n<tls-crypt>\n"
-         infra-shared-key
-         "\n</tls-crypt>\n\nremote-cert-tls server\n\nverify-x509-name "
-         infra-common-name-prefix
-         " name-prefix\n\n#script-security 2\n"
-         "#tls-verify \"/etc/openvpn/cmd/tls-verify dnQualifier Server\"\n\nauth-nocache\n\n"
-         "ping 60\nping-restart 120\n# ping-exit 300\ncompress lz4\n\n"
-         (str/join
-           "\n\n"
-           (map
-             #(str "<connection>\nremote "
-                   (:endpoint %) " " (:port %) " " (:protocol %)
-                   "\n</connection>") infra-vpn-endpoints))
-         "\n\n#verb 4\n")))
-
 
 (defn generated-credential-modal
   []
@@ -324,14 +293,14 @@
         infra-services (subscribe [::subs/infrastructure-services-available "vpn"])]
     (fn []
       (let [infra  (some #(when (= (:parent @cred) (:id %)) %) @infra-services)
-            config (vpn-config (:vpn-ca-certificate infra)
-                               (:vpn-intermediate-ca infra)
-                               (:intermediate-ca @generated-cred)
-                               (:certificate @generated-cred)
-                               (:private-key @generated-cred)
-                               (:vpn-shared-key infra)
-                               (:vpn-common-name-prefix infra)
-                               (:vpn-endpoints infra))]
+            config (utils/vpn-config (:vpn-ca-certificate infra)
+                                     (:vpn-intermediate-ca infra)
+                                     (:intermediate-ca @generated-cred)
+                                     (:certificate @generated-cred)
+                                     (:private-key @generated-cred)
+                                     (:vpn-shared-key infra)
+                                     (:vpn-common-name-prefix infra)
+                                     (:vpn-endpoints infra))]
         [ui/Modal {:open       (boolean @generated-cred)
                    :close-icon true
                    :on-close   #(dispatch [::events/set-generated-credential-modal nil])}
@@ -344,7 +313,7 @@
 
            [ui/Card
             {:href     (str "data:text/plain;charset=utf-8," (js/encodeURIComponent config))
-             :download "vpn.conf"
+             :download (str "vpn client " (:name @cred) ".conf")
              :disabled (not config)}
             [ui/CardContent {:text-align :center}
              [ui/Header "Save credential"]

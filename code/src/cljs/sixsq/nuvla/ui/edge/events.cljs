@@ -94,3 +94,20 @@
   (fn [db [_ {:keys [resource-id]}]]
     (dispatch [::get-nuvlaboxes])
     (assoc db ::spec/nuvlabox-created-id resource-id)))
+
+
+(reg-event-db
+  ::set-vpn-infra
+  (fn [db [_ {:keys [resources]}]]
+    (assoc db ::spec/vpn-infra resources)))
+
+
+(reg-event-fx
+  ::get-vpn-infra
+  (fn [{:keys [db]} _]
+    {:db                  (assoc db ::spec/vpn-infra nil)
+     ::cimi-api-fx/search [:infrastructure-service
+                           {:filter "subtype='vpn' and vpn-scope='nuvlabox'"
+                            :select "id, name, description"
+                            :last   10000}
+                           #(dispatch [::set-vpn-infra %])]}))

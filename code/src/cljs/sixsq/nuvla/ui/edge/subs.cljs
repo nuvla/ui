@@ -70,3 +70,10 @@
   ::nuvlabox-created-id
   (fn [db]
     (::spec/nuvlabox-created-id db)))
+
+(reg-sub
+  ::vpn-infra-options
+  (fn [{:keys [::spec/vpn-infra]}]
+    (map
+      (fn [{:keys [id name]}] {:key id, :text name, :value id})
+      vpn-infra)))

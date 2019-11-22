@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Devtools - install devtools in dev mode
   - EDGE DETAILS PAGE - Add openVPN support
   - CREDENTIAL PAGE - Add openVPN support
   - Dependencies - udpate parent and local dependencies

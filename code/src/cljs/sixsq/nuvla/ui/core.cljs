@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.core
   (:require
+    [devtools.core :as devtools]
     [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.authn.events :as authn-events]
@@ -17,6 +18,7 @@
 (defn dev-setup []
   (when config/debug?
     (enable-console-print!)
+    (devtools/install!)
     (log/info "development mode")))
 
 

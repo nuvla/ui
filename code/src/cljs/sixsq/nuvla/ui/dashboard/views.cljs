@@ -162,12 +162,11 @@
          [menu-bar]
          [ui/Segment style/basic
           [deployments-display deployments-list]]
-         (when (> total-pages 1)
-           [uix/Pagination
-            {:totalitems   total-deployments
-             :totalPages   total-pages
-             :activePage   @page
-             :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}])]))))
+         [uix/Pagination
+          {:totalitems   total-deployments
+           :totalPages   total-pages
+           :activePage   @page
+           :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]))))
 
 
 (defmethod panel/render :dashboard

@@ -13,7 +13,6 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
-    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -21,16 +20,6 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [taoensso.timbre :as log]))
-
-
-(def refresh-action-id :nuvlabox-get-nuvlaboxes)
-
-
-(defn refresh
-  []
-  (dispatch [::main-events/action-interval-start {:id        refresh-action-id
-                                                  :frequency 10000
-                                                  :event     [::events/get-nuvlaboxes]}]))
 
 
 (defn StatisticState
@@ -60,7 +49,8 @@
      [StatisticState new (utils/state->icon utils/state-new) "NEW"]
      [StatisticState activated (utils/state->icon utils/state-activated) "ACTIVATED"]
      [StatisticState commissioned (utils/state->icon utils/state-commissioned) "COMMISSIONED"]
-     [StatisticState decommissioning (utils/state->icon utils/state-decommissioning) "DECOMMISSIONING"]
+     [StatisticState decommissioning
+      (utils/state->icon utils/state-decommissioning) "DECOMMISSIONING"]
      [StatisticState decommissioned (utils/state->icon utils/state-decommissioned) "DECOMMISSIONED"]
      [StatisticState error (utils/state->icon utils/state-error) "ERROR"]]))
 
@@ -79,9 +69,17 @@
     [ui/Menu {:borderless true}
      [AddButton]
      [main-components/RefreshMenu
-      {:action-id  refresh-action-id
+      {:action-id  events/refresh-id
        :loading?   @loading?
-       :on-refresh refresh}]]))
+       :on-refresh #(dispatch [::events/refresh])}]]))
+
+
+(defn SearchInput []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/MenuItem [ui/Input {:icon        "search"
+                            :placeholder (@tr [:search])
+                            :on-change   (ui-callback/input-callback
+                                           #(dispatch [::events/set-full-text-search %]))}]]))
 
 
 (defn CreatedNuvlaBox
@@ -195,7 +193,7 @@
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])]
-    (refresh)
+    (dispatch [::events/refresh])
     (fn []
       (let [total-elements (get @nuvlaboxes :count 0)
             total-pages    (general-utils/total-pages total-elements @elements-per-page)]
@@ -214,10 +212,10 @@
                ^{:key id}
                [NuvlaboxRow nuvlabox]))]]
 
-         (when (> total-pages 1)
-           [uix/Pagination {:totalPages   total-pages
-                            :activePage   @page
-                            :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}])]))))
+         [uix/Pagination {:totalPages   total-pages
+                          :activePage   @page
+                          :onPageChange (ui-callback/callback
+                                          :activePage #(dispatch [::events/set-page %]))}]]))))
 
 
 (defmethod panel/render :edge
@@ -226,6 +224,7 @@
         n        (count path)
         root     [:<>
                   [MenuBar]
+                  [SearchInput]
                   [StatisticStates]
                   [NuvlaboxTable]
                   [AddModal]]

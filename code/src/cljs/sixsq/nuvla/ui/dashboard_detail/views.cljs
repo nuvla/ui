@@ -241,11 +241,10 @@
              ^{:key id}
              [job-map-to-row job])]]
 
-         (when (> total-pages 1)
-           [uix/Pagination {:totalPages   total-pages
-                            :activePage   @page
-                            :onPageChange (ui-callback/callback
-                                            :activePage #(dispatch [::events/set-job-page %]))}])]))))
+         [uix/Pagination {:totalPages   total-pages
+                          :activePage   @page
+                          :onPageChange (ui-callback/callback
+                                          :activePage #(dispatch [::events/set-job-page %]))}]]))))
 
 
 (defn jobs-section

@@ -50,7 +50,8 @@
                  :primary  true
                  :icon     :rocket
                  :content  (@tr [:launch])
-                 :on-click #(dispatch [::deployment-dialog-events/create-deployment (:id module) :credentials])}]]))
+                 :on-click #(dispatch [::deployment-dialog-events/create-deployment
+                                       (:id module) :credentials])}]]))
 
 
 (defn modules-cards-group
@@ -66,7 +67,8 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Input {:placeholder (@tr [:search])
                :icon        "search"
-               :on-change   (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))}]))
+               :on-change   (ui-callback/input-callback
+                              #(dispatch [::events/set-full-text-search %]))}]))
 
 
 (defn control-bar []
@@ -120,12 +122,12 @@
           [:<>
            [control-bar]
            [modules-cards-group (get @modules :resources [])]
-           (when (> total-pages 1)
-             [uix/Pagination
-              {:totalitems   total-modules
-               :totalPages   total-pages
-               :activePage   @page
-               :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}])]
+           [uix/Pagination
+            {:totalitems   total-modules
+             :totalPages   total-pages
+             :activePage   @page
+             :onPageChange (ui-callback/callback
+                             :activePage #(dispatch [::events/set-page %]))}]]
           :label "App Store"
           :title-size :h2]]))))
 

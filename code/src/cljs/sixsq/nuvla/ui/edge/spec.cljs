@@ -23,6 +23,8 @@
 (s/def ::elements-per-page int?)
 (s/def ::total-elements int?)
 
+(s/def ::full-text-search (s/nilable string?))
+
 (s/def ::state-selector #{"all" "new" "activated" "commissioned"
                           "decommissioning" "decommissioned" "error"})
 
@@ -36,6 +38,7 @@
                           ::page
                           ::elements-per-page
                           ::total-elements
+                          ::full-text-search
                           ::state-selector
                           ::open-modal
                           ::nuvlabox-created-id
@@ -49,6 +52,7 @@
                ::page                1
                ::elements-per-page   10
                ::total-elements      0
+               ::full-text-search    nil
                ::state-selector      nil
                ::open-modal          nil
                ::nuvlabox-created-id nil

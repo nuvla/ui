@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - EDGE PAGE - Full text search
+  - Pagination - make pagination visible even if only one page is available
+  - EDGE PAGE - Replace dropdown filter by clickable icons
   - DASHBOARD DETAIL PAGE - re-order deployment sections
   - Devtools - install devtools in dev mode
   - EDGE DETAILS PAGE - Add openVPN support

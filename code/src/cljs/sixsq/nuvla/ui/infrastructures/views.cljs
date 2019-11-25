@@ -111,13 +111,12 @@
          (when (pos-int? infra-group-count)
            [:<>
             [ServiceGroups @isgs]
-            (when (> total-pages 1)
-              [uix/Pagination
-               {:totalitems   infra-group-count
-                :totalPages   total-pages
-                :activePage   @page
-                :onPageChange (ui-callback/callback
-                                :activePage #(dispatch [::events/set-page %]))}])])]))))
+            [uix/Pagination
+             {:totalitems   infra-group-count
+              :totalPages   total-pages
+              :activePage   @page
+              :onPageChange (ui-callback/callback
+                              :activePage #(dispatch [::events/set-page %]))}]])]))))
 
 
 (defn in?

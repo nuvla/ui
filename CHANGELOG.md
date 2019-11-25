@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - DASHBOARD DETAIL PAGE - re-order deployment sections
   - Devtools - install devtools in dev mode
   - EDGE DETAILS PAGE - Add openVPN support
   - CREDENTIAL PAGE - Add openVPN support

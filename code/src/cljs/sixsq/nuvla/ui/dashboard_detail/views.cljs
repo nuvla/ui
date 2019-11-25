@@ -108,6 +108,7 @@
                 ^{:key param-name}
                 [parameter-to-row param])])]]
          :count (count params)
+         :default-open false
          :label (@tr [:module-output-parameters])]))))
 
 
@@ -143,6 +144,7 @@
                 ^{:key (str "env-var-" name)}
                 [env-var-to-row env-var])])]]
          :count (count env-vars)
+         :default-open false
          :label (str/capitalize (@tr [:environmental-variables]))]))))
 
 
@@ -199,6 +201,7 @@
         events-info (events-table-info @events)]
     [uix/Accordion [events-table events-info]
      :label (str/capitalize (@tr [:events]))
+     :default-open false
      :count (count events-info)]))
 
 
@@ -252,6 +255,7 @@
         {:keys [resources]} @jobs]
     [uix/Accordion [jobs-table @jobs]
      :label (str/capitalize (@tr [:job]))
+     :default-open false
      :count (count resources)]))
 
 
@@ -526,8 +530,8 @@
         [menu]
         [summary @deployment]
         [urls-section]
+        [logs-section]
+        [events-section]
         [parameters-section]
         [env-vars-section]
-        [events-section]
-        [logs-section]
         [jobs-section]]])))

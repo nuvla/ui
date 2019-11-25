@@ -35,11 +35,20 @@
 
 (defn StatisticState
   [value icon label]
-  [ui/Statistic
-   [ui/StatisticValue (or value "-")
-    "\u2002"
-    [ui/Icon {:name icon}]]
-   [ui/StatisticLabel label]])
+  (let [state-selector (subscribe [::subs/state-selector])
+        selected?      (or
+                         (= label @state-selector)
+                         (and (= label "TOTAL")
+                              (= @state-selector nil)))
+        color          (if selected? "black" "grey")]
+    [ui/Statistic {:style    {:cursor "pointer"}
+                   :color    color
+                   :on-click #(dispatch [::events/set-state-selector
+                                         (if (= label "TOTAL") nil label)])}
+     [ui/StatisticValue (or value "-")
+      "\u2002"
+      [ui/Icon {:size (when selected? "large") :name icon}]]
+     [ui/StatisticLabel label]]))
 
 
 (defn StatisticStates
@@ -47,28 +56,13 @@
   (let [{:keys [total new activated commissioned
                 decommissioning decommissioned error]} @(subscribe [::subs/state-nuvlaboxes])]
     [ui/StatisticGroup (merge {:size "tiny"} style/center-block)
-     [StatisticState total "box" "Total"]
-     [StatisticState new (utils/state->icon utils/state-new) "New"]
-     [StatisticState activated (utils/state->icon utils/state-activated) "Activated"]
-     [StatisticState commissioned (utils/state->icon utils/state-commissioned) "Commissioned"]
-     [StatisticState decommissioning (utils/state->icon utils/state-decommissioning) "Decommissioning"]
-     [StatisticState decommissioned (utils/state->icon utils/state-decommissioned) "Decommissioned"]
-     [StatisticState error (utils/state->icon utils/state-error) "Error"]]))
-
-
-(defn StateFilter []
-  (let [state-selector (subscribe [::subs/state-selector])]
-    ^{:key (str "state:" @state-selector)}
-    [ui/Dropdown
-     {:value     (or @state-selector "ALL")
-      :scrolling false
-      :selection true
-      :options   (->>
-                   utils/nuvlabox-states
-                   (map (fn [state] {:value state, :text state}))
-                   (cons {:value "ALL", :text "ALL"}))
-      :on-change (ui-callback/value
-                   #(dispatch [::events/set-state-selector (if (= % "ALL") nil %)]))}]))
+     [StatisticState total "box" "TOTAL"]
+     [StatisticState new (utils/state->icon utils/state-new) "NEW"]
+     [StatisticState activated (utils/state->icon utils/state-activated) "ACTIVATED"]
+     [StatisticState commissioned (utils/state->icon utils/state-commissioned) "COMMISSIONED"]
+     [StatisticState decommissioning (utils/state->icon utils/state-decommissioning) "DECOMMISSIONING"]
+     [StatisticState decommissioned (utils/state->icon utils/state-decommissioned) "DECOMMISSIONED"]
+     [StatisticState error (utils/state->icon utils/state-error) "ERROR"]]))
 
 
 (defn AddButton
@@ -123,19 +117,19 @@
         user-id        (subscribe [::authn-subs/user-id])
         nuvlabox-id    (subscribe [::subs/nuvlabox-created-id])
         vpn-infra-opts (subscribe [::subs/vpn-infra-options])
-        default-data   {:owner           @user-id
-                       :refresh-interval 30}
+        default-data   {:owner            @user-id
+                        :refresh-interval 30}
         creation-data  (r/atom default-data)
         on-close-fn    #(do
-                         (dispatch [::events/set-created-nuvlabox-id nil])
-                         (dispatch [::events/open-modal nil])
-                         (reset! creation-data default-data))
+                          (dispatch [::events/set-created-nuvlabox-id nil])
+                          (dispatch [::events/open-modal nil])
+                          (reset! creation-data default-data))
         on-add-fn      #(do
-                         (dispatch [::events/create-nuvlabox
-                                    (->> @creation-data
-                                         (remove (fn [[_ v]] (str/blank? v)))
-                                         (into {}))])
-                         (reset! creation-data default-data))
+                          (dispatch [::events/create-nuvlabox
+                                     (->> @creation-data
+                                          (remove (fn [[_ v]] (str/blank? v)))
+                                          (into {}))])
+                          (reset! creation-data default-data))
         active?        (r/atom false)]
     (dispatch [::events/get-vpn-infra])
     (fn []
@@ -205,9 +199,7 @@
     (fn []
       (let [total-elements (get @nuvlaboxes :count 0)
             total-pages    (general-utils/total-pages total-elements @elements-per-page)]
-        [:div
-
-         [StateFilter]
+        [:<>
 
          [ui/Table {:compact "very", :selectable true}
           [ui/TableHeader

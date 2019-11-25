@@ -380,35 +380,59 @@
 
 
 (defn action-button
-  [popup-text icon-name event-kw deployment-id]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Modal
-     {:trigger (r/as-element
-                 [:div
-                  [ui/Popup {:content  (@tr [popup-text])
-                             :size     "tiny"
-                             :position "top center"
-                             :trigger  (r/as-element
-                                         [ui/Icon {:name  icon-name
-                                                   :style {:cursor "pointer"}
-                                                   :color "red"}])}]])
-      :header  (@tr [popup-text])
-      :content (@tr [:are-you-sure?])
-      :actions [{:key     "cancel"
-                 :content (@tr [:cancel])}
-                {:key     "yes"
-                 :content (@tr [:yes]), :primary true
-                 :onClick #(dispatch [event-kw deployment-id])}]}]))
+  [popup-text icon-name callback label]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        open?       (r/atom false)
+        on-close-fn (fn [event]
+                      (reset! open? false)
+                      (.stopPropagation event)
+                      (.preventDefault event))
+        on-click-fn (fn [event]
+                      (reset! open? true)
+                      (.stopPropagation event)
+                      (.preventDefault event))]
+    (fn []
+      [:<>
+       [ui/Popup {:content  (@tr [popup-text])
+                  :size     "tiny"
+                  :position "top center"
+                  :trigger  (r/as-element
+                              (if label
+                                [ui/Label {:corner   true
+                                           :size     "small"
+                                           :on-click on-click-fn}
+                                 [ui/Icon {:name  icon-name
+                                           :style {:cursor "pointer"}
+                                           :color "red"}]]
+                                [ui/Icon {:name     icon-name
+                                          :style    {:cursor "pointer"}
+                                          :color    "red"
+                                          :on-click on-click-fn}])
+                              )}]
+       [ui/Modal
+        {:open       @open?
+         :header     (@tr [popup-text])
+         :content    (@tr [:are-you-sure?])
+         :on-close   on-close-fn
+         :close-icon true
+         :actions    [{:key     "cancel"
+                       :content (@tr [:cancel])
+                       :onClick on-close-fn}
+                      {:key     "yes"
+                       :content (@tr [:yes]), :primary true
+                       :onClick callback}]}]])))
 
 
 (defn stop-button
-  [{:keys [id] :as deployment}]
-  [action-button :stop "stop" ::events/stop-deployment id])
+  [{:keys [id] :as deployment} & {:keys [label]
+                                  :or   {label true}}]
+  [action-button :stop "stop" #(dispatch [::events/stop-deployment id]) label])
 
 
 (defn delete-button
-  [{:keys [id] :as deployment}]
-  [action-button :delete "trash" ::events/delete id])
+  [{:keys [id] :as deployment} & {:keys [label]
+                                  :or   {label true}}]
+  [action-button :delete "trash" #(dispatch [::events/delete id]) label])
 
 
 (defn DeploymentCard
@@ -430,7 +454,11 @@
         started?      (utils/is-started? state)]
 
     ^{:key id}
-    [ui/Card
+    [ui/Card (when clickable?
+               {:href     (utils/detail-href id)
+                :on-click (fn [event]
+                            (dispatch [::history-events/navigate (utils/detail-href id)])
+                            (.preventDefault event))})
      [ui/Image {:src      (or module-logo-url "")
                 :bordered true
                 :style    {:width      "auto"
@@ -440,16 +468,10 @@
 
      (when clickable?
        (cond
-         (general-utils/can-operation? "stop" deployment) [ui/Label {:corner true, :size "small"}
-                                                           [stop-button deployment]]
-         (general-utils/can-delete? deployment) [ui/Label {:corner true, :size "small"}
-                                                 [delete-button deployment]]))
+         (general-utils/can-operation? "stop" deployment) [stop-button deployment]
+         (general-utils/can-delete? deployment) [delete-button deployment]))
 
-     [ui/CardContent (when clickable?
-                       {:href     (utils/detail-href id)
-                        :on-click (fn [event]
-                                    (dispatch [::history-events/navigate (utils/detail-href id)])
-                                    (.preventDefault event))})
+     [ui/CardContent
 
       [ui/Segment (merge style/basic {:floated "right"})
        [:p {:style {:color "initial"}} state]
@@ -470,13 +492,15 @@
          [:div [ui/Icon {:name "key"}] cred-info])]]
 
      (when (and started? @primary-url)
-       [ui/Button {:color   "green"
-                   :icon    "external"
-                   :content primary-url-name
-                   :fluid   true
-                   :href    @primary-url
-                   :target  "_blank"
-                   :rel     "noreferrer"}])]))
+       [ui/Button {:color    "green"
+                   :icon     "external"
+                   :content  primary-url-name
+                   :fluid    true
+                   :href     @primary-url
+                   :on-click (fn [event]
+                               (.stopPropagation event))
+                   :target   "_blank"
+                   :rel      "noreferrer"}])]))
 
 
 (defn summary

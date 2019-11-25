@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - DASHBOARD PAGE - Clickable cards better visibility
+  - DASHBOARD PAGE - Search Input
   - Main components - Search input
   - EDGE PAGE - Full text search
   - Pagination - make pagination visible even if only one page is available

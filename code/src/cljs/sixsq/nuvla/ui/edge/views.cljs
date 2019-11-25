@@ -74,14 +74,6 @@
        :on-refresh #(dispatch [::events/refresh])}]]))
 
 
-(defn SearchInput []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/MenuItem [ui/Input {:icon        "search"
-                            :placeholder (@tr [:search])
-                            :on-change   (ui-callback/input-callback
-                                           #(dispatch [::events/set-full-text-search %]))}]]))
-
-
 (defn CreatedNuvlaBox
   [nuvlabox-id creation-data on-close-fn tr]
   (let [nuvlabox-name-or-id (str "NuvlaBox " (or (:name creation-data)
@@ -224,7 +216,7 @@
         n        (count path)
         root     [:<>
                   [MenuBar]
-                  [SearchInput]
+                  [main-components/SearchInput #(dispatch [::events/set-full-text-search %])]
                   [StatisticStates]
                   [NuvlaboxTable]
                   [AddModal]]

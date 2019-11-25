@@ -63,20 +63,11 @@
       [module-card module])]])
 
 
-(defn appstore-search []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Input {:placeholder (@tr [:search])
-               :icon        "search"
-               :on-change   (ui-callback/input-callback
-                              #(dispatch [::events/set-full-text-search %]))}]))
-
-
 (defn control-bar []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Menu {:secondary true}
-     [ui/MenuMenu {:position "left"}
-      [appstore-search]]
-     [refresh-menu]]))
+  [ui/Menu {:secondary true}
+   [ui/MenuMenu {:position "left"}
+    [main-components/SearchInput #(dispatch [::events/set-full-text-search %])]]
+   [refresh-menu]])
 
 
 (defn control-bar-projects []

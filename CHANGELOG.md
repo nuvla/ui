@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Main components - Search input
   - EDGE PAGE - Full text search
   - Pagination - make pagination visible even if only one page is available
   - EDGE PAGE - Replace dropdown filter by clickable icons

@@ -231,7 +231,39 @@
                         :id            "nuvla-ui-main"
                         :fire-on-mount true
                         :on-update     (responsive/callback #(dispatch [::events/set-device %]))}
-         [:<>
+         [ui/Grid {:stackable true
+                   :style {:margin 0
+                           :height "100vh"}, :columns 2}
+          [ui/GridColumn {:color "blue"
+                          :style {:background-image "url(/ui/images/volumlight.png)"
+                                  :background-size "cover"
+                                  :background-position "left"
+                                  :background-repeat "no-repeat"}}
+           [:div {:style {:padding "80px"}}
+            [ui/Header {:inverted true
+                        :style    {:font-size   "1.9vw"
+                                   :font-weight "normal"}}
+             "Welcome to"]
+            [ui/Header {:inverted true
+                        :style    {:font-size   "8vw"
+                                   :font-weight "normal"}}
+             "Nuvla.io"]
+            [:br]
+
+            [ui/Header {:inverted true
+                        :style    {:font-size   "1.9vw"
+                                   :font-weight "normal"}}
+             "Start immediately deploying apps containers in one button click."]
+            [:br]
+
+            [:p {:style {:font-size "1.5vw"
+                         :font-weight "bold"}} "Start jouney with us"]
+
+            ]
+           ]
+          [ui/GridColumn {:color "green"}]
+          ]
+         #_[:<>
           [sidebar/menu]
           [:div {:style {:transition  "0.5s"
                          :margin-left (if (and (not @is-small-device?) @show?)

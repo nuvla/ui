@@ -66,7 +66,7 @@
 
 (defn MenuBar []
   (let [loading? (subscribe [::subs/loading?])]
-    [ui/Menu {:borderless true}
+    [ui/Menu {:borderless true, :stackable true}
      [AddButton]
      [main-components/RefreshMenu
       {:action-id  events/refresh-id
@@ -133,7 +133,7 @@
            [ui/Icon {:name "add"}] (str "New NuvlaBox " (:name @creation-data))]
 
           [ui/ModalContent
-           [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+           [ui/Table style/definition
             [ui/TableBody
              [uix/TableRowField (@tr [:name]), :on-change #(swap! creation-data assoc :name %)]
              [uix/TableRowField (@tr [:description]), :type :textarea,
@@ -154,7 +154,7 @@
             [ui/AccordionTitle {:active   @active?, :icon "dropdown", :content "Advanced"
                                 :on-click #(swap! active? not)}]
             [ui/AccordionContent {:active @active?}
-             [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+             [ui/Table style/definition
               [ui/TableBody
                [uix/TableRowField "version", :spec (s/nilable int?),
                 :default-value (:version @creation-data),

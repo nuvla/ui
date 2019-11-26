@@ -46,7 +46,7 @@
         loading? (subscribe [::subs/loading?])]
     (fn []
       [:<>
-       [ui/Menu {:borderless true}
+       [ui/Menu {:borderless true, :stackable true}
         [ui/MenuItem {:icon     "grid layout"
                       :active   (= @view "cards")
                       :on-click #(dispatch [::events/set-view "cards"])}]
@@ -95,24 +95,22 @@
   [deployments-list]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [deployments-list]
-      [ui/Table
-       {:compact     "very"
-        :single-line true
-        :padded      false
-        :unstackable true}
-       [ui/TableHeader
-        [ui/TableRow
-         [ui/TableHeaderCell (@tr [:id])]
-         [ui/TableHeaderCell (@tr [:module])]
-         [ui/TableHeaderCell (@tr [:status])]
-         [ui/TableHeaderCell (@tr [:url])]
-         [ui/TableHeaderCell (@tr [:created])]
-         [ui/TableHeaderCell (@tr [:infrastructure])]
-         [ui/TableHeaderCell (@tr [:actions])]]]
-       [ui/TableBody
-        (for [{:keys [id] :as deployment} deployments-list]
-          ^{:key id}
-          [row-fn deployment])]])))
+      [ui/Segment style/autoscroll-x
+       [ui/Table
+        (merge style/single-line {:unstackable true})
+        [ui/TableHeader
+         [ui/TableRow
+          [ui/TableHeaderCell (@tr [:id])]
+          [ui/TableHeaderCell (@tr [:module])]
+          [ui/TableHeaderCell (@tr [:status])]
+          [ui/TableHeaderCell (@tr [:url])]
+          [ui/TableHeaderCell (@tr [:created])]
+          [ui/TableHeaderCell (@tr [:infrastructure])]
+          [ui/TableHeaderCell (@tr [:actions])]]]
+        [ui/TableBody
+         (for [{:keys [id] :as deployment} deployments-list]
+           ^{:key id}
+           [row-fn deployment])]]])))
 
 
 (defn cards-data-table

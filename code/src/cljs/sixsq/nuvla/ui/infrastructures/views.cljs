@@ -143,7 +143,7 @@
                          :read-only     (not editable?)
                          :on-change     #(dispatch [::events/update-infra-service :acl %])}]
 
-         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+         [ui/Table style/definition
           [ui/TableBody
            [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
             :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
@@ -173,7 +173,7 @@
                          :read-only     (not editable?)
                          :on-change     #(dispatch [::events/update-infra-service :acl %])}]
 
-         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+         [ui/Table style/definition
           [ui/TableBody
            [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
             :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
@@ -271,7 +271,7 @@
                       :size :massive}]
             [ui/Header (@tr [:register])]]]]]
 
-        [:div
+        #_[:div
          [:p (@tr [:register-s3-note])]
          [ui/CardGroup {:centered true}
 

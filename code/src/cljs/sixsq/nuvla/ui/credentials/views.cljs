@@ -85,7 +85,7 @@
                          :read-only     (not editable?)
                          :on-change     #(dispatch [::events/update-credential :acl %])}]
 
-         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+         [ui/Table style/definition
           [ui/TableBody
            [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
             :validate-form? @validate-form?, :default-value name, :spec ::spec/name,
@@ -124,7 +124,7 @@
                          :read-only     (not editable?)
                          :on-change     #(dispatch [::events/update-credential :acl %])}]
 
-         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+         [ui/Table style/definition
           [ui/TableBody
            [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
             :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
@@ -158,7 +158,7 @@
 
         [:<>
 
-         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+         [ui/Table style/definition
           [ui/TableBody
            [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
             :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
@@ -257,7 +257,7 @@
              [ui/Icon {:name "docker"
                        :size :massive}]]]
 
-           [ui/Card
+           #_[ui/Card
             {:on-click #(do
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
@@ -417,8 +417,7 @@
            (if (empty? infra-service-creds)
              [ui/Message
               (str/capitalize (str (@tr [:no-credentials]) "."))]
-             [:div [ui/Table {:style {:margin-top 10}
-                              :class :nuvla-ui-editable}
+             [:div [ui/Table {:style {:margin-top 10}}
                     [ui/TableHeader
                      [ui/TableRow
                       [ui/TableHeaderCell {:content "Name"}]

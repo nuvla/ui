@@ -171,8 +171,7 @@
         (if (empty? @ports)
           [ui/Message
            (str/capitalize (str (@tr [:no-ports]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}
-                           :class :nuvla-ui-editable}
+          [:div [ui/Table {:style {:margin-top 10}}
                  [ui/TableHeader
                   [ui/TableRow
                    [ui/TableHeaderCell {:content "Destination (External)"}]
@@ -257,8 +256,7 @@
         (if (empty? @mounts)
           [ui/Message
            (str/capitalize (str (@tr [:no-mounts]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}
-                           :class :nuvla-ui-editable}
+          [:div [ui/Table {:style {:margin-top 10}}
                  [ui/TableHeader
                   [ui/TableRow
                    [ui/TableHeaderCell {:content "Type"}]

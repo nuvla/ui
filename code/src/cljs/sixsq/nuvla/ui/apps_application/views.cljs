@@ -80,8 +80,7 @@
         (if (empty? @files)
           [ui/Message
            (str/capitalize (str (@tr [:no-files]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}
-                           :class :nuvla-ui-editable}
+          [:div [ui/Table {:style {:margin-top 10}}
                  [ui/TableHeader
                   [ui/TableRow
                    [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]

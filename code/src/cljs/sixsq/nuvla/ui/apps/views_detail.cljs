@@ -471,8 +471,7 @@
         (if (empty? @env-variables)
           [ui/Message
            (str/capitalize (str (@tr [:module-no-env-variables]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}
-                           :class :nuvla-ui-editable}
+          [:div [ui/Table {:style {:margin-top 10}}
                  [ui/TableHeader
                   [ui/TableRow
                    [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
@@ -530,8 +529,7 @@
         (if (empty? @urls)
           [ui/Message
            (str/capitalize (str (@tr [:no-urls]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}
-                           :class :nuvla-ui-editable}
+          [:div [ui/Table {:style {:margin-top 10}}
                  [ui/TableHeader
                   [ui/TableRow
                    [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
@@ -590,8 +588,7 @@
         (if (empty? @output-parameters)
           [ui/Message
            (str/capitalize (str (@tr [:no-output-parameters]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}
-                           :class :nuvla-ui-editable}
+          [:div [ui/Table {:style {:margin-top 10}}
                  [ui/TableHeader
                   [ui/TableRow
                    [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]

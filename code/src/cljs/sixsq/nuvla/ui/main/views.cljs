@@ -167,14 +167,14 @@
     (fn []
       (let [[type content] @message]
         (when content
-         [ui/Container {:text-align :center}
-          [ui/Message
-           (if (= type :success)
-             {:success true
-              :content (@tr [(keyword content)])}
-             {:error   true
-              :content content})]
-          [:br]])))))
+          [ui/Container {:text-align :center}
+           [ui/Message
+            (if (= type :success)
+              {:success true
+               :content (@tr [(keyword content)])}
+              {:error   true
+               :content content})]
+           [:br]])))))
 
 
 (defn contents
@@ -232,49 +232,92 @@
                         :fire-on-mount true
                         :on-update     (responsive/callback #(dispatch [::events/set-device %]))}
          [ui/Grid {:stackable true
-                   :style {:margin 0
-                           :height "100vh"}, :columns 2}
-          [ui/GridColumn {:color "blue"
-                          :style {:background-image "url(/ui/images/volumlight.png)"
-                                  :background-size "cover"
+                   :columns   2
+                   :reversed  "mobile"
+                   :style     {:margin           0
+                               :background-color "white"}}
+          [ui/GridColumn {:style {:background-image    "url(/ui/images/volumlight.png)"
+                                  :background-size     "cover"
                                   :background-position "left"
-                                  :background-repeat "no-repeat"}}
-           [:div {:style {:padding "80px"}}
-            [ui/Header {:inverted true
-                        :style    {:font-size   "1.9vw"
-                                   :font-weight "normal"}}
+                                  :background-repeat   "no-repeat"
+                                  :color               "white"
+                                  :min-height          "100vh"}}
+           [:div {:style {:padding "75px"}}
+            [:div {:style {:font-size "2em"}}
              "Welcome to"]
-            [ui/Header {:inverted true
-                        :style    {:font-size   "8vw"
-                                   :font-weight "normal"}}
-             "Nuvla.io"]
+            [:div {:style {:font-size   "6em"
+                           :line-height "normal"}}
+             "Nuvla"]
             [:br]
 
-            [ui/Header {:inverted true
-                        :style    {:font-size   "1.9vw"
-                                   :font-weight "normal"}}
+            [:div {:style {:margin-top  40
+                           :line-height "normal"
+                           :font-size   "2em"}}
              "Start immediately deploying apps containers in one button click."]
             [:br]
 
-            [:p {:style {:font-size "1.5vw"
-                         :font-weight "bold"}} "Start jouney with us"]
+            [:b {:style {:font-size "1.4em"}} "Start jouney with us"]
+
+            [:br] [:br]
+            [ui/Button {:style {:border-radius 0}
+                        :size  "large" :inverted true} "Sign up"]
+            [:div {:style {:margin-top  20
+                           :line-height "normal"}}
+             (str "Provide a secured edge to cloud (and back) management platform "
+                  "that enabled near-data AI for connected world use cases.")]
+
+            [:div {:style {:position "absolute"
+                           :bottom   40}}
+             "Follow us on "
+             [:span
+              [ui/Icon {:name "facebook"}]
+              [ui/Icon {:name "twitter"}]
+              [ui/Icon {:name "youtube"}]]]
 
             ]
            ]
-          [ui/GridColumn {:color "green"}]
+          [ui/GridColumn
+
+           [:div {:style {:margin-left "10%"
+                          :margin-top  "30%"}}
+            [:span {:style {:font-size "1.4em"}} "Login to " [:b "Account"]]
+            [ui/Form {:style {:margin-top 30
+                              :max-width  "60%"}}
+             [ui/FormInput {:label "Username"}]
+             [ui/FormInput {:label "Password"}]
+             [ui/FormField
+              [:a {:href ""} "Forgot your password?"]]
+             [ui/Button {:primary true
+                         :floated "right"
+                         :style {:border-radius 0}} "Sign in"]]
+
+            [:div {:style {:margin-top 70
+                           :color      "grey"}} "or use your github account "
+             [ui/Button {:style    {:margin-left 10}
+                         :circular true
+                         :basic    true
+                         :class    "icon"}
+              [ui/Icon {:name "github"
+                        :size "large"}]
+
+              ]
+             ]
+
+            ]
+           ]
           ]
          #_[:<>
-          [sidebar/menu]
-          [:div {:style {:transition  "0.5s"
-                         :margin-left (if (and (not @is-small-device?) @show?)
-                                        sidebar/sidebar-width "0")}}
-           [ui/Dimmer {:active   (and @is-small-device? @show?)
-                       :inverted true
-                       :style    {:z-index 999}
-                       :on-click #(dispatch [::events/close-sidebar])}]
-           [header]
-           [contents]
-           [ignore-changes-modal]
-           (when-not @iframe? [footer])]]]
+            [sidebar/menu]
+            [:div {:style {:transition  "0.5s"
+                           :margin-left (if (and (not @is-small-device?) @show?)
+                                          sidebar/sidebar-width "0")}}
+             [ui/Dimmer {:active   (and @is-small-device? @show?)
+                         :inverted true
+                         :style    {:z-index 999}
+                         :on-click #(dispatch [::events/close-sidebar])}]
+             [header]
+             [contents]
+             [ignore-changes-modal]
+             (when-not @iframe? [footer])]]]
         [ui/Container
          [ui/Loader {:active true :size "massive"}]]))))

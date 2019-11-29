@@ -68,8 +68,8 @@
                ::aggregations                nil
                ::collection                  nil
                ::collection-name             nil
-               ::selected-fields             ["id"]
-               ::available-fields            ["id"]
+               ::selected-fields             ["id" "name"]
+               ::available-fields            ["id" "name"]
                ::show-add-modal?             false
                ::collections-templates-cache {}
                ::selected-rows               #{}})

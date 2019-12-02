@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - CIMI PAGE - make name field visible by default
+  - DEPENDENCIES - Fix firefox callback issue in delete caused by 
+    bluebird version 3.7.1
   - DASHBOARD DETAIL PAGE - re-order deployment sections
   - Devtools - install devtools in dev mode
   - EDGE DETAILS PAGE - Add openVPN support

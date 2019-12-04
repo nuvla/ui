@@ -30,8 +30,25 @@
 
 
 (defn summary []
-  (let []
-    [apps-views-detail/summary]))
+  (let [editable?      (subscribe [::apps-subs/editable?])
+        module-common  (subscribe [::apps-subs/module-common])
+        module-subtype (subscribe [::apps-subs/module-subtype])]
+    [apps-views-detail/summary
+     [^{:key "module_subtype"}
+      [ui/TableRow
+       [ui/TableCell {:collapsing true
+                      :style      {:padding-bottom 8}} "subtype"]
+       [ui/TableCell {:style {:padding-left (when-not @editable? 24)}}
+        (if @editable?
+          [ui/Dropdown {:selection true,
+                        :fluid     true
+                        :value     @module-subtype
+                        :on-change (ui-callback/value
+                                     #(dispatch [::apps-events/subtype %]))
+                        :options   [{:key "application", :text "Docker", :value "application"}
+                                    {:key   "application_kubernetes", :text "Kubernetes",
+                                     :value "application_kubernetes"}]}]
+          @module-subtype)]]]]))
 
 
 (defn single-file [{:keys [id ::spec/file-name ::spec/file-content]}]
@@ -143,7 +160,6 @@
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
         (dispatch [::apps-events/set-form-spec ::spec/module-application])
-        (dispatch [::apps-events/set-module-subtype :application])
         [ui/Container {:fluid true}
          [uix/PageHeader "cubes" (str parent (when (not-empty parent) "/") name) :inline true]
          [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)

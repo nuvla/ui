@@ -77,7 +77,6 @@
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
         (dispatch [::apps-events/set-form-spec ::spec/module-project])
-        (dispatch [::apps-events/set-module-subtype :project])
         [ui/Container {:fluid true}
          [uix/PageHeader "folder" (str parent (when (not-empty parent) "/") name) :inline true]
          ^{:key (:id @module)}

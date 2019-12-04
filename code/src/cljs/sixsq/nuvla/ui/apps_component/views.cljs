@@ -352,7 +352,6 @@
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
         (dispatch [::apps-events/set-form-spec ::spec/module-component])
-        (dispatch [::apps-events/set-module-subtype :component])
         [ui/Container {:fluid true}
          [uix/PageHeader "grid layout" (str parent (when (not-empty parent) "/") name) :inline true]
          [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)

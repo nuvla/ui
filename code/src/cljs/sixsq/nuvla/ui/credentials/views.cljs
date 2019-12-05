@@ -34,7 +34,7 @@
 (defn row-infrastructure-services-selector
   [subtype additional-filter editable? value-spec on-change]
   (let [tr              (subscribe [::i18n-subs/tr])
-        infra-services  (subscribe [::subs/infrastructure-services-available subtype])
+        infra-services  (subscribe [::subs/infrastructure-services-available])
         credential      (subscribe [::subs/credential])
         local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
@@ -102,7 +102,7 @@
            [uix/TableRowField "key", :placeholder (@tr [:key]), :editable? editable?,
             :required? true, :default-value key, :spec ::spec/key, :type :textarea,
             :on-change (partial on-change :key), :validate-form? @validate-form?]
-           [row-infrastructure-services-selector "swarm" nil editable? ::spec/parent
+           [row-infrastructure-services-selector ["swarm" "kubernetes"] nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
 
 
@@ -138,7 +138,7 @@
            [uix/TableRowField "secret-key", :editable? editable?, :required? true,
             :default-value secret-key, :spec ::spec/secret-key, :validate-form? @validate-form?,
             :on-change (partial on-change :secret-key)]
-           [row-infrastructure-services-selector "s3" nil editable? ::spec/parent
+           [row-infrastructure-services-selector ["s3"] nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
 
 
@@ -166,7 +166,7 @@
            [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
             :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
             :on-change (partial on-change :description)]
-           [row-infrastructure-services-selector "vpn" "vpn-scope='customer'" editable?
+           [row-infrastructure-services-selector ["vpn"] "vpn-scope='customer'" editable?
             ::spec/parent (partial on-change :parent)]]]]))))
 
 
@@ -206,7 +206,7 @@
         is-new?     (subscribe [::subs/is-new?])]
     (fn []
       (let [subtype         (:subtype @credential "")
-            header          (str (if is-new? "New" "Update") " Credential: " subtype)
+            header          (str (if is-new? "New" "Update") " Credential")
             validation-item (get infrastructure-service-validation-map subtype)
             validation-spec (:validation-spec validation-item)
             modal-content   (:modal-content validation-item)]
@@ -253,9 +253,11 @@
                           (dispatch [::events/open-credential-modal
                                      {:subtype "infrastructure-service-swarm"} true]))}
             [ui/CardContent {:text-align :center}
-             [ui/Header "Swarm"]
+             [ui/Header "Swarm / Kubernetes"]
              [ui/Icon {:name "docker"
-                       :size :massive}]]]
+                       :size :massive}]
+             [ui/Image {:src   "/ui/images/kubernetes.svg"
+                        :style {:max-width 112}}]]]
 
            [ui/Card
             {:on-click #(do
@@ -268,7 +270,7 @@
              [ui/Header "MinIO"]
              [:div]
              [ui/Image {:src  "/ui/images/minio.png"
-                        :size :tiny}]]]
+                        :style {:max-height 112}}]]]
 
            [ui/Card
             {:on-click #(do
@@ -279,9 +281,8 @@
                                      {:subtype "infrastructure-service-vpn"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "OpenVPN"]
-             [:div]
              [ui/Image {:src  "/ui/images/openvpn.png"
-                        :size "small"}]]]
+                        :style {:max-width 112}}]]]
            ]]]))))
 
 
@@ -290,7 +291,7 @@
   (let [tr             (subscribe [::i18n-subs/tr])
         generated-cred (subscribe [::subs/generated-credential-modal])
         cred           (subscribe [::subs/credential])
-        infra-services (subscribe [::subs/infrastructure-services-available "vpn"])]
+        infra-services (subscribe [::subs/infrastructure-services-available])]
     (fn []
       (let [infra  (some #(when (= (:parent @cred) (:id %)) %) @infra-services)
             config (utils/vpn-config (:vpn-ca-certificate infra)

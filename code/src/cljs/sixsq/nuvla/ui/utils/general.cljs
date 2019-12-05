@@ -107,12 +107,13 @@
 
 (defn yaml->obj
   [yaml]
-  (js-yaml/load yaml))
+  (js-yaml/loadAll yaml))
 
 
 (defn check-yaml
   [yaml]
   (try
+    (.log js/console (yaml->obj yaml))
     [true (yaml->obj yaml)]
     (catch :default e
       [false (str (js->clj e))])))

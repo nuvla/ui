@@ -181,11 +181,11 @@ Leiningen website to install the tool.
 Once all of the development tools have been installed, the workflow is
 as follows:
 
- 1. Run `npm install` at the root of the cloned repository.  This only
+ 1. Run `npm install` at the `code` folder of the cloned repository.  This only
     needs to be done once at the beginning and then whenever
     dependencies change.
 
- 2. Start a development server for the build with `lein dev`.  When
+ 2. Start a development server for the build with `lein dev` from within the `code` folder.  When
     this completes ("build completed" message in the terminal), you
     can then connect to the process on http://localhost:8280.
 

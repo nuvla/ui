@@ -30,7 +30,7 @@
 (s/def ::amount (s/and float? #(> % 0)))
 (s/def ::currency #{"EUR", "CHF", "USD"})
 (s/def ::expiry ::spec-utils/timestamp)
-(s/def ::state #{"NEW", "ACTIVATED", "EXPIRED", "REDEEMED"})
+(s/def ::state #{"NEW", "ACTIVATED", "DISTRIBUTED", "EXPIRED", "REDEEMED"})
 (s/def ::service-info-url spec-utils/nonblank-string)
 (s/def ::code spec-utils/nonblank-string)
 (s/def ::activated ::spec-utils/timestamp)
@@ -41,6 +41,9 @@
 (s/def ::supplier spec-utils/nonblank-string)
 (s/def ::user spec-utils/nonblank-string)
 (s/def ::owner spec-utils/nonblank-string)
+(s/def ::distributor spec-utils/nonblank-string)
+(s/def ::platform spec-utils/nonblank-string)
+
 
 (s/def ::voucher
   (only-keys :req-un [::amount
@@ -48,17 +51,20 @@
                       ::state
                       ::code
                       ::target-audience
-                      ::supplier
+                      ::platform
                       ::owner
-                      ::user]
+                      ]
              :opt-un [::expiry
+                      ::supplier
+                      ::user
+                      ::distributor
                       ::activated
                       ::service-info-url
                       ::redeemed
                       ::wave
                       ::batch]))
 
-(def required-headers #{"code", "amount", "currency", "supplier", "target-audience"})
+(def required-headers #{"code", "amount", "currency", "platform", "target-audience"})
 
 (def show-modal (r/atom nil))
 
@@ -95,7 +101,7 @@
 (defn cimi-voucher
   [user-id json-line]
   (->> (select-keys json-line
-                    [:amount :currency :code :state :target-audience :supplier :expiry
+                    [:amount :currency :code :state :target-audience :supplier :expiry :platform :distributor
                      :activated :service-info-url :redeemed :wave :batch])
        (remove #(nil? (second %)))
        (map transform-value)
@@ -279,7 +285,7 @@
 
 (defn View
   []
-  (dispatch [::events/set-selected-fields ["code", "amount", "currency", "supplier",
+  (dispatch [::events/set-selected-fields ["code", "amount", "currency", "platform",
                                            "target-audience", "state", "created"]])
   (dispatch [::events/set-collection-name "voucher"])
   (dispatch [::events/get-results])

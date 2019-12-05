@@ -94,7 +94,7 @@
             :amount (js/parseFloat v)
             :state (str/upper-case v)
             :currency (str/upper-case v)
-            :distributor (or :distributor "OCRE")
+            :distributor (get v :distributor "OCRE")
             v)]
     [k v]))
 

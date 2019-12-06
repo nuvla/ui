@@ -257,15 +257,32 @@
        [ExportButton]])
 
 
+(defn load-voucher-stats
+      [searched-vouchers]
+      (->> searched-vouchers
+           (group-by :distributor)
+           (map (fn [[k v]]
+                {:distributor k :quantity (count v) :color (str "#" (rand-int 999999))})
+
+                )
+           )
+
+      )
+
+
 (defn Pies
-      [resources]
+      [vouchers]
       [uix/Accordion
-       (let [voucher-stats (concat [{:label "this is 1" :percentage 40 :color "#FF6384"}
-                                 {:label "this is 2" :percentage 60 :color "#FF6300"}])]
+       (let [voucher-stats (load-voucher-stats (get vouchers :resources []))]
+
+            ;[ui/Message
+            ; {:warning true
+            ;  :content (str voucher-stats)}]
+
             [plot/Pie {:height  50
 
-                       :data    {:labels   (map :label voucher-stats)
-                                 :datasets [{:data (map :percentage voucher-stats)
+                       :data    {:labels   (map :distributor voucher-stats)
+                                 :datasets [{:data (map :quantity voucher-stats)
                                              :backgroundColor (map :color voucher-stats) }]}
 
                        :options {
@@ -277,10 +294,26 @@
                                           :display true
                                           }
                                  }
-                       }])
+                       }]
+            )
        :label "Voucher Distribution"
        :icon "shipping fast"])
 
+
+
+(defn PieSection
+      []
+      (let [vouchers (subscribe [::subs/collection])]
+           (fn []
+               (let [vouchers @vouchers]
+                    (if vouchers
+                      (do
+                      [ui/Segment style/basic
+                             [Pies vouchers]
+                       ])
+                      [ui/Message
+                       {:warning true
+                        :content "Voucher information not available"}])) )))
 
 
 (defn menu-bar []
@@ -309,29 +342,7 @@
                  (when (= (:resource-type @resources) "voucher-collection")
                        [ImportExportMenu])]
                 [ui/Segment {:attached "bottom"}
-                 [cimi-views/search-header]]
-                ])))
-
-
-(defn PieSection
-      []
-      (let [vouchers (subscribe [::subs/collection])]
-           (fn []
-               (if @vouchers
-
-                   [ui/Message
-                  {:info true
-                   :content @vouchers}]
-                 ;(let [{:keys [distributor]} @vouchers]
-                 ;     [ui/Segment style/basic
-                 ;      [ui/Segment {:attached "bottom"}
-                 ;      (when distributor
-                 ;
-                 ;            [Pies distributor])
-                 ;      ]])
-                 [ui/Message
-                  {:warning true
-                   :content "Voucher information not available"}]))))
+                 [cimi-views/search-header]]])))
 
 
 (defn View

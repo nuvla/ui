@@ -10,13 +10,13 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.edge.utils :as u]
     [sixsq.nuvla.client.api :as api]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.events :as events]
     [sixsq.nuvla.ui.cimi.subs :as subs]
     [sixsq.nuvla.ui.cimi.views :as cimi-views]
+    [sixsq.nuvla.ui.edge.utils :as u]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.panel :as panel]
@@ -81,285 +81,285 @@
 (def total (r/atom nil))
 
 (defn reset-state!
-      []
-      (reset! show-modal nil)
-      (reset! file-errors nil)
-      (reset! valid-file nil)
-      (reset! upload-state nil)
-      (reset! progress 0)
-      (reset! total nil))
+  []
+  (reset! show-modal nil)
+  (reset! file-errors nil)
+  (reset! valid-file nil)
+  (reset! upload-state nil)
+  (reset! progress 0)
+  (reset! total nil))
 
 
 (defn transform-value
-      [[k v]]
-      (let [v (case k
-                    :amount (js/parseFloat v)
-                    :state (str/upper-case v)
-                    :currency (str/upper-case v)
-                    :distributor (if (clojure.string/blank? v) "OCRE" v)
-                    v)]
-           [k v]))
+  [[k v]]
+  (let [v (case k
+            :amount (js/parseFloat v)
+            :state (str/upper-case v)
+            :currency (str/upper-case v)
+            :distributor (if (clojure.string/blank? v) "OCRE" v)
+            v)]
+    [k v]))
 
 
 (defn cimi-voucher
-      [user-id json-line]
-      (->> (select-keys json-line
-                        [:amount :currency :code :state :target-audience :supplier :expiry :platform :distributor
-                         :activated :service-info-url :redeemed :wave :batch])
-           (remove #(nil? (second %)))
-           (map transform-value)
-           (into {})
-           (merge {:state "NEW"
-                   :owner user-id
-                   :user  user-id})))
+  [user-id json-line]
+  (->> (select-keys json-line
+                    [:amount :currency :code :state :target-audience :supplier :expiry :platform :distributor
+                     :activated :service-info-url :redeemed :wave :batch])
+       (remove #(nil? (second %)))
+       (map transform-value)
+       (into {})
+       (merge {:state "NEW"
+               :owner user-id
+               :user  user-id})))
 
 
 (defn check-file [e]
-      (let [target (.-currentTarget e)
-            file   (-> target .-files (aget 0))]
-           (papa/parse
-             file
-             #js {:header          true
-                  :transformHeader #(str/lower-case %)
-                  :preview         10
-                  :complete        (fn [results, _]
-                                       (let [results-edn    (js->clj results :keywordize-keys true)
-                                             headers        (some-> results-edn :meta :fields set)
-                                             headers-error? (not (clojure.set/subset? required-headers headers))
-                                             csv-errors     (:errors results-edn)
-                                             spec-error?    (->> results-edn
-                                                                 :data
-                                                                 (map #(s/valid? ::voucher (cimi-voucher "user/fake" %)))
-                                                                 (some false?))
-                                             errors-list    (cond-> (mapv :message csv-errors)
-                                                                    headers-error? (conj
-                                                                                     (str "Required headers are missing: "
-                                                                                          (clojure.set/difference
-                                                                                            required-headers headers)))
-                                                                    spec-error? (conj "CSV rows are failing voucher spec."))]
+  (let [target (.-currentTarget e)
+        file   (-> target .-files (aget 0))]
+    (papa/parse
+      file
+      #js {:header          true
+           :transformHeader #(str/lower-case %)
+           :preview         10
+           :complete        (fn [results, _]
+                              (let [results-edn    (js->clj results :keywordize-keys true)
+                                    headers        (some-> results-edn :meta :fields set)
+                                    headers-error? (not (clojure.set/subset? required-headers headers))
+                                    csv-errors     (:errors results-edn)
+                                    spec-error?    (->> results-edn
+                                                        :data
+                                                        (map #(s/valid? ::voucher (cimi-voucher "user/fake" %)))
+                                                        (some false?))
+                                    errors-list    (cond-> (mapv :message csv-errors)
+                                                           headers-error? (conj
+                                                                            (str "Required headers are missing: "
+                                                                                 (clojure.set/difference
+                                                                                   required-headers headers)))
+                                                           spec-error? (conj "CSV rows are failing voucher spec."))]
 
-                                            (reset! file-errors errors-list)
-                                            (when (empty? errors-list)
-                                                  (reset! valid-file file))))})))
+                                (reset! file-errors errors-list)
+                                (when (empty? errors-list)
+                                  (reset! valid-file file))))})))
 
 
 (defn import-vouchers
-      [user-id]
-      (papa/parse
-        @valid-file
-        #js {:header          true
-             :complete        (fn [rows]
-                                  (go
-                                    (let [data     (js->clj rows :keywordize-keys true)
-                                          vouchers (->> data :data (map (partial cimi-voucher user-id)))]
-                                         (reset! total (count vouchers))
-                                         (doseq [voucher vouchers]
-                                                (let [response (<! (api/add @cimi-api-fx/CLIENT :voucher voucher))]
-                                                     (when (instance? js/Error response)
-                                                           (cimi-api-fx/default-error-message response "Add voucher failed"))
-                                                     (swap! progress inc)))
-                                         (reset! upload-state :finished)
-                                         (dispatch [::events/get-results]))))
-             :transformHeader #(str/lower-case %)}))
+  [user-id]
+  (papa/parse
+    @valid-file
+    #js {:header          true
+         :complete        (fn [rows]
+                            (go
+                              (let [data     (js->clj rows :keywordize-keys true)
+                                    vouchers (->> data :data (map (partial cimi-voucher user-id)))]
+                                (reset! total (count vouchers))
+                                (doseq [voucher vouchers]
+                                  (let [response (<! (api/add @cimi-api-fx/CLIENT :voucher voucher))]
+                                    (when (instance? js/Error response)
+                                      (cimi-api-fx/default-error-message response "Add voucher failed"))
+                                    (swap! progress inc)))
+                                (reset! upload-state :finished)
+                                (dispatch [::events/get-results]))))
+         :transformHeader #(str/lower-case %)}))
 
 
 (defn export-collection
-      [selected-fields resources]
-      (some->>
-        resources
-        (map (fn [voucher]
-                 (str/join "," (map #(get voucher (keyword %)) selected-fields))))
-        (cons (str/join "," selected-fields))
-        (str/join "\n")))
+  [selected-fields resources]
+  (some->>
+    resources
+    (map (fn [voucher]
+           (str/join "," (map #(get voucher (keyword %)) selected-fields))))
+    (cons (str/join "," selected-fields))
+    (str/join "\n")))
 
 
 (defn ImportButton
-      []
-      [uix/MenuItemWithIcon
-       {:name      "Import"
-        :icon-name "arrow alternate circle down"
-        :on-click  #(reset! show-modal :import)}])
+  []
+  [uix/MenuItemWithIcon
+   {:name      "Import"
+    :icon-name "arrow alternate circle down"
+    :on-click  #(reset! show-modal :import)}])
 
 
 (defn ExportButton
-      []
-      (let [collection      (subscribe [::subs/collection])
-            selected-fields (subscribe [::subs/selected-fields])
-            csv-content     (export-collection @selected-fields (:resources @collection))]
-           [uix/MenuItemWithIcon
-            {:name      "Export"
-             :download  "vouchers-export.csv"
-             :disabled  (not (pos? (:count @collection)))
-             :href      (str "data:text/plain;charset=utf-8," (js/encodeURIComponent csv-content))
-             :icon-name "arrow alternate circle up"}]))
+  []
+  (let [collection      (subscribe [::subs/collection])
+        selected-fields (subscribe [::subs/selected-fields])
+        csv-content     (export-collection @selected-fields (:resources @collection))]
+    [uix/MenuItemWithIcon
+     {:name      "Export"
+      :download  "vouchers-export.csv"
+      :disabled  (not (pos? (:count @collection)))
+      :href      (str "data:text/plain;charset=utf-8," (js/encodeURIComponent csv-content))
+      :icon-name "arrow alternate circle up"}]))
 
 
 (defn ModalImport
-      []
-      (let [user-id   (subscribe [::authn-subs/user-id])
-            finished? (= @upload-state :finished)]
-           [ui/Modal
-            {:open       (some? @show-modal)
-             :close-icon true
-             :on-close   reset-state!}
+  []
+  (let [user-id   (subscribe [::authn-subs/user-id])
+        finished? (= @upload-state :finished)]
+    [ui/Modal
+     {:open       (some? @show-modal)
+      :close-icon true
+      :on-close   reset-state!}
 
-            [ui/ModalHeader (some-> @show-modal name str/capitalize)]
+     [ui/ModalHeader (some-> @show-modal name str/capitalize)]
 
-            [ui/ModalContent
+     [ui/ModalContent
 
-             (when-not (empty? @file-errors)
-                       [ui/Message {:error true}
-                        [ui/MessageHeader "Validation of selected file failed!"]
-                        [ui/MessageContent
-                         [ui/MessageList
-                          (for [error @file-errors]
-                               ^{:key (random-uuid)}
-                               [ui/MessageItem error])]]])
+      (when-not (empty? @file-errors)
+        [ui/Message {:error true}
+         [ui/MessageHeader "Validation of selected file failed!"]
+         [ui/MessageContent
+          [ui/MessageList
+           (for [error @file-errors]
+             ^{:key (random-uuid)}
+             [ui/MessageItem error])]]])
 
-             ^{:key "file-input"}
-             [:input {:style     {:width         "100%"
-                                  :margin-bottom 30}
-                      :type      "file"
-                      :id        "file"
-                      :name      "file"
-                      :disabled  (some? @upload-state)
-                      :accept    ".csv"
-                      :on-change check-file}]
+      ^{:key "file-input"}
+      [:input {:style     {:width         "100%"
+                           :margin-bottom 30}
+               :type      "file"
+               :id        "file"
+               :name      "file"
+               :disabled  (some? @upload-state)
+               :accept    ".csv"
+               :on-change check-file}]
 
-             (when (pos? @progress)
-                   [ui/Progress {:progress     "percent"
-                                 :total        @total
-                                 :value        @progress
-                                 :precision    0
-                                 :auto-success true
-                                 :size         "medium"}])]
-            [ui/ModalActions
-             (when-not finished?
-                       [uix/Button
-                        {:text     "Import"
-                         :positive true
-                         :disabled (boolean (or (not-empty @file-errors) (= @upload-state :started)))
-                         :on-click (fn []
-                                       (reset! upload-state :started)
-                                       (import-vouchers @user-id)
-                                       )}])
-             (when finished?
-                   [uix/Button
-                    {:text     "Close"
-                     :on-click reset-state!}])
-             ]]))
+      (when (pos? @progress)
+        [ui/Progress {:progress     "percent"
+                      :total        @total
+                      :value        @progress
+                      :precision    0
+                      :auto-success true
+                      :size         "medium"}])]
+     [ui/ModalActions
+      (when-not finished?
+        [uix/Button
+         {:text     "Import"
+          :positive true
+          :disabled (boolean (or (not-empty @file-errors) (= @upload-state :started)))
+          :on-click (fn []
+                      (reset! upload-state :started)
+                      (import-vouchers @user-id)
+                      )}])
+      (when finished?
+        [uix/Button
+         {:text     "Close"
+          :on-click reset-state!}])
+      ]]))
 
 
 (defn ImportExportMenu
-      []
-      [ui/MenuMenu {:position :right}
-       [ImportButton]
-       [ExportButton]])
+  []
+  [ui/MenuMenu {:position :right}
+   [ImportButton]
+   [ExportButton]])
 
 
 (defn load-voucher-stats
-      [searched-vouchers]
-      (->> searched-vouchers
-           (group-by :distributor)
-           (map (fn [[k v]]
-                {:distributor k :quantity (count v) :color (str "#" (rand-int 999999))})
+  [searched-vouchers]
+  (->> searched-vouchers
+       (group-by :distributor)
+       (map (fn [[k v]]
+              {:distributor k :quantity (count v) :color (str "#" (rand-int 999999))})
 
-                )
-           )
+            )
+       )
 
-      )
+  )
 
 
 (defn Pies
-      [vouchers]
-      [uix/Accordion
-       (let [voucher-stats (load-voucher-stats (get vouchers :resources []))]
+  [vouchers]
+  [uix/Accordion
+   (let [voucher-stats (load-voucher-stats (get vouchers :resources []))]
 
-            ;[ui/Message
-            ; {:warning true
-            ;  :content (str voucher-stats)}]
+     ;[ui/Message
+     ; {:warning true
+     ;  :content (str voucher-stats)}]
 
-            [plot/Pie {:height  50
+     [plot/Pie {:height  50
 
-                       :data    {:labels   (map :distributor voucher-stats)
-                                 :datasets [{:data (map :quantity voucher-stats)
-                                             :backgroundColor (map :color voucher-stats) }]}
+                :data    {:labels   (map :distributor voucher-stats)
+                          :datasets [{:data            (map :quantity voucher-stats)
+                                      :backgroundColor (map :color voucher-stats)}]}
 
-                       :options {
-                                 :title {
-                                         :display true,
-                                         :text "Distributors"
-                                         },
-                                 :legend {
-                                          :display true
-                                          }
-                                 }
-                       }]
-            )
-       :label "Voucher Distribution"
-       :icon "shipping fast"])
+                :options {
+                          :title  {
+                                   :display true,
+                                   :text    "Distributors"
+                                   },
+                          :legend {
+                                   :display true
+                                   }
+                          }
+                }]
+     )
+   :label "Voucher Distribution"
+   :icon "shipping fast"])
 
 
 
 (defn PieSection
-      []
-      (let [vouchers (subscribe [::subs/collection])]
-           (fn []
-               (let [vouchers @vouchers]
-                    (if vouchers
-                      (do
-                      [ui/Segment style/basic
-                             [Pies vouchers]
-                       ])
-                      [ui/Message
-                       {:warning true
-                        :content "Voucher information not available"}])) )))
+  []
+  (let [vouchers (subscribe [::subs/collection])]
+    (fn []
+      (let [vouchers @vouchers]
+        (if vouchers
+          (do
+            [ui/Segment style/basic
+             [Pies vouchers]
+             ])
+          [ui/Message
+           {:warning true
+            :content "Voucher information not available"}])))))
 
 
 (defn menu-bar []
-      (let [tr            (subscribe [::i18n-subs/tr])
-            resources     (subscribe [::subs/collection])
-            selected-rows (subscribe [::subs/selected-rows])]
-           (fn []
-               (when (instance? js/Error @resources)
-                     (dispatch [::messages-events/add
-                                (let [{:keys [status message]} (response/parse-ex-info @resources)]
-                                     {:header  (cond-> (@tr [:error])
-                                                       status (str " (" status ")"))
-                                      :message message
-                                      :type    :error})]))
-               [ui/Segment style/basic
-                [cimi-views/resource-add-form]
-                [ui/Menu {:attached   "top"
-                          :borderless true}
-                 [cimi-views/search-button]
-                 [cimi-views/select-fields]
-                 (when (general-utils/can-add? @resources)
-                       [cimi-views/create-button])
-                 (when (and (not-empty @selected-rows)
-                            (general-utils/can-bulk-delete? @resources))
-                       [cimi-views/delete-resources-button])
-                 (when (= (:resource-type @resources) "voucher-collection")
-                       [ImportExportMenu])]
-                [ui/Segment {:attached "bottom"}
-                 [cimi-views/search-header]]])))
+  (let [tr            (subscribe [::i18n-subs/tr])
+        resources     (subscribe [::subs/collection])
+        selected-rows (subscribe [::subs/selected-rows])]
+    (fn []
+      (when (instance? js/Error @resources)
+        (dispatch [::messages-events/add
+                   (let [{:keys [status message]} (response/parse-ex-info @resources)]
+                     {:header  (cond-> (@tr [:error])
+                                       status (str " (" status ")"))
+                      :message message
+                      :type    :error})]))
+      [ui/Segment style/basic
+       [cimi-views/resource-add-form]
+       [ui/Menu {:attached   "top"
+                 :borderless true}
+        [cimi-views/search-button]
+        [cimi-views/select-fields]
+        (when (general-utils/can-add? @resources)
+          [cimi-views/create-button])
+        (when (and (not-empty @selected-rows)
+                   (general-utils/can-bulk-delete? @resources))
+          [cimi-views/delete-resources-button])
+        (when (= (:resource-type @resources) "voucher-collection")
+          [ImportExportMenu])]
+       [ui/Segment {:attached "bottom"}
+        [cimi-views/search-header]]])))
 
 
 (defn View
-      []
-      (dispatch [::events/set-selected-fields ["code", "amount", "currency", "platform",
-                                               "target-audience", "state", "created", "distributor"]])
-      (dispatch [::events/set-collection-name "voucher"])
-      (dispatch [::events/get-results])
-      (fn []
-          [:<>
-           [uix/PageHeader "credit card outline" "OCRE"]
-           [menu-bar]
-           [PieSection]
-           [cimi-views/results-display]
-           [ModalImport]]))
+  []
+  (dispatch [::events/set-selected-fields ["code", "amount", "currency", "platform",
+                                           "target-audience", "state", "created", "distributor"]])
+  (dispatch [::events/set-collection-name "voucher"])
+  (dispatch [::events/get-results])
+  (fn []
+    [:<>
+     [uix/PageHeader "credit card outline" "OCRE"]
+     [menu-bar]
+     [PieSection]
+     [cimi-views/results-display]
+     [ModalImport]]))
 
 
 (defmethod panel/render :ocre
-           []
-           [View])
+  []
+  [View])

@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - OCRE PAGE - add pie chart and align schema with api-server
   - CIMI PAGE - make name field visible by default
   - DEPENDENCIES - Fix firefox callback issue in delete caused by 
     bluebird version 3.7.1

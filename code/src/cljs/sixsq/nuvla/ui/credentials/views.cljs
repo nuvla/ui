@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.credentials.events :as events]
     [sixsq.nuvla.ui.credentials.spec :as spec]
@@ -151,23 +152,29 @@
         validate-form? (subscribe [::subs/validate-form?])
         on-change      (fn [name-kw value]
                          (dispatch [::events/update-credential name-kw value])
-                         (dispatch [::events/validate-credential-form ::spec/vpn-credential]))]
+                         (dispatch [::events/validate-credential-form ::spec/vpn-credential]))
+        infra-services (subscribe [::subs/infrastructure-services-available "vpn"])
+        user           (subscribe [::authn-subs/user])]
     (fn []
-      (let [editable? (general-utils/editable? @credential @is-new?)
-            {:keys [name description access-key secret-key]} @credential]
-
+      (let [editable?              (general-utils/editable? @credential @is-new?)
+            {:keys [name description access-key secret-key]} @credential
+            infra-service-selected (->> @infra-services
+                                        (filter #(= (:id %) (:parent @credential)))
+                                        first)
+            infra-name-or-id       (or (:name infra-service-selected)
+                                       (:id infra-service-selected))
+            name-credential        (str infra-name-or-id " - " @user)
+            description-credential (str infra-name-or-id " credential for " @user)]
+        (on-change :name name-credential)
         [:<>
 
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody
-           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
-            :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
-            :validate-form? @validate-form?]
-           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
-            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
-            :on-change (partial on-change :description)]
            [row-infrastructure-services-selector "vpn" "vpn-scope='customer'" editable?
-            ::spec/parent (partial on-change :parent)]]]]))))
+            ::spec/parent (partial on-change :parent)]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description-credential, :spec ::spec/description,
+            :validate-form? @validate-form?, :on-change (partial on-change :description)]]]]))))
 
 
 (defn save-callback
@@ -308,6 +315,17 @@
          [ui/ModalHeader "Generated credential"]
 
          [ui/ModalContent {:scrolling false}
+
+          [ui/Message {:warning true}
+           [ui/MessageHeader "Warning"]
+           [ui/MessageContent
+            [:div
+             "Please save this file, since Nuvla will not save it (it's your secret!)."
+             [:br]
+             " Go to "
+             [:a {:href "https://docs.nuvla.io/nuvla/vpn", :target "_blank"} "docs.nuvla.io"]
+             " for details on how to configure your OpenVPN client."
+             ]]]
 
           [ui/CardGroup {:centered true}
 

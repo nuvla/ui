@@ -31,7 +31,6 @@
 
 (defn summary []
   (let [editable?      (subscribe [::apps-subs/editable?])
-        module-common  (subscribe [::apps-subs/module-common])
         module-subtype (subscribe [::apps-subs/module-subtype])]
     [apps-views-detail/summary
      [^{:key "module_subtype"}
@@ -122,6 +121,7 @@
         docker-compose  (subscribe [::subs/docker-compose])
         form-valid?     (subscribe [::apps-subs/form-valid?])
         editable?       (subscribe [::apps-subs/editable?])
+        module-subtype  (subscribe [::apps-subs/module-subtype])
         local-validate? (r/atom false)
         default-value   @docker-compose]
     (fn []
@@ -148,7 +148,7 @@
                (if (str/blank? error-msg)
                  (@tr [:module-docker-compose-error])
                  error-msg)]))]
-         :label "Docker compose"
+         :label (if (= @module-subtype "application") "Docker compose" "Manifest")
          :default-open true]))))
 
 

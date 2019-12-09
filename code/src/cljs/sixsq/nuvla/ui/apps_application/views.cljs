@@ -30,8 +30,24 @@
 
 
 (defn summary []
-  (let []
-    [apps-views-detail/summary]))
+  (let [editable?      (subscribe [::apps-subs/editable?])
+        module-subtype (subscribe [::apps-subs/module-subtype])]
+    [apps-views-detail/summary
+     [^{:key "module_subtype"}
+      [ui/TableRow
+       [ui/TableCell {:collapsing true
+                      :style      {:padding-bottom 8}} "subtype"]
+       [ui/TableCell {:style {:padding-left (when-not @editable? 24)}}
+        (if @editable?
+          [ui/Dropdown {:selection true,
+                        :fluid     true
+                        :value     @module-subtype
+                        :on-change (ui-callback/value
+                                     #(dispatch [::apps-events/subtype %]))
+                        :options   [{:key "application", :text "Docker", :value "application"}
+                                    {:key   "application_kubernetes", :text "Kubernetes",
+                                     :value "application_kubernetes"}]}]
+          @module-subtype)]]]]))
 
 
 (defn single-file [{:keys [id ::spec/file-name ::spec/file-content]}]
@@ -104,6 +120,7 @@
         docker-compose  (subscribe [::subs/docker-compose])
         form-valid?     (subscribe [::apps-subs/form-valid?])
         editable?       (subscribe [::apps-subs/editable?])
+        module-subtype  (subscribe [::apps-subs/module-subtype])
         local-validate? (r/atom false)
         default-value   @docker-compose]
     (fn []
@@ -130,7 +147,7 @@
                (if (str/blank? error-msg)
                  (@tr [:module-docker-compose-error])
                  error-msg)]))]
-         :label "Docker compose"
+         :label (if (= @module-subtype "application") "Docker compose" "Manifest")
          :default-open true]))))
 
 
@@ -142,7 +159,6 @@
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
         (dispatch [::apps-events/set-form-spec ::spec/module-application])
-        (dispatch [::apps-events/set-module-subtype :application])
         [ui/Container {:fluid true}
          [uix/PageHeader "cubes" (str parent (when (not-empty parent) "/") name) :inline true]
          [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)

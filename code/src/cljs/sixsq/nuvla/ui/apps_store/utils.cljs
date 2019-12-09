@@ -10,5 +10,6 @@
    :filter  (general-utils/join-and
               (general-utils/join-or
                 "subtype='component'"
-                "subtype='application'")
+                "subtype='application'"
+                "subtype='application_kubernetes'")
               (general-utils/fulltext-query-string full-text-search))})

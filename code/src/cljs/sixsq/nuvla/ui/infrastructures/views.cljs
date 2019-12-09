@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.infrastructures.views
   (:require
     [cljs.pprint :refer [cl-format]]
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -39,8 +40,9 @@
 
 
 (def service-icons
-  {:swarm :docker
-   :s3    :aws})
+  {:swarm      "docker"
+   :s3         "aws"
+   :kubernetes "/ui/images/kubernetes.svg"})
 
 
 (defn ServiceCard
@@ -55,7 +57,16 @@
                         :object-fit "contain"}}])
    [ui/CardContent
     [ui/CardHeader {:style {:word-wrap "break-word"}}
-     [ui/Icon {:name ((keyword subtype) service-icons)}]
+     (let [icon-or-image ((keyword subtype) service-icons)]
+       (if (str/starts-with? icon-or-image "/")
+         [ui/Image {:src icon-or-image
+                    :style {:overflow "hidden"
+                            :display "inline-block"
+                            :height 28
+                            :margin-right 4
+                            :padding-bottom 7
+                            }}]
+         [ui/Icon {:name ((keyword subtype) service-icons)}]))
      (or name id)]
     [ui/CardMeta {:style {:word-wrap "break-word"}} path]
     [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]]])
@@ -187,10 +198,12 @@
 
 
 (def infrastructure-service-validation-map
-  {"swarm" {:validation-event ::events/validate-swarm-service-form
-            :modal-content    service-swarm}
-   "s3"    {:validation-event ::events/validate-minio-service-form
-            :modal-content    service-minio}})
+  {"swarm"      {:validation-event ::events/validate-swarm-service-form
+                 :modal-content    service-swarm}
+   "s3"         {:validation-event ::events/validate-minio-service-form
+                 :modal-content    service-minio}
+   "kubernetes" {:validation-event ::events/validate-swarm-service-form
+                 :modal-content    service-swarm}})
 
 
 (defn save-callback
@@ -269,7 +282,21 @@
             [ui/Header "Swarm"]
             [ui/Icon {:name "docker"
                       :size :massive}]
-            [ui/Header (@tr [:register])]]]]]
+            [ui/Header (@tr [:register])]]]
+
+          [ui/Card
+           {:on-click #(do
+                         (dispatch [::events/set-validate-form? false])
+                         (dispatch [::events/form-valid])
+                         (dispatch [::events/close-add-service-modal])
+                         (dispatch [::events/open-service-modal
+                                    (assoc @service :subtype "kubernetes") true]))}
+           [ui/CardContent {:text-align :center}
+            [ui/Header "Kubernetes"]
+            [ui/Image {:src   "/ui/images/kubernetes.svg"
+                       :style {:max-width 112}}]
+            [ui/Header (@tr [:register])]]]
+          ]]
 
         #_[:div
          [:p (@tr [:register-s3-note])]

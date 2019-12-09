@@ -164,20 +164,24 @@
     (assoc-in db [::spec/credential key] value)))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-infrastructure-services-available
-  (fn [db [_ subtype response]]
+  (fn [{db :db} [_ response]]
     (let [infrastructure-services (:resources response)]
-      (assoc-in db [::spec/infrastructure-services-available subtype] infrastructure-services))))
+      (cond-> {:db (assoc db ::spec/infrastructure-services-available infrastructure-services)}
+              (= (:count response) 1) (assoc :dispatch
+                                             [::update-credential :parent
+                                              (-> infrastructure-services first :id)])))))
 
 
 (reg-event-fx
   ::fetch-infrastructure-services-available
-  (fn [{:keys [db]} [_ subtype additional-filter]]
-    {:db                  (assoc-in db [::spec/infrastructure-services-available subtype] nil)
+  (fn [{:keys [db]} [_ subtypes additional-filter]]
+    {:db                  (assoc db ::spec/infrastructure-services-available nil)
      ::cimi-api-fx/search [:infrastructure-service
-                           {:filter (cond-> (str "subtype='" subtype "'")
+                           {:filter (cond-> (apply general-utils/join-or
+                                                   (map #(str "subtype='" % "'") subtypes))
                                             additional-filter (general-utils/join-and
                                                                 additional-filter))
                             :last   10000}
-                           #(dispatch [::set-infrastructure-services-available subtype %])]}))
+                           #(dispatch [::set-infrastructure-services-available %])]}))

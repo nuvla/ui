@@ -75,7 +75,7 @@
                  [re-frame "0.11.0-rc3" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
-                 [com.taoensso/timbre "4.10.0"  :scope "provided"]
+                 [com.taoensso/timbre "4.10.0" :scope "provided"]
                  [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]
                  [com.taoensso/tempura "1.2.1" :scope "provided"]
                  [com.cemerick/url :scope "provided"]]

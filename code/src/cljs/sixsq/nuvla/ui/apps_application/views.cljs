@@ -20,8 +20,7 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn clear-module
@@ -127,7 +126,7 @@
       (let [validate? (or @local-validate? (not @form-valid?))]
         [uix/Accordion
          [:<>
-          [:div {:style {:margin-bottom "10px"}} "Docker compose"
+          [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]]
 
           [ui/CodeMirror {:value      default-value

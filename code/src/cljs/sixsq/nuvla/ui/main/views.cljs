@@ -38,8 +38,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.welcome.views]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.welcome.views]))
 
 
 (defn crumb
@@ -124,9 +123,9 @@
                                   (dispatch [::apps-events/form-valid]))}]]]))
 
 
-(defmulti BootstrapMessage identity)
+#_(defmulti BootstrapMessage identity)
 
-(defmethod BootstrapMessage :no-swarm
+#_(defmethod BootstrapMessage :no-swarm
   [_]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Message
@@ -143,7 +142,7 @@
                       (str " " (@tr [:click-here]))]])}]))
 
 
-(defmethod BootstrapMessage :no-credential
+#_(defmethod BootstrapMessage :no-credential
   [_]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Message
@@ -180,7 +179,7 @@
 (defn contents
   []
   (let [resource-path     (subscribe [::subs/nav-path])
-        bootstrap-message (subscribe [::subs/bootstrap-message])
+        ;bootstrap-message (subscribe [::subs/bootstrap-message])
         content-key       (subscribe [::subs/content-key])
         is-small-device?  (subscribe [::subs/is-small-device?])]
     (fn []
@@ -193,7 +192,7 @@
 
        [Message]
 
-       (when @bootstrap-message
+       #_(when @bootstrap-message
          [BootstrapMessage @bootstrap-message])
        (panel/render @resource-path)])))
 

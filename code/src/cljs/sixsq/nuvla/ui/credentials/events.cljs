@@ -89,7 +89,7 @@
                             #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                  (dispatch [::close-credential-modal])
                                  (dispatch [::get-credentials])
-                                 (dispatch [::main-events/check-bootstrap-message])
+                                 #_(dispatch [::main-events/check-bootstrap-message])
                                  (when
                                    (contains?
                                      #{"credential-template/create-credential-vpn-customer"}

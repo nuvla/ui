@@ -4,6 +4,10 @@
 
 ### Changed
 
+## [2.4.7] - 2019-12-09
+
+### Changed
+
   - BOOTSTRAP_MESSAGE - Disable check for bootstarp message for swarm and 
     creds
   - DASHBOARD PAGE - Clickable cards better visibility

@@ -122,10 +122,10 @@
 
 (defn Accordion
   [content & {:keys [label count icon default-open title-size on-open on-close]
-              :or {default-open true, title-size   :h3, on-open #(), on-close #()}}]
+              :or   {default-open true, title-size :h3, on-open #(), on-close #()}}]
   (let [active? (r/atom default-open)]
     (fn [content & {:keys [label count icon default-open title-size]
-                    :or {default-open true, title-size   :h3, on-open #(), on-close #()}}]
+                    :or   {default-open true, title-size :h3, on-open #(), on-close #()}}]
       [ui/Accordion {:fluid     true
                      :styled    true
                      :style     {:margin-top    "10px"

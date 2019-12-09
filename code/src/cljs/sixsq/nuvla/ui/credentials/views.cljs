@@ -48,23 +48,22 @@
          [ui/TableCell {:collapsing true}
           (general-utils/mandatory-name (@tr [:infrastructure]))]
          [ui/TableCell {:error (and validate? (not valid?))}
-          [ui/Form {:style {:max-height "100px"
-                            :overflow-y "auto"}}
-           (if (pos-int? (count @infra-services))
-             (for [{id :id, infra-name :name} @infra-services]
-               ^{:key (str id value)}
-               [ui/FormField
-                [ui/Radio {:label    (or infra-name id)
-                           :checked  (= id value)
-                           :disabled (not editable?)
-                           :on-click (ui-callback/value
-                                       #(do
-                                          (reset! local-validate? true)
-                                          (on-change id)))}]
-                ff/nbsp
-                [history/icon-link (str "api/" id)]])
-             [ui/Message {:content (str (str/capitalize (@tr [:no-infra-service-of-subtype]))
-                                        " " subtype ".")}])]]]))))
+          (if (pos-int? (count @infra-services))
+            ^{:key value}
+            [ui/Dropdown {:clearable   true
+                          :selection   true
+                          :fluid       true
+                          :value       value
+                          :placeholder "Select releated infrastructure service"
+                          :on-change   (ui-callback/callback
+                                         :value #(do
+                                                   (reset! local-validate? true)
+                                                   (on-change %)))
+                          :options     (map (fn [{id :id, infra-name :name}]
+                                              {:key id, :value id, :text infra-name})
+                                            @infra-services)}]
+            [ui/Message {:content (str (str/capitalize (@tr [:no-infra-service-of-subtype]))
+                                       " " subtype ".")}])]]))))
 
 
 (defn credential-swarm
@@ -143,7 +142,6 @@
             (partial on-change :parent)]]]]))))
 
 
-
 (defn credential-vpn
   []
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -157,9 +155,9 @@
         user           (subscribe [::authn-subs/user])]
     (fn []
       (let [editable?              (general-utils/editable? @credential @is-new?)
-            {:keys [name description access-key secret-key]} @credential
+            infra-id               (:parent @credential)
             infra-service-selected (->> @infra-services
-                                        (filter #(= (:id %) (:parent @credential)))
+                                        (filter #(= (:id %) infra-id))
                                         first)
             infra-name-or-id       (or (:name infra-service-selected)
                                        (:id infra-service-selected))
@@ -167,11 +165,11 @@
             description-credential (str infra-name-or-id " credential for " @user)]
         (on-change :name name-credential)
         [:<>
-
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody
            [row-infrastructure-services-selector "vpn" "vpn-scope='customer'" editable?
             ::spec/parent (partial on-change :parent)]
+           ^{:key infra-id}
            [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
             :default-value description-credential, :spec ::spec/description,
             :validate-form? @validate-form?, :on-change (partial on-change :description)]]]]))))

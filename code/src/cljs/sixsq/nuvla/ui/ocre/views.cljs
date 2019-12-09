@@ -16,9 +16,11 @@
     [sixsq.nuvla.ui.cimi.events :as events]
     [sixsq.nuvla.ui.cimi.subs :as subs]
     [sixsq.nuvla.ui.cimi.views :as cimi-views]
+    [sixsq.nuvla.ui.edge.utils :as u]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.plot.plot :as plot]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -30,7 +32,7 @@
 (s/def ::amount (s/and float? #(> % 0)))
 (s/def ::currency #{"EUR", "CHF", "USD"})
 (s/def ::expiry ::spec-utils/timestamp)
-(s/def ::state #{"NEW", "ACTIVATED", "EXPIRED", "REDEEMED"})
+(s/def ::state #{"NEW", "ACTIVATED", "DISTRIBUTED", "EXPIRED", "REDEEMED"})
 (s/def ::service-info-url spec-utils/nonblank-string)
 (s/def ::code spec-utils/nonblank-string)
 (s/def ::activated ::spec-utils/timestamp)
@@ -41,6 +43,9 @@
 (s/def ::supplier spec-utils/nonblank-string)
 (s/def ::user spec-utils/nonblank-string)
 (s/def ::owner spec-utils/nonblank-string)
+(s/def ::distributor str)
+(s/def ::platform spec-utils/nonblank-string)
+
 
 (s/def ::voucher
   (only-keys :req-un [::amount
@@ -48,17 +53,20 @@
                       ::state
                       ::code
                       ::target-audience
-                      ::supplier
+                      ::platform
                       ::owner
-                      ::user]
+                      ]
              :opt-un [::expiry
+                      ::supplier
+                      ::user
+                      ::distributor
                       ::activated
                       ::service-info-url
                       ::redeemed
                       ::wave
                       ::batch]))
 
-(def required-headers #{"code", "amount", "currency", "supplier", "target-audience"})
+(def required-headers #{"code", "amount", "currency", "platform", "target-audience"})
 
 (def show-modal (r/atom nil))
 
@@ -88,6 +96,7 @@
             :amount (js/parseFloat v)
             :state (str/upper-case v)
             :currency (str/upper-case v)
+            :distributor (if (clojure.string/blank? v) "OCRE" v)
             v)]
     [k v]))
 
@@ -95,7 +104,7 @@
 (defn cimi-voucher
   [user-id json-line]
   (->> (select-keys json-line
-                    [:amount :currency :code :state :target-audience :supplier :expiry
+                    [:amount :currency :code :state :target-audience :supplier :expiry :platform :distributor
                      :activated :service-info-url :redeemed :wave :batch])
        (remove #(nil? (second %)))
        (map transform-value)
@@ -248,6 +257,65 @@
    [ExportButton]])
 
 
+(defn load-voucher-stats
+  [searched-vouchers]
+  (->> searched-vouchers
+       (group-by :distributor)
+       (map (fn [[k v]]
+              {:distributor k :quantity (count v) :color (str "#" (rand-int 999999))})
+
+            )
+       )
+
+  )
+
+
+(defn Pies
+  [vouchers]
+  [uix/Accordion
+   (let [voucher-stats (load-voucher-stats (get vouchers :resources []))]
+
+     ;[ui/Message
+     ; {:warning true
+     ;  :content (str voucher-stats)}]
+
+     [plot/Pie {:height  50
+
+                :data    {:labels   (map :distributor voucher-stats)
+                          :datasets [{:data            (map :quantity voucher-stats)
+                                      :backgroundColor (map :color voucher-stats)}]}
+
+                :options {
+                          :title  {
+                                   :display true,
+                                   :text    "Distributors"
+                                   },
+                          :legend {
+                                   :display true
+                                   }
+                          }
+                }]
+     )
+   :label "Voucher Distribution"
+   :icon "shipping fast"])
+
+
+
+(defn PieSection
+  []
+  (let [vouchers (subscribe [::subs/collection])]
+    (fn []
+      (let [vouchers @vouchers]
+        (if vouchers
+          (do
+            [ui/Segment style/basic
+             [Pies vouchers]
+             ])
+          [ui/Message
+           {:warning true
+            :content "Voucher information not available"}])))))
+
+
 (defn menu-bar []
   (let [tr            (subscribe [::i18n-subs/tr])
         resources     (subscribe [::subs/collection])
@@ -279,14 +347,15 @@
 
 (defn View
   []
-  (dispatch [::events/set-selected-fields ["code", "amount", "currency", "supplier",
-                                           "target-audience", "state", "created"]])
+  (dispatch [::events/set-selected-fields ["code", "amount", "currency", "platform",
+                                           "target-audience", "state", "created", "distributor"]])
   (dispatch [::events/set-collection-name "voucher"])
   (dispatch [::events/get-results])
   (fn []
     [:<>
      [uix/PageHeader "credit card outline" "OCRE"]
      [menu-bar]
+     [PieSection]
      [cimi-views/results-display]
      [ModalImport]]))
 

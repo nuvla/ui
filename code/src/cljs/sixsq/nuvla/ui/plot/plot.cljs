@@ -23,7 +23,7 @@
 
 ;(def Doughnut (reagent/adapt-react-class chartjs2/Doughnut))
 
-;(def Pie (reagent/adapt-react-class chartjs2/Pie))
+(def Pie (reagent/adapt-react-class chartjs2/Pie))
 
 ;(def Line (reagent/adapt-react-class chartjs2/Line))
 

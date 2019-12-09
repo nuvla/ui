@@ -77,8 +77,8 @@
 
 (reg-sub
   ::infrastructure-services-available
-  (fn [db [_ subtype]]
-    (get-in db [::spec/infrastructure-services-available subtype])))
+  (fn [db]
+    (::spec/infrastructure-services-available db)))
 
 
 (reg-sub

@@ -28,6 +28,7 @@
         (case subtype
           "component" [apps-component-views/view-edit]
           "application" [apps-application-views/view-edit]
+          "application_kubernetes" [apps-application-views/view-edit]
           [apps-project-views/view-edit])))))
 
 

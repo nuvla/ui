@@ -32,9 +32,10 @@
         project     (get db ::apps-project-spec/module-project)
         application (get db ::apps-application-spec/module-application)]
     (case module-subtype
-      :component component
-      :project project
-      :application application
+      "component" component
+      "project" project
+      "application" application
+      "application_kubernetes" application
       project)))
 
 
@@ -50,18 +51,12 @@
     (assoc db ::spec/module-spec module-spec)))
 
 
-(reg-event-db
-  ::set-module-subtype
-  (fn [db [_ module-subtype]]
-    (assoc db ::spec/module-subtype module-subtype)))
-
-
 ; Perform form validation if validate-form? is true.
 (reg-event-db
   ::validate-form
   (fn [db [_]]
     (let [form-spec      (get db ::spec/form-spec)
-          module-subtype (get db ::spec/module-subtype)
+          module-subtype (-> db ::spec/module-common ::spec/subtype)
           module-common  (get db ::spec/module-common)
           module         (get-module module-subtype db)
           validate-form? (get db ::spec/validate-form?)
@@ -123,6 +118,7 @@
         "component" (apps-component-utils/module->db db module)
         "project" (apps-project-utils/module->db db module)
         "application" (apps-application-utils/module->db db module)
+        "application_kubernetes" (apps-application-utils/module->db db module)
         db))))
 
 
@@ -201,24 +197,13 @@
 (reg-event-db
   ::subtype
   (fn [db [_ subtype]]
-    (assoc-in db [::spec/module-common :subtype] (some-> subtype str/upper-case))))
+    (assoc-in db [::spec/module-common ::spec/subtype] subtype)))
 
-
-(reg-event-db
-  ::path
-  (fn [db [_ path]]
-    (assoc-in db [::spec/module-common :path] path)))
 
 (reg-event-db
   ::acl
   (fn [db [_ acl]]
     (assoc-in db [::spec/module-common ::spec/acl] acl)))
-
-
-(reg-event-db
-  ::parent
-  (fn [db [_ parent]]
-    (assoc-in db [::spec/module-common :parent-path] parent)))
 
 
 (reg-event-db

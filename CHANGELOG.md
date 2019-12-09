@@ -10,6 +10,10 @@
   - EDGE PAGE - Full text search
   - Pagination - make pagination visible even if only one page is available
   - EDGE PAGE - Replace dropdown filter by clickable icons
+  - OCRE PAGE - add pie chart and align schema with api-server
+  - CIMI PAGE - make name field visible by default
+  - DEPENDENCIES - Fix firefox callback issue in delete caused by 
+    bluebird version 3.7.1
   - DASHBOARD DETAIL PAGE - re-order deployment sections
   - Devtools - install devtools in dev mode
   - EDGE DETAILS PAGE - Add openVPN support

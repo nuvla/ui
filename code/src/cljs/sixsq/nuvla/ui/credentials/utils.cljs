@@ -70,7 +70,7 @@
   (when
     (and infra-ca-cert infra-vpn-intermediate-ca cred-vpn-intermediate-ca cred-certificate
          cred-private-key infra-shared-key infra-common-name-prefix infra-vpn-endpoints)
-    (str "client\n\ndev tap\n\nnobind\n\n# Certificate Configuration\n\n# CA certificate\n<ca>\n"
+    (str "client\n\ndev vpn\ndev-type tun\n\n\nnobind\n\n# Certificate Configuration\n\n# CA certificate\n<ca>\n"
          infra-ca-cert
          "\n"
          (str/join "\n" infra-vpn-intermediate-ca)

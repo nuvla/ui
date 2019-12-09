@@ -8,10 +8,11 @@
 
 (defn db->module
   [module commit db]
-  (let [subtype (::spec/module-subtype db)
+  (let [subtype (-> db ::spec/module-common ::spec/subtype)
         module  (utils/db->module module commit db)]
     (case subtype
-      :component (apps-component-utils/db->module module commit db)
-      :application (apps-application-utils/db->module module commit db)
-      :project module
+      "component" (apps-component-utils/db->module module commit db)
+      "application" (apps-application-utils/db->module module commit db)
+      "application_kubernetes" (apps-application-utils/db->module module commit db)
+      "project" module
       module)))

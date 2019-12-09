@@ -4,6 +4,11 @@
 
 ### Changed
 
+  - Credential - add vpn modal, default description and name is set 
+    for the user. Warning is displayed for the user to request user 
+    to save his generated credential 
+  - Credential - add modal select by default first infra if only 
+    one available
   - OCRE PAGE - add pie chart and align schema with api-server
   - CIMI PAGE - make name field visible by default
   - DEPENDENCIES - Fix firefox callback issue in delete caused by 

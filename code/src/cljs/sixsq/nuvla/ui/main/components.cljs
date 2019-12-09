@@ -4,7 +4,8 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn RefreshedIn
@@ -35,3 +36,11 @@
      [RefreshedIn action-id])
    (when on-refresh
      [RefreshButton loading? on-refresh refresh-disabled?])])
+
+
+(defn SearchInput
+  [callback]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Input {:placeholder (@tr [:search])
+               :icon        "search"
+               :on-change   (ui-callback/input-callback callback)}]))

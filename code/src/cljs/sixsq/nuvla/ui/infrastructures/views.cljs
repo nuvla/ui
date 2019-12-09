@@ -20,8 +20,7 @@
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [sixsq.nuvla.ui.utils.values :as values]
     [taoensso.timbre :as timbre]
-    [taoensso.timbre :as log]
-    [clojure.string :as str]))
+    [taoensso.timbre :as log]))
 
 
 (defn ControlBar []
@@ -123,13 +122,12 @@
          (when (pos-int? infra-group-count)
            [:<>
             [ServiceGroups @isgs]
-            (when (> total-pages 1)
-              [uix/Pagination
-               {:totalitems   infra-group-count
-                :totalPages   total-pages
-                :activePage   @page
-                :onPageChange (ui-callback/callback
-                                :activePage #(dispatch [::events/set-page %]))}])])]))))
+            [uix/Pagination
+             {:totalitems   infra-group-count
+              :totalPages   total-pages
+              :activePage   @page
+              :onPageChange (ui-callback/callback
+                              :activePage #(dispatch [::events/set-page %]))}]])]))))
 
 
 (defn in?
@@ -156,7 +154,7 @@
                          :read-only     (not editable?)
                          :on-change     #(dispatch [::events/update-infra-service :acl %])}]
 
-         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+         [ui/Table style/definition
           [ui/TableBody
            [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
             :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
@@ -186,7 +184,7 @@
                          :read-only     (not editable?)
                          :on-change     #(dispatch [::events/update-infra-service :acl %])}]
 
-         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+         [ui/Table style/definition
           [ui/TableBody
            [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
             :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
@@ -300,7 +298,7 @@
             [ui/Header (@tr [:register])]]]
           ]]
 
-        [:div
+        #_[:div
          [:p (@tr [:register-s3-note])]
          [ui/CardGroup {:centered true}
 

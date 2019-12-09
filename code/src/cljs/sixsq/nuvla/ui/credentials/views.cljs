@@ -14,15 +14,13 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.accordion :as utils-accordion]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
-    [taoensso.timbre :as timbre]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as timbre]))
 
 
 (defn in?
@@ -84,7 +82,7 @@
                          :read-only     (not editable?)
                          :on-change     #(dispatch [::events/update-credential :acl %])}]
 
-         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+         [ui/Table style/definition
           [ui/TableBody
            [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
             :validate-form? @validate-form?, :default-value name, :spec ::spec/name,
@@ -123,7 +121,7 @@
                          :read-only     (not editable?)
                          :on-change     #(dispatch [::events/update-credential :acl %])}]
 
-         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+         [ui/Table style/definition
           [ui/TableBody
            [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
             :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
@@ -167,7 +165,7 @@
         (when @update-description                           ; used for first load
           (on-change :description description-credential))
         [:<>
-         [ui/Table (assoc style/definition :class :nuvla-ui-editable)
+         [ui/Table style/definition
           [ui/TableBody
            [row-infrastructure-services-selector ["vpn"] "vpn-scope='customer'" editable?
             ::spec/parent #(do (on-change :parent %)
@@ -269,18 +267,18 @@
              [ui/Image {:src   "/ui/images/kubernetes.svg"
                         :style {:max-width 112}}]]]
 
-           [ui/Card
-            {:on-click #(do
-                          (dispatch [::events/set-validate-form? false])
-                          (dispatch [::events/form-valid])
-                          (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::events/open-credential-modal
-                                     {:subtype "infrastructure-service-minio"} true]))}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "MinIO"]
-             [:div]
-             [ui/Image {:src   "/ui/images/minio.png"
-                        :style {:max-height 112}}]]]
+           #_[ui/Card
+              {:on-click #(do
+                            (dispatch [::events/set-validate-form? false])
+                            (dispatch [::events/form-valid])
+                            (dispatch [::events/close-add-credential-modal])
+                            (dispatch [::events/open-credential-modal
+                                       {:subtype "infrastructure-service-minio"} true]))}
+              [ui/CardContent {:text-align :center}
+               [ui/Header "MinIO"]
+               [:div]
+               [ui/Image {:src   "/ui/images/minio.png"
+                          :style {:max-height 112}}]]]
 
            [ui/Card
             {:on-click #(do
@@ -439,8 +437,7 @@
            (if (empty? infra-service-creds)
              [ui/Message
               (str/capitalize (str (@tr [:no-credentials]) "."))]
-             [:div [ui/Table {:style {:margin-top 10}
-                              :class :nuvla-ui-editable}
+             [:div [ui/Table {:style {:margin-top 10}}
                     [ui/TableHeader
                      [ui/TableRow
                       [ui/TableHeaderCell {:content "Name"}]

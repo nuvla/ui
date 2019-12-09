@@ -4,6 +4,12 @@
 
 ### Changed
 
+  - DASHBOARD PAGE - Clickable cards better visibility
+  - DASHBOARD PAGE - Search Input
+  - Main components - Search input
+  - EDGE PAGE - Full text search
+  - Pagination - make pagination visible even if only one page is available
+  - EDGE PAGE - Replace dropdown filter by clickable icons
   - Credential - add vpn modal, default description and name is set 
     for the user. Warning is displayed for the user to request user 
     to save his generated credential 

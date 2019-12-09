@@ -5,11 +5,11 @@
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.credentials.events :as events]
     [sixsq.nuvla.ui.credentials.spec :as spec]
     [sixsq.nuvla.ui.credentials.subs :as subs]
     [sixsq.nuvla.ui.credentials.utils :as utils]
-    [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
@@ -47,23 +47,22 @@
          [ui/TableCell {:collapsing true}
           (general-utils/mandatory-name (@tr [:infrastructure]))]
          [ui/TableCell {:error (and validate? (not valid?))}
-          [ui/Form {:style {:max-height "100px"
-                            :overflow-y "auto"}}
-           (if (pos-int? (count @infra-services))
-             (for [{id :id, infra-name :name} @infra-services]
-               ^{:key (str id value)}
-               [ui/FormField
-                [ui/Radio {:label    (or infra-name id)
-                           :checked  (= id value)
-                           :disabled (not editable?)
-                           :on-click (ui-callback/value
-                                       #(do
-                                          (reset! local-validate? true)
-                                          (on-change id)))}]
-                ff/nbsp
-                [history/icon-link (str "api/" id)]])
-             [ui/Message {:content (str (str/capitalize (@tr [:no-infra-service-of-subtype]))
-                                        " " subtype ".")}])]]]))))
+          (if (pos-int? (count @infra-services))
+            ^{:key value}
+            [ui/Dropdown {:clearable   true
+                          :selection   true
+                          :fluid       true
+                          :value       value
+                          :placeholder "Select releated infrastructure service"
+                          :on-change   (ui-callback/callback
+                                         :value #(do
+                                                   (reset! local-validate? true)
+                                                   (on-change %)))
+                          :options     (map (fn [{id :id, infra-name :name}]
+                                              {:key id, :value id, :text infra-name})
+                                            @infra-services)}]
+            [ui/Message {:content (str (str/capitalize (@tr [:no-infra-service-of-subtype]))
+                                       " " subtype ".")}])]]))))
 
 
 (defn credential-swarm
@@ -142,32 +141,43 @@
             (partial on-change :parent)]]]]))))
 
 
-
 (defn credential-vpn
   []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        is-new?        (subscribe [::subs/is-new?])
-        credential     (subscribe [::subs/credential])
-        validate-form? (subscribe [::subs/validate-form?])
-        on-change      (fn [name-kw value]
-                         (dispatch [::events/update-credential name-kw value])
-                         (dispatch [::events/validate-credential-form ::spec/vpn-credential]))]
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        is-new?            (subscribe [::subs/is-new?])
+        credential         (subscribe [::subs/credential])
+        validate-form?     (subscribe [::subs/validate-form?])
+        on-change          (fn [name-kw value]
+                             (dispatch [::events/update-credential name-kw value])
+                             (dispatch [::events/validate-credential-form ::spec/vpn-credential]))
+        infra-services     (subscribe [::subs/infrastructure-services-available])
+        user               (subscribe [::authn-subs/user])
+        update-description (atom true)]
     (fn []
-      (let [editable? (general-utils/editable? @credential @is-new?)
-            {:keys [name description access-key secret-key]} @credential]
-
+      (let [editable?              (general-utils/editable? @credential @is-new?)
+            infra-id               (:parent @credential)
+            infra-service-selected (->> @infra-services
+                                        (filter #(= (:id %) infra-id))
+                                        first)
+            infra-name-or-id       (or (:name infra-service-selected)
+                                       (:id infra-service-selected))
+            name-credential        (str infra-name-or-id " - " @user)
+            description-credential (str infra-name-or-id " credential for " @user)]
+        (on-change :name name-credential)
+        (when @update-description                           ; used for first load
+          (on-change :description description-credential))
         [:<>
-
          [ui/Table (assoc style/definition :class :nuvla-ui-editable)
           [ui/TableBody
-           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
-            :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
-            :validate-form? @validate-form?]
-           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
-            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
-            :on-change (partial on-change :description)]
            [row-infrastructure-services-selector ["vpn"] "vpn-scope='customer'" editable?
-            ::spec/parent (partial on-change :parent)]]]]))))
+            ::spec/parent #(do (on-change :parent %)
+                               (on-change :description description-credential))]
+           ^{:key (str "description-cred-" infra-id)}
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description-credential, :spec ::spec/description,
+            :validate-form? @validate-form?, :on-change #(do
+                                                           (reset! update-description false)
+                                                           (on-change :description %))]]]]))))
 
 
 (defn save-callback
@@ -269,7 +279,7 @@
             [ui/CardContent {:text-align :center}
              [ui/Header "MinIO"]
              [:div]
-             [ui/Image {:src  "/ui/images/minio.png"
+             [ui/Image {:src   "/ui/images/minio.png"
                         :style {:max-height 112}}]]]
 
            [ui/Card
@@ -281,7 +291,7 @@
                                      {:subtype "infrastructure-service-vpn"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "OpenVPN"]
-             [ui/Image {:src  "/ui/images/openvpn.png"
+             [ui/Image {:src   "/ui/images/openvpn.png"
                         :style {:max-width 112}}]]]
            ]]]))))
 
@@ -309,6 +319,17 @@
          [ui/ModalHeader "Generated credential"]
 
          [ui/ModalContent {:scrolling false}
+
+          [ui/Message {:warning true}
+           [ui/MessageHeader "Warning"]
+           [ui/MessageContent
+            [:div
+             "Please save this file, since Nuvla will not save it (it's your secret!)."
+             [:br]
+             " Go to "
+             [:a {:href "https://docs.nuvla.io/nuvla/vpn", :target "_blank"} "docs.nuvla.io"]
+             " for details on how to configure your OpenVPN client."
+             ]]]
 
           [ui/CardGroup {:centered true}
 

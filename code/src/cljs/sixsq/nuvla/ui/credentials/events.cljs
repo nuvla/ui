@@ -164,11 +164,14 @@
     (assoc-in db [::spec/credential key] value)))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-infrastructure-services-available
-  (fn [db [_ response]]
+  (fn [{db :db} [_ response]]
     (let [infrastructure-services (:resources response)]
-      (assoc db ::spec/infrastructure-services-available infrastructure-services))))
+      (cond-> {:db (assoc db ::spec/infrastructure-services-available infrastructure-services)}
+              (= (:count response) 1) (assoc :dispatch
+                                             [::update-credential :parent
+                                              (-> infrastructure-services first :id)])))))
 
 
 (reg-event-fx

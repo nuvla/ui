@@ -133,6 +133,8 @@
         active?        (r/atom false)]
     (dispatch [::events/get-vpn-infra])
     (fn []
+      (when (= (count @vpn-infra-opts) 1)
+        (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
       [ui/Modal {:open       @visible?
                  :close-icon true
                  :on-close   on-close-fn}
@@ -152,10 +154,11 @@
               [ui/TableCell {:collapsing true} "vpn"]
               ^{:key (or key name)}
               [ui/TableCell
-               [ui/Dropdown {:clearable   true
+               [ui/Dropdown {:clearable   (> (count @vpn-infra-opts) 1)
                              :selection   true
                              :fluid       true
                              :placeholder (@tr [:none])
+                             :value       (:vpn-server-id @creation-data)
                              :on-change   (ui-callback/callback
                                             :value #(swap! creation-data assoc :vpn-server-id %))
                              :options     @vpn-infra-opts}]]]

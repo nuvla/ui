@@ -149,6 +149,7 @@
   (let [aggregations (subscribe [::subs/aggregations])]
     (fn []
       (let [stats (->> @aggregations
+                       (remove (fn [[k _]] (str/starts-with? (str k) ":terms")))
                        (map tuple-fn)
                        (sort second)
                        (map statistic)

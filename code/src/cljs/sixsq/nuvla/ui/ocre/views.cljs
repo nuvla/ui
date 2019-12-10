@@ -45,6 +45,7 @@
 (s/def ::owner spec-utils/nonblank-string)
 (s/def ::distributor str)
 (s/def ::platform spec-utils/nonblank-string)
+(s/def ::acl any?)
 
 
 (s/def ::voucher
@@ -54,8 +55,7 @@
                       ::code
                       ::target-audience
                       ::platform
-                      ::owner
-                      ]
+                      ::owner]
              :opt-un [::expiry
                       ::supplier
                       ::user
@@ -64,7 +64,8 @@
                       ::service-info-url
                       ::redeemed
                       ::wave
-                      ::batch]))
+                      ::batch
+                      ::acl]))
 
 (def required-headers #{"code", "amount", "currency", "platform", "target-audience"})
 
@@ -104,15 +105,16 @@
 (defn cimi-voucher
   [user-id json-line]
   (->> (select-keys json-line
-                    [:amount :currency :code :state :target-audience :supplier :expiry :platform :distributor
-                     :activated :service-info-url :redeemed :wave :batch])
+                    [:amount :currency :code :state :target-audience :supplier :expiry :platform
+                     :distributor :activated :service-info-url :redeemed :wave :batch])
        (remove #(nil? (second %)))
        (map transform-value)
        (into {})
        (merge {:state "NEW"
                :owner user-id
-               :user  user-id})))
-
+               :user  user-id
+               :acl   {:owners   [user-id]
+                       :view-acl ["group/ocre-user"]}})))
 
 (defn check-file [e]
   (let [target (.-currentTarget e)
@@ -257,60 +259,33 @@
    [ExportButton]])
 
 
-(defn load-voucher-stats
-  [searched-vouchers]
-  (->> searched-vouchers
-       (group-by :distributor)
-       (map (fn [[k v]]
-              {:distributor k :quantity (count v) :color (str "#" (rand-int 999999))})
-
-            )
-       )
-
-  )
-
-
 (defn Pies
-  [vouchers]
+  [terms-aggr]
   [uix/Accordion
-   (let [voucher-stats (load-voucher-stats (get vouchers :resources []))]
+   [plot/Pie {:height  75
 
-     ;[ui/Message
-     ; {:warning true
-     ;  :content (str voucher-stats)}]
+              :data    {:labels   (map :key terms-aggr)
+                        :datasets [{:data            (map :doc_count terms-aggr)
+                                    :backgroundColor (map #(str "#" (rand-int 999999)) terms-aggr)}]}
 
-     [plot/Pie {:height  50
-
-                :data    {:labels   (map :distributor voucher-stats)
-                          :datasets [{:data            (map :quantity voucher-stats)
-                                      :backgroundColor (map :color voucher-stats)}]}
-
-                :options {
-                          :title  {
-                                   :display true,
-                                   :text    "Distributors"
-                                   },
-                          :legend {
-                                   :display true
-                                   }
-                          }
-                }]
-     )
+              :options {:title           {:display true,
+                                          :text    "Distributors"},
+                        :legend          {:display true}
+                        }}]
    :label "Voucher Distribution"
    :icon "shipping fast"])
-
 
 
 (defn PieSection
   []
   (let [vouchers (subscribe [::subs/collection])]
     (fn []
-      (let [vouchers @vouchers]
-        (if vouchers
+      (let [vouchers   @vouchers
+            terms-aggr (-> vouchers :aggregations :terms:distributor :buckets)]
+        (if (pos? (count terms-aggr))
           (do
             [ui/Segment style/basic
-             [Pies vouchers]
-             ])
+             [Pies terms-aggr]])
           [ui/Message
            {:warning true
             :content "Voucher information not available"}])))))
@@ -350,6 +325,10 @@
   (dispatch [::events/set-selected-fields ["code", "amount", "currency", "platform",
                                            "target-audience", "state", "created", "distributor"]])
   (dispatch [::events/set-collection-name "voucher"])
+  (dispatch [::events/set-filter nil])
+  (dispatch [::events/set-first 0])
+  (dispatch [::events/set-last 100])
+  (dispatch [::events/set-orderby "created:desc"])
   (dispatch [::events/get-results])
   (fn []
     [:<>

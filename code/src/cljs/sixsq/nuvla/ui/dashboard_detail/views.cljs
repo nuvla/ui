@@ -262,7 +262,6 @@
   [go-live?]
   (let [locale        (subscribe [::i18n-subs/locale])
         services-list (subscribe [::subs/deployment-services-list])
-        id            (subscribe [::subs/deployment-log-id])
         since         (subscribe [::subs/deployment-log-since])
         service       (subscribe [::subs/deployment-log-service])
         play?         (subscribe [::subs/deployment-log-play?])]

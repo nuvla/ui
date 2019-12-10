@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - DASHBOARD DETAIL - Regression fix list of services for application not 
+    visible  
+
 ## [2.4.7] - 2019-12-09
 
 ### Changed

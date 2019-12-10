@@ -56,6 +56,7 @@
                    (catch :default _))]
         (some-> yaml
                 js->clj
+                first
                 (get "services" {})
                 keys
                 sort))

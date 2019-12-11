@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - DASHBOARD DETAIL - Support Kubernetes logs
   - DASHBOARD DETAIL - Regression fix list of services for application not 
     visible  
 

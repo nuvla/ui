@@ -277,15 +277,13 @@
   [terms-aggr]
   [uix/Accordion
    [plot/Pie {:height  75
-
               :data    {:labels   (map :key terms-aggr)
                         :datasets [{:data            (map :doc_count terms-aggr)
-                                    :backgroundColor (map #(str "#" (rand-int 999999)) terms-aggr)}]}
-
+                                    :backgroundColor (map #(str "#" (rand-int 999999))
+                                                          terms-aggr)}]}
               :options {:title  {:display true,
                                  :text    "Distributors"},
-                        :legend {:display true}
-                        }}]
+                        :legend {:display true}}}]
    :label "Voucher Distribution"
    :icon "shipping fast"])
 

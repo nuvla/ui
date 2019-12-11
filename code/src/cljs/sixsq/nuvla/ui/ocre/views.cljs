@@ -26,8 +26,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.spec :as spec-utils]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 (s/def ::amount (s/and float? #(> % 0)))
 (s/def ::currency #{"EUR", "CHF", "USD"})
@@ -116,6 +115,29 @@
                :acl   {:owners   [user-id]
                        :view-acl ["group/ocre-user"]}})))
 
+
+(defn check-file-error
+  [file results _]
+  (let [results-edn    (js->clj results :keywordize-keys true)
+        headers        (some-> results-edn :meta :fields set)
+        headers-error? (not (clojure.set/subset? required-headers headers))
+        csv-errors     (:errors results-edn)
+        spec-error?    (->> results-edn
+                            :data
+                            (map #(s/valid? ::voucher (cimi-voucher "user/fake" %)))
+                            (some false?))
+        errors-list    (cond-> (mapv :message csv-errors)
+                               headers-error? (conj
+                                                (str "Required headers are missing: "
+                                                     (clojure.set/difference
+                                                       required-headers headers)))
+                               spec-error? (conj "CSV rows are failing voucher spec."))]
+
+    (reset! file-errors errors-list)
+    (when (empty? errors-list)
+      (reset! valid-file file))))
+
+
 (defn check-file [e]
   (let [target (.-currentTarget e)
         file   (-> target .-files (aget 0))]
@@ -124,25 +146,28 @@
       #js {:header          true
            :transformHeader #(str/lower-case %)
            :preview         10
-           :complete        (fn [results, _]
-                              (let [results-edn    (js->clj results :keywordize-keys true)
-                                    headers        (some-> results-edn :meta :fields set)
-                                    headers-error? (not (clojure.set/subset? required-headers headers))
-                                    csv-errors     (:errors results-edn)
-                                    spec-error?    (->> results-edn
-                                                        :data
-                                                        (map #(s/valid? ::voucher (cimi-voucher "user/fake" %)))
-                                                        (some false?))
-                                    errors-list    (cond-> (mapv :message csv-errors)
-                                                           headers-error? (conj
-                                                                            (str "Required headers are missing: "
-                                                                                 (clojure.set/difference
-                                                                                   required-headers headers)))
-                                                           spec-error? (conj "CSV rows are failing voucher spec."))]
+           :complete        (partial check-file-error file)})))
 
-                                (reset! file-errors errors-list)
-                                (when (empty? errors-list)
-                                  (reset! valid-file file))))})))
+
+(defn send-vouchers-server
+  [user-id rows]
+  (go
+    (let [data     (js->clj rows :keywordize-keys true)
+          vouchers (->> data :data (map (partial cimi-voucher user-id)))]
+      (reset! total (count vouchers))
+      (doseq [voucher vouchers]
+        (let [add-resp (<! (api/add @cimi-api-fx/CLIENT :voucher voucher))]
+          (when (instance? js/Error add-resp)
+            (let [parsed-resp (response/parse-ex-info add-resp)]
+              (if (= (:status parsed-resp) 409)
+                (let [resource-id (:resource-id parsed-resp)
+                      edit-resp   (<! (api/edit @cimi-api-fx/CLIENT resource-id voucher))]
+                  (when (instance? js/Error edit-resp)
+                    (cimi-api-fx/default-error-message edit-resp "Edit voucher failed")))
+                (cimi-api-fx/default-error-message add-resp "Add voucher failed"))))
+          (swap! progress inc)))
+      (reset! upload-state :finished)
+      (dispatch [::events/get-results]))))
 
 
 (defn import-vouchers
@@ -150,18 +175,7 @@
   (papa/parse
     @valid-file
     #js {:header          true
-         :complete        (fn [rows]
-                            (go
-                              (let [data     (js->clj rows :keywordize-keys true)
-                                    vouchers (->> data :data (map (partial cimi-voucher user-id)))]
-                                (reset! total (count vouchers))
-                                (doseq [voucher vouchers]
-                                  (let [response (<! (api/add @cimi-api-fx/CLIENT :voucher voucher))]
-                                    (when (instance? js/Error response)
-                                      (cimi-api-fx/default-error-message response "Add voucher failed"))
-                                    (swap! progress inc)))
-                                (reset! upload-state :finished)
-                                (dispatch [::events/get-results]))))
+         :complete        (partial send-vouchers-server user-id)
          :transformHeader #(str/lower-case %)}))
 
 
@@ -268,9 +282,9 @@
                         :datasets [{:data            (map :doc_count terms-aggr)
                                     :backgroundColor (map #(str "#" (rand-int 999999)) terms-aggr)}]}
 
-              :options {:title           {:display true,
-                                          :text    "Distributors"},
-                        :legend          {:display true}
+              :options {:title  {:display true,
+                                 :text    "Distributors"},
+                        :legend {:display true}
                         }}]
    :label "Voucher Distribution"
    :icon "shipping fast"])
@@ -325,6 +339,7 @@
   (dispatch [::events/set-selected-fields ["code", "amount", "currency", "platform",
                                            "target-audience", "state", "created", "distributor"]])
   (dispatch [::events/set-collection-name "voucher"])
+  (dispatch [::events/set-aggregation "terms:distributor"])
   (dispatch [::events/set-filter nil])
   (dispatch [::events/set-first 0])
   (dispatch [::events/set-last 100])

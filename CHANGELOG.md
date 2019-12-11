@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - OCRE - When importing, if voucher exist update it instead of conflict
   - OCRE - Make visible vouchers by default to all group users
   - OCRE - Server side aggregation for pie chart
   - OCRE - Set default query params at page enter to remove influence 

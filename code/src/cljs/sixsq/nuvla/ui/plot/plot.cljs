@@ -27,7 +27,7 @@
 
 ;(def Line (reagent/adapt-react-class chartjs2/Line))
 
-;(def Radar (reagent/adapt-react-class chartjs2/Radar))
+(def Radar (reagent/adapt-react-class chartjs2/Radar))
 
 ;(def Polar (reagent/adapt-react-class chartjs2/Polar))
 

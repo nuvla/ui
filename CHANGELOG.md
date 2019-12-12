@@ -4,6 +4,12 @@
 
 ### Changed
 
+  - OCRE - When importing, if voucher exist update it instead of conflict
+  - OCRE - Make visible vouchers by default to all group users
+  - OCRE - Server side aggregation for pie chart
+  - OCRE - Set default query params at page enter to remove influence 
+    from CIMI page
+  - CIMI PAGE - remove terms from statistic numbers since badly rendered 
   - DASHBOARD DETAIL - Support Kubernetes logs
   - DASHBOARD DETAIL - Regression fix list of services for application not 
     visible  

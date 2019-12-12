@@ -9,8 +9,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn card [name-kw desc-kw icon target-resource]

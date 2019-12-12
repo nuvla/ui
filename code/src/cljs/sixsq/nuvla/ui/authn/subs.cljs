@@ -6,8 +6,7 @@
     [sixsq.nuvla.ui.authn.spec :as spec]
     [sixsq.nuvla.ui.authn.utils :as utils]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
-    [sixsq.nuvla.ui.utils.spec :as us]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.spec :as us]))
 
 
 (reg-sub

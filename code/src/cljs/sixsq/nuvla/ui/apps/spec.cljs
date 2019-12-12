@@ -102,9 +102,6 @@
 ; Spec to use when validating form
 (s/def ::form-spec any?)
 
-; TODO: should be set (:component, :project)
-(s/def ::module-subtype any?)
-
 ;; Page
 
 (s/def ::default-logo-url (s/nilable string?))

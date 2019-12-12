@@ -5,35 +5,46 @@
     [sixsq.nuvla.ui.edge.effects :as fx]
     [sixsq.nuvla.ui.edge.spec :as spec]
     [sixsq.nuvla.ui.edge.utils :as utils]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
     [taoensso.timbre :as log]))
 
+(def refresh-id :nuvlabox-get-nuvlaboxes)
 
-;; from CIMI
+(reg-event-fx
+  ::refresh
+  (fn [_ _]
+   {:dispatch [::main-events/action-interval-start {:id        refresh-id
+                                                    :frequency 10000
+                                                    :event     [::get-nuvlaboxes]}]}))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-page
-  (fn [db [_ page]]
-    (dispatch [::get-nuvlaboxes])
-    (assoc db ::spec/page page)))
+  (fn [{db :db} [_ page]]
+    {:db       (assoc db ::spec/page page)
+     :dispatch [::refresh]}))
+
+
+(reg-event-fx
+  ::set-full-text-search
+  (fn [{{:keys [::spec/elements-per-page] :as db} :db} [_ full-text-search]]
+    {:db       (assoc db ::spec/full-text-search full-text-search
+                         ::spec/page 1)
+     :dispatch [::refresh]}))
 
 
 (reg-event-fx
   ::get-nuvlaboxes
   (fn [{{:keys [::spec/state-selector
                 ::spec/page
-                ::spec/elements-per-page] :as db} :db} _]
+                ::spec/elements-per-page
+                ::spec/full-text-search] :as db} :db} _]
     {:db                   (assoc db ::spec/loading? true)
      ::cimi-api-fx/search  [:nuvlabox
-                            (general-utils/prepare-params
-                              (cond-> {:first   (inc (* (dec page) elements-per-page))
-                                       :last    (* page elements-per-page)
-                                       :orderby "created:desc"}
-                                      state-selector (assoc :filter
-                                                            (utils/state-filter state-selector))))
+                            (utils/get-query-params full-text-search page elements-per-page
+                                                    state-selector)
                             #(dispatch [::set-nuvlaboxes %])]
      ::fx/state-nuvlaboxes [#(dispatch [::set-state-nuvlaboxes %])]}))
 

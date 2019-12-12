@@ -37,7 +37,7 @@
         nuvlabox          (subscribe [::subs/nuvlabox])
         loading?          (subscribe [::subs/loading?])
         {:keys [id name] :as nuvlabox} @nuvlabox]
-    [ui/Menu {:borderless true}
+    [ui/Menu {:borderless true, :stackable true}
      (when @can-decommission?
        [resource-details/action-button-icon "Decommission" (@tr [:yes]) "eraser" (str "Decommission " (or id name))
         (@tr [:are-you-sure?]) #(dispatch [::events/decommission]) (constantly nil)])

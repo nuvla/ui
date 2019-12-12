@@ -82,7 +82,7 @@
                           #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                (dispatch [::close-service-modal])
                                (dispatch [::get-infra-service-groups])
-                               (dispatch [::main-events/check-bootstrap-message]))]})))
+                               #_(dispatch [::main-events/check-bootstrap-message]))]})))
 
 (reg-event-fx
   ::edit-infra-service

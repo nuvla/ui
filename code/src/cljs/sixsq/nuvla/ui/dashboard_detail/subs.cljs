@@ -3,7 +3,8 @@
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
     [sixsq.nuvla.ui.dashboard.utils :as dashboard-utils]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [clojure.string :as str]))
 
 
 (reg-sub
@@ -46,20 +47,40 @@
 
 
 (reg-sub
+  ::is-deployment-application-kubernetes?
+  :<- [::deployment-module]
+  (fn [module]
+    (= (:subtype module) "application_kubernetes")))
+
+
+(defn parse-application-yaml
+  [docker-compose]
+  (when-let [yaml (try
+                    (general-utils/yaml->obj docker-compose)
+                    (catch :default _))]
+    (js->clj yaml)))
+
+
+(reg-sub
   ::deployment-services-list
   :<- [::is-deployment-application?]
+  :<- [::is-deployment-application-kubernetes?]
   :<- [::deployment-module-content]
-  (fn [[is-application? {:keys [docker-compose]}]]
-    (if is-application?
-      (let [yaml (try
-                   (general-utils/yaml->obj docker-compose)
-                   (catch :default _))]
-        (some-> yaml
-                js->clj
-                (get "services" {})
-                keys
-                sort))
-      ["machine"])))
+  (fn [[is-application? is-application-kubernetes? {:keys [docker-compose]}]]
+    (cond
+      is-application? (some-> docker-compose
+                              parse-application-yaml
+                              first
+                              (get "services" {})
+                              keys
+                              sort)
+      is-application-kubernetes? (some->> docker-compose
+                                          parse-application-yaml
+                                          (map #(let [kind      (get % "kind")
+                                                      meta-name (get-in % ["metadata" "name"])]
+                                                  (str kind "/" meta-name)))
+                                          sort)
+      :else ["machine"])))
 
 
 (reg-sub

@@ -7,7 +7,15 @@
 
 (reg-sub
   ::module-common
-  ::spec/module-common)
+  (fn [db]
+    (::spec/module-common db)))
+
+
+(reg-sub
+  ::module-subtype
+  :<- [::module-common]
+  (fn [module-common _]
+    (::spec/subtype module-common)))
 
 
 ;; Validation
@@ -110,4 +118,3 @@
 (reg-sub
   ::commit-message
   ::spec/commit-message)
-

@@ -4,6 +4,33 @@
 
 ### Changed
 
+  - OCRE - When importing, if voucher exist update it instead of conflict
+  - OCRE - Make visible vouchers by default to all group users
+  - OCRE - Server side aggregation for pie chart
+  - OCRE - Set default query params at page enter to remove influence 
+    from CIMI page
+  - CIMI PAGE - remove terms from statistic numbers since badly rendered 
+  - DASHBOARD DETAIL - Support Kubernetes logs
+  - DASHBOARD DETAIL - Regression fix list of services for application not 
+    visible  
+
+## [2.4.7] - 2019-12-09
+
+### Changed
+
+  - BOOTSTRAP_MESSAGE - Disable check for bootstarp message for swarm and 
+    creds
+  - DASHBOARD PAGE - Clickable cards better visibility
+  - DASHBOARD PAGE - Search Input
+  - Main components - Search input
+  - EDGE PAGE - Full text search
+  - Pagination - make pagination visible even if only one page is available
+  - EDGE PAGE - Replace dropdown filter by clickable icons
+  - CREDENTIAL - add vpn modal, default description and name is set 
+    for the user. Warning is displayed for the user to request user 
+    to save his generated credential 
+  - CREDENTIAL - add modal select by default first infra if only 
+    one available
   - OCRE PAGE - add pie chart and align schema with api-server
   - CIMI PAGE - make name field visible by default
   - DEPENDENCIES - Fix firefox callback issue in delete caused by 

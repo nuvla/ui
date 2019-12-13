@@ -14,8 +14,7 @@
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 
 (defn refresh

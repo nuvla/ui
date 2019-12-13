@@ -155,3 +155,31 @@
                                    ::spec/success-message nil
                                    ::spec/error-message nil)
        ::cimi-api-fx/add [collection-kw template on-success :on-error on-error]})))
+
+(reg-event-fx
+  ::submit2
+  (fn [{{:keys [::spec/server-redirect-uri] :as db} :db} [_ form-id form-data opts]]
+    (let [{close-modal  :close-modal,
+           success-msg  :success-msg,
+           callback-add :callback-add,
+           redirect-url :redirect-url
+           :or          {close-modal  true
+                         redirect-url server-redirect-uri}} opts
+
+          on-success    (or callback-add
+                            (partial default-submit-callback close-modal success-msg))
+
+          on-error      #(let [{:keys [message]} (response/parse-ex-info %)]
+                           (dispatch [::clear-loading])
+                           (dispatch [::set-error-message (or message %)]))
+
+          template      {:template (assoc form-data :href form-id
+                                                    :redirect-url redirect-url)}
+          collection-kw (cond
+                          (str/starts-with? form-id "session-template/") :session
+                          (str/starts-with? form-id "user-template/") :user)]
+
+      {:db               (assoc db ::spec/loading? true
+                                   ::spec/success-message nil
+                                   ::spec/error-message nil)
+       ::cimi-api-fx/add [collection-kw template on-success :on-error on-error]})))

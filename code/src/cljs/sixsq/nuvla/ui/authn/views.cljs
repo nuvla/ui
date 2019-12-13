@@ -646,8 +646,6 @@
   (let [tr               (subscribe [::i18n-subs/tr])
         user             (subscribe [::subs/user])
         profile-fn       #(dispatch [::history-events/navigate "profile"])
-        login-fn         #(dispatch [::events/open-modal :login])
-        signup-fn        #(dispatch [::events/open-modal :signup])
         logged-in?       (boolean @user)
         signup-template? (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
         dropdown-menu    [ui/Dropdown {:inline    true
@@ -666,11 +664,11 @@
         (when @signup-template?
           [:span {:style    {:padding-right "10px"
                              :cursor        "pointer"}
-                  :on-click signup-fn}
+                  :on-click #(dispatch [::history-events/navigate "sign-up"])}
            [ui/Icon {:name "signup"}]
            (@tr [:signup])])
         [ui/ButtonGroup {:primary true}
-         [ui/Button {:on-click login-fn}
+         [ui/Button {:on-click #(dispatch [::history-events/navigate "sign-in"])}
           [ui/Icon {:name "sign in"}]
           (@tr [:login])]
          dropdown-menu]])

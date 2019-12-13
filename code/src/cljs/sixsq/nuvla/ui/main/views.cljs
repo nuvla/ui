@@ -100,7 +100,7 @@
             :style    {:cursor "pointer"}}
         [:span#release-version (str "v")]]]
       [ui/GridColumn (assoc grid-style :text-align "right")
-       [i18n-views/locale-dropdown]]]]))
+       [i18n-views/LocaleDropdown]]]]))
 
 
 (defn ignore-changes-modal
@@ -236,6 +236,7 @@
          (.log js/console @resource-path)
          (case (first @resource-path)
            "sign-in" [session-views/Sign-in]
+           "sign-up" [session-views/Sign-up]
            nil [session-views/Sign-in]
            [:<>
             [sidebar/menu]

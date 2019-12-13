@@ -12,7 +12,8 @@
     [sixsq.nuvla.ui.main.views :as main-views]
     [sixsq.nuvla.ui.routes :as routes]
     [sixsq.nuvla.ui.utils.defines :as defines]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [form-validator.core :as fv]))
 
 
 (defn dev-setup []
@@ -67,5 +68,6 @@
   (visibility-watcher)
   (routes/routes)
   (dispatch [::history-events/initialize @config/path-prefix])
+  (swap! fv/conf #(merge % {:atom r/atom}))
   (mount-root)
   (log/info "finished initialization"))

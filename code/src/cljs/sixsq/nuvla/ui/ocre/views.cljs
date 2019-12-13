@@ -11,6 +11,7 @@
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.client.api :as api]
+    [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.events :as events]
@@ -301,7 +302,7 @@
            {
             :label k
             :data (re-group-by-state v all-states)
-            :backgroundColor (str "#" (rand-int 999999))})
+            :backgroundColor (str "#" (.toString (rand-int 16rFFFFFF) 16))})
 
       )
     ;(sort-by :state)
@@ -314,7 +315,7 @@
   [plot/Pie {:height  75
              :data    {:labels   (map :key terms-aggr)
                        :datasets [{:data            (map :doc_count terms-aggr)
-                                   :backgroundColor (map #(str "#" (rand-int 999999))
+                                   :backgroundColor (map #(str "#" (.toString (rand-int 16rFFFFFF) 16))
                                                       terms-aggr)}]}
              :options {:title  {:display true,
                                 :text    "Distributors"},
@@ -329,11 +330,6 @@
 
   (let [all-states {"ACTIVATED" [], "DISTRIBUTED" [], "EXPIRED" [], "NEW" [], "REDEEMED" []}
         group-by-platform-radar (group-by-platform (get vouchers :resources []) all-states) ]
-
-
-    [ui/Message
-     {:warning true
-      :content (str group-by-platform-radar)}]
 
     [plot/Radar {:height  100
 
@@ -365,22 +361,49 @@
             terms-aggr (-> vouchers :aggregations :terms:distributor :buckets)]
         (if vouchers
           (do
-            [ui/Table
-             (merge style/single-line {:unstackable true})
-             [ui/TableHeader
-              [ui/TableRow
-
+            [ui/Grid {:columns 2}
              (if (pos? (count terms-aggr))
                (do
-                 [ui/TableHeaderCell
+                 [ui/GridColumn
                   [Pies terms-aggr]]))
-               [ui/TableHeaderCell
-                [Radar vouchers]]
-             ]]]
+             [ui/GridColumn
+              [Radar vouchers]]
+             ]
             )
           [ui/Message
            {:warning true
             :content "Voucher information not available"}])))))
+
+
+(defn StatisticState
+  [value icon label]
+  (let [
+        color          "black"]
+    [ui/Statistic {:style    {:cursor "pointer"}
+                   :color    "black"
+                   }
+     [ui/StatisticValue (or value "-")
+      "\u2002"
+      [ui/Icon {:size "large" :name icon}]]
+     [ui/StatisticLabel label]]))
+
+
+(defn StatisticStates
+  []
+  (dispatch [::events/get-infrastructure-service (str "voucher/")])
+  (let [vouchers (subscribe [::subs/collection])
+        total "1"]
+    [ui/StatisticGroup (merge {:size "tiny"} style/center-block)
+     [StatisticState total "credit card" "TOTAL"]
+     ;[StatisticState new (utils/state->icon utils/state-new) "NEW"]
+     ;[StatisticState activated (utils/state->icon utils/state-activated) "ACTIVATED"]
+     ;[StatisticState commissioned (utils/state->icon utils/state-commissioned) "COMMISSIONED"]
+     ;[StatisticState decommissioning
+     ; (utils/state->icon utils/state-decommissioning) "DECOMMISSIONING"]
+     ;[StatisticState decommissioned (utils/state->icon utils/state-decommissioned) "DECOMMISSIONED"]
+     ;[StatisticState error (utils/state->icon utils/state-error) "ERROR"]]))
+
+     ]))
 
 
 (defn menu-bar []
@@ -425,7 +448,8 @@
   (dispatch [::events/get-results])
   (fn []
     [:<>
-     [uix/PageHeader "credit card outline" "OCRE"]
+     [uix/PageHeader "" "OCRE"]
+     [StatisticStates]
      [menu-bar]
      [PlotSection]
      [cimi-views/results-display]

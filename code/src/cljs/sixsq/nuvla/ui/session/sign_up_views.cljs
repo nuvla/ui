@@ -1,15 +1,16 @@
 (ns sixsq.nuvla.ui.session.sign-up-views
   (:require
-    [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.spec :as us]
-    [sixsq.nuvla.ui.authn.events :as authn-events]
     [cljs.spec.alpha :as s]
-    [sixsq.nuvla.ui.session.components :as comp]
+    [clojure.string :as str]
     [form-validator.core :as fv]
-    [clojure.string :as str]))
+    [re-frame.core :refer [dispatch subscribe]]
+    [sixsq.nuvla.ui.authn.events :as authn-events]
+    [sixsq.nuvla.ui.authn.subs :as authn-subs]
+    [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.session.components :as comp]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.spec :as us]))
 
 ;; VALIDATION SPEC
 (s/def ::email (s/and string? us/email?))
@@ -29,7 +30,7 @@
       [:password-repeat :password-not-equal])))
 
 
-(defn Sign-up-form
+(defn Form
   []
   (let [form-conf                      {:form-spec         ::user-template-email-password
                                         :names->validators {:password-repeat [password-repeat-check]}}
@@ -90,3 +91,15 @@
                                    :class    "icon"}
                         [ui/Icon {:name "github"
                                   :size "large"}]]]}])))
+
+
+(defn Presentation
+  []
+  [comp/LeftPanel
+   {:title           "Nuvla"
+    :subtitle        "Start immediately deploying apps containers in one button click."
+    :p1              "Start jouney with us"
+    :p2              (str "Provide a secured edge to cloud (and back) management platform "
+                          "that enabled near-data AI for connected world use cases.")
+    :button-text     "Sign in"
+    :button-callback #(dispatch [::history-events/navigate "sign-in"])}])

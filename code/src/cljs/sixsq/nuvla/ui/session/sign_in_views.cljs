@@ -1,14 +1,15 @@
 (ns sixsq.nuvla.ui.session.sign-in-views
   (:require
-    [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.spec :as us]
-    [sixsq.nuvla.ui.authn.events :as authn-events]
     [cljs.spec.alpha :as s]
-    [sixsq.nuvla.ui.session.components :as comp]
+    [clojure.string :as str]
     [form-validator.core :as fv]
-    [clojure.string :as str]))
+    [re-frame.core :refer [dispatch subscribe]]
+    [sixsq.nuvla.ui.authn.events :as authn-events]
+    [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.session.components :as comp]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.spec :as us]))
 
 ;; VALIDATION SPEC
 (s/def ::username us/nonblank-string)
@@ -19,7 +20,7 @@
                    ::password]))
 
 
-(defn Sign-in-form
+(defn Form
   []
   (let [form-conf {:form-spec ::session-template-password}
         form      (fv/init-form form-conf)
@@ -42,7 +43,9 @@
                                       :type      "password"
                                       :on-change (partial fv/event->names->value! form)
                                       :on-blur   (partial fv/event->show-message form)
-                                      :error     (fv/?show-message form :password spec->msg)}]]
+                                      :error     (fv/?show-message form :password spec->msg)}]
+                       [ui/FormField
+                        [:a {:href ""} "Forgot your password?"]]]
         :submit-text  (@tr [:sign-in])
         :submit-fn    #(when (fv/validate-form-and-show? form)
                          (dispatch [::authn-events/submit2 "session-template/password" (:names->value @form)]))
@@ -55,3 +58,14 @@
                         [ui/Icon {:name "github"
                                   :size "large"}]]]}])))
 
+
+(defn Presentation
+  []
+  [comp/LeftPanel
+   {:title "Nuvla"
+    :subtitle "Start immediately deploying apps containers in one button click."
+    :p1 "Start jouney with us"
+    :p2 (str "Provide a secured edge to cloud (and back) management platform "
+             "that enabled near-data AI for connected world use cases.")
+    :button-text "Sign up"
+    :button-callback #(dispatch [::history-events/navigate "sign-up"])}])

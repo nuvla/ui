@@ -33,13 +33,13 @@
     [sixsq.nuvla.ui.ocre.views]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.profile.views]
+    [sixsq.nuvla.ui.session.views :as session-views]
     [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.responsive :as responsive]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.welcome.views]
-    [sixsq.nuvla.ui.session.views :as session-views]
     [taoensso.timbre :as log]))
 
 

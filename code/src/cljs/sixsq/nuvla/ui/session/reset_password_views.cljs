@@ -65,7 +65,7 @@
                                        :icon-position "left"
                                        :required      true
                                        :auto-complete "new-password"
-                                       :label         (str/capitalize (@tr [:password]))
+                                       :label         (@tr [:new-password])
                                        :type          "password"
                                        :on-change     (partial fv/event->names->value! form)
                                        :on-blur       (partial fv/event->show-message form)
@@ -73,7 +73,7 @@
                                                                         :new-password spec->msg)}]
                         [ui/FormInput {:name      :password-repeat
                                        :required  true
-                                       :label     (str/capitalize (@tr [:password-repeat]))
+                                       :label     (@tr [:password-repeat])
                                        :type      "password"
                                        :on-change (partial fv/event->names->value! form)
                                        :on-blur   (partial fv/event->show-message form)
@@ -84,7 +84,8 @@
                          (dispatch [::authn-events/submit2 "session-template/password-reset"
                                     (-> @form
                                         :names->value
-                                        (dissoc :password-repeat))]))}])))
+                                        (dissoc :password-repeat))
+                                    {:success-msg  (@tr [:validation-email-success-msg])}]))}])))
 
 
 (defn Presentation
@@ -95,5 +96,5 @@
     :p1              "Start jouney with us"
     :p2              (str "Provide a secured edge to cloud (and back) management platform "
                           "that enabled near-data AI for connected world use cases.")
-    :button-text     "Sign up"
-    :button-callback #(dispatch [::history-events/navigate "sign-up"])}])
+    :button-text     "Sign in"
+    :button-callback #(dispatch [::history-events/navigate "sign-in"])}])

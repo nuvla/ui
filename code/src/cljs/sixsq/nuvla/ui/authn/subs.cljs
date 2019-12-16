@@ -29,7 +29,8 @@
 
 (reg-sub
   ::loading?
-  ::spec/loading?)
+  (fn [db]
+    (::spec/loading? db)))
 
 
 (reg-sub

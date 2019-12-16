@@ -49,7 +49,8 @@
                         [history-views/link "reset-password" (@tr [:forgot-password])]]]
         :submit-text  (@tr [:sign-in])
         :submit-fn    #(when (fv/validate-form-and-show? form)
-                         (dispatch [::authn-events/submit2 "session-template/password" (:names->value @form)]))
+                         (dispatch [::authn-events/submit2 "session-template/password"
+                                    (:names->value @form)]))
         :ExtraContent [:div {:style {:margin-top 70
                                      :color      "grey"}} "or use your github account "
                        [ui/Button {:style    {:margin-left 10}

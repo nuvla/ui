@@ -12,7 +12,8 @@
   [{:keys [title title-bold FormFields submit-text submit-fn ExtraContent]}]
   (let [error-message   (subscribe [::authn-subs/error-message])
         success-message (subscribe [::authn-subs/success-message])
-        tr              (subscribe [::i18n-subs/tr])]
+        tr              (subscribe [::i18n-subs/tr])
+        loading?        (subscribe [::authn-subs/loading?])]
     [ui/GridColumn
      [:div {:style {:float "right"}} [i18n-views/LocaleDropdown]]
      [:div {:style {:margin-left "10%"
@@ -40,6 +41,7 @@
 
        [ui/Button {:primary  true
                    :floated  "right"
+                   :loading  @loading?
                    :on-click submit-fn}
         submit-text]]
 

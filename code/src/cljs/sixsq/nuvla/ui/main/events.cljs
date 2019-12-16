@@ -167,7 +167,7 @@
     (assoc db ::spec/ignore-changes-modal callback-fn)))
 
 
-(reg-event-fx
+#_(reg-event-fx
   ::set-bootsrap-message
   (fn [{:keys [db]} [_ {resources     :resources
                         resource-type :resource-type
@@ -196,7 +196,7 @@
       {:db (assoc db ::spec/bootstrap-message nil)})))
 
 
-(reg-event-fx
+#_(reg-event-fx
   ::check-bootstrap-message
   (fn [_ _]
     {::api-fx/search [:infrastructure-service

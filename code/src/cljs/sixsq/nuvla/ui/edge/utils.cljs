@@ -13,14 +13,6 @@
 (def state-error "ERROR")
 
 
-(def nuvlabox-states [state-new
-                      state-activated
-                      state-commissioned
-                      state-decommissioning
-                      state-decommissioned
-                      state-error])
-
-
 (defn state->icon
   [state]
   (let [icons-map {state-activated       "handshake"
@@ -99,6 +91,12 @@
           (map disk-stats (sort-by :device disks))))
 
 
-(defn usb-hw-id
-  [{:keys [bus-id device-id] :as device}]
-  (str bus-id "." device-id))
+(defn get-query-params
+  [full-text-search page elements-per-page state-selector]
+  {:first   (inc (* (dec page) elements-per-page))
+   :last    (* page elements-per-page)
+   :orderby "created:desc"
+   :filter  (general-utils/join-and
+              (when state-selector (state-filter state-selector))
+              (general-utils/fulltext-query-string full-text-search))})
+

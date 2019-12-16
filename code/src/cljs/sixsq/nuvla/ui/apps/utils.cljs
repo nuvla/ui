@@ -29,6 +29,7 @@
     "project" "folder"
     "component" "grid layout"
     "application" "cubes"
+    "application_kubernetes" "cubes"
     "question circle"))
 
 

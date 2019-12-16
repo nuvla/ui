@@ -107,7 +107,7 @@
 
 (defn yaml->obj
   [yaml]
-  (js-yaml/load yaml))
+  (js-yaml/loadAll yaml))
 
 
 (defn check-yaml

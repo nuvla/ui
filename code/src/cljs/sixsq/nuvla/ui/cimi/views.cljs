@@ -74,24 +74,22 @@
 
 
 (defn results-table-row [row-fn entry i]
-  (let [over-checkbox?   (atom false)
-        can-bulk-delete? (subscribe [::subs/can-bulk-delete?])]
-    (fn [row-fn entry i]
-      (when entry
-        (let [data          (row-fn entry)
-              id            (:id entry)
-              row-selected? (subscribe [::subs/row-selected? id])]
-          [ui/TableRow {:on-click #(when-not @over-checkbox?
-                                     (dispatch [::history-events/navigate (str "api/" id)]))}
-           (when @can-bulk-delete?
-             [ui/TableCell
-              [ui/Checkbox {:checked       @row-selected?
-                            :on-mouse-over #(reset! over-checkbox? true)
-                            :on-mouse-out  #(reset! over-checkbox? false)
-                            :on-click      #(dispatch [::events/select-row @row-selected? id])}]])
-           (for [[j v] (map-indexed vector data)]
-             ^{:key (str "row-" i "-cell-" j)}
-             [ui/TableCell v])])))))
+  (let [can-bulk-delete? (subscribe [::subs/can-bulk-delete?])]
+    (when entry
+      (let [data          (row-fn entry)
+            id            (:id entry)
+            row-selected? (subscribe [::subs/row-selected? id])]
+        [ui/TableRow {:style {:cursor "pointer"}
+                      :on-click #(dispatch [::history-events/navigate (str "api/" id)])}
+         (when @can-bulk-delete?
+           [ui/TableCell
+            [ui/Checkbox {:checked  @row-selected?
+                          :on-click (fn [event]
+                                      (dispatch [::events/select-row @row-selected? id])
+                                      (.stopPropagation event))}]])
+         (for [[j v] (map-indexed vector data)]
+           ^{:key (str "row-" i "-cell-" j)}
+           [ui/TableCell v])]))))
 
 
 (defn results-table-body [row-fn entries]
@@ -151,6 +149,7 @@
   (let [aggregations (subscribe [::subs/aggregations])]
     (fn []
       (let [stats (->> @aggregations
+                       (remove (fn [[k _]] (str/starts-with? (str k) ":terms")))
                        (map tuple-fn)
                        (sort second)
                        (map statistic)

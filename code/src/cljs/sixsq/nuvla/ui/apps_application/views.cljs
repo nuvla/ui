@@ -20,8 +20,7 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn clear-module
@@ -30,8 +29,24 @@
 
 
 (defn summary []
-  (let []
-    [apps-views-detail/summary]))
+  (let [editable?      (subscribe [::apps-subs/editable?])
+        module-subtype (subscribe [::apps-subs/module-subtype])]
+    [apps-views-detail/summary
+     [^{:key "module_subtype"}
+      [ui/TableRow
+       [ui/TableCell {:collapsing true
+                      :style      {:padding-bottom 8}} "subtype"]
+       [ui/TableCell {:style {:padding-left (when-not @editable? 24)}}
+        (if @editable?
+          [ui/Dropdown {:selection true,
+                        :fluid     true
+                        :value     @module-subtype
+                        :on-change (ui-callback/value
+                                     #(dispatch [::apps-events/subtype %]))
+                        :options   [{:key "application", :text "Docker", :value "application"}
+                                    {:key   "application_kubernetes", :text "Kubernetes",
+                                     :value "application_kubernetes"}]}]
+          @module-subtype)]]]]))
 
 
 (defn single-file [{:keys [id ::spec/file-name ::spec/file-content]}]
@@ -80,8 +95,7 @@
         (if (empty? @files)
           [ui/Message
            (str/capitalize (str (@tr [:no-files]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}
-                           :class :nuvla-ui-editable}
+          [:div [ui/Table {:style {:margin-top 10}}
                  [ui/TableHeader
                   [ui/TableRow
                    [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]
@@ -105,13 +119,14 @@
         docker-compose  (subscribe [::subs/docker-compose])
         form-valid?     (subscribe [::apps-subs/form-valid?])
         editable?       (subscribe [::apps-subs/editable?])
+        module-subtype  (subscribe [::apps-subs/module-subtype])
         local-validate? (r/atom false)
         default-value   @docker-compose]
     (fn []
       (let [validate? (or @local-validate? (not @form-valid?))]
         [uix/Accordion
          [:<>
-          [:div {:style {:margin-bottom "10px"}} "Docker compose"
+          [:div {:style {:margin-bottom "10px"}} "Env substitution"
            [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]]
 
           [ui/CodeMirror {:value      default-value
@@ -131,7 +146,7 @@
                (if (str/blank? error-msg)
                  (@tr [:module-docker-compose-error])
                  error-msg)]))]
-         :label "Docker compose"
+         :label (if (= @module-subtype "application") "Docker compose" "Manifest")
          :default-open true]))))
 
 
@@ -143,7 +158,6 @@
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
         (dispatch [::apps-events/set-form-spec ::spec/module-application])
-        (dispatch [::apps-events/set-module-subtype :application])
         [ui/Container {:fluid true}
          [uix/PageHeader "cubes" (str parent (when (not-empty parent) "/") name) :inline true]
          [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)

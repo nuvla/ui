@@ -1,8 +1,8 @@
-(def parent-version "6.7.0")
-(def sixsq-nuvla-api-version "2.0.5")
-(def version "2.4.7-SNAPSHOT")
+(def parent-version "6.7.2")
+(def sixsq-nuvla-api-version "2.0.7")
+(def version "2.4.8-SNAPSHOT")
 
-(defproject sixsq.nuvla.ui/code "2.4.7-SNAPSHOT"
+(defproject sixsq.nuvla.ui/code "2.4.8-SNAPSHOT"
 
   :description "Web Browser User Interface for Nuvla"
 
@@ -75,7 +75,7 @@
                  [re-frame "0.11.0-rc3" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
-                 [com.taoensso/timbre "4.10.0"  :scope "provided"]
+                 [com.taoensso/timbre "4.10.0" :scope "provided"]
                  [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]
                  [com.taoensso/tempura "1.2.1" :scope "provided"]
                  [com.cemerick/url :scope "provided"]

@@ -21,7 +21,7 @@
     "source-map-support": "^0.5.16"
   },
   "dependencies": {
-    "bluebird": "^3.7.1",
+    "bluebird": "^3.7.2",
     "chart.js": "^2.9.3",
     "codemirror": "^5.49.2",
     "create-react-class": "15.6.3",
@@ -29,12 +29,12 @@
     "license-checker": "^25.0.1",
     "moment": "^2.24.0",
     "papaparse": "^5.1.0",
-    "react": "^16.9.0",
+    "react": "16.9.0",
     "react-chartjs-2": "^2.8.0",
     "react-codemirror2": "^6.0.0",
     "react-copy-to-clipboard": "^5.0.2",
     "react-datepicker": "^1.8.0",
-    "react-dom": "^16.9.0",
+    "react-dom": "16.9.0",
     "react-markdown": "^4.2.2",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.88.1"

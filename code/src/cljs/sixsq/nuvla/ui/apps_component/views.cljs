@@ -171,8 +171,7 @@
         (if (empty? @ports)
           [ui/Message
            (str/capitalize (str (@tr [:no-ports]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}
-                           :class :nuvla-ui-editable}
+          [:div [ui/Table {:style {:margin-top 10}}
                  [ui/TableHeader
                   [ui/TableRow
                    [ui/TableHeaderCell {:content "Destination (External)"}]
@@ -257,8 +256,7 @@
         (if (empty? @mounts)
           [ui/Message
            (str/capitalize (str (@tr [:no-mounts]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}
-                           :class :nuvla-ui-editable}
+          [:div [ui/Table {:style {:margin-top 10}}
                  [ui/TableHeader
                   [ui/TableRow
                    [ui/TableHeaderCell {:content "Type"}]
@@ -352,7 +350,6 @@
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
         (dispatch [::apps-events/set-form-spec ::spec/module-component])
-        (dispatch [::apps-events/set-module-subtype :component])
         [ui/Container {:fluid true}
          [uix/PageHeader "grid layout" (str parent (when (not-empty parent) "/") name) :inline true]
          [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)

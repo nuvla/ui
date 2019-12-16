@@ -344,7 +344,7 @@
         cardinality-supplier    (subscribe [::subs/cardinality-supplier])
         cardinality-platform    (subscribe [::subs/cardinality-platform])]
     [ui/StatisticGroup (merge {:size "tiny"} style/center-block)
-     [StatisticState @count-ids "credit card" "TOTAL"]
+     [StatisticState @count-ids "credit card" "VOUCHERS"]
      [StatisticState @cardinality-supplier "industry" "SUPPLIERS"]
      [StatisticState @cardinality-distributor "shipping fast" "DISTRIBUTORS"]
      [StatisticState @cardinality-platform "building" "PLATFORMS"]]))

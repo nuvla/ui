@@ -382,8 +382,9 @@
 
 (defn View
   []
-  (dispatch [::cimi-events/set-selected-fields ["code", "amount", "currency", "platform",
-                                                "target-audience", "state", "created", "distributor"]])
+  (dispatch [::cimi-events/set-selected-fields
+             ["code", "amount", "currency", "platform", "target-audience",
+              "state", "created", "distributor"]])
   (dispatch [::cimi-events/set-collection-name "voucher"])
   (dispatch [::cimi-events/set-filter nil])
   (dispatch [::cimi-events/set-aggregation nil])

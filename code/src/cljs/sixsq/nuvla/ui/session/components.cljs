@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.session.components
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
@@ -27,14 +28,14 @@
          [ui/Message {:negative  true
                       :size      "tiny"
                       :onDismiss #(dispatch [::authn-events/set-error-message nil])}
-          [ui/MessageHeader (@tr [:login-failed])]
+          [ui/MessageHeader (str/capitalize  (@tr [:error]))]
           [:p @error-message]])
 
        (when @success-message
          [ui/Message {:negative  false
                       :size      "tiny"
                       :onDismiss #(dispatch [::authn-events/set-success-message nil])}
-          [ui/MessageHeader (@tr [:success])]
+          [ui/MessageHeader (str/capitalize (@tr [:success]))]
           [:p @success-message]])
 
        FormFields
@@ -45,7 +46,8 @@
                    :on-click submit-fn}
         submit-text]]
 
-      ExtraContent]]))
+      (when ExtraContent
+        ExtraContent)]]))
 
 
 (defn LeftPanel
@@ -73,11 +75,12 @@
     [:b {:style {:font-size "1.4em"}} p1]
 
     [:br] [:br]
-    [ui/Button
-     {:size     "large"
-      :inverted true
-      :on-click button-callback}
-     button-text]
+    (when button-text
+      [ui/Button
+      {:size     "large"
+       :inverted true
+       :on-click button-callback}
+      button-text])
     [:div {:style {:margin-top  20
                    :line-height "normal"}}
      p2]

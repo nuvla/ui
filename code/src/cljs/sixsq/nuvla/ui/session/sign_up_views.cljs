@@ -6,6 +6,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
+    [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.session.components :as comp]
@@ -40,7 +41,8 @@
                                         ::password       (@tr [:password-constraint])
                                         :password-repeat (@tr [:passwords-doesnt-match])}
         server-redirect-uri            (subscribe [::authn-subs/server-redirect-uri])
-        callback-message-on-validation (js/encodeURI "signup-validation-success")]
+        callback-message-on-validation (js/encodeURI "signup-validation-success")
+        github-template? (subscribe [::authn-subs/user-template-exist? "user-template/nuvla"])]
     (fn []
       [comp/RightPanel
        {:title        "Create an  "
@@ -83,18 +85,25 @@
                                     {:success-msg  (@tr [:validation-email-success-msg])
                                      :redirect-url (str @server-redirect-uri "?message="
                                                         callback-message-on-validation)}]))
-        :ExtraContent [:div {:style {:margin-top 70
-                                     :color      "grey"}} "or use your github account "
-                       [ui/Button {:style    {:margin-left 10}
-                                   :circular true
-                                   :basic    true
-                                   :class    "icon"
-                                   :on-click #(dispatch [::authn-events/submit2 "user-template/nuvla"
-                                                         {}
-                                                         {:redirect-url (str @server-redirect-uri "?message="
-                                                                             callback-message-on-validation)}])}
-                        [ui/Icon {:name "github"
-                                  :size "large"}]]]}])))
+        :ExtraContent (when @github-template?
+                        [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/user")
+                                 :method "post"
+                                 :style  {:margin-top 70
+                                          :color      "grey"}}
+                        "or use your github account "
+                        [:input {:hidden        true
+                                 :name          "href"
+                                 :default-value "user-template/nuvla"}]
+                        [:input {:hidden        true
+                                 :name          "redirect-url"
+                                 :default-value @server-redirect-uri}]
+                        [ui/Button {:style    {:margin-left 10}
+                                    :circular true
+                                    :basic    true
+                                    :type     "submit"
+                                    :class    "icon"}
+                         [ui/Icon {:name "github"
+                                   :size "large"}]]])}])))
 
 
 (defn Presentation

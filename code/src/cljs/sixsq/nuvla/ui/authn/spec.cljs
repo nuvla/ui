@@ -88,7 +88,7 @@
    ::error-message         nil
    ::success-message       nil
    ::redirect-uri          nil
-   ::server-redirect-uri   (str @config/path-prefix "/welcome")
+   ::server-redirect-uri   (str @config/path-prefix "/sign-in")
    ::loading?              false
    ::form-id               nil
    ::form-data             {}})

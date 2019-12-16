@@ -6,8 +6,8 @@
     [sixsq.nuvla.ui.authn.spec :as spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.events :as cimi-events]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.utils.response :as response]
     [taoensso.timbre :as log]))
 

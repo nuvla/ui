@@ -9,8 +9,7 @@
     [sixsq.nuvla.ui.main.events :as events]
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 (def sidebar-width "10rem")
 
@@ -38,7 +37,7 @@
                   :overflow-x "hidden"}
       :active    @active?
       :on-click  (if (and protected? (not @is-user?))
-                   #(dispatch [::authn-events/open-modal :login])
+                   #(dispatch [::history-events/navigate "sign-in"])
                    #(navigate url))}]))
 
 

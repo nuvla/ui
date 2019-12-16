@@ -11,15 +11,17 @@
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.cimi.events :as events]
-    [sixsq.nuvla.ui.cimi.subs :as subs]
+    [sixsq.nuvla.ui.cimi.events :as cimi-events]
+    [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.cimi.views :as cimi-views]
+    [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.edge.utils :as u]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.ocre.events :as events]
+    [sixsq.nuvla.ui.ocre.subs :as subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.plot.plot :as plot]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -56,16 +58,16 @@
                       ::target-audience
                       ::platform
                       ::owner]
-    :opt-un [::expiry
-             ::supplier
-             ::user
-             ::distributor
-             ::activated
-             ::service-info-url
-             ::redeemed
-             ::wave
-             ::batch
-             ::acl]))
+             :opt-un [::expiry
+                      ::supplier
+                      ::user
+                      ::distributor
+                      ::activated
+                      ::service-info-url
+                      ::redeemed
+                      ::wave
+                      ::batch
+                      ::acl]))
 
 (def required-headers #{"code", "amount", "currency", "platform", "target-audience"})
 
@@ -105,16 +107,16 @@
 (defn cimi-voucher
   [user-id json-line]
   (->> (select-keys json-line
-         [:amount :currency :code :state :target-audience :supplier :expiry :platform
-          :distributor :activated :service-info-url :redeemed :wave :batch])
-    (remove #(nil? (second %)))
-    (map transform-value)
-    (into {})
-    (merge {:state "NEW"
-            :owner user-id
-            :user  user-id
-            :acl   {:owners   [user-id]
-                    :view-acl ["group/ocre-user"]}})))
+                    [:amount :currency :code :state :target-audience :supplier :expiry :platform
+                     :distributor :activated :service-info-url :redeemed :wave :batch])
+       (remove #(nil? (second %)))
+       (map transform-value)
+       (into {})
+       (merge {:state "NEW"
+               :owner user-id
+               :user  user-id
+               :acl   {:owners   [user-id]
+                       :view-acl ["group/ocre-user"]}})))
 
 
 (defn check-file-error
@@ -124,15 +126,15 @@
         headers-error? (not (clojure.set/subset? required-headers headers))
         csv-errors     (:errors results-edn)
         spec-error?    (->> results-edn
-                         :data
-                         (map #(s/valid? ::voucher (cimi-voucher "user/fake" %)))
-                         (some false?))
+                            :data
+                            (map #(s/valid? ::voucher (cimi-voucher "user/fake" %)))
+                            (some false?))
         errors-list    (cond-> (mapv :message csv-errors)
-                         headers-error? (conj
-                                          (str "Required headers are missing: "
-                                            (clojure.set/difference
-                                              required-headers headers)))
-                         spec-error? (conj "CSV rows are failing voucher spec."))]
+                               headers-error? (conj
+                                                (str "Required headers are missing: "
+                                                     (clojure.set/difference
+                                                       required-headers headers)))
+                               spec-error? (conj "CSV rows are failing voucher spec."))]
 
     (reset! file-errors errors-list)
     (when (empty? errors-list)
@@ -168,7 +170,7 @@
                 (cimi-api-fx/default-error-message add-resp "Add voucher failed"))))
           (swap! progress inc)))
       (reset! upload-state :finished)
-      (dispatch [::events/get-results]))))
+      (dispatch [::cimi-events/get-results]))))
 
 
 (defn import-vouchers
@@ -200,8 +202,8 @@
 
 (defn ExportButton
   []
-  (let [collection      (subscribe [::subs/collection])
-        selected-fields (subscribe [::subs/selected-fields])
+  (let [collection      (subscribe [::cimi-subs/collection])
+        selected-fields (subscribe [::cimi-subs/selected-fields])
         csv-content     (export-collection @selected-fields (:resources @collection))]
     [uix/MenuItemWithIcon
      {:name      "Export"
@@ -273,115 +275,62 @@
    [ImportButton]
    [ExportButton]])
 
-(defn re-group-by-state
-  [platform-all-states all-states]
-  (->> platform-all-states
-    ;(group-by #(select-keys % [:state :platform]) )
-    (group-by :state)
-    (into (sorted-map) )
-    (merge (into (sorted-map) all-states) )
-    (map (fn [[k v]]
-           (count v)
-           )
-
-      )
-    (vec )
-    ;(sort-by :state)
-    )
-
-  )
-
-(defn group-by-platform
-  [searched-vouchers all-states]
-  (->> searched-vouchers
-    ;(group-by #(select-keys % [:state :platform]) )
-    (group-by :platform)
-    ;(into (sorted-map) )
-    ;(merge (into (sorted-map) all-states) )
-    (map (fn [[k v]]
-           {
-            :label k
-            :data (re-group-by-state v all-states)
-            :backgroundColor (str "#" (.toString (rand-int 16rFFFFFF) 16))})
-
-      )
-    ;(sort-by :state)
-    )
-
-  )
 
 (defn Pies
   [terms-aggr]
-  [plot/Pie {:height  75
+  [plot/Pie {:height  100
              :data    {:labels   (map :key terms-aggr)
                        :datasets [{:data            (map :doc_count terms-aggr)
-                                   :backgroundColor (map #(str "#" (.toString (rand-int 16rFFFFFF) 16))
-                                                      terms-aggr)}]}
+                                   :backgroundColor (map #(str "#"
+                                                               (.toString (rand-int 16rFFFFFF) 16))
+                                                         terms-aggr)}]}
              :options {:title  {:display true,
                                 :text    "Distributors"},
-                       :legend {:display true
+                       :legend {:display  true
                                 :position "left"}}}
    :label "Voucher Distribution"
    :icon "shipping fast"])
 
 
 (defn Radar
-  [vouchers all-states]
-
-  (let [all-states {"ACTIVATED" [], "DISTRIBUTED" [], "EXPIRED" [], "NEW" [], "REDEEMED" []}
-        group-by-platform-radar (group-by-platform (get vouchers :resources []) all-states) ]
+  []
+  (let [all-states {"ACTIVATED" [], "DISTRIBUTED" [], "EXPIRED" [], "NEW" [],
+                    "REDEEMED"  []}
+        radar-ds   (subscribe [::subs/platforms-radar])]
 
     [plot/Radar {:height  100
-
-                 :data    {:labels   (map (fn [[k v]] k ) all-states)
-                           :datasets group-by-platform-radar
-                           }
-
-                 :options {
-                           :title  {
-                                    :display true,
-                                    :text    "Platforms"
-                                    },
-                           :legend {
-                                    :display true
-                                    :position "left"
-                                    :fullWidth false
-                                    }
-                           }
-                 }]
-    )
-  )
+                 :data    {:labels   (map (fn [[k v]] k) all-states)
+                           :datasets @radar-ds}
+                 :options {:title  {:display true,
+                                    :text    "Platforms"},
+                           :legend {:display   true
+                                    :position  "left"
+                                    :fullWidth false}
+                           }}]))
 
 
 (defn PlotSection
   []
-  (let [vouchers (subscribe [::subs/collection])]
+  (let [distributors-terms (subscribe [::subs/distributors-terms])]
     (fn []
-      (let [vouchers @vouchers
-            terms-aggr (-> vouchers :aggregations :terms:distributor :buckets)]
-        (if vouchers
-          (do
-            [ui/Grid {:columns 2}
-             (if (pos? (count terms-aggr))
-               (do
-                 [ui/GridColumn
-                  [Pies terms-aggr]]))
-             [ui/GridColumn
-              [Radar vouchers]]
-             ]
-            )
-          [ui/Message
-           {:warning true
-            :content "Voucher information not available"}])))))
+      (if @distributors-terms
+        [ui/Grid {:columns   2,
+                  :stackable true}
+         (when (pos? (count @distributors-terms))
+           [ui/GridColumn
+            [Pies @distributors-terms]])
+         [ui/GridColumn
+          [Radar]]]
+        [ui/Message
+         {:warning true
+          :content "Voucher information not available"}]))))
 
 
 (defn StatisticState
   [value icon label]
-  (let [
-        color          "black"]
-    [ui/Statistic {:style    {:cursor "pointer"}
-                   :color    "black"
-                   }
+  (let [color "black"]
+    [ui/Statistic {:style {:cursor "pointer"}
+                   :color "black"}
      [ui/StatisticValue (or value "-")
       "\u2002"
       [ui/Icon {:size "large" :name icon}]]
@@ -390,32 +339,28 @@
 
 (defn StatisticStates
   []
-  (dispatch [::events/get-infrastructure-service (str "voucher/")])
-  (let [vouchers (subscribe [::subs/collection])
-        total "1"]
+  (let [count-ids               (subscribe [::subs/count-ids])
+        cardinality-distributor (subscribe [::subs/cardinality-distributor])
+        cardinality-supplier    (subscribe [::subs/cardinality-supplier])
+        cardinality-platform    (subscribe [::subs/cardinality-platform])]
     [ui/StatisticGroup (merge {:size "tiny"} style/center-block)
-     [StatisticState total "credit card" "TOTAL"]
-     ;[StatisticState new (utils/state->icon utils/state-new) "NEW"]
-     ;[StatisticState activated (utils/state->icon utils/state-activated) "ACTIVATED"]
-     ;[StatisticState commissioned (utils/state->icon utils/state-commissioned) "COMMISSIONED"]
-     ;[StatisticState decommissioning
-     ; (utils/state->icon utils/state-decommissioning) "DECOMMISSIONING"]
-     ;[StatisticState decommissioned (utils/state->icon utils/state-decommissioned) "DECOMMISSIONED"]
-     ;[StatisticState error (utils/state->icon utils/state-error) "ERROR"]]))
-
-     ]))
+     [StatisticState @count-ids "credit card" "TOTAL"]
+     [StatisticState @cardinality-supplier "industry" "SUPPLIERS"]
+     [StatisticState @cardinality-distributor "shipping fast" "DISTRIBUTORS"]
+     [StatisticState @cardinality-platform "building" "PLATFORMS"]]))
 
 
 (defn menu-bar []
   (let [tr            (subscribe [::i18n-subs/tr])
-        resources     (subscribe [::subs/collection])
-        selected-rows (subscribe [::subs/selected-rows])]
+        resources     (subscribe [::cimi-subs/collection])
+        selected-rows (subscribe [::cimi-subs/selected-rows])]
     (fn []
+      (dispatch [::events/fetch-distributor-terms])
       (when (instance? js/Error @resources)
         (dispatch [::messages-events/add
                    (let [{:keys [status message]} (response/parse-ex-info @resources)]
                      {:header  (cond-> (@tr [:error])
-                                 status (str " (" status ")"))
+                                       status (str " (" status ")"))
                       :message message
                       :type    :error})]))
       [ui/Segment style/basic
@@ -427,7 +372,7 @@
         (when (general-utils/can-add? @resources)
           [cimi-views/create-button])
         (when (and (not-empty @selected-rows)
-                (general-utils/can-bulk-delete? @resources))
+                   (general-utils/can-bulk-delete? @resources))
           [cimi-views/delete-resources-button])
         (when (= (:resource-type @resources) "voucher-collection")
           [ImportExportMenu])]
@@ -437,15 +382,15 @@
 
 (defn View
   []
-  (dispatch [::events/set-selected-fields ["code", "amount", "currency", "platform",
-                                           "target-audience", "state", "created", "distributor"]])
-  (dispatch [::events/set-collection-name "voucher"])
-  (dispatch [::events/set-aggregation "terms:distributor"])
-  (dispatch [::events/set-filter nil])
-  (dispatch [::events/set-first 0])
-  (dispatch [::events/set-last 100])
-  (dispatch [::events/set-orderby "created:desc"])
-  (dispatch [::events/get-results])
+  (dispatch [::cimi-events/set-selected-fields ["code", "amount", "currency", "platform",
+                                                "target-audience", "state", "created", "distributor"]])
+  (dispatch [::cimi-events/set-collection-name "voucher"])
+  (dispatch [::cimi-events/set-filter nil])
+  (dispatch [::cimi-events/set-aggregation nil])
+  (dispatch [::cimi-events/set-first 0])
+  (dispatch [::cimi-events/set-last 100])
+  (dispatch [::cimi-events/set-orderby "created:desc"])
+  (dispatch [::cimi-events/get-results])
   (fn []
     [:<>
      [uix/PageHeader "" "OCRE"]

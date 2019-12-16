@@ -22,6 +22,7 @@
     [sixsq.nuvla.ui.infrastructures.spec :as infra-service]
     [sixsq.nuvla.ui.main.spec :as main]
     [sixsq.nuvla.ui.messages.spec :as messages]
+    [sixsq.nuvla.ui.ocre.spec :as ocre]
     [sixsq.nuvla.ui.profile.spec :as profile]))
 
 
@@ -43,7 +44,8 @@
                      ::messages/db
                      ::edge/db
                      ::edge-detail/db
-                     ::profile/db))
+                     ::profile/db
+                     ::ocre/db))
 
 
 (def default-db
@@ -67,4 +69,5 @@
          messages/defaults
          edge/defaults
          edge-detail/defaults
-         profile/defaults))
+         profile/defaults
+         ocre/defaults))

@@ -237,6 +237,7 @@
          (case (first @resource-path)
            "sign-in" [session-views/Sign-in]
            "sign-up" [session-views/Sign-up]
+           "reset-password" [session-views/Reset-password]
            nil [session-views/Sign-in]
            [:<>
             [sidebar/menu]

@@ -21,7 +21,7 @@
 
 
       [ui/Form {:style {:margin-top 30
-                        :max-width  "70%"}}
+                        :max-width  "80%"}}
        (when @error-message
          [ui/Message {:negative  true
                       :size      "tiny"

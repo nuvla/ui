@@ -88,7 +88,11 @@
                        [ui/Button {:style    {:margin-left 10}
                                    :circular true
                                    :basic    true
-                                   :class    "icon"}
+                                   :class    "icon"
+                                   :on-click #(dispatch [::authn-events/submit2 "user-template/nuvla"
+                                                         {}
+                                                         {:redirect-url (str @server-redirect-uri "?message="
+                                                                             callback-message-on-validation)}])}
                         [ui/Icon {:name "github"
                                   :size "large"}]]]}])))
 

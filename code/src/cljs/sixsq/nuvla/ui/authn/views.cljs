@@ -44,7 +44,7 @@
       (let [{:keys [username password]} @form-data]
         [:<>
          [ui/FormInput {:name          "username"
-                        :placeholder   (str/capitalize (@tr [:username]))
+                        :placeholder   (@tr [:username])
                         :icon          "user"
                         :icon-position "left"
                         :auto-focus    true
@@ -463,7 +463,7 @@
                         :list   errors-list}]
 
            [ui/FormInput {:name          "reset-username"
-                          :placeholder   (str/capitalize (@tr [:username]))
+                          :placeholder   (@tr [:username])
                           :icon          "user"
                           :fluid         false
                           :icon-position "left"
@@ -591,9 +591,7 @@
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
         user                 (subscribe [::subs/user])
-        sign-out-fn          (fn []
-                               (dispatch [::events/logout])
-                               (dispatch [::history-events/navigate "welcome"]))
+        sign-out-fn          #(dispatch [::events/logout])
         create-user-fn       #(do
                                 (dispatch [::events/set-form-id utils/user-tmpl-email-invitation])
                                 (dispatch [::events/open-modal :invite-user]))
@@ -666,7 +664,7 @@
                              :cursor        "pointer"}
                   :on-click #(dispatch [::history-events/navigate "sign-up"])}
            [ui/Icon {:name "signup"}]
-           (@tr [:signup])])
+           (@tr [:sign-up])])
         [ui/ButtonGroup {:primary true}
          [ui/Button {:on-click #(dispatch [::history-events/navigate "sign-in"])}
           [ui/Icon {:name "sign in"}]

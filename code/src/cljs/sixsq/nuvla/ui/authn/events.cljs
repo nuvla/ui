@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.events :as cimi-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.utils.response :as response]
     [taoensso.timbre :as log]))
 
@@ -42,7 +43,8 @@
   ::logout
   (fn [{:keys [db]} _]
     {:db                  (assoc db :sixsq.nuvla.ui.main.spec/bootstrap-message nil)
-     ::cimi-api-fx/logout [#(dispatch [::set-session nil])]}))
+     ::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
+                                (dispatch [::history-events/navigate "sign-in"]))]}))
 
 
 (reg-event-db

@@ -3,6 +3,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.session.components :as comp]
     [sixsq.nuvla.ui.session.sign-in-views :as sign-in-views]
+    [sixsq.nuvla.ui.session.reset-password-views :as reset-password-views]
     [sixsq.nuvla.ui.session.sign-up-views :as sign-up-views]))
 
 
@@ -18,6 +19,13 @@
   [comp/SessionPage
    sign-up-views/Presentation
    sign-up-views/Form])
+
+
+(defn Reset-password
+  []
+  [comp/SessionPage
+   reset-password-views/Presentation
+   reset-password-views/Form])
 
 
 ; redirect signup doit se faire sur la page sign-in

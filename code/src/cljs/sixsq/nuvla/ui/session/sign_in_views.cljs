@@ -6,6 +6,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.session.components :as comp]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -33,7 +34,7 @@
         :title-bold   "Account"
         :FormFields   [:<>
                        [ui/FormInput {:name       :username
-                                      :label      (str/capitalize (@tr [:username]))
+                                      :label      (@tr [:username])
                                       :auto-focus true
                                       :on-change  (partial fv/event->names->value! form)
                                       :on-blur    (partial fv/event->show-message form)
@@ -45,7 +46,7 @@
                                       :on-blur   (partial fv/event->show-message form)
                                       :error     (fv/?show-message form :password spec->msg)}]
                        [ui/FormField
-                        [:a {:href ""} "Forgot your password?"]]]
+                        [history-views/link "reset-password" (@tr [:forgot-password])]]]
         :submit-text  (@tr [:sign-in])
         :submit-fn    #(when (fv/validate-form-and-show? form)
                          (dispatch [::authn-events/submit2 "session-template/password" (:names->value @form)]))

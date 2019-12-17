@@ -234,10 +234,10 @@
                         :on-update     (responsive/callback #(dispatch [::events/set-device %]))}
          (.log js/console @resource-path)
          (case (first @resource-path)
-           "sign-in" [session-views/Sign-in]
-           "sign-up" [session-views/Sign-up]
-           "reset-password" [session-views/Reset-password]
-           nil [session-views/Sign-in]
+           "sign-in" [session-views/SessionPage]
+           "sign-up" [session-views/SessionPage]
+           "reset-password" [session-views/SessionPage]
+           nil [session-views/SessionPage]
            [:<>
             [sidebar/menu]
             [:div {:style {:transition  "0.5s"

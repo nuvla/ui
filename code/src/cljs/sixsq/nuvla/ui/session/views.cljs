@@ -2,56 +2,60 @@
   (:require
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.authn.events :as authn-events]
+    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.session.components :as comp]
     [sixsq.nuvla.ui.session.reset-password-views :as reset-password-views]
     [sixsq.nuvla.ui.session.sign-in-views :as sign-in-views]
     [sixsq.nuvla.ui.session.sign-up-views :as sign-up-views]
-    ))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
-(defn Sign-in
+(defn LeftPanel
   []
-  (let [path         (subscribe [::main-subs/nav-path-first])
+  (let [first-path (subscribe [::main-subs/nav-path-first])]
+    (case @first-path
+      "sign-in" [sign-in-views/Presentation]
+      "sign-up" [sign-up-views/Presentation]
+      "reset-password" [reset-password-views/Presentation]
+      [sign-in-views/Presentation])))
+
+
+(defn RightPanel
+  []
+  (let [first-path (subscribe [::main-subs/nav-path-first])]
+    (case @first-path
+      "sign-in" [sign-in-views/Form]
+      "sign-up" [sign-up-views/Form]
+      "reset-password" [reset-password-views/Form]
+      [sign-in-views/Form])))
+
+(defn SessionPage
+  []
+  (let [session      (subscribe [::authn-subs/session])
         query-params (subscribe [::main-subs/nav-query-params])
-        {:keys [message, error]} @query-params
-        tr           (subscribe [::i18n-subs/tr])]
-    (when @query-params
-      (when error
-        (dispatch [::authn-events/set-error-message (@tr [(keyword error)])]))
-      (when message
-        (dispatch [::authn-events/set-success-message (@tr [(keyword message)])]))
+        tr           (subscribe [::i18n-subs/tr])
+        error        (some-> @query-params :error keyword)
+        message      (some-> @query-params :message keyword)]
+    (when @session
+      (dispatch [::history-events/navigate "welcome"]))
+    (when error
+      (dispatch [::authn-events/set-error-message (@tr [(keyword error)])]))
+    (when message
+      (dispatch [::authn-events/set-success-message (@tr [(keyword message)])]))
+    [ui/Grid {:stackable true
+              :columns   2
+              :reversed  "mobile"
+              :style     {:margin           0
+                          :background-color "white"}}
 
-      (dispatch [::history-events/navigate (str @path "/")])))
-  [comp/SessionPage
-   sign-in-views/Presentation
-   sign-in-views/Form])
-
-
-(defn Sign-up
-  []
-  [comp/SessionPage
-   sign-up-views/Presentation
-   sign-up-views/Form])
-
-
-(defn Reset-password
-  []
-  [comp/SessionPage
-   reset-password-views/Presentation
-   reset-password-views/Form])
-
-
-; redirect signup doit se faire sur la page sign-in
-; reset password form
-
-; si disponible
-; github signup call
-; github signin call
-; sign-up
-
-; en mobile formulaire au plus haut de la page
-; ::automatic-logout-at-session-expiry
-; nav quand not session redirect to sign-in
+     [ui/GridColumn {:style {:background-image    "url(/ui/images/volumlight.png)"
+                             :background-size     "cover"
+                             :background-position "left"
+                             :background-repeat   "no-repeat"
+                             :color               "white"
+                             :min-height          "100vh"}}
+      [LeftPanel]]
+     [ui/GridColumn
+      [RightPanel]]]))

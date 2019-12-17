@@ -18,7 +18,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.config :as config]))
 
 
 (defn dropdown-method-option
@@ -513,21 +513,22 @@
 
 
 (defn modal-create-user []
-  (let [tr                  (subscribe [::i18n-subs/tr])
-        open-modal          (subscribe [::subs/open-modal])
-        error-message       (subscribe [::subs/error-message])
-        success-message     (subscribe [::subs/success-message])
-        loading?            (subscribe [::subs/loading?])
-        server-redirect-uri (subscribe [::subs/server-redirect-uri])
-        form-data           (subscribe [::subs/form-data])
-        form-spec           (subscribe [::subs/form-spec])]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        open-modal      (subscribe [::subs/open-modal])
+        error-message   (subscribe [::subs/error-message])
+        success-message (subscribe [::subs/success-message])
+        loading?        (subscribe [::subs/loading?])
+        form-data       (subscribe [::subs/form-data])
+        form-spec       (subscribe [::subs/form-spec])]
     (fn []
       (let [email-encoded-uri (-> @form-data :email js/encodeURI)
             submit-fn         #(dispatch [::events/submit {:close-modal  false
                                                            :error-msg    (@tr [:error-occured])
                                                            :success-msg  (@tr [:invitation-email-success-msg])
-                                                           :redirect-url (str @server-redirect-uri
-                                                                              "?reset-password=" email-encoded-uri)}])
+                                                           :redirect-url (str @config/path-prefix
+                                                                              "/reset-password"
+                                                                              "?invited-user="
+                                                                              email-encoded-uri)}])
             form-valid?       (s/valid? @form-spec @form-data)
             {:keys [email]} @form-data]
 
@@ -569,7 +570,7 @@
                           :required      true
                           :auto-focus    true
                           :auto-complete "on"
-                          :on-change     (ui-callback/input-callback
+                          :on-blur       (ui-callback/input-callback
                                            #(dispatch [::events/update-form-data :email %]))}]]
 
           [:div {:style {:padding "10px 0"}} (@tr [:invite-user-inst])]]

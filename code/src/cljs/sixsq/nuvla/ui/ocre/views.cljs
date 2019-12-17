@@ -13,12 +13,15 @@
     [sixsq.nuvla.client.api :as api]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.cimi.events :as events]
-    [sixsq.nuvla.ui.cimi.subs :as subs]
+    [sixsq.nuvla.ui.cimi.events :as cimi-events]
+    [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.cimi.views :as cimi-views]
+    [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.edge.utils :as u]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.ocre.events :as events]
+    [sixsq.nuvla.ui.ocre.subs :as subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.plot.plot :as plot]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -167,7 +170,7 @@
                 (cimi-api-fx/default-error-message add-resp "Add voucher failed"))))
           (swap! progress inc)))
       (reset! upload-state :finished)
-      (dispatch [::events/get-results]))))
+      (dispatch [::cimi-events/get-results]))))
 
 
 (defn import-vouchers
@@ -199,8 +202,8 @@
 
 (defn ExportButton
   []
-  (let [collection      (subscribe [::subs/collection])
-        selected-fields (subscribe [::subs/selected-fields])
+  (let [collection      (subscribe [::cimi-subs/collection])
+        selected-fields (subscribe [::cimi-subs/selected-fields])
         csv-content     (export-collection @selected-fields (:resources @collection))]
     [uix/MenuItemWithIcon
      {:name      "Export"
@@ -275,39 +278,84 @@
 
 (defn Pies
   [terms-aggr]
-  [uix/Accordion
-   [plot/Pie {:height  75
-              :data    {:labels   (map :key terms-aggr)
-                        :datasets [{:data            (map :doc_count terms-aggr)
-                                    :backgroundColor (map #(str "#" (rand-int 999999))
-                                                          terms-aggr)}]}
-              :options {:title  {:display true,
-                                 :text    "Distributors"},
-                        :legend {:display true}}}]
+  [plot/Pie {:height  100
+             :data    {:labels   (map :key terms-aggr)
+                       :datasets [{:data            (map :doc_count terms-aggr)
+                                   :backgroundColor (map #(str "#"
+                                                               (.toString (rand-int 16rFFFFFF) 16))
+                                                         terms-aggr)}]}
+             :options {:title  {:display true,
+                                :text    "Distributors"},
+                       :legend {:display  true
+                                :position "left"}}}
    :label "Voucher Distribution"
    :icon "shipping fast"])
 
 
-(defn PieSection
+(defn Radar
   []
-  (let [vouchers (subscribe [::subs/collection])]
+  (let [all-states {"ACTIVATED" [], "DISTRIBUTED" [], "EXPIRED" [], "NEW" [],
+                    "REDEEMED"  []}
+        radar-ds   (subscribe [::subs/platforms-radar])]
+
+    [plot/Radar {:height  100
+                 :data    {:labels   (map (fn [[k v]] k) all-states)
+                           :datasets @radar-ds}
+                 :options {:title  {:display true,
+                                    :text    "Platforms"},
+                           :legend {:display   true
+                                    :position  "left"
+                                    :fullWidth false}
+                           }}]))
+
+
+(defn PlotSection
+  []
+  (let [distributors-terms (subscribe [::subs/distributors-terms])]
     (fn []
-      (let [vouchers   @vouchers
-            terms-aggr (-> vouchers :aggregations :terms:distributor :buckets)]
-        (if (pos? (count terms-aggr))
-          (do
-            [ui/Segment style/basic
-             [Pies terms-aggr]])
-          [ui/Message
-           {:warning true
-            :content "Voucher information not available"}])))))
+      (if @distributors-terms
+        [ui/Grid {:columns   2,
+                  :stackable true}
+         (when (pos? (count @distributors-terms))
+           [ui/GridColumn
+            [Pies @distributors-terms]])
+         [ui/GridColumn
+          [Radar]]]
+        [ui/Message
+         {:warning true
+          :content "Voucher information not available"}]))))
+
+
+(defn StatisticState
+  [value icon label]
+  (let [color "black"]
+    [ui/Statistic {:style {:cursor "pointer"}
+                   :color "black"}
+     [ui/StatisticValue (or value "-")
+      "\u2002"
+      [ui/Icon {:size "large" :name icon}]]
+     [ui/StatisticLabel label]]))
+
+
+(defn StatisticStates
+  []
+  (let [count-ids               (subscribe [::subs/count-ids])
+        cardinality-distributor (subscribe [::subs/cardinality-distributor])
+        cardinality-supplier    (subscribe [::subs/cardinality-supplier])
+        cardinality-platform    (subscribe [::subs/cardinality-platform])]
+    [ui/StatisticGroup (merge {:size "tiny"} style/center-block)
+     [StatisticState @count-ids "credit card" "VOUCHERS"]
+     [StatisticState @cardinality-supplier "industry" "SUPPLIERS"]
+     [StatisticState @cardinality-distributor "shipping fast" "DISTRIBUTORS"]
+     [StatisticState @cardinality-platform "building" "PLATFORMS"]]))
 
 
 (defn menu-bar []
   (let [tr            (subscribe [::i18n-subs/tr])
-        resources     (subscribe [::subs/collection])
-        selected-rows (subscribe [::subs/selected-rows])]
+        resources     (subscribe [::cimi-subs/collection])
+        selected-rows (subscribe [::cimi-subs/selected-rows])]
     (fn []
+      (dispatch [::events/fetch-distributor-terms])
       (when (instance? js/Error @resources)
         (dispatch [::messages-events/add
                    (let [{:keys [status message]} (response/parse-ex-info @resources)]
@@ -334,20 +382,22 @@
 
 (defn View
   []
-  (dispatch [::events/set-selected-fields ["code", "amount", "currency", "platform",
-                                           "target-audience", "state", "created", "distributor"]])
-  (dispatch [::events/set-collection-name "voucher"])
-  (dispatch [::events/set-aggregation "terms:distributor"])
-  (dispatch [::events/set-filter nil])
-  (dispatch [::events/set-first 0])
-  (dispatch [::events/set-last 100])
-  (dispatch [::events/set-orderby "created:desc"])
-  (dispatch [::events/get-results])
+  (dispatch [::cimi-events/set-selected-fields
+             ["code", "amount", "currency", "platform", "target-audience",
+              "state", "created", "distributor"]])
+  (dispatch [::cimi-events/set-collection-name "voucher"])
+  (dispatch [::cimi-events/set-filter nil])
+  (dispatch [::cimi-events/set-aggregation nil])
+  (dispatch [::cimi-events/set-first 0])
+  (dispatch [::cimi-events/set-last 100])
+  (dispatch [::cimi-events/set-orderby "created:desc"])
+  (dispatch [::cimi-events/get-results])
   (fn []
     [:<>
-     [uix/PageHeader "credit card outline" "OCRE"]
+     [uix/PageHeader "" "OCRE"]
+     [StatisticStates]
      [menu-bar]
-     [PieSection]
+     [PlotSection]
      [cimi-views/results-display]
      [ModalImport]]))
 

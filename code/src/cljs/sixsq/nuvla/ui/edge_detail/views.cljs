@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.edge-detail.events :as events]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]
     [sixsq.nuvla.ui.edge.subs :as edge-subs]
@@ -220,11 +221,21 @@
 
 (defn EdgeDetails
   [uuid]
-  (let []
+  (let [nuvlabox  (subscribe [::subs/nuvlabox])
+        can-edit? (subscribe [::subs/can-edit?])
+        acl-open  (r/atom false)]
     (refresh uuid)
     (fn [uuid]
       ^{:key uuid}
       [ui/Container {:fluid true}
        [MenuBar uuid]
+       ^{:key (:updated @nuvlabox)}
+       [acl/AclButton
+        {:default-value   (:acl @nuvlabox)
+         :read-only       (not @can-edit?)
+         :default-active? @acl-open
+         :on-change       #(do
+                             (reset! acl-open true)
+                             (dispatch [::events/edit (:id @nuvlabox) (assoc @nuvlabox :acl %)]))}]
        [SummarySection]
        [StatusSection]])))

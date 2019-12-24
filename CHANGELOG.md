@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - NUVLABOX DETAIL - Allow sharing NuvlaBox via ACL
   - OCRE - When importing, if voucher exist update it instead of conflict
   - OCRE - Make visible vouchers by default to all group users
   - OCRE - Server side aggregation for pie chart

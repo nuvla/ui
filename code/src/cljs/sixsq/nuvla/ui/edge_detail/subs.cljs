@@ -47,6 +47,13 @@
 
 
 (reg-sub
+  ::can-edit?
+  :<- [::nuvlabox]
+  (fn [nuvlabox _]
+    (general-utils/can-edit? nuvlabox)))
+
+
+(reg-sub
   ::can-delete?
   :<- [::nuvlabox]
   (fn [nuvlabox _]

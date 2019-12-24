@@ -115,7 +115,7 @@ You will need to point your development ui environment to a Nuvla server. For th
 you have a few choices:
 
  1. [Deploy a test server](https://github.com/nuvla/deployment/tree/master/test)
- 2. Point to an already deployed server (e.g. nuvla.io - soon)
+ 2. Point to an already deployed server (e.g. https://nuvla.io)
 
 You then need to configure your local Nuvla ui to point to the Nuvla server.
 

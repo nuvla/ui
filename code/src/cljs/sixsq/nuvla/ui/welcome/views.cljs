@@ -32,17 +32,12 @@
   (let [tr           (subscribe [::i18n-subs/tr])
         iframe?      (subscribe [::main-subs/iframe?])
         query-params (subscribe [::main-subs/nav-query-params])
-        {:keys [reset-password, message, error]} @query-params]
+        {:keys [message, error]} @query-params]
     (when @query-params
 
       (when (or message error)
         (dispatch [:sixsq.nuvla.ui.main.events/set-message
                    (if error :error :success) (or error message)]))
-
-      (when reset-password
-        (dispatch [::authn-events/set-form-id authn-utils/session-tmpl-password-reset])
-        (dispatch [::authn-events/update-form-data :username (:reset-password @query-params)])
-        (dispatch [::authn-events/open-modal :reset-password]))
 
       (dispatch [::history-events/navigate (str (first path) "/")]))
     [ui/Container {:textAlign "center"

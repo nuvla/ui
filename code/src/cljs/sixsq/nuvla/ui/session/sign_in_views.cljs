@@ -6,14 +6,14 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.authn.subs :as authn-subs]
+    [sixsq.nuvla.ui.authn.utils :as utils]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.session.components :as comp]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.spec :as us]
-    [sixsq.nuvla.ui.authn.utils :as utils]))
+    [sixsq.nuvla.ui.utils.spec :as us]))
 
 ;; VALIDATION SPEC
 (s/def ::username us/nonblank-string)
@@ -55,7 +55,7 @@
                         [history-views/link "reset-password" (@tr [:forgot-password])]]]
         :submit-text  (@tr [:sign-in])
         :submit-fn    #(when (fv/validate-form-and-show? form)
-                         (dispatch [::authn-events/submit2 "session-template/password"
+                         (dispatch [::authn-events/submit "session-template/password"
                                     (:names->value @form)]))
         :ExtraContent (when @github-template?
                         [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/session")

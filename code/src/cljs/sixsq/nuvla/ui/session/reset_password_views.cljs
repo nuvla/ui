@@ -6,8 +6,8 @@
     [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.session.components :as comp]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.session.components :as comp]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.spec :as us]))
 
@@ -85,7 +85,7 @@
                                                                    :password-repeat spec->msg)}]]]
         :submit-text (@tr [(if invited-user :set-password :reset-password)])
         :submit-fn   #(when (fv/validate-form-and-show? form)
-                        (dispatch [::authn-events/submit2 "session-template/password-reset"
+                        (dispatch [::authn-events/submit "session-template/password-reset"
                                    (-> @form
                                        :names->value
                                        (dissoc :password-repeat))

@@ -78,7 +78,7 @@
                                        :error     (fv/?show-message form :password-repeat spec->msg)}]]]
         :submit-text  (@tr [:sign-up])
         :submit-fn    #(when (fv/validate-form-and-show? form)
-                         (dispatch [::authn-events/submit2 "user-template/email-password"
+                         (dispatch [::authn-events/submit "user-template/email-password"
                                     (-> @form
                                         :names->value
                                         (dissoc :password-repeat))
@@ -87,23 +87,23 @@
                                                         callback-message-on-validation)}]))
         :ExtraContent (when @github-template?
                         [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/user")
-                                 :method "post"
-                                 :style  {:margin-top 70
-                                          :color      "grey"}}
-                        "or use your github account "
-                        [:input {:hidden        true
-                                 :name          "href"
-                                 :default-value "user-template/nuvla"}]
-                        [:input {:hidden        true
-                                 :name          "redirect-url"
-                                 :default-value @server-redirect-uri}]
-                        [ui/Button {:style    {:margin-left 10}
-                                    :circular true
-                                    :basic    true
-                                    :type     "submit"
-                                    :class    "icon"}
-                         [ui/Icon {:name "github"
-                                   :size "large"}]]])}])))
+                                  :method "post"
+                                  :style  {:margin-top 70
+                                           :color      "grey"}}
+                         "or use your github account "
+                         [:input {:hidden        true
+                                  :name          "href"
+                                  :default-value "user-template/nuvla"}]
+                         [:input {:hidden        true
+                                  :name          "redirect-url"
+                                  :default-value @server-redirect-uri}]
+                         [ui/Button {:style    {:margin-left 10}
+                                     :circular true
+                                     :basic    true
+                                     :type     "submit"
+                                     :class    "icon"}
+                          [ui/Icon {:name "github"
+                                    :size "large"}]]])}])))
 
 
 (defn Presentation

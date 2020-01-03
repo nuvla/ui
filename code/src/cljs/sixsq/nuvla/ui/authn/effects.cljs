@@ -13,6 +13,5 @@
           remaining-time-millis (->> expiry (time/delta-milliseconds (time/now)) int)]
       (if (pos-int? remaining-time-millis)
         (do (js/clearTimeout @timeout-id)
-            (reset! timeout-id (js/setTimeout logout-callback remaining-time-millis))
-            (dispatch [:sixsq.nuvla.ui.authn.events/close-modal-no-session]))
+            (reset! timeout-id (js/setTimeout logout-callback remaining-time-millis)))
         (logout-callback)))))

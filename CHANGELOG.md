@@ -6,6 +6,9 @@
 
   - INFRASTRUCTURE PAGE - Remove S3 from add modal
   - CREDENTIAL PAGE - Remove S3 from add modal
+  - DASHBOARD - card <a> can't be descendant of <a>
+  - Update copyright footer to 2020
+  - NUVLABOX DETAIL - Allow sharing NuvlaBox via ACL
   - OCRE - When importing, if voucher exist update it instead of conflict
   - OCRE - Make visible vouchers by default to all group users
   - OCRE - Server side aggregation for pie chart

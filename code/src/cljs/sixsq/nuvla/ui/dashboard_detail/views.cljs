@@ -454,10 +454,12 @@
 
     ^{:key id}
     [ui/Card (when clickable?
-               {:href     (utils/detail-href id)
+               {:as       :div
+                :link     true
                 :on-click (fn [event]
                             (dispatch [::history-events/navigate (utils/detail-href id)])
-                            (.preventDefault event))})
+                            (.preventDefault event))
+                })
      [ui/Image {:src      (or module-logo-url "")
                 :bordered true
                 :style    {:width      "auto"

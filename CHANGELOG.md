@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - DASHBOARD - card <a> can't be descendant of <a>
   - Update copyright footer to 2020
   - NUVLABOX DETAIL - Allow sharing NuvlaBox via ACL
   - OCRE - When importing, if voucher exist update it instead of conflict

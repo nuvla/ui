@@ -4,7 +4,6 @@
     [form-validator.core :as fv]
     [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.cimi.events :as api-events]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.db.events :as db-events]
@@ -12,6 +11,7 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.views :as main-views]
     [sixsq.nuvla.ui.routes :as routes]
+    [sixsq.nuvla.ui.session.events :as session-events]
     [sixsq.nuvla.ui.utils.defines :as defines]
     [taoensso.timbre :as log]))
 
@@ -63,7 +63,7 @@
   (dev-setup)
   (dispatch-sync [::db-events/initialize-db])
   (dispatch-sync [::api-events/get-cloud-entry-point])
-  (dispatch-sync [::authn-events/initialize])
+  (dispatch-sync [::session-events/initialize])
   (dispatch-sync [::main-events/check-iframe])
   (visibility-watcher)
   (routes/routes)

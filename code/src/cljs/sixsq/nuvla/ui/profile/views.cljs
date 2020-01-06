@@ -4,11 +4,11 @@
     [clojure.string :as str]
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.profile.events :as events]
     [sixsq.nuvla.ui.profile.subs :as subs]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -158,7 +158,7 @@
 (defn session-info
   []
   (let [tr                  (subscribe [::i18n-subs/tr])
-        session             (subscribe [::authn-subs/session])
+        session             (subscribe [::session-subs/session])
         credential-password (subscribe [::subs/credential-password])]
     (fn []
       [ui/Segment style/basic

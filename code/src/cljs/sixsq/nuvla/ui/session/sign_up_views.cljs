@@ -4,12 +4,12 @@
     [clojure.string :as str]
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.authn.events :as authn-events]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.session.components :as comp]
+    [sixsq.nuvla.ui.session.events :as session-events]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.spec :as us]))
 
@@ -43,9 +43,9 @@
         spec->msg                  {::email          (@tr [:email-invalid-format])
                                     ::password       (@tr [:password-constraint])
                                     :password-repeat (@tr [:passwords-doesnt-match])}
-        server-redirect-uri        (subscribe [::authn-subs/server-redirect-uri])
+        server-redirect-uri        (subscribe [::session-subs/server-redirect-uri])
         callback-msg-on-validation (js/encodeURI "signup-validation-success")
-        github-template?           (subscribe [::authn-subs/user-template-exist?
+        github-template?           (subscribe [::session-subs/user-template-exist?
                                                "user-template/nuvla"])]
     (fn []
       [comp/RightPanel
@@ -82,7 +82,7 @@
                                        :error     (fv/?show-message form :password-repeat spec->msg)}]]]
         :submit-text  (@tr [:sign-up])
         :submit-fn    #(when (fv/validate-form-and-show? form)
-                         (dispatch [::authn-events/submit "user-template/email-password"
+                         (dispatch [::session-events/submit "user-template/email-password"
                                     (-> @form
                                         :names->value
                                         (dissoc :password-repeat))

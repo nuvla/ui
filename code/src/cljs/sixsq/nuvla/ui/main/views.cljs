@@ -10,7 +10,6 @@
     [sixsq.nuvla.ui.apps-store.views]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.views]
-    [sixsq.nuvla.ui.authn.views :as authn-views]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.cimi.views]
     [sixsq.nuvla.ui.credentials.events :as credential-events]
@@ -214,7 +213,7 @@
     [ui/MenuMenu {:position "right"}
      [messages/bell-menu]
      [ui/MenuItem {:fitted true}
-      [authn-views/authn-menu]]]]
+      [session-views/authn-menu]]]]
 
    [messages/alert-slider]
    [messages/alert-modal]])
@@ -232,7 +231,6 @@
                         :id            "nuvla-ui-main"
                         :fire-on-mount true
                         :on-update     (responsive/callback #(dispatch [::events/set-device %]))}
-         (.log js/console @resource-path)
          (case (first @resource-path)
            "sign-in" [session-views/SessionPage]
            "sign-up" [session-views/SessionPage]

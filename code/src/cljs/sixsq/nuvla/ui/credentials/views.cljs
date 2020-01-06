@@ -5,7 +5,6 @@
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.credentials.events :as events]
     [sixsq.nuvla.ui.credentials.spec :as spec]
     [sixsq.nuvla.ui.credentials.subs :as subs]
@@ -13,6 +12,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.accordion :as utils-accordion]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -149,7 +149,7 @@
                              (dispatch [::events/update-credential name-kw value])
                              (dispatch [::events/validate-credential-form ::spec/vpn-credential]))
         infra-services     (subscribe [::subs/infrastructure-services-available])
-        user               (subscribe [::authn-subs/user])
+        user               (subscribe [::session-subs/user])
         update-description (atom true)]
     (fn []
       (let [editable?              (general-utils/editable? @credential @is-new?)

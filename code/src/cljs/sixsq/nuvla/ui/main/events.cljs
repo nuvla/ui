@@ -3,12 +3,12 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
-    [sixsq.nuvla.ui.authn.events :as authn-events]
     [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
     [sixsq.nuvla.ui.main.effects :as fx]
     [sixsq.nuvla.ui.main.spec :as spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.messages.spec :as messages-spec]
+    [sixsq.nuvla.ui.session.events :as session-events]
     [sixsq.nuvla.ui.utils.general :as u]
     [taoensso.timbre :as log]))
 
@@ -54,7 +54,7 @@
              ::fx/bulk-actions-interval [(if visible?
                                            ::action-interval-resume
                                            ::action-interval-pause) actions-interval]}
-            visible? (assoc ::api-fx/session [#(dispatch [::authn-events/set-session %])]))))
+            visible? (assoc ::api-fx/session [#(dispatch [::session-events/set-session %])]))))
 
 
 (reg-event-fx

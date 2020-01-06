@@ -2,12 +2,11 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.authn.events :as authn-events]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as events]
     [sixsq.nuvla.ui.main.subs :as subs]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
@@ -26,7 +25,7 @@
 (defn item
   [label-kw url icon protected?]
   (let [tr       (subscribe [::i18n-subs/tr])
-        is-user? (subscribe [::authn-subs/is-user?])
+        is-user? (subscribe [::session-subs/is-user?])
         active?  (subscribe [::subs/nav-url-active? url])]
 
     ^{:key (name label-kw)}
@@ -97,7 +96,7 @@
          (when (or (not @iframe?) iframe-visble?)
            ^{:key url}
            [item label-kw url icon protected?])))
-     (let [is-admin?     (subscribe [::authn-subs/is-admin?])
-           is-ocre-user? (subscribe [::authn-subs/has-role? "group/ocre-user"])]
+     (let [is-admin?     (subscribe [::session-subs/is-admin?])
+           is-ocre-user? (subscribe [::session-subs/has-role? "group/ocre-user"])]
        (when (or @is-admin? @is-ocre-user?)
          [item-ocre]))]))

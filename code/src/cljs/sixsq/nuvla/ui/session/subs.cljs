@@ -1,9 +1,9 @@
-(ns sixsq.nuvla.ui.authn.subs
+(ns sixsq.nuvla.ui.session.subs
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.authn.spec :as spec]
-    [sixsq.nuvla.ui.cimi.subs :as cimi-subs]))
+    [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
+    [sixsq.nuvla.ui.session.spec :as spec]))
 
 
 (reg-sub

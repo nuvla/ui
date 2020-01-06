@@ -5,7 +5,6 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
     [sixsq.nuvla.ui.edge.events :as events]
     [sixsq.nuvla.ui.edge.subs :as subs]
@@ -14,6 +13,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -104,7 +104,7 @@
   (let [modal-id       :add
         tr             (subscribe [::i18n-subs/tr])
         visible?       (subscribe [::subs/modal-visible? modal-id])
-        user-id        (subscribe [::authn-subs/user-id])
+        user-id        (subscribe [::session-subs/user-id])
         nuvlabox-id    (subscribe [::subs/nuvlabox-created-id])
         vpn-infra-opts (subscribe [::subs/vpn-infra-options])
         default-data   {:owner            @user-id

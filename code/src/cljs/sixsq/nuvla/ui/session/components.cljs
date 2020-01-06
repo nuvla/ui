@@ -2,19 +2,18 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.authn.events :as authn-events]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
-    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
+    [sixsq.nuvla.ui.session.events :as session-events]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defn RightPanel
   [{:keys [title title-bold FormFields submit-text submit-fn ExtraContent]}]
-  (let [error-message   (subscribe [::authn-subs/error-message])
-        success-message (subscribe [::authn-subs/success-message])
+  (let [error-message   (subscribe [::session-subs/error-message])
+        success-message (subscribe [::session-subs/success-message])
         tr              (subscribe [::i18n-subs/tr])
-        loading?        (subscribe [::authn-subs/loading?])]
+        loading?        (subscribe [::session-subs/loading?])]
     [:<>
      [:div {:style {:float "right"}} [i18n-views/LocaleDropdown]]
      [:div {:style {:margin-left "10%"
@@ -27,14 +26,14 @@
        (when @error-message
          [ui/Message {:negative  true
                       :size      "tiny"
-                      :onDismiss #(dispatch [::authn-events/set-error-message nil])}
+                      :onDismiss #(dispatch [::session-events/set-error-message nil])}
           [ui/MessageHeader (str/capitalize (@tr [:error]))]
           [:p @error-message]])
 
        (when @success-message
          [ui/Message {:negative  false
                       :size      "tiny"
-                      :onDismiss #(dispatch [::authn-events/set-success-message nil])}
+                      :onDismiss #(dispatch [::session-events/set-success-message nil])}
           [ui/MessageHeader (str/capitalize (@tr [:success]))]
           [:p @success-message]])
 

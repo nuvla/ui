@@ -4,14 +4,14 @@
     [clojure.string :as str]
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.authn.events :as authn-events]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
-    [sixsq.nuvla.ui.authn.utils :as utils]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.session.components :as comp]
+    [sixsq.nuvla.ui.session.events :as session-events]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
+    [sixsq.nuvla.ui.session.utils :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.spec :as us]))
 
@@ -33,8 +33,8 @@
         tr                  (subscribe [::i18n-subs/tr])
         spec->msg           {::username (@tr [:should-not-be-empty])
                              ::password (@tr [:should-not-be-empty])}
-        server-redirect-uri (subscribe [::authn-subs/server-redirect-uri])
-        github-template?    (subscribe [::authn-subs/session-template-exist?
+        server-redirect-uri (subscribe [::session-subs/server-redirect-uri])
+        github-template?    (subscribe [::session-subs/session-template-exist?
                                         "session-template/github-nuvla"])]
     (fn []
       [comp/RightPanel
@@ -57,7 +57,7 @@
                         [history-views/link "reset-password" (@tr [:forgot-password])]]]
         :submit-text  (@tr [:sign-in])
         :submit-fn    #(when (fv/validate-form-and-show? form)
-                         (dispatch [::authn-events/submit "session-template/password"
+                         (dispatch [::session-events/submit "session-template/password"
                                     (:names->value @form)]))
         :ExtraContent (when @github-template?
                         [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/session")
@@ -82,7 +82,7 @@
 
 (defn Presentation
   []
-  (let [signup-template? (subscribe [::authn-subs/user-template-exist?
+  (let [signup-template? (subscribe [::session-subs/user-template-exist?
                                      utils/user-tmpl-email-password])]
     [comp/LeftPanel
      (cond->

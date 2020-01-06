@@ -8,8 +8,9 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.session.components :as comp]
-    [sixsq.nuvla.ui.session.events :as session-events]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
+    [sixsq.nuvla.ui.session.events :as events]
+    [sixsq.nuvla.ui.session.subs :as subs]
+    [sixsq.nuvla.ui.session.utils :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.spec :as us]))
 
@@ -43,9 +44,9 @@
         spec->msg                  {::email          (@tr [:email-invalid-format])
                                     ::password       (@tr [:password-constraint])
                                     :password-repeat (@tr [:passwords-doesnt-match])}
-        server-redirect-uri        (subscribe [::session-subs/server-redirect-uri])
+        server-redirect-uri        (subscribe [::subs/server-redirect-uri])
         callback-msg-on-validation (js/encodeURI "signup-validation-success")
-        github-template?           (subscribe [::session-subs/user-template-exist?
+        github-template?           (subscribe [::subs/user-template-exist?
                                                "user-template/nuvla"])]
     (fn []
       [comp/RightPanel
@@ -82,7 +83,7 @@
                                        :error     (fv/?show-message form :password-repeat spec->msg)}]]]
         :submit-text  (@tr [:sign-up])
         :submit-fn    #(when (fv/validate-form-and-show? form)
-                         (dispatch [::session-events/submit "user-template/email-password"
+                         (dispatch [::events/submit utils/user-tmpl-email-password
                                     (-> @form
                                         :names->value
                                         (dissoc :password-repeat))

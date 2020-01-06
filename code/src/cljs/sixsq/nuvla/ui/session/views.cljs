@@ -90,7 +90,7 @@
       (let [submit-fn #(when (fv/validate-form-and-show? form)
                          (let [form-data     (:names->value @form)
                                email-encoded (-> form-data :email js/encodeURI)]
-                           (dispatch [::events/submit "user-template/email-invitation"
+                           (dispatch [::events/submit utils/user-tmpl-email-invitation
                                       (:names->value @form)
                                       {:success-msg  (@tr [:invitation-email-success-msg])
                                        :redirect-url (str @config/path-prefix

@@ -4,16 +4,16 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
-    [sixsq.nuvla.ui.session.events :as session-events]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
+    [sixsq.nuvla.ui.session.events :as events]
+    [sixsq.nuvla.ui.session.subs :as subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defn RightPanel
   [{:keys [title title-bold FormFields submit-text submit-fn ExtraContent]}]
-  (let [error-message   (subscribe [::session-subs/error-message])
-        success-message (subscribe [::session-subs/success-message])
+  (let [error-message   (subscribe [::subs/error-message])
+        success-message (subscribe [::subs/success-message])
         tr              (subscribe [::i18n-subs/tr])
-        loading?        (subscribe [::session-subs/loading?])]
+        loading?        (subscribe [::subs/loading?])]
     [:<>
      [:div {:style {:float "right"}} [i18n-views/LocaleDropdown]]
      [:div {:style {:margin-left "10%"
@@ -26,14 +26,14 @@
        (when @error-message
          [ui/Message {:negative  true
                       :size      "tiny"
-                      :onDismiss #(dispatch [::session-events/set-error-message nil])}
+                      :onDismiss #(dispatch [::events/set-error-message nil])}
           [ui/MessageHeader (str/capitalize (@tr [:error]))]
           [:p @error-message]])
 
        (when @success-message
          [ui/Message {:negative  false
                       :size      "tiny"
-                      :onDismiss #(dispatch [::session-events/set-success-message nil])}
+                      :onDismiss #(dispatch [::events/set-success-message nil])}
           [ui/MessageHeader (str/capitalize (@tr [:success]))]
           [:p @success-message]])
 

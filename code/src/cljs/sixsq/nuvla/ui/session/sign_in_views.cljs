@@ -26,7 +26,9 @@
 
 (defn Form
   []
-  (let [form-conf           {:form-spec ::session-template-password}
+  (let [form-conf           {:form-spec    ::session-template-password
+                             :names->value {:username ""
+                                            :password ""}}
         form                (fv/init-form form-conf)
         tr                  (subscribe [::i18n-subs/tr])
         spec->msg           {::username (@tr [:should-not-be-empty])

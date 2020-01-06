@@ -14,10 +14,12 @@
 ;; VALIDATION SPEC
 (s/def ::username us/nonblank-string)
 (s/def ::new-password us/acceptable-password?)
+(s/def ::password-repeat us/nonblank-string)
 
 (s/def ::session-template-password-reset
   (s/keys :req-un [::username
-                   ::new-password]))
+                   ::new-password
+                   ::password-repeat]))
 
 ;; VALIDATION SPEC
 (s/def ::email (s/and string? us/email?))
@@ -42,7 +44,9 @@
   (let [query-params (subscribe [::main-subs/nav-query-params])
         invited-user (:invited-user @query-params)
         form-conf    {:form-spec         ::session-template-password-reset
-                      :names->value {:username (or invited-user "")}
+                      :names->value      {:username        (or invited-user "")
+                                          :new-password    ""
+                                          :password-repeat ""}
                       :names->validators {:password-repeat [password-repeat-check]}}
         form         (fv/init-form form-conf)
         tr           (subscribe [::i18n-subs/tr])

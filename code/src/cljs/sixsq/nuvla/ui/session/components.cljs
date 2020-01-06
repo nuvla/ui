@@ -53,8 +53,6 @@
 (defn LeftPanel
   [{:keys [title subtitle p1 p2 button-text button-callback]}]
   [:div {:style {:padding "75px"}}
-   #_[:div {:style {:font-size "2em"}}
-      "Welcome to"]
    [:div {:style {:font-size   "6em"
                   :line-height "normal"}}
     title]

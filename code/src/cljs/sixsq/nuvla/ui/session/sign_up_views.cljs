@@ -33,16 +33,20 @@
 
 (defn Form
   []
-  (let [form-conf                      {:form-spec         ::user-template-email-password
-                                        :names->validators {:password-repeat [password-repeat-check]}}
-        form                           (fv/init-form form-conf)
-        tr                             (subscribe [::i18n-subs/tr])
-        spec->msg                      {::email          (@tr [:email-invalid-format])
-                                        ::password       (@tr [:password-constraint])
-                                        :password-repeat (@tr [:passwords-doesnt-match])}
-        server-redirect-uri            (subscribe [::authn-subs/server-redirect-uri])
-        callback-message-on-validation (js/encodeURI "signup-validation-success")
-        github-template? (subscribe [::authn-subs/user-template-exist? "user-template/nuvla"])]
+  (let [form-conf                  {:form-spec         ::user-template-email-password
+                                    :names->validators {:password-repeat [password-repeat-check]}
+                                    :names->value      {:email           ""
+                                                        :password        ""
+                                                        :password-repeat ""}}
+        form                       (fv/init-form form-conf)
+        tr                         (subscribe [::i18n-subs/tr])
+        spec->msg                  {::email          (@tr [:email-invalid-format])
+                                    ::password       (@tr [:password-constraint])
+                                    :password-repeat (@tr [:passwords-doesnt-match])}
+        server-redirect-uri        (subscribe [::authn-subs/server-redirect-uri])
+        callback-msg-on-validation (js/encodeURI "signup-validation-success")
+        github-template?           (subscribe [::authn-subs/user-template-exist?
+                                               "user-template/nuvla"])]
     (fn []
       [comp/RightPanel
        {:title        "Create an  "
@@ -84,7 +88,7 @@
                                         (dissoc :password-repeat))
                                     {:success-msg  (@tr [:validation-email-success-msg])
                                      :redirect-url (str @server-redirect-uri "?message="
-                                                        callback-message-on-validation)}]))
+                                                        callback-msg-on-validation)}]))
         :ExtraContent (when @github-template?
                         [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/user")
                                   :method "post"

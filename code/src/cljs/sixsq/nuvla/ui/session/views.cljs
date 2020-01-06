@@ -49,9 +49,9 @@
     (when @session
       (dispatch [::history-events/navigate "welcome"]))
     (when error
-      (dispatch [::events/set-error-message (@tr [(keyword error)])]))
+      (dispatch [::events/set-error-message (or (@tr [(keyword error)]) error)]))
     (when message
-      (dispatch [::events/set-success-message (@tr [(keyword message)])]))
+      (dispatch [::events/set-success-message (or (@tr [(keyword message)]) message)]))
     [ui/Grid {:stackable true
               :columns   2
               :reversed  "mobile"

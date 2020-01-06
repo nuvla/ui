@@ -5,7 +5,6 @@
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
-    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.session.components :as comp]
     [sixsq.nuvla.ui.session.events :as events]
@@ -50,8 +49,8 @@
                                                "user-template/nuvla"])]
     (fn []
       [comp/RightPanel
-       {:title        "Create an  "
-        :title-bold   "Account"
+       {:title        (@tr [:create-an])
+        :title-bold   (@tr [:account])
         :FormFields   [:<>
                        [ui/FormInput {:name          :email
                                       :label         "Email"
@@ -95,7 +94,7 @@
                                   :method "post"
                                   :style  {:margin-top 70
                                            :color      "grey"}}
-                         "or use your github account "
+                         (@tr [:or-use-github-accout])
                          [:input {:hidden        true
                                   :name          "href"
                                   :default-value "user-template/nuvla"}]
@@ -109,15 +108,3 @@
                                      :class    "icon"}
                           [ui/Icon {:name "github"
                                     :size "large"}]]])}])))
-
-
-(defn Presentation
-  []
-  [comp/LeftPanel
-   {:title           "Nuvla"
-    :subtitle        "Start immediately deploying apps containers in one button click."
-    :p1              "Start jouney with us"
-    :p2              (str "Provide a secured edge to cloud (and back) management platform "
-                          "that enabled near-data AI for connected world use cases.")
-    :button-text     "Sign in"
-    :button-callback #(dispatch [::history-events/navigate "sign-in"])}])

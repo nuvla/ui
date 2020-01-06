@@ -47,39 +47,3 @@
 
       (when ExtraContent
         ExtraContent)]]))
-
-
-(defn LeftPanel
-  [{:keys [title subtitle p1 p2 button-text button-callback]}]
-  [:div {:style {:padding "75px"}}
-   [:div {:style {:font-size   "6em"
-                  :line-height "normal"}}
-    title]
-   [:br]
-
-   [:div {:style {:margin-top  40
-                  :line-height "normal"
-                  :font-size   "2em"}}
-    subtitle]
-   [:br]
-
-   [:b {:style {:font-size "1.4em"}} p1]
-
-   [:br] [:br]
-   (when button-text
-     [ui/Button
-      {:size     "large"
-       :inverted true
-       :on-click button-callback}
-      button-text])
-   [:div {:style {:margin-top  20
-                  :line-height "normal"}}
-    p2]
-
-   [:div {:style {:position "absolute"
-                  :bottom   40}}
-    "Follow us on "
-    [:span
-     [ui/Icon {:name "facebook"}]
-     [ui/Icon {:name "twitter"}]
-     [ui/Icon {:name "youtube"}]]]])

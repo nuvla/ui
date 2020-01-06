@@ -3,7 +3,6 @@
     [cljs.spec.alpha :as s]
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.session.components :as comp]
@@ -56,8 +55,8 @@
                       :password-repeat (@tr [:passwords-doesnt-match])}]
     (fn []
       [comp/RightPanel
-       {:title       (if invited-user "Accept " "Reset ")
-        :title-bold  (if invited-user "Invitation" "Password")
+       {:title       (if invited-user (@tr [:accept]) (@tr [:reset]))
+        :title-bold  (if invited-user (@tr [:invitation]) (@tr [:password]))
         :FormFields  [:<>
                       [ui/FormInput {:name          :username
                                      :label         (@tr [:username])
@@ -95,15 +94,3 @@
                                        :names->value
                                        (dissoc :password-repeat))
                                    {:success-msg (@tr [:validation-email-success-msg])}]))}])))
-
-
-(defn Presentation
-  []
-  [comp/LeftPanel
-   {:title           "Nuvla"
-    :subtitle        "Start immediately deploying apps containers in one button click."
-    :p1              "Start jouney with us"
-    :p2              (str "Provide a secured edge to cloud (and back) management platform "
-                          "that enabled near-data AI for connected world use cases.")
-    :button-text     "Sign in"
-    :button-callback #(dispatch [::history-events/navigate "sign-in"])}])

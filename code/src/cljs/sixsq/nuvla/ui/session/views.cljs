@@ -19,57 +19,6 @@
     [sixsq.nuvla.ui.utils.spec :as us]))
 
 
-(defn LeftPanel
-  []
-  (let [first-path (subscribe [::main-subs/nav-path-first])]
-    (case @first-path
-      "sign-in" [sign-in-views/Presentation]
-      "sign-up" [sign-up-views/Presentation]
-      "reset-password" [reset-password-views/Presentation]
-      [sign-in-views/Presentation])))
-
-
-(defn RightPanel
-  []
-  (let [first-path (subscribe [::main-subs/nav-path-first])]
-    (case @first-path
-      "sign-in" [sign-in-views/Form]
-      "sign-up" [sign-up-views/Form]
-      "reset-password" [reset-password-views/Form]
-      [sign-in-views/Form])))
-
-
-(defn SessionPage
-  []
-  (let [session      (subscribe [::subs/session])
-        query-params (subscribe [::main-subs/nav-query-params])
-        tr           (subscribe [::i18n-subs/tr])
-        error        (some-> @query-params :error keyword)
-        message      (some-> @query-params :message keyword)]
-    (when @session
-      (dispatch [::history-events/navigate "welcome"]))
-    (when error
-      (dispatch [::events/set-error-message (or (@tr [(keyword error)]) error)]))
-    (when message
-      (dispatch [::events/set-success-message (or (@tr [(keyword message)]) message)]))
-    [ui/Grid {:stackable true
-              :columns   2
-              :reversed  "mobile"
-              :style     {:margin           0
-                          :background-color "white"}}
-
-     [ui/GridColumn {:style {:background-image    "url(/ui/images/volumlight.png)"
-                             :background-size     "cover"
-                             :background-position "left"
-                             :background-repeat   "no-repeat"
-                             :color               "white"
-                             :min-height          "100vh"}}
-      [LeftPanel]]
-     [ui/GridColumn
-      [RightPanel]]]))
-
-
-
 ;;; VALIDATION SPEC
 (s/def ::email (s/and string? us/email?))
 
@@ -230,3 +179,92 @@
          dropdown-menu]])
      [modal-create-user]]))
 
+
+(defn LeftPanel
+  []
+  (let [tr               (subscribe [::i18n-subs/tr])
+        first-path       (subscribe [::main-subs/nav-path-first])
+        signup-template? (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])]
+    [:div {:style {:padding "75px"}}
+     [:div {:style {:font-size   "6em"
+                    :line-height "normal"}}
+      "Nuvla.io"]
+     [:br]
+
+     [:div {:style {:margin-top  40
+                    :line-height "normal"
+                    :font-size   "2em"}}
+      (@tr [:edge-platform-as-a-service])]
+     [:br]
+
+     [:p {:style {:font-size "1.4em"}} (@tr [:start-journey-to-the-edge])]
+
+     [:br] [:br]
+     [:div
+      [uix/Button
+       {:text     (@tr [:sign-in])
+        :inverted true
+        :active   (= @first-path "sign-in")
+        :on-click #(dispatch [::history-events/navigate "sign-in"])}]
+      (when @signup-template?
+        [uix/Button
+         {:text     (@tr [:sign-up])
+          :inverted true
+          :active   (= @first-path "sign-up")
+          :on-click #(dispatch [::history-events/navigate "sign-up"])}])]
+     [:div {:style {:margin-top  20
+                    :line-height "normal"}}
+      (@tr [:keep-data-control])]
+
+     [:div {:style {:position "absolute"
+                    :bottom   40}}
+      (@tr [:follow-us-on])
+      [:span
+       (for [[icon url] [["youtube" "https://www.youtube.com/channel/UCGYw3n7c-QsDtsVH32By1-g"]
+                         ["twitter" "https://twitter.com/sixsq"]
+                         ["facebook" "https://www.facebook.com/SixSq-143266939349560"]]]
+         [:a {:key    url
+              :href   url
+              :target "_blank"
+              :style  {:color "white"}}
+          [ui/Icon {:name icon}]])]]]
+    ))
+
+
+(defn RightPanel
+  []
+  (let [first-path (subscribe [::main-subs/nav-path-first])]
+    (case @first-path
+      "sign-in" [sign-in-views/Form]
+      "sign-up" [sign-up-views/Form]
+      "reset-password" [reset-password-views/Form]
+      [sign-in-views/Form])))
+
+
+(defn SessionPage
+  []
+  (let [session      (subscribe [::subs/session])
+        query-params (subscribe [::main-subs/nav-query-params])
+        tr           (subscribe [::i18n-subs/tr])
+        error        (some-> @query-params :error keyword)
+        message      (some-> @query-params :message keyword)]
+    (when @session
+      (dispatch [::history-events/navigate "welcome"]))
+    (when error
+      (dispatch [::events/set-error-message (or (@tr [(keyword error)]) error)]))
+    (when message
+      (dispatch [::events/set-success-message (or (@tr [(keyword message)]) message)]))
+    [ui/Grid {:stackable true
+              :columns   2
+              :style     {:margin           0
+                          :background-color "white"}}
+
+     [ui/GridColumn {:style {:background-image    "url(/ui/images/volumlight.png)"
+                             :background-size     "cover"
+                             :background-position "left"
+                             :background-repeat   "no-repeat"
+                             :color               "white"
+                             :min-height          "100vh"}}
+      [LeftPanel]]
+     [ui/GridColumn
+      [RightPanel]]]))

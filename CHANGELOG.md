@@ -4,6 +4,10 @@
 
 ### Changed
 
+## [2.4.8] - 2020-01-10
+
+### Changed
+
   - SESSION PAGE - Use proper page for authentication instead of modals
   - DEPENDENCIES - Fix version of closure-compiler-unshaded to be 
     aligned with shadow-cljs version 

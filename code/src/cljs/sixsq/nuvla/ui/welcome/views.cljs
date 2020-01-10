@@ -2,20 +2,17 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.authn.events :as authn-events]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
-    [sixsq.nuvla.ui.authn.utils :as authn-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.session.subs :as session-subs]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn card [name-kw desc-kw icon target-resource]
   (let [tr       (subscribe [::i18n-subs/tr])
-        is-user? (subscribe [::authn-subs/is-user?])]
+        is-user? (subscribe [::session-subs/is-user?])]
     [ui/Card
      [ui/CardContent {:as "h1"}
       [ui/CardHeader [ui/Header {:as "h1"}
@@ -33,17 +30,12 @@
   (let [tr           (subscribe [::i18n-subs/tr])
         iframe?      (subscribe [::main-subs/iframe?])
         query-params (subscribe [::main-subs/nav-query-params])
-        {:keys [reset-password, message, error]} @query-params]
+        {:keys [message, error]} @query-params]
     (when @query-params
 
       (when (or message error)
         (dispatch [:sixsq.nuvla.ui.main.events/set-message
                    (if error :error :success) (or error message)]))
-
-      (when reset-password
-        (dispatch [::authn-events/set-form-id authn-utils/session-tmpl-password-reset])
-        (dispatch [::authn-events/update-form-data :username (:reset-password @query-params)])
-        (dispatch [::authn-events/open-modal :reset-password]))
 
       (dispatch [::history-events/navigate (str (first path) "/")]))
     [ui/Container {:textAlign "center"

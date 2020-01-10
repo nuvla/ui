@@ -8,21 +8,21 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
-(defn locale-dropdown-item
+(defn LocaleDropdownItem
   [{:keys [value text]}]
   (let [on-click #(dispatch [::i18n-events/set-locale value])]
     [ui/DropdownItem {:on-click on-click} text]))
 
 
-(defn locale-dropdown
+(defn LocaleDropdown
   []
   (let [locale (subscribe [::i18n-subs/locale])]
-    (fn []
-      [ui/Dropdown {:close-on-change true
-                    :upward          true
-                    :item            true
-                    :icon            nil
-                    :pointing        "top right"
-                    :trigger         (r/as-element [:span [ui/Icon {:name "globe"}] @locale])}
-       (vec (concat [ui/DropdownMenu]
-                    (map locale-dropdown-item (utils/locale-choices))))])))
+    [ui/Dropdown {:close-on-change true
+                  :item            true
+                  :icon            nil
+                  :pointing        "top right"
+                  :trigger         (r/as-element [:span [ui/Icon {:name "globe"}] @locale])}
+     [ui/DropdownMenu
+      (for [{:keys [value] :as locale-choice} (utils/locale-choices)]
+        ^{:key value}
+        [LocaleDropdownItem locale-choice])]]))

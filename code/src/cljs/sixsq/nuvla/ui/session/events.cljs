@@ -1,14 +1,14 @@
-(ns sixsq.nuvla.ui.authn.events
+(ns sixsq.nuvla.ui.session.events
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.authn.effects :as fx]
-    [sixsq.nuvla.ui.authn.spec :as spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.events :as cimi-events]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.session.effects :as fx]
+    [sixsq.nuvla.ui.session.spec :as spec]
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-fx
@@ -42,7 +42,8 @@
   ::logout
   (fn [{:keys [db]} _]
     {:db                  (assoc db :sixsq.nuvla.ui.main.spec/bootstrap-message nil)
-     ::cimi-api-fx/logout [#(dispatch [::set-session nil])]}))
+     ::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
+                                (dispatch [::history-events/navigate "sign-in"]))]}))
 
 
 (reg-event-db
@@ -55,24 +56,8 @@
   ::close-modal
   (fn [db _]
     (assoc db ::spec/open-modal nil
-              ::spec/selected-method-group nil
-              ::spec/form-data nil
               ::spec/error-message nil
               ::spec/success-message nil)))
-
-
-(reg-event-db
-  ::close-modal-no-session
-  (fn [{:keys [::spec/open-modal] :as db} _]
-    (when-not (contains? #{:invite-user :reset-password} open-modal)
-      (dispatch [::close-modal]))
-    db))
-
-
-(reg-event-db
-  ::set-selected-method-group
-  (fn [db [_ selected-method]]
-    (assoc db ::spec/selected-method-group selected-method)))
 
 
 (reg-event-db
@@ -93,41 +78,18 @@
      :dispatch [::clear-loading]}))
 
 
-(reg-event-db
-  ::set-form-id
-  (fn [db [_ form-id]]
-    (assoc db ::spec/form-id form-id
-              ::spec/form-data nil)))
-
-
-(reg-event-db
-  ::update-form-data
-  (fn [db [_ param-name param-value]]
-    (update db ::spec/form-data assoc param-name param-value)))
-
-
-(reg-event-db
-  ::clear-form-data
-  (fn [db _]
-    (assoc db ::spec/form-data {})))
-
-
 (defn default-submit-callback
   [close-modal success-msg response]
   (dispatch [::clear-loading])
-  (dispatch [::clear-form-data])
   (dispatch [::initialize])
   (when close-modal
     (dispatch [::close-modal]))
   (when success-msg
     (dispatch [::set-success-message success-msg])))
 
-
 (reg-event-fx
   ::submit
-  (fn [{{:keys [::spec/form-id
-                ::spec/form-data
-                ::spec/server-redirect-uri] :as db} :db} [_ opts]]
+  (fn [{{:keys [::spec/server-redirect-uri] :as db} :db} [_ form-id form-data opts]]
     (let [{close-modal  :close-modal,
            success-msg  :success-msg,
            callback-add :callback-add,
@@ -142,11 +104,8 @@
                            (dispatch [::clear-loading])
                            (dispatch [::set-error-message (or message %)]))
 
-          template      {:template (-> form-data
-                                       (dissoc :repeat-new-password
-                                               :repeat-password)
-                                       (assoc :href form-id
-                                              :redirect-url redirect-url))}
+          template      {:template (assoc form-data :href form-id
+                                                    :redirect-url redirect-url)}
           collection-kw (cond
                           (str/starts-with? form-id "session-template/") :session
                           (str/starts-with? form-id "user-template/") :user)]

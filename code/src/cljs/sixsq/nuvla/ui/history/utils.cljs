@@ -65,7 +65,7 @@
   (let [location   (.-location js/window)
         token      (get-token path-prefix location)
         full-token (get-full-token path-prefix location)
-        redirect   (when (= token "/") "/welcome")]
+        redirect   (when (= token "/") "/sign-in")]
     (log/info "start token: " token (when redirect (str "redirect to " redirect)))
     (.setToken history (or redirect token))
     (secretary/dispatch! (or redirect full-token))))

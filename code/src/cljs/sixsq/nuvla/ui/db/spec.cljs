@@ -7,7 +7,6 @@
     [sixsq.nuvla.ui.apps-component.spec :as apps-component]
     [sixsq.nuvla.ui.apps-store.spec :as apps-store]
     [sixsq.nuvla.ui.apps.spec :as apps]
-    [sixsq.nuvla.ui.authn.spec :as authn]
     [sixsq.nuvla.ui.cimi-detail.spec :as api-detail]
     [sixsq.nuvla.ui.cimi.spec :as api]
     [sixsq.nuvla.ui.credentials.spec :as credential]
@@ -23,13 +22,13 @@
     [sixsq.nuvla.ui.main.spec :as main]
     [sixsq.nuvla.ui.messages.spec :as messages]
     [sixsq.nuvla.ui.ocre.spec :as ocre]
-    [sixsq.nuvla.ui.profile.spec :as profile]))
+    [sixsq.nuvla.ui.profile.spec :as profile]
+    [sixsq.nuvla.ui.session.spec :as session]))
 
 
 (s/def ::db (s/merge ::acl/db
                      ::apps/db
                      ::apps-store/db
-                     ::authn/db
                      ::api/db
                      ::api-detail/db
                      ::credential/db
@@ -45,7 +44,8 @@
                      ::edge/db
                      ::edge-detail/db
                      ::profile/db
-                     ::ocre/db))
+                     ::ocre/db
+                     ::session/db))
 
 
 (def default-db
@@ -54,7 +54,6 @@
          apps-component/defaults
          apps-application/defaults
          apps-store/defaults
-         authn/defaults
          api/defaults
          api-detail/defaults
          data/defaults
@@ -70,4 +69,5 @@
          edge/defaults
          edge-detail/defaults
          profile/defaults
-         ocre/defaults))
+         ocre/defaults
+         session/defaults))

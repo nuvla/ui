@@ -10,7 +10,6 @@
     [sixsq.nuvla.ui.apps-store.views]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.views]
-    [sixsq.nuvla.ui.authn.views :as authn-views]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.cimi.views]
     [sixsq.nuvla.ui.credentials.events :as credential-events]
@@ -33,6 +32,7 @@
     [sixsq.nuvla.ui.ocre.views]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.profile.views]
+    [sixsq.nuvla.ui.session.views :as session-views]
     [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.responsive :as responsive]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -98,7 +98,7 @@
             :style    {:cursor "pointer"}}
         [:span#release-version (str "v")]]]
       [ui/GridColumn (assoc grid-style :text-align "right")
-       [i18n-views/locale-dropdown]]]]))
+       [i18n-views/LocaleDropdown]]]]))
 
 
 (defn ignore-changes-modal
@@ -166,14 +166,14 @@
     (fn []
       (let [[type content] @message]
         (when content
-         [ui/Container {:text-align :center}
-          [ui/Message
-           (if (= type :success)
-             {:success true
-              :content (@tr [(keyword content)])}
-             {:error   true
-              :content content})]
-          [:br]])))))
+          [ui/Container {:text-align :center}
+           [ui/Message
+            (if (= type :success)
+              {:success true
+               :content (@tr [(keyword content)])}
+              {:error   true
+               :content content})]
+           [:br]])))))
 
 
 (defn contents
@@ -213,7 +213,7 @@
     [ui/MenuMenu {:position "right"}
      [messages/bell-menu]
      [ui/MenuItem {:fitted true}
-      [authn-views/authn-menu]]]]
+      [session-views/authn-menu]]]]
 
    [messages/alert-slider]
    [messages/alert-modal]])
@@ -224,24 +224,31 @@
     (let [show?            (subscribe [::subs/sidebar-open?])
           cep              (subscribe [::api-subs/cloud-entry-point])
           iframe?          (subscribe [::subs/iframe?])
-          is-small-device? (subscribe [::subs/is-small-device?])]
+          is-small-device? (subscribe [::subs/is-small-device?])
+          resource-path    (subscribe [::subs/nav-path])]
       (if @cep
         [ui/Responsive {:as            "div"
                         :id            "nuvla-ui-main"
                         :fire-on-mount true
                         :on-update     (responsive/callback #(dispatch [::events/set-device %]))}
-         [:<>
-          [sidebar/menu]
-          [:div {:style {:transition  "0.5s"
-                         :margin-left (if (and (not @is-small-device?) @show?)
-                                        sidebar/sidebar-width "0")}}
-           [ui/Dimmer {:active   (and @is-small-device? @show?)
-                       :inverted true
-                       :style    {:z-index 999}
-                       :on-click #(dispatch [::events/close-sidebar])}]
-           [header]
-           [contents]
-           [ignore-changes-modal]
-           (when-not @iframe? [footer])]]]
+         (case (first @resource-path)
+           "sign-in" [session-views/SessionPage]
+           "sign-up" [session-views/SessionPage]
+           "reset-password" [session-views/SessionPage]
+           nil [session-views/SessionPage]
+           [:<>
+            [sidebar/menu]
+            [:div {:style {:transition  "0.5s"
+                           :margin-left (if (and (not @is-small-device?) @show?)
+                                          sidebar/sidebar-width "0")}}
+             [ui/Dimmer {:active   (and @is-small-device? @show?)
+                         :inverted true
+                         :style    {:z-index 999}
+                         :on-click #(dispatch [::events/close-sidebar])}]
+             [header]
+             [contents]
+             [ignore-changes-modal]
+             (when-not @iframe? [footer])]]
+           )]
         [ui/Container
          [ui/Loader {:active true :size "massive"}]]))))

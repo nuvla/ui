@@ -69,7 +69,7 @@
 
   ;; mark all dependencies as provided to avoid having transitive
   ;; dependencies pulled in by those that depend on this
-  :dependencies [[reagent "0.9.0-rc3" :scope "provided"
+  :dependencies [[reagent "0.9.0-rc4" :scope "provided"
                   :exclusions [cljsjs/react
                                cljsjs/react-dom]]
                  [re-frame "0.11.0-rc3" :scope "provided"]
@@ -78,7 +78,8 @@
                  [com.taoensso/timbre "4.10.0" :scope "provided"]
                  [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]
                  [com.taoensso/tempura "1.2.1" :scope "provided"]
-                 [com.cemerick/url :scope "provided"]]
+                 [com.cemerick/url :scope "provided"]
+                 [kwladyka/form-validator-cljs "1.2.1"]]
 
   :source-paths ["src/clj" "src/cljs"]
 
@@ -88,7 +89,7 @@
                           [binaryage/devtools "0.9.11" :scope "test"]]}
 
    :scljs {:dependencies [[thheller/shadow-cljs "2.8.52"]   ;; WARNING: also in package.json
-                          [com.google.javascript/closure-compiler-unshaded "v20190909"]]}}
+                          [com.google.javascript/closure-compiler-unshaded "v20190819"]]}}
 
 
 

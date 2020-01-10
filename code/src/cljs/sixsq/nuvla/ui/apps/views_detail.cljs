@@ -9,13 +9,13 @@
     [sixsq.nuvla.ui.apps.subs :as subs]
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.views-versions :as views-versions]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as forms]
@@ -106,7 +106,7 @@
   []
   (let [tr             (subscribe [::i18n-subs/tr])
         visible?       (subscribe [::subs/save-modal-visible?])
-        username       (subscribe [::authn-subs/user])
+        username       (subscribe [::session-subs/user])
         commit-message (subscribe [::subs/commit-message])]
     (fn []
       (let [commit-map {:author @username

@@ -11,7 +11,6 @@
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.events :as cimi-events]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
@@ -24,6 +23,7 @@
     [sixsq.nuvla.ui.ocre.subs :as subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.plot.plot :as plot]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -215,7 +215,7 @@
 
 (defn ModalImport
   []
-  (let [user-id   (subscribe [::authn-subs/user-id])
+  (let [user-id   (subscribe [::session-subs/user-id])
         finished? (= @upload-state :finished)]
     [ui/Modal
      {:open       (some? @show-modal)

@@ -7,9 +7,9 @@
     [sixsq.nuvla.ui.acl.events :as events]
     [sixsq.nuvla.ui.acl.subs :as subs]
     [sixsq.nuvla.ui.acl.utils :as utils]
-    [sixsq.nuvla.ui.authn.subs :as authn-subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -323,7 +323,7 @@
   (let [mode   (r/atom (or mode :simple))
         ui-acl (or ui-acl
                    (r/atom
-                     (let [acl (or default-value (when-not read-only {:owners #{@(subscribe [::authn-subs/user-id])}}))]
+                     (let [acl (or default-value (when-not read-only {:owners #{@(subscribe [::session-subs/user-id])}}))]
                        (utils/acl->ui-acl-format acl))))]
     (fn [{:keys [on-change read-only] :as opts}]
       (let [opts (assoc opts :mode mode
@@ -343,7 +343,7 @@
   [{:keys [default-value read-only default-active?] :as opts}]
   (let [tr      (subscribe [::i18n-subs/tr])
         active? (r/atom default-active?)
-        acl     (or default-value (when-not read-only {:owners [@(subscribe [::authn-subs/user-id])]}))
+        acl     (or default-value (when-not read-only {:owners [@(subscribe [::session-subs/user-id])]}))
         ui-acl  (when acl (r/atom (utils/acl->ui-acl-format acl)))]
     (fn [opts]
       (when ui-acl

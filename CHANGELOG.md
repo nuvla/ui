@@ -4,6 +4,11 @@
 
 ### Changed
 
+  - SESSION PAGE - Use proper page for authentication instead of modals
+  - DEPENDENCIES - Fix version of closure-compiler-unshaded to be 
+    aligned with shadow-cljs version 
+  - DEPENDENCIES - update dependencies
+  - DEPENDENCIES - New validation utility for form fields
   - INFRASTRUCTURE PAGE - Remove S3 from add modal
   - CREDENTIAL PAGE - Remove S3 from add modal
   - DASHBOARD - card <a> can't be descendant of <a>

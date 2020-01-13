@@ -23,8 +23,7 @@
     [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn edit-button-disabled?
@@ -53,7 +52,8 @@
         is-new?       (subscribe [::subs/is-new?])
         page-changed? (subscribe [::main-subs/changes-protection?])]
     (fn []
-      (let [launchable?      (not= "project" (:subtype @module))
+      (let [subtype          (:subtype @module)
+            launchable?      (and subtype (not= "project" subtype))
             launch-disabled? (or @is-new? @page-changed?)
             add?             (= "project" (:subtype @module))
             add-disabled?    (or @is-new? @page-changed?)

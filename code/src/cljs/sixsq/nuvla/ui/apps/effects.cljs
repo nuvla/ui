@@ -6,8 +6,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-fx]]
     [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]))
 
 
 (reg-fx
@@ -17,18 +16,19 @@
       (let [path              (or path "")
             path-filter       (str "path='" path "'")
             children-filter   (str "parent-path='" path "'")
-            {:keys [subtype id] :as project-metadata} (if-not (str/blank? path)
-                                                        (-> (<! (api/search @CLIENT :module {:filter path-filter}))
-                                                            :resources
-                                                            first)
-                                                        {:subtype     "project"
-                                                         :name        "Applications"
-                                                         :description "cloud applications at your service"})
+            project-metadata  (if-not (str/blank? path)
+                                (-> (<! (api/search @CLIENT :module {:filter path-filter}))
+                                    :resources
+                                    first)
+                                {:subtype     "project"
+                                 :name        "Applications"
+                                 :description "cloud applications at your service"})
+            {:keys [subtype id]} project-metadata
             path-with-version (str id (when
                                         (not (nil? version))
                                         (str "_" version)))
             module            (if (not= "project" subtype)
-                                (<! (api/get @CLIENT path-with-version))
+                                (when id (<! (api/get @CLIENT path-with-version)))
                                 project-metadata)
 
             children          (when (= subtype "project")

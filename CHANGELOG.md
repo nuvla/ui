@@ -4,6 +4,10 @@
 
 ### Changed
 
+  - APPS PAGE - When user is not logged in, launch button should not be visible
+  - APPS PAGE - When user is not logged in, set-module is getting 
+    cloud-entry-point instead of nil fix
+
 ## [2.4.8] - 2020-01-10
 
 ### Changed

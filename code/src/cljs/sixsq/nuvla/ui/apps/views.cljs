@@ -13,8 +13,7 @@
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
-    [taoensso.timbre :as timbre]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as timbre]))
 
 
 (defn module-details

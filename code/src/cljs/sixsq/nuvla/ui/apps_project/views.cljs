@@ -2,7 +2,6 @@
   (:require
     [cljs.pprint :refer [cl-format]]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
-    [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps-project.spec :as spec]
     [sixsq.nuvla.ui.apps.events :as apps-events]
@@ -15,8 +14,7 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 (defn summary []
   [apps-views-detail/summary])

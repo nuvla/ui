@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.apps.events
   (:require
     [cljs.spec.alpha :as s]
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.apps-application.spec :as apps-application-spec]
     [sixsq.nuvla.ui.apps-application.utils :as apps-application-utils]
@@ -19,9 +18,7 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 ;; Validation
@@ -401,6 +398,7 @@
                                 (do (dispatch [::cimi-detail-events/get (:id %)])
                                     (dispatch [::get-module])
                                     (dispatch [::main-events/changes-protection? false])))]}))))
+
 
 (reg-event-fx
   ::delete-module

@@ -15,7 +15,6 @@
 (s/def ::data-infra-services any?)
 (s/def ::selected-infra-service (s/nilable string?))
 (s/def ::infra-service-filter (s/nilable string?))
-(s/def ::infra-services-filter (s/nilable string?))
 
 (s/def ::infra-services any?)
 
@@ -44,7 +43,6 @@
                           ::data-infra-services
                           ::selected-infra-service
                           ::infra-service-filter
-                          ::infra-services-filter
                           ::infra-services
 
                           ::active-step
@@ -61,7 +59,6 @@
                ::data-infra-services    nil
                ::selected-infra-service nil
                ::infra-service-filter   nil
-               ::infra-services-filter  nil
                ::infra-services         nil
 
                ::active-step            :data

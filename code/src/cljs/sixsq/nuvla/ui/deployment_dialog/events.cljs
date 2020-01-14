@@ -8,8 +8,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-fx
@@ -175,7 +174,6 @@
   [db infra-service]
   (dispatch [::get-credentials])
   (assoc db ::spec/selected-infra-service infra-service
-            ::spec/infra-services-filter (str "infrastructure-services='" infra-service "'")
             ::spec/infra-service-filter (str "infrastructure-service='" infra-service "'")))
 
 

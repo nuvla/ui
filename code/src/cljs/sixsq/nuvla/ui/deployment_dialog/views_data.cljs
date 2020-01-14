@@ -25,7 +25,7 @@
   []
   (let [data-clouds    (subscribe [::subs/data-clouds])
         selected-cloud (subscribe [::subs/selected-cloud])
-        connectors     (subscribe [::subs/connectors])
+        connectors     (subscribe [::subs/cloud-infra-services])
 
         {:keys [key doc_count]} (first (filter (fn [m] (= @selected-cloud (:key m))) @data-clouds))
         {:keys [name description]} (get @connectors key)]
@@ -43,7 +43,7 @@
   (let [tr             (subscribe [::i18n-subs/tr])
         data-clouds    (subscribe [::subs/data-clouds])
         selected-cloud (subscribe [::subs/selected-cloud])
-        connectors     (subscribe [::subs/connectors])
+        connectors     (subscribe [::subs/cloud-infra-services])
         completed?     (subscribe [::subs/data-completed?])
 
         {:keys [key doc_count]} (first (filter (fn [m] (= @selected-cloud (:key m))) @data-clouds))
@@ -70,7 +70,7 @@
 (defn list-item
   [{:keys [key doc_count]}]
   (let [selected-cloud (subscribe [::subs/selected-cloud])
-        connectors     (subscribe [::subs/connectors])
+        connectors     (subscribe [::subs/cloud-infra-services])
         {:keys [name description]} (get @connectors key)]
 
     (let [options     {:key         key

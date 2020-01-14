@@ -82,6 +82,24 @@
 
 
 (reg-sub
+  ::infra-services-loading?
+  (fn [db]
+    (::spec/infra-services-loading? db)))
+
+
+(reg-sub
+  ::selected-infra-service
+  (fn [db]
+    (::spec/selected-infra-service db)))
+
+
+(reg-sub
+  ::infra-services
+  (fn [db]
+    (::spec/infra-services db)))
+
+
+(reg-sub
   ::active-step
   (fn [db]
     (::spec/active-step db)))
@@ -102,19 +120,19 @@
 (reg-sub
   ::data-clouds
   (fn [db]
-    (::spec/data-infra-services db)))
+    (::spec/data-clouds db)))
 
 
 (reg-sub
   ::selected-cloud
   (fn [db]
-    (::spec/selected-infra-service db)))
+    (::spec/selected-cloud db)))
 
 
 (reg-sub
-  ::connectors
+  ::cloud-infra-services
   (fn [db]
-    (::spec/infra-services db)))
+    (::spec/cloud-infra-services db)))
 
 
 ;;
@@ -128,6 +146,13 @@
   :<- [::deployment]
   (fn [[selected-credential deployment]]
     (boolean (and selected-credential (:parent deployment)))))
+
+
+(reg-sub
+  ::infra-services-completed?
+  :<- [::selected-infra-service]
+  (fn [selected-infra-service]
+    (boolean selected-infra-service)))
 
 
 (reg-sub

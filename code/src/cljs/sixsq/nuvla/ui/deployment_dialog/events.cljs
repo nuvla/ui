@@ -20,7 +20,7 @@
 
 (reg-event-db
   ::set-credentials
-  (fn [db [_ credentials]]
+  (fn [db [_ {credentials :resources}]]
     (when (= 1 (count credentials))
       (dispatch [::set-selected-credential (first credentials)]))
 
@@ -32,10 +32,10 @@
   ::get-data-records-for-cred
   (fn [{{:keys [::spec/deployment
                 ::data-spec/time-period-filter
-                ::spec/infra-service-filter
+                ::spec/cloud-filter
                 ::data-spec/content-type-filter] :as db} :db} _]
     (let [filter        (general-utils/join-and time-period-filter
-                                                infra-service-filter
+                                                cloud-filter
                                                 content-type-filter)
           selected-keys (map keyword (::data-spec/selected-data-set-ids db))
           datasets-map  (select-keys (::data-spec/data-records-by-data-set db) selected-keys)
@@ -71,6 +71,35 @@
     (assoc db ::spec/active-step active-step)))
 
 
+(reg-event-fx
+  ::set-selected-infra-service
+  (fn [{:keys [db]} [_ infra-service]]
+    {:db       (assoc db ::spec/selected-infra-service infra-service)
+     :dispatch [::get-credentials (:id infra-service)]}))
+
+
+(reg-event-fx
+  ::set-infra-services
+  (fn [{:keys [db]} [_ {infra-services :resources}]]
+    (cond-> {:db (assoc db ::spec/infra-services infra-services
+                           ::spec/infra-services-loading? false)}
+            (= (count infra-services) 1) (assoc :dispatch [::set-selected-infra-service
+                                                           (first infra-services)]))))
+
+
+(reg-event-fx
+  ::get-infra-services
+  (fn [{:keys [db]} _]
+    {:db                  (assoc db ::spec/infra-services-loading? true
+                                    ::spec/infra-services nil
+                                    ::spec/selected-infra-service nil)
+     ::cimi-api-fx/search [:infrastructure-service
+                           {:filter "subtype='kubernetes' or subtype='swarm'",
+                            :select "id, name, description, subtype"
+                            :order  "name:asc,id:asc"}
+                           #(dispatch [::set-infra-services %])]}))
+
+
 (reg-event-db
   ::set-deployment
   (fn [db [_ deployment]]
@@ -89,11 +118,11 @@
   ::create-deployment
   (fn [{{:keys [::spec/deployment] :as db} :db} [_ id first-step do-not-open-modal?]]
     (when (= :data first-step)
-      (dispatch [::get-data-records-by-cred]))
+      (dispatch [::get-data-records]))
     (let [data              {:module {:href id}}
           old-deployment-id (:id deployment)
           on-success        #(do
-                               (dispatch [::get-credentials])
+                               (dispatch [::get-infra-services])
                                (dispatch [::get-deployment (:resource-id %)]))]
       (cond->
         {:db               (assoc db ::spec/loading-deployment? true
@@ -102,28 +131,28 @@
                                      ::spec/deploy-modal-visible? (not (boolean do-not-open-modal?))
                                      ::spec/active-step (or first-step :data)
                                      ::spec/data-step-active? (= first-step :data)
-                                     ::spec/infra-service-filter nil
-                                     ::spec/selected-infra-service nil
-                                     ::spec/infra-services nil
-                                     ::spec/data-infra-services nil)
+                                     ::spec/cloud-filter nil
+                                     ::spec/selected-cloud nil
+                                     ::spec/cloud-infra-services nil
+                                     ::spec/data-clouds nil)
          ::cimi-api-fx/add [:deployment data on-success]}
         old-deployment-id (assoc ::cimi-api-fx/delete [old-deployment-id #() :on-error #()])))))
 
 
 (reg-event-fx
   ::get-credentials
-  (fn [{{:keys [::spec/selected-infra-service] :as db} :db} _]
-    (let [search-creds-callback #(dispatch [::set-credentials (get % :resources [])])]
-      {:db (assoc db ::spec/credentials-loading? true
-                     ::spec/credentials nil
-                     ::spec/selected-credential nil)
-       ::cimi-api-fx/search
-           [:credential
-            {:select "id, name, description, created, subtype"
-             :filter (general-utils/join-and
-                       (when selected-infra-service
-                         (str "parent='" selected-infra-service "'"))
-                       (str "subtype='infrastructure-service-swarm'"))} search-creds-callback]})))
+  (fn [{db :db} [_ infra-service-id]]
+    {:db (assoc db ::spec/credentials-loading? true
+                   ::spec/credentials nil
+                   ::spec/selected-credential nil)
+     ::cimi-api-fx/search
+         [:credential
+          {:select "id, name, description, created, subtype"
+           :filter (general-utils/join-and
+                     (when infra-service-id
+                       (str "parent='" infra-service-id "'"))
+                     (str "subtype='infrastructure-service-swarm'"))}
+          #(dispatch [::set-credentials %])]}))
 
 
 (reg-event-fx
@@ -165,24 +194,24 @@
 
 
 (reg-event-db
-  ::set-infra-services
+  ::set-cloud-infra-services
   (fn [db [_ {infra-services :resources}]]
-    (assoc db ::spec/infra-services (into {} (map (juxt :id identity) infra-services)))))
+    (assoc db ::spec/cloud-infra-services (into {} (map (juxt :id identity) infra-services)))))
 
 
-(defn set-infra-service-and-filter
+(defn set-data-infra-service-and-filter
   [db infra-service]
-  (dispatch [::get-credentials])
-  (assoc db ::spec/selected-infra-service infra-service
-            ::spec/infra-service-filter (str "infrastructure-service='" infra-service "'")))
+  (dispatch [::get-infra-services])
+  (assoc db ::spec/selected-cloud infra-service
+            ::spec/cloud-filter (str "infrastructure-service='" infra-service "'")))
 
 
 (reg-event-fx
-  ::get-infra-services
+  ::get-cloud-infra-services
   (fn [_ [_ filter]]
     {::cimi-api-fx/search [:infrastructure-service
                            {:filter filter, :select "id, name, description, subtype"}
-                           #(dispatch [::set-infra-services %])]}))
+                           #(dispatch [::set-cloud-infra-services %])]}))
 
 
 (reg-event-fx
@@ -193,19 +222,17 @@
           infra-services (map :key buckets)
           filter         (apply general-utils/join-or (map #(str "id='" % "'") infra-services))]
 
-      {:db       (cond-> (assoc db ::spec/data-infra-services buckets)
-                         (= 1 (count infra-services)) (set-infra-service-and-filter
+      {:db       (cond-> (assoc db ::spec/data-clouds buckets)
+                         (= 1 (count infra-services)) (set-data-infra-service-and-filter
                                                         (first infra-services)))
-       :dispatch [::get-infra-services filter]})))
+       :dispatch [::get-cloud-infra-services filter]})))
 
 
 (reg-event-fx
-  ::get-data-records-by-cred
+  ::get-data-records
   (fn [{{:keys [::data-spec/time-period-filter
-                ::data-spec/content-type-filter
-                ::data-spec/credentials] :as db} :db} _]
-    (let [filter (general-utils/join-and time-period-filter
-                                         content-type-filter)]
+                ::data-spec/content-type-filter] :as db} :db} _]
+    (let [filter (general-utils/join-and time-period-filter content-type-filter)]
       {:db db
        ::cimi-api-fx/search
            [:data-record {:filter      filter
@@ -217,4 +244,4 @@
 (reg-event-db
   ::set-infra-service-filter
   (fn [db [_ cloud]]
-    (set-infra-service-and-filter db cloud)))
+    (set-data-infra-service-and-filter db cloud)))

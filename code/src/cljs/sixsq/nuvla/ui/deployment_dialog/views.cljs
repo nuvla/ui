@@ -3,10 +3,10 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
-    [sixsq.nuvla.ui.deployment-dialog.views-credentials :as credentials-step]
     [sixsq.nuvla.ui.deployment-dialog.views-data :as data-step]
     [sixsq.nuvla.ui.deployment-dialog.views-env-variables :as env-variables-step]
     [sixsq.nuvla.ui.deployment-dialog.views-files :as files-step]
+    [sixsq.nuvla.ui.deployment-dialog.views-infra-services :as infra-services-step]
     [sixsq.nuvla.ui.deployment-dialog.views-summary :as summary-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -24,7 +24,7 @@
               :on-click  #(dispatch [::events/set-active-step step-id])
               :completed (case step-id
                            :data @data-completed?
-                           :credentials @credentials-completed?
+                           :infra-services @credentials-completed?
                            :env-variables @env-variables-completed?
                            completed?)
               :active    (= step-id @active-step)}
@@ -38,7 +38,7 @@
   [ui/Segment style/autoscroll-y
    (case active-step
      :data [data-step/content]
-     :credentials [credentials-step/content]
+     :infra-services [infra-services-step/content]
      :env-variables [env-variables-step/content]
      :files [files-step/content]
      :summary [summary-step/content]
@@ -62,7 +62,7 @@
             submit-fn      #(dispatch [::events/edit-deployment])
 
             steps          [(when show-data? :data)
-                            :credentials
+                            :infra-services
                             :env-variables
                             (when (= module-subtype "application") :files)
                             :summary]

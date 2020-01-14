@@ -21,11 +21,19 @@
   (assoc-in basic [:style :overflow-x] "auto"))
 
 
+(def ^{:doc "Options for a Segment with vertical scroll."}
+  autoscroll-y {:basic true
+                :style {:max-height "100%"
+                        :overflow-y "auto"
+                        :padding    1}})
+
+
 (def ^{:doc "Options for a Segment with evenly spaced content."}
   evenly
   (merge basic
          {:style {:display         "flex"
                   :justify-content "space-evenly"}}))
+
 
 (def center-block
   {:style {:margin     "25px auto"

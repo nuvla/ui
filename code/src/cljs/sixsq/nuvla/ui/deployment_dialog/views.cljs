@@ -10,7 +10,7 @@
     [sixsq.nuvla.ui.deployment-dialog.views-summary :as summary-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 
 (defn deployment-step-state
@@ -35,13 +35,14 @@
 
 (defn step-content
   [active-step]
-  (case active-step
-    :data [data-step/content]
-    :credentials [credentials-step/content]
-    :environmental-variables [env-variables-step/content]
-    :files [files-step/content]
-    :summary [summary-step/content]
-    nil))
+  [ui/Segment style/autoscroll-y
+   (case active-step
+     :data [data-step/content]
+     :credentials [credentials-step/content]
+     :environmental-variables [env-variables-step/content]
+     :files [files-step/content]
+     :summary [summary-step/content]
+     nil)])
 
 
 (defn deploy-modal
@@ -77,7 +78,7 @@
             (str "\u00a0" module-name)
             "\u2026")]
 
-         [ui/ModalContent {:scrolling true}
+         [ui/ModalContent
           [ui/ModalDescription
 
            [ui/StepGroup {:size "mini", :fluid true}
@@ -90,7 +91,7 @@
                         :basic   true
                         :style   {:padding 0
                                   :height  "25em"}}
-            (if @ready?
+            (when @ready?
               [step-content @active-step])]]]
 
          [ui/ModalActions

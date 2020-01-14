@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Deployment modal - Steps keeps at top when scrolling
   - APPS PAGE - When user is not logged in, launch button should not be visible
   - APPS PAGE - When user is not logged in, set-module is getting 
     cloud-entry-point instead of nil fix

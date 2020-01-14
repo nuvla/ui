@@ -65,8 +65,8 @@
 
 
 (reg-sub
-  ::loading-credentials?
-  ::spec/loading-credentials?)
+  ::credentials-loading?                                    ;;FIXME not used
+  ::spec/credentials-loading?)
 
 
 (reg-sub

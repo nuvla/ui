@@ -14,9 +14,8 @@
 (reg-event-fx
   ::close-deploy-modal
   (fn [{{:keys [::spec/deployment] :as db} :db} _]
-    (cond-> {:db                  (assoc db ::spec/deploy-modal-visible? false
-                                            ::spec/deployment nil)
-             ::cimi-api-fx/delete [(:id deployment) #()]})))
+    {:db                  (merge db spec/defaults)
+     ::cimi-api-fx/delete [(:id deployment) #()]}))
 
 
 (reg-event-db
@@ -26,43 +25,44 @@
       (dispatch [::set-selected-credential (first credentials)]))
 
     (assoc db ::spec/credentials credentials
-              ::spec/loading-credentials? false)))
+              ::spec/credentials-loading? false)))
+
+
+(reg-event-fx
+  ::get-data-records-for-cred
+  (fn [{{:keys [::spec/deployment
+                ::data-spec/time-period-filter
+                ::spec/infra-service-filter
+                ::data-spec/content-type-filter] :as db} :db} _]
+    (let [filter        (general-utils/join-and time-period-filter
+                                                infra-service-filter
+                                                content-type-filter)
+          selected-keys (map keyword (::data-spec/selected-data-set-ids db))
+          datasets-map  (select-keys (::data-spec/data-records-by-data-set db) selected-keys)
+
+          callback-data (fn [{:keys [resources] :as data-records}]
+                          (let [distinct-mounts (->> resources
+                                                     (map :mount)
+                                                     (remove nil?)
+                                                     (distinct))]
+                            (dispatch [::set-deployment
+                                       (cond->
+                                         (assoc deployment
+                                           :data-records (utils/invert-dataset-map datasets-map))
+
+                                         (seq distinct-mounts) (assoc-in
+                                                                 [:module :content :mounts]
+                                                                 distinct-mounts))])))]
+      {::cimi-api-fx/search [:data-record {:filter filter, :select "id, mount"} callback-data]})))
 
 
 (reg-event-fx
   ::set-selected-credential
   (fn [{{:keys [::spec/deployment
-                ::data-spec/time-period-filter
-                ::spec/infra-service-filter
-                ::data-spec/content-type-filter] :as db} :db}
-       [_ {credential-id :id :as credential}]]
-    (let [updated-deployment (assoc deployment :parent credential-id)
-          filter             (general-utils/join-and time-period-filter
-                                                     infra-service-filter
-                                                     content-type-filter)
-          selected-keys      (map keyword (::data-spec/selected-data-set-ids db))
-          datasets-map       (select-keys (::data-spec/data-records-by-data-set db) selected-keys)
-
-          callback-data      (fn [{:keys [resources] :as data-records}]
-                               (let [distinct-mounts (->> resources
-                                                          (map :mount)
-                                                          (remove nil?)
-                                                          (distinct))]
-                                 (dispatch [::set-deployment
-                                            (cond->
-                                              (assoc updated-deployment
-                                                :data-records
-                                                (utils/invert-dataset-map datasets-map))
-
-                                              (seq distinct-mounts) (assoc-in
-                                                                      [:module :content :mounts]
-                                                                      distinct-mounts))])))]
-      (cond-> {:db (assoc db ::spec/selected-credential credential
-                             ::spec/deployment updated-deployment)}
-              infra-service-filter (assoc ::cimi-api-fx/search
-                                          [:data-record {:filter filter,
-                                                         :select "id, mount"}
-                                           callback-data])))))
+                ::spec/data-step-active?] :as db} :db} [_ {credential-id :id :as credential}]]
+    (cond-> {:db (assoc db ::spec/selected-credential credential
+                           ::spec/deployment (assoc deployment :parent credential-id))}
+            data-step-active? (assoc :dispatch [::get-data-records-for-cred]))))
 
 
 (reg-event-db
@@ -114,7 +114,7 @@
   ::get-credentials
   (fn [{{:keys [::spec/selected-infra-service] :as db} :db} _]
     (let [search-creds-callback #(dispatch [::set-credentials (get % :resources [])])]
-      {:db (assoc db ::spec/loading-credentials? true
+      {:db (assoc db ::spec/credentials-loading? true
                      ::spec/credentials nil
                      ::spec/selected-credential nil)
        ::cimi-api-fx/search
@@ -178,6 +178,14 @@
 
 
 (reg-event-fx
+  ::get-infra-services
+  (fn [_ [_ filter]]
+    {::cimi-api-fx/search [:infrastructure-service
+                           {:filter filter, :select "id, name, description, subtype"}
+                           #(dispatch [::set-infra-services %])]}))
+
+
+(reg-event-fx
   ::set-data-infra-services
   (fn [{:keys [db]} [_ data-clouds-response]]
     (let [buckets        (get-in data-clouds-response
@@ -185,12 +193,10 @@
           infra-services (map :key buckets)
           filter         (apply general-utils/join-or (map #(str "id='" % "'") infra-services))]
 
-      {:db                  (cond-> (assoc db ::spec/data-infra-services buckets)
-                                    (= 1 (count infra-services)) (set-infra-service-and-filter
-                                                                   (first infra-services)))
-       ::cimi-api-fx/search [:infrastructure-service
-                             {:filter filter, :select "id, name, description, subtype"}
-                             #(dispatch [::set-infra-services %])]})))
+      {:db       (cond-> (assoc db ::spec/data-infra-services buckets)
+                         (= 1 (count infra-services)) (set-infra-service-and-filter
+                                                        (first infra-services)))
+       :dispatch [::get-infra-services filter]})))
 
 
 (reg-event-fx

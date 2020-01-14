@@ -8,7 +8,7 @@
 (s/def ::loading-deployment? boolean?)
 (s/def ::deployment any?)
 
-(s/def ::loading-credentials? boolean?)
+(s/def ::credentials-loading? boolean?)
 (s/def ::credentials (s/nilable (s/coll-of any? :kind vector?)))
 (s/def ::selected-credential any?)
 
@@ -37,8 +37,8 @@
 (s/def ::db (s/keys :req [::deploy-modal-visible?
                           ::loading-deployment?
                           ::deployment
-                          ::loading-credentials?
                           ::credentials
+                          ::credentials-loading?
                           ::selected-credential
                           ::data-infra-services
                           ::selected-infra-service
@@ -53,8 +53,8 @@
 (def defaults {::deploy-modal-visible?  false
                ::loading-deployment?    false
                ::deployment             nil
-               ::loading-credentials?   false
                ::credentials            nil
+               ::credentials-loading?   false
                ::selected-credential    nil
                ::data-infra-services    nil
                ::selected-infra-service nil

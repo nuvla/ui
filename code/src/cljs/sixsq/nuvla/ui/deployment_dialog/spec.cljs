@@ -67,7 +67,7 @@
                                                          :icon    "database"}
                                          :credentials   {:step-id :credentials
                                                          :icon    "key"}
-                                         :env-variables {:step-id :environmental-variables
+                                         :env-variables {:step-id :env-variables
                                                          :icon    "list alternate outline"}
                                          :files         {:step-id :files
                                                          :icon    "file alternate outline"}

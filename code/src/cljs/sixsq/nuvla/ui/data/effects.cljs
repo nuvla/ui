@@ -11,12 +11,12 @@
 
 (reg-fx
   ::fetch-data
-  (fn [[time-period-filter infra-services-filter full-text-search data-sets callback]]
+  (fn [[time-period-filter full-text-search data-sets callback]]
     (go
       (doseq [{:keys [id] :as data-set} data-sets]
         (let [record-filter (:data-record-filter data-set)
-              filter        (general-utils/join-and time-period-filter infra-services-filter
-                                                    full-text-search record-filter)]
+              filter        (general-utils/join-and
+                              time-period-filter full-text-search record-filter)]
           (callback id (<! (api/search @CLIENT
                                        :data-record
                                        {:filter      filter

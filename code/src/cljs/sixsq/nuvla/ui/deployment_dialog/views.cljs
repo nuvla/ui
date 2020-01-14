@@ -25,7 +25,7 @@
               :completed (case step-id
                            :data @data-completed?
                            :credentials @credentials-completed?
-                           :environmental-variables @env-variables-completed?
+                           :env-variables @env-variables-completed?
                            completed?)
               :active    (= step-id @active-step)}
      [ui/Icon {:name icon}]
@@ -39,7 +39,7 @@
    (case active-step
      :data [data-step/content]
      :credentials [credentials-step/content]
-     :environmental-variables [env-variables-step/content]
+     :env-variables [env-variables-step/content]
      :files [files-step/content]
      :summary [summary-step/content]
      nil)])

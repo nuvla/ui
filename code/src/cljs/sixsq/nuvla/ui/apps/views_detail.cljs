@@ -466,7 +466,7 @@
     (fn []
       [uix/Accordion
        [:<>
-        [:div (str/capitalize (@tr [:environmental-variables]))
+        [:div (str/capitalize (@tr [:env-variables]))
          [:span ff/nbsp (ff/help-popup (@tr [:module-env-variables-help]))]]
         (if (empty? @env-variables)
           [ui/Message

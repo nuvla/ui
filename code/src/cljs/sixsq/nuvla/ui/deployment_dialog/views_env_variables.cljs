@@ -17,7 +17,7 @@
         completed?    (subscribe [::subs/env-variables-completed?])
 
         description   (str "Count: " (count @env-variables))
-        on-click-fn   #(dispatch [::events/set-active-step :environmental-variables])]
+        on-click-fn   #(dispatch [::events/set-active-step :env-variables])]
 
     ^{:key "env-variables"}
     [ui/TableRow {:active   false
@@ -26,7 +26,7 @@
       (if @completed?
         [ui/Icon {:name "list alternate outline", :size "large"}]
         [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
-     [ui/TableCell {:collapsing true} (@tr [:environmental-variables])]
+     [ui/TableCell {:collapsing true} (@tr [:env-variables])]
      [ui/TableCell [:div [:span description]]]]))
 
 

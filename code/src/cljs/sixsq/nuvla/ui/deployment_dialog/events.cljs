@@ -196,11 +196,9 @@
 (reg-event-fx
   ::get-data-records-by-cred
   (fn [{{:keys [::data-spec/time-period-filter
-                ::data-spec/infra-services-filter
                 ::data-spec/content-type-filter
                 ::data-spec/credentials] :as db} :db} _]
     (let [filter (general-utils/join-and time-period-filter
-                                         infra-services-filter
                                          content-type-filter)]
       {:db db
        ::cimi-api-fx/search

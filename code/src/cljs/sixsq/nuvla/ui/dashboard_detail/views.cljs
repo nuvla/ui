@@ -145,7 +145,7 @@
                 [env-var-to-row env-var])])]]
          :count (count env-vars)
          :default-open false
-         :label (str/capitalize (@tr [:environmental-variables]))]))))
+         :label (str/capitalize (@tr [:env-variables]))]))))
 
 
 (def event-fields #{:id :content :timestamp :category})

@@ -43,18 +43,6 @@
        "')"))
 
 
-(defn create-infra-service-filter
-  [credentials]
-  (let [creds-services (->> credentials
-                            (map :services)
-                            (remove nil?)
-                            (sequence cat))]
-    (some->> creds-services
-             (seq)
-             (map #(str "infrastructure-service/href='" % "'"))
-             (str/join " or "))))
-
-
 (defn format-bytes
   [bytes]
   (if (number? bytes)

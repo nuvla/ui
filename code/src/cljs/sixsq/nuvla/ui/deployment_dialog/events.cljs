@@ -55,14 +55,44 @@
                                                                  distinct-mounts))])))]
       {::cimi-api-fx/search [:data-record {:filter filter, :select "id, mount"} callback-data]})))
 
+(reg-event-fx
+  ::set-check-coe-job
+  (fn [{{:keys [::spec/coe-check-job-id] :as db} :db} [_ {:keys [id return-code] :as resource}]]
+    (when (= coe-check-job-id id)
+      (cond-> {:db (cond-> (assoc db ::spec/coe-check resource)
+                           return-code (assoc ::spec/coe-check-job-id nil
+                                              ::spec/coe-check-loading? false))}
+              (nil? return-code) (assoc :dispatch-later
+                                        [{:ms 3000 :dispatch [::get-check-coe-job]}])))))
+
+
+(reg-event-fx
+  ::get-check-coe-job
+  (fn [{{:keys [::spec/coe-check-job-id]} :db} _]
+    {::cimi-api-fx/get [coe-check-job-id #(dispatch [::set-check-coe-job %])]}))
+
+
+(reg-event-fx
+  ::set-check-coe-job-id
+  (fn [{:keys [db]} [_ job-id]]
+    {:db             (assoc db ::spec/coe-check-job-id job-id)
+     :dispatch-later [{:ms 3000 :dispatch [::get-check-coe-job]}]}))
+
 
 (reg-event-fx
   ::set-selected-credential
   (fn [{{:keys [::spec/deployment
                 ::spec/data-step-active?] :as db} :db} [_ {credential-id :id :as credential}]]
-    (cond-> {:db (assoc db ::spec/selected-credential credential
-                           ::spec/deployment (assoc deployment :parent credential-id))}
-            data-step-active? (assoc :dispatch [::get-data-records-for-cred]))))
+    (let [can-check-coe? (general-utils/can-operation? "check-coe" credential)]
+      (cond-> {:db (assoc db ::spec/selected-credential credential
+                             ::spec/deployment (assoc deployment :parent credential-id)
+                             ::spec/coe-check-loading? can-check-coe?
+                             ::spec/coe-check nil)}
+              data-step-active? (assoc :dispatch [::get-data-records-for-cred])
+              can-check-coe? (assoc ::cimi-api-fx/operation
+                                    [credential-id
+                                     "check-coe"
+                                     #(dispatch [::set-check-coe-job-id (:location %)])])))))
 
 
 (reg-event-db
@@ -74,7 +104,9 @@
 (reg-event-fx
   ::set-selected-infra-service
   (fn [{:keys [db]} [_ infra-service]]
-    {:db       (assoc db ::spec/selected-infra-service infra-service)
+    {:db       (assoc db ::spec/selected-infra-service infra-service
+                         ::spec/coe-check nil
+                         ::spec/coe-check-loading? false)
      :dispatch [::get-credentials (:id infra-service)]}))
 
 
@@ -89,12 +121,12 @@
 
 (reg-event-fx
   ::get-infra-services
-  (fn [{:keys [db]} _]
+  (fn [{:keys [db]} [_ filter]]
     {:db                  (assoc db ::spec/infra-services-loading? true
                                     ::spec/infra-services nil
                                     ::spec/selected-infra-service nil)
      ::cimi-api-fx/search [:infrastructure-service
-                           {:filter "subtype='kubernetes' or subtype='swarm'",
+                           {:filter filter,
                             :select "id, name, description, subtype"
                             :order  "name:asc,id:asc"}
                            #(dispatch [::set-infra-services %])]}))
@@ -111,7 +143,13 @@
   ::get-deployment
   (fn [{:keys [db]} [_ id]]
     {:db               (assoc db ::spec/deployment {:id id})
-     ::cimi-api-fx/get [id #(dispatch [::set-deployment %])]}))
+     ::cimi-api-fx/get [id #(let [module-subtype (get-in % [:module :subtype])
+                                  is-kubernetes? (= module-subtype "application_kubernetes")
+                                  filter         (if is-kubernetes?
+                                                   "subtype='kubernetes'"
+                                                   "subtype='swarm'")]
+                              (dispatch [::get-infra-services filter])
+                              (dispatch [::set-deployment %]))]}))
 
 
 (reg-event-fx
@@ -121,9 +159,7 @@
       (dispatch [::get-data-records]))
     (let [data              {:module {:href id}}
           old-deployment-id (:id deployment)
-          on-success        #(do
-                               (dispatch [::get-infra-services])
-                               (dispatch [::get-deployment (:resource-id %)]))]
+          on-success        #(dispatch [::get-deployment (:resource-id %)])]
       (cond->
         {:db               (assoc db ::spec/loading-deployment? true
                                      ::spec/deployment nil
@@ -201,7 +237,6 @@
 
 (defn set-data-infra-service-and-filter
   [db infra-service]
-  (dispatch [::get-infra-services])
   (assoc db ::spec/selected-cloud infra-service
             ::spec/cloud-filter (str "infrastructure-service='" infra-service "'")))
 

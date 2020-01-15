@@ -149,7 +149,6 @@
          {:text     (str/capitalize (@tr [:change-password]))
           :positive true
           :on-click #(when (fv/validate-form-and-show? form)
-                       (js/console.log "valide form")
                        (dispatch [::events/change-password (-> @form
                                                                :names->value
                                                                (dissoc :password-repeat))]))}]]])))

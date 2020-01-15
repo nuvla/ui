@@ -10,7 +10,8 @@
     [sixsq.nuvla.ui.deployment-dialog.views-summary :as summary-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.style :as style]))
+    [sixsq.nuvla.ui.utils.style :as style]
+    [reagent.core :as r]))
 
 
 (defn deployment-step-state
@@ -45,6 +46,28 @@
      nil)])
 
 
+(defn connectivity-check-popup
+  []
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        coe-check-error-msg (subscribe [::subs/coe-check-error-msg])
+        coe-check-loading?  (subscribe [::subs/coe-check-loading?])]
+    [ui/Popup {:trigger (r/as-element [ui/Icon {:name    (cond
+                                                           @coe-check-error-msg "warning sign"
+                                                           @coe-check-loading? "circle notched"
+                                                           :else "world")
+                                                :color   (cond
+                                                           @coe-check-error-msg "red"
+                                                           @coe-check-loading? "black"
+                                                           :else "green")
+                                                :loading @coe-check-loading?
+                                                :style   {:float "right"}}])
+               :basic   true
+               :content (cond
+                          @coe-check-error-msg @coe-check-error-msg
+                          @coe-check-loading? "Connectivity check in progress..."
+                          :else "All good :)")}]))
+
+
 (defn deploy-modal
   [show-data?]
   (let [tr               (subscribe [::i18n-subs/tr])
@@ -53,7 +76,8 @@
         ready?           (subscribe [::subs/ready?])
         launch-disabled? (subscribe [::subs/launch-disabled?])
         active-step      (subscribe [::subs/active-step])
-        step-states      (subscribe [::subs/step-states])]
+        step-states      (subscribe [::subs/step-states])
+        coe-check?       (subscribe [::subs/popup-connectivity-check-visible?])]
     (fn [show-data?]
       (let [module         (:module @deployment)
             module-name    (:name module)
@@ -76,7 +100,10 @@
           [ui/Icon {:name "rocket", :size "large"}]
           (if @ready?
             (str "\u00a0" module-name)
-            "\u2026")]
+            "\u2026")
+
+          (when @coe-check?
+            [connectivity-check-popup])]
 
          [ui/ModalContent
           [ui/ModalDescription

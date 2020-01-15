@@ -179,6 +179,42 @@
 
 
 (reg-sub
+  ::coe-check-loading?
+  (fn [db]
+    (::spec/coe-check-loading? db)))
+
+
+(reg-sub
+  ::coe-check
+  (fn [{:keys [::spec/coe-check] :as db}]
+    coe-check))
+
+
+(reg-sub
+  ::coe-check-error-msg
+  (fn [{:keys [::spec/selected-credential
+               ::spec/coe-check]}]
+    (when (= (get-in coe-check [:target-resource :href])
+             (:id selected-credential))
+      (when-let [return-code (:return-code coe-check)]
+        (when (not= return-code 0)
+          (:status-message coe-check))))))
+
+
+(reg-sub
+  ::popup-connectivity-check-visible?
+  :<- [::selected-credential]
+  :<- [::coe-check-loading?]
+  :<- [::coe-check]
+  (fn [[selected-credential
+        coe-check-loading?
+        coe-check]]
+    (boolean
+      (and selected-credential
+          (or coe-check-loading? coe-check)))))
+
+
+(reg-sub
   ::launch-disabled?
   :<- [::deployment]
   :<- [::data-completed?]

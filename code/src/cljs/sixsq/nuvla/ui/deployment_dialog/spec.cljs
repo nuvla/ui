@@ -11,6 +11,9 @@
 (s/def ::credentials (s/nilable (s/coll-of any? :kind vector?)))
 (s/def ::credentials-loading? boolean?)
 (s/def ::selected-credential any?)
+(s/def ::coe-check-loading? boolean?)
+(s/def ::coe-check-job-id (s/nilable string?))
+(s/def ::coe-check any?)
 
 
 (s/def ::infra-services (s/nilable (s/coll-of any? :kind vector?)))
@@ -47,6 +50,8 @@
                           ::selected-infra-service
                           ::credentials
                           ::credentials-loading?
+                          ::coe-check-loading?
+                          ::coe-check
                           ::selected-credential
                           ::data-clouds
                           ::selected-cloud
@@ -63,6 +68,8 @@
                ::deployment              nil
                ::credentials             nil
                ::credentials-loading?    false
+               ::coe-check-loading?      false
+               ::coe-check               nil
                ::infra-services          nil
                ::infra-services-loading? false
                ::selected-infra-service  nil

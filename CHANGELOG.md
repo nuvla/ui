@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Deployment modal - Add connectivity check popup
   - Deployment modal - Credential step is replaced by infrastructure services step
   - Deployment modal - Steps keeps at top when scrolling
   - APPS PAGE - When user is not logged in, launch button should not be visible

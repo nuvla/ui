@@ -4,9 +4,9 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.infrastructures-detail.spec :as spec]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-db
@@ -29,14 +29,16 @@
   (fn [{{:keys [::spec/infrastructure-service] :as db} :db} _]
     (let [resource-id (:id infrastructure-service)]
       {::cimi-api-fx/edit [resource-id infrastructure-service
-                          #(if (instance? js/Error %)
-                             (let [{:keys [status message]} (response/parse-ex-info %)]
-                               (dispatch [::messages-events/add
-                                          {:header  (cond-> (str "error editing " resource-id)
-                                                            status (str " (" status ")"))
-                                           :content message
-                                           :type    :error}]))
-                             (dispatch [::set-infrastructure-service %]))]})))
+                           #(if (instance? js/Error %)
+                              (let [{:keys [status message]} (response/parse-ex-info %)]
+                                (dispatch [::messages-events/add
+                                           {:header  (cond-> (str "error editing " resource-id)
+                                                             status (str " (" status ")"))
+                                            :content message
+                                            :type    :error}]))
+                              (do
+                                (dispatch [::main-events/changes-protection? false])
+                                (dispatch [::set-infrastructure-service %])))]})))
 
 
 (reg-event-fx

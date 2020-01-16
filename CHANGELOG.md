@@ -7,6 +7,7 @@
   - Deployment modal - Filter infrastructure services by module subtype
   - Deployment modal - Add connectivity check popup
   - Deployment modal - Credential step is replaced by infrastructure services step
+  - INFRASTRUCTURE PAGE - Ignore changes modal is visible even when we save fix
   - Deployment modal - Steps keeps at top when scrolling
   - APPS PAGE - When user is not logged in, launch button should not be visible
   - APPS PAGE - When user is not logged in, set-module is getting 

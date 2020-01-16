@@ -191,11 +191,11 @@
 
 
 (defn NuvlaboxCard
-  [nuvlabox status]
+  [nuvlabox status & {on-click-fn :on-click}]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [{:keys [id name description created state] :as nuvlabox} status]
       ^{:key id}
-      [ui/Card
+      [ui/Card (when on-click-fn {:on-click on-click-fn})
        [ui/CardContent
 
         [ui/CardHeader {:style {:word-wrap "break-word"}}

@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - EDGE PAGE - Let user choose cards or table display for NuvlaBoxes
   - INFRASTRUCTURE PAGE - Ignore changes modal is visible even when we save fix
   - Deployment modal - Steps keeps at top when scrolling
   - APPS PAGE - When user is not logged in, launch button should not be visible

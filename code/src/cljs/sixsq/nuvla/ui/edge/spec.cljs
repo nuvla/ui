@@ -50,7 +50,7 @@
                ::state-nuvlaboxes    nil
                ::status-nuvlaboxes   nil
                ::page                1
-               ::elements-per-page   10
+               ::elements-per-page   9
                ::total-elements      0
                ::full-text-search    nil
                ::state-selector      nil

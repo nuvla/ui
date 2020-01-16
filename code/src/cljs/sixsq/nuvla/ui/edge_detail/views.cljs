@@ -229,13 +229,14 @@
       ^{:key uuid}
       [ui/Container {:fluid true}
        [MenuBar uuid]
-       ^{:key (:updated @nuvlabox)}
-       [acl/AclButton
-        {:default-value   (:acl @nuvlabox)
-         :read-only       (not @can-edit?)
-         :default-active? @acl-open
-         :on-change       #(do
-                             (reset! acl-open true)
-                             (dispatch [::events/edit (:id @nuvlabox) (assoc @nuvlabox :acl %)]))}]
+       (when (:acl @nuvlabox)
+         ^{:key (:updated @nuvlabox)}
+         [acl/AclButton
+          {:default-value   (:acl @nuvlabox)
+           :read-only       (not @can-edit?)
+           :default-active? @acl-open
+           :on-change       #(do
+                               (reset! acl-open true)
+                               (dispatch [::events/edit (:id @nuvlabox) (assoc @nuvlabox :acl %)]))}])
        [SummarySection]
        [StatusSection]])))

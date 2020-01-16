@@ -18,9 +18,10 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
+
+(def cards-view (r/atom true))
 
 (defn StatisticState
   [value icon label]
@@ -66,12 +67,20 @@
 
 (defn MenuBar []
   (let [loading? (subscribe [::subs/loading?])]
-    [ui/Menu {:borderless true, :stackable true}
-     [AddButton]
-     [main-components/RefreshMenu
-      {:action-id  events/refresh-id
-       :loading?   @loading?
-       :on-refresh #(dispatch [::events/refresh])}]]))
+    (dispatch [::events/refresh])
+    (fn []
+      [ui/Menu {:borderless true, :stackable true}
+       [AddButton]
+       [ui/MenuItem {:icon     "grid layout"
+                     :active   @cards-view
+                     :on-click #(reset! cards-view true)}]
+       [ui/MenuItem {:icon     "table"
+                     :active   (not @cards-view)
+                     :on-click #(reset! cards-view false)}]
+       [main-components/RefreshMenu
+        {:action-id  events/refresh-id
+         :loading?   @loading?
+         :on-refresh #(dispatch [::events/refresh])}]])))
 
 
 (defn CreatedNuvlaBox
@@ -183,34 +192,48 @@
      [ui/TableCell (or name uuid)]]))
 
 
-(defn NuvlaboxTable
+(defn Pagination
   []
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])]
-    (dispatch [::events/refresh])
-    (fn []
-      (let [total-elements (get @nuvlaboxes :count 0)
-            total-pages    (general-utils/total-pages total-elements @elements-per-page)]
-        [:<>
+        page              (subscribe [::subs/page])
+        total-elements    (get @nuvlaboxes :count 0)
+        total-pages       (general-utils/total-pages total-elements @elements-per-page)]
 
-         [ui/Table {:compact "very", :selectable true}
-          [ui/TableHeader
-           [ui/TableRow
-            [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
-            [ui/TableHeaderCell "state"]
-            [ui/TableHeaderCell "name"]]]
+    [uix/Pagination {:totalPages   total-pages
+                     :activePage   @page
+                     :onPageChange (ui-callback/callback
+                                     :activePage #(dispatch [::events/set-page %]))}]))
 
-          [ui/TableBody
-           (doall
-             (for [{:keys [id] :as nuvlabox} (:resources @nuvlaboxes)]
-               ^{:key id}
-               [NuvlaboxRow nuvlabox]))]]
 
-         [uix/Pagination {:totalPages   total-pages
-                          :activePage   @page
-                          :onPageChange (ui-callback/callback
-                                          :activePage #(dispatch [::events/set-page %]))}]]))))
+(defn NuvlaboxTable
+  []
+  (let [nuvlaboxes (subscribe [::subs/nuvlaboxes])]
+    [ui/Table {:compact "very", :selectable true}
+     [ui/TableHeader
+      [ui/TableRow
+       [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
+       [ui/TableHeaderCell "state"]
+       [ui/TableHeaderCell "name"]]]
+
+     [ui/TableBody
+      (doall
+        (for [{:keys [id] :as nuvlabox} (:resources @nuvlaboxes)]
+          ^{:key id}
+          [NuvlaboxRow nuvlabox]))]]))
+
+
+(defn NuvlaboxCards
+  []
+  (let [nuvlaboxes (subscribe [::subs/nuvlaboxes])]
+    [ui/CardGroup {:centered true}
+     (doall
+       (for [{:keys [id] :as nuvlabox} (:resources @nuvlaboxes)]
+         (let [status      (subscribe [::subs/status-nuvlabox id])
+               uuid        (general-utils/id->uuid id)
+               on-click-fn #(dispatch [::history-events/navigate (str "edge/" uuid)])]
+           ^{:key id}
+           [edge-detail/NuvlaboxCard nuvlabox @status :on-click on-click-fn])))]))
 
 
 (defmethod panel/render :edge
@@ -221,7 +244,10 @@
                   [MenuBar]
                   [main-components/SearchInput #(dispatch [::events/set-full-text-search %])]
                   [StatisticStates]
-                  [NuvlaboxTable]
+                  (if @cards-view
+                    [NuvlaboxCards]
+                    [NuvlaboxTable])
+                  [Pagination]
                   [AddModal]]
         children (case n
                    1 root

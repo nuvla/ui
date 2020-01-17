@@ -7,6 +7,9 @@
   - Deployment modal - Filter infrastructure services by module subtype
   - Deployment modal - Add connectivity check popup
   - Deployment modal - Credential step is replaced by infrastructure services step
+  - Session page should not appear when reloading the page
+  - DASHBOARD DETAIL PAGE - ACL widget disapearing sometimes on refresh fix
+  - EDGE PAGE - Let user choose cards or table display for NuvlaBoxes
   - INFRASTRUCTURE PAGE - Ignore changes modal is visible even when we save fix
   - Deployment modal - Steps keeps at top when scrolling
   - APPS PAGE - When user is not logged in, launch button should not be visible

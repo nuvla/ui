@@ -54,7 +54,7 @@
              ::fx/bulk-actions-interval [(if visible?
                                            ::action-interval-resume
                                            ::action-interval-pause) actions-interval]}
-            visible? (assoc ::api-fx/session [#(dispatch [::session-events/set-session %])]))))
+            visible? (assoc :dispatch [::session-events/initialize]))))
 
 
 (reg-event-fx

@@ -22,8 +22,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (def refresh-action-id :dashboard-detail-get-deployment)
@@ -547,10 +546,11 @@
       [ui/Segment (merge style/basic {:loading @loading?})
        [ui/Container {:fluid true}
         [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard])) :inline true]
-        [acl/AclButton
-         {:default-value @acl
-          :read-only     @read-only?
-          :on-change     #(dispatch [::events/edit resource-id (assoc @deployment :acl %)])}]
+        (when @acl
+          [acl/AclButton
+          {:default-value @acl
+           :read-only     @read-only?
+           :on-change     #(dispatch [::events/edit resource-id (assoc @deployment :acl %)])}])
         [menu]
         [summary @deployment]
         [urls-section]

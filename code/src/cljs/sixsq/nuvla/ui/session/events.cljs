@@ -13,13 +13,13 @@
 
 (reg-event-fx
   ::initialize
-  (fn [_ _]
-    {::cimi-api-fx/session
-     [(fn [session]
-        (dispatch [::set-session session])
-        (when session
-          #_(dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])
-          (dispatch [:sixsq.nuvla.ui.main.events/notifications-polling])))]}))
+  (fn [{db :db} _]
+    {:db                   (assoc db ::spec/loading-session? true)
+     ::cimi-api-fx/session [(fn [session]
+                              (dispatch [::set-session session])
+                              (when session
+                                #_(dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])
+                                (dispatch [:sixsq.nuvla.ui.main.events/notifications-polling])))]}))
 
 
 (reg-event-fx
@@ -30,8 +30,9 @@
                 ::main-spec/pages] :as db} :db} [_ session-arg]]
     (let [no-session-protected-page? (and (nil? session-arg)
                                           (->> nav-path first (get pages) :protected?))]
-      (cond-> {:db (assoc db ::spec/session session-arg)}
-              no-session-protected-page? (assoc :dispatch [::open-modal :login])
+      (cond-> {:db (assoc db ::spec/session session-arg
+                             ::spec/session-loading? false)}
+              no-session-protected-page? (assoc :dispatch [::history-events/navigate "sign-in"])
               session-arg (assoc ::fx/automatic-logout-at-session-expiry [session-arg])
               ;; force refresh templates collection cache when not the same user (different session)
               (not= session session-arg) (assoc :dispatch-n [[::cimi-events/get-cloud-entry-point]

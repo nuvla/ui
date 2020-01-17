@@ -32,6 +32,7 @@
     [sixsq.nuvla.ui.ocre.views]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.profile.views]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.session.views :as session-views]
     [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.responsive :as responsive]
@@ -225,8 +226,9 @@
           cep              (subscribe [::api-subs/cloud-entry-point])
           iframe?          (subscribe [::subs/iframe?])
           is-small-device? (subscribe [::subs/is-small-device?])
-          resource-path    (subscribe [::subs/nav-path])]
-      (if @cep
+          resource-path    (subscribe [::subs/nav-path])
+          session-loading? (subscribe [::session-subs/session-loading?])]
+      (if (and @cep (not @session-loading?))
         [ui/Responsive {:as            "div"
                         :id            "nuvla-ui-main"
                         :fire-on-mount true

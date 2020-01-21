@@ -1,12 +1,14 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
-    [sixsq.nuvla.ui.deployment-dialog.views-credentials :as credentials-step]
     [sixsq.nuvla.ui.deployment-dialog.views-data :as data-step]
     [sixsq.nuvla.ui.deployment-dialog.views-env-variables :as env-variables-step]
     [sixsq.nuvla.ui.deployment-dialog.views-files :as files-step]
+    [sixsq.nuvla.ui.deployment-dialog.views-infra-services :as infra-services-step]
     [sixsq.nuvla.ui.deployment-dialog.views-summary :as summary-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -24,7 +26,7 @@
               :on-click  #(dispatch [::events/set-active-step step-id])
               :completed (case step-id
                            :data @data-completed?
-                           :credentials @credentials-completed?
+                           :infra-services @credentials-completed?
                            :env-variables @env-variables-completed?
                            completed?)
               :active    (= step-id @active-step)}
@@ -38,22 +40,45 @@
   [ui/Segment style/autoscroll-y
    (case active-step
      :data [data-step/content]
-     :credentials [credentials-step/content]
+     :infra-services [infra-services-step/content]
      :env-variables [env-variables-step/content]
      :files [files-step/content]
      :summary [summary-step/content]
      nil)])
 
 
+(defn credential-check
+  []
+  (let [tr        (subscribe [::i18n-subs/tr])
+        error-msg (subscribe [::subs/check-cred-error-msg])
+        loading?  (subscribe [::subs/check-cred-loading?])]
+    [:span {:style {:float "left"}}
+     [ui/Icon {:name    (cond
+                          @error-msg "warning sign"
+                          @loading? "circle notched"
+                          :else "world")
+               :color   (cond
+                          @error-msg "yellow"
+                          @loading? "black"
+                          :else "green")
+               :loading @loading?
+               :size    "big"}]
+     (cond
+       @error-msg (str/capitalize (or @error-msg ""))
+       @loading? (@tr [:connectivity-check-in-progress])
+       :else (@tr [:all-good]))]))
+
+
 (defn deploy-modal
   [show-data?]
-  (let [tr               (subscribe [::i18n-subs/tr])
-        visible?         (subscribe [::subs/deploy-modal-visible?])
-        deployment       (subscribe [::subs/deployment])
-        ready?           (subscribe [::subs/ready?])
-        launch-disabled? (subscribe [::subs/launch-disabled?])
-        active-step      (subscribe [::subs/active-step])
-        step-states      (subscribe [::subs/step-states])]
+  (let [tr                    (subscribe [::i18n-subs/tr])
+        visible?              (subscribe [::subs/deploy-modal-visible?])
+        deployment            (subscribe [::subs/deployment])
+        ready?                (subscribe [::subs/ready?])
+        launch-disabled?      (subscribe [::subs/launch-disabled?])
+        active-step           (subscribe [::subs/active-step])
+        step-states           (subscribe [::subs/step-states])
+        check-cred-is-active? (subscribe [::subs/check-cred-is-active?])]
     (fn [show-data?]
       (let [module         (:module @deployment)
             module-name    (:name module)
@@ -62,7 +87,7 @@
             submit-fn      #(dispatch [::events/edit-deployment])
 
             steps          [(when show-data? :data)
-                            :credentials
+                            :infra-services
                             :env-variables
                             (when (= module-subtype "application") :files)
                             :summary]
@@ -95,9 +120,13 @@
               [step-content @active-step])]]]
 
          [ui/ModalActions
-          [ui/Button {:primary  true
-                      :disabled @launch-disabled?
-                      :on-click submit-fn}
-           [ui/Icon {:name     "rocket"
-                     :disabled @launch-disabled?}]
-           (@tr [:launch])]]]))))
+
+          [:div
+           (when @check-cred-is-active?
+             [credential-check])
+           [ui/Button {:primary  true
+                       :disabled @launch-disabled?
+                       :on-click submit-fn}
+            [ui/Icon {:name     "rocket"
+                      :disabled @launch-disabled?}]
+            (@tr [:launch])]]]]))))

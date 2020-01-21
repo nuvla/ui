@@ -8,15 +8,23 @@
 (s/def ::loading-deployment? boolean?)
 (s/def ::deployment any?)
 
+(s/def ::credentials any?)
 (s/def ::credentials-loading? boolean?)
-(s/def ::credentials (s/nilable (s/coll-of any? :kind vector?)))
-(s/def ::selected-credential any?)
+(s/def ::selected-credential-id any?)
+(s/def ::check-cred-loading? boolean?)
+(s/def ::job-check-cred-id (s/nilable string?))
+(s/def ::check-cred any?)
 
-(s/def ::data-infra-services any?)
-(s/def ::selected-infra-service (s/nilable string?))
-(s/def ::infra-service-filter (s/nilable string?))
 
-(s/def ::infra-services any?)
+(s/def ::infra-services (s/nilable (s/coll-of any? :kind vector?)))
+(s/def ::infra-services-loading? boolean?)
+(s/def ::selected-infra-service any?)
+
+(s/def ::data-clouds any?)
+(s/def ::selected-cloud (s/nilable string?))
+(s/def ::cloud-filter (s/nilable string?))
+
+(s/def ::cloud-infra-services any?)
 
 (s/def ::step-id #{:data :credentials :env-variables :files :summary})
 
@@ -37,39 +45,49 @@
 (s/def ::db (s/keys :req [::deploy-modal-visible?
                           ::loading-deployment?
                           ::deployment
+                          ::infra-services
+                          ::infra-services-loading?
+                          ::selected-infra-service
                           ::credentials
                           ::credentials-loading?
-                          ::selected-credential
-                          ::data-infra-services
-                          ::selected-infra-service
-                          ::infra-service-filter
-                          ::infra-services
+                          ::check-cred-loading?
+                          ::check-cred
+                          ::selected-credential-id
+                          ::data-clouds
+                          ::selected-cloud
+                          ::cloud-filter
+                          ::cloud-infra-services            ;; from search to display data
 
                           ::active-step
                           ::data-step-active?
                           ::step-states]))
 
 
-(def defaults {::deploy-modal-visible?  false
-               ::loading-deployment?    false
-               ::deployment             nil
-               ::credentials            nil
-               ::credentials-loading?   false
-               ::selected-credential    nil
-               ::data-infra-services    nil
-               ::selected-infra-service nil
-               ::infra-service-filter   nil
-               ::infra-services         nil
+(def defaults {::deploy-modal-visible?   false
+               ::loading-deployment?     false
+               ::deployment              nil
+               ::credentials             nil
+               ::credentials-loading?    false
+               ::check-cred-loading?     false
+               ::check-cred              nil
+               ::infra-services          nil
+               ::infra-services-loading? false
+               ::selected-infra-service  nil
+               ::selected-credential-id  nil
+               ::data-clouds             nil
+               ::selected-cloud          nil
+               ::cloud-filter            nil
+               ::cloud-infra-services    nil
 
-               ::active-step            :data
-               ::data-step-active       true
-               ::step-states            {:data          {:step-id :data
-                                                         :icon    "database"}
-                                         :credentials   {:step-id :credentials
-                                                         :icon    "key"}
-                                         :env-variables {:step-id :env-variables
-                                                         :icon    "list alternate outline"}
-                                         :files         {:step-id :files
-                                                         :icon    "file alternate outline"}
-                                         :summary       {:step-id :summary
-                                                         :icon    "info"}}})
+               ::active-step             :data
+               ::data-step-active        true
+               ::step-states             {:data           {:step-id :data
+                                                           :icon    "database"}
+                                          :infra-services {:step-id :infra-services
+                                                           :icon    "cloud"}
+                                          :env-variables  {:step-id :env-variables
+                                                           :icon    "list alternate outline"}
+                                          :files          {:step-id :files
+                                                           :icon    "file alternate outline"}
+                                          :summary        {:step-id :summary
+                                                           :icon    "info"}}})

@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - Deployment modal - Add credential check
+  - Deployment modal - Filter infrastructure services by module subtype
+  - Deployment modal - Credential step is replaced by infrastructure services step
   - Session page should not appear when reloading the page
   - DASHBOARD DETAIL PAGE - ACL widget disapearing sometimes on refresh fix
   - EDGE PAGE - Let user choose cards or table display for NuvlaBoxes

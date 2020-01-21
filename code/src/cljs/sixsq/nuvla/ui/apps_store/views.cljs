@@ -50,7 +50,7 @@
                  :icon     :rocket
                  :content  (@tr [:launch])
                  :on-click #(dispatch [::deployment-dialog-events/create-deployment
-                                       (:id module) :credentials])}]]))
+                                       (:id module) :infra-services])}]]))
 
 
 (defn modules-cards-group

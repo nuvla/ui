@@ -47,11 +47,11 @@
 (defn credential-is-outdated?
   [{:keys [last-check] :as credential}]
   (boolean
-    (some->
-      last-check
-      time/parse-iso8601
-      time/delta-minutes
-      (> 5))))
+    (or (nil? last-check)
+        (-> last-check
+            time/parse-iso8601
+            time/delta-minutes
+            (> 5)))))
 
 
 (defn credential-can-op-check?

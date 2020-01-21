@@ -55,8 +55,7 @@
         locale              (subscribe [::i18n-subs/locale])
         selected-credential (subscribe [::subs/selected-credential])
         valid-status        (subscribe [::subs/credential-status-valid id])
-        last-check-ago      (utils/credential-last-check-ago credential @locale)
-        is-outdated?        (utils/credential-is-outdated? credential)]
+        last-check-ago      (utils/credential-last-check-ago credential @locale)]
     [ui/ListItem {:active   (= id (:id @selected-credential))
                   :on-click #(dispatch [::events/set-selected-credential credential])}
      [ui/ListIcon {:vertical-align "middle"}
@@ -72,7 +71,7 @@
         [ui/ListDescription description])
       [ui/ListDescription
        (@tr [:last-check])
-       [:span {:style {:color (if is-outdated? "orange" "green")}}
+       [:span
         (if last-check-ago
           last-check-ago
           (@tr [:not-available]))]]]]))

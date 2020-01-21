@@ -1,13 +1,14 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-infra-services
   (:require
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.style :as style]))
-
 
 (defn summary-row
   []
@@ -50,30 +51,54 @@
 
 (defn cred-item
   [{:keys [id name description] :as credential}]
-  (let [selected-credential (subscribe [::subs/selected-credential])]
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        locale              (subscribe [::i18n-subs/locale])
+        selected-credential (subscribe [::subs/selected-credential])
+        valid-status        (subscribe [::subs/credential-status-valid id])
+        last-check-ago      (utils/credential-last-check-ago credential @locale)
+        is-outdated?        (utils/credential-is-outdated? credential)]
     [ui/ListItem {:active   (= id (:id @selected-credential))
                   :on-click #(dispatch [::events/set-selected-credential credential])}
-     [ui/ListIcon {:name "key", :size "large", :vertical-align "middle"}]
+     [ui/ListIcon {:vertical-align "middle"}
+      [ui/IconGroup {:size "big"}
+       [ui/Icon {:name "key"}]
+       (when (some? @valid-status)
+         [ui/Icon (cond-> {:corner true}
+                          @valid-status (assoc :name "thumbs up", :color "green")
+                          (not @valid-status) (assoc :name "thumbs down", :color "red"))])]]
      [ui/ListContent
       [ui/ListHeader (or name id)]
       (when description
-        [ui/ListDescription description])]]))
+        [ui/ListDescription description])
+      [ui/ListDescription
+       (@tr [:last-check])
+       [:span {:style {:color (if is-outdated? "orange" "green")}}
+        (if last-check-ago
+          last-check-ago
+          (@tr [:not-available]))]]]]))
 
 
 (defn creds-list
   []
-  (fn []
-    (let [tr          (subscribe [::i18n-subs/tr])
-          credentials @(subscribe [::subs/credentials])]
-
-      (if (seq credentials)
-        [ui/ListSA {:divided   true
-                    :relaxed   true
-                    :selection true}
-         (for [{:keys [id] :as credential} credentials]
-           ^{:key id}
-           [cred-item credential])]
-        [ui/Message {:error true} (@tr [:no-credentials])]))))
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        credentials        (subscribe [::subs/credentials])
+        refresh-check-time (r/atom 0)
+        interval-id        (atom nil)]
+    (r/create-class
+      {:component-did-mount    (fn []
+                                 (reset! interval-id
+                                         (js/setInterval #(swap! refresh-check-time inc) 5000)))
+       :component-will-unmount #(when @interval-id
+                                  (js/clearInterval @interval-id))
+       :reagent-render         #(if (seq @credentials)
+                                  [ui/ListSA {:divided   true
+                                              :relaxed   true
+                                              :selection true}
+                                   (doall
+                                     (for [{:keys [id] :as credential} @credentials]
+                                       ^{:key (str id @refresh-check-time)}
+                                       [cred-item credential]))]
+                                  [ui/Message {:error true} (@tr [:no-credentials])])})))
 
 
 (defn item

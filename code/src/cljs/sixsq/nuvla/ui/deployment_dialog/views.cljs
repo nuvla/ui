@@ -1,6 +1,8 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
     [sixsq.nuvla.ui.deployment-dialog.views-data :as data-step]
@@ -10,8 +12,7 @@
     [sixsq.nuvla.ui.deployment-dialog.views-summary :as summary-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [reagent.core :as r]))
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 
 (defn deployment-step-state
@@ -46,38 +47,38 @@
      nil)])
 
 
-(defn connectivity-check-popup
+(defn credential-check
   []
-  (let [tr                  (subscribe [::i18n-subs/tr])
-        coe-check-error-msg (subscribe [::subs/coe-check-error-msg])
-        coe-check-loading?  (subscribe [::subs/coe-check-loading?])]
-    [ui/Popup {:trigger (r/as-element [ui/Icon {:name    (cond
-                                                           @coe-check-error-msg "warning sign"
-                                                           @coe-check-loading? "circle notched"
-                                                           :else "world")
-                                                :color   (cond
-                                                           @coe-check-error-msg "red"
-                                                           @coe-check-loading? "black"
-                                                           :else "green")
-                                                :loading @coe-check-loading?
-                                                :style   {:float "right"}}])
-               :basic   true
-               :content (cond
-                          @coe-check-error-msg @coe-check-error-msg
-                          @coe-check-loading? "Connectivity check in progress..."
-                          :else "All good :)")}]))
+  (let [tr        (subscribe [::i18n-subs/tr])
+        error-msg (subscribe [::subs/check-cred-error-msg])
+        loading?  (subscribe [::subs/check-cred-loading?])]
+    [:span {:style {:float "left"}}
+     [ui/Icon {:name    (cond
+                          @error-msg "warning sign"
+                          @loading? "circle notched"
+                          :else "world")
+               :color   (cond
+                          @error-msg "yellow"
+                          @loading? "black"
+                          :else "green")
+               :loading @loading?
+               :size    "big"}]
+     (cond
+       @error-msg (str/capitalize (or @error-msg ""))
+       @loading? (@tr [:connectivity-check-in-progress])
+       :else (@tr [:all-good]))]))
 
 
 (defn deploy-modal
   [show-data?]
-  (let [tr               (subscribe [::i18n-subs/tr])
-        visible?         (subscribe [::subs/deploy-modal-visible?])
-        deployment       (subscribe [::subs/deployment])
-        ready?           (subscribe [::subs/ready?])
-        launch-disabled? (subscribe [::subs/launch-disabled?])
-        active-step      (subscribe [::subs/active-step])
-        step-states      (subscribe [::subs/step-states])
-        coe-check?       (subscribe [::subs/popup-connectivity-check-visible?])]
+  (let [tr                    (subscribe [::i18n-subs/tr])
+        visible?              (subscribe [::subs/deploy-modal-visible?])
+        deployment            (subscribe [::subs/deployment])
+        ready?                (subscribe [::subs/ready?])
+        launch-disabled?      (subscribe [::subs/launch-disabled?])
+        active-step           (subscribe [::subs/active-step])
+        step-states           (subscribe [::subs/step-states])
+        check-cred-is-active? (subscribe [::subs/check-cred-is-active?])]
     (fn [show-data?]
       (let [module         (:module @deployment)
             module-name    (:name module)
@@ -100,10 +101,7 @@
           [ui/Icon {:name "rocket", :size "large"}]
           (if @ready?
             (str "\u00a0" module-name)
-            "\u2026")
-
-          (when @coe-check?
-            [connectivity-check-popup])]
+            "\u2026")]
 
          [ui/ModalContent
           [ui/ModalDescription
@@ -122,9 +120,13 @@
               [step-content @active-step])]]]
 
          [ui/ModalActions
-          [ui/Button {:primary  true
-                      :disabled @launch-disabled?
-                      :on-click submit-fn}
-           [ui/Icon {:name     "rocket"
-                     :disabled @launch-disabled?}]
-           (@tr [:launch])]]]))))
+
+          [:div
+           (when @check-cred-is-active?
+             [credential-check])
+           [ui/Button {:primary  true
+                       :disabled @launch-disabled?
+                       :on-click submit-fn}
+            [ui/Icon {:name     "rocket"
+                      :disabled @launch-disabled?}]
+            (@tr [:launch])]]]]))))

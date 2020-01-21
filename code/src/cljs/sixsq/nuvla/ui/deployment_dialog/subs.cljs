@@ -3,7 +3,9 @@
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (reg-sub
@@ -65,20 +67,52 @@
 
 
 (reg-sub
-  ::credentials-loading?                                    ;;FIXME not used
+  ::credentials-loading?
   ::spec/credentials-loading?)
-
-
-(reg-sub
-  ::selected-credential
-  (fn [db]
-    (::spec/selected-credential db)))
 
 
 (reg-sub
   ::credentials
   (fn [db]
-    (::spec/credentials db)))
+    (sort-by (juxt :name :id) (::spec/credentials db))))
+
+
+(reg-sub
+  ::credentials-by-ids
+  :<- [::credentials]
+  (fn [credentials]
+    (->> credentials
+         (map (juxt :id identity))
+         (into {}))))
+
+
+(reg-sub
+  ::credential
+  :<- [::credentials-by-ids]
+  (fn [credentials-by-ids [_ id]]
+    (get credentials-by-ids id)))
+
+
+(reg-sub
+  ::selected-credential-id
+  (fn [db]
+    (::spec/selected-credential-id db)))
+
+
+(reg-sub
+  ::selected-credential
+  :<- [::credentials-by-ids]
+  :<- [::selected-credential-id]
+  (fn [[credentials-by-ids selected-credential]]
+    (get credentials-by-ids selected-credential)))
+
+
+(reg-sub
+  ::credential-status-valid
+  (fn [[_ id] _]
+    (subscribe [::credential id]))
+  (fn [credential _]
+    (utils/credential-status-valid credential)))
 
 
 (reg-sub
@@ -179,39 +213,39 @@
 
 
 (reg-sub
-  ::coe-check-loading?
+  ::check-cred-loading?
   (fn [db]
-    (::spec/coe-check-loading? db)))
+    (::spec/check-cred-loading? db)))
 
 
 (reg-sub
-  ::coe-check
-  (fn [{:keys [::spec/coe-check] :as db}]
-    coe-check))
+  ::check-cred
+  (fn [{:keys [::spec/check-cred] :as db}]
+    check-cred))
 
 
 (reg-sub
-  ::coe-check-error-msg
-  (fn [{:keys [::spec/selected-credential
-               ::spec/coe-check]}]
-    (when (= (get-in coe-check [:target-resource :href])
-             (:id selected-credential))
-      (when-let [return-code (:return-code coe-check)]
+  ::check-cred-error-msg
+  (fn [{:keys [::spec/selected-credential-id
+               ::spec/check-cred]}]
+    (when (= (get-in check-cred [:target-resource :href])
+             selected-credential-id)
+      (when-let [return-code (:return-code check-cred)]
         (when (not= return-code 0)
-          (:status-message coe-check))))))
+          (:status-message check-cred))))))
 
 
 (reg-sub
-  ::popup-connectivity-check-visible?
-  :<- [::selected-credential]
-  :<- [::coe-check-loading?]
-  :<- [::coe-check]
-  (fn [[selected-credential
-        coe-check-loading?
-        coe-check]]
+  ::check-cred-is-active?
+  :<- [::selected-credential-id]
+  :<- [::check-cred-loading?]
+  :<- [::check-cred]
+  (fn [[selected-credential-id
+        check-cred-loading?
+        check-cred]]
     (boolean
-      (and selected-credential
-          (or coe-check-loading? coe-check)))))
+      (and selected-credential-id
+           (or check-cred-loading? check-cred)))))
 
 
 (reg-sub

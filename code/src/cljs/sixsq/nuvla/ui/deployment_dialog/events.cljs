@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-dialog.events
   (:require
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [re-frame.core :refer [dispatch inject-cofx reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.data.spec :as data-spec]
     [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
@@ -18,14 +18,16 @@
      ::cimi-api-fx/delete [(:id deployment) #()]}))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-credentials
-  (fn [db [_ {credentials :resources}]]
-    (when (= 1 (count credentials))
-      (dispatch [::set-selected-credential (first credentials)]))
-
-    (assoc db ::spec/credentials credentials
-              ::spec/credentials-loading? false)))
+  (fn [{{:keys [::spec/selected-credential-id] :as db} :db} [_ {credentials :resources}]]
+    (let [only-one-cred (= (count credentials) 1)
+          first-cred    (when only-one-cred (first credentials))
+          select-cred?  (and only-one-cred
+                             (not= selected-credential-id (:id first-cred)))]
+      (cond-> {:db (assoc db ::spec/credentials credentials
+                             ::spec/credentials-loading? false)}
+              select-cred? (assoc :dispatch [::set-selected-credential (first credentials)])))))
 
 
 (reg-event-fx
@@ -55,44 +57,49 @@
                                                                  distinct-mounts))])))]
       {::cimi-api-fx/search [:data-record {:filter filter, :select "id, mount"} callback-data]})))
 
+
 (reg-event-fx
-  ::set-check-coe-job
-  (fn [{{:keys [::spec/coe-check-job-id] :as db} :db} [_ {:keys [id return-code] :as resource}]]
-    (when (= coe-check-job-id id)
-      (cond-> {:db (cond-> (assoc db ::spec/coe-check resource)
-                           return-code (assoc ::spec/coe-check-job-id nil
-                                              ::spec/coe-check-loading? false))}
+  ::set-job-check-cred
+  (fn [{{:keys [::spec/job-check-cred-id
+                ::spec/selected-infra-service]
+         :as   db} :db} [_ {:keys [id return-code] :as resource}]]
+    (when (= job-check-cred-id id)
+      (cond-> {:db (cond-> (assoc db ::spec/check-cred resource)
+                           return-code (assoc ::spec/job-check-cred-id nil
+                                              ::spec/check-cred-loading? false))}
+              return-code (assoc :dispatch [::refresh-credentials])
               (nil? return-code) (assoc :dispatch-later
-                                        [{:ms 3000 :dispatch [::get-check-coe-job]}])))))
+                                        [{:ms 3000 :dispatch [::get-job-check-cred]}])))))
 
 
 (reg-event-fx
-  ::get-check-coe-job
-  (fn [{{:keys [::spec/coe-check-job-id]} :db} _]
-    {::cimi-api-fx/get [coe-check-job-id #(dispatch [::set-check-coe-job %])]}))
+  ::get-job-check-cred
+  (fn [{{:keys [::spec/job-check-cred-id]} :db} _]
+    {::cimi-api-fx/get [job-check-cred-id #(dispatch [::set-job-check-cred %])]}))
 
 
 (reg-event-fx
-  ::set-check-coe-job-id
+  ::set-check-cred-job-id
   (fn [{:keys [db]} [_ job-id]]
-    {:db             (assoc db ::spec/coe-check-job-id job-id)
-     :dispatch-later [{:ms 3000 :dispatch [::get-check-coe-job]}]}))
+    {:db             (assoc db ::spec/job-check-cred-id job-id)
+     :dispatch-later [{:ms 3000 :dispatch [::get-job-check-cred]}]}))
 
 
 (reg-event-fx
   ::set-selected-credential
   (fn [{{:keys [::spec/deployment
-                ::spec/data-step-active?] :as db} :db} [_ {credential-id :id :as credential}]]
-    (let [can-check-coe? (general-utils/can-operation? "check-coe" credential)]
-      (cond-> {:db (assoc db ::spec/selected-credential credential
-                             ::spec/deployment (assoc deployment :parent credential-id)
-                             ::spec/coe-check-loading? can-check-coe?
-                             ::spec/coe-check nil)}
+                ::spec/data-step-active?] :as db} :db} [_ {:keys [id] :as credential}]]
+    (let [check-cred? (utils/credential-need-check? credential)]
+      (cond-> {:db (assoc db ::spec/selected-credential-id id
+                             ::spec/deployment (assoc deployment :parent id)
+                             ::spec/check-cred-loading? check-cred?
+                             ::spec/check-cred nil)}
+
               data-step-active? (assoc :dispatch [::get-data-records-for-cred])
-              can-check-coe? (assoc ::cimi-api-fx/operation
-                                    [credential-id
-                                     "check-coe"
-                                     #(dispatch [::set-check-coe-job-id (:location %)])])))))
+              check-cred? (assoc ::cimi-api-fx/operation
+                                 [id
+                                  "check"
+                                  #(dispatch [::set-check-cred-job-id (:location %)])])))))
 
 
 (reg-event-db
@@ -105,9 +112,9 @@
   ::set-selected-infra-service
   (fn [{:keys [db]} [_ infra-service]]
     {:db       (assoc db ::spec/selected-infra-service infra-service
-                         ::spec/coe-check nil
-                         ::spec/coe-check-loading? false)
-     :dispatch [::get-credentials (:id infra-service)]}))
+                         ::spec/check-cred nil
+                         ::spec/check-cred-loading? false)
+     :dispatch [::get-credentials]}))
 
 
 (reg-event-fx
@@ -163,7 +170,7 @@
       (cond->
         {:db               (assoc db ::spec/loading-deployment? true
                                      ::spec/deployment nil
-                                     ::spec/selected-credential nil
+                                     ::spec/selected-credential-id nil
                                      ::spec/deploy-modal-visible? (not (boolean do-not-open-modal?))
                                      ::spec/active-step (or first-step :data)
                                      ::spec/data-step-active? (= first-step :data)
@@ -177,18 +184,24 @@
 
 (reg-event-fx
   ::get-credentials
-  (fn [{db :db} [_ infra-service-id]]
-    {:db (assoc db ::spec/credentials-loading? true
-                   ::spec/credentials nil
-                   ::spec/selected-credential nil)
-     ::cimi-api-fx/search
-         [:credential
-          {:select "id, name, description, created, subtype"
-           :filter (general-utils/join-and
-                     (when infra-service-id
-                       (str "parent='" infra-service-id "'"))
-                     (str "subtype='infrastructure-service-swarm'"))}
-          #(dispatch [::set-credentials %])]}))
+  (fn [{db :db} _]
+    {:db       (assoc db ::spec/credentials-loading? true
+                         ::spec/credentials nil
+                         ::spec/selected-credential-id nil)
+     :dispatch [::refresh-credentials]}))
+
+
+(reg-event-fx
+  ::refresh-credentials
+  (fn [{{:keys [::spec/selected-infra-service]} :db} _]
+    (when-let [infra-id (:id selected-infra-service)]
+      {::cimi-api-fx/search
+       [:credential
+        {:select "id, name, description, created, subtype, last-check, status"
+         :filter (general-utils/join-and
+                   (str "parent='" infra-id "'")
+                   (str "subtype='infrastructure-service-swarm'"))}
+        #(dispatch [::set-credentials %])]})))
 
 
 (reg-event-fx

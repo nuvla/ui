@@ -357,39 +357,20 @@
   []
   (let [tr         (subscribe [::i18n-subs/tr])
         visible?   (subscribe [::subs/delete-confirmation-modal-visible?])
-        credential (subscribe [::subs/credential])
-        confirmed? (r/atom false)]
+        credential (subscribe [::subs/credential])]
     (fn []
-      (let [id   (:id @credential)
-            name (:name @credential)]
-        [ui/Modal {:open       @visible?
-                   :close-icon true
-                   :on-close   #(dispatch [::events/close-delete-confirmation-modal])}
-
-         [ui/ModalHeader (str "Delete Credential?")]
-
-         [ui/ModalContent {:scrolling false}
-          [:h3 name " (" (:description @credential) ")"]
-          [:div "(" id ")"]
-          [ui/Message {:error true}
-           [ui/MessageHeader "Danger - this cannot be undone!"]
-           [ui/MessageContent
-            [:p]
-            [ui/Checkbox {:name      "confirm-deletion"
-                          :label     (@tr [:credential-delete-warning])
-                          :checked   @confirmed?
-                          :fitted    true
-                          :on-change #(reset! confirmed? (not @confirmed?))}]]]]
-
-         [ui/ModalActions
-          [uix/Button {:text     (@tr [:delete])
-                       :positive true
-                       :disabled (when-not @confirmed? true)
-                       :active   true
-                       :on-click #(do
-                                    (reset! confirmed? false)
-                                    (dispatch [::events/delete-credential id])
-                                    (dispatch [::events/close-delete-confirmation-modal]))}]]]))))
+      (let [{:keys [id name description]} @credential
+            content (str (or name id) (when description " - ") description)]
+        ^{:key (random-uuid)}
+        [uix/ModalDanger
+         {:on-close    #(dispatch [::events/close-delete-confirmation-modal])
+          :on-confirm  #(do (dispatch [::events/delete-credential id])
+                            (dispatch [::events/close-delete-confirmation-modal]))
+          :open        @visible?
+          :content     [:h3 content]
+          :header      (@tr [:delete-credential])
+          :danger-msg  (@tr [:credential-delete-warning])
+          :button-text (@tr [:delete])}]))))
 
 
 ;subtype name description

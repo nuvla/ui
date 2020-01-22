@@ -84,10 +84,10 @@
      [ui/TableCell
       (cond
         (general-utils/can-operation? "stop" deployment)
-        [dashboard-detail-views/stop-button deployment :label false]
+        [dashboard-detail-views/stop-button deployment]
 
         (general-utils/can-delete? deployment)
-        [dashboard-detail-views/delete-button deployment :label false])]]))
+        [dashboard-detail-views/delete-button deployment])]]))
 
 
 (defn vertical-data-table

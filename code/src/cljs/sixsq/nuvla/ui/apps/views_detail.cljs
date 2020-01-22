@@ -20,7 +20,6 @@
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -44,6 +43,27 @@
         (if (= (or subtype new-subtype) "project")
           (dispatch [::events/edit-module nil])
           (dispatch [::events/open-save-modal]))))))
+
+
+(defn delete-button
+  [module]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        show? (r/atom false)]
+    (fn [module]
+      (let [{:keys [id name description]} module
+            content (str (or name id) (when description " - ") description)]
+        ^{:key (random-uuid)}
+        [uix/ModalDanger
+         {:on-close    #(reset! show? false)
+          :on-confirm  #(dispatch [::events/delete-module id])
+          :open        @show?
+          :trigger     (r/as-element [ui/MenuItem {:on-click #(reset! show? true)}
+                                      [ui/Icon {:name "trash"}]
+                                      (@tr [:delete])])
+          :content     [:h3 content]
+          :header      (@tr [:delete-module])
+          :danger-msg  (@tr [:module-delete-warning])
+          :button-text (@tr [:delete])}]))))
 
 
 (defn control-bar []
@@ -77,7 +97,7 @@
              :on-click  #(dispatch [::events/open-add-modal])}])
 
          (when (general-utils/can-delete? @module)
-           [resource-details/delete-button @module #(dispatch [::events/delete-module id])])
+           [delete-button @module])
 
          [main-components/RefreshMenu
           {:refresh-disabled? @is-new?

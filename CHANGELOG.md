@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - CIMI PAGE - Sort from table columns header
   - Deployment modal - Add credential check
   - Deployment modal - Filter infrastructure services by module subtype
   - Deployment modal - Credential step is replaced by infrastructure services step

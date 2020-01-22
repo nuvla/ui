@@ -6,8 +6,7 @@
     [sixsq.nuvla.ui.cimi.utils :as utils]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-db
@@ -110,8 +109,7 @@
                             :collection-key
                             (get collection-name))]
       {:db                  (assoc db ::spec/loading? true
-                                      ::spec/aggregations nil
-                                      ::spec/collection nil)
+                                      ::spec/aggregations nil)
        ::cimi-api-fx/search [resource-type
                              (general-utils/prepare-params query-params)
                              #(dispatch [::set-results resource-type %])]})))

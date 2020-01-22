@@ -23,8 +23,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn id-selector-formatter [entry]
@@ -49,9 +48,18 @@
 
 (defn table-header-cell
   [label]
-  ^{:key label} [ui/TableHeaderCell
-                 [:a {:on-click (remove-column-fn label)} [ui/Icon {:name "remove circle"}]]
-                 "\u00a0" label])
+  (let [sort-icon (subscribe [::subs/orderby-label-icon label])
+        next-direction (case @sort-icon
+                         "sort ascending" (str label ":desc")
+                         "sort descending" ""
+                         "sort" (str label ":asc"))]
+    [ui/TableHeaderCell
+     [uix/LinkIcon {:name     "remove circle"
+                    :on-click (remove-column-fn label)}]
+     " " label " "
+     [uix/LinkIcon {:name     @sort-icon
+                    :on-click #(do (dispatch [::events/set-orderby next-direction])
+                                   (dispatch [::events/get-results]))}]]))
 
 
 (defn results-table-header [selected-fields]
@@ -79,7 +87,7 @@
       (let [data          (row-fn entry)
             id            (:id entry)
             row-selected? (subscribe [::subs/row-selected? id])]
-        [ui/TableRow {:style {:cursor "pointer"}
+        [ui/TableRow {:style    {:cursor "pointer"}
                       :on-click #(dispatch [::history-events/navigate (str "api/" id)])}
          (when @can-bulk-delete?
            [ui/TableCell

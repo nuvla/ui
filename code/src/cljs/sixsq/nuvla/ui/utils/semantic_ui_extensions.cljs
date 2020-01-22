@@ -9,8 +9,7 @@
     [sixsq.nuvla.ui.utils.form-fields :as form-fields]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn Button
@@ -204,3 +203,8 @@
                  [ui/TextArea common-opts]
                  (when @active-input? [ui/Icon {:name "pencil"}])]]])
             [SpanBlockJustified default-value])]]))))
+
+
+(defn LinkIcon
+  [{:keys [name on-click]}]
+  [:a [ui/Icon {:name name, :link true, :on-click on-click}]])

@@ -7,8 +7,7 @@
     [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 

@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.main.effects
   (:require
-    [re-frame.core :refer [dispatch reg-fx]]
-    [taoensso.timbre :as log]))
+    [re-frame.core :refer [dispatch reg-fx]]))
 
 
 (reg-fx

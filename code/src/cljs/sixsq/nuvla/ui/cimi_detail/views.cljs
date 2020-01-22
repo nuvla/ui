@@ -10,8 +10,7 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.resource-details :as details]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.resource-details :as details]))
 
 
 (defn path->resource-id

@@ -3,8 +3,7 @@
     [re-frame.core :refer [dispatch]]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as events]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn link

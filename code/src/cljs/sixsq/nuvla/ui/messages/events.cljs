@@ -2,8 +2,7 @@
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.messages.spec :as spec]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (reg-event-db

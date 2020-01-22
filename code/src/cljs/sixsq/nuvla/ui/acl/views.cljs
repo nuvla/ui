@@ -13,8 +13,7 @@
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn is-advanced-mode?
@@ -33,8 +32,7 @@
   [help-kw]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Popup {:trigger (r/as-element
-                          [ui/Icon {:name "info circle"
-                                    :link true}])
+                          [ui/Icon {:name "info circle", :link true}])
                :basic   true
                :content (@tr [help-kw])}]))
 

@@ -4,15 +4,13 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as events]
     [sixsq.nuvla.ui.messages.subs :as subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (defn type->icon-name

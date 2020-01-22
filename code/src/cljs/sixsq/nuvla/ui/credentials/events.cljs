@@ -6,11 +6,9 @@
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.credentials.spec :as spec]
     [sixsq.nuvla.ui.credentials.utils :as utils]
-    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 
@@ -89,7 +87,7 @@
                             #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                  (dispatch [::close-credential-modal])
                                  (dispatch [::get-credentials])
-                                 #_(dispatch [::main-events/check-bootstrap-message])
+                                 ;(dispatch [::main-events/check-bootstrap-message])
                                  (when
                                    (contains?
                                      #{"credential-template/create-credential-vpn-customer"}

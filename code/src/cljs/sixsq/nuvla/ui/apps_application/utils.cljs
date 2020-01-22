@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.apps-application.utils
   (:require [sixsq.nuvla.ui.apps-application.spec :as spec]
-            [sixsq.nuvla.ui.apps.utils :as apps-utils]
-            [taoensso.timbre :as log]))
+            [sixsq.nuvla.ui.apps.utils :as apps-utils]))
 
 ;; Deserialization functions: module->db
 

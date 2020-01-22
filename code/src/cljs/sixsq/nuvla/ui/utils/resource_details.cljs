@@ -15,8 +15,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.table :as table]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (defn action-buttons

@@ -3,8 +3,7 @@
     [sixsq.nuvla.ui.apps-application.utils :as apps-application-utils]
     [sixsq.nuvla.ui.apps-component.utils :as apps-component-utils]
     [sixsq.nuvla.ui.apps.spec :as spec]
-    [sixsq.nuvla.ui.apps.utils :as utils]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.apps.utils :as utils]))
 
 (defn db->module
   [module commit db]

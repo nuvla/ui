@@ -4,6 +4,10 @@
 
 ### Changed
 
+## [2.4.9] - 2020-01-23
+
+### Changed
+
   - Session - add getting started link and terms and conditions link
   - Replace modal delete in apps, deployment, edge, infrastructure, credentials
   - COMPONENT - Modal danger with warning and checkbox confirmation

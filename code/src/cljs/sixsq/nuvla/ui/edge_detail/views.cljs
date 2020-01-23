@@ -14,11 +14,9 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.plot.plot :as plot]
-    [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -26,24 +24,54 @@
 
 (defn refresh
   [uuid]
-  (dispatch [::main-events/action-interval-start {:id        refresh-action-id
-                                                  :frequency 10000
-                                                  :event     [::events/get-nuvlabox (str "nuvlabox/" uuid)]}]))
+  (dispatch [::main-events/action-interval-start
+             {:id        refresh-action-id
+              :frequency 10000
+              :event     [::events/get-nuvlabox (str "nuvlabox/" uuid)]}]))
+
+
+
+(defn DecommissionButton
+  [nuvlabox]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        {:keys [id name description]} nuvlabox
+        content (str (or name id) (when description " - ") description)]
+    [uix/ModalDanger
+     {:button-text (@tr [:decommission])
+      :on-confirm  #(dispatch [::events/decommission])
+      :danger-msg  (@tr [:nuvlabox-decommission-warning])
+      :trigger     (r/as-element [ui/MenuItem
+                                  [ui/Icon {:name "eraser"}]
+                                  (@tr [:decommission])])
+      :header      (@tr [:decommission-nuvlabox])
+      :content     [:h3 content]}]))
+
+
+(defn DeleteButton
+  [nuvlabox]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        {:keys [id name description]} nuvlabox
+        content (str (or name id) (when description " - ") description)]
+    [uix/ModalDanger
+     {:button-text (@tr [:delete])
+      :on-confirm  #(dispatch [::events/delete])
+      :trigger     (r/as-element [ui/MenuItem
+                                  [ui/Icon {:name "trash"}]
+                                  (@tr [:delete])])
+      :header      (@tr [:delete-nuvlabox])
+      :content     [:h3 content]}]))
 
 
 (defn MenuBar [uuid]
-  (let [tr                (subscribe [::i18n-subs/tr])
-        can-decommission? (subscribe [::subs/can-decommission?])
+  (let [can-decommission? (subscribe [::subs/can-decommission?])
         can-delete?       (subscribe [::subs/can-delete?])
         nuvlabox          (subscribe [::subs/nuvlabox])
-        loading?          (subscribe [::subs/loading?])
-        {:keys [id name] :as nuvlabox} @nuvlabox]
+        loading?          (subscribe [::subs/loading?])]
     [ui/Menu {:borderless true, :stackable true}
      (when @can-decommission?
-       [resource-details/action-button-icon "Decommission" (@tr [:yes]) "eraser" (str "Decommission " (or id name))
-        (@tr [:are-you-sure?]) #(dispatch [::events/decommission]) (constantly nil)])
+       [DecommissionButton @nuvlabox])
      (when @can-delete?
-       [resource-details/delete-button nuvlabox #(dispatch [::events/delete])])
+       [DeleteButton @nuvlabox])
 
      [main-components/RefreshMenu
       {:action-id  refresh-action-id

@@ -64,17 +64,6 @@
 
 
 (reg-sub
-  ::credential-modal-visible?
-  (fn [db]
-    (::spec/credential-modal-visible? db)))
-
-
-(reg-sub
-  ::delete-confirmation-modal-visible?
-  ::spec/delete-confirmation-modal-visible?)
-
-
-(reg-sub
   ::infrastructure-services-available
   (fn [db]
     (::spec/infrastructure-services-available db)))

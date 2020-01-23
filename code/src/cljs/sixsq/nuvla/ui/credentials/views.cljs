@@ -13,7 +13,6 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.accordion :as utils-accordion]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -353,29 +352,25 @@
       {:on-refresh #(dispatch [::events/get-credentials])}]]))
 
 
-(defn delete-confirmation-modal
-  []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        visible?   (subscribe [::subs/delete-confirmation-modal-visible?])
-        credential (subscribe [::subs/credential])]
-    (fn []
-      (let [{:keys [id name description]} @credential
-            content (str (or name id) (when description " - ") description)]
-        ^{:key (random-uuid)}
-        [uix/ModalDanger
-         {:on-close    #(dispatch [::events/close-delete-confirmation-modal])
-          :on-confirm  #(do (dispatch [::events/delete-credential id])
-                            (dispatch [::events/close-delete-confirmation-modal]))
-          :open        @visible?
-          :content     [:h3 content]
-          :header      (@tr [:delete-credential])
-          :danger-msg  (@tr [:credential-delete-warning])
-          :button-text (@tr [:delete])}]))))
+(defn DeleteButton
+  [credential]
+  (let [tr (subscribe [::i18n-subs/tr])
+        {:keys [id name description]} credential
+        content (str (or name id) (when description " - ") description)]
+    [uix/ModalDanger
+     {:on-confirm  #(dispatch [::events/delete-credential id])
+      :trigger     (r/as-element [ui/Icon {:name  "trash"
+                                           :style {:cursor "pointer"}
+                                           :color "red"}])
+      :content     [:h3 content]
+      :header      (@tr [:delete-credential])
+      :danger-msg  (@tr [:credential-delete-warning])
+      :button-text (@tr [:delete])}]))
 
 
 ;subtype name description
 (defn single-credential
-  [{:keys [id subtype name description] :as credential}]
+  [{:keys [subtype name description] :as credential}]
   [ui/TableRow
    [ui/TableCell {:floated :left
                   :width   2}
@@ -392,7 +387,7 @@
                   :style   {}}
 
     (when (general-utils/can-delete? credential)
-      [utils-accordion/trash id ::events/open-delete-confirmation-modal nil credential])
+      [DeleteButton credential])
 
     (when (general-utils/can-edit? credential)
       [ui/Icon {:name     :cog
@@ -405,10 +400,10 @@
   []
   (let [tr          (subscribe [::i18n-subs/tr])
         credentials (subscribe [::subs/credentials])]
+    (dispatch [::events/get-credentials])
     (fn []
       (let [infra-service-creds (filter #(in? infrastructure-service-subtypes (:subtype %))
                                         @credentials)]
-        (dispatch [::events/get-credentials])
         [ui/Container {:fluid true}
          [uix/PageHeader "key" (str/capitalize (@tr [:credentials])) :inline true]
          [uix/Accordion
@@ -440,5 +435,4 @@
    [credentials]
    [add-credential-modal]
    [credential-modal]
-   [generated-credential-modal]
-   [delete-confirmation-modal]])
+   [generated-credential-modal]])

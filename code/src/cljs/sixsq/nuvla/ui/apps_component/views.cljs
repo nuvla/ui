@@ -354,7 +354,7 @@
                          :on-change     #(do (dispatch [::apps-events/acl %])
                                              (dispatch [::main-events/changes-protection? true]))
                          :read-only     (not @editable?)}]
-         [apps-views-detail/control-bar]
+         [apps-views-detail/MenuBar]
          [summary]
          [ports-section]
          [apps-views-detail/env-variables-section]

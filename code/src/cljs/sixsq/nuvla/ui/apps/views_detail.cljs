@@ -45,28 +45,23 @@
           (dispatch [::events/open-save-modal]))))))
 
 
-(defn delete-button
+(defn DeleteButton
   [module]
-  (let [tr    (subscribe [::i18n-subs/tr])
-        show? (r/atom false)]
-    (fn [module]
-      (let [{:keys [id name description]} module
-            content (str (or name id) (when description " - ") description)]
-        ^{:key (random-uuid)}
-        [uix/ModalDanger
-         {:on-close    #(reset! show? false)
-          :on-confirm  #(dispatch [::events/delete-module id])
-          :open        @show?
-          :trigger     (r/as-element [ui/MenuItem {:on-click #(reset! show? true)}
-                                      [ui/Icon {:name "trash"}]
-                                      (@tr [:delete])])
-          :content     [:h3 content]
-          :header      (@tr [:delete-module])
-          :danger-msg  (@tr [:module-delete-warning])
-          :button-text (@tr [:delete])}]))))
+  (let [tr      (subscribe [::i18n-subs/tr])
+        {:keys [id name description]} module
+        content (str (or name id) (when description " - ") description)]
+    [uix/ModalDanger
+     {:on-confirm  #(dispatch [::events/delete-module id])
+      :trigger     (r/as-element [ui/MenuItem
+                                  [ui/Icon {:name "trash"}]
+                                  (@tr [:delete])])
+      :content     [:h3 content]
+      :header      (@tr [:delete-module])
+      :danger-msg  (@tr [:module-delete-warning])
+      :button-text (@tr [:delete])}]))
 
 
-(defn control-bar []
+(defn MenuBar []
   (let [tr            (subscribe [::i18n-subs/tr])
         module        (subscribe [::subs/module])
         is-new?       (subscribe [::subs/is-new?])
@@ -97,7 +92,7 @@
              :on-click  #(dispatch [::events/open-add-modal])}])
 
          (when (general-utils/can-delete? @module)
-           [delete-button @module])
+           [DeleteButton @module])
 
          [main-components/RefreshMenu
           {:refresh-disabled? @is-new?

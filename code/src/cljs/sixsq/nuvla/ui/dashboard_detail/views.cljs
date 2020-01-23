@@ -16,7 +16,6 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
@@ -394,7 +393,7 @@
                 :on-click on-click}])))
 
 
-(defn stop-button
+(defn StopButton
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
@@ -404,7 +403,6 @@
             content        (str (or name id) (when description " - ") description)
             module-content (str (@tr [:created-from-module]) (or (:name module) (:id module)))
             button-text    (@tr [:stop])]
-        ^{:key (random-uuid)}
         [uix/ModalDanger
          {:on-close    (fn [event]
                          (reset! open? false)
@@ -431,7 +429,7 @@
           :button-text button-text}]))))
 
 
-(defn delete-button
+(defn DeleteButton
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
@@ -441,7 +439,6 @@
             content        (str (or name id) (when description " - ") description)
             module-content (str (@tr [:created-from-module]) (or (:name module) (:id module)))
             button-text    (@tr [:delete])]
-        ^{:key (random-uuid)}
         [uix/ModalDanger
          {:on-close    (fn [event]
                          (reset! open? false)
@@ -464,7 +461,6 @@
                                                                (.preventDefault event)))}]))
           :content     [:<> [:h3 content] [:p module-content]]
           :header      (@tr [:delete-deployment])
-          :danger-msg  (@tr [:deployment-delete-warning])
           :button-text button-text}]))))
 
 
@@ -503,8 +499,8 @@
 
      (when clickable?
        (cond
-         (general-utils/can-operation? "stop" deployment) [stop-button deployment :label? true]
-         (general-utils/can-delete? deployment) [delete-button deployment :label? true]))
+         (general-utils/can-operation? "stop" deployment) [StopButton deployment :label? true]
+         (general-utils/can-delete? deployment) [DeleteButton deployment :label? true]))
 
      [ui/CardContent
 
@@ -544,15 +540,15 @@
    [DeploymentCard deployment :clickable? false]])
 
 
-(defn menu
+(defn MenuBar
   []
   (let [loading? (subscribe [::subs/loading?])
         {:keys [id] :as deployment} @(subscribe [::subs/deployment])]
     [ui/Menu {:borderless true}
      (when (general-utils/can-delete? deployment)
-       [delete-button deployment :menu-item? true])
+       [DeleteButton deployment :menu-item? true])
      (when (general-utils/can-operation? "stop" deployment)
-       [stop-button deployment :menu-item? true])
+       [StopButton deployment :menu-item? true])
      [main-components/RefreshMenu
       {:action-id  refresh-action-id
        :loading?   @loading?
@@ -584,7 +580,7 @@
            {:default-value @acl
             :read-only     @read-only?
             :on-change     #(dispatch [::events/edit resource-id (assoc @deployment :acl %)])}])
-        [menu]
+        [MenuBar]
         [summary @deployment]
         [urls-section]
         [logs-section]

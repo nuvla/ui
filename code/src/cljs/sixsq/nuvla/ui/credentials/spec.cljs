@@ -16,8 +16,6 @@
 
 (s/def ::credential-modal-visible? boolean?)
 
-(s/def ::delete-confirmation-modal-visible? boolean?)
-
 (s/def ::active-input (s/nilable string?))
 
 ;; Validation
@@ -76,7 +74,6 @@
 
 (s/def ::db (s/keys :req [::add-credential-modal-visible?
                           ::credentials-modal-visible?
-                          ::delete-confirmation-modal-visible?
                           ::generated-credential-modal
                           ::credential
                           ::credentials
@@ -91,7 +88,6 @@
 
 (def defaults {::add-credential-modal-visible?      false
                ::credential-modal-visible?          false
-               ::delete-confirmation-modal-visible? false
                ::generated-credential-modal         nil
                ::credentials                        []
                ::credential                         {}

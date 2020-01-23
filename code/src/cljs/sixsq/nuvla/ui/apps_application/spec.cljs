@@ -2,8 +2,7 @@
   (:require-macros [sixsq.nuvla.ui.utils.spec :refer [only-keys]])
   (:require [clojure.spec.alpha :as s]
             [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.utils.spec :as spec-utils]
-            [taoensso.timbre :as log]))
+            [sixsq.nuvla.ui.utils.spec :as spec-utils]))
 
 
 ; create an initial entry for new application

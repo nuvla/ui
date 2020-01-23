@@ -20,7 +20,6 @@
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -46,7 +45,23 @@
           (dispatch [::events/open-save-modal]))))))
 
 
-(defn control-bar []
+(defn DeleteButton
+  [module]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        {:keys [id name description]} module
+        content (str (or name id) (when description " - ") description)]
+    [uix/ModalDanger
+     {:on-confirm  #(dispatch [::events/delete-module id])
+      :trigger     (r/as-element [ui/MenuItem
+                                  [ui/Icon {:name "trash"}]
+                                  (@tr [:delete])])
+      :content     [:h3 content]
+      :header      (@tr [:delete-module])
+      :danger-msg  (@tr [:module-delete-warning])
+      :button-text (@tr [:delete])}]))
+
+
+(defn MenuBar []
   (let [tr            (subscribe [::i18n-subs/tr])
         module        (subscribe [::subs/module])
         is-new?       (subscribe [::subs/is-new?])
@@ -67,7 +82,7 @@
              :icon-name "rocket"
              :disabled  launch-disabled?
              :on-click  #(dispatch [::deployment-dialog-events/create-deployment
-                                    id :credentials])}])
+                                    id :infra-services])}])
 
          (when add?
            [uix/MenuItemWithIcon
@@ -77,7 +92,7 @@
              :on-click  #(dispatch [::events/open-add-modal])}])
 
          (when (general-utils/can-delete? @module)
-           [resource-details/delete-button @module #(dispatch [::events/delete-module id])])
+           [DeleteButton @module])
 
          [main-components/RefreshMenu
           {:refresh-disabled? @is-new?

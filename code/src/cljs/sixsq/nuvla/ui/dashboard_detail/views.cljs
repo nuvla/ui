@@ -16,7 +16,6 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
@@ -377,60 +376,92 @@
                  (dispatch [::events/set-deployment-log-service (first @services-list)]))]))
 
 
-(defn action-button
-  [popup-text icon-name callback label]
-  (let [tr          (subscribe [::i18n-subs/tr])
-        open?       (r/atom false)
-        on-close-fn (fn [event]
-                      (reset! open? false)
-                      (.stopPropagation event)
-                      (.preventDefault event))
-        on-click-fn (fn [event]
-                      (reset! open? true)
-                      (.stopPropagation event)
-                      (.preventDefault event))]
-    (fn []
-      [:<>
-       [ui/Popup {:content  (@tr [popup-text])
-                  :size     "tiny"
-                  :position "top center"
-                  :trigger  (r/as-element
-                              (if label
-                                [ui/Label {:corner   true
-                                           :size     "small"
-                                           :on-click on-click-fn}
-                                 [ui/Icon {:name  icon-name
-                                           :style {:cursor "pointer"}
-                                           :color "red"}]]
-                                [ui/Icon {:name     icon-name
-                                          :style    {:cursor "pointer"}
-                                          :color    "red"
-                                          :on-click on-click-fn}])
-                              )}]
-       [ui/Modal
-        {:open       @open?
-         :header     (@tr [popup-text])
-         :content    (@tr [:are-you-sure?])
-         :on-close   on-close-fn
-         :close-icon true
-         :actions    [{:key     "cancel"
-                       :content (@tr [:cancel])
-                       :onClick on-close-fn}
-                      {:key     "yes"
-                       :content (@tr [:yes]), :primary true
-                       :onClick callback}]}]])))
+
+(defn button-icon
+  [label? icon-name on-click]
+  (r/as-element
+    (if label?
+      [ui/Label {:corner   true
+                 :size     "small"
+                 :on-click on-click}
+       [ui/Icon {:name  icon-name
+                 :style {:cursor "pointer"}
+                 :color "red"}]]
+      [ui/Icon {:name     icon-name
+                :style    {:cursor "pointer"}
+                :color    "red"
+                :on-click on-click}])))
 
 
-(defn stop-button
-  [{:keys [id] :as deployment} & {:keys [label]
-                                  :or   {label true}}]
-  [action-button :stop "stop" #(dispatch [::events/stop-deployment id]) label])
+(defn StopButton
+  [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        open?     (r/atom false)
+        icon-name "stop"]
+    (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
+      (let [{:keys [id name description module]} deployment
+            content        (str (or name id) (when description " - ") description)
+            module-content (str (@tr [:created-from-module]) (or (:name module) (:id module)))
+            button-text    (@tr [:stop])]
+        [uix/ModalDanger
+         {:on-close    (fn [event]
+                         (reset! open? false)
+                         (.stopPropagation event)
+                         (.preventDefault event))
+          :on-confirm  #(dispatch [::events/stop-deployment id])
+          :open        @open?
+          :trigger     (r/as-element
+                         (if menu-item?
+                           [ui/MenuItem {:on-click #(reset! open? true)}
+                            [ui/Icon {:name icon-name}]
+                            (@tr [:stop])]
+                           [ui/Popup {:content  button-text
+                                      :size     "tiny"
+                                      :position "top center"
+                                      :trigger  (button-icon label? icon-name
+                                                             (fn [event]
+                                                               (reset! open? true)
+                                                               (.stopPropagation event)
+                                                               (.preventDefault event)))}]))
+          :content     [:<> [:h3 content] [:p module-content]]
+          :header      (@tr [:stop-deployment])
+          :danger-msg  (@tr [:deployment-stop-warning])
+          :button-text button-text}]))))
 
 
-(defn delete-button
-  [{:keys [id] :as deployment} & {:keys [label]
-                                  :or   {label true}}]
-  [action-button :delete "trash" #(dispatch [::events/delete id]) label])
+(defn DeleteButton
+  [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        open?     (r/atom false)
+        icon-name "trash"]
+    (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
+      (let [{:keys [id name description module]} deployment
+            content        (str (or name id) (when description " - ") description)
+            module-content (str (@tr [:created-from-module]) (or (:name module) (:id module)))
+            button-text    (@tr [:delete])]
+        [uix/ModalDanger
+         {:on-close    (fn [event]
+                         (reset! open? false)
+                         (.stopPropagation event)
+                         (.preventDefault event))
+          :on-confirm  #(dispatch [::events/delete id])
+          :open        @open?
+          :trigger     (r/as-element
+                         (if menu-item?
+                           [ui/MenuItem {:on-click #(reset! open? true)}
+                            [ui/Icon {:name icon-name}]
+                            (@tr [:delete])]
+                           [ui/Popup {:content  button-text
+                                      :size     "tiny"
+                                      :position "top center"
+                                      :trigger  (button-icon label? icon-name
+                                                             (fn [event]
+                                                               (reset! open? true)
+                                                               (.stopPropagation event)
+                                                               (.preventDefault event)))}]))
+          :content     [:<> [:h3 content] [:p module-content]]
+          :header      (@tr [:delete-deployment])
+          :button-text button-text}]))))
 
 
 (defn DeploymentCard
@@ -468,8 +499,8 @@
 
      (when clickable?
        (cond
-         (general-utils/can-operation? "stop" deployment) [stop-button deployment]
-         (general-utils/can-delete? deployment) [delete-button deployment]))
+         (general-utils/can-operation? "stop" deployment) [StopButton deployment :label? true]
+         (general-utils/can-delete? deployment) [DeleteButton deployment :label? true]))
 
      [ui/CardContent
 
@@ -509,17 +540,15 @@
    [DeploymentCard deployment :clickable? false]])
 
 
-(defn menu
+(defn MenuBar
   []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::subs/loading?])
+  (let [loading? (subscribe [::subs/loading?])
         {:keys [id] :as deployment} @(subscribe [::subs/deployment])]
     [ui/Menu {:borderless true}
      (when (general-utils/can-delete? deployment)
-       [resource-details/delete-button deployment #(dispatch [::events/delete id])])
+       [DeleteButton deployment :menu-item? true])
      (when (general-utils/can-operation? "stop" deployment)
-       [resource-details/action-button-icon (@tr [:stop]) (@tr [:yes]) "stop" (@tr [:stop]) (@tr [:are-you-sure?])
-        #(dispatch [::events/stop-deployment id]) (constantly nil)])
+       [StopButton deployment :menu-item? true])
      [main-components/RefreshMenu
       {:action-id  refresh-action-id
        :loading?   @loading?
@@ -548,10 +577,10 @@
         [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard])) :inline true]
         (when @acl
           [acl/AclButton
-          {:default-value @acl
-           :read-only     @read-only?
-           :on-change     #(dispatch [::events/edit resource-id (assoc @deployment :acl %)])}])
-        [menu]
+           {:default-value @acl
+            :read-only     @read-only?
+            :on-change     #(dispatch [::events/edit resource-id (assoc @deployment :acl %)])}])
+        [MenuBar]
         [summary @deployment]
         [urls-section]
         [logs-section]

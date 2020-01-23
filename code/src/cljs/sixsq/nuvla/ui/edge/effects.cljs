@@ -7,8 +7,7 @@
     [sixsq.nuvla.client.api :as api]
     [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]
     [sixsq.nuvla.ui.edge.utils :as utils]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (defn get-state-count

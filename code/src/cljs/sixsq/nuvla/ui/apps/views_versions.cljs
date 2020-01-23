@@ -4,8 +4,7 @@
             [sixsq.nuvla.ui.apps.events :as events]
             [sixsq.nuvla.ui.apps.subs :as subs]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [taoensso.timbre :as log]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn is-latest? [module]

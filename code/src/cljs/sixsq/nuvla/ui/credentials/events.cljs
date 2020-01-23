@@ -6,11 +6,9 @@
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.credentials.spec :as spec]
     [sixsq.nuvla.ui.credentials.utils :as utils]
-    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 
@@ -69,7 +67,9 @@
   ::get-credentials
   (fn [{:keys [db]} [_]]
     {:db                  (assoc db ::spec/completed? false)
-     ::cimi-api-fx/search [:credential {} #(dispatch [::set-credentials (:resources %)])]}))
+     ::cimi-api-fx/search [:credential
+                           {:orderby "name:asc, id:asc"}
+                           #(dispatch [::set-credentials (:resources %)])]}))
 
 
 (reg-event-db
@@ -89,7 +89,7 @@
                             #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                  (dispatch [::close-credential-modal])
                                  (dispatch [::get-credentials])
-                                 #_(dispatch [::main-events/check-bootstrap-message])
+                                 ;(dispatch [::main-events/check-bootstrap-message])
                                  (when
                                    (contains?
                                      #{"credential-template/create-credential-vpn-customer"}
@@ -142,20 +142,6 @@
   ::close-credential-modal
   (fn [db _]
     (assoc db ::spec/credential-modal-visible? false)))
-
-
-(reg-event-db
-  ::open-delete-confirmation-modal
-  (fn [db [_ id credential]]
-    (-> db
-        (assoc ::spec/credential credential)
-        (assoc ::spec/delete-confirmation-modal-visible? true))))
-
-
-(reg-event-db
-  ::close-delete-confirmation-modal
-  (fn [db _]
-    (assoc db ::spec/delete-confirmation-modal-visible? false)))
 
 
 (reg-event-db

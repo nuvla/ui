@@ -13,16 +13,6 @@
   [:span form-fields/nbsp [ui/Label {:circular true} (count coll)]])
 
 
-(defn trash
-  [id remove-event validate-event data]
-  [ui/Icon {:name     "trash"
-            :style    {:cursor :pointer}
-            :on-click #(do (when-not (nil? validate-event) (dispatch [::main-events/changes-protection? true]))
-                           (dispatch-sync [remove-event id data])
-                           (when-not (nil? validate-event) (dispatch [validate-event])))
-            :color    :red}])
-
-
 (defn plus
   [add-event validate-event]
   [ui/Icon {:name     "plus circle"

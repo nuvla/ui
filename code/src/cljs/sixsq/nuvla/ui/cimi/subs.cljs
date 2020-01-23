@@ -1,15 +1,40 @@
 (ns sixsq.nuvla.ui.cimi.subs
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-sub]]
     [sixsq.nuvla.ui.cimi.events :as events]
     [sixsq.nuvla.ui.cimi.spec :as spec]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-sub
   ::query-params
-  ::spec/query-params)
+  (fn [db]
+    (::spec/query-params db)))
+
+
+(reg-sub
+  ::orderby-map
+  :<- [::query-params]
+  (fn [{:keys [orderby]}]
+    (some->>
+      (str/split orderby #"\s*,\s*")
+      (remove str/blank?)
+      (map #(let [[label sort-direction] (str/split % #":")] [label (or sort-direction "asc")]))
+      (into {}))))
+
+
+(reg-sub
+  ::orderby-label-icon
+  :<- [::orderby-map]
+  (fn [orderby-map [_ label]]
+    (let [sort-direction (get orderby-map label)
+          direction (case sort-direction
+                      "asc" " ascending"
+                      "desc" " descending"
+                      "")]
+      (str "sort" direction))))
+
 
 
 (reg-sub

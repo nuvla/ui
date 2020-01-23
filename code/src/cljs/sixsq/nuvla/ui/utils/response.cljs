@@ -2,9 +2,7 @@
   "parses JSON responses from the CIMI API"
   (:require
     [cljs.pprint :refer [pprint]]
-    [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.general :as utils]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.general :as utils]))
 
 
 (defn parse

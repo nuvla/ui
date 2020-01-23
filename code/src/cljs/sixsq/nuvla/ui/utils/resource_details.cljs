@@ -15,8 +15,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.table :as table]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (defn action-buttons
@@ -44,7 +43,7 @@
 
         [ui/Modal
          {:open      (boolean @show?)
-          :closeIcon true
+          :close-icon true
           :on-close  #(reset! show? false)
           :trigger   (r/as-element
                        [ui/MenuItem (cond-> {:aria-label menu-item-label

@@ -7,8 +7,7 @@
     [sixsq.nuvla.ui.edge.events :as edge-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-db

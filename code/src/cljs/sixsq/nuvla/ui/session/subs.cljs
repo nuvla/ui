@@ -7,6 +7,12 @@
 
 
 (reg-sub
+  ::session-loading?
+  (fn [db]
+    (::spec/session-loading? db)))
+
+
+(reg-sub
   ::open-modal
   (fn [db]
     (::spec/open-modal db)))

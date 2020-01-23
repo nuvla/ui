@@ -3,10 +3,10 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
-    [sixsq.nuvla.ui.deployment-dialog.views-credentials :as credentials-step]
     [sixsq.nuvla.ui.deployment-dialog.views-data :as data-step]
     [sixsq.nuvla.ui.deployment-dialog.views-env-variables :as env-variables-step]
     [sixsq.nuvla.ui.deployment-dialog.views-files :as files-step]
+    [sixsq.nuvla.ui.deployment-dialog.views-infra-services :as infra-services-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
@@ -40,6 +40,6 @@
       [application-row]
       (when @data-step-active?
         [data-step/summary-row])
-      [credentials-step/summary-row]
+      [infra-services-step/summary-row]
       (when @is-application? [files-step/summary-row])
       [env-variables-step/summary-row]]]))

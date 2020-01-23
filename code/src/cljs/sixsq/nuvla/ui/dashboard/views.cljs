@@ -14,8 +14,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (defn refresh
@@ -85,10 +84,10 @@
      [ui/TableCell
       (cond
         (general-utils/can-operation? "stop" deployment)
-        [dashboard-detail-views/stop-button deployment :label false]
+        [dashboard-detail-views/StopButton deployment]
 
         (general-utils/can-delete? deployment)
-        [dashboard-detail-views/delete-button deployment :label false])]]))
+        [dashboard-detail-views/DeleteButton deployment])]]))
 
 
 (defn vertical-data-table

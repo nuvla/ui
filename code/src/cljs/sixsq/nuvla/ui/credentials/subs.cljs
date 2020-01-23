@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.credentials.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.credentials.spec :as spec]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.credentials.spec :as spec]))
 
 
 (reg-sub
@@ -62,17 +61,6 @@
   ::add-credential-modal-visible?
   (fn [db]
     (::spec/add-credential-modal-visible? db)))
-
-
-(reg-sub
-  ::credential-modal-visible?
-  (fn [db]
-    (::spec/credential-modal-visible? db)))
-
-
-(reg-sub
-  ::delete-confirmation-modal-visible?
-  ::spec/delete-confirmation-modal-visible?)
 
 
 (reg-sub

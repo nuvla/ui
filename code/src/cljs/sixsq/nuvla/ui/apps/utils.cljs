@@ -4,8 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [subscribe]]
     [sixsq.nuvla.ui.apps.spec :as spec]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn nav-path->module-path

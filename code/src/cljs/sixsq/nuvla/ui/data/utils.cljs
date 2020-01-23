@@ -1,10 +1,7 @@
 (ns sixsq.nuvla.ui.data.utils
   (:require
     [clojure.pprint :refer [cl-format]]
-    [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (defn matches-parameter-name?

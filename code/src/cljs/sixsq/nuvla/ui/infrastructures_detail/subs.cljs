@@ -2,8 +2,7 @@
   (:require
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.infrastructures-detail.spec :as spec]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-sub

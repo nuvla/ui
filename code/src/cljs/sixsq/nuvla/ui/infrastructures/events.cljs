@@ -6,11 +6,9 @@
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.infrastructures.spec :as spec]
     [sixsq.nuvla.ui.infrastructures.utils :as utils]
-    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 ; Perform form validation if validate-form? is true.
@@ -81,8 +79,8 @@
       {::cimi-api-fx/add [:infrastructure-service new-service
                           #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                (dispatch [::close-service-modal])
-                               (dispatch [::get-infra-service-groups])
-                               #_(dispatch [::main-events/check-bootstrap-message]))]})))
+                               ;(dispatch [::main-events/check-bootstrap-message])
+                               (dispatch [::get-infra-service-groups]))]})))
 
 (reg-event-fx
   ::edit-infra-service

@@ -20,8 +20,7 @@
     [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn registry-url
@@ -330,8 +329,7 @@
          [:p {:style {:padding-top 8}
               :class "nuvla-command"} [:b "$ " command " "]
           [ui/Popup {:trigger  (r/as-element [ui/CopyToClipboard {:text command}
-                                              [:a [ui/Icon {:name "clipboard outline"
-                                                            :link true}]]])
+                                              [uix/LinkIcon {:name "clipboard outline"}]])
                      :position "top center"}
            "copy to clipboard"]]
          [:p "Note: ensure you have a recent installation of docker."]]))))
@@ -356,7 +354,7 @@
                          :on-change     #(do (dispatch [::apps-events/acl %])
                                              (dispatch [::main-events/changes-protection? true]))
                          :read-only     (not @editable?)}]
-         [apps-views-detail/control-bar]
+         [apps-views-detail/MenuBar]
          [summary]
          [ports-section]
          [apps-views-detail/env-variables-section]

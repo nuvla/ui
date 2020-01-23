@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.acl.utils
-  (:require [clojure.set :as set]
-            [taoensso.timbre :as log]))
+  (:require [clojure.set :as set]))
 
 
 (def rights-hierarchy (-> (make-hierarchy)

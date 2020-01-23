@@ -5,6 +5,13 @@
 ### Changed
 
   - Session - add getting started link and terms and conditions link
+  - Replace modal delete in apps, deployment, edge, infrastructure, credentials
+  - COMPONENT - Modal danger with warning and checkbox confirmation
+  - CIMI PAGE - Sort from table columns header
+  - Deployment modal - Add credential check
+  - Deployment modal - Filter infrastructure services by module subtype
+  - Deployment modal - Credential step is replaced by infrastructure services step
+  - Session page should not appear when reloading the page
   - DASHBOARD DETAIL PAGE - ACL widget disapearing sometimes on refresh fix
   - EDGE PAGE - Let user choose cards or table display for NuvlaBoxes
   - INFRASTRUCTURE PAGE - Ignore changes modal is visible even when we save fix

@@ -4,6 +4,7 @@
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.config :as config]))
 
+(s/def ::session-loading? boolean?)
 
 (s/def ::open-modal (s/nilable keyword?))
 
@@ -20,7 +21,8 @@
 (s/def ::loading? boolean?)
 
 
-(s/def ::db (s/keys :req [::open-modal
+(s/def ::db (s/keys :req [::session-loading?
+                          ::open-modal
                           ::session
                           ::error-message
                           ::success-message
@@ -30,10 +32,11 @@
 
 
 (def defaults
-  {::open-modal            nil
-   ::session               nil
-   ::error-message         nil
-   ::success-message       nil
-   ::redirect-uri          nil
-   ::server-redirect-uri   (str @config/path-prefix "/sign-in")
-   ::loading?              false})
+  {::session-loading?    true
+   ::open-modal          nil
+   ::session             nil
+   ::error-message       nil
+   ::success-message     nil
+   ::redirect-uri        nil
+   ::server-redirect-uri (str @config/path-prefix "/sign-in")
+   ::loading?            false})

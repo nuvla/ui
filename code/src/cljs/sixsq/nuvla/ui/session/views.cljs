@@ -207,11 +207,23 @@
         :active   (= @first-path "sign-in")
         :on-click #(dispatch [::history-events/navigate "sign-in"])}]
       (when @signup-template?
-        [uix/Button
-         {:text     (@tr [:sign-up])
-          :inverted true
-          :active   (= @first-path "sign-up")
-          :on-click #(dispatch [::history-events/navigate "sign-up"])}])]
+        [:span
+         [uix/Button
+          {:text     (@tr [:sign-up])
+           :inverted true
+           :active   (= @first-path "sign-up")
+           :on-click #(dispatch [::history-events/navigate "sign-up"])}]
+         [:br]
+         [:a {:href   "https://sixsq.com/terms/general-terms-and-conditions"
+              :target "_blank"
+              :style  {:color "white" :font-style "italic"}}
+          (@tr [:terms-and-conditions])]])]
+     [:br]
+     [:a {:href   "https://docs.nuvla.io"
+          :target "_blank"
+          :style  {:color "white"}}
+      [:p {:style {:font-size "1.2em" :text-decoration "underline"}}
+       (@tr [:getting-started-docs])]]
      [:div {:style {:margin-top  20
                     :line-height "normal"}}
       (@tr [:keep-data-control])]

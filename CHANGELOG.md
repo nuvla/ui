@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Session - add getting started link and terms and conditions link
   - Replace modal delete in apps, deployment, edge, infrastructure, credentials
   - COMPONENT - Modal danger with warning and checkbox confirmation
   - CIMI PAGE - Sort from table columns header

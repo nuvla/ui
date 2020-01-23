@@ -43,9 +43,9 @@
                                       (:names->value @form)
                                       {:success-msg  (@tr [:invitation-email-success-msg])
                                        :redirect-url (str @config/path-prefix
-                                                       "/reset-password"
-                                                       "?invited-user="
-                                                       email-encoded)}])))]
+                                                          "/reset-password"
+                                                          "?invited-user="
+                                                          email-encoded)}])))]
         [ui/Modal
          {:id        "modal-create-user"
           :size      :tiny
@@ -143,7 +143,7 @@
                         :icon       "mail"
                         :text       (@tr [:support])
                         :href       (str "mailto:support%40sixsq%2Ecom?subject=%5BSlipStream%5D%20"
-                                      "Support%20question%20%2D%20Not%20logged%20in")}]]]))
+                                         "Support%20question%20%2D%20Not%20logged%20in")}]]]))
 
 
 (defn authn-menu
@@ -213,18 +213,17 @@
            :inverted true
            :active   (= @first-path "sign-up")
            :on-click #(dispatch [::history-events/navigate "sign-up"])}]
-         [:a {:key    "https://sixsq.com/terms/general-terms-and-conditions"
-              :href   "https://sixsq.com/terms/general-terms-and-conditions"
+         [:br]
+         [:a {:href   "https://sixsq.com/terms/general-terms-and-conditions"
               :target "_blank"
               :style  {:color "white" :font-style "italic"}}
           (@tr [:terms-and-conditions])]])]
-     [:div {:style {:margin-top  5
-                    :line-height "normal"}}
-      [:a {:key    "https://docs.nuvla.io"
-           :href   "https://docs.nuvla.io"
-           :target "_blank"
-           :style  {:color "white"}}
-       [:p {:style {:font-size "1.2em" :text-decoration "underline"}} (@tr [:getting-started-docs])]]]
+     [:br]
+     [:a {:href   "https://docs.nuvla.io"
+          :target "_blank"
+          :style  {:color "white"}}
+      [:p {:style {:font-size "1.2em" :text-decoration "underline"}}
+       (@tr [:getting-started-docs])]]
      [:div {:style {:margin-top  20
                     :line-height "normal"}}
       (@tr [:keep-data-control])]

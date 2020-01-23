@@ -43,7 +43,7 @@
 
         [ui/Modal
          {:open      (boolean @show?)
-          :closeIcon true
+          :close-icon true
           :on-close  #(reset! show? false)
           :trigger   (r/as-element
                        [ui/MenuItem (cond-> {:aria-label menu-item-label

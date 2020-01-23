@@ -208,3 +208,44 @@
 (defn LinkIcon
   [{:keys [name on-click]}]
   [:a [ui/Icon {:name name, :link true, :on-click on-click}]])
+
+
+(defn ModalDanger
+  [{:keys [button-text on-confirm danger-msg header content trigger open on-close]}]
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        confirmed?           (r/atom (nil? danger-msg))
+        checkbox-warning-msg (fn [danger-msg]
+                               ;; force confirmed to false at open of modal
+                               (reset! confirmed? false)
+                               (fn [danger-msg]
+                                 [ui/Checkbox {:label     danger-msg
+                                               :checked   @confirmed?
+                                               :fitted    true
+                                               :on-change #(swap! confirmed? not)}]))]
+    (fn [{:keys [button-text on-confirm danger-msg header content trigger open on-close]}]
+      [ui/Modal (cond->
+                  {:on-click   (fn [event]
+                                 (.stopPropagation event)
+                                 (.preventDefault event))
+                   :close-icon true
+                   :trigger    trigger
+                   :on-close   (fn [& args]
+                                 (when on-close
+                                   (apply on-close args)))}
+                  (some? open) (assoc :open open))
+
+       (when header [ui/ModalHeader header])
+
+       [ui/ModalContent {:scrolling false}
+        (when content content)
+        (when danger-msg
+          [ui/Message {:error true}
+           [ui/MessageHeader {:style {:margin-bottom 10}} (@tr [:danger-action-cannot-be-undone])]
+           [ui/MessageContent [checkbox-warning-msg danger-msg]]])]
+
+       [ui/ModalActions
+        [Button {:text     (str/capitalize button-text)
+                 :negative true
+                 :disabled (not @confirmed?)
+                 :active   true
+                 :on-click #(on-confirm)}]]])))

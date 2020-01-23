@@ -67,7 +67,9 @@
   ::get-credentials
   (fn [{:keys [db]} [_]]
     {:db                  (assoc db ::spec/completed? false)
-     ::cimi-api-fx/search [:credential {} #(dispatch [::set-credentials (:resources %)])]}))
+     ::cimi-api-fx/search [:credential
+                           {:orderby "name:asc, id:asc"}
+                           #(dispatch [::set-credentials (:resources %)])]}))
 
 
 (reg-event-db
@@ -140,20 +142,6 @@
   ::close-credential-modal
   (fn [db _]
     (assoc db ::spec/credential-modal-visible? false)))
-
-
-(reg-event-db
-  ::open-delete-confirmation-modal
-  (fn [db [_ id credential]]
-    (-> db
-        (assoc ::spec/credential credential)
-        (assoc ::spec/delete-confirmation-modal-visible? true))))
-
-
-(reg-event-db
-  ::close-delete-confirmation-modal
-  (fn [db _]
-    (assoc db ::spec/delete-confirmation-modal-visible? false)))
 
 
 (reg-event-db

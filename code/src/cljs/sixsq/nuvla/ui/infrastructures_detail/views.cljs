@@ -36,13 +36,29 @@
     (callback valid?)))
 
 
+(defn DeleteButton
+  [infra-service]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        {:keys [id name description]} @infra-service
+        content (str (or name id) (when description " - ") description)]
+    [uix/ModalDanger
+     {:button-text (@tr [:delete])
+      :on-confirm  #(dispatch [::events/delete])
+      :danger-msg  (@tr [:infrastructure-delete-warning])
+      :trigger     (r/as-element [ui/MenuItem
+                                  [ui/Icon {:name "trash"}]
+                                  (@tr [:delete])])
+      :header      (@tr [:delete-infrastructure])
+      :content     [:h3 content]}]))
+
+
 (defn MenuBar [uuid]
   (let [can-delete?   (subscribe [::subs/can-delete?])
         infra-service (subscribe [::subs/infrastructure-service])
         loading?      (subscribe [::subs/loading?])]
     [ui/Menu {:borderless true}
      (when @can-delete?
-       [resource-details/delete-button infra-service #(dispatch [::events/delete])])
+       [DeleteButton infra-service])
 
      [main-components/RefreshMenu
       {:loading?   @loading?

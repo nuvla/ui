@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Replace modal delete in apps, deployment, edge, infrastructure, credentials
+  - COMPONENT - Modal danger with warning and checkbox confirmation
   - CIMI PAGE - Sort from table columns header
   - Deployment modal - Add credential check
   - Deployment modal - Filter infrastructure services by module subtype

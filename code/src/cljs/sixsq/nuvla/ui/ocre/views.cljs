@@ -22,7 +22,7 @@
     [sixsq.nuvla.ui.ocre.events :as events]
     [sixsq.nuvla.ui.ocre.subs :as subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.plot.plot :as plot]
+    [sixsq.nuvla.ui.utils.plot :as plot]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]

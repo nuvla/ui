@@ -18,7 +18,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.utils.map :as map]))
 
 
 (def cards-view (r/atom true))
@@ -247,6 +248,24 @@
                   (if @cards-view
                     [NuvlaboxCards]
                     [NuvlaboxTable])
+                  [:div {:style {:margin-top    20
+                                 :margin-bottom 20}}
+                   [map/Map {:style  {:height 500
+                                      :width  "100%"}
+                             :center [46.2273, 6.07661],
+                             :zoom   18}
+
+                    [map/TileLayer {:url "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}]
+                    [map/Marker {:position [46.2273, 6.07661]
+                                 :draggable true
+                                 :on-drag-start #(js/console.log "drag start")
+                                 :on-drag-end #(js/console.log %)}
+                     [map/Popup
+                      [ui/Card
+                       {:header "NB 1" :meta "meta data" :description "this is the description"}]
+                      ]
+                     ]
+                    ]]
                   [Pagination]
                   [AddModal]]
         children (case n

@@ -253,18 +253,27 @@
                    [map/Map {:style  {:height 500
                                       :width  "100%"}
                              :center [46.2273, 6.07661],
-                             :zoom   18}
-
-                    [map/TileLayer {:url "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}]
-                    [map/Marker {:position [46.2273, 6.07661]
-                                 :draggable true
-                                 :on-drag-start #(js/console.log "drag start")
-                                 :on-drag-end #(js/console.log %)}
-                     [map/Popup
-                      [ui/Card
-                       {:header "NB 1" :meta "meta data" :description "this is the description"}]
-                      ]
-                     ]
+                             :zoom   15}
+                    [map/LayersControl {:position "topright"}
+                     [map/BaseLayer {:name    "Light"
+                                     :checked true}
+                      [map/TileLayer {:url         "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
+                                      :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a>, &copy; <a href=\"https://carto.com/attributions\">Carto</a>"}]]
+                     [map/BaseLayer {:name "Classic"}
+                      [map/TileLayer {:url         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                      :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a>"}]]]
+                    (for [pos [[46.2273, 6.07661] [45.2273, 6.07661] [46.2273, 7.07661]]]
+                      ^{:key (str pos)}
+                      [map/Marker {:position      pos
+                                   :draggable     true
+                                   :on-drag-start #(js/console.log "drag start")
+                                   :on-drag-end   #(js/console.log %)}
+                       [map/Popup
+                        [ui/Card
+                         {:header "NB 1" :meta "meta data" :description "this is the description"}]
+                        ]
+                       ]
+                      )
                     ]]
                   [Pagination]
                   [AddModal]]

@@ -36,6 +36,12 @@
 
 
 (reg-sub
+  ::full-text-search
+  (fn [db]
+    (::spec/full-text-search db)))
+
+
+(reg-sub
   ::creds-name-map
   (fn [db]
     (::spec/creds-name-map db)))

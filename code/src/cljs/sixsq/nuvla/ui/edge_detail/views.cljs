@@ -13,12 +13,12 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.plot :as plot]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.map :as map]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -160,7 +160,8 @@
 
 (defn Location
   []
-  (let [{:keys [id location] :as nuvlabox} @(subscribe [::subs/nuvlabox])]
+  (let [{:keys [id location] :as nuvlabox} @(subscribe [::subs/nuvlabox])
+        update-location-fn #(dispatch [::events/edit id (assoc nuvlabox :location %)])]
     [uix/Accordion
      [map/Map {:style    {:height 300
                           :width  "100%"
@@ -168,16 +169,14 @@
                :center   (or location map/sixsq-latlng)
                :zoom     3
                :on-click (when-not location
-                           (map/click-location
-                             #(dispatch [::events/edit id
-                                         (assoc nuvlabox :location %)])))}
+                           (map/click-location update-location-fn))}
       [map/DefaultLayers]
 
-      (js/console.log location)
       (when location
         [map/Marker {:position    location
                      :draggable   true
-                     :on-drag-end #(js/console.log (js->clj % :keywordize-keys true))}])]
+                     :on-drag-end (map/drag-end-location update-location-fn)}])]
+     :default-open false
      :label "Location"
      :icon "map"]))
 

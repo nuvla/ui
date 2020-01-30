@@ -17,3 +17,9 @@
 (reg-sub
   ::page
   ::spec/page)
+
+
+(reg-sub
+  ::full-text-search
+  (fn [db]
+    (::spec/full-text-search db)))

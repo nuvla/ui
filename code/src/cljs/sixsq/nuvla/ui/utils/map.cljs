@@ -33,11 +33,24 @@
     [TileLayer {:url         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a>"}]]])
 
+
+(defn convert-latlong-map
+  [latlong]
+  [(.-lat latlong) (.-lng latlong)])
+
+
 (defn click-location
-  [f]
-  (fn [evt]
-    (let [latlong (-> evt (js->clj :keywordize-keys true) :latlng)]
-      (f ((juxt :lat :lng) latlong)))))
+  [callback]
+  (fn [event]
+    (let [latlong (.-latlng event)]
+      (callback (convert-latlong-map latlong)))))
+
+
+(defn drag-end-location
+  [callback]
+  (fn [event]
+    (let [latlong (-> event .-target .getLatLng)]
+      (callback (convert-latlong-map latlong)))))
 
 
 (def sixsq-latlng [46.2273, 6.07661])

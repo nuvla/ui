@@ -15,14 +15,14 @@
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.map :as map]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
-(def view-type (r/atom :map))
+(def view-type (r/atom :cards))
 
 (defn StatisticState
   [value icon label]
@@ -67,24 +67,30 @@
 
 
 (defn MenuBar []
-  (let [loading? (subscribe [::subs/loading?])]
+  (let [loading?  (subscribe [::subs/loading?])
+        full-text (subscribe [::subs/full-text-search])]
     (dispatch [::events/refresh])
     (fn []
-      [ui/Menu {:borderless true, :stackable true}
-       [AddButton]
-       [ui/MenuItem {:icon     "grid layout"
-                     :active   (= @view-type :cards)
-                     :on-click #(reset! view-type :cards)}]
-       [ui/MenuItem {:icon     "table"
-                     :active   (= @view-type :table)
-                     :on-click #(reset! view-type :table)}]
-       [ui/MenuItem {:icon     "map"
-                     :active   (= @view-type :map)
-                     :on-click #(reset! view-type :map)}]
-       [main-components/RefreshMenu
-        {:action-id  events/refresh-id
-         :loading?   @loading?
-         :on-refresh #(dispatch [::events/refresh])}]])))
+      [:<>
+       [ui/Menu {:borderless true, :stackable true}
+        [AddButton]
+        [ui/MenuItem {:icon     "grid layout"
+                      :active   (= @view-type :cards)
+                      :on-click #(reset! view-type :cards)}]
+        [ui/MenuItem {:icon     "table"
+                      :active   (= @view-type :table)
+                      :on-click #(reset! view-type :table)}]
+        [ui/MenuItem {:icon     "map"
+                      :active   (= @view-type :map)
+                      :on-click #(reset! view-type :map)}]
+        [main-components/RefreshMenu
+         {:action-id  events/refresh-id
+          :loading?   @loading?
+          :on-refresh #(dispatch [::events/refresh])}]]
+       [main-components/SearchInput
+        {:default-value @full-text
+         :on-change     (ui-callback/input-callback
+                          #(dispatch [::events/set-full-text-search %]))}]])))
 
 
 (defn CreatedNuvlaBox
@@ -228,13 +234,13 @@
 
 
 (defn NuvlaboxMapPoint
-  [{:keys [id name location] :as nuvlabox} status]
+  [{:keys [id name location] :as nuvlabox}]
   (let [status   (subscribe [::subs/status-nuvlabox id])
         uuid     (general-utils/id->uuid id)
         on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
     [map/CircleMarker {:on-click on-click
                        :center   location
-                       :color    (utils/status->color status)
+                       :color    (utils/status->color @status)
                        :opacity  0.5
                        :weight   2}
      [map/Tooltip (or name id)]]))
@@ -277,7 +283,6 @@
         n        (count path)
         root     [:<>
                   [MenuBar]
-                  [main-components/SearchInput #(dispatch [::events/set-full-text-search %])]
                   [StatisticStates]
                   (case @view-type
                     :cards [NuvlaboxCards]

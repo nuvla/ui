@@ -506,7 +506,7 @@
 
       [ui/Segment (merge style/basic {:floated "right"})
        [:p {:style {:color "initial"}} state]
-       [ui/Loader {:active        (utils/deployment-active? state)
+       [ui/Loader {:active        (utils/deployment-in-transition? state)
                    :indeterminate true}]]
 
       [ui/CardHeader (if clickable?

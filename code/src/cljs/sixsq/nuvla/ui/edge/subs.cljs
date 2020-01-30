@@ -17,6 +17,12 @@
 
 
 (reg-sub
+  ::full-text-search
+  (fn [db]
+    (::spec/full-text-search db)))
+
+
+(reg-sub
   ::nuvlaboxes
   (fn [db]
     (::spec/nuvlaboxes db)))

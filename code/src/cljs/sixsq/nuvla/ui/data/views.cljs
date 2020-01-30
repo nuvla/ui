@@ -15,7 +15,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn refresh-credentials []
@@ -82,7 +83,9 @@
                            :on-change        #(dispatch
                                                 [::events/set-time-period [time-start %]])}]]
           [ui/FormField
-           [main-components/SearchInput #(dispatch [::events/set-full-text-search %])]]]]))))
+           [main-components/SearchInput
+            {:on-change (ui-callback/input-callback
+                          #(dispatch [::events/set-full-text-search %]))}]]]]))))
 
 
 (defn control-bar []

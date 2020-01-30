@@ -36,7 +36,9 @@
                                     "resources/public/ui/css/react-datepicker.min.css"
                                     "resources/public/ui/css/codemirror.css"
                                     "resources/public/ui/css/dialog.css"
-                                    "resources/public/ui/css/matchesonscrollbar.css"]
+                                    "resources/public/ui/css/matchesonscrollbar.css"
+                                    "resources/public/ui/css/leaflet.css"
+                                    "resources/public/ui/css/images"]
 
   :auto-clean false
 
@@ -65,7 +67,11 @@
                             ["node_modules/codemirror/addon/search/matchesonscrollbar.css"
                              {:target-path "resources/public/ui/css/matchesonscrollbar.css"}]
                             ["target/version.css"
-                             {:target-path "resources/public/ui/css/version.css"}]]}
+                             {:target-path "resources/public/ui/css/version.css"}]
+                            ["node_modules/leaflet/dist/leaflet.css"
+                             {:target-path "resources/public/ui/css/leaflet.css"}]
+                            ["node_modules/leaflet/dist/images"
+                             {:target-path "resources/public/ui/css/images"}]]}
 
   ;; mark all dependencies as provided to avoid having transitive
   ;; dependencies pulled in by those that depend on this

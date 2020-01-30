@@ -73,3 +73,9 @@
   ::generated-credential-modal
   (fn [db]
     (::spec/generated-credential-modal db)))
+
+
+(reg-sub
+  ::credential-modal-visible?
+  (fn [db]
+    (::spec/credential-modal-visible? db)))

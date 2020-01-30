@@ -73,7 +73,7 @@
 
 
 (s/def ::db (s/keys :req [::add-credential-modal-visible?
-                          ::credentials-modal-visible?
+                          ::credential-modal-visible?
                           ::generated-credential-modal
                           ::credential
                           ::credentials
@@ -86,16 +86,16 @@
                           ::infrastructure-services-available]))
 
 
-(def defaults {::add-credential-modal-visible?      false
-               ::credential-modal-visible?          false
-               ::generated-credential-modal         nil
-               ::credentials                        []
-               ::credential                         {}
-               ::active-input                       nil
-               ::form-spec                          nil
-               ::form-valid?                        true
-               ::validate-form?                     false
-               ::credential-password                nil
-               ::error-message                      nil
-               ::infrastructure-services-available  nil})
+(def defaults {::add-credential-modal-visible?     false
+               ::credential-modal-visible?         false
+               ::generated-credential-modal        nil
+               ::credentials                       []
+               ::credential                        {}
+               ::active-input                      nil
+               ::form-spec                         nil
+               ::form-valid?                       true
+               ::validate-form?                    false
+               ::credential-password               nil
+               ::error-message                     nil
+               ::infrastructure-services-available nil})
 

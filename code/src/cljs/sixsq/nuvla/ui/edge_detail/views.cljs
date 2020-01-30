@@ -161,24 +161,27 @@
 (defn Location
   []
   (let [{:keys [id location] :as nuvlabox} @(subscribe [::subs/nuvlabox])
-        update-location-fn #(dispatch [::events/edit id (assoc nuvlabox :location %)])]
-    [uix/Accordion
-     [map/Map {:style    {:height 300
-                          :width  "100%"
-                          :cursor (when-not location "pointer")}
-               :center   (or location map/sixsq-latlng)
-               :zoom     3
-               :on-click (when-not location
-                           (map/click-location update-location-fn))}
-      [map/DefaultLayers]
+        update-location-fn #(dispatch [::events/edit id (assoc nuvlabox :location %)])
+        zoom               (atom 3)]
+    (fn []
+      [uix/Accordion
+       [map/Map {:style             {:height 400
+                                     :width  "100%"
+                                     :cursor (when-not location "pointer")}
+                 :center            (or location map/sixsq-latlng)
+                 :zoom              @zoom
+                 :onViewportChanged #(reset! zoom (.-zoom %))
+                 :on-click          (when-not location
+                                      (map/click-location update-location-fn))}
+        [map/DefaultLayers]
 
-      (when location
-        [map/Marker {:position    location
-                     :draggable   true
-                     :on-drag-end (map/drag-end-location update-location-fn)}])]
-     :default-open false
-     :label "Location"
-     :icon "map"]))
+        (when location
+          [map/Marker {:position    location
+                       :draggable   true
+                       :on-drag-end (map/drag-end-location update-location-fn)}])]
+       :default-open false
+       :label "Location"
+       :icon "map"])))
 
 
 (defn StatusIcon
@@ -237,8 +240,7 @@
            [Heartbeat updated next-heartbeat]
            (when resources
              [Load resources])
-           [Peripherals]
-           [Location]])
+           [Peripherals]])
         [ui/Message
          {:warning true
           :content "NuvlaBox status not available."}]))))
@@ -269,8 +271,10 @@
   []
   (let [{:keys [id] :as nuvlabox} @(subscribe [::subs/nuvlabox])
         status @(subscribe [::edge-subs/status-nuvlabox id])]
-    [ui/CardGroup {:centered true}
-     [NuvlaboxCard nuvlabox status]]))
+    [:<>
+     [ui/CardGroup {:centered true}
+      [NuvlaboxCard nuvlabox status]]
+     [Location]]))
 
 
 (defn EdgeDetails

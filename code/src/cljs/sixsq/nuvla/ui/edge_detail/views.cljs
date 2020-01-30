@@ -16,7 +16,9 @@
     [sixsq.nuvla.ui.utils.plot :as plot]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.utils.map :as map]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -156,6 +158,30 @@
      :count (count @nuvlabox-peripherals)]))
 
 
+(defn Location
+  []
+  (let [{:keys [id location] :as nuvlabox} @(subscribe [::subs/nuvlabox])]
+    [uix/Accordion
+     [map/Map {:style    {:height 300
+                          :width  "100%"
+                          :cursor (when-not location "pointer")}
+               :center   (or location map/sixsq-latlng)
+               :zoom     3
+               :on-click (when-not location
+                           (map/click-location
+                             #(dispatch [::events/edit id
+                                         (assoc nuvlabox :location %)])))}
+      [map/DefaultLayers]
+
+      (js/console.log location)
+      (when location
+        [map/Marker {:position    location
+                     :draggable   true
+                     :on-drag-end #(js/console.log (js->clj % :keywordize-keys true))}])]
+     :label "Location"
+     :icon "map"]))
+
+
 (defn StatusIcon
   [status]
   [ui/Popup
@@ -212,7 +238,8 @@
            [Heartbeat updated next-heartbeat]
            (when resources
              [Load resources])
-           [Peripherals]])
+           [Peripherals]
+           [Location]])
         [ui/Message
          {:warning true
           :content "NuvlaBox status not available."}]))))

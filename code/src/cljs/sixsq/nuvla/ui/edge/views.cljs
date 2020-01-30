@@ -22,7 +22,7 @@
     [sixsq.nuvla.ui.utils.map :as map]))
 
 
-(def cards-view (r/atom true))
+(def view-type (r/atom :map))
 
 (defn StatisticState
   [value icon label]
@@ -73,11 +73,14 @@
       [ui/Menu {:borderless true, :stackable true}
        [AddButton]
        [ui/MenuItem {:icon     "grid layout"
-                     :active   @cards-view
-                     :on-click #(reset! cards-view true)}]
+                     :active   (= @view-type :cards)
+                     :on-click #(reset! view-type :cards)}]
        [ui/MenuItem {:icon     "table"
-                     :active   (not @cards-view)
-                     :on-click #(reset! cards-view false)}]
+                     :active   (= @view-type :table)
+                     :on-click #(reset! view-type :table)}]
+       [ui/MenuItem {:icon     "map"
+                     :active   (= @view-type :map)
+                     :on-click #(reset! view-type :map)}]
        [main-components/RefreshMenu
         {:action-id  events/refresh-id
          :loading?   @loading?
@@ -224,6 +227,19 @@
           [NuvlaboxRow nuvlabox]))]]))
 
 
+(defn NuvlaboxMapPoint
+  [{:keys [id name location] :as nuvlabox} status]
+  (let [status   (subscribe [::subs/status-nuvlabox id])
+        uuid     (general-utils/id->uuid id)
+        on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
+    [map/CircleMarker {:on-click on-click
+                       :center   location
+                       :color    (utils/status->color status)
+                       :opacity  0.5
+                       :weight   2}
+     [map/Tooltip (or name id)]]))
+
+
 (defn NuvlaboxCards
   []
   (let [nuvlaboxes (subscribe [::subs/nuvlaboxes])]
@@ -237,6 +253,24 @@
            [edge-detail/NuvlaboxCard nuvlabox @status :on-click on-click-fn])))]))
 
 
+(defn NuvlaboxMap
+  []
+  (let [nuvlaboxes (subscribe [::subs/nuvlaboxes])]
+    [:div {:style {:margin-top    20
+                   :margin-bottom 20}}
+     [map/Map {:style  {:height 500
+                        :width  "100%"}
+               :center map/sixsq-latlng
+               :zoom   3}
+      [map/DefaultLayers]
+      (doall
+        (for [{:keys [id] :as nuvlabox} (->> @nuvlaboxes
+                                             :resources
+                                             (filter #(:location %)))]
+          ^{:key id}
+          [NuvlaboxMapPoint nuvlabox]))]]))
+
+
 (defmethod panel/render :edge
   [path]
   (let [[_ uuid] path
@@ -245,36 +279,10 @@
                   [MenuBar]
                   [main-components/SearchInput #(dispatch [::events/set-full-text-search %])]
                   [StatisticStates]
-                  (if @cards-view
-                    [NuvlaboxCards]
-                    [NuvlaboxTable])
-                  [:div {:style {:margin-top    20
-                                 :margin-bottom 20}}
-                   [map/Map {:style  {:height 500
-                                      :width  "100%"}
-                             :center [46.2273, 6.07661],
-                             :zoom   15}
-                    [map/LayersControl {:position "topright"}
-                     [map/BaseLayer {:name    "Light"
-                                     :checked true}
-                      [map/TileLayer {:url         "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
-                                      :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a>, &copy; <a href=\"https://carto.com/attributions\">Carto</a>"}]]
-                     [map/BaseLayer {:name "Classic"}
-                      [map/TileLayer {:url         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                      :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a>"}]]]
-                    (for [pos [[46.2273, 6.07661] [45.2273, 6.07661] [46.2273, 7.07661]]]
-                      ^{:key (str pos)}
-                      [map/Marker {:position      pos
-                                   :draggable     true
-                                   :on-drag-start #(js/console.log "drag start")
-                                   :on-drag-end   #(js/console.log %)}
-                       [map/Popup
-                        [ui/Card
-                         {:header "NB 1" :meta "meta data" :description "this is the description"}]
-                        ]
-                       ]
-                      )
-                    ]]
+                  (case @view-type
+                    :cards [NuvlaboxCards]
+                    :table [NuvlaboxTable]
+                    :map [NuvlaboxMap])
                   [Pagination]
                   [AddModal]]
         children (case n

@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Credential page - fix regression in showing credential modal 
+
 ## [2.4.9] - 2020-01-23
 
 ### Changed

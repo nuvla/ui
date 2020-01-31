@@ -13,7 +13,6 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.plot :as plot]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -158,30 +157,35 @@
      :count (count @nuvlabox-peripherals)]))
 
 
-(defn Location
-  []
-  (let [{:keys [id location] :as nuvlabox} @(subscribe [::subs/nuvlabox])
-        update-location-fn #(dispatch [::events/edit id (assoc nuvlabox :location %)])
-        zoom               (atom 3)]
-    (fn []
-      [uix/Accordion
-       [map/Map {:style             {:height 400
-                                     :width  "100%"
-                                     :cursor (when-not location "pointer")}
-                 :center            (or location map/sixsq-latlng)
-                 :zoom              @zoom
-                 :onViewportChanged #(reset! zoom (.-zoom %))
-                 :on-click          (when-not location
-                                      (map/click-location update-location-fn))}
-        [map/DefaultLayers]
+(defn LocationAccordion
+  [{:keys [id location] :as nuvlabox}]
+  (let [zoom (atom 3)
+        tr   (subscribe [::i18n-subs/tr])]
+    (fn [{:keys [id location] :as nuvlabox}]
+      (let [update-location-fn #(dispatch [::events/edit id (assoc nuvlabox :location %)])]
+        [uix/Accordion
 
-        (when location
-          [map/Marker {:position    location
-                       :draggable   true
-                       :on-drag-end (map/drag-end-location update-location-fn)}])]
-       :default-open false
-       :label "Location"
-       :icon "map"])))
+         [:div
+          (if location (@tr [:map-drag-to-update-nb-location])
+                       (@tr [:map-click-to-set-nb-location]))
+          [map/Map
+           {:style             {:height 400
+                                :width  "100%"
+                                :cursor (when-not location "pointer")}
+            :center            (or location map/sixsq-latlng)
+            :zoom              @zoom
+            :onViewportChanged #(reset! zoom (.-zoom %))
+            :on-click          (when-not location
+                                 (map/click-location update-location-fn))}
+           [map/DefaultLayers]
+
+           (when location
+             [map/Marker {:position    location
+                          :draggable   true
+                          :on-drag-end (map/drag-end-location update-location-fn)}])]]
+         :default-open false
+         :label "Location"
+         :icon "map"]))))
 
 
 (defn StatusIcon
@@ -274,7 +278,7 @@
     [:<>
      [ui/CardGroup {:centered true}
       [NuvlaboxCard nuvlabox status]]
-     [Location]]))
+     [LocationAccordion nuvlabox]]))
 
 
 (defn EdgeDetails

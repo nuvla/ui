@@ -26,6 +26,7 @@
     "codemirror": "^5.50.2",
     "create-react-class": "15.6.3",
     "js-yaml": "^3.13.1",
+    "leaflet": "^1.6.0",
     "license-checker": "^25.0.1",
     "moment": "^2.24.0",
     "papaparse": "^5.1.1",
@@ -35,6 +36,7 @@
     "react-copy-to-clipboard": "^5.0.2",
     "react-datepicker": "^1.8.0",
     "react-dom": "16.9.0",
+    "react-leaflet": "^2.6.1",
     "react-markdown": "^4.3.0",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.88.2"

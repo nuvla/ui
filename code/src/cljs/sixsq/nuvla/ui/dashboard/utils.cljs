@@ -57,7 +57,7 @@
     false))
 
 
-(defn deployment-active?
+(defn deployment-in-transition?
   [state]
   (str/ends-with? (str state) "ING"))
 

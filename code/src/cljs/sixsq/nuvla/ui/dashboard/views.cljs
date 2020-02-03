@@ -24,10 +24,13 @@
 
 (defn control-bar []
   (let [tr           (subscribe [::i18n-subs/tr])
-        active-only? (subscribe [::subs/active-only?])]
+        active-only? (subscribe [::subs/active-only?])
+        full-text    (subscribe [::subs/full-text-search])]
     [:span
 
-     [main-components/SearchInput #(dispatch [::events/set-full-text-search %])]
+     [main-components/SearchInput
+      {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))
+       :default-value @full-text}]
 
      ^{:key (str "activeOnly:" @active-only?)}
      [ui/Checkbox {:style          {:margin-left 10}

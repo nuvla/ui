@@ -3,6 +3,7 @@
     [clojure.spec.alpha :as s]
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
+    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -143,8 +144,9 @@
                         :icon       "mail"
                         :text       (@tr [:support])
                         :href       (js/encodeURI
-                                      (str "mailto:support@sixsq.com?subject=[Nuvla] "
-                                           "Support question - "
+                                      (str "mailto:support@sixsq.com?subject=["
+                                           @cimi-api-fx/NUVLA_URL
+                                           "] Support question - "
                                            (if logged-in? @user "Not logged in")))
                         }]]]))
 

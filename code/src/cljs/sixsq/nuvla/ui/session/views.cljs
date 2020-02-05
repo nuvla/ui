@@ -3,6 +3,7 @@
     [clojure.spec.alpha :as s]
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
+    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -142,8 +143,12 @@
       [ui/DropdownItem {:aria-label (@tr [:support])
                         :icon       "mail"
                         :text       (@tr [:support])
-                        :href       (str "mailto:support%40sixsq%2Ecom?subject=%5BSlipStream%5D%20"
-                                         "Support%20question%20%2D%20Not%20logged%20in")}]]]))
+                        :href       (js/encodeURI
+                                      (str "mailto:support@sixsq.com?subject=["
+                                           @cimi-api-fx/NUVLA_URL
+                                           "] Support question - "
+                                           (if logged-in? @user "Not logged in")))
+                        }]]]))
 
 
 (defn authn-menu

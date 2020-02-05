@@ -62,11 +62,15 @@
       [module-card module])]])
 
 
-(defn control-bar []
-  [ui/Menu {:secondary true}
-   [ui/MenuMenu {:position "left"}
-    [main-components/SearchInput #(dispatch [::events/set-full-text-search %])]]
-   [refresh-menu]])
+(defn control-bar
+  []
+  (let [full-text (subscribe [::subs/full-text-search])]
+    [ui/Menu {:secondary true}
+     [ui/MenuMenu {:position "left"}
+      [main-components/SearchInput
+       {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))
+        :default-value @full-text}]]
+     [refresh-menu]]))
 
 
 (defn control-bar-projects []

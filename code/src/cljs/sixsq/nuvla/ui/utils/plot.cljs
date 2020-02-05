@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.plot.plot
+(ns sixsq.nuvla.ui.utils.plot
   (:require
     ["chart.js" :as chartjs]
     ["react-chartjs-2" :as chartjs2]

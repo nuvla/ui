@@ -147,8 +147,8 @@
          (when count
            [:span form-fields/nbsp form-fields/nbsp [ui/Label {:circular true} count]])]]
 
-       [ui/AccordionContent {:active @active?}
-        content]])))
+       (when @active? [ui/AccordionContent {:active @active?}
+                       content])])))
 
 
 (defn PageHeader

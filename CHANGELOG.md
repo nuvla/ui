@@ -4,6 +4,14 @@
 
 ### Changed
 
+  - Authn menu - Fix support text and set user when logged in
+  - Edge details - allow add and edit of location on Map
+  - Edge - NuvlaBox displayed on map
+  - Map leaflet integration
+  - Search input - Full text search value is lost on navigation but the filter
+    stay fix
+  - Credential page - fix regression in showing credential modal 
+
 ## [2.4.9] - 2020-01-23
 
 ### Changed

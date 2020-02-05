@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Infra page - Fix blank page when not known subtype
   - Authn menu - Fix support text and set user when logged in
   - Edge details - allow add and edit of location on Map
   - Edge - NuvlaBox displayed on map

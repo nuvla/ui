@@ -19,8 +19,7 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as timbre]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as timbre]))
 
 
 (defn ControlBar []
@@ -57,7 +56,7 @@
                         :object-fit "contain"}}])
    [ui/CardContent
     [ui/CardHeader {:style {:word-wrap "break-word"}}
-     (let [icon-or-image ((keyword subtype) service-icons)]
+     (let [icon-or-image (get service-icons (keyword subtype) "question circle")]
        (if (str/starts-with? icon-or-image "/")
          [ui/Image {:src icon-or-image
                     :style {:overflow "hidden"
@@ -66,7 +65,7 @@
                             :margin-right 4
                             :padding-bottom 7
                             }}]
-         [ui/Icon {:name ((keyword subtype) service-icons)}]))
+         [ui/Icon {:name icon-or-image}]))
      (or name id)]
     [ui/CardMeta {:style {:word-wrap "break-word"}} path]
     [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]]])

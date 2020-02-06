@@ -36,7 +36,12 @@
 
 (defn convert-latlong-map
   [latlong]
-  [(.-lat latlong) (.-lng latlong)])
+  [(.-lng latlong) (.-lat latlong)])
+
+
+(defn longlat->latlong
+  [[lng lat]]
+  [lat lng])
 
 
 (defn click-location

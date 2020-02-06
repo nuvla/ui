@@ -239,7 +239,7 @@
         uuid     (general-utils/id->uuid id)
         on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
     [map/CircleMarker {:on-click on-click
-                       :center   location
+                       :center   (map/longlat->latlong location)
                        :color    (utils/status->color @status)
                        :opacity  0.5
                        :weight   2}

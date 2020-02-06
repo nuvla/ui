@@ -172,7 +172,7 @@
            {:style             {:height 400
                                 :width  "100%"
                                 :cursor (when-not location "pointer")}
-            :center            (or location map/sixsq-latlng)
+            :center            (or (map/longlat->latlong location) map/sixsq-latlng)
             :zoom              @zoom
             :onViewportChanged #(reset! zoom (.-zoom %))
             :on-click          (when-not location
@@ -180,7 +180,7 @@
            [map/DefaultLayers]
 
            (when location
-             [map/Marker {:position    location
+             [map/Marker {:position    (map/longlat->latlong location)
                           :draggable   true
                           :on-drag-end (map/drag-end-location update-location-fn)}])]]
          :default-open false

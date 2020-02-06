@@ -46,9 +46,8 @@
 
 (defn ServiceCard
   [{:keys [id name description path subtype logo-url] :as service}]
-  [ui/Card (when (general-utils/can-edit? service)
-             {:on-click #(dispatch [::history-events/navigate
-                                    (str "infrastructures/" (general-utils/id->uuid id))])})
+  [ui/Card {:on-click #(dispatch [::history-events/navigate
+                                  (str "infrastructures/" (general-utils/id->uuid id))])}
    (when logo-url
      [ui/Image {:src   logo-url
                 :style {:width      "auto"
@@ -58,11 +57,11 @@
     [ui/CardHeader {:style {:word-wrap "break-word"}}
      (let [icon-or-image (get service-icons (keyword subtype) "question circle")]
        (if (str/starts-with? icon-or-image "/")
-         [ui/Image {:src icon-or-image
-                    :style {:overflow "hidden"
-                            :display "inline-block"
-                            :height 28
-                            :margin-right 4
+         [ui/Image {:src   icon-or-image
+                    :style {:overflow       "hidden"
+                            :display        "inline-block"
+                            :height         28
+                            :margin-right   4
                             :padding-bottom 7
                             }}]
          [ui/Icon {:name icon-or-image}]))
@@ -298,21 +297,21 @@
           ]]
 
         #_[:div
-         [:p (@tr [:register-s3-note])]
-         [ui/CardGroup {:centered true}
+           [:p (@tr [:register-s3-note])]
+           [ui/CardGroup {:centered true}
 
-          [ui/Card
-           {:on-click #(do
-                         (dispatch [::events/set-validate-form? false])
-                         (dispatch [::events/form-valid])
-                         (dispatch [::events/close-add-service-modal])
-                         (dispatch [::events/open-service-modal
-                                    (assoc @service :subtype "s3") true]))}
-           [ui/CardContent {:text-align :center}
-            [ui/Header "MinIO"]
-            [ui/Image {:src  "/ui/images/minio.png"
-                       :size :tiny}]
-            [ui/Header (@tr [:register])]]]]]]])))
+            [ui/Card
+             {:on-click #(do
+                           (dispatch [::events/set-validate-form? false])
+                           (dispatch [::events/form-valid])
+                           (dispatch [::events/close-add-service-modal])
+                           (dispatch [::events/open-service-modal
+                                      (assoc @service :subtype "s3") true]))}
+             [ui/CardContent {:text-align :center}
+              [ui/Header "MinIO"]
+              [ui/Image {:src  "/ui/images/minio.png"
+                         :size :tiny}]
+              [ui/Header (@tr [:register])]]]]]]])))
 
 
 (defmethod panel/render :infrastructures

@@ -270,7 +270,7 @@
 (defn NuvlaboxCard
   [nuvlabox status & {on-click-fn :on-click}]
   (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [id name description created state] :as nuvlabox} status]
+    (fn [{:keys [id name description created state tags] :as nuvlabox} status]
       ^{:key id}
       [ui/Card (when on-click-fn {:on-click on-click-fn})
        [ui/CardContent
@@ -285,7 +285,19 @@
         [:p {:align "right"} state]
 
         (when-not (str/blank? description)
-          [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description])]])))
+          [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description])
+
+        [ui/LabelGroup {:size   "tiny"
+                        :color "teal"
+                        :style {:max-height 150, :overflow "auto"}}
+         (for [tag tags]
+           ^{:key (str id "-" tag)}
+           [ui/Label {:style {:max-width "15ch"
+                              :overflow "hidden"
+                              :text-overflow "ellipsis"
+                              :white-space "nowrap"}}
+            [ui/Icon {:name "tag"}] tag
+            ])]]])))
 
 
 (defn SummarySection

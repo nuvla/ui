@@ -147,6 +147,7 @@ $ open /Applications/Google\ Chrome.app \
 For **Safari**, first enable the "Develop" menu:
 
  * Open the Safari preferences,
+ * Click on the Privacy tab and untick "Prevent cross-site tracking" 
  * Click the "Advanced" tab, and
  * Then activate the "Show Develop menu in menu bar" option.
 

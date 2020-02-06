@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Edge details - Display tags in NuvlaBox cards
   - Infrastructure - User able to view should be able to go to details page
   - Edge details - add update notification message on edit
   - Edge details - longitude have to be normalized before update in ES

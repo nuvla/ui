@@ -106,6 +106,7 @@
 (def HeaderSubheader (r/adapt-react-class semantic/HeaderSubheader))
 
 (def Label (r/adapt-react-class semantic/Label))
+(def LabelGroup (r/adapt-react-class semantic/LabelGroup))
 (def LabelDetail (r/adapt-react-class semantic/LabelDetail))
 
 (def ListSA (r/adapt-react-class semantic/List))

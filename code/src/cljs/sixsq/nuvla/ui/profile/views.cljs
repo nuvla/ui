@@ -167,7 +167,8 @@
          [cc/metadata
           {:title       (:identifier @session)
            :icon        "user"
-           :description (str (@tr [:session-expires]) " " (-> @session :expiry time/parse-iso8601 time/ago))}
+           :description (str (@tr [:session-expires]) " "
+                             (-> @session :expiry time/parse-iso8601 time/ago))}
           (->> @session
                general-utils/remove-common-attrs
                user-as-link

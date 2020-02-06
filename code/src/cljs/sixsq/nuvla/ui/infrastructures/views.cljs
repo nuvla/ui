@@ -19,8 +19,7 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as timbre]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as timbre]))
 
 
 (defn ControlBar []
@@ -47,9 +46,8 @@
 
 (defn ServiceCard
   [{:keys [id name description path subtype logo-url] :as service}]
-  [ui/Card (when (general-utils/can-edit? service)
-             {:on-click #(dispatch [::history-events/navigate
-                                    (str "infrastructures/" (general-utils/id->uuid id))])})
+  [ui/Card {:on-click #(dispatch [::history-events/navigate
+                                  (str "infrastructures/" (general-utils/id->uuid id))])}
    (when logo-url
      [ui/Image {:src   logo-url
                 :style {:width      "auto"
@@ -57,16 +55,16 @@
                         :object-fit "contain"}}])
    [ui/CardContent
     [ui/CardHeader {:style {:word-wrap "break-word"}}
-     (let [icon-or-image ((keyword subtype) service-icons)]
+     (let [icon-or-image (get service-icons (keyword subtype) "question circle")]
        (if (str/starts-with? icon-or-image "/")
-         [ui/Image {:src icon-or-image
-                    :style {:overflow "hidden"
-                            :display "inline-block"
-                            :height 28
-                            :margin-right 4
+         [ui/Image {:src   icon-or-image
+                    :style {:overflow       "hidden"
+                            :display        "inline-block"
+                            :height         28
+                            :margin-right   4
                             :padding-bottom 7
                             }}]
-         [ui/Icon {:name ((keyword subtype) service-icons)}]))
+         [ui/Icon {:name icon-or-image}]))
      (or name id)]
     [ui/CardMeta {:style {:word-wrap "break-word"}} path]
     [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]]])
@@ -299,21 +297,21 @@
           ]]
 
         #_[:div
-         [:p (@tr [:register-s3-note])]
-         [ui/CardGroup {:centered true}
+           [:p (@tr [:register-s3-note])]
+           [ui/CardGroup {:centered true}
 
-          [ui/Card
-           {:on-click #(do
-                         (dispatch [::events/set-validate-form? false])
-                         (dispatch [::events/form-valid])
-                         (dispatch [::events/close-add-service-modal])
-                         (dispatch [::events/open-service-modal
-                                    (assoc @service :subtype "s3") true]))}
-           [ui/CardContent {:text-align :center}
-            [ui/Header "MinIO"]
-            [ui/Image {:src  "/ui/images/minio.png"
-                       :size :tiny}]
-            [ui/Header (@tr [:register])]]]]]]])))
+            [ui/Card
+             {:on-click #(do
+                           (dispatch [::events/set-validate-form? false])
+                           (dispatch [::events/form-valid])
+                           (dispatch [::events/close-add-service-modal])
+                           (dispatch [::events/open-service-modal
+                                      (assoc @service :subtype "s3") true]))}
+             [ui/CardContent {:text-align :center}
+              [ui/Header "MinIO"]
+              [ui/Image {:src  "/ui/images/minio.png"
+                         :size :tiny}]
+              [ui/Header (@tr [:register])]]]]]]])))
 
 
 (defmethod panel/render :infrastructures

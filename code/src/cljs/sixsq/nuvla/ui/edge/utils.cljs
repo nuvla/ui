@@ -32,6 +32,16 @@
     :unknown "yellow"
     nil))
 
+
+(defn map-status->color
+  [status]
+  (case status
+    :online "green"
+    :offline "red"
+    :unknown "orange"
+    nil))
+
+
 (def filter-offline-status (str "next-heartbeat < 'now'"))
 
 (def filter-online-status (str "next-heartbeat >= 'now'"))

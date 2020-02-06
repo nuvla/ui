@@ -34,9 +34,19 @@
                 :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a>"}]]])
 
 
+(defn normalize-lng
+  [lng]
+  (-> lng (mod 360) (+ 540) (mod 360) (- 180)))
+
+
 (defn convert-latlong-map
   [latlong]
-  [(.-lat latlong) (.-lng latlong)])
+  [(.-lng latlong) (.-lat latlong)])
+
+
+(defn longlat->latlong
+  [[lng lat]]
+  [lat lng])
 
 
 (defn click-location

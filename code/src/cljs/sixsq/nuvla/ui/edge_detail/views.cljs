@@ -288,14 +288,15 @@
           [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description])
 
         [ui/LabelGroup {:size   "tiny"
-                        :key    "tagGroup"
-                        :tag    true
-                        :color  "teal"
-                        :style  {:margin-top "4px"}}
+                        :color "teal"
+                        :style {:max-height 150, :overflow "auto"}}
          (for [tag tags]
-           [ui/Label {:size   "tiny"
-                      :key    tag}
-            tag
+           ^{:key (str id "-" tag)}
+           [ui/Label {:style {:max-width "15ch"
+                              :overflow "hidden"
+                              :text-overflow "ellipsis"
+                              :white-space "nowrap"}}
+            [ui/Icon {:name "tag"}] tag
             ])]]])))
 
 

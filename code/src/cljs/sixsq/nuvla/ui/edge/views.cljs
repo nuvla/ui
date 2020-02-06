@@ -240,7 +240,7 @@
         on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
     [map/CircleMarker {:on-click on-click
                        :center   (map/longlat->latlong location)
-                       :color    (utils/status->color @status)
+                       :color    (utils/map-status->color @status)
                        :opacity  0.5
                        :weight   2}
      [map/Tooltip (or name id)]]))
@@ -288,7 +288,8 @@
                     :cards [NuvlaboxCards]
                     :table [NuvlaboxTable]
                     :map [NuvlaboxMap])
-                  [Pagination]
+                  (when-not (= @view-type :map)
+                    [Pagination])
                   [AddModal]]
         children (case n
                    1 root

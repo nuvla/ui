@@ -4,6 +4,11 @@
 
 ### Changed
 
+  - Edge details - add update notification message on edit
+  - Edge details - longitude have to be normalized before update in ES
+  - Edge details - remove pagination from map view
+  - Edge details - confirm new location with buttons
+  - Edge details - position in leaflet it's [lat long], in ES it's [long lat] fix
   - Infra page - Fix blank page when not known subtype
   - Authn menu - Fix support text and set user when logged in
   - Edge details - allow add and edit of location on Map

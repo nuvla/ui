@@ -16,8 +16,8 @@
     [sixsq.nuvla.ui.utils.plot :as plot]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.style :as style]))
+    [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -167,28 +167,25 @@
             position            (some-> (or @new-location location) map/longlat->latlong)]
 
         [uix/Accordion
-         [ui/Segment style/basic
+         [:div
           (if position (@tr [:map-drag-to-update-nb-location])
                        (@tr [:map-click-to-set-nb-location]))
-          [map/Map
-           {:style             {:height        400
-                                :width         "100%"
-                                :margin-bottom 10
-                                :cursor        (when-not location "pointer")}
+          [map/MapBox
+           {:style             {:height 400
+                                :cursor (when-not location "pointer")}
             :center            (or position map/sixsq-latlng)
             :zoom              @zoom
             :onViewportChanged #(reset! zoom (.-zoom %))
             :on-click          (when-not position
                                  (map/click-location update-new-location))}
-           [map/DefaultLayers]
-
            (when position
              [map/Marker {:position    position
                           :draggable   true
                           :on-drag-end (map/drag-end-location update-new-location)}])]
-          [:div
+          [:div {:align "right"}
+           [ui/Button {:on-click #(reset! new-location nil)}
+            (@tr [:cancel])]
            [ui/Button {:primary  true
-                       :floated  "right"
                        :on-click #(dispatch
                                     [::events/edit id
                                      (assoc nuvlabox
@@ -196,9 +193,7 @@
                                        (update @new-location 0 map/normalize-lng))
                                      "NuvlaBox position updated successfully"])}
             (@tr [:save])]
-           [ui/Button {:floated  "right"
-                       :on-click #(reset! new-location nil)}
-            (@tr [:cancel])]]]
+           ]]
          :default-open false
          :label "Location"
          :icon "map"]))))
@@ -286,15 +281,15 @@
         (when-not (str/blank? description)
           [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description])
 
-        [ui/LabelGroup {:size   "tiny"
+        [ui/LabelGroup {:size  "tiny"
                         :color "teal"
                         :style {:max-height 150, :overflow "auto"}}
          (for [tag tags]
            ^{:key (str id "-" tag)}
-           [ui/Label {:style {:max-width "15ch"
-                              :overflow "hidden"
+           [ui/Label {:style {:max-width     "15ch"
+                              :overflow      "hidden"
                               :text-overflow "ellipsis"
-                              :white-space "nowrap"}}
+                              :white-space   "nowrap"}}
             [ui/Icon {:name "tag"}] tag
             ])]]])))
 

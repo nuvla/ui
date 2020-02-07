@@ -262,19 +262,16 @@
 (defn NuvlaboxMap
   []
   (let [nuvlaboxes (subscribe [::subs/nuvlaboxes])]
-    [:div {:style {:margin-top    20
-                   :margin-bottom 20}}
-     [map/Map {:style  {:height 500
-                        :width  "100%"}
-               :center map/sixsq-latlng
-               :zoom   3}
-      [map/DefaultLayers]
-      (doall
-        (for [{:keys [id] :as nuvlabox} (->> @nuvlaboxes
-                                             :resources
-                                             (filter #(:location %)))]
-          ^{:key id}
-          [NuvlaboxMapPoint nuvlabox]))]]))
+    [map/MapBox
+     {:style  {:height 500}
+      :center map/sixsq-latlng
+      :zoom   3}
+     (doall
+       (for [{:keys [id] :as nuvlabox} (->> @nuvlaboxes
+                                            :resources
+                                            (filter #(:location %)))]
+         ^{:key id}
+         [NuvlaboxMapPoint nuvlabox]))]))
 
 
 (defmethod panel/render :edge

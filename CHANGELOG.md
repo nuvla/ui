@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.4.10] - 2020-02-07
+
 ### Changed
 
   - Edge details - Display tags in NuvlaBox cards

@@ -268,7 +268,6 @@
         :raw                                       "raw"
         :refresh                                   "refresh"
         :register                                  "register"
-        :register-s3-note                          "Register an existing Object Store Service (S3)?"
         :register-swarm-note                       "Register an existing Container Orchestration Engine or deploy a new one?"
         :release-notes                             "release notes"
         :reports                                   "reports"

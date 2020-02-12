@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+ - Credentials - Bring back S3
+ - Infrastructures - Bring back S3
+
 ## [2.4.10] - 2020-02-07
 
 ### Changed

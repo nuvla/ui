@@ -40,7 +40,7 @@
 
 (def service-icons
   {:swarm      "docker"
-   :s3         "aws"
+   :s3         "/ui/images/s3.png"
    :kubernetes "/ui/images/kubernetes.svg"})
 
 
@@ -165,7 +165,7 @@
             :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]]))))
 
 
-(defn service-minio
+(defn service-object-store
   []
   (let [tr             (subscribe [::i18n-subs/tr])
         is-new?        (subscribe [::subs/is-new?])
@@ -199,7 +199,7 @@
   {"swarm"      {:validation-event ::events/validate-swarm-service-form
                  :modal-content    service-swarm}
    "s3"         {:validation-event ::events/validate-minio-service-form
-                 :modal-content    service-minio}
+                 :modal-content    service-object-store}
    "kubernetes" {:validation-event ::events/validate-swarm-service-form
                  :modal-content    service-swarm}})
 
@@ -296,22 +296,21 @@
             [ui/Header (@tr [:register])]]]
           ]]
 
-        #_[:div
-           [:p (@tr [:register-s3-note])]
-           [ui/CardGroup {:centered true}
+        [uix/MoreAccordion
+         [ui/CardGroup {:centered true}
 
-            [ui/Card
-             {:on-click #(do
-                           (dispatch [::events/set-validate-form? false])
-                           (dispatch [::events/form-valid])
-                           (dispatch [::events/close-add-service-modal])
-                           (dispatch [::events/open-service-modal
-                                      (assoc @service :subtype "s3") true]))}
-             [ui/CardContent {:text-align :center}
-              [ui/Header "MinIO"]
-              [ui/Image {:src  "/ui/images/minio.png"
-                         :size :tiny}]
-              [ui/Header (@tr [:register])]]]]]]])))
+          [ui/Card
+           {:on-click #(do
+                         (dispatch [::events/set-validate-form? false])
+                         (dispatch [::events/form-valid])
+                         (dispatch [::events/close-add-service-modal])
+                         (dispatch [::events/open-service-modal
+                                    (assoc @service :subtype "s3") true]))}
+           [ui/CardContent {:text-align :center}
+            [ui/Header "Object Store"]
+            [ui/Image {:src  "/ui/images/s3.png"
+                       :size :tiny}]
+            [ui/Header (@tr [:register])]]]]]]])))
 
 
 (defmethod panel/render :infrastructures

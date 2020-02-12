@@ -151,6 +151,20 @@
                        content])])))
 
 
+(defn MoreAccordion
+  [content]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        more? (r/atom false)]
+    (fn [content]
+      [ui/Accordion
+       [ui/AccordionTitle {:on-click #(swap! more? not)
+                           :active   @more?}
+        [ui/Icon {:name "dropdown"}]
+        (@tr [:more])]
+       [ui/AccordionContent {:active @more?}
+        content]])))
+
+
 (defn PageHeader
   [icon title & {:keys [inline]}]
   [:h2 (when inline {:style {:display    :inline

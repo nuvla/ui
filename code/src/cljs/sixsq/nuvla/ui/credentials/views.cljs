@@ -102,7 +102,7 @@
             (partial on-change :parent)]]]]))))
 
 
-(defn credential-minio
+(defn credential-object-store
   []
   (let [tr             (subscribe [::i18n-subs/tr])
         is-new?        (subscribe [::subs/is-new?])
@@ -194,7 +194,7 @@
     :modal-content   credential-swarm},
    "infrastructure-service-minio"
    {:validation-spec ::spec/minio-credential
-    :modal-content   credential-minio},
+    :modal-content   credential-object-store},
    "infrastructure-service-vpn"
    {:validation-spec ::spec/vpn-credential
     :modal-content   credential-vpn}})
@@ -266,19 +266,6 @@
              [ui/Image {:src   "/ui/images/kubernetes.svg"
                         :style {:max-width 112}}]]]
 
-           #_[ui/Card
-              {:on-click #(do
-                            (dispatch [::events/set-validate-form? false])
-                            (dispatch [::events/form-valid])
-                            (dispatch [::events/close-add-credential-modal])
-                            (dispatch [::events/open-credential-modal
-                                       {:subtype "infrastructure-service-minio"} true]))}
-              [ui/CardContent {:text-align :center}
-               [ui/Header "MinIO"]
-               [:div]
-               [ui/Image {:src   "/ui/images/minio.png"
-                          :style {:max-height 112}}]]]
-
            [ui/Card
             {:on-click #(do
                           (dispatch [::events/set-validate-form? false])
@@ -289,8 +276,22 @@
             [ui/CardContent {:text-align :center}
              [ui/Header "OpenVPN"]
              [ui/Image {:src   "/ui/images/openvpn.png"
-                        :style {:max-width 112}}]]]
-           ]]]))))
+                        :style {:max-width 112}}]]]]
+          [uix/MoreAccordion
+           [ui/CardGroup {:centered true}
+            [ui/Card
+             {:on-click #(do
+                           (dispatch [::events/set-validate-form? false])
+                           (dispatch [::events/form-valid])
+                           (dispatch [::events/close-add-credential-modal])
+                           (dispatch [::events/open-credential-modal
+                                      {:subtype "infrastructure-service-minio"} true]))}
+             [ui/CardContent {:text-align :center}
+              [ui/Header "Object Store"]
+              [:div]
+              [ui/Image {:src   "/ui/images/s3.png"
+                         :style {:max-height 112}}]]]]]
+          ]]))))
 
 
 (defn generated-credential-modal
@@ -354,7 +355,7 @@
 
 (defn DeleteButton
   [credential]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr      (subscribe [::i18n-subs/tr])
         {:keys [id name description]} credential
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger

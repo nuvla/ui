@@ -62,6 +62,18 @@
                                            ::parent]))
 
 
+; Registry
+
+(s/def ::username utils-spec/nonblank-string)
+(s/def ::password utils-spec/nonblank-string)
+
+(s/def ::registry-credential (s/keys :req-un [::name
+                                              ::description
+                                              ::username
+                                              ::password
+                                              ::parent]))
+
+
 ; VPN
 
 (s/def ::vpn-credential (s/keys :req-un [::name

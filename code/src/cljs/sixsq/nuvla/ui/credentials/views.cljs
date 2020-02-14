@@ -138,6 +138,42 @@
             (partial on-change :parent)]]]]))))
 
 
+(defn credential-registy
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        credential     (subscribe [::subs/credential])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-credential name-kw value])
+                         (dispatch [::events/validate-credential-form ::spec/registry-credential]))]
+    (fn []
+      (let [editable? (general-utils/editable? @credential @is-new?)
+            {:keys [name description username password]} @credential]
+
+        [:<>
+         [acl/AclButton {:default-value (:acl @credential)
+                         :read-only     (not editable?)
+                         :on-change     #(dispatch [::events/update-credential :acl %])}]
+
+         [ui/Table style/definition
+          [ui/TableBody
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
+            :validate-form? @validate-form?]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
+            :on-change (partial on-change :description)]
+           [uix/TableRowField "username", :editable? editable?, :required? true,
+            :default-value username, :spec ::spec/username, :validate-form? @validate-form?,
+            :on-change (partial on-change :username)]
+           [uix/TableRowField "password", :editable? editable?, :required? true,
+            :default-value password, :spec ::spec/password, :validate-form? @validate-form?,
+            :on-change (partial on-change :password)]
+           [row-infrastructure-services-selector ["registry"] nil editable? ::spec/parent
+            (partial on-change :parent)]]]]))))
+
+
 (defn credential-vpn
   []
   (let [tr                 (subscribe [::i18n-subs/tr])
@@ -197,7 +233,11 @@
     :modal-content   credential-object-store},
    "infrastructure-service-vpn"
    {:validation-spec ::spec/vpn-credential
-    :modal-content   credential-vpn}})
+    :modal-content   credential-vpn}
+   "infrastructure-service-registry"
+   {:validation-spec ::spec/registry-credential
+    :modal-content   credential-registy}
+   })
 
 
 (def infrastructure-service-subtypes
@@ -279,6 +319,20 @@
                         :style {:max-width 112}}]]]]
           [uix/MoreAccordion
            [ui/CardGroup {:centered true}
+            [ui/Card
+             {:on-click #(do
+                           (dispatch [::events/set-validate-form? false])
+                           (dispatch [::events/form-valid])
+                           (dispatch [::events/close-add-credential-modal])
+                           (dispatch [::events/open-credential-modal
+                                      {:subtype "infrastructure-service-registry"} true]))}
+             [ui/CardContent {:text-align :center}
+              [ui/Header "Docker registry"]
+              [:div]
+              [ui/IconGroup {:size "massive"}
+               [ui/Icon {:name "docker"}]
+               [ui/Icon {:name "database", :corner "bottom right"}]]]]
+
             [ui/Card
              {:on-click #(do
                            (dispatch [::events/set-validate-form? false])

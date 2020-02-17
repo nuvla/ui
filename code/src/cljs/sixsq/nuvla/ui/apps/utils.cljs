@@ -106,17 +106,18 @@
 
 (defn db->module
   [module commit-map db]
-  (let [name              (get-in db [::spec/module-common ::spec/name])
-        description       (get-in db [::spec/module-common ::spec/description])
-        parent-path       (get-in db [::spec/module-common ::spec/parent-path])
-        logo-url          (get-in db [::spec/module-common ::spec/logo-url])
-        subtype           (get-in db [::spec/module-common ::spec/subtype])
-        path              (get-in db [::spec/module-common ::spec/path])
-        acl               (get-in db [::spec/module-common ::spec/acl])
-        env-variables     (env-variables->module db)
-        urls              (urls->module db)
-        output-parameters (output-parameters->module db)
-        data-bindings     (data-binding->module db)]
+  (let [name               (get-in db [::spec/module-common ::spec/name])
+        description        (get-in db [::spec/module-common ::spec/description])
+        parent-path        (get-in db [::spec/module-common ::spec/parent-path])
+        logo-url           (get-in db [::spec/module-common ::spec/logo-url])
+        subtype            (get-in db [::spec/module-common ::spec/subtype])
+        path               (get-in db [::spec/module-common ::spec/path])
+        acl                (get-in db [::spec/module-common ::spec/acl])
+        private-registries (get-in db [::spec/module-common ::spec/private-registries])
+        env-variables      (env-variables->module db)
+        urls               (urls->module db)
+        output-parameters  (output-parameters->module db)
+        data-bindings      (data-binding->module db)]
     (as-> module m
           (assoc-in m [:name] name)
           (assoc-in m [:description] description)
@@ -131,6 +132,9 @@
           (if (empty? urls)
             (update-in m [:content] dissoc :urls)
             (assoc-in m [:content :urls] urls))
+          (if (empty? private-registries)
+            (update-in m [:content] dissoc :private-registries)
+            (assoc-in m [:content :private-registries] private-registries))
           (assoc-in m [:content :output-parameters] output-parameters)
           (assoc-in m [:data-accept-content-types] data-bindings)
           (sanitize-base m)
@@ -195,7 +199,9 @@
       (assoc-in [::spec/module-common ::spec/output-parameters]
                 (output-parameters->db (:output-parameters content)))
       (assoc-in [::spec/module-common ::spec/data-types]
-                (data-types->db data-accept-content-types))))
+                (data-types->db data-accept-content-types))
+      (assoc-in [::spec/module-common ::spec/private-registries]
+                (:private-registries content))))
 
 
 (defn mandatory-name

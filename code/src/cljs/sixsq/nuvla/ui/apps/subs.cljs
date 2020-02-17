@@ -86,6 +86,20 @@
 
 
 (reg-sub
+  ::private-registries
+  (fn [db]
+    (get-in db [::spec/module-common ::spec/private-registries])))
+
+
+(reg-sub
+  ::private-registries-options
+  (fn [db]
+    (map (fn [{:keys [id name]}]
+           {:key id, :value id, :text (or name id)})
+         (::spec/registries-infra db))))
+
+
+(reg-sub
   ::data-types
   (fn [db]
     (get-in db [::spec/module-common ::spec/data-types])))

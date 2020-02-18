@@ -20,6 +20,12 @@
 (s/def ::infra-services-loading? boolean?)
 (s/def ::selected-infra-service any?)
 
+(s/def ::infra-registries (s/nilable (s/coll-of any? :kind vector?)))
+(s/def ::infra-registries-loading? boolean?)
+
+(s/def ::infra-registries-creds (s/nilable (s/coll-of any? :kind vector?)))
+(s/def ::infra-registries-creds-loading? boolean?)
+
 (s/def ::data-clouds any?)
 (s/def ::selected-cloud (s/nilable string?))
 (s/def ::cloud-filter (s/nilable string?))
@@ -47,6 +53,10 @@
                           ::deployment
                           ::infra-services
                           ::infra-services-loading?
+                          ::infra-registries
+                          ::infra-registries-loading?
+                          ::infra-registries-creds
+                          ::infra-registries-creds-loading?
                           ::selected-infra-service
                           ::credentials
                           ::credentials-loading?
@@ -63,31 +73,40 @@
                           ::step-states]))
 
 
-(def defaults {::deploy-modal-visible?   false
-               ::loading-deployment?     false
-               ::deployment              nil
-               ::credentials             nil
-               ::credentials-loading?    false
-               ::check-cred-loading?     false
-               ::check-cred              nil
-               ::infra-services          nil
-               ::infra-services-loading? false
-               ::selected-infra-service  nil
-               ::selected-credential-id  nil
-               ::data-clouds             nil
-               ::selected-cloud          nil
-               ::cloud-filter            nil
-               ::cloud-infra-services    nil
+(def step-states {:data           {:step-id :data
+                                   :icon    "database"}
+                  :infra-services {:step-id :infra-services
+                                   :icon    "cloud"}
+                  :registries     {:step-id :registries
+                                   :icon    "docker"}
+                  :env-variables  {:step-id :env-variables
+                                   :icon    "list alternate outline"}
+                  :files          {:step-id :files
+                                   :icon    "file alternate outline"}
+                  :summary        {:step-id :summary
+                                   :icon    "info"}})
 
-               ::active-step             :data
-               ::data-step-active        true
-               ::step-states             {:data           {:step-id :data
-                                                           :icon    "database"}
-                                          :infra-services {:step-id :infra-services
-                                                           :icon    "cloud"}
-                                          :env-variables  {:step-id :env-variables
-                                                           :icon    "list alternate outline"}
-                                          :files          {:step-id :files
-                                                           :icon    "file alternate outline"}
-                                          :summary        {:step-id :summary
-                                                           :icon    "info"}}})
+
+(def defaults {::deploy-modal-visible?           false
+               ::loading-deployment?             false
+               ::deployment                      nil
+               ::credentials                     nil
+               ::credentials-loading?            false
+               ::check-cred-loading?             false
+               ::check-cred                      nil
+               ::infra-services                  nil
+               ::infra-services-loading?         false
+               ::infra-registries                nil
+               ::infra-registries-loading?       false
+               ::infra-registries-creds          nil
+               ::infra-registries-creds-loading? false
+               ::selected-infra-service          nil
+               ::selected-credential-id          nil
+               ::data-clouds                     nil
+               ::selected-cloud                  nil
+               ::cloud-filter                    nil
+               ::cloud-infra-services            nil
+
+               ::active-step                     :data
+               ::data-step-active                true
+               ::step-states                     step-states})

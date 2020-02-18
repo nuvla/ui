@@ -140,10 +140,64 @@
 
 
 (reg-event-db
+  ::set-infra-registries-creds
+  (fn [db [_ {creds :resources}]]
+    (assoc db ::spec/infra-registries-creds creds
+              ::spec/infra-registries-creds-loading? false)))
+
+
+(reg-event-fx
+  ::set-infra-registries
+  (fn [{:keys [db]} [_ {infra-registries :resources}]]
+    {:db                  (assoc db ::spec/infra-registries infra-registries
+                                    ::spec/infra-registries-loading? false
+                                    ::spec/infra-registries-creds nil
+                                    ::spec/infra-registries-creds-loading? true)
+     ::cimi-api-fx/search [:credential
+                           {:filter (general-utils/join-and
+                                      "subtype='infrastructure-service-registry'"
+                                      (apply general-utils/join-or
+                                             (map #(str "parent='" (:id %) "'") infra-registries))),
+                            :select "id, parent, name, description"
+                            :order  "name:asc,id:asc"}
+                           #(dispatch [::set-infra-registries-creds %])]}))
+
+
+(reg-event-fx
+  ::get-infra-registries
+  (fn [{:keys [db]} [_ registry-ids]]
+    {:db                  (assoc db ::spec/infra-registries-loading? true
+                                    ::spec/infra-registries)
+     ::cimi-api-fx/search [:infrastructure-service
+                           {:filter (general-utils/join-and
+                                      "subtype='registry'"
+                                      (apply general-utils/join-or
+                                             (map #(str "id='" % "'") registry-ids))),
+                            :select "id, name, description"
+                            :order  "name:asc,id:asc"}
+                           #(dispatch [::set-infra-registries %])]}))
+
+
+(reg-event-db
+  ::set-credential-registry
+  (fn [{:keys [::spec/deployment] :as db} [_ index credential-id]]
+    (let [private-registries   (get-in deployment [:module :content :private-registries])
+          old-registries-creds (get deployment :registries-credentials
+                                    (vec (take (count private-registries) (repeat nil))))
+          registries-creds     (assoc old-registries-creds index credential-id)
+          update-deployment    (assoc deployment :registries-credentials registries-creds)]
+      (js/console.log "::set-credential-registry"
+                      old-registries-creds registries-creds)
+      (assoc db ::spec/deployment update-deployment))))
+
+
+(reg-event-fx
   ::set-deployment
-  (fn [db [_ deployment]]
-    (assoc db ::spec/deployment deployment
-              ::spec/loading-deployment? false)))
+  (fn [{db :db} [_ deployment]]
+    (let [registry-ids (get-in deployment [:module :content :private-registries])]
+      (cond-> {:db (assoc db ::spec/deployment deployment
+                             ::spec/loading-deployment? false)}
+              (some? registry-ids) (assoc :dispatch [::get-infra-registries registry-ids])))))
 
 
 (reg-event-fx

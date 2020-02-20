@@ -186,8 +186,6 @@
                                     (vec (take (count private-registries) (repeat nil))))
           registries-creds     (assoc old-registries-creds index credential-id)
           update-deployment    (assoc deployment :registries-credentials registries-creds)]
-      (js/console.log "::set-credential-registry"
-                      old-registries-creds registries-creds)
       (assoc db ::spec/deployment update-deployment))))
 
 

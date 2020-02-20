@@ -4,6 +4,11 @@
 
 ### Changed
 
+ - Deployment modal - support private registries
+ - Module component -  Support private registries
+ - Module app - Support private registries
+ - Credentials - Docker private registries
+ - Infrastructure - Support Docker private registries
  - Credentials - Bring back S3
  - Infrastructures - Bring back S3
 

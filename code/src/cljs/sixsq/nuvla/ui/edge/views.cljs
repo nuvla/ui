@@ -126,6 +126,7 @@
         user-id        (subscribe [::session-subs/user-id])
         nuvlabox-id    (subscribe [::subs/nuvlabox-created-id])
         vpn-infra-opts (subscribe [::subs/vpn-infra-options])
+        nb-releases    (subscribe [::subs/nuvlabox-releases])
         default-data   {:owner            @user-id
                         :refresh-interval 30}
         creation-data  (r/atom default-data)
@@ -141,6 +142,7 @@
                           (reset! creation-data default-data))
         active?        (r/atom false)]
     (dispatch [::events/get-vpn-infra])
+    (dispatch [::events/get-nuvlabox-releases])
     (fn []
       (when (= (count @vpn-infra-opts) 1)
         (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
@@ -178,9 +180,28 @@
             [ui/AccordionContent {:active @active?}
              [ui/Table style/definition
               [ui/TableBody
-               [uix/TableRowField "version", :spec (s/nilable int?),
-                :default-value (:version @creation-data),
-                :on-change #(swap! creation-data assoc :version (general-utils/str->int %))]]]]]]
+               ;[uix/TableRowField "version", :spec (s/nilable int?),
+               ; :default-value (:version @creation-data),
+               ; :on-change #(swap! creation-data assoc :version (general-utils/str->int %))]
+               [ui/TableRow
+                [ui/TableCell [:span "version"]]
+                [ui/Message
+                 {:warning true
+                  :content (map :release @nb-releases)}]
+                [ui/Dropdown {:clearable   (> (count @nb-releases) 1)
+                              :selection   true
+                              :fluid       true
+                              :placeholder (@tr [(-> @nb-releases first :release)])
+                              :value       (:nb-rel @creation-data)
+                              :on-change   (ui-callback/callback
+                                             :value #(swap! creation-data assoc :nb-rel %))
+                              :options     (map
+                                             (fn [{:keys [release]}] {:key release, :text release, :value release})
+                                             @nb-releases)}]
+                [ui/TableCell [:span "pre-release"]]
+                [ui/TableCell [:span "notes"]]
+                ]
+               ]]]]]
 
           [ui/ModalActions
            [ui/Button {:positive true

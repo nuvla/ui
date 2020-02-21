@@ -119,5 +119,20 @@
      ::cimi-api-fx/search [:infrastructure-service
                            {:filter "subtype='vpn' and vpn-scope='nuvlabox'"
                             :select "id, name, description"
+                            :order  "release-date:desc"
                             :last   10000}
                            #(dispatch [::set-vpn-infra %])]}))
+
+(reg-event-db
+  ::set-nuvlabox-releases
+  (fn [db [_ {:keys [resources]}]]
+    (assoc db ::spec/nuvlabox-releases resources)))
+
+(reg-event-fx
+  ::get-nuvlabox-releases
+  (fn [{:keys [db]} _]
+    {:db                  (assoc db ::spec/nuvlabox-releases nil)
+     ::cimi-api-fx/search [:nuvlabox-release
+                           {:select "release"
+                            :last   30}
+                           #(dispatch [::set-nuvlabox-releases %])]}))

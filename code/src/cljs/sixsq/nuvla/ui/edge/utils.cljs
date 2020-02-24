@@ -2,6 +2,7 @@
   (:require
     [cljs.pprint :refer [cl-format]]
     [sixsq.nuvla.client.api :as api]
+    [clojure.string :as str]
     [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
@@ -62,9 +63,9 @@
 (defn percentage
   [used capacity]
   (-> used
-      (/ capacity)
-      (* 100)
-      int))
+    (/ capacity)
+    (* 100)
+    int))
 
 
 (defn mb->gb
@@ -98,7 +99,7 @@
   [{:keys [cpu ram disks]}]
   (concat [(cpu-stats cpu)
            (ram-stats ram)]
-          (map disk-stats (sort-by :device disks))))
+    (map disk-stats (sort-by :device disks))))
 
 
 (defn get-query-params
@@ -110,3 +111,12 @@
               (when state-selector (state-filter state-selector))
               (general-utils/fulltext-query-string full-text-search))})
 
+(defn prepare-compose-files
+  [nuvlabox-release selected-peripherals nuvlabox-id]
+  (let [nuvlabox-file-scopes  (group-by :scope (:compose-files nuvlabox-release))
+        compose-files         []]
+    (for [peripheral selected-peripherals]
+      (into (sorted-map) (conj compose-files {:name (:name (into (sorted-map) (get nuvlabox-file-scopes peripheral)))
+                           :file (str/replace (:file (into (sorted-map) (get nuvlabox-file-scopes peripheral)))
+                                   #"\$\{NUVLABOX_UUID\}"
+                                   nuvlabox-id)})))))

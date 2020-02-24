@@ -14,9 +14,9 @@
 (reg-event-fx
   ::refresh
   (fn [_ _]
-   {:dispatch [::main-events/action-interval-start {:id        refresh-id
-                                                    :frequency 10000
-                                                    :event     [::get-nuvlaboxes]}]}))
+    {:dispatch [::main-events/action-interval-start {:id        refresh-id
+                                                     :frequency 10000
+                                                     :event     [::get-nuvlaboxes]}]}))
 
 
 (reg-event-fx
@@ -30,7 +30,7 @@
   ::set-full-text-search
   (fn [{{:keys [::spec/elements-per-page] :as db} :db} [_ full-text-search]]
     {:db       (assoc db ::spec/full-text-search full-text-search
-                         ::spec/page 1)
+                 ::spec/page 1)
      :dispatch [::refresh]}))
 
 
@@ -43,7 +43,7 @@
     {:db                   (assoc db ::spec/loading? true)
      ::cimi-api-fx/search  [:nuvlabox
                             (utils/get-query-params full-text-search page elements-per-page
-                                                    state-selector)
+                              state-selector)
                             #(dispatch [::set-nuvlaboxes %])]
      ::fx/state-nuvlaboxes [#(dispatch [::set-state-nuvlaboxes %])]}))
 
@@ -55,15 +55,15 @@
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
                    {:header  (cond-> (str "failure getting nuvlaboxes")
-                                     status (str " (" status ")"))
+                               status (str " (" status ")"))
                     :content message
                     :type    :error})])
       (cond->
         {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-                       ::spec/loading? false)}
+               ::spec/loading? false)}
         (not-empty resources) (assoc ::fx/get-status-nuvlaboxes
-                                     [(map :id resources)
-                                      #(dispatch [::set-status-nuvlaboxes %])])))))
+                                [(map :id resources)
+                                 #(dispatch [::set-status-nuvlaboxes %])])))))
 
 
 (reg-event-db
@@ -83,7 +83,7 @@
   (fn [{db :db} [_ state-selector]]
     (dispatch [::get-nuvlaboxes])
     {:db (assoc db ::spec/state-selector state-selector
-                   ::spec/page 1)}))
+           ::spec/page 1)}))
 
 
 (reg-event-db
@@ -119,9 +119,9 @@
      ::cimi-api-fx/search [:infrastructure-service
                            {:filter "subtype='vpn' and vpn-scope='nuvlabox'"
                             :select "id, name, description"
-                            :order  "release-date:desc"
                             :last   10000}
                            #(dispatch [::set-vpn-infra %])]}))
+
 
 (reg-event-db
   ::set-nuvlabox-releases
@@ -133,6 +133,7 @@
   (fn [{:keys [db]} _]
     {:db                  (assoc db ::spec/nuvlabox-releases nil)
      ::cimi-api-fx/search [:nuvlabox-release
-                           {:select "release"
-                            :last   30}
+                           {:select "release, pre-release, release-notes, url, compose-files "
+                            :orderby  "release-date:desc"
+                            :last   10000}
                            #(dispatch [::set-nuvlabox-releases %])]}))

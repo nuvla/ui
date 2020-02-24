@@ -710,6 +710,7 @@
             [ui/Dropdown
              {:name          "private registries"
               :multiple      multiple?
+              :clearable     (not multiple?)
               :selection     true
               :default-value (if multiple? @registries (first @registries))
               :options       @registries-options
@@ -718,7 +719,10 @@
               :on-change     (ui-callback/value
                                #(do
                                   (reset! local-validate? true)
-                                  (dispatch [::events/private-registries (if multiple? % [%])])
+                                  (dispatch [::events/private-registries
+                                             (if multiple?
+                                               %
+                                               (if (str/blank? %) [] [%]))])
                                   (dispatch [::main-events/changes-protection? true])
                                   (dispatch [::events/validate-form])))}]
             [:span (str/join ", " @registries)])]]))))

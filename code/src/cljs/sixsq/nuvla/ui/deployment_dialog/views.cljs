@@ -9,6 +9,7 @@
     [sixsq.nuvla.ui.deployment-dialog.views-env-variables :as env-variables-step]
     [sixsq.nuvla.ui.deployment-dialog.views-files :as files-step]
     [sixsq.nuvla.ui.deployment-dialog.views-infra-services :as infra-services-step]
+    [sixsq.nuvla.ui.deployment-dialog.views-registries :as registries-step]
     [sixsq.nuvla.ui.deployment-dialog.views-summary :as summary-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -21,13 +22,15 @@
         active-step              (subscribe [::subs/active-step])
         credentials-completed?   (subscribe [::subs/credentials-completed?])
         env-variables-completed? (subscribe [::subs/env-variables-completed?])
-        data-completed?          (subscribe [::subs/data-completed?])]
+        data-completed?          (subscribe [::subs/data-completed?])
+        registries-completed?    (subscribe [::subs/registries-completed?])]
     [ui/Step {:link      true
               :on-click  #(dispatch [::events/set-active-step step-id])
               :completed (case step-id
                            :data @data-completed?
                            :infra-services @credentials-completed?
                            :env-variables @env-variables-completed?
+                           :registries @registries-completed?
                            completed?)
               :active    (= step-id @active-step)}
      [ui/Icon {:name icon}]
@@ -41,6 +44,7 @@
    (case active-step
      :data [data-step/content]
      :infra-services [infra-services-step/content]
+     :registries [registries-step/content]
      :env-variables [env-variables-step/content]
      :files [files-step/content]
      :summary [summary-step/content]
@@ -74,6 +78,7 @@
   (let [tr                    (subscribe [::i18n-subs/tr])
         visible?              (subscribe [::subs/deploy-modal-visible?])
         deployment            (subscribe [::subs/deployment])
+        private-registries    (subscribe [::subs/private-registries])
         ready?                (subscribe [::subs/ready?])
         launch-disabled?      (subscribe [::subs/launch-disabled?])
         active-step           (subscribe [::subs/active-step])
@@ -88,6 +93,7 @@
 
             steps          [(when show-data? :data)
                             :infra-services
+                            (when (some? @private-registries) :registries)
                             :env-variables
                             (when (= module-subtype "application") :files)
                             :summary]

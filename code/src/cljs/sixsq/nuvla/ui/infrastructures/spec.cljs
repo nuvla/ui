@@ -58,6 +58,12 @@
                                :opt-un [::parent]))
 
 
+(s/def ::registry-service (s/keys :req-un [::name
+                                           ::description
+                                           ::endpoint]
+                                  :opt-un [::parent]))
+
+
 ; MinIO
 
 (s/def ::minio-service (s/keys :req-un [::name

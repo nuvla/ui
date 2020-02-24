@@ -3,9 +3,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
-    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]))
 
 
 (reg-sub
@@ -134,6 +132,61 @@
 
 
 (reg-sub
+  ::infra-registries
+  (fn [db]
+    (::spec/infra-registries db)))
+
+
+(reg-sub
+  ::infra-registries-by-ids
+  :<- [::infra-registries]
+  (fn [infra-registries]
+    (->> infra-registries
+         (map (juxt :id identity))
+         (into {}))))
+
+
+(reg-sub
+  ::infra-registry
+  :<- [::infra-registries-by-ids]
+  (fn [infra-registries-by-ids [_ id]]
+    (get infra-registries-by-ids id)))
+
+
+(reg-sub
+  ::infra-registries-loading?
+  (fn [db]
+    (::spec/infra-registries-loading? db)))
+
+
+(reg-sub
+  ::infra-registries-creds
+  (fn [db]
+    (::spec/infra-registries-creds db)))
+
+(reg-sub
+  ::infra-registries-creds-grouped-by-parent
+  :<- [::infra-registries-creds]
+  (fn [infra-registries-creds]
+    (group-by :parent infra-registries-creds)))
+
+
+(reg-sub
+  ::infra-registries-creds-by-parent-options
+  :<- [::infra-registries-creds-grouped-by-parent]
+  (fn [infra-registries-creds-grouped-by-parent [_ parent-id]]
+    (->> (get infra-registries-creds-grouped-by-parent parent-id [])
+        (map (fn [{:keys [id name]}]
+               {:key id, :text (or name id), :value id})))))
+
+
+(reg-sub
+  ::infra-registries-creds-loading?
+  (fn [db]
+    (::spec/infra-registries-creds-loading? db)))
+
+
+(reg-sub
   ::active-step
   (fn [db]
     (::spec/active-step db)))
@@ -190,10 +243,42 @@
 
 
 (reg-sub
+  ::registries-completed?
+  :<- [::private-registries]
+  :<- [::registries-credentials]
+  (fn [[private-registries registries-credentials]]
+    (or (nil? private-registries)
+        (and
+          (not (empty? private-registries))
+          (some? registries-credentials)
+          (every? string? registries-credentials)))))
+
+
+(reg-sub
   ::env-variables
   :<- [::module-content]
   (fn [module-content]
     (->> module-content :environmental-variables)))
+
+
+(reg-sub
+  ::private-registries
+  :<- [::module-content]
+  (fn [module-content]
+    (->> module-content :private-registries)))
+
+
+(reg-sub
+  ::registries-credentials
+  (fn [db]
+    (-> db ::spec/deployment :registries-credentials)))
+
+
+(reg-sub
+  ::registries-credentials-by-index
+  :<- [::registries-credentials]
+  (fn [registries-credentials [_ index]]
+    (get registries-credentials index)))
 
 
 (reg-sub
@@ -255,9 +340,12 @@
   :<- [::data-step-active?]
   :<- [::credentials-completed?]
   :<- [::env-variables-completed?]
+  :<- [::registries-completed?]
   (fn [[deployment data-completed? data-step-active?
-        credentials-completed? env-variables-completed?]]
+        credentials-completed? env-variables-completed?
+        registries-completed?]]
     (or (not deployment)
         (and (not data-completed?) data-step-active?)
         (not credentials-completed?)
-        (not env-variables-completed?))))
+        (not env-variables-completed?)
+        (not registries-completed?))))

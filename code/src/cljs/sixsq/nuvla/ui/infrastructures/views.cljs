@@ -41,7 +41,8 @@
 (def service-icons
   {:swarm      "docker"
    :s3         "/ui/images/s3.png"
-   :kubernetes "/ui/images/kubernetes.svg"})
+   :kubernetes "/ui/images/kubernetes.svg"
+   :registry   "database"})
 
 
 (defn ServiceCard
@@ -165,6 +166,37 @@
             :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]]))))
 
 
+(defn service-registry
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        service        (subscribe [::subs/infra-service])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-infra-service name-kw value])
+                         (dispatch [::events/validate-registry-service-form]))]
+    (fn []
+      (let [editable? (general-utils/editable? @service @is-new?)
+            {:keys [name description endpoint]} @service]
+        [:<>
+
+         [acl/AclButton {:default-value (:acl @service)
+                         :read-only     (not editable?)
+                         :on-change     #(dispatch [::events/update-infra-service :acl %])}]
+
+         [ui/Table style/definition
+          [ui/TableBody
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
+            :validate-form? @validate-form?]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description,
+            :on-change (partial on-change :description), :validate-form? @validate-form?]
+           [uix/TableRowField (@tr [:endpoint]), :placeholder "https://registry.hub.docker.com",
+            :default-value endpoint, :spec ::spec/endpoint, :editable? editable?, :required? true,
+            :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]]))))
+
+
 (defn service-object-store
   []
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -201,7 +233,9 @@
    "s3"         {:validation-event ::events/validate-minio-service-form
                  :modal-content    service-object-store}
    "kubernetes" {:validation-event ::events/validate-swarm-service-form
-                 :modal-content    service-swarm}})
+                 :modal-content    service-swarm}
+   "registry"   {:validation-event ::events/validate-registry-service-form
+                 :modal-content    service-registry}})
 
 
 (defn save-callback
@@ -279,7 +313,7 @@
            [ui/CardContent {:text-align :center}
             [ui/Header "Swarm"]
             [ui/Icon {:name "docker"
-                      :size :massive}]
+                      :size "massive"}]
             [ui/Header (@tr [:register])]]]
 
           [ui/Card
@@ -305,11 +339,25 @@
                          (dispatch [::events/form-valid])
                          (dispatch [::events/close-add-service-modal])
                          (dispatch [::events/open-service-modal
+                                    (assoc @service :subtype "registry") true]))}
+           [ui/CardContent {:text-align :center}
+            [ui/Header "Docker Registry"]
+            [ui/IconGroup {:size "massive"}
+             [ui/Icon {:name "docker"}]
+             [ui/Icon {:name "database", :corner "bottom right"}]]
+            [ui/Header (@tr [:register])]]]
+
+          [ui/Card
+           {:on-click #(do
+                         (dispatch [::events/set-validate-form? false])
+                         (dispatch [::events/form-valid])
+                         (dispatch [::events/close-add-service-modal])
+                         (dispatch [::events/open-service-modal
                                     (assoc @service :subtype "s3") true]))}
            [ui/CardContent {:text-align :center}
             [ui/Header "Object Store"]
-            [ui/Image {:src  "/ui/images/s3.png"
-                       :size :tiny}]
+            [ui/Image {:src   "/ui/images/s3.png"
+                       :style {:max-width 112}}]
             [ui/Header (@tr [:register])]]]]]]])))
 
 

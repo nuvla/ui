@@ -46,7 +46,9 @@
                         :options   [{:key "application", :text "Docker", :value "application"}
                                     {:key   "application_kubernetes", :text "Kubernetes",
                                      :value "application_kubernetes"}]}]
-          @module-subtype)]]]]))
+          @module-subtype)]]
+      ^{:key "summary-private-registries"}
+      [apps-views-detail/private-registries true]]]))
 
 
 (defn single-file [{:keys [id ::spec/file-name ::spec/file-content]}]

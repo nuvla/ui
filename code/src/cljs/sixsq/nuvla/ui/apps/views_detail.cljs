@@ -695,8 +695,7 @@
         registries-options (subscribe [::subs/private-registries-options])
         form-valid?        (subscribe [::subs/form-valid?])
         editable?          (subscribe [::subs/editable?])
-        local-validate?    (r/atom false)
-        label              "private registries"]
+        local-validate?    (r/atom false)]
     (dispatch [::events/get-registries-infra])
     (fn [multiple?]
       (let [validate? (or @local-validate? (not @form-valid?))]
@@ -704,12 +703,11 @@
         [ui/TableRow
          [ui/TableCell {:collapsing true
                         :style      {:padding-bottom 8}}
-          label]
+          (if multiple? "private registries" "private regitry")]
          [ui/TableCell
           (if @editable?
             [ui/Dropdown
-             {:name          "private registries"
-              :multiple      multiple?
+             {:multiple      multiple?
               :clearable     (not multiple?)
               :selection     true
               :default-value (if multiple? @registries (first @registries))

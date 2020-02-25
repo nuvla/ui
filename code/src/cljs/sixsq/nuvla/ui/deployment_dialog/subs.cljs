@@ -164,20 +164,14 @@
   (fn [db]
     (::spec/infra-registries-creds db)))
 
-(reg-sub
-  ::infra-registries-creds-grouped-by-parent
-  :<- [::infra-registries-creds]
-  (fn [infra-registries-creds]
-    (group-by :parent infra-registries-creds)))
-
 
 (reg-sub
   ::infra-registries-creds-by-parent-options
-  :<- [::infra-registries-creds-grouped-by-parent]
-  (fn [infra-registries-creds-grouped-by-parent [_ parent-id]]
-    (->> (get infra-registries-creds-grouped-by-parent parent-id [])
-        (map (fn [{:keys [id name]}]
-               {:key id, :text (or name id), :value id})))))
+  :<- [::infra-registries-creds]
+  (fn [infra-registries-creds [_ parent-id]]
+    (->> (get infra-registries-creds parent-id [])
+         (map (fn [{:keys [id name]}]
+                {:key id, :text (or name id), :value id})))))
 
 
 (reg-sub
@@ -245,40 +239,32 @@
 (reg-sub
   ::registries-completed?
   :<- [::private-registries]
-  :<- [::registries-credentials]
-  (fn [[private-registries registries-credentials]]
+  :<- [::registries-creds]
+  (fn [[private-registries registries-creds]]
     (or (nil? private-registries)
         (and
           (not (empty? private-registries))
-          (some? registries-credentials)
-          (every? string? registries-credentials)))))
+          (= (count private-registries) (->> registries-creds vals (remove nil?) count))))))
+
+
+(reg-sub
+  ::registries-creds
+  (fn [db]
+    (::spec/registries-creds db)))
 
 
 (reg-sub
   ::env-variables
   :<- [::module-content]
   (fn [module-content]
-    (->> module-content :environmental-variables)))
+    (-> module-content :environmental-variables)))
 
 
 (reg-sub
   ::private-registries
   :<- [::module-content]
   (fn [module-content]
-    (->> module-content :private-registries)))
-
-
-(reg-sub
-  ::registries-credentials
-  (fn [db]
-    (-> db ::spec/deployment :registries-credentials)))
-
-
-(reg-sub
-  ::registries-credentials-by-index
-  :<- [::registries-credentials]
-  (fn [registries-credentials [_ index]]
-    (get registries-credentials index)))
+    (-> module-content :private-registries distinct seq)))
 
 
 (reg-sub

@@ -26,6 +26,8 @@
 (s/def ::infra-registries-creds (s/nilable (s/coll-of any? :kind vector?)))
 (s/def ::infra-registries-creds-loading? boolean?)
 
+(s/def ::registries-creds any?)
+
 (s/def ::data-clouds any?)
 (s/def ::selected-cloud (s/nilable string?))
 (s/def ::cloud-filter (s/nilable string?))
@@ -57,6 +59,7 @@
                           ::infra-registries-loading?
                           ::infra-registries-creds
                           ::infra-registries-creds-loading?
+                          ::registries-creds
                           ::selected-infra-service
                           ::credentials
                           ::credentials-loading?
@@ -100,6 +103,7 @@
                ::infra-registries-loading?       false
                ::infra-registries-creds          nil
                ::infra-registries-creds-loading? false
+               ::registries-creds                {}
                ::selected-infra-service          nil
                ::selected-credential-id          nil
                ::data-clouds                     nil

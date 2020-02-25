@@ -139,11 +139,17 @@
                            #(dispatch [::set-infra-services %])]}))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-infra-registries-creds
-  (fn [db [_ {creds :resources}]]
-    (assoc db ::spec/infra-registries-creds creds
-              ::spec/infra-registries-creds-loading? false)))
+  (fn [{db :db} [_ {creds :resources}]]
+    (let [infra-registries-creds (group-by :parent creds)
+          single-cred-choices    (filter #(= 1 (count (second %))) infra-registries-creds)]
+      (cond-> {:db (assoc db ::spec/infra-registries-creds infra-registries-creds
+                             ::spec/infra-registries-creds-loading? false)}
+              (seq single-cred-choices) (assoc :dispatch-n
+                                               (mapv (fn [[infra-id [{cred-id :id}]]]
+                                                       [::set-credential-registry infra-id cred-id])
+                                                     single-cred-choices))))))
 
 
 (reg-event-fx
@@ -157,7 +163,7 @@
                            {:filter (general-utils/join-and
                                       "subtype='infrastructure-service-registry'"
                                       (apply general-utils/join-or
-                                             (map #(str "parent='" (:id %) "'") infra-registries))),
+                                             (map #(str "parent='" (:id %) "'") infra-registries)))
                             :select "id, parent, name, description"
                             :order  "name:asc,id:asc"}
                            #(dispatch [::set-infra-registries-creds %])]}))
@@ -180,13 +186,13 @@
 
 (reg-event-db
   ::set-credential-registry
-  (fn [{:keys [::spec/deployment] :as db} [_ index credential-id]]
-    (let [private-registries   (get-in deployment [:module :content :private-registries])
-          old-registries-creds (get deployment :registries-credentials
-                                    (vec (take (count private-registries) (repeat nil))))
-          registries-creds     (assoc old-registries-creds index credential-id)
-          update-deployment    (assoc deployment :registries-credentials registries-creds)]
-      (assoc db ::spec/deployment update-deployment))))
+  (fn [{:keys [::spec/registries-creds
+               ::spec/deployment] :as db} [_ infra-id cred-id]]
+    (let [update-registries-creds (assoc registries-creds infra-id cred-id)
+          registries-credentials  (->> update-registries-creds vals (remove nil?))]
+      (assoc db ::spec/registries-creds update-registries-creds
+                ::spec/deployment (assoc deployment
+                                    :registries-credentials registries-credentials)))))
 
 
 (reg-event-fx

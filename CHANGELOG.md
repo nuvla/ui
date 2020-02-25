@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+ - Egde - Automatic NuvlaBox release selection and peripheral correlation
+ - Edge - Dynamic compose file generation upon NuvlaBox creation
+ - Edge - Installation guides upon NuvlaBox creation
+
 ### Changed
 
  - Credentials - Bring back S3

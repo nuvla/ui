@@ -111,6 +111,7 @@
               (when state-selector (state-filter state-selector))
               (general-utils/fulltext-query-string full-text-search))})
 
+
 (defn prepare-compose-files
   [nuvlabox-release selected-peripherals nuvlabox-id]
   (let [nuvlabox-file-scopes  (group-by :scope (:compose-files nuvlabox-release))
@@ -120,3 +121,8 @@
                            :file (str/replace (:file (into (sorted-map) (get nuvlabox-file-scopes peripheral)))
                                    #"\$\{NUVLABOX_UUID\}"
                                    nuvlabox-id)})))))
+
+
+(defn get-major-version
+  [full-version]
+  (-> (str/split full-version #"\.") first))

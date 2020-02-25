@@ -100,16 +100,13 @@
         nuvlabox-release      (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals  (:nb-assets nuvlabox-release-data)
         download-files        (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals nuvlabox-id)
+        execute-command       (str "docker-compose -f " (str/join " -f " (map :name download-files) ) " up -d")
         ]
 
     [:<>
      [ui/ModalHeader
       [ui/Icon {:name "box"}] (str nuvlabox-name-or-id " created")]
-     [:span (do
-              (cl-format nil "~s" download-files)
 
-              ;(cl-format nil "~s" download-files)
-              )]
      [ui/ModalContent
       [ui/CardGroup {:centered true}
        [ui/Card
@@ -123,17 +120,43 @@
                      :icon     "clipboard"
                      :content  (@tr [:copy-nuvlabox-id])}]]]]]
 
-     [ui/Divider]
+     [ui/Divider {:horizontal true}
+      [ui/Header "Quick Installation"]]
 
-     [ui/Container (for [file download-files]
-                     [:a {:href       (str "data:text/plain;charset=utf-8," (js/encodeURIComponent (:file file)))
-                          :target     "_blank"
-                          :style      {:margin "1em"}
-                          :download   (:name file)
-                          } (:name file)]
+     [ui/Segment {:text-align  :center
+                  :raised      true}
+      [ui/Label {:circular true
+                 :color "green"} "1"]
+      [:h5 {:style {:margin "0.5em 0 1em 0"}}
+       "Download the compose file(s)"]
+      [ui/Container
+       (for [file download-files]
+         [:a {:href       (str "data:text/plain;charset=utf-8," (js/encodeURIComponent (:file file)))
+              :target     "_blank"
+              :style      {:margin "1em"}
+              :download   (:name file)
+              :key        (:name file)
+              } (:name file)])]]
 
-                     )]
+     [ui/Segment {:text-align :center
+                  :raised      true}
+      [ui/Label {:circular true
+                 :color "green"} "2"]
+      [:h5 {:style {:margin "0.5em 0 1em 0"}}
+       "Execute "
+       [ui/CopyToClipboard {:text execute-command}
+        [:a {:href "#"
+             :style {:font-size     "0.9em"
+                     :color         "grey"
+                     :font-style    "italic"
+                     :font-weight   "lighter"}} "(click to copy)"]]]
+      [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]
 
+     [ui/Container {:text-align :center
+                    :style      {:margin "0.2em"}}
+      [:span "Full documentation at "
+       [:a {:href "https://docs.nuvla.io/docs/nuvlabox/nuvlabox-engine/quickstart.html"
+            :target "_blank"} "Nuvla Docs"]]]
 
      [ui/ModalActions
       [ui/Button {:on-click on-close-fn} (@tr [:close])]]]))
@@ -152,12 +175,16 @@
                                 (fn [{:keys [release]}] {:key release, :text release, :value release})
                                 @nb-releases)
         nb-releases-by-rel    (group-by :release @nb-releases)
-        default-data   {:owner            @user-id
-                        :refresh-interval 30}
-        creation-data  (r/atom default-data)
-        nuvlabox-release-data  (r/atom {:nb-rel           (-> @nb-releases first :release)
-                                        :nb-selected      (-> @nb-releases first)
-                                        :nb-assets        #{""}})
+        default-data          {:owner            @user-id
+                               :refresh-interval 30}
+        creation-data         (r/atom default-data)
+        nuvlabox-release-data (r/atom {:nb-rel       (-> @nb-releases
+                                                       first
+                                                       :release)
+                                       :nb-selected  (-> @nb-releases
+                                                       first)
+                                       :nb-assets    (set (map first (group-by :scope (:compose-files (-> @nb-releases
+                                                                                                        first)))))})
         on-close-fn    #(do
                           (dispatch [::events/set-created-nuvlabox-id nil])
                           (dispatch [::events/open-modal nil])
@@ -207,7 +234,7 @@
                                 :on-click #(swap! active? not)}]
             [ui/AccordionContent {:active @active?}
              [ui/Segment
-              [ui/HeaderSubheader "Version"]
+              [:h3 {:style {:font-variant "small-caps"}} "version"]
               [ui/Dropdown {:selection   true
                             :placeholder (:nb-rel @nuvlabox-release-data)
                             :value       (:nb-rel @nuvlabox-release-data)
@@ -215,7 +242,10 @@
                             :on-change   (ui-callback/value
                                            (fn [value]
                                              (swap! nuvlabox-release-data assoc :nb-rel value)
-                                             (swap! nuvlabox-release-data assoc :nb-selected (into (sorted-map) (get nb-releases-by-rel value)))))}]
+                                             (swap! creation-data assoc :version (general-utils/str->int (utils/get-major-version value)))
+                                             (swap! nuvlabox-release-data assoc :nb-selected (into (sorted-map) (get nb-releases-by-rel value)))
+                                             (swap! nuvlabox-release-data assoc :nb-assets (set (map first (group-by :scope (:compose-files (:nb-selected @nuvlabox-release-data))))))
+                                             ))}]
               [:a {:href (:url (:nb-selected @nuvlabox-release-data))
                    :target   "_blank"
                    :style {:margin "1em"}
@@ -228,16 +258,23 @@
                   :hide-on-scroll true}]
                 )
               [ui/Container
+               (if (> (count (:nb-assets @nuvlabox-release-data)) 1)
+                 [ui/Popup
+                  {:trigger        (r/as-element [:span "Additional modules: "])
+                   :content        "This release lets you choose optional modules for automatic peripheral discovery"
+                   :on             "hover"
+                   :hide-on-scroll true}])
                (for [file (:compose-files (:nb-selected @nuvlabox-release-data))]
                  (if (and (not= (:scope file) "") (not= (:scope file) "core"))
-                   (do
-                     [ui/Checkbox {:key (:scope file)
-                                   :label (:scope file)
-                                   :style {:margin "1em"}
-                                   :on-change     (ui-callback/checked (fn [checked]
-                                                                         (if checked
-                                                                           (swap! nuvlabox-release-data assoc :nb-assets (conj (:nb-assets @nuvlabox-release-data) (:scope file)))
-                                                                           (swap! nuvlabox-release-data assoc :nb-assets (disj (:nb-assets @nuvlabox-release-data) (:scope file))))))}])))]]]]]
+                   [ui/Checkbox {:key       (:scope file)
+                                 :label     (:scope file)
+                                 :default-checked (contains? (:nb-assets @nuvlabox-release-data) (:scope file))
+                                 :style     {:margin "1em"}
+                                 :on-change (ui-callback/checked
+                                              (fn [checked]
+                                                (if checked
+                                                  (swap! nuvlabox-release-data assoc :nb-assets (conj (:nb-assets @nuvlabox-release-data) (:scope file)))
+                                                  (swap! nuvlabox-release-data assoc :nb-assets (disj (:nb-assets @nuvlabox-release-data) (:scope file))))))}]))]]]]]
 
           [ui/ModalActions
            [ui/Button {:positive true

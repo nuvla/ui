@@ -118,9 +118,9 @@
         compose-files         []]
     (for [peripheral selected-peripherals]
       (into (sorted-map) (conj compose-files {:name (:name (into (sorted-map) (get nuvlabox-file-scopes peripheral)))
-                           :file (str/replace (:file (into (sorted-map) (get nuvlabox-file-scopes peripheral)))
-                                   #"\$\{NUVLABOX_UUID\}"
-                                   nuvlabox-id)})))))
+                                              :file (str/replace (:file (into (sorted-map) (get nuvlabox-file-scopes peripheral)))
+                                                      #"\$\{NUVLABOX_UUID\}"
+                                                      nuvlabox-id)})))))
 
 
 (defn get-major-version

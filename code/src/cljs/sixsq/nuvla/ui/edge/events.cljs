@@ -30,7 +30,7 @@
   ::set-full-text-search
   (fn [{{:keys [::spec/elements-per-page] :as db} :db} [_ full-text-search]]
     {:db       (assoc db ::spec/full-text-search full-text-search
-                 ::spec/page 1)
+                         ::spec/page 1)
      :dispatch [::refresh]}))
 
 
@@ -60,10 +60,10 @@
                     :type    :error})])
       (cond->
         {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-               ::spec/loading? false)}
+                       ::spec/loading? false)}
         (not-empty resources) (assoc ::fx/get-status-nuvlaboxes
-                                [(map :id resources)
-                                 #(dispatch [::set-status-nuvlaboxes %])])))))
+                                     [(map :id resources)
+                                      #(dispatch [::set-status-nuvlaboxes %])])))))
 
 
 (reg-event-db
@@ -83,7 +83,7 @@
   (fn [{db :db} [_ state-selector]]
     (dispatch [::get-nuvlaboxes])
     {:db (assoc db ::spec/state-selector state-selector
-           ::spec/page 1)}))
+                   ::spec/page 1)}))
 
 
 (reg-event-db

@@ -4,6 +4,7 @@
 
 ### Changed
 
+ - DEPENDENCIES - update dependencies
  - Deployment modal - support private registries
  - Module component -  Support private registries
  - Module app - Support private registries

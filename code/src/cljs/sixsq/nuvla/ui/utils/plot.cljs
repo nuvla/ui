@@ -21,7 +21,7 @@
 
 ;(def Bar (reagent/adapt-react-class chartjs2/Bar))
 
-;(def Doughnut (reagent/adapt-react-class chartjs2/Doughnut))
+(def Doughnut (reagent/adapt-react-class chartjs2/Doughnut))
 
 (def Pie (reagent/adapt-react-class chartjs2/Pie))
 

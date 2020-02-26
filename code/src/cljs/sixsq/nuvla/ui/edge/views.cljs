@@ -200,8 +200,7 @@
                                                  (remove (fn [[_ v]] (str/blank? v)))
                                                  (into {}))])
                                  (reset! creation-data default-data))]
-    (dispatch [::events/get-vpn-infra])
-    (dispatch [::events/get-nuvlabox-releases])
+    (js/console.error "CRIS")
     (fn []
       (when (= (count @vpn-infra-opts) 1)
         (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
@@ -309,6 +308,14 @@
             (@tr [:create])]]])])))
 
 
+(defn AddModalWrapper
+  []
+  (let [nb-release  (subscribe [::subs/nuvlabox-releases])]
+      ^{:key (count @nb-release)}
+      (js/console.error (count @nb-release))
+      [AddModal]
+      ))
+
 (defn NuvlaboxRow
   [{:keys [id state name] :as nuvlabox}]
   (let [status   (subscribe [::subs/status-nuvlabox id])
@@ -408,9 +415,11 @@
                     :map [NuvlaboxMap])
                   (when-not (= @view-type :map)
                     [Pagination])
-                  [AddModal]]
+                  [AddModalWrapper]]
         children (case n
                    1 root
                    2 [edge-detail/EdgeDetails uuid]
                    root)]
+    (dispatch [::events/get-vpn-infra])
+    (dispatch [::events/get-nuvlabox-releases])
     [ui/Segment style/basic children]))

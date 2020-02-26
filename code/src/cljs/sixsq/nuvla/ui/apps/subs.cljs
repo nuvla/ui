@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.apps.subs
   (:require
+    [clojure.set :as set]
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
@@ -83,6 +84,27 @@
   ::output-parameters
   (fn [db]
     (get-in db [::spec/module-common ::spec/output-parameters])))
+
+
+(reg-sub
+  ::private-registries
+  (fn [db]
+    (get-in db [::spec/module-common ::spec/private-registries])))
+
+
+(reg-sub
+  ::private-registries-options
+  (fn [db]
+    (let [registries-infra        (::spec/registries-infra db)
+          private-registries-set  (-> db
+                                      (get-in [::spec/module-common ::spec/private-registries])
+                                      set)
+          registries-infra-set    (set (map :id registries-infra))
+          not-existing-registries (set/difference private-registries-set registries-infra-set)]
+      (map (fn [{:keys [id name]}]
+             {:key id, :value id, :text (or name id)})
+           (concat registries-infra
+                   (map (fn [id] {:id id}) not-existing-registries))))))
 
 
 (reg-sub

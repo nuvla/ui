@@ -7,6 +7,7 @@
 (def dictionary
   {:en {:lang                                      "English"
 
+        :registries                                "Registries"
         :about                                     "about"
         :about-subtitle                            "This software is brought to you"
         :accept                                    "Accept "
@@ -68,6 +69,8 @@
         :create-an                                 "Create an "
         :created                                   "created"
         :created-from-module                       "Created from module: "
+        :credential                                "credential"
+        :select-credential                         "select a credential"
         :credential-cloud-section                  "Cloud Services"
         :credential-delete-warning                 "I understand that deleting this credential is permanent and cannot be undone. This action might affect services started or created with this credential."
         :credential-infra-service-section          "Infrastructure Services"
@@ -332,7 +335,7 @@
         :users                                     "users"
         :validation-email-success-msg              "A validation message has been sent to your email account."
         :validation-error                          "Validation error!"
-        :validation-error-message                  "The form in invalid. Please review the fields in red."
+        :validation-error-message                  "The form is invalid. Please review the fields in red."
         :value                                     "value"
         :version-number                            "Version number"
         :view                                      "view"
@@ -415,6 +418,7 @@
         :create-an                       "Créer un "
         :created                         "créé"
         :created-from-module             "Créé à partir du module: "
+        :select-credential               "sélectionnez une information d'identification"
         :credentials                     "informations d'identification"
         :current-password                "mot de passe actuel"
         :current-user                    "utilisateur actuel"

@@ -26,6 +26,18 @@
 
 
 (reg-event-db
+  ::validate-registry-service-form
+  (fn [db [_]]
+    (let [form-spec      ::spec/registry-service
+          service        (get db ::spec/infra-service)
+          validate-form? (get db ::spec/validate-form?)
+          valid?         (if validate-form?
+                           (if (nil? form-spec) true (s/valid? form-spec service)) true)]
+      (s/explain form-spec service)
+      (assoc db ::spec/form-valid? valid?))))
+
+
+(reg-event-db
   ::validate-minio-service-form
   (fn [db [_]]
     (let [form-spec      ::spec/minio-service

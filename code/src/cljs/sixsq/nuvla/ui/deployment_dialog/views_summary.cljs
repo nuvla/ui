@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.deployment-dialog.views-env-variables :as env-variables-step]
     [sixsq.nuvla.ui.deployment-dialog.views-files :as files-step]
     [sixsq.nuvla.ui.deployment-dialog.views-infra-services :as infra-services-step]
+    [sixsq.nuvla.ui.deployment-dialog.views-registries :as registries-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
@@ -34,12 +35,14 @@
 (defn content
   []
   (let [data-step-active? (subscribe [::subs/data-step-active?])
-        is-application?   (subscribe [::subs/is-application?])]
+        is-application?   (subscribe [::subs/is-application?])
+        registries-creds  (subscribe [::subs/registries-creds])]
     [ui/Table
-     [ui/TableBody
+     [ui/TableBody {:style {:cursor "pointer"}}
       [application-row]
       (when @data-step-active?
         [data-step/summary-row])
       [infra-services-step/summary-row]
       (when @is-application? [files-step/summary-row])
-      [env-variables-step/summary-row]]]))
+      [env-variables-step/summary-row]
+      (when (seq @registries-creds) [registries-step/summary-row])]]))

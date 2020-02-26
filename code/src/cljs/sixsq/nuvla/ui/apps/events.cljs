@@ -369,6 +369,30 @@
   (fn [db [_ id dt]]
     (assoc-in db [::spec/module-common ::spec/data-types id] {:id id ::spec/data-type dt})))
 
+;; Private registries
+
+(reg-event-db
+  ::private-registries
+  (fn [db [_ private-registries]]
+    (assoc-in db [::spec/module-common ::spec/private-registries] private-registries)))
+
+
+(reg-event-db
+  ::set-registries-infra
+  (fn [db [_ {resources :resources}]]
+    (assoc db ::spec/registries-infra resources)))
+
+
+(reg-event-fx
+  ::get-registries-infra
+  (fn [_ _]
+    {::cimi-api-fx/search
+     [:infrastructure-service
+      {:filter "subtype='registry'"
+       :select "id, name"
+       :order  "name:asc, id:asc"
+       :last 10000} #(dispatch [::set-registries-infra %])]}))
+
 
 (reg-event-fx
   ::edit-module

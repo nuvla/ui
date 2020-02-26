@@ -75,6 +75,8 @@
 
 (s/def ::data-types (s/map-of any? (s/merge ::data-type-map)))
 
+(s/def ::private-registries (s/coll-of string?))
+
 
 (s/def ::module-common (s/keys :req [::name
                                      ::parent-path
@@ -88,7 +90,8 @@
                                      ::env-variables
                                      ::urls
                                      ::output-parameters
-                                     ::data-types]))
+                                     ::data-types
+                                     ::private-registries]))
 
 
 ;; Validation
@@ -122,6 +125,8 @@
 
 (s/def ::commit-message (s/nilable string?))
 
+(s/def ::registries-infra any?)
+
 (s/def ::db (s/keys :req [::active-input
                           ::form-spec
                           ::form-valid?
@@ -132,7 +137,8 @@
                           ::default-logo-url
                           ::logo-url-modal-visible?
                           ::save-modal-visible?
-                          ::commit-message]))
+                          ::commit-message
+                          ::registries-infra]))
 
 (def defaults {::active-input            nil
                ::form-spec               nil
@@ -145,4 +151,5 @@
                ::logo-url-modal-visible? false
                ::save-modal-visible?     false
                ::default-logo-url        "/ui/images/noimage.png"
-               ::commit-message          ""})
+               ::commit-message          ""
+               ::registries-infra        nil})

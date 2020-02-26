@@ -108,11 +108,12 @@
 (defn summary []
   (let []
     [apps-views-detail/summary
-     [
-      ^{:key "summary-docker-image"}
+     [^{:key "summary-docker-image"}
       [docker-image]
       ^{:key "summary-architectures"}
-      [architectures]]]))
+      [architectures]
+      ^{:key "summary-private-registries"}
+      [apps-views-detail/private-registries false]]]))
 
 
 (defn single-port

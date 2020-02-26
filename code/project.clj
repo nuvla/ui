@@ -75,10 +75,10 @@
 
   ;; mark all dependencies as provided to avoid having transitive
   ;; dependencies pulled in by those that depend on this
-  :dependencies [[reagent "0.9.0-rc4" :scope "provided"
+  :dependencies [[reagent "0.9.1" :scope "provided"
                   :exclusions [cljsjs/react
                                cljsjs/react-dom]]
-                 [re-frame "0.11.0-rc3" :scope "provided"]
+                 [re-frame "0.11.0" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
                  [com.taoensso/timbre "4.10.0" :scope "provided"]
@@ -91,11 +91,17 @@
 
   :profiles
   {:dev   {:dependencies [[org.clojure/clojure]
-                          [org.clojure/clojurescript]
-                          [binaryage/devtools "0.9.11" :scope "test"]]}
+                          [org.clojure/clojurescript
+                           :exclusions
+                           [com.google.javascript/closure-compiler-unshaded
+                            org.clojure/google-closure-library
+                            org.clojure/google-closure-library-third-party]]
+                          [binaryage/devtools "1.0.0" :scope "test"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.8.52"]   ;; WARNING: also in package.json
-                          [com.google.javascript/closure-compiler-unshaded "v20190819"]]}}
+   :scljs {:dependencies [[thheller/shadow-cljs "2.8.86"]   ;; WARNING: also in package.json
+                          [org.clojure/google-closure-library "0.0-20191016-6ae1f72f"]
+                          [org.clojure/google-closure-library-third-party "0.0-20191016-6ae1f72f"]
+                          [com.google.javascript/closure-compiler-unshaded "v20191027"]]}}
 
 
 

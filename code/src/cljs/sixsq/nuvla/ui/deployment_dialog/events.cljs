@@ -139,11 +139,69 @@
                            #(dispatch [::set-infra-services %])]}))
 
 
+(reg-event-fx
+  ::set-infra-registries-creds
+  (fn [{db :db} [_ {creds :resources}]]
+    (let [infra-registries-creds (group-by :parent creds)
+          single-cred-choices    (filter #(= 1 (count (second %))) infra-registries-creds)]
+      (cond-> {:db (assoc db ::spec/infra-registries-creds infra-registries-creds
+                             ::spec/infra-registries-creds-loading? false)}
+              (seq single-cred-choices) (assoc :dispatch-n
+                                               (mapv (fn [[infra-id [{cred-id :id}]]]
+                                                       [::set-credential-registry infra-id cred-id])
+                                                     single-cred-choices))))))
+
+
+(reg-event-fx
+  ::set-infra-registries
+  (fn [{:keys [db]} [_ {infra-registries :resources}]]
+    {:db                  (assoc db ::spec/infra-registries infra-registries
+                                    ::spec/infra-registries-loading? false
+                                    ::spec/infra-registries-creds nil
+                                    ::spec/infra-registries-creds-loading? true)
+     ::cimi-api-fx/search [:credential
+                           {:filter (general-utils/join-and
+                                      "subtype='infrastructure-service-registry'"
+                                      (apply general-utils/join-or
+                                             (map #(str "parent='" (:id %) "'") infra-registries)))
+                            :select "id, parent, name, description"
+                            :order  "name:asc,id:asc"}
+                           #(dispatch [::set-infra-registries-creds %])]}))
+
+
+(reg-event-fx
+  ::get-infra-registries
+  (fn [{:keys [db]} [_ registry-ids]]
+    {:db                  (assoc db ::spec/infra-registries-loading? true
+                                    ::spec/infra-registries)
+     ::cimi-api-fx/search [:infrastructure-service
+                           {:filter (general-utils/join-and
+                                      "subtype='registry'"
+                                      (apply general-utils/join-or
+                                             (map #(str "id='" % "'") registry-ids))),
+                            :select "id, name, description"
+                            :order  "name:asc,id:asc"}
+                           #(dispatch [::set-infra-registries %])]}))
+
+
 (reg-event-db
+  ::set-credential-registry
+  (fn [{:keys [::spec/registries-creds
+               ::spec/deployment] :as db} [_ infra-id cred-id]]
+    (let [update-registries-creds (assoc registries-creds infra-id cred-id)
+          registries-credentials  (->> update-registries-creds vals (remove nil?))]
+      (assoc db ::spec/registries-creds update-registries-creds
+                ::spec/deployment (assoc deployment
+                                    :registries-credentials registries-credentials)))))
+
+
+(reg-event-fx
   ::set-deployment
-  (fn [db [_ deployment]]
-    (assoc db ::spec/deployment deployment
-              ::spec/loading-deployment? false)))
+  (fn [{db :db} [_ deployment]]
+    (let [registry-ids (get-in deployment [:module :content :private-registries])]
+      (cond-> {:db (assoc db ::spec/deployment deployment
+                             ::spec/loading-deployment? false)}
+              (some? registry-ids) (assoc :dispatch [::get-infra-registries registry-ids])))))
 
 
 (reg-event-fx

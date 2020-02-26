@@ -687,3 +687,40 @@
        :label (@tr [:data-binding])
        :count (count @data-types)
        :default-open false])))
+
+
+(defn private-registries
+  [multiple?]
+  (let [registries         (subscribe [::subs/private-registries])
+        registries-options (subscribe [::subs/private-registries-options])
+        form-valid?        (subscribe [::subs/form-valid?])
+        editable?          (subscribe [::subs/editable?])
+        local-validate?    (r/atom false)]
+    (dispatch [::events/get-registries-infra])
+    (fn [multiple?]
+      (let [validate? (or @local-validate? (not @form-valid?))]
+        ^{:key @registries}
+        [ui/TableRow
+         [ui/TableCell {:collapsing true
+                        :style      {:padding-bottom 8}}
+          (if multiple? "private registries" "private regitry")]
+         [ui/TableCell
+          (if @editable?
+            [ui/Dropdown
+             {:multiple      multiple?
+              :clearable     (not multiple?)
+              :selection     true
+              :default-value (if multiple? @registries (first @registries))
+              :options       @registries-options
+              :error         (and validate?
+                                  (not (s/valid? ::spec/private-registries @registries)))
+              :on-change     (ui-callback/value
+                               #(do
+                                  (reset! local-validate? true)
+                                  (dispatch [::events/private-registries
+                                             (if multiple?
+                                               %
+                                               (if (str/blank? %) [] [%]))])
+                                  (dispatch [::main-events/changes-protection? true])
+                                  (dispatch [::events/validate-form])))}]
+            [:span (str/join ", " @registries)])]]))))

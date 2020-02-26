@@ -43,7 +43,7 @@
     {:db                   (assoc db ::spec/loading? true)
      ::cimi-api-fx/search  [:nuvlabox
                             (utils/get-query-params full-text-search page elements-per-page
-                              state-selector)
+                                                    state-selector)
                             #(dispatch [::set-nuvlaboxes %])]
      ::fx/state-nuvlaboxes [#(dispatch [::set-state-nuvlaboxes %])]}))
 
@@ -55,7 +55,7 @@
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
                    {:header  (cond-> (str "failure getting nuvlaboxes")
-                               status (str " (" status ")"))
+                                     status (str " (" status ")"))
                     :content message
                     :type    :error})])
       (cond->
@@ -133,7 +133,7 @@
   (fn [{:keys [db]} _]
     {:db                  (assoc db ::spec/nuvlabox-releases nil)
      ::cimi-api-fx/search [:nuvlabox-release
-                           {:select "release, pre-release, release-notes, url, compose-files "
-                            :orderby  "release-date:desc"
-                            :last   10000}
+                           {:select  "release, pre-release, release-notes, url, compose-files "
+                            :orderby "release-date:desc"
+                            :last    10000}
                            #(dispatch [::set-nuvlabox-releases %])]}))

@@ -46,7 +46,7 @@
 
 
 (defn ServiceCard
-  [{:keys [id name description path subtype logo-url] :as service}]
+  [{:keys [id name description path subtype logo-url swarm-enabled] :as service}]
   [ui/Card {:on-click #(dispatch [::history-events/navigate
                                   (str "infrastructures/" (general-utils/id->uuid id))])}
    (when logo-url
@@ -54,9 +54,10 @@
                 :style {:width      "auto"
                         :height     "100px"
                         :object-fit "contain"}}])
-   [ui/CardContent
-    [ui/CardHeader {:style {:word-wrap "break-word"}}
-     (let [icon-or-image (get service-icons (keyword subtype) "question circle")]
+
+   (let [icon-or-image (get service-icons (keyword subtype) "question circle")]
+     [ui/CardContent
+      [ui/CardHeader {:style {:word-wrap "break-word"}}
        (if (str/starts-with? icon-or-image "/")
          [ui/Image {:src   icon-or-image
                     :style {:overflow       "hidden"
@@ -65,10 +66,19 @@
                             :margin-right   4
                             :padding-bottom 7
                             }}]
-         [ui/Icon {:name icon-or-image}]))
-     (or name id)]
-    [ui/CardMeta {:style {:word-wrap "break-word"}} path]
-    [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]]])
+         [ui/Icon {:name icon-or-image}])
+       (or name id)]
+      [ui/CardMeta {:style {:word-wrap "break-word"}} path]
+      [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]
+      (when swarm-enabled
+        [ui/Label {:image   true
+                   :color   "blue"
+                   :style   {:left  "0"
+                             :margin "0.7em 0 0 0"}
+                   }
+         [ui/Image {:color "white"}
+           [ui/Icon {:name  icon-or-image}]]
+         "Swarm enabled"])])])
 
 
 (defn ServiceGroupCard
@@ -311,7 +321,7 @@
                                     (assoc @service :subtype "swarm") true]))}
 
            [ui/CardContent {:text-align :center}
-            [ui/Header "Swarm"]
+            [ui/Header "Docker Swarm"]
             [ui/Icon {:name "docker"
                       :size "massive"}]
             [ui/Header (@tr [:register])]]]

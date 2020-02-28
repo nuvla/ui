@@ -171,3 +171,61 @@
                                                                 additional-filter))
                             :last   10000}
                            #(dispatch [::set-infrastructure-services-available %])]}))
+
+
+(reg-event-db
+  ::set-credential-after-check
+  (fn [{:keys [::spec/credential-check-table] :as db}
+       [_ {:keys [id last-check status] :as credential}]]
+    (assoc-in db [::spec/credential-check-table id]
+              (assoc (get credential-check-table id)
+                :last-check last-check
+                :status status
+                :check-in-progress? false))))
+
+
+(reg-event-fx
+  ::set-job-check-cred
+  (fn [{db :db} [_ {:keys [id target-resource return-code status-message] :as job}]]
+    (let [job-completed? (some? return-code)]
+      (if job-completed?
+        (cond->
+          {::cimi-api-fx/get [(:href target-resource)
+                              #(dispatch [::set-credential-after-check %])]}
+          (not= return-code 0) (assoc :db (assoc-in db [::spec/credential-check-table
+                                                        (:href target-resource) :error-msg]
+                                                    status-message)))
+        {:dispatch [::set-check-cred-job-id id]}))))
+
+
+(reg-event-fx
+  ::get-job-check-cred
+  (fn [_ [_ job-id callback]]
+    {::cimi-api-fx/get [job-id callback]}))
+
+
+(reg-event-fx
+  ::set-check-cred-job-id
+  (fn [_ [_ job-id]]
+    {:dispatch-later
+     [{:ms 3000 :dispatch [::get-job-check-cred job-id #(dispatch [::set-job-check-cred %])]}]}))
+
+
+(reg-event-fx
+  ::check-credential
+  (fn [{{:keys [::spec/credential-check-table] :as db} :db}
+       [_ {:keys [id] :as credential} delta-minutes-outdated]]
+    (let [{:keys [last-check status]} (get credential-check-table id)
+          cred        (cond-> credential
+                              last-check (assoc :last-check last-check)
+                              status (assoc :status status))
+          need-check? (utils/credential-need-check? cred delta-minutes-outdated)]
+      (cond->
+        {:db (assoc-in db [::spec/credential-check-table id]
+                       {:check-in-progress? need-check?
+                        :error-msg          nil
+                        :status             (:status cred)
+                        :last-check         (:last-check cred)})}
+        need-check? (assoc ::cimi-api-fx/operation
+                           [id "check" #(dispatch [::set-check-cred-job-id (:location %)])])
+        ))))

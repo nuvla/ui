@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.credentials.subs
   (:require
-    [re-frame.core :refer [reg-sub]]
+    [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.credentials.spec :as spec]))
 
 
@@ -79,3 +79,32 @@
   ::credential-modal-visible?
   (fn [db]
     (::spec/credential-modal-visible? db)))
+
+
+(reg-sub
+  ::credential-check-table
+  (fn [db]
+    (::spec/credential-check-table db)))
+
+(reg-sub
+  ::credential-check
+  (fn [db [_ id]]
+    (get-in db [::spec/credential-check-table id])))
+
+
+(reg-sub
+  ::credential-check-loading?
+  (fn [db [_ id]]
+    (get-in db [::spec/credential-check-table id :check-in-progress?])))
+
+
+(reg-sub
+  ::credential-check-error-msg
+  (fn [db [_ id]]
+    (get-in db [::spec/credential-check-table id :error-msg])))
+
+
+(reg-sub
+  ::credential-check-status
+  (fn [db [_ id]]
+    (get-in db [::spec/credential-check-table id :status])))

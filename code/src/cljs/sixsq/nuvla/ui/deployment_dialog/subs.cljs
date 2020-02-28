@@ -2,8 +2,7 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
-    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]))
+    [sixsq.nuvla.ui.deployment-dialog.spec :as spec]))
 
 
 (reg-sub
@@ -103,14 +102,6 @@
   :<- [::selected-credential-id]
   (fn [[credentials-by-ids selected-credential]]
     (get credentials-by-ids selected-credential)))
-
-
-(reg-sub
-  ::credential-status-valid
-  (fn [[_ id] _]
-    (subscribe [::credential id]))
-  (fn [credential _]
-    (utils/credential-status-valid credential)))
 
 
 (reg-sub
@@ -281,42 +272,6 @@
   :<- [::selected-cloud]
   (fn [selected-cloud]
     (boolean selected-cloud)))
-
-
-(reg-sub
-  ::check-cred-loading?
-  (fn [db]
-    (::spec/check-cred-loading? db)))
-
-
-(reg-sub
-  ::check-cred
-  (fn [{:keys [::spec/check-cred] :as db}]
-    check-cred))
-
-
-(reg-sub
-  ::check-cred-error-msg
-  (fn [{:keys [::spec/selected-credential-id
-               ::spec/check-cred]}]
-    (when (= (get-in check-cred [:target-resource :href])
-             selected-credential-id)
-      (when-let [return-code (:return-code check-cred)]
-        (when (not= return-code 0)
-          (:status-message check-cred))))))
-
-
-(reg-sub
-  ::check-cred-is-active?
-  :<- [::selected-credential-id]
-  :<- [::check-cred-loading?]
-  :<- [::check-cred]
-  (fn [[selected-credential-id
-        check-cred-loading?
-        check-cred]]
-    (boolean
-      (and selected-credential-id
-           (or check-cred-loading? check-cred)))))
 
 
 (reg-sub

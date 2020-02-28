@@ -125,3 +125,8 @@
   "Time to UTC string"
   [moment]
   (-> moment .clone .utc .format))
+
+
+(defn parse-ago
+  [time-str locale]
+  (some-> time-str parse-iso8601 (ago locale)))

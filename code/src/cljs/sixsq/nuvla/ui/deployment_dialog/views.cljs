@@ -2,7 +2,7 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
+    [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
     [sixsq.nuvla.ui.deployment-dialog.views-data :as data-step]
@@ -51,11 +51,12 @@
      nil)])
 
 
-(defn credential-check
+(defn CredentialCheck
   []
   (let [tr        (subscribe [::i18n-subs/tr])
-        error-msg (subscribe [::subs/check-cred-error-msg])
-        loading?  (subscribe [::subs/check-cred-loading?])]
+        cred-id   (subscribe [::subs/selected-credential-id])
+        error-msg (subscribe [::creds-subs/credential-check-error-msg @cred-id])
+        loading?  (subscribe [::creds-subs/credential-check-loading? @cred-id])]
     [:span {:style {:float "left"}}
      [ui/Icon {:name    (cond
                           @error-msg "warning sign"
@@ -75,30 +76,30 @@
 
 (defn deploy-modal
   [show-data?]
-  (let [tr                    (subscribe [::i18n-subs/tr])
-        visible?              (subscribe [::subs/deploy-modal-visible?])
-        deployment            (subscribe [::subs/deployment])
-        private-registries    (subscribe [::subs/private-registries])
-        ready?                (subscribe [::subs/ready?])
-        launch-disabled?      (subscribe [::subs/launch-disabled?])
-        active-step           (subscribe [::subs/active-step])
-        step-states           (subscribe [::subs/step-states])
-        check-cred-is-active? (subscribe [::subs/check-cred-is-active?])]
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        visible?           (subscribe [::subs/deploy-modal-visible?])
+        deployment         (subscribe [::subs/deployment])
+        private-registries (subscribe [::subs/private-registries])
+        ready?             (subscribe [::subs/ready?])
+        launch-disabled?   (subscribe [::subs/launch-disabled?])
+        active-step        (subscribe [::subs/active-step])
+        step-states        (subscribe [::subs/step-states])
+        cred-id            (subscribe [::subs/selected-credential-id])]
     (fn [show-data?]
-      (let [module         (:module @deployment)
-            module-name    (:name module)
-            module-subtype (:subtype module)
-            hide-fn        #(dispatch [::events/close-deploy-modal])
-            submit-fn      #(dispatch [::events/edit-deployment])
+      (let [credential-check (subscribe [::creds-subs/credential-check @cred-id])
+            module           (:module @deployment)
+            module-name      (:name module)
+            module-subtype   (:subtype module)
+            hide-fn          #(dispatch [::events/close-deploy-modal])
+            submit-fn        #(dispatch [::events/edit-deployment])
 
-            steps          [(when show-data? :data)
-                            :infra-services
-                            (when (some? @private-registries) :registries)
-                            :env-variables
-                            (when (= module-subtype "application") :files)
-                            :summary]
-            visible-steps  (remove nil? steps)]
-
+            steps            [(when show-data? :data)
+                              :infra-services
+                              (when (some? @private-registries) :registries)
+                              :env-variables
+                              (when (= module-subtype "application") :files)
+                              :summary]
+            visible-steps    (remove nil? steps)]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   hide-fn}
@@ -128,8 +129,8 @@
          [ui/ModalActions
 
           [:div
-           (when @check-cred-is-active?
-             [credential-check])
+           (when @credential-check
+             [CredentialCheck])
            [ui/Button {:primary  true
                        :disabled @launch-disabled?
                        :on-click submit-fn}

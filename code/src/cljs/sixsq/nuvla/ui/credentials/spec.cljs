@@ -18,6 +18,8 @@
 
 (s/def ::active-input (s/nilable string?))
 
+(s/def ::credential-check-table any?)
+
 ;; Validation
 
 ; Is the form valid?
@@ -95,7 +97,8 @@
                           ::validate-form?
                           ::credential-password
                           ::error-message
-                          ::infrastructure-services-available]))
+                          ::infrastructure-services-available
+                          ::credential-check-table]))
 
 
 (def defaults {::add-credential-modal-visible?     false
@@ -109,5 +112,6 @@
                ::validate-form?                    false
                ::credential-password               nil
                ::error-message                     nil
-               ::infrastructure-services-available nil})
+               ::infrastructure-services-available nil
+               ::credential-check-table            nil})
 

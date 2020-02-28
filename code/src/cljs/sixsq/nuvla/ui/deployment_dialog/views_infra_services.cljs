@@ -1,13 +1,13 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-infra-services
   (:require
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]))
 
@@ -53,21 +53,19 @@
 (defn cred-item
   [{:keys [id name description] :as credential}]
   (let [tr                  (subscribe [::i18n-subs/tr])
-        locale              (subscribe [::i18n-subs/locale])
         selected-credential (subscribe [::subs/selected-credential])
-        cred-check          (subscribe [::creds-subs/credential-check id])
-        valid-status        (= (:status @cred-check) "VALID")
-        last-check          (:last-check @cred-check)
-        last-check-ago      (time/parse-ago last-check @locale)]
+        status              (subscribe [::creds-subs/credential-check-status id])
+        cred-valid?         (subscribe [::creds-subs/credential-check-status-valid? id])
+        last-check          (subscribe [::creds-subs/credential-check-last-check id])]
     [ui/ListItem {:active   (= id (:id @selected-credential))
                   :on-click #(dispatch [::events/set-selected-credential credential])}
      [ui/ListIcon {:vertical-align "middle"}
       [ui/IconGroup {:size "big"}
        [ui/Icon {:name "key"}]
-       (when (some? valid-status)
+       (when (some? @status)
          [ui/Icon {:corner true
-                   :name   (if valid-status "thumbs up" "thumbs down")
-                   :color  (if valid-status "green" "red")}])]]
+                   :name   (if @cred-valid? "thumbs up" "thumbs down")
+                   :color  (if @cred-valid? "green" "red")}])]]
      [ui/ListContent
       [ui/ListHeader (or name id)]
       (when description
@@ -75,8 +73,8 @@
       [ui/ListDescription
        (@tr [:last-check])
        [:span
-        (if last-check-ago
-          last-check-ago
+        (if @last-check
+          [uix/TimeAgo @last-check]
           (@tr [:not-available]))]]]]))
 
 

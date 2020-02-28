@@ -129,7 +129,7 @@
                                       "subtype='infrastructure-service-registry'"
                                       (apply general-utils/join-or
                                              (map #(str "parent='" (:id %) "'") infra-registries)))
-                            :select "id, parent, name, description"
+                            :select "id, parent, name, description, last-check, status, subtype"
                             :order  "name:asc,id:asc"}
                            #(dispatch [::set-infra-registries-creds %])]}))
 
@@ -149,15 +149,18 @@
                            #(dispatch [::set-infra-registries %])]}))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-credential-registry
-  (fn [{:keys [::spec/registries-creds
-               ::spec/deployment] :as db} [_ infra-id cred-id]]
+  (fn [{{:keys [::spec/registries-creds
+                ::spec/infra-registries-creds
+                ::spec/deployment] :as db} :db} [_ infra-id cred-id]]
     (let [update-registries-creds (assoc registries-creds infra-id cred-id)
-          registries-credentials  (->> update-registries-creds vals (remove nil?))]
-      (assoc db ::spec/registries-creds update-registries-creds
-                ::spec/deployment (assoc deployment
-                                    :registries-credentials registries-credentials)))))
+          registries-credentials  (->> update-registries-creds vals (remove nil?))
+          credential              (-> infra-registries-creds (get infra-id) first)]
+      {:db       (assoc db ::spec/registries-creds update-registries-creds
+                           ::spec/deployment (assoc deployment
+                                               :registries-credentials registries-credentials))
+       :dispatch [::creds-events/check-credential credential 5]})))
 
 
 (reg-event-fx

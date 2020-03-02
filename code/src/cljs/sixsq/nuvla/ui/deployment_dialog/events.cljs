@@ -163,13 +163,11 @@
        :dispatch [::creds-events/check-credential credential 5]})))
 
 
-(reg-event-fx
+(reg-event-db
   ::set-deployment
-  (fn [{db :db} [_ deployment]]
-    (let [registry-ids (get-in deployment [:module :content :private-registries])]
-      (cond-> {:db (assoc db ::spec/deployment deployment
-                             ::spec/loading-deployment? false)}
-              (some? registry-ids) (assoc :dispatch [::get-infra-registries registry-ids])))))
+  (fn [db [_ deployment]]
+    (assoc db ::spec/deployment deployment
+              ::spec/loading-deployment? false)))
 
 
 (reg-event-fx
@@ -182,7 +180,13 @@
                                                    "subtype='kubernetes'"
                                                    "subtype='swarm'")]
                               (dispatch [::get-infra-services filter])
-                              (dispatch [::set-deployment %]))]}))
+                              (dispatch [::set-deployment %])
+                              (when-let [registry-ids (some-> %
+                                                              :module
+                                                              :content
+                                                              :private-registries)]
+                                (dispatch [::get-infra-registries registry-ids]))
+                              )]}))
 
 
 (reg-event-fx

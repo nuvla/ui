@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.infrastructures-detail.views :as infra-detail]
@@ -16,7 +17,6 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [sixsq.nuvla.ui.utils.values :as values]
@@ -57,10 +57,10 @@
                         :object-fit "contain"}}])
 
    (let [icon-or-image (get service-icons (keyword subtype) "question circle")
-         status (cond
-                  (true? online) :online
-                  (false? online) :offline
-                  :else :unknown)]
+         status        (cond
+                         (true? online) :online
+                         (false? online) :offline
+                         :else :unknown)]
      [ui/CardContent
       [ui/CardHeader {:style {:word-wrap "break-word"}}
        [:div {:style {:float "right"}}
@@ -79,16 +79,14 @@
       [ui/CardMeta {:style {:word-wrap "break-word"}} path]
       [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]
       (when (true? swarm-enabled)
-        [ui/Label {:image   true
-                   :color   "blue"
+        [ui/Label {:image    true
+                   :color    "blue"
                    :circular true
-                   :basic   true
-                   :style   {:left  "0"
-                             :margin "0.7em 0 0 0"}
-                   }
-         [ui/Image {
-                    :bordered true}
-           [ui/Icon {:name  icon-or-image}]]
+                   :basic    true
+                   :style    {:left   "0"
+                              :margin "0.7em 0 0 0"}}
+         [ui/Image {:bordered true}
+          [ui/Icon {:name icon-or-image}]]
          "Swarm enabled"])])])
 
 

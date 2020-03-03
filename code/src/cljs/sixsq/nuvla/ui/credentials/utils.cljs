@@ -1,6 +1,8 @@
 (ns sixsq.nuvla.ui.credentials.utils
   (:require [clojure.string :as str]
-            [sixsq.nuvla.ui.credentials.spec :as spec]))
+            [sixsq.nuvla.ui.credentials.spec :as spec]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (defn db->new-swarm-credential
@@ -114,3 +116,39 @@
                    (:endpoint %) " " (:port %) " " (:protocol %)
                    "\n</connection>") infra-vpn-endpoints))
          "\n\n#verb 4\n")))
+
+
+
+(defn credential-last-check-ago
+  [{:keys [last-check] :as credential} locale]
+  (some-> last-check time/parse-iso8601 (time/ago locale)))
+
+
+(defn credential-status-valid
+  [{:keys [status] :as credential}]
+  (some-> status (= "VALID")))
+
+
+(defn credential-is-outdated?
+  [{:keys [last-check] :as credential} delta-minutes]
+  (boolean
+    (or (nil? last-check)
+        (-> last-check
+            time/parse-iso8601
+            time/delta-minutes
+            (> delta-minutes)))))
+
+
+(defn credential-can-op-check?
+  [credential]
+  (general-utils/can-operation? "check" credential))
+
+
+(defn credential-need-check?
+  [credential delta-minutes]
+  (boolean
+    (and
+      credential
+      (credential-can-op-check? credential)
+      (or (not (credential-status-valid credential))
+          (credential-is-outdated? credential delta-minutes)))))

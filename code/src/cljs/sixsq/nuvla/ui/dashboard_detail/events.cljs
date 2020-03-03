@@ -84,12 +84,11 @@
                              #(dispatch [::set-events (:resources %)])]})))
 
 
-
-(reg-event-db
+(reg-event-fx
   ::set-job-page
-  (fn [{:keys [::spec/deployment] :as db} [_ page]]
-    (dispatch [::get-jobs (:id deployment)])
-    (assoc db ::spec/job-page page)))
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ page]]
+    {:dispatch [::get-jobs (:id deployment)]
+     :db (assoc db ::spec/job-page page)}))
 
 
 (reg-event-db

@@ -4,6 +4,9 @@
 
 ### Changed
 
+ - Component - New component time-ago
+ - Deployment modal - check credential of registries
+ - Module component - fix bug in edit with private registries
  - DEPENDENCIES - update dependencies
  - Deployment modal - support private registries
  - Module component -  Support private registries

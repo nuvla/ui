@@ -11,9 +11,6 @@
 (s/def ::credentials any?)
 (s/def ::credentials-loading? boolean?)
 (s/def ::selected-credential-id any?)
-(s/def ::check-cred-loading? boolean?)
-(s/def ::job-check-cred-id (s/nilable string?))
-(s/def ::check-cred any?)
 
 
 (s/def ::infra-services (s/nilable (s/coll-of any? :kind vector?)))
@@ -63,8 +60,6 @@
                           ::selected-infra-service
                           ::credentials
                           ::credentials-loading?
-                          ::check-cred-loading?
-                          ::check-cred
                           ::selected-credential-id
                           ::data-clouds
                           ::selected-cloud
@@ -95,8 +90,6 @@
                ::deployment                      nil
                ::credentials                     nil
                ::credentials-loading?            false
-               ::check-cred-loading?             false
-               ::check-cred                      nil
                ::infra-services                  nil
                ::infra-services-loading?         false
                ::infra-registries                nil
@@ -110,7 +103,6 @@
                ::selected-cloud                  nil
                ::cloud-filter                    nil
                ::cloud-infra-services            nil
-
                ::active-step                     :data
                ::data-step-active                true
                ::step-states                     step-states})

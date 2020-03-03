@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
+    [sixsq.nuvla.ui.credentials.components :as creds-comp]
+    [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
     [sixsq.nuvla.ui.deployment-dialog.views-data :as data-step]
@@ -23,7 +23,9 @@
         credentials-completed?   (subscribe [::subs/credentials-completed?])
         env-variables-completed? (subscribe [::subs/env-variables-completed?])
         data-completed?          (subscribe [::subs/data-completed?])
-        registries-completed?    (subscribe [::subs/registries-completed?])]
+        registries-completed?    (subscribe [::subs/registries-completed?])
+        cred-id                  (subscribe [::subs/selected-credential-id])
+        infra-registries-creds   (subscribe [::subs/infra-registries-creds])]
     [ui/Step {:link      true
               :on-click  #(dispatch [::events/set-active-step step-id])
               :completed (case step-id
@@ -35,7 +37,29 @@
               :active    (= step-id @active-step)}
      [ui/Icon {:name icon}]
      [ui/StepContent
-      [ui/StepTitle (@tr [step-id])]]]))
+      [ui/StepTitle (@tr [step-id]) " "
+       (case step-id
+         :infra-services
+         (when @credentials-completed?
+           [creds-comp/CredentialCheckPopup @cred-id])
+         :registries
+         (when @registries-completed?
+           (let [registries-creds (map first (vals @infra-registries-creds))
+                 focused-cred-reg (or
+                                    (some
+                                      (fn [{cred-reg-id :id}]
+                                        (when (or
+                                                @(subscribe
+                                                  [::creds-subs/credential-check-loading?
+                                                   cred-reg-id])
+                                                @(subscribe
+                                                   [::creds-subs/credential-check-status-invalid?
+                                                    cred-reg-id]))
+                                          cred-reg-id)) registries-creds)
+                                    (:id (first registries-creds)))]
+
+             [creds-comp/CredentialCheckPopup focused-cred-reg]))
+         nil)]]]))
 
 
 (defn step-content
@@ -51,39 +75,16 @@
      nil)])
 
 
-(defn credential-check
-  []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        error-msg (subscribe [::subs/check-cred-error-msg])
-        loading?  (subscribe [::subs/check-cred-loading?])]
-    [:span {:style {:float "left"}}
-     [ui/Icon {:name    (cond
-                          @error-msg "warning sign"
-                          @loading? "circle notched"
-                          :else "world")
-               :color   (cond
-                          @error-msg "yellow"
-                          @loading? "black"
-                          :else "green")
-               :loading @loading?
-               :size    "big"}]
-     (cond
-       @error-msg (str/capitalize (or @error-msg ""))
-       @loading? (@tr [:connectivity-check-in-progress])
-       :else (@tr [:all-good]))]))
-
-
 (defn deploy-modal
   [show-data?]
-  (let [tr                    (subscribe [::i18n-subs/tr])
-        visible?              (subscribe [::subs/deploy-modal-visible?])
-        deployment            (subscribe [::subs/deployment])
-        private-registries    (subscribe [::subs/private-registries])
-        ready?                (subscribe [::subs/ready?])
-        launch-disabled?      (subscribe [::subs/launch-disabled?])
-        active-step           (subscribe [::subs/active-step])
-        step-states           (subscribe [::subs/step-states])
-        check-cred-is-active? (subscribe [::subs/check-cred-is-active?])]
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        visible?           (subscribe [::subs/deploy-modal-visible?])
+        deployment         (subscribe [::subs/deployment])
+        private-registries (subscribe [::subs/private-registries])
+        ready?             (subscribe [::subs/ready?])
+        launch-disabled?   (subscribe [::subs/launch-disabled?])
+        active-step        (subscribe [::subs/active-step])
+        step-states        (subscribe [::subs/step-states])]
     (fn [show-data?]
       (let [module         (:module @deployment)
             module-name    (:name module)
@@ -98,7 +99,6 @@
                             (when (= module-subtype "application") :files)
                             :summary]
             visible-steps  (remove nil? steps)]
-
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   hide-fn}
@@ -127,12 +127,9 @@
 
          [ui/ModalActions
 
-          [:div
-           (when @check-cred-is-active?
-             [credential-check])
-           [ui/Button {:primary  true
-                       :disabled @launch-disabled?
-                       :on-click submit-fn}
-            [ui/Icon {:name     "rocket"
-                      :disabled @launch-disabled?}]
-            (@tr [:launch])]]]]))))
+          [ui/Button {:primary  true
+                      :disabled @launch-disabled?
+                      :on-click submit-fn}
+           [ui/Icon {:name     "rocket"
+                     :disabled @launch-disabled?}]
+           (@tr [:launch])]]]))))

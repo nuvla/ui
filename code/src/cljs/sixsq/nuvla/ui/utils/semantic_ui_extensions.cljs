@@ -9,6 +9,7 @@
     [sixsq.nuvla.ui.utils.form-fields :as form-fields]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
@@ -263,3 +264,14 @@
                  :disabled (not @confirmed?)
                  :active   true
                  :on-click #(on-confirm)}]]])))
+
+
+(defn TimeAgo
+  [time-str]
+  (let [locale        (subscribe [::i18n-subs/locale])
+        fn-update-ago #(time/parse-ago % @locale)
+        refresh       (r/atom 0)]
+    (fn [time-str]
+      (js/setTimeout #(swap! refresh inc) 5000)
+      ^{:key (str time-str @refresh)}
+      [:span (fn-update-ago time-str)])))

@@ -2,6 +2,7 @@
   (:require
     [re-frame.core :refer [dispatch inject-cofx reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [sixsq.nuvla.ui.credentials.events :as creds-events]
     [sixsq.nuvla.ui.data.spec :as data-spec]
     [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
     [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
@@ -59,47 +60,13 @@
 
 
 (reg-event-fx
-  ::set-job-check-cred
-  (fn [{{:keys [::spec/job-check-cred-id
-                ::spec/selected-infra-service]
-         :as   db} :db} [_ {:keys [id return-code] :as resource}]]
-    (when (= job-check-cred-id id)
-      (cond-> {:db (cond-> (assoc db ::spec/check-cred resource)
-                           return-code (assoc ::spec/job-check-cred-id nil
-                                              ::spec/check-cred-loading? false))}
-              return-code (assoc :dispatch [::refresh-credentials])
-              (nil? return-code) (assoc :dispatch-later
-                                        [{:ms 3000 :dispatch [::get-job-check-cred]}])))))
-
-
-(reg-event-fx
-  ::get-job-check-cred
-  (fn [{{:keys [::spec/job-check-cred-id]} :db} _]
-    {::cimi-api-fx/get [job-check-cred-id #(dispatch [::set-job-check-cred %])]}))
-
-
-(reg-event-fx
-  ::set-check-cred-job-id
-  (fn [{:keys [db]} [_ job-id]]
-    {:db             (assoc db ::spec/job-check-cred-id job-id)
-     :dispatch-later [{:ms 3000 :dispatch [::get-job-check-cred]}]}))
-
-
-(reg-event-fx
   ::set-selected-credential
   (fn [{{:keys [::spec/deployment
                 ::spec/data-step-active?] :as db} :db} [_ {:keys [id] :as credential}]]
-    (let [check-cred? (utils/credential-need-check? credential)]
-      (cond-> {:db (assoc db ::spec/selected-credential-id id
-                             ::spec/deployment (assoc deployment :parent id)
-                             ::spec/check-cred-loading? check-cred?
-                             ::spec/check-cred nil)}
-
-              data-step-active? (assoc :dispatch [::get-data-records-for-cred])
-              check-cred? (assoc ::cimi-api-fx/operation
-                                 [id
-                                  "check"
-                                  #(dispatch [::set-check-cred-job-id (:location %)])])))))
+    {:db         (assoc db ::spec/selected-credential-id id
+                           ::spec/deployment (assoc deployment :parent id))
+     :dispatch-n [(when data-step-active? [::get-data-records-for-cred])
+                  [::creds-events/check-credential credential 5]]}))
 
 
 (reg-event-db
@@ -111,9 +78,7 @@
 (reg-event-fx
   ::set-selected-infra-service
   (fn [{:keys [db]} [_ infra-service]]
-    {:db       (assoc db ::spec/selected-infra-service infra-service
-                         ::spec/check-cred nil
-                         ::spec/check-cred-loading? false)
+    {:db       (assoc db ::spec/selected-infra-service infra-service)
      :dispatch [::get-credentials]}))
 
 
@@ -164,7 +129,7 @@
                                       "subtype='infrastructure-service-registry'"
                                       (apply general-utils/join-or
                                              (map #(str "parent='" (:id %) "'") infra-registries)))
-                            :select "id, parent, name, description"
+                            :select "id, parent, name, description, last-check, status, subtype"
                             :order  "name:asc,id:asc"}
                            #(dispatch [::set-infra-registries-creds %])]}))
 
@@ -184,24 +149,25 @@
                            #(dispatch [::set-infra-registries %])]}))
 
 
-(reg-event-db
-  ::set-credential-registry
-  (fn [{:keys [::spec/registries-creds
-               ::spec/deployment] :as db} [_ infra-id cred-id]]
-    (let [update-registries-creds (assoc registries-creds infra-id cred-id)
-          registries-credentials  (->> update-registries-creds vals (remove nil?))]
-      (assoc db ::spec/registries-creds update-registries-creds
-                ::spec/deployment (assoc deployment
-                                    :registries-credentials registries-credentials)))))
-
-
 (reg-event-fx
+  ::set-credential-registry
+  (fn [{{:keys [::spec/registries-creds
+                ::spec/infra-registries-creds
+                ::spec/deployment] :as db} :db} [_ infra-id cred-id]]
+    (let [update-registries-creds (assoc registries-creds infra-id cred-id)
+          registries-credentials  (->> update-registries-creds vals (remove nil?))
+          credential              (-> infra-registries-creds (get infra-id) first)]
+      {:db       (assoc db ::spec/registries-creds update-registries-creds
+                           ::spec/deployment (assoc deployment
+                                               :registries-credentials registries-credentials))
+       :dispatch [::creds-events/check-credential credential 5]})))
+
+
+(reg-event-db
   ::set-deployment
-  (fn [{db :db} [_ deployment]]
-    (let [registry-ids (get-in deployment [:module :content :private-registries])]
-      (cond-> {:db (assoc db ::spec/deployment deployment
-                             ::spec/loading-deployment? false)}
-              (some? registry-ids) (assoc :dispatch [::get-infra-registries registry-ids])))))
+  (fn [db [_ deployment]]
+    (assoc db ::spec/deployment deployment
+              ::spec/loading-deployment? false)))
 
 
 (reg-event-fx
@@ -214,7 +180,13 @@
                                                    "subtype='kubernetes'"
                                                    "subtype='swarm'")]
                               (dispatch [::get-infra-services filter])
-                              (dispatch [::set-deployment %]))]}))
+                              (dispatch [::set-deployment %])
+                              (when-let [registry-ids (some-> %
+                                                              :module
+                                                              :content
+                                                              :private-registries)]
+                                (dispatch [::get-infra-registries registry-ids]))
+                              )]}))
 
 
 (reg-event-fx

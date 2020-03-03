@@ -1,23 +1,27 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-registries
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.credentials.components :as creds-comp]
+    [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn summary-row
   []
-  (let [tr            (subscribe [::i18n-subs/tr])
+  (let [tr               (subscribe [::i18n-subs/tr])
         registries-creds (subscribe [::subs/registries-creds])
-        completed?    (subscribe [::subs/registries-completed?])
+        completed?       (subscribe [::subs/registries-completed?])
 
-        description   (str "Count: " (count @registries-creds))
-        on-click-fn   #(dispatch [::events/set-active-step :registries])]
+        description      (str "Count: " (count @registries-creds))
+        on-click-fn      #(dispatch [::events/set-active-step :registries])]
 
     ^{:key "registries"}
     [ui/TableRow {:active   false
@@ -29,6 +33,7 @@
      [ui/TableCell {:collapsing true} (@tr [:registries])]
      [ui/TableCell [:div [:span description]]]]))
 
+
 (defn dropdown-creds
   [private-registry-id]
   (let [tr               (subscribe [::i18n-subs/tr])
@@ -38,14 +43,18 @@
         creds-options    (subscribe [::subs/infra-registries-creds-by-parent-options
                                      private-registry-id])
         registry-descr   (:description @registry)
-        registries-creds (subscribe [::subs/registries-creds])]
+        registries-creds (subscribe [::subs/registries-creds])
+        default-value    (get @registries-creds private-registry-id)]
     (if @registry
       [ui/FormDropdown
        (cond->
          {:required      true
           :loading       @loading?
           :label         (r/as-element [:label registry-name ff/nbsp
-                                        (when registry-descr (ff/help-popup registry-descr))])
+                                        (when registry-descr (ff/help-popup registry-descr))
+                                        (when default-value
+                                          [:span " "
+                                           [creds-comp/CredentialCheckPopup default-value]])])
           :selection     true
           :default-value (get @registries-creds private-registry-id)
           :placeholder   (@tr [:select-credential])

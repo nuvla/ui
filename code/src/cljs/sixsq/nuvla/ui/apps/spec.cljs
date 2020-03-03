@@ -75,7 +75,7 @@
 
 (s/def ::data-types (s/map-of any? (s/merge ::data-type-map)))
 
-(s/def ::private-registries (s/coll-of string?))
+(s/def ::private-registries (s/nilable (s/coll-of string?)))
 
 
 (s/def ::module-common (s/keys :req [::name

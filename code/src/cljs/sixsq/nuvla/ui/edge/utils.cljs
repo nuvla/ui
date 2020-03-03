@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.edge.utils
   (:require
     [cljs.pprint :refer [cl-format]]
+    [clojure.string :as str]
     [sixsq.nuvla.client.api :as api]
     [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
@@ -62,43 +63,50 @@
 (defn percentage
   [used capacity]
   (-> used
-      (/ capacity)
-      (* 100)
-      int))
+    (/ capacity)
+    (* 100)
+    int))
 
 
 (defn mb->gb
   [mb]
   (cl-format nil "~,1F" (/ mb 1000.)))
 
+
 (defn cpu-stats
-  [{:keys [capacity load]}]
-  {:label      (str "CPU ( " capacity " core(s) )")
+  [{:keys [capacity load topic raw-sample]}]
+  {:label      ["load" "free"]
+   :title      (str capacity "-core CPU (%)")
    :percentage load
-   :value      (str load "%")})
+   :value      (- 100 load)
+   :data-gateway  [topic raw-sample]})
 
 
 (defn ram-stats
-  [{:keys [capacity used] :as ram}]
+  [{:keys [capacity used topic raw-sample] :as ram}]
   (let [percent (percentage used capacity)]
-    {:label      (str "RAM ( " (mb->gb capacity) " GB )")
+    {:label     ["used" "free"]
+     :title     (str (mb->gb capacity) " GB of RAM (%)" )
      :percentage percent
-     :value      (str percent "% - " (mb->gb capacity) " GB")}))
+     :value      (- 100 percent)
+     :data-gateway  [topic raw-sample]}))
 
 
 (defn disk-stats
-  [{:keys [device capacity used]}]
+  [{:keys [device capacity used topic raw-sample]}]
   (let [percent (percentage used capacity)]
-    {:label      (str device " partition ( " (mb->gb capacity) " GB )")
+    {:label      ["used" "free"]
+     :title      (str device " partition: " capacity " GB (%)")
      :percentage percent
-     :value      (str percent "% - " (mb->gb capacity) " GB")}))
+     :value      (- 100 percent)
+     :data-gateway      [topic raw-sample]}))
 
 
 (defn load-statistics
   [{:keys [cpu ram disks]}]
   (concat [(cpu-stats cpu)
            (ram-stats ram)]
-          (map disk-stats (sort-by :device disks))))
+    (map disk-stats (sort-by :device disks))))
 
 
 (defn get-query-params
@@ -110,3 +118,18 @@
               (when state-selector (state-filter state-selector))
               (general-utils/fulltext-query-string full-text-search))})
 
+
+(defn prepare-compose-files
+  [nuvlabox-release selected-peripherals nuvlabox-id]
+  (let [nuvlabox-file-scopes (group-by :scope (:compose-files nuvlabox-release))]
+    (map
+      (fn [peripheral]
+        (let [{:keys [name file]} (first (get nuvlabox-file-scopes peripheral))]
+          {:name name
+           :file (str/replace file #"\$\{NUVLABOX_UUID\}" nuvlabox-id)}))
+      selected-peripherals)))
+
+
+(defn get-major-version
+  [full-version]
+  (-> (str/split full-version #"\.") first))

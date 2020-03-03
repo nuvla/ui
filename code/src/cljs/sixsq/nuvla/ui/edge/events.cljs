@@ -14,9 +14,9 @@
 (reg-event-fx
   ::refresh
   (fn [_ _]
-   {:dispatch [::main-events/action-interval-start {:id        refresh-id
-                                                    :frequency 10000
-                                                    :event     [::get-nuvlaboxes]}]}))
+    {:dispatch [::main-events/action-interval-start {:id        refresh-id
+                                                     :frequency 10000
+                                                     :event     [::get-nuvlaboxes]}]}))
 
 
 (reg-event-fx
@@ -121,3 +121,19 @@
                             :select "id, name, description"
                             :last   10000}
                            #(dispatch [::set-vpn-infra %])]}))
+
+
+(reg-event-db
+  ::set-nuvlabox-releases
+  (fn [db [_ {:keys [resources]}]]
+    (assoc db ::spec/nuvlabox-releases resources)))
+
+(reg-event-fx
+  ::get-nuvlabox-releases
+  (fn [{:keys [db]} _]
+    {:db                  (assoc db ::spec/nuvlabox-releases nil)
+     ::cimi-api-fx/search [:nuvlabox-release
+                           {:select  "release, pre-release, release-notes, url, compose-files "
+                            :orderby "release-date:desc"
+                            :last    10000}
+                           #(dispatch [::set-nuvlabox-releases %])]}))

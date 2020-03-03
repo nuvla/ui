@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+
+ - Egde - Automatic NuvlaBox release selection and peripheral correlation
+ - Edge - Dynamic compose file generation upon NuvlaBox creation
+ - Edge - Installation guides upon NuvlaBox creation
+
 ### Changed
 
  - Component - New component time-ago
@@ -16,6 +22,7 @@
  - Infrastructure - view infra status and if swarm mode is enabled 
  - Credentials - Bring back S3
  - Infrastructures - Bring back S3
+ - Edge detail - replace horizontal bars by gauge charts
 
 ## [2.4.10] - 2020-02-07
 

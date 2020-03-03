@@ -83,3 +83,8 @@
     (map
       (fn [{:keys [id name]}] {:key id, :text name, :value id})
       vpn-infra)))
+
+(reg-sub
+  ::nuvlabox-releases
+  (fn [db]
+    (::spec/nuvlabox-releases db)))

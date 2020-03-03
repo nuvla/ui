@@ -119,6 +119,9 @@
 (defn docker-compose-section []
   (let [tr              (subscribe [::i18n-subs/tr])
         docker-compose  (subscribe [::subs/docker-compose])
+        module-app      (subscribe [::apps-subs/module])
+        unsupp-opts     (:unsupported-options (:content @module-app))
+        compatibility   (:compatibility @module-app)
         form-valid?     (subscribe [::apps-subs/form-valid?])
         editable?       (subscribe [::apps-subs/editable?])
         module-subtype  (subscribe [::apps-subs/module-subtype])
@@ -128,8 +131,33 @@
       (let [validate? (or @local-validate? (not @form-valid?))]
         [uix/Accordion
          [:<>
-          [:div {:style {:margin-bottom "10px"}} "Env substitution"
-           [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]]
+          [ui/Grid {:stackable true
+                    :columns    2}
+           [ui/GridRow
+            [ui/GridColumn {:floated "left"}
+             [:div {:style {:margin-bottom "10px"}} "Env substitution"
+              [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]]]
+
+            [ui/GridColumn {:floated "right"
+                            :text-align "right"}
+             [:span {:style {:font-variant "small-caps"}}
+              "compatibility: "]
+             [ui/Label {:color      "blue"
+                        :horizontal true}
+              compatibility]
+             (when (> (count unsupp-opts) 0)
+               [ui/Image
+                [ui/Popup
+                 {:trigger        (r/as-element [ui/Icon {:color "yellow" :name "exclamation triangle"}])
+                  :header         "Unsupported options"
+                  :content        (str "Swarm does not support and will ignore the following options: "
+                                    (str/join "; " unsupp-opts))
+
+                  :on             "hover"
+                  :position       "top right"
+                  :wide           true
+                  :hide-on-scroll true}
+                 ]])]]]
 
           [ui/CodeMirror {:value      default-value
                           :autoCursor true

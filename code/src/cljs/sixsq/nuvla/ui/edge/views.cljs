@@ -200,7 +200,6 @@
                                                  (remove (fn [[_ v]] (str/blank? v)))
                                                  (into {}))])
                                  (reset! creation-data default-data))]
-    (js/console.error "CRIS")
     (fn []
       (when (= (count @vpn-infra-opts) 1)
         (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
@@ -312,9 +311,7 @@
   []
   (let [nb-release  (subscribe [::subs/nuvlabox-releases])]
       ^{:key (count @nb-release)}
-      (js/console.error (count @nb-release))
-      [AddModal]
-      ))
+      [AddModal]))
 
 (defn NuvlaboxRow
   [{:keys [id state name] :as nuvlabox}]

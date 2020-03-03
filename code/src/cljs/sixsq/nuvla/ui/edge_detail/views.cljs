@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.edge-detail.views
   (:require
+    [cljs.pprint :refer [cl-format pprint]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [cljs.pprint :refer [cl-format pprint]]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.edge-detail.events :as events]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]

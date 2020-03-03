@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.infrastructures-detail.views :as infra-detail]
@@ -46,7 +47,7 @@
 
 
 (defn ServiceCard
-  [{:keys [id name description path subtype logo-url] :as service}]
+  [{:keys [id name description path subtype logo-url swarm-enabled online] :as service}]
   [ui/Card {:on-click #(dispatch [::history-events/navigate
                                   (str "infrastructures/" (general-utils/id->uuid id))])}
    (when logo-url
@@ -54,9 +55,16 @@
                 :style {:width      "auto"
                         :height     "100px"
                         :object-fit "contain"}}])
-   [ui/CardContent
-    [ui/CardHeader {:style {:word-wrap "break-word"}}
-     (let [icon-or-image (get service-icons (keyword subtype) "question circle")]
+
+   (let [icon-or-image (get service-icons (keyword subtype) "question circle")
+         status        (cond
+                         (true? online) :online
+                         (false? online) :offline
+                         :else :unknown)]
+     [ui/CardContent
+      [ui/CardHeader {:style {:word-wrap "break-word"}}
+       [:div {:style {:float "right"}}
+        [edge-detail/StatusIcon status :corner "top right"]]
        (if (str/starts-with? icon-or-image "/")
          [ui/Image {:src   icon-or-image
                     :style {:overflow       "hidden"
@@ -65,10 +73,21 @@
                             :margin-right   4
                             :padding-bottom 7
                             }}]
-         [ui/Icon {:name icon-or-image}]))
-     (or name id)]
-    [ui/CardMeta {:style {:word-wrap "break-word"}} path]
-    [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]]])
+         [ui/Icon {:name icon-or-image}])
+       (or name id)]
+
+      [ui/CardMeta {:style {:word-wrap "break-word"}} path]
+      [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]
+      (when (true? swarm-enabled)
+        [ui/Label {:image    true
+                   :color    "blue"
+                   :circular true
+                   :basic    true
+                   :style    {:left   "0"
+                              :margin "0.7em 0 0 0"}}
+         [ui/Image {:bordered true}
+          [ui/Icon {:name icon-or-image}]]
+         "Swarm enabled"])])])
 
 
 (defn ServiceGroupCard
@@ -311,7 +330,7 @@
                                     (assoc @service :subtype "swarm") true]))}
 
            [ui/CardContent {:text-align :center}
-            [ui/Header "Swarm"]
+            [ui/Header "Docker Swarm"]
             [ui/Icon {:name "docker"
                       :size "massive"}]
             [ui/Header (@tr [:register])]]]

@@ -13,6 +13,7 @@
  - Module app - Support private registries
  - Credentials - Docker private registries
  - Infrastructure - Support Docker private registries
+ - Infrastructure - view infra status and if swarm mode is enabled 
  - Credentials - Bring back S3
  - Infrastructures - Bring back S3
 

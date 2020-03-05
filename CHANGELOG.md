@@ -10,6 +10,8 @@
 
 ### Changed
 
+ - Data page / Deployment modal - replace data-records map by 
+   data-records-filter
  - Component - New component time-ago
  - Deployment modal - check credential of registries
  - Module component - fix bug in edit with private registries

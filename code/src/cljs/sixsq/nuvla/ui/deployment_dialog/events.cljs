@@ -5,7 +5,6 @@
     [sixsq.nuvla.ui.credentials.events :as creds-events]
     [sixsq.nuvla.ui.data.spec :as data-spec]
     [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
-    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -32,31 +31,15 @@
 
 
 (reg-event-fx
-  ::get-data-records-for-cred
+  ::set-data-records-filter
   (fn [{{:keys [::spec/deployment
                 ::data-spec/time-period-filter
                 ::spec/cloud-filter
                 ::data-spec/content-type-filter] :as db} :db} _]
-    (let [filter        (general-utils/join-and time-period-filter
-                                                cloud-filter
-                                                content-type-filter)
-          selected-keys (map keyword (::data-spec/selected-data-set-ids db))
-          datasets-map  (select-keys (::data-spec/data-records-by-data-set db) selected-keys)
-
-          callback-data (fn [{:keys [resources] :as data-records}]
-                          (let [distinct-mounts (->> resources
-                                                     (map :mount)
-                                                     (remove nil?)
-                                                     (distinct))]
-                            (dispatch [::set-deployment
-                                       (cond->
-                                         (assoc deployment
-                                           :data-records (utils/invert-dataset-map datasets-map))
-
-                                         (seq distinct-mounts) (assoc-in
-                                                                 [:module :content :mounts]
-                                                                 distinct-mounts))])))]
-      {::cimi-api-fx/search [:data-record {:filter filter, :select "id, mount"} callback-data]})))
+    (let [filter (general-utils/join-and time-period-filter
+                                         cloud-filter
+                                         content-type-filter)]
+      {:dispatch [::set-deployment (assoc deployment :data-records-filter filter)]})))
 
 
 (reg-event-fx
@@ -65,7 +48,7 @@
                 ::spec/data-step-active?] :as db} :db} [_ {:keys [id] :as credential}]]
     {:db         (assoc db ::spec/selected-credential-id id
                            ::spec/deployment (assoc deployment :parent id))
-     :dispatch-n [(when data-step-active? [::get-data-records-for-cred])
+     :dispatch-n [(when data-step-active? [::set-data-records-filter])
                   [::creds-events/check-credential credential 5]]}))
 
 

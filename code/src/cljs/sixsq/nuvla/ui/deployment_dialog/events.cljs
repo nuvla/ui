@@ -34,11 +34,13 @@
   ::set-data-records-filter
   (fn [{{:keys [::spec/deployment
                 ::data-spec/time-period-filter
+                ::data-spec/full-text-search
                 ::spec/cloud-filter
                 ::data-spec/content-type-filter] :as db} :db} _]
     (let [filter (general-utils/join-and time-period-filter
                                          cloud-filter
-                                         content-type-filter)]
+                                         content-type-filter
+                                         full-text-search)]
       {:dispatch [::set-deployment (assoc deployment :data-records-filter filter)]})))
 
 

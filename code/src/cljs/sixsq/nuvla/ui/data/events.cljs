@@ -38,13 +38,7 @@
                 ::spec/time-period-filter] :as db} :db} _]
     (when (seq credentials)
       (let [data-sets-vals (vals data-sets)]
-        {
-         ;:db         (assoc db ::spec/data-records-filter
-         ;                     (general-utils/join-and
-         ;                       time-period-filter full-text-search
-         ;                       (apply general-utils/join-or
-         ;                              (map :data-record-filter data-sets-vals))))
-        :dispatch-n (mapv (fn [data-set]
+        {:dispatch-n (map (fn [data-set]
                             [::fetch-dataset-stats
                              (:id data-set)
                              (general-utils/join-and
@@ -114,7 +108,6 @@
           query-application  (apply general-utils/join-and (map :module-filter selected-data-sets))
           query-objects      (apply general-utils/join-or
                                     (map :data-record-filter selected-data-sets))]
-      (js/console.log query-objects)
       {:db                  (assoc db ::spec/application-select-visible? true
                                       ::spec/loading-applications? true
                                       ::spec/selected-application-id nil
@@ -149,7 +142,7 @@
 (reg-event-fx
   ::get-data-sets
   (fn [{:keys [db]} _]
-    {:db                  (assoc db ::spec/data-sets nil)
+    {:db                  (merge db spec/defaults)
      ::cimi-api-fx/search [:data-set {} #(dispatch [::set-data-sets %])]}))
 
 

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.4.11] - 2020-03-06
+
 ### Added
 
  - Egde - Automatic NuvlaBox release selection and peripheral correlation

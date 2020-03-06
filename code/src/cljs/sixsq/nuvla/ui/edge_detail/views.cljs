@@ -17,7 +17,6 @@
     [sixsq.nuvla.ui.utils.plot :as plot]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]))
 
 
@@ -234,58 +233,52 @@
 (defn Load
   [resources]
   [uix/Accordion
-   (let [load-stats (u/load-statistics resources)
+   (let [load-stats      (u/load-statistics resources)
          number-of-stats (count load-stats)]
      ; TODO: if the number-of-stats grows if should split into a new row
      [ui/Grid {:columns   number-of-stats,
                :stackable true
                :divided   true}
-
       [ui/GridRow
        (for [stat load-stats]
+         ^{:key (:title stat)}
          [ui/GridColumn
-
           [:div
            [plot/Doughnut {:height  250
-                           :data    {:labels    (:label stat)
-                                     :datasets  [{:data            [(:percentage stat), (:value stat)]
-                                                  :backgroundColor [
-                                                                    "rgb(230, 99, 100)",
-                                                                    "rgba(155, 99, 132, 0.1)",
-                                                                    "rgb(230, 99, 100)"
-                                                                    ]
-                                                  :borderColor     ["rgba(230, 99, 100,1)"]
-                                                  :borderWidth     3}]}
-                           :options {:legend   {:display true
-                                                :labels  {
-                                                          :fontColor "grey"
-                                                          }}
-                                     :title    {:display   true
-                                                :text      (:title stat)
-                                                :position  "bottom"}
+                           :data    {:labels   (:label stat)
+                                     :datasets [{:data            [(:percentage stat), (:value stat)]
+                                                 :backgroundColor ["rgb(230, 99, 100)",
+                                                                   "rgba(155, 99, 132, 0.1)",
+                                                                   "rgb(230, 99, 100)"]
+                                                 :borderColor     ["rgba(230, 99, 100,1)"]
+                                                 :borderWidth     3}]}
+                           :options {:legend              {:display true
+                                                           :labels  {:fontColor "grey"}}
+                                     :title               {:display  true
+                                                           :text     (:title stat)
+                                                           :position "bottom"}
                                      :maintainAspectRatio false
                                      :circumference       4.14
                                      :rotation            -3.64
                                      :cutoutPercentage    60}}]]
 
-
-          [ui/Container {:key         (:topic stat)
-                         :text-align  :center}
-           [ui/LabelGroup {:key   (:topic stat)
-                           :size  "tiny"}
-            [ui/Label {:color "blue"
-                       :basic true
-                       :image true}
-             "Topic: "
-             [ui/LabelDetail
-              (first (:data-gateway stat))]]
-            [ui/Label {:color "blue"
-                       :basic true
-                       :image true}
-             "Raw sample: "
-             [ui/LabelDetail
-              (last (:data-gateway stat))]]]
-           ]
+          (when (pos? (count stat))
+            [ui/Container {:key        (:topic stat)
+                          :text-align :center}
+            [ui/LabelGroup {:key  (:topic stat)
+                            :size "tiny"}
+             [ui/Label {:color "blue"
+                        :basic true
+                        :image true}
+              "Topic: "
+              [ui/LabelDetail
+               (first (:data-gateway stat))]]
+             [ui/Label {:color "blue"
+                        :basic true
+                        :image true}
+              "Raw sample: "
+              [ui/LabelDetail
+               (last (:data-gateway stat))]]]])
 
 
           ; TODO: the data-gateway stats should be in a popup instead of raw text. But fails some unknown reason,
@@ -310,7 +303,7 @@
                                            :wide           true
                                            :on             "hover"
                                            :hide-on-scroll true}]]
-   :icon  "thermometer half"])
+   :icon "thermometer half"])
 
 
 (defn StatusSection

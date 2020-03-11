@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.data.utils
   (:require
-    [clojure.pprint :refer [cl-format]]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.time :as time]))
 
 
@@ -47,8 +47,8 @@
           units ["B" "KiB" "MiB" "GiB" "TiB" "PiB" "EiB"]]
       (if (< bytes scale)
         (str bytes " B")
-        (let [exp    (int (/ (.log js/Math bytes) (.log js/Math scale)))
+        (let [exp    (int (/ (js/Math.log bytes) (js/Math.log scale)))
               prefix (get units exp)
-              v      (/ bytes (.pow js/Math scale exp))]
-          (cl-format nil "~,1F ~a" v prefix))))
+              v      (/ bytes (js/Math.pow scale exp))]
+          (str (general-utils/round-up v :n-decimal 1) prefix))))
     "..."))

@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.dashboard-detail.views
   (:require
-    [clojure.pprint :refer [cl-format]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -158,17 +157,12 @@
            (map dt-fn)))))
 
 
-(defn format-delta-time
-  [delta-time]
-  (cl-format nil "~,2F" delta-time))
-
-
 (defn event-map-to-row
   [{:keys [id content timestamp category delta-time] :as evt}]
   [ui/TableRow
    [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
    [ui/TableCell timestamp]
-   [ui/TableCell (format-delta-time delta-time)]
+   [ui/TableCell (general-utils/round-up delta-time)]
    [ui/TableCell category]
    [ui/TableCell (:state content)]])
 

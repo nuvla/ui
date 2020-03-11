@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.edge-detail.views
   (:require
-    [cljs.pprint :refer [cl-format pprint]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -264,21 +263,21 @@
 
           (when (pos? (count (:data-gateway stat)))
             [ui/Container {:key        (:topic stat)
-                          :text-align :center}
-            [ui/LabelGroup {:key  (:topic stat)
-                            :size "tiny"}
-             [ui/Label {:color "blue"
-                        :basic true
-                        :image true}
-              "Topic: "
-              [ui/LabelDetail
-               (first (:data-gateway stat))]]
-             [ui/Label {:color "blue"
-                        :basic true
-                        :image true}
-              "Raw sample: "
-              [ui/LabelDetail
-               (last (:data-gateway stat))]]]]
+                           :text-align :center}
+             [ui/LabelGroup {:key  (:topic stat)
+                             :size "tiny"}
+              [ui/Label {:color "blue"
+                         :basic true
+                         :image true}
+               "Topic: "
+               [ui/LabelDetail
+                (first (:data-gateway stat))]]
+              [ui/Label {:color "blue"
+                         :basic true
+                         :image true}
+               "Raw sample: "
+               [ui/LabelDetail
+                (last (:data-gateway stat))]]]]
             )
 
 

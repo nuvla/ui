@@ -1,9 +1,6 @@
 (ns sixsq.nuvla.ui.edge.utils
   (:require
-    [cljs.pprint :refer [cl-format]]
     [clojure.string :as str]
-    [sixsq.nuvla.client.api :as api]
-    [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (def state-new "NEW")
@@ -53,61 +50,47 @@
   (str "state='" state "'"))
 
 
-(def default-params {:first 1, :last 10000})
-
-(defn nuvlabox-status-search
-  [params]
-  (api/search @CLIENT :nuvlabox-status (general-utils/prepare-params params)))
-
-
-(defn percentage
-  [used capacity]
-  (-> used
-    (/ capacity)
-    (* 100)
-    int))
-
-
-(defn mb->gb
-  [mb]
-  (cl-format nil "~,1F" (/ mb 1000.)))
-
 
 (defn cpu-stats
   [{:keys [capacity load topic raw-sample]}]
-  (let [percent (* (float (/ load capacity)) 100)]
-    {:label      ["load" "free"]
-     :title      (str capacity "-core CPU (load %)")
-     :percentage percent
-     :value      (- 100 percent)
-     :data-gateway  (if (nil? topic) [] [topic raw-sample])}))
+  (let [percent (-> (general-utils/percentage load capacity)
+                    (general-utils/round-up))]
+    {:label        ["load" "free"]
+     :title        (str capacity "-core CPU (load %)")
+     :percentage   percent
+     :value        (- 100 percent)
+     :data-gateway (if (nil? topic) [] [topic raw-sample])}))
 
 
 (defn ram-stats
   [{:keys [capacity used topic raw-sample] :as ram}]
-  (let [percent (percentage used capacity)]
-    {:label     ["used" "free"]
-     :title     (str (mb->gb capacity) " GB of RAM (%)" )
-     :percentage percent
-     :value      (- 100 percent)
-     :data-gateway  (if (nil? topic) [] [topic raw-sample])}))
+  (let [percent         (-> (general-utils/percentage used capacity)
+                            (general-utils/round-up :n-decimal 0))
+        capacity-gbytes (-> (general-utils/mbytes->gbytes capacity)
+                            (general-utils/round-up))]
+    {:label        ["used" "free"]
+     :title        (str capacity-gbytes " GB of RAM (%)")
+     :percentage   percent
+     :value        (- 100 percent)
+     :data-gateway (if (nil? topic) [] [topic raw-sample])}))
 
 
 (defn disk-stats
   [{:keys [device capacity used topic raw-sample]}]
-  (let [percent (percentage used capacity)]
-    {:label      ["used" "free"]
-     :title      (str device " partition: " capacity " GB (%)")
-     :percentage percent
-     :value      (- 100 percent)
-     :data-gateway      (if (nil? topic) [] [topic raw-sample])}))
+  (let [percent (-> (general-utils/percentage used capacity)
+                    (general-utils/round-up :n-decimal 0))]
+    {:label        ["used" "free"]
+     :title        (str device " partition: " capacity " GB (%)")
+     :percentage   percent
+     :value        (- 100 percent)
+     :data-gateway (if (nil? topic) [] [topic raw-sample])}))
 
 
 (defn load-statistics
   [{:keys [cpu ram disks]}]
   (concat [(cpu-stats cpu)
            (ram-stats ram)]
-    (map disk-stats (sort-by :device disks))))
+          (map disk-stats (sort-by :device disks))))
 
 
 (defn get-query-params

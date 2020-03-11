@@ -5,7 +5,6 @@
   (:require
     ["papaparse" :as papa]
     [cljs.core.async :refer [<! timeout]]
-    [cljs.pprint :refer [cl-format pprint]]
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]

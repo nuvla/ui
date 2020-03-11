@@ -75,11 +75,12 @@
 
 (defn cpu-stats
   [{:keys [capacity load topic raw-sample]}]
-  {:label      ["load" "free"]
-   :title      (str capacity "-core CPU (%)")
-   :percentage load
-   :value      (- 100 load)
-   :data-gateway  [topic raw-sample]})
+  (let [percent (* (float (/ load capacity)) 100)]
+    {:label      ["load" "free"]
+     :title      (str capacity "-core CPU (load %)")
+     :percentage percent
+     :value      (- 100 percent)
+     :data-gateway  (if (nil? topic) [] [topic raw-sample])}))
 
 
 (defn ram-stats
@@ -89,7 +90,7 @@
      :title     (str (mb->gb capacity) " GB of RAM (%)" )
      :percentage percent
      :value      (- 100 percent)
-     :data-gateway  [topic raw-sample]}))
+     :data-gateway  (if (nil? topic) [] [topic raw-sample])}))
 
 
 (defn disk-stats
@@ -99,7 +100,7 @@
      :title      (str device " partition: " capacity " GB (%)")
      :percentage percent
      :value      (- 100 percent)
-     :data-gateway      [topic raw-sample]}))
+     :data-gateway      (if (nil? topic) [] [topic raw-sample])}))
 
 
 (defn load-statistics

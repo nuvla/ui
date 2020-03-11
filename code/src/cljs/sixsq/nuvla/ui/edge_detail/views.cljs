@@ -262,7 +262,7 @@
                                      :rotation            -3.64
                                      :cutoutPercentage    60}}]]
 
-          (when (pos? (count stat))
+          (when (pos? (count (:data-gateway stat)))
             [ui/Container {:key        (:topic stat)
                           :text-align :center}
             [ui/LabelGroup {:key  (:topic stat)
@@ -278,7 +278,8 @@
                         :image true}
               "Raw sample: "
               [ui/LabelDetail
-               (last (:data-gateway stat))]]]])
+               (last (:data-gateway stat))]]]]
+            )
 
 
           ; TODO: the data-gateway stats should be in a popup instead of raw text. But fails some unknown reason,

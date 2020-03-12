@@ -27,6 +27,7 @@
  - Credentials - Bring back S3
  - Infrastructures - Bring back S3
  - Edge detail - replace horizontal bars by gauge charts
+ - OCRE - updated voucher schema and CSV file header validation
 
 ## [2.4.10] - 2020-02-07
 

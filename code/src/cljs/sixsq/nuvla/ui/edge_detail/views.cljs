@@ -183,6 +183,7 @@
                                        :color   "vk"
                                        :size    "large"
                                        :circular true
+                                       :disabled @button-load?
                                        :loading  @button-load?}
                             (first actions)])}]
              ]]])]

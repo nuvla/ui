@@ -23,6 +23,19 @@
   (fn [db]
     (::spec/nuvlabox-peripherals db)))
 
+(reg-sub
+  ::nuvlabox-peripherals-ids
+  :<- [::nuvlabox-peripherals]
+  (fn [nuvlabox-peripherals]
+    (keys nuvlabox-peripherals)))
+
+
+(reg-sub
+  ::nuvlabox-peripheral
+  :<- [::nuvlabox-peripherals]
+  (fn [nuvlabox-peripherals [_ id]]
+    (get nuvlabox-peripherals id)))
+
 
 (reg-sub
   ::next-heartbeat-moment

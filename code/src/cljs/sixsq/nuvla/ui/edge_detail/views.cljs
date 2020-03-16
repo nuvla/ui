@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.edge-detail.views
   (:require
-    [cljs.pprint :refer [cl-format pprint]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -17,7 +16,6 @@
     [sixsq.nuvla.ui.utils.plot :as plot]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]))
 
 
@@ -81,81 +79,142 @@
        :on-refresh #(refresh uuid)}]]))
 
 
+(defn get-available-actions
+  [operations]
+  (filter some? (map #(nth (str/split % #"/") 2 nil) (map :href operations))))
+
+
 (defn Peripheral
-  [{p-name        :name
-    p-product     :product
-    p-created     :created
-    p-updated     :updated
-    p-descr       :description
-    p-interface   :interface
-    p-device-path :device-path
-    p-available   :available
-    p-vendor      :vendor
-    p-classes     :classes
-    p-indentifier :identifier}]
-  (let [locale (subscribe [::i18n-subs/locale])]
-    [uix/Accordion
-     [ui/Table {:basic "very"}
-      [ui/TableBody
-       (when p-product
-         [ui/TableRow
-          [ui/TableCell "Name"]
-          [ui/TableCell (str p-name " " p-product)]])
-       (when p-descr
-         [ui/TableRow
-          [ui/TableCell "Description"]
-          [ui/TableCell p-descr]])
-       [ui/TableRow
-        [ui/TableCell "Classes"]
-        [ui/TableCell (str/join ", " p-classes)]]
-       [ui/TableRow
-        [ui/TableCell "Available"]
-        [ui/TableCell
-         [ui/Icon {:name "circle", :color (if p-available "green" "red")}]
-         (if p-available "Yes" "No")]]
-       (when p-interface
-         [ui/TableRow
-          [ui/TableCell "Interface"]
-          [ui/TableCell p-interface]])
-       (when p-device-path
-         [ui/TableRow
-          [ui/TableCell "Device path"]
-          [ui/TableCell p-device-path]])
-       [ui/TableRow
-        [ui/TableCell "Identifier"]
-        [ui/TableCell p-indentifier]]
-       [ui/TableRow
-        [ui/TableCell "Vendor"]
-        [ui/TableCell p-vendor]]
-       [ui/TableRow
-        [ui/TableCell "Created"]
-        [ui/TableCell (time/ago (time/parse-iso8601 p-created) @locale)]]
-       [ui/TableRow
-        [ui/TableCell "Updated"]
-        [ui/TableCell (time/ago (time/parse-iso8601 p-updated) @locale)]]]
-      ]
-     :label (or p-name p-product)
-     :title-size :h4
-     :default-open false
-     :icon (case p-interface
-             "USB" "usb"
-             nil)]))
+  [id]
+  (let [locale       (subscribe [::i18n-subs/locale])
+        last-updated (r/atom "1970-01-01T00:00:00Z")
+        button-load? (r/atom false)
+        peripheral   (subscribe [::subs/nuvlabox-peripheral id])]
+    (fn [id]
+      (let [{p-id          :id
+             p-ops         :operations
+             p-name        :name
+             p-product     :product
+             p-created     :created
+             p-updated     :updated
+             p-descr       :description
+             p-interface   :interface
+             p-device-path :device-path
+             p-available   :available
+             p-vendor      :vendor
+             p-classes     :classes
+             p-identifier  :identifier
+             p-serial-num  :serial-number
+             p-video-dev   :video-device
+             p-data-gw-url :local-data-gateway-endpoint
+             p-data-sample :raw-data-sample} @peripheral
+            actions (get-available-actions p-ops)]
+
+        (when (> (compare p-updated @last-updated) 0)
+          (reset! button-load? false)
+          (reset! last-updated p-updated))
+        [uix/Accordion
+         [ui/Table {:basic "very"}
+          [ui/TableBody
+           (when p-product
+             [ui/TableRow
+              [ui/TableCell "Name"]
+              [ui/TableCell (str p-name " " p-product)]])
+           (when p-serial-num
+             [ui/TableRow
+              [ui/TableCell "Serial Number"]
+              [ui/TableCell p-serial-num]])
+           (when p-descr
+             [ui/TableRow
+              [ui/TableCell "Description"]
+              [ui/TableCell p-descr]])
+           [ui/TableRow
+            [ui/TableCell "Classes"]
+            [ui/TableCell (str/join ", " p-classes)]]
+           [ui/TableRow
+            [ui/TableCell "Available"]
+            [ui/TableCell
+             [ui/Icon {:name "circle", :color (if p-available "green" "red")}]
+             (if p-available "Yes" "No")]]
+           (when p-interface
+             [ui/TableRow
+              [ui/TableCell "Interface"]
+              [ui/TableCell p-interface]])
+           (when p-device-path
+             [ui/TableRow
+              [ui/TableCell "Device Path"]
+              [ui/TableCell p-device-path]])
+           (when p-video-dev
+             [ui/TableRow
+              [ui/TableCell "Video Device"]
+              [ui/TableCell p-video-dev]])
+           [ui/TableRow
+            [ui/TableCell "Identifier"]
+            [ui/TableCell p-identifier]]
+           [ui/TableRow
+            [ui/TableCell "Vendor"]
+            [ui/TableCell p-vendor]]
+           [ui/TableRow
+            [ui/TableCell "Created"]
+            [ui/TableCell (time/ago (time/parse-iso8601 p-created) @locale)]]
+           [ui/TableRow
+            [ui/TableCell "Updated"]
+            [ui/TableCell (time/ago (time/parse-iso8601 p-updated) @locale)]]
+           (when p-data-gw-url
+             [ui/TableRow {:positive true}
+              [ui/TableCell "Data Gateway Connection"]
+              [ui/TableCell p-data-gw-url]])
+           (when p-data-sample
+             [ui/TableRow {:positive true}
+              [ui/TableCell "Raw Data Sample"]
+              [ui/TableCell p-data-sample]])]
+          (when (> (count actions) 0)
+            [ui/TableFooter
+             [ui/TableRow
+              [ui/TableHeaderCell]
+              [ui/TableHeaderCell
+               [ui/Popup
+                {:position "left center"
+                 :content  "Click to start/stop routing this peripheral's data through the Data Gateway"
+                 :header   "data-gateway"
+                 :inverted true
+                 :wide     "very"
+                 :size     "small"
+                 :trigger  (r/as-element
+                             [ui/Button {:on-click #(do
+                                                      (reset! button-load? true)
+                                                      (dispatch
+                                                        [::events/custom-action p-id (first actions)
+                                                         (str "Triggered " (first actions) " for " p-id)]))
+                                         :floated  "right"
+                                         :color    "vk"
+                                         :size     "large"
+                                         :circular true
+                                         :disabled @button-load?
+                                         :loading  @button-load?}
+                              (first actions)])}]
+               ]]])]
+         :label (or p-name p-product)
+         :title-size :h4
+         :default-open false
+         :icon (case p-interface
+                 "USB" "usb"
+                 nil)]))))
 
 
 (defn Peripherals
   []
-  (let [nuvlabox-peripherals (subscribe [::subs/nuvlabox-peripherals])]
-    [uix/Accordion
-     [:div
-      (doall
-        (for [{p-indentifier :identifier
-               p-created     :created
-               :as           peripheral} @nuvlabox-peripherals]
-          ^{:key (str p-indentifier p-created)}
-          [Peripheral peripheral]))]
-     :label "Peripherals"
-     :icon "usb"
-     :count (count @nuvlabox-peripherals)]))
+  (let [ids (subscribe [::subs/nuvlabox-peripherals-ids])]
+    (fn []
+      [uix/Accordion
+       [:div
+        (doall
+          (for [id @ids]
+            ^{:key id}
+            [Peripheral id]))]
+       :label "Peripherals"
+       :icon "usb"
+       :count (count @ids)])))
 
 
 (defn LocationAccordion
@@ -234,58 +293,53 @@
 (defn Load
   [resources]
   [uix/Accordion
-   (let [load-stats (u/load-statistics resources)
+   (let [load-stats      (u/load-statistics resources)
          number-of-stats (count load-stats)]
      ; TODO: if the number-of-stats grows if should split into a new row
      [ui/Grid {:columns   number-of-stats,
                :stackable true
                :divided   true}
-
       [ui/GridRow
        (for [stat load-stats]
+         ^{:key (:title stat)}
          [ui/GridColumn
-
           [:div
            [plot/Doughnut {:height  250
-                           :data    {:labels    (:label stat)
-                                     :datasets  [{:data            [(:percentage stat), (:value stat)]
-                                                  :backgroundColor [
-                                                                    "rgb(230, 99, 100)",
-                                                                    "rgba(155, 99, 132, 0.1)",
-                                                                    "rgb(230, 99, 100)"
-                                                                    ]
-                                                  :borderColor     ["rgba(230, 99, 100,1)"]
-                                                  :borderWidth     3}]}
-                           :options {:legend   {:display true
-                                                :labels  {
-                                                          :fontColor "grey"
-                                                          }}
-                                     :title    {:display   true
-                                                :text      (:title stat)
-                                                :position  "bottom"}
+                           :data    {:labels   (:label stat)
+                                     :datasets [{:data            [(:percentage stat), (:value stat)]
+                                                 :backgroundColor ["rgb(230, 99, 100)",
+                                                                   "rgba(155, 99, 132, 0.1)",
+                                                                   "rgb(230, 99, 100)"]
+                                                 :borderColor     ["rgba(230, 99, 100,1)"]
+                                                 :borderWidth     3}]}
+                           :options {:legend              {:display true
+                                                           :labels  {:fontColor "grey"}}
+                                     :title               {:display  true
+                                                           :text     (:title stat)
+                                                           :position "bottom"}
                                      :maintainAspectRatio false
                                      :circumference       4.14
                                      :rotation            -3.64
                                      :cutoutPercentage    60}}]]
 
-
-          [ui/Container {:key         (:topic stat)
-                         :text-align  :center}
-           [ui/LabelGroup {:key   (:topic stat)
-                           :size  "tiny"}
-            [ui/Label {:color "blue"
-                       :basic true
-                       :image true}
-             "Topic: "
-             [ui/LabelDetail
-              (first (:data-gateway stat))]]
-            [ui/Label {:color "blue"
-                       :basic true
-                       :image true}
-             "Raw sample: "
-             [ui/LabelDetail
-              (last (:data-gateway stat))]]]
-           ]
+          (when (pos? (count (:data-gateway stat)))
+            [ui/Container {:key        (:topic stat)
+                           :text-align :center}
+             [ui/LabelGroup {:key  (:topic stat)
+                             :size "tiny"}
+              [ui/Label {:color "blue"
+                         :basic true
+                         :image true}
+               "Topic: "
+               [ui/LabelDetail
+                (first (:data-gateway stat))]]
+              [ui/Label {:color "blue"
+                         :basic true
+                         :image true}
+               "Raw sample: "
+               [ui/LabelDetail
+                (last (:data-gateway stat))]]]]
+            )
 
 
           ; TODO: the data-gateway stats should be in a popup instead of raw text. But fails some unknown reason,
@@ -310,7 +364,7 @@
                                            :wide           true
                                            :on             "hover"
                                            :hide-on-scroll true}]]
-   :icon  "thermometer half"])
+   :icon "thermometer half"])
 
 
 (defn StatusSection

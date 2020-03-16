@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.infrastructures.views
   (:require
-    [cljs.pprint :refer [cl-format]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.acl.views :as acl]

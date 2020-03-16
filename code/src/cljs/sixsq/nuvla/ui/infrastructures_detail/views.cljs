@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.infrastructures-detail.views
   (:require
-    [cljs.pprint :refer [cl-format]]
     [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]

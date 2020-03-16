@@ -61,27 +61,27 @@
     (update db ::spec/query-params merge {:aggregation aggregation-value})))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-collection-name
-  (fn [{:keys [::spec/cloud-entry-point
-               ::spec/collection-name] :as db} [_ coll-name]]
+  (fn [{{:keys [::spec/cloud-entry-point
+                ::spec/collection-name] :as db} :db} [_ coll-name]]
     (if (or (empty? coll-name) (-> cloud-entry-point
                                    :collection-key
                                    (get coll-name)))
-      (cond-> db
-              (not= coll-name collection-name) (assoc ::spec/collection-name coll-name
-                                                      ::spec/selected-rows #{}
-                                                      ::spec/collection nil))
-      (let [msg-map {:header  (cond-> (str "invalid resource type: " coll-name))
-                     :content (str "The resource type '" coll-name "' is not valid. "
-                                   "Please choose another resource type.")
-                     :type    :error}]
+      {:db (cond-> db
+                   (not= coll-name collection-name) (assoc ::spec/collection-name coll-name
+                                                           ::spec/selected-rows #{}
+                                                           ::spec/collection nil))}
 
-        ;; only send error message when the cloud-entry-point is actually set, otherwise
-        ;; we don't yet know if this is a valid resource or not
-        (when cloud-entry-point
-          (dispatch [::messages-events/add msg-map]))
-        db))))
+      (when cloud-entry-point
+        (let [msg-map {:header  (cond-> (str "invalid resource type: " coll-name))
+                       :content (str "The resource type '" coll-name "' is not valid. "
+                                     "Please choose another resource type.")
+                       :type    :error}]
+
+          ;; only send error message when the cloud-entry-point is actually set, otherwise
+          ;; we don't yet know if this is a valid resource or not
+          {:dispatch [::messages-events/add msg-map]})))))
 
 
 (reg-event-db
@@ -133,36 +133,40 @@
 
 
 
-(reg-event-db
+(reg-event-fx
   ::set-results
-  (fn [db [_ resource-type listing]]
+  (fn [{db :db} [_ resource-type listing]]
     (let [error?       (instance? js/Error listing)
           entries      (get listing :resources [])
           aggregations (get listing :aggregations nil)
           fields       (general-utils/merge-keys (conj entries {:id "id"}))]
-      (when error?
-        (dispatch [::messages-events/add
-                   (let [{:keys [status message]} (response/parse-ex-info listing)]
-                     {:header  (cond-> (str "failure getting " (name resource-type))
-                                       status (str " (" status ")"))
-                      :content message
-                      :type    :error})]))
-      (assoc db ::spec/aggregations aggregations
-                ::spec/collection (when-not error? listing)
-                ::spec/loading? false
-                ::spec/available-fields fields))))
+      (cond-> {:db (assoc db ::spec/aggregations aggregations
+                             ::spec/collection (when-not error? listing)
+                             ::spec/loading? false
+                             ::spec/available-fields fields)}
+              error? (assoc :dispatch
+                            [::messages-events/add
+                             (let [{:keys [status message]} (response/parse-ex-info listing)]
+                               {:header  (cond-> (str "failure getting " (name resource-type))
+                                                 status (str " (" status ")"))
+                                :content message
+                                :type    :error})])))))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-cloud-entry-point
-  (fn [db [_ {:keys [base-uri] :as cep}]]
-    (let [href-map (utils/collection-href-map cep)
-          key-map  (utils/collection-key-map cep)]
-      (-> db
-          (assoc ::spec/cloud-entry-point {:base-uri        base-uri
-                                           :collection-href href-map
-                                           :collection-key  key-map})
-          (assoc ::spec/collections-templates-cache (utils/collections-template-map href-map))))))
+  (fn [{db :db} [_ {:keys [base-uri] :as cep}]]
+    (if (instance? js/Error cep)
+      (do (js/console.error "Communication with API server failed! Retry in 5 seconds")
+          {:dispatch-later [{:ms 5000 :dispatch [::get-cloud-entry-point]}]})
+      (let [href-map (utils/collection-href-map cep)
+            key-map  (utils/collection-key-map cep)]
+        {:db (-> db
+                 (assoc ::spec/cloud-entry-point {:base-uri        base-uri
+                                                  :collection-href href-map
+                                                  :collection-key  key-map})
+                 (assoc ::spec/collections-templates-cache
+                        (utils/collections-template-map href-map)))}))))
 
 
 (reg-event-fx
@@ -183,20 +187,20 @@
                              #(dispatch [::set-templates template-href (:resources %)])]})))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-templates
-  (fn [db [_ template-href templates]]
+  (fn [{db :db} [_ template-href templates]]
     (if (instance? js/Error templates)
-      (dispatch [::messages-events/add
-                 (let [{:keys [status message]} (response/parse-ex-info templates)]
-                   {:header  (cond-> (str "failure getting " (name template-href))
-                                     status (str " (" status ")"))
-                    :content message
-                    :type    :error})])
-      (assoc-in db [::spec/collections-templates-cache template-href]
-                (->> templates
-                     (map (juxt :id identity))
-                     (into {}))))))
+      {:dispatch [::messages-events/add
+                  (let [{:keys [status message]} (response/parse-ex-info templates)]
+                    {:header  (cond-> (str "failure getting " (name template-href))
+                                      status (str " (" status ")"))
+                     :content message
+                     :type    :error})]}
+      {:db (assoc-in db [::spec/collections-templates-cache template-href]
+                     (->> templates
+                          (map (juxt :id identity))
+                          (into {})))})))
 
 
 (reg-event-db

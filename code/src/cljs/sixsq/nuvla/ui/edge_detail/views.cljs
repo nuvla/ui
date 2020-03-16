@@ -110,7 +110,7 @@
              p-data-sample :raw-data-sample} @peripheral
             actions (get-available-actions p-ops)]
 
-        (when (> p-updated @last-updated)
+        (when (> (compare p-updated @last-updated) 0)
           (reset! button-load? false)
           (reset! last-updated p-updated))
         [uix/Accordion

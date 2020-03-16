@@ -54,7 +54,7 @@
           {:position "top center"
            :content  (str "COMPATIBILITY: " compatibility)
            :size     "small"
-           :trigger  (r/as-element [ui/Icon {:color "white" :name "chain"}])}]])]
+           :trigger  (r/as-element [ui/Icon {:color "white" :name "info"}])}]])]
      [ui/Button {:fluid    true
                  :primary  true
                  :icon     :rocket

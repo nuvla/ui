@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.apps-application.views
   (:require
-    [cljs.pprint :refer [cl-format]]
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]

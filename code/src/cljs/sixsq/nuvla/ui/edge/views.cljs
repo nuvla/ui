@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.edge.views
   (:require
-    [cljs.pprint :refer [cl-format pprint]]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]

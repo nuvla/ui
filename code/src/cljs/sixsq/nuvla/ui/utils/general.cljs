@@ -262,3 +262,23 @@
               (map #(str % "*"))
               (str/join "+"))
          "'")))
+
+
+;; Math
+
+(defn round-up
+  [value & {:keys [n-decimal] :or {n-decimal 2}}]
+  (let [multiplier    (js/Math.pow 10 n-decimal)
+        rounded-value (js/Math.round (* value multiplier))]
+    (/ rounded-value multiplier)))
+
+
+(defn percentage
+  [used capacity]
+  (-> (/ used capacity)
+      (* 100)))
+
+
+(defn mbytes->gbytes
+  [mb]
+  (/ mb 1024))

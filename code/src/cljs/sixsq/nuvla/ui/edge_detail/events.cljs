@@ -19,7 +19,9 @@
 (reg-event-db
   ::set-nuvlabox-peripherals
   (fn [db [_ nuvlabox-peripherals]]
-    (assoc db ::spec/nuvlabox-peripherals (get nuvlabox-peripherals :resources []))))
+    (assoc db ::spec/nuvlabox-peripherals (->> (get nuvlabox-peripherals :resources [])
+                                               (map (juxt :id identity))
+                                               (into {})))))
 
 
 (reg-event-fx
@@ -66,9 +68,9 @@
                             (do
                               (when success-msg
                                 (dispatch [::messages-events/add
-                                          {:header  success-msg
-                                           :content success-msg
-                                           :type    :success}]))
+                                           {:header  success-msg
+                                            :content success-msg
+                                            :type    :success}]))
                               (dispatch [::set-nuvlabox %])))]}))
 
 
@@ -77,3 +79,22 @@
   (fn [{{:keys [::spec/nuvlabox]} :db} _]
     (let [nuvlabox-id (:id nuvlabox)]
       {::cimi-api-fx/delete [nuvlabox-id #(dispatch [::history-events/navigate "edge"])]})))
+
+
+(reg-event-fx
+  ::custom-action
+  (fn [_ [_ resource-id operation success-msg]]
+    {::cimi-api-fx/operation [resource-id operation
+                              #(if (instance? js/Error %)
+                                 (let [{:keys [status message]} (response/parse-ex-info %)]
+                                   (dispatch [::messages-events/add
+                                              {:header  (cond-> (str "error on operation " operation " for " resource-id)
+                                                                status (str " (" status ")"))
+                                               :content message
+                                               :type    :error}]))
+
+                                 (when success-msg
+                                   (dispatch [::messages-events/add
+                                              {:header  success-msg
+                                               :content success-msg
+                                               :type    :success}])))]}))

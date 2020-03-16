@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.apps-project.views
   (:require
-    [cljs.pprint :refer [cl-format]]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps-project.spec :as spec]

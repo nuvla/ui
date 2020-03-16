@@ -2,15 +2,20 @@
 
 ## Unreleased
 
+## [2.4.11] - 2020-03-06
+
 ### Added
 
  - Egde - Automatic NuvlaBox release selection and peripheral correlation
  - Edge - Dynamic compose file generation upon NuvlaBox creation
  - Edge - Installation guides upon NuvlaBox creation
  - App view - compatibility label
+ - Edge - Action buttons to peripherals
 
 ### Changed
 
+ - Data page / Deployment modal - replace data-records map by 
+   data-records-filter
  - Component - New component time-ago
  - Deployment modal - check credential of registries
  - Module component - fix bug in edit with private registries
@@ -24,6 +29,7 @@
  - Credentials - Bring back S3
  - Infrastructures - Bring back S3
  - Edge detail - replace horizontal bars by gauge charts
+ - OCRE - updated voucher schema and CSV file header validation
 
 ## [2.4.10] - 2020-02-07
 

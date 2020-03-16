@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.cimi.views
   (:require
-    [cljs.pprint :refer [cl-format pprint]]
+    [cljs.pprint :refer [pprint]]
     [clojure.set :as set]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
@@ -128,9 +128,7 @@
   (when data
     ^{:key label}
     [ui/Statistic {:size "tiny"}
-     (if (int? value)
-       [ui/StatisticValue (cl-format nil "~D" value)]
-       [ui/StatisticValue (cl-format nil "~,2F" value)])
+     [ui/StatisticValue value]
      [ui/StatisticLabel label]]))
 
 

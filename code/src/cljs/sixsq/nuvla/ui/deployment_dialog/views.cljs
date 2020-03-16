@@ -112,7 +112,7 @@
          [ui/ModalContent
           [ui/ModalDescription
 
-           [ui/StepGroup {:size "mini", :fluid true}
+           [ui/StepGroup {:size "mini", :fluid true, :style {:overflow-x "auto"}}
             (doall
               (for [step-id visible-steps]
                 ^{:key step-id}

@@ -31,8 +31,6 @@
 
 (s/def ::data-sets (s/map-of string? map?))
 
-(s/def ::data-records-by-data-set (s/map-of string? vector?))
-
 (s/def ::selected-data-set-ids (s/coll-of string? :kind set?))
 
 (s/def ::db (s/keys :req [::time-period
@@ -47,9 +45,7 @@
                           ::counts
                           ::sizes
                           ::data-sets
-                          ::data-records-by-data-set
-                          ::selected-data-set-ids
-                          ]))
+                          ::selected-data-set-ids]))
 
 (def default-time-period [(time/days-before 30)
                           (time/days-before 0)])
@@ -66,6 +62,4 @@
                ::counts                      nil
                ::sizes                       nil
                ::data-sets                   {}
-               ::data-records-by-data-set    {}
-               ::selected-data-set-ids       #{}
-               })
+               ::selected-data-set-ids       #{}})

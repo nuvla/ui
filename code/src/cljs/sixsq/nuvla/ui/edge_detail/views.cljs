@@ -79,81 +79,142 @@
        :on-refresh #(refresh uuid)}]]))
 
 
+(defn get-available-actions
+  [operations]
+  (filter some? (map #(nth (str/split % #"/") 2 nil) (map :href operations))))
+
+
 (defn Peripheral
-  [{p-name        :name
-    p-product     :product
-    p-created     :created
-    p-updated     :updated
-    p-descr       :description
-    p-interface   :interface
-    p-device-path :device-path
-    p-available   :available
-    p-vendor      :vendor
-    p-classes     :classes
-    p-indentifier :identifier}]
-  (let [locale (subscribe [::i18n-subs/locale])]
-    [uix/Accordion
-     [ui/Table {:basic "very"}
-      [ui/TableBody
-       (when p-product
-         [ui/TableRow
-          [ui/TableCell "Name"]
-          [ui/TableCell (str p-name " " p-product)]])
-       (when p-descr
-         [ui/TableRow
-          [ui/TableCell "Description"]
-          [ui/TableCell p-descr]])
-       [ui/TableRow
-        [ui/TableCell "Classes"]
-        [ui/TableCell (str/join ", " p-classes)]]
-       [ui/TableRow
-        [ui/TableCell "Available"]
-        [ui/TableCell
-         [ui/Icon {:name "circle", :color (if p-available "green" "red")}]
-         (if p-available "Yes" "No")]]
-       (when p-interface
-         [ui/TableRow
-          [ui/TableCell "Interface"]
-          [ui/TableCell p-interface]])
-       (when p-device-path
-         [ui/TableRow
-          [ui/TableCell "Device path"]
-          [ui/TableCell p-device-path]])
-       [ui/TableRow
-        [ui/TableCell "Identifier"]
-        [ui/TableCell p-indentifier]]
-       [ui/TableRow
-        [ui/TableCell "Vendor"]
-        [ui/TableCell p-vendor]]
-       [ui/TableRow
-        [ui/TableCell "Created"]
-        [ui/TableCell (time/ago (time/parse-iso8601 p-created) @locale)]]
-       [ui/TableRow
-        [ui/TableCell "Updated"]
-        [ui/TableCell (time/ago (time/parse-iso8601 p-updated) @locale)]]]
-      ]
-     :label (or p-name p-product)
-     :title-size :h4
-     :default-open false
-     :icon (case p-interface
-             "USB" "usb"
-             nil)]))
+  [id]
+  (let [locale       (subscribe [::i18n-subs/locale])
+        last-updated (r/atom "1970-01-01T00:00:00Z")
+        button-load? (r/atom false)
+        peripheral   (subscribe [::subs/nuvlabox-peripheral id])]
+    (fn [id]
+      (let [{p-id          :id
+             p-ops         :operations
+             p-name        :name
+             p-product     :product
+             p-created     :created
+             p-updated     :updated
+             p-descr       :description
+             p-interface   :interface
+             p-device-path :device-path
+             p-available   :available
+             p-vendor      :vendor
+             p-classes     :classes
+             p-identifier  :identifier
+             p-serial-num  :serial-number
+             p-video-dev   :video-device
+             p-data-gw-url :local-data-gateway-endpoint
+             p-data-sample :raw-data-sample} @peripheral
+            actions (get-available-actions p-ops)]
+
+        (when (> (compare p-updated @last-updated) 0)
+          (reset! button-load? false)
+          (reset! last-updated p-updated))
+        [uix/Accordion
+         [ui/Table {:basic "very"}
+          [ui/TableBody
+           (when p-product
+             [ui/TableRow
+              [ui/TableCell "Name"]
+              [ui/TableCell (str p-name " " p-product)]])
+           (when p-serial-num
+             [ui/TableRow
+              [ui/TableCell "Serial Number"]
+              [ui/TableCell p-serial-num]])
+           (when p-descr
+             [ui/TableRow
+              [ui/TableCell "Description"]
+              [ui/TableCell p-descr]])
+           [ui/TableRow
+            [ui/TableCell "Classes"]
+            [ui/TableCell (str/join ", " p-classes)]]
+           [ui/TableRow
+            [ui/TableCell "Available"]
+            [ui/TableCell
+             [ui/Icon {:name "circle", :color (if p-available "green" "red")}]
+             (if p-available "Yes" "No")]]
+           (when p-interface
+             [ui/TableRow
+              [ui/TableCell "Interface"]
+              [ui/TableCell p-interface]])
+           (when p-device-path
+             [ui/TableRow
+              [ui/TableCell "Device Path"]
+              [ui/TableCell p-device-path]])
+           (when p-video-dev
+             [ui/TableRow
+              [ui/TableCell "Video Device"]
+              [ui/TableCell p-video-dev]])
+           [ui/TableRow
+            [ui/TableCell "Identifier"]
+            [ui/TableCell p-identifier]]
+           [ui/TableRow
+            [ui/TableCell "Vendor"]
+            [ui/TableCell p-vendor]]
+           [ui/TableRow
+            [ui/TableCell "Created"]
+            [ui/TableCell (time/ago (time/parse-iso8601 p-created) @locale)]]
+           [ui/TableRow
+            [ui/TableCell "Updated"]
+            [ui/TableCell (time/ago (time/parse-iso8601 p-updated) @locale)]]
+           (when p-data-gw-url
+             [ui/TableRow {:positive true}
+              [ui/TableCell "Data Gateway Connection"]
+              [ui/TableCell p-data-gw-url]])
+           (when p-data-sample
+             [ui/TableRow {:positive true}
+              [ui/TableCell "Raw Data Sample"]
+              [ui/TableCell p-data-sample]])]
+          (when (> (count actions) 0)
+            [ui/TableFooter
+             [ui/TableRow
+              [ui/TableHeaderCell]
+              [ui/TableHeaderCell
+               [ui/Popup
+                {:position "left center"
+                 :content  "Click to start/stop routing this peripheral's data through the Data Gateway"
+                 :header   "data-gateway"
+                 :inverted true
+                 :wide     "very"
+                 :size     "small"
+                 :trigger  (r/as-element
+                             [ui/Button {:on-click #(do
+                                                      (reset! button-load? true)
+                                                      (dispatch
+                                                        [::events/custom-action p-id (first actions)
+                                                         (str "Triggered " (first actions) " for " p-id)]))
+                                         :floated  "right"
+                                         :color    "vk"
+                                         :size     "large"
+                                         :circular true
+                                         :disabled @button-load?
+                                         :loading  @button-load?}
+                              (first actions)])}]
+               ]]])]
+         :label (or p-name p-product)
+         :title-size :h4
+         :default-open false
+         :icon (case p-interface
+                 "USB" "usb"
+                 nil)]))))
 
 
 (defn Peripherals
   []
-  (let [nuvlabox-peripherals (subscribe [::subs/nuvlabox-peripherals])]
-    [uix/Accordion
-     [:div
-      (doall
-        (for [{p-indentifier :identifier
-               p-created     :created
-               :as           peripheral} @nuvlabox-peripherals]
-          ^{:key (str p-indentifier p-created)}
-          [Peripheral peripheral]))]
-     :label "Peripherals"
-     :icon "usb"
-     :count (count @nuvlabox-peripherals)]))
+  (let [ids (subscribe [::subs/nuvlabox-peripherals-ids])]
+    (fn []
+      [uix/Accordion
+       [:div
+        (doall
+          (for [id @ids]
+            ^{:key id}
+            [Peripheral id]))]
+       :label "Peripherals"
+       :icon "usb"
+       :count (count @ids)])))
 
 
 (defn LocationAccordion

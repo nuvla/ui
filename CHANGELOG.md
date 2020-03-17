@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Profile - change password modal fix
   - Retry get cloud-entry-point first load and keep loading
 
 ## [2.4.11] - 2020-03-06

@@ -31,17 +31,21 @@
 
 
 (reg-event-fx
-  ::set-data-records-filter
+  ::set-data-filters
   (fn [{{:keys [::spec/deployment
-                ::data-spec/time-period-filter
+                ::data-spec/time-period
                 ::data-spec/full-text-search
                 ::spec/cloud-filter
                 ::data-spec/content-type-filter] :as db} :db} _]
-    (let [filter (general-utils/join-and time-period-filter
-                                         cloud-filter
+    (let [filter (general-utils/join-and cloud-filter
                                          content-type-filter
-                                         full-text-search)]
-      {:dispatch [::set-deployment (assoc deployment :data-records-filter filter)]})))
+                                         full-text-search)
+          data-filters {:records {:filters
+                                  [{:filter filter
+                                    :data-type "data-record"
+                                    :time-start (first time-period)
+                                    :time-end (second time-period)}]}}]
+      {:dispatch [::set-deployment (assoc deployment :data data-filters)]})))
 
 
 (reg-event-fx
@@ -50,7 +54,7 @@
                 ::spec/data-step-active?] :as db} :db} [_ {:keys [id] :as credential}]]
     {:db         (assoc db ::spec/selected-credential-id id
                            ::spec/deployment (assoc deployment :parent id))
-     :dispatch-n [(when data-step-active? [::set-data-records-filter])
+     :dispatch-n [(when data-step-active? [::set-data-filters])
                   [::creds-events/check-credential credential 5]]}))
 
 

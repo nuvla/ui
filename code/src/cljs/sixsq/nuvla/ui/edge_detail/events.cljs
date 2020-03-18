@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.edge-detail.events
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.edge-detail.spec :as spec]
@@ -82,6 +83,26 @@
 
 
 (reg-event-fx
+  ::check-custom-job-state
+  (fn [_ [_ periph-id operation {:keys [id return-code status-message] :as job}]]
+    (let [job-completed? (some? return-code)]
+      (if job-completed?
+        {:dispatch [::messages-events/add
+                    {:header  (str (str/capitalize operation) " on " periph-id
+                                   (if (= return-code 0) " completed." " failed!"))
+                     :content status-message
+                     :type    (if (= return-code 0) :success :error)}]}
+        {:dispatch-later [{:ms 5000 :dispatch [::check-custom-action-job
+                                               periph-id operation id]}]}))))
+
+
+(reg-event-fx
+  ::check-custom-action-job
+  (fn [_ [_ periph-id operation job-id]]
+    {::cimi-api-fx/get [job-id #(dispatch [::check-custom-job-state periph-id operation %])]}))
+
+
+(reg-event-fx
   ::custom-action
   (fn [_ [_ resource-id operation success-msg]]
     {::cimi-api-fx/operation [resource-id operation
@@ -97,4 +118,7 @@
                                    (dispatch [::messages-events/add
                                               {:header  success-msg
                                                :content success-msg
-                                               :type    :success}])))]}))
+                                               :type    :success}])
+                                   (dispatch [::check-custom-action-job
+                                              resource-id operation (:location %)])
+                                   ))]}))

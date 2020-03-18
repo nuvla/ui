@@ -37,14 +37,14 @@
                 ::data-spec/full-text-search
                 ::spec/cloud-filter
                 ::data-spec/content-type-filter] :as db} :db} _]
-    (let [filter (general-utils/join-and cloud-filter
-                                         content-type-filter
-                                         full-text-search)
+    (let [filter       (general-utils/join-and cloud-filter
+                                               content-type-filter
+                                               full-text-search)
           data-filters {:records {:filters
-                                  [{:filter filter
-                                    :data-type "data-record"
+                                  [{:filter     filter
+                                    :data-type  "data-record"
                                     :time-start (first time-period)
-                                    :time-end (second time-period)}]}}]
+                                    :time-end   (second time-period)}]}}]
       {:dispatch [::set-deployment (assoc deployment :data data-filters)]})))
 
 

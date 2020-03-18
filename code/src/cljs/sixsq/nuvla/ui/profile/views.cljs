@@ -64,35 +64,35 @@
 
 ;;; VALIDATION SPEC
 (s/def ::current-password us/nonblank-string)
-(s/def ::password us/acceptable-password?)
-(s/def ::password-repeat us/nonblank-string)
+(s/def ::new-password us/acceptable-password?)
+(s/def ::new-password-repeat us/nonblank-string)
 
 (s/def ::credential-change-password
   (s/keys :req-un [::current-password
-                   ::password
-                   ::password-repeat]))
+                   ::new-password
+                   ::new-password-repeat]))
 
 
 (defn password-repeat-check [form name]
-  (let [password        (get-in @form [:names->value :password])
+  (let [password        (get-in @form [:names->value :new-password])
         password-repeat (get-in @form [:names->value name])]
     (when-not (= password password-repeat)
-      [:password-repeat :password-not-equal])))
+      [:new-password-repeat :password-not-equal])))
 
 
 (defn modal-change-password []
   (let [open-modal    (subscribe [::subs/open-modal])
         error-message (subscribe [::subs/error-message])
         tr            (subscribe [::i18n-subs/tr])
-        form-conf     {:names->value      {:current-password ""
-                                           :password         ""
-                                           :password-repeat  ""}
+        form-conf     {:names->value      {:current-password    ""
+                                           :new-password        ""
+                                           :new-password-repeat ""}
                        :form-spec         ::credential-change-password
-                       :names->validators {:password-repeat [password-repeat-check]}}
+                       :names->validators {:new-password-repeat [password-repeat-check]}}
         form          (fv/init-form form-conf)
-        spec->msg     {::current-password (@tr [:should-not-be-empty])
-                       ::password         (@tr [:password-constraint])
-                       :password-repeat   (@tr [:passwords-doesnt-match])}]
+        spec->msg     {::current-password   (@tr [:should-not-be-empty])
+                       ::new-password       (@tr [:password-constraint])
+                       :new-password-repeat (@tr [:passwords-doesnt-match])}]
     (fn []
       [ui/Modal
        {:size      :tiny
@@ -116,17 +116,19 @@
         [ui/Form
          [ui/FormInput
           {:name          :current-password
+           :id            "current-password"
            :label         (str/capitalize (@tr [:current-password]))
            :required      true
            :icon          "key"
            :icon-position "left"
            :auto-focus    "on"
            :auto-complete "off"
+           :type          "password"
            :on-change     (partial fv/event->names->value! form)
            :on-blur       (partial fv/event->show-message form)
            :error         (fv/?show-message form :current-password spec->msg)}]
          [ui/FormGroup {:widths 2}
-          [ui/FormInput {:name          :password
+          [ui/FormInput {:name          :new-password
                          :icon          "key"
                          :icon-position "left"
                          :required      true
@@ -135,23 +137,24 @@
                          :type          "password"
                          :on-change     (partial fv/event->names->value! form)
                          :on-blur       (partial fv/event->show-message form)
-                         :error         (fv/?show-message form :password spec->msg)}]
-          [ui/FormInput {:name      :password-repeat
+                         :error         (fv/?show-message form :new-password spec->msg)}]
+          [ui/FormInput {:name      :new-password-repeat
                          :required  true
                          :label     (str/capitalize (@tr [:new-password-repeat]))
                          :type      "password"
                          :on-change (partial fv/event->names->value! form)
                          :on-blur   (partial fv/event->show-message form)
-                         :error     (fv/?show-message form :password-repeat spec->msg)}]]]]
+                         :error     (fv/?show-message form :new-password-repeat spec->msg)}]]]]
 
        [ui/ModalActions
         [uix/Button
          {:text     (str/capitalize (@tr [:change-password]))
           :positive true
           :on-click #(when (fv/validate-form-and-show? form)
-                       (dispatch [::events/change-password (-> @form
-                                                               :names->value
-                                                               (dissoc :password-repeat))]))}]]])))
+                       (dispatch [::events/change-password
+                                  (-> @form
+                                      :names->value
+                                      (dissoc :new-password-repeat))]))}]]])))
 
 
 (defn session-info

@@ -51,7 +51,7 @@
 (reg-event-fx
   ::change-password
   (fn [{{:keys [::spec/credential-password
-                ::i18n-spec/tr] :as db} :db} [_ body]]
+                ::i18n-spec/tr]} :db} [_ body]]
     (let [callback-fn #(if (instance? js/Error %)
                          (let [{:keys [message]} (response/parse-ex-info %)]
                            (dispatch [::set-error-message message]))

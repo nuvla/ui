@@ -105,7 +105,9 @@
                 ::spec/selected-data-set-ids] :as db} :db} _]
     (let [selected-data-sets (vals (filter (fn [[k v]]
                                              (boolean (selected-data-set-ids k))) data-sets))
-          query-application  (apply general-utils/join-and (map :module-filter selected-data-sets))
+          query-application  (apply general-utils/join-and
+                                    (conj (map :module-filter selected-data-sets)
+                                          "subtype!='project'"))
           query-objects      (apply general-utils/join-or
                                     (map :data-record-filter selected-data-sets))]
       {:db                  (assoc db ::spec/application-select-visible? true

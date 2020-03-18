@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Data workflow - module of subtype project should not appear
+  - Deployment modal - Align deployment data filter spec with api-server
   - Profile - change password modal fix
   - Retry get cloud-entry-point first load and keep loading
 

@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Update dependencies to latest react/reagent/re-frame and others
   - Popup credential connectivity check disappear fix
   - Data workflow - module of subtype project should not appear
   - Deployment modal - Align deployment data filter spec with api-server

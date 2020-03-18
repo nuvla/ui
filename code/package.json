@@ -39,6 +39,7 @@
     "react-leaflet": "^2.6.3",
     "react-markdown": "^4.3.1",
     "semantic-ui-css": "^2.4.1",
-    "semantic-ui-react": "^0.88.2"
+    "semantic-ui-react": "^0.88.2",
+    "unist-util-visit-parents": "^3.0.2"
   }
 }

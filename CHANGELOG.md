@@ -2,8 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+  - New Dependency - add jszip library
+
 ### Changed
 
+  - Edge page – Create nuvlabox modal generate a single zip for NuvlaBox
+    engine
+  - New Dependency - jszip add library
   - Update dependencies to latest react/reagent/re-frame and others
   - Popup credential connectivity check disappear fix
   - Data workflow - module of subtype project should not appear

@@ -103,7 +103,7 @@
     (fn []
       (let [nuvlabox-name-or-id (str "NuvlaBox " (or (:name creation-data)
                                                      (general-utils/id->short-uuid nuvlabox-id)))
-            execute-command     (str "docker-compose -f "
+            execute-command     (str "docker-compose -p nuvlabox -f "
                                      (str/join " -f " (map :name download-files)) " up -d")]
         [:<>
          [ui/ModalHeader
@@ -142,7 +142,7 @@
           [ui/Label {:circular true
                      :color    "green"} "2"]
           [:h5 {:style {:margin "0.5em 0 1em 0"}}
-           "Execute "
+           "Unzip & Execute "
            [ui/CopyToClipboard {:text execute-command}
             [:a {:href  "#"
                  :style {:font-size   "0.9em"

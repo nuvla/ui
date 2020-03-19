@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.core
   (:require
-    [devtools.core :as devtools]
     [form-validator.core :as fv]
     [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]
     [reagent.core :as r]
@@ -20,7 +19,6 @@
 (defn dev-setup []
   (when config/debug?
     (enable-console-print!)
-    (devtools/install!)
     (log/info "development mode")))
 
 

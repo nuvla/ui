@@ -1,5 +1,5 @@
 (def parent-version "6.7.2")
-(def sixsq-nuvla-api-version "2.0.7")
+(def sixsq-nuvla-api-version "2.0.8")
 (def version "2.4.12-SNAPSHOT")
 
 (defproject sixsq.nuvla.ui/code "2.4.12-SNAPSHOT"
@@ -75,10 +75,10 @@
 
   ;; mark all dependencies as provided to avoid having transitive
   ;; dependencies pulled in by those that depend on this
-  :dependencies [[reagent "0.9.1" :scope "provided"
+  :dependencies [[reagent "0.10.0" :scope "provided"
                   :exclusions [cljsjs/react
                                cljsjs/react-dom]]
-                 [re-frame "0.11.0" :scope "provided"]
+                 [re-frame "0.12.0" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
                  [com.taoensso/timbre "4.10.0" :scope "provided"]
@@ -98,7 +98,7 @@
                             org.clojure/google-closure-library-third-party]]
                           [binaryage/devtools "1.0.0" :scope "test"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.8.86"]   ;; WARNING: also in package.json
+   :scljs {:dependencies [[thheller/shadow-cljs "2.8.93"]   ;; WARNING: also in package.json
                           [org.clojure/google-closure-library "0.0-20191016-6ae1f72f"]
                           [org.clojure/google-closure-library-third-party "0.0-20191016-6ae1f72f"]
                           [com.google.javascript/closure-compiler-unshaded "v20191027"]]}}

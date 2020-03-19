@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.core
   (:require
-    [devtools.core :as devtools]
     [form-validator.core :as fv]
     [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]
     [reagent.core :as r]
+    [reagent.dom :as rdom]
     [sixsq.nuvla.ui.cimi.events :as api-events]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.db.events :as db-events]
@@ -19,7 +19,6 @@
 (defn dev-setup []
   (when config/debug?
     (enable-console-print!)
-    (devtools/install!)
     (log/info "development mode")))
 
 
@@ -28,7 +27,7 @@
    (when-let [container-element (.getElementById js/document tag)]
      (log/info "Rendering " tag)
      (when initialization-fn (initialization-fn))
-     (r/render [comp] container-element))))
+     (rdom/render [comp] container-element))))
 
 
 (defn mount-root []

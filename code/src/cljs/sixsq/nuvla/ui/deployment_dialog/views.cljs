@@ -50,8 +50,8 @@
                                       (fn [{cred-reg-id :id}]
                                         (when (or
                                                 @(subscribe
-                                                  [::creds-subs/credential-check-loading?
-                                                   cred-reg-id])
+                                                   [::creds-subs/credential-check-loading?
+                                                    cred-reg-id])
                                                 @(subscribe
                                                    [::creds-subs/credential-check-status-invalid?
                                                     cred-reg-id]))
@@ -99,9 +99,10 @@
                             (when (= module-subtype "application") :files)
                             :summary]
             visible-steps  (remove nil? steps)]
-        [ui/Modal {:open       @visible?
-                   :close-icon true
-                   :on-close   hide-fn}
+        [ui/Modal (cond-> {:open       @visible?
+                           :close-icon true
+                           :on-close   hide-fn}
+                          show-data? (assoc :size "large"))
 
          [ui/ModalHeader
           [ui/Icon {:name "rocket", :size "large"}]
@@ -112,7 +113,7 @@
          [ui/ModalContent
           [ui/ModalDescription
 
-           [ui/StepGroup {:size "mini", :fluid true, :style {:overflow-x "auto"}}
+           [ui/StepGroup {:size "mini", :fluid true}
             (doall
               (for [step-id visible-steps]
                 ^{:key step-id}

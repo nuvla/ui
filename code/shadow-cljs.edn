@@ -14,14 +14,11 @@
 
                                 :modules    {:nuvla-ui {:entries [sixsq.nuvla.ui.core]}}
 
-                                :devtools   {:after-load sixsq.nuvla.ui.core/mount-root
-                                             :preloads   [devtools.preload]}
-
                                 :dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL
-
                                                                 "https://nuvla.io"
                                                                 #_"https://localhost"}
-                                             :compiler-options {:infer-externs :auto}}
+                                             :compiler-options {:infer-externs :auto
+                                                                :preloads [devtools.preload ]}}
 
                                 :release    {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL ""}
                                              :compiler-options {:infer-externs :auto

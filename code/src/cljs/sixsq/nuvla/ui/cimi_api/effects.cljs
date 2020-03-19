@@ -72,7 +72,7 @@
   ::cloud-entry-point
   (fn [[callback]]
     (go
-      (callback (<! (api/cloud-entry-point @CLIENT))))))
+      (callback (<! (api/cloud-entry-point @CLIENT {:no-cache true}))))))
 
 
 (reg-fx

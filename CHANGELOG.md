@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Changed
+
+  - Update dependencies to latest react/reagent/re-frame and others
+  - Popup credential connectivity check disappear fix
+  - Data workflow - module of subtype project should not appear
+  - Deployment modal - Align deployment data filter spec with api-server
+  - Profile - change password modal fix
+  - Retry get cloud-entry-point first load and keep loading
+
 ## [2.4.11] - 2020-03-06
 
 ### Added

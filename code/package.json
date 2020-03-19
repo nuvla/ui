@@ -26,6 +26,7 @@
     "codemirror": "^5.52.0",
     "create-react-class": "15.6.3",
     "js-yaml": "^3.13.1",
+    "jszip": "^3.2.2",
     "leaflet": "^1.6.0",
     "license-checker": "^25.0.1",
     "moment": "^2.24.0",

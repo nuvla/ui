@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - Application - Module compatibility and docker-compose validation 
+    on save
+  - Dependencies - udpate parent to v6.7.3
   - Update dependencies to latest react/reagent/re-frame and others
   - Popup credential connectivity check disappear fix
   - Data workflow - module of subtype project should not appear

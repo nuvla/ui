@@ -18,6 +18,7 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 
@@ -391,37 +392,74 @@
       {:filter "subtype='registry'"
        :select "id, name"
        :order  "name:asc, id:asc"
-       :last 10000} #(dispatch [::set-registries-infra %])]}))
+       :last   10000} #(dispatch [::set-registries-infra %])]}))
+
+
+(reg-event-fx
+  ::check-validate-docker-compose-job
+  (fn [{db :db} [_ operation {:keys [id return-code progress status-message] :as job}]]
+    (let [job-completed? (= progress 100)]
+      (if job-completed?
+        {:db (assoc db ::spec/validate-docker-compose {:valid?    (= return-code 0)
+                                                       :loading?  false
+                                                       :error-msg status-message})}
+        {:dispatch-later [{:ms 5000 :dispatch [::get-validate-docker-compose-job
+                                               operation id]}]}))))
+
+
+(reg-event-fx
+  ::get-validate-docker-compose-job
+  (fn [_ [_ operation job-id]]
+    {::cimi-api-fx/get [job-id #(dispatch [::check-validate-docker-compose-job operation %])]}))
 
 
 (reg-event-fx
   ::edit-module
   (fn [{{:keys [::spec/module] :as db} :db} [_ commit-map]]
-    (let [id               (:id module)
-          sanitized-module (utils-detail/db->module module commit-map db)]
-      (if (nil? id)
-        {::cimi-api-fx/add [:module sanitized-module
-                            #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
-                                 (dispatch [::set-module sanitized-module]) ;Needed?
-                                 (dispatch [::main-events/changes-protection? false])
-                                 (dispatch [::history-events/navigate
-                                            (str "apps/" (:path sanitized-module))]))
-                            :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
-                                         (cimi-api-fx/default-add-on-error :module %)
-                                         (when (= status 409)
-                                           (dispatch [::name nil])
-                                           (dispatch [::validate-form])))]}
-        {::cimi-api-fx/edit [id sanitized-module
-                             #(if (instance? js/Error %)
-                                (let [{:keys [status message]} (response/parse-ex-info %)]
-                                  (dispatch [::messages-events/add
-                                             {:header  (cond-> (str "error editing " id)
-                                                               status (str " (" status ")"))
-                                              :content message
-                                              :type    :error}]))
-                                (do (dispatch [::cimi-detail-events/get (:id %)])
-                                    (dispatch [::get-module])
-                                    (dispatch [::main-events/changes-protection? false])))]}))))
+    (let [id                      (:id module)
+          sanitized-module        (utils-detail/db->module module commit-map db)
+          validate-op             "validate-docker-compose"
+          validate-docker-compose (when (general-utils/can-operation? validate-op module)
+                                    [id validate-op
+                                     #(if (instance? js/Error %)
+                                        (let [{:keys [status message]} (response/parse-ex-info %)]
+                                          (dispatch [::messages-events/add
+                                                     {:header  (cond-> (str "error on operation "
+                                                                            validate-op " for " id)
+                                                                       status (str " (" status ")"))
+                                                      :content message
+                                                      :type    :error}]))
+
+                                        (dispatch [::get-validate-docker-compose-job
+                                                   validate-op (:location %)]))])]
+
+      (cond->
+        (if (nil? id)
+          {::cimi-api-fx/add [:module sanitized-module
+                              #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
+                                   (dispatch [::set-module sanitized-module]) ;Needed?
+                                   (dispatch [::main-events/changes-protection? false])
+                                   (dispatch [::history-events/navigate
+                                              (str "apps/" (:path sanitized-module))]))
+                              :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
+                                           (cimi-api-fx/default-add-on-error :module %)
+                                           (when (= status 409)
+                                             (dispatch [::name nil])
+                                             (dispatch [::validate-form])))]}
+          {::cimi-api-fx/edit [id sanitized-module
+                               #(if (instance? js/Error %)
+                                  (let [{:keys [status message]} (response/parse-ex-info %)]
+                                    (dispatch [::messages-events/add
+                                               {:header  (cond-> (str "error editing " id)
+                                                                 status (str " (" status ")"))
+                                                :content message
+                                                :type    :error}]))
+                                  (do (dispatch [::cimi-detail-events/get (:id %)])
+                                      (dispatch [::get-module])
+                                      (dispatch [::main-events/changes-protection? false])))]})
+        validate-docker-compose (assoc ::cimi-api-fx/operation validate-docker-compose
+                                       :db (assoc db
+                                             ::spec/validate-docker-compose {:loading? true}))))))
 
 
 (reg-event-fx

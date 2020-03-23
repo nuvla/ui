@@ -140,3 +140,9 @@
 (reg-sub
   ::commit-message
   ::spec/commit-message)
+
+
+(reg-sub
+  ::validate-docker-compose
+  (fn [db]
+    (::spec/validate-docker-compose db)))

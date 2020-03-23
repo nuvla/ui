@@ -115,6 +115,48 @@
        :default-open false])))
 
 
+(defn DockerComposeValidationPopup
+  [{:keys [loading? valid? error-msg] :as validate-dc}]
+  [ui/Popup {:trigger        (r/as-element [ui/Icon {:name    (cond
+                                                                loading? "circle notched"
+                                                                (not valid?) "bug"
+                                                                valid? "checkmark")
+                                                     :color   (cond
+                                                                loading? "black"
+                                                                (not valid?) "red"
+                                                                valid? "green")
+                                                     :loading loading?}])
+             :header         "Validation of docker-compose"
+             :content        (cond
+                               loading? "Validation of docker-compose in progress..."
+                               (not valid?) (str/replace error-msg #"^.*is invalid because:" "")
+                               valid? "Docker-compose is valid :)")
+             :on             "hover"
+             :position       "top center"
+             :wide           true
+             :hide-on-scroll true}])
+
+
+(defn DockerComposeCompatibility
+  [compatibility unsupp-opts]
+  (let [popup-disabled? (empty? unsupp-opts)]
+    [:div {:style {:float "right"}}
+    [:span {:style {:font-variant "small-caps"}} "compatibility: "]
+    [ui/Popup
+     {:trigger        (r/as-element [ui/Label {:color "blue"} compatibility ff/nbsp
+                                     (when-not popup-disabled?
+                                       [ui/Icon {:name "exclamation triangle"}])])
+      :header         "Unsupported options"
+      :content        (str "Swarm doesn't support and will ignore the following options: "
+                           (str/join "; " unsupp-opts))
+
+      :on             "hover"
+      :position       "top right"
+      :disabled       popup-disabled?
+      :wide           true
+      :hide-on-scroll true}]]))
+
+
 (defn docker-compose-section []
   (let [tr              (subscribe [::i18n-subs/tr])
         docker-compose  (subscribe [::subs/docker-compose])
@@ -124,39 +166,17 @@
         form-valid?     (subscribe [::apps-subs/form-valid?])
         editable?       (subscribe [::apps-subs/editable?])
         module-subtype  (subscribe [::apps-subs/module-subtype])
+        validate-dc     (subscribe [::apps-subs/validate-docker-compose])
         local-validate? (r/atom false)
         default-value   @docker-compose]
     (fn []
       (let [validate? (or @local-validate? (not @form-valid?))]
         [uix/Accordion
          [:<>
-          [ui/Grid {:stackable true
-                    :columns    2}
-           [ui/GridRow
-            [ui/GridColumn {:floated "left"}
-             [:div {:style {:margin-bottom "10px"}} "Env substitution"
-              [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]]]
-
-            [ui/GridColumn {:floated "right"
-                            :text-align "right"}
-             [:span {:style {:font-variant "small-caps"}}
-              "compatibility: "]
-             [ui/Label {:color      "blue"
-                        :horizontal true}
-              compatibility]
-             (when (> (count unsupp-opts) 0)
-               [ui/Image
-                [ui/Popup
-                 {:trigger        (r/as-element [ui/Icon {:color "yellow" :name "exclamation triangle"}])
-                  :header         "Unsupported options"
-                  :content        (str "Swarm does not support and will ignore the following options: "
-                                    (str/join "; " unsupp-opts))
-
-                  :on             "hover"
-                  :position       "top right"
-                  :wide           true
-                  :hide-on-scroll true}
-                 ]])]]]
+          [:div {:style {:margin-bottom "10px"}} "Env substitution"
+           [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
+           (when (= @module-subtype "application")
+             [DockerComposeCompatibility compatibility unsupp-opts])]
 
           [ui/CodeMirror {:value      default-value
                           :autoCursor true
@@ -175,7 +195,11 @@
                (if (str/blank? error-msg)
                  (@tr [:module-docker-compose-error])
                  error-msg)]))]
-         :label (if (= @module-subtype "application") "Docker compose" "Manifest")
+         :label (if (= @module-subtype "application")
+                  [:span "Docker compose" ff/nbsp
+                   (when @validate-dc
+                     [DockerComposeValidationPopup @validate-dc])]
+                  "Manifest")
          :default-open true]))))
 
 

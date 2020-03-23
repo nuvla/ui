@@ -17,7 +17,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.utils.zip :as zip]))
 
 
 (def view-type (r/atom :cards))
@@ -93,72 +94,71 @@
 
 (defn CreatedNuvlaBox
   [nuvlabox-id creation-data nuvlabox-release-data on-close-fn tr]
-  (let [nuvlabox-name-or-id  (str "NuvlaBox " (or (:name creation-data)
-                                                  (general-utils/id->short-uuid nuvlabox-id)))
-        nuvlabox-release     (:nb-selected nuvlabox-release-data)
+  (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
+        zip-url              (r/atom nil)
         download-files       (utils/prepare-compose-files
-                               nuvlabox-release nuvlabox-peripherals nuvlabox-id)
-        execute-command      (str "docker-compose -f "
-                                  (str/join " -f " (map :name download-files)) " up -d")]
+                               nuvlabox-release nuvlabox-peripherals nuvlabox-id)]
+    (zip/create download-files #(reset! zip-url %))
+    (fn []
+      (let [nuvlabox-name-or-id (str "NuvlaBox " (or (:name creation-data)
+                                                     (general-utils/id->short-uuid nuvlabox-id)))
+            execute-command     (str "docker-compose -p nuvlabox -f "
+                                     (str/join " -f " (map :name download-files)) " up -d")]
+        [:<>
+         [ui/ModalHeader
+          [ui/Icon {:name "box"}] (str nuvlabox-name-or-id " created")]
 
-    [:<>
-     [ui/ModalHeader
-      [ui/Icon {:name "box"}] (str nuvlabox-name-or-id " created")]
+         [ui/ModalContent
+          [ui/CardGroup {:centered true}
+           [ui/Card
+            [ui/CardContent {:text-align :center}
+             [ui/Header [:span {:style {:overflow-wrap "break-word"}} nuvlabox-name-or-id]]
+             [ui/Icon {:name  "box"
+                       :color "green"
+                       :size  :massive}]]
+            [ui/CopyToClipboard {:text nuvlabox-id}
+             [ui/Button {:positive true
+                         :icon     "clipboard"
+                         :content  (@tr [:copy-nuvlabox-id])}]]]]]
 
-     [ui/ModalContent
-      [ui/CardGroup {:centered true}
-       [ui/Card
-        [ui/CardContent {:text-align :center}
-         [ui/Header [:span {:style {:overflow-wrap "break-word"}} nuvlabox-name-or-id]]
-         [ui/Icon {:name  "box"
-                   :color "green"
-                   :size  :massive}]]
-        [ui/CopyToClipboard {:text nuvlabox-id}
-         [ui/Button {:positive true
-                     :icon     "clipboard"
-                     :content  (@tr [:copy-nuvlabox-id])}]]]]]
+         [ui/Divider {:horizontal true}
+          [ui/Header "Quick Installation"]]
 
-     [ui/Divider {:horizontal true}
-      [ui/Header "Quick Installation"]]
+         [ui/Segment {:loading    (nil? @zip-url)
+                      :text-align :center
+                      :raised     true}
+          [ui/Label {:circular true
+                     :color    "green"} "1"]
+          [:h5 {:style {:margin "0.5em 0 1em 0"}}
+           "Download the compose file(s)"]
+          [:a {:href     @zip-url
+               :target   "_blank"
+               :style    {:margin "1em"}
+               :download "nuvlabox-engine.zip"} "nuvlabox-engine.zip"]]
 
-     [ui/Segment {:text-align :center
-                  :raised     true}
-      [ui/Label {:circular true
-                 :color    "green"} "1"]
-      [:h5 {:style {:margin "0.5em 0 1em 0"}}
-       "Download the compose file(s)"]
-      [ui/Container
-       (for [file download-files]
-         [:a {:href     (str "data:text/plain;charset=utf-8," (js/encodeURIComponent (:file file)))
-              :target   "_blank"
-              :style    {:margin "1em"}
-              :download (:name file)
-              :key      (:name file)
-              } (:name file)])]]
+         [ui/Segment {:text-align :center
+                      :raised     true}
+          [ui/Label {:circular true
+                     :color    "green"} "2"]
+          [:h5 {:style {:margin "0.5em 0 1em 0"}}
+           "Unzip & Execute "
+           [ui/CopyToClipboard {:text execute-command}
+            [:a {:href  "#"
+                 :style {:font-size   "0.9em"
+                         :color       "grey"
+                         :font-style  "italic"
+                         :font-weight "lighter"}} "(click to copy)"]]]
+          [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]
 
-     [ui/Segment {:text-align :center
-                  :raised     true}
-      [ui/Label {:circular true
-                 :color    "green"} "2"]
-      [:h5 {:style {:margin "0.5em 0 1em 0"}}
-       "Execute "
-       [ui/CopyToClipboard {:text execute-command}
-        [:a {:href  "#"
-             :style {:font-size   "0.9em"
-                     :color       "grey"
-                     :font-style  "italic"
-                     :font-weight "lighter"}} "(click to copy)"]]]
-      [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]
+         [ui/Container {:text-align :center
+                        :style      {:margin "0.2em"}}
+          [:span "Full documentation at "
+           [:a {:href   "https://docs.nuvla.io/docs/nuvlabox/nuvlabox-engine/quickstart.html"
+                :target "_blank"} "Nuvla Docs"]]]
 
-     [ui/Container {:text-align :center
-                    :style      {:margin "0.2em"}}
-      [:span "Full documentation at "
-       [:a {:href   "https://docs.nuvla.io/docs/nuvlabox/nuvlabox-engine/quickstart.html"
-            :target "_blank"} "Nuvla Docs"]]]
-
-     [ui/ModalActions
-      [ui/Button {:on-click on-close-fn} (@tr [:close])]]]))
+         [ui/ModalActions
+          [ui/Button {:on-click on-close-fn} (@tr [:close])]]]))))
 
 
 (defn AddModal
@@ -179,12 +179,12 @@
                                :refresh-interval 30}
         first-nb-release      (first @nb-releases)
         creation-data         (r/atom default-data)
-        default-release-data {:nb-rel      (:release first-nb-release)
-                              :nb-selected first-nb-release
-                              :nb-assets   (->> first-nb-release
-                                                :compose-files
-                                                (map :scope)
-                                                set)}
+        default-release-data  {:nb-rel      (:release first-nb-release)
+                               :nb-selected first-nb-release
+                               :nb-assets   (->> first-nb-release
+                                                 :compose-files
+                                                 (map :scope)
+                                                 set)}
         nuvlabox-release-data (r/atom default-release-data)
         advanced?             (r/atom false)
         on-close-fn           #(do
@@ -308,9 +308,9 @@
 
 (defn AddModalWrapper
   []
-  (let [nb-release  (subscribe [::subs/nuvlabox-releases])]
-      ^{:key (count @nb-release)}
-      [AddModal]))
+  (let [nb-release (subscribe [::subs/nuvlabox-releases])]
+    ^{:key (count @nb-release)}
+    [AddModal]))
 
 (defn NuvlaboxRow
   [{:keys [id state name] :as nuvlabox}]

@@ -141,20 +141,21 @@
   [compatibility unsupp-opts]
   (let [popup-disabled? (empty? unsupp-opts)]
     [:div {:style {:float "right"}}
-    [:span {:style {:font-variant "small-caps"}} "compatibility: "]
-    [ui/Popup
-     {:trigger        (r/as-element [ui/Label {:color "blue"} compatibility ff/nbsp
-                                     (when-not popup-disabled?
-                                       [ui/Icon {:name "exclamation triangle"}])])
-      :header         "Unsupported options"
-      :content        (str "Swarm doesn't support and will ignore the following options: "
+     [:span {:style {:font-variant "small-caps"}} "compatibility: "]
+     [ui/Label {:color "blue"
+                :horizontal true} compatibility]
+     (when-not popup-disabled?
+       [ui/Popup
+        {:trigger        (r/as-element [ui/Icon {:color  "yellow"
+                                                 :name   "exclamation triangle"}])
+         :header         "Unsupported options"
+         :content        (str "Swarm doesn't support and will ignore the following options: "
                            (str/join "; " unsupp-opts))
 
-      :on             "hover"
-      :position       "top right"
-      :disabled       popup-disabled?
-      :wide           true
-      :hide-on-scroll true}]]))
+         :on             "hover"
+         :position       "top right"
+         :wide           true
+         :hide-on-scroll true}])]))
 
 
 (defn docker-compose-section []

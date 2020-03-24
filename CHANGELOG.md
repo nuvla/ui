@@ -2,11 +2,18 @@
 
 ## Unreleased
 
+### Added
+
+  - New Dependency - add jszip library
+
 ### Changed
 
   - Application - Module compatibility and docker-compose validation 
     on get module
   - Dependencies - udpate parent to v6.7.3
+  - Edge page – Create nuvlabox modal generate a single zip for NuvlaBox
+    engine
+  - New Dependency - jszip add library
   - Update dependencies to latest react/reagent/re-frame and others
   - Popup credential connectivity check disappear fix
   - Data workflow - module of subtype project should not appear

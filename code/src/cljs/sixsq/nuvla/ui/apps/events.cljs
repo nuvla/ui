@@ -18,6 +18,7 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 
@@ -106,10 +107,15 @@
 
 (reg-event-db
   ::set-module
-  (fn [db [_ module]]
+  (fn [{:keys [::spec/validate-docker-compose] :as db} [_ {:keys [id] :as module}]]
     (let [db      (assoc db ::spec/completed? true
                             ::spec/module-path (:path module)
-                            ::spec/module (if (nil? module) {} module))
+                            ::spec/module (if (nil? module) {} module)
+                            ::spec/module-immutable module
+                            ::spec/validate-docker-compose
+                            (if (= id (:module-id validate-docker-compose))
+                              validate-docker-compose
+                              nil))
           subtype (:subtype module)]
       (case subtype
         "component" (apps-component-utils/module->db db module)
@@ -140,6 +146,7 @@
           default-logo-url (::spec/default-logo-url db)]
       (-> db
           (assoc ::spec/module {})
+          (assoc ::spec/module-immutable {})
           (assoc ::spec/module-common {})
           (assoc-in [::spec/module-common ::spec/name] new-name)
           (assoc-in [::spec/module-common ::spec/description] "")
@@ -157,7 +164,8 @@
   (fn [{{:keys [::main-spec/nav-path] :as db} :db} [_ version]]
     (let [path (utils/nav-path->module-path nav-path)]
       {:db                  (assoc db ::spec/completed? false
-                                      ::spec/module nil)
+                                      ::spec/module nil
+                                      ::spec/module-immutable nil)
        ::apps-fx/get-module [path version #(dispatch [::set-module %])]})))
 
 
@@ -391,27 +399,75 @@
       {:filter "subtype='registry'"
        :select "id, name"
        :order  "name:asc, id:asc"
-       :last 10000} #(dispatch [::set-registries-infra %])]}))
+       :last   10000} #(dispatch [::set-registries-infra %])]}))
+
+
+(reg-event-fx
+  ::check-validate-docker-compose-job
+  (fn [{{:keys [::spec/module] :as db} :db}
+       [_ module-id operation {:keys [id return-code progress status-message] :as job}]]
+    (when (= module-id (:id module))
+      (let [job-completed? (= progress 100)]
+        (if job-completed?
+          {:db (assoc db ::spec/validate-docker-compose {:valid?    (= return-code 0)
+                                                         :loading?  false
+                                                         :error-msg status-message})}
+          {:dispatch-later [{:ms 5000 :dispatch [::get-validate-docker-compose-job
+                                                 module-id operation id]}]})))))
+
+
+(reg-event-fx
+  ::get-validate-docker-compose-job
+  (fn [_ [_ module-id operation job-id]]
+    {::cimi-api-fx/get [job-id #(dispatch [::check-validate-docker-compose-job
+                                           module-id operation %])]}))
+
+(reg-event-fx
+  ::validate-docker-compose
+  (fn [{db :db} [_ module-or-id]]
+    (let [validate-op "validate-docker-compose"
+          id          (if (string? module-or-id) module-or-id (:id module-or-id))]
+      (when (or
+              (string? module-or-id)
+              (general-utils/can-operation? validate-op module-or-id))
+        {:db                     (assoc db ::spec/validate-docker-compose {:loading?  true
+                                                                           :module-id id})
+         ::cimi-api-fx/operation [id validate-op
+                                  #(if (instance? js/Error %)
+                                     (let [{:keys [status message]} (response/parse-ex-info %)]
+                                       (dispatch [::messages-events/add
+                                                  {:header  (cond-> (str "error on operation "
+                                                                         validate-op " for " id)
+                                                                    status (str " (" status ")"))
+                                                   :content message
+                                                   :type    :error}]))
+                                     (dispatch [::get-validate-docker-compose-job id
+                                                validate-op (:location %)]))]}))))
 
 
 (reg-event-fx
   ::edit-module
   (fn [{{:keys [::spec/module] :as db} :db} [_ commit-map]]
-    (let [id               (:id module)
-          sanitized-module (utils-detail/db->module module commit-map db)]
+    (let [id (:id module)
+          {:keys [subtype] :as sanitized-module} (utils-detail/db->module module commit-map db)]
       (if (nil? id)
         {::cimi-api-fx/add [:module sanitized-module
-                            #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
-                                 (dispatch [::set-module sanitized-module]) ;Needed?
-                                 (dispatch [::main-events/changes-protection? false])
-                                 (dispatch [::history-events/navigate
-                                            (str "apps/" (:path sanitized-module))]))
+                            #(do
+                               (dispatch [::cimi-detail-events/get (:resource-id %)])
+                               (dispatch [::set-module sanitized-module]) ;Needed?
+                               (when (= subtype "application")
+                                 (dispatch [::validate-docker-compose (:resource-id %)]))
+                               (dispatch [::main-events/changes-protection? false])
+                               (dispatch [::history-events/navigate
+                                          (str "apps/" (:path sanitized-module))]))
                             :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
                                          (cimi-api-fx/default-add-on-error :module %)
                                          (when (= status 409)
                                            (dispatch [::name nil])
                                            (dispatch [::validate-form])))]}
-        {::cimi-api-fx/edit [id sanitized-module
+        {::cimi-api-fx/edit [id (if commit-map
+                                  sanitized-module
+                                  (dissoc sanitized-module :content))
                              #(if (instance? js/Error %)
                                 (let [{:keys [status message]} (response/parse-ex-info %)]
                                   (dispatch [::messages-events/add
@@ -421,6 +477,8 @@
                                               :type    :error}]))
                                 (do (dispatch [::cimi-detail-events/get (:id %)])
                                     (dispatch [::get-module])
+                                    (when (= subtype "application")
+                                      (dispatch [::validate-docker-compose %]))
                                     (dispatch [::main-events/changes-protection? false])))]}))))
 
 

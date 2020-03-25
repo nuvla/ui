@@ -9,6 +9,9 @@
 
 ### Changed
 
+  - Application - Module compatibility and docker-compose validation 
+    on get module
+  - Dependencies - udpate parent to v6.7.3
   - Edge page – Create nuvlabox modal generate a single zip for NuvlaBox
     engine
   - New Dependency - jszip add library
@@ -26,6 +29,7 @@
  - Egde - Automatic NuvlaBox release selection and peripheral correlation
  - Edge - Dynamic compose file generation upon NuvlaBox creation
  - Edge - Installation guides upon NuvlaBox creation
+ - App view - compatibility label
  - Edge - Action buttons to peripherals
 
 ### Changed

@@ -127,6 +127,8 @@
 
 (s/def ::registries-infra any?)
 
+(s/def ::validate-docker-compose any?)
+
 (s/def ::db (s/keys :req [::active-input
                           ::form-spec
                           ::form-valid?
@@ -138,7 +140,8 @@
                           ::logo-url-modal-visible?
                           ::save-modal-visible?
                           ::commit-message
-                          ::registries-infra]))
+                          ::registries-infra
+                          ::validate-docker-compose]))
 
 (def defaults {::active-input            nil
                ::form-spec               nil
@@ -152,4 +155,5 @@
                ::save-modal-visible?     false
                ::default-logo-url        "/ui/images/noimage.png"
                ::commit-message          ""
-               ::registries-infra        nil})
+               ::registries-infra        nil
+               ::validate-docker-compose nil})

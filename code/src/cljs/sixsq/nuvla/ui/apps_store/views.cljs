@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.apps-store.views
   (:require
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
     [sixsq.nuvla.ui.apps-store.events :as events]
     [sixsq.nuvla.ui.apps-store.subs :as subs]
@@ -27,7 +28,7 @@
                      (dispatch [::apps-events/get-module]))}])
 
 (defn module-card
-  [{:keys [id name description path parent-path subtype logo-url] :as module}]
+  [{:keys [id name description path parent-path subtype compatibility logo-url] :as module}]
   (let [tr          (subscribe [::i18n-subs/tr])
         detail-href (str "apps/" path)]
     [ui/Card
@@ -44,7 +45,14 @@
        [ui/Icon {:name (apps-utils/subtype-icon subtype)}]
        (or name id)]
       [ui/CardMeta {:style {:word-wrap "break-word"}} parent-path]
-      [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]]
+      [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]
+      (when compatibility
+        [ui/Label {:color   "grey", :corner  "right"}
+         [ui/Popup
+          {:position "top center"
+           :content  (str "COMPATIBILITY: " compatibility)
+           :size     "small"
+           :trigger  (r/as-element [ui/Icon {:name "info"}])}]])]
      [ui/Button {:fluid    true
                  :primary  true
                  :icon     :rocket

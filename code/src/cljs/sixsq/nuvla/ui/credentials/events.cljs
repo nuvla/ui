@@ -186,8 +186,8 @@
 
 (reg-event-fx
   ::set-job-check-cred
-  (fn [{db :db} [_ {:keys [id target-resource return-code status-message] :as job}]]
-    (let [job-completed? (some? return-code)]
+  (fn [{db :db} [_ {:keys [id target-resource return-code progress status-message] :as job}]]
+    (let [job-completed? (= progress 100)]
       (if job-completed?
         (cond->
           {::cimi-api-fx/get [(:href target-resource)

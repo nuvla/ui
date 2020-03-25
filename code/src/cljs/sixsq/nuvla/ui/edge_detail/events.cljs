@@ -84,8 +84,8 @@
 
 (reg-event-fx
   ::check-custom-job-state
-  (fn [_ [_ periph-id operation {:keys [id return-code status-message] :as job}]]
-    (let [job-completed? (some? return-code)]
+  (fn [_ [_ periph-id operation {:keys [id return-code progress status-message] :as job}]]
+    (let [job-completed? (= progress 100)]
       (if job-completed?
         {:dispatch [::messages-events/add
                     {:header  (str (str/capitalize operation) " on " periph-id

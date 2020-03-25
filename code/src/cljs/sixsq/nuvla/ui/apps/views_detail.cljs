@@ -122,10 +122,14 @@
   (let [tr             (subscribe [::i18n-subs/tr])
         visible?       (subscribe [::subs/save-modal-visible?])
         username       (subscribe [::session-subs/user])
-        commit-message (subscribe [::subs/commit-message])]
+        commit-message (subscribe [::subs/commit-message])
+        need-commit?   (subscribe [::subs/module-content-updated?])]
     (fn []
       (let [commit-map {:author @username
-                        :commit @commit-message}]
+                        :commit @commit-message}
+            save-fn    #(do (dispatch [::events/edit-module (when @need-commit? commit-map)])
+                            (dispatch [::events/close-save-modal])
+                            (dispatch [::events/commit-message nil]))]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(do (dispatch [::events/commit-message nil])
@@ -134,25 +138,22 @@
          [ui/ModalHeader (str/capitalize (str (@tr [:save]) " " (@tr [:component])))]
 
          [ui/ModalContent
-          [ui/Input {:placeholder   (@tr [:commit-placeholder])
-                     :fluid         true
-                     :default-value @commit-message
-                     :auto-focus    true
-                     :focus         true
-                     :on-change     (ui-callback/input-callback
-                                      #(dispatch [::events/commit-message %]))
-                     :on-key-press  (partial forms/on-return-key
-                                             #(do (dispatch [::events/edit-module commit-map])
-                                                  (dispatch [::events/close-save-modal])
-                                                  (dispatch [::events/commit-message nil])))}]]
+          (if @need-commit?
+            [ui/Input {:placeholder   (@tr [:commit-placeholder])
+                       :fluid         true
+                       :default-value @commit-message
+                       :auto-focus    true
+                       :focus         true
+                       :on-change     (ui-callback/input-callback
+                                        #(dispatch [::events/commit-message %]))
+                       :on-key-press  (partial forms/on-return-key save-fn)}]
+            (@tr [:are-you-sure?]))]
 
          [ui/ModalActions
           [uix/Button {:text     (@tr [:save])
                        :positive true
                        :active   true
-                       :on-click #(do (dispatch [::events/edit-module commit-map])
-                                      (dispatch [::events/commit-message nil])
-                                      (dispatch [::events/close-save-modal]))}]]]))))
+                       :on-click save-fn}]]]))))
 
 
 (defn logo-url-modal

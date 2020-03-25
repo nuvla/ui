@@ -42,11 +42,12 @@
 ;; Sanitize before serialization to server
 
 (defn sanitize-name [name]
-  (str/lower-case
-    (str/replace
-      (str/trim
-        (str/join "" (re-seq #"[a-zA-Z0-9\ ]" name)))
-      " " "-")))
+  (when name
+    (str/lower-case
+     (str/replace
+       (str/trim
+         (str/join "" (re-seq #"[a-zA-Z0-9\ ]" name)))
+       " " "-"))))
 
 
 (defn contruct-path [parent name]

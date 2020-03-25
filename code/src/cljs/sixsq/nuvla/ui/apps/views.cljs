@@ -46,6 +46,7 @@
   (let [nav-path         (subscribe [::main-subs/nav-path])
         nav-query-params (subscribe [::main-subs/nav-query-params])]
     (fn []
+      (dispatch [::events/clear-validate-docker-compose])
       (let [module-name (utils/nav-path->module-name @nav-path)
             new-subtype (:subtype @nav-query-params)
             version     (:version @nav-query-params nil)

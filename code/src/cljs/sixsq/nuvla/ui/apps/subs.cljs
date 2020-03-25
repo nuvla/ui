@@ -3,6 +3,7 @@
     [clojure.set :as set]
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.apps.spec :as spec]
+    [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
@@ -145,4 +146,20 @@
 (reg-sub
   ::validate-docker-compose
   (fn [db]
-    (::spec/validate-docker-compose db)))
+    (or (::spec/validate-docker-compose db)
+        (let [docker-compose-valid (get-in db [::spec/module-immutable :valid])]
+          (when (boolean? docker-compose-valid)
+           {:valid?    docker-compose-valid
+            :loading?  false
+            :error-msg (get-in db [::spec/module-immutable :validation-message] "")})))))
+
+
+(reg-sub
+  ::module-content-updated?
+  (fn [{:keys [::spec/module
+               ::spec/module-immutable] :as db}]
+    (not= (-> module
+              (utils-detail/db->module nil db)
+              :content
+              (dissoc :commit :author))
+          (-> module-immutable :content (dissoc :commit :author)))))

@@ -117,24 +117,25 @@
 
 (defn DockerComposeValidationPopup
   [{:keys [loading? valid? error-msg] :as validate-dc}]
-  [ui/Popup {:trigger        (r/as-element [ui/Icon {:name    (cond
-                                                                loading? "circle notched"
-                                                                (not valid?) "bug"
-                                                                valid? "checkmark")
-                                                     :color   (cond
-                                                                loading? "black"
-                                                                (not valid?) "red"
-                                                                valid? "green")
-                                                     :loading loading?}])
-             :header         "Validation of docker-compose"
-             :content        (cond
-                               loading? "Validation of docker-compose in progress..."
-                               (not valid?) (str/replace error-msg #"^.*is invalid because:" "")
-                               valid? "Docker-compose is valid :)")
-             :on             "hover"
-             :position       "top center"
-             :wide           true
-             :hide-on-scroll true}])
+  [ui/Popup
+   {:trigger        (r/as-element [ui/Icon {:name    (cond
+                                                       loading? "circle notched"
+                                                       (not valid?) "bug"
+                                                       valid? "checkmark")
+                                            :color   (cond
+                                                       loading? "black"
+                                                       (not valid?) "red"
+                                                       valid? "green")
+                                            :loading loading?}])
+    :header         "Validation of docker-compose"
+    :content        (cond
+                      loading? "Validation of docker-compose in progress..."
+                      (not valid?) (some-> error-msg (str/replace #"^.*is invalid because:" ""))
+                      valid? "Docker-compose is valid :)")
+    :on             "hover"
+    :position       "top center"
+    :wide           true
+    :hide-on-scroll true}])
 
 
 (defn DockerComposeCompatibility
@@ -142,15 +143,15 @@
   (let [popup-disabled? (empty? unsupp-opts)]
     [:div {:style {:float "right"}}
      [:span {:style {:font-variant "small-caps"}} "compatibility: "]
-     [ui/Label {:color "blue"
+     [ui/Label {:color      "blue"
                 :horizontal true} compatibility]
      (when-not popup-disabled?
        [ui/Popup
-        {:trigger        (r/as-element [ui/Icon {:color  "yellow"
-                                                 :name   "exclamation triangle"}])
+        {:trigger        (r/as-element [ui/Icon {:color "yellow"
+                                                 :name  "exclamation triangle"}])
          :header         "Unsupported options"
          :content        (str "Swarm doesn't support and will ignore the following options: "
-                           (str/join "; " unsupp-opts))
+                              (str/join "; " unsupp-opts))
 
          :on             "hover"
          :position       "top right"

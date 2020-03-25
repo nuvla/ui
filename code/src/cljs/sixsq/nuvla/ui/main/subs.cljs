@@ -94,9 +94,9 @@
 
 
 (reg-sub
-  ::refresh-in
+  ::next-refresh
   (fn [{:keys [::spec/actions-interval]} [_ action-id]]
-    (get-in actions-interval [action-id :refresh-in])))
+    (get-in actions-interval [action-id :next-refresh])))
 
 
 (reg-sub

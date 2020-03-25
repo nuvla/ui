@@ -9,11 +9,13 @@
 
 (defn RefreshedIn
   [action-id]
-  (let [tr         (subscribe [::i18n-subs/tr])
-        refresh-in (subscribe [::subs/refresh-in action-id])]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        next-refresh (subscribe [::subs/next-refresh action-id])]
     (fn []
       [ui/MenuItem {:disabled true}
-       (str (@tr [:automatic-refresh-in]) " " (/ @refresh-in 1000) "s")])))
+       [:span (@tr [:automatic-refresh-in]) " "
+        (when @next-refresh
+          [uix/CountDown @next-refresh]) "s"]])))
 
 
 (defn RefreshButton

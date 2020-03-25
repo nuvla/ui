@@ -4,11 +4,13 @@
 
 ### Added
 
+  - Count down component
   - Re-frame-10x - inspection and debug tools
   - New Dependency - add jszip library
 
 ### Changed
 
+  - Action interval - Optimization
   - Application - Module compatibility and docker-compose validation 
     on get module
   - Dependencies - udpate parent to v6.7.3

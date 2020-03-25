@@ -275,3 +275,14 @@
       (js/setTimeout #(swap! refresh inc) 5000)
       ^{:key (str time-str @refresh)}
       [:span (fn-update-ago time-str)])))
+
+
+(defn CountDown
+  [futur-time]
+  (let [refresh (r/atom 0)]
+    (fn [futur-moment]
+      (let [delta-seconds (/ (time/delta-milliseconds (time/now) futur-moment) 1000)]
+        (js/setTimeout #(swap! refresh inc) 1000)
+        ^{:key (str futur-moment @refresh)}
+        [:span
+         (if (neg? delta-seconds) 0 (js/Math.round delta-seconds))]))))

@@ -10,6 +10,7 @@
     [sixsq.nuvla.ui.messages.spec :as messages-spec]
     [sixsq.nuvla.ui.session.events :as session-events]
     [sixsq.nuvla.ui.utils.general :as u]
+    [sixsq.nuvla.ui.utils.time :as time]
     [taoensso.timbre :as log]))
 
 
@@ -52,7 +53,7 @@
   (fn [{{:keys [::spec/actions-interval] :as db} :db} [_ visible?]]
     (cond-> {:db                        (assoc db ::spec/visible? visible?)
              ::fx/bulk-actions-interval [(if visible?
-                                           ::action-interval-resume
+                                           ::action-interval-start
                                            ::action-interval-pause) actions-interval]}
             visible? (assoc :dispatch [::session-events/initialize]))))
 
@@ -69,68 +70,44 @@
                                      (dissoc actions-interval notification-polling-id)]}))))
 
 
-(def TICK_INTERVAL 1000)
-
-
-(reg-event-db
-  ::action-interval-tick
-  (fn [{:keys [::spec/actions-interval] :as db} [_ action-id]]
-    (let [{:keys [frequency event refresh-in]} (get actions-interval action-id)
-          new-refresh-in (- (or refresh-in frequency) TICK_INTERVAL)]
-      (if (pos-int? new-refresh-in)
-        (assoc-in db [::spec/actions-interval action-id :refresh-in] new-refresh-in)
-        (do
-          (dispatch event)
-          (assoc-in db [::spec/actions-interval action-id :refresh-in] frequency))))))
-
-
-(reg-event-db
+(reg-event-fx
   ::action-interval-start
-  (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id event frequency] :as action-opts}]]
-    (log/info "Start action-interval: " action-opts)
-    (let [existing-action (get actions-interval id)
-          timer           (or (:timer existing-action)
-                              (js/setInterval
-                                #(dispatch [::action-interval-tick id]) TICK_INTERVAL))]
-      (dispatch event)
-      (assoc-in db [::spec/actions-interval id] (assoc action-opts :timer timer
-                                                                   :refresh-in frequency)))))
+  (fn [{{:keys [::spec/actions-interval] :as db} :db}
+       [_ {:keys [id] :as action-opts}]]
+    (let [existing-action    (get actions-interval id)
+          {:keys [event timer frequency] :as action-opts} (or existing-action
+                                                              action-opts)
+          update-action-opts (assoc action-opts
+                               :timer (js/setTimeout
+                                        #(dispatch [::action-interval-start action-opts])
+                                        frequency),
+                               :next-refresh (time/add-milliseconds (time/now) frequency))]
+      (cond
+        (nil? existing-action) (log/info "Start action-interval: " action-opts)
+        (nil? timer) (log/info "Resume action-interval: " id))
+      {:dispatch event
+       :db       (assoc-in db [::spec/actions-interval id] update-action-opts)})))
 
 
 (reg-event-db
   ::action-interval-pause
-  (fn [{:keys [::spec/actions-interval] :as db} [_ action-id]]
-    (log/info "Pause action-interval:" action-id)
-    (let [{existing-timer :timer :as existing-action} (get actions-interval action-id)]
+  (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id] :as action-opts}]]
+    (log/info "Pause action-interval:" id)
+    (let [{existing-timer :timer :as existing-action} (get actions-interval id)]
       (when existing-timer
-        (js/clearInterval existing-timer))
+        (js/clearTimeout existing-timer))
       (cond-> db
-              existing-action (update-in [::spec/actions-interval action-id] dissoc :timer)))))
-
-
-(reg-event-db
-  ::action-interval-resume
-  (fn [{:keys [::spec/actions-interval] :as db} [_ action-id]]
-    (log/info "Resume action-interval: " action-id)
-    (if-let [{:keys [event frequency] :as existing-action} (get actions-interval action-id)]
-      (let [timer (or (:timer existing-action)
-                      (js/setInterval
-                        #(dispatch [::action-interval-tick action-id]) TICK_INTERVAL))]
-        (dispatch event)
-        (update-in db [::spec/actions-interval action-id] assoc
-                   :timer timer
-                   :refresh-in frequency))
-      db)))
+              existing-action (update-in [::spec/actions-interval id] dissoc :timer)))))
 
 
 (reg-event-db
   ::action-interval-delete
-  (fn [{:keys [::spec/actions-interval] :as db} [_ action-id]]
-    (log/info "Delete action-interval: " action-id)
-    (let [{existing-timer :timer} (get actions-interval action-id)]
+  (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id] :as action-opts}]]
+    (log/info "Delete action-interval: " id)
+    (let [{existing-timer :timer} (get actions-interval id)]
       (when existing-timer
-        (js/clearInterval existing-timer))
-      (assoc db ::spec/actions-interval (dissoc actions-interval action-id)))))
+        (js/clearTimeout existing-timer))
+      (assoc db ::spec/actions-interval (dissoc actions-interval id)))))
 
 
 (reg-event-fx
@@ -168,41 +145,41 @@
 
 
 #_(reg-event-fx
-  ::set-bootsrap-message
-  (fn [{:keys [db]} [_ {resources     :resources
-                        resource-type :resource-type
-                        element-count :count :as response}]]
-    (if response
+    ::set-bootsrap-message
+    (fn [{:keys [db]} [_ {resources     :resources
+                          resource-type :resource-type
+                          element-count :count :as response}]]
+      (if response
 
-      (case resource-type
+        (case resource-type
 
-        "infrastructure-service-collection"
-        (if (> element-count 0)
-          {:db             (assoc db ::spec/bootstrap-message nil)
-           ::api-fx/search [:credential
-                            {:filter (u/join-and
-                                       "subtype='infrastructure-service-swarm'"
-                                       (apply u/join-or
-                                              (map #(str "parent='" (:id %) "'") resources)))
-                             :last   0}
-                            #(dispatch [::set-bootsrap-message %])]}
-          {:db (assoc db ::spec/bootstrap-message :no-swarm)})
+          "infrastructure-service-collection"
+          (if (> element-count 0)
+            {:db             (assoc db ::spec/bootstrap-message nil)
+             ::api-fx/search [:credential
+                              {:filter (u/join-and
+                                         "subtype='infrastructure-service-swarm'"
+                                         (apply u/join-or
+                                                (map #(str "parent='" (:id %) "'") resources)))
+                               :last   0}
+                              #(dispatch [::set-bootsrap-message %])]}
+            {:db (assoc db ::spec/bootstrap-message :no-swarm)})
 
-        "credential-collection"
-        (if (> element-count 0)
-          {:db (assoc db ::spec/bootstrap-message nil)}
-          {:db (assoc db ::spec/bootstrap-message :no-credential)}))
+          "credential-collection"
+          (if (> element-count 0)
+            {:db (assoc db ::spec/bootstrap-message nil)}
+            {:db (assoc db ::spec/bootstrap-message :no-credential)}))
 
-      {:db (assoc db ::spec/bootstrap-message nil)})))
+        {:db (assoc db ::spec/bootstrap-message nil)})))
 
 
 #_(reg-event-fx
-  ::check-bootstrap-message
-  (fn [_ _]
-    {::api-fx/search [:infrastructure-service
-                      {:filter "subtype='swarm'"
-                       :select "id"}
-                      #(dispatch [::set-bootsrap-message %])]}))
+    ::check-bootstrap-message
+    (fn [_ _]
+      {::api-fx/search [:infrastructure-service
+                        {:filter "subtype='swarm'"
+                         :select "id"}
+                        #(dispatch [::set-bootsrap-message %])]}))
 
 
 (reg-event-fx

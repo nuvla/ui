@@ -6,8 +6,8 @@
 (reg-fx
   ::bulk-actions-interval
   (fn [[dispatched-event-key actions-interval]]
-    (doseq [id (keys actions-interval)]
-      (dispatch [dispatched-event-key id]))))
+    (doseq [action-opts (vals actions-interval)]
+      (dispatch [dispatched-event-key action-opts]))))
 
 
 (reg-fx

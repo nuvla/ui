@@ -107,11 +107,15 @@
 
 (reg-event-db
   ::set-module
-  (fn [db [_ module]]
+  (fn [{:keys [::spec/validate-docker-compose] :as db} [_ {:keys [id] :as module}]]
     (let [db      (assoc db ::spec/completed? true
                             ::spec/module-path (:path module)
                             ::spec/module (if (nil? module) {} module)
-                            ::spec/module-immutable module)
+                            ::spec/module-immutable module
+                            ::spec/validate-docker-compose
+                            (if (= id (:module-id validate-docker-compose))
+                              validate-docker-compose
+                              nil))
           subtype (:subtype module)]
       (case subtype
         "component" (apps-component-utils/module->db db module)
@@ -144,7 +148,6 @@
           (assoc ::spec/module {})
           (assoc ::spec/module-immutable {})
           (assoc ::spec/module-common {})
-          (assoc ::spec/validate-docker-compose nil)
           (assoc-in [::spec/module-common ::spec/name] new-name)
           (assoc-in [::spec/module-common ::spec/description] "")
           (assoc-in [::spec/module-common ::spec/logo-url] default-logo-url)
@@ -154,12 +157,6 @@
           (assoc-in [::spec/module-common ::spec/urls] {})
           (assoc-in [::spec/module-common ::spec/output-parameters] {})
           (assoc-in [::spec/module-common ::spec/data-types] {})))))
-
-
-(reg-event-db
-  ::clear-validate-docker-compose
-  (fn [db _]
-    (assoc db ::spec/validate-docker-compose nil)))
 
 
 (reg-event-fx
@@ -433,7 +430,8 @@
       (when (or
               (string? module-or-id)
               (general-utils/can-operation? validate-op module-or-id))
-        {:db                     (assoc db ::spec/validate-docker-compose {:loading? true})
+        {:db                     (assoc db ::spec/validate-docker-compose {:loading?  true
+                                                                           :module-id id})
          ::cimi-api-fx/operation [id validate-op
                                   #(if (instance? js/Error %)
                                      (let [{:keys [status message]} (response/parse-ex-info %)]
@@ -450,14 +448,15 @@
 (reg-event-fx
   ::edit-module
   (fn [{{:keys [::spec/module] :as db} :db} [_ commit-map]]
-    (let [id               (:id module)
-          sanitized-module (utils-detail/db->module module commit-map db)]
+    (let [id (:id module)
+          {:keys [subtype] :as sanitized-module} (utils-detail/db->module module commit-map db)]
       (if (nil? id)
         {::cimi-api-fx/add [:module sanitized-module
                             #(do
                                (dispatch [::cimi-detail-events/get (:resource-id %)])
                                (dispatch [::set-module sanitized-module]) ;Needed?
-                               (dispatch [::validate-docker-compose (:resource-id %)])
+                               (when (= subtype "application")
+                                 (dispatch [::validate-docker-compose (:resource-id %)]))
                                (dispatch [::main-events/changes-protection? false])
                                (dispatch [::history-events/navigate
                                           (str "apps/" (:path sanitized-module))]))
@@ -478,7 +477,8 @@
                                               :type    :error}]))
                                 (do (dispatch [::cimi-detail-events/get (:id %)])
                                     (dispatch [::get-module])
-                                    (dispatch [::validate-docker-compose %])
+                                    (when (= subtype "application")
+                                      (dispatch [::validate-docker-compose %]))
                                     (dispatch [::main-events/changes-protection? false])))]}))))
 
 

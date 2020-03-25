@@ -4,6 +4,7 @@
 
 ### Added
 
+  - Re-frame-10x - inspection and debug tools
   - New Dependency - add jszip library
 
 ### Changed

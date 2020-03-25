@@ -96,7 +96,8 @@
                            [com.google.javascript/closure-compiler-unshaded
                             org.clojure/google-closure-library
                             org.clojure/google-closure-library-third-party]]
-                          [binaryage/devtools "1.0.0" :scope "test"]]}
+                          [binaryage/devtools "1.0.0" :scope "test"]
+                          [day8.re-frame/re-frame-10x "0.6.0"]]}
 
    :scljs {:dependencies [[thheller/shadow-cljs "2.8.93"]   ;; WARNING: also in package.json
                           [org.clojure/google-closure-library "0.0-20191016-6ae1f72f"]

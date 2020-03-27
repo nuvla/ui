@@ -39,7 +39,9 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.welcome.views]))
+    [sixsq.nuvla.ui.welcome.views]
+    ["@stripe/stripe-js" :as stripe]
+    ["@stripe/react-stripe-js" :as react-stripe]))
 
 
 (defn crumb
@@ -219,6 +221,46 @@
    [messages/alert-slider]
    [messages/alert-modal]])
 
+;import {Elements} from '@stripe/react-stripe-js';
+;import {loadStripe} from '@stripe/stripe-js';
+;
+;// Make sure to call `loadStripe` outside of a component’s render to avoid
+;// recreating the `Stripe` object on every render.
+;const stripePromise = loadStripe('pk_test_JJ1eMdKN0Hp4UFJ6kWXWO4ix00jtXzq5XG');
+;
+;const App = () => {
+;  return (
+;    <Elements stripe={stripePromise}>
+;      <MyCheckoutForm />
+;    </Elements>
+;  );
+;};
+
+
+(def stripe-promise (stripe/loadStripe "pk_test_JJ1eMdKN0Hp4UFJ6kWXWO4ix00jtXzq5XG"))
+(js/console.log stripe-promise)
+
+(def Elements (r/adapt-react-class react-stripe/Elements))
+(def CardElement (r/adapt-react-class react-stripe/CardElement))
+
+
+;<CardElement
+;  options={{
+;    style: {
+;      base: {
+;        fontSize: '16px',
+;        color: '#424770',
+;        '::placeholder': {
+;          color: '#aab7c4',
+;        },
+;      },
+;      invalid: {
+;        color: '#9e2146',
+;      },
+;    },
+;  }}
+;/>
+
 
 (defn app []
   (fn []
@@ -248,6 +290,13 @@
                          :style    {:z-index 999}
                          :on-click #(dispatch [::events/close-sidebar])}]
              [header]
+             [:h1 "Testing"]
+             [Elements {:stripe stripe-promise}
+              [:div {:style {:width 400
+                             :margin 20
+                             :background-color "#5795f8"}}
+               [CardElement]]
+              ]
              [contents]
              [ignore-changes-modal]
              (when-not @iframe? [footer])]]

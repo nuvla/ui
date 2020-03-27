@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.4.12] - 2020-03-27
+
 ### Added
 
   - Count down component

@@ -294,11 +294,13 @@
   [resources]
   [uix/Accordion
    (let [load-stats      (u/load-statistics resources)
+         net-stats       (u/load-net-stats (:net-stats resources))
          number-of-stats (count load-stats)]
      ; TODO: if the number-of-stats grows if should split into a new row
      [ui/Grid {:columns   number-of-stats,
                :stackable true
-               :divided   true}
+               :divided   true
+               :celled    "internally"}
       [ui/GridRow
        (for [stat load-stats]
          ^{:key (:title stat)}
@@ -353,7 +355,33 @@
           ;
           ;  :on             "hover"
           ;  :hide-on-scroll true}]
-          ])]])
+          ])]
+      (when net-stats
+        [ui/GridRow {:centered true
+                     :columns  2}
+         [ui/GridColumn
+          [:div
+           [plot/Bar      {:height  200
+                           :data    {:labels   (:label            net-stats)
+                                     :datasets [{:label           "Received",
+                                                 :data            (:rx net-stats)
+                                                 :backgroundColor "rgb(182, 219, 238)"
+                                                 :borderColor     "white"
+                                                 :borderWidth     1}
+                                                {:label           "Transmitted",
+                                                 :data            (:tx net-stats)
+                                                 :backgroundColor "rgb(230, 99, 100)"
+                                                 :borderColor     "white"
+                                                 :borderWidth     1}]}
+                           :options {:legend              {:display true
+                                                           :labels  {:fontColor "grey"}}
+                                     :title               {:display  true
+                                                           :text     (:title net-stats)
+                                                           :position "bottom"}
+                                     :scales {:yAxes [{:type          "logarithmic"
+                                                       :scaleLabel {:labelString   "bytes"
+                                                                    :display       true}}]}}}]]]])])
+
    :label [:span "Resource Consumption " [ui/Popup
                                           {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
                                            :content        "Let your NuvlaBox apps subscribe to the internal MQTT topics
@@ -419,10 +447,54 @@
 (defn SummarySection
   []
   (let [{:keys [id] :as nuvlabox} @(subscribe [::subs/nuvlabox])
-        status @(subscribe [::edge-subs/status-nuvlabox id])]
+        status @(subscribe [::edge-subs/status-nuvlabox id])
+        {:keys [hostname ip docker-server-version operating-system architecture last-boot]
+         :as nb-status} @(subscribe [::subs/nuvlabox-status])
+        card-options {:text-align "center"
+                      :color  "black"
+                      :style {:max-width 200}}]
     [:<>
-     [ui/CardGroup {:centered true}
-      [NuvlaboxCard nuvlabox status]]
+     [ui/Grid {:columns 3}
+      [ui/GridRow
+       [ui/GridColumn
+        [ui/Label {:color "grey"
+                   :basic     true
+                   :circular  true}
+         (str "Last boot: " last-boot)]]
+       [ui/GridColumn
+        [ui/CardGroup {:centered true}
+         [NuvlaboxCard nuvlabox status]]]
+       [ui/GridColumn]]]
+
+     [ui/Segment
+      [ui/CardGroup {:centered  true}
+       (when operating-system
+         [ui/Card card-options
+          [ui/CardContent
+           [ui/CardHeader "Operating System"]
+           [ui/CardMeta operating-system]]])
+       (when hostname
+         [ui/Card card-options
+          [ui/CardContent
+           [ui/CardHeader "Hostname"]
+           [ui/CardMeta hostname]]])
+       (when architecture
+         [ui/Card card-options
+          [ui/CardContent
+           [ui/CardHeader "Architecture"]
+           [ui/CardMeta architecture]]])
+       (when ip
+         [ui/Card card-options
+          [ui/CardContent
+           [ui/CardHeader "IP"]
+           [ui/CardMeta ip]]])
+       (when docker-server-version
+         [ui/Card card-options
+          [ui/CardContent
+           [ui/CardHeader "Docker Version"]
+           [ui/CardMeta docker-server-version]]])
+       ]]
+
      [LocationAccordion nuvlabox]]))
 
 

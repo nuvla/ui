@@ -444,16 +444,15 @@
 (defn SummarySection
   []
   (let [nuvlabox  (subscribe [::subs/nuvlabox])
-        nb-status @(subscribe [::subs/nuvlabox-status])
+        nb-status (subscribe [::subs/nuvlabox-status])
         can-edit? (subscribe [::subs/can-edit?])
         acl-open  (r/atom false)]
     (fn []
       (let [status       @(subscribe [::edge-subs/status-nuvlabox (:id @nuvlabox)])
             {:keys [hostname ip docker-server-version
-                    operating-system architecture last-boot]} nb-status
+                    operating-system architecture last-boot]} @nb-status
 
-            card-options {:text-align "center"
-                          :color      "black"
+            card-options {:color      "black"
                           :style      {:max-width 200}}]
         [:<>
          (when (:acl @nuvlabox)
@@ -474,7 +473,7 @@
               [ui/Label {:color    "grey"
                          :basic    true
                          :circular true}
-               (str "Last boot: " last-boot)])]
+               (str "Last boot: " (time/time->format last-boot))])]
            [ui/GridColumn
             [ui/CardGroup {:centered true}
              (when @nuvlabox
@@ -485,7 +484,7 @@
                     (remove #(or (nil? %) (str/blank? %)))
                     seq)
            [ui/Segment
-            [ui/CardGroup {:ctered true}
+            [ui/CardGroup {:centered true}
              (when operating-system
                [ui/Card card-options
                 [ui/CardContent

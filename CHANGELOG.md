@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - UIX comp - use setInterval behave better with dev reloading
+  - Action Interval - use setInterval behave better with dev reloading
   - NuvlaBox Edge detail - Show peripheral action in accordion title
   - NuvlaBox Edge detail - New plots and stats
 

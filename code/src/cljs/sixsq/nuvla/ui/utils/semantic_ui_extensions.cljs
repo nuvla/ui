@@ -273,8 +273,8 @@
   (let [locale        (subscribe [::i18n-subs/locale])
         fn-update-ago #(time/parse-ago % @locale)
         refresh       (r/atom 0)]
+    (js/setInterval #(swap! refresh inc) 5000)
     (fn [time-str]
-      (js/setTimeout #(swap! refresh inc) 5000)
       ^{:key (str time-str @refresh)}
       [:span (fn-update-ago time-str)])))
 
@@ -282,9 +282,9 @@
 (defn CountDown
   [futur-time]
   (let [refresh (r/atom 0)]
+    (js/setInterval #(swap! refresh inc) 1000)
     (fn [futur-moment]
       (let [delta-seconds (/ (time/delta-milliseconds (time/now) futur-moment) 1000)]
-        (js/setTimeout #(swap! refresh inc) 1000)
         ^{:key (str futur-moment @refresh)}
         [:span
          (if (neg? delta-seconds) 0 (js/Math.round delta-seconds))]))))

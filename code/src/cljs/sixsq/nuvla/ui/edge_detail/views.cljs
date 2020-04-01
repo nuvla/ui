@@ -356,7 +356,7 @@
           ;  :on             "hover"
           ;  :hide-on-scroll true}]
           ])]
-      (when net-stats
+      (when (> (count (:label net-stats)) 0)
         [ui/GridRow {:centered true
                      :columns  2}
          [ui/GridColumn

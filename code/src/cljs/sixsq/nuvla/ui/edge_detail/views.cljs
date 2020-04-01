@@ -110,7 +110,7 @@
              p-data-sample :raw-data-sample} @peripheral
             actions (get-available-actions p-ops)]
 
-        (when (> (compare p-updated @last-updated) 0)
+        (when (pos? (compare p-updated @last-updated))
           (reset! button-load? false)
           (reset! last-updated p-updated))
         [uix/Accordion
@@ -167,34 +167,30 @@
            (when p-data-sample
              [ui/TableRow {:positive true}
               [ui/TableCell "Raw Data Sample"]
-              [ui/TableCell p-data-sample]])]
-          (when (> (count actions) 0)
-            [ui/TableFooter
-             [ui/TableRow
-              [ui/TableHeaderCell]
-              [ui/TableHeaderCell
-               [ui/Popup
-                {:position "left center"
-                 :content  "Click to start/stop routing this peripheral's data through the Data Gateway"
-                 :header   "data-gateway"
-                 :inverted true
-                 :wide     "very"
-                 :size     "small"
-                 :trigger  (r/as-element
-                             [ui/Button {:on-click #(do
-                                                      (reset! button-load? true)
-                                                      (dispatch
-                                                        [::events/custom-action p-id (first actions)
-                                                         (str "Triggered " (first actions) " for " p-id)]))
-                                         :floated  "right"
-                                         :color    "vk"
-                                         :size     "large"
-                                         :circular true
-                                         :disabled @button-load?
-                                         :loading  @button-load?}
-                              (first actions)])}]
-               ]]])]
-         :label (or p-name p-product)
+              [ui/TableCell p-data-sample]])]]
+         :label [:span (or p-name p-product)
+                 (when (pos? (count actions))
+                   [ui/Popup
+                    {:position "left center"
+                     :content  "Click to start/stop routing this peripheral's data through the Data Gateway"
+                     :header   "data-gateway"
+                     :wide     "very"
+                     :size     "small"
+                     :trigger  (r/as-element
+                                 [ui/Button
+                                  {:on-click (fn [event]
+                                               (reset! button-load? true)
+                                               (dispatch
+                                                 [::events/custom-action p-id (first actions)
+                                                  (str "Triggered " (first actions) " for " p-id)])
+                                               (.stopPropagation event))
+                                   :style    {:margin "-.6em"}
+                                   :color    "vk"
+                                   :floated  "right"
+                                   :circular true
+                                   :disabled @button-load?
+                                   :loading  @button-load?}
+                                  (first actions)])}])]
          :title-size :h4
          :default-open false
          :icon (case p-interface
@@ -294,11 +290,13 @@
   [resources]
   [uix/Accordion
    (let [load-stats      (u/load-statistics resources)
+         net-stats       (u/load-net-stats (:net-stats resources))
          number-of-stats (count load-stats)]
      ; TODO: if the number-of-stats grows if should split into a new row
      [ui/Grid {:columns   number-of-stats,
                :stackable true
-               :divided   true}
+               :divided   true
+               :celled    "internally"}
       [ui/GridRow
        (for [stat load-stats]
          ^{:key (:title stat)}
@@ -353,17 +351,44 @@
           ;
           ;  :on             "hover"
           ;  :hide-on-scroll true}]
-          ])]])
-   :label [:span "Resource Consumption " [ui/Popup
-                                          {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
-                                           :content        "Let your NuvlaBox apps subscribe to the internal MQTT topics
+          ])]
+      (when (pos? (count (:label net-stats)))
+        [ui/GridRow {:centered true
+                     :columns  2}
+         [ui/GridColumn
+          [:div
+           [plot/Bar {:height  200
+                      :data    {:labels   (:label net-stats)
+                                :datasets [{:label           "Received",
+                                            :data            (:rx net-stats)
+                                            :backgroundColor "rgb(182, 219, 238)"
+                                            :borderColor     "white"
+                                            :borderWidth     1}
+                                           {:label           "Transmitted",
+                                            :data            (:tx net-stats)
+                                            :backgroundColor "rgb(230, 99, 100)"
+                                            :borderColor     "white"
+                                            :borderWidth     1}]}
+                      :options {:legend {:display true
+                                         :labels  {:fontColor "grey"}}
+                                :title  {:display  true
+                                         :text     (:title net-stats)
+                                         :position "bottom"}
+                                :scales {:yAxes [{:type       "logarithmic"
+                                                  :scaleLabel {:labelString "bytes"
+                                                               :display     true}}]}}}]]]])])
+
+   :label [:span "Resource Consumption "
+           [ui/Popup
+            {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
+             :content        "Let your NuvlaBox apps subscribe to the internal MQTT topics
                                           to access these values locally"
-                                           :header         "data-gateway"
-                                           :position       "right center"
-                                           :inverted       true
-                                           :wide           true
-                                           :on             "hover"
-                                           :hide-on-scroll true}]]
+             :header         "data-gateway"
+             :position       "right center"
+             :inverted       true
+             :wide           true
+             :on             "hover"
+             :hide-on-scroll true}]]
    :icon "thermometer half"])
 
 
@@ -418,33 +443,83 @@
 
 (defn SummarySection
   []
-  (let [{:keys [id] :as nuvlabox} @(subscribe [::subs/nuvlabox])
-        status @(subscribe [::edge-subs/status-nuvlabox id])]
-    [:<>
-     [ui/CardGroup {:centered true}
-      [NuvlaboxCard nuvlabox status]]
-     [LocationAccordion nuvlabox]]))
+  (let [nuvlabox  (subscribe [::subs/nuvlabox])
+        nb-status (subscribe [::subs/nuvlabox-status])
+        can-edit? (subscribe [::subs/can-edit?])
+        acl-open  (r/atom false)]
+    (fn []
+      (let [status       @(subscribe [::edge-subs/status-nuvlabox (:id @nuvlabox)])
+            {:keys [hostname ip docker-server-version
+                    operating-system architecture last-boot]} @nb-status
+
+            card-options {:color      "black"
+                          :style      {:max-width 200}}]
+        [:<>
+         (when (:acl @nuvlabox)
+           ^{:key (:updated @nuvlabox)}
+           [acl/AclButton
+            {:default-value   (:acl @nuvlabox)
+             :read-only       (not @can-edit?)
+             :default-active? @acl-open
+             :on-change       #(do
+                                 (reset! acl-open true)
+                                 (dispatch [::events/edit
+                                            (:id @nuvlabox) (assoc @nuvlabox :acl %)
+                                            "NuvlaBox ACL updated successfully"]))}])
+         [ui/Grid {:columns 3, :stackable true}
+          [ui/GridRow
+           [ui/GridColumn
+            (when last-boot
+              [ui/Label {:color    "grey"
+                         :basic    true
+                         :circular true}
+               (str "Last boot: " (time/time->format last-boot))])]
+           [ui/GridColumn
+            [ui/CardGroup {:centered true}
+             (when @nuvlabox
+               [NuvlaboxCard @nuvlabox status])]]]]
+
+         (when (->> [hostname ip docker-server-version
+                     operating-system architecture last-boot]
+                    (remove #(or (nil? %) (str/blank? %)))
+                    seq)
+           [ui/Segment
+            [ui/CardGroup {:centered true}
+             (when operating-system
+               [ui/Card card-options
+                [ui/CardContent
+                 [ui/CardHeader "Operating System"]
+                 [ui/CardMeta operating-system]]])
+             (when hostname
+               [ui/Card card-options
+                [ui/CardContent
+                 [ui/CardHeader "Hostname"]
+                 [ui/CardMeta hostname]]])
+             (when architecture
+               [ui/Card card-options
+                [ui/CardContent
+                 [ui/CardHeader "Architecture"]
+                 [ui/CardMeta architecture]]])
+             (when ip
+               [ui/Card card-options
+                [ui/CardContent
+                 [ui/CardHeader "IP"]
+                 [ui/CardMeta ip]]])
+             (when docker-server-version
+               [ui/Card card-options
+                [ui/CardContent
+                 [ui/CardHeader "Docker Version"]
+                 [ui/CardMeta docker-server-version]]])]])
+
+         [LocationAccordion nuvlabox]]))))
 
 
 (defn EdgeDetails
   [uuid]
-  (let [nuvlabox  (subscribe [::subs/nuvlabox])
-        can-edit? (subscribe [::subs/can-edit?])
-        acl-open  (r/atom false)]
-    (refresh uuid)
-    (fn [uuid]
-      ^{:key uuid}
-      [ui/Container {:fluid true}
-       [MenuBar uuid]
-       (when (:acl @nuvlabox)
-         ^{:key (:updated @nuvlabox)}
-         [acl/AclButton
-          {:default-value   (:acl @nuvlabox)
-           :read-only       (not @can-edit?)
-           :default-active? @acl-open
-           :on-change       #(do
-                               (reset! acl-open true)
-                               (dispatch [::events/edit (:id @nuvlabox) (assoc @nuvlabox :acl %)
-                                          "NuvlaBox ACL updated successfully"]))}])
-       [SummarySection]
-       [StatusSection]])))
+  (refresh uuid)
+  (fn [uuid]
+    ^{:key uuid}
+    [ui/Container {:fluid true}
+     [MenuBar uuid]
+     [SummarySection]
+     [StatusSection]]))

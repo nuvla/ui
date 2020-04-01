@@ -134,6 +134,8 @@
 
        [ui/AccordionTitle {:active   @active?
                            :index    1
+                           :style {:display "inline-block"
+                                   :width "100%"}
                            :on-click #(do
                                         (accordion-utils/toggle active?)
                                         (if @active? (on-open) (on-close)))}

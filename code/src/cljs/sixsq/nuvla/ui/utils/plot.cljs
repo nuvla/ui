@@ -19,7 +19,7 @@
 
 (def HorizontalBar (reagent/adapt-react-class chartjs2/HorizontalBar))
 
-;(def Bar (reagent/adapt-react-class chartjs2/Bar))
+(def Bar (reagent/adapt-react-class chartjs2/Bar))
 
 (def Doughnut (reagent/adapt-react-class chartjs2/Doughnut))
 
@@ -34,4 +34,3 @@
 ;(def Bubble (reagent/adapt-react-class chartjs2/Bubble))
 
 ;(def Scatter (reagent/adapt-react-class chartjs2/Scatter))
-

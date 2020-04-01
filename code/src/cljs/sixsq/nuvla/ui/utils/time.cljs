@@ -132,6 +132,13 @@
   (-> moment .clone .utc .format))
 
 
+(defn time->format
+  ([iso8601]
+   (time->format iso8601 "YYYY/MM/DD, hh:mm:ss"))
+  ([iso8601 format]
+   (-> iso8601 parse-iso8601 (.format format))))
+
+
 (defn parse-ago
   [time-str locale]
   (some-> time-str parse-iso8601 (ago locale)))

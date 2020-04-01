@@ -9,6 +9,7 @@
   - Count down component
   - Re-frame-10x - inspection and debug tools
   - New Dependency - add jszip library
+  - New plots and stats for NuvlaBox Edge detail view
 
 ### Changed
 

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+  - NuvlaBox Edge detail - Show peripheral action in accordion title
+  - NuvlaBox Edge detail - New plots and stats
+
 ## [2.4.12] - 2020-03-27
 
 ### Added
@@ -9,7 +14,6 @@
   - Count down component
   - Re-frame-10x - inspection and debug tools
   - New Dependency - add jszip library
-  - New plots and stats for NuvlaBox Edge detail view
 
 ### Changed
 

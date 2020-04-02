@@ -184,6 +184,7 @@
                                                  [::events/custom-action p-id (first actions)
                                                   (str "Triggered " (first actions) " for " p-id)])
                                                (.stopPropagation event))
+                                   :style    {:margin "-.6em"}
                                    :color    "vk"
                                    :floated  "right"
                                    :circular true

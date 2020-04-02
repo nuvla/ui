@@ -74,19 +74,21 @@
   ::action-interval-start
   (fn [{{:keys [::spec/actions-interval] :as db} :db}
        [_ {:keys [id] :as action-opts}]]
-    (let [existing-action    (get actions-interval id)
-          {:keys [event timer frequency] :as action-opts} (or existing-action
-                                                              action-opts)
-          update-action-opts (assoc action-opts
-                               :timer (js/setTimeout
-                                        #(dispatch [::action-interval-start action-opts])
-                                        frequency),
-                               :next-refresh (time/add-milliseconds (time/now) frequency))]
+    (let [existing-action (get actions-interval id)
+          {:keys [event timer frequency] :as action-opts} (or existing-action action-opts)
+          next-refresh    (time/add-milliseconds (time/now) frequency)
+          new-action-opts (-> action-opts
+                              (assoc :next-refresh next-refresh)
+                              (cond-> (nil? timer)
+                                      (assoc :timer
+                                             (js/setInterval
+                                               #(dispatch [::action-interval-start action-opts])
+                                               frequency))))]
       (cond
         (nil? existing-action) (log/info "Start action-interval: " action-opts)
         (nil? timer) (log/info "Resume action-interval: " id))
       {:dispatch event
-       :db       (assoc-in db [::spec/actions-interval id] update-action-opts)})))
+       :db       (assoc-in db [::spec/actions-interval id] new-action-opts)})))
 
 
 (reg-event-db
@@ -95,7 +97,7 @@
     (log/info "Pause action-interval:" id)
     (let [{existing-timer :timer :as existing-action} (get actions-interval id)]
       (when existing-timer
-        (js/clearTimeout existing-timer))
+        (js/clearInterval existing-timer))
       (cond-> db
               existing-action (update-in [::spec/actions-interval id] dissoc :timer)))))
 

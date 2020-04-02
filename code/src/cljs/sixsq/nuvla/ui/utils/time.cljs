@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.utils.time
   (:require
     ["moment" :as moment]
+    ["moment/locale/fr"]
     [clojure.string :as str]))
 
 
@@ -130,6 +131,13 @@
   "Time to UTC string"
   [moment]
   (-> moment .clone .utc .format))
+
+
+(defn time->format
+  ([iso8601]
+   (time->format iso8601 "YYYY/MM/DD, hh:mm:ss"))
+  ([iso8601 format]
+   (-> iso8601 parse-iso8601 (.format format))))
 
 
 (defn parse-ago

@@ -107,3 +107,15 @@ div.search.dropdown > input {
   background-position: 0 0;
   background-size: 65px 20px;
 }
+
+.stripe-input {
+  border: 1px solid rgba(34,36,38,.15);
+  padding: .67857143em 1em;
+  border-radius: .28571429rem;
+  background: #fff;
+  outline: 0px;
+}
+
+.stripe-input-focus {
+  border-color: #85b7d9;
+}

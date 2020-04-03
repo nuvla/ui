@@ -129,37 +129,37 @@
 #_(defmulti BootstrapMessage identity)
 
 #_(defmethod BootstrapMessage :no-swarm
-  [_]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Message
-     {:icon       "inbox"
-      :info       true
-      :on-dismiss #(dispatch [::events/set-bootsrap-message])
-      :header     (@tr [:message-no-swarm])
-      :content    (r/as-element
-                    [:p (@tr [:message-to-create-one])
-                     [:a
-                      {:style    {:cursor "pointer"}
-                       :on-click #(do (dispatch [::history-events/navigate "infrastructures"])
-                                      (dispatch [::infra-service-events/open-add-service-modal]))}
-                      (str " " (@tr [:click-here]))]])}]))
+    [_]
+    (let [tr (subscribe [::i18n-subs/tr])]
+      [ui/Message
+       {:icon       "inbox"
+        :info       true
+        :on-dismiss #(dispatch [::events/set-bootsrap-message])
+        :header     (@tr [:message-no-swarm])
+        :content    (r/as-element
+                      [:p (@tr [:message-to-create-one])
+                       [:a
+                        {:style    {:cursor "pointer"}
+                         :on-click #(do (dispatch [::history-events/navigate "infrastructures"])
+                                        (dispatch [::infra-service-events/open-add-service-modal]))}
+                        (str " " (@tr [:click-here]))]])}]))
 
 
 #_(defmethod BootstrapMessage :no-credential
-  [_]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Message
-     {:icon       "inbox"
-      :info       true
-      :on-dismiss #(dispatch [::events/set-bootsrap-message])
-      :header     (@tr [:message-no-credential])
-      :content    (r/as-element
-                    [:p (@tr [:message-to-create-one])
-                     [:a
-                      {:style    {:cursor "pointer"}
-                       :on-click #(do (dispatch [::history-events/navigate "credentials"])
-                                      (dispatch [::credential-events/open-add-credential-modal]))}
-                      (str " " (@tr [:click-here]))]])}]))
+    [_]
+    (let [tr (subscribe [::i18n-subs/tr])]
+      [ui/Message
+       {:icon       "inbox"
+        :info       true
+        :on-dismiss #(dispatch [::events/set-bootsrap-message])
+        :header     (@tr [:message-no-credential])
+        :content    (r/as-element
+                      [:p (@tr [:message-to-create-one])
+                       [:a
+                        {:style    {:cursor "pointer"}
+                         :on-click #(do (dispatch [::history-events/navigate "credentials"])
+                                        (dispatch [::credential-events/open-add-credential-modal]))}
+                        (str " " (@tr [:click-here]))]])}]))
 
 
 (defn Message
@@ -181,10 +181,10 @@
 
 (defn contents
   []
-  (let [resource-path     (subscribe [::subs/nav-path])
+  (let [resource-path    (subscribe [::subs/nav-path])
         ;bootstrap-message (subscribe [::subs/bootstrap-message])
-        content-key       (subscribe [::subs/content-key])
-        is-small-device?  (subscribe [::subs/is-small-device?])]
+        content-key      (subscribe [::subs/content-key])
+        is-small-device? (subscribe [::subs/is-small-device?])]
     (fn []
       [ui/Container
        (cond-> {:as    "main"
@@ -196,7 +196,7 @@
        [Message]
 
        #_(when @bootstrap-message
-         [BootstrapMessage @bootstrap-message])
+           [BootstrapMessage @bootstrap-message])
        (panel/render @resource-path)])))
 
 
@@ -221,46 +221,130 @@
    [messages/alert-slider]
    [messages/alert-modal]])
 
-;import {Elements} from '@stripe/react-stripe-js';
-;import {loadStripe} from '@stripe/stripe-js';
-;
-;// Make sure to call `loadStripe` outside of a component’s render to avoid
-;// recreating the `Stripe` object on every render.
-;const stripePromise = loadStripe('pk_test_JJ1eMdKN0Hp4UFJ6kWXWO4ix00jtXzq5XG');
-;
-;const App = () => {
-;  return (
-;    <Elements stripe={stripePromise}>
-;      <MyCheckoutForm />
-;    </Elements>
-;  );
-;};
 
-
-(def stripe-promise (stripe/loadStripe "pk_test_JJ1eMdKN0Hp4UFJ6kWXWO4ix00jtXzq5XG"))
+(def stripe-promise (stripe/loadStripe "pk_test_Wo4so0qa2wqn66052FlvyMpl00MhPPQdAG"))
 (js/console.log stripe-promise)
 
 (def Elements (r/adapt-react-class react-stripe/Elements))
 (def CardElement (r/adapt-react-class react-stripe/CardElement))
+(def ElementsConsumer (r/adapt-react-class react-stripe/ElementsConsumer))
 
 
-;<CardElement
-;  options={{
-;    style: {
-;      base: {
-;        fontSize: '16px',
-;        color: '#424770',
-;        '::placeholder': {
-;          color: '#aab7c4',
-;        },
-;      },
-;      invalid: {
-;        color: '#9e2146',
-;      },
-;    },
-;  }}
-;/>
+(def email (r/atom nil))
 
+(def card-info-completed? (r/atom false))
+
+(def card-validation-error-message (r/atom nil))
+
+(def create-payment-method-result (r/atom nil))
+
+(def create-payment-method-error (r/atom nil))
+
+(def plan (r/atom nil))
+
+(defn handle-submit
+  [stripe elements event]
+  (.preventDefault event)
+  (when (and stripe elements)
+    (let [promise (stripe.createPaymentMethod
+                    #js{:type            "card"
+                        :card            (elements.getElement react-stripe/CardElement)
+
+                        :billing_details #js{:email "jenny.rosen@example.com"}
+                        })]
+      (-> promise
+          (.then (fn [res]
+                   (reset! create-payment-method-result res)
+                   (js/console.log "res:" res))
+                 (fn [err]
+                   (js/console.log err)
+                   (reset! create-payment-method-error err)))
+          (.catch (fn [err] (js/console.log "catch err:" err)))))))
+
+
+;; While not yet hooks support we have to use react components
+;; https://github.com/reagent-project/reagent/blob/master/doc/ReactFeatures.md#hooks
+(defn InternalCheckoutForm
+  [stripe elements]
+  (let [className (r/atom "stripe-input")]
+    (reset! card-validation-error-message nil)
+    (reset! card-info-completed? false)
+    (fn [stripe elements]
+      [ui/Form {:on-submit (partial handle-submit stripe elements)
+                :style     {:width 400}
+                :error true #_(boolean? @create-payment-method-error)}
+       [ui/Message {:error true
+                    :header "Something went wrong"
+                    :content "aaa" #_@create-payment-method-error}]
+       [ui/FormInput {:label     "Email"
+                      :on-change (ui-callback/value #(reset! email %))}]
+       [ui/FormField
+        [:label "Card Number"]
+        [CardElement {:className @className
+                      :on-change (fn [event]
+                                   (reset! card-validation-error-message (some-> event .-error .-message))
+                                   (reset! card-info-completed? (.-complete event)))}]
+        (when @card-validation-error-message
+          [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-message])]
+       [ui/Button {:type     "submit"
+                   :animated "vertical"
+                   :primary  true
+                   :floated  "right"
+                   :disabled (or (nil? @email)
+                                 (not stripe-promise)
+                                 (not @card-info-completed?))}
+        [ui/ButtonContent {:hidden true} [ui/Icon {:name "shop"}]]
+        [ui/ButtonContent {:visible true} "Subscribe"]]])))
+
+
+(defn ReactCheckoutForm []
+  (let [stripe   (react-stripe/useStripe)
+        elements (react-stripe/useElements)]
+    (r/as-element
+      [InternalCheckoutForm stripe elements])))
+
+
+(def CheckoutForm (r/adapt-react-class ReactCheckoutForm))
+
+
+(defn PlanComp
+  [key label price color logo]
+  [ui/GridColumn
+   [ui/Segment {:on-click   #(reset! plan key)
+                :text-align "center"
+                :style      (cond-> {:cursor "pointer"}
+                                    (= @plan key) (assoc :border "2px solid #85b7d9"))}
+    [ui/Header {:as :h2 :icon true :text-align "center"}
+     [ui/Icon {:name logo, :color color}]
+     label
+     [ui/HeaderSubheader price]]
+    [ui/Image {:src "https://react.semantic-ui.com/images/wireframe/media-paragraph.png"}]
+    ]]
+  )
+
+(defn StripeDemo
+  []
+  (let [locale (subscribe [::i18n-subs/locale])]
+    (fn []
+      [:<>
+       [:div {:style {:margin 20}}
+        [:h1 "Stripe demo"]
+        [ui/Grid {:stackable true}
+         [ui/GridRow {:columns 4}
+          [PlanComp :free "Free" "free" "black" "paper plane"]
+          [PlanComp :bronze "bronze" "500$ / month" "brown" "plane"]
+          [PlanComp :silver "Silver" "4'000$ / month" "grey" "fighter jet"]
+          [PlanComp :gold "Gold" "15'000$ / month" "yellow" "space shuttle"]]
+         (when true #_@plan
+           [ui/GridRow {:columns 1}
+            [ui/GridColumn
+             [ui/Segment {:compact true}
+              ^{:key @locale}
+              [Elements {:stripe  stripe-promise
+                         :options {:locale @locale}}
+               [CheckoutForm]]]]
+            ])
+         ]]])))
 
 (defn app []
   (fn []
@@ -290,13 +374,7 @@
                          :style    {:z-index 999}
                          :on-click #(dispatch [::events/close-sidebar])}]
              [header]
-             [:h1 "Testing"]
-             [Elements {:stripe stripe-promise}
-              [:div {:style {:width 400
-                             :margin 20
-                             :background-color "#5795f8"}}
-               [CardElement]]
-              ]
+             [StripeDemo]
              [contents]
              [ignore-changes-modal]
              (when-not @iframe? [footer])]]

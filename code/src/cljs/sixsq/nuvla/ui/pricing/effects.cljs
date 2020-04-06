@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.pricing.effects
   (:require
-    [re-frame.core :refer [dispatch reg-fx]]
-    ["@stripe/stripe-js" :as stripejs]))
+    ["@stripe/stripe-js" :as stripejs]
+    [re-frame.core :refer [dispatch reg-fx]]))
 
 
 (reg-fx

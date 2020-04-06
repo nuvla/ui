@@ -11,6 +11,12 @@
 
 
 (reg-sub
+  ::plan-id
+  (fn [db]
+    (::spec/plan-id db)))
+
+
+(reg-sub
   ::subscription
   (fn [db]
     (::spec/subscription db)))

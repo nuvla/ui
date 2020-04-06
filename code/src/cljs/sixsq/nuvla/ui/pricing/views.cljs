@@ -1,20 +1,20 @@
 (ns sixsq.nuvla.ui.pricing.views
   (:require
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.pricing.subs :as subs]
-    [sixsq.nuvla.ui.pricing.events :as events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     ["@stripe/react-stripe-js" :as react-stripe]
-    [day8.re-frame.http-fx]
     [ajax.core :as ajax]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.style :as style]))
+    [day8.re-frame.http-fx]
+    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
+    [reagent.core :as r]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.pricing.events :as events]
+    [sixsq.nuvla.ui.pricing.subs :as subs]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (def Elements (r/adapt-react-class react-stripe/Elements))
 (def CardElement (r/adapt-react-class react-stripe/CardElement))
@@ -26,8 +26,6 @@
 (def card-info-completed? (r/atom false))
 
 (def card-validation-error-message (r/atom nil))
-
-(def plan (r/atom nil))
 
 (defn handle-submit
   [elements event]
@@ -46,7 +44,8 @@
   (let [className            (r/atom "stripe-input")
         stripe               (subscribe [::subs/stripe])
         payment-method-error (subscribe [::subs/error])
-        processing?          (subscribe [::subs/processing?])]
+        processing?          (subscribe [::subs/processing?])
+        plan-id              (subscribe [::subs/plan-id])]
     (fn [elements]
       [ui/Form {:on-submit (partial handle-submit elements)
                 :style     {:width 400}
@@ -74,6 +73,7 @@
                                (nil? @email)
                                (not @stripe)
                                (not @card-info-completed?)
+                               (nil? @plan-id)
                                @processing?)}
         [ui/ButtonContent {:hidden true} [ui/Icon {:name "shop"}]]
         [ui/ButtonContent {:visible true} "Subscribe"]]])))
@@ -89,27 +89,30 @@
 
 
 (defn PlanComp
-  [key label price color logo]
-  [ui/GridColumn
-   [ui/Segment {:on-click   #(reset! plan key)
-                :text-align "center"
-                :style      (cond-> {:cursor "pointer"}
-                                    (= @plan key) (assoc :border "2px solid #85b7d9"))}
-    [ui/Header {:as :h2 :icon true :text-align "center"}
-     [ui/Icon {:name logo, :color color}]
-     label
-     [ui/HeaderSubheader price]]
-    [ui/Image {:src "https://react.semantic-ui.com/images/wireframe/media-paragraph.png"}]
-    [ui/Image {:src "https://react.semantic-ui.com/images/wireframe/media-paragraph.png"}]
-    [ui/Image {:src "https://react.semantic-ui.com/images/wireframe/media-paragraph.png"}]
-    ]])
+  [id label price color logo]
+  (let [selected-plan-id (subscribe [::subs/plan-id])]
+    [ui/GridColumn
+     [ui/Segment {:on-click   #(dispatch [::events/set-plan-id id])
+                  :text-align "center"
+                  :style      (cond-> {:cursor "pointer"}
+                                      (= @selected-plan-id id) (assoc :border "2px solid #85b7d9"))}
+      [ui/Header {:as :h2 :icon true :text-align "center"}
+       [ui/Icon {:name logo, :color color}]
+       label
+       [ui/HeaderSubheader price]]
+      [ui/Image {:src "https://react.semantic-ui.com/images/wireframe/media-paragraph.png"}]
+      [ui/Image {:src "https://react.semantic-ui.com/images/wireframe/media-paragraph.png"}]
+      [ui/Image {:src "https://react.semantic-ui.com/images/wireframe/media-paragraph.png"}]
+      ]]))
 
 
 (defn Pricing
   []
   (let [locale       (subscribe [::i18n-subs/locale])
         stripe       (subscribe [::subs/stripe])
-        subscription (subscribe [::subs/subscription])]
+        subscription (subscribe [::subs/subscription])
+        plan-id      (subscribe [::subs/plan-id])]
+    (js/console.log "INIT")
     (dispatch [::events/init])
     (reset! card-validation-error-message nil)
     (reset! card-info-completed? false)
@@ -117,11 +120,11 @@
       [ui/Segment (assoc style/basic, :loading (not @stripe))
        [ui/Grid {:stackable true, :columns 4}
         [ui/GridRow {:columns 4}
-         [PlanComp :free "Free" "free" "black" "paper plane"]
-         [PlanComp :bronze "bronze" "500$ / month" "brown" "plane"]
-         [PlanComp :silver "Silver" "4'000$ / month" "grey" "fighter jet"]
-         [PlanComp :gold "Gold" "15'000$ / month" "yellow" "space shuttle"]]
-        (when true #_@plan
+         [PlanComp "plan_Gx4S6VYf9cbfRK" "Free" "free" "black" "paper plane"]
+         [PlanComp "plan_Gx23NQ4bczKU4e" "bronze" "500$ / month" "brown" "plane"]
+         [PlanComp "plan_Gx43FhmevUCOau" "Silver" "4'000$ / month" "grey" "fighter jet"]
+         [PlanComp "plan_Gx44NITOaAhpUU" "Gold" "15'000$ / month" "yellow" "space shuttle"]]
+        (when true #_@plan-id
           [ui/GridColumn
            [ui/Segment {:compact true}
             (when @stripe
@@ -133,7 +136,10 @@
           [:<>
            [ui/GridRow {:columns 1}
             [ui/GridColumn
-             [:h2 "Your subscription status is: " (:status @subscription)]]
+             [:h2 "Your subscription status is: " (:status @subscription) " "
+              (when (= (:status @subscription) "active")
+                [ui/Icon {:name "handshake"}]
+                )]]
             ]
            [ui/GridRow {:columns 1}
             [ui/GridColumn

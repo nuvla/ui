@@ -6,7 +6,9 @@
 
 (s/def ::subscription any?)
 
-(s/def ::error string?)
+(s/def ::plan-id (s/nilable string?))
+
+(s/def ::error (s/nilable string?))
 
 (s/def ::processing? boolean?)
 
@@ -17,6 +19,7 @@
 
 
 (def defaults {::stripe       nil
+               ::plan-id      nil
                ::subscription nil
                ::error        nil
                ::processing?  false})

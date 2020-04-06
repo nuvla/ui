@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.pricing.events
   (:require
+    [ajax.core :as ajax]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.pricing.effects :as fx]
-    [sixsq.nuvla.ui.pricing.spec :as spec]
-    [ajax.core :as ajax]))
+    [sixsq.nuvla.ui.pricing.spec :as spec]))
 
 
 (reg-event-fx
@@ -20,6 +20,12 @@
     (assoc db ::spec/stripe stripe)))
 
 
+(reg-event-db
+  ::set-plan-id
+  (fn [db [_ id]]
+    (assoc db ::spec/plan-id id)))
+
+
 (reg-event-fx
   ::create-payment-method
   (fn [{{:keys [::spec/stripe] :as db} :db} [_ data]]
@@ -31,7 +37,7 @@
 
 (reg-event-fx
   ::set-payment-method-result
-  (fn [{db :db} [_ result]]
+  (fn [{{:keys [::spec/plan-id] :as db} :db} [_ result]]
     (let [res            (-> result (js->clj :keywordize-keys true))
           error          (:error res)
           payment-method (:paymentMethod res)]
@@ -39,7 +45,7 @@
         {:db (assoc db ::spec/error (:message error)
                        ::spec/processing? false)}
         {:dispatch [::create-customer
-                    ["plan_Gx43FhmevUCOau"]
+                    plan-id
                     (:id payment-method)
                     (-> payment-method :billing_details :email)]}))))
 
@@ -58,6 +64,12 @@
     db))
 
 
+(reg-event-db
+  ::set-server-error
+  (fn [db [_ result]]
+    (assoc db ::spec/error (-> result (js->clj :keywordize-keys true) :response :error :message)
+              ::spec/processing? false)))
+
 (reg-event-fx
   ::http-post
   (fn [_ [_ uri data success-event error-event]]
@@ -75,10 +87,11 @@
   ::create-customer
   (fn [_ [_ plan-ids payment-id email]]
     {:dispatch [::http-post "http://localhost:4242/create-customer"
-                {:plan_ids       plan-ids
+                {:plan_ids       [plan-ids]
                  :payment_method payment-id
                  :email          email}
-                ::set-subscription]}))
+                ::set-subscription
+                ::set-server-error]}))
 
 
 (reg-event-fx

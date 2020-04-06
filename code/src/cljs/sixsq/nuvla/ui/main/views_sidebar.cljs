@@ -30,7 +30,7 @@
 
     ^{:key (name label-kw)}
     [uix/MenuItemWithIcon
-     {:name      (str/capitalize (@tr [label-kw]))
+     {:name      (str/capitalize (or (@tr [label-kw]) (name label-kw)))
       :icon-name icon
       :style     {:min-width  sidebar-width
                   :overflow-x "hidden"}

@@ -1,0 +1,153 @@
+(ns sixsq.nuvla.ui.pricing.views
+  (:require
+    [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
+    [sixsq.nuvla.ui.pricing.subs :as subs]
+    [sixsq.nuvla.ui.pricing.events :as events]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    ["@stripe/react-stripe-js" :as react-stripe]
+    [day8.re-frame.http-fx]
+    [ajax.core :as ajax]
+    [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
+    [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [clojure.string :as str]
+    [sixsq.nuvla.ui.utils.style :as style]))
+
+(def Elements (r/adapt-react-class react-stripe/Elements))
+(def CardElement (r/adapt-react-class react-stripe/CardElement))
+(def ElementsConsumer (r/adapt-react-class react-stripe/ElementsConsumer))
+
+
+(def email (r/atom nil))
+
+(def card-info-completed? (r/atom false))
+
+(def card-validation-error-message (r/atom nil))
+
+(def plan (r/atom nil))
+
+(defn handle-submit
+  [elements event]
+  (.preventDefault event)
+  (when elements
+    (dispatch [::events/create-payment-method
+               #js{:type            "card"
+                   :card            (elements.getElement react-stripe/CardElement)
+                   :billing_details #js{:email @email}}])))
+
+
+;; While not yet hooks support we have to use react components
+;; https://github.com/reagent-project/reagent/blob/master/doc/ReactFeatures.md#hooks
+(defn InternalCheckoutForm
+  [elements]
+  (let [className            (r/atom "stripe-input")
+        stripe               (subscribe [::subs/stripe])
+        payment-method-error (subscribe [::subs/error])
+        processing?          (subscribe [::subs/processing?])]
+    (fn [elements]
+      [ui/Form {:on-submit (partial handle-submit elements)
+                :style     {:width 400}
+                :error     (boolean @payment-method-error)}
+       [ui/Message {:error   true
+                    :header  "Something went wrong"
+                    :content @payment-method-error}]
+       [ui/FormInput {:label     "Email"
+                      :on-change (ui-callback/value #(reset! email %))}]
+       [ui/FormField
+        [:label "Card Number"]
+        [CardElement {:className @className
+                      :on-change (fn [event]
+                                   (reset! card-validation-error-message
+                                           (some-> event .-error .-message))
+                                   (reset! card-info-completed? (.-complete event)))}]
+        (when @card-validation-error-message
+          [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-message])]
+       [ui/Button {:type     "submit"
+                   :animated "vertical"
+                   :primary  true
+                   :loading  @processing?
+                   :floated  "right"
+                   :disabled (or
+                               (nil? @email)
+                               (not @stripe)
+                               (not @card-info-completed?)
+                               @processing?)}
+        [ui/ButtonContent {:hidden true} [ui/Icon {:name "shop"}]]
+        [ui/ButtonContent {:visible true} "Subscribe"]]])))
+
+
+(defn ReactCheckoutForm []
+  (let [elements (react-stripe/useElements)]
+    (r/as-element
+      [InternalCheckoutForm elements])))
+
+
+(def CheckoutForm (r/adapt-react-class ReactCheckoutForm))
+
+
+(defn PlanComp
+  [key label price color logo]
+  [ui/GridColumn
+   [ui/Segment {:on-click   #(reset! plan key)
+                :text-align "center"
+                :style      (cond-> {:cursor "pointer"}
+                                    (= @plan key) (assoc :border "2px solid #85b7d9"))}
+    [ui/Header {:as :h2 :icon true :text-align "center"}
+     [ui/Icon {:name logo, :color color}]
+     label
+     [ui/HeaderSubheader price]]
+    [ui/Image {:src "https://react.semantic-ui.com/images/wireframe/media-paragraph.png"}]
+    [ui/Image {:src "https://react.semantic-ui.com/images/wireframe/media-paragraph.png"}]
+    [ui/Image {:src "https://react.semantic-ui.com/images/wireframe/media-paragraph.png"}]
+    ]])
+
+
+(defn Pricing
+  []
+  (let [locale       (subscribe [::i18n-subs/locale])
+        stripe       (subscribe [::subs/stripe])
+        subscription (subscribe [::subs/subscription])]
+    (dispatch [::events/init])
+    (reset! card-validation-error-message nil)
+    (reset! card-info-completed? false)
+    (fn []
+      [ui/Segment (assoc style/basic, :loading (not @stripe))
+       [ui/Grid {:stackable true, :columns 4}
+        [ui/GridRow {:columns 4}
+         [PlanComp :free "Free" "free" "black" "paper plane"]
+         [PlanComp :bronze "bronze" "500$ / month" "brown" "plane"]
+         [PlanComp :silver "Silver" "4'000$ / month" "grey" "fighter jet"]
+         [PlanComp :gold "Gold" "15'000$ / month" "yellow" "space shuttle"]]
+        (when true #_@plan
+          [ui/GridColumn
+           [ui/Segment {:compact true}
+            (when @stripe
+              ^{:key @locale}
+              [Elements {:stripe  @stripe
+                         :options {:locale @locale}}
+               [CheckoutForm]])]])
+        (when @subscription
+          [:<>
+           [ui/GridRow {:columns 1}
+            [ui/GridColumn
+             [:h2 "Your subscription status is: " (:status @subscription)]]
+            ]
+           [ui/GridRow {:columns 1}
+            [ui/GridColumn
+             [ui/Segment
+              [ui/CodeMirror {:value   (or (.stringify js/JSON (clj->js @subscription) nil 2) "")
+                              :options {:mode      "application/json"
+                                        :read-only true}}]
+              ]]]]
+          )
+        ]])))
+
+
+(defmethod panel/render :pricing
+  [path]
+  [ui/Segment style/basic
+   [uix/PageHeader "code" (str/upper-case "Pricing")]
+   [Pricing]])

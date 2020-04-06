@@ -16,6 +16,7 @@
     [sixsq.nuvla.ui.docs.spec :as docs]
     [sixsq.nuvla.ui.edge-detail.spec :as edge-detail]
     [sixsq.nuvla.ui.edge.spec :as edge]
+    [sixsq.nuvla.ui.pricing.spec :as pricing]
     [sixsq.nuvla.ui.i18n.spec :as i18n]
     [sixsq.nuvla.ui.infrastructures-detail.spec :as infra-service-detail]
     [sixsq.nuvla.ui.infrastructures.spec :as infra-service]
@@ -45,7 +46,8 @@
                      ::edge-detail/db
                      ::profile/db
                      ::ocre/db
-                     ::session/db))
+                     ::session/db
+                     ::pricing/db))
 
 
 (def default-db
@@ -70,4 +72,5 @@
          edge-detail/defaults
          profile/defaults
          ocre/defaults
-         session/defaults))
+         session/defaults
+         pricing/defaults))

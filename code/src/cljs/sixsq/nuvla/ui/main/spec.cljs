@@ -110,4 +110,10 @@
                                                           :label-kw   :api
                                                           :icon       "code"
                                                           :protected? false
-                                                          :order      7}}})
+                                                          :order      7}
+                                       "pricing"         {:url        "pricing"
+                                                          :label-kw   :pricing
+                                                          :icon       "shop"
+                                                          :protected? false
+                                                          :order      8}
+                                       }})

@@ -289,7 +289,7 @@
          [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
 
          [ui/ModalContent {:scrolling false}
-          [:div {:style {:padding-bottom 20}} "Choose the credential subtype you want to add."]
+          [:div {:style {:padding-bottom 20}} (@tr [:credentials-add-message])]
           [ui/CardGroup {:centered true}
 
            [ui/Card

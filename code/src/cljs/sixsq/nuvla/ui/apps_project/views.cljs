@@ -13,7 +13,8 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]))
+    [sixsq.nuvla.ui.utils.style :as style]
+    [clojure.string :as str]))
 
 (defn summary []
   [apps-views-detail/summary])
@@ -58,7 +59,7 @@
 
           [uix/Accordion
            [format-module-children children]
-           :label "Sub-modules"
+           :label (str/capitalize (@tr [:apps-sub-modules]))
            :title-size :h2])))))
 
 

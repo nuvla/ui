@@ -296,13 +296,14 @@
 
 (defn data-set-resources
   []
-  [ui/Container {:fluid true}
-   [uix/PageHeader "database" "Data Processing"]
-   [control-bar]
-   [application-select-modal]
-   [deployment-dialog-views/deploy-modal true]
-   [queries-cards-group]
-   [main-action-button]])
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Container {:fluid true}
+     [uix/PageHeader "database" (@tr [:data-processing])]
+     [control-bar]
+     [application-select-modal]
+     [deployment-dialog-views/deploy-modal true]
+     [queries-cards-group]
+     [main-action-button]]))
 
 
 (defmethod panel/render :data

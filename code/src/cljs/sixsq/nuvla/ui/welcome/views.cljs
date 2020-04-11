@@ -159,7 +159,7 @@
               (@tr [:welcome-how-to-nb-5-header])
               (@tr [:welcome-how-to-nb-5-subheader-pre])
               ". "
-              [:a {:href "#deploy-app"} (@tr [:show-me])]
+              [:a {:href "#deploy-app"} (str/capitalize (@tr [:show-me]))]
               ".")]]]
 
      [ui/Divider]
@@ -172,7 +172,7 @@
        [ui/HeaderSubheader {:as "h2"}
         (@tr [:welcome-how-to-launch-header])]
        [ui/HeaderSubheader {:as "h4"}
-        (@tr [:welcome-how-to-launch-subheader]) " " [:a {:href "https://docs.nuvla.io/nuvla/launch-app"} "here"] "."]
+        (@tr [:welcome-how-to-launch-subheader]) " " [:a {:href "https://docs.nuvla.io/nuvla/launch-app"} (@tr [:here])] "."]
        [ui/StepGroup {:vertical true}
         (step 1
               (@tr [:welcome-how-to-launch-1-header-])
@@ -193,7 +193,7 @@
               (@tr [:welcome-how-to-launch-4-header])
               (@tr [:welcome-how-to-launch-4-subheader-pre])
               " "
-              [navigate-link "dashboard" "Dashboard"]
+              [navigate-link "dashboard" (@tr [:dashboard])]
               ", "
               (@tr [:welcome-how-to-launch-4-subheader-post])
               ".")]]

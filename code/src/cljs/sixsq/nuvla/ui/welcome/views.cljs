@@ -50,28 +50,19 @@
                :style {:margin-top "8px"}}
       [ui/GridColumn {:width 6}
        [ui/Header {:as "h1"}
-        "We enable your edge, as a Service"]
+        (@tr [:welcome-header])]
        [ui/HeaderSubheader {:as "h2"}
-        "Deploy any containerised app, to the edge, Kubernetes, Docker and Docker Swarm"]
+        (@tr [:welcome-subheader])]
        [ui/HeaderSubheader {:as "h3"}
-        "New to Nuvla.io? Start here:"]
+        (@tr [:welcome-subsubheader])]
        [:div {:style {:padding "10px 0"}}
-        [:a {:class [:ui :primary :button] :href "#add-nuvlabox"} "Create a NuvlaBox"]]
+        [:a {:class [:ui :primary :button] :href "#add-nuvlabox"} (@tr [:welcome-create-nuvlabox])]]
        [:div {:style {:padding "10px 0"}}
-        [:a {:class [:ui :primary :button] :href "#launch-app"} "Launch an app"]]
-       ;[:div {:style {:padding "10px 0"}}
-       ; [:a {:class [:ui :primary :button] :href "#deploy-app"} "Register an app"] [ui/Label {:tag true :color :yellow} "coming soon"]]
-       ;[:div {:style {:padding "10px 0"}}
-       ; [:a {:class [:ui :primary :button] :href "#add-nuvlabox"} "Register an container infrastructure"] [ui/Label {:tag true :color :yellow} "coming soon"]]
+        [:a {:class [:ui :primary :button] :href "#launch-app"} (@tr [:welcome-launch-app])]]
        [ui/HeaderSubheader {:as "h3"}
-        "And more advanced features, we think simply rock:"]
+        (@tr [:welcome-more-advanced])]
        [:div {:style {:padding "10px 0"}}
-        [:a {:class [:ui :button] :href "#video-at-the-edge"} "Process video at the edge"]]
-       ;[:div {:style {:padding "10px 0"}}
-       ; [:a {:class [:ui :button] :href "#data-at-the-edge"} "Manage data at the edge"] [ui/Label {:tag true :color :yellow} "coming soon"]]
-       ;[:div {:style {:padding "10px 0"}}
-       ; [:a {:class [:ui :button] :href "#edge-to-cloud-data"} "Manage data across edges and cloud"] [ui/Label {:tag true :color :yellow} "coming soon"]]
-       ]
+        [:a {:class [:ui :button] :href "#video-at-the-edge"} (@tr [:welcome-process-video-at-edge])]]]
       [ui/GridColumn {:width 6}
        [ui/Embed {:id           "yYJ6laT_6M4"
                   :placeholder  "https://img.youtube.com/vi/yYJ6laT_6M4/maxresdefault.jpg"
@@ -80,9 +71,9 @@
      [ui/Divider]
 
      [ui/Header {:as "h2" :style {:text-align :center} :size :huge}
-      "Resources"]
+      (@tr [:welcome-resources])]
      [ui/HeaderSubheader {:as "h3" :style {:text-align :center}}
-      "Here find a wealth of Nuvla resources."]
+      (@tr [:welcome-resources-subheader])]
 
      [ui/CardGroup {:stackable true
                :centered true
@@ -91,106 +82,32 @@
 
       [ui/Card
        [ui/CardContent {:text-align :center}
-        [ui/Header {:as :h2} "Documentation"]
+        [ui/Header {:as :h2} (str/capitalize (@tr [:documentation]))]
         [ui/Icon {:name  "book"
                   :size  "massive"
                   :color "blue"}]
         [ui/Header {:as :h4}
-         "Find "
-         [:a {:href "https://docs.nuvla.io"} "here"]
-         " the complete Nuvla documentation"]]]
+         (@tr [:welcome-doc-subheader-pre]) " "
+         [:a {:href "https://docs.nuvla.io"} (@tr [:here])]
+         " " (@tr [:welcome-doc-subheader-post])]]]
       [ui/Card {:textAlign :center}
        [ui/CardContent {:text-align :center}
-        [ui/Header {:as :h2} "Videos"]
+        [ui/Header {:as :h2} (str/capitalize (@tr [:videos]))]
         [ui/Icon {:name  "video"
                   :size  "massive"
                   :color "blue"}]
         [ui/Header {:as :h4}
-         "Access our "
+         (@tr [:welcome-video-subheader-pre]) " "
          [:a {:href "https://sixsq.com/videos"}
-          "video channel"]
-         " to see talks, presentations and tutorials"]]]]
-
-     ;[ui/Divider]
-     ;
-     ;[ui/Header {:as "h2" :style {:text-align :center} :size :huge}
-     ; "Workflows"]
-     ;[ui/HeaderSubheader {:as "h3" :style {:text-align :center}}
-     ; "These will help you understanding how Nuvla hangs together"]
-     ;
-     ;
-     ;[ui/HeaderSubheader {:as "h2"}
-     ; "Manage your own infrastructures"]
-     ;
-     ;[ui/StepGroup {:widths 2}
-     ; (step nil "Create an infrastructure" "Here you have two choices:"
-     ;       [ui/Step {:vertical true :attached true}
-     ;        [ui/StepGroup {:vertical true :style {:margin-left "-10px" :margin-right "-10px"}}
-     ;         (step 1 "Create a NuvlaBox" [:a {:href "#add-nuvlabox"} "Show me"])
-     ;         (step "1'" "Register orchestration engine" "" [:a {:href "#add-k8s"} "Show me"])]])
-     ; (step 2 "Launch a test application" [:a {:href "#launch"} "Show me"])]
-     ;
-     ;[ui/Divider]
-     ;
-     ;[ui/HeaderSubheader {:as "h2"}
-     ; "Launch applications"]
-     ;
-     ;[ui/StepGroup {:widths 3}
-     ; (step 1 "Select an app" "Use the App Store to search and find the app you want to launch.")
-     ; (step 2 "Launch the application" "By choosing the target infrastructure. " [:a {:href "#launch"} "Show me"])
-     ; (step 3 "Manage your apps" "You can now manage, monitor and update your apps. " [:a {:href "/ui/dashboard"} "Show me"])]
-     ;
-     ;[ui/Divider]
-     ;
-     ;[ui/HeaderSubheader {:as "h2"}
-     ; "Register applications"]
-     ;
-     ;[ui/StepGroup {:widths 3}
-     ; (step nil "Register a containerised application" "Here you have three choices:"
-     ;       [ui/Step {:vertical true :attached true}
-     ;        [ui/StepGroup {:vertical true}
-     ;         (step 1 "Single Docker container" "Click or tap " [:a {:href "/ui/edge"} "here"] " to learn how to create and register a NuvlaBox.")
-     ;         (step "1'" "Multiple containers" [:a {:href "https://docs.nuvla.io"} "Show me"] " how to register a Docker Compose for Docker or Docker Swarm.")
-     ;         (step "1''" "Kubernetes manifest" [:a {:href "https://docs.nuvla.io"} "Show me"] " how to register a Kubernetes manifest.")]])
-     ; (step 2 "Test your new application" [:a {:href "#launch"} "Show me"])
-     ; (step 3 "Manage your apps" "Using the " [:a {:href "/ui/dashboard"} "dashboard"] ", you can now view in one place, all your applications, and manage them.")]
-     ;
-     ;[ui/Divider]
-     ;
-     ;[ui/HeaderSubheader {:as "h2"}
-     ; "Manage data at the edge"]
-     ;
-     ;[ui/StepGroup {:widths 3}
-     ; (step nil "Register a containerised application" "Here you have three choices:"
-     ;       [ui/Step {:vertical true :attached true}
-     ;        [ui/StepGroup {:vertical true}
-     ;         (step 1 "Single Docker container" "Click or tap " [:a {:href "/ui/edge"} "here"] " to learn how to create and register a NuvlaBox.")
-     ;         (step "1'" "Multiple containers (Compose file)" [:a {:href "https://docs.nuvla.io"} "Show me"] " how to register a Docker Compose for Docker or Docker Swarm.")
-     ;         (step "1''" "Kubernetes manifest" [:a {:href "https://docs.nuvla.io"} "Show me"] " how to register a Kubernetes manifest.")]])
-     ; (step 2 "Launch an application" [:a {:href "#launch"} "Show me"])
-     ; (step 3 "Manage your apps" "Using the " [:a {:href "/ui/dashboard"} "dashboard"] ", you can now view in one place, all your applications, and manage them.")]
-     ;
-     ;[ui/Divider]
-     ;
-     ;[ui/HeaderSubheader {:as "h2"}
-     ; "Manage data across edge and cloud"]
-     ;
-     ;[ui/StepGroup {:widths 3}
-     ; (step nil "Register a containerised application" "Here you have three choices:"
-     ;       [ui/Step {:vertical true :attached true}
-     ;        [ui/StepGroup {:vertical true}
-     ;         (step 1 "Single Docker container" "Click or tap " [:a {:href "/ui/edge"} "here"] " to learn how to create and register a NuvlaBox.")
-     ;         (step "1'" "Multiple containers (Compose file)" [:a {:href "https://docs.nuvla.io"} "Show me"] " how to register a Docker Compose for Docker or Docker Swarm.")
-     ;         (step "1''" "Kubernetes manifest" [:a {:href "https://docs.nuvla.io"} "Show me"] " how to register a Kubernetes manifest.")]])
-     ; (step 2 "Launch an application" [:a {:href "#launch"} "Show me"])
-     ; (step 3 "Manage your apps" "Using the " [:a {:href "/ui/dashboard"} "dashboard"] ", you can now view in one place, all your applications, and manage them.")]
+          (@tr [:video-channel])]
+         " " (@tr [:welcome-video-subheader-post])]]]]
 
      [ui/Divider]
 
      [ui/Header {:as "h2" :style {:text-align :center} :size :huge}
-      "How To's"]
+      (@tr [:welcome-how-to-header])]
      [ui/HeaderSubheader {:as "h3" :style {:text-align :center :padding-bottom "20px"}}
-      "These instructions will guide you through specific tasks."]
+      (@tr [:welcome-how-to-subheader])]
 
      [ui/Grid {:id            :add-nuvlabox
                :centered      true
@@ -200,20 +117,50 @@
        [ui/Image {:floated "right" :src "/ui/images/welcome-nb.png" :fluid true}]]
       [ui/GridColumn {:width 9}
        [ui/HeaderSubheader {:as "h2"}
-        "Create and configure your first NuvlaBox (smart edge device)"]
+        (@tr [:welcome-how-to-nb-header])]
        [ui/HeaderSubheader {:as "h4"}
-        "Follow these steps or find detailed instructions " [:a {:href "https://docs.nuvla.io/nuvlabox/nuvlabox-engine"} "here"] "."]
+        (@tr [:welcome-how-to-nb-subheader]) " " [:a {:href "https://docs.nuvla.io/nuvlabox/nuvlabox-engine"} (@tr [:here])] "."]
        [ui/StepGroup {:vertical true}
         (step 1
-              "Prepare your NuvlaBox"
-              "Here is "
-              [:a {:target "_blank" :href "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/requirements"} "what you have to do"]
-              " to prepare your hardware platform.")
+              (@tr [:welcome-how-to-nb-1-header])
+              (@tr [:welcome-how-to-nb-1-subheader-pre])
+              " "
+              [:a {:target "_blank" :href "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/requirements"}
+               (@tr [:welcome-how-to-nb-1-subheader-mid])]
+              " "
+              (@tr [:welcome-how-to-nb-1-subheader-post])
+              ".")
         (step 2
-              "Create a new NuvlaBox entry in Nuvla" "Go to the " [navigate-link "edge" "edge page"] " and click or tap on the " [:strong "add button"] ".")
-        (step 3 "Start NuvlaBox Engine" "Copy the compose file to your new NuvlaBox and start the NuvlaBox Engine. Here's a link to the " [:a {:target "_blank" :href "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/quickstart"} "documentation"] " for details.")
-        (step 4 "Manage your NuvlaBox" "Once the NuvlaBox Engine has started, you'll see it turn active on the " [navigate-link "edge" "edge page"] ". From there, you'll be able to see telemetry and control your edge device.")
-        (step 5 "Deploy apps to your NuvlaBox" "You can now deploy any containerised app compatible with your edge hardware architecture. " [:a {:href "#deploy-app"} "Show me"])]]]
+              (@tr [:welcome-how-to-nb-2-header])
+              (@tr [:welcome-how-to-nb-2-subheader-pre])
+              " "
+              [navigate-link "edge" (@tr [:welcome-how-to-nb-2-subheader-mid])]
+              " "
+              (@tr [:welcome-how-to-nb-2-subheader-post])
+              ".")
+        (step 3
+              (@tr [:welcome-how-to-nb-3-header])
+              (@tr [:welcome-how-to-nb-3-subheader-pre])
+              " "
+              [:a {:target "_blank" :href "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/quickstart"} (@tr [:documentation])]
+              " "
+              (@tr [:welcome-how-to-nb-3-subheader-post])
+              ".")
+        (step 4
+              (@tr [:welcome-how-to-nb-4-header])
+              (@tr [:welcome-how-to-nb-4-subheader-pre])
+              " "
+              [navigate-link "edge" (@tr [:welcome-how-to-nb-4-subheader-mid])]
+              ". "
+              (@tr [:welcome-how-to-nb-4-subheader-post])
+              ".")
+
+        (step 5
+              (@tr [:welcome-how-to-nb-5-header])
+              (@tr [:welcome-how-to-nb-5-subheader-pre])
+              ". "
+              [:a {:href "#deploy-app"} (@tr [:show-me])]
+              ".")]]]
 
      [ui/Divider]
 
@@ -223,14 +170,33 @@
                :verticalAlign :middle}
       [ui/GridColumn {:width 9}
        [ui/HeaderSubheader {:as "h2"}
-        "Launch any containerised app"]
+        (@tr [:welcome-how-to-launch-header])]
        [ui/HeaderSubheader {:as "h4"}
-        "You will find detailed instructions " [:a {:href "https://docs.nuvla.io/nuvla/launch-app"} "here"] "."]
+        (@tr [:welcome-how-to-launch-subheader]) " " [:a {:href "https://docs.nuvla.io/nuvla/launch-app"} "here"] "."]
        [ui/StepGroup {:vertical true}
-        (step 1 "Find you app in the App Store" "The " [navigate-link "apps" "App Store"] " contains public and private containerised apps. Use the search field to find what you are looking for. Try for example 'nginx examples'. Then click/tap 'launch'.")
-        (step 2 "Configure the app" "Here you will tell Nuvla which target infrastructure to deploy to, as well as configuration parameters.")
-        (step 3 "Launch!" "Once all this is done, you simply have to press the launch button")
-        (step 4 "Enjoy :-)" "Once the app is deployed, from the " [navigate-link "dashboard" "Dashboard"] ", or the detailed deployment page, you'll be able to access your app.")]]
+        (step 1
+              (@tr [:welcome-how-to-launch-1-header-])
+              (@tr [:welcome-how-to-launch-1-subheader-pre])
+              " "
+              [navigate-link "apps" (@tr [:appstore])]
+              " "
+              (@tr [:welcome-how-to-launch-1-subheader-post])
+              ".")
+        (step 2
+              (@tr [:welcome-how-to-launch-2-header])
+              (@tr [:welcome-how-to-launch-2-subheader-pre]))
+        (step 3
+              (@tr [:welcome-how-to-launch-3-header])
+              (@tr [:welcome-how-to-launch-3-subheader-pre])
+              " ")
+        (step 4
+              (@tr [:welcome-how-to-launch-4-header])
+              (@tr [:welcome-how-to-launch-4-subheader-pre])
+              " "
+              [navigate-link "dashboard" "Dashboard"]
+              ", "
+              (@tr [:welcome-how-to-launch-4-subheader-post])
+              ".")]]
       [ui/GridColumn {:width 6}
        [ui/Image {:floated "right" :src "/ui/images/welcome-appstore.png" :fluid true}]]]
 
@@ -247,10 +213,23 @@
                   :source      "youtube"}]]
       [ui/GridColumn {:width 9}
        [ui/HeaderSubheader {:as "h2"}
-        "Process video stream at the edge"]
+        (@tr [:welcome-how-to-video-header])]
        [ui/HeaderSubheader {:as "h4"}
-        "Follow these steps and/or watch the video."]
+        (@tr [:welcome-how-to-video-subheader])]
        [ui/StepGroup {:vertical true}
-        (step 1 "Install a NuvlaBox" "Follow these " [:a {:href "#add-nuvlabox"} "steps"] " to setup your own NuvlaBox.")
-        (step 2 "Connect a video camera" "This tutorial assumes you have connected a USB camera to your device. Make sure it appears in the peripheral of you NuvlaBox on the " [navigate-link "edge" "edge page"] ".")
-        (step 3 "Deploy a video app to process the stream" "The video in this section will walk you through these steps")]]]]))
+        (step 1
+              (@tr [:welcome-how-to-video-1-header])
+              (@tr [:welcome-how-to-video-1-subheader-pre])
+              " "
+              [:a {:href "#add-nuvlabox"} (@tr [:welcome-how-to-video-1-subheader-mid])]
+              " "
+              (@tr [:welcome-how-to-video-1-subheader-post])
+              ".")
+        (step 2
+              (@tr [:welcome-how-to-video-2-header])
+              (@tr [:welcome-how-to-video-2-subheader-pre])
+              " "
+              [navigate-link "edge" (@tr [:welcome-how-to-video-2-subheader-post])] ".")
+        (step 3
+              (@tr [:welcome-how-to-video-3-header])
+              (@tr [:welcome-how-to-video-3-subheader-pre]))]]]]))

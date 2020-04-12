@@ -167,7 +167,8 @@
      [ui/Grid {:id            :launch-app
                :centered      true
                :stackable     true
-               :verticalAlign :middle}
+               :verticalAlign :middle
+               :reversed "mobile"}
       [ui/GridColumn {:width 9}
        [ui/HeaderSubheader {:as "h2"}
         (@tr [:welcome-how-to-launch-header])]
@@ -205,8 +206,7 @@
      [ui/Grid {:id :video-at-the-edge
                :centered true
                :stackable true
-               :verticalAlign :middle
-               :reversed "mobile"}
+               :verticalAlign :middle}
       [ui/GridColumn {:width 6}
        [ui/Embed {:id          "BHzbEDzyfnQ"
                   :placeholder "https://img.youtube.com/vi/BHzbEDzyfnQ/maxresdefault.jpg"

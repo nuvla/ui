@@ -6,7 +6,6 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defn navigate-link [target-page text]
@@ -47,7 +46,7 @@
                :centered      true
                :verticalAlign :middle
                :reversed      :mobile
-               :style {:margin-top "8px"}}
+               :style         {:margin-top "8px"}}
       [ui/GridColumn {:width 6}
        [ui/Header {:as "h1"}
         (@tr [:welcome-header])]
@@ -64,9 +63,9 @@
        [:div {:style {:padding "10px 0"}}
         [:a {:class [:ui :button] :href "#video-at-the-edge"} (@tr [:welcome-process-video-at-edge])]]]
       [ui/GridColumn {:width 6}
-       [ui/Embed {:id           "yYJ6laT_6M4"
-                  :placeholder  "https://img.youtube.com/vi/yYJ6laT_6M4/maxresdefault.jpg"
-                  :source       "youtube"}]]]
+       [ui/Embed {:id          "yYJ6laT_6M4"
+                  :placeholder "https://img.youtube.com/vi/yYJ6laT_6M4/maxresdefault.jpg"
+                  :source      "youtube"}]]]
 
      [ui/Divider]
 
@@ -76,9 +75,8 @@
       (@tr [:welcome-resources-subheader])]
 
      [ui/CardGroup {:stackable true
-               :centered true
-               :columns 4
-               :padded true}
+                    :centered  true
+                    :columns   4}
 
       [ui/Card
        [ui/CardContent {:text-align :center}
@@ -90,7 +88,7 @@
          (@tr [:welcome-doc-subheader-pre]) " "
          [:a {:href "https://docs.nuvla.io"} (@tr [:here])]
          " " (@tr [:welcome-doc-subheader-post])]]]
-      [ui/Card {:textAlign :center}
+      [ui/Card
        [ui/CardContent {:text-align :center}
         [ui/Header {:as :h2} (str/capitalize (@tr [:videos]))]
         [ui/Icon {:name  "video"
@@ -125,7 +123,9 @@
               (@tr [:welcome-how-to-nb-1-header])
               (@tr [:welcome-how-to-nb-1-subheader-pre])
               " "
-              [:a {:target "_blank" :href "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/requirements"}
+              [:a {:target "_blank"
+                   :key    "nuvlabox-engine-requirements"
+                   :href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/requirements"}
                (@tr [:welcome-how-to-nb-1-subheader-mid])]
               " "
               (@tr [:welcome-how-to-nb-1-subheader-post])
@@ -134,6 +134,7 @@
               (@tr [:welcome-how-to-nb-2-header])
               (@tr [:welcome-how-to-nb-2-subheader-pre])
               " "
+              ^{:key (@tr [:welcome-how-to-nb-2-subheader-mid])}
               [navigate-link "edge" (@tr [:welcome-how-to-nb-2-subheader-mid])]
               " "
               (@tr [:welcome-how-to-nb-2-subheader-post])
@@ -142,7 +143,10 @@
               (@tr [:welcome-how-to-nb-3-header])
               (@tr [:welcome-how-to-nb-3-subheader-pre])
               " "
-              [:a {:target "_blank" :href "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/quickstart"} (@tr [:documentation])]
+              [:a {:target "_blank"
+                   :key    "nuvlabox-engine-quickstart"
+                   :href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/quickstart"}
+               (@tr [:documentation])]
               " "
               (@tr [:welcome-how-to-nb-3-subheader-post])
               ".")
@@ -150,6 +154,7 @@
               (@tr [:welcome-how-to-nb-4-header])
               (@tr [:welcome-how-to-nb-4-subheader-pre])
               " "
+              ^{:key (@tr [:welcome-how-to-nb-4-subheader-mid])}
               [navigate-link "edge" (@tr [:welcome-how-to-nb-4-subheader-mid])]
               ". "
               (@tr [:welcome-how-to-nb-4-subheader-post])
@@ -159,6 +164,7 @@
               (@tr [:welcome-how-to-nb-5-header])
               (@tr [:welcome-how-to-nb-5-subheader-pre])
               ". "
+              ^{:key (@tr [:show-me])}
               [:a {:href "#deploy-app"} (str/capitalize (@tr [:show-me]))]
               ".")]]]
 
@@ -168,7 +174,7 @@
                :centered      true
                :stackable     true
                :verticalAlign :middle
-               :reversed "mobile"}
+               :reversed      "mobile"}
       [ui/GridColumn {:width 9}
        [ui/HeaderSubheader {:as "h2"}
         (@tr [:welcome-how-to-launch-header])]
@@ -179,6 +185,7 @@
               (@tr [:welcome-how-to-launch-1-header-])
               (@tr [:welcome-how-to-launch-1-subheader-pre])
               " "
+              ^{:key (@tr [:appstore])}
               [navigate-link "apps" (@tr [:appstore])]
               " "
               (@tr [:welcome-how-to-launch-1-subheader-post])
@@ -194,6 +201,7 @@
               (@tr [:welcome-how-to-launch-4-header])
               (@tr [:welcome-how-to-launch-4-subheader-pre])
               " "
+              ^{:key (@tr [:dashboard])}
               [navigate-link "dashboard" (@tr [:dashboard])]
               ", "
               (@tr [:welcome-how-to-launch-4-subheader-post])
@@ -203,9 +211,9 @@
 
      [ui/Divider]
 
-     [ui/Grid {:id :video-at-the-edge
-               :centered true
-               :stackable true
+     [ui/Grid {:id            :video-at-the-edge
+               :centered      true
+               :stackable     true
                :verticalAlign :middle}
       [ui/GridColumn {:width 6}
        [ui/Embed {:id          "BHzbEDzyfnQ"
@@ -221,6 +229,7 @@
               (@tr [:welcome-how-to-video-1-header])
               (@tr [:welcome-how-to-video-1-subheader-pre])
               " "
+              ^{:key (@tr [:welcome-how-to-video-1-subheader-mid])}
               [:a {:href "#add-nuvlabox"} (@tr [:welcome-how-to-video-1-subheader-mid])]
               " "
               (@tr [:welcome-how-to-video-1-subheader-post])
@@ -229,6 +238,7 @@
               (@tr [:welcome-how-to-video-2-header])
               (@tr [:welcome-how-to-video-2-subheader-pre])
               " "
+              ^{:key (@tr [:welcome-how-to-video-2-subheader-post])}
               [navigate-link "edge" (@tr [:welcome-how-to-video-2-subheader-post])] ".")
         (step 3
               (@tr [:welcome-how-to-video-3-header])

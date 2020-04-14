@@ -38,6 +38,7 @@
 (reg-event-fx
   ::set-payment-method-result
   (fn [{{:keys [::spec/plan-id] :as db} :db} [_ result]]
+    (js/console.log ::set-payment-method-result result)
     (let [res            (-> result (js->clj :keywordize-keys true))
           error          (:error res)
           payment-method (:paymentMethod res)]
@@ -107,7 +108,8 @@
               requires-action?     (= (:status payment-intent) "requires_action")
               subscription-active? (= (:status subscription) "active")]
           (cond-> {:db (assoc db ::spec/subscription subscription
-                                 ::spec/processing? (not subscription-active?))}
+                                 ::spec/processing? (and requires-action?
+                                                         (not subscription-active?)))}
                   requires-action? (assoc ::fx/confirm-card-payment
                                           [stripe (:client_secret payment-intent)
                                            #(dispatch [::get-subscription

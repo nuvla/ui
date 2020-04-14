@@ -19,6 +19,7 @@
 (def Elements (r/adapt-react-class react-stripe/Elements))
 (def CardElement (r/adapt-react-class react-stripe/CardElement))
 (def ElementsConsumer (r/adapt-react-class react-stripe/ElementsConsumer))
+(def IbanElement (r/adapt-react-class react-stripe/IbanElement))
 
 
 (def email (r/atom nil))
@@ -27,7 +28,9 @@
 
 (def card-validation-error-message (r/atom nil))
 
-(defn handle-submit
+(def payment-form (r/atom :sepa-debit #_:credit-card))
+
+(defn handle-submit-credit-card
   [elements event]
   (.preventDefault event)
   (when elements
@@ -35,6 +38,17 @@
                #js{:type            "card"
                    :card            (elements.getElement react-stripe/CardElement)
                    :billing_details #js{:email @email}}])))
+
+
+(defn handle-submit-sepa-debit
+  [elements event]
+  (.preventDefault event)
+  (when elements
+    (dispatch [::events/create-payment-method
+               #js{:type            "sepa_debit"
+                   :sepa_debit      (elements.getElement react-stripe/IbanElement)
+                   :billing_details #js{:email @email
+                                        :name "test"}}])))
 
 
 ;; While not yet hooks support we have to use react components
@@ -47,7 +61,9 @@
         processing?          (subscribe [::subs/processing?])
         plan-id              (subscribe [::subs/plan-id])]
     (fn [elements]
-      [ui/Form {:on-submit (partial handle-submit elements)
+      [ui/Form {:on-submit (partial (if (= payment-form :credit-card)
+                                      handle-submit-credit-card
+                                      handle-submit-sepa-debit) elements)
                 :style     {:width 400}
                 :error     (boolean @payment-method-error)}
        [ui/Message {:error   true
@@ -55,15 +71,29 @@
                     :content @payment-method-error}]
        [ui/FormInput {:label     "Email"
                       :on-change (ui-callback/value #(reset! email %))}]
-       [ui/FormField
-        [:label "Card Number"]
-        [CardElement {:className @className
-                      :on-change (fn [event]
-                                   (reset! card-validation-error-message
-                                           (some-> event .-error .-message))
-                                   (reset! card-info-completed? (.-complete event)))}]
-        (when @card-validation-error-message
-          [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-message])]
+       (if (= @payment-form :credit-card)
+         [ui/FormField
+          [:label "Card Number"]
+          [CardElement {:className @className
+                        :on-change (fn [event]
+                                     (js/console.log event)
+                                     (reset! card-validation-error-message
+                                             (some-> event .-error .-message))
+                                     (reset! card-info-completed? (.-complete event)))}]
+          (when @card-validation-error-message
+            [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-message])]
+         [ui/FormField
+          [:label "IBAN"]
+          [IbanElement {:className @className
+                        :on-change (fn [event]
+                                     (reset! card-validation-error-message
+                                             (some-> event .-error .-message))
+                                     (reset! card-info-completed? (.-complete event)))
+                        :options   (clj->js {:supportedCountries ["SEPA"]
+                                             :placeholderCountry "CH"})}]
+          (when @card-validation-error-message
+            [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-message])]
+         )
        [ui/Button {:type     "submit"
                    :animated "vertical"
                    :primary  true
@@ -124,14 +154,24 @@
          [PlanComp "plan_Gx23NQ4bczKU4e" "bronze" "500$ / month" "brown" "plane"]
          [PlanComp "plan_Gx43FhmevUCOau" "Silver" "4'000$ / month" "grey" "fighter jet"]
          [PlanComp "plan_Gx44NITOaAhpUU" "Gold" "15'000$ / month" "yellow" "space shuttle"]]
-        (when true #_@plan-id
+        [ui/GridRow {:columns 1}
+         [ui/GridColumn
+          [ui/ButtonGroup
+           [ui/Button {:attached "left"
+                       :active   (= @payment-form :credit-card)
+                       :on-click #(reset! payment-form :credit-card)}
+            "Credit Card"]
+           [ui/Button {:attached "right"
+                       :active   (= @payment-form :sepa-debit)
+                       :on-click #(reset! payment-form :sepa-debit)}
+            "SEPA Direct Debit payments"]]]]
+        (when (and true #_@plan-id @stripe)
           [ui/GridColumn
            [ui/Segment {:compact true}
-            (when @stripe
-              ^{:key @locale}
-              [Elements {:stripe  @stripe
-                         :options {:locale @locale}}
-               [CheckoutForm]])]])
+            ^{:key @locale}
+            [Elements {:stripe  @stripe
+                       :options {:locale @locale}}
+             [CheckoutForm]]]])
         (when @subscription
           [:<>
            [ui/GridRow {:columns 1}

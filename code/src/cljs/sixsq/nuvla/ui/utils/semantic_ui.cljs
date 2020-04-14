@@ -99,6 +99,8 @@
 
 (def Image (r/adapt-react-class semantic/Image))
 
+(def Embed (r/adapt-react-class semantic/Embed))
+
 (def Input (r/adapt-react-class semantic/Input))
 
 (def Header (r/adapt-react-class semantic/Header))

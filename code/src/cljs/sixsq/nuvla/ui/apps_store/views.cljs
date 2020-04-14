@@ -18,7 +18,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [clojure.string :as str]))
 
 
 (defn refresh-menu
@@ -106,13 +107,14 @@
            (when (and @module (not (instance? js/Error @module)))
              (let [{:keys [children]} @module]
                [apps-project-views/format-module-children children]))]
-          :label (general-utils/capitalize-words (@tr [:all-projects]))
+          :label (str/capitalize (@tr [:all-projects]))
           :title-size :h2]]))))
 
 
 (defn appstore
   []
-  (let [modules           (subscribe [::subs/modules])
+  (let [tr                (subscribe [::i18n-subs/tr])
+        modules           (subscribe [::subs/modules])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])]
     (dispatch [::events/set-full-text-search nil])
@@ -130,7 +132,7 @@
              :activePage   @page
              :onPageChange (ui-callback/callback
                              :activePage #(dispatch [::events/set-page %]))}]]
-          :label "App Store"
+          :label (str/capitalize (@tr [:appstore]))
           :title-size :h2]]))))
 
 

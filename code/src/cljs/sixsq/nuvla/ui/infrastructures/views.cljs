@@ -331,8 +331,7 @@
            [ui/CardContent {:text-align :center}
             [ui/Header "Docker Swarm"]
             [ui/Icon {:name "docker"
-                      :size "massive"}]
-            [ui/Header (@tr [:register])]]]
+                      :size "massive"}]]]
 
           [ui/Card
            {:on-click #(do
@@ -344,9 +343,7 @@
            [ui/CardContent {:text-align :center}
             [ui/Header "Kubernetes"]
             [ui/Image {:src   "/ui/images/kubernetes.svg"
-                       :style {:max-width 112}}]
-            [ui/Header (@tr [:register])]]]
-          ]]
+                       :style {:max-width 112}}]]]]]
 
         [uix/MoreAccordion
          [ui/CardGroup {:centered true}
@@ -362,8 +359,7 @@
             [ui/Header "Docker Registry"]
             [ui/IconGroup {:size "massive"}
              [ui/Icon {:name "docker"}]
-             [ui/Icon {:name "database", :corner "bottom right"}]]
-            [ui/Header (@tr [:register])]]]
+             [ui/Icon {:name "database", :corner "bottom right"}]]]]
 
           [ui/Card
            {:on-click #(do
@@ -375,8 +371,7 @@
            [ui/CardContent {:text-align :center}
             [ui/Header "Object Store"]
             [ui/Image {:src   "/ui/images/s3.png"
-                       :style {:max-width 112}}]
-            [ui/Header (@tr [:register])]]]]]]])))
+                       :style {:max-width 112}}]]]]]]])))
 
 
 (defmethod panel/render :infrastructures

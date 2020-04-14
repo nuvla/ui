@@ -2,8 +2,12 @@
 
 ## Unreleased
 
+## [2.4.13] - 2020-04-14
+
 ### Changed
 
+  - Welcome page - Update content
+  - Credentials - i18n
   - Momentjs - require locale fr
   - UIX comp - use setInterval behave better with dev reloading
   - Action Interval - use setInterval behave better with dev reloading

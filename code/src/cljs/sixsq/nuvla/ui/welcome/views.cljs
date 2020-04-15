@@ -230,7 +230,10 @@
               (@tr [:welcome-how-to-video-1-subheader-pre])
               " "
               ^{:key (@tr [:welcome-how-to-video-1-subheader-mid])}
-              [:a {:href "#add-nuvlabox"} (@tr [:welcome-how-to-video-1-subheader-mid])]
+              [:a {:target "_blank"
+                   :key    "video-nuvlabox-engine-quickstart"
+                   :href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/quickstart"}
+               (@tr [:welcome-how-to-video-1-subheader-mid])]
               " "
               (@tr [:welcome-how-to-video-1-subheader-post])
               ".")

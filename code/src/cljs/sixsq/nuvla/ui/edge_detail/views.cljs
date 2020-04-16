@@ -107,14 +107,17 @@
              p-serial-num  :serial-number
              p-video-dev   :video-device
              p-data-gw-url :local-data-gateway-endpoint
-             p-data-sample :raw-data-sample} @peripheral
-            actions (get-available-actions p-ops)]
+             p-data-sample :raw-data-sample
+             p-additional-assets  :additional-assets} @peripheral
+            actions (get-available-actions p-ops)
+            p-additional-assets-list  (map (fn [[key value]] [(name key) value]) p-additional-assets)]
 
         (when (pos? (compare p-updated @last-updated))
           (reset! button-load? false)
           (reset! last-updated p-updated))
         [uix/Accordion
-         [ui/Table {:basic "very"}
+         [ui/Table {:basic "very"
+                    :padded      false}
           [ui/TableBody
            (when p-product
              [ui/TableRow
@@ -160,6 +163,19 @@
            [ui/TableRow
             [ui/TableCell "Updated"]
             [ui/TableCell (time/ago (time/parse-iso8601 p-updated) @locale)]]
+           (when p-additional-assets-list
+             (concat [[ui/TableRow
+                       [ui/TableCell {:row-span (count p-additional-assets-list)} "Additional Assets"]
+                       [ui/TableCell {:style {:font-weight "bold" :text-transform "uppercase" :padding "0px"}}
+                        (str (ffirst p-additional-assets-list) ": ")]
+                       [ui/TableCell (str/join "\n" (second (first p-additional-assets-list)))]
+                       ]]
+               (map (fn [[key value]]
+                      [ui/TableRow
+                       [ui/TableCell {:style {:font-weight "bold" :text-transform "uppercase"}}
+                        (str key ": ")]
+                       [ui/TableCell (str/join "\n" value)]
+                       ]) (rest p-additional-assets-list))))
            (when p-data-gw-url
              [ui/TableRow {:positive true}
               [ui/TableCell "Data Gateway Connection"]

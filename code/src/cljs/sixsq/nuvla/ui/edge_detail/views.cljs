@@ -168,13 +168,13 @@
                        [ui/TableCell {:row-span (count p-additional-assets-list)} "Additional Assets"]
                        [ui/TableCell {:style {:font-weight "bold" :text-transform "uppercase" :padding "0px"}}
                         (str (ffirst p-additional-assets-list) ": ")]
-                       [ui/TableCell (str/join "\n" (second (first p-additional-assets-list)))]
+                       [ui/TableCell (map (fn [val] [:div val]) (second (first p-additional-assets-list)))]
                        ]]
                (map (fn [[key value]]
                       [ui/TableRow
                        [ui/TableCell {:style {:font-weight "bold" :text-transform "uppercase"}}
                         (str key ": ")]
-                       [ui/TableCell (str/join "\n" value)]
+                       [ui/TableCell (map (fn [val] [:div val]) value)]
                        ]) (rest p-additional-assets-list))))
            (when p-data-gw-url
              [ui/TableRow {:positive true}

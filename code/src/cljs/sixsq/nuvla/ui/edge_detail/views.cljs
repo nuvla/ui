@@ -109,8 +109,7 @@
              p-data-gw-url :local-data-gateway-endpoint
              p-data-sample :raw-data-sample
              p-additional-assets  :additional-assets} @peripheral
-            actions (get-available-actions p-ops)
-            p-additional-assets-list  (map (fn [[key value]] [(name key) value]) p-additional-assets)]
+            actions (get-available-actions p-ops)]
 
         (when (pos? (compare p-updated @last-updated))
           (reset! button-load? false)
@@ -163,19 +162,15 @@
            [ui/TableRow
             [ui/TableCell "Updated"]
             [ui/TableCell (time/ago (time/parse-iso8601 p-updated) @locale)]]
-           (when p-additional-assets-list
-             (concat [[ui/TableRow
-                       [ui/TableCell {:row-span (count p-additional-assets-list)} "Additional Assets"]
-                       [ui/TableCell {:style {:font-weight "bold" :text-transform "uppercase" :padding "0px"}}
-                        (str (ffirst p-additional-assets-list) ": ")]
-                       [ui/TableCell (map (fn [val] [:div val]) (second (first p-additional-assets-list)))]
-                       ]]
-               (map (fn [[key value]]
-                      [ui/TableRow
-                       [ui/TableCell {:style {:font-weight "bold" :text-transform "uppercase"}}
-                        (str key ": ")]
-                       [ui/TableCell (map (fn [val] [:div val]) value)]
-                       ]) (rest p-additional-assets-list))))
+           (when p-additional-assets
+             [ui/TableRow
+              [ui/TableCell "Additional Assets"]
+              [ui/TableCell (map (fn [[key value]]
+                                   [ui/Segment {:vertical true}
+                                    [:div {:style {:font-weight "bold" :font-variant "small-caps"}}
+                                     (str (name key) ": ")]
+                                    (map (fn [val]
+                                           [:div val]) value)]) p-additional-assets)]])
            (when p-data-gw-url
              [ui/TableRow {:positive true}
               [ui/TableCell "Data Gateway Connection"]

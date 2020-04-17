@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+  - Added new peripheral attributes to Edge detail view's accordion
+
 ## [2.4.13] - 2020-04-14
 
 ### Changed

@@ -107,14 +107,16 @@
              p-serial-num  :serial-number
              p-video-dev   :video-device
              p-data-gw-url :local-data-gateway-endpoint
-             p-data-sample :raw-data-sample} @peripheral
+             p-data-sample :raw-data-sample
+             p-additional-assets  :additional-assets} @peripheral
             actions (get-available-actions p-ops)]
 
         (when (pos? (compare p-updated @last-updated))
           (reset! button-load? false)
           (reset! last-updated p-updated))
         [uix/Accordion
-         [ui/Table {:basic "very"}
+         [ui/Table {:basic "very"
+                    :padded      false}
           [ui/TableBody
            (when p-product
              [ui/TableRow
@@ -160,6 +162,15 @@
            [ui/TableRow
             [ui/TableCell "Updated"]
             [ui/TableCell (time/ago (time/parse-iso8601 p-updated) @locale)]]
+           (when p-additional-assets
+             [ui/TableRow
+              [ui/TableCell "Additional Assets"]
+              [ui/TableCell (map (fn [[key value]]
+                                   [ui/Segment {:vertical true}
+                                    [:div {:style {:font-weight "bold" :font-variant "small-caps"}}
+                                     (str (name key) ": ")]
+                                    (map (fn [val]
+                                           [:div val]) value)]) p-additional-assets)]])
            (when p-data-gw-url
              [ui/TableRow {:positive true}
               [ui/TableCell "Data Gateway Connection"]

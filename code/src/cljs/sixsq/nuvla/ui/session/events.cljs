@@ -28,6 +28,7 @@
                 ::spec/session
                 ::main-spec/nav-path
                 ::main-spec/pages] :as db} :db} [_ session-arg]]
+    (js/console.log "session: " session-arg)
     (let [no-session-protected-page? (and (nil? session-arg)
                                           (->> nav-path first (get pages) :protected?))]
       (cond-> {:db (assoc db ::spec/session session-arg
@@ -115,3 +116,11 @@
                                    ::spec/success-message nil
                                    ::spec/error-message nil)
        ::cimi-api-fx/add [collection-kw template on-success :on-error on-error]})))
+
+
+(reg-event-fx
+  ::switch-account
+  (fn [{{:keys [::spec/session]} :db} [_ claim]]
+    (let [claim (if (= (:identifier session) claim) (:user session) claim)]
+      {::cimi-api-fx/operation [(:id session) "switch" #(dispatch [::initialize])
+                                {:claim claim}]})))

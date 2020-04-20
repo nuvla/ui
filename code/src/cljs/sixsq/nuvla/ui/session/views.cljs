@@ -17,7 +17,9 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.spec :as us]))
+    [sixsq.nuvla.ui.utils.spec :as us]
+    [reagent.core :as r]
+    [clojure.string :as str]))
 
 
 ;;; VALIDATION SPEC
@@ -105,50 +107,59 @@
         logged-in?           (boolean @user)
 
         invitation-template? (subscribe [::subs/user-template-exist?
-                                         utils/user-tmpl-email-invitation])]
+                                         utils/user-tmpl-email-invitation])
+        switch-account-options              (subscribe [::subs/switch-account-options])]
 
     [ui/DropdownMenu
+     (when (seq @switch-account-options)
+       [:<>
+        [ui/DropdownHeader "Switch Account"]
+        (for [account @switch-account-options]
+          ^{:key account}
+          [ui/DropdownItem {:text     account
+                            :icon     (if (str/starts-with? account "group/") "group" "user")
+                            :on-click #(dispatch [::events/switch-account account])}])
+        [ui/DropdownDivider]])
+
+     (when @invitation-template?
+       [:<>
+        [ui/DropdownItem
+         {:key      "invite"
+          :text     (@tr [:invite-user])
+          :icon     "user add"
+          :on-click create-user-fn}]
+        [ui/DropdownDivider]])
+
+     [ui/DropdownItem {:aria-label (@tr [:documentation])
+                       :icon       "book"
+                       :text       (@tr [:documentation])
+                       :href       "https://docs.nuvla.io/"
+                       :target     "_blank"
+                       :rel        "noreferrer"}]
+     [ui/DropdownItem {:aria-label (@tr [:knowledge-base])
+                       :icon       "info circle"
+                       :text       (@tr [:knowledge-base])
+                       :href       "https://support.sixsq.com/solution/categories"
+                       :target     "_blank"
+                       :rel        "noreferrer"}]
+     [ui/DropdownItem {:aria-label (@tr [:support])
+                       :icon       "mail"
+                       :text       (@tr [:support])
+                       :href       (js/encodeURI
+                                     (str "mailto:support@sixsq.com?subject=["
+                                          @cimi-api-fx/NUVLA_URL
+                                          "] Support question - "
+                                          (if logged-in? @user "Not logged in")))}]
 
      (when logged-in?
        [:<>
+        [ui/DropdownDivider]
         [ui/DropdownItem
          {:key      "sign-out"
           :text     (@tr [:logout])
           :icon     "sign out"
-          :on-click sign-out-fn}]
-        [ui/DropdownDivider]
-
-        (when @invitation-template?
-          [:<>
-           [ui/DropdownItem
-            {:key      "invite"
-             :text     (@tr [:invite-user])
-             :icon     "user add"
-             :on-click create-user-fn}]
-           [ui/DropdownDivider]])])
-
-     [:<>
-      [ui/DropdownItem {:aria-label (@tr [:documentation])
-                        :icon       "book"
-                        :text       (@tr [:documentation])
-                        :href       "https://docs.nuvla.io/"
-                        :target     "_blank"
-                        :rel        "noreferrer"}]
-      [ui/DropdownItem {:aria-label (@tr [:knowledge-base])
-                        :icon       "info circle"
-                        :text       (@tr [:knowledge-base])
-                        :href       "https://support.sixsq.com/solution/categories"
-                        :target     "_blank"
-                        :rel        "noreferrer"}]
-      [ui/DropdownItem {:aria-label (@tr [:support])
-                        :icon       "mail"
-                        :text       (@tr [:support])
-                        :href       (js/encodeURI
-                                      (str "mailto:support@sixsq.com?subject=["
-                                           @cimi-api-fx/NUVLA_URL
-                                           "] Support question - "
-                                           (if logged-in? @user "Not logged in")))
-                        }]]]))
+          :on-click sign-out-fn}]])
+     ]))
 
 
 (defn authn-menu
@@ -167,7 +178,7 @@
      (if logged-in?
        [ui/ButtonGroup {:primary true}
         [ui/Button {:on-click profile-fn}
-         [ui/Icon {:name "user"}]
+         [ui/Icon {:name (if (-> @user (or "") (str/starts-with? "group/")) "group" "user")}]
          (general-utils/truncate @user)]
         dropdown-menu]
        [:div

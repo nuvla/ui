@@ -87,8 +87,11 @@
 (defn files-section []
   (let [tr        (subscribe [::i18n-subs/tr])
         files     (subscribe [::subs/files])
-        editable? (subscribe [::apps-subs/editable?])]
-    (fn []
+        editable? (subscribe [::apps-subs/editable?])
+        module-app      (subscribe [::apps-subs/module])
+        compatibility   (:compatibility @module-app)]
+    (when (not= compatibility "docker-compose")
+      (fn []
       [uix/Accordion
        [:<>
         [:div (@tr [:module-files])
@@ -112,7 +115,7 @@
            [apps-views-detail/plus ::events/add-file]])]
        :label (@tr [:module-files])
        :count (count @files)
-       :default-open false])))
+       :default-open false]))))
 
 
 (defn DockerComposeValidationPopup

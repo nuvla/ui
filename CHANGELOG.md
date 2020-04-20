@@ -5,6 +5,7 @@
 ### Changed
 
   - Added new peripheral attributes to Edge detail view's accordion
+  - Files are ignored for docker-compose applications
 
 ## [2.4.13] - 2020-04-14
 

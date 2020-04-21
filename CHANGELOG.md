@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+  - Auth menu - Support switch session account
+
 ### Changed
 
   - Added new peripheral attributes to Edge detail view's accordion

@@ -29,9 +29,6 @@
   :<- [::session]
   :<- [::roles]
   (fn [[{:keys [identifier active-claim] :as session} roles]]
-    (js/console.log "roles:" roles)
-    (js/console.log "active-claim:" active-claim)
-    (js/console.log "identifier:" identifier)
     (when (general-utils/can-operation? "switch" session)
       (cond-> (filter #(and
                          (str/starts-with? % "group/")

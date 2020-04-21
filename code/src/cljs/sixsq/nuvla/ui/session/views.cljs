@@ -1,8 +1,10 @@
 (ns sixsq.nuvla.ui.session.views
   (:require
     [clojure.spec.alpha :as s]
+    [clojure.string :as str]
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -17,9 +19,7 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.spec :as us]
-    [reagent.core :as r]
-    [clojure.string :as str]))
+    [sixsq.nuvla.ui.utils.spec :as us]))
 
 
 ;;; VALIDATION SPEC

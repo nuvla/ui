@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.apps-project.views
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps-project.spec :as spec]
@@ -13,8 +14,7 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [clojure.string :as str]))
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 (defn summary []
   [apps-views-detail/summary])

@@ -28,7 +28,6 @@
                 ::spec/session
                 ::main-spec/nav-path
                 ::main-spec/pages] :as db} :db} [_ session-arg]]
-    (js/console.log "session: " session-arg)
     (let [no-session-protected-page? (and (nil? session-arg)
                                           (->> nav-path first (get pages) :protected?))]
       (cond-> {:db (assoc db ::spec/session session-arg

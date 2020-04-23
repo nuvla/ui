@@ -108,17 +108,17 @@
 
         invitation-template? (subscribe [::subs/user-template-exist?
                                          utils/user-tmpl-email-invitation])
-        switch-account-options              (subscribe [::subs/switch-account-options])]
+        act-as-options       (subscribe [::subs/act-as-options])]
 
     [ui/DropdownMenu
-     (when (seq @switch-account-options)
+     (when (seq @act-as-options)
        [:<>
-        [ui/DropdownHeader "Switch Account"]
-        (for [account @switch-account-options]
+        [ui/DropdownHeader (@tr [:act-as])]
+        (for [account @act-as-options]
           ^{:key account}
           [ui/DropdownItem {:text     account
                             :icon     (if (str/starts-with? account "group/") "group" "user")
-                            :on-click #(dispatch [::events/switch-account account])}])
+                            :on-click #(dispatch [::events/act-as account])}])
         [ui/DropdownDivider]])
 
      (when @invitation-template?

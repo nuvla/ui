@@ -4,7 +4,7 @@
 
 ### Added
 
-  - Auth menu - Support switch session account
+  - Auth menu - Support act as a group via claim action
 
 ### Changed
 

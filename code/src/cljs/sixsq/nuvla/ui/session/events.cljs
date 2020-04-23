@@ -118,8 +118,8 @@
 
 
 (reg-event-fx
-  ::switch-account
+  ::act-as
   (fn [{{:keys [::spec/session]} :db} [_ claim]]
     (let [claim (if (= (:identifier session) claim) (:user session) claim)]
-      {::cimi-api-fx/operation [(:id session) "switch" #(dispatch [::initialize])
+      {::cimi-api-fx/operation [(:id session) "claim" #(dispatch [::initialize])
                                 {:claim claim}]})))

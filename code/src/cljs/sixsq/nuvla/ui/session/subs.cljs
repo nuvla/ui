@@ -25,11 +25,11 @@
     (::spec/session db)))
 
 (reg-sub
-  ::switch-account-options
+  ::act-as-options
   :<- [::session]
   :<- [::roles]
   (fn [[{:keys [identifier active-claim] :as session} roles]]
-    (when (general-utils/can-operation? "switch" session)
+    (when (general-utils/can-operation? "claim" session)
       (cond-> (filter #(and
                          (str/starts-with? % "group/")
                          (not (#{"group/nuvla-anon" "group/nuvla-user"

@@ -115,3 +115,11 @@
                                    ::spec/success-message nil
                                    ::spec/error-message nil)
        ::cimi-api-fx/add [collection-kw template on-success :on-error on-error]})))
+
+
+(reg-event-fx
+  ::act-as
+  (fn [{{:keys [::spec/session]} :db} [_ claim]]
+    (let [claim (if (= (:identifier session) claim) (:user session) claim)]
+      {::cimi-api-fx/operation [(:id session) "claim" #(dispatch [::initialize])
+                                {:claim claim}]})))

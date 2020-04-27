@@ -22,6 +22,8 @@ The expected JSON schema is:
   "vpn": "infrastructure-service/<uuid>",
   "assets": ["docker-compose.yml", <other compose files to install alongside>]
 }
+
+:returns NuvlaBox UUID
 """
 
 import requests
@@ -43,7 +45,7 @@ def arguments():
     parser = argparse.ArgumentParser(description='NuvlaBox Agent')
     parser.add_argument('--nuvlabox-installation-trigger-json', dest='nb_trigger_content', default=None, metavar='JSON')
 
-    return parser
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
@@ -51,9 +53,11 @@ if __name__ == "__main__":
 
     nb_trigger_json = json.loads(args.nb_trigger_content)
 
-    nuvla_endpoint = nb_trigger_json['endpoint'].rstrip('/')
+    nuvla_endpoint = nb_trigger_json['endpoint'].rstrip('/').rstrip('/api') + "/api"
     nb_basename = nb_trigger_json['name'].rstrip('_')
     nb_basedescription = nb_trigger_json['description']
+    nb_version = nb_trigger_json['version'].split('.')[0]
+    nb_vpn_server_id = nb_trigger_json.get('vpn')
 
     login_apikey = {
         "template": {
@@ -68,9 +72,12 @@ if __name__ == "__main__":
     # login
     login_endpoint = nuvla_endpoint + "/session"
     try:
-        s.post(login_endpoint, json=login_apikey)
+        session = s.post(login_endpoint, json=login_apikey).json()
     except requests.exceptions.SSLError:
-        s.post(login_endpoint, json=login_apikey, verify=False)
+        session = s.post(login_endpoint, json=login_apikey, verify=False).json()
+
+    if session["status"] != 201:
+        raise Exception("Unable to login at {}. Reason: {}".format(login_endpoint, session['message']))
 
     # create Nuvlabox
     try:
@@ -80,3 +87,23 @@ if __name__ == "__main__":
 
     nb_name = nb_basename + "_" + unique_id
     nb_description = "{} - {}".format(nb_basedescription, unique_id)
+
+    nuvlabox = {
+        "name": nb_name,
+        "description": nb_description,
+        "version": int(nb_version)
+    }
+
+    if nb_vpn_server_id:
+        nuvlabox['vpn-server-id'] = nb_vpn_server_id
+
+    new_nb_endpoint = nuvla_endpoint + "/nuvlabox"
+    try:
+        nb_id = s.post(new_nb_endpoint, json=nuvlabox).json()
+    except requests.exceptions.SSLError:
+        nb_id = s.post(new_nb_endpoint, json=nuvlabox, verify=False).json()
+
+    if nb_id['status'] != 201:
+        raise Exception("Failed to register new NuvlaBox at {}. Reason: {}".format(new_nb_endpoint, nb_id['message']))
+
+    print(nb_id["resource-id"])

@@ -233,13 +233,14 @@
            [ui/Accordion
             [ui/AccordionTitle {:active   @advanced?, :icon "dropdown", :content "Advanced"
                                 :on-click #(swap! advanced? not)}]
-            [ui/AccordionContent {:active @advanced?}
+            [ui/AccordionContent {:active true}
 
              (let [{nb-rel                                  :nb-rel
                     nb-assets                               :nb-assets
                     {:keys [compose-files url pre-release]} :nb-selected} @nuvlabox-release-data]
-               [ui/Segment
-                [:h3 {:style {:font-variant "small-caps"}} "version"]
+               [ui/Container
+                [ui/Divider {:horizontal true :as "h3"}
+                 "version"]
                 [ui/Dropdown {:selection   true
                               :placeholder nb-rel
                               :value       nb-rel
@@ -296,7 +297,78 @@
                                                                    :nb-assets
                                                                    (-> @nuvlabox-release-data
                                                                        :nb-assets
-                                                                       (disj scope))))))}])))]])]]]
+                                                                       (disj scope))))))}])))]
+
+                [ui/Divider {:horizontal true :as "h3"}
+                 "operating system"]
+
+                [ui/Grid
+                 [ui/GridRow {:columns 2
+                              :text-align "center"}
+                  [ui/GridColumn
+                   [ui/Card {:raised true
+                             :centered true
+                             :style {:width 200
+                                     :height 100}}
+                    [ui/Reveal {:animated "move left"
+                                :style {:height "100%"
+                                        :width  "100%"}}
+                     [ui/RevealContent {:visible true
+                                        :style {:background-color "white"
+                                                :height "100%"
+                                                :width  "100%"
+                                                :display "flex"
+                                                :align-items "center"}}
+                      [ui/Image {:centered true
+                                 :src "/ui/images/nuvlabox-os-logo-small.png"
+                                 :style {:max-height "90%"
+                                         :max-width  "55%"}}]]
+                     [ui/RevealContent {:hidden true
+                                        :style {:background "url(/ui/images/nuvlabox-os-logo-small.png) no-repeat fixed center"
+                                                :height "100%"
+                                                :width  "100%"}}
+                      [:div {:style {:background-color "rgba(0,0,0,0.4)"
+                                     :height           "100%"
+                                     :width            "100%"
+                                     :color            "white"
+                                     :display          "flex"
+                                     :align-items      "center"
+                                     :font-style       "oblique"}}
+                       [:span
+                       "Your minimalistic and NuvlaBox-driven operating system"]]]]]]
+                  [ui/GridColumn
+                   [ui/Card {:raised true
+                             :centered true
+                             :style {:width 200
+                                     :height 100}}
+                    [ui/Reveal {:animated "move left"
+                                :style {:height "100%"
+                                        :width  "100%"}}
+                     [ui/RevealContent {:visible true
+                                        :style {:background-color "white"
+                                                :height "100%"
+                                                :width  "100%"
+                                                :display "flex"
+                                                :align-items "center"}}
+                      [ui/Image {:centered true
+                                 :src "/ui/images/linux-logo.png"
+                                 :alt "Attribution: lewing@isc.tamu.edu Larry Ewing and The GIMP"
+                                 :title "Attribution: lewing@isc.tamu.edu Larry Ewing and The GIMP"
+                                 :style {:max-height "90%"
+                                         :max-width  "55%"}}]]
+                     [ui/RevealContent {:hidden true
+                                        :style {:background "url(/ui/images/linux-logo.png) no-repeat fixed center"
+                                                :height "100%"
+                                                :width  "100%"}}
+                      [:div {:style {:background-color "rgba(0,0,0,0.4)"
+                                     :height           "100%"
+                                     :width            "100%"
+                                     :color            "white"
+                                     :display          "flex"
+                                     :align-items      "center"
+                                     :font-style       "oblique"}}
+                       [:span
+                        "Any Linux-based OS, like Ubuntu, Debian, CentOS, etc."]]]]]]]]])]]]
 
           [ui/ModalActions
            [ui/Button {:positive true

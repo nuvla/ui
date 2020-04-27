@@ -148,6 +148,8 @@
 
 (def Radio (r/adapt-react-class semantic/Radio))
 (def Responsive (r/adapt-react-class semantic/Responsive))
+(def Reveal (r/adapt-react-class semantic/Reveal))
+(def RevealContent (r/adapt-react-class semantic/RevealContent))
 
 (def Segment (r/adapt-react-class semantic/Segment))
 (def SegmentGroup (r/adapt-react-class semantic/SegmentGroup))

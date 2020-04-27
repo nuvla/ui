@@ -166,7 +166,6 @@
   (let [modal-id              :add
         tr                    (subscribe [::i18n-subs/tr])
         visible?              (subscribe [::subs/modal-visible? modal-id])
-        user-id               (subscribe [::session-subs/user-id])
         nuvlabox-id           (subscribe [::subs/nuvlabox-created-id])
         vpn-infra-opts        (subscribe [::subs/vpn-infra-options])
         nb-releases           (subscribe [::subs/nuvlabox-releases])
@@ -175,8 +174,7 @@
                                   {:key release, :text release, :value release})
                                 @nb-releases)
         nb-releases-by-rel    (group-by :release @nb-releases)
-        default-data          {:owner            @user-id
-                               :refresh-interval 30}
+        default-data          {:refresh-interval 30}
         first-nb-release      (first @nb-releases)
         creation-data         (r/atom default-data)
         default-release-data  {:nb-rel      (:release first-nb-release)

@@ -4,6 +4,7 @@
 
 ### Added
 
+  - Auth menu - Support act as a group via claim action
   - downloads directory to host downloadable Nuvla assets
   - nuvlabox-self-registration download script, for the NuvlaBox industrialization
 

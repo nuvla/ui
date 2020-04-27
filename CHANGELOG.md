@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+  - downloads directory to host downloadable Nuvla assets
+  - nuvlabox-self-registration download script, for the NuvlaBox industrialization
+
 ### Changed
 
   - Added new peripheral attributes to Edge detail view's accordion

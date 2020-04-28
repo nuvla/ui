@@ -178,7 +178,7 @@
                                    :apisecret "todo"}]
         [:<>
          [ui/ModalHeader
-          [ui/Icon {:name "box"}] "NuvlaBox USB installation trigger ready"]
+          [ui/Icon {:name "usb"}] "NuvlaBox USB installation trigger ready"]
 
          [ui/ModalContent
           [ui/CardGroup {:centered true}
@@ -207,8 +207,9 @@
           [ui/Label {:circular true
                      :color    "green"} "1"]
           [:h5 {:style {:margin "0.5em 0 1em 0"}}
-           "Copy the trigger file into a USB stick"]
-          [:span "NOTE: the acceptable filesystems formats are vfat, ext2, ext3, ext4, hfsplus and ntfs"]]
+           "Copy the trigger file into a USB stick "
+           [ui/Popup {:content "the acceptable USB filesystems formats are: vfat, ext2, ext3, ext4, hfsplus and ntfs"
+                      :trigger (r/as-element [ui/Icon {:name "info circle"}])}]]]
 
          [ui/Segment {:text-align :center
                       :raised     true}
@@ -403,13 +404,17 @@
                                          :on-change #(reset! install-strategy "usb")}]
 
                        [:div {:style {:color "grey" :font-style "oblique"}}
-                        (@tr [:create-nuvlabox-usb])]]
+                        (@tr [:create-nuvlabox-usb])]
+                       [:a {:href "https://docs.nuvla.io"
+                            :target "_blank"}
+                        "more info..."]]
 
                       [ui/Divider {:hidden true}]])]
 
-                [ui/ModalActions {:style {:display (if (nil? @install-strategy) "none" "inherit")}}
+                [ui/ModalActions
                   [ui/Button {:positive true
-                              :on-click on-add-fn}
+                              :on-click on-add-fn
+                              :disabled (nil? @install-strategy)}
                    (@tr [:create])]]
                 ])])))
 

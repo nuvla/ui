@@ -7,6 +7,8 @@
   - Auth menu - Support act as a group via claim action
   - downloads directory to host downloadable Nuvla assets
   - nuvlabox-self-registration download script, for the NuvlaBox industrialization
+  - OS selection step in NuvlaBox creation workflow
+  - Generation of API key and USB trigger file for auto-installing NuvlaBox
 
 ### Changed
 

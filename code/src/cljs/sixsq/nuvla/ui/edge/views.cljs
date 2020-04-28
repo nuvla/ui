@@ -260,8 +260,8 @@
                                               set)}
         nuvlabox-release-data (r/atom default-release-data)
         advanced?             (r/atom false)
-        default-operating-system  "Linux"
-        operating-system      (r/atom default-operating-system)
+        install-strategy-default  nil
+        install-strategy      (r/atom install-strategy-default)
         create-usb-trigger-default  false
         create-usb-trigger    (r/atom create-usb-trigger-default)
         on-close-fn           #(do
@@ -269,15 +269,17 @@
                                  (dispatch [::events/open-modal nil])
                                  (reset! advanced? false)
                                  (reset! creation-data default-data)
-                                 (reset! operating-system default-operating-system)
+                                 (reset! install-strategy install-strategy-default)
                                  (reset! create-usb-trigger create-usb-trigger-default)
                                  (reset! nuvlabox-release-data default-release-data))
-        on-add-fn             #(do
-                                 (dispatch [::events/create-nuvlabox
-                                            (->> @creation-data
-                                              (remove (fn [[_ v]] (str/blank? v)))
-                                              (into {}))])
-                                 (reset! creation-data default-data))]
+        on-add-fn             #(if (= @install-strategy "usb")
+                                 (reset! create-usb-trigger true)
+                                 (do
+                                   (dispatch [::events/create-nuvlabox
+                                              (->> @creation-data
+                                                (remove (fn [[_ v]] (str/blank? v)))
+                                                (into {}))])
+                                   (reset! creation-data default-data)))]
     (fn []
       (when (= (count @vpn-infra-opts) 1)
         (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
@@ -292,6 +294,8 @@
                  [ui/Icon {:name "add"}] (str "New NuvlaBox " (:name @creation-data))]
 
                 [ui/ModalContent
+                 [ui/Divider {:horizontal true :as "h3"}
+                  "general"]
 
                  [ui/Table style/definition
                   [ui/TableBody
@@ -312,10 +316,6 @@
                                    :on-change   (ui-callback/callback
                                                   :value #(swap! creation-data assoc :vpn-server-id %))
                                    :options     @vpn-infra-opts}]]]]]
-                 [ui/Accordion
-                  [ui/AccordionTitle {:active   @advanced?, :icon "dropdown", :content "Advanced"
-                                      :on-click #(swap! advanced? not)}]
-                  [ui/AccordionContent {:active true}
 
                    (let [{nb-rel                                  :nb-rel
                           nb-assets                               :nb-assets
@@ -382,122 +382,36 @@
                                                                       (disj scope))))))}])))]
 
                       [ui/Divider {:horizontal true :as "h3"}
-                       "operating system"]
+                       "installation method"]
 
-                      [ui/Container {:fluid true
-                                     :text-align "center"}
-                       [:span (str "Selected: " @operating-system)]]
+                      [ui/Form
+                       [ui/FormCheckbox {:label "Compose file bundle"
+                                         :radio true
+                                         :error (nil? @install-strategy)
+                                         :checked (= @install-strategy "compose")
+                                         :on-change #(reset! install-strategy "compose")}]
 
-                      [ui/Grid {:stackable true}
-                       [ui/GridRow {:columns 2
-                                    :text-align "center"}
-                        [ui/GridColumn
-                         [ui/Button {:value    "12"
-                                     :primary  (= @operating-system "Linux")
-                                     :centered true
-                                     :style    {:width              200
-                                                :height             100
-                                                :padding            2
-                                                :-webkit-box-shadow "0px 0px 5px 1px rgba(0,0,0,0.75)"
-                                                :-moz-box-shadow    "0px 0px 5px 1px rgba(0,0,0,0.5)"
-                                                :box-shadow         "0px 0px 5px 1px rgba(0,0,0,0.1)"}
-                                     :on-click #(reset! operating-system "Linux")}
-                          [ui/Reveal {:animated "move left"
-                                      :style {:height "100%"
-                                              :width  "100%"}}
-                           [ui/RevealContent {:visible true
-                                              :style {:background-color "white"
-                                                      :height "100%"
-                                                      :width  "100%"
-                                                      :display "flex"
-                                                      :align-items "center"}}
-                            [ui/Image {:centered true
-                                       :src "/ui/images/linux-logo.png"
-                                       :alt "Attribution: lewing@isc.tamu.edu Larry Ewing and The GIMP"
-                                       :title "Attribution: lewing@isc.tamu.edu Larry Ewing and The GIMP"
-                                       :style {:max-height "90%"
-                                               :max-width  "55%"}}]]
-                           [ui/RevealContent {:hidden true
-                                              :style {:background "url(/ui/images/linux-logo.png) no-repeat fixed center"
-                                                      :height "100%"
-                                                      :width  "100%"}}
-                            [:div {:style {:background-color "rgba(0,0,0,0.2)"
-                                           :height           "100%"
-                                           :width            "100%"
-                                           :color            "white"
-                                           :display          "flex"
-                                           :align-items      "center"
-                                           :font-style       "oblique"}}
-                             [:span
-                              "Any Linux-based OS, like Ubuntu, Debian, CentOS, etc."]]]]]]
-                        [ui/GridColumn
-                         [ui/Button {:primary (= @operating-system "NuvlaBox OS")
-                                     :centered true
-                                     :style {:width 200
-                                             :height 100
-                                             :padding 2
-                                             :-webkit-box-shadow "0px 0px 5px 1px rgba(0,0,0,0.75)"
-                                             :-moz-box-shadow "0px 0px 5px 1px rgba(0,0,0,0.5)"
-                                             :box-shadow "0px 0px 5px 1px rgba(0,0,0,0.1)"}
-                                     :on-click  #(reset! operating-system "NuvlaBox OS")}
-                          [ui/Reveal {:animated "move left"
-                                      :style {:height "100%"
-                                              :width  "100%"}}
-                           [ui/RevealContent {:visible true
-                                              :style {:background-color "white"
-                                                      :height "100%"
-                                                      :width  "100%"
-                                                      :display "flex"
-                                                      :align-items "center"}}
-                            [ui/Image {:centered true
-                                       :src "/ui/images/nuvlabox-os-logo-small.png"
-                                       :style {:max-height "90%"
-                                               :max-width  "55%"}}]]
-                           [ui/RevealContent {:hidden true
-                                              :style {:background "url(/ui/images/nuvlabox-os-logo-small.png) no-repeat fixed center"
-                                                      :height "100%"
-                                                      :width  "100%"}}
-                            [:div {:style {:background-color "rgba(0,0,0,0.2)"
-                                           :height           "100%"
-                                           :width            "100%"
-                                           :color            "white"
-                                           :display          "flex"
-                                           :align-items      "center"
-                                           :font-style       "oblique"}}
-                             [:span
-                              "Your NuvlaBox-driven and minimalistic operating system"]]]]]
-                         [:br]
-                         [ui/Container {:style {:display (if (= @operating-system "NuvlaBox OS")
-                                                           "inline-block" "none")}}
-                          [:a {:href "https://docs.nuvla.io"}
-                           "Learn more"]]]]]])]]]
+                       [:div {:style {:color "grey" :font-style "oblique"}}
+                        (@tr [:create-nuvlabox-compose])]
 
-                [ui/ModalActions
-                 [ui/ButtonGroup
-                  [ui/Popup {:position "left center"
-                             :wide true
-                             :style {
-                                     :margin 0}
-                             :content (@tr [:create-nuvlabox-usb-popup])
-                             :trigger (r/as-element [ui/Button {:animated true
-                                                                :color "green"
-                                                                :basic true
-                                                                :style {:display (if (= @operating-system "NuvlaBox OS")
-                                                                                   "inline" "none")
-                                                                        :border-radius 0}
-                                                                :on-click #(reset! create-usb-trigger true)}
-                                                     [ui/ButtonContent {:visible true}
-                                                      [ui/Icon {:name "usb"}]
-                                                      (@tr [:create-nuvlabox-usb])]
-                                                     [ui/ButtonContent {:hidden true}
-                                                      (@tr [:create-nuvlabox-usb-help])]
-                                                     ])}]
-                  [ui/ButtonOr {:style {:display (if (= @operating-system "NuvlaBox OS")
-                                                   "inline" "none")}}]
+                       [ui/Divider {:hidden true}]
+
+                       [ui/FormCheckbox {:label "USB stick"
+                                         :radio true
+                                         :error (nil? @install-strategy)
+                                         :checked (= @install-strategy "usb")
+                                         :on-change #(reset! install-strategy "usb")}]
+
+                       [:div {:style {:color "grey" :font-style "oblique"}}
+                        (@tr [:create-nuvlabox-usb])]]
+
+                      [ui/Divider {:hidden true}]])]
+
+                [ui/ModalActions {:style {:display (if (nil? @install-strategy) "none" "inherit")}}
                   [ui/Button {:positive true
-                              :on-click on-add-fn
-                              :style {:border-radius 0}}
-                   (@tr [:create])]]]])])))
+                              :on-click on-add-fn}
+                   (@tr [:create])]]
+                ])])))
 
 
 (defn AddModalWrapper

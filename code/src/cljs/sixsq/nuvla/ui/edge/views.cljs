@@ -184,20 +184,47 @@
           [ui/CardGroup {:centered true}
            [ui/Card
             [ui/CardContent {:text-align :center}
-             [ui/Header [:span {:style {:overflow-wrap "break-word"}} "USB trigger file"]]
+             [ui/Header [:span {:style {:overflow-wrap "break-word"}} "NuvlaBox USB trigger file"]]
              [ui/Icon {:name  "file code"
                        :color "green"
                        :size  :massive}]]
-            [:a {:href nuvlabox-trigger-file
+            [:a {:href (str "data:text/plain;charset=utf-8," (js/encodeURIComponent (general-utils/edn->json nuvlabox-trigger-file)))
                  :target "_blank"
                  :download "nuvlabox-installation-trigger-usb"}
-             [ui/Button {:positive true
-                         :icon     "download"
-                         :content  (@tr [:download-nuvlabox-trigger])}]]]]]
+             [ui/Button {:positive        true
+                         :fluid           true
+                         :icon            "download"
+                         :label-position  "left"
+                         :as              "div"
+                         :content         (@tr [:download])}]]]]]
 
          [ui/Divider {:horizontal true}
           [ui/Header "Instructions"]]
 
+         [ui/Segment {:loading    (nil? nuvlabox-trigger-file)
+                      :text-align :center
+                      :raised     true}
+          [ui/Label {:circular true
+                     :color    "green"} "1"]
+          [:h5 {:style {:margin "0.5em 0 1em 0"}}
+           "Copy the trigger file into a USB stick"]
+          [:span "NOTE: the acceptable filesystems formats are vfat, ext2, ext3, ext4, hfsplus and ntfs"]]
+
+         [ui/Segment {:text-align :center
+                      :raised     true}
+          [ui/Label {:circular true
+                     :color    "green"} "2"]
+          [:h5 {:style {:margin "0.5em 0 1em 0"}}
+           "Plug and wait"]
+          [:span "Plug the USB stick into your NuvlaBox OS machine and wait for the installation feedback"]]
+
+         [ui/Segment {:text-align :center
+                      :raised     true}
+          [ui/Label {:circular true
+                     :color    "green"} "3"]
+          [:h5 {:style {:margin "0.5em 0 1em 0"}}
+           "Repeat"]
+          [:span "Repeat step 2 on as many NuvlaBox OS machines as you want"]]
 
          [ui/Container {:text-align :center
                         :style      {:margin "0.2em"}}

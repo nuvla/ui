@@ -35,6 +35,8 @@
 
 (def Button (r/adapt-react-class semantic/Button))
 (def ButtonGroup (r/adapt-react-class semantic/ButtonGroup))
+(def ButtonContent (r/adapt-react-class semantic/ButtonContent))
+(def ButtonOr (r/adapt-react-class semantic/ButtonOr))
 
 (def Card (r/adapt-react-class semantic/Card))
 (def CardContent (r/adapt-react-class semantic/CardContent))

@@ -263,6 +263,7 @@
         advanced?             (r/atom false)
         install-strategy-default  nil
         install-strategy      (r/atom install-strategy-default)
+        install-strategy-error  (r/atom install-strategy-default)
         create-usb-trigger-default  false
         create-usb-trigger    (r/atom create-usb-trigger-default)
         on-close-fn           #(do
@@ -271,16 +272,18 @@
                                  (reset! advanced? false)
                                  (reset! creation-data default-data)
                                  (reset! install-strategy install-strategy-default)
+                                 (reset! install-strategy-error install-strategy-default)
                                  (reset! create-usb-trigger create-usb-trigger-default)
                                  (reset! nuvlabox-release-data default-release-data))
-        on-add-fn             #(if (= @install-strategy "usb")
-                                 (reset! create-usb-trigger true)
-                                 (do
-                                   (dispatch [::events/create-nuvlabox
-                                              (->> @creation-data
-                                                (remove (fn [[_ v]] (str/blank? v)))
-                                                (into {}))])
-                                   (reset! creation-data default-data)))]
+        on-add-fn             #(cond
+                                 (nil? @install-strategy) (reset! install-strategy-error true)
+                                 (= @install-strategy "usb") (reset! create-usb-trigger true)
+                                 :else (do
+                                         (dispatch [::events/create-nuvlabox
+                                                    (->> @creation-data
+                                                      (remove (fn [[_ v]] (str/blank? v)))
+                                                      (into {}))])
+                                         (reset! creation-data default-data)))]
     (fn []
       (when (= (count @vpn-infra-opts) 1)
         (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
@@ -318,105 +321,109 @@
                                                   :value #(swap! creation-data assoc :vpn-server-id %))
                                    :options     @vpn-infra-opts}]]]]]
 
-                   (let [{nb-rel                                  :nb-rel
-                          nb-assets                               :nb-assets
-                          {:keys [compose-files url pre-release]} :nb-selected} @nuvlabox-release-data]
-                     [ui/Container
-                      [ui/Divider {:horizontal true :as "h3"}
-                       "version"]
-                      [ui/Dropdown {:selection   true
-                                    :placeholder nb-rel
-                                    :value       nb-rel
-                                    :options     nb-releases-options
-                                    :on-change   (ui-callback/value
-                                                   (fn [value]
-                                                     (swap! nuvlabox-release-data
-                                                       assoc :nb-rel value)
-                                                     (swap! creation-data assoc
-                                                       :version (-> value
-                                                                  utils/get-major-version
-                                                                  general-utils/str->int))
-                                                     (swap! nuvlabox-release-data assoc
-                                                       :nb-selected
-                                                       (->> value
-                                                         (get nb-releases-by-rel)
-                                                         (into (sorted-map))))
-                                                     (swap! nuvlabox-release-data assoc :nb-assets
-                                                       (set (map :scope compose-files)))))}]
-                      [:a {:href   url
-                           :target "_blank"
-                           :style  {:margin "1em"}
-                           } "Release notes"]
-                      (when pre-release
-                        [ui/Popup
-                         {:trigger        (r/as-element [ui/Icon {:name "exclamation triangle"}])
-                          :content        (str "This version is a pre-release, "
-                                            "and thus not meant for production!")
-                          :on             "hover"
-                          :hide-on-scroll true}])
-                      [ui/Container
-                       (when (> (count compose-files) 1)
-                         [ui/Popup
-                          {:trigger        (r/as-element [:span "Additional modules: "])
-                           :content        (str "This release lets you choose optional modules for "
-                                             "automatic peripheral discovery")
-                           :on             "hover"
-                           :hide-on-scroll true}])
-                       (doall
-                         (for [{:keys [scope]} compose-files]
-                           (when-not (#{"core" ""} scope)
-                             [ui/Checkbox {:key             scope
-                                           :label           scope
-                                           :default-checked (contains? (:nb-assets @nuvlabox-release-data)
-                                                              scope)
-                                           :style           {:margin "1em"}
-                                           :on-change       (ui-callback/checked
-                                                              (fn [checked]
-                                                                (if checked
-                                                                  (swap! nuvlabox-release-data assoc
+                 (let [{nb-rel                                  :nb-rel
+                        nb-assets                               :nb-assets
+                        {:keys [compose-files url pre-release]} :nb-selected} @nuvlabox-release-data]
+                   [ui/Container
+                    [ui/Divider {:horizontal true :as "h3"}
+                     "version"]
+                    [ui/Dropdown {:selection   true
+                                  :placeholder nb-rel
+                                  :value       nb-rel
+                                  :options     nb-releases-options
+                                  :on-change   (ui-callback/value
+                                                 (fn [value]
+                                                   (swap! nuvlabox-release-data
+                                                     assoc :nb-rel value)
+                                                   (swap! creation-data assoc
+                                                     :version (-> value
+                                                                utils/get-major-version
+                                                                general-utils/str->int))
+                                                   (swap! nuvlabox-release-data assoc
+                                                     :nb-selected
+                                                     (->> value
+                                                       (get nb-releases-by-rel)
+                                                       (into (sorted-map))))
+                                                   (swap! nuvlabox-release-data assoc :nb-assets
+                                                     (set (map :scope compose-files)))))}]
+                    [:a {:href   url
+                         :target "_blank"
+                         :style  {:margin "1em"}}
+                     "Release notes"]
+                    (when pre-release
+                      [ui/Popup
+                       {:trigger        (r/as-element [ui/Icon {:name "exclamation triangle"}])
+                        :content        (str "This version is a pre-release, "
+                                          "and thus not meant for production!")
+                        :on             "hover"
+                        :hide-on-scroll true}])
+                    [ui/Container
+                     (when (> (count compose-files) 1)
+                       [ui/Popup
+                        {:trigger        (r/as-element [:span "Additional modules: "])
+                         :content        (str "This release lets you choose optional modules for "
+                                           "automatic peripheral discovery")
+                         :on             "hover"
+                         :hide-on-scroll true}])
+                     (doall
+                       (for [{:keys [scope]} compose-files]
+                         (when-not (#{"core" ""} scope)
+                           [ui/Checkbox {:key             scope
+                                         :label           scope
+                                         :default-checked (contains? (:nb-assets @nuvlabox-release-data)
+                                                            scope)
+                                         :style           {:margin "1em"}
+                                         :on-change       (ui-callback/checked
+                                                            (fn [checked]
+                                                              (if checked
+                                                                (swap! nuvlabox-release-data assoc
+                                                                  :nb-assets
+                                                                  (conj nb-assets scope))
+                                                                (swap! nuvlabox-release-data assoc
+                                                                  :nb-assets
+                                                                  (-> @nuvlabox-release-data
                                                                     :nb-assets
-                                                                    (conj nb-assets scope))
-                                                                  (swap! nuvlabox-release-data assoc
-                                                                    :nb-assets
-                                                                    (-> @nuvlabox-release-data
-                                                                      :nb-assets
-                                                                      (disj scope))))))}])))]
+                                                                    (disj scope))))))}])))]
 
-                      [ui/Divider {:horizontal true :as "h3"}
-                       "installation method"]
+                    [ui/Divider {:horizontal true :as "h3"}
+                     "installation method"]
 
-                      [ui/Form
-                       [ui/FormCheckbox {:label "Compose file bundle"
-                                         :radio true
-                                         :error (nil? @install-strategy)
-                                         :checked (= @install-strategy "compose")
-                                         :on-change #(reset! install-strategy "compose")}]
+                    [ui/Form
+                     [ui/FormCheckbox {:label "Compose file bundle"
+                                       :radio true
+                                       :error (not (nil? @install-strategy-error))
+                                       :checked (= @install-strategy "compose")
+                                       :on-change #(do
+                                                     (reset! install-strategy "compose")
+                                                     (reset! install-strategy-error nil))}]
 
-                       [:div {:style {:color "grey" :font-style "oblique"}}
-                        (@tr [:create-nuvlabox-compose])]
+                     [:div {:style {:color "grey" :font-style "oblique"}}
+                      (@tr [:create-nuvlabox-compose])]
 
-                       [ui/Divider {:hidden true}]
+                     [ui/Divider {:hidden true}]
 
-                       [ui/FormCheckbox {:label "USB stick"
-                                         :radio true
-                                         :error (nil? @install-strategy)
-                                         :checked (= @install-strategy "usb")
-                                         :on-change #(reset! install-strategy "usb")}]
+                     [ui/FormCheckbox {:label "USB stick"
+                                       :radio true
+                                       :error (not (nil? @install-strategy-error))
+                                       :checked (= @install-strategy "usb")
+                                       :on-change #(do
+                                                     (reset! install-strategy "usb")
+                                                     (reset! install-strategy-error nil))}]
 
-                       [:div {:style {:color "grey" :font-style "oblique"}}
-                        (@tr [:create-nuvlabox-usb])]
-                       [:a {:href "https://docs.nuvla.io"
-                            :target "_blank"}
-                        "more info..."]]
+                     [:div {:style {:color "grey" :font-style "oblique"}}
+                      (@tr [:create-nuvlabox-usb])]
+                     [:a {:href "https://docs.nuvla.io"
+                          :target "_blank"}
+                      "more info..."]]
 
-                      [ui/Divider {:hidden true}]])]
+                    [ui/Divider {:hidden true}]])]
 
                 [ui/ModalActions
-                  [ui/Button {:positive true
-                              :on-click on-add-fn
-                              :disabled (nil? @install-strategy)}
-                   (@tr [:create])]]
-                ])])))
+                 [:span {:style {:color "#9f3a38" :display (if (not (nil? @install-strategy-error)) "inline-block" "none")}}
+                  "Missing fields"]
+                 [ui/Button {:positive true
+                             :on-click on-add-fn}
+                  (@tr [:create])]]])])))
 
 
 (defn AddModalWrapper

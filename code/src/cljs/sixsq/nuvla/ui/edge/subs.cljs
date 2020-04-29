@@ -78,6 +78,11 @@
     (::spec/nuvlabox-created-id db)))
 
 (reg-sub
+  ::nuvlabox-usb-api-key
+  (fn [db]
+    (::spec/nuvlabox-usb-api-key db)))
+
+(reg-sub
   ::vpn-infra-options
   (fn [{:keys [::spec/vpn-infra]}]
     (map

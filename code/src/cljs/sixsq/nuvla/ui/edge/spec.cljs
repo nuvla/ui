@@ -21,6 +21,8 @@
 
 (s/def ::nuvlabox-created-id (s/nilable string?))
 
+(s/def ::nuvlabox-usb-api-key any?)
+
 (s/def ::page int?)
 (s/def ::elements-per-page int?)
 (s/def ::total-elements int?)
@@ -45,6 +47,7 @@
                           ::state-selector
                           ::open-modal
                           ::nuvlabox-created-id
+                          ::nuvlabox-usb-api-key
                           ::vpn-infra]))
 
 
@@ -60,4 +63,5 @@
                ::state-selector      nil
                ::open-modal          nil
                ::nuvlabox-created-id nil
+               ::nuvlabox-usb-api-key nil
                ::vpn-infra           nil})

@@ -216,7 +216,7 @@
                        :size  :massive}]]
             [:a {:href (str "data:text/plain;charset=utf-8," (js/encodeURIComponent (general-utils/edn->json nuvlabox-trigger-file)))
                  :target "_blank"
-                 :download "nuvlabox-installation-trigger-usb"}
+                 :download "nuvlabox-installation-trigger-usb.json"}
              [ui/Button {:positive        true
                          :fluid           true
                          :loading         (nil? apikey)

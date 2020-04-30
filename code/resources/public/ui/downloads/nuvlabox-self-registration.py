@@ -120,9 +120,7 @@ def install_nuvlabox_engine(cmd, env=os.environ.copy(), timeout=600):
     except TimeoutExpired:
         raise Exception('Command execution timed out after {} seconds'.format(timeout))
 
-    if result.returncode == 0:
-        return result.stdout
-    else:
+    if result.returncode != 0:
         raise Exception(result.stdout)
 
 
@@ -158,13 +156,15 @@ if __name__ == "__main__":
     s = requests.Session()
 
     # login
+    connection_verify = True
     login_endpoint = nuvla_endpoint + "/session"
     try:
         session = s.post(login_endpoint, json=login_apikey).json()
     except requests.exceptions.SSLError:
         environment_fallback += ",NUVLA_ENDPOINT_INSECURE=True"
         environment['NUVLA_ENDPOINT_INSECURE'] = True
-        session = s.post(login_endpoint, json=login_apikey, verify=False).json()
+        connection_verify = False
+        session = s.post(login_endpoint, json=login_apikey, verify=connection_verify).json()
 
     if session["status"] != 201:
         raise Exception("Unable to login at {}. Reason: {}".format(login_endpoint, session['message']))
@@ -188,10 +188,7 @@ if __name__ == "__main__":
         nuvlabox['vpn-server-id'] = nb_vpn_server_id
 
     new_nb_endpoint = nuvla_endpoint + "/nuvlabox"
-    try:
-        nb_id = s.post(new_nb_endpoint, json=nuvlabox).json()
-    except requests.exceptions.SSLError:
-        nb_id = s.post(new_nb_endpoint, json=nuvlabox, verify=False).json()
+    nb_id = s.post(new_nb_endpoint, json=nuvlabox, verify=connection_verify).json()
 
     if nb_id['status'] != 201:
         raise Exception("Failed to register new NuvlaBox at {}. Reason: {}".format(new_nb_endpoint, nb_id['message']))
@@ -201,11 +198,16 @@ if __name__ == "__main__":
     environment_fallback += ",NUVLABOX_UUID={}".format(nuvlabox_id)
     environment['NUVLABOX_UUID'] = nuvlabox_id
 
-    installer_file, compose_files = prepare_nuvlabox_engine_installation(int(nb_version), nb_assets, nb_workdir)
+    try:
+        installer_file, compose_files = prepare_nuvlabox_engine_installation(int(nb_version), nb_assets, nb_workdir)
 
-    install_command = ["sh", installer_file, "--environment={}".format(environment_fallback),
-                       "--compose-files={}".format(",".join(compose_files)), "--installation-strategy=UPDATE",
-                       "--action=INSTALL"]
+        install_command = ["sh", installer_file, "--environment={}".format(environment_fallback),
+                           "--compose-files={}".format(",".join(compose_files)), "--installation-strategy=UPDATE",
+                           "--action=INSTALL"]
 
-    install_nuvlabox_engine(install_command, env=environment)
-
+        install_nuvlabox_engine(install_command, env=environment)
+    except:
+        # On any error, cleanup the resource in Nuvla
+        print("NuvlaBox Engine installation failed - removing {} from Nuvla".format(nuvlabox_id))
+        s.delete(nuvla_endpoint + "/" + nuvlabox_id, verify=connection_verify)
+        raise

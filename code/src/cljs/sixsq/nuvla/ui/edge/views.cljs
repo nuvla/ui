@@ -175,12 +175,15 @@
   [creation-data nuvlabox-release-data on-close-fn tr]
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
-        new-api-key          (subscribe [::subs/nuvlabox-usb-api-key])]
+        new-api-key          (subscribe [::subs/nuvlabox-usb-api-key])
+        download-files       (utils/prepare-compose-files
+                               nuvlabox-release nuvlabox-peripherals "placeholder")
+        download-files-names (map :name download-files)]
 
     (fn []
       (let [apikey                (:resource-id @new-api-key)
             apisecret             (:secret-key @new-api-key)
-            nuvlabox-trigger-file {:assets    nuvlabox-peripherals
+            nuvlabox-trigger-file {:assets    download-files-names
                                    :version   (:release nuvlabox-release)
                                    :name      (:name creation-data)
                                    :description    (:description creation-data)

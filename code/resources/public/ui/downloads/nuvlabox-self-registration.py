@@ -251,7 +251,7 @@ if __name__ == "__main__":
     try:
         installer_file, compose_files = prepare_nuvlabox_engine_installation(nb_release, nb_assets, nb_workdir)
 
-        install_command = ["sh", installer_file, "--env_file={}".format(env_file),
+        install_command = ["sh", installer_file, "--env-file={}".format(env_file),
                            "--compose-files={}".format(",".join(compose_files)),
                            "--installation-strategy={}".format(installation_strategy), "--action=INSTALL"]
 

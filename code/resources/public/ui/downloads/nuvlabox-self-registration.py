@@ -126,6 +126,8 @@ def install_nuvlabox_engine(cmd, env=os.environ.copy(), timeout=600):
     if result.returncode != 0:
         raise Exception(result.stdout)
 
+    print(result.stdout)
+
 
 if __name__ == "__main__":
     args = arguments()
@@ -207,6 +209,7 @@ if __name__ == "__main__":
                            "--compose-files={}".format(",".join(compose_files)), "--installation-strategy=UPDATE",
                            "--action=INSTALL"]
 
+        print("Installing NuvlaBox Engine - this can take a few minutes...")
         install_nuvlabox_engine(install_command, env=environment)
     except:
         # On any error, cleanup the resource in Nuvla

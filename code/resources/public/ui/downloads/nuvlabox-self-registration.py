@@ -78,15 +78,17 @@ def prepare_nuvlabox_engine_installation(version, compose_files, workdir):
     existing_files = os.listdir(workdir)
     now = int(time.time())
     for efile in existing_files:
-        old_file = "{}/{}".format(workdir, efile)
-        new_file = "{}/{}.{}".format(workdir, efile, now)
-        os.rename(old_file, new_file)
+        if not efile.endswith("backup"):
+            old_file = "{}/{}".format(workdir, efile)
+            new_file = "{}/{}.{}.backup".format(workdir, efile, now)
+            os.rename(old_file, new_file)
 
     final_compose_files = []
     for file in compose_files:
         gh_url = "{}/{}".format(github_release, file)
 
         r = requests.get(gh_url)
+        r.raise_for_status()
         save_compose_file_at = "{}/{}".format(workdir, file)
         with open(save_compose_file_at, 'wb') as f:
             f.write(r.content)
@@ -99,6 +101,7 @@ def prepare_nuvlabox_engine_installation(version, compose_files, workdir):
     installer_file_gh = "{}/{}".format(github_release, installer_file_name)
 
     r = requests.get(installer_file_gh)
+    r.raise_for_status()
     with open(installer_file, 'wb') as f:
         f.write(r.content)
 
@@ -132,16 +135,17 @@ if __name__ == "__main__":
     environment_fallback = ""
 
     nb_trigger_json = json.loads(args.nb_trigger_content)
-    nb_workdir = args.nb_workdir
+    nb_workdir = args.nb_workdir.rstrip('/')
 
     nuvla = nb_trigger_json['endpoint']
     environment_fallback += "NUVLA_ENDPOINT={}".format(nuvla)
     environment['NUVLA_ENDPOINT'] = nuvla
 
     nuvla_endpoint = nb_trigger_json['endpoint'].rstrip('/').rstrip('/api') + "/api"
-    nb_basename = nb_trigger_json['name'].rstrip('_')
-    nb_basedescription = nb_trigger_json['description']
-    nb_version = nb_trigger_json['version'].split('.')[0]
+    nb_basename = nb_trigger_json.get('name', '').rstrip('_')
+    nb_basedescription = nb_trigger_json.get('description', '')
+    nb_release = nb_trigger_json['version']
+    nb_version = nb_release.split('.')[0]
     nb_vpn_server_id = nb_trigger_json.get('vpn')
     nb_assets = nb_trigger_json['assets']
 
@@ -166,8 +170,7 @@ if __name__ == "__main__":
         connection_verify = False
         session = s.post(login_endpoint, json=login_apikey, verify=connection_verify).json()
 
-    if session["status"] != 201:
-        raise Exception("Unable to login at {}. Reason: {}".format(login_endpoint, session['message']))
+    session.raise_for_status()
 
     # create Nuvlabox
     try:
@@ -190,8 +193,7 @@ if __name__ == "__main__":
     new_nb_endpoint = nuvla_endpoint + "/nuvlabox"
     nb_id = s.post(new_nb_endpoint, json=nuvlabox, verify=connection_verify).json()
 
-    if nb_id['status'] != 201:
-        raise Exception("Failed to register new NuvlaBox at {}. Reason: {}".format(new_nb_endpoint, nb_id['message']))
+    nb_id.raise_for_status()
 
     nuvlabox_id = nb_id["resource-id"]
     print("Created NuvlaBox resource {} in {}".format(nuvlabox_id, nuvla))
@@ -199,7 +201,7 @@ if __name__ == "__main__":
     environment['NUVLABOX_UUID'] = nuvlabox_id
 
     try:
-        installer_file, compose_files = prepare_nuvlabox_engine_installation(int(nb_version), nb_assets, nb_workdir)
+        installer_file, compose_files = prepare_nuvlabox_engine_installation(nb_release, nb_assets, nb_workdir)
 
         install_command = ["sh", installer_file, "--environment={}".format(environment_fallback),
                            "--compose-files={}".format(",".join(compose_files)), "--installation-strategy=UPDATE",

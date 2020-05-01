@@ -166,7 +166,7 @@ if __name__ == "__main__":
         session = s.post(login_endpoint, json=login_apikey)
     except requests.exceptions.SSLError:
         environment_fallback += ",NUVLA_ENDPOINT_INSECURE=True"
-        environment['NUVLA_ENDPOINT_INSECURE'] = True
+        environment['NUVLA_ENDPOINT_INSECURE'] = "True"
         connection_verify = False
         session = s.post(login_endpoint, json=login_apikey, verify=connection_verify)
 

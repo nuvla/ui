@@ -132,24 +132,35 @@ def install_nuvlabox_engine(cmd, env=os.environ.copy(), timeout=600):
 if __name__ == "__main__":
     args = arguments()
 
-    environment = os.environ.copy()
-    # We can also pass the env as an argument to the installer script later on, so let's save it
-    environment_fallback = ""
-
     nb_trigger_json = json.loads(args.nb_trigger_content)
     nb_workdir = args.nb_workdir.rstrip('/')
+    env_file = "{}/.env"
 
+    # Check if env files already exists
+    # cause that will tell us if this is the first time we are self-registring this NB or not
+    # if there's a previous env file (thus previous installation), we will check if it is COMMISSIONED or not
+    # based on this check, we will either UPDATE or OVERWRITE the existing installation, respectively
+    installation_strategy = "UPDATE"    # default
+    previous_conf = {}
+    if os.path.isfile(env_file):
+        # .env file exists - get the previous details
+        with open(env_file) as f:
+            for l in f.read().splitlines():
+                if l and "=" in l:
+                    varname = l.split('=', 1)[0]
+                    varvalue = l.split('=', 1)[1]
+                    previous_conf[varname] = varvalue
+
+    # argparse
     nuvla = nb_trigger_json['endpoint']
-    environment_fallback += "NUVLA_ENDPOINT={}".format(nuvla)
-    environment['NUVLA_ENDPOINT'] = nuvla
-
     nuvla_endpoint = nb_trigger_json['endpoint'].rstrip('/').rstrip('/api') + "/api"
     nb_basename = nb_trigger_json.get('name', '').rstrip('_')
     nb_basedescription = nb_trigger_json.get('description', '')
     nb_release = nb_trigger_json['version']
-    nb_version = nb_release.split('.')[0]
     nb_vpn_server_id = nb_trigger_json.get('vpn')
     nb_assets = nb_trigger_json['assets']
+
+    nb_version = nb_release.split('.')[0]
 
     login_apikey = {
         "template": {
@@ -167,52 +178,89 @@ if __name__ == "__main__":
     try:
         session = s.post(login_endpoint, json=login_apikey)
     except requests.exceptions.SSLError:
-        environment_fallback += ",NUVLA_ENDPOINT_INSECURE=True"
-        environment['NUVLA_ENDPOINT_INSECURE'] = "True"
         connection_verify = False
         session = s.post(login_endpoint, json=login_apikey, verify=connection_verify)
 
     session.raise_for_status()
 
-    # create Nuvlabox
-    try:
-        unique_id = str(get_mac())
-    except:
-        unique_id = str(int(time.time()))
+    # Double check previous conf
+    new_conf = previous_conf.copy()
+    if previous_conf:
+        if "NUVLA_ENDPOINT" not in previous_conf or previous_conf['NUVLA_ENDPOINT'] != nuvla:
+            # new NUVLA_ENDPOINT, therefore, we are NOT updating the current installation
+            installation_strategy = "OVERWRITE"
+            new_conf['NUVLA_ENDPOINT'] = nuvla
+            new_conf['NUVLA_ENDPOINT_INSECURE'] = not connection_verify
+        else:
+            # the NUVLA_ENDPOINT is the same as the previous installation
+            # so let's double check if the current installation is still COMMISSIONED
+            if "NUVLABOX_UUID" in previous_conf:
+                check_nb_endpoint = nuvla_endpoint + "/" + previous_conf['NUVLABOX_UUID']
+                nb = s.get(check_nb_endpoint, verify=connection_verify)
+                if nb.status_code == 200:
+                    state = nb.json().get('state', 'UNKNOWN')
+                    if state in ["DECOMMISSIONED", 'ERROR']:
+                        # this NuvlaBox has been decommissioned or is in error, just overwrite the local installation
+                        installation_strategy = "OVERWRITE"
+                elif nb.status_code == 404:
+                    # doesn't exist, so let's just OVERWRITE this local installation
+                    installation_strategy = "OVERWRITE"
+                else:
+                    # something went wrong, either a network issue or we have the wrong credentials to access the
+                    # current NuvlaBox resource...just throw the error and do nothing
+                    nb.raise_for_status()
+            else:
+                # there is not UUID from a previous installation, so something went wrong, let's re-install
+                installation_strategy = "OVERWRITE"
 
-    nb_name = nb_basename + "_" + unique_id
-    nb_description = "{}_With self-registration number {}".format(nb_basedescription, unique_id)
+    nuvlabox_id = None
+    if installation_strategy == "OVERWRITE":
+        # create Nuvlabox
+        try:
+            unique_id = str(get_mac())
+        except:
+            unique_id = str(int(time.time()))
 
-    nuvlabox = {
-        "name": nb_name,
-        "description": nb_description,
-        "version": int(nb_version)
-    }
+        nb_name = nb_basename + "_" + unique_id
+        nb_description = "{}_With self-registration number {}".format(nb_basedescription, unique_id)
 
-    if nb_vpn_server_id:
-        nuvlabox['vpn-server-id'] = nb_vpn_server_id
+        nuvlabox = {
+            "name": nb_name,
+            "description": nb_description,
+            "version": int(nb_version)
+        }
 
-    new_nb_endpoint = nuvla_endpoint + "/nuvlabox"
-    nb_id = s.post(new_nb_endpoint, json=nuvlabox, verify=connection_verify)
+        if nb_vpn_server_id:
+            nuvlabox['vpn-server-id'] = nb_vpn_server_id
 
-    nb_id.raise_for_status()
+        new_nb_endpoint = nuvla_endpoint + "/nuvlabox"
+        nb_id = s.post(new_nb_endpoint, json=nuvlabox, verify=connection_verify)
 
-    nuvlabox_id = nb_id.json()["resource-id"]
-    print("Created NuvlaBox resource {} in {}".format(nuvlabox_id, nuvla))
-    environment_fallback += ",NUVLABOX_UUID={}".format(nuvlabox_id)
-    environment['NUVLABOX_UUID'] = nuvlabox_id
+        nb_id.raise_for_status()
+
+        nuvlabox_id = nb_id.json()["resource-id"]
+        print("Created NuvlaBox resource {} in {}".format(nuvlabox_id, nuvla))
+
+        new_conf['NUVLABOX_UUID'] = nuvlabox_id
+
+        # update new env file
+        with open(env_file, 'w') as f:
+            for varname, varvalue in new_conf:
+                f.write("{}={}\n".format(varname, varvalue))
 
     try:
         installer_file, compose_files = prepare_nuvlabox_engine_installation(nb_release, nb_assets, nb_workdir)
 
-        install_command = ["sh", installer_file, "--environment={}".format(environment_fallback),
-                           "--compose-files={}".format(",".join(compose_files)), "--installation-strategy=UPDATE",
-                           "--action=INSTALL"]
+        install_command = ["sh", installer_file, "--env_file={}".format(env_file),
+                           "--compose-files={}".format(",".join(compose_files)),
+                           "--installation-strategy={}".format(installation_strategy), "--action=INSTALL"]
 
         print("Installing NuvlaBox Engine - this can take a few minutes...")
-        install_nuvlabox_engine(install_command, env=environment)
+        install_nuvlabox_engine(install_command)
     except:
         # On any error, cleanup the resource in Nuvla
-        print("NuvlaBox Engine installation failed - removing {} from Nuvla".format(nuvlabox_id))
-        s.delete(nuvla_endpoint + "/" + nuvlabox_id, verify=connection_verify)
+        print("NuvlaBox Engine installation failed")
+        if nuvlabox_id:
+            print("removing {} from Nuvla".format(nuvlabox_id))
+            s.delete(nuvla_endpoint + "/" + nuvlabox_id, verify=connection_verify)
         raise

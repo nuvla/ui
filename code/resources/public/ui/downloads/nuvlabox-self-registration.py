@@ -163,12 +163,12 @@ if __name__ == "__main__":
     connection_verify = True
     login_endpoint = nuvla_endpoint + "/session"
     try:
-        session = s.post(login_endpoint, json=login_apikey).json()
+        session = s.post(login_endpoint, json=login_apikey)
     except requests.exceptions.SSLError:
         environment_fallback += ",NUVLA_ENDPOINT_INSECURE=True"
         environment['NUVLA_ENDPOINT_INSECURE'] = True
         connection_verify = False
-        session = s.post(login_endpoint, json=login_apikey, verify=connection_verify).json()
+        session = s.post(login_endpoint, json=login_apikey, verify=connection_verify)
 
     session.raise_for_status()
 
@@ -191,11 +191,11 @@ if __name__ == "__main__":
         nuvlabox['vpn-server-id'] = nb_vpn_server_id
 
     new_nb_endpoint = nuvla_endpoint + "/nuvlabox"
-    nb_id = s.post(new_nb_endpoint, json=nuvlabox, verify=connection_verify).json()
+    nb_id = s.post(new_nb_endpoint, json=nuvlabox, verify=connection_verify)
 
     nb_id.raise_for_status()
 
-    nuvlabox_id = nb_id["resource-id"]
+    nuvlabox_id = nb_id.json()["resource-id"]
     print("Created NuvlaBox resource {} in {}".format(nuvlabox_id, nuvla))
     environment_fallback += ",NUVLABOX_UUID={}".format(nuvlabox_id)
     environment['NUVLABOX_UUID'] = nuvlabox_id

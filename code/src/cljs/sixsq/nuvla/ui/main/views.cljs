@@ -35,13 +35,13 @@
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.session.views :as session-views]
     [sixsq.nuvla.ui.utils.general :as utils]
-    [sixsq.nuvla.ui.utils.intercom :as intercom]
+    [sixsq.nuvla.ui.intercom.views :as intercom]
     [sixsq.nuvla.ui.utils.responsive :as responsive]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.welcome.views]
-    ))
+    [taoensso.timbre :as log]))
 
 
 (defn crumb
@@ -241,7 +241,7 @@
            "reset-password" [session-views/SessionPage]
            nil [session-views/SessionPage]
            [:<>
-            [intercom/Intercom {:appID "CHANGE-ME-PLEASE"}]
+            [intercom/widget]
             [sidebar/menu]
             [:div {:style {:transition  "0.5s"
                            :margin-left (if (and (not @is-small-device?) @show?)

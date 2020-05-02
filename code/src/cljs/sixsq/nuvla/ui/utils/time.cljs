@@ -11,6 +11,11 @@
 (def ^:private iso8601-format (.-ISO_8601 moment))
 
 
+(defn timestamp
+  []
+  (/ (.now js/Date) 1000))
+
+
 (defn now
   ([]
    (now default-locale))

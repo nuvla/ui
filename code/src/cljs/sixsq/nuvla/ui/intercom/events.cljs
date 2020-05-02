@@ -9,3 +9,9 @@
   ::set-event
   (fn [{:keys [::spec/events] :as db} [_ event-name event-value]]
     (assoc-in db [::spec/events] (merge events {event-name event-value}))))
+
+
+(reg-event-db
+  ::clear-events
+  (fn [{:keys [::spec/events] :as db} _]
+    (assoc-in db [::spec/events] {})))

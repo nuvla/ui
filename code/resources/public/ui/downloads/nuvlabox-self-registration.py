@@ -56,12 +56,13 @@ def arguments():
     return parser.parse_args()
 
 
-def prepare_nuvlabox_engine_installation(version, compose_files, workdir):
+def prepare_nuvlabox_engine_installation(version, compose_files, workdir, keep_files=[]):
     """ Prepares the working environment for installing the NuvlaBox Engine
 
     :param version: GitHub release of the NuvlaBox Engine
     :param compose_files: list of release assets to download
     :param workdir: path where the compose files are to be saved
+    :param keep_files: list of files that is not supposed to be modified during this preparation
 
     :returns absolute path to the NuvlaBox Engine installer script
     """
@@ -78,10 +79,10 @@ def prepare_nuvlabox_engine_installation(version, compose_files, workdir):
     existing_files = os.listdir(workdir)
     now = int(time.time())
     for efile in existing_files:
-        if not efile.endswith("backup"):
-            old_file = "{}/{}".format(workdir, efile)
-            new_file = "{}/{}.{}.backup".format(workdir, efile, now)
-            os.rename(old_file, new_file)
+        filename = "{}/{}".format(workdir, efile)
+        if not filename.endswith("backup") and filename not in keep_files:
+            new_file = ".{}.backup".format(filename, now)
+            os.rename(filename, new_file)
 
     final_compose_files = []
     for file in compose_files:
@@ -215,9 +216,10 @@ if __name__ == "__main__":
             # current NuvlaBox resource...just throw the error and do nothing
             nb.raise_for_status()
     else:
-        # there is not UUID from a previous installation, so something went wrong, let's re-install
-        print("Previous NuvlaBox installation is missing a UUID so maybe something went wrong before...overwriting")
-        installation_strategy = "OVERWRITE"
+        if previous_conf:
+            # there is not UUID from a previous installation, so something went wrong, let's re-install
+            print("Previous NuvlaBox installation is missing a UUID so maybe something went wrong before...overwriting")
+            installation_strategy = "OVERWRITE"
 
     nuvlabox_id = None
     if installation_strategy == "OVERWRITE":
@@ -250,12 +252,16 @@ if __name__ == "__main__":
         new_conf['NUVLABOX_UUID'] = nuvlabox_id
 
     # update env file
+    print("Setting up environment {} at {}".format(new_conf, env_file))
     with open(env_file, 'w') as f:
         for varname, varvalue in new_conf.items():
             f.write("{}={}\n".format(varname, varvalue))
 
     try:
-        installer_file, compose_files = prepare_nuvlabox_engine_installation(nb_release, nb_assets, nb_workdir)
+        installer_file, compose_files = prepare_nuvlabox_engine_installation(nb_release,
+                                                                             nb_assets,
+                                                                             nb_workdir,
+                                                                             keep_files=[env_file])
 
         install_command = ["sh", installer_file, "--env-file={}".format(env_file),
                            "--compose-files={}".format(",".join(compose_files)),

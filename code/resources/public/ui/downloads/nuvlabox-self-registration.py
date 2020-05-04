@@ -251,7 +251,7 @@ if __name__ == "__main__":
 
     # update env file
     with open(env_file, 'w') as f:
-        for varname, varvalue in new_conf:
+        for varname, varvalue in new_conf.items():
             f.write("{}={}\n".format(varname, varvalue))
 
     try:

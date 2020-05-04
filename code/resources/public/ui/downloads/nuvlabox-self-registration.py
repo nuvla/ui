@@ -142,6 +142,7 @@ if __name__ == "__main__":
     # based on this check, we will either UPDATE or OVERWRITE the existing installation, respectively
     installation_strategy = "UPDATE"    # default
     previous_conf = {}
+    new_conf = {}
     if os.path.isfile(env_file):
         # .env file exists - get the previous details
         with open(env_file) as f:
@@ -175,6 +176,7 @@ if __name__ == "__main__":
     # login
     connection_verify = True
     login_endpoint = nuvla_endpoint + "/session"
+    print("Nuvla login at {}...".format(login_endpoint))
     try:
         session = s.post(login_endpoint, json=login_apikey)
     except requests.exceptions.SSLError:
@@ -183,35 +185,39 @@ if __name__ == "__main__":
 
     session.raise_for_status()
 
-    # Double check previous conf
-    new_conf = previous_conf.copy()
-    if previous_conf:
-        if "NUVLA_ENDPOINT" not in previous_conf or previous_conf['NUVLA_ENDPOINT'] != nuvla:
-            # new NUVLA_ENDPOINT, therefore, we are NOT updating the current installation
-            installation_strategy = "OVERWRITE"
-            new_conf['NUVLA_ENDPOINT'] = nuvla
-            new_conf['NUVLA_ENDPOINT_INSECURE'] = not connection_verify
-        else:
-            # the NUVLA_ENDPOINT is the same as the previous installation
-            # so let's double check if the current installation is still COMMISSIONED
-            if "NUVLABOX_UUID" in previous_conf:
-                check_nb_endpoint = nuvla_endpoint + "/" + previous_conf['NUVLABOX_UUID']
-                nb = s.get(check_nb_endpoint, verify=connection_verify)
-                if nb.status_code == 200:
-                    state = nb.json().get('state', 'UNKNOWN')
-                    if state in ["DECOMMISSIONED", 'ERROR']:
-                        # this NuvlaBox has been decommissioned or is in error, just overwrite the local installation
-                        installation_strategy = "OVERWRITE"
-                elif nb.status_code == 404:
-                    # doesn't exist, so let's just OVERWRITE this local installation
-                    installation_strategy = "OVERWRITE"
-                else:
-                    # something went wrong, either a network issue or we have the wrong credentials to access the
-                    # current NuvlaBox resource...just throw the error and do nothing
-                    nb.raise_for_status()
-            else:
-                # there is not UUID from a previous installation, so something went wrong, let's re-install
+    new_conf['NUVLA_ENDPOINT'] = nuvla
+    new_conf['NUVLA_ENDPOINT_INSECURE'] = not connection_verify
+
+    if "NUVLABOX_UUID" in previous_conf:
+        previous_uuid = previous_conf['NUVLABOX_UUID']
+        print("Existing env file from previous deployment found, with NuvlaBox UUID {}".format(previous_uuid))
+        check_nb_endpoint = nuvla_endpoint + "/" + previous_uuid
+        nb = s.get(check_nb_endpoint, verify=connection_verify)
+        if nb.status_code == 200:
+            state = nb.json().get('state', 'UNKNOWN')
+            if state in ["DECOMMISSIONED", 'ERROR']:
+                # this NuvlaBox has been decommissioned or is in error, just overwrite the local installation
+                print("Previous NuvlaBox {} is in state {}. Going to OVERWRITE it...".format(previous_uuid, state))
                 installation_strategy = "OVERWRITE"
+            else:
+                new_conf['NUVLABOX_UUID'] = previous_uuid
+                if new_conf == previous_conf:
+                    print("NuvlaBox environment hasn't changed, performing an UPDATE")
+                else:
+                    print("NuvlaBox environment different from existing installation, performing an OVERWRITE")
+                    installation_strategy = "UPDATE"
+        elif nb.status_code == 404:
+            # doesn't exist, so let's just OVERWRITE this local installation
+            print("Previous NuvlaBox {} doesn't exist anymore...creating new one".format(previous_uuid))
+            installation_strategy = "OVERWRITE"
+        else:
+            # something went wrong, either a network issue or we have the wrong credentials to access the
+            # current NuvlaBox resource...just throw the error and do nothing
+            nb.raise_for_status()
+    else:
+        # there is not UUID from a previous installation, so something went wrong, let's re-install
+        print("Previous NuvlaBox installation is missing a UUID so maybe something went wrong before...overwriting")
+        installation_strategy = "OVERWRITE"
 
     nuvlabox_id = None
     if installation_strategy == "OVERWRITE":
@@ -243,10 +249,10 @@ if __name__ == "__main__":
 
         new_conf['NUVLABOX_UUID'] = nuvlabox_id
 
-        # update new env file
-        with open(env_file, 'w') as f:
-            for varname, varvalue in new_conf:
-                f.write("{}={}\n".format(varname, varvalue))
+    # update env file
+    with open(env_file, 'w') as f:
+        for varname, varvalue in new_conf:
+            f.write("{}={}\n".format(varname, varvalue))
 
     try:
         installer_file, compose_files = prepare_nuvlabox_engine_installation(nb_release, nb_assets, nb_workdir)

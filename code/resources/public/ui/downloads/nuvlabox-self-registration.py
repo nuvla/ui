@@ -157,8 +157,8 @@ if __name__ == "__main__":
     # argparse
     nuvla = nb_trigger_json['endpoint']
     nuvla_endpoint = nb_trigger_json['endpoint'].rstrip('/').rstrip('/api') + "/api"
-    nb_basename = nb_trigger_json.get('name', '').rstrip('_')
-    nb_basedescription = nb_trigger_json.get('description', '')
+    nb_basename = nb_trigger_json.get('name', '')
+    nb_basedescription = nb_trigger_json.get('description', ' ')
     nb_release = nb_trigger_json['version']
     nb_vpn_server_id = nb_trigger_json.get('vpn')
     nb_assets = nb_trigger_json['assets']
@@ -225,8 +225,9 @@ if __name__ == "__main__":
         except:
             unique_id = str(int(time.time()))
 
-        nb_name = nb_basename + "_" + unique_id
-        nb_description = "{}_With self-registration number {}".format(nb_basedescription, unique_id)
+        nb_name = nb_basename.rstrip("_") + "_" + unique_id if nb_basename else unique_id
+
+        nb_description = "{} - self-registration number {}".format(nb_basedescription, unique_id)
 
         nuvlabox = {
             "name": nb_name,

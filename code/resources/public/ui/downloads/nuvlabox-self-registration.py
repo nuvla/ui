@@ -189,7 +189,7 @@ if __name__ == "__main__":
     session.raise_for_status()
 
     new_conf['NUVLA_ENDPOINT'] = nuvla
-    new_conf['NUVLA_ENDPOINT_INSECURE'] = not connection_verify
+    new_conf['NUVLA_ENDPOINT_INSECURE'] = str(not connection_verify)
 
     if previous_conf:
         first_installation = False

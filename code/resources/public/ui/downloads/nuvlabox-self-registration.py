@@ -225,7 +225,6 @@ if __name__ == "__main__":
 
     if first_installation or installation_strategy == "OVERWRITE":
         print("Creating new NuvlaBox resource...")
-        # create Nuvlabox
         try:
             unique_id = str(get_mac())
         except:

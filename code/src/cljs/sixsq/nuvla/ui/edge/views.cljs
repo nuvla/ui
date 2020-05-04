@@ -385,7 +385,8 @@
                                                        (get nb-releases-by-rel)
                                                        (into (sorted-map))))
                                                    (swap! nuvlabox-release-data assoc :nb-assets
-                                                     (set (map :scope compose-files)))))}]
+                                                     (set (map :scope (:compose-files
+                                                                        (:nb-selected @nuvlabox-release-data)))))))}]
                     [:a {:href   url
                          :target "_blank"
                          :style  {:margin "1em"}}

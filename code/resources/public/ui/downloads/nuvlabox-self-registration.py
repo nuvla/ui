@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
     nb_trigger_json = json.loads(args.nb_trigger_content)
     nb_workdir = args.nb_workdir.rstrip('/')
-    env_file = "{}/.env"
+    env_file = "{}/.env".format(nb_workdir)
 
     # Check if env files already exists
     # cause that will tell us if this is the first time we are self-registring this NB or not

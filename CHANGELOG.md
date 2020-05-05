@@ -15,6 +15,7 @@
   - Added new peripheral attributes to Edge detail view's accordion
   - Files are ignored for docker-compose applications
   - Fixed NuvlaBox version selection bug about picking up wrong modules
+  - Translate all NuvlaBox modal content to French 
 
 ## [2.4.13] - 2020-04-14
 

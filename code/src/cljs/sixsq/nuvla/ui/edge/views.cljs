@@ -94,10 +94,10 @@
 
 
 (defn NuvlaDocs
-  []
+  [tr]
   [ui/Container {:text-align :center
                  :style      {:margin "0.5em"}}
-   [:span "Full documentation at "
+   [:span (@tr [:nuvlabox-documentation])
     [:a {:href   "https://docs.nuvla.io/docs/nuvlabox/nuvlabox-engine/quickstart.html"
          :target "_blank"} "Nuvla Docs"]]])
 
@@ -133,7 +133,7 @@
                          :content  (@tr [:copy-nuvlabox-id])}]]]]]
 
          [ui/Divider {:horizontal true}
-          [ui/Header "Quick Installation"]]
+          [ui/Header (@tr [:nuvlabox-quick-install])]]
 
          [ui/Segment {:loading    (nil? @zip-url)
                       :text-align :center
@@ -141,7 +141,7 @@
           [ui/Label {:circular true
                      :color    "green"} "1"]
           [:h5 {:style {:margin "0.5em 0 1em 0"}}
-           "Download the compose file(s)"]
+           (str/capitalize (@tr [:download]))" compose file(s)"]
           [:a {:href     @zip-url
                :target   "_blank"
                :style    {:margin "1em"}
@@ -152,7 +152,7 @@
           [ui/Label {:circular true
                      :color    "green"} "2"]
           [:h5 {:style {:margin "0.5em 0 1em 0"}}
-           "Unzip & Execute "
+           (@tr [:nuvlabox-unzip-execute])
            [ui/CopyToClipboard {:text execute-command}
             [:a {:href  "#"
                  :style {:font-size   "0.9em"
@@ -161,11 +161,7 @@
                          :font-weight "lighter"}} "(click to copy)"]]]
           [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]
 
-         [ui/Container {:text-align :center
-                        :style      {:margin "0.5em"}}
-          [:span "Full documentation at "
-           [:a {:href   "https://docs.nuvla.io/docs/nuvlabox/nuvlabox-engine/quickstart.html"
-                :target "_blank"} "Nuvla Docs"]]]
+         [NuvlaDocs tr]
 
          [ui/ModalActions
           [ui/Button {:on-click on-close-fn} (@tr [:close])]]]))))
@@ -194,7 +190,7 @@
                                    :apisecret apisecret}]
         [:<>
          [ui/ModalHeader
-          [ui/Icon {:name "usb"}] "NuvlaBox USB installation trigger"]
+          [ui/Icon {:name "usb"}] (@tr [:nuvlabox-modal-usb-header])]
          [ui/Message {:attached  true
                       :icon      true
                       :floating  true}
@@ -202,14 +198,21 @@
           [ui/MessageContent
            [ui/MessageHeader
             (@tr [:nuvlabox-usb-key])]
-           (if apikey (str (@tr [:nuvlabox-usb-key-ready]) " " apikey)
-                      (@tr [:nuvlabox-usb-key-wait]))]]
+           (if apikey
+             [:span (str (@tr [:nuvlabox-usb-key-ready]) " ")
+              [:a {:href (str "api/" apikey)
+                   :target "_blank"}
+               apikey] " "
+              [ui/Popup {:content (@tr [:nuvlabox-modal-usb-apikey-warning])
+                         :trigger (r/as-element [ui/Icon {:name "exclamation triangle"
+                                                          :color  "orange"}])}]]
+             (@tr [:nuvlabox-usb-key-wait]))]]
 
          [ui/ModalContent
           [ui/CardGroup {:centered true}
            [ui/Card
             [ui/CardContent {:text-align :center}
-             [ui/Header [:span {:style {:overflow-wrap "break-word"}} "NuvlaBox USB trigger file"]]
+             [ui/Header [:span {:style {:overflow-wrap "break-word"}} (@tr [:nuvlabox-modal-usb-trigger-file])]]
              [ui/Icon {:name  (if apikey "file code" "spinner")
                        :loading (nil? apikey)
                        :color "green"
@@ -226,7 +229,7 @@
                          :content         (@tr [:download])}]]]]]
 
          [ui/Divider {:horizontal true}
-          [ui/Header "Instructions"]]
+          [ui/Header (@tr [:instructions])]]
 
          [ui/Segment {:loading    (nil? nuvlabox-trigger-file)
                       :text-align :center
@@ -234,8 +237,8 @@
           [ui/Label {:circular true
                      :color    "green"} "1"]
           [:h5 {:style {:margin "0.5em 0 1em 0"}}
-           "Copy the trigger file into a USB stick "
-           [ui/Popup {:content "the acceptable USB filesystem formats are: vfat, ext2, ext3, ext4, hfsplus and ntfs"
+           (@tr [:nuvlabox-modal-usb-copy])
+           [ui/Popup {:content (@tr [:nuvlabox-modal-usb-copy-warning])
                       :trigger (r/as-element [ui/Icon {:name "info circle"}])}]]]
 
          [ui/Segment {:text-align :center
@@ -243,18 +246,18 @@
           [ui/Label {:circular true
                      :color    "green"} "2"]
           [:h5 {:style {:margin "0.5em 0 1em 0"}}
-           "Plug and wait"]
-          [:span "Plug the USB stick into your NuvlaBox OS machine and wait for the installation feedback"]]
+           (@tr [:nuvlabox-modal-usb-plug])]
+          [:span (@tr [:nuvlabox-modal-usb-plug-info])]]
 
          [ui/Segment {:text-align :center
                       :raised     true}
           [ui/Label {:circular true
                      :color    "green"} "3"]
           [:h5 {:style {:margin "0.5em 0 1em 0"}}
-           "Repeat"]
-          [:span "Repeat step 2 on as many NuvlaBox OS machines as you want"]]
+           (@tr [:repeat])]
+          [:span (@tr [:repeat-info])]]
 
-         [NuvlaDocs]
+         [NuvlaDocs tr]
 
          [ui/ModalActions
           [ui/Button {:on-click on-close-fn} (@tr [:close])]]]))))
@@ -290,14 +293,13 @@
         create-usb-trigger-default  false
         create-usb-trigger    (r/atom create-usb-trigger-default)
         ; default ttl for API key is 30 days
-        default-ttl           2592000
-        default-ttl-days      (/ default-ttl 24 60 60)
+        default-ttl           30
         usb-trigger-key-ttl   (r/atom default-ttl)
         new-api-key-data      {:description   "Auto-generated for NuvlaBox self-registration USB trigger"
                                :name          "NuvlaBox self-registration USB trigger"
                                :template {
                                           :method "generate-api-key"
-                                          :ttl    @usb-trigger-key-ttl
+                                          :ttl    (* @usb-trigger-key-ttl 24 60 60)
                                           :href   "credential-template/generate-api-key"}}
         on-close-fn           #(do
                                  (dispatch [::events/set-created-nuvlabox-id nil])
@@ -335,11 +337,11 @@
          @create-usb-trigger [CreatedNuvlaBoxUSBTrigger @creation-data @nuvlabox-release-data on-close-fn tr]
          :else [:<>
                 [ui/ModalHeader
-                 [ui/Icon {:name "add"}] (str "New NuvlaBox " (:name @creation-data))]
+                 [ui/Icon {:name "add"}] (str (@tr [:nuvlabox-modal-new-nuvlabox]) (:name @creation-data))]
 
                 [ui/ModalContent
                  [ui/Divider {:horizontal true :as "h3"}
-                  "general"]
+                  (@tr [:nuvlabox-modal-general])]
 
                  [ui/Table style/definition
                   [ui/TableBody
@@ -366,7 +368,7 @@
                         {:keys [compose-files url pre-release]} :nb-selected} @nuvlabox-release-data]
                    [ui/Container
                     [ui/Divider {:horizontal true :as "h3"}
-                     "version"]
+                     (@tr [:nuvlabox-modal-version])]
                     [ui/Dropdown {:selection   true
                                   :placeholder nb-rel
                                   :value       nb-rel
@@ -390,20 +392,18 @@
                     [:a {:href   url
                          :target "_blank"
                          :style  {:margin "1em"}}
-                     "Release notes"]
+                     (@tr [:nuvlabox-release-notes])]
                     (when pre-release
                       [ui/Popup
                        {:trigger        (r/as-element [ui/Icon {:name "exclamation triangle"}])
-                        :content        (str "This version is a pre-release, "
-                                          "and thus not meant for production!")
+                        :content        (@tr [:nuvlabox-pre-release])
                         :on             "hover"
                         :hide-on-scroll true}])
                     [ui/Container
                      (when (> (count compose-files) 1)
                        [ui/Popup
-                        {:trigger        (r/as-element [:span "Additional modules: "])
-                         :content        (str "This release lets you choose optional modules for "
-                                           "automatic peripheral discovery")
+                        {:trigger        (r/as-element [:span (@tr [:additional-modules])])
+                         :content        (str (@tr [:additional-modules-popup]))
                          :on             "hover"
                          :hide-on-scroll true}])
                      (doall
@@ -427,7 +427,7 @@
                                                                     (disj scope))))))}])))]
 
                     [ui/Divider {:horizontal true :as "h3"}
-                     "installation method"]
+                     (@tr [:nuvlabox-modal-install-method])]
 
                     [ui/Form
                      [ui/FormCheckbox {:label "Compose file bundle"
@@ -455,12 +455,12 @@
                       (@tr [:create-nuvlabox-usb])]
                      [:a {:href "https://docs.nuvla.io"
                           :target "_blank"}
-                      "more info..."]
+                      (@tr [:nuvlabox-modal-more-info])]
                      ]
 
                     [ui/Container {:style {:margin "5px"
                                            :display (if (= @install-strategy "usb") "inline-block" "none")}}
-                     [ui/Input {:label  "Expires in (sec):"
+                     [ui/Input {:label  (@tr [:nuvlabox-modal-usb-expires])
                                 :placeholder default-ttl
                                 :value  @usb-trigger-key-ttl
                                 :size   "mini"
@@ -470,18 +470,17 @@
                                                  (number? (general-utils/str->int %)) (reset! usb-trigger-key-ttl
                                                                                         (general-utils/str->int %))
                                                  (empty? %) (reset! usb-trigger-key-ttl 0)))
-                                :step   60
+                                :step   1
                                 :min    0}]
-                     [ui/Popup {:content (str "After this time, the NuvlaBox USB installer will no longer be valid. Default is "
-                                           default-ttl-days " days. Insert 0 for no expiry date.")
-                                :position  "right center"
-                                :wide      true
-                                :trigger   (r/as-element [ui/Icon {:name "question"
+                     [ui/Popup {:content    (@tr [:nuvlabox-modal-usb-expires-popup] [default-ttl])
+                                :position   "right center"
+                                :wide       true
+                                :trigger    (r/as-element [ui/Icon {:name "question"
                                                                    :color "grey"}])}]]])]
 
                 [ui/ModalActions
                  [:span {:style {:color "#9f3a38" :display (if (not (nil? @install-strategy-error)) "inline-block" "none")}}
-                  "Missing fields"]
+                  (@tr [:nuvlabox-modal-missing-fields])]
                  [ui/Button {:positive true
                              :on-click on-add-fn}
                   (@tr [:create])]]])])))

@@ -79,6 +79,8 @@
                   :exclusions [cljsjs/react
                                cljsjs/react-dom]]
                  [re-frame "0.12.0" :scope "provided"]
+                 [day8.re-frame/http-fx "v0.2.0" :scope "provided"]
+                 [cljs-ajax "0.8.0" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
                  [com.taoensso/timbre "4.10.0" :scope "provided"]

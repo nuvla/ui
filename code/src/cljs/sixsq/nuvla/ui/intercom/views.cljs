@@ -15,4 +15,7 @@
           email  (subscribe [::session-subs/user])
           events (subscribe [::subs/events])]
       @_
-      [intercom/Intercom (merge {:appID @app-id :email @email} @events)])))
+      [intercom/Intercom (merge
+                           {:appID @app-id}
+                           (when (not (nil? @email)) {:email @email})
+                           @events)])))

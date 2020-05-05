@@ -1,7 +1,9 @@
 (ns sixsq.nuvla.ui.main.events
   (:require
+    [ajax.core :as ajax]
     [clojure.set :as set]
     [clojure.string :as str]
+    [day8.re-frame.http-fx]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
     [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
     [sixsq.nuvla.ui.main.effects :as fx]
@@ -240,3 +242,33 @@
   ::force-refresh-content
   (fn [db]
     (assoc db ::spec/content-key (random-uuid))))
+
+
+(reg-event-db
+  ::force-refresh-content
+  (fn [db]
+    (assoc db ::spec/content-key (random-uuid))))
+
+
+(reg-event-db
+  ::get-ui-config-good
+  (fn [db [_ result]]
+    (assoc db ::spec/intercom-api-id (:intercom-app-id result))))
+
+
+(reg-event-db
+  ::get-ui-config-bad
+  (fn [db [_ response]]
+    (log/info "Failed to load UI configuration file")
+    db))
+
+
+(reg-event-fx
+  ::get-ui-config
+  (fn [_ _]
+    {:http-xhrio {:method          :get
+                  :uri             "/ui/config/config.json"
+                  :timeout         8000
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [::get-ui-config-good]
+                  :on-failure      [::get-ui-config-bad]}}))

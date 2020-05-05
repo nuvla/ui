@@ -13,5 +13,5 @@
 (s/def ::db (s/keys :req [::app-id ::events]))
 
 
-(def defaults {::app-id "qjggmp6w"
+(def defaults {::app-id ""                                  ; "qjggmp6w"
                ::events {}})

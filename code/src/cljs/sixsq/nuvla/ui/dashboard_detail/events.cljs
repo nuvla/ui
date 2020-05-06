@@ -48,6 +48,17 @@
 
 
 (reg-event-fx
+  ::fetch-module
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ id]]
+    {::cimi-api-fx/operation [id "fetch-module"
+                              #(do (dispatch [::set-deployment %])
+                                   (dispatch [::messages-events/add
+                                              {:header  "Fetch module"
+                                               :message (str "Fetch module " % " done.")
+                                               :type    :success}]))]}))
+
+
+(reg-event-fx
   ::stop-deployment
   (fn [{:keys [db]} [_ href]]
     {:db                     db

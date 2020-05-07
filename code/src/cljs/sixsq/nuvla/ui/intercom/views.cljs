@@ -14,7 +14,7 @@
           app-id (subscribe [::subs/app-id])
           email  (subscribe [::session-subs/user])
           events (subscribe [::subs/events])]
-      @_
+      @_                                                    ;to force the component to refresh
       [intercom/Intercom (merge
                            {:appID @app-id}
                            (when (not (nil? @email)) {:email @email})

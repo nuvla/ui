@@ -4,14 +4,10 @@
     [clojure.spec.alpha :as s]))
 
 
-(s/def ::app-id any?)
-
-
 (s/def ::events any?)
 
 
-(s/def ::db (s/keys :req [::app-id ::events]))
+(s/def ::db (s/keys :req [::events]))
 
 
-(def defaults {::app-id ""                                  ; "qjggmp6w"
-               ::events {}})
+(def defaults {::events {}})

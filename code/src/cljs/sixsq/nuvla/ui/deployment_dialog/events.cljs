@@ -9,7 +9,6 @@
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]
     [clojure.string :as str]))
 
 
@@ -82,8 +81,8 @@
 
 (reg-event-fx
   ::set-infra-services
-  (fn [{:keys [db]} [_ {infra-services :resources}]]
-    (let [first-infra (first infra-services)]
+  (fn [{{:keys [::spec/selected-infra-service] :as db} :db} [_ {infra-services :resources}]]
+    (let [first-infra (when-not selected-infra-service (first infra-services))]
       (cond-> {:db (assoc db ::spec/infra-services infra-services
                              ::spec/infra-services-loading? false)}
               first-infra (assoc :dispatch [::set-selected-infra-service first-infra])))))
@@ -93,8 +92,7 @@
   ::get-infra-services
   (fn [{:keys [db]} [_ filter]]
     {:db                  (assoc db ::spec/infra-services-loading? true
-                                    ::spec/infra-services nil
-                                    ::spec/selected-infra-service nil)
+                                    ::spec/infra-services nil)
      ::cimi-api-fx/search [:infrastructure-service
                            {:filter filter,
                             :select "id, name, description, subtype"
@@ -201,6 +199,7 @@
         {:db               (assoc db ::spec/loading-deployment? true
                                      ::spec/deployment nil
                                      ::spec/selected-credential-id nil
+                                     ::spec/selected-infra-service nil
                                      ::spec/deploy-modal-visible? (not (boolean do-not-open-modal?))
                                      ::spec/active-step (or first-step :data)
                                      ::spec/data-step-active? (= first-step :data)
@@ -224,18 +223,19 @@
   (fn [{db :db} [_ first-step {:keys [parent id] :as deployment}]]
     (when (= :data first-step)
       (dispatch [::get-data-records]))
-    (cond-> {:db       (assoc db ::spec/loading-deployment? true
-                                 ::spec/deployment nil
-                                 ::spec/selected-credential-id nil
-                                 ::spec/deploy-modal-visible? true
-                                 ::spec/active-step (or first-step :data)
-                                 ::spec/data-step-active? (= first-step :data)
-                                 ::spec/cloud-filter nil
-                                 ::spec/selected-cloud nil
-                                 ::spec/cloud-infra-services nil
-                                 ::spec/data-clouds nil)
+    (cond-> {:db         (assoc db ::spec/loading-deployment? true
+                                   ::spec/deployment nil
+                                   ::spec/selected-credential-id nil
+                                   ::spec/selected-infra-service nil
+                                   ::spec/deploy-modal-visible? true
+                                   ::spec/active-step (or first-step :data)
+                                   ::spec/data-step-active? (= first-step :data)
+                                   ::spec/cloud-filter nil
+                                   ::spec/selected-cloud nil
+                                   ::spec/cloud-infra-services nil
+                                   ::spec/data-clouds nil)
              :dispatch [::get-deployment id]}
-            parent (assoc ::cimi-api-fx/get [parent #()]))))
+            parent (assoc ::cimi-api-fx/get [parent #(dispatch [::reselect-credential %])]))))
 
 
 (reg-event-fx

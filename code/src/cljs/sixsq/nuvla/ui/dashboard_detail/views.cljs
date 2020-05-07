@@ -373,20 +373,33 @@
 
 
 
-(defn button-icon
-  [label? icon-name on-click]
-  (r/as-element
-    (if label?
-      [ui/Label {:corner   true
-                 :size     "small"
-                 :on-click on-click}
-       [ui/Icon {:name  icon-name
-                 :style {:cursor "pointer"}
-                 :color "red"}]]
-      [ui/Icon {:name     icon-name
-                :style    {:cursor "pointer"}
-                :color    "red"
-                :on-click on-click}])))
+(defn action-button
+  [{:keys [label? menu-item? icon-name button-text on-click disabled? popup-text]
+    :or   {disabled? false on-click identity}}]
+  (let [button (cond
+                 label? [ui/Label {:corner   true
+                                   :size     "small"
+                                   :on-click on-click}
+                         [ui/Icon {:name  icon-name
+                                   :style {:cursor "pointer"}
+                                   :color "red"}]]
+                 menu-item? [ui/MenuItem
+                             {:on-click on-click
+                              :disabled disabled?}
+                             [ui/Icon {:name icon-name}]
+                             button-text]
+                 :else [ui/Icon {:name     icon-name
+                                 :style    {:cursor "pointer"}
+                                 :color    "red"
+                                 :on-click on-click}])]
+    (if popup-text
+      [ui/Popup
+       (cond-> {:header            (str/capitalize button-text)
+                :content           popup-text
+                :mouse-enter-delay 500
+                :trigger           (r/as-element button)}
+               (and (not menu-item?) (not label?)) (assoc :position "bottom center"))]
+      button)))
 
 
 (defn StopButton
@@ -396,8 +409,19 @@
         icon-name "stop"]
     (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
       (let [{:keys [id name description module]} deployment
-            content        (str (or name id) (when description " - ") description)
-            module-content (str (@tr [:created-from-module]) (or (:name module) (:id module)))]
+            text1  (str (or name id) (when description " - ") description)
+            text2  (str (@tr [:created-from-module]) (or (:name module) (:id module)))
+            button (action-button
+                     {:label?      label?
+                      :menu-item?  menu-item?
+                      :on-click    (fn [event]
+                                     (reset! open? true)
+                                     (.stopPropagation event)
+                                     (.preventDefault event))
+                      :disabled?   (not (general-utils/can-operation? "stop" deployment))
+                      :icon-name   icon-name
+                      :button-text (@tr [:stop])
+                      :popup-text  "Stop a deployment on infrastructure. This will also delete related resources on infrastructure (e.g. containers, volumes, configs, secrets)."})]
         [uix/ModalDanger
          {:on-close    (fn [event]
                          (reset! open? false)
@@ -407,26 +431,10 @@
                           (dispatch [::events/stop-deployment id])
                           (reset! open? false))
           :open        @open?
-          :trigger     (r/as-element
-                         [ui/Popup {:header   (str/capitalize (@tr [:stop]))
-                                    :content  "Stop a deployment on infrastructure. This will also delete related resources on infrastructure (e.g. containers, volumes, configs, secrets)."
-                                    :position "top center"
-                                    :trigger  (if menu-item?
-                                                (r/as-element
-                                                  [ui/MenuItem
-                                                  {:on-click #(reset! open? true)
-                                                   :disabled (not (general-utils/can-operation? "stop" deployment))}
-                                                  [ui/Icon {:name icon-name}]
-                                                  (@tr [:stop])])
-                                                (button-icon label? icon-name
-                                                             (fn [event]
-                                                               (reset! open? true)
-                                                               (.stopPropagation event)
-                                                               (.preventDefault event)))
-                                                )}])
-          :content     [:<> [:h3 content] [:p module-content]]
+          :trigger     (r/as-element button)
+          :content     [:<> [:h3 text1] [:p text2]]
           :header      (@tr [:stop-deployment])
-          :danger-msg  (@tr [:deployment-stop-warning])
+          :danger-msg  "Stop a deployment on infrastructure. This will also delete related resources on infrastructure (e.g. containers, volumes, configs, secrets)." #_(@tr [:deployment-stop-warning])
           :button-text (@tr [:stop])}]))))
 
 
@@ -437,8 +445,19 @@
         icon-name "trash"]
     (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
       (let [{:keys [id name description module]} deployment
-            content        (str (or name id) (when description " - ") description)
-            module-content (str (@tr [:created-from-module]) (or (:name module) (:id module)))]
+            text-1 (str (or name id) (when description " - ") description)
+            text-2 (str (@tr [:created-from-module]) (or (:name module) (:id module)))
+            button (action-button
+                     {:on-click    (fn [event]
+                                     (reset! open? true)
+                                     (.stopPropagation event)
+                                     (.preventDefault event))
+                      :button-text (@tr [:delete])
+                      :popup-text  "Delete permanently a deployment and all his related sub-resources. e.g. Deployment api-key, deployment-parameters, deployment logs session."
+                      :icon-name   icon-name
+                      :label?      label?
+                      :menu-item?  menu-item?
+                      :disabled?   (not (general-utils/can-delete? deployment))})]
         [uix/ModalDanger
          {:on-close    (fn [event]
                          (reset! open? false)
@@ -446,22 +465,8 @@
                          (.preventDefault event))
           :on-confirm  #(dispatch [::events/delete id])
           :open        @open?
-          :trigger     (r/as-element
-                         [ui/Popup {:header            (str/capitalize (@tr [:delete]))
-                                    :content           "Delete permanently a deployment and all his related sub-resources. e.g. Deployment api-key, deployment-parameters, deployment logs session."
-                                    :mouse-enter-delay 500
-                                    :trigger           (if menu-item?
-                                                         (r/as-element
-                                                           [ui/MenuItem {:on-click #(reset! open? true)
-                                                                         :disabled (not (general-utils/can-delete? deployment))}
-                                                            [ui/Icon {:name icon-name}]
-                                                            (@tr [:delete])])
-                                                         (button-icon label? icon-name
-                                                                      (fn [event]
-                                                                        (reset! open? true)
-                                                                        (.stopPropagation event)
-                                                                        (.preventDefault event))))}])
-          :content     [:<> [:h3 content] [:p module-content]]
+          :trigger     (r/as-element button)
+          :content     [:<> [:h3 text-1] [:p text-2]]
           :header      (@tr [:delete-deployment])
           :danger-msg  "Delete permanently a deployment and all his related sub-resources. e.g. Deployment api-key, deployment-parameters, deployment logs session."
           :button-text (@tr [:delete])}]))))
@@ -470,53 +475,47 @@
 (defn CloneButton
   [{:keys [id data module] :as deployment}]
   (let [tr         (subscribe [::i18n-subs/tr])
-        first-step (if data :data :infra-services)]
+        first-step (if data :data :infra-services)
+        button     (action-button
+                     {:menu-item?  true
+                      :button-text (@tr [:clone])
+                      :icon-name   "code branch"
+                      :popup-text  "Duplicate a deployment on same or another infrastructure. Only following attributes are cloned name, description, tags, module and data. Other attributes are reset (e.g. state, targeted infrastructure, deployment api-key, acls, ...)."
+                      :on-click    #(dispatch [::deployment-dialog-events/create-deployment
+                                               id first-step])
+                      :disabled?   (nil? module)})]
     [:<>
      [deployment-dialog-views/deploy-modal]
-     [ui/Popup {:content           "Duplicate a deployment on same or another infrastructure. Only following attributes are cloned name, description, tags, module and data. Other attributes are reset (e.g. state, targeted infrastructure, deployment api-key, acls, ...)."
-                :mouse-enter-delay 500
-                :header            (str/capitalize (@tr [:clone]))
-                :trigger           (r/as-element
-                                     [ui/MenuItem
-                                      {:name     (@tr [:clone])
-                                       :on-click #(dispatch [::deployment-dialog-events/create-deployment id first-step])
-                                       :disabled (nil? module)}
-                                      [ui/Icon {:name "code branch"}]
-                                      (@tr [:clone])])}]]))
+     button]))
 
 
 (defn StartButton
   [{:keys [data] :as deployment}]
-  (let [tr          (subscribe [::i18n-subs/tr])
-        first-step  (if data :data :infra-services)
-        on-click-fn #(dispatch [::deployment-dialog-events/open-deployment-modal first-step
-                                deployment])]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        first-step (if data :data :infra-services)
+        button     (action-button
+                     {:button-text (@tr [:start])
+                      :popup-text  "Start an existing deployment. Target infrastructure, env variables and output parameters values are kept and they can be updated afterwards. This action is only available for deployment in STOPPED state."
+                      :icon-name   "play"
+                      :menu-item?  true
+                      :disabled?   (not (general-utils/can-operation? "start" deployment))
+                      :on-click    #(dispatch [::deployment-dialog-events/open-deployment-modal first-step
+                                               deployment])})]
     [:<>
      [deployment-dialog-views/deploy-modal]
-     [ui/Popup {:content           "Start an existing deployment. Target infrastructure, env variables and output parameters values are kept and they can be updated afterwards. This action is only available for deployment in STOPPED state."
-                :mouse-enter-delay 500
-                :header            (str/capitalize (@tr [:start]))
-                :trigger           (r/as-element
-                                     [ui/MenuItem {:on-click on-click-fn
-                                                   :disabled (not (general-utils/can-operation? "start" deployment))}
-                                      [ui/Icon {:name "play"}]
-                                      (@tr [:start])])}]
-     ]))
+     button]))
 
 
 (defn FetchModuleButton
   [{:keys [id] :as deployment}]
-  (let [tr          (subscribe [::i18n-subs/tr])
-        on-click-fn #(dispatch [::events/fetch-module id])]
-    [ui/Popup {:content           "Deployment module is fetched again from apps and merged into the deployment. Target infrastructure, env variables and output parameters values are kept and can be updated afterwards. This action is only available for deployment in STOPPED state."
-               :mouse-enter-delay 500
-               :header            (str/capitalize "fetch module")
-               :trigger           (r/as-element
-                                    [ui/MenuItem {:on-click on-click-fn
-                                                  :disabled (not (general-utils/can-operation? "fetch-module" deployment))}
-                                     [ui/Icon {:name "history"}]
-                                     "fetch module"
-                                     #_(@tr [:start])])}]))
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (action-button
+      {:button-text "fetch module"
+       :popup-text  "Deployment module is fetched again from apps and merged into the deployment. Target infrastructure, env variables and output parameters values are kept and can be updated afterwards. This action is only available for deployment in STOPPED state."
+       :disabled?   (not (general-utils/can-operation? "fetch-module" deployment))
+       :icon-name   "history"
+       :menu-item?  true
+       :on-click    #(dispatch [::events/fetch-module id])})))
 
 
 (defn DeploymentCard

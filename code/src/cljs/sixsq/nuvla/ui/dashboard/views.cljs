@@ -166,6 +166,6 @@
         root     [dashboard-main]
         children (case n
                    1 root
-                   2 [dashboard-detail-views/deployment-detail uuid]
+                   2 ^{:key uuid} [dashboard-detail-views/deployment-detail uuid]
                    root)]
     [ui/Segment style/basic children]))

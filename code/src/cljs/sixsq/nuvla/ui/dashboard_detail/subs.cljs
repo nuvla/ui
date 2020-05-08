@@ -158,3 +158,35 @@
   ::deployment-log-play?
   (fn [db]
     (::spec/deployment-log-play? db)))
+
+
+(reg-sub
+  ::module-versions
+  (fn [db]
+    (::spec/module-versions db)))
+
+
+(reg-sub
+  ::current-module-content-id
+  :<- [::deployment-module-content]
+  (fn [deployment-module-content]
+    (:id deployment-module-content)))
+
+(reg-sub
+  ::current-module-version
+  :<- [::module-versions]
+  :<- [::current-module-content-id]
+  (fn [[module-versions id]]
+    (when id
+      (some
+        (fn [[idx item]]
+          (when (= (:href item) id) idx))
+        (map-indexed vector module-versions)))))
+
+
+(reg-sub
+  ::is-latest-module-versions?
+  :<- [::module-versions]
+  :<- [::current-module-content-id]
+  (fn [[module-versions id]]
+    (= (-> module-versions last :href) id)))

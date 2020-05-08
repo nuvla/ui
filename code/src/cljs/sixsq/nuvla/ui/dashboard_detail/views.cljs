@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.dashboard-detail.events :as events]
     [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
     [sixsq.nuvla.ui.dashboard-detail.subs :as subs]
+    [sixsq.nuvla.ui.apps.views-versions :as views-versions]
     [sixsq.nuvla.ui.dashboard.subs :as dashboard-subs]
     [sixsq.nuvla.ui.dashboard.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -30,15 +31,11 @@
 
 (defn refresh
   [resource-id]
+  (dispatch [::events/clear-module])
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
               :frequency 10000
               :event     [::events/get-deployment resource-id]}]))
-
-
-(defn format-module-link
-  [module]
-  [history-views/link (str "apps/" module) module])
 
 
 (defn url-to-row
@@ -74,6 +71,23 @@
                 [url-to-row url-name url-pattern])])]]
          :count (count urls)
          :label "URLs"]))))
+
+
+(defn module-version-section
+  []
+  (let [module-versions   (subscribe [::subs/module-versions])
+        module-content-id (subscribe [::subs/current-module-content-id])
+        current-version   (subscribe [::subs/current-module-version])
+        module            (subscribe [::subs/deployment-module])]
+    (fn []
+      [uix/Accordion
+       [ui/Segment style/autoscroll-x
+        [views-versions/versions-table @module-versions @module-content-id
+         :on-click #(dispatch [::history-events/navigate
+                               (str "apps/" (:path @module) "?version=" @current-version)])]]
+       :default-open false
+       :count (str "v" (or @current-version "-"))
+       :label "Module versions"])))
 
 
 (defn parameter-to-row
@@ -508,11 +522,13 @@
 
 (defn FetchModuleButton
   [{:keys [id] :as deployment}]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        is-latest? (subscribe [::subs/is-latest-module-versions?])]
     (action-button
       {:button-text (@tr [:fetch])
        :popup-text  (@tr [:deployment-fetch-msg])
-       :disabled?   (not (general-utils/can-operation? "fetch-module" deployment))
+       :disabled?   (or (not (general-utils/can-operation? "fetch-module" deployment))
+                        @is-latest?)
        :icon-name   "history"
        :menu-item?  true
        :on-click    #(dispatch [::events/fetch-module id])})))
@@ -596,7 +612,7 @@
 (defn MenuBar
   []
   (let [loading? (subscribe [::subs/loading?])
-        {:keys [id module] :as deployment} @(subscribe [::subs/deployment])]
+        {:keys [id] :as deployment} @(subscribe [::subs/deployment])]
     [ui/Menu {:borderless true}
      [StartButton deployment]
      [ShutdownButton deployment :menu-item? true]
@@ -637,6 +653,7 @@
         [MenuBar]
         [summary @deployment]
         [urls-section]
+        [module-version-section]
         [logs-section]
         [events-section]
         [parameters-section]

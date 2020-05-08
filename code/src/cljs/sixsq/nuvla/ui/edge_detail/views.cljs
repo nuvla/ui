@@ -441,7 +441,7 @@
 
         [ui/LabelGroup {:size  "tiny"
                         :color "teal"
-                        :style {:max-height 150, :overflow "auto"}}
+                        :style {:margin-top 10, :max-height 150, :overflow "auto"}}
          (for [tag tags]
            ^{:key (str id "-" tag)}
            [ui/Label {:style {:max-width     "15ch"

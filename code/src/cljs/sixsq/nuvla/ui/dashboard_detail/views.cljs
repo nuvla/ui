@@ -459,7 +459,7 @@
 
 
 (defn DeploymentCard
-  [{:keys [id state module] :as deployment} & {:keys [clickable?]
+  [{:keys [id state module tags] :as deployment} & {:keys [clickable?]
                                                :or   {clickable? true}}]
   (let [tr            (subscribe [::i18n-subs/tr])
         creds-name    (subscribe [::dashboard-subs/creds-name-map])
@@ -514,7 +514,19 @@
       [ui/CardDescription
 
        (when-not (str/blank? cred-info)
-         [:div [ui/Icon {:name "key"}] cred-info])]]
+         [:div [ui/Icon {:name "key"}] cred-info])]
+
+      [ui/LabelGroup {:size  "tiny"
+                      :color "teal"
+                      :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+       (for [tag tags]
+         ^{:key (str id "-" tag)}
+         [ui/Label {:style {:max-width     "15ch"
+                            :overflow      "hidden"
+                            :text-overflow "ellipsis"
+                            :white-space   "nowrap"}}
+          [ui/Icon {:name "tag"}] tag
+          ])]]
 
      (when (and started? @primary-url)
        [ui/Button {:color    "green"

@@ -87,7 +87,7 @@
      [ui/TableCell
       (cond
         (general-utils/can-operation? "stop" deployment)
-        [dashboard-detail-views/StopButton deployment]
+        [dashboard-detail-views/ShutdownButton deployment]
 
         (general-utils/can-delete? deployment)
         [dashboard-detail-views/DeleteButton deployment])]]))

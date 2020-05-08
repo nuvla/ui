@@ -402,7 +402,7 @@
       button)))
 
 
-(defn StopButton
+(defn ShutdownButton
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
@@ -420,8 +420,8 @@
                                      (.preventDefault event))
                       :disabled?   (not (general-utils/can-operation? "stop" deployment))
                       :icon-name   icon-name
-                      :button-text (@tr [:stop])
-                      :popup-text  "Stop a deployment on infrastructure. This will also delete related resources on infrastructure (e.g. containers, volumes, configs, secrets)."})]
+                      :button-text (@tr [:shutdown])
+                      :popup-text  (@tr [:deployment-shutdown-msg])})]
         [uix/ModalDanger
          {:on-close    (fn [event]
                          (reset! open? false)
@@ -433,9 +433,9 @@
           :open        @open?
           :trigger     (r/as-element button)
           :content     [:<> [:h3 text1] [:p text2]]
-          :header      (@tr [:stop-deployment])
-          :danger-msg  "Stop a deployment on infrastructure. This will also delete related resources on infrastructure (e.g. containers, volumes, configs, secrets)." #_(@tr [:deployment-stop-warning])
-          :button-text (@tr [:stop])}]))))
+          :header      (@tr [:shutdown-deployment])
+          :danger-msg  (@tr [:deployment-shutdown-msg])
+          :button-text (@tr [:shutdown])}]))))
 
 
 (defn DeleteButton
@@ -453,7 +453,7 @@
                                      (.stopPropagation event)
                                      (.preventDefault event))
                       :button-text (@tr [:delete])
-                      :popup-text  "Delete permanently a deployment and all his related sub-resources. e.g. Deployment api-key, deployment-parameters, deployment logs session."
+                      :popup-text  (@tr [:deployment-delete-msg])
                       :icon-name   icon-name
                       :label?      label?
                       :menu-item?  menu-item?
@@ -468,7 +468,7 @@
           :trigger     (r/as-element button)
           :content     [:<> [:h3 text-1] [:p text-2]]
           :header      (@tr [:delete-deployment])
-          :danger-msg  "Delete permanently a deployment and all his related sub-resources. e.g. Deployment api-key, deployment-parameters, deployment logs session."
+          :danger-msg  (@tr [:deployment-delete-msg])
           :button-text (@tr [:delete])}]))))
 
 
@@ -480,7 +480,7 @@
                      {:menu-item?  true
                       :button-text (@tr [:clone])
                       :icon-name   "code branch"
-                      :popup-text  "Duplicate a deployment on same or another infrastructure. Only following attributes are cloned name, description, tags, module and data. Other attributes are reset (e.g. state, targeted infrastructure, deployment api-key, acls, ...)."
+                      :popup-text  (@tr [:deployment-clone-msg])
                       :on-click    #(dispatch [::deployment-dialog-events/create-deployment
                                                id first-step])
                       :disabled?   (nil? module)})]
@@ -494,8 +494,8 @@
   (let [tr         (subscribe [::i18n-subs/tr])
         first-step (if data :data :infra-services)
         button     (action-button
-                     {:button-text (@tr [:start])
-                      :popup-text  "Start an existing deployment. Target infrastructure, env variables and output parameters values are kept and they can be updated afterwards. This action is only available for deployment in STOPPED state."
+                     {:button-text (@tr [:restart])
+                      :popup-text  (@tr [:deployment-restart-msg])
                       :icon-name   "play"
                       :menu-item?  true
                       :disabled?   (not (general-utils/can-operation? "start" deployment))
@@ -510,8 +510,8 @@
   [{:keys [id] :as deployment}]
   (let [tr (subscribe [::i18n-subs/tr])]
     (action-button
-      {:button-text "fetch module"
-       :popup-text  "Deployment module is fetched again from apps and merged into the deployment. Target infrastructure, env variables and output parameters values are kept and can be updated afterwards. This action is only available for deployment in STOPPED state."
+      {:button-text (@tr [:fetch])
+       :popup-text  (@tr [:deployment-fetch-msg])
        :disabled?   (not (general-utils/can-operation? "fetch-module" deployment))
        :icon-name   "history"
        :menu-item?  true
@@ -542,8 +542,7 @@
                 :link     true
                 :on-click (fn [event]
                             (dispatch [::history-events/navigate (utils/detail-href id)])
-                            (.preventDefault event))
-                })
+                            (.preventDefault event))})
      [ui/Image {:src      (or module-logo-url "")
                 :bordered true
                 :style    {:width      "auto"
@@ -553,7 +552,7 @@
 
      (when clickable?
        (cond
-         (general-utils/can-operation? "stop" deployment) [StopButton deployment :label? true]
+         (general-utils/can-operation? "stop" deployment) [ShutdownButton deployment :label? true]
          (general-utils/can-delete? deployment) [DeleteButton deployment :label? true]))
 
      [ui/CardContent
@@ -600,7 +599,7 @@
         {:keys [id module] :as deployment} @(subscribe [::subs/deployment])]
     [ui/Menu {:borderless true}
      [StartButton deployment]
-     [StopButton deployment :menu-item? true]
+     [ShutdownButton deployment :menu-item? true]
      [FetchModuleButton deployment]
      [CloneButton deployment]
      [DeleteButton deployment :menu-item? true]

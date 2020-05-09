@@ -42,12 +42,24 @@
 
 (s/def ::pages map?)
 
-
+; from ui config file
 (s/def ::intercom-api-id string?)
+(s/def ::linkedin string?)
+(s/def ::twitter string?)
+(s/def ::facebook string?)
+(s/def ::youtube string?)
+(s/def ::eula string?)
+(s/def ::terms-and-conditions string?)
 
 
 (s/def ::db (s/keys :req [::iframe?
                           ::intercom-api-id
+                          ::linkedin
+                          ::twitter
+                          ::facebook
+                          ::youtube
+                          ::eula
+                          ::terms-and-conditions
                           ::device
                           ::sidebar-open?
                           ::visible?
@@ -63,6 +75,12 @@
 
 (def defaults {::iframe?              false
                ::intercom-api-id      ""
+               ::linkedin             ""
+               ::twitter              ""
+               ::facebook             ""
+               ::youtube              ""
+               ::eula                 ""
+               ::terms-and-conditions ""
                ::device               :computer
                ::sidebar-open?        true
                ::visible?             true

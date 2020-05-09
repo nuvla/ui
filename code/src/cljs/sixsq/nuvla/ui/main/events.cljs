@@ -253,7 +253,13 @@
 (reg-event-db
   ::get-ui-config-good
   (fn [db [_ result]]
-    (assoc db ::spec/intercom-api-id (:intercom-app-id result))))
+    (assoc db ::spec/intercom-api-id (:intercom-app-id result)
+              ::spec/twitter (:twitter result)
+              ::spec/linkedin (:linkedin result)
+              ::spec/youtube  (:youtube result)
+              ::spec/facebook (:facebook result)
+              ::spec/eula (:eula result)
+              ::spec/terms-and-conditions (:terms-and-conditions result))))
 
 
 (reg-event-db

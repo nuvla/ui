@@ -196,11 +196,33 @@
      [modal-create-user]]))
 
 
+(defn follow-us
+  []
+  (let [tr       (subscribe [::i18n-subs/tr])
+        linkedin (subscribe [::subs/linkedin])
+        twitter  (subscribe [::subs/twitter])
+        facebook (subscribe [::subs/facebook])
+        youtube  (subscribe [::subs/youtube])]
+    [:<>
+     (@tr [:follow-us-on])
+     [:span
+      (for [[icon url] [(when-not (empty? @linkedin) ["linkedin" @linkedin])
+                        (when-not (empty? @twitter) ["twitter" @twitter])
+                        (when-not (empty? @facebook) ["facebook" @facebook])
+                        (when-not (empty? @youtube) ["youtube" @youtube])]]
+        [:a {:key    url
+             :href   url
+             :target "_blank"
+             :style  {:color "white"}}
+         [ui/Icon {:name icon}]])]]))
+
 (defn LeftPanel
   []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        first-path       (subscribe [::main-subs/nav-path-first])
-        signup-template? (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])]
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        first-path           (subscribe [::main-subs/nav-path-first])
+        signup-template?     (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
+        eula                 (subscribe [::subs/eula])
+        terms-and-conditions (subscribe [::subs/terms-and-conditions])]
     [:div {:style {:padding "75px"}}
      [:div {:style {:font-size   "6em"
                     :line-height "normal"}}
@@ -230,10 +252,18 @@
            :active   (= @first-path "sign-up")
            :on-click #(dispatch [::history-events/navigate "sign-up"])}]
          [:br]
-         [:a {:href   "https://sixsq.com/terms/general-terms-and-conditions"
-              :target "_blank"
-              :style  {:color "white" :font-style "italic"}}
-          (@tr [:terms-and-conditions])]])]
+         [:br]
+         (when-not (empty? @terms-and-conditions)
+           [:a {:href   @terms-and-conditions
+                :target "_blank"
+                :style  {:margin-top 20 :color "white" :font-style "italic"}}
+            (@tr [:terms-and-conditions])])
+         (when-not (or (empty? @terms-and-conditions) (empty? @eula)) " and ")
+         (when-not (empty? @eula)
+           [:a {:href   @eula
+                :target "_blank"
+                :style  {:margin-top 20 :color "white" :font-style "italic"}}
+            (@tr [:terms-end-user-license-agreement])])])]
      [:br]
      [:a {:href   "https://docs.nuvla.io"
           :target "_blank"
@@ -246,17 +276,7 @@
 
      [:div {:style {:position "absolute"
                     :bottom   40}}
-      (@tr [:follow-us-on])
-      [:span
-       (for [[icon url] [["youtube" "https://www.youtube.com/channel/UCGYw3n7c-QsDtsVH32By1-g"]
-                         ["twitter" "https://twitter.com/sixsq"]
-                         ["facebook" "https://www.facebook.com/SixSq-143266939349560"]]]
-         [:a {:key    url
-              :href   url
-              :target "_blank"
-              :style  {:color "white"}}
-          [ui/Icon {:name icon}]])]]]
-    ))
+      [follow-us]]]))
 
 
 (defn RightPanel

@@ -11,6 +11,8 @@
   - Auth menu - Support act as a group via claim action
   - downloads directory to host downloadable Nuvla assets
   - nuvlabox-self-registration download script, for the NuvlaBox industrialization
+  - OS selection step in NuvlaBox creation workflow
+  - Generation of API key and USB trigger file for auto-installing NuvlaBox
 
 ### Changed
 
@@ -18,6 +20,8 @@
   - Dashboard detail - Fetch clone workflows
   - Added new peripheral attributes to Edge detail view's accordion
   - Files are ignored for docker-compose applications
+  - Fixed NuvlaBox version selection bug about picking up wrong modules
+  - Translate all NuvlaBox modal content to French 
 
 ## [2.4.13] - 2020-04-14
 

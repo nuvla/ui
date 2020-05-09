@@ -106,6 +106,19 @@
     (assoc db ::spec/nuvlabox-created-id resource-id)))
 
 
+(reg-event-fx
+  ::create-nuvlabox-usb-api-key
+  (fn [_ [_ creation-data]]
+    {::cimi-api-fx/add [:credential creation-data
+                        #(dispatch [::set-nuvlabox-usb-api-key %])]}))
+
+
+(reg-event-db
+  ::set-nuvlabox-usb-api-key
+  (fn [db [_ {:keys [resource-id secret-key]}]]
+    (assoc db ::spec/nuvlabox-usb-api-key {:resource-id resource-id :secret-key secret-key})))
+
+
 (reg-event-db
   ::set-vpn-infra
   (fn [db [_ {:keys [resources]}]]

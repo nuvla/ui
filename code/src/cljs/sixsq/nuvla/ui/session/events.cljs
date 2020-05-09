@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.events :as cimi-events]
     [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.session.effects :as fx]
     [sixsq.nuvla.ui.session.spec :as spec]
@@ -44,6 +45,7 @@
   (fn [{:keys [db]} _]
     {:db                  (assoc db :sixsq.nuvla.ui.main.spec/bootstrap-message nil)
      ::cimi-api-fx/logout [#(do (dispatch [::set-session nil])
+                                (dispatch [::intercom-events/clear-events])
                                 (dispatch [::history-events/navigate "sign-in"]))]}))
 
 

@@ -1,15 +1,17 @@
 (ns sixsq.nuvla.ui.deployment-dialog.events
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch inject-cofx reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.credentials.events :as creds-events]
     [sixsq.nuvla.ui.data.spec :as data-spec]
     [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
     [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
-    [clojure.string :as str]))
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (reg-event-fx
@@ -31,7 +33,7 @@
                                      dep-cred-id)
                             (some #(when (= dep-cred-id (:id %)) %) credentials))
                           (when (and only-one-cred
-                                (not= selected-credential-id (:id first-cred)))
+                                     (not= selected-credential-id (:id first-cred)))
                             first-cred))]
       (cond-> {:db (assoc db ::spec/credentials credentials
                              ::spec/credentials-loading? false)}
@@ -223,17 +225,17 @@
   (fn [{db :db} [_ first-step {:keys [parent id] :as deployment}]]
     (when (= :data first-step)
       (dispatch [::get-data-records]))
-    (cond-> {:db         (assoc db ::spec/loading-deployment? true
-                                   ::spec/deployment nil
-                                   ::spec/selected-credential-id nil
-                                   ::spec/selected-infra-service nil
-                                   ::spec/deploy-modal-visible? true
-                                   ::spec/active-step (or first-step :data)
-                                   ::spec/data-step-active? (= first-step :data)
-                                   ::spec/cloud-filter nil
-                                   ::spec/selected-cloud nil
-                                   ::spec/cloud-infra-services nil
-                                   ::spec/data-clouds nil)
+    (cond-> {:db       (assoc db ::spec/loading-deployment? true
+                                 ::spec/deployment nil
+                                 ::spec/selected-credential-id nil
+                                 ::spec/selected-infra-service nil
+                                 ::spec/deploy-modal-visible? true
+                                 ::spec/active-step (or first-step :data)
+                                 ::spec/data-step-active? (= first-step :data)
+                                 ::spec/cloud-filter nil
+                                 ::spec/selected-cloud nil
+                                 ::spec/cloud-infra-services nil
+                                 ::spec/data-clouds nil)
              :dispatch [::get-deployment id]}
             parent (assoc ::cimi-api-fx/get [parent #(dispatch [::reselect-credential %])]))))
 
@@ -296,7 +298,9 @@
                                                            status (str " (" status ")"))
                                           :content message
                                           :type    :error}]))
-                            (dispatch [::start-deployment resource-id])))]
+                            (do
+                              (dispatch [::start-deployment resource-id])
+                              (dispatch [::intercom-events/set-event "Last app launch" (time/timestamp)]))))]
       {::cimi-api-fx/edit [resource-id deployment edit-callback]})))
 
 

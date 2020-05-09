@@ -6,7 +6,6 @@
     [sixsq.nuvla.ui.edge.spec :as spec]
     [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.credentials.events :as cred-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -117,7 +116,6 @@
 (reg-event-db
   ::set-nuvlabox-usb-api-key
   (fn [db [_ {:keys [resource-id secret-key]}]]
-    (dispatch [::cred-events/get-credentials])
     (assoc db ::spec/nuvlabox-usb-api-key {:resource-id resource-id :secret-key secret-key})))
 
 

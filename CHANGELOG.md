@@ -4,6 +4,8 @@
 
 ### Added
 
+  - Dashboard detail - deplyment in stopped state are restartable
+    and rename stop operation shutdown in UI
   - Config file - Load config file to set UI side configuration
   - Intercom Component
   - Auth menu - Support act as a group via claim action
@@ -12,6 +14,8 @@
 
 ### Changed
 
+  - Dashboard detail - Show module versions
+  - Dashboard detail - Fetch clone workflows
   - Added new peripheral attributes to Edge detail view's accordion
   - Files are ignored for docker-compose applications
 

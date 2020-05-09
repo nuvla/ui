@@ -87,7 +87,7 @@
      [ui/TableCell
       (cond
         (general-utils/can-operation? "stop" deployment)
-        [dashboard-detail-views/StopButton deployment]
+        [dashboard-detail-views/ShutdownButton deployment]
 
         (general-utils/can-delete? deployment)
         [dashboard-detail-views/DeleteButton deployment])]]))
@@ -97,22 +97,21 @@
   [deployments-list]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [deployments-list]
-      [ui/Segment style/autoscroll-x
-       [ui/Table
-        (merge style/single-line {:unstackable true})
-        [ui/TableHeader
-         [ui/TableRow
-          [ui/TableHeaderCell (@tr [:id])]
-          [ui/TableHeaderCell (@tr [:module])]
-          [ui/TableHeaderCell (@tr [:status])]
-          [ui/TableHeaderCell (@tr [:url])]
-          [ui/TableHeaderCell (@tr [:created])]
-          [ui/TableHeaderCell (@tr [:infrastructure])]
-          [ui/TableHeaderCell (@tr [:actions])]]]
-        [ui/TableBody
-         (for [{:keys [id] :as deployment} deployments-list]
-           ^{:key id}
-           [row-fn deployment])]]])))
+      [ui/Table
+       (merge style/single-line {:stackable true})
+       [ui/TableHeader
+        [ui/TableRow
+         [ui/TableHeaderCell (@tr [:id])]
+         [ui/TableHeaderCell (@tr [:module])]
+         [ui/TableHeaderCell (@tr [:status])]
+         [ui/TableHeaderCell (@tr [:url])]
+         [ui/TableHeaderCell (@tr [:created])]
+         [ui/TableHeaderCell (@tr [:infrastructure])]
+         [ui/TableHeaderCell (@tr [:actions])]]]
+       [ui/TableBody
+        (for [{:keys [id] :as deployment} deployments-list]
+          ^{:key id}
+          [row-fn deployment])]])))
 
 
 (defn cards-data-table
@@ -167,6 +166,6 @@
         root     [dashboard-main]
         children (case n
                    1 root
-                   2 [dashboard-detail-views/deployment-detail uuid]
+                   2 ^{:key uuid} [dashboard-detail-views/deployment-detail uuid]
                    root)]
     [ui/Segment style/basic children]))

@@ -43,7 +43,11 @@
 (s/def ::pages map?)
 
 
+(s/def ::intercom-api-id string?)
+
+
 (s/def ::db (s/keys :req [::iframe?
+                          ::intercom-api-id
                           ::device
                           ::sidebar-open?
                           ::visible?
@@ -58,6 +62,7 @@
 
 
 (def defaults {::iframe?              false
+               ::intercom-api-id      ""
                ::device               :computer
                ::sidebar-open?        true
                ::visible?             true

@@ -134,8 +134,8 @@
 
        [ui/AccordionTitle {:active   @active?
                            :index    1
-                           :style {:display "inline-block"
-                                   :width "100%"}
+                           :style    {:display "inline-block"
+                                      :width   "100%"}
                            :on-click #(do
                                         (accordion-utils/toggle active?)
                                         (if @active? (on-open) (on-close)))}
@@ -231,6 +231,7 @@
   [{:keys [button-text on-confirm danger-msg header content trigger open on-close]}]
   (let [tr                   (subscribe [::i18n-subs/tr])
         confirmed?           (r/atom (nil? danger-msg))
+        clicked?             (r/atom false)
         checkbox-warning-msg (fn [danger-msg]
                                ;; force confirmed to false at open of modal
                                (reset! confirmed? false)
@@ -238,7 +239,18 @@
                                  [ui/Checkbox {:label     danger-msg
                                                :checked   @confirmed?
                                                :fitted    true
-                                               :on-change #(swap! confirmed? not)}]))]
+                                               :on-change #(swap! confirmed? not)}]))
+
+        button-confirm       (fn []
+                               (reset! clicked? false)
+                               (fn []
+                                 [Button {:text     (str/capitalize button-text)
+                                          :negative true
+                                          :disabled (or (not @confirmed?) @clicked?)
+                                          :loading  @clicked?
+                                          :active   true
+                                          :on-click #(do (reset! clicked? true)
+                                                         (on-confirm))}]))]
     (fn [{:keys [button-text on-confirm danger-msg header content trigger open on-close]}]
       [ui/Modal (cond->
                   {:on-click   (fn [event]
@@ -261,11 +273,7 @@
            [ui/MessageContent [checkbox-warning-msg danger-msg]]])]
 
        [ui/ModalActions
-        [Button {:text     (str/capitalize button-text)
-                 :negative true
-                 :disabled (not @confirmed?)
-                 :active   true
-                 :on-click #(on-confirm)}]]])))
+        [button-confirm]]])))
 
 
 (defn TimeAgo

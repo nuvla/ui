@@ -12,6 +12,7 @@
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
@@ -22,6 +23,7 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
@@ -129,7 +131,8 @@
                         :commit @commit-message}
             save-fn    #(do (dispatch [::events/edit-module (when @need-commit? commit-map)])
                             (dispatch [::events/close-save-modal])
-                            (dispatch [::events/commit-message nil]))]
+                            (dispatch [::events/commit-message nil])
+                            (dispatch [::intercom-events/set-event "Last save module" (time/timestamp)]))]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(do (dispatch [::events/commit-message nil])

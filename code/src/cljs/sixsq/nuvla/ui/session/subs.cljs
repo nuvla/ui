@@ -3,7 +3,6 @@
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.session.spec :as spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
@@ -134,38 +133,3 @@
   (fn [session-templates [_ template-id]]
     (contains? session-templates template-id)))
 
-
-(reg-sub
-  ::linkedin
-  (fn [db]
-    (::main-spec/linkedin db)))
-
-
-(reg-sub
-  ::facebook
-  (fn [db]
-    (::main-spec/facebook db)))
-
-
-(reg-sub
-  ::twitter
-  (fn [db]
-    (::main-spec/twitter db)))
-
-
-(reg-sub
-  ::youtube
-  (fn [db]
-    (::main-spec/youtube db)))
-
-
-(reg-sub
-  ::eula
-  (fn [db]
-    (::main-spec/eula db)))
-
-
-(reg-sub
-  ::terms-and-conditions
-  (fn [db]
-    (::main-spec/terms-and-conditions db)))

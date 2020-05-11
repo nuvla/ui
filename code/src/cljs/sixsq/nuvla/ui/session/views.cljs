@@ -198,18 +198,21 @@
 
 (defn follow-us
   []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        linkedin (subscribe [::subs/linkedin])
-        twitter  (subscribe [::subs/twitter])
-        facebook (subscribe [::subs/facebook])
-        youtube  (subscribe [::subs/youtube])]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        linkedin     (subscribe [::main-subs/config :linkedin])
+        twitter      (subscribe [::main-subs/config :twitter])
+        facebook     (subscribe [::main-subs/config :facebook])
+        youtube      (subscribe [::main-subs/config :youtube])
+        social-media (remove #(nil? (second %))
+                             [["linkedin" @linkedin]
+                              ["twitter" @twitter]
+                              ["facebook" @facebook]
+                              ["youtube" @youtube]])]
     [:<>
-     (@tr [:follow-us-on])
+     (when (seq social-media)
+       (@tr [:follow-us-on]))
      [:span
-      (for [[icon url] [(when-not (empty? @linkedin) ["linkedin" @linkedin])
-                        (when-not (empty? @twitter) ["twitter" @twitter])
-                        (when-not (empty? @facebook) ["facebook" @facebook])
-                        (when-not (empty? @youtube) ["youtube" @youtube])]]
+      (for [[icon url] social-media]
         [:a {:key    url
              :href   url
              :target "_blank"
@@ -221,8 +224,8 @@
   (let [tr                   (subscribe [::i18n-subs/tr])
         first-path           (subscribe [::main-subs/nav-path-first])
         signup-template?     (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
-        eula                 (subscribe [::subs/eula])
-        terms-and-conditions (subscribe [::subs/terms-and-conditions])]
+        eula                 (subscribe [::main-subs/config :eula])
+        terms-and-conditions (subscribe [::main-subs/config :terms-and-conditions])]
     [:div {:style {:padding "75px"}}
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"
@@ -256,13 +259,13 @@
            :on-click #(dispatch [::history-events/navigate "sign-up"])}]
          [:br]
          [:br]
-         (when-not (empty? @terms-and-conditions)
+         (when @terms-and-conditions
            [:a {:href   @terms-and-conditions
                 :target "_blank"
                 :style  {:margin-top 20 :color "white" :font-style "italic"}}
             (@tr [:terms-and-conditions])])
-         (when-not (or (empty? @terms-and-conditions) (empty? @eula)) " and ")
-         (when-not (empty? @eula)
+         (when (and @terms-and-conditions @eula) " and ")
+         (when @eula
            [:a {:href   @eula
                 :target "_blank"
                 :style  {:margin-top 20 :color "white" :font-style "italic"}}

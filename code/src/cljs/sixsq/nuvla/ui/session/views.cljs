@@ -177,9 +177,9 @@
     [:<>
      (if logged-in?
        [ui/ButtonGroup {:primary true}
-        [ui/Button {:on-click profile-fn}
+        [ui/Button {:id "nuvla-username-button" :on-click profile-fn}
          [ui/Icon {:name (if (-> @user (or "") (str/starts-with? "group/")) "group" "user")}]
-         (general-utils/truncate @user)]
+         [:span {:id "nuvla-username"} (general-utils/truncate @user)]]
         dropdown-menu]
        [:div
         (when @signup-template?
@@ -202,9 +202,12 @@
         first-path       (subscribe [::main-subs/nav-path-first])
         signup-template? (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])]
     [:div {:style {:padding "75px"}}
-     [:div {:style {:font-size   "6em"
-                    :line-height "normal"}}
-      "Nuvla.io"]
+     [ui/Image {:alt      "logo"
+                :src      "/ui/images/nuvla-logo.png"
+                :size     "medium"
+                :style    {:margin-top    "10px"
+                           :margin-bottom "0px"}
+                :centered false}]
      [:br]
 
      [:div {:style {:margin-top  40

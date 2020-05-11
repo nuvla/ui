@@ -245,12 +245,6 @@
 
 
 (reg-event-db
-  ::force-refresh-content
-  (fn [db]
-    (assoc db ::spec/content-key (random-uuid))))
-
-
-(reg-event-db
   ::get-ui-config-good
   (fn [db [_ result]]
     (assoc db ::spec/intercom-api-id (:intercom-app-id result)

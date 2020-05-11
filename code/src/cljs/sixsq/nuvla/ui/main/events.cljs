@@ -247,7 +247,7 @@
 (reg-event-db
   ::get-ui-config-good
   (fn [db [_ result]]
-    (assoc db ::spec/intercom-api-id (:intercom-app-id result))))
+    (assoc db ::spec/config result)))
 
 
 (reg-event-db

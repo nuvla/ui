@@ -123,3 +123,16 @@
   :<- [::pages]
   (fn [pages [_ url]]
     (get pages url)))
+
+
+(reg-sub
+  ::config-map
+  (fn [db]
+    (::spec/config db)))
+
+
+(reg-sub
+  ::config
+  :<- [::config-map]
+  (fn [config-map [_ key]]
+    (get config-map key)))

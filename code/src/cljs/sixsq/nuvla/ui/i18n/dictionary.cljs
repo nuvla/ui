@@ -372,6 +372,7 @@
         :tech-doc                                  "technical documentation"
         :terminate                                 "terminate"
         :terms-and-conditions                      "Terms and conditions"
+        :terms-end-user-license-agreement          "End User License Agreement"
         :timestamp                                 "timestamp"
         :to                                        "to"
         :today                                     "today"

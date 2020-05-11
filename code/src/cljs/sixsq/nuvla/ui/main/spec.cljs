@@ -42,12 +42,11 @@
 
 (s/def ::pages map?)
 
-
-(s/def ::intercom-api-id string?)
+; from ui config file
+(s/def ::config any?)
 
 
 (s/def ::db (s/keys :req [::iframe?
-                          ::intercom-api-id
                           ::device
                           ::sidebar-open?
                           ::visible?
@@ -62,7 +61,7 @@
 
 
 (def defaults {::iframe?              false
-               ::intercom-api-id      ""
+               ::config               {}
                ::device               :computer
                ::sidebar-open?        true
                ::visible?             true

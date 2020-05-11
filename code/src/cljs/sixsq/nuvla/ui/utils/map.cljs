@@ -2,8 +2,10 @@
   (:require
     ["react-leaflet" :as leaflet]
     [clojure.string :as str]
+    [re-frame.core :refer [subscribe]]
     [reagent.core :as reagent]
-    [sixsq.nuvla.ui.config :as config]))
+    [sixsq.nuvla.ui.config :as config]
+    [sixsq.nuvla.ui.main.subs :as main-subs]))
 
 (def Map (reagent/adapt-react-class leaflet/Map))
 
@@ -31,22 +33,25 @@
 
 (defn DefaultLayers
   []
-  (let [access-token "pk.eyJ1IjoiMHhiYXNlMTIiLCJhIjoiY2s2Yzhsa2hzMGo3MzNsb3ZxaWo3ZGE3NiJ9.s0_WxYEqHBpsoc3LmdaPWg"]
+  (let [access-token (subscribe [::main-subs/config :mapbox-access-token])]
     [LayersControl {:position "topright"}
-     [BaseLayer {:name    "Light"
-                 :checked (not config/debug?)}
-      [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/{z}/{x}/{y}?access_token=" access-token)
-                  :attribution attributions}]]
-     [BaseLayer {:name "Streets"}
-      [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/{z}/{x}/{y}?access_token=" access-token)
-                  :attribution attributions}]]
-     [BaseLayer {:name "Satellite"}
-      [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/tiles/{z}/{x}/{y}?access_token=" access-token)
-                  :attribution attributions}]]
+     (when @access-token
+       [BaseLayer {:name    "Light"
+                   :checked (not config/debug?)}
+        [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
+                    :attribution attributions}]])
+     (when @access-token
+       [BaseLayer {:name "Streets"}
+        [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
+                    :attribution attributions}]])
+     (when @access-token
+       [BaseLayer {:name "Satellite"}
+        [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
+                    :attribution attributions}]])
      (when config/debug?
        [BaseLayer {:name    "Light cartodb dev"
                    :checked config/debug?}
-        [TileLayer {:url "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
+        [TileLayer {:url         "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
                     :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a>, &copy; <a href=\"https://carto.com/attributions\">Carto</a>"
                     }]])
      ]))

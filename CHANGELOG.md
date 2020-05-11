@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.4.14] - 2020-05-11
+
 ### Added
 
   - Dashboard detail - deplyment in stopped state are restartable

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## [2.4.15] - 2020-05-12
+
+### Changes
+
+  - Container - exclude config.json and nuvla-logo.png from
+    precompress mvn prepare-package
+
 ## [2.4.14] - 2020-05-11
 
 ### Added

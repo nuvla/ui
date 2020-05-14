@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changes
+
+  - Danger-Modal - Fix shutdown deployment in some condition button
+    had no effect
+
 ## [2.4.15] - 2020-05-12
 
 ### Changes

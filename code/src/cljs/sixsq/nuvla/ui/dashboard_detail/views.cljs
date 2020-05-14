@@ -436,6 +436,7 @@
                       :icon-name   icon-name
                       :button-text (@tr [:shutdown])
                       :popup-text  (@tr [:deployment-shutdown-msg])})]
+        ^{:key (random-uuid)}
         [uix/ModalDanger
          {:on-close    (fn [event]
                          (reset! open? false)
@@ -472,6 +473,7 @@
                       :label?      label?
                       :menu-item?  menu-item?
                       :disabled?   (not (general-utils/can-delete? deployment))})]
+        ^{:key (random-uuid)}
         [uix/ModalDanger
          {:on-close    (fn [event]
                          (reset! open? false)
@@ -536,7 +538,7 @@
 
 (defn DeploymentCard
   [{:keys [id state module tags] :as deployment} & {:keys [clickable?]
-                                               :or   {clickable? true}}]
+                                                    :or   {clickable? true}}]
   (let [tr            (subscribe [::i18n-subs/tr])
         creds-name    (subscribe [::dashboard-subs/creds-name-map])
         credential-id (:parent deployment)
@@ -622,9 +624,8 @@
 
 
 (defn MenuBar
-  []
-  (let [loading? (subscribe [::subs/loading?])
-        {:keys [id] :as deployment} @(subscribe [::subs/deployment])]
+  [{:keys [id] :as deployment}]
+  (let [loading? (subscribe [::subs/loading?])]
     [ui/Menu {:borderless true}
      [StartButton deployment]
      [ShutdownButton deployment :menu-item? true]
@@ -662,7 +663,7 @@
            {:default-value @acl
             :read-only     @read-only?
             :on-change     #(dispatch [::events/edit resource-id (assoc @deployment :acl %)])}])
-        [MenuBar]
+        [MenuBar @deployment]
         [summary @deployment]
         [urls-section]
         [module-version-section]

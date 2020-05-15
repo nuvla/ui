@@ -6,6 +6,8 @@
 
   - Danger-Modal - Fix shutdown deployment in some condition button
     had no effect
+  - Fix typos and text consistency
+  - Add instructions on how to enable fast deployment monitoring
 
 ## [2.4.15] - 2020-05-12
 

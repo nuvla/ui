@@ -199,7 +199,11 @@
               [ui/Label {:pointing "above", :basic true, :color "red"}
                (if (str/blank? error-msg)
                  (@tr [:module-docker-compose-error])
-                 error-msg)]))]
+                 error-msg)]))
+          [:div [@tr [:apps-more-info]]
+           [:a {:href "https://docs.nuvla.io/nuvla/add-apps#enabling-fast--dedicated-monitoring-for-application-deployments"
+                :target "_black"}
+            "Nuvla docs"]]]
          :label (if (= @module-subtype "application")
                   [:span "Docker compose" ff/nbsp
                    (when @validate-dc

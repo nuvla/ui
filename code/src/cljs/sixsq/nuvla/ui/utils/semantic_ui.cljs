@@ -36,6 +36,8 @@
 (def Button (r/adapt-react-class semantic/Button))
 (def ButtonContent (r/adapt-react-class semantic/ButtonContent))
 (def ButtonGroup (r/adapt-react-class semantic/ButtonGroup))
+(def ButtonContent (r/adapt-react-class semantic/ButtonContent))
+;(def ButtonOr (r/adapt-react-class semantic/ButtonOr))
 
 (def Card (r/adapt-react-class semantic/Card))
 (def CardContent (r/adapt-react-class semantic/CardContent))
@@ -45,7 +47,9 @@
 (def CardMeta (r/adapt-react-class semantic/CardMeta))
 
 (def Checkbox (r/adapt-react-class semantic/Checkbox))
-
+;(def Comment (r/adapt-react-class semantic/Comment))
+;(def CommentAvatar (r/adapt-react-class semantic/CommentAvatar))
+;(def CommentContent (r/adapt-react-class semantic/CommentContent))
 (def Container (r/adapt-react-class semantic/Container))
 
 (def DatePicker (r/adapt-react-class date-picker/default))
@@ -100,6 +104,8 @@
 
 (def Image (r/adapt-react-class semantic/Image))
 
+(def Embed (r/adapt-react-class semantic/Embed))
+
 (def Input (r/adapt-react-class semantic/Input))
 
 (def Header (r/adapt-react-class semantic/Header))
@@ -147,6 +153,8 @@
 
 (def Radio (r/adapt-react-class semantic/Radio))
 (def Responsive (r/adapt-react-class semantic/Responsive))
+;(def Reveal (r/adapt-react-class semantic/Reveal))
+;(def RevealContent (r/adapt-react-class semantic/RevealContent))
 
 (def Segment (r/adapt-react-class semantic/Segment))
 (def SegmentGroup (r/adapt-react-class semantic/SegmentGroup))

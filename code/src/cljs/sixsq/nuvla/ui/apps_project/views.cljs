@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.apps-project.views
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps-project.spec :as spec]
@@ -58,7 +59,7 @@
 
           [uix/Accordion
            [format-module-children children]
-           :label "Sub-modules"
+           :label (str/capitalize (@tr [:apps-sub-modules]))
            :title-size :h2])))))
 
 

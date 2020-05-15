@@ -19,6 +19,7 @@
     [sixsq.nuvla.ui.i18n.spec :as i18n]
     [sixsq.nuvla.ui.infrastructures-detail.spec :as infra-service-detail]
     [sixsq.nuvla.ui.infrastructures.spec :as infra-service]
+    [sixsq.nuvla.ui.intercom.spec :as intercom]
     [sixsq.nuvla.ui.main.spec :as main]
     [sixsq.nuvla.ui.messages.spec :as messages]
     [sixsq.nuvla.ui.ocre.spec :as ocre]
@@ -40,6 +41,7 @@
                      ::i18n/db
                      ::infra-service/db
                      ::infra-service-detail/db
+                     ::intercom/db
                      ::main/db
                      ::messages/db
                      ::edge/db
@@ -66,6 +68,7 @@
          i18n/defaults
          infra-service/defaults
          infra-service-detail/defaults
+         intercom/defaults
          main/defaults
          messages/defaults
          edge/defaults

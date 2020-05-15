@@ -1,8 +1,10 @@
 (ns sixsq.nuvla.ui.session.views
   (:require
     [clojure.spec.alpha :as s]
+    [clojure.string :as str]
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -105,50 +107,59 @@
         logged-in?           (boolean @user)
 
         invitation-template? (subscribe [::subs/user-template-exist?
-                                         utils/user-tmpl-email-invitation])]
+                                         utils/user-tmpl-email-invitation])
+        act-as-options       (subscribe [::subs/act-as-options])]
 
     [ui/DropdownMenu
+     (when (seq @act-as-options)
+       [:<>
+        [ui/DropdownHeader (@tr [:act-as])]
+        (for [account @act-as-options]
+          ^{:key account}
+          [ui/DropdownItem {:text     account
+                            :icon     (if (str/starts-with? account "group/") "group" "user")
+                            :on-click #(dispatch [::events/act-as account])}])
+        [ui/DropdownDivider]])
+
+     (when @invitation-template?
+       [:<>
+        [ui/DropdownItem
+         {:key      "invite"
+          :text     (@tr [:invite-user])
+          :icon     "user add"
+          :on-click create-user-fn}]
+        [ui/DropdownDivider]])
+
+     [ui/DropdownItem {:aria-label (@tr [:documentation])
+                       :icon       "book"
+                       :text       (@tr [:documentation])
+                       :href       "https://docs.nuvla.io/"
+                       :target     "_blank"
+                       :rel        "noreferrer"}]
+     [ui/DropdownItem {:aria-label (@tr [:knowledge-base])
+                       :icon       "info circle"
+                       :text       (@tr [:knowledge-base])
+                       :href       "https://support.sixsq.com/solution/categories"
+                       :target     "_blank"
+                       :rel        "noreferrer"}]
+     [ui/DropdownItem {:aria-label (@tr [:support])
+                       :icon       "mail"
+                       :text       (@tr [:support])
+                       :href       (js/encodeURI
+                                     (str "mailto:support@sixsq.com?subject=["
+                                          @cimi-api-fx/NUVLA_URL
+                                          "] Support question - "
+                                          (if logged-in? @user "Not logged in")))}]
 
      (when logged-in?
        [:<>
+        [ui/DropdownDivider]
         [ui/DropdownItem
          {:key      "sign-out"
           :text     (@tr [:logout])
           :icon     "sign out"
-          :on-click sign-out-fn}]
-        [ui/DropdownDivider]
-
-        (when @invitation-template?
-          [:<>
-           [ui/DropdownItem
-            {:key      "invite"
-             :text     (@tr [:invite-user])
-             :icon     "user add"
-             :on-click create-user-fn}]
-           [ui/DropdownDivider]])])
-
-     [:<>
-      [ui/DropdownItem {:aria-label (@tr [:documentation])
-                        :icon       "book"
-                        :text       (@tr [:documentation])
-                        :href       "https://docs.nuvla.io/"
-                        :target     "_blank"
-                        :rel        "noreferrer"}]
-      [ui/DropdownItem {:aria-label (@tr [:knowledge-base])
-                        :icon       "info circle"
-                        :text       (@tr [:knowledge-base])
-                        :href       "https://support.sixsq.com/solution/categories"
-                        :target     "_blank"
-                        :rel        "noreferrer"}]
-      [ui/DropdownItem {:aria-label (@tr [:support])
-                        :icon       "mail"
-                        :text       (@tr [:support])
-                        :href       (js/encodeURI
-                                      (str "mailto:support@sixsq.com?subject=["
-                                           @cimi-api-fx/NUVLA_URL
-                                           "] Support question - "
-                                           (if logged-in? @user "Not logged in")))
-                        }]]]))
+          :on-click sign-out-fn}]])
+     ]))
 
 
 (defn authn-menu
@@ -166,9 +177,9 @@
     [:<>
      (if logged-in?
        [ui/ButtonGroup {:primary true}
-        [ui/Button {:on-click profile-fn}
-         [ui/Icon {:name "user"}]
-         (general-utils/truncate @user)]
+        [ui/Button {:id "nuvla-username-button" :on-click profile-fn}
+         [ui/Icon {:name (if (-> @user (or "") (str/starts-with? "group/")) "group" "user")}]
+         [:span {:id "nuvla-username"} (general-utils/truncate @user)]]
         dropdown-menu]
        [:div
         (when @signup-template?
@@ -185,15 +196,43 @@
      [modal-create-user]]))
 
 
+(defn follow-us
+  []
+  (let [tr           (subscribe [::i18n-subs/tr])
+        linkedin     (subscribe [::main-subs/config :linkedin])
+        twitter      (subscribe [::main-subs/config :twitter])
+        facebook     (subscribe [::main-subs/config :facebook])
+        youtube      (subscribe [::main-subs/config :youtube])
+        social-media (remove #(nil? (second %))
+                             [["linkedin" @linkedin]
+                              ["twitter" @twitter]
+                              ["facebook" @facebook]
+                              ["youtube" @youtube]])]
+    [:<>
+     (when (seq social-media)
+       (@tr [:follow-us-on]))
+     [:span
+      (for [[icon url] social-media]
+        [:a {:key    url
+             :href   url
+             :target "_blank"
+             :style  {:color "white"}}
+         [ui/Icon {:name icon}]])]]))
+
 (defn LeftPanel
   []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        first-path       (subscribe [::main-subs/nav-path-first])
-        signup-template? (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])]
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        first-path           (subscribe [::main-subs/nav-path-first])
+        signup-template?     (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
+        eula                 (subscribe [::main-subs/config :eula])
+        terms-and-conditions (subscribe [::main-subs/config :terms-and-conditions])]
     [:div {:style {:padding "75px"}}
-     [:div {:style {:font-size   "6em"
-                    :line-height "normal"}}
-      "Nuvla.io"]
+     [ui/Image {:alt      "logo"
+                :src      "/ui/images/nuvla-logo.png"
+                :size     "medium"
+                :style    {:margin-top    "10px"
+                           :margin-bottom "0px"}
+                :centered false}]
      [:br]
 
      [:div {:style {:margin-top  40
@@ -219,10 +258,18 @@
            :active   (= @first-path "sign-up")
            :on-click #(dispatch [::history-events/navigate "sign-up"])}]
          [:br]
-         [:a {:href   "https://sixsq.com/terms/general-terms-and-conditions"
-              :target "_blank"
-              :style  {:color "white" :font-style "italic"}}
-          (@tr [:terms-and-conditions])]])]
+         [:br]
+         (when @terms-and-conditions
+           [:a {:href   @terms-and-conditions
+                :target "_blank"
+                :style  {:margin-top 20 :color "white" :font-style "italic"}}
+            (@tr [:terms-and-conditions])])
+         (when (and @terms-and-conditions @eula) " and ")
+         (when @eula
+           [:a {:href   @eula
+                :target "_blank"
+                :style  {:margin-top 20 :color "white" :font-style "italic"}}
+            (@tr [:terms-end-user-license-agreement])])])]
      [:br]
      [:a {:href   "https://docs.nuvla.io"
           :target "_blank"
@@ -235,17 +282,7 @@
 
      [:div {:style {:position "absolute"
                     :bottom   40}}
-      (@tr [:follow-us-on])
-      [:span
-       (for [[icon url] [["youtube" "https://www.youtube.com/channel/UCGYw3n7c-QsDtsVH32By1-g"]
-                         ["twitter" "https://twitter.com/sixsq"]
-                         ["facebook" "https://www.facebook.com/SixSq-143266939349560"]]]
-         [:a {:key    url
-              :href   url
-              :target "_blank"
-              :style  {:color "white"}}
-          [ui/Icon {:name icon}]])]]]
-    ))
+      [follow-us]]]))
 
 
 (defn RightPanel

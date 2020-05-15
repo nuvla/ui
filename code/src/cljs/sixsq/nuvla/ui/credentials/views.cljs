@@ -50,7 +50,7 @@
                           :selection   true
                           :fluid       true
                           :value       value
-                          :placeholder "Select releated infrastructure service"
+                          :placeholder (@tr [:credentials-select-related-infra])
                           :on-change   (ui-callback/callback
                                          :value #(do
                                                    (reset! local-validate? true)
@@ -195,7 +195,7 @@
             infra-name-or-id       (or (:name infra-service-selected)
                                        (:id infra-service-selected))
             name-credential        (str infra-name-or-id " - " @user)
-            description-credential (str infra-name-or-id " credential for " @user)]
+            description-credential (str infra-name-or-id " " (@tr [:credential-for]) " " @user)]
         (on-change :name name-credential)
         (when @update-description                           ; used for first load
           (on-change :description description-credential))
@@ -236,8 +236,7 @@
     :modal-content   credential-vpn}
    "infrastructure-service-registry"
    {:validation-spec ::spec/registry-credential
-    :modal-content   credential-registy}
-   })
+    :modal-content   credential-registy}})
 
 
 (def infrastructure-service-subtypes
@@ -253,7 +252,7 @@
         is-new?     (subscribe [::subs/is-new?])]
     (fn []
       (let [subtype         (:subtype @credential "")
-            header          (str (if is-new? "New" "Update") " Credential")
+            header          (str/capitalize (str (if is-new? (@tr [:new]) (@tr [:update])) " " (@tr [:credential])))
             validation-item (get infrastructure-service-validation-map subtype)
             validation-spec (:validation-spec validation-item)
             modal-content   (:modal-content validation-item)]
@@ -289,7 +288,7 @@
          [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
 
          [ui/ModalContent {:scrolling false}
-          [:div {:style {:padding-bottom 20}} "Choose the credential subtype you want to add."]
+          [:div {:style {:padding-bottom 20}} (@tr [:credential-choose-type])]
           [ui/CardGroup {:centered true}
 
            [ui/Card
@@ -344,8 +343,7 @@
               [ui/Header "Object Store"]
               [:div]
               [ui/Image {:src   "/ui/images/s3.png"
-                         :style {:max-height 112}}]]]]]
-          ]]))))
+                         :style {:max-height 112}}]]]]]]]))))
 
 
 (defn generated-credential-modal
@@ -368,20 +366,22 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/set-generated-credential-modal nil])}
 
-         [ui/ModalHeader "Generated credential"]
+         [ui/ModalHeader (@tr [:credential-generate])]
 
          [ui/ModalContent {:scrolling false}
 
           [ui/Message {:warning true}
-           [ui/MessageHeader "Warning"]
+           [ui/MessageHeader (@tr [:warning])]
            [ui/MessageContent
             [:div
-             "Please save this file, since Nuvla will not save it (it's your secret!)."
+             (@tr [:credential-please-save-this-file])
              [:br]
-             " Go to "
-             [:a {:href "https://docs.nuvla.io/nuvla/vpn", :target "_blank"} "docs.nuvla.io"]
-             " for details on how to configure your OpenVPN client."
-             ]]]
+             " "
+             (@tr [:credential-go-to])
+             " "
+             [:a {:href "https://docs.nuvla.io/nuvla/vpn", :target "_blank"} (@tr [:documentation])]
+             " "
+             (@tr [:credential-for-details-vpn])]]]
 
           [ui/CardGroup {:centered true}
 
@@ -390,10 +390,9 @@
              :download (str "vpn client " (:name @cred) ".conf")
              :disabled (not config)}
             [ui/CardContent {:text-align :center}
-             [ui/Header "Save credential"]
+             [ui/Header (@tr [:credential-save])]
              [ui/Icon {:name "file text"
-                       :size :massive}]]]]
-          ]]))))
+                       :size :massive}]]]]]]))))
 
 
 (defn control-bar []
@@ -471,15 +470,15 @@
              [:div [ui/Table {:style {:margin-top 10}}
                     [ui/TableHeader
                      [ui/TableRow
-                      [ui/TableHeaderCell {:content "Name"}]
-                      [ui/TableHeaderCell {:content "Description"}]
-                      [ui/TableHeaderCell {:content "Type"}]
-                      [ui/TableHeaderCell {:content "Actions"}]]]
+                      [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
+                      [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
+                      [ui/TableHeaderCell {:content (str/capitalize (@tr [:type]))}]
+                      [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}]]]
                     [ui/TableBody
                      (for [credential infra-service-creds]
                        ^{:key (:id credential)}
                        [single-credential credential])]]])]
-          :label (@tr [:credential-infra-service-section])
+          :label (@tr [:infra-services])
           :count (count infra-service-creds)]]))))
 
 

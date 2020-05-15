@@ -10,12 +10,14 @@
     [sixsq.nuvla.ui.infrastructures.events :as events]
     [sixsq.nuvla.ui.infrastructures.spec :as spec]
     [sixsq.nuvla.ui.infrastructures.subs :as subs]
+    [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [sixsq.nuvla.ui.utils.values :as values]
@@ -264,7 +266,8 @@
     (when form-valid?
       (do
         (dispatch [::events/set-validate-form? false])
-        (dispatch [::events/edit-infra-service])))))
+        (dispatch [::events/edit-infra-service])
+        (dispatch [::intercom-events/set-event "Last create Infrastructure Service" (time/timestamp)])))))
 
 
 (defn ServiceModal
@@ -331,8 +334,7 @@
            [ui/CardContent {:text-align :center}
             [ui/Header "Docker Swarm"]
             [ui/Icon {:name "docker"
-                      :size "massive"}]
-            [ui/Header (@tr [:register])]]]
+                      :size "massive"}]]]
 
           [ui/Card
            {:on-click #(do
@@ -344,9 +346,7 @@
            [ui/CardContent {:text-align :center}
             [ui/Header "Kubernetes"]
             [ui/Image {:src   "/ui/images/kubernetes.svg"
-                       :style {:max-width 112}}]
-            [ui/Header (@tr [:register])]]]
-          ]]
+                       :style {:max-width 112}}]]]]]
 
         [uix/MoreAccordion
          [ui/CardGroup {:centered true}
@@ -362,8 +362,7 @@
             [ui/Header "Docker Registry"]
             [ui/IconGroup {:size "massive"}
              [ui/Icon {:name "docker"}]
-             [ui/Icon {:name "database", :corner "bottom right"}]]
-            [ui/Header (@tr [:register])]]]
+             [ui/Icon {:name "database", :corner "bottom right"}]]]]
 
           [ui/Card
            {:on-click #(do
@@ -375,8 +374,7 @@
            [ui/CardContent {:text-align :center}
             [ui/Header "Object Store"]
             [ui/Image {:src   "/ui/images/s3.png"
-                       :style {:max-width 112}}]
-            [ui/Header (@tr [:register])]]]]]]])))
+                       :style {:max-width 112}}]]]]]]])))
 
 
 (defmethod panel/render :infrastructures

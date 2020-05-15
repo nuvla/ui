@@ -24,6 +24,7 @@
     [sixsq.nuvla.ui.infrastructures-detail.views]
     [sixsq.nuvla.ui.infrastructures.events :as infra-service-events]
     [sixsq.nuvla.ui.infrastructures.views]
+    [sixsq.nuvla.ui.intercom.views :as intercom]
     [sixsq.nuvla.ui.main.events :as events]
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
@@ -39,7 +40,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.welcome.views]))
+    [sixsq.nuvla.ui.welcome.views]
+    [taoensso.timbre :as log]))
 
 
 (defn crumb
@@ -239,6 +241,7 @@
            "reset-password" [session-views/SessionPage]
            nil [session-views/SessionPage]
            [:<>
+            [intercom/widget]
             [sidebar/menu]
             [:div {:style {:transition  "0.5s"
                            :margin-left (if (and (not @is-small-device?) @show?)

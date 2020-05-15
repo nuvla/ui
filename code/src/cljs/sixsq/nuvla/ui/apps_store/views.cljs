@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.apps-store.views
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
@@ -106,13 +107,14 @@
            (when (and @module (not (instance? js/Error @module)))
              (let [{:keys [children]} @module]
                [apps-project-views/format-module-children children]))]
-          :label (general-utils/capitalize-words (@tr [:all-projects]))
+          :label (str/capitalize (@tr [:all-projects]))
           :title-size :h2]]))))
 
 
 (defn appstore
   []
-  (let [modules           (subscribe [::subs/modules])
+  (let [tr                (subscribe [::i18n-subs/tr])
+        modules           (subscribe [::subs/modules])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])]
     (dispatch [::events/set-full-text-search nil])
@@ -130,7 +132,7 @@
              :activePage   @page
              :onPageChange (ui-callback/callback
                              :activePage #(dispatch [::events/set-page %]))}]]
-          :label "App Store"
+          :label (str/capitalize (@tr [:appstore]))
           :title-size :h2]]))))
 
 

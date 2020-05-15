@@ -1,8 +1,8 @@
 (def parent-version "6.7.3")
 (def sixsq-nuvla-api-version "2.0.8")
-(def version "2.4.13-SNAPSHOT")
+(def version "2.4.16-SNAPSHOT")
 
-(defproject sixsq.nuvla.ui/code "2.4.13-SNAPSHOT"
+(defproject sixsq.nuvla.ui/code "2.4.16-SNAPSHOT"
 
   :description "Web Browser User Interface for Nuvla"
 
@@ -79,6 +79,8 @@
                   :exclusions [cljsjs/react
                                cljsjs/react-dom]]
                  [re-frame "0.12.0" :scope "provided"]
+                 [day8.re-frame/http-fx "v0.2.0" :scope "provided"]
+                 [cljs-ajax "0.8.0" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
                  [com.taoensso/timbre "4.10.0" :scope "provided"]

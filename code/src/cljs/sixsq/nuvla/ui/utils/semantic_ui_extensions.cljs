@@ -134,8 +134,8 @@
 
        [ui/AccordionTitle {:active   @active?
                            :index    1
-                           :style {:display "inline-block"
-                                   :width "100%"}
+                           :style    {:display "inline-block"
+                                      :width   "100%"}
                            :on-click #(do
                                         (accordion-utils/toggle active?)
                                         (if @active? (on-open) (on-close)))}
@@ -231,14 +231,7 @@
   [{:keys [button-text on-confirm danger-msg header content trigger open on-close]}]
   (let [tr                   (subscribe [::i18n-subs/tr])
         confirmed?           (r/atom (nil? danger-msg))
-        checkbox-warning-msg (fn [danger-msg]
-                               ;; force confirmed to false at open of modal
-                               (reset! confirmed? false)
-                               (fn [danger-msg]
-                                 [ui/Checkbox {:label     danger-msg
-                                               :checked   @confirmed?
-                                               :fitted    true
-                                               :on-change #(swap! confirmed? not)}]))]
+        clicked?             (r/atom false)]
     (fn [{:keys [button-text on-confirm danger-msg header content trigger open on-close]}]
       [ui/Modal (cond->
                   {:on-click   (fn [event]
@@ -248,7 +241,9 @@
                    :trigger    trigger
                    :on-close   (fn [& args]
                                  (when on-close
-                                   (apply on-close args)))}
+                                   (apply on-close args))
+                                 (reset! confirmed? (nil? danger-msg))
+                                 (reset! clicked? false))}
                   (some? open) (assoc :open open))
 
        (when header [ui/ModalHeader header])
@@ -258,14 +253,19 @@
         (when danger-msg
           [ui/Message {:error true}
            [ui/MessageHeader {:style {:margin-bottom 10}} (@tr [:danger-action-cannot-be-undone])]
-           [ui/MessageContent [checkbox-warning-msg danger-msg]]])]
+           [ui/MessageContent [ui/Checkbox {:label     danger-msg
+                                            :checked   @confirmed?
+                                            :fitted    true
+                                            :on-change #(swap! confirmed? not)}]]])]
 
        [ui/ModalActions
         [Button {:text     (str/capitalize button-text)
                  :negative true
-                 :disabled (not @confirmed?)
+                 :disabled (or (not @confirmed?) @clicked?)
+                 :loading  @clicked?
                  :active   true
-                 :on-click #(on-confirm)}]]])))
+                 :on-click #(do (reset! clicked? true)
+                                (on-confirm))}]]])))
 
 
 (defn TimeAgo

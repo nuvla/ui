@@ -3,7 +3,8 @@
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
-    [sixsq.nuvla.ui.session.spec :as spec]))
+    [sixsq.nuvla.ui.session.spec :as spec]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-sub
@@ -22,6 +23,19 @@
   ::session
   (fn [db]
     (::spec/session db)))
+
+(reg-sub
+  ::act-as-options
+  :<- [::session]
+  :<- [::roles]
+  (fn [[{:keys [identifier active-claim] :as session} roles]]
+    (when (general-utils/can-operation? "claim" session)
+      (cond-> (filter #(and
+                         (str/starts-with? % "group/")
+                         (not (#{"group/nuvla-anon" "group/nuvla-user"
+                                 "group/nuvla-admin" active-claim} %))) roles)
+              (and (string? active-claim)
+                   (str/starts-with? active-claim "group/")) (conj identifier)))))
 
 
 (reg-sub
@@ -61,8 +75,12 @@
 (reg-sub
   ::user
   :<- [::session]
-  (fn [session]
-    (:identifier session)))
+  (fn [{:keys [identifier active-claim]}]
+    (or
+      (when (and (string? active-claim)
+                 (str/starts-with? active-claim "group/"))
+        active-claim)
+      identifier)))
 
 
 (reg-sub
@@ -114,3 +132,4 @@
   :<- [::session-templates]
   (fn [session-templates [_ template-id]]
     (contains? session-templates template-id)))
+

@@ -13,10 +13,19 @@
 
 
 (reg-event-db
+  ::set-module-versions
+  (fn [db [_ module]]
+    (assoc db ::spec/module-versions (:versions module))))
+
+(reg-event-fx
   ::set-deployment
-  (fn [db [_ resource]]
-    (assoc db ::spec/loading? false
-              ::spec/deployment resource)))
+  (fn [{{:keys [::spec/module-versions] :as db} :db} [_ resource]]
+    (let [module-href (get-in resource [:module :href])]
+      (cond-> {:db (assoc db ::spec/loading? false
+                             ::spec/deployment resource)}
+              (and (not module-versions)
+                   module-href) (assoc ::cimi-api-fx/get
+                                       [module-href #(dispatch [::set-module-versions %])])))))
 
 
 (reg-event-db
@@ -45,6 +54,23 @@
                                   [::get-jobs id]]
                ::cimi-api-fx/get [id #(dispatch [::set-deployment %])]}
               different-deployment? (assoc :db (merge db spec/defaults))))))
+
+
+(reg-event-db
+  ::clear-module
+  (fn [db]
+    (assoc db ::spec/module-versions nil)))
+
+
+(reg-event-fx
+  ::fetch-module
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ id]]
+    {::cimi-api-fx/operation [id "fetch-module"
+                              #(do (dispatch [::set-deployment %])
+                                   (dispatch [::messages-events/add
+                                              {:header  "Fetch module"
+                                               :message (str "Fetch module " % " done.")
+                                               :type    :success}]))]}))
 
 
 (reg-event-fx
@@ -88,7 +114,7 @@
   ::set-job-page
   (fn [{{:keys [::spec/deployment] :as db} :db} [_ page]]
     {:dispatch [::get-jobs (:id deployment)]
-     :db (assoc db ::spec/job-page page)}))
+     :db       (assoc db ::spec/job-page page)}))
 
 
 (reg-event-db

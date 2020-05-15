@@ -24,14 +24,39 @@
          label]))))
 
 
+(defn versions-table
+  [versions current & {:keys [on-click]}]
+  [ui/Table
+   [ui/TableHeader
+    [ui/TableRow
+     [ui/TableHeaderCell {:width "1"} "Version"]
+     [ui/TableHeaderCell {:width "1"} "Author"]
+     [ui/TableHeaderCell {:width "14"} "Commit message"]]]
+   [ui/TableBody
+    (for [[i v] (sort-by first > (map-indexed vector versions))]
+      (let [{:keys [href commit author]} v
+            is-current? (= current href)]
+        ^{:key (str "version" i)}
+        [ui/TableRow (when is-current? {:active true})
+         [ui/TableCell
+          (if on-click
+            [:a {:style    {:cursor "pointer"}
+                 :on-click #(on-click i)}
+             (str "v" i)]
+            (str "v" i))
+          (when is-current? " <<")]
+         [ui/TableCell author]
+         [ui/TableCell commit]]
+        ))]])
+
+
 (defn versions []
   (let [module         (subscribe [::subs/module])
         show-versions? (reagent/atom false)]
     (fn []
-      (let [versions         (:versions @module)
-            is-versioned?    (not (empty? versions))
-            versions-indexes (sort #(compare (second %2) (second %1)) (zipmap versions (range)))
-            current          (-> @module :content :id)]
+      (let [versions      (:versions @module)
+            is-versioned? (not (empty? versions))
+            current       (-> @module :content :id)]
         (if (not (is-latest? @module))
           (dispatch [::events/set-version-warning])
           (dispatch [::events/clear-version-warning]))
@@ -39,23 +64,5 @@
           [:div
            [show-versions show-versions?]
            (when @show-versions?
-             [ui/Table
-              [ui/TableHeader
-               [ui/TableRow
-                [ui/TableHeaderCell {:width "1"} "Version"]
-                [ui/TableHeaderCell {:width "1"} "Author"]
-                [ui/TableHeaderCell {:width "14"} "Commit message"]]]
-              [ui/TableBody
-               (for [[v i] versions-indexes]
-                 (let [{:keys [href commit author]} v
-                       is-current? (= current href)]
-                   ^{:key (str "version" i)}
-                   [ui/TableRow (when is-current? {:active true})
-                    [ui/TableCell [:a {:style    {:cursor "pointer"}
-                                       :on-click #(dispatch [::events/get-module i])}
-                                   (str "v" i)]
-                     (when is-current? " <<")]
-                    [ui/TableCell author]
-                    [ui/TableCell commit]]
-                   ))]])]
+             [versions-table versions current :on-click #(dispatch [::events/get-module %])])]
           )))))

@@ -45,6 +45,16 @@
     min-height: calc(100vh - 85px);
 }
 
+@media only screen and (max-width: 768px) {
+    #nuvla-username {
+        display: none;
+    }
+    #nuvla-username-button {
+        padding-left: 15px;
+        padding-right: 5px;
+    }
+}
+
 .nuvla-ui-header {
     height: 30px;
     border-radius: unset !important;

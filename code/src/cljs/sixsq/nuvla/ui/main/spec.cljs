@@ -42,6 +42,9 @@
 
 (s/def ::pages map?)
 
+; from ui config file
+(s/def ::config any?)
+
 
 (s/def ::db (s/keys :req [::iframe?
                           ::device
@@ -58,6 +61,7 @@
 
 
 (def defaults {::iframe?              false
+               ::config               {}
                ::device               :computer
                ::sidebar-open?        true
                ::visible?             true

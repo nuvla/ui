@@ -876,7 +876,7 @@
         :welcome-how-to-video-header               "Traitez un flux vidéo à la périphérie"
         :welcome-how-to-video-subheader            "Suivez ces étapes et visionnez cette vidéo."
         :welcome-launch-app                        "Lancer une app"
-        :welcome-more-advanced                     "Et des fonctionalité plus avancée, qui rock:"
+        :welcome-more-advanced                     "Et des fonctionalités plus avancées, qui rock:"
         :welcome-process-video-at-edge             "Traitez un flux vidéo en périphérie"
         :welcome-resources                         "Ressources"
         :welcome-resources-subheader               "Ici vous trouverez une mine de ressources sur Nuvla."

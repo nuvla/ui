@@ -132,3 +132,4 @@
   :<- [::session-templates]
   (fn [session-templates [_ template-id]]
     (contains? session-templates template-id)))
+

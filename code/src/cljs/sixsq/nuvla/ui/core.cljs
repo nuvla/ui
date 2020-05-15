@@ -62,6 +62,7 @@
   (dev-setup)
   (dispatch-sync [::db-events/initialize-db])
   (dispatch-sync [::api-events/get-cloud-entry-point])
+  (dispatch-sync [::main-events/get-ui-config])
   (dispatch-sync [::session-events/initialize])
   (dispatch-sync [::main-events/check-iframe])
   (visibility-watcher)

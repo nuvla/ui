@@ -11,7 +11,7 @@
   <parent>
     <groupId>sixsq.nuvla.ui</groupId>
     <artifactId>parent</artifactId>
-    <version>2.4.14-SNAPSHOT</version>
+    <version>2.4.16-SNAPSHOT</version>
   </parent>
 
   <licenses>
@@ -191,7 +191,6 @@
         <configuration>
           <executable>find</executable>
           <workingDirectory>${project.build.directory}/dependency/ui</workingDirectory>
-          find target/dependency/ui -type f -exec zopfli {} \;
           <arguments>
             <argument>${project.build.directory}/dependency/ui</argument>
             <argument>-type</argument>
@@ -204,6 +203,14 @@
             <argument>-not</argument>
             <argument>-name</argument>
             <argument>version.css</argument>
+            <argument>-a</argument>
+            <argument>-not</argument>
+            <argument>-name</argument>
+            <argument>config.json</argument>
+            <argument>-a</argument>
+            <argument>-not</argument>
+            <argument>-name</argument>
+            <argument>nuvla-logo.png</argument>
             <argument>-exec</argument>
             <argument>zopfli</argument>
             <argument>{}</argument>

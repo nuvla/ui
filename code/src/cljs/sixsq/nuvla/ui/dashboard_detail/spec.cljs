@@ -7,6 +7,8 @@
 
 (s/def ::deployment any?)
 
+(s/def ::module-versions any?)
+
 (s/def ::deployment-parameters any?)
 
 (s/def ::events any?)
@@ -51,6 +53,7 @@
 (def defaults {::loading?                  true
                ::deployment                nil
                ::deployment-parameters     nil
+               ::module-versions           nil
                ::events                    nil
                ::jobs                      nil
                ::jobs-per-page             10

@@ -2,16 +2,40 @@
 
 ## Unreleased
 
+### Changes
+
+  - Danger-Modal - Fix shutdown deployment in some condition button
+    had no effect
+
+## [2.4.15] - 2020-05-12
+
+### Changes
+
+  - Container - exclude config.json and nuvla-logo.png from
+    precompress mvn prepare-package
+
+## [2.4.14] - 2020-05-11
+
 ### Added
 
+  - Dashboard detail - deplyment in stopped state are restartable
+    and rename stop operation shutdown in UI
+  - Config file - Load config file to set UI side configuration
+  - Intercom Component
   - Auth menu - Support act as a group via claim action
   - downloads directory to host downloadable Nuvla assets
   - nuvlabox-self-registration download script, for the NuvlaBox industrialization
+  - OS selection step in NuvlaBox creation workflow
+  - Generation of API key and USB trigger file for auto-installing NuvlaBox
 
 ### Changed
 
+  - Dashboard detail - Show module versions
+  - Dashboard detail - Fetch clone workflows
   - Added new peripheral attributes to Edge detail view's accordion
   - Files are ignored for docker-compose applications
+  - Fixed NuvlaBox version selection bug about picking up wrong modules
+  - Translate all NuvlaBox modal content to French 
 
 ## [2.4.13] - 2020-04-14
 

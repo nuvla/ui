@@ -52,6 +52,7 @@
             is-root?    (empty? module-name)
             is-new?     (not (empty? new-subtype))]
         (dispatch [::events/is-new? (not (empty? new-subtype))])
+        (dispatch [::events/clear-version-warning])
         (if is-root?
           [apps-store-views/root-view]
           (do

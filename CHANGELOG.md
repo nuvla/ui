@@ -4,6 +4,7 @@
 
 ### Changes
 
+  - NuvlaBox detail - Fix bug when saving location
   - Danger-Modal - Fix shutdown deployment in some condition button
     had no effect
   - Fix typos and text consistency

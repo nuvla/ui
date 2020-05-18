@@ -9,6 +9,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.pricing.events :as events]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.pricing.subs :as subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -30,13 +31,15 @@
 
 (def payment-form (r/atom "credit-card"))
 
+(def elements-atom (r/atom nil))
+
 (defn handle-submit-credit-card
   [elements event]
   (.preventDefault event)
   (when elements
     (dispatch [::events/create-payment-method
-               #js{:type            "card"
-                   :card            (elements.getElement react-stripe/CardElement)}])))
+               #js{:type "card"
+                   :card (elements.getElement react-stripe/CardElement)}])))
 
 
 (defn handle-submit-sepa-debit
@@ -46,7 +49,7 @@
     (dispatch [::events/create-payment-method
                #js{:type            "sepa_debit"
                    :sepa_debit      (elements.getElement react-stripe/IbanElement)
-                   :billing_details #js{:name  "test"}}])))
+                   :billing_details #js{:name "test"}}])))
 
 
 ;; While not yet hooks support we have to use react components
@@ -55,22 +58,25 @@
   [elements]
   (let [className            (r/atom "stripe-input")
         stripe               (subscribe [::subs/stripe])
-        payment-method-error (subscribe [::subs/error])
-        processing?          (subscribe [::subs/processing?])
-        plan-id              (subscribe [::subs/plan-id])]
-    (fn [elements]
-      [ui/Form {:on-submit (partial (if (= @payment-form "credit-card")
-                                      handle-submit-credit-card
-                                      handle-submit-sepa-debit) elements)
-                :error     (boolean @payment-method-error)}
+        payment-method-error (subscribe [::subs/error])]
+    (fn []
+      [ui/Form {:error (boolean @payment-method-error)}
        [ui/Message {:error   true
                     :header  "Something went wrong"
                     :content @payment-method-error}]
-       [ui/FormSelect {:label         "Choose your payment method"
-                       :default-value "credit-card"
-                       :on-change     (ui-callback/value #(reset! payment-form %))
-                       :options       [{:text "credit card", :value "credit-card", :icon "credit card"}
-                                       {:text "bank account", :value "sepa-debit", :icon "exchange"}]}]
+       [ui/FormGroup {:inline true}
+        [:label "Billing Method"]
+        #_{:label         "Choose your payment method"
+           :default-value "credit-card"
+           :on-change     (ui-callback/value #(reset! payment-form %))
+           :options       [{:text "credit card", :value "credit-card", :icon "credit card"}
+                           {:text "bank account", :value "sepa-debit", :icon "exchange"}]}
+        [ui/FormRadio {:label     "Credit Card"
+                       :checked   (= @payment-form "credit-card")
+                       :on-change (ui-callback/value #(reset! payment-form "credit-card"))}]
+        [ui/FormRadio {:label     "Bank Account"
+                       :checked   (= @payment-form "sepa-debit")
+                       :on-change (ui-callback/value #(reset! payment-form "sepa-debit"))}]]
        (if (= @payment-form "credit-card")
          [ui/FormField
           [:label "Card Number"]
@@ -95,46 +101,66 @@
           (when @card-validation-error-message
             [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-message])]
          )
-       [ui/Button {:type     "submit"
-                   :animated "vertical"
-                   :primary  true
-                   :loading  @processing?
-                   :floated  "right"
-                   :disabled (or
-                               (not @stripe)
-                               (not @card-info-completed?)
-                               #_(nil? @plan-id)
-                               @processing?)}
-        [ui/ButtonContent {:hidden true} [ui/Icon {:name "shop"}]]
-        [ui/ButtonContent {:visible true} "Subscribe"]]])))
+       #_[ui/Button {:type     "submit"
+                     :animated "vertical"
+                     :primary  true
+                     :loading  @processing?
+                     :floated  "right"
+                     :disabled (or
+                                 (not @stripe)
+                                 (not @card-info-completed?)
+                                 #_(nil? @plan-id)
+                                 @processing?)}
+          [ui/ButtonContent {:hidden true} [ui/Icon {:name "shop"}]]
+          [ui/ButtonContent {:visible true} "Subscribe"]]])))
 
 
 (defn ReactCheckoutForm []
   (let [elements (react-stripe/useElements)]
+    (reset! elements-atom elements)
     (r/as-element
-      [InternalCheckoutForm elements])))
+      [InternalCheckoutForm])))
 
 
-(def SubscribeModal (r/adapt-react-class ReactCheckoutForm))
+(def CheckoutForm (r/adapt-react-class ReactCheckoutForm))
 
 (defn SubscribeButton
   []
-  (let [locale (subscribe [::i18n-subs/locale])
-        stripe (subscribe [::subs/stripe])]
-    [ui/Modal
-     {:open       true
-      :size "tiny"
-      :trigger    (r/as-element [ui/Button {:style    {:width "80%"}
-                                            :positive true
-                                            :circular true
-                                            :size     "large"} "Subscribe now"])
-      :close-icon true}
-     [ui/ModalHeader "Subscribe"]
-     [ui/ModalContent
-      ^{:key @locale}
-      [Elements {:stripe  @stripe
-                 :options {:locale @locale}}
-       [SubscribeModal]]]]))
+  (let [locale      (subscribe [::i18n-subs/locale])
+        stripe      (subscribe [::subs/stripe])
+        processing? (subscribe [::subs/processing?])
+        plan-id     (subscribe [::subs/plan-id])]
+    (reset! elements-atom nil)
+    (fn []
+      [ui/Modal
+       {;:open       true
+        :size       "tiny"
+        :trigger    (r/as-element [ui/Button {:primary  true
+                                              :circular true
+                                              :basic    true
+                                              :size     "large"} "Try Nuvla for free for 14 days"])
+        :close-icon true}
+       [ui/ModalHeader "Subscribe"]
+       [ui/ModalContent
+        ^{:key @locale}
+        [Elements {:stripe  @stripe
+                   :options {:locale @locale}}
+         [CheckoutForm]]]
+       [ui/ModalActions
+        [ui/Button {:animated "vertical"
+                    :primary  true
+                    :loading  @processing?
+                    :on-click (partial (if (= @payment-form "credit-card")
+                                         handle-submit-credit-card
+                                         handle-submit-sepa-debit) @elements-atom)
+                    :disabled (or
+                                (not @elements-atom)
+                                (not @stripe)
+                                (not @card-info-completed?)
+                                #_(nil? @plan-id)
+                                @processing?)}
+         [ui/ButtonContent {:hidden true} [ui/Icon {:name "shop"}]]
+         [ui/ButtonContent {:visible true} "Subscribe"]]]])))
 
 
 (defn PlanComp
@@ -185,14 +211,15 @@
 
 (defn Pricing
   []
-  (let [locale       (subscribe [::i18n-subs/locale])
-        stripe       (subscribe [::subs/stripe])
-        subscription (subscribe [::subs/subscription])
-        plan-id      (subscribe [::subs/plan-id])]
+  (let [locale   (subscribe [::i18n-subs/locale])
+        stripe   (subscribe [::subs/stripe])
+        customer (subscribe [::subs/customer])
+        plan-id  (subscribe [::subs/plan-id])]
     (dispatch [::events/init])
     (reset! card-validation-error-message nil)
     (reset! card-info-completed? false)
     (fn []
+      (js/console.log @customer)
       [ui/Segment (assoc style/basic, :loading (not @stripe))
        [ui/CardGroup {:centered true}
         [PlanComp {:id         "plan_Gx4S6VYf9cbfRK"
@@ -259,8 +286,9 @@
              [ui/TableCell [:h5 "Additional"]]
              [ui/TableCell "€ 5.00 per month, each"]]]]]
          [ui/GridColumn {:width 5, :text-align "center"}
-          [SubscribeButton]]]]
-
+          ^{:key (random-uuid)}
+          [SubscribeButton]
+          ]]]
 
        [:br]
        [ui/GridRow {:columns 1}
@@ -280,20 +308,18 @@
            ^{:key @locale}
            [Elements {:stripe  @stripe
                       :options {:locale @locale}}
-            [SubscribeModal]]]])
-       (when @subscription
+            [CheckoutForm]]]])
+       (when @customer
          [:<>
-          [ui/GridRow {:columns 1}
+          #_[ui/GridRow {:columns 1}
            [ui/GridColumn
-            [:h2 "Your subscription status is: " (:status @subscription) " "
-             (when (= (:status @subscription) "active")
-               [ui/Icon {:name "handshake"}]
-               )]]
-           ]
+            [:h2 "Your subscription status is: " (:status @customer) " "
+             (when (= (:status @customer) "active")
+               [ui/Icon {:name "handshake"}])]]]
           [ui/GridRow {:columns 1}
            [ui/GridColumn
             [ui/Segment
-             [ui/CodeMirror {:value   (or (.stringify js/JSON (clj->js @subscription) nil 2) "")
+             [ui/CodeMirror {:value   (or @customer "")
                              :options {:mode      "application/json"
                                        :read-only true}}]
              ]]]]

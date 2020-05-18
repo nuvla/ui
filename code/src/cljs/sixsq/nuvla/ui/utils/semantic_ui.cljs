@@ -82,7 +82,7 @@
 (def FormField (r/adapt-react-class semantic/FormField))
 (def FormGroup (r/adapt-react-class semantic/FormGroup))
 (def FormInput (r/adapt-react-class semantic/FormInput))
-;(def FormRadio (r/adapt-react-class semantic/FormRadio))
+(def FormRadio (r/adapt-react-class semantic/FormRadio))
 (def FormSelect (r/adapt-react-class semantic/FormSelect))
 
 (def Grid (r/adapt-react-class semantic/Grid))

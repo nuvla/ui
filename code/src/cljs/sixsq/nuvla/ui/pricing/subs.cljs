@@ -17,9 +17,9 @@
 
 
 (reg-sub
-  ::subscription
+  ::customer
   (fn [db]
-    (::spec/subscription db)))
+    (::spec/customer db)))
 
 
 (reg-sub

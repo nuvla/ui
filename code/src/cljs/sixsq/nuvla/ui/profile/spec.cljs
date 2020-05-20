@@ -18,7 +18,7 @@
 
 (s/def ::plan-id (s/nilable string?))
 
-(s/def ::processing? boolean?)
+(s/def ::setup-intent any?)
 
 
 (s/def ::db (s/keys :req [::stripe
@@ -26,14 +26,14 @@
                           ::customer
                           ::open-modal
                           ::error-message
-                          ::processing?
-                          ::loading]))
+                          ::loading
+                          ::setup-intent]))
 
 
 (def defaults {::stripe        nil
                ::user          nil
                ::customer      nil
+               ::setup-intent  nil
                ::open-modal    nil
                ::error-message nil
-               ::processing?   false
                ::loading       #{:user :customer}})

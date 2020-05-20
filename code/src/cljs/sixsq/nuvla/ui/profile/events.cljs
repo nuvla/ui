@@ -28,8 +28,9 @@
 
 (reg-event-fx
   ::get-customer
-  (fn [_ [_ id]]
-    {::cimi-api-fx/get [id #(dispatch [::set-customer %])]}))
+  (fn [{db :db} [_ id]]
+    {:db               (update db ::spec/loading disj :create-customer)
+     ::cimi-api-fx/get [id #(dispatch [::set-customer %])]}))
 
 
 (reg-event-fx
@@ -58,8 +59,8 @@
   ::close-modal
   (fn [db _]
     (assoc db ::spec/open-modal nil
-              ::spec/processing? false
-              ::spec/error-message nil)))
+              ::spec/error-message nil
+              ::spec/setup-intent nil)))
 
 
 (reg-event-db
@@ -76,7 +77,7 @@
 
 (reg-event-db
   ::set-user
-  (fn [{:keys [loading] :as db} [_ user]]
+  (fn [{:keys [::spec/loading] :as db} [_ user]]
     (assoc db ::spec/user user
               ::spec/loading (disj loading :user))))
 
@@ -112,32 +113,74 @@
   (fn [{{:keys [::spec/stripe] :as db} :db} [_ data]]
     (when stripe
       {::fx/create-payment-method [stripe data #(dispatch [::set-payment-method-result %])]
-       :db                        (assoc db ::spec/processing? true)})))
+       :db                        (update db ::spec/loading conj :create-payment)})))
 
 
 (reg-event-fx
   ::set-payment-method-result
-  (fn [{db :db} [_ result]]
+  (fn [{:keys [::spec/loading] :as db} [_ result]]
     (js/console.log ::set-payment-method-result result)
     (let [res            (-> result (js->clj :keywordize-keys true))
           error          (:error res)
           payment-method (:paymentMethod res)]
       (if error
         {:db (assoc db ::spec/error-message (:message error)
-                       ::spec/processing? false)}
+                       ::spec/loading (disj loading :create-payment))}
         {:dispatch [::create-customer (:id payment-method)]}))))
+
 
 
 (reg-event-fx
   ::create-customer
-  (fn [_ [_ payment-id]]
-
-    {::cimi-api-fx/add [:customer {:plan-id           "plan_HGQ9iUgnz2ho8e"
+  (fn [{db :db} [_ payment-id]]
+    {:db               (update db ::spec/loading conj :create-customer)
+     ::cimi-api-fx/add [:customer {:plan-id           "plan_HGQ9iUgnz2ho8e"
                                    :plan-item-ids     ["plan_HGQIIWmhYmi45G"
                                                        "plan_HIrgmGboUlLqG9"
                                                        "plan_HGQAXewpgs9NeW"
                                                        "plan_HGQqB0p8h86Ija"]
                                    :payment-method-id payment-id}
                         #(dispatch [::get-customer (:resource-id %)])]}))
+
+
+
+
+(reg-event-fx
+  ::confirm-card-setup
+  (fn [{{:keys [::spec/stripe
+                ::spec/setup-intent] :as db} :db} [_ data]]
+    (when stripe
+      {::fx/confirm-card-setup [stripe (:client-secret setup-intent)
+                                data #(dispatch [::set-confirm-card-setup-result %])]
+       :db                     (update db ::spec/loading conj :confirm-card-setup)})))
+
+
+(reg-event-fx
+  ::set-confirm-card-setup-result
+  (fn [{{:keys [::spec/loading
+                ::spec/customer] :as db} :db} [_ result]]
+    (let [res            (-> result (js->clj :keywordize-keys true))
+          error          (:error res)]
+      (if error
+        {:db (assoc db ::spec/error-message (:message error)
+                       ::spec/loading (disj loading :confirm-card-setup))}
+        {:dispatch-n [[::get-customer (:id customer)]
+                      [::close-modal]]}))))
+
+
+
+(reg-event-db
+  ::set-setup-intent
+  (fn [{:keys [::spec/loading] :as db} [_ setup-itent]]
+    (assoc db ::spec/setup-intent setup-itent
+              ::spec/loading (disj loading :create-setup-intent))))
+
+
+(reg-event-fx
+  ::create-setup-intent
+  (fn [{{:keys [::spec/customer] :as db} :db} _]
+    {:db                     (update db ::spec/loading conj :create-setup-intent)
+     ::cimi-api-fx/operation [(:id customer) "create-setup-intent"
+                              #(dispatch [::set-setup-intent %])]}))
 
 

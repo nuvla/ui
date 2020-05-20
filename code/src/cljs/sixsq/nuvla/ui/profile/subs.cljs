@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.profile.subs
   (:require
     [re-frame.core :refer [dispatch reg-sub subscribe]]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.profile.spec :as spec]))
 
 
@@ -67,11 +68,6 @@
   (fn [db]
     (::spec/stripe db)))
 
-(reg-sub
-  ::processing?
-  (fn [db]
-    (::spec/processing? db)))
-
 
 (reg-sub
   ::subscribe-button-disabled?
@@ -81,3 +77,10 @@
     (or
       loading?
       (some? customer))))
+
+
+(reg-sub
+  ::cannot-create-setup-intent?
+  :<- [::customer]
+  (fn [customer]
+    (not (general-utils/can-operation? "create-setup-intent" customer))))

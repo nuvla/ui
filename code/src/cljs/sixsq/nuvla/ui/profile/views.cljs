@@ -14,6 +14,7 @@
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.spec :as us]
@@ -255,6 +256,27 @@
   (.preventDefault event)
   (when elements
     (dispatch [::events/create-payment-method
+               #js{:payment_method
+                   #js{:type            "sepa_debit"
+                       :sepa_debit      (elements.getElement react-stripe/IbanElement)
+                       :billing_details #js{:name "test"}}}])))
+
+
+(defn handle-setup-intent-credit-card
+  [elements event]
+  (.preventDefault event)
+  (when elements
+    (dispatch [::events/confirm-card-setup
+               #js{:payment_method
+                   #js{:type "card"
+                       :card (elements.getElement react-stripe/CardElement)}}])))
+
+
+(defn handle-setup-intent-sepa-debit
+  [elements event]
+  (.preventDefault event)
+  (when elements
+    (dispatch [::events/confirm-card-setup
                #js{:type            "sepa_debit"
                    :sepa_debit      (elements.getElement react-stripe/IbanElement)
                    :billing_details #js{:name "test"}}])))
@@ -264,13 +286,12 @@
 ;; https://github.com/reagent-project/reagent/blob/master/doc/ReactFeatures.md#hooks
 (defn InternalCheckoutForm
   [elements]
-  (let [className   (r/atom "stripe-input")
-        stripe      (subscribe [::subs/stripe])
-        error       (subscribe [::subs/error-message])
-        processing? (subscribe [::subs/processing?])]
+  (let [className (r/atom "stripe-input")
+        error     (subscribe [::subs/error-message])
+        loading?  (subscribe [::subs/loading? :create-payment])]
     (fn []
       [ui/Form {:error   (boolean @error)
-                :loading @processing?}
+                :loading @loading?}
        [ui/Message {:error   true
                     :header  "Something went wrong"
                     :content @error}]
@@ -323,7 +344,7 @@
                                       (reset! card-info-completed? (.-complete event)))}]
            (when @card-validation-error-message
              [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-message])]]
-         [ui/FormField
+         [ui/FormField {:width 8}
           [:label "IBAN"]
           [IbanElement
            {:className @className
@@ -336,18 +357,7 @@
           (when @card-validation-error-message
             [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-message])]
          )
-       #_[ui/Button {:type     "submit"
-                     :animated "vertical"
-                     :primary  true
-                     :loading  @processing?
-                     :floated  "right"
-                     :disabled (or
-                                 (not @stripe)
-                                 (not @card-info-completed?)
-                                 #_(nil? @plan-id)
-                                 @processing?)}
-          [ui/ButtonContent {:hidden true} [ui/Icon {:name "shop"}]]
-          [ui/ButtonContent {:visible true} "Subscribe"]]])))
+       ])))
 
 
 (defn ReactCheckoutForm []
@@ -361,12 +371,13 @@
 
 (defn SubscribeButton
   []
-  (let [locale      (subscribe [::i18n-subs/locale])
-        stripe      (subscribe [::subs/stripe])
-        processing? (subscribe [::subs/processing?])
-        loading?    (subscribe [::subs/loading?])
-        open?       (subscribe [::subs/modal-open? :subscribe])
-        disabled?   (subscribe [::subs/subscribe-button-disabled?])]
+  (let [locale                  (subscribe [::i18n-subs/locale])
+        stripe                  (subscribe [::subs/stripe])
+        loading-create-payment? (subscribe [::subs/loading? :create-payment])
+        loading-customer?       (subscribe [::subs/loading? :customer])
+        open?                   (subscribe [::subs/modal-open? :subscribe])
+        disabled?               (subscribe [::subs/subscribe-button-disabled?])
+        session                 (subscribe [::session-subs/session])]
     (reset! elements-atom nil)
     (fn []
       [:<>
@@ -391,17 +402,19 @@
                                  (not @elements-atom)
                                  (not @stripe)
                                  (not @card-info-completed?)
-                                 @processing?)}
+                                 @loading-create-payment?)}
           [ui/ButtonContent {:hidden true} [ui/Icon {:name "shop"}]]
           [ui/ButtonContent {:visible true} "Subscribe"]]]]
        [ui/Button {:primary  true
                    :circular true
                    :basic    true
-                   :loading  @loading?
+                   :loading  @loading-customer?
                    :disabled @disabled?
-                   :on-click #(dispatch [::events/open-modal :subscribe])} "Try Nuvla for free for 14 days"]
+                   :on-click (if @session
+                               #(dispatch [::events/open-modal :subscribe])
+                               #(dispatch [::history-events/navigate "sign-up"]))}
+        "Try Nuvla for free for 14 days"]
        ])))
-
 
 
 (defn Subscription
@@ -452,10 +465,127 @@
         ])]))
 
 
+(defn PaymentMethodInputInternal
+  [{:keys [type onChange options] :as props}]
+  (case type
+    "sepa-debit" [IbanElement
+                  {:className "stripe-input"
+                   :on-change onChange
+                   :options   (clj->js options)}]
+    "credit-card" [CardElement {:className "stripe-input"
+                                :on-change onChange}]
+    [:div]))
+
+
+(defn PaymentMethodInputWrapper
+  [props]
+  (let [elements (react-stripe/useElements)]
+    (reset! elements-atom elements)
+    (r/as-element
+      [PaymentMethodInputInternal (js->clj props :keywordize-keys true)])))
+
+
+(def PaymentMethodInputReactClass (r/adapt-react-class PaymentMethodInputWrapper))
+
+(defn PaymentMethodInput
+  [props]
+  (let [locale (subscribe [::i18n-subs/locale])
+        stripe (subscribe [::subs/stripe])]
+    (fn [props]
+      ^{:key @locale}
+      [Elements {:stripe  @stripe
+                 :options {:locale @locale}}
+       [PaymentMethodInputReactClass props]])))
+
+
+(defn AddPaymentMethodButton
+  []
+  (let [stripe                 (subscribe [::subs/stripe])
+        loading-setup-intent?  (subscribe [::subs/loading? :create-setup-intent])
+        loading-confirm-setup? (subscribe [::subs/loading? :confirm-setup-intent])
+        disabled?              (subscribe [::subs/cannot-create-setup-intent?])
+        open?                  (subscribe [::subs/modal-open? :add-payment-method])
+        error                  (subscribe [::subs/error-message])]
+    (reset! elements-atom nil)
+    (fn []
+      [:<>
+       [ui/Modal
+        {:open       @open?
+         :size       "small"
+         :on-close   #(dispatch [::events/close-modal])
+         :close-icon true}
+        [ui/ModalHeader "Add payment method"]
+        [ui/ModalContent
+         [ui/Form {:error (boolean @error)
+                   :loading @loading-confirm-setup?}
+          [ui/Message {:error   true
+                       :header  "Something went wrong"
+                       :content @error}]
+          [ui/FormGroup {:inline true}
+           [:label "Billing Method"]
+           [ui/FormRadio {:label     "Credit Card"
+                          :checked   (= @payment-form "credit-card")
+                          :on-change (ui-callback/value #(reset! payment-form "credit-card"))}]
+           [ui/FormRadio {:label     "Bank Account"
+                          :checked   (= @payment-form "sepa-debit")
+                          :on-change (ui-callback/value #(reset! payment-form "sepa-debit"))}]]
+          [ui/FormField
+           [PaymentMethodInput
+            (cond-> {:type      @payment-form
+                     :on-change (fn [event]
+                                  (reset! card-validation-error-message
+                                          (some-> event .-error .-message))
+                                  (reset! card-info-completed? (.-complete event)))}
+                    (= @payment-form "sepa-debit") (assoc :options {:supportedCountries ["SEPA"]
+                                                                    :placeholderCountry "CH"}))]]]]
+        [ui/ModalActions
+         [ui/Button {:primary  true
+                     :on-click (partial (if (= @payment-form "credit-card")
+                                          handle-setup-intent-credit-card
+                                          handle-setup-intent-sepa-debit) @elements-atom)
+                     :disabled (or
+                                 (not @elements-atom)
+                                 (not @stripe)
+                                 (not @card-info-completed?)
+                                 @loading-setup-intent?)}
+          "Add"]]]
+       [ui/Button {:primary  true
+                   :circular true
+                   :basic    true
+                   :disabled @disabled?
+                   :on-click #(do
+                                (dispatch [::events/create-setup-intent])
+                                (dispatch [::events/open-modal :add-payment-method]))}
+        "Add"]])))
+
+
+(defn PaymentMethods
+  []
+  (let [tr       (subscribe [::i18n-subs/tr])
+        loading? (subscribe [::subs/loading? :customer])]
+    [ui/Segment {:padded  true
+                 :color   "purple"
+                 :loading @loading?
+                 :style   {:height "100%"}}
+     [ui/Header {:as :h2 :dividing true} "Payment Methods"]
+     (if false
+       [:p "Fix me"]
+       [ui/Grid {:text-align     "center"
+                 :vertical-align "middle"
+                 :style          {:height "100%"}}
+        [ui/GridColumn
+         [ui/Header {:as :h3, :icon true, :disabled true}
+          [ui/Icon {:name "payment"}]
+          "Add your first payment method"]
+         [:br]
+         [AddPaymentMethodButton]]])]))
+
+
 (defn Content
   []
   (let [tr        (subscribe [::i18n-subs/tr])
-        cred-pass (subscribe [::subs/credential-password])]
+        cred-pass (subscribe [::subs/credential-password])
+        session   (subscribe [::session-subs/session])]
     (dispatch [::events/init])
     (reset! card-validation-error-message nil)
     (reset! card-info-completed? false)
@@ -473,25 +603,25 @@
           [Session]]
          [ui/GridColumn
           [Subscription]]]
-        [ui/GridRow {:columns 2}
-         [ui/GridColumn
-          [ui/Segment {:padded true
-                       :color  "blue"}
-           [ui/Header {:as :h3 :dividing true} "Usage"]]]
-         [ui/GridColumn
-          [ui/Segment {:padded true
-                       :color  "brown"}
-           [ui/Header {:as :h3 :dividing true} "Next Bill"]]]]
-        [ui/GridRow {:columns 2}
-         [ui/GridColumn
-          [ui/Segment {:padded true
-                       :color  "yellow"}
-           [ui/Header {:as :h3 :dividing true} "Invoices"]]]
-         [ui/GridColumn
-          [ui/Segment {:padded true
-                       :color  "purple"}
-           [ui/Header {:as :h3 :dividing true} "Payment Methods"]]]]]]))
-  )
+        (when @session
+          [:<>
+           [ui/GridRow {:columns 2}
+            [ui/GridColumn
+             [ui/Segment {:padded true
+                          :color  "blue"}
+              [ui/Header {:as :h3 :dividing true} "Usage"]]]
+            [ui/GridColumn
+             [ui/Segment {:padded true
+                          :color  "brown"}
+              [ui/Header {:as :h3 :dividing true} "Next Bill"]]]]
+           [ui/GridRow {:columns 2}
+            [ui/GridColumn
+             [ui/Segment {:padded true
+                          :color  "yellow"}
+              [ui/Header {:as :h3 :dividing true} "Invoices"]]]
+            [ui/GridColumn
+             [PaymentMethods]]]]
+          )]])))
 
 
 (defmethod panel/render :profile

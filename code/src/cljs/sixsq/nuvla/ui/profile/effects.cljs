@@ -22,8 +22,9 @@
 
 
 (reg-fx
-  ::confirm-card-payment
-  (fn [[stripe client-secret callback]]
+  ::confirm-card-setup
+  (fn [[stripe client-secret data callback]]
     (-> stripe
-        (.confirmCardPayment client-secret)
-        (.then (fn [result] (callback result))))))
+        (.confirmCardSetup client-secret data)
+        (.then (fn [result]
+                 (callback result))))))

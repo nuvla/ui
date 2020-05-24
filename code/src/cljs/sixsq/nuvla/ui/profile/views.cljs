@@ -256,10 +256,10 @@
   (.preventDefault event)
   (when elements
     (dispatch [::events/create-payment-method
-               #js{:payment_method
-                   #js{:type            "sepa_debit"
-                       :sepa_debit      (elements.getElement react-stripe/IbanElement)
-                       :billing_details #js{:name "test"}}}])))
+               #js{:type            "sepa_debit"
+                   :sepa_debit      (elements.getElement react-stripe/IbanElement)
+                   :billing_details #js{:name  "test"
+                                        :email "test@example.com"}}])))
 
 
 (defn handle-setup-intent-credit-card
@@ -268,18 +268,17 @@
   (when elements
     (dispatch [::events/confirm-card-setup
                #js{:payment_method
-                   #js{:type "card"
-                       :card (elements.getElement react-stripe/CardElement)}}])))
+                   #js{:card (elements.getElement react-stripe/CardElement)}}])))
 
 
 (defn handle-setup-intent-sepa-debit
   [elements event]
   (.preventDefault event)
   (when elements
-    (dispatch [::events/confirm-card-setup
-               #js{:type            "sepa_debit"
-                   :sepa_debit      (elements.getElement react-stripe/IbanElement)
-                   :billing_details #js{:name "test"}}])))
+    (dispatch [::events/confirm-iban-setup
+               #js{:payment_method
+                   #js{:sepa_debit      (elements.getElement react-stripe/IbanElement)
+                       :billing_details #js{:name "test"}}}])))
 
 
 ;; While not yet hooks support we have to use react components
@@ -420,6 +419,7 @@
 (defn Subscription
   []
   (let [tr          (subscribe [::i18n-subs/tr])
+        locale      (subscribe [::i18n-subs/locale])
         subscrption (subscribe [::subs/subscription])
         loading?    (subscribe [::subs/loading? :customer])]
     [ui/Segment {:padded  true
@@ -432,33 +432,31 @@
         [ui/TableBody
          [ui/TableRow
           [ui/TableCell {:width 5} [:b "Status"]]
-          [ui/TableCell {:width 11} (:status @subscrption)]]
+          [ui/TableCell {:width 11} (str/capitalize (:status @subscrption))]]
          [ui/TableRow
           [ui/TableCell [:b "Start date"]]
-          [ui/TableCell (:start-date @subscrption)]
-          ]
+          [ui/TableCell (some-> @subscrption :start-date (time/time->format "LLL" @locale))]]
          [ui/TableRow
-          [ui/TableCell [:b "Trial period start"]]
-          [ui/TableCell "..."]
-          ]
+          [ui/TableCell [:b "Trial start date"]]
+          [ui/TableCell (some-> @subscrption :trial-start (time/time->format "LLL" @locale))]]
          [ui/TableRow
-          [ui/TableCell [:b "Trial period end"]]
-          [ui/TableCell "..."]
-          ]
+          [ui/TableCell [:b "Trial end date"]]
+          [ui/TableCell (some-> @subscrption :trial-end (time/time->format "LLL" @locale))]]
          [ui/TableRow
           [ui/TableCell [:b "Current period start"]]
-          [ui/TableCell (:current-period-start @subscrption)]
-          ]
+          [ui/TableCell (some-> @subscrption :current-period-start
+                                (time/time->format "LLL" @locale))]]
          [ui/TableRow
           [ui/TableCell [:b "Current period end"]]
-          [ui/TableCell (:current-period-end @subscrption)]
+          [ui/TableCell (some-> @subscrption :current-period-end
+                                (time/time->format "LLL" @locale))]
           ]]]
        [ui/Grid {:text-align     "center"
                  :vertical-align "middle"
                  :style          {:height "100%"}}
         [ui/GridColumn
          [ui/Header {:as :h3, :icon true, :disabled true}
-          [ui/Icon {:name "search"}]
+          [ui/Icon {:name "edit"}]
           "Not subscribed yet"]
          [:br]
          [SubscribeButton]]
@@ -516,7 +514,7 @@
          :close-icon true}
         [ui/ModalHeader "Add payment method"]
         [ui/ModalContent
-         [ui/Form {:error (boolean @error)
+         [ui/Form {:error   (boolean @error)
                    :loading @loading-confirm-setup?}
           [ui/Message {:error   true
                        :header  "Something went wrong"
@@ -552,24 +550,76 @@
        [ui/Button {:primary  true
                    :circular true
                    :basic    true
+                   :size     "small"
                    :disabled @disabled?
                    :on-click #(do
                                 (dispatch [::events/create-setup-intent])
                                 (dispatch [::events/open-modal :add-payment-method]))}
+        [ui/Icon {:name "plus square outline"}]
         "Add"]])))
 
 
 (defn PaymentMethods
   []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::subs/loading? :customer])]
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        loading?            (subscribe [::subs/loading? :payment-methods])
+        cards-bank-accounts (subscribe [::subs/cards-bank-accounts])
+        default             @(subscribe [::subs/default-payment-method])]
     [ui/Segment {:padded  true
                  :color   "purple"
                  :loading @loading?
                  :style   {:height "100%"}}
      [ui/Header {:as :h2 :dividing true} "Payment Methods"]
-     (if false
-       [:p "Fix me"]
+     (js/console.log @cards-bank-accounts)
+     (if @cards-bank-accounts
+       [:<>
+        [ui/Table {:basic "very"}
+         [ui/TableBody
+          (for [{:keys [last4 brand payment-method exp-month exp-year]} @cards-bank-accounts]
+            (let [is-default? (= default payment-method)]
+              ^{:key (str payment-method)}
+              [ui/TableRow
+               [ui/TableCell
+                [ui/Icon {:name (case brand
+                                  "visa" "cc visa"
+                                  "mastercard" "cc mastercard"
+                                  "amex" "cc amex"
+                                  "iban" "building"
+                                  "payment")
+                          :size "large"}]
+                (str/upper-case brand)]
+               [ui/TableCell "•••• " last4 " "
+                (when is-default?
+                  [ui/Label {:size :tiny :circular true :color "blue"} "default"])]
+               (when (and exp-month exp-year)
+                 [ui/TableCell {:style {:color "grey"}}
+                  (str (if (= (count (str exp-month)) 1)
+                         (str "0" exp-month)
+                         exp-month) "/" exp-year)])
+               [ui/TableCell
+                [ui/ButtonGroup {:basic true :size "small" :icon true :floated "right"}
+                 (when-not is-default?
+                   [ui/Popup
+                    {:position "top center"
+                     :content  "Set as default"
+                     :trigger  (r/as-element
+                                 [ui/Button
+                                  {:on-click #(dispatch [::events/set-default-payment-method
+                                                         payment-method])}
+                                  [ui/Icon {:name "pin"}]])}])
+                 [ui/Popup
+                  {:position "top center"
+                   :content  "Delete"
+                   :trigger  (r/as-element [ui/Button
+                                            {:on-click #(dispatch [::events/detach-payment-method
+                                                                   payment-method])}
+                                            [ui/Icon {:name "trash", :color "red"}]])}]]
+                ]]))
+          [ui/TableRow
+           [ui/TableCell {:col-span 4}
+            [AddPaymentMethodButton]
+            ]]
+          ]]]
        [ui/Grid {:text-align     "center"
                  :vertical-align "middle"
                  :style          {:height "100%"}}

@@ -20,50 +20,8 @@
     [sixsq.nuvla.ui.utils.spec :as us]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]))
-
-
-(defn tuple-to-row [[v1 v2]]
-  [ui/TableRow
-   [ui/TableCell {:collapsing true} (str v1)]
-   [ui/TableCell v2]])
-
-
-(def data-to-tuple
-  (juxt (comp name first) (comp values/format-value second)))
-
-
-(defn format-roles
-  [{:keys [roles] :as m}]
-  (assoc m :roles (values/format-collection (sort (str/split roles #"\s+")))))
-
-
-(defn user-as-link
-  [{:keys [user] :as m}]
-  (assoc m :user (values/as-href {:href user})))
-
-
-(def session-keys #{:user :roles :clientIP})
-
-
-(def session-keys-order {:user 1, :clientIP 2, :expiry 3, :roles 4})
-
-
-(defn add-index
-  [[k _ :as entry]]
-  (-> k
-      (session-keys-order 5)
-      (cons entry)))
-
-
-(defn process-session-data
-  [{:keys [expiry] :as data}]
-  (let [locale (subscribe [::i18n-subs/locale])]
-    (->> (select-keys data session-keys)
-         (cons [:expiry (time/remaining expiry @locale)])
-         (map add-index)
-         (sort-by first)
-         (map rest))))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [taoensso.timbre :as log]))
 
 
 ;;; VALIDATION SPEC
@@ -161,36 +119,6 @@
                                       (dissoc :new-password-repeat))]))}]]])))
 
 
-(defn session-info
-  []
-  (let [tr                  (subscribe [::i18n-subs/tr])
-        session             (subscribe [::session-subs/session])
-        credential-password (subscribe [::subs/credential-password])]
-    (fn []
-      [ui/Segment style/basic
-       (when @session
-         (when-not @credential-password
-           (dispatch [::events/get-user]))
-         [cc/metadata
-          {:title       (:identifier @session)
-           :icon        "user"
-           :description (str (@tr [:session-expires]) " "
-                             (-> @session :expiry time/parse-iso8601 time/ago))}
-          (->> @session
-               general-utils/remove-common-attrs
-               user-as-link
-               format-roles
-               process-session-data
-               (map data-to-tuple)
-               (map tuple-to-row))])
-       (when @credential-password
-         [ui/Button {:primary  true
-                     :on-click #(dispatch [::events/open-modal :change-password])}
-          (str/capitalize (@tr [:change-password]))])
-       (when-not @session
-         [:p (@tr [:no-session])])])))
-
-
 (defn Session
   []
   (let [tr      (subscribe [::i18n-subs/tr])
@@ -222,8 +150,6 @@
           [ui/Icon {:name "search"}]
           "No session"]]
         ])]))
-
-
 
 
 (def Elements (r/adapt-react-class react-stripe/Elements))
@@ -333,17 +259,16 @@
                        :checked   (= @payment-form "sepa-debit")
                        :on-change (ui-callback/value #(reset! payment-form "sepa-debit"))}]]
        (if (= @payment-form "credit-card")
-         [ui/FormGroup
-          [ui/FormField {:width 8}
-           [:label "Card Number"]
-           [CardElement {:className @className
-                         :on-change (fn [event]
-                                      (reset! card-validation-error-message
-                                              (some-> event .-error .-message))
-                                      (reset! card-info-completed? (.-complete event)))}]
-           (when @card-validation-error-message
-             [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-message])]]
-         [ui/FormField {:width 8}
+         [ui/FormField {:width 9}
+          [:label "Card Number"]
+          [CardElement {:className @className
+                        :on-change (fn [event]
+                                     (reset! card-validation-error-message
+                                             (some-> event .-error .-message))
+                                     (reset! card-info-completed? (.-complete event)))}]
+          (when @card-validation-error-message
+            [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-message])]
+         [ui/FormField {:width 9}
           [:label "IBAN"]
           [IbanElement
            {:className @className
@@ -387,7 +312,7 @@
          :close-icon true}
         [ui/ModalHeader "Subscribe"]
         [ui/ModalContent
-         ^{:key @locale}
+         ^{:key (str @locale @stripe)}
          [Elements {:stripe  @stripe
                     :options {:locale @locale}}
           [CheckoutForm]]]
@@ -418,49 +343,53 @@
 
 (defn Subscription
   []
-  (let [tr          (subscribe [::i18n-subs/tr])
-        locale      (subscribe [::i18n-subs/locale])
-        subscrption (subscribe [::subs/subscription])
-        loading?    (subscribe [::subs/loading? :customer])]
-    [ui/Segment {:padded  true
-                 :color   "red"
-                 :loading @loading?
-                 :style   {:height "100%"}}
-     [ui/Header {:as :h2 :dividing true} "Subscription"]
-     (if @subscrption
-       [ui/Table {:basic "very"}
-        [ui/TableBody
-         [ui/TableRow
-          [ui/TableCell {:width 5} [:b "Status"]]
-          [ui/TableCell {:width 11} (str/capitalize (:status @subscrption))]]
-         [ui/TableRow
-          [ui/TableCell [:b "Start date"]]
-          [ui/TableCell (some-> @subscrption :start-date (time/time->format "LLL" @locale))]]
-         [ui/TableRow
-          [ui/TableCell [:b "Trial start date"]]
-          [ui/TableCell (some-> @subscrption :trial-start (time/time->format "LLL" @locale))]]
-         [ui/TableRow
-          [ui/TableCell [:b "Trial end date"]]
-          [ui/TableCell (some-> @subscrption :trial-end (time/time->format "LLL" @locale))]]
-         [ui/TableRow
-          [ui/TableCell [:b "Current period start"]]
-          [ui/TableCell (some-> @subscrption :current-period-start
-                                (time/time->format "LLL" @locale))]]
-         [ui/TableRow
-          [ui/TableCell [:b "Current period end"]]
-          [ui/TableCell (some-> @subscrption :current-period-end
-                                (time/time->format "LLL" @locale))]
-          ]]]
-       [ui/Grid {:text-align     "center"
-                 :vertical-align "middle"
-                 :style          {:height "100%"}}
-        [ui/GridColumn
-         [ui/Header {:as :h3, :icon true, :disabled true}
-          [ui/Icon {:name "edit"}]
-          "Not subscribed yet"]
-         [:br]
-         [SubscribeButton]]
-        ])]))
+  (let [tr           (subscribe [::i18n-subs/tr])
+        locale       (subscribe [::i18n-subs/locale])
+        subscription (subscribe [::subs/subscription])
+        loading?     (subscribe [::subs/loading? :subscription])]
+    (fn []
+      (let [{:keys [status start-date trial-start trial-end
+                    current-period-start current-period-end]} @subscription]
+        [ui/Segment {:padded  true
+                     :color   "red"
+                     :loading @loading?
+                     :style   {:height "100%"}}
+         [ui/Header {:as :h2 :dividing true} "Subscription"]
+         (if @subscription
+           [ui/Table {:basic "very"}
+            [ui/TableBody
+             [ui/TableRow
+              [ui/TableCell {:width 5} [:b "Status"]]
+              [ui/TableCell {:width 11} (str/capitalize status)]]
+             [ui/TableRow
+              [ui/TableCell [:b "Start date"]]
+              [ui/TableCell (some-> start-date (time/time->format "LLL" @locale))]]
+             (when (= status "trialing")
+               [:<>
+                [ui/TableRow
+                 [ui/TableCell [:b "Trial start date"]]
+                 [ui/TableCell (some-> trial-start
+                                       (time/time->format "LLL" @locale))]]
+                [ui/TableRow
+                 [ui/TableCell [:b "Trial end date"]]
+                 [ui/TableCell (some-> trial-end (time/time->format "LLL" @locale))]]])
+             [ui/TableRow
+              [ui/TableCell [:b "Current period start"]]
+              [ui/TableCell (some-> current-period-start (time/time->format "LLL" @locale))]]
+             [ui/TableRow
+              [ui/TableCell [:b "Current period end"]]
+              [ui/TableCell (some-> current-period-end (time/time->format "LLL" @locale))]
+              ]]]
+           [ui/Grid {:text-align     "center"
+                     :vertical-align "middle"
+                     :style          {:height "100%"}}
+            [ui/GridColumn
+             [ui/Header {:as :h3, :icon true, :disabled true}
+              [ui/Icon {:name "edit"}]
+              "Not subscribed yet"]
+             [:br]
+             [SubscribeButton]]
+            ])]))))
 
 
 (defn PaymentMethodInputInternal
@@ -490,7 +419,7 @@
   (let [locale (subscribe [::i18n-subs/locale])
         stripe (subscribe [::subs/stripe])]
     (fn [props]
-      ^{:key @locale}
+      ^{:key (str @locale @stripe)}
       [Elements {:stripe  @stripe
                  :options {:locale @locale}}
        [PaymentMethodInputReactClass props]])))
@@ -527,7 +456,7 @@
            [ui/FormRadio {:label     "Bank Account"
                           :checked   (= @payment-form "sepa-debit")
                           :on-change (ui-callback/value #(reset! payment-form "sepa-debit"))}]]
-          [ui/FormField
+          [ui/FormField {:width 9}
            [PaymentMethodInput
             (cond-> {:type      @payment-form
                      :on-change (fn [event]
@@ -563,6 +492,7 @@
   []
   (let [tr                  (subscribe [::i18n-subs/tr])
         loading?            (subscribe [::subs/loading? :payment-methods])
+        customer            @(subscribe [::subs/customer])
         cards-bank-accounts (subscribe [::subs/cards-bank-accounts])
         default             @(subscribe [::subs/default-payment-method])]
     [ui/Segment {:padded  true
@@ -615,17 +545,18 @@
           [ui/TableRow
            [ui/TableCell {:col-span 4}
             [AddPaymentMethodButton]
-            ]]
-          ]]]
+            ]]]]]
        [ui/Grid {:text-align     "center"
                  :vertical-align "middle"
                  :style          {:height "100%"}}
         [ui/GridColumn
          [ui/Header {:as :h3, :icon true, :disabled true}
           [ui/Icon {:name "payment"}]
-          "Add your first payment method"]
-         [:br]
-         [AddPaymentMethodButton]]])]))
+          "Payment method"]
+         (when customer
+           [:<>
+            [:br]
+            [AddPaymentMethodButton]])]])]))
 
 
 (defn format-currency
@@ -649,8 +580,9 @@
      (if upcoming-invoice
        [ui/Table
         [ui/TableHeader
-         [ui/TableHeaderCell "Description"]
-         [ui/TableHeaderCell "Amount"]]
+         [ui/TableRow
+          [ui/TableHeaderCell "Description"]
+          [ui/TableHeaderCell "Amount"]]]
         [ui/TableBody
          (for [[period lines] upcoming-lines]
            ^{:key (str period)}
@@ -666,11 +598,11 @@
                [ui/TableCell description]
                [ui/TableCell
                 (format-currency currency amount)]])])]
-        [ui/TableFooter {:full-width true}
+        [ui/TableFooter
          [ui/TableRow
-          [ui/TableHeaderCell "Total"]
-          [ui/TableHeaderCell
-           (format-currency (:currency upcoming-invoice) (:total upcoming-invoice))]]]]
+          [ui/TableCell [:b "Total"]]
+          [ui/TableCell
+           [:b (format-currency (:currency upcoming-invoice) (:total upcoming-invoice))]]]]]
        [ui/Grid {:text-align     "center"
                  :vertical-align "middle"
                  :style          {:height "100%"}}
@@ -683,35 +615,38 @@
 (defn Invoices
   []
   (let [tr       (subscribe [::i18n-subs/tr])
-        locale   (subscribe [::i18n-subs/locale])
-        loading? (subscribe [::subs/loading? :invoices])
+        locale   @(subscribe [::i18n-subs/locale])
+        loading? @(subscribe [::subs/loading? :invoices])
         invoices @(subscribe [::subs/invoices])]
     [ui/Segment {:padded  true
                  :color   "yellow"
-                 :loading @loading?
+                 :loading loading?
                  :style   {:height "100%"}}
      [ui/Header {:as :h2 :dividing true} "Invoices"]
      (if invoices
        [ui/Table
         [ui/TableHeader
-         [ui/TableHeaderCell "Number"]
-         [ui/TableHeaderCell "Status"]
-         [ui/TableHeaderCell "Due date"]
-         [ui/TableHeaderCell "Total"]
-         [ui/TableHeaderCell "Download"]]
+         [ui/TableRow
+          [ui/TableHeaderCell "Number"]
+          [ui/TableHeaderCell "Created"]
+          [ui/TableHeaderCell "Status"]
+          [ui/TableHeaderCell "Due date"]
+          [ui/TableHeaderCell "Total"]
+          [ui/TableHeaderCell "Download"]]]
         [ui/TableBody
          (for [{:keys [number created status due-date invoice-pdf currency total]} invoices]
            ^{:key (str number)}
            [ui/TableRow
             [ui/TableCell number]
+            [ui/TableCell (some-> created (time/time->format "LL" locale))]
             [ui/TableCell (str/capitalize status)]
-            [ui/TableCell (if due-date (some-> created (time/time->format "LLL" locale)) "-")]
+            [ui/TableCell (if due-date (some-> due-date (time/time->format "LL" locale)) "-")]
             [ui/TableCell (format-currency currency total)]
             [ui/TableCell
              (when invoice-pdf
-               [ui/Button {:basic   true
-                           :icon    "download"
-                           :href    invoice-pdf}])]])]]
+               [ui/Button {:basic true
+                           :icon  "download"
+                           :href  invoice-pdf}])]])]]
        [ui/Grid {:text-align     "center"
                  :vertical-align "middle"
                  :style          {:height "100%"}}
@@ -720,49 +655,51 @@
           [ui/Icon {:name "calendar check"}]
           "Not any"]]])]))
 
+
 (defn Content
   []
   (let [tr        (subscribe [::i18n-subs/tr])
         cred-pass (subscribe [::subs/credential-password])
-        session   (subscribe [::session-subs/session])]
+        session   (subscribe [::session-subs/session])
+        is-admin? (subscribe [::session-subs/is-admin?])]
     (dispatch [::events/init])
     (reset! card-validation-error-message nil)
     (reset! card-info-completed? false)
     (fn []
-      [:<>
-       [uix/PageHeader "user" "Profile"]
-       [ui/Menu {:borderless true}
-        [ui/MenuItem {:disabled (nil? @cred-pass)
-                      :content  (str/capitalize (@tr [:change-password]))
-                      :on-click #(dispatch [::events/open-modal :change-password])}]]
-       [ui/Grid {:stackable true}
+      (let [show-sections (and @session (not @is-admin?))]
+        [:<>
+         [uix/PageHeader "user" "Profile"]
+         [ui/Menu {:borderless true}
+          [ui/MenuItem {:disabled (nil? @cred-pass)
+                        :content  (str/capitalize (@tr [:change-password]))
+                        :on-click #(dispatch [::events/open-modal :change-password])}]]
+         [ui/Grid {:stackable true}
 
-        [ui/GridRow {:columns 2}
-         [ui/GridColumn
-          [Session]]
-         [ui/GridColumn
-          [Subscription]]]
-        (when @session
-          [:<>
-           [ui/GridRow {:columns 2}
-            [ui/GridColumn
-             [UpcomingInvoice]]
-            [ui/GridColumn
-             [Invoices]]]
-           [ui/GridRow {:columns 2}
-            [ui/GridColumn
-             [PaymentMethods]]
-            [ui/GridColumn
-             [ui/Segment {:padded true
-                          :color  "blue"}
-              [ui/Header {:as :h3 :dividing true} "Usage"]]]
-            ]]
-          )]])))
+          [ui/GridRow {:columns 2}
+           [ui/GridColumn
+            [Session]]
+           [ui/GridColumn
+            (when show-sections
+              [Subscription])]]
+          (when show-sections
+            [:<>
+             [ui/GridRow {:columns 2}
+              [ui/GridColumn
+               [UpcomingInvoice]]
+              [ui/GridColumn
+               [Invoices]]]
+             [ui/GridRow {:columns 2}
+              [ui/GridColumn
+               [PaymentMethods]]
+              [ui/GridColumn
+               [ui/Segment {:padded true
+                            :color  "blue"}
+                [ui/Header {:as :h3 :dividing true} "Usage"]]]]]
+            )]]))))
 
 
 (defmethod panel/render :profile
   [path]
   [:div
-   #_[session-info]
    [Content]
    [modal-change-password]])

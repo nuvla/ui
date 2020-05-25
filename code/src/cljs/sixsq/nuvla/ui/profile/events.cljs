@@ -7,21 +7,27 @@
     [sixsq.nuvla.ui.profile.effects :as fx]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.profile.spec :as spec]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.session.spec :as session-spec]
     [sixsq.nuvla.ui.utils.response :as response]))
+
 
 (reg-event-fx
   ::init
   (fn [{db :db} _]
     {:db              (merge db spec/defaults)
-     ::fx/load-stripe ["pk_test_Wo4so0qa2wqn66052FlvyMpl00MhPPQdAG"
-                       #(dispatch [::load-stripe-done %])]
-     :dispatch-n      [[::get-user]
+     :dispatch-n      [[::load-stripe]
+                       [::get-user]
                        [::search-existing-customer]]}))
 
 
+(reg-event-fx
+  ::load-stripe
+  (fn [{{:keys [::main-spec/config] :as db} :db} _]
+    {::fx/load-stripe [(:stripe config) #(dispatch [::stripe-loaded %])]}))
+
 (reg-event-db
-  ::load-stripe-done
+  ::stripe-loaded
   (fn [db [_ stripe]]
     (assoc db ::spec/stripe stripe)))
 

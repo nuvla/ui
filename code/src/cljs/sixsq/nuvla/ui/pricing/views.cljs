@@ -10,6 +10,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.pricing.events :as events]
+    [sixsq.nuvla.ui.profile.events :as profile-event]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.pricing.subs :as subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -67,77 +68,79 @@
 
 (defn Pricing
   []
-  [ui/Segment style/basic
-   [ui/CardGroup {:centered true}
-    [PlanComp {:id         "plan_Gx4S6VYf9cbfRK"
-               :title      "Paper plane"
-               :subtitle   "Pay as you go"
-               :color      "olive"
-               :logo       "paper plane"
-               :first      true
-               :nb-number  "Up to 99"
-               :nb-price   "€ 50.00"
-               :dep-number "Up to 999"
-               :dep-price  "€ 6.00"
-               }]
-    [PlanComp {:id         "plan_Gx4S6VYf9cbfRK2"
-               :title      "Air plane"
-               :subtitle   "20% Discount"
-               :color      "yellow"
-               :logo       "plane"
-               :nb-number  "From 100"
-               :nb-price   "€ 40.00"
-               :dep-number "From 1'000"
-               :dep-price  "€ 4.80"}]
-    [PlanComp {:id         "plan_Gx4S6VYf9cbfRK3"
-               :title      "Rocket"
-               :subtitle   "35% Discount"
-               :color      "orange"
-               :logo       "rocket"
-               :nb-number  "From 500"
-               :nb-price   "€ 32.50"
-               :dep-number "From 5'000"
-               :dep-price  "€ 3.90"}]
-    [PlanComp {:id         "plan_Gx4S6VYf9cbfRK4"
-               :title      "Starship"
-               :subtitle   "43% Discount"
-               :color      "red"
-               :logo       "space shuttle"
-               :nb-number  "From 1'000"
-               :nb-price   "€ 28.50"
-               :dep-number "From 10'000"
-               :dep-price  "€ 3.42"}]]
+  (dispatch [::profile-event/load-stripe])
+  (fn []
+    [ui/Segment style/basic
+    [ui/CardGroup {:centered true}
+     [PlanComp {:id         "plan_Gx4S6VYf9cbfRK"
+                :title      "Paper plane"
+                :subtitle   "Pay as you go"
+                :color      "olive"
+                :logo       "paper plane"
+                :first      true
+                :nb-number  "Up to 99"
+                :nb-price   "€ 50.00"
+                :dep-number "Up to 999"
+                :dep-price  "€ 6.00"
+                }]
+     [PlanComp {:id         "plan_Gx4S6VYf9cbfRK2"
+                :title      "Air plane"
+                :subtitle   "20% Discount"
+                :color      "yellow"
+                :logo       "plane"
+                :nb-number  "From 100"
+                :nb-price   "€ 40.00"
+                :dep-number "From 1'000"
+                :dep-price  "€ 4.80"}]
+     [PlanComp {:id         "plan_Gx4S6VYf9cbfRK3"
+                :title      "Rocket"
+                :subtitle   "35% Discount"
+                :color      "orange"
+                :logo       "rocket"
+                :nb-number  "From 500"
+                :nb-price   "€ 32.50"
+                :dep-number "From 5'000"
+                :dep-price  "€ 3.90"}]
+     [PlanComp {:id         "plan_Gx4S6VYf9cbfRK4"
+                :title      "Starship"
+                :subtitle   "43% Discount"
+                :color      "red"
+                :logo       "space shuttle"
+                :nb-number  "From 1'000"
+                :nb-price   "€ 28.50"
+                :dep-number "From 10'000"
+                :dep-price  "€ 3.42"}]]
 
-   [ui/Grid {:centered true, :stackable true}
-    [ui/GridRow {:vertical-align "middle"}
-     [ui/GridColumn {:width 10}
-      [ui/Table {:attached "top", :striped true, :text-align "center"}
-       [ui/TableBody
-        [ui/TableRow
-         [ui/TableCell {:row-span 3, :width 2} [:h4 "Support"]]
-         [ui/TableCell {:width 2} [:h5 "Bronze"]]
-         [ui/TableCell {:width 12} "included"]]
-        [ui/TableRow
-         [ui/TableCell [:h5 "Silver"]]
-         [ui/TableCell {:style {:font-style "italic"}} "contact us"]]
-        [ui/TableRow
-         [ui/TableCell [:h5 "Gold"]]
-         [ui/TableCell {:style {:font-style "italic"}} "contact us"]]]]
-      [ui/Table {:attached "bottom", :striped true, :text-align "center"}
-       [ui/TableBody
-        [ui/TableRow
-         [ui/TableCell {:row-span 2, :width 2} [:h4 "VPN"]]
-         [ui/TableCell {:width 2} [:h5 "1st"]]
-         [ui/TableCell {:width 12, :style {:font-style "italic"}} "included"]]
-        [ui/TableRow
-         [ui/TableCell [:h5 "Additional"]]
-         [ui/TableCell "€ 5.00 per month, each"]]]]]
-     [ui/GridColumn {:width 5, :text-align "center"}
-      ^{:key (random-uuid)}
-      [profile-views/SubscribeButton]
-      ]]]
+    [ui/Grid {:centered true, :stackable true}
+     [ui/GridRow {:vertical-align "middle"}
+      [ui/GridColumn {:width 10}
+       [ui/Table {:attached "top", :striped true, :text-align "center"}
+        [ui/TableBody
+         [ui/TableRow
+          [ui/TableCell {:row-span 3, :width 2} [:h4 "Support"]]
+          [ui/TableCell {:width 2} [:h5 "Bronze"]]
+          [ui/TableCell {:width 12} "included"]]
+         [ui/TableRow
+          [ui/TableCell [:h5 "Silver"]]
+          [ui/TableCell {:style {:font-style "italic"}} "contact us"]]
+         [ui/TableRow
+          [ui/TableCell [:h5 "Gold"]]
+          [ui/TableCell {:style {:font-style "italic"}} "contact us"]]]]
+       [ui/Table {:attached "bottom", :striped true, :text-align "center"}
+        [ui/TableBody
+         [ui/TableRow
+          [ui/TableCell {:row-span 2, :width 2} [:h4 "VPN"]]
+          [ui/TableCell {:width 2} [:h5 "1st"]]
+          [ui/TableCell {:width 12, :style {:font-style "italic"}} "included"]]
+         [ui/TableRow
+          [ui/TableCell [:h5 "Additional"]]
+          [ui/TableCell "€ 5.00 per month, each"]]]]]
+      [ui/GridColumn {:width 5, :text-align "center"}
+       ^{:key (random-uuid)}
+       [profile-views/SubscribeButton]
+       ]]]
 
-   ])
+    ]))
 
 
 (defmethod panel/render :pricing

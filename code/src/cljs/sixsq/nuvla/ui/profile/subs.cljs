@@ -26,9 +26,53 @@
 
 (reg-sub
   ::subscription
-  :<- [::customer]
-  (fn [customer]
-    (:subscription customer)))
+  (fn [db]
+    (::spec/subscription db)))
+
+
+(reg-sub
+  ::payment-methods
+  (fn [db]
+    (::spec/payment-methods db)))
+
+
+(reg-sub
+  ::cards-bank-accounts
+  :<- [::payment-methods]
+  (fn [payment-methods]
+    (let [{:keys [cards bank-accounts]} payment-methods]
+      (->> (concat cards (map #(assoc % :brand "iban") bank-accounts))
+           (sort-by (juxt :exp-year :exp-month :payment-method))
+           seq))))
+
+
+(reg-sub
+  ::default-payment-method
+  :<- [::payment-methods]
+  (fn [payment-methods]
+    (:default-payment-method payment-methods)))
+
+
+(reg-sub
+  ::upcoming-invoice
+  (fn [db]
+    (::spec/upcoming-invoice db)))
+
+
+(reg-sub
+  ::upcoming-invoice-lines
+  :<- [::upcoming-invoice]
+  (fn [upcoming-invoice]
+    (->> upcoming-invoice
+         :lines
+         (group-by :period)
+         (sort-by #(-> % first :start)))))
+
+
+(reg-sub
+  ::invoices
+  (fn [db]
+    (::spec/invoices db)))
 
 
 (reg-sub
@@ -72,7 +116,7 @@
 (reg-sub
   ::subscribe-button-disabled?
   :<- [::customer]
-  :<- [::loading? :customer]
+  :<- [::loading? :subscription]
   (fn [[customer loading?]]
     (or
       loading?

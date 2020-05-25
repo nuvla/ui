@@ -570,7 +570,6 @@
                  :loading @loading?
                  :style   {:height "100%"}}
      [ui/Header {:as :h2 :dividing true} "Payment Methods"]
-     (js/console.log @cards-bank-accounts)
      (if @cards-bank-accounts
        [:<>
         [ui/Table {:basic "very"}
@@ -591,11 +590,9 @@
                [ui/TableCell "•••• " last4 " "
                 (when is-default?
                   [ui/Label {:size :tiny :circular true :color "blue"} "default"])]
-               (when (and exp-month exp-year)
-                 [ui/TableCell {:style {:color "grey"}}
-                  (str (if (= (count (str exp-month)) 1)
-                         (str "0" exp-month)
-                         exp-month) "/" exp-year)])
+               [ui/TableCell {:style {:color "grey"}}
+                (when (and exp-month exp-year)
+                  (str (general-utils/format "%02d" exp-month) "/" exp-year))]
                [ui/TableCell
                 [ui/ButtonGroup {:basic true :size "small" :icon true :floated "right"}
                  (when-not is-default?
@@ -631,6 +628,98 @@
          [AddPaymentMethodButton]]])]))
 
 
+(defn format-currency
+  [currency amount]
+  (str (if (= currency "eur") "€" currency)
+       " " (general-utils/format "%.2f" amount)))
+
+
+(defn UpcomingInvoice
+  []
+  (let [tr               (subscribe [::i18n-subs/tr])
+        locale           @(subscribe [::i18n-subs/locale])
+        loading?         (subscribe [::subs/loading? :upcoming-invoice])
+        upcoming-invoice @(subscribe [::subs/upcoming-invoice])
+        upcoming-lines   @(subscribe [::subs/upcoming-invoice-lines])]
+    [ui/Segment {:padded  true
+                 :color   "brown"
+                 :loading @loading?
+                 :style   {:height "100%"}}
+     [ui/Header {:as :h2 :dividing true} "Upcoming Invoice"]
+     (if upcoming-invoice
+       [ui/Table
+        [ui/TableHeader
+         [ui/TableHeaderCell "Description"]
+         [ui/TableHeaderCell "Amount"]]
+        [ui/TableBody
+         (for [[period lines] upcoming-lines]
+           ^{:key (str period)}
+           [:<>
+            [ui/TableRow
+             [ui/TableCell {:col-span 2, :style {:color "grey"}}
+              (str (some-> period :start (time/time->format "LL" locale))
+                   " - "
+                   (some-> period :end (time/time->format "LL" locale)))]]
+            (for [{:keys [description amount currency] :as line} lines]
+              ^{:key (str period description)}
+              [ui/TableRow
+               [ui/TableCell description]
+               [ui/TableCell
+                (format-currency currency amount)]])])]
+        [ui/TableFooter {:full-width true}
+         [ui/TableRow
+          [ui/TableHeaderCell "Total"]
+          [ui/TableHeaderCell
+           (format-currency (:currency upcoming-invoice) (:total upcoming-invoice))]]]]
+       [ui/Grid {:text-align     "center"
+                 :vertical-align "middle"
+                 :style          {:height "100%"}}
+        [ui/GridColumn
+         [ui/Header {:as :h3, :icon true, :disabled true}
+          [ui/Icon {:name "calendar"}]
+          "Not any"]]])]))
+
+
+(defn Invoices
+  []
+  (let [tr       (subscribe [::i18n-subs/tr])
+        locale   (subscribe [::i18n-subs/locale])
+        loading? (subscribe [::subs/loading? :invoices])
+        invoices @(subscribe [::subs/invoices])]
+    [ui/Segment {:padded  true
+                 :color   "yellow"
+                 :loading @loading?
+                 :style   {:height "100%"}}
+     [ui/Header {:as :h2 :dividing true} "Invoices"]
+     (if invoices
+       [ui/Table
+        [ui/TableHeader
+         [ui/TableHeaderCell "Number"]
+         [ui/TableHeaderCell "Status"]
+         [ui/TableHeaderCell "Due date"]
+         [ui/TableHeaderCell "Total"]
+         [ui/TableHeaderCell "Download"]]
+        [ui/TableBody
+         (for [{:keys [number created status due-date invoice-pdf currency total]} invoices]
+           ^{:key (str number)}
+           [ui/TableRow
+            [ui/TableCell number]
+            [ui/TableCell (str/capitalize status)]
+            [ui/TableCell (if due-date (some-> created (time/time->format "LLL" locale)) "-")]
+            [ui/TableCell (format-currency currency total)]
+            [ui/TableCell
+             (when invoice-pdf
+               [ui/Button {:basic   true
+                           :icon    "download"
+                           :href    invoice-pdf}])]])]]
+       [ui/Grid {:text-align     "center"
+                 :vertical-align "middle"
+                 :style          {:height "100%"}}
+        [ui/GridColumn
+         [ui/Header {:as :h3, :icon true, :disabled true}
+          [ui/Icon {:name "calendar check"}]
+          "Not any"]]])]))
+
 (defn Content
   []
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -657,20 +746,17 @@
           [:<>
            [ui/GridRow {:columns 2}
             [ui/GridColumn
+             [UpcomingInvoice]]
+            [ui/GridColumn
+             [Invoices]]]
+           [ui/GridRow {:columns 2}
+            [ui/GridColumn
+             [PaymentMethods]]
+            [ui/GridColumn
              [ui/Segment {:padded true
                           :color  "blue"}
               [ui/Header {:as :h3 :dividing true} "Usage"]]]
-            [ui/GridColumn
-             [ui/Segment {:padded true
-                          :color  "brown"}
-              [ui/Header {:as :h3 :dividing true} "Next Bill"]]]]
-           [ui/GridRow {:columns 2}
-            [ui/GridColumn
-             [ui/Segment {:padded true
-                          :color  "yellow"}
-              [ui/Header {:as :h3 :dividing true} "Invoices"]]]
-            [ui/GridColumn
-             [PaymentMethods]]]]
+            ]]
           )]])))
 
 

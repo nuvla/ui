@@ -3,7 +3,9 @@
     ["js-yaml" :as js-yaml]
     [clojure.set :as set]
     [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [goog.string :as gstring]
+    [goog.string.format]))
 
 
 (defn str->int
@@ -282,3 +284,8 @@
 (defn mbytes->gbytes
   [mb]
   (/ mb 1024))
+
+
+(defn format
+  [fmt v]
+  (gstring/format fmt v))

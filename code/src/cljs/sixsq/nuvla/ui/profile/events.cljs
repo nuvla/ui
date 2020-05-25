@@ -57,6 +57,8 @@
                            ::spec/loading (disj loading :customer))}
             customer (assoc :dispatch-n [[::get-subscription]
                                          [::list-payment-methods]
+                                         [::upcoming-invoice]
+                                         [::list-invoices]
                                          [::close-modal]]))))
 
 
@@ -71,7 +73,6 @@
 (reg-event-fx
   ::get-subscription
   (fn [{{:keys [::spec/customer] :as db} :db} _]
-    (js/console.log ::get-subscription)
     {:db                     (update db ::spec/loading conj :subscription)
      ::cimi-api-fx/operation [(:id customer) "get-subscription"
                               #(dispatch [::set-subscription %])]}))
@@ -80,7 +81,6 @@
 (reg-event-db
   ::set-subscription
   (fn [{:keys [::spec/loading] :as db} [_ subscription]]
-    (js/console.log ::set-subscription)
     (assoc db ::spec/subscription subscription
               ::spec/loading (disj loading :subscription))))
 
@@ -98,6 +98,36 @@
   (fn [{:keys [::spec/loading] :as db} [_ payment-methods]]
     (assoc db ::spec/payment-methods payment-methods
               ::spec/loading (disj loading :payment-methods))))
+
+
+(reg-event-fx
+  ::upcoming-invoice
+  (fn [{{:keys [::spec/customer] :as db} :db} _]
+    {:db                     (update db ::spec/loading conj :upcoming-invoice)
+     ::cimi-api-fx/operation [(:id customer) "upcoming-invoice"
+                              #(dispatch [::set-upcoming-invoice %])]}))
+
+
+(reg-event-db
+  ::set-upcoming-invoice
+  (fn [{:keys [::spec/loading] :as db} [_ upcoming-invoice]]
+    (assoc db ::spec/upcoming-invoice upcoming-invoice
+              ::spec/loading (disj loading :upcoming-invoice))))
+
+
+(reg-event-fx
+  ::list-invoices
+  (fn [{{:keys [::spec/customer] :as db} :db} _]
+    {:db                     (update db ::spec/loading conj :invoices)
+     ::cimi-api-fx/operation [(:id customer) "list-invoices"
+                              #(dispatch [::set-invoices %])]}))
+
+
+(reg-event-db
+  ::set-invoices
+  (fn [{:keys [::spec/loading] :as db} [_ invoices]]
+    (assoc db ::spec/invoices invoices
+              ::spec/loading (disj loading :invoices))))
 
 
 (reg-event-db
@@ -156,7 +186,6 @@
 (reg-event-fx
   ::set-payment-method-result
   (fn [{{:keys [::spec/loading] :as db} :db} [_ result]]
-    (js/console.log ::set-payment-method-result result)
     (let [res            (-> result (js->clj :keywordize-keys true))
           error          (:error res)
           payment-method (:paymentMethod res)]
@@ -199,6 +228,7 @@
         {:db (assoc db ::spec/error-message (:message error)
                        ::spec/loading (disj loading :confirm-card-setup))}
         {:dispatch-n [[::list-payment-methods]
+                      [::upcoming-invoice]
                       [::close-modal]]}))))
 
 

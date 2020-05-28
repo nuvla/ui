@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.session.sign-up-views
   (:require
     [cljs.spec.alpha :as s]
+    [reagent.core :as r]
     [clojure.string :as str]
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
@@ -8,10 +9,12 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.session.components :as comp]
     [sixsq.nuvla.ui.session.events :as events]
+    [sixsq.nuvla.ui.profile.views :as profile-views]
     [sixsq.nuvla.ui.session.subs :as subs]
     [sixsq.nuvla.ui.session.utils :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.spec :as us]))
+    [sixsq.nuvla.ui.utils.spec :as us]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 ;; VALIDATION SPEC
 (s/def ::email (s/and string? us/email?))
@@ -46,7 +49,15 @@
         server-redirect-uri        (subscribe [::subs/server-redirect-uri])
         callback-msg-on-validation (js/encodeURI "signup-validation-success")
         github-template?           (subscribe [::subs/user-template-exist?
-                                               "user-template/nuvla"])]
+                                               "user-template/nuvla"])
+        create-customer            (r/atom false)
+        form-customer-conf         {:form-spec    ::profile-views/customer
+                                    :names->value {:fullname       ""
+                                                   :street-address ""
+                                                   :city           ""
+                                                   :country        ""
+                                                   :postal-code    ""}}
+        form-customer              (fv/init-form form-customer-conf)]
     (fn []
       [comp/RightPanel
        {:title        (@tr [:create-an])
@@ -79,16 +90,38 @@
                                        :type      "password"
                                        :on-change (partial fv/event->names->value! form)
                                        :on-blur   (partial fv/event->show-message form)
-                                       :error     (fv/?show-message form :password-repeat spec->msg)}]]]
+                                       :error     (fv/?show-message
+                                                    form :password-repeat spec->msg)}]]
+
+                       [ui/FormCheckbox {:label     "Start my trial now"
+                                         :on-change (ui-callback/checked
+                                                      #(reset! create-customer %))}]
+                       (when @create-customer
+                         [profile-views/CustomerFormFields form-customer])]
         :submit-text  (@tr [:sign-up])
-        :submit-fn    #(when (fv/validate-form-and-show? form)
-                         (dispatch [::events/submit utils/user-tmpl-email-password
-                                    (-> @form
-                                        :names->value
-                                        (dissoc :password-repeat))
-                                    {:success-msg  (@tr [:validation-email-success-msg])
-                                     :redirect-url (str @server-redirect-uri "?message="
-                                                        callback-msg-on-validation)}]))
+        :submit-fn    #(let [form-signup-valid?   (fv/validate-form-and-show? form)
+                             form-customer-valid? (if @create-customer
+                                                    (fv/validate-form-and-show? form-customer)
+                                                    true)
+                             form-valid?          (and form-signup-valid? form-customer-valid?)]
+                         (js/console.log form-signup-valid? form-customer-valid?)
+                         (when form-valid?
+                           (let [data (-> @form
+                                          :names->value
+                                          (dissoc :password-repeat))
+                                 opts {:success-msg  (@tr [:validation-email-success-msg])
+                                       :redirect-url (str @server-redirect-uri "?message="
+                                                          callback-msg-on-validation)}]
+                             (if @create-customer
+                               (let [customer  (profile-views/customer-form->customer form-customer)
+                                     data-cust (assoc data :customer customer)]
+                                 (if (:payment-method customer)
+                                   (dispatch [::events/create-payment-method
+                                              utils/user-tmpl-email-password data-cust opts])
+                                   (dispatch [::events/submit utils/user-tmpl-email-password
+                                              data-cust opts])))
+                               (dispatch [::events/submit
+                                          utils/user-tmpl-email-password data opts])))))
         :ExtraContent (when @github-template?
                         [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/user")
                                   :method "post"

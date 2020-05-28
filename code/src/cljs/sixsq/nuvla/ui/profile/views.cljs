@@ -147,7 +147,7 @@
                  :style          {:height "100%"}}
         [ui/GridColumn
          [ui/Header {:as :h3, :icon true, :disabled true, :text-align "center"}
-          [ui/Icon {:name "search"}]
+          [ui/Icon {:className "fad fa-sign-in-alt"}]
           "No session"]]
         ])]))
 
@@ -158,8 +158,6 @@
 (def IbanElement (r/adapt-react-class react-stripe/IbanElement))
 
 
-(def email (r/atom nil))
-
 (def card-info-completed? (r/atom false))
 
 (def card-validation-error-message (r/atom nil))
@@ -168,25 +166,6 @@
 
 (def elements-atom (r/atom nil))
 
-(defn handle-submit-credit-card
-  [elements event]
-  (.preventDefault event)
-  (when elements
-    (dispatch [::events/create-payment-method
-               #js{:type "card"
-                   :card (elements.getElement react-stripe/CardElement)}])))
-
-
-(defn handle-submit-sepa-debit
-  [elements event]
-  (.preventDefault event)
-  (when elements
-    (dispatch [::events/create-payment-method
-               #js{:type            "sepa_debit"
-                   :sepa_debit      (elements.getElement react-stripe/IbanElement)
-                   :billing_details #js{:name  "test"
-                                        :email "test@example.com"}}])))
-
 
 (defn handle-setup-intent-credit-card
   [elements event]
@@ -194,7 +173,7 @@
   (when elements
     (dispatch [::events/confirm-card-setup
                #js{:payment_method
-                   #js{:card (elements.getElement react-stripe/CardElement)}}])))
+                   #js{"card" (elements.getElement react-stripe/CardElement)}}])))
 
 
 (defn handle-setup-intent-sepa-debit
@@ -207,102 +186,186 @@
                        :billing_details #js{:name "test"}}}])))
 
 
+
+(defn PaymentMethodInputInternal
+  [{:keys [type onChange options] :as props}]
+  (case type
+    "sepa_debit" [IbanElement
+                  {:className "stripe-input"
+                   :on-change onChange
+                   :options   (clj->js options)}]
+    "card" [CardElement {:className "stripe-input"
+                         :on-change onChange}]
+    [:div]))
+
 ;; While not yet hooks support we have to use react components
 ;; https://github.com/reagent-project/reagent/blob/master/doc/ReactFeatures.md#hooks
-(defn InternalCheckoutForm
-  [elements]
-  (let [className (r/atom "stripe-input")
-        error     (subscribe [::subs/error-message])
-        loading?  (subscribe [::subs/loading? :create-payment])]
-    (fn []
-      [ui/Form {:error   (boolean @error)
-                :loading @loading?}
-       [ui/Message {:error   true
-                    :header  "Something went wrong"
-                    :content @error}]
-       [ui/FormGroup {:widths 3}
-        [ui/FormInput {:label "Company"}]]
-       [ui/FormGroup {:widths "equal"}
-        [ui/FormInput {:label    "Last Name"
-                       :required true}]
-        [ui/FormInput {:label    "First Name"
-                       :required true}]]
-       [ui/FormGroup
-        [ui/FormDropdown {:label       "Country"
-                          :search      true
-                          :selection   true
-                          :required    true
-                          :width       6
-                          :options     [{:key "ch", :value "ch", :flag "ch", :text "Switzerland"}
-                                        {:key "at", :value "at", :flag "at", :text "Austria"}]
-                          :placeholder "Select Country"}]
-        [ui/FormInput {:label    "Street Address"
-                       :required true
-                       :width    10}]]
-       [ui/FormGroup {:widths "equal"}
-        [ui/FormInput {:label    "City"
-                       :required true}]
-        [ui/FormInput {:label    "Zip/Postal Code"
-                       :required true}]
-        [ui/FormInput {:label "Phone Number"}]]
-       [ui/FormGroup {:inline true}
-        [:label "Billing Method"]
-        #_{:label         "Choose your payment method"
-           :default-value "credit-card"
-           :on-change     (ui-callback/value #(reset! payment-form %))
-           :options       [{:text "credit card", :value "credit-card", :icon "credit card"}
-                           {:text "bank account", :value "sepa-debit", :icon "exchange"}]}
-        [ui/FormRadio {:label     "Credit Card"
-                       :checked   (= @payment-form "credit-card")
-                       :on-change (ui-callback/value #(reset! payment-form "credit-card"))}]
-        [ui/FormRadio {:label     "Bank Account"
-                       :checked   (= @payment-form "sepa-debit")
-                       :on-change (ui-callback/value #(reset! payment-form "sepa-debit"))}]]
-       (if (= @payment-form "credit-card")
-         [ui/FormField {:width 9}
-          [:label "Card Number"]
-          [CardElement {:className @className
-                        :on-change (fn [event]
-                                     (reset! card-validation-error-message
-                                             (some-> event .-error .-message))
-                                     (reset! card-info-completed? (.-complete event)))}]
-          (when @card-validation-error-message
-            [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-message])]
-         [ui/FormField {:width 9}
-          [:label "IBAN"]
-          [IbanElement
-           {:className @className
-            :on-change (fn [event]
-                         (reset! card-validation-error-message
-                                 (some-> event .-error .-message))
-                         (reset! card-info-completed? (.-complete event)))
-            :options   (clj->js {:supportedCountries ["SEPA"]
-                                 :placeholderCountry "CH"})}]
-          (when @card-validation-error-message
-            [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-message])]
-         )
-       ])))
 
-
-(defn ReactCheckoutForm []
-  (let [elements (react-stripe/useElements)]
-    (reset! elements-atom elements)
+(defn PaymentMethodInputWrapper
+  [props]
+  (let [elements     (react-stripe/useElements)
+        props        (js->clj props :keywordize-keys true)
+        set-elements (:setElements props)]
+    (when set-elements (set-elements elements))
     (r/as-element
-      [InternalCheckoutForm])))
+      [PaymentMethodInputInternal props])))
 
 
-(def CheckoutForm (r/adapt-react-class ReactCheckoutForm))
+(def PaymentMethodInputReactClass (r/adapt-react-class PaymentMethodInputWrapper))
+
+(defn PaymentMethodInput
+  [props]
+  (let [locale (subscribe [::i18n-subs/locale])
+        stripe (subscribe [::subs/stripe])]
+    (fn [props]
+      ^{:key (str @locale @stripe)}
+      [Elements {:stripe  @stripe
+                 :options {:locale @locale}}
+       [PaymentMethodInputReactClass props]])))
+
+
+;; VALIDATION SPEC
+(s/def ::fullname us/nonblank-string)
+(s/def ::street-address us/nonblank-string)
+(s/def ::city us/nonblank-string)
+(s/def ::country us/nonblank-string)
+(s/def ::postal-code us/nonblank-string)
+(s/def ::payment-method (s/nilable map?))
+
+(s/def ::customer
+  (s/keys :req-un [::fullname
+                   ::street-address
+                   ::city
+                   ::country
+                   ::postal-code]
+          :opt-un [::payment-method]))
+
+(defn CustomerFormFields
+  [form]
+  (let [tr                        (subscribe [::i18n-subs/tr])
+        payment-form              (r/atom "card")
+        elements                  (r/atom nil)
+        card-validation-error-msg (r/atom nil)]
+    (dispatch [::events/load-stripe])
+    (fn [form]
+      (let [should-not-be-empty-msg (@tr [:should-not-be-empty])
+            spec->msg               {::fullname       should-not-be-empty-msg
+                                     ::street-address should-not-be-empty-msg
+                                     ::city           should-not-be-empty-msg
+                                     ::country        should-not-be-empty-msg
+                                     ::postal-code    should-not-be-empty-msg}]
+        [:<>
+         [ui/FormInput {:name      :fullname
+                        :label     "Full Name"
+                        :required  true
+                        :on-change (partial fv/event->names->value! form)
+                        :on-blur   (partial fv/event->show-message form)
+                        :error     (fv/?show-message form :fullname spec->msg)}]
+         [ui/FormGroup
+          [ui/FormInput {:name      :street-address
+                         :label     "Street Address"
+                         :required  true
+                         :on-change (partial fv/event->names->value! form)
+                         :on-blur   (partial fv/event->show-message form)
+                         :error     (fv/?show-message form :street-address spec->msg)
+                         :width     10}]
+          [ui/FormInput {:name      :postal-code
+                         :label     "Zip/Postal Code"
+                         :required  true
+                         :on-change (partial fv/event->names->value! form)
+                         :on-blur   (partial fv/event->show-message form)
+                         :error     (fv/?show-message form :postal-code spec->msg)
+                         :width     6}]]
+         [ui/FormGroup {:widths 2}
+          [ui/FormInput {:name      :city
+                         :label     "City"
+                         :required  true
+                         :on-change (partial fv/event->names->value! form)
+                         :on-blur   (partial fv/event->show-message form)
+                         :error     (fv/?show-message form :city spec->msg)}]
+          [ui/FormDropdown {:name        :country
+                            :label       "Country"
+                            :search      true
+                            :selection   true
+                            :required    true
+                            :on-change   (fn [_ data]
+                                           (let [name  (keyword (.-name data))
+                                                 value (.-value data)]
+                                             (swap! form #(assoc-in % [:names->value name] value))
+                                             (fv/validate-form form)))
+                            :error       (fv/?show-message form :country spec->msg)
+                            :options     [{:key "ch", :value "CH", :flag "ch", :text "Switzerland"}
+                                          {:key "at", :value "AT", :flag "at", :text "Austria"}]
+                            :placeholder "Select Country"}]]
+
+
+         [ui/FormGroup {:inline true}
+          [:label "Payment Method"]
+          [ui/FormRadio {:label     "Credit Card"
+                         :checked   (= @payment-form "card")
+                         :on-change (ui-callback/value #(reset! payment-form "card"))}]
+          [ui/FormRadio {:label     "Bank Account"
+                         :checked   (= @payment-form "sepa_debit")
+                         :on-change (ui-callback/value #(reset! payment-form "sepa_debit"))}]]
+         [ui/FormField {:style {:max-width 380}}
+          [:label "Card Number"]
+          [PaymentMethodInput
+           (cond-> {:type         @payment-form
+                    :set-elements #(reset! elements %)
+                    :on-change    (fn [event]
+                                    (let [error       (some-> event .-error .-message)
+                                          empty-field (.-empty event)
+                                          swap-form!  (fn [v]
+                                                        (swap! form
+                                                               #(assoc-in % [:names->value
+                                                                             :payment-method] v)))]
+                                      (reset! card-validation-error-msg error)
+                                      (cond
+                                        error (swap-form! error)
+                                        (.-complete event) (swap-form! {:type     @payment-form
+                                                                        :elements @elements})
+                                        empty-field (swap-form! nil)
+                                        (not empty-field) (swap-form! "in-progress")))
+                                    (fv/validate-form form))}
+                   (= @payment-form "sepa_debit") (assoc :options {:supportedCountries ["SEPA"]
+                                                                   :placeholderCountry "CH"}))]
+          (when @card-validation-error-msg
+            [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-msg])]]
+        ))))
+
+(defn customer-form->customer
+  [form]
+  (let [{:keys [fullname payment-method] :as customer} (:names->value @form)]
+    (cond-> {:fullname     fullname
+             :address      (select-keys customer [:street-address
+                                                  :city
+                                                  :country
+                                                  :postal-code])
+             :subscription {:plan-id       "plan_HGQ9iUgnz2ho8e"
+                            :plan-item-ids ["plan_HGQIIWmhYmi45G"
+                                            "plan_HIrgmGboUlLqG9"
+                                            "plan_HGQAXewpgs9NeW"
+                                            "plan_HGQqB0p8h86Ija"]}}
+            payment-method (assoc :payment-method payment-method))))
 
 (defn SubscribeButton
   []
-  (let [locale                  (subscribe [::i18n-subs/locale])
-        stripe                  (subscribe [::subs/stripe])
-        loading-create-payment? (subscribe [::subs/loading? :create-payment])
-        loading-customer?       (subscribe [::subs/loading? :customer])
-        open?                   (subscribe [::subs/modal-open? :subscribe])
-        disabled?               (subscribe [::subs/subscribe-button-disabled?])
-        session                 (subscribe [::session-subs/session])]
-    (reset! elements-atom nil)
+  (let [stripe                   (subscribe [::subs/stripe])
+        loading-create-payment?  (subscribe [::subs/loading? :create-payment])
+        loading-customer?        (subscribe [::subs/loading? :customer])
+        open?                    (subscribe [::subs/modal-open? :subscribe])
+        disabled?                (subscribe [::subs/subscribe-button-disabled?])
+        session                  (subscribe [::session-subs/session])
+        error                    (subscribe [::subs/error-message])
+        loading-payment?         (subscribe [::subs/loading? :create-payment])
+        loading-create-customer? (subscribe [::subs/loading? :create-customer])
+        form-conf                {:form-spec    ::customer
+                                  :names->value {:fullname       ""
+                                                 :street-address ""
+                                                 :city           ""
+                                                 :country        ""
+                                                 :postal-code    ""}}
+        form                     (fv/init-form form-conf)]
     (fn []
       [:<>
        [ui/Modal
@@ -312,21 +375,23 @@
          :close-icon true}
         [ui/ModalHeader "Subscribe"]
         [ui/ModalContent
-         ^{:key (str @locale @stripe)}
-         [Elements {:stripe  @stripe
-                    :options {:locale @locale}}
-          [CheckoutForm]]]
+         [ui/Form {:error   (boolean @error)
+                   :loading (or @loading-payment? @loading-create-customer?)}
+          [ui/Message {:error   true
+                       :header  "Something went wrong"
+                       :content @error}]
+          [CustomerFormFields form]]]
         [ui/ModalActions
          [ui/Button {:animated "vertical"
                      :primary  true
-                     :on-click (partial (if (= @payment-form "credit-card")
-                                          handle-submit-credit-card
-                                          handle-submit-sepa-debit) @elements-atom)
+                     :on-click #(when (fv/validate-form-and-show? form)
+                                  (dispatch [::events/create-payment-method
+                                             (customer-form->customer form)]))
                      :disabled (or
-                                 (not @elements-atom)
                                  (not @stripe)
-                                 (not @card-info-completed?)
-                                 @loading-create-payment?)}
+                                 @loading-create-payment?
+                                 @loading-create-customer?
+                                 (not (fv/form-valid? form)))}
           [ui/ButtonContent {:hidden true} [ui/Icon {:name "shop"}]]
           [ui/ButtonContent {:visible true} "Subscribe"]]]]
        [ui/Button {:primary  true
@@ -385,44 +450,11 @@
                      :style          {:height "100%"}}
             [ui/GridColumn
              [ui/Header {:as :h3, :icon true, :disabled true}
-              [ui/Icon {:name "edit"}]
+              [ui/Icon {:className "fad fa-money-check-edit"}]
               "Not subscribed yet"]
              [:br]
              [SubscribeButton]]
             ])]))))
-
-
-(defn PaymentMethodInputInternal
-  [{:keys [type onChange options] :as props}]
-  (case type
-    "sepa-debit" [IbanElement
-                  {:className "stripe-input"
-                   :on-change onChange
-                   :options   (clj->js options)}]
-    "credit-card" [CardElement {:className "stripe-input"
-                                :on-change onChange}]
-    [:div]))
-
-
-(defn PaymentMethodInputWrapper
-  [props]
-  (let [elements (react-stripe/useElements)]
-    (reset! elements-atom elements)
-    (r/as-element
-      [PaymentMethodInputInternal (js->clj props :keywordize-keys true)])))
-
-
-(def PaymentMethodInputReactClass (r/adapt-react-class PaymentMethodInputWrapper))
-
-(defn PaymentMethodInput
-  [props]
-  (let [locale (subscribe [::i18n-subs/locale])
-        stripe (subscribe [::subs/stripe])]
-    (fn [props]
-      ^{:key (str @locale @stripe)}
-      [Elements {:stripe  @stripe
-                 :options {:locale @locale}}
-       [PaymentMethodInputReactClass props]])))
 
 
 (defn AddPaymentMethodButton
@@ -451,23 +483,24 @@
           [ui/FormGroup {:inline true}
            [:label "Billing Method"]
            [ui/FormRadio {:label     "Credit Card"
-                          :checked   (= @payment-form "credit-card")
-                          :on-change (ui-callback/value #(reset! payment-form "credit-card"))}]
+                          :checked   (= @payment-form "card")
+                          :on-change (ui-callback/value #(reset! payment-form "card"))}]
            [ui/FormRadio {:label     "Bank Account"
-                          :checked   (= @payment-form "sepa-debit")
-                          :on-change (ui-callback/value #(reset! payment-form "sepa-debit"))}]]
+                          :checked   (= @payment-form "sepa_debit")
+                          :on-change (ui-callback/value #(reset! payment-form "sepa_debit"))}]]
           [ui/FormField {:width 9}
            [PaymentMethodInput
-            (cond-> {:type      @payment-form
-                     :on-change (fn [event]
-                                  (reset! card-validation-error-message
-                                          (some-> event .-error .-message))
-                                  (reset! card-info-completed? (.-complete event)))}
-                    (= @payment-form "sepa-debit") (assoc :options {:supportedCountries ["SEPA"]
+            (cond-> {:type         @payment-form
+                     :on-change    (fn [event]
+                                     (reset! card-validation-error-message
+                                             (some-> event .-error .-message))
+                                     (reset! card-info-completed? (.-complete event)))
+                     :set-elements #(reset! elements-atom %)}
+                    (= @payment-form "sepa_debit") (assoc :options {:supportedCountries ["SEPA"]
                                                                     :placeholderCountry "CH"}))]]]]
         [ui/ModalActions
          [ui/Button {:primary  true
-                     :on-click (partial (if (= @payment-form "credit-card")
+                     :on-click (partial (if (= @payment-form "card")
                                           handle-setup-intent-credit-card
                                           handle-setup-intent-sepa-debit) @elements-atom)
                      :disabled (or
@@ -551,7 +584,7 @@
                  :style          {:height "100%"}}
         [ui/GridColumn
          [ui/Header {:as :h3, :icon true, :disabled true}
-          [ui/Icon {:name "payment"}]
+          [ui/Icon {:className "fad fa-credit-card"}]
           "Payment method"]
          (when customer
            [:<>
@@ -608,7 +641,7 @@
                  :style          {:height "100%"}}
         [ui/GridColumn
          [ui/Header {:as :h3, :icon true, :disabled true}
-          [ui/Icon {:name "calendar"}]
+          [ui/Icon {:className "fad fa-file-invoice"}]
           "Not any"]]])]))
 
 
@@ -652,7 +685,7 @@
                  :style          {:height "100%"}}
         [ui/GridColumn
          [ui/Header {:as :h3, :icon true, :disabled true}
-          [ui/Icon {:name "calendar check"}]
+          [ui/Icon {:className "fad fa-file-invoice-dollar"}]
           "Not any"]]])]))
 
 

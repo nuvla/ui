@@ -29,10 +29,11 @@
         [ui/Card
          [ui/Segment {:text-align "center"}
           [ui/Header {:as :h2 :icon true :text-align "center"}
-           [ui/Icon {:name logo, :color color}]
+           [ui/Icon {:className logo
+                     :color color}]
            title
            [ui/HeaderSubheader subtitle]]
-          [:h4 {:style {:text-align "center"
+          [:h4 {:style {:text-align "centerall.css"
                         :color      "white"
                         :background "grey"}}
            "Monthly"]
@@ -76,18 +77,17 @@
                 :title      "Paper plane"
                 :subtitle   "Pay as you go"
                 :color      "olive"
-                :logo       "paper plane"
+                :logo       "fad fa-paper-plane"
                 :first      true
                 :nb-number  "Up to 99"
                 :nb-price   "€ 50.00"
                 :dep-number "Up to 999"
-                :dep-price  "€ 6.00"
-                }]
+                :dep-price  "€ 6.00"}]
      [PlanComp {:id         "plan_Gx4S6VYf9cbfRK2"
                 :title      "Air plane"
                 :subtitle   "20% Discount"
                 :color      "yellow"
-                :logo       "plane"
+                :logo       "fad fa-plane"
                 :nb-number  "From 100"
                 :nb-price   "€ 40.00"
                 :dep-number "From 1'000"
@@ -96,7 +96,7 @@
                 :title      "Rocket"
                 :subtitle   "35% Discount"
                 :color      "orange"
-                :logo       "rocket"
+                :logo       "fad fa-rocket"
                 :nb-number  "From 500"
                 :nb-price   "€ 32.50"
                 :dep-number "From 5'000"
@@ -105,7 +105,7 @@
                 :title      "Starship"
                 :subtitle   "43% Discount"
                 :color      "red"
-                :logo       "space shuttle"
+                :logo       "fad fa-starship"
                 :nb-number  "From 1'000"
                 :nb-price   "€ 28.50"
                 :dep-number "From 10'000"

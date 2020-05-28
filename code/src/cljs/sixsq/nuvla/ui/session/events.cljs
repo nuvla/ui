@@ -8,6 +8,9 @@
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.session.effects :as fx]
+    [sixsq.nuvla.ui.profile.effects :as profile-fx]
+    ["@stripe/react-stripe-js" :as react-stripe]
+    [sixsq.nuvla.ui.profile.spec :as profile-spec]
     [sixsq.nuvla.ui.session.spec :as spec]
     [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -90,9 +93,46 @@
   (when success-msg
     (dispatch [::set-success-message success-msg])))
 
+
+(reg-event-fx
+  ::create-payment-method
+  (fn [{{:keys [::profile-spec/stripe] :as db} :db}
+       [_ form-id form-data opts]]
+    (let [{input-type :type elements :elements} (get-in form-data [:customer :payment-method])
+          data (clj->js
+                 {:type            input-type
+                  input-type       (case input-type
+                                     "sepa_debit" (.getElement elements react-stripe/IbanElement)
+                                     "card" (.getElement elements react-stripe/CardElement))
+                  :billing_details (when (= input-type "sepa_debit")
+                                     {:name  "test"
+                                      :email "test@example.com"})})]
+      {:db                                (assoc db ::spec/loading? true
+                                                    ::spec/success-message nil
+                                                    ::spec/error-message nil)
+       ::profile-fx/create-payment-method [stripe data
+                                           #(dispatch [::set-payment-method-result form-id
+                                                       form-data
+                                                       opts %])]})))
+
+
+(reg-event-fx
+  ::set-payment-method-result
+  (fn [_ [_ form-id form-data opts result]]
+    (let [res            (-> result (js->clj :keywordize-keys true))
+          error          (:error res)
+          payment-method (-> res :paymentMethod :id)
+          form-data-pm   (assoc-in form-data [:customer :payment-method] payment-method)]
+      (if error
+        {:dispatch-n [[::clear-loading]
+                      [::set-error-message (:message error)]]}
+        {:dispatch [::submit form-id form-data-pm opts]}))))
+
+
 (reg-event-fx
   ::submit
   (fn [{{:keys [::spec/server-redirect-uri] :as db} :db} [_ form-id form-data opts]]
+    (js/console.log form-id form-data opts)
     (let [{close-modal  :close-modal,
            success-msg  :success-msg,
            callback-add :callback-add,

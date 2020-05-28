@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
     [sixsq.nuvla.ui.profile.effects :as fx]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    ["@stripe/react-stripe-js" :as react-stripe]
     [sixsq.nuvla.ui.profile.spec :as spec]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.session.spec :as session-spec]
@@ -15,16 +16,18 @@
 (reg-event-fx
   ::init
   (fn [{db :db} _]
-    {:db              (merge db spec/defaults)
-     :dispatch-n      [[::load-stripe]
-                       [::get-user]
-                       [::search-existing-customer]]}))
+    {:db         (merge db spec/defaults)
+     :dispatch-n [[::load-stripe]
+                  [::get-user]
+                  [::search-existing-customer]]}))
 
 
 (reg-event-fx
   ::load-stripe
-  (fn [{{:keys [::main-spec/config] :as db} :db} _]
-    {::fx/load-stripe [(:stripe config) #(dispatch [::stripe-loaded %])]}))
+  (fn [{{:keys [::main-spec/config
+                ::spec/stripe] :as db} :db} _]
+    (when-not stripe
+      {::fx/load-stripe [(:stripe config) #(dispatch [::stripe-loaded %])]})))
 
 (reg-event-db
   ::stripe-loaded
@@ -151,15 +154,16 @@
 
 
 (reg-event-db
-  ::set-error-message
-  (fn [db [_ error-message]]
-    (assoc db ::spec/error-message error-message)))
-
-
-(reg-event-db
   ::clear-error-message
   (fn [db _]
     (assoc db ::spec/error-message nil)))
+
+
+(reg-event-fx
+  ::set-error
+  (fn [{db :db} [_ error-msg key-loading]]
+    {:db (cond-> (assoc db ::spec/error-message error-msg)
+                 key-loading (update ::spec/loading disj key-loading))}))
 
 
 (reg-event-fx
@@ -167,8 +171,7 @@
   (fn [{{:keys [::spec/user
                 ::i18n-spec/tr]} :db} [_ body]]
     (let [callback-fn #(if (instance? js/Error %)
-                         (let [{:keys [message]} (response/parse-ex-info %)]
-                           (dispatch [::set-error-message message]))
+                         (dispatch [::set-error (-> % response/parse-ex-info :message)])
                          (let [{:keys [status message]} %]
                            (if (= status 200)
                              (do
@@ -177,41 +180,50 @@
                                           {:header  (str/capitalize (tr [:success]))
                                            :content (str/capitalize (tr [:password-updated]))
                                            :type    :success}]))
-                             (dispatch [::set-error-message (str message " (" status ")")]))))]
+                             (dispatch [::set-error (str message " (" status ")")]))))]
       {::cimi-api-fx/operation [(:credential-password user) "change-password" callback-fn body]})))
 
 
 (reg-event-fx
   ::create-payment-method
-  (fn [{{:keys [::spec/stripe] :as db} :db} [_ data]]
-    (when stripe
-      {::fx/create-payment-method [stripe data #(dispatch [::set-payment-method-result %])]
-       :db                        (update db ::spec/loading conj :create-payment)})))
+  (fn [{{:keys [::spec/stripe] :as db} :db} [_ {:keys [payment-method] :as customer}]]
+    (if payment-method
+      (let [{input-type :type elements :elements} payment-method
+            data (clj->js
+                   {:type            input-type
+                    input-type       (case input-type
+                                       "sepa_debit" (.getElement elements react-stripe/IbanElement)
+                                       "card" (.getElement elements react-stripe/CardElement))
+                    :billing_details (when (= input-type "sepa_debit")
+                                       {:name  "test"
+                                        :email "test@example.com"})})]
+        {::fx/create-payment-method [stripe data
+                                     #(dispatch [::set-payment-method-result customer %])]
+         :db                        (update db ::spec/loading conj :create-payment)})
+      {:dispatch [::create-customer customer]})))
 
 
 (reg-event-fx
   ::set-payment-method-result
-  (fn [{{:keys [::spec/loading] :as db} :db} [_ result]]
+  (fn [{db :db} [_ customer result]]
     (let [res            (-> result (js->clj :keywordize-keys true))
           error          (:error res)
-          payment-method (:paymentMethod res)]
+          payment-method (-> res :paymentMethod :id)]
       (if error
-        {:db (assoc db ::spec/error-message (:message error)
-                       ::spec/loading (disj loading :create-payment))}
-        {:dispatch [::create-customer (:id payment-method)]}))))
+        {:dispatch [::set-error (:message error) :create-payment]}
+        {:db       (update db ::spec/loading disj :create-payment)
+         :dispatch [::create-customer (assoc customer :payment-method payment-method)]}))))
 
 
 (reg-event-fx
   ::create-customer
-  (fn [{db :db} [_ payment-id]]
+  (fn [{db :db} [_ {:keys [payment-method] :as customer}]]
     {:db               (update db ::spec/loading conj :create-customer)
-     ::cimi-api-fx/add [:customer {:plan-id           "plan_HGQ9iUgnz2ho8e"
-                                   :plan-item-ids     ["plan_HGQIIWmhYmi45G"
-                                                       "plan_HIrgmGboUlLqG9"
-                                                       "plan_HGQAXewpgs9NeW"
-                                                       "plan_HGQqB0p8h86Ija"]
-                                   :payment-method-id payment-id}
-                        #(dispatch [::get-customer (:resource-id %)])]}))
+     ::cimi-api-fx/add [:customer (cond-> customer
+                                          payment-method (assoc :payment-method payment-method))
+                        #(dispatch [::get-customer (:resource-id %)])
+                        :on-error #(dispatch [::set-error (-> % response/parse-ex-info :message)
+                                              :create-customer])]}))
 
 
 (reg-event-fx
@@ -231,8 +243,7 @@
     (let [res   (-> result (js->clj :keywordize-keys true))
           error (:error res)]
       (if error
-        {:db (assoc db ::spec/error-message (:message error)
-                       ::spec/loading (disj loading :confirm-card-setup))}
+        {:dispatch [::set-error (:message error) :confirm-card-setup]}
         {:dispatch-n [[::list-payment-methods]
                       [::upcoming-invoice]
                       [::close-modal]]}))))
@@ -255,8 +266,7 @@
     (let [res   (-> result (js->clj :keywordize-keys true))
           error (:error res)]
       (if error
-        {:db (assoc db ::spec/error-message (:message error)
-                       ::spec/loading (disj loading :confirm-card-setup))}
+        {:dispatch [::set-error (:message error) :confirm-card-setup]}
         {:dispatch-n [[::list-payment-methods]
                       [::close-modal]]}))))
 

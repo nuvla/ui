@@ -79,23 +79,22 @@
   "Provides the sidebar menu for selecting major components/panels of the
    application."
   []
-  (let [show?      (subscribe [::subs/sidebar-open?])
-        iframe?    (subscribe [::subs/iframe?])
-        pages-list (subscribe [::subs/pages-list])]
+  (let [show?      @(subscribe [::subs/sidebar-open?])
+        iframe?    @(subscribe [::subs/iframe?])
+        pages-list @(subscribe [::subs/pages-list])]
     [ui/Menu {:id         "nuvla-ui-sidebar"
               :style      {:transition "0.5s"
-                           :width      (if @show? sidebar-width "0")}
+                           :width      (if show? sidebar-width "0")}
               :vertical   true
               :icon       "labeled"
               :borderless true
               :inverted   true
               :fixed      "left"}
-     (when-not @iframe? [logo-item])
-     (doall
-       (for [{:keys [url label-kw icon protected? iframe-visble?]} @pages-list]
-         (when (or (not @iframe?) iframe-visble?)
-           ^{:key url}
-           [item label-kw url icon protected?])))
+     (when-not iframe? [logo-item])
+     (for [{:keys [url label-kw icon protected? iframe-visble?]} pages-list]
+       (when (or (not iframe?) iframe-visble?)
+         ^{:key url}
+         [item label-kw url icon protected?]))
      (let [is-admin?     (subscribe [::session-subs/is-admin?])
            is-ocre-user? (subscribe [::session-subs/has-role? "group/ocre-user"])]
        (when (or @is-admin? @is-ocre-user?)

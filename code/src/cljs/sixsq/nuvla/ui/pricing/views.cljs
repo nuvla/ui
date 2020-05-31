@@ -43,12 +43,12 @@
           [ui/Grid {:divided true, :style {;:height 75
                                            :background-color "lightyellow"}}
            (when extend
-             [ui/GridColumn {:width 10}
+             [ui/GridColumn {:width 11}
               [:div {:style {:text-align "left"}}
                [ui/Icon {:name "box"}]
                "NuvlaBox"
                [:p {:style {:color "grey"}} "Active devices only"]]])
-           [ui/GridColumn (when extend {:width 6})
+           [ui/GridColumn (when extend {:width 5})
             nb-number
             [:br]
             [ui/Label {:color color} nb-price]]]
@@ -56,11 +56,11 @@
                     :style   {;:height 75
                               :background-color "lightcyan"}}
            (when extend
-             [ui/GridColumn {:width 10}
+             [ui/GridColumn {:width 11}
               [:div {:style {:text-align "left"}} [ui/Icon {:name "play"}]
                "App Deployments"
-               [:p {:style {:color "grey"}} "Active devices only"]]])
-           [ui/GridColumn (when extend {:width 6})
+               [:p {:style {:color "grey"}} "Concurrent deployments"]]])
+           [ui/GridColumn (when extend {:width 5})
             dep-number
             [:br]
             [ui/Label {:color color} dep-price]]]
@@ -84,7 +84,7 @@
                 :dep-number "Up to 999"
                 :dep-price  "€ 6.00"}]
      [PlanComp {:id         "plan_Gx4S6VYf9cbfRK2"
-                :title      "Air plane"
+                :title      "Airplane"
                 :subtitle   "20% Discount"
                 :color      "yellow"
                 :logo       "fad fa-plane"
@@ -146,5 +146,6 @@
 (defmethod panel/render :pricing
   [path]
   [ui/Segment style/basic
-   [uix/PageHeader "code" (str/upper-case "Pricing")]
+   [uix/PageHeader
+    "fas fa-piggy-bank" (str/upper-case "Pricing")]
    [Pricing]])

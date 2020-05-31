@@ -18,6 +18,8 @@
 
 (s/def ::invoices any?)
 
+(s/def ::customer-info any?)
+
 (s/def ::open-modal (s/nilable keyword?))
 
 (s/def ::error-message (s/nilable string?))
@@ -36,6 +38,7 @@
                           ::payment-methods
                           ::upcoming-invoice
                           ::invoices
+                          ::customer-info
                           ::open-modal
                           ::error-message
                           ::loading
@@ -48,6 +51,7 @@
                ::payment-methods  nil
                ::upcoming-invoice nil
                ::invoices         nil
+               ::customer-info    nil
                ::subscription     nil
                ::setup-intent     nil
                ::open-modal       nil

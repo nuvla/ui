@@ -117,7 +117,7 @@
                                                           :order      7}
                                        "pricing"         {:url        "pricing"
                                                           :label-kw   :pricing
-                                                          :icon       "shop"
+                                                          :icon       "fas fa-piggy-bank"
                                                           :protected? false
                                                           :order      8}
                                        }})

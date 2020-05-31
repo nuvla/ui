@@ -231,6 +231,7 @@
 (s/def ::country us/nonblank-string)
 (s/def ::postal-code us/nonblank-string)
 (s/def ::payment-method (s/nilable map?))
+(s/def ::coupon us/nonblank-string)
 
 (s/def ::customer
   (s/keys :req-un [::fullname
@@ -238,7 +239,8 @@
                    ::city
                    ::country
                    ::postal-code]
-          :opt-un [::payment-method]))
+          :opt-un [::payment-method
+                   ::coupon]))
 
 (defn CustomerFormFields
   [form]
@@ -253,7 +255,8 @@
                                      ::street-address should-not-be-empty-msg
                                      ::city           should-not-be-empty-msg
                                      ::country        should-not-be-empty-msg
-                                     ::postal-code    should-not-be-empty-msg}]
+                                     ::postal-code    should-not-be-empty-msg
+                                     ::coupon         should-not-be-empty-msg}]
         [:<>
          [ui/FormInput {:name      :fullname
                         :label     "Full Name"
@@ -298,6 +301,13 @@
                                           {:key "at", :value "AT", :flag "at", :text "Austria"}]
                             :placeholder "Select Country"}]]
 
+         [ui/FormInput {:name          :coupon
+                        :label         "Coupon code"
+                        :on-change     (partial fv/event->names->value! form)
+                        :on-blur       (partial fv/event->show-message form)
+                        :error         (fv/?show-message form :coupon spec->msg)
+                        :auto-complete "off"
+                        :width         8}]
 
          [ui/FormGroup {:inline true}
           [:label "Payment Method"]
@@ -330,12 +340,13 @@
                    (= @payment-form "sepa_debit") (assoc :options {:supportedCountries ["SEPA"]
                                                                    :placeholderCountry "CH"}))]
           (when @card-validation-error-msg
-            [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-msg])]]
+            [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-msg])]
+         ]
         ))))
 
 (defn customer-form->customer
   [form]
-  (let [{:keys [fullname payment-method] :as customer} (:names->value @form)]
+  (let [{:keys [fullname payment-method coupon] :as customer} (:names->value @form)]
     (cond-> {:fullname     fullname
              :address      (select-keys customer [:street-address
                                                   :city
@@ -346,7 +357,8 @@
                                             "plan_HIrgmGboUlLqG9"
                                             "plan_HGQAXewpgs9NeW"
                                             "plan_HGQqB0p8h86Ija"]}}
-            payment-method (assoc :payment-method payment-method))))
+            payment-method (assoc :payment-method payment-method)
+            coupon (assoc :coupon coupon))))
 
 (defn SubscribeButton
   []
@@ -689,6 +701,104 @@
           "Not any"]]])]))
 
 
+(defn AddCouponButton
+  [open?]
+  (let [loading?    (subscribe [::subs/loading? :add-coupon])
+        error       (subscribe [::subs/error-message])
+        coupon-code (r/atom nil)]
+    (fn [open?]
+      [:<>
+       [ui/Modal
+        {:open       open?
+         :size       "small"
+         :on-close   #(dispatch [::events/close-modal])
+         :close-icon true}
+        [ui/ModalHeader "Add coupon"]
+        [ui/ModalContent
+         [ui/Form {:error   (boolean @error)
+                   :loading @loading?}
+          [ui/Message {:error   true
+                       :header  "Something went wrong"
+                       :content @error}]
+
+          [ui/FormInput {:label      "Coupon code"
+                         :on-change  (ui-callback/value #(reset! coupon-code %))
+                         :auto-focus true
+                         :focus      true}]]]
+        [ui/ModalActions
+         [ui/Button {:primary  true
+                     :on-click #(dispatch [::events/add-coupon @coupon-code])
+                     :disabled (or @loading?
+                                   (str/blank? coupon-code))}
+          "Add"]]]
+       [ui/Button {:primary  true
+                   :circular true
+                   :basic    true
+                   :size     "small"
+                   :on-click #(dispatch [::events/open-modal :add-coupon])}
+        [ui/Icon {:name "plus square outline"}]
+        "Add"]])))
+
+
+(defn Coupon
+  []
+  (let [tr            (subscribe [::i18n-subs/tr])
+        loading?      @(subscribe [::subs/loading? :customer-info])
+        customer-info @(subscribe [::subs/customer-info])
+        open?         @(subscribe [::subs/modal-open? :add-coupon])
+        {:keys [name percent-off currency amount-off
+                duration duration-in-month] :as coupon} (:coupon customer-info)]
+    [ui/Segment {:padded  true
+                 :color   "blue"
+                 :loading loading?
+                 :style   {:height "100%"}}
+     [ui/Header {:as :h2 :dividing true} "Coupon"]
+     (if coupon
+       [ui/Table {:basic "very"}
+        [ui/TableBody
+         [ui/TableRow
+          [ui/TableCell {:width 5} [:b "Name"]]
+          [ui/TableCell {:width 11} name]]
+         (when percent-off
+           [ui/TableRow
+            [ui/TableCell [:b "Percent off"]]
+            [ui/TableCell (str percent-off "%")]])
+         (when amount-off
+           [ui/TableRow
+            [ui/TableCell [:b "Amount"]]
+            [ui/TableCell (format-currency currency amount-off)]])
+         (when duration-in-month
+           [ui/TableRow
+            [ui/TableCell [:b "Duration in month"]]
+            [ui/TableCell duration-in-month]])
+         (when duration
+           [ui/TableRow
+            [ui/TableCell [:b "Duration"]]
+            [ui/TableCell duration]])
+         [ui/TableRow
+          [ui/TableCell {:col-span 2}
+           [ui/Popup
+            {:position "top center"
+             :content  "Delete"
+             :trigger  (r/as-element [ui/Button {:basic    true
+                                                 :size     "small"
+                                                 :icon     true
+                                                 :on-click #(dispatch [::events/remove-coupon])}
+                                      [ui/Icon {:name "trash", :color "red"}]])}]]]]]
+       [ui/Grid {:text-align     "center"
+                 :vertical-align "middle"
+                 :style          {:height "100%"}}
+        [ui/GridColumn
+         [ui/Header {:as :h3, :icon true, :disabled true}
+          [ui/Icon {:className "fad fa-ticket"}]
+          "Not any"]
+         (when customer-info
+           [:<>
+            [:br]
+            ^{:key (random-uuid)}
+            [AddCouponButton open?]])]])]))
+
+
 (defn Content
   []
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -725,9 +835,7 @@
               [ui/GridColumn
                [PaymentMethods]]
               [ui/GridColumn
-               [ui/Segment {:padded true
-                            :color  "blue"}
-                [ui/Header {:as :h3 :dividing true} "Usage"]]]]]
+               [Coupon]]]]
             )]]))))
 
 

@@ -133,3 +133,8 @@ div.search.dropdown > input {
 .fad {
   font-family: 'Font Awesome 5 Duotone' !important;
 }
+
+.fas {
+  font-family: 'Font Awesome 5 Pro' !important;
+  font-weight: 900 !important;
+}

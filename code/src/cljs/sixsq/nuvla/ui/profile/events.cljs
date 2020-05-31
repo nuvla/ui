@@ -65,6 +65,7 @@
     (cond-> {:db (assoc db ::spec/customer customer
                            ::spec/loading (disj loading :customer))}
             customer (assoc :dispatch-n [[::get-subscription]
+                                         [::customer-info]
                                          [::list-payment-methods]
                                          [::upcoming-invoice]
                                          [::list-invoices]
@@ -92,6 +93,21 @@
   (fn [{:keys [::spec/loading] :as db} [_ subscription]]
     (assoc db ::spec/subscription subscription
               ::spec/loading (disj loading :subscription))))
+
+
+(reg-event-fx
+  ::customer-info
+  (fn [{{:keys [::spec/customer] :as db} :db} _]
+    {:db                     (update db ::spec/loading conj :customer-info)
+     ::cimi-api-fx/operation [(:id customer) "customer-info"
+                              #(dispatch [::set-customer-info %])]}))
+
+
+(reg-event-db
+  ::set-customer-info
+  (fn [{:keys [::spec/loading] :as db} [_ customer-info]]
+    (assoc db ::spec/customer-info customer-info
+              ::spec/loading (disj loading :customer-info))))
 
 
 (reg-event-fx
@@ -303,3 +319,36 @@
                               {:payment-method payment-method}]}))
 
 
+(reg-event-fx
+  ::add-coupon
+  (fn [{{:keys [::spec/customer] :as db} :db} [_ coupon]]
+    {::cimi-api-fx/operation [(:id customer) "add-coupon"
+                              #(dispatch [::add-coupon-result %])
+                              {:coupon coupon}]
+     :db                     (update db ::spec/loading conj :add-coupon)}))
+
+
+(reg-event-fx
+  ::add-coupon-result
+  (fn [{db :db} [_ result]]
+    (if (instance? js/Error result)
+      {:dispatch [::set-error (-> result response/parse-ex-info :message) :add-coupon]}
+      {:dispatch [::customer-info]
+       :db       (update db ::spec/loading disj :add-coupon)})))
+
+
+(reg-event-fx
+  ::remove-coupon
+  (fn [{{:keys [::spec/customer] :as db} :db} _]
+    {::cimi-api-fx/operation [(:id customer) "remove-coupon"
+                              #(dispatch [::remove-coupon-result %])]
+     :db                     (update db ::spec/loading conj :remove-coupon)}))
+
+
+(reg-event-fx
+  ::remove-coupon-result
+  (fn [{db :db} [_ result]]
+    (if (instance? js/Error result)
+      {:dispatch [::set-error (-> result response/parse-ex-info :message) :remove-coupon]}
+      {:dispatch [::customer-info]
+       :db       (update db ::spec/loading disj :remove-coupon)})))

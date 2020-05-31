@@ -76,6 +76,19 @@
 
 
 (reg-sub
+  ::customer-info
+  (fn [db]
+    (::spec/customer-info db)))
+
+
+(reg-sub
+  ::coupon
+  :<- [::customer-info]
+  (fn [customer-info]
+    (:coupon customer-info)))
+
+
+(reg-sub
   ::open-modal
   (fn [db]
     (::spec/open-modal db)))

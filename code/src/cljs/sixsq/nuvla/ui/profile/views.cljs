@@ -133,12 +133,10 @@
           [ui/TableCell {:width 11} (:identifier @session)]]
          [ui/TableRow
           [ui/TableCell [:b (str/capitalize (@tr [:session-expires]))]]
-          [ui/TableCell (-> @session :expiry time/parse-iso8601 time/ago)]
-          ]
+          [ui/TableCell (-> @session :expiry time/parse-iso8601 time/ago)]]
          [ui/TableRow
           [ui/TableCell [:b "User id"]]
-          [ui/TableCell (values/as-href {:href (:user @session)})]
-          ]
+          [ui/TableCell (values/as-href {:href (:user @session)})]]
          [ui/TableRow
           [ui/TableCell [:b "Roles"]]
           [ui/TableCell (values/format-collection (sort (str/split (:roles @session) #"\s+")))]]]]
@@ -148,43 +146,13 @@
         [ui/GridColumn
          [ui/Header {:as :h3, :icon true, :disabled true, :text-align "center"}
           [ui/Icon {:className "fad fa-sign-in-alt"}]
-          "No session"]]
-        ])]))
+          "No session"]]])]))
 
 
 (def Elements (r/adapt-react-class react-stripe/Elements))
 (def CardElement (r/adapt-react-class react-stripe/CardElement))
 (def ElementsConsumer (r/adapt-react-class react-stripe/ElementsConsumer))
 (def IbanElement (r/adapt-react-class react-stripe/IbanElement))
-
-
-(def card-info-completed? (r/atom false))
-
-(def card-validation-error-message (r/atom nil))
-
-(def payment-form (r/atom "credit-card"))
-
-(def elements-atom (r/atom nil))
-
-
-(defn handle-setup-intent-credit-card
-  [elements event]
-  (.preventDefault event)
-  (when elements
-    (dispatch [::events/confirm-card-setup
-               #js{:payment_method
-                   #js{"card" (elements.getElement react-stripe/CardElement)}}])))
-
-
-(defn handle-setup-intent-sepa-debit
-  [elements event]
-  (.preventDefault event)
-  (when elements
-    (dispatch [::events/confirm-iban-setup
-               #js{:payment_method
-                   #js{:sepa_debit      (elements.getElement react-stripe/IbanElement)
-                       :billing_details #js{:name "test"}}}])))
-
 
 
 (defn PaymentMethodInputInternal
@@ -341,8 +309,8 @@
                                                                    :placeholderCountry "CH"}))]
           (when @card-validation-error-msg
             [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-msg])]
-         ]
-        ))))
+         ]))))
+
 
 (defn customer-form->customer
   [form]
@@ -359,6 +327,7 @@
                                             "plan_HGQqB0p8h86Ija"]}}
             payment-method (assoc :payment-method payment-method)
             coupon (assoc :coupon coupon))))
+
 
 (defn SubscribeButton
   []
@@ -470,18 +439,20 @@
 
 
 (defn AddPaymentMethodButton
-  []
-  (let [stripe                 (subscribe [::subs/stripe])
-        loading-setup-intent?  (subscribe [::subs/loading? :create-setup-intent])
-        loading-confirm-setup? (subscribe [::subs/loading? :confirm-setup-intent])
-        disabled?              (subscribe [::subs/cannot-create-setup-intent?])
-        open?                  (subscribe [::subs/modal-open? :add-payment-method])
-        error                  (subscribe [::subs/error-message])]
-    (reset! elements-atom nil)
-    (fn []
+  [open?]
+  (let [stripe                    (subscribe [::subs/stripe])
+        loading-setup-intent?     (subscribe [::subs/loading? :create-setup-intent])
+        loading-confirm-setup?    (subscribe [::subs/loading? :confirm-setup-intent])
+        disabled?                 (subscribe [::subs/cannot-create-setup-intent?])
+        error                     (subscribe [::subs/error-message])
+        payment-form              (r/atom "card")
+        elements                  (r/atom nil)
+        card-validation-error-msg (r/atom nil)
+        card-info-completed?      (r/atom false)]
+    (fn [open?]
       [:<>
        [ui/Modal
-        {:open       @open?
+        {:open       open?
          :size       "small"
          :on-close   #(dispatch [::events/close-modal])
          :close-icon true}
@@ -504,21 +475,22 @@
            [PaymentMethodInput
             (cond-> {:type         @payment-form
                      :on-change    (fn [event]
-                                     (reset! card-validation-error-message
+                                     (reset! card-validation-error-msg
                                              (some-> event .-error .-message))
                                      (reset! card-info-completed? (.-complete event)))
-                     :set-elements #(reset! elements-atom %)}
+                     :set-elements #(reset! elements %)}
                     (= @payment-form "sepa_debit") (assoc :options {:supportedCountries ["SEPA"]
-                                                                    :placeholderCountry "CH"}))]]]]
+                                                                    :placeholderCountry "CH"}))]
+           (when @card-validation-error-msg
+             [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-msg])]]]
         [ui/ModalActions
          [ui/Button {:primary  true
-                     :on-click (partial (if (= @payment-form "card")
-                                          handle-setup-intent-credit-card
-                                          handle-setup-intent-sepa-debit) @elements-atom)
+                     :on-click #(dispatch [::events/confirm-card-setup @payment-form @elements])
                      :disabled (or
-                                 (not @elements-atom)
+                                 (not @elements)
                                  (not @stripe)
                                  (not @card-info-completed?)
+                                 @card-validation-error-msg
                                  @loading-setup-intent?)}
           "Add"]]]
        [ui/Button {:primary  true
@@ -535,21 +507,21 @@
 
 (defn PaymentMethods
   []
-  (let [tr                  (subscribe [::i18n-subs/tr])
-        loading?            (subscribe [::subs/loading? :payment-methods])
+  (let [loading?            @(subscribe [::subs/loading? :payment-methods])
+        open?               @(subscribe [::subs/modal-open? :add-payment-method])
         customer            @(subscribe [::subs/customer])
-        cards-bank-accounts (subscribe [::subs/cards-bank-accounts])
+        cards-bank-accounts @(subscribe [::subs/cards-bank-accounts])
         default             @(subscribe [::subs/default-payment-method])]
     [ui/Segment {:padded  true
                  :color   "purple"
-                 :loading @loading?
+                 :loading loading?
                  :style   {:height "100%"}}
      [ui/Header {:as :h2 :dividing true} "Payment Methods"]
-     (if @cards-bank-accounts
+     (if cards-bank-accounts
        [:<>
         [ui/Table {:basic "very"}
          [ui/TableBody
-          (for [{:keys [last4 brand payment-method exp-month exp-year]} @cards-bank-accounts]
+          (for [{:keys [last4 brand payment-method exp-month exp-year]} cards-bank-accounts]
             (let [is-default? (= default payment-method)]
               ^{:key (str payment-method)}
               [ui/TableRow
@@ -589,7 +561,8 @@
                 ]]))
           [ui/TableRow
            [ui/TableCell {:col-span 4}
-            [AddPaymentMethodButton]
+            ^{:key (random-uuid)}
+            [AddPaymentMethodButton open?]
             ]]]]]
        [ui/Grid {:text-align     "center"
                  :vertical-align "middle"
@@ -601,7 +574,7 @@
          (when customer
            [:<>
             [:br]
-            [AddPaymentMethodButton]])]])]))
+            [AddPaymentMethodButton open?]])]])]))
 
 
 (defn format-currency
@@ -806,8 +779,6 @@
         session   (subscribe [::session-subs/session])
         is-admin? (subscribe [::session-subs/is-admin?])]
     (dispatch [::events/init])
-    (reset! card-validation-error-message nil)
-    (reset! card-info-completed? false)
     (fn []
       (let [show-sections (and @session (not @is-admin?))]
         [:<>

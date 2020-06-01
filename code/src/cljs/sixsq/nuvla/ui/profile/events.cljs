@@ -165,8 +165,7 @@
   ::close-modal
   (fn [db _]
     (assoc db ::spec/open-modal nil
-              ::spec/error-message nil
-              ::spec/setup-intent nil)))
+              ::spec/error-message nil)))
 
 
 (reg-event-db
@@ -245,11 +244,23 @@
 (reg-event-fx
   ::confirm-card-setup
   (fn [{{:keys [::spec/stripe
-                ::spec/setup-intent] :as db} :db} [_ data]]
+                ::spec/setup-intent] :as db} :db} [_ type elements]]
     (when stripe
-      {::fx/confirm-card-setup [stripe (:client-secret setup-intent)
-                                data #(dispatch [::set-confirm-card-setup-result %])]
-       :db                     (update db ::spec/loading conj :confirm-card-setup)})))
+      (let [data       (clj->js
+                         {:payment_method
+                          {:type            type
+                           type             (case type
+                                              "sepa_debit" (.getElement elements
+                                                                        react-stripe/IbanElement)
+                                              "card" (.getElement elements
+                                                                  react-stripe/CardElement))
+                           :billing_details (when (= type "sepa_debit")
+                                              {:name  "test"
+                                               :email "test@example.com"})}})
+            effect-key (if (= type "card") ::fx/confirm-card-setup ::fx/confirm-sepa-debit-setup)]
+        {effect-key [stripe (:client-secret setup-intent)
+                     data #(dispatch [::set-confirm-card-setup-result %])]
+         :db        (update db ::spec/loading conj :confirm-setup-intent)}))))
 
 
 (reg-event-fx
@@ -259,31 +270,12 @@
     (let [res   (-> result (js->clj :keywordize-keys true))
           error (:error res)]
       (if error
-        {:dispatch [::set-error (:message error) :confirm-card-setup]}
-        {:dispatch-n [[::list-payment-methods]
+        {:dispatch [::set-error (:message error) :confirm-setup-intent]}
+        {:db         (-> db
+                         (assoc ::spec/setup-intent nil)
+                         (update ::spec/loading disj :confirm-setup-intent))
+         :dispatch-n [[::list-payment-methods]
                       [::upcoming-invoice]
-                      [::close-modal]]}))))
-
-
-(reg-event-fx
-  ::confirm-iban-setup
-  (fn [{{:keys [::spec/stripe
-                ::spec/setup-intent] :as db} :db} [_ data]]
-    (when stripe
-      {::fx/confirm-sepa-debit-setup [stripe (:client-secret setup-intent)
-                                      data #(dispatch [::set-confirm-iban-setup-result %])]
-       :db                           (update db ::spec/loading conj :confirm-card-setup)})))
-
-
-(reg-event-fx
-  ::set-confirm-iban-setup-result
-  (fn [{{:keys [::spec/loading
-                ::spec/customer] :as db} :db} [_ result]]
-    (let [res   (-> result (js->clj :keywordize-keys true))
-          error (:error res)]
-      (if error
-        {:dispatch [::set-error (:message error) :confirm-card-setup]}
-        {:dispatch-n [[::list-payment-methods]
                       [::close-modal]]}))))
 
 

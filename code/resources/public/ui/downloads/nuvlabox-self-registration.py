@@ -145,14 +145,17 @@ if __name__ == "__main__":
     nuvlabox_id = None
     previous_conf = {}
     new_conf = {}
-    if os.path.isfile(env_file):
-        # .env file exists - get the previous details
-        with open(env_file) as f:
-            for l in f.read().splitlines():
-                if l and "=" in l:
-                    varname = l.split('=', 1)[0]
-                    varvalue = l.split('=', 1)[1]
-                    previous_conf[varname] = varvalue
+    if not os.path.exists(nb_workdir):
+        os.makedirs(nb_workdir)
+    else:
+        if os.path.isfile(env_file):
+            # .env file exists - get the previous details
+            with open(env_file) as f:
+                for l in f.read().splitlines():
+                    if l and "=" in l:
+                        varname = l.split('=', 1)[0]
+                        varvalue = l.split('=', 1)[1]
+                        previous_conf[varname] = varvalue
 
     # argparse
     nuvla = nb_trigger_json['endpoint']

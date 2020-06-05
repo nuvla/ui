@@ -51,6 +51,16 @@
                                            ::key
                                            ::parent]))
 
+; SSH
+
+(s/def ::public-key utils-spec/nonblank-string)
+(s/def ::private-key string?)
+
+(s/def ::ssh-credential (s/keys :req-un [::name
+                                         ::description]
+                                :opt-un [::public-key
+                                         ::private-key]))
+
 
 ; MinIO
 

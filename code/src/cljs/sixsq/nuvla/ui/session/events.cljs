@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.cimi.events :as cimi-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
+    [sixsq.nuvla.ui.profile.events :as profile-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.session.effects :as fx]
     [sixsq.nuvla.ui.profile.effects :as profile-fx]
@@ -23,7 +24,8 @@
                               (dispatch [::set-session session])
                               (when session
                                 #_(dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])
-                                (dispatch [:sixsq.nuvla.ui.main.events/notifications-polling])))]}))
+                                (dispatch [:sixsq.nuvla.ui.main.events/notifications-polling])
+                                (dispatch [::profile-events/search-existing-customer])))]}))
 
 
 (reg-event-fx
@@ -132,7 +134,6 @@
 (reg-event-fx
   ::submit
   (fn [{{:keys [::spec/server-redirect-uri] :as db} :db} [_ form-id form-data opts]]
-    (js/console.log form-id form-data opts)
     (let [{close-modal  :close-modal,
            success-msg  :success-msg,
            callback-add :callback-add,

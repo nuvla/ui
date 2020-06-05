@@ -12,27 +12,14 @@
     [sixsq.nuvla.ui.session.spec :as session-spec]
     [sixsq.nuvla.ui.utils.response :as response]))
 
+;; TODO when customer exist but not valid subscription
 
 (reg-event-fx
   ::init
   (fn [{db :db} _]
     {:db         (merge db spec/defaults)
-     :dispatch-n [[::load-stripe]
-                  [::get-user]
+     :dispatch-n [[::get-user]
                   [::search-existing-customer]]}))
-
-
-(reg-event-fx
-  ::load-stripe
-  (fn [{{:keys [::main-spec/config
-                ::spec/stripe] :as db} :db} _]
-    (when-not stripe
-      {::fx/load-stripe [(:stripe config) #(dispatch [::stripe-loaded %])]})))
-
-(reg-event-db
-  ::stripe-loaded
-  (fn [db [_ stripe]]
-    (assoc db ::spec/stripe stripe)))
 
 
 (reg-event-db
@@ -65,10 +52,6 @@
     (cond-> {:db (assoc db ::spec/customer customer
                            ::spec/loading (disj loading :customer))}
             customer (assoc :dispatch-n [[::get-subscription]
-                                         [::customer-info]
-                                         [::list-payment-methods]
-                                         [::upcoming-invoice]
-                                         [::list-invoices]
                                          [::close-modal]]))))
 
 

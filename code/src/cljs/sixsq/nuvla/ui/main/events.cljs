@@ -244,10 +244,11 @@
     (assoc db ::spec/content-key (random-uuid))))
 
 
-(reg-event-db
+(reg-event-fx
   ::get-ui-config-good
-  (fn [db [_ result]]
-    (assoc db ::spec/config result)))
+  (fn [{db :db} [_ {:keys [stripe] :as result}]]
+    (cond-> {:db (assoc db ::spec/config result)}
+            stripe (assoc :dispatch [::load-stripe]))))
 
 
 (reg-event-db
@@ -266,3 +267,43 @@
                   :response-format (ajax/json-response-format {:keywords? true})
                   :on-success      [::get-ui-config-good]
                   :on-failure      [::get-ui-config-bad]}}))
+
+
+(reg-event-db
+  ::open-modal
+  (fn [db [_ modal-key]]
+    (assoc db ::spec/open-modal modal-key)))
+
+
+(reg-event-db
+  ::close-modal
+  (fn [db _]
+    (assoc db ::spec/open-modal nil)))
+
+
+(reg-event-fx
+  ::load-stripe
+  (fn [{{:keys [::spec/config
+                ::spec/stripe] :as db} :db} _]
+    (when-not stripe
+      {::fx/load-stripe [(:stripe config) #(dispatch [::stripe-loaded %])]})))
+
+
+(reg-event-db
+  ::stripe-loaded
+  (fn [db [_ stripe]]
+    (assoc db ::spec/stripe stripe)))
+
+
+(reg-event-fx
+  ::subscription-required-dispatch
+  (fn [{{:keys [::spec/stripe
+                :sixsq.nuvla.ui.profile.spec/subscription]} :db} [_ dispatch-vector]]
+    (let [active? (boolean
+                    (or (and (some? stripe)
+                             (#{"triailing" "active"} (:status subscription)))
+                        (nil? stripe)))]
+      {:dispatch (if active?
+                   dispatch-vector
+                   [::open-modal :subscription-required])})))
+

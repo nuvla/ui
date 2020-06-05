@@ -125,6 +125,22 @@
                    :on-click #(do (dispatch [::events/ignore-changes true])
                                   (dispatch [::apps-events/form-valid]))}]]]))
 
+(defn subscription-required-modal
+  []
+  (let [tr    (subscribe [::i18n-subs/tr])
+        open? (subscribe [::subs/modal-open? :subscription-required])]
+
+    [ui/Modal {:open       @open?
+               :close-icon true
+               :size       "small"
+               :on-close   #(dispatch [::events/close-modal])}
+
+     [ui/ModalHeader (str/capitalize (str "Subscription required"))]
+
+     [ui/ModalContent {:content "You need a subscription to be able to perform this action."}]
+
+     ]))
+
 
 #_(defmulti BootstrapMessage identity)
 
@@ -253,6 +269,7 @@
              [header]
              [contents]
              [ignore-changes-modal]
+             [subscription-required-modal]
              (when-not @iframe? [footer])]]
            )]
         [ui/Container

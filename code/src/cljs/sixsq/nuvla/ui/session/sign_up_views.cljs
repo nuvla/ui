@@ -104,7 +104,6 @@
                                                     (fv/validate-form-and-show? form-customer)
                                                     true)
                              form-valid?          (and form-signup-valid? form-customer-valid?)]
-                         (js/console.log form-signup-valid? form-customer-valid?)
                          (when form-valid?
                            (let [data (-> @form
                                           :names->value

@@ -83,8 +83,9 @@
             {:name      (@tr [:launch])
              :icon-name "rocket"
              :disabled  launch-disabled?
-             :on-click  #(dispatch [::deployment-dialog-events/create-deployment
-                                    id :infra-services])}])
+             :on-click  #(dispatch [::main-events/subscription-required-dispatch
+                                    [::deployment-dialog-events/create-deployment
+                                     id :infra-services]])}])
 
          (when add?
            [uix/MenuItemWithIcon

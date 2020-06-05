@@ -1,10 +1,7 @@
 (ns sixsq.nuvla.ui.profile.spec
   (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.utils.spec :as us]))
+    [clojure.spec.alpha :as s]))
 
-
-(s/def ::stripe any?)
 
 (s/def ::user any?)
 
@@ -31,8 +28,7 @@
 (s/def ::setup-intent any?)
 
 
-(s/def ::db (s/keys :req [::stripe
-                          ::user
+(s/def ::db (s/keys :req [::user
                           ::customer
                           ::subscription
                           ::payment-methods
@@ -45,8 +41,7 @@
                           ::setup-intent]))
 
 
-(def defaults {::stripe           nil
-               ::user             nil
+(def defaults {::user             nil
                ::customer         nil
                ::payment-methods  nil
                ::upcoming-invoice nil

@@ -7,6 +7,7 @@
 (def dictionary
   {:en {:lang                                      "English"
 
+        :pricing                                   "pricing"
         :about                                     "about"
         :about-subtitle                            "This software is brought to you"
         :accept                                    "Accept "
@@ -464,6 +465,7 @@
 
    :fr {:lang                                      "Français"
 
+        :pricing                                   "pricing"
         :about                                     "à propos"
         :about-subtitle                            "Ce logiciel vous est fournit"
         :accept                                    "Accepter l'"

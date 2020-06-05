@@ -2,6 +2,7 @@
   (:require
     [re-frame.core :refer [dispatch reg-sub subscribe]]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.profile.spec :as spec]))
 
 
@@ -118,12 +119,6 @@
   :<- [::loading]
   (fn [loading [_ loading-key]]
     (contains? loading loading-key)))
-
-
-(reg-sub
-  ::stripe
-  (fn [db]
-    (::spec/stripe db)))
 
 
 (reg-sub

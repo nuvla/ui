@@ -5,15 +5,6 @@
 
 
 (reg-fx
-  ::load-stripe
-  (fn [[publishable-key callback]]
-    (-> publishable-key
-        (stripejs/loadStripe)
-        (.then (fn [stripe]
-                 (callback stripe))))))
-
-
-(reg-fx
   ::create-payment-method
   (fn [[stripe data callback]]
     (-> stripe

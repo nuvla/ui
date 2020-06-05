@@ -25,12 +25,12 @@
   [{:keys [id title subtitle color logo first nb-number nb-price dep-number dep-price] :as ops}]
   (let [is-mobile? (subscribe [::main-subs/is-device? :mobile])]
     (fn [{:keys [id title subtitle color logo first nb-number nb-price dep-number dep-price] :as ops}]
-      (let [extend           (or first @is-mobile?)]
+      (let [extend (or first @is-mobile?)]
         [ui/Card
          [ui/Segment {:text-align "center"}
           [ui/Header {:as :h2 :icon true :text-align "center"}
            [ui/Icon {:className logo
-                     :color color}]
+                     :color     color}]
            title
            [ui/HeaderSubheader subtitle]]
           [:h4 {:style {:text-align "centerall.css"
@@ -69,83 +69,81 @@
 
 (defn Pricing
   []
-  (dispatch [::profile-event/load-stripe])
-  (fn []
-    [ui/Segment style/basic
-    [ui/CardGroup {:centered true}
-     [PlanComp {:id         "plan_Gx4S6VYf9cbfRK"
-                :title      "Paper plane"
-                :subtitle   "Pay as you go"
-                :color      "olive"
-                :logo       "fad fa-paper-plane"
-                :first      true
-                :nb-number  "Up to 99"
-                :nb-price   "€ 50.00"
-                :dep-number "Up to 999"
-                :dep-price  "€ 6.00"}]
-     [PlanComp {:id         "plan_Gx4S6VYf9cbfRK2"
-                :title      "Airplane"
-                :subtitle   "20% Discount"
-                :color      "yellow"
-                :logo       "fad fa-plane"
-                :nb-number  "From 100"
-                :nb-price   "€ 40.00"
-                :dep-number "From 1'000"
-                :dep-price  "€ 4.80"}]
-     [PlanComp {:id         "plan_Gx4S6VYf9cbfRK3"
-                :title      "Rocket"
-                :subtitle   "35% Discount"
-                :color      "orange"
-                :logo       "fad fa-rocket"
-                :nb-number  "From 500"
-                :nb-price   "€ 32.50"
-                :dep-number "From 5'000"
-                :dep-price  "€ 3.90"}]
-     [PlanComp {:id         "plan_Gx4S6VYf9cbfRK4"
-                :title      "Starship"
-                :subtitle   "43% Discount"
-                :color      "red"
-                :logo       "fad fa-starship"
-                :nb-number  "From 1'000"
-                :nb-price   "€ 28.50"
-                :dep-number "From 10'000"
-                :dep-price  "€ 3.42"}]]
+  [ui/Segment style/basic
+   [ui/CardGroup {:centered true}
+    [PlanComp {:id         "plan_Gx4S6VYf9cbfRK"
+               :title      "Paper plane"
+               :subtitle   "Pay as you go"
+               :color      "olive"
+               :logo       "fad fa-paper-plane"
+               :first      true
+               :nb-number  "Up to 99"
+               :nb-price   "€ 50.00"
+               :dep-number "Up to 999"
+               :dep-price  "€ 6.00"}]
+    [PlanComp {:id         "plan_Gx4S6VYf9cbfRK2"
+               :title      "Airplane"
+               :subtitle   "20% Discount"
+               :color      "yellow"
+               :logo       "fad fa-plane"
+               :nb-number  "From 100"
+               :nb-price   "€ 40.00"
+               :dep-number "From 1'000"
+               :dep-price  "€ 4.80"}]
+    [PlanComp {:id         "plan_Gx4S6VYf9cbfRK3"
+               :title      "Rocket"
+               :subtitle   "35% Discount"
+               :color      "orange"
+               :logo       "fad fa-rocket"
+               :nb-number  "From 500"
+               :nb-price   "€ 32.50"
+               :dep-number "From 5'000"
+               :dep-price  "€ 3.90"}]
+    [PlanComp {:id         "plan_Gx4S6VYf9cbfRK4"
+               :title      "Starship"
+               :subtitle   "43% Discount"
+               :color      "red"
+               :logo       "fad fa-starship"
+               :nb-number  "From 1'000"
+               :nb-price   "€ 28.50"
+               :dep-number "From 10'000"
+               :dep-price  "€ 3.42"}]]
 
-    [ui/Grid {:centered true, :stackable true}
-     [ui/GridRow {:vertical-align "middle"}
-      [ui/GridColumn {:width 10}
-       [ui/Table {:attached "top", :striped true, :text-align "center"}
-        [ui/TableBody
-         [ui/TableRow
-          [ui/TableCell {:row-span 3, :width 2} [:h4 "Support"]]
-          [ui/TableCell {:width 2} [:h5 "Bronze"]]
-          [ui/TableCell {:width 12} "included"]]
-         [ui/TableRow
-          [ui/TableCell [:h5 "Silver"]]
-          [ui/TableCell {:style {:font-style "italic"}} "contact us"]]
-         [ui/TableRow
-          [ui/TableCell [:h5 "Gold"]]
-          [ui/TableCell {:style {:font-style "italic"}} "contact us"]]]]
-       [ui/Table {:attached "bottom", :striped true, :text-align "center"}
-        [ui/TableBody
-         [ui/TableRow
-          [ui/TableCell {:row-span 2, :width 2} [:h4 "VPN"]]
-          [ui/TableCell {:width 2} [:h5 "1st"]]
-          [ui/TableCell {:width 12, :style {:font-style "italic"}} "included"]]
-         [ui/TableRow
-          [ui/TableCell [:h5 "Additional"]]
-          [ui/TableCell "€ 5.00 per month, each"]]]]]
-      [ui/GridColumn {:width 5, :text-align "center"}
-       ^{:key (random-uuid)}
-       [profile-views/SubscribeButton]
-       ]]]
-
-    ]))
+   [ui/Grid {:centered true, :stackable true}
+    [ui/GridRow {:vertical-align "middle"}
+     [ui/GridColumn {:width 10}
+      [ui/Table {:attached "top", :striped true, :text-align "center"}
+       [ui/TableBody
+        [ui/TableRow
+         [ui/TableCell {:row-span 3, :width 2} [:h4 "Support"]]
+         [ui/TableCell {:width 2} [:h5 "Bronze"]]
+         [ui/TableCell {:width 12} "included"]]
+        [ui/TableRow
+         [ui/TableCell [:h5 "Silver"]]
+         [ui/TableCell {:style {:font-style "italic"}} "contact us"]]
+        [ui/TableRow
+         [ui/TableCell [:h5 "Gold"]]
+         [ui/TableCell {:style {:font-style "italic"}} "contact us"]]]]
+      [ui/Table {:attached "bottom", :striped true, :text-align "center"}
+       [ui/TableBody
+        [ui/TableRow
+         [ui/TableCell {:row-span 2, :width 2} [:h4 "VPN"]]
+         [ui/TableCell {:width 2} [:h5 "1st"]]
+         [ui/TableCell {:width 12, :style {:font-style "italic"}} "included"]]
+        [ui/TableRow
+         [ui/TableCell [:h5 "Additional"]]
+         [ui/TableCell "€ 5.00 per month, each"]]]]]
+     [ui/GridColumn {:width 5, :text-align "center"}
+      ^{:key (random-uuid)}
+      [profile-views/SubscribeButton]
+      ]]]])
 
 
 (defmethod panel/render :pricing
   [path]
-  [ui/Segment style/basic
-   [uix/PageHeader
-    "fas fa-piggy-bank" (str/upper-case "Pricing")]
-   [Pricing]])
+  (let [stripe (subscribe [::main-subs/stripe])]
+    [ui/Segment style/basic
+    [uix/PageHeader
+     "fas fa-piggy-bank" (str/upper-case "Pricing")]
+     (when @stripe
+       [Pricing])]))

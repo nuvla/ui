@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.main.effects
   (:require
+    ["@stripe/stripe-js" :as stripejs]
     [re-frame.core :refer [dispatch reg-fx]]))
 
 
@@ -14,3 +15,12 @@
   ::open-new-window
   (fn [[url]]
     (.open js/window url "_blank" "noreferrer")))
+
+
+(reg-fx
+  ::load-stripe
+  (fn [[publishable-key callback]]
+    (-> publishable-key
+        (stripejs/loadStripe)
+        (.then (fn [stripe]
+                 (callback stripe))))))

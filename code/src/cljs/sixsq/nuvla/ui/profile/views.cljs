@@ -211,6 +211,7 @@
           :opt-un [::payment-method
                    ::coupon]))
 
+
 (defn CustomerFormFields
   [form]
   (let [tr                        (subscribe [::i18n-subs/tr])
@@ -314,16 +315,11 @@
 (defn customer-form->customer
   [form]
   (let [{:keys [fullname payment-method coupon] :as customer} (:names->value @form)]
-    (cond-> {:fullname     fullname
-             :address      (select-keys customer [:street-address
-                                                  :city
-                                                  :country
-                                                  :postal-code])
-             :subscription {:plan-id       "plan_HGQ9iUgnz2ho8e"
-                            :plan-item-ids ["plan_HGQIIWmhYmi45G"
-                                            "plan_HIrgmGboUlLqG9"
-                                            "plan_HGQAXewpgs9NeW"
-                                            "plan_HGQqB0p8h86Ija"]}}
+    (cond-> {:fullname fullname
+             :address  (select-keys customer [:street-address
+                                              :city
+                                              :country
+                                              :postal-code])}
             payment-method (assoc :payment-method payment-method)
             coupon (assoc :coupon coupon))))
 
@@ -334,11 +330,13 @@
         loading-create-payment?  (subscribe [::subs/loading? :create-payment])
         loading-customer?        (subscribe [::subs/loading? :customer])
         open?                    (subscribe [::subs/modal-open? :subscribe])
-        disabled?                (subscribe [::subs/subscribe-button-disabled?])
+        loading-subscription?    (subscribe [::subs/loading? :subscription])
         session                  (subscribe [::session-subs/session])
         error                    (subscribe [::subs/error-message])
         loading-payment?         (subscribe [::subs/loading? :create-payment])
         loading-create-customer? (subscribe [::subs/loading? :create-customer])
+        customer                 (subscribe [::subs/customer])
+        subscription             (subscribe [::subs/subscription])
         form-conf                {:form-spec    ::customer
                                   :names->value {:fullname       ""
                                                  :street-address ""
@@ -346,6 +344,7 @@
                                                  :country        ""
                                                  :postal-code    ""}}
         form                     (fv/init-form form-conf)]
+    (dispatch [::events/get-pricing-catalogue])
     (fn []
       [:<>
        [ui/Modal
@@ -360,29 +359,38 @@
           [ui/Message {:error   true
                        :header  "Something went wrong"
                        :content @error}]
-          [CustomerFormFields form]]]
+          (if @customer
+            "Do you confirm the creation of a new subscription?"
+            [CustomerFormFields form])]]
         [ui/ModalActions
          [ui/Button {:animated "vertical"
                      :primary  true
-                     :on-click #(when (fv/validate-form-and-show? form)
+                     :on-click #(if @customer
                                   (dispatch [::events/create-payment-method
-                                             (customer-form->customer form)]))
-                     :disabled (or
-                                 (not @stripe)
-                                 @loading-create-payment?
-                                 @loading-create-customer?
-                                 (not (fv/form-valid? form)))}
+                                             ::events/create-subscription])
+                                  (when (fv/validate-form-and-show? form)
+                                    (dispatch [::events/create-payment-method
+                                               ::events/create-customer (customer-form->customer
+                                                                          form)])))
+                     :disabled (or (not @stripe)
+                                   @loading-create-payment?
+                                   @loading-create-customer?
+                                   (if @customer
+                                     false
+                                     (not (fv/form-valid? form))))}
           [ui/ButtonContent {:hidden true} [ui/Icon {:name "shop"}]]
           [ui/ButtonContent {:visible true} "Subscribe"]]]]
        [ui/Button {:primary  true
                    :circular true
                    :basic    true
                    :loading  @loading-customer?
-                   :disabled @disabled?
+                   :disabled (or @loading-subscription? (some? (:status @subscription)))
                    :on-click (if @session
                                #(dispatch [::events/open-modal :subscribe])
                                #(dispatch [::history-events/navigate "sign-up"]))}
-        "Try Nuvla for free for 14 days"]
+        (if @customer
+          "Subscribe now"
+          "Try Nuvla for free for 14 days")]
        ])))
 
 

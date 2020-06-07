@@ -122,16 +122,6 @@
 
 
 (reg-sub
-  ::subscribe-button-disabled?
-  :<- [::customer]
-  :<- [::loading? :subscription]
-  (fn [[customer loading?]]
-    (or
-      loading?
-      (some? customer))))
-
-
-(reg-sub
   ::cannot-create-setup-intent?
   :<- [::customer]
   (fn [customer]

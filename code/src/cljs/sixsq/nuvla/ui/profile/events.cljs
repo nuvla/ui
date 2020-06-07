@@ -184,7 +184,7 @@
 
 (reg-event-fx
   ::create-payment-method
-  (fn [{{:keys [::spec/stripe] :as db} :db} [_ {:keys [payment-method] :as customer}]]
+  (fn [{{:keys [::main-spec/stripe] :as db} :db} [_ event-kw {:keys [payment-method] :as resource}]]
     (if payment-method
       (let [{input-type :type elements :elements} payment-method
             data (clj->js
@@ -196,28 +196,36 @@
                                        {:name  "test"
                                         :email "test@example.com"})})]
         {::fx/create-payment-method [stripe data
-                                     #(dispatch [::set-payment-method-result customer %])]
+                                     #(dispatch [::set-payment-method-result event-kw resource %])]
          :db                        (update db ::spec/loading conj :create-payment)})
-      {:dispatch [::create-customer customer]})))
+      {:dispatch [event-kw resource]})))
 
 
 (reg-event-fx
   ::set-payment-method-result
-  (fn [{db :db} [_ customer result]]
+  (fn [{db :db} [_ event-kw resource result]]
     (let [res            (-> result (js->clj :keywordize-keys true))
           error          (:error res)
           payment-method (-> res :paymentMethod :id)]
       (if error
         {:dispatch [::set-error (:message error) :create-payment]}
         {:db       (update db ::spec/loading disj :create-payment)
-         :dispatch [::create-customer (assoc customer :payment-method payment-method)]}))))
+         :dispatch [event-kw (assoc resource :payment-method payment-method)]}))))
+
+
+(defn catalogue->subscription
+  [pricing-catalogue]
+  (let [pay-as-you-go (-> pricing-catalogue :plans first)]
+    {:plan-id       (:plan-id pay-as-you-go)
+     :plan-item-ids (:required-items pay-as-you-go)}))
 
 
 (reg-event-fx
   ::create-customer
-  (fn [{db :db} [_ {:keys [payment-method] :as customer}]]
+  (fn [{{:keys [::spec/pricing-catalogue] :as db} :db} [_ {:keys [payment-method] :as customer}]]
     {:db               (update db ::spec/loading conj :create-customer)
-     ::cimi-api-fx/add [:customer (cond-> customer
+     ::cimi-api-fx/add [:customer (cond-> (assoc customer :subscription (catalogue->subscription
+                                                                          pricing-catalogue))
                                           payment-method (assoc :payment-method payment-method))
                         #(dispatch [::get-customer (:resource-id %)])
                         :on-error #(dispatch [::set-error (-> % response/parse-ex-info :message)
@@ -225,8 +233,34 @@
 
 
 (reg-event-fx
+  ::create-subscription
+  (fn [{{:keys [::spec/pricing-catalogue
+                ::spec/customer] :as db} :db} _]
+    {:db                     (update db ::spec/loading conj :create-customer)
+     ::cimi-api-fx/operation [(:id customer)
+                              "create-subscription"
+                              #(if (instance? js/Error %)
+                                 (dispatch [::set-error (-> % response/parse-ex-info :message)
+                                            :create-customer])
+                                 (dispatch [::get-customer (:id customer)]))
+                              (catalogue->subscription pricing-catalogue)]}))
+
+
+(reg-event-fx
+  ::get-pricing-catalogue
+  (fn [_ _]
+    {::cimi-api-fx/get ["pricing/catalogue" #(dispatch [::set-pricing-catalogue %])]}))
+
+
+(reg-event-db
+  ::set-pricing-catalogue
+  (fn [db [_ resource]]
+    (assoc db ::spec/pricing-catalogue resource)))
+
+
+(reg-event-fx
   ::confirm-card-setup
-  (fn [{{:keys [::spec/stripe
+  (fn [{{:keys [::main-spec/stripe
                 ::spec/setup-intent] :as db} :db} [_ type elements]]
     (when stripe
       (let [data       (clj->js

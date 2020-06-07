@@ -9,6 +9,8 @@
 
 (s/def ::subscription any?)
 
+(s/def ::pricing-catalogue any?)
+
 (s/def ::payment-methods any?)
 
 (s/def ::upcoming-invoice any?)
@@ -31,6 +33,7 @@
 (s/def ::db (s/keys :req [::user
                           ::customer
                           ::subscription
+                          ::pricing-catalogue
                           ::payment-methods
                           ::upcoming-invoice
                           ::invoices
@@ -41,14 +44,15 @@
                           ::setup-intent]))
 
 
-(def defaults {::user             nil
-               ::customer         nil
-               ::payment-methods  nil
-               ::upcoming-invoice nil
-               ::invoices         nil
-               ::customer-info    nil
-               ::subscription     nil
-               ::setup-intent     nil
-               ::open-modal       nil
-               ::error-message    nil
-               ::loading          #{}})
+(def defaults {::user              nil
+               ::customer          nil
+               ::pricing-catalogue nil
+               ::payment-methods   nil
+               ::upcoming-invoice  nil
+               ::invoices          nil
+               ::customer-info     nil
+               ::subscription      nil
+               ::setup-intent      nil
+               ::open-modal        nil
+               ::error-message     nil
+               ::loading           #{}})

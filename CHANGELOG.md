@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+  - New credential creation workflow for SSH keys
+  - SSH key association for NuvlaBox at creation time
+
 ### Changes
 
   - NuvlaBox detail - Fix bug when saving location

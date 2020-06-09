@@ -271,12 +271,15 @@
         nuvlabox-id           (subscribe [::subs/nuvlabox-created-id])
         vpn-infra-opts        (subscribe [::subs/vpn-infra-options])
         nb-releases           (subscribe [::subs/nuvlabox-releases])
+        ssh-credentials       (subscribe [::subs/ssh-keys-available])
         nb-releases-options   (map
                                 (fn [{:keys [release]}]
                                   {:key release, :text release, :value release})
                                 @nb-releases)
         nb-releases-by-rel    (group-by :release @nb-releases)
-        default-data          {:refresh-interval 30}
+        ssh-toggle            (r/atom false)
+        default-data          {:refresh-interval 30
+                               :add-ssh-key      @ssh-toggle}
         first-nb-release      (first @nb-releases)
         creation-data         (r/atom default-data)
         default-release-data  {:nb-rel      (:release first-nb-release)
@@ -301,11 +304,17 @@
                                           :method "generate-api-key"
                                           :ttl    (* @usb-trigger-key-ttl 24 60 60)
                                           :href   "credential-template/generate-api-key"}}
+        ssh-toggle            (r/atom false)
+        ssh-existing-key      (r/atom false)
+        ssh-chosen-keys       (r/atom [])
         on-close-fn           #(do
                                  (dispatch [::events/set-created-nuvlabox-id nil])
                                  (dispatch [::events/set-nuvlabox-usb-api-key nil])
                                  (dispatch [::events/open-modal nil])
                                  (reset! advanced? false)
+                                 (reset! ssh-toggle false)
+                                 (reset! ssh-existing-key false)
+                                 (reset! ssh-chosen-keys [])
                                  (reset! creation-data default-data)
                                  (reset! install-strategy install-strategy-default)
                                  (reset! usb-trigger-key-ttl default-ttl)
@@ -326,6 +335,7 @@
                                                       (remove (fn [[_ v]] (str/blank? v)))
                                                       (into {}))])
                                          (reset! creation-data default-data)))]
+    (dispatch [::events/get-ssh-keys-available ["ssh-key"] nil])
     (fn []
       (when (= (count @vpn-infra-opts) 1)
         (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
@@ -362,6 +372,57 @@
                                    :on-change   (ui-callback/callback
                                                   :value #(swap! creation-data assoc :vpn-server-id %))
                                    :options     @vpn-infra-opts}]]]]]
+
+                 [ui/Checkbox {:slider      true
+                               :label       (@tr [:nuvlabox-modal-add-ssh-key])
+                               :checked     @ssh-toggle
+                               :on-change   #(do
+                                               (swap! creation-data assoc :add-ssh-key (not @ssh-toggle))
+                                               (swap! ssh-toggle not)
+                                               (reset! ssh-chosen-keys [])
+                                               (reset! ssh-existing-key false)
+                                               (swap! creation-data dissoc :add-existing-ssh-keys))}]
+
+                 [ui/Segment {:style {:display (if @ssh-toggle "block" "none")}}
+                  [ui/Form
+                   [ui/FormGroup {:inline  true}
+
+                    [ui/FormCheckbox {:label (@tr [:nuvlabox-modal-add-new-ssh-key])
+                                      :radio true
+                                      :checked (not @ssh-existing-key)
+                                      :on-change #(do
+                                                    (swap! ssh-existing-key not)
+                                                    (swap! creation-data dissoc :add-existing-ssh-keys))}]
+
+                    [ui/FormCheckbox {:label (@tr [:nuvlabox-modal-add-existing-ssh-key])
+                                      :radio true
+                                      :checked @ssh-existing-key
+                                      :on-change #(do
+                                                    (swap! ssh-existing-key not)
+                                                    (swap! creation-data assoc :add-existing-ssh-keys @ssh-chosen-keys))}]]]
+
+                  (when @ssh-existing-key
+                    (if (pos-int? (count @ssh-credentials))
+                      [ui/Dropdown {:search      true
+                                    :multiple    true
+                                    :selection   true
+                                    :fluid       true
+                                    :placeholder (@tr [:nuvlabox-modal-select-existing-ssh-key])
+
+                                    :on-change   (ui-callback/callback
+                                                   :value #(do
+                                                             (reset! ssh-chosen-keys %)
+                                                             (swap! creation-data assoc :add-existing-ssh-keys @ssh-chosen-keys)))
+                                    :options     (map (fn [{id :id, name :name}]
+                                                        {:key id, :value id, :text name})
+                                                   @ssh-credentials)}]
+
+                      [ui/Message {:content (str/capitalize (@tr [:nuvlabox-modal-no-ssh-keys-avail]))}]
+                      ))
+
+                  ]
+
+                 [:span (str @creation-data)]
 
                  (let [{nb-rel                                  :nb-rel
                         nb-assets                               :nb-assets

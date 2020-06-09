@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
@@ -141,6 +142,7 @@
   (fn [db [_ {:keys [resources]}]]
     (assoc db ::spec/nuvlabox-releases resources)))
 
+
 (reg-event-fx
   ::get-nuvlabox-releases
   (fn [{:keys [db]} _]
@@ -150,3 +152,22 @@
                             :orderby "release-date:desc"
                             :last    10000}
                            #(dispatch [::set-nuvlabox-releases %])]}))
+
+
+(reg-event-db
+  ::set-ssh-keys-available
+  (fn [db [_ {:keys [resources]}]]
+    (assoc db ::spec/ssh-keys-available resources)))
+
+
+(reg-event-fx
+  ::get-ssh-keys-available
+  (fn [{:keys [db]} [_ subtypes additional-filter]]
+    {:db                  (assoc db ::spec/ssh-keys-available nil)
+     ::cimi-api-fx/search [:credential
+                           {:filter (cond-> (apply general-utils/join-or
+                                              (map #(str "subtype='" % "'") subtypes))
+                                      additional-filter (general-utils/join-and
+                                                          additional-filter))
+                            :last   10000}
+                           #(dispatch [::set-ssh-keys-available %])]}))

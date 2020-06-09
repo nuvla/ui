@@ -34,6 +34,8 @@
 
 (s/def ::vpn-infra any?)
 
+; ssh key association
+(s/def ::ssh-keys-available any?)
 
 (s/def ::db (s/keys :req [::loading?
                           ::nuvlaboxes
@@ -48,7 +50,8 @@
                           ::open-modal
                           ::nuvlabox-created-id
                           ::nuvlabox-usb-api-key
-                          ::vpn-infra]))
+                          ::vpn-infra
+                          ::ssh-keys-available]))
 
 
 (def defaults {::loading?            false
@@ -64,4 +67,5 @@
                ::open-modal          nil
                ::nuvlabox-created-id nil
                ::nuvlabox-usb-api-key nil
-               ::vpn-infra           nil})
+               ::vpn-infra           nil
+               ::ssh-keys-available  nil})

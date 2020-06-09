@@ -93,3 +93,8 @@
   ::nuvlabox-releases
   (fn [db]
     (::spec/nuvlabox-releases db)))
+
+(reg-sub
+  ::ssh-keys-available
+  (fn [db]
+    (::spec/ssh-keys-available db)))

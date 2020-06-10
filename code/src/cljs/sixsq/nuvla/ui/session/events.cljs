@@ -11,7 +11,6 @@
     [sixsq.nuvla.ui.session.effects :as fx]
     [sixsq.nuvla.ui.profile.effects :as profile-fx]
     ["@stripe/react-stripe-js" :as react-stripe]
-    [sixsq.nuvla.ui.profile.spec :as profile-spec]
     [sixsq.nuvla.ui.session.spec :as spec]
     [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -98,7 +97,7 @@
 
 (reg-event-fx
   ::create-payment-method
-  (fn [{{:keys [::profile-spec/stripe] :as db} :db}
+  (fn [{{:keys [::main-spec/stripe] :as db} :db}
        [_ form-id form-data opts]]
     (let [{input-type :type elements :elements} (get-in form-data [:customer :payment-method])
           data (clj->js

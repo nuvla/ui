@@ -8,8 +8,8 @@
   ::create-payment-method
   (fn [[stripe data callback]]
     (js/console.error "::create-payment-method " stripe data callback)
-    (js/console.error "::create-payment-method " (. stripe createPaymentMethod data))
-    (-> (. stripe createPaymentMethod data)
+    (js/console.error "::create-payment-method " (. stripe -createPaymentMethod))
+    (-> ((. stripe -createPaymentMethod) data)
         (.then (fn [result] (callback result))))))
 
 

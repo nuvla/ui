@@ -7,9 +7,9 @@
 (reg-fx
   ::create-payment-method
   (fn [[stripe data callback]]
-    (js/console.error "::create-payment-method " stripe)
-    (-> stripe
-        (.createPaymentMethod data)
+    (js/console.error "::create-payment-method " stripe data callback)
+    (js/console.error "::create-payment-method " (. stripe createPaymentMethod data))
+    (-> (. stripe createPaymentMethod data)
         (.then (fn [result] (callback result))))))
 
 
@@ -17,8 +17,7 @@
   ::confirm-card-setup
   (fn [[stripe client-secret data callback]]
     (js/console.error "::confirm-card-setup " stripe)
-    (-> stripe
-        (.confirmCardSetup client-secret data)
+    (-> (. stripe confirmCardSetup client-secret data)
         (.then (fn [result]
                  (callback result))))))
 
@@ -27,7 +26,6 @@
   ::confirm-sepa-debit-setup
   (fn [[stripe client-secret data callback]]
     (js/console.error "::confirm-sepa-debit-setup" stripe)
-    (-> stripe
-        (.confirmSepaDebitSetup client-secret data)
+    (-> (. stripe confirmSepaDebitSetup client-secret data)
         (.then (fn [result]
                  (callback result))))))

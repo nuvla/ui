@@ -292,7 +292,7 @@
 
 (reg-event-db
   ::stripe-loaded
-  (fn [db [_ ^js stripe]]
+  (fn [db [_ stripe]]
     ;;^js type hint needed with externs
     ;; inference to not break with advanced optimizations
     (assoc db ::spec/stripe stripe)))

@@ -198,7 +198,7 @@
 (s/def ::country us/nonblank-string)
 (s/def ::postal-code us/nonblank-string)
 (s/def ::payment-method (s/nilable map?))
-(s/def ::coupon us/nonblank-string)
+(s/def ::coupon string?)
 
 (s/def ::customer
   (s/keys :req-un [::fullname
@@ -276,7 +276,7 @@
                         :width         8}]
 
          [ui/FormGroup {:inline true}
-          [:label "Payment Method"]
+          [:label (@tr [:payment-method])]
           [ui/FormRadio {:label     (@tr [:credit-card])
                          :checked   (= @payment-form "card")
                          :on-change (ui-callback/value #(reset! payment-form "card"))}]
@@ -319,7 +319,7 @@
                                               :country
                                               :postal-code])}
             payment-method (assoc :payment-method payment-method)
-            coupon (assoc :coupon coupon))))
+            (not (str/blank? coupon)) (assoc :coupon coupon))))
 
 
 (defn SubscribeButton

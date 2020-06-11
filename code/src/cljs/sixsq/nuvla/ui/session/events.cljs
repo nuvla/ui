@@ -106,7 +106,7 @@
                                      "sepa_debit" (.getElement elements react-stripe/IbanElement)
                                      "card" (.getElement elements react-stripe/CardElement))
                   :billing_details (when (= input-type "sepa_debit")
-                                     {:name  "test"
+                                     {:name  "test"         ;;fixme
                                       :email "test@example.com"})})]
       {:db                                (assoc db ::spec/loading? true
                                                     ::spec/success-message nil

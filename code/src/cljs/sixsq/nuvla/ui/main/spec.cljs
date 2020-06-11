@@ -116,11 +116,6 @@
                                                           :icon       "box"
                                                           :protected? true
                                                           :order      6}
-                                       ;"pricing"         {:url        "pricing"
-                                       ;                   :label-kw   :pricing
-                                       ;                   :icon       "fas fa-piggy-bank"
-                                       ;                   :protected? false
-                                       ;                   :order      7}
                                        "api"             {:url        "api"
                                                           :label-kw   :api
                                                           :icon       "code"

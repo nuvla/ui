@@ -291,9 +291,9 @@
 
 (reg-event-db
   ::stripe-loaded
-  (fn [db [_ stripe]]
+  (fn [db [_ ^js stripe]]
     (js/console.log stripe)
-    (js/console.log "::stripe-loaded " (. stripe -createPaymentMethod))
+    (js/console.log "::stripe-loaded " (.-createPaymentMethod stripe))
     (js/console.log "::stripe-loaded " (js->clj stripe))
     (assoc db ::spec/stripe stripe)))
 

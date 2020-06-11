@@ -108,18 +108,24 @@
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
         zip-url              (r/atom nil)
         download-files       (utils/prepare-compose-files
-                               nuvlabox-release nuvlabox-peripherals nuvlabox-id)]
+                               nuvlabox-release nuvlabox-peripherals nuvlabox-id)
+        nuvlabox-ssh-keys    (subscribe [::subs/nuvlabox-ssh-key])
+        new-private-ssh-key  (subscribe [::subs/nuvlabox-private-ssh-key])]
     (zip/create download-files #(reset! zip-url %))
+    ;(utils/handle-ssh-keys @new-ssh-key existing-ssh-keys)
     (fn []
       (let [nuvlabox-name-or-id (str "NuvlaBox " (or (:name creation-data)
                                                      (general-utils/id->short-uuid nuvlabox-id)))
-            execute-command     (str "docker-compose -p nuvlabox -f "
-                                     (str/join " -f " (map :name download-files)) " up -d")]
+            execute-command     @nuvlabox-ssh-keys
+                                ;(str "docker-compose -p nuvlabox -f "
+                                ;     (str/join " -f " (map :name download-files)) " up -d")
+            ]
         [:<>
          [ui/ModalHeader
           [ui/Icon {:name "box"}] (str nuvlabox-name-or-id " created")]
 
          [ui/ModalContent
+          [:span (str @nuvlabox-ssh-keys)]
           [ui/CardGroup {:centered true}
            [ui/Card
             [ui/CardContent {:text-align :center}
@@ -277,9 +283,7 @@
                                   {:key release, :text release, :value release})
                                 @nb-releases)
         nb-releases-by-rel    (group-by :release @nb-releases)
-        ssh-toggle            (r/atom false)
-        default-data          {:refresh-interval 30
-                               :add-ssh-key      @ssh-toggle}
+        default-data          {:refresh-interval 30}
         first-nb-release      (first @nb-releases)
         creation-data         (r/atom default-data)
         default-release-data  {:nb-rel      (:release first-nb-release)
@@ -330,6 +334,15 @@
                                                                             (into {}))])
                                                                (reset! create-usb-trigger true))
                                  :else (do
+                                         (when @ssh-toggle
+                                           (if @ssh-existing-key
+                                             (dispatch [::events/find-and-set-nuvlabox-ssh-keys @ssh-chosen-keys])
+                                             ; else, create new one
+                                             (let [ssh-desc "SSH credential generated for NuvlaBox: "
+                                                   ssh-tpl {:name        (str "SSH key for " (:name @creation-data))
+                                                            :description (str ssh-desc (:name @creation-data))
+                                                            :template    {:href "credential-template/generate-ssh-key"}}]
+                                               (dispatch [::events/create-ssh-key ssh-tpl]))))
                                          (dispatch [::events/create-nuvlabox
                                                     (->> @creation-data
                                                       (remove (fn [[_ v]] (str/blank? v)))
@@ -377,11 +390,9 @@
                                :label       (@tr [:nuvlabox-modal-add-ssh-key])
                                :checked     @ssh-toggle
                                :on-change   #(do
-                                               (swap! creation-data assoc :add-ssh-key (not @ssh-toggle))
                                                (swap! ssh-toggle not)
                                                (reset! ssh-chosen-keys [])
-                                               (reset! ssh-existing-key false)
-                                               (swap! creation-data dissoc :add-existing-ssh-keys))}]
+                                               (reset! ssh-existing-key false))}]
 
                  [ui/Segment {:style {:display (if @ssh-toggle "block" "none")}}
                   [ui/Form
@@ -391,15 +402,13 @@
                                       :radio true
                                       :checked (not @ssh-existing-key)
                                       :on-change #(do
-                                                    (swap! ssh-existing-key not)
-                                                    (swap! creation-data dissoc :add-existing-ssh-keys))}]
+                                                    (swap! ssh-existing-key not))}]
 
                     [ui/FormCheckbox {:label (@tr [:nuvlabox-modal-add-existing-ssh-key])
                                       :radio true
                                       :checked @ssh-existing-key
                                       :on-change #(do
-                                                    (swap! ssh-existing-key not)
-                                                    (swap! creation-data assoc :add-existing-ssh-keys @ssh-chosen-keys))}]]]
+                                                    (swap! ssh-existing-key not))}]]]
 
                   (when @ssh-existing-key
                     (if (pos-int? (count @ssh-credentials))
@@ -411,8 +420,7 @@
 
                                     :on-change   (ui-callback/callback
                                                    :value #(do
-                                                             (reset! ssh-chosen-keys %)
-                                                             (swap! creation-data assoc :add-existing-ssh-keys @ssh-chosen-keys)))
+                                                             (reset! ssh-chosen-keys %)))
                                     :options     (map (fn [{id :id, name :name}]
                                                         {:key id, :value id, :text name})
                                                    @ssh-credentials)}]
@@ -421,8 +429,6 @@
                       ))
 
                   ]
-
-                 [:span (str @creation-data)]
 
                  (let [{nb-rel                                  :nb-rel
                         nb-assets                               :nb-assets

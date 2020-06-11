@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.edge.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.edge.effects :as fx]
     [sixsq.nuvla.ui.edge.spec :as spec]
@@ -91,6 +92,39 @@
   ::open-modal
   (fn [db [_ modal-id]]
     (assoc db ::spec/open-modal modal-id)))
+
+
+(reg-event-fx
+  ::create-ssh-key
+  (fn [_ [_ ssh-template]]
+    {::cimi-api-fx/add [:credential ssh-template
+                        #(do
+                           (dispatch [::set-nuvlabox-ssh-keys [{:resource-id 1
+                                                                :public-key  2}]])
+                           (dispatch [::set-nuvlabox-created-private-ssh-key (:private-key %)]))]}))
+
+
+(reg-event-db
+  ::find-and-set-nuvlabox-ssh-keys
+  (fn [db [_ ssh-keys-ids]]
+    (let [ssh-key-list  (r/atom [])]
+      (for [id ssh-keys-ids]
+        {::cimi-api-fx/get [id
+                            #(swap! ssh-key-list concat [{:resource-id id
+                                                          :public-key  (:public-key %)}])]})
+      (dispatch [::set-nuvlabox-ssh-keys (into [] @ssh-key-list)]))))
+
+
+(reg-event-db
+  ::set-nuvlabox-ssh-keys
+  (fn [db [_ ssh-key-list]]
+    (assoc db ::spec/nuvlabox-ssh-key ssh-key-list)))
+
+
+(reg-event-db
+  ::set-nuvlabox-created-private-ssh-key
+  (fn [db [_ private-key]]
+    (assoc db ::spec/nuvlabox-private-ssh-key private-key)))
 
 
 (reg-event-fx

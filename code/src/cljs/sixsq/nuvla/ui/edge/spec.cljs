@@ -23,6 +23,9 @@
 
 (s/def ::nuvlabox-usb-api-key any?)
 
+(s/def ::nuvlabox-ssh-key any?)
+(s/def ::nuvlabox-private-ssh-key string?)
+
 (s/def ::page int?)
 (s/def ::elements-per-page int?)
 (s/def ::total-elements int?)
@@ -50,6 +53,8 @@
                           ::open-modal
                           ::nuvlabox-created-id
                           ::nuvlabox-usb-api-key
+                          ::nuvlabox-ssh-key
+                          ::nuvlabox-private-ssh-key
                           ::vpn-infra
                           ::ssh-keys-available]))
 
@@ -67,5 +72,7 @@
                ::open-modal          nil
                ::nuvlabox-created-id nil
                ::nuvlabox-usb-api-key nil
+               ::nuvlabox-ssh-key    []
+               ::nuvlabox-private-ssh-key nil
                ::vpn-infra           nil
                ::ssh-keys-available  nil})

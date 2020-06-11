@@ -125,3 +125,13 @@
 (defn get-major-version
   [full-version]
   (-> (str/split full-version #"\.") first))
+
+
+(defn handle-ssh-keys
+  [new-ssh-key existing-ssh-keys]
+  (if existing-ssh-keys
+    ; get the corresponding pub keys
+    ; generate new ssh key
+    1
+    2
+    ))

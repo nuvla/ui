@@ -78,6 +78,16 @@
     (::spec/nuvlabox-created-id db)))
 
 (reg-sub
+  ::nuvlabox-ssh-key
+  (fn [db]
+    (::spec/nuvlabox-ssh-key db)))
+
+(reg-sub
+  ::nuvlabox-private-ssh-key
+  (fn [db]
+    (::spec/nuvlabox-private-ssh-key db)))
+
+(reg-sub
   ::nuvlabox-usb-api-key
   (fn [db]
     (::spec/nuvlabox-usb-api-key db)))

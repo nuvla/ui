@@ -2,23 +2,23 @@
   (:require
     ["@stripe/react-stripe-js" :as react-stripe]
     [ajax.core :as ajax]
-    [sixsq.nuvla.ui.profile.views :as profile-views]
     [clojure.string :as str]
     [day8.re-frame.http-fx]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.pricing.events :as events]
-    [sixsq.nuvla.ui.profile.events :as profile-event]
-    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.pricing.subs :as subs]
+    [sixsq.nuvla.ui.profile.events :as profile-event]
+    [sixsq.nuvla.ui.profile.views :as profile-views]
+    [sixsq.nuvla.ui.utils.general :as general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.general :as general]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn PlanComp

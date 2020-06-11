@@ -6,8 +6,6 @@
 (reg-fx
   ::create-payment-method
   (fn [[stripe data callback]]
-    (js/console.log "::create-payment-method " stripe)
-    (js/console.log "::create-payment-method " (.-createPaymentMethod stripe))
     (-> ((.-createPaymentMethod stripe) data)
         (.then (fn [result] (callback result))))))
 

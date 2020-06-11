@@ -3,9 +3,9 @@
     ["js-yaml" :as js-yaml]
     [clojure.set :as set]
     [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [goog.string :as gstring]
-    [goog.string.format]))
+    [goog.string.format]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (defn str->int

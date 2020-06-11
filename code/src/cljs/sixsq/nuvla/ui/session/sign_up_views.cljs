@@ -1,15 +1,18 @@
 (ns sixsq.nuvla.ui.session.sign-up-views
   (:require
     [cljs.spec.alpha :as s]
-    [reagent.core :as r]
     [clojure.string :as str]
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.profile.events :as profile-events]
+    [sixsq.nuvla.ui.profile.subs :as profile-subs]
+    [sixsq.nuvla.ui.profile.views :as profile-views]
     [sixsq.nuvla.ui.session.components :as comp]
     [sixsq.nuvla.ui.session.events :as events]
-    [sixsq.nuvla.ui.profile.views :as profile-views]
     [sixsq.nuvla.ui.session.subs :as subs]
     [sixsq.nuvla.ui.session.utils :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -50,6 +53,8 @@
         callback-msg-on-validation (js/encodeURI "signup-validation-success")
         github-template?           (subscribe [::subs/user-template-exist?
                                                "user-template/nuvla"])
+        stripe                     (subscribe [::main-subs/stripe])
+        pricing-catalogue          (subscribe [::profile-subs/pricing-catalogue])
         create-customer            (r/atom false)
         form-customer-conf         {:form-spec    ::profile-views/customer
                                     :names->value {:fullname       ""
@@ -58,6 +63,7 @@
                                                    :country        ""
                                                    :postal-code    ""}}
         form-customer              (fv/init-form form-customer-conf)]
+    (dispatch [::profile-events/get-pricing-catalogue])
     (fn []
       [comp/RightPanel
        {:title        (@tr [:create-an])
@@ -96,7 +102,7 @@
                        [ui/FormCheckbox {:label     "Start my trial now"
                                          :on-change (ui-callback/checked
                                                       #(reset! create-customer %))}]
-                       (when @create-customer
+                       (when (and @stripe @create-customer)
                          [profile-views/CustomerFormFields form-customer])]
         :submit-text  (@tr [:sign-up])
         :submit-fn    #(let [form-signup-valid?   (fv/validate-form-and-show? form)
@@ -112,7 +118,11 @@
                                        :redirect-url (str @server-redirect-uri "?message="
                                                           callback-msg-on-validation)}]
                              (if @create-customer
-                               (let [customer  (profile-views/customer-form->customer form-customer)
+                               (let [customer  (-> form-customer
+                                                   profile-views/customer-form->customer
+                                                   (assoc :subscription
+                                                          (profile-events/catalogue->subscription
+                                                            @pricing-catalogue)))
                                      data-cust (assoc data :customer customer)]
                                  (if (:payment-method customer)
                                    (dispatch [::events/create-payment-method

@@ -284,9 +284,10 @@
 (reg-event-fx
   ::load-stripe
   (fn [{{:keys [::spec/config
-                ::spec/stripe] :as db} :db} _]
-    (when-not stripe
-      {::fx/load-stripe [(:stripe config) #(dispatch [::stripe-loaded %])]})))
+                ::spec/stripe]} :db} _]
+    (when-let [stripe-public-key (:stripe config)]
+      (when-not stripe
+        {::fx/load-stripe [stripe-public-key #(dispatch [::stripe-loaded %])]}))))
 
 
 (reg-event-db
@@ -294,8 +295,6 @@
   (fn [db [_ ^js stripe]]
     ;;^js type hint needed with externs
     ;; inference to not break with advanced optimizations
-    (js/console.log "::stripe-loaded " stripe)
-    (js/console.log "::stripe-loaded " (.-createPaymentMethod stripe))
     (assoc db ::spec/stripe stripe)))
 
 

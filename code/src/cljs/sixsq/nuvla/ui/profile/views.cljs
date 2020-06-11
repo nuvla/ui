@@ -151,7 +151,6 @@
 
 (def Elements (r/adapt-react-class react-stripe/Elements))
 (def CardElement (r/adapt-react-class react-stripe/CardElement))
-(def ElementsConsumer (r/adapt-react-class react-stripe/ElementsConsumer))
 (def IbanElement (r/adapt-react-class react-stripe/IbanElement))
 
 

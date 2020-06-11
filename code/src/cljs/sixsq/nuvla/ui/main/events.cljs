@@ -292,6 +292,7 @@
 (reg-event-db
   ::stripe-loaded
   (fn [db [_ stripe]]
+    (js/console.log stripe)
     (assoc db ::spec/stripe stripe)))
 
 

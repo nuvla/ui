@@ -294,6 +294,8 @@
   (fn [db [_ ^js stripe]]
     ;;^js type hint needed with externs
     ;; inference to not break with advanced optimizations
+    (js/console.log "::stripe-loaded " stripe)
+    (js/console.log "::stripe-loaded " (.-createPaymentMethod stripe))
     (assoc db ::spec/stripe stripe)))
 
 

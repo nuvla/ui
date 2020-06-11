@@ -293,8 +293,8 @@
   ::stripe-loaded
   (fn [db [_ stripe]]
     (js/console.log stripe)
-    (js/console.error "::stripe-loaded " (. stripe -createPaymentMethod))
-    (js/console.error "::stripe-loaded " (js->clj stripe))
+    (js/console.log "::stripe-loaded " (. stripe -createPaymentMethod))
+    (js/console.log "::stripe-loaded " (js->clj stripe))
     (assoc db ::spec/stripe stripe)))
 
 

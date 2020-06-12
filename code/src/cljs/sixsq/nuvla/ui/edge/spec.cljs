@@ -72,7 +72,7 @@
                ::open-modal          nil
                ::nuvlabox-created-id nil
                ::nuvlabox-usb-api-key nil
-               ::nuvlabox-ssh-key    []
+               ::nuvlabox-ssh-key    nil
                ::nuvlabox-private-ssh-key nil
                ::vpn-infra           nil
                ::ssh-keys-available  nil})

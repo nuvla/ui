@@ -112,26 +112,17 @@
 
 
 (defn prepare-compose-files
-  [nuvlabox-release selected-peripherals nuvlabox-id]
+  [nuvlabox-release selected-peripherals replacements]
   (let [nuvlabox-file-scopes (group-by :scope (:compose-files nuvlabox-release))]
     (map
       (fn [peripheral]
-        (let [{:keys [name file]} (first (get nuvlabox-file-scopes peripheral))]
+        (let [{:keys [name file]} (first (get nuvlabox-file-scopes peripheral))
+              replacement-list (partition 2 replacements)]
           {:name name
-           :file (str/replace file #"\$\{NUVLABOX_UUID\}" nuvlabox-id)}))
+           :file (reduce #(apply str/replace %1 %2) file replacement-list)}))
       selected-peripherals)))
 
 
 (defn get-major-version
   [full-version]
   (-> (str/split full-version #"\.") first))
-
-
-(defn handle-ssh-keys
-  [new-ssh-key existing-ssh-keys]
-  (if existing-ssh-keys
-    ; get the corresponding pub keys
-    ; generate new ssh key
-    1
-    2
-    ))

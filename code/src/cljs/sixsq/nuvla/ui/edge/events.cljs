@@ -99,20 +99,22 @@
   (fn [_ [_ ssh-template]]
     {::cimi-api-fx/add [:credential ssh-template
                         #(do
-                           (dispatch [::set-nuvlabox-ssh-keys [{:resource-id 1
-                                                                :public-key  2}]])
+                           (dispatch [::set-nuvlabox-ssh-keys {:ids         [(:resource-id %)]
+                                                               :public-keys [(:public-key %)]}])
                            (dispatch [::set-nuvlabox-created-private-ssh-key (:private-key %)]))]}))
 
 
-(reg-event-db
-  ::find-and-set-nuvlabox-ssh-keys
-  (fn [db [_ ssh-keys-ids]]
-    (let [ssh-key-list  (r/atom [])]
-      (for [id ssh-keys-ids]
-        {::cimi-api-fx/get [id
-                            #(swap! ssh-key-list concat [{:resource-id id
-                                                          :public-key  (:public-key %)}])]})
-      (dispatch [::set-nuvlabox-ssh-keys (into [] @ssh-key-list)]))))
+(reg-event-fx
+  ::find-nuvlabox-ssh-keys
+  (fn [_ [_ ssh-keys-ids]]
+    {::cimi-api-fx/search [:credential
+                           {:filter (cond-> (apply general-utils/join-or
+                                              (map #(str "id='" % "'") ssh-keys-ids)))
+                            :select "public-key"
+                            :last   10000}
+                           #(dispatch [::set-nuvlabox-ssh-keys {:ids         ssh-keys-ids
+                                                                :public-keys (into [] (map :public-key
+                                                                                        (:resources %)))}])]}))
 
 
 (reg-event-db
@@ -125,6 +127,19 @@
   ::set-nuvlabox-created-private-ssh-key
   (fn [db [_ private-key]]
     (assoc db ::spec/nuvlabox-private-ssh-key private-key)))
+
+
+(reg-event-fx
+  ::assign-ssh-keys
+  (fn [_ [_ {:keys [ids]} nuvlabox-id]]
+    {::cimi-api-fx/edit [nuvlabox-id {:ssh-keys ids}
+                         #(when (instance? js/Error %)
+                            (let [{:keys [status message]} (response/parse-ex-info %)]
+                              (dispatch [::messages-events/add
+                                         {:header  (cond-> (str "error editing " nuvlabox-id)
+                                                     status (str " (" status ")"))
+                                          :content message
+                                          :type    :error}])))]}))
 
 
 (reg-event-fx

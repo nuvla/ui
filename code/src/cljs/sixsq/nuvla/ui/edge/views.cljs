@@ -103,29 +103,42 @@
 
 
 (defn CreatedNuvlaBox
-  [nuvlabox-id creation-data nuvlabox-release-data on-close-fn tr]
+  [nuvlabox-id creation-data nuvlabox-release-data nuvlabox-ssh-keys new-private-ssh-key on-close-fn tr]
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
+        private-ssh-key-file (str (general-utils/id->short-uuid nuvlabox-id) ".ssh.private")
+        public-keys          (if @nuvlabox-ssh-keys
+                               (str (str/join "\\n" (:public-keys @nuvlabox-ssh-keys)) "\\n")
+                               nil)
         zip-url              (r/atom nil)
-        download-files       (utils/prepare-compose-files
-                               nuvlabox-release nuvlabox-peripherals nuvlabox-id)
-        nuvlabox-ssh-keys    (subscribe [::subs/nuvlabox-ssh-key])
-        new-private-ssh-key  (subscribe [::subs/nuvlabox-private-ssh-key])]
+        envsubst             (if public-keys
+                               [#"\$\{NUVLABOX_UUID\}" nuvlabox-id
+                                #"\$\{NUVLABOX_SSH_PUB_KEY\}" public-keys]
+                               [#"\$\{NUVLABOX_UUID\}" nuvlabox-id])
+        download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals envsubst)]
     (zip/create download-files #(reset! zip-url %))
-    ;(utils/handle-ssh-keys @new-ssh-key existing-ssh-keys)
+    (when @nuvlabox-ssh-keys
+      (dispatch [::events/assign-ssh-keys @nuvlabox-ssh-keys nuvlabox-id]))
     (fn []
       (let [nuvlabox-name-or-id (str "NuvlaBox " (or (:name creation-data)
                                                      (general-utils/id->short-uuid nuvlabox-id)))
-            execute-command     @nuvlabox-ssh-keys
-                                ;(str "docker-compose -p nuvlabox -f "
-                                ;     (str/join " -f " (map :name download-files)) " up -d")
-            ]
+            execute-command     (str "docker-compose -p nuvlabox -f "
+                                     (str/join " -f " (map :name download-files)) " up -d")]
         [:<>
          [ui/ModalHeader
           [ui/Icon {:name "box"}] (str nuvlabox-name-or-id " created")]
 
+          (when @new-private-ssh-key
+            [ui/Message {:info  true
+                         :content (@tr [:nuvlabox-modal-private-ssh-key-info])
+                         :header  (r/as-element [:a {:href   (str "data:text/plain;charset=utf-8,"
+                                                               (js/encodeURIComponent @new-private-ssh-key))
+                                                     :target   "_blank"
+                                                     :download private-ssh-key-file
+                                                     :key      private-ssh-key-file}
+                                                 [ui/Icon {:name "privacy"}] private-ssh-key-file])}])
+
          [ui/ModalContent
-          [:span (str @nuvlabox-ssh-keys)]
           [ui/CardGroup {:centered true}
            [ui/Card
             [ui/CardContent {:text-align :center}
@@ -174,18 +187,19 @@
 
 
 (defn CreatedNuvlaBoxUSBTrigger
-  [creation-data nuvlabox-release-data on-close-fn tr]
+  [creation-data nuvlabox-release-data nuvlabox-ssh-keys new-private-ssh-key on-close-fn tr]
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
         new-api-key          (subscribe [::subs/nuvlabox-usb-api-key])
-        download-files       (utils/prepare-compose-files
-                               nuvlabox-release nuvlabox-peripherals "placeholder")
+        private-ssh-key-file "nuvlabox.ssh.private"
+        download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals
+                               [#"placeholder" "placeholder"])
         download-files-names (map :name download-files)]
 
     (fn []
       (let [apikey                (:resource-id @new-api-key)
             apisecret             (:secret-key @new-api-key)
-            nuvlabox-trigger-file {:assets    download-files-names
+            nb-trigger-file-base  {:assets    download-files-names
                                    :version   (:release nuvlabox-release)
                                    :name      (:name creation-data)
                                    :description    (:description creation-data)
@@ -193,7 +207,10 @@
                                    :endpoint  @cimi-fx/NUVLA_URL
                                    :vpn       (:vpn-server-id creation-data)
                                    :apikey    apikey
-                                   :apisecret apisecret}]
+                                   :apisecret apisecret}
+            nuvlabox-trigger-file (if @nuvlabox-ssh-keys
+                                    (assoc nb-trigger-file-base :ssh @nuvlabox-ssh-keys)
+                                    nb-trigger-file-base)]
         [:<>
          [ui/ModalHeader
           [ui/Icon {:name "usb"}] (@tr [:nuvlabox-modal-usb-header])]
@@ -213,6 +230,16 @@
                          :trigger (r/as-element [ui/Icon {:name "exclamation triangle"
                                                           :color  "orange"}])}]]
              (@tr [:nuvlabox-usb-key-wait]))]]
+
+         (when @new-private-ssh-key
+           [ui/Message {:info  true
+                        :content (@tr [:nuvlabox-modal-private-ssh-key-info])
+                        :header  (r/as-element [:a {:href   (str "data:text/plain;charset=utf-8,"
+                                                              (js/encodeURIComponent @new-private-ssh-key))
+                                                    :target   "_blank"
+                                                    :download private-ssh-key-file
+                                                    :key      private-ssh-key-file}
+                                                [ui/Icon {:name "privacy"}] private-ssh-key-file])}])
 
          [ui/ModalContent
           [ui/CardGroup {:centered true}
@@ -311,9 +338,13 @@
         ssh-toggle            (r/atom false)
         ssh-existing-key      (r/atom false)
         ssh-chosen-keys       (r/atom [])
+        nuvlabox-ssh-keys     (subscribe [::subs/nuvlabox-ssh-key])
+        new-private-ssh-key   (subscribe [::subs/nuvlabox-private-ssh-key])
         on-close-fn           #(do
                                  (dispatch [::events/set-created-nuvlabox-id nil])
                                  (dispatch [::events/set-nuvlabox-usb-api-key nil])
+                                 (dispatch [::events/set-nuvlabox-ssh-keys nil])
+                                 (dispatch [::events/set-nuvlabox-created-private-ssh-key nil])
                                  (dispatch [::events/open-modal nil])
                                  (reset! advanced? false)
                                  (reset! ssh-toggle false)
@@ -327,27 +358,30 @@
                                  (reset! nuvlabox-release-data default-release-data))
         on-add-fn             #(cond
                                  (nil? @install-strategy) (reset! install-strategy-error true)
-                                 (= @install-strategy "usb") (do
-                                                               (dispatch [::events/create-nuvlabox-usb-api-key
-                                                                          (->> new-api-key-data
-                                                                            (remove (fn [[_ v]] (str/blank? v)))
-                                                                            (into {}))])
-                                                               (reset! create-usb-trigger true))
                                  :else (do
                                          (when @ssh-toggle
                                            (if @ssh-existing-key
-                                             (dispatch [::events/find-and-set-nuvlabox-ssh-keys @ssh-chosen-keys])
+                                             (when (not-empty @ssh-chosen-keys)
+                                               (dispatch [::events/find-nuvlabox-ssh-keys @ssh-chosen-keys]))
                                              ; else, create new one
                                              (let [ssh-desc "SSH credential generated for NuvlaBox: "
                                                    ssh-tpl {:name        (str "SSH key for " (:name @creation-data))
                                                             :description (str ssh-desc (:name @creation-data))
                                                             :template    {:href "credential-template/generate-ssh-key"}}]
                                                (dispatch [::events/create-ssh-key ssh-tpl]))))
-                                         (dispatch [::events/create-nuvlabox
-                                                    (->> @creation-data
-                                                      (remove (fn [[_ v]] (str/blank? v)))
-                                                      (into {}))])
-                                         (reset! creation-data default-data)))]
+                                         (if (= @install-strategy "usb")
+                                           (do
+                                             (dispatch [::events/create-nuvlabox-usb-api-key
+                                                        (->> new-api-key-data
+                                                          (remove (fn [[_ v]] (str/blank? v)))
+                                                          (into {}))])
+                                             (reset! create-usb-trigger true))
+                                           (do
+                                             (dispatch [::events/create-nuvlabox
+                                                        (->> @creation-data
+                                                          (remove (fn [[_ v]] (str/blank? v)))
+                                                          (into {}))])
+                                             (reset! creation-data default-data)))))]
     (dispatch [::events/get-ssh-keys-available ["ssh-key"] nil])
     (fn []
       (when (= (count @vpn-infra-opts) 1)
@@ -356,8 +390,10 @@
                  :close-icon true
                  :on-close   on-close-fn}
        (cond
-         @nuvlabox-id [CreatedNuvlaBox @nuvlabox-id @creation-data @nuvlabox-release-data on-close-fn tr]
-         @create-usb-trigger [CreatedNuvlaBoxUSBTrigger @creation-data @nuvlabox-release-data on-close-fn tr]
+         @nuvlabox-id [CreatedNuvlaBox @nuvlabox-id @creation-data @nuvlabox-release-data
+                       nuvlabox-ssh-keys new-private-ssh-key on-close-fn tr]
+         @create-usb-trigger [CreatedNuvlaBoxUSBTrigger @creation-data @nuvlabox-release-data
+                              nuvlabox-ssh-keys new-private-ssh-key on-close-fn tr]
          :else [:<>
                 [ui/ModalHeader
                  [ui/Icon {:name "add"}] (str (@tr [:nuvlabox-modal-new-nuvlabox]) (:name @creation-data))]

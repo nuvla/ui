@@ -21,7 +21,11 @@ The expected JSON schema is:
   "name": "<basename nuvlaboxes>",
   "description": "<base description>",
   "vpn": "infrastructure-service/<uuid>",
-  "assets": ["docker-compose.yml", <other compose files to install alongside>]
+  "assets": ["docker-compose.yml", <other compose files to install alongside>],
+  "ssh": {
+            "ids": ["credential/111-bbb-ccc", ...],
+            "public-keys": ["ssh-rsa AAA...", ...]
+            }
 }
 
 :returns NuvlaBox UUID
@@ -165,7 +169,9 @@ if __name__ == "__main__":
     nb_release = nb_trigger_json['version']
     nb_vpn_server_id = nb_trigger_json.get('vpn')
     nb_assets = nb_trigger_json['assets']
+    nb_ssh = nb_trigger_json.get('ssh')
 
+    nb_ssh_pubkeys = nb_ssh.get('public-keys', [])
     nb_version = nb_release.split('.')[0]
 
     login_apikey = {
@@ -192,6 +198,7 @@ if __name__ == "__main__":
 
     new_conf['NUVLA_ENDPOINT'] = nuvla
     new_conf['NUVLA_ENDPOINT_INSECURE'] = str(not connection_verify)
+    new_conf['NUVLABOX_SSH_PUB_KEY'] = '\\n'.join(nb_ssh_pubkeys) + '\\n'
 
     if previous_conf:
         if "NUVLABOX_UUID" in previous_conf:
@@ -240,6 +247,9 @@ if __name__ == "__main__":
 
         if nb_vpn_server_id:
             nuvlabox['vpn-server-id'] = nb_vpn_server_id
+
+        if nb_ssh and "ids" in nb_ssh and isinstance([], nb_ssh.get('ids')):
+            nuvlabox['ssh-keys'] = nb_ssh.get('ids')
 
         new_nb_endpoint = nuvla_endpoint + "/nuvlabox"
         nb_id = s.post(new_nb_endpoint, json=nuvlabox, verify=connection_verify)

@@ -99,11 +99,12 @@
                                        :error     (fv/?show-message
                                                     form :password-repeat spec->msg)}]]
 
-                       [ui/FormCheckbox {:label     "Start my trial now"
-                                         :on-change (ui-callback/checked
-                                                      #(reset! create-customer %))}]
                        (when (and @stripe @create-customer)
-                         [profile-views/CustomerFormFields form-customer])]
+                         [:<>
+                          [ui/FormCheckbox {:label     "Start my trial now"
+                                            :on-change (ui-callback/checked
+                                                         #(reset! create-customer %))}]
+                          [profile-views/CustomerFormFields form-customer]])]
         :submit-text  (@tr [:sign-up])
         :submit-fn    #(let [form-signup-valid?   (fv/validate-form-and-show? form)
                              form-customer-valid? (if @create-customer

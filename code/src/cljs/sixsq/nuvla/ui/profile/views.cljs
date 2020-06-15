@@ -280,9 +280,9 @@
           [ui/FormRadio {:label     (@tr [:credit-card])
                          :checked   (= @payment-form "card")
                          :on-change (ui-callback/value #(reset! payment-form "card"))}]
-          [ui/FormRadio {:label     (@tr [:bank-account])
-                         :checked   (= @payment-form "sepa_debit")
-                         :on-change (ui-callback/value #(reset! payment-form "sepa_debit"))}]]
+          #_[ui/FormRadio {:label     (@tr [:bank-account])
+                           :checked   (= @payment-form "sepa_debit")
+                           :on-change (ui-callback/value #(reset! payment-form "sepa_debit"))}]]
          [ui/FormField {:style {:max-width 380}}
           [:label (@tr [:card-number])]
           [PaymentMethodInput
@@ -475,7 +475,7 @@
            [ui/FormRadio {:label     (@tr [:credit-card])
                           :checked   (= @payment-form "card")
                           :on-change (ui-callback/value #(reset! payment-form "card"))}]
-           [ui/FormRadio {:label     (@tr [:bank-account])
+           #_[ui/FormRadio {:label     (@tr [:bank-account])
                           :checked   (= @payment-form "sepa_debit")
                           :on-change (ui-callback/value #(reset! payment-form "sepa_debit"))}]]
           [ui/FormField {:width 9}
@@ -802,7 +802,8 @@
         customer  (subscribe [::subs/customer])]
     (dispatch [::events/init])
     (fn []
-      (let [show-sections (and @stripe @session (not @is-admin?) @customer)]
+      (let [show-subscription (and @stripe @session (not @is-admin?))
+            show-customer-sections (and show-subscription @customer)]
         [:<>
          [uix/PageHeader "user" (str/capitalize (@tr [:profile]))]
          [ui/Menu {:borderless true}
@@ -815,9 +816,9 @@
            [ui/GridColumn
             [Session]]
            [ui/GridColumn
-            (when show-sections
+            (when show-subscription
               [Subscription])]]
-          (when show-sections
+          (when show-customer-sections
             [:<>
              [ui/GridRow {:columns 2}
               [ui/GridColumn

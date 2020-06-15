@@ -304,7 +304,7 @@
                 :sixsq.nuvla.ui.profile.spec/subscription]} :db} [_ dispatch-vector]]
     (let [active? (boolean
                     (or (and (some? stripe)
-                             (#{"triailing" "active"} (:status subscription)))
+                             (#{"trialing" "active"} (:status subscription)))
                         (nil? stripe)))]
       {:dispatch (if active?
                    dispatch-vector

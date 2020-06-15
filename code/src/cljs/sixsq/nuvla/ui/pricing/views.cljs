@@ -10,9 +10,9 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.pricing.events :as events]
     [sixsq.nuvla.ui.pricing.subs :as subs]
     [sixsq.nuvla.ui.profile.events :as profile-event]
+    [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.profile.views :as profile-views]
     [sixsq.nuvla.ui.utils.general :as general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -72,7 +72,8 @@
 
 (defn Pricing
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        subscription (subscribe [::profile-subs/subscription])]
     (let [up-to-str (@tr [:up-to])
           from-str  (@tr [:from])]
       [ui/Segment style/basic
@@ -141,8 +142,9 @@
              [ui/TableCell (str "€ 5.00 " (@tr [:per-month-each]))]]]]]
          [ui/GridColumn {:width 5, :text-align "center"}
           ^{:key (random-uuid)}
-          [profile-views/SubscribeButton]
-          ]]]])))
+          (when-not @subscription
+            [profile-views/SubscribeButton])]
+         ]]])))
 
 
 (defmethod panel/render :pricing

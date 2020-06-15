@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -227,7 +228,9 @@
      ::cimi-api-fx/add [:customer (cond-> (assoc customer :subscription (catalogue->subscription
                                                                           pricing-catalogue))
                                           payment-method (assoc :payment-method payment-method))
-                        #(dispatch [::get-customer (:resource-id %)])
+                        #(do
+                           (dispatch [::get-customer (:resource-id %)])
+                           (dispatch [::history-events/navigate "profile"]))
                         :on-error #(dispatch [::set-error (-> % response/parse-ex-info :message)
                                               :create-customer])]}))
 
@@ -242,7 +245,9 @@
                               #(if (instance? js/Error %)
                                  (dispatch [::set-error (-> % response/parse-ex-info :message)
                                             :create-customer])
-                                 (dispatch [::get-customer (:id customer)]))
+                                 (do
+                                   (dispatch [::get-customer (:id customer)])
+                                   (dispatch [::history-events/navigate "profile"])))
                               (catalogue->subscription pricing-catalogue)]}))
 
 

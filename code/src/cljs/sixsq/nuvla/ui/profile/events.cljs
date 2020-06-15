@@ -183,37 +183,6 @@
       {::cimi-api-fx/operation [(:credential-password user) "change-password" callback-fn body]})))
 
 
-(reg-event-fx
-  ::create-payment-method
-  (fn [{{:keys [::main-spec/stripe] :as db} :db} [_ event-kw {:keys [payment-method] :as resource}]]
-    (if payment-method
-      (let [{input-type :type elements :elements} payment-method
-            data (clj->js
-                   {:type            input-type
-                    input-type       (case input-type
-                                       "sepa_debit" (.getElement elements react-stripe/IbanElement)
-                                       "card" (.getElement elements react-stripe/CardElement))
-                    :billing_details (when (= input-type "sepa_debit")
-                                       {:name  "test"
-                                        :email "test@example.com"})})]
-        {::fx/create-payment-method [stripe data
-                                     #(dispatch [::set-payment-method-result event-kw resource %])]
-         :db                        (update db ::spec/loading conj :create-payment)})
-      {:dispatch [event-kw resource]})))
-
-
-(reg-event-fx
-  ::set-payment-method-result
-  (fn [{db :db} [_ event-kw resource result]]
-    (let [res            (-> result (js->clj :keywordize-keys true))
-          error          (:error res)
-          payment-method (-> res :paymentMethod :id)]
-      (if error
-        {:dispatch [::set-error (:message error) :create-payment]}
-        {:db       (update db ::spec/loading disj :create-payment)
-         :dispatch [event-kw (assoc resource :payment-method payment-method)]}))))
-
-
 (defn catalogue->subscription
   [pricing-catalogue]
   (let [pay-as-you-go (-> pricing-catalogue :plans first)]

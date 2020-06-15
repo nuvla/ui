@@ -4,13 +4,6 @@
 
 
 (reg-fx
-  ::create-payment-method
-  (fn [[^js stripe data callback]]
-    (-> ((.-createPaymentMethod stripe) data)
-        (.then (fn [result] (callback result))))))
-
-
-(reg-fx
   ::confirm-card-setup
   (fn [[^js stripe client-secret data callback]]
     (-> (. stripe confirmCardSetup client-secret data)

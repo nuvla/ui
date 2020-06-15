@@ -99,12 +99,13 @@
                                        :error     (fv/?show-message
                                                     form :password-repeat spec->msg)}]]
 
-                       (when (and @stripe @create-customer)
-                         [:<>
-                          [ui/FormCheckbox {:label     "Start my trial now"
-                                            :on-change (ui-callback/checked
-                                                         #(reset! create-customer %))}]
-                          [profile-views/CustomerFormFields form-customer]])]
+                       (when @stripe
+                         [ui/FormCheckbox {:label     "Start my trial now"
+                                           :on-change (ui-callback/checked
+                                                        #(reset! create-customer %))}])
+                       (when @create-customer
+                         [profile-views/CustomerFormFields form-customer])
+                       ]
         :submit-text  (@tr [:sign-up])
         :submit-fn    #(let [form-signup-valid?   (fv/validate-form-and-show? form)
                              form-customer-valid? (if @create-customer
@@ -125,11 +126,8 @@
                                                           (profile-events/catalogue->subscription
                                                             @pricing-catalogue)))
                                      data-cust (assoc data :customer customer)]
-                                 (if (:payment-method customer)
-                                   (dispatch [::events/create-payment-method
-                                              utils/user-tmpl-email-password data-cust opts])
-                                   (dispatch [::events/submit utils/user-tmpl-email-password
-                                              data-cust opts])))
+                                 (dispatch [::events/submit utils/user-tmpl-email-password
+                                            data-cust opts]))
                                (dispatch [::events/submit
                                           utils/user-tmpl-email-password data opts])))))
         :ExtraContent (when @github-template?

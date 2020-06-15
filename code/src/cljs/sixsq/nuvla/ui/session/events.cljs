@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.session.events
   (:require
-    ["@stripe/react-stripe-js" :as react-stripe]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
@@ -94,41 +93,6 @@
     (dispatch [::close-modal]))
   (when success-msg
     (dispatch [::set-success-message success-msg])))
-
-
-(reg-event-fx
-  ::create-payment-method
-  (fn [{{:keys [::main-spec/stripe] :as db} :db}
-       [_ form-id form-data opts]]
-    (let [{input-type :type elements :elements} (get-in form-data [:customer :payment-method])
-          data (clj->js
-                 {:type            input-type
-                  input-type       (case input-type
-                                     "sepa_debit" (.getElement elements react-stripe/IbanElement)
-                                     "card" (.getElement elements react-stripe/CardElement))
-                  :billing_details (when (= input-type "sepa_debit")
-                                     {:name  "test"         ;;fixme
-                                      :email "test@example.com"})})]
-      {:db                                (assoc db ::spec/loading? true
-                                                    ::spec/success-message nil
-                                                    ::spec/error-message nil)
-       ::profile-fx/create-payment-method [stripe data
-                                           #(dispatch [::set-payment-method-result form-id
-                                                       form-data
-                                                       opts %])]})))
-
-
-(reg-event-fx
-  ::set-payment-method-result
-  (fn [_ [_ form-id form-data opts result]]
-    (let [res            (-> result (js->clj :keywordize-keys true))
-          error          (:error res)
-          payment-method (-> res :paymentMethod :id)
-          form-data-pm   (assoc-in form-data [:customer :payment-method] payment-method)]
-      (if error
-        {:dispatch-n [[::clear-loading]
-                      [::set-error-message (:message error)]]}
-        {:dispatch [::submit form-id form-data-pm opts]}))))
 
 
 (reg-event-fx

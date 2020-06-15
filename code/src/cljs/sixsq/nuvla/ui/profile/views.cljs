@@ -212,10 +212,7 @@
 
 (defn CustomerFormFields
   [form]
-  (let [tr                        (subscribe [::i18n-subs/tr])
-        payment-form              (r/atom "card")
-        elements                  (r/atom nil)
-        card-validation-error-msg (r/atom nil)]
+  (let [tr                        (subscribe [::i18n-subs/tr])]
     (fn [form]
       (let [should-not-be-empty-msg (@tr [:should-not-be-empty])
             spec->msg               {::fullname       should-not-be-empty-msg
@@ -273,41 +270,7 @@
                         :on-blur       (partial fv/event->show-message form)
                         :error         (fv/?show-message form :coupon spec->msg)
                         :auto-complete "off"
-                        :width         8}]
-
-         [ui/FormGroup {:inline true}
-          [:label (@tr [:payment-method])]
-          [ui/FormRadio {:label     (@tr [:credit-card])
-                         :checked   (= @payment-form "card")
-                         :on-change (ui-callback/value #(reset! payment-form "card"))}]
-          #_[ui/FormRadio {:label     (@tr [:bank-account])
-                           :checked   (= @payment-form "sepa_debit")
-                           :on-change (ui-callback/value #(reset! payment-form "sepa_debit"))}]]
-         [ui/FormField {:style {:max-width 380}}
-          [:label (@tr [:card-number])]
-          [PaymentMethodInput
-           (cond-> {:type         @payment-form
-                    :set-elements #(reset! elements %)
-                    :on-change    (fn [event]
-                                    (let [error       (some-> event .-error .-message)
-                                          empty-field (.-empty event)
-                                          swap-form!  (fn [v]
-                                                        (swap! form
-                                                               #(assoc-in % [:names->value
-                                                                             :payment-method] v)))]
-                                      (reset! card-validation-error-msg error)
-                                      (cond
-                                        error (swap-form! error)
-                                        (.-complete event) (swap-form! {:type     @payment-form
-                                                                        :elements @elements})
-                                        empty-field (swap-form! nil)
-                                        (not empty-field) (swap-form! "in-progress")))
-                                    (fv/validate-form form))}
-                   (= @payment-form "sepa_debit") (assoc :options {:supportedCountries ["SEPA"]
-                                                                   :placeholderCountry "CH"}))]
-          (when @card-validation-error-msg
-            [ui/Label {:basic true, :color "red", :pointing true} @card-validation-error-msg])]
-         ]))))
+                        :width         8}]]))))
 
 
 (defn customer-form->customer
@@ -326,13 +289,11 @@
   []
   (let [tr                       (subscribe [::i18n-subs/tr])
         stripe                   (subscribe [::main-subs/stripe])
-        loading-create-payment?  (subscribe [::subs/loading? :create-payment])
         loading-customer?        (subscribe [::subs/loading? :customer])
         open?                    (subscribe [::subs/modal-open? :subscribe])
         loading-subscription?    (subscribe [::subs/loading? :subscription])
         session                  (subscribe [::session-subs/session])
         error                    (subscribe [::subs/error-message])
-        loading-payment?         (subscribe [::subs/loading? :create-payment])
         loading-create-customer? (subscribe [::subs/loading? :create-customer])
         customer                 (subscribe [::subs/customer])
         subscription             (subscribe [::subs/subscription])
@@ -354,7 +315,7 @@
         [ui/ModalHeader (@tr [:subscribe])]
         [ui/ModalContent
          [ui/Form {:error   (boolean @error)
-                   :loading (or @loading-payment? @loading-create-customer?)}
+                   :loading @loading-create-customer?}
           [ui/Message {:error   true
                        :header  (@tr [:something-went-wrong])
                        :content @error}]
@@ -365,14 +326,11 @@
          [ui/Button {:animated "vertical"
                      :primary  true
                      :on-click #(if @customer
-                                  (dispatch [::events/create-payment-method
-                                             ::events/create-subscription])
+                                  (dispatch [::events/create-subscription])
                                   (when (fv/validate-form-and-show? form)
-                                    (dispatch [::events/create-payment-method
-                                               ::events/create-customer (customer-form->customer
+                                    (dispatch [::events/create-customer (customer-form->customer
                                                                           form)])))
                      :disabled (or (not @stripe)
-                                   @loading-create-payment?
                                    @loading-create-customer?
                                    (if @customer
                                      false

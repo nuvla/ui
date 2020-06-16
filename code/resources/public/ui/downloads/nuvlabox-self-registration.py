@@ -169,7 +169,7 @@ if __name__ == "__main__":
     nb_release = nb_trigger_json['version']
     nb_vpn_server_id = nb_trigger_json.get('vpn')
     nb_assets = nb_trigger_json['assets']
-    nb_ssh = nb_trigger_json.get('ssh')
+    nb_ssh = nb_trigger_json.get('ssh', {})
 
     nb_ssh_pubkeys = nb_ssh.get('public-keys', [])
     nb_version = nb_release.split('.')[0]

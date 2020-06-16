@@ -248,7 +248,7 @@ if __name__ == "__main__":
         if nb_vpn_server_id:
             nuvlabox['vpn-server-id'] = nb_vpn_server_id
 
-        if nb_ssh and "ids" in nb_ssh and isinstance([], nb_ssh.get('ids')):
+        if nb_ssh and "ids" in nb_ssh and isinstance(nb_ssh.get('ids'), list):
             nuvlabox['ssh-keys'] = nb_ssh.get('ids')
 
         new_nb_endpoint = nuvla_endpoint + "/nuvlabox"

@@ -198,7 +198,8 @@ if __name__ == "__main__":
 
     new_conf['NUVLA_ENDPOINT'] = nuvla
     new_conf['NUVLA_ENDPOINT_INSECURE'] = str(not connection_verify)
-    new_conf['NUVLABOX_SSH_PUB_KEY'] = '\\n'.join(nb_ssh_pubkeys) + '\\n'
+    if nb_ssh_pubkeys:
+        new_conf['NUVLABOX_SSH_PUB_KEY'] = '\\n'.join(nb_ssh_pubkeys)
 
     if previous_conf:
         if "NUVLABOX_UUID" in previous_conf:

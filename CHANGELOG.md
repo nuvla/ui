@@ -2,10 +2,21 @@
 
 ## Unreleased
 
+### Added
+
+  - Profile page - Customer and stripe integration
+  - Pricing page
+
 ### Changes
 
+  - Config - new attribute stripe
+  - Sign-up - Integration with pricing feature
+  - Main - Modal subscription required
+  - NuvlaBox detail - Fix bug when saving location
   - Danger-Modal - Fix shutdown deployment in some condition button
     had no effect
+  - Fix typos and text consistency
+  - Add instructions on how to enable fast deployment monitoring
 
 ## [2.4.15] - 2020-05-12
 

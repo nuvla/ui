@@ -522,7 +522,7 @@
                  [ui/CardHeader "Docker Version"]
                  [ui/CardMeta docker-server-version]]])]])
 
-         [LocationAccordion nuvlabox]]))))
+         [LocationAccordion @nuvlabox]]))))
 
 
 (defn EdgeDetails

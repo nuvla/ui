@@ -45,7 +45,8 @@
            (@tr [(if first-item
                    :you-only-pay-for-resources-you-use
                    :discount-automatically-applies)])]
-          [ui/Grid {:divided true, :style {:background-color "lightyellow"}}
+          [ui/Grid {:divided true, :style {:background-color "lightyellow"
+                                           :min-height       95}}
            (when extend
              [ui/GridColumn {:width 11}
               [:div {:style {:text-align "left"}}
@@ -57,12 +58,13 @@
             [:br]
             [ui/Label {:color color} nb-price]]]
           [ui/Grid {:divided true,
-                    :style   {:background-color "lightcyan"}}
+                    :style   {:background-color "lightcyan"
+                              :min-height       95}}
            (when extend
              [ui/GridColumn {:width 11}
               [:div {:style {:text-align "left"}} [ui/Icon {:name "play"}]
                "App Deployments"
-               [:p {:style {:color "grey"}} (@tr [:concurrent-deployment])]]])
+               [:p {:style {:color "grey"}} (@tr [:active-deployments])]]])
            [ui/GridColumn (when extend {:width 5})
             dep-number
             [:br]
@@ -140,10 +142,10 @@
             [ui/TableRow
              [ui/TableCell [:h5 (@tr [:additional])]]
              [ui/TableCell (str "€ 5.00 " (@tr [:per-month-each]))]]]]]
-         [ui/GridColumn {:width 5, :text-align "center"}
-          ^{:key (random-uuid)}
-          (when-not @subscription
-            [profile-views/SubscribeButton])]
+         (when-not @subscription
+           [ui/GridColumn {:width 5, :text-align "center"}
+            ^{:key (random-uuid)}
+            [profile-views/SubscribeButton]])
          ]]])))
 
 
@@ -152,6 +154,6 @@
   (let [stripe (subscribe [::main-subs/stripe])]
     [ui/Segment style/basic
      [uix/PageHeader
-      "fas fa-piggy-bank" (str/upper-case "Pricing")]
+      "fas fa-cash-register" (str/upper-case "Pricing")]
      (when @stripe
        [Pricing])]))

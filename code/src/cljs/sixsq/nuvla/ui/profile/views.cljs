@@ -212,7 +212,7 @@
 
 (defn CustomerFormFields
   [form]
-  (let [tr                        (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (fn [form]
       (let [should-not-be-empty-msg (@tr [:should-not-be-empty])
             spec->msg               {::fullname       should-not-be-empty-msg
@@ -434,8 +434,8 @@
                           :checked   (= @payment-form "card")
                           :on-change (ui-callback/value #(reset! payment-form "card"))}]
            #_[ui/FormRadio {:label     (@tr [:bank-account])
-                          :checked   (= @payment-form "sepa_debit")
-                          :on-change (ui-callback/value #(reset! payment-form "sepa_debit"))}]]
+                            :checked   (= @payment-form "sepa_debit")
+                            :on-change (ui-callback/value #(reset! payment-form "sepa_debit"))}]]
           [ui/FormField {:width 9}
            [PaymentMethodInput
             (cond-> {:type         @payment-form
@@ -554,7 +554,7 @@
        " " (general-utils/format "%.2f" amount)))
 
 
-(defn UpcomingInvoice
+(defn CurrentConsumption
   []
   (let [tr               (subscribe [::i18n-subs/tr])
         loading?         (subscribe [::subs/loading? :upcoming-invoice])
@@ -564,18 +564,20 @@
     (fn []
       (let [locale @(subscribe [::i18n-subs/locale])
             {upcoming-total    :total
-             upcoming-currency :currency} @upcoming-invoice]
+             upcoming-subtotal :subtotal
+             upcoming-currency :currency
+             {:keys [coupon]}  :discount} @upcoming-invoice]
         [ui/Segment {:padded  true
                      :color   "brown"
                      :loading @loading?
                      :style   {:height "100%"}}
-         [ui/Header {:as :h2 :dividing true} (@tr [:upcoming-invoice])]
+         [ui/Header {:as :h2 :dividing true} (@tr [:current-consumption])]
          (if upcoming-total
            [ui/Table
             [ui/TableHeader
              [ui/TableRow
               [ui/TableHeaderCell (str/capitalize (@tr [:description]))]
-              [ui/TableHeaderCell (@tr [:amount])]]]
+              [ui/TableHeaderCell {:text-align "right"} (@tr [:amount])]]]
             [ui/TableBody
              (for [[period lines] @upcoming-lines]
                ^{:key (str period)}
@@ -589,12 +591,31 @@
                   ^{:key (str period description)}
                   [ui/TableRow
                    [ui/TableCell description]
-                   [ui/TableCell
-                    (format-currency currency amount)]])])]
-            [ui/TableFooter
-             [ui/TableRow
+                   [ui/TableCell {:text-align "right"}
+                    (format-currency currency amount)]])])
+
+             [ui/TableRow {:active true}
+              [ui/TableCell [:i [:b (@tr [:subtotal])]]]
+              [ui/TableCell {:text-align "right"}
+               [:b [:i (format-currency upcoming-currency upcoming-subtotal)]]]]
+             (when coupon
+               (let [{:keys [percent-off amount-off currency]} coupon]
+                 [ui/TableRow
+                  [ui/TableCell
+                   [:i (str (:name coupon) " ("
+                            (when percent-off
+                              (str percent-off "%"))
+                            (when amount-off
+                              (format-currency currency amount-off))
+                            " "
+                            (@tr [:reduction-off])
+                            ")")]]
+                  [ui/TableCell {:text-align "right"}
+                   [:i (format-currency upcoming-currency
+                                        (- upcoming-total upcoming-subtotal))]]]))
+             [ui/TableRow {:active true}
               [ui/TableCell [:b (str/capitalize (@tr [:total]))]]
-              [ui/TableCell
+              [ui/TableCell {:text-align "right"}
                [:b (format-currency upcoming-currency upcoming-total)]]]]]
            [ui/Grid {:text-align     "center"
                      :vertical-align "middle"
@@ -760,7 +781,7 @@
         customer  (subscribe [::subs/customer])]
     (dispatch [::events/init])
     (fn []
-      (let [show-subscription (and @stripe @session (not @is-admin?))
+      (let [show-subscription      (and @stripe @session (not @is-admin?))
             show-customer-sections (and show-subscription @customer)]
         [:<>
          [uix/PageHeader "user" (str/capitalize (@tr [:profile]))]
@@ -780,7 +801,7 @@
             [:<>
              [ui/GridRow {:columns 2}
               [ui/GridColumn
-               [UpcomingInvoice]]
+               [CurrentConsumption]]
               [ui/GridColumn
                [Invoices]]]
              [ui/GridRow {:columns 2}

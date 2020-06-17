@@ -135,11 +135,14 @@
                :size       "small"
                :on-close   #(dispatch [::events/close-modal])}
 
-     [ui/ModalHeader (str/capitalize (str "Subscription required"))]
+     [ui/ModalHeader (@tr [:subscription-required])]
 
-     [ui/ModalContent {:content "You need a subscription to be able to perform this action."}]
-
-     ]))
+     [ui/ModalContent
+      [:div
+       [:p (@tr [:subscription-required-content])]
+       [ui/Button {:primary true
+                   :on-click #(dispatch [::history-events/navigate "profile"])}
+        (@tr [:subscribe])]]]]))
 
 
 #_(defmulti BootstrapMessage identity)

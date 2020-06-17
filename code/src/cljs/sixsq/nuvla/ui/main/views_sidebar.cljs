@@ -64,7 +64,7 @@
         active?  (subscribe [::subs/nav-url-active? url])
 
         label-kw :pricing
-        icon     "fas fa-piggy-bank"]
+        icon     "fas fa-cash-register"]
     ^{:key (name label-kw)}
     [uix/MenuItemWithIcon
      {:name      (str/capitalize (@tr [label-kw]))

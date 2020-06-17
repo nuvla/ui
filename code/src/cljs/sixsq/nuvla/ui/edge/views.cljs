@@ -4,7 +4,6 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
-    [sixsq.nuvla.ui.cimi.events :as cimi-events]
     [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
     [sixsq.nuvla.ui.edge.events :as events]
     [sixsq.nuvla.ui.edge.subs :as subs]
@@ -12,6 +11,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
@@ -59,11 +59,13 @@
 
 (defn AddButton
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr                   (subscribe [::i18n-subs/tr])]
     [uix/MenuItemWithIcon
      {:name      (@tr [:add])
       :icon-name "add"
-      :on-click  #(dispatch [::events/open-modal :add])}]))
+      :on-click  #(dispatch
+                    [::main-events/subscription-required-dispatch
+                     [::events/open-modal :add]])}]))
 
 
 (defn MenuBar []
@@ -141,7 +143,7 @@
           [ui/Label {:circular true
                      :color    "green"} "1"]
           [:h5 {:style {:margin "0.5em 0 1em 0"}}
-           (str/capitalize (@tr [:download]))" compose file(s)"]
+           (str/capitalize (@tr [:download])) " compose file(s)"]
           [:a {:href     @zip-url
                :target   "_blank"
                :style    {:margin "1em"}
@@ -179,33 +181,33 @@
     (fn []
       (let [apikey                (:resource-id @new-api-key)
             apisecret             (:secret-key @new-api-key)
-            nuvlabox-trigger-file {:assets    download-files-names
-                                   :version   (:release nuvlabox-release)
-                                   :name      (:name creation-data)
-                                   :description    (:description creation-data)
-                                   :script    (str  @cimi-fx/NUVLA_URL "/ui/downloads/nuvlabox-self-registration.py")
-                                   :endpoint  @cimi-fx/NUVLA_URL
-                                   :vpn       (:vpn-server-id creation-data)
-                                   :apikey    apikey
-                                   :apisecret apisecret}]
+            nuvlabox-trigger-file {:assets      download-files-names
+                                   :version     (:release nuvlabox-release)
+                                   :name        (:name creation-data)
+                                   :description (:description creation-data)
+                                   :script      (str @cimi-fx/NUVLA_URL "/ui/downloads/nuvlabox-self-registration.py")
+                                   :endpoint    @cimi-fx/NUVLA_URL
+                                   :vpn         (:vpn-server-id creation-data)
+                                   :apikey      apikey
+                                   :apisecret   apisecret}]
         [:<>
          [ui/ModalHeader
           [ui/Icon {:name "usb"}] (@tr [:nuvlabox-modal-usb-header])]
-         [ui/Message {:attached  true
-                      :icon      true
-                      :floating  true}
+         [ui/Message {:attached true
+                      :icon     true
+                      :floating true}
           [ui/Icon {:name (if apikey "check circle outline" "spinner")}]
           [ui/MessageContent
            [ui/MessageHeader
             (@tr [:nuvlabox-usb-key])]
            (if apikey
              [:span (str (@tr [:nuvlabox-usb-key-ready]) " ")
-              [:a {:href (str "api/" apikey)
+              [:a {:href   (str "api/" apikey)
                    :target "_blank"}
                apikey] " "
               [ui/Popup {:content (@tr [:nuvlabox-modal-usb-apikey-warning])
-                         :trigger (r/as-element [ui/Icon {:name "exclamation triangle"
-                                                          :color  "orange"}])}]]
+                         :trigger (r/as-element [ui/Icon {:name  "exclamation triangle"
+                                                          :color "orange"}])}]]
              (@tr [:nuvlabox-usb-key-wait]))]]
 
          [ui/ModalContent
@@ -213,20 +215,20 @@
            [ui/Card
             [ui/CardContent {:text-align :center}
              [ui/Header [:span {:style {:overflow-wrap "break-word"}} (@tr [:nuvlabox-modal-usb-trigger-file])]]
-             [ui/Icon {:name  (if apikey "file code" "spinner")
+             [ui/Icon {:name    (if apikey "file code" "spinner")
                        :loading (nil? apikey)
-                       :color "green"
-                       :size  :massive}]]
-            [:a {:href (str "data:text/plain;charset=utf-8," (js/encodeURIComponent (general-utils/edn->json nuvlabox-trigger-file)))
-                 :target "_blank"
+                       :color   "green"
+                       :size    :massive}]]
+            [:a {:href     (str "data:text/plain;charset=utf-8," (js/encodeURIComponent (general-utils/edn->json nuvlabox-trigger-file)))
+                 :target   "_blank"
                  :download "nuvlabox-installation-trigger-usb.nuvla"}
-             [ui/Button {:positive        true
-                         :fluid           true
-                         :loading         (nil? apikey)
-                         :icon            "download"
-                         :label-position  "left"
-                         :as              "div"
-                         :content         (@tr [:download])}]]]]]
+             [ui/Button {:positive       true
+                         :fluid          true
+                         :loading        (nil? apikey)
+                         :icon           "download"
+                         :label-position "left"
+                         :as             "div"
+                         :content        (@tr [:download])}]]]]]
 
          [ui/Divider {:horizontal true}
           [ui/Header (@tr [:instructions])]]
@@ -265,67 +267,67 @@
 
 (defn AddModal
   []
-  (let [modal-id              :add
-        tr                    (subscribe [::i18n-subs/tr])
-        visible?              (subscribe [::subs/modal-visible? modal-id])
-        nuvlabox-id           (subscribe [::subs/nuvlabox-created-id])
-        vpn-infra-opts        (subscribe [::subs/vpn-infra-options])
-        nb-releases           (subscribe [::subs/nuvlabox-releases])
-        nb-releases-options   (map
-                                (fn [{:keys [release]}]
-                                  {:key release, :text release, :value release})
-                                @nb-releases)
-        nb-releases-by-rel    (group-by :release @nb-releases)
-        default-data          {:refresh-interval 30}
-        first-nb-release      (first @nb-releases)
-        creation-data         (r/atom default-data)
-        default-release-data  {:nb-rel      (:release first-nb-release)
-                               :nb-selected first-nb-release
-                               :nb-assets   (->> first-nb-release
-                                              :compose-files
-                                              (map :scope)
-                                              set)}
-        nuvlabox-release-data (r/atom default-release-data)
-        advanced?             (r/atom false)
-        install-strategy-default  nil
-        install-strategy      (r/atom install-strategy-default)
-        install-strategy-error  (r/atom install-strategy-default)
-        create-usb-trigger-default  false
-        create-usb-trigger    (r/atom create-usb-trigger-default)
+  (let [modal-id                   :add
+        tr                         (subscribe [::i18n-subs/tr])
+        visible?                   (subscribe [::subs/modal-visible? modal-id])
+        nuvlabox-id                (subscribe [::subs/nuvlabox-created-id])
+        vpn-infra-opts             (subscribe [::subs/vpn-infra-options])
+        nb-releases                (subscribe [::subs/nuvlabox-releases])
+        nb-releases-options        (map
+                                     (fn [{:keys [release]}]
+                                       {:key release, :text release, :value release})
+                                     @nb-releases)
+        nb-releases-by-rel         (group-by :release @nb-releases)
+        default-data               {:refresh-interval 30}
+        first-nb-release           (first @nb-releases)
+        creation-data              (r/atom default-data)
+        default-release-data       {:nb-rel      (:release first-nb-release)
+                                    :nb-selected first-nb-release
+                                    :nb-assets   (->> first-nb-release
+                                                      :compose-files
+                                                      (map :scope)
+                                                      set)}
+        nuvlabox-release-data      (r/atom default-release-data)
+        advanced?                  (r/atom false)
+        install-strategy-default   nil
+        install-strategy           (r/atom install-strategy-default)
+        install-strategy-error     (r/atom install-strategy-default)
+        create-usb-trigger-default false
+        create-usb-trigger         (r/atom create-usb-trigger-default)
         ; default ttl for API key is 30 days
-        default-ttl           30
-        usb-trigger-key-ttl   (r/atom default-ttl)
-        new-api-key-data      {:description   "Auto-generated for NuvlaBox self-registration USB trigger"
-                               :name          "NuvlaBox self-registration USB trigger"
-                               :template {
-                                          :method "generate-api-key"
-                                          :ttl    (* @usb-trigger-key-ttl 24 60 60)
-                                          :href   "credential-template/generate-api-key"}}
-        on-close-fn           #(do
-                                 (dispatch [::events/set-created-nuvlabox-id nil])
-                                 (dispatch [::events/set-nuvlabox-usb-api-key nil])
-                                 (dispatch [::events/open-modal nil])
-                                 (reset! advanced? false)
-                                 (reset! creation-data default-data)
-                                 (reset! install-strategy install-strategy-default)
-                                 (reset! usb-trigger-key-ttl default-ttl)
-                                 (reset! install-strategy-error install-strategy-default)
-                                 (reset! create-usb-trigger create-usb-trigger-default)
-                                 (reset! nuvlabox-release-data default-release-data))
-        on-add-fn             #(cond
-                                 (nil? @install-strategy) (reset! install-strategy-error true)
-                                 (= @install-strategy "usb") (do
-                                                               (dispatch [::events/create-nuvlabox-usb-api-key
-                                                                          (->> new-api-key-data
-                                                                            (remove (fn [[_ v]] (str/blank? v)))
-                                                                            (into {}))])
-                                                               (reset! create-usb-trigger true))
-                                 :else (do
-                                         (dispatch [::events/create-nuvlabox
-                                                    (->> @creation-data
-                                                      (remove (fn [[_ v]] (str/blank? v)))
-                                                      (into {}))])
-                                         (reset! creation-data default-data)))]
+        default-ttl                30
+        usb-trigger-key-ttl        (r/atom default-ttl)
+        new-api-key-data           {:description "Auto-generated for NuvlaBox self-registration USB trigger"
+                                    :name        "NuvlaBox self-registration USB trigger"
+                                    :template    {
+                                                  :method "generate-api-key"
+                                                  :ttl    (* @usb-trigger-key-ttl 24 60 60)
+                                                  :href   "credential-template/generate-api-key"}}
+        on-close-fn                #(do
+                                      (dispatch [::events/set-created-nuvlabox-id nil])
+                                      (dispatch [::events/set-nuvlabox-usb-api-key nil])
+                                      (dispatch [::events/open-modal nil])
+                                      (reset! advanced? false)
+                                      (reset! creation-data default-data)
+                                      (reset! install-strategy install-strategy-default)
+                                      (reset! usb-trigger-key-ttl default-ttl)
+                                      (reset! install-strategy-error install-strategy-default)
+                                      (reset! create-usb-trigger create-usb-trigger-default)
+                                      (reset! nuvlabox-release-data default-release-data))
+        on-add-fn                  #(cond
+                                      (nil? @install-strategy) (reset! install-strategy-error true)
+                                      (= @install-strategy "usb") (do
+                                                                    (dispatch [::events/create-nuvlabox-usb-api-key
+                                                                               (->> new-api-key-data
+                                                                                    (remove (fn [[_ v]] (str/blank? v)))
+                                                                                    (into {}))])
+                                                                    (reset! create-usb-trigger true))
+                                      :else (do
+                                              (dispatch [::events/create-nuvlabox
+                                                         (->> @creation-data
+                                                              (remove (fn [[_ v]] (str/blank? v)))
+                                                              (into {}))])
+                                              (reset! creation-data default-data)))]
     (fn []
       (when (= (count @vpn-infra-opts) 1)
         (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
@@ -376,19 +378,19 @@
                                   :on-change   (ui-callback/value
                                                  (fn [value]
                                                    (swap! nuvlabox-release-data
-                                                     assoc :nb-rel value)
+                                                          assoc :nb-rel value)
                                                    (swap! creation-data assoc
-                                                     :version (-> value
-                                                                utils/get-major-version
-                                                                general-utils/str->int))
+                                                          :version (-> value
+                                                                       utils/get-major-version
+                                                                       general-utils/str->int))
                                                    (swap! nuvlabox-release-data assoc
-                                                     :nb-selected
-                                                     (->> value
-                                                       (get nb-releases-by-rel)
-                                                       (into (sorted-map))))
+                                                          :nb-selected
+                                                          (->> value
+                                                               (get nb-releases-by-rel)
+                                                               (into (sorted-map))))
                                                    (swap! nuvlabox-release-data assoc :nb-assets
-                                                     (set (map :scope (:compose-files
-                                                                        (:nb-selected @nuvlabox-release-data)))))))}]
+                                                          (set (map :scope (:compose-files
+                                                                             (:nb-selected @nuvlabox-release-data)))))))}]
                     [:a {:href   url
                          :target "_blank"
                          :style  {:margin "1em"}}
@@ -412,28 +414,28 @@
                            [ui/Checkbox {:key             scope
                                          :label           scope
                                          :default-checked (contains? (:nb-assets @nuvlabox-release-data)
-                                                            scope)
+                                                                     scope)
                                          :style           {:margin "1em"}
                                          :on-change       (ui-callback/checked
                                                             (fn [checked]
                                                               (if checked
                                                                 (swap! nuvlabox-release-data assoc
-                                                                  :nb-assets
-                                                                  (conj nb-assets scope))
+                                                                       :nb-assets
+                                                                       (conj nb-assets scope))
                                                                 (swap! nuvlabox-release-data assoc
-                                                                  :nb-assets
-                                                                  (-> @nuvlabox-release-data
-                                                                    :nb-assets
-                                                                    (disj scope))))))}])))]
+                                                                       :nb-assets
+                                                                       (-> @nuvlabox-release-data
+                                                                           :nb-assets
+                                                                           (disj scope))))))}])))]
 
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:nuvlabox-modal-install-method])]
 
                     [ui/Form
-                     [ui/FormCheckbox {:label "Compose file bundle"
-                                       :radio true
-                                       :error (not (nil? @install-strategy-error))
-                                       :checked (= @install-strategy "compose")
+                     [ui/FormCheckbox {:label     "Compose file bundle"
+                                       :radio     true
+                                       :error     (not (nil? @install-strategy-error))
+                                       :checked   (= @install-strategy "compose")
                                        :on-change #(do
                                                      (reset! install-strategy "compose")
                                                      (reset! install-strategy-error nil))}]
@@ -443,40 +445,40 @@
 
                      [ui/Divider {:hidden true}]
 
-                     [ui/FormCheckbox {:label "USB stick"
-                                       :radio true
-                                       :error (not (nil? @install-strategy-error))
-                                       :checked (= @install-strategy "usb")
+                     [ui/FormCheckbox {:label     "USB stick"
+                                       :radio     true
+                                       :error     (not (nil? @install-strategy-error))
+                                       :checked   (= @install-strategy "usb")
                                        :on-change #(do
                                                      (reset! install-strategy "usb")
                                                      (reset! install-strategy-error nil))}]
 
                      [:div {:style {:color "grey" :font-style "oblique"}}
                       (@tr [:create-nuvlabox-usb])]
-                     [:a {:href "https://docs.nuvla.io"
+                     [:a {:href   "https://docs.nuvla.io"
                           :target "_blank"}
                       (@tr [:nuvlabox-modal-more-info])]
                      ]
 
-                    [ui/Container {:style {:margin "5px"
+                    [ui/Container {:style {:margin  "5px"
                                            :display (if (= @install-strategy "usb") "inline-block" "none")}}
-                     [ui/Input {:label  (@tr [:nuvlabox-modal-usb-expires])
+                     [ui/Input {:label       (@tr [:nuvlabox-modal-usb-expires])
                                 :placeholder default-ttl
-                                :value  @usb-trigger-key-ttl
-                                :size   "mini"
-                                :type   "number"
-                                :on-change  (ui-callback/input-callback
-                                              #(cond
-                                                 (number? (general-utils/str->int %)) (reset! usb-trigger-key-ttl
-                                                                                        (general-utils/str->int %))
-                                                 (empty? %) (reset! usb-trigger-key-ttl 0)))
-                                :step   1
-                                :min    0}]
-                     [ui/Popup {:content    (@tr [:nuvlabox-modal-usb-expires-popup] [default-ttl])
-                                :position   "right center"
-                                :wide       true
-                                :trigger    (r/as-element [ui/Icon {:name "question"
-                                                                   :color "grey"}])}]]])]
+                                :value       @usb-trigger-key-ttl
+                                :size        "mini"
+                                :type        "number"
+                                :on-change   (ui-callback/input-callback
+                                               #(cond
+                                                  (number? (general-utils/str->int %)) (reset! usb-trigger-key-ttl
+                                                                                               (general-utils/str->int %))
+                                                  (empty? %) (reset! usb-trigger-key-ttl 0)))
+                                :step        1
+                                :min         0}]
+                     [ui/Popup {:content  (@tr [:nuvlabox-modal-usb-expires-popup] [default-ttl])
+                                :position "right center"
+                                :wide     true
+                                :trigger  (r/as-element [ui/Icon {:name  "question"
+                                                                  :color "grey"}])}]]])]
 
                 [ui/ModalActions
                  [:span {:style {:color "#9f3a38" :display (if (not (nil? @install-strategy-error)) "inline-block" "none")}}

@@ -136,3 +136,22 @@
   :<- [::config-map]
   (fn [config-map [_ key]]
     (get config-map key)))
+
+
+(reg-sub
+  ::open-modal
+  (fn [db]
+    (::spec/open-modal db)))
+
+
+(reg-sub
+  ::modal-open?
+  :<- [::open-modal]
+  (fn [open-modal [_ modal-key]]
+    (= open-modal modal-key)))
+
+
+(reg-sub
+  ::stripe
+  (fn [db]
+    (::spec/stripe db)))

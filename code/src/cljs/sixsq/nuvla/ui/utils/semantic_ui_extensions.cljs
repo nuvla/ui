@@ -24,6 +24,13 @@
     [ui/Button final-opts text]))
 
 
+(defn Icon
+  [{:keys [name] :as opts}]
+  [ui/Icon (cond-> opts
+                   (or (str/starts-with? name "fad ")
+                       (str/starts-with? name "fas ")) (-> (dissoc :name)
+                                                           (assoc :className name)))])
+
 (defn MenuItemWithIcon
   "Provides a menu item that reuses the name for the :name property and as the
    MenuItem label. The optional icon-name specifies the icon to use. The
@@ -34,8 +41,8 @@
                        (assoc :aria-label name))]
     [ui/MenuItem final-opts
      (when icon-name
-       [ui/Icon (cond-> {:name icon-name}
-                        (boolean? loading?) (assoc :loading loading?))])
+       [Icon (cond-> {:name icon-name}
+                     (boolean? loading?) (assoc :loading loading?))])
      name]))
 
 
@@ -172,7 +179,7 @@
   [icon title & {:keys [inline]}]
   [:h2 (when inline {:style {:display    :inline
                              :word-break :break-all}})
-   [ui/Icon {:name icon}] " " title])
+   [Icon {:name icon}] " " title])
 
 
 (defn SpanBlockJustified
@@ -229,9 +236,9 @@
 
 (defn ModalDanger
   [{:keys [button-text on-confirm danger-msg header content trigger open on-close]}]
-  (let [tr                   (subscribe [::i18n-subs/tr])
-        confirmed?           (r/atom (nil? danger-msg))
-        clicked?             (r/atom false)]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        confirmed? (r/atom (nil? danger-msg))
+        clicked?   (r/atom false)]
     (fn [{:keys [button-text on-confirm danger-msg header content trigger open on-close]}]
       [ui/Modal (cond->
                   {:on-click   (fn [event]

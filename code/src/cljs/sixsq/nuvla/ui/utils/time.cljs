@@ -9,6 +9,7 @@
 
 
 (def ^:private iso8601-format (.-ISO_8601 moment))
+(def ^:private unix-format "X")
 
 
 (defn timestamp
@@ -33,6 +34,13 @@
    (parse-iso8601 iso8601 default-locale))
   ([iso8601 locale]
    (moment iso8601 iso8601-format locale true)))
+
+
+(defn parse-unix
+  ([unix-timestamp]
+   (parse-unix unix-timestamp default-locale))
+  ([unix-timestamp locale]
+   (moment unix-timestamp unix-format locale true)))
 
 
 (defn invalid
@@ -142,7 +150,18 @@
   ([iso8601]
    (time->format iso8601 "YYYY/MM/DD, hh:mm:ss"))
   ([iso8601 format]
-   (-> iso8601 parse-iso8601 (.format format))))
+   (time->format iso8601 format default-locale))
+  ([iso8601 format locale]
+   (-> iso8601 parse-iso8601 (.locale locale) (.format format))))
+
+
+(defn moment-format
+  "Returns the difference in the given date-time instances in natural language
+   unless another locale is given."
+  ([moment format]
+   (moment-format moment format default-locale))
+  ([moment format locale]
+   (-> moment .clone (.locale locale) (.format format))))
 
 
 (defn parse-ago

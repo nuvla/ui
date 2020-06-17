@@ -7,6 +7,9 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
+    [sixsq.nuvla.ui.profile.effects :as profile-fx]
+    [sixsq.nuvla.ui.profile.events :as profile-events]
+    [sixsq.nuvla.ui.profile.spec :as profile-spec]
     [sixsq.nuvla.ui.session.effects :as fx]
     [sixsq.nuvla.ui.session.spec :as spec]
     [sixsq.nuvla.ui.utils.response :as response]))
@@ -20,7 +23,8 @@
                               (dispatch [::set-session session])
                               (when session
                                 #_(dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])
-                                (dispatch [:sixsq.nuvla.ui.main.events/notifications-polling])))]}))
+                                (dispatch [:sixsq.nuvla.ui.main.events/notifications-polling])
+                                (dispatch [::profile-events/search-existing-customer])))]}))
 
 
 (reg-event-fx
@@ -89,6 +93,7 @@
     (dispatch [::close-modal]))
   (when success-msg
     (dispatch [::set-success-message success-msg])))
+
 
 (reg-event-fx
   ::submit

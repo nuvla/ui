@@ -4,14 +4,20 @@
     [clojure.string :as str]
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.profile.events :as profile-events]
+    [sixsq.nuvla.ui.profile.subs :as profile-subs]
+    [sixsq.nuvla.ui.profile.views :as profile-views]
     [sixsq.nuvla.ui.session.components :as comp]
     [sixsq.nuvla.ui.session.events :as events]
     [sixsq.nuvla.ui.session.subs :as subs]
     [sixsq.nuvla.ui.session.utils :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.spec :as us]))
+    [sixsq.nuvla.ui.utils.spec :as us]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 ;; VALIDATION SPEC
 (s/def ::email (s/and string? us/email?))
@@ -46,7 +52,18 @@
         server-redirect-uri        (subscribe [::subs/server-redirect-uri])
         callback-msg-on-validation (js/encodeURI "signup-validation-success")
         github-template?           (subscribe [::subs/user-template-exist?
-                                               "user-template/nuvla"])]
+                                               "user-template/nuvla"])
+        stripe                     (subscribe [::main-subs/stripe])
+        pricing-catalogue          (subscribe [::profile-subs/pricing-catalogue])
+        create-customer            (r/atom false)
+        form-customer-conf         {:form-spec    ::profile-views/customer
+                                    :names->value {:fullname       ""
+                                                   :street-address ""
+                                                   :city           ""
+                                                   :country        ""
+                                                   :postal-code    ""}}
+        form-customer              (fv/init-form form-customer-conf)]
+    (dispatch [::profile-events/get-pricing-catalogue])
     (fn []
       [comp/RightPanel
        {:title        (@tr [:create-an])
@@ -79,16 +96,40 @@
                                        :type      "password"
                                        :on-change (partial fv/event->names->value! form)
                                        :on-blur   (partial fv/event->show-message form)
-                                       :error     (fv/?show-message form :password-repeat spec->msg)}]]]
+                                       :error     (fv/?show-message
+                                                    form :password-repeat spec->msg)}]]
+
+                       (when @stripe
+                         [ui/FormCheckbox {:label     "Start my trial now"
+                                           :on-change (ui-callback/checked
+                                                        #(reset! create-customer %))}])
+                       (when @create-customer
+                         [profile-views/CustomerFormFields form-customer])
+                       ]
         :submit-text  (@tr [:sign-up])
-        :submit-fn    #(when (fv/validate-form-and-show? form)
-                         (dispatch [::events/submit utils/user-tmpl-email-password
-                                    (-> @form
-                                        :names->value
-                                        (dissoc :password-repeat))
-                                    {:success-msg  (@tr [:validation-email-success-msg])
-                                     :redirect-url (str @server-redirect-uri "?message="
-                                                        callback-msg-on-validation)}]))
+        :submit-fn    #(let [form-signup-valid?   (fv/validate-form-and-show? form)
+                             form-customer-valid? (if @create-customer
+                                                    (fv/validate-form-and-show? form-customer)
+                                                    true)
+                             form-valid?          (and form-signup-valid? form-customer-valid?)]
+                         (when form-valid?
+                           (let [data (-> @form
+                                          :names->value
+                                          (dissoc :password-repeat))
+                                 opts {:success-msg  (@tr [:validation-email-success-msg])
+                                       :redirect-url (str @server-redirect-uri "?message="
+                                                          callback-msg-on-validation)}]
+                             (if @create-customer
+                               (let [customer  (-> form-customer
+                                                   profile-views/customer-form->customer
+                                                   (assoc :subscription
+                                                          (profile-events/catalogue->subscription
+                                                            @pricing-catalogue)))
+                                     data-cust (assoc data :customer customer)]
+                                 (dispatch [::events/submit utils/user-tmpl-email-password
+                                            data-cust opts]))
+                               (dispatch [::events/submit
+                                          utils/user-tmpl-email-password data opts])))))
         :ExtraContent (when @github-template?
                         [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/user")
                                   :method "post"

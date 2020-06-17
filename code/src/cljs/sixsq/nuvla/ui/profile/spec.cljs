@@ -1,20 +1,58 @@
 (ns sixsq.nuvla.ui.profile.spec
   (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.utils.spec :as us]))
+    [clojure.spec.alpha :as s]))
 
 
-(s/def ::credential-password string?)
+(s/def ::user any?)
+
+(s/def ::customer any?)
+
+(s/def ::subscription any?)
+
+(s/def ::pricing-catalogue any?)
+
+(s/def ::payment-methods any?)
+
+(s/def ::upcoming-invoice any?)
+
+(s/def ::invoices any?)
+
+(s/def ::customer-info any?)
 
 (s/def ::open-modal (s/nilable keyword?))
 
 (s/def ::error-message (s/nilable string?))
 
-(s/def ::db (s/keys :req [::credential-password
+(s/def ::loading set?)
+
+(s/def ::plan-id (s/nilable string?))
+
+(s/def ::setup-intent any?)
+
+
+(s/def ::db (s/keys :req [::user
+                          ::customer
+                          ::subscription
+                          ::pricing-catalogue
+                          ::payment-methods
+                          ::upcoming-invoice
+                          ::invoices
+                          ::customer-info
                           ::open-modal
-                          ::error-message]))
+                          ::error-message
+                          ::loading
+                          ::setup-intent]))
 
 
-(def defaults {::credential-password nil
-               ::open-modal          nil
-               ::error-message       nil})
+(def defaults {::user              nil
+               ::customer          nil
+               ::pricing-catalogue nil
+               ::payment-methods   nil
+               ::upcoming-invoice  nil
+               ::invoices          nil
+               ::customer-info     nil
+               ::subscription      nil
+               ::setup-intent      nil
+               ::open-modal        nil
+               ::error-message     nil
+               ::loading           #{}})

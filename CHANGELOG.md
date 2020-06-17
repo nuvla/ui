@@ -4,8 +4,10 @@
 
 ### Added
 
+  - Awesome fonts
   - Profile page - Customer and stripe integration
   - Pricing page
+  - Stripe components
 
 ### Changes
 

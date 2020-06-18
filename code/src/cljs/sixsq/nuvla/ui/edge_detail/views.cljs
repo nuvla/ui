@@ -458,8 +458,10 @@
   (let [nuvlabox  (subscribe [::subs/nuvlabox])
         nb-status (subscribe [::subs/nuvlabox-status])
         can-edit? (subscribe [::subs/can-edit?])
+        ssh-creds (subscribe [::subs/nuvlabox-ssh-keys])
         acl-open  (r/atom false)
         tr        (subscribe [::i18n-subs/tr])]
+
     (fn []
       (let [status       @(subscribe [::edge-subs/status-nuvlabox (:id @nuvlabox)])
             {:keys [hostname ip docker-server-version
@@ -467,6 +469,8 @@
 
             card-options {:color      "black"
                           :style      {:max-width 200}}]
+        (when (and (:ssh-keys @nuvlabox) (nil? @ssh-creds))
+          (dispatch [::events/get-nuvlabox-ssh-keys (:ssh-keys @nuvlabox)]))
         [:<>
          (when (:acl @nuvlabox)
            ^{:key (:updated @nuvlabox)}
@@ -492,15 +496,20 @@
                [ui/Popup {:hoverable  true
                           :flowing  true
                           :position "bottom center"
-                          :content  (r/as-element [ui/ListSA {:divided  true
-                                                              :relaxed  true}
-                                                   (for [sshkey (:ssh-keys @nuvlabox)]
-                                                     [ui/ListItem
-                                                      [ui/ListContent
-                                                       [ui/ListHeader
-                                                        [:a {:href   (str @config/path-prefix "/api/" sshkey)
-                                                             :target "_blank"}
-                                                         sshkey]]]])])
+                          :content  (r/as-element (if @ssh-creds
+                                                    [ui/ListSA {:divided  true
+                                                                :relaxed  true}
+                                                     (for [sshkey (:associated-ssh-keys @ssh-creds)]
+                                                       [ui/ListItem {:key (:id sshkey)}
+                                                        [ui/ListContent
+                                                         [ui/ListHeader
+                                                          [:a {:href   (str @config/path-prefix "/api/" sshkey)
+                                                               :target "_blank"}
+                                                           (or (:name sshkey) (:id sshkey))]]
+                                                         [ui/ListDescription
+                                                          (str (subs (:public-key sshkey) 0 55) " ...")]]])]
+                                                    [ui/Loader {:active true
+                                                                :inline "centered"}]))
                           :trigger  (r/as-element [ui/Icon {:name "key"
                                                             :fitted true}
                                                    (@tr [:nuvlabox-detail-ssh-enabled])

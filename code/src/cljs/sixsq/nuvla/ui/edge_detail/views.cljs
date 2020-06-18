@@ -4,6 +4,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.edge-detail.events :as events]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]
     [sixsq.nuvla.ui.edge.subs :as edge-subs]
@@ -457,7 +458,8 @@
   (let [nuvlabox  (subscribe [::subs/nuvlabox])
         nb-status (subscribe [::subs/nuvlabox-status])
         can-edit? (subscribe [::subs/can-edit?])
-        acl-open  (r/atom false)]
+        acl-open  (r/atom false)
+        tr        (subscribe [::i18n-subs/tr])]
     (fn []
       (let [status       @(subscribe [::edge-subs/status-nuvlabox (:id @nuvlabox)])
             {:keys [hostname ip docker-server-version
@@ -484,7 +486,27 @@
               [ui/Label {:color    "grey"
                          :basic    true
                          :circular true}
-               (str "Last boot: " (time/time->format last-boot))])]
+               (str "Last boot: " (time/time->format last-boot))])
+            (when (:ssh-keys @nuvlabox)
+              [ui/Segment {:compact true}
+               [ui/Popup {:hoverable  true
+                          :flowing  true
+                          :position "bottom center"
+                          :content  (r/as-element [ui/ListSA {:divided  true
+                                                              :relaxed  true}
+                                                   (for [sshkey (:ssh-keys @nuvlabox)]
+                                                     [ui/ListItem
+                                                      [ui/ListContent
+                                                       [ui/ListHeader
+                                                        [:a {:href   (str @config/path-prefix "/api/" sshkey)
+                                                             :target "_blank"}
+                                                         sshkey]]]])])
+                          :trigger  (r/as-element [ui/Icon {:name "key"
+                                                            :fitted true}
+                                                   (@tr [:nuvlabox-detail-ssh-enabled])
+                                                   [ui/Icon {:name "angle down"
+                                                             :fitted true}]])}]
+               ])]
            [ui/GridColumn
             [ui/CardGroup {:centered true}
              (when @nuvlabox

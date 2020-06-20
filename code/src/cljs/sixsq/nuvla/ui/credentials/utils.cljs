@@ -76,6 +76,23 @@
         (assoc-in [:template :parent] infrastructure-services))))
 
 
+(defn db->new-exoscale-credential
+  [db]
+  (let [name        (get-in db [::spec/credential :name])
+        description (get-in db [::spec/credential :description])
+        subtype     (get-in db [::spec/credential :subtype])
+        secret      (get-in db [::spec/credential :exoscale-api-secret-key])
+        key         (get-in db [::spec/credential :exoscale-api-key])
+        acl         (get-in db [::spec/credential :acl])]
+    (-> {}
+        (assoc :name name)
+        (assoc :description description)
+        (assoc-in [:template :href] (str "credential-template/store-" subtype))
+        (assoc-in [:template :exoscale-api-key] key)
+        (assoc-in [:template :exoscale-api-secret-key] secret)
+        (cond-> acl (assoc-in [:template :acl] acl)))))
+
+
 (defn db->new-credential
   [db]
   (let [subtype (get-in db [::spec/credential :subtype])]
@@ -83,6 +100,7 @@
       "infrastructure-service-swarm" (db->new-swarm-credential db)
       "infrastructure-service-minio" (db->new-minio-credential db)
       "infrastructure-service-vpn" (db->new-vpn-credential db)
+      "infrastructure-service-exoscale" (db->new-exoscale-credential db)
       "infrastructure-service-registry" (db->new-registry-credential db))))
 
 

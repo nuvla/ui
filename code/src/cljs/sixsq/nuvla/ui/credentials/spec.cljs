@@ -44,12 +44,12 @@
 (s/def ::key utils-spec/nonblank-string)
 (s/def ::infrastructure-services any?)
 
-(s/def ::swarm-credential (s/keys :req-un [::name
-                                           ::description
-                                           ::ca
-                                           ::cert
-                                           ::key
-                                           ::parent]))
+(s/def ::coe-credential (s/keys :req-un [::name
+                                         ::description
+                                         ::ca
+                                         ::cert
+                                         ::key
+                                         ::parent]))
 
 
 ; MinIO
@@ -82,6 +82,15 @@
                                          ::description
                                          ::parent]))
 
+
+; Exoscale CSP
+
+(s/def ::exoscale-api-key utils-spec/nonblank-string)
+(s/def ::exoscale-api-secret-key utils-spec/nonblank-string)
+(s/def ::exoscale-credential (s/keys :req-un [::name
+                                              ::description
+                                              ::exoscale-api-key
+                                              ::exoscale-api-secret-key]))
 
 (s/def ::infrastructure-services-available any?)
 

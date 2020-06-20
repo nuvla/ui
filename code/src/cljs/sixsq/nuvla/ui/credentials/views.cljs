@@ -30,13 +30,13 @@
 
 
 (defn row-infrastructure-services-selector
-  [subtype additional-filter editable? value-spec on-change]
+  [subtypes additional-filter editable? value-spec on-change]
   (let [tr              (subscribe [::i18n-subs/tr])
         infra-services  (subscribe [::subs/infrastructure-services-available])
         credential      (subscribe [::subs/credential])
         local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
-    (dispatch [::events/fetch-infrastructure-services-available subtype additional-filter])
+    (dispatch [::events/fetch-infrastructure-services-available subtypes additional-filter])
     (fn [subtype additional-filter editable? value-spec on-change]
       (let [value     (:parent @credential)
             validate? (or @local-validate? @validate-form?)
@@ -63,15 +63,16 @@
                                        " " subtype ".")}])]]))))
 
 
-(defn credential-swarm
+(defn credential-coe
   []
   (let [tr             (subscribe [::i18n-subs/tr])
+        coe-subtypes   ["swarm" "kubernetes"]
         is-new?        (subscribe [::subs/is-new?])
         credential     (subscribe [::subs/credential])
         validate-form? (subscribe [::subs/validate-form?])
         on-change      (fn [name-kw value]
                          (dispatch [::events/update-credential name-kw value])
-                         (dispatch [::events/validate-credential-form ::spec/swarm-credential]))]
+                         (dispatch [::events/validate-credential-form ::spec/coe-credential]))]
     (fn []
       (let [editable? (general-utils/editable? @credential @is-new?)
             {:keys [name description ca cert key]} @credential]
@@ -99,7 +100,7 @@
            [uix/TableRowField "key", :placeholder (@tr [:key]), :editable? editable?,
             :required? true, :default-value key, :spec ::spec/key, :type :textarea,
             :on-change (partial on-change :key), :validate-form? @validate-form?]
-           [row-infrastructure-services-selector ["swarm" "kubernetes"] nil editable? ::spec/parent
+           [row-infrastructure-services-selector coe-subtypes nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
 
 
@@ -214,6 +215,35 @@
                                                            (on-change :description %))]]]]))))
 
 
+(defn credential-exoscale
+  []
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        is-new?            (subscribe [::subs/is-new?])
+        credential         (subscribe [::subs/credential])
+        validate-form?     (subscribe [::subs/validate-form?])
+        on-change          (fn [name-kw value]
+                             (dispatch [::events/update-credential name-kw value])
+                             (dispatch [::events/validate-credential-form ::spec/exoscale-credential]))]
+    (fn []
+      (let [editable?              (general-utils/editable? @credential @is-new?)
+            {:keys [name description exoscale-api-key exoscale-api-secret-key]} @credential]
+        [:<>
+         [ui/Table style/definition
+          [ui/TableBody
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :default-value name, :spec ::spec/name, :validate-form? @validate-form?,
+            :on-change (partial on-change :name)]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
+            :on-change (partial on-change :description)]
+           [uix/TableRowField "api key", :placeholder "Exoscale API key", :editable? editable?, :required? true,
+            :default-value exoscale-api-key, :spec ::spec/exoscale-api-key, :validate-form? @validate-form?,
+            :on-change (partial on-change :exoscale-api-key)]
+           [uix/TableRowField "api secret", :placeholder "Exoscale API secret", :editable? editable?, :required? true,
+            :default-value exoscale-api-secret-key, :spec ::spec/exoscale-api-secret-key, :validate-form? @validate-form?,
+            :on-change (partial on-change :exoscale-api-secret-key)]]]]))))
+
+
 (defn save-callback
   [form-validation-spec]
   (dispatch-sync [::events/set-validate-form? true])
@@ -227,14 +257,17 @@
 
 (def infrastructure-service-validation-map
   {"infrastructure-service-swarm"
-   {:validation-spec ::spec/swarm-credential
-    :modal-content   credential-swarm},
+   {:validation-spec ::spec/coe-credential
+    :modal-content   credential-coe},
    "infrastructure-service-minio"
    {:validation-spec ::spec/minio-credential
     :modal-content   credential-object-store},
    "infrastructure-service-vpn"
    {:validation-spec ::spec/vpn-credential
     :modal-content   credential-vpn}
+   "infrastructure-service-exoscale"
+   {:validation-spec ::spec/exoscale-credential
+    :modal-content   credential-exoscale}
    "infrastructure-service-registry"
    {:validation-spec ::spec/registry-credential
     :modal-content   credential-registy}})
@@ -345,7 +378,23 @@
               [ui/Header "Object Store"]
               [:div]
               [ui/Image {:src   "/ui/images/s3.png"
-                         :style {:max-height 112}}]]]]]]]))))
+                         :style {:max-height 112}}]]]
+
+            [ui/Divider {:horizontal true :as "h4"} "Cloud Service Providers"]
+
+            [ui/Card
+             {:on-click #(do
+                          (dispatch [::events/set-validate-form? false])
+                          (dispatch [::events/form-valid])
+                          (dispatch [::events/close-add-credential-modal])
+                          (dispatch [::main-events/subscription-required-dispatch
+                                     [::events/open-credential-modal
+                                      {:subtype "infrastructure-service-exoscale"} true]]))}
+             [ui/CardContent {:text-align :center}
+              [ui/Header "Exoscale"]
+              [ui/Image {:src   "/ui/images/exoscale.png"
+                         :style {:max-width 112}}]]]
+            ]]]]))))
 
 
 (defn generated-credential-modal

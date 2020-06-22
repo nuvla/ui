@@ -14,9 +14,9 @@
 ; Perform form validation if validate-form? is true.
 
 (reg-event-db
-  ::validate-swarm-service-form
+  ::validate-coe-service-form
   (fn [db [_]]
-    (let [form-spec      ::spec/swarm-service
+    (let [form-spec      ::spec/coe-service
           service        (get db ::spec/infra-service)
           validate-form? (get db ::spec/validate-form?)
           valid?         (if validate-form?
@@ -80,6 +80,34 @@
   ::reset-infra-service
   (fn [db [_]]
     (assoc db ::spec/infra-service {})))
+
+
+(reg-event-db
+ ::update-credential
+ (fn [db [_ key value]]
+   (assoc-in db [::spec/management-credential key] value)))
+
+
+(reg-event-fx
+ ::set-coe-management-credentials-available
+ (fn [{db :db} [_ response]]
+   (let [mgmt-creds (:resources response)]
+     (cond-> {:db (assoc db ::spec/management-credentials-available mgmt-creds)}
+       (= (:count response) 1) (assoc :dispatch
+                                      [::update-credential :parent
+                                       (-> mgmt-creds first :id)])))))
+
+
+(reg-event-fx
+ ::fetch-coe-management-credentials-available
+ (fn [{:keys [db]} [_ subtypes additional-filter]]
+   {:db                  (assoc db ::spec/management-credentials-available nil)
+    ::cimi-api-fx/search [:credential
+                          {:filter (cond-> (apply general-utils/join-or
+                                                  (map #(str "subtype='" % "'") subtypes))
+                                     additional-filter (general-utils/join-and additional-filter))
+                           :last   10000}
+                          #(dispatch [::set-coe-management-credentials-available %])]}))
 
 
 (reg-event-fx

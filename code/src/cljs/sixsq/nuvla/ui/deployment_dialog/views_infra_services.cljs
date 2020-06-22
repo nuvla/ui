@@ -79,7 +79,8 @@
 
 
 (defn creds-list
-  []
+  ;; TODO: generate creds list taking subtype into the account.
+  [subtype]
   (let [tr          (subscribe [::i18n-subs/tr])
         credentials (subscribe [::subs/credentials])]
     (if (seq @credentials)
@@ -116,7 +117,7 @@
      [ui/AccordionContent {:active active?}
       description
       [ui/Segment (assoc style/basic :loading @loading?)
-       [creds-list]]]]))
+       [creds-list subtype]]]]))
 
 
 (defn content

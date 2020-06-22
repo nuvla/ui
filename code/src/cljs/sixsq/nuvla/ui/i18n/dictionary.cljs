@@ -99,7 +99,8 @@
         :credential-for-details-vpn                "for details on how to configure your OpenVPN client."
         :credential-generate                       "Generated credential"
         :credential-go-to                          "Go to our"
-        :credential-infra-service-section-sub-text "Credentials used to manage infrastructure services, such as Swarm, MinIO and storage services from cloud providers, such as Amazon, Azure and Exoscale"
+        ; FIXME: Validate. Update French translation.
+        :credential-infra-service-section-sub-text "Credentials to manage infrastructure services: Docker Swarm, Kubernetes, IaaS and S3 storage from cloud providers, such as Amazon, Azure, Google and Exoscale."
         :credential-please-save-this-file          "Please save this file, since Nuvla will not save it (it's your secret!)."
         :credential-save                           "Save credential"
         :credentials                               "credentials"
@@ -606,7 +607,7 @@
         :credential-for-details-vpn                "pour le détail de la configuration de votre client OpenVPN."
         :credential-generate                       "Identifiant géréré"
         :credential-go-to                          "Allez vers notre"
-        :credential-infra-service-section-sub-text "Idendifiants utilisés pour gérer les services d'infrastructure, tel que Swarm, MinIO et les services de stockage des fournisseurs de services cloud, tel qu'Amazon, Azure et Exoscale"
+        :credential-infra-service-section-sub-text "Idendifiants utilisés pour gérer les services d'infrastructure, tel que Swarm, S3 et les services de stockage des fournisseurs de services cloud, tel qu'Amazon, Azure et Exoscale"
         :credential-please-save-this-file          "S'il vous plaît, garder ce fichier en lieu sûr, puisque Nuvla ne le sauvegardera pas (c'est votre secret!)."
         :credential-save                           "Sauvez l'identifiant"
         :credentials                               "identifiants"

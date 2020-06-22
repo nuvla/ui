@@ -20,18 +20,24 @@
 
 (defn db->new-service
   [db]
-  (let [service-name    (get-in db [::spec/infra-service :name])
-        description     (get-in db [::spec/infra-service :description])
-        group-id        (get-in db [::spec/infra-service :parent])
-        endpoint        (get-in db [::spec/infra-service :endpoint])
-        service-subtype (get-in db [::spec/infra-service :subtype])
-        acl             (get-in db [::spec/infra-service :acl])]
+  (let [service-name          (get-in db [::spec/infra-service :name])
+        description           (get-in db [::spec/infra-service :description])
+        group-id              (get-in db [::spec/infra-service :parent])
+        subtype               (get-in db [::spec/infra-service :subtype])
+        management-credential (get-in db [::spec/infra-service :management-credential])
+        _ (println "MNG creds " management-credential)
+        template-type         (if management-credential "coe" "generic")
+        _ (println "TEMPLATE TYPE " template-type)
+        endpoint              (if (= template-type "generic") (get-in db [::spec/infra-service :endpoint]))
+        _ (println "ENDPOINT " endpoint)
+        acl                   (get-in db [::spec/infra-service :acl])]
     (-> {}
-        (assoc-in [:template :href] (str "infrastructure-service-template/generic"))
+        (assoc-in [:template :href] (str "infrastructure-service-template/" template-type))
         (assoc-in [:template :name] service-name)
         (assoc-in [:template :description] description)
         (assoc-in [:template :parent] group-id)
-        (assoc-in [:template :subtype] service-subtype)
-        (assoc-in [:template :endpoint] endpoint)
+        (assoc-in [:template :subtype] subtype)
+        (cond-> endpoint (assoc-in [:template :endpoint] endpoint))
+        (cond-> management-credential (assoc-in [:template :management-credential] management-credential))
         (cond-> acl (assoc-in [:template :acl] acl))
         )))

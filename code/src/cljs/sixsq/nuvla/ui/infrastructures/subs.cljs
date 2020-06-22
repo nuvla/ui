@@ -25,6 +25,12 @@
 
 
 (reg-sub
+ ::management-credentials-available
+ (fn [db]
+   (::spec/management-credentials-available db)))
+
+
+(reg-sub
   ::elements-per-page
   ::spec/elements-per-page)
 

@@ -1,7 +1,9 @@
 (ns sixsq.nuvla.ui.infrastructures.views
   (:require
+    [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -154,19 +156,54 @@
   [coll elm]
   (some #(= elm %) coll))
 
+(defn row-management-credential-selector
+  [subtypes additional-filter editable? value-spec on-change]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        mgmt-creds      (subscribe [::subs/management-credentials-available])
+        local-validate? (r/atom false)
+        validate-form?  (subscribe [::subs/validate-form?])]
+    (dispatch [::events/fetch-coe-management-credentials-available subtypes additional-filter])
+    (fn [subtypes additional-filter editable? value-spec on-change]
+      (let [_ (println "MGMT CREDS: " @mgmt-creds)
+            value     (:management-credential @mgmt-creds)
+            validate? (or @local-validate? @validate-form?)
+            valid?    (s/valid? value-spec value)]
+        [ui/TableRow
+         [ui/TableCell {:collapsing false}
+          (general-utils/mandatory-name "CSP credential")]
+         [ui/TableCell {:error (and validate? (not valid?))}
+          (if (pos-int? (count @mgmt-creds))
+            ^{:key value}
+            [ui/Dropdown {:clearable   true
+                          :selection   true
+                          :fluid       true
+                          :value       value
+                          :placeholder "Select Cloud Service Provider credential"
+                          :on-change   (ui-callback/callback
+                                        :value #(do
+                                                 (reset! local-validate? true)
+                                                 (on-change %)))
+                          :options     (map (fn [{id :id, infra-name :name}]
+                                              {:key id, :value id, :text infra-name})
+                                            @mgmt-creds)}]
+            [ui/Message {:content (str "No CSP credential of subtype " subtypes ".")}])]]))))
 
-(defn service-swarm
+(defn service-coe
   []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        is-new?        (subscribe [::subs/is-new?])
-        service        (subscribe [::subs/infra-service])
-        validate-form? (subscribe [::subs/validate-form?])
-        on-change      (fn [name-kw value]
-                         (dispatch [::events/update-infra-service name-kw value])
-                         (dispatch [::events/validate-swarm-service-form]))]
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        is-new?            (subscribe [::subs/is-new?])
+        service            (subscribe [::subs/infra-service])
+        validate-form?     (subscribe [::subs/validate-form?])
+        subtype            (:subtype @service "coe")
+        on-change          (fn [name-kw value]
+                             (let [value (if (= name-kw :multiplicity) (int value) value)]
+                               (dispatch [::events/update-infra-service name-kw value])
+                               (dispatch [::events/validate-coe-service-form])))
+        csp-names          ["exoscale" "google" "amazonec2" "azure"]
+        mgmt-cred-subtypes (map #(str "infrastructure-service-" %) csp-names)]
     (fn []
       (let [editable? (general-utils/editable? @service @is-new?)
-            {:keys [name description endpoint]} @service]
+            {:keys [name description endpoint multiplicity]} @service]
         [:<>
 
          [acl/AclButton {:default-value (:acl @service)
@@ -180,10 +217,31 @@
             :validate-form? @validate-form?]
            [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
             :default-value description, :spec ::spec/description,
-            :on-change (partial on-change :description), :validate-form? @validate-form?]
-           [uix/TableRowField (@tr [:endpoint]), :placeholder "https://swarm-example.io::2376",
-            :default-value endpoint, :spec ::spec/endpoint, :editable? editable?, :required? true,
-            :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]]))))
+            :on-change (partial on-change :description), :validate-form? @validate-form?]]]
+
+         [ui/Divider]
+
+         [:div {:style {:color "grey" :font-style "oblique"}}
+          (str "Provide endpoint of existing " subtype " cluster")]
+
+         [ui/Table style/definition
+          [ui/TableBody
+           [uix/TableRowField (@tr [:endpoint]), :placeholder (str "https://" subtype "-example.io:2376"),
+            :default-value endpoint, :spec ::spec/endpoint, :editable? editable?, :required? false,
+            :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]
+
+         [ui/Divider {:horizontal true :as "h4"} "or"]
+
+         [:div {:style {:color "grey" :font-style "oblique"}}
+          (str "Provision new " subtype " cluster on Cloud Service Provider")]
+
+         [ui/Table style/definition
+          [ui/TableBody
+           [uix/TableRowField (@tr [:multiplicity]), :placeholder "cluster size",
+            :default-value multiplicity, :spec ::spec/multiplicity, :editable? editable?, :required? false,
+            :on-change (partial on-change :multiplicity), :validate-form? @validate-form?]]]
+         [row-management-credential-selector mgmt-cred-subtypes nil editable? ::spec/management-credential (partial on-change :management-credential)]
+         ]))))
 
 
 (defn service-registry
@@ -248,12 +306,12 @@
 
 
 (def infrastructure-service-validation-map
-  {"swarm"      {:validation-event ::events/validate-swarm-service-form
-                 :modal-content    service-swarm}
+  {"swarm"      {:validation-event ::events/validate-coe-service-form
+                 :modal-content    service-coe}
    "s3"         {:validation-event ::events/validate-minio-service-form
                  :modal-content    service-object-store}
-   "kubernetes" {:validation-event ::events/validate-swarm-service-form
-                 :modal-content    service-swarm}
+   "kubernetes" {:validation-event ::events/validate-coe-service-form
+                 :modal-content    service-coe}
    "registry"   {:validation-event ::events/validate-registry-service-form
                  :modal-content    service-registry}})
 

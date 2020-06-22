@@ -259,6 +259,9 @@
   {"infrastructure-service-swarm"
    {:validation-spec ::spec/coe-credential
     :modal-content   credential-coe},
+   "infrastructure-service-kubernetes"
+   {:validation-spec ::spec/coe-credential
+    :modal-content   credential-coe},
    "infrastructure-service-minio"
    {:validation-spec ::spec/minio-credential
     :modal-content   credential-object-store},

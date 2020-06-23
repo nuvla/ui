@@ -34,8 +34,8 @@
 (def BreadcrumbSection (r/adapt-react-class semantic/BreadcrumbSection))
 
 (def Button (r/adapt-react-class semantic/Button))
-(def ButtonGroup (r/adapt-react-class semantic/ButtonGroup))
 (def ButtonContent (r/adapt-react-class semantic/ButtonContent))
+(def ButtonGroup (r/adapt-react-class semantic/ButtonGroup))
 ;(def ButtonOr (r/adapt-react-class semantic/ButtonOr))
 
 (def Card (r/adapt-react-class semantic/Card))
@@ -82,7 +82,7 @@
 (def FormField (r/adapt-react-class semantic/FormField))
 (def FormGroup (r/adapt-react-class semantic/FormGroup))
 (def FormInput (r/adapt-react-class semantic/FormInput))
-;(def FormRadio (r/adapt-react-class semantic/FormRadio))
+(def FormRadio (r/adapt-react-class semantic/FormRadio))
 (def FormSelect (r/adapt-react-class semantic/FormSelect))
 
 (def Grid (r/adapt-react-class semantic/Grid))

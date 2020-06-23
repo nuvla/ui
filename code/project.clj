@@ -87,7 +87,8 @@
                  [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]
                  [com.taoensso/tempura "1.2.1" :scope "provided"]
                  [com.cemerick/url :scope "provided"]
-                 [kwladyka/form-validator-cljs "1.2.1"]]
+                 [kwladyka/form-validator-cljs "1.2.1"]
+                 [day8.re-frame/http-fx "v0.2.0"]]
 
   :source-paths ["src/clj" "src/cljs"]
 

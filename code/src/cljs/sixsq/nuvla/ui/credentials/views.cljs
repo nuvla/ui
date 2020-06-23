@@ -11,6 +11,7 @@
     [sixsq.nuvla.ui.credentials.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -353,8 +354,9 @@
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::events/open-credential-modal
-                                     {:subtype "infrastructure-service-vpn"} true]))}
+                          (dispatch [::main-events/subscription-required-dispatch
+                                     [::events/open-credential-modal
+                                      {:subtype "infrastructure-service-vpn"} true]]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "OpenVPN"]
              [ui/Image {:src   "/ui/images/openvpn.png"

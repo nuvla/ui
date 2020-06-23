@@ -24,12 +24,10 @@
         description           (get-in db [::spec/infra-service :description])
         group-id              (get-in db [::spec/infra-service :parent])
         subtype               (get-in db [::spec/infra-service :subtype])
+        multiplicity          (get-in db [::spec/infra-service :multiplicity])
         management-credential (get-in db [::spec/infra-service :management-credential])
-        _ (println "MNG creds " management-credential)
         template-type         (if management-credential "coe" "generic")
-        _ (println "TEMPLATE TYPE " template-type)
         endpoint              (if (= template-type "generic") (get-in db [::spec/infra-service :endpoint]))
-        _ (println "ENDPOINT " endpoint)
         acl                   (get-in db [::spec/infra-service :acl])]
     (-> {}
         (assoc-in [:template :href] (str "infrastructure-service-template/" template-type))
@@ -37,6 +35,8 @@
         (assoc-in [:template :description] description)
         (assoc-in [:template :parent] group-id)
         (assoc-in [:template :subtype] subtype)
+        (assoc-in [:template :cluster-params :multiplicity] multiplicity)
+        (cond-> endpoint (assoc-in [:template :endpoint] endpoint))
         (cond-> endpoint (assoc-in [:template :endpoint] endpoint))
         (cond-> management-credential (assoc-in [:template :management-credential] management-credential))
         (cond-> acl (assoc-in [:template :acl] acl))

@@ -160,12 +160,12 @@
   [subtypes additional-filter editable? value-spec on-change]
   (let [tr              (subscribe [::i18n-subs/tr])
         mgmt-creds      (subscribe [::subs/management-credentials-available])
+        service         (subscribe [::subs/infra-service])
         local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
     (dispatch [::events/fetch-coe-management-credentials-available subtypes additional-filter])
     (fn [subtypes additional-filter editable? value-spec on-change]
-      (let [_ (println "MGMT CREDS: " @mgmt-creds)
-            value     (:management-credential @mgmt-creds)
+      (let [value     (:management-credential @service)
             validate? (or @local-validate? @validate-form?)
             valid?    (s/valid? value-spec value)]
         [ui/TableRow
@@ -240,8 +240,21 @@
            [uix/TableRowField (@tr [:multiplicity]), :placeholder "cluster size",
             :default-value multiplicity, :spec ::spec/multiplicity, :editable? editable?, :required? false,
             :on-change (partial on-change :multiplicity), :validate-form? @validate-form?]]]
-         [row-management-credential-selector mgmt-cred-subtypes nil editable? ::spec/management-credential (partial on-change :management-credential)]
-         ]))))
+         ;; FIXME: make it work with :multiplicity and use instead of TableRowField.
+         #_[ui/Table {:compact     "very"
+                    :single-line true
+                    :collapsing      true
+                    :style       {:max-width "100%"}}
+          [ui/TableBody
+           [ui/Input {:aria-label   (@tr [:multiplicity])
+                      :tab-index    2
+                      :type         "number"
+                      :min          1
+                      :label        (@tr [:multiplicity])
+                      :defaultValue 1
+                      :on-blur      (partial on-change :multiplicity)}]  ]]
+         [row-management-credential-selector mgmt-cred-subtypes nil editable? ::spec/management-credential
+          (partial on-change :management-credential)]]))))
 
 
 (defn service-registry

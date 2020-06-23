@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.infrastructures-detail.views
   (:require
     [cljs.spec.alpha :as s]
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
@@ -110,7 +111,14 @@
            [uix/TableRowField (@tr [:endpoint]), :key (str id "-subtype"),
             :editable? @can-edit?, :spec ::spec/endpoint, :validate-form? @validate-form?,
             :required? true, :default-value endpoint,
-            :on-change (partial on-change :endpoint)]]]
+            :on-change (partial on-change :endpoint)]
+           ;; FIXME: refactor.
+           (if (= (:subtype @infra-service) "swarm")
+             [uix/TableRowField "COE manager", :key (str id "-subtype"),
+              :editable? false, :spec ::spec/endpoint, :validate-form? @validate-form?,
+              :required? true, :default-value [:a {:href   (str "http:" (second (str/split endpoint #":")) ":9000")
+                                                   :target "_blank"}
+                                               (str "http:" (second (str/split endpoint #":")) ":9000")]])]]
          (when @can-edit?
            [uix/Button {:text     (@tr [:save])
                         :primary  true

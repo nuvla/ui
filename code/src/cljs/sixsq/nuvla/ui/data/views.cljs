@@ -11,6 +11,7 @@
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -37,7 +38,8 @@
         :disabled  (not (seq @data-sets))
         :icon-name "rocket"
         :position  "left"
-        :on-click  #(dispatch [::events/open-application-select-modal])}])))
+        :on-click  #(dispatch [::main-events/subscription-required-dispatch
+                               [::events/open-application-select-modal]])}])))
 
 
 (defn search-header []
@@ -291,7 +293,8 @@
       {:content  (@tr [:process])
        :disabled (not (seq @data-sets))
        :icon     "rocket"
-       :on-click #(dispatch [::events/open-application-select-modal])}]]))
+       :on-click #(dispatch [::main-events/subscription-required-dispatch
+                             [::events/open-application-select-modal]])}]]))
 
 
 (defn data-set-resources

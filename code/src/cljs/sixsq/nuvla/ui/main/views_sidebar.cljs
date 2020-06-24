@@ -30,7 +30,7 @@
 
     ^{:key (name label-kw)}
     [uix/MenuItemWithIcon
-     {:name      (str/capitalize (@tr [label-kw]))
+     {:name      (str/capitalize (or (@tr [label-kw]) (name label-kw)))
       :icon-name icon
       :style     {:min-width  sidebar-width
                   :overflow-x "hidden"}
@@ -48,6 +48,23 @@
 
         label-kw :ocre
         icon     "credit card outline"]
+    ^{:key (name label-kw)}
+    [uix/MenuItemWithIcon
+     {:name      (str/capitalize (@tr [label-kw]))
+      :icon-name icon
+      :style     {:min-width  sidebar-width
+                  :overflow-x "hidden"}
+      :active    @active?
+      :on-click  #(navigate url)}]))
+
+(defn item-pricing
+  []
+  (let [tr       (subscribe [::i18n-subs/tr])
+        url      "pricing"
+        active?  (subscribe [::subs/nav-url-active? url])
+
+        label-kw :pricing
+        icon     "fas fa-cash-register"]
     ^{:key (name label-kw)}
     [uix/MenuItemWithIcon
      {:name      (str/capitalize (@tr [label-kw]))
@@ -79,24 +96,24 @@
   "Provides the sidebar menu for selecting major components/panels of the
    application."
   []
-  (let [show?      (subscribe [::subs/sidebar-open?])
-        iframe?    (subscribe [::subs/iframe?])
-        pages-list (subscribe [::subs/pages-list])]
+  (let [show?         @(subscribe [::subs/sidebar-open?])
+        iframe?       @(subscribe [::subs/iframe?])
+        pages-list    @(subscribe [::subs/pages-list])
+        is-admin?     @(subscribe [::session-subs/is-admin?])
+        is-ocre-user? @(subscribe [::session-subs/has-role? "group/ocre-user"])
+        stripe        @(subscribe [::subs/stripe])]
     [ui/Menu {:id         "nuvla-ui-sidebar"
               :style      {:transition "0.5s"
-                           :width      (if @show? sidebar-width "0")}
+                           :width      (if show? sidebar-width "0")}
               :vertical   true
               :icon       "labeled"
               :borderless true
               :inverted   true
               :fixed      "left"}
-     (when-not @iframe? [logo-item])
-     (doall
-       (for [{:keys [url label-kw icon protected? iframe-visble?]} @pages-list]
-         (when (or (not @iframe?) iframe-visble?)
-           ^{:key url}
-           [item label-kw url icon protected?])))
-     (let [is-admin?     (subscribe [::session-subs/is-admin?])
-           is-ocre-user? (subscribe [::session-subs/has-role? "group/ocre-user"])]
-       (when (or @is-admin? @is-ocre-user?)
-         [item-ocre]))]))
+     (when-not iframe? [logo-item])
+     (for [{:keys [url label-kw icon protected? iframe-visble?]} pages-list]
+       (when (or (not iframe?) iframe-visble?)
+         ^{:key url}
+         [item label-kw url icon protected?]))
+     (when (or is-admin? is-ocre-user?) [item-ocre])
+     (when stripe [item-pricing])]))

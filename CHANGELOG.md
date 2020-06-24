@@ -7,9 +7,16 @@
   - New credential creation workflow for SSH keys
   - SSH key association for NuvlaBox at creation time
   - SSH key listing in NuvlaBox details page
+  - Awesome fonts
+  - Profile page - Customer and stripe integration
+  - Pricing page
+  - Stripe components
 
 ### Changes
 
+  - Config - new attribute stripe
+  - Sign-up - Integration with pricing feature
+  - Main - Modal subscription required
   - NuvlaBox detail - Fix bug when saving location
   - Danger-Modal - Fix shutdown deployment in some condition button
     had no effect

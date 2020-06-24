@@ -2,7 +2,6 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
     [sixsq.nuvla.ui.about.views]
     [sixsq.nuvla.ui.apps-application.views]
     [sixsq.nuvla.ui.apps-component.views]
@@ -32,6 +31,7 @@
     [sixsq.nuvla.ui.messages.views :as messages]
     [sixsq.nuvla.ui.ocre.views]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.pricing.views]
     [sixsq.nuvla.ui.profile.views]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.session.views :as session-views]
@@ -125,41 +125,62 @@
                    :on-click #(do (dispatch [::events/ignore-changes true])
                                   (dispatch [::apps-events/form-valid]))}]]]))
 
+(defn subscription-required-modal
+  []
+  (let [tr    (subscribe [::i18n-subs/tr])
+        open? (subscribe [::subs/modal-open? :subscription-required])]
+
+    [ui/Modal {:open       @open?
+               :close-icon true
+               :size       "small"
+               :on-close   #(dispatch [::events/close-modal])}
+
+     [ui/ModalHeader (@tr [:subscription-required])]
+
+     [ui/ModalContent
+      [:div
+       [:p (@tr [:subscription-required-content])]
+       [ui/Button {:primary  true
+                   :on-click #(do
+                                (dispatch [::history-events/navigate "profile"])
+                                (dispatch [::events/close-modal]))}
+        (@tr [:subscribe])]]]]))
+
 
 #_(defmulti BootstrapMessage identity)
 
 #_(defmethod BootstrapMessage :no-swarm
-  [_]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Message
-     {:icon       "inbox"
-      :info       true
-      :on-dismiss #(dispatch [::events/set-bootsrap-message])
-      :header     (@tr [:message-no-swarm])
-      :content    (r/as-element
-                    [:p (@tr [:message-to-create-one])
-                     [:a
-                      {:style    {:cursor "pointer"}
-                       :on-click #(do (dispatch [::history-events/navigate "infrastructures"])
-                                      (dispatch [::infra-service-events/open-add-service-modal]))}
-                      (str " " (@tr [:click-here]))]])}]))
+    [_]
+    (let [tr (subscribe [::i18n-subs/tr])]
+      [ui/Message
+       {:icon       "inbox"
+        :info       true
+        :on-dismiss #(dispatch [::events/set-bootsrap-message])
+        :header     (@tr [:message-no-swarm])
+        :content    (r/as-element
+                      [:p (@tr [:message-to-create-one])
+                       [:a
+                        {:style    {:cursor "pointer"}
+                         :on-click #(do (dispatch [::history-events/navigate "infrastructures"])
+                                        (dispatch [::infra-service-events/open-add-service-modal]))}
+                        (str " " (@tr [:click-here]))]])}]))
 
 
 #_(defmethod BootstrapMessage :no-credential
-  [_]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Message
-     {:icon       "inbox"
-      :info       true
-      :on-dismiss #(dispatch [::events/set-bootsrap-message])
-      :header     (@tr [:message-no-credential])
-      :content    (r/as-element
-                    [:p (@tr [:message-to-create-one])
-                     [:a
-                      {:style    {:cursor "pointer"}
-                       :on-click #(do (dispatch [::history-events/navigate "credentials"])
-                                      (dispatch [::credential-events/open-add-credential-modal]))}
-                      (str " " (@tr [:click-here]))]])}]))
+    [_]
+    (let [tr (subscribe [::i18n-subs/tr])]
+      [ui/Message
+       {:icon       "inbox"
+        :info       true
+        :on-dismiss #(dispatch [::events/set-bootsrap-message])
+        :header     (@tr [:message-no-credential])
+        :content    (r/as-element
+                      [:p (@tr [:message-to-create-one])
+                       [:a
+                        {:style    {:cursor "pointer"}
+                         :on-click #(do (dispatch [::history-events/navigate "credentials"])
+                                        (dispatch [::credential-events/open-add-credential-modal]))}
+                        (str " " (@tr [:click-here]))]])}]))
 
 
 (defn Message
@@ -181,10 +202,10 @@
 
 (defn contents
   []
-  (let [resource-path     (subscribe [::subs/nav-path])
+  (let [resource-path    (subscribe [::subs/nav-path])
         ;bootstrap-message (subscribe [::subs/bootstrap-message])
-        content-key       (subscribe [::subs/content-key])
-        is-small-device?  (subscribe [::subs/is-small-device?])]
+        content-key      (subscribe [::subs/content-key])
+        is-small-device? (subscribe [::subs/is-small-device?])]
     (fn []
       [ui/Container
        (cond-> {:as    "main"
@@ -196,7 +217,7 @@
        [Message]
 
        #_(when @bootstrap-message
-         [BootstrapMessage @bootstrap-message])
+           [BootstrapMessage @bootstrap-message])
        (panel/render @resource-path)])))
 
 
@@ -253,6 +274,7 @@
              [header]
              [contents]
              [ignore-changes-modal]
+             [subscription-required-modal]
              (when-not @iframe? [footer])]]
            )]
         [ui/Container

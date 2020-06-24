@@ -15,6 +15,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -48,7 +49,7 @@
       [ui/CardMeta {:style {:word-wrap "break-word"}} parent-path]
       [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]
       (when compatibility
-        [ui/Label {:color   "grey", :corner  "right"}
+        [ui/Label {:color "grey", :corner "right"}
          [ui/Popup
           {:position "top center"
            :content  (str "COMPATIBILITY: " compatibility)
@@ -58,8 +59,9 @@
                  :primary  true
                  :icon     :rocket
                  :content  (@tr [:launch])
-                 :on-click #(dispatch [::deployment-dialog-events/create-deployment
-                                       (:id module) :infra-services])}]]))
+                 :on-click #(dispatch [::main-events/subscription-required-dispatch
+                                       [::deployment-dialog-events/create-deployment
+                                        (:id module) :infra-services]])}]]))
 
 
 (defn modules-cards-group

@@ -45,6 +45,10 @@
 ; from ui config file
 (s/def ::config any?)
 
+(s/def ::open-modal (s/nilable keyword?))
+
+(s/def ::stripe any?)
+
 
 (s/def ::db (s/keys :req [::iframe?
                           ::device
@@ -57,7 +61,9 @@
                           ::bootstrap-message
                           ::message
                           ::actions-interval
-                          ::content-key]))
+                          ::content-key
+                          ::open-modal
+                          ::stripe]))
 
 
 (def defaults {::iframe?              false
@@ -114,4 +120,7 @@
                                                           :label-kw   :api
                                                           :icon       "code"
                                                           :protected? false
-                                                          :order      7}}})
+                                                          :order      7}
+                                       }
+               ::open-modal           nil
+               ::stripe               nil})

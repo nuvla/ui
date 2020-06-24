@@ -113,7 +113,7 @@
             :required? true, :default-value endpoint,
             :on-change (partial on-change :endpoint)]
            ;; FIXME: refactor.
-           (if (= (:subtype @infra-service) "swarm")
+           (if (and (= (:method @infra-service) "coe") (not (str/blank? endpoint)))
              [uix/TableRowField "COE manager", :key (str id "-subtype"),
               :editable? false, :spec ::spec/endpoint, :validate-form? @validate-form?,
               :required? true, :default-value [:a {:href   (str "http:" (second (str/split endpoint #":")) ":9000")

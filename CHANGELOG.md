@@ -11,6 +11,7 @@
 
 ### Changes
 
+  - Dashboard - fix show empty URL in table view
   - Config - new attribute stripe
   - Sign-up - Integration with pricing feature
   - Main - Modal subscription required

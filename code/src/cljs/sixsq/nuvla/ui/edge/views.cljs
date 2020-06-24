@@ -131,7 +131,7 @@
           [ui/Icon {:name "box"}] (str nuvlabox-name-or-id " created")]
 
           (when @new-private-ssh-key
-            [ui/Message {:info  true
+            [ui/Message {:negative  true
                          :content (@tr [:nuvlabox-modal-private-ssh-key-info])
                          :header  (r/as-element [:a {:href   (str "data:text/plain;charset=utf-8,"
                                                                (js/encodeURIComponent @new-private-ssh-key))
@@ -234,7 +234,7 @@
              (@tr [:nuvlabox-usb-key-wait]))]]
 
          (when @new-private-ssh-key
-           [ui/Message {:info  true
+           [ui/Message {:negative  true
                         :content (@tr [:nuvlabox-modal-private-ssh-key-info])
                         :header  (r/as-element [:a {:href   (str "data:text/plain;charset=utf-8,"
                                                               (js/encodeURIComponent @new-private-ssh-key))

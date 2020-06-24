@@ -45,12 +45,14 @@
 (reg-event-fx
   ::get-nuvlabox-ssh-keys
   (fn [_ [_ ssh-keys-ids]]
-    {::cimi-api-fx/search [:credential
-                           {:filter (cond-> (apply general-utils/join-or
-                                              (map #(str "id='" % "'") ssh-keys-ids)))
-                            ;:select "id,name,public-key"
-                            :last   100}
-                           #(dispatch [::set-nuvlabox-ssh-keys {:associated-ssh-keys (:resources %)}])]}))
+    (if (empty? ssh-keys-ids)
+      (dispatch [::set-nuvlabox-ssh-keys {}])
+      {::cimi-api-fx/search [:credential
+                             {:filter (cond-> (apply general-utils/join-or
+                                                (map #(str "id='" % "'") ssh-keys-ids)))
+                              ;:select "id,name,public-key"
+                              :last   100}
+                             #(dispatch [::set-nuvlabox-ssh-keys {:associated-ssh-keys (:resources %)}])]})))
 
 
 (reg-event-fx

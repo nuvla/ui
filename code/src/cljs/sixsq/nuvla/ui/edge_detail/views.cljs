@@ -469,7 +469,7 @@
 
             card-options {:color      "black"
                           :style      {:max-width 200}}]
-        (when (and (:ssh-keys @nuvlabox) (nil? @ssh-creds))
+        (when (not= (count (:ssh-keys @nuvlabox)) (count (:associated-ssh-keys @ssh-creds)))
           (dispatch [::events/get-nuvlabox-ssh-keys (:ssh-keys @nuvlabox)]))
         [:<>
          (when (:acl @nuvlabox)
@@ -491,25 +491,23 @@
                          :basic    true
                          :circular true}
                (str "Last boot: " (time/time->format last-boot))])
-            (when (:ssh-keys @nuvlabox)
+
+            (when (pos? (count (:associated-ssh-keys @ssh-creds)))
               [ui/Segment {:compact true}
                [ui/Popup {:hoverable  true
                           :flowing  true
                           :position "bottom center"
-                          :content  (r/as-element (if @ssh-creds
-                                                    [ui/ListSA {:divided  true
-                                                                :relaxed  true}
-                                                     (for [sshkey (:associated-ssh-keys @ssh-creds)]
-                                                       [ui/ListItem {:key (:id sshkey)}
-                                                        [ui/ListContent
-                                                         [ui/ListHeader
-                                                          [:a {:href   (str @config/path-prefix "/api/" sshkey)
-                                                               :target "_blank"}
-                                                           (or (:name sshkey) (:id sshkey))]]
-                                                         [ui/ListDescription
-                                                          (str (subs (:public-key sshkey) 0 55) " ...")]]])]
-                                                    [ui/Loader {:active true
-                                                                :inline "centered"}]))
+                          :content  (r/as-element [ui/ListSA {:divided  true
+                                                              :relaxed  true}
+                                                   (for [sshkey (:associated-ssh-keys @ssh-creds)]
+                                                     [ui/ListItem {:key (:id sshkey)}
+                                                      [ui/ListContent
+                                                       [ui/ListHeader
+                                                        [:a {:href   (str @config/path-prefix "/api/" (:id sshkey))
+                                                             :target "_blank"}
+                                                         (or (:name sshkey) (:id sshkey))]]
+                                                       [ui/ListDescription
+                                                        (str (subs (:public-key sshkey) 0 55) " ...")]]])])
                           :trigger  (r/as-element [ui/Icon {:name "key"
                                                             :fitted true}
                                                    (@tr [:nuvlabox-detail-ssh-enabled])

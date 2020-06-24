@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.apps-application.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.apps-application.spec :as spec]))
+    [sixsq.nuvla.ui.apps-application.spec :as spec]
+    [sixsq.nuvla.ui.apps.utils :as utils]))
 
 
 (reg-event-db
@@ -14,9 +15,11 @@
 
 (reg-event-db
   ::add-file
-  (fn [db [_ id _]]
-    ; overwrite the id
-    (assoc-in db [::spec/module-application ::spec/files id] {:id id, ::spec/file-content ""})))
+  (fn [db [_ _]]
+    (let [id (-> db
+                 (get-in [::spec/module-application ::spec/files])
+                 utils/sorted-map-new-idx)]
+      (assoc-in db [::spec/module-application ::spec/files id] {:id id, ::spec/file-content ""}))))
 
 
 (reg-event-db

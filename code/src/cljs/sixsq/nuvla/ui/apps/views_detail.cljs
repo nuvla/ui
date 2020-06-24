@@ -406,7 +406,7 @@
             :link     true
             :color    "green"
             :on-click #(do (dispatch [::main-events/changes-protection? true])
-                           (dispatch [add-event (random-uuid) {}])
+                           (dispatch [add-event {}])
                            (dispatch [::events/validate-form]))}])
 
 
@@ -502,7 +502,7 @@
                      [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
                  [ui/TableBody
                   (for [[id env-variable] @env-variables]
-                    ^{:key id}
+                    ^{:key (str "env_" id)}
                     [single-env-variable env-variable])]]])
         (when @editable?
           [:div {:style {:padding-top 10}}
@@ -558,7 +558,7 @@
                      [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
                  [ui/TableBody
                   (for [[id url-map] @urls]
-                    ^{:key id}
+                    ^{:key (str "url_" id)}
                     [single-url url-map])]]])
         (when @editable?
           [:div {:style {:padding-top 10}}
@@ -617,7 +617,7 @@
                      [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
                  [ui/TableBody
                   (for [[id param] @output-parameters]
-                    ^{:key id}
+                    ^{:key (str "out-param_" id)}
                     [single-output-parameter param])]]])
         (when @editable?
           [:div {:style {:padding-top 10}}
@@ -684,7 +684,7 @@
           [:div [ui/Grid {:style {:margin-top    5
                                   :margin-bottom 5}}
                  (for [[id dt] @data-types]
-                   ^{:key id}
+                   ^{:key (str "data-type_" id)}
                    [single-data-type dt])]])
         (when @editable?
           [:div

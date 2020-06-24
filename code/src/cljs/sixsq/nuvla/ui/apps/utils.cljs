@@ -44,10 +44,10 @@
 (defn sanitize-name [name]
   (when name
     (str/lower-case
-     (str/replace
-       (str/trim
-         (str/join "" (re-seq #"[a-zA-Z0-9\ ]" name)))
-       " " "-"))))
+      (str/replace
+        (str/trim
+          (str/join "" (re-seq #"[a-zA-Z0-9\ ]" name)))
+        " " "-"))))
 
 
 (defn contruct-path [parent name]
@@ -57,8 +57,7 @@
                       [parent sanitized-name]))))
 
 
-(defn
-  sanitize-base
+(defn sanitize-base
   [module]
   (let [path (contruct-path (:parent-path module) (:name module))]
     (if (nil? (:path module))
@@ -68,41 +67,43 @@
 
 (defn env-variables->module
   [db]
-  (into []
-        (for [[id m] (get-in db [::spec/module-common ::spec/env-variables])]
-          (let [{:keys [::spec/env-name ::spec/env-description ::spec/env-value ::spec/env-required]
-                 :or   {env-required false}} m]
-            (cond-> {:name     env-name
-                     :required env-required}
-                    env-value (assoc :value env-value)
-                    env-description (assoc :description env-description))))))
+  (into
+    []
+    (for [[id m] (get-in db [::spec/module-common ::spec/env-variables])]
+      (let [{:keys [::spec/env-name ::spec/env-description ::spec/env-value ::spec/env-required]
+             :or   {env-required false}} m]
+        (cond-> {:name     env-name
+                 :required env-required}
+                env-value (assoc :value env-value)
+                env-description (assoc :description env-description))))))
 
 
 (defn urls->module
   [db]
-  (into []
-        (for [[id u] (get-in db [::spec/module-common ::spec/urls])]
-          (do
-            [(::spec/url-name u) (::spec/url u)]))))
+  (into
+    []
+    (for [[id u] (get-in db [::spec/module-common ::spec/urls])]
+      [(::spec/url-name u) (::spec/url u)])))
 
 
 (defn output-parameters->module
   [db]
-  (into []
-        (for [[id op] (get-in db [::spec/module-common ::spec/output-parameters])]
-          (let [{:keys [::spec/output-parameter-name ::spec/output-parameter-description]} op]
-            (conj
-              {:name output-parameter-name}
-              {:description output-parameter-description})))))
+  (into
+    []
+    (for [[id op] (get-in db [::spec/module-common ::spec/output-parameters])]
+      (let [{:keys [::spec/output-parameter-name ::spec/output-parameter-description]} op]
+        (conj
+          {:name output-parameter-name}
+          {:description output-parameter-description})))))
 
 
 (defn data-binding->module
   [db]
-  (into []
-        (for [[id binding] (get-in db [::spec/module-common ::spec/data-types])]
-          (let [{:keys [::spec/data-type]} binding]
-            (conj
-              data-type)))))
+  (into
+    []
+    (for [[id binding] (get-in db [::spec/module-common ::spec/data-types])]
+      (let [{:keys [::spec/data-type]} binding]
+        (conj data-type)))))
 
 
 (defn db->module
@@ -144,43 +145,43 @@
 
 (defn env-variables->db
   [env-variables]
-  (into {}
-        (for [{:keys [name description value required]} env-variables]
-          (let [id (random-uuid)]
-            {id {:id                    id
-                 ::spec/env-name        name
-                 ::spec/env-value       value
-                 ::spec/env-description description
-                 ::spec/env-required    (or required false)}}))))
+  (into
+    (sorted-map)
+    (for [[id {:keys [name description value required]}] (map-indexed vector env-variables)]
+      [id {:id                    id
+           ::spec/env-name        name
+           ::spec/env-value       value
+           ::spec/env-description description
+           ::spec/env-required    (or required false)}])))
 
 
 (defn urls->db
   [tuples]
-  (into {}
-        (for [[name url] tuples]
-          (let [id (random-uuid)]
-            {id {:id             id
-                 ::spec/url-name name
-                 ::spec/url      url}}))))
+  (into
+    (sorted-map)
+    (for [[id [name url]] (map-indexed vector tuples)]
+      [id {:id             id
+           ::spec/url-name name
+           ::spec/url      url}])))
 
 
 (defn output-parameters->db
   [params]
-  (into {}
-        (for [{:keys [name description]} params]
-          (let [id (random-uuid)]
-            {id {:id                                 id
-                 ::spec/output-parameter-name        name
-                 ::spec/output-parameter-description description}}))))
+  (into
+    (sorted-map)
+    (for [[id {:keys [name description]}] (map-indexed vector params)]
+      [id {:id                                 id
+           ::spec/output-parameter-name        name
+           ::spec/output-parameter-description description}])))
 
 
 (defn data-types->db
   [dts]
-  (into {}
-        (for [dt dts]
-          (let [id (random-uuid)]
-            {id {:id              id
-                 ::spec/data-type dt}}))))
+  (into
+    (sorted-map)
+    (for [[id dt] (map-indexed vector dts)]
+      [id {:id              id
+           ::spec/data-type dt}])))
 
 
 (defn module->db
@@ -210,3 +211,7 @@
   [:span name [:sup " " [ui/Icon {:name  "asterisk"
                                   :size  :tiny
                                   :color :red}]]])
+
+(defn sorted-map-new-idx
+  [sorted-map-elemts]
+  (or (some-> sorted-map-elemts last first inc) 0))

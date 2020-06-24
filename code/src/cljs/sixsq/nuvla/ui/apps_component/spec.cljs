@@ -6,8 +6,8 @@
 
 ; create an initial entry for new components
 (def defaults {::module-component {::image         {}
-                                   ::ports         {}
-                                   ::mounts        {}
+                                   ::ports         (sorted-map)
+                                   ::mounts        (sorted-map)
                                    ::architectures ["amd64"]}})
 
 

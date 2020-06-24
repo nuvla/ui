@@ -14,25 +14,25 @@
 
 (defn ports->db
   [ports]
-  (into {}
-        (for [{:keys [target-port published-port protocol]} ports]
-          (let [id (random-uuid)]
-            {id {:id                   id
-                 ::spec/target-port    target-port
-                 ::spec/published-port published-port
-                 ::spec/protocol       protocol}}))))
+  (into
+    (sorted-map)
+    (for [[id {:keys [target-port published-port protocol]}] (map-indexed vector ports)]
+      [id {:id                   id
+           ::spec/target-port    target-port
+           ::spec/published-port published-port
+           ::spec/protocol       protocol}])))
 
 
 (defn mounts->db
   [mounts]
-  (into {}
-        (for [{:keys [source target read-only mount-type]} mounts]
-          (let [id (random-uuid)]
-            {id {:id                    id
-                 ::spec/mount-source    source
-                 ::spec/mount-target    target
-                 ::spec/mount-read-only (boolean read-only)
-                 ::spec/mount-type      mount-type}}))))
+  (into
+    (sorted-map)
+    (for [[id {:keys [source target read-only mount-type]}] (map-indexed vector mounts)]
+      [id {:id                    id
+           ::spec/mount-source    source
+           ::spec/mount-target    target
+           ::spec/mount-read-only (boolean read-only)
+           ::spec/mount-type      mount-type}])))
 
 
 (defn module->db
@@ -60,27 +60,29 @@
 
 (defn ports->module
   [db]
-  (into []
-        (for [[id p] (get-in db [::spec/module-component ::spec/ports])]
-          (let [{:keys [::spec/target-port ::spec/published-port ::spec/protocol]
-                 :or   {target-port nil published-port nil protocol "tcp"}} p]
-            (conj {:target-port target-port}
-                  (when (not (nil? published-port)) {:published-port published-port})
-                  (when (not (nil? protocol)) {:protocol protocol}))))))
+  (into
+    []
+    (for [[id p] (get-in db [::spec/module-component ::spec/ports])]
+      (let [{:keys [::spec/target-port ::spec/published-port ::spec/protocol]
+             :or   {target-port nil published-port nil protocol "tcp"}} p]
+        (conj {:target-port target-port}
+              (when (not (nil? published-port)) {:published-port published-port})
+              (when (not (nil? protocol)) {:protocol protocol}))))))
 
 
 ; TODO: add options
 (defn mounts->module
   [db]
-  (into []
-        (for [[id m] (get-in db [::spec/module-component ::spec/mounts])]
-          (let [{:keys [::spec/mount-source ::spec/mount-target
-                        ::spec/mount-read-only ::spec/mount-type]
-                 :or   {mount-read-only false}} m]
-            (conj {:source mount-source}
-                  {:target mount-target}
-                  {:mount-type mount-type}
-                  (when (not (nil? mount-read-only)) {:read-only mount-read-only}))))))
+  (into
+    []
+    (for [[id m] (get-in db [::spec/module-component ::spec/mounts])]
+      (let [{:keys [::spec/mount-source ::spec/mount-target
+                    ::spec/mount-read-only ::spec/mount-type]
+             :or   {mount-read-only false}} m]
+        (conj {:source mount-source}
+              {:target mount-target}
+              {:mount-type mount-type}
+              (when (not (nil? mount-read-only)) {:read-only mount-read-only}))))))
 
 
 (defn db->module

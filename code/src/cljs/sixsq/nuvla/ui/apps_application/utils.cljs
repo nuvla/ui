@@ -6,12 +6,12 @@
 
 (defn files->db
   [files]
-  (into {}
-        (for [{:keys [file-name file-content]} files]
-          (let [id (random-uuid)]
-            {id {:id                 id
-                 ::spec/file-name    file-name
-                 ::spec/file-content file-content}}))))
+  (into
+    (sorted-map)
+    (for [[id {:keys [file-name file-content]}] (map-indexed vector files)]
+      [id {:id                 id
+           ::spec/file-name    file-name
+           ::spec/file-content file-content}])))
 
 
 (defn module->db
@@ -28,12 +28,13 @@
 
 (defn files->module
   [db]
-  (into []
-        (for [[id file] (get-in db [::spec/module-application ::spec/files])]
-          (let [{:keys [::spec/file-name ::spec/file-content]} file]
-            (conj
-              {:file-name file-name}
-              {:file-content file-content})))))
+  (into
+    []
+    (for [[id file] (get-in db [::spec/module-application ::spec/files])]
+      (let [{:keys [::spec/file-name ::spec/file-content]} file]
+        (conj
+          {:file-name file-name}
+          {:file-content file-content})))))
 
 
 (defn db->module

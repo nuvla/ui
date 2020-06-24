@@ -491,7 +491,7 @@
                          :basic    true
                          :circular true}
                (str "Last boot: " (time/time->format last-boot))])
-            (when (and (:ssh-keys @nuvlabox) (some? (:ssh-keys @nuvlabox)))
+            (when (:ssh-keys @nuvlabox)
               [ui/Segment {:compact true}
                [ui/Popup {:hoverable  true
                           :flowing  true

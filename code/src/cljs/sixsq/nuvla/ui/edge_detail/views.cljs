@@ -92,32 +92,32 @@
         button-load? (r/atom false)
         peripheral   (subscribe [::subs/nuvlabox-peripheral id])]
     (fn [id]
-      (let [{p-id          :id
-             p-ops         :operations
-             p-name        :name
-             p-product     :product
-             p-created     :created
-             p-updated     :updated
-             p-descr       :description
-             p-interface   :interface
-             p-device-path :device-path
-             p-available   :available
-             p-vendor      :vendor
-             p-classes     :classes
-             p-identifier  :identifier
-             p-serial-num  :serial-number
-             p-video-dev   :video-device
-             p-data-gw-url :local-data-gateway-endpoint
-             p-data-sample :raw-data-sample
-             p-additional-assets  :additional-assets} @peripheral
+      (let [{p-id                :id
+             p-ops               :operations
+             p-name              :name
+             p-product           :product
+             p-created           :created
+             p-updated           :updated
+             p-descr             :description
+             p-interface         :interface
+             p-device-path       :device-path
+             p-available         :available
+             p-vendor            :vendor
+             p-classes           :classes
+             p-identifier        :identifier
+             p-serial-num        :serial-number
+             p-video-dev         :video-device
+             p-data-gw-url       :local-data-gateway-endpoint
+             p-data-sample       :raw-data-sample
+             p-additional-assets :additional-assets} @peripheral
             actions (get-available-actions p-ops)]
 
         (when (pos? (compare p-updated @last-updated))
           (reset! button-load? false)
           (reset! last-updated p-updated))
         [uix/Accordion
-         [ui/Table {:basic "very"
-                    :padded      false}
+         [ui/Table {:basic  "very"
+                    :padded false}
           [ui/TableBody
            (when p-product
              [ui/TableRow
@@ -467,8 +467,8 @@
             {:keys [hostname ip docker-server-version
                     operating-system architecture last-boot]} @nb-status
 
-            card-options {:color      "black"
-                          :style      {:max-width 200}}]
+            card-options {:color "black"
+                          :style {:max-width 200}}]
         (when (not= (count (:ssh-keys @nuvlabox)) (count (:associated-ssh-keys @ssh-creds)))
           (dispatch [::events/get-nuvlabox-ssh-keys (:ssh-keys @nuvlabox)]))
         [:<>
@@ -494,25 +494,27 @@
 
             (when (pos? (count (:associated-ssh-keys @ssh-creds)))
               [ui/Segment {:compact true}
-               [ui/Popup {:hoverable  true
-                          :flowing  true
-                          :position "bottom center"
-                          :content  (r/as-element [ui/ListSA {:divided  true
-                                                              :relaxed  true}
-                                                   (for [sshkey (:associated-ssh-keys @ssh-creds)]
-                                                     [ui/ListItem {:key (:id sshkey)}
-                                                      [ui/ListContent
-                                                       [ui/ListHeader
-                                                        [:a {:href   (str @config/path-prefix "/api/" (:id sshkey))
-                                                             :target "_blank"}
-                                                         (or (:name sshkey) (:id sshkey))]]
-                                                       [ui/ListDescription
-                                                        (str (subs (:public-key sshkey) 0 55) " ...")]]])])
-                          :trigger  (r/as-element [ui/Icon {:name "key"
-                                                            :fitted true}
-                                                   (@tr [:nuvlabox-detail-ssh-enabled])
-                                                   [ui/Icon {:name "angle down"
-                                                             :fitted true}]])}]
+               [ui/Popup
+                {:hoverable true
+                 :flowing   true
+                 :position  "bottom center"
+                 :content   (r/as-element [ui/ListSA {:divided true
+                                                      :relaxed true}
+                                           (for [sshkey (:associated-ssh-keys @ssh-creds)]
+                                             [ui/ListItem {:key (:id sshkey)}
+                                              [ui/ListContent
+                                               [ui/ListHeader
+                                                [:a {:href   (str @config/path-prefix
+                                                                  "/api/" (:id sshkey))
+                                                     :target "_blank"}
+                                                 (or (:name sshkey) (:id sshkey))]]
+                                               [ui/ListDescription
+                                                (str (subs (:public-key sshkey) 0 55) " ...")]]])])
+                 :trigger   (r/as-element [ui/Icon {:name   "key"
+                                                    :fitted true}
+                                           (@tr [:nuvlabox-detail-ssh-enabled])
+                                           [ui/Icon {:name   "angle down"
+                                                     :fitted true}]])}]
                ])]
            [ui/GridColumn
             [ui/CardGroup {:centered true}

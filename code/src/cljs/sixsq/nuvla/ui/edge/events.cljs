@@ -107,14 +107,15 @@
 (reg-event-fx
   ::find-nuvlabox-ssh-keys
   (fn [_ [_ ssh-keys-ids]]
-    {::cimi-api-fx/search [:credential
-                           {:filter (cond-> (apply general-utils/join-or
-                                              (map #(str "id='" % "'") ssh-keys-ids)))
-                            :select "public-key"
-                            :last   10000}
-                           #(dispatch [::set-nuvlabox-ssh-keys {:ids         ssh-keys-ids
-                                                                :public-keys (into [] (map :public-key
-                                                                                        (:resources %)))}])]}))
+    {::cimi-api-fx/search
+     [:credential
+      {:filter (cond-> (apply general-utils/join-or
+                              (map #(str "id='" % "'") ssh-keys-ids)))
+       :select "public-key"
+       :last   10000}
+      #(dispatch [::set-nuvlabox-ssh-keys {:ids         ssh-keys-ids
+                                           :public-keys (into [] (map :public-key
+                                                                      (:resources %)))}])]}))
 
 
 (reg-event-db
@@ -137,7 +138,7 @@
                             (let [{:keys [status message]} (response/parse-ex-info %)]
                               (dispatch [::messages-events/add
                                          {:header  (cond-> (str "error editing " nuvlabox-id)
-                                                     status (str " (" status ")"))
+                                                           status (str " (" status ")"))
                                           :content message
                                           :type    :error}])))]}))
 
@@ -215,8 +216,8 @@
     {:db                  (assoc db ::spec/ssh-keys-available nil)
      ::cimi-api-fx/search [:credential
                            {:filter (cond-> (apply general-utils/join-or
-                                              (map #(str "subtype='" % "'") subtypes))
-                                      additional-filter (general-utils/join-and
-                                                          additional-filter))
+                                                   (map #(str "subtype='" % "'") subtypes))
+                                            additional-filter (general-utils/join-and
+                                                                additional-filter))
                             :last   10000}
                            #(dispatch [::set-ssh-keys-available %])]}))

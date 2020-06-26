@@ -96,7 +96,6 @@
                                      (get-in new-credential [:template :href]))
                                    (dispatch [::set-generated-credential-modal %]))
                                  (let [{:keys [status message resource-id]} (response/parse %)]
-                                    (dispatch [::get-results])
                                     (dispatch [::messages-events/add
                                                {:header  (cond-> (str "added " resource-id)
                                                            status (str " (" status ")"))

@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.edge.events :as edge-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 
@@ -15,6 +16,12 @@
   ::set-nuvlabox-status
   (fn [db [_ nuvlabox-status]]
     (assoc db ::spec/nuvlabox-status nuvlabox-status)))
+
+
+(reg-event-db
+  ::set-nuvlabox-ssh-keys
+  (fn [db [_ ssh-keys]]
+    (assoc db ::spec/nuvlabox-ssh-keys ssh-keys)))
 
 
 (reg-event-db
@@ -33,6 +40,20 @@
      ::cimi-api-fx/get               [nb-status-id #(dispatch [::set-nuvlabox-status %])
                                       :on-error #(dispatch [::set-nuvlabox-status nil])]
      ::edge-fx/get-status-nuvlaboxes [[id] #(dispatch [::edge-events/set-status-nuvlaboxes %])]}))
+
+
+(reg-event-fx
+  ::get-nuvlabox-ssh-keys
+  (fn [_ [_ ssh-keys-ids]]
+    (if (empty? ssh-keys-ids)
+      (dispatch [::set-nuvlabox-ssh-keys {}])
+      {::cimi-api-fx/search
+       [:credential
+        {:filter (cond-> (apply general-utils/join-or
+                                (map #(str "id='" % "'") ssh-keys-ids)))
+         ;:select "id,name,public-key"
+         :last   100}
+        #(dispatch [::set-nuvlabox-ssh-keys {:associated-ssh-keys (:resources %)}])]})))
 
 
 (reg-event-fx

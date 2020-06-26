@@ -19,6 +19,12 @@
 
 
 (reg-sub
+  ::nuvlabox-ssh-keys
+  (fn [db]
+    (::spec/nuvlabox-ssh-keys db)))
+
+
+(reg-sub
   ::nuvlabox-peripherals
   (fn [db]
     (::spec/nuvlabox-peripherals db)))

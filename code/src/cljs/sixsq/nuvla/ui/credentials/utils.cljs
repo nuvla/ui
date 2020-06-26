@@ -26,6 +26,23 @@
         (cond-> acl (assoc-in [:template :acl] acl)))))
 
 
+(defn db->new-ssh-credential
+  [db]
+  (let [name        (get-in db [::spec/credential :name])
+        description (get-in db [::spec/credential :description])
+        subtype     (get-in db [::spec/credential :subtype])
+        public-key  (get-in db [::spec/credential :public-key])
+        private-key (get-in db [::spec/credential :private-key])
+        acl         (get-in db [::spec/credential :acl])]
+    (-> {}
+        (assoc :name name)
+        (assoc :description description)
+        (assoc-in [:template :href] (str "credential-template/" subtype))
+        (cond-> private-key (assoc-in [:template :private-key] private-key))
+        (cond-> public-key (assoc-in [:template :public-key] public-key))
+        (cond-> acl (assoc-in [:template :acl] acl)))))
+
+
 (defn db->new-minio-credential
   [db]
   (let [name                    (get-in db [::spec/credential :name])
@@ -83,7 +100,8 @@
       "infrastructure-service-swarm" (db->new-swarm-credential db)
       "infrastructure-service-minio" (db->new-minio-credential db)
       "infrastructure-service-vpn" (db->new-vpn-credential db)
-      "infrastructure-service-registry" (db->new-registry-credential db))))
+      "infrastructure-service-registry" (db->new-registry-credential db)
+      "generate-ssh-key" (db->new-ssh-credential db))))
 
 
 (defn vpn-config

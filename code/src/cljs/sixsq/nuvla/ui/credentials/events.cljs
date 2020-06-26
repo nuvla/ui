@@ -95,6 +95,12 @@
                                      #{"credential-template/create-credential-vpn-customer"}
                                      (get-in new-credential [:template :href]))
                                    (dispatch [::set-generated-credential-modal %]))
+                                 (let [{:keys [status message resource-id]} (response/parse %)]
+                                    (dispatch [::messages-events/add
+                                               {:header  (cond-> (str "added " resource-id)
+                                                           status (str " (" status ")"))
+                                                :content message
+                                                :type    :success}]))
                                  )]}
         {:db                db
          ::cimi-api-fx/edit [id credential

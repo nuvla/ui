@@ -4,6 +4,9 @@
 
 ### Added
 
+  - New credential creation workflow for SSH keys
+  - SSH key association for NuvlaBox at creation time
+  - SSH key listing in NuvlaBox details page
   - Awesome fonts
   - Profile page - Customer and stripe integration
   - Pricing page

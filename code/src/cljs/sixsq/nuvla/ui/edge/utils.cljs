@@ -88,10 +88,10 @@
 
 (defn load-net-stats
   [net-stats]
-  {:label         (map :interface net-stats)
-   :title         (str "Network Stats")
-   :tx            (map :bytes-transmitted net-stats)
-   :rx            (map :bytes-received net-stats)})
+  {:label (map :interface net-stats)
+   :title (str "Network Stats")
+   :tx    (map :bytes-transmitted net-stats)
+   :rx    (map :bytes-received net-stats)})
 
 
 (defn load-statistics
@@ -112,13 +112,14 @@
 
 
 (defn prepare-compose-files
-  [nuvlabox-release selected-peripherals nuvlabox-id]
+  [nuvlabox-release selected-peripherals replacements]
   (let [nuvlabox-file-scopes (group-by :scope (:compose-files nuvlabox-release))]
     (map
       (fn [peripheral]
-        (let [{:keys [name file]} (first (get nuvlabox-file-scopes peripheral))]
+        (let [{:keys [name file]} (first (get nuvlabox-file-scopes peripheral))
+              replacement-list (partition 2 replacements)]
           {:name name
-           :file (str/replace file #"\$\{NUVLABOX_UUID\}" nuvlabox-id)}))
+           :file (reduce #(apply str/replace %1 %2) file replacement-list)}))
       selected-peripherals)))
 
 

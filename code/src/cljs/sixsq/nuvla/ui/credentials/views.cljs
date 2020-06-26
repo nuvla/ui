@@ -103,6 +103,46 @@
             (partial on-change :parent)]]]]))))
 
 
+(defn credential-ssh
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        credential     (subscribe [::subs/credential])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-credential name-kw value])
+                         (dispatch [::events/validate-credential-form ::spec/ssh-credential]))]
+    (fn []
+      (let [editable? (general-utils/editable? @credential @is-new?)
+            {:keys [name description public-key private-key]} @credential]
+
+        [:<>
+
+         [acl/AclButton {:default-value (:acl @credential)
+                         :read-only     (not editable?)
+                         :on-change     #(dispatch [::events/update-credential :acl %])}]
+
+         [ui/Table style/definition
+          [ui/TableBody
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :validate-form? @validate-form?, :default-value name, :spec ::spec/name,
+            :on-change (partial on-change :name)]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
+            :on-change (partial on-change :description)]
+           [uix/TableRowField (r/as-element [ui/Popup
+                                             {:position "right center"
+                                              :content  (@tr [:public-key-info])
+                                              :trigger  (r/as-element
+                                                          [:span "public key " [ui/Icon {:name "info circle"}]])}]),
+            :placeholder (@tr [:public-key]), :editable? editable?, :required? false,
+            :default-value public-key, :spec ::spec/public-key, :type :textarea,
+            :on-change (partial on-change :public-key)]
+           [uix/TableRowField "private key", :placeholder (@tr [:private-key]), :editable? editable?,
+            :required? false, :default-value private-key, :spec ::spec/private-key, :type :textarea,
+            :on-change (partial on-change :private-key)]]]]))))
+
+
 (defn credential-object-store
   []
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -237,7 +277,10 @@
     :modal-content   credential-vpn}
    "infrastructure-service-registry"
    {:validation-spec ::spec/registry-credential
-    :modal-content   credential-registy}})
+    :modal-content   credential-registy}
+   "generate-ssh-key"
+   {:validation-spec ::spec/ssh-credential
+    :modal-content   credential-ssh}})
 
 
 (def infrastructure-service-subtypes
@@ -345,6 +388,19 @@
               [ui/Header "Object Store"]
               [:div]
               [ui/Image {:src   "/ui/images/s3.png"
+                         :style {:max-height 112}}]]]
+
+            [ui/Card
+             {:on-click #(do
+                           (dispatch [::events/set-validate-form? false])
+                           (dispatch [::events/form-valid])
+                           (dispatch [::events/close-add-credential-modal])
+                           (dispatch [::events/open-credential-modal
+                                      {:subtype "generate-ssh-key"} true]))}
+             [ui/CardContent {:text-align :center}
+              [ui/Header "SSH Keypair"]
+              [:div]
+              [ui/Image {:src   "/ui/images/ssh.png"
                          :style {:max-height 112}}]]]]]]]))))
 
 

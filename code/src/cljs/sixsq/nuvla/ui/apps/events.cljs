@@ -153,10 +153,10 @@
           (assoc-in [::spec/module-common ::spec/logo-url] default-logo-url)
           (assoc-in [::spec/module-common ::spec/parent-path] new-parent)
           (assoc-in [::spec/module-common ::spec/subtype] new-subtype)
-          (assoc-in [::spec/module-common ::spec/env-variables] {})
-          (assoc-in [::spec/module-common ::spec/urls] {})
-          (assoc-in [::spec/module-common ::spec/output-parameters] {})
-          (assoc-in [::spec/module-common ::spec/data-types] {})))))
+          (assoc-in [::spec/module-common ::spec/env-variables] (sorted-map))
+          (assoc-in [::spec/module-common ::spec/urls] (sorted-map))
+          (assoc-in [::spec/module-common ::spec/output-parameters] (sorted-map))
+          (assoc-in [::spec/module-common ::spec/data-types] (sorted-map))))))
 
 
 (reg-event-fx
@@ -266,9 +266,11 @@
 
 (reg-event-db
   ::add-env-variable
-  (fn [db [_ id env-variable]]
-    ; overwrite the id
-    (assoc-in db [::spec/module-common ::spec/env-variables id] (assoc env-variable :id id))))
+  (fn [db [_ env-variable]]
+    (let [id (-> db
+                 (get-in [::spec/module-common ::spec/env-variables])
+                 utils/sorted-map-new-idx)]
+      (assoc-in db [::spec/module-common ::spec/env-variables id] (assoc env-variable :id id)))))
 
 
 (reg-event-db
@@ -305,9 +307,11 @@
 
 (reg-event-db
   ::add-url
-  (fn [db [_ id url]]
-    ; overwrite the id
-    (assoc-in db [::spec/module-common ::spec/urls id] (assoc url :id id))))
+  (fn [db [_ url]]
+    (let [id (-> db
+                 (get-in [::spec/module-common ::spec/urls])
+                 utils/sorted-map-new-idx)]
+      (assoc-in db [::spec/module-common ::spec/urls id] (assoc url :id id)))))
 
 
 (reg-event-db
@@ -332,9 +336,11 @@
 
 (reg-event-db
   ::add-output-parameter
-  (fn [db [_ id param]]
-    ; overwrite the id
-    (assoc-in db [::spec/module-common ::spec/output-parameters id] (assoc param :id id))))
+  (fn [db [_ param]]
+    (let [id (-> db
+                 (get-in [::spec/module-common ::spec/output-parameters])
+                 utils/sorted-map-new-idx)]
+      (assoc-in db [::spec/module-common ::spec/output-parameters id] (assoc param :id id)))))
 
 
 (reg-event-db
@@ -361,9 +367,11 @@
 
 (reg-event-db
   ::add-data-type
-  (fn [db [_ id data-type]]
-    ; overwrite the id
-    (assoc-in db [::spec/module-common ::spec/data-types id] (assoc data-type :id id))))
+  (fn [db [_ data-type]]
+    (let [id (-> db
+                 (get-in [::spec/module-common ::spec/data-types])
+                 utils/sorted-map-new-idx)]
+      (assoc-in db [::spec/module-common ::spec/data-types id] (assoc data-type :id id)))))
 
 
 (reg-event-db

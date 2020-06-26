@@ -35,12 +35,12 @@
         private-key (get-in db [::spec/credential :private-key])
         acl         (get-in db [::spec/credential :acl])]
     (-> {}
-      (assoc :name name)
-      (assoc :description description)
-      (assoc-in [:template :href] (str "credential-template/" subtype))
-      (cond-> private-key (assoc-in [:template :private-key] private-key))
-      (cond-> public-key (assoc-in [:template :public-key] public-key))
-      (cond-> acl (assoc-in [:template :acl] acl)))))
+        (assoc :name name)
+        (assoc :description description)
+        (assoc-in [:template :href] (str "credential-template/" subtype))
+        (cond-> private-key (assoc-in [:template :private-key] private-key))
+        (cond-> public-key (assoc-in [:template :public-key] public-key))
+        (cond-> acl (assoc-in [:template :acl] acl)))))
 
 
 (defn db->new-minio-credential

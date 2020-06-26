@@ -88,10 +88,10 @@
 
 (defn load-net-stats
   [net-stats]
-  {:label         (map :interface net-stats)
-   :title         (str "Network Stats")
-   :tx            (map :bytes-transmitted net-stats)
-   :rx            (map :bytes-received net-stats)})
+  {:label (map :interface net-stats)
+   :title (str "Network Stats")
+   :tx    (map :bytes-transmitted net-stats)
+   :rx    (map :bytes-received net-stats)})
 
 
 (defn load-statistics

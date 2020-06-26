@@ -131,10 +131,10 @@
             :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
             :on-change (partial on-change :description)]
            [uix/TableRowField (r/as-element [ui/Popup
-                                                 {:position "right center"
-                                                  :content  (@tr [:public-key-info])
-                                                  :trigger  (r/as-element
-                                                              [:span "public key " [ui/Icon {:name  "info circle"}]])}]),
+                                             {:position "right center"
+                                              :content  (@tr [:public-key-info])
+                                              :trigger  (r/as-element
+                                                          [:span "public key " [ui/Icon {:name "info circle"}]])}]),
             :placeholder (@tr [:public-key]), :editable? editable?, :required? false,
             :default-value public-key, :spec ::spec/public-key, :type :textarea,
             :on-change (partial on-change :public-key)]

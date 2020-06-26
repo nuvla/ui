@@ -2,7 +2,8 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.apps-component.spec :as spec]))
+    [sixsq.nuvla.ui.apps-component.spec :as spec]
+    [sixsq.nuvla.ui.apps.utils :as utils]))
 
 
 (reg-event-db
@@ -21,9 +22,11 @@
 
 (reg-event-db
   ::add-port
-  (fn [db [_ id mapping]]
-    ; overwrite the id
-    (assoc-in db [::spec/module-component ::spec/ports id] (assoc mapping :id id))))
+  (fn [db [_ mapping]]
+    (let [id (-> db
+                 (get-in [::spec/module-component ::spec/ports])
+                 utils/sorted-map-new-idx)]
+      (assoc-in db [::spec/module-component ::spec/ports id] (assoc mapping :id id)))))
 
 
 (reg-event-db
@@ -66,9 +69,11 @@
 
 (reg-event-db
   ::add-mount
-  (fn [db [_ id mount]]
-    ; overwrite the id
-    (assoc-in db [::spec/module-component ::spec/mounts id] (assoc mount :id id))))
+  (fn [db [_ mount]]
+    (let [id (-> db
+                 (get-in [::spec/module-component ::spec/mounts])
+                 utils/sorted-map-new-idx)]
+      (assoc-in db [::spec/module-component ::spec/mounts id] (assoc mount :id id)))))
 
 
 (reg-event-db

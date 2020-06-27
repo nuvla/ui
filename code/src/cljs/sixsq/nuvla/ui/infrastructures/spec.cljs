@@ -52,14 +52,19 @@
 (s/def ::parent utils-spec/nonblank-string)
 (s/def ::endpoint utils-spec/nonblank-string)
 (s/def ::multiplicity int?)
+(s/def ::coe-manager-install boolean?)
 (s/def ::management-credential utils-spec/nonblank-string)
 
 (s/def ::coe-service (s/keys :req-un [::name
-                                      ::description]
+                                      ::description
+                                      ::management-credential]
                              :opt-un [::parent
-                                      ::endpoint
-                                      ::multiplicity
-                                      ::management-credential]))
+                                      ::multiplicity]))
+
+(s/def ::generic-service (s/keys :req-un [::name
+                                          ::description
+                                          ::endpoint]
+                                 :opt-un [::parent]))
 
 
 (s/def ::registry-service (s/keys :req-un [::name

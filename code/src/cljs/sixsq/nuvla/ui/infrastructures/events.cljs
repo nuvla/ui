@@ -16,12 +16,19 @@
 (reg-event-db
   ::validate-coe-service-form
   (fn [db [_]]
-    (let [form-spec      ::spec/coe-service
-          service        (get db ::spec/infra-service)
-          validate-form? (get db ::spec/validate-form?)
-          valid?         (if validate-form?
-                           (if (nil? form-spec) true (s/valid? form-spec service)) true)]
-      (s/explain form-spec service)
+    (let [coe-form-spec          ::spec/coe-service
+          generic-form-spec      ::spec/generic-service
+          service                (get db ::spec/infra-service)
+          validate-form?         (get db ::spec/validate-form?)
+          valid?                 (if validate-form?
+                                   (if (or (nil? coe-form-spec) (nil? generic-form-spec))
+                                     true
+                                     ; :endpoint distinguishes pre-existing from to be deployed COE
+                                     (if (:endpoint service)
+                                       (s/valid? generic-form-spec service)
+                                       (s/valid? coe-form-spec service)))
+                                   true)]
+      (s/explain coe-form-spec service)
       (assoc db ::spec/form-valid? valid?))))
 
 

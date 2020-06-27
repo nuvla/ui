@@ -1,12 +1,14 @@
 (ns sixsq.nuvla.ui.edge.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.edge.effects :as fx]
     [sixsq.nuvla.ui.edge.spec :as spec]
     [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
@@ -93,6 +95,55 @@
 
 
 (reg-event-fx
+  ::create-ssh-key
+  (fn [_ [_ ssh-template]]
+    {::cimi-api-fx/add [:credential ssh-template
+                        #(do
+                           (dispatch [::set-nuvlabox-ssh-keys {:ids         [(:resource-id %)]
+                                                               :public-keys [(:public-key %)]}])
+                           (dispatch [::set-nuvlabox-created-private-ssh-key (:private-key %)]))]}))
+
+
+(reg-event-fx
+  ::find-nuvlabox-ssh-keys
+  (fn [_ [_ ssh-keys-ids]]
+    {::cimi-api-fx/search
+     [:credential
+      {:filter (cond-> (apply general-utils/join-or
+                              (map #(str "id='" % "'") ssh-keys-ids)))
+       :select "public-key"
+       :last   10000}
+      #(dispatch [::set-nuvlabox-ssh-keys {:ids         ssh-keys-ids
+                                           :public-keys (into [] (map :public-key
+                                                                      (:resources %)))}])]}))
+
+
+(reg-event-db
+  ::set-nuvlabox-ssh-keys
+  (fn [db [_ ssh-key-list]]
+    (assoc db ::spec/nuvlabox-ssh-key ssh-key-list)))
+
+
+(reg-event-db
+  ::set-nuvlabox-created-private-ssh-key
+  (fn [db [_ private-key]]
+    (assoc db ::spec/nuvlabox-private-ssh-key private-key)))
+
+
+(reg-event-fx
+  ::assign-ssh-keys
+  (fn [_ [_ {:keys [ids]} nuvlabox-id]]
+    {::cimi-api-fx/edit [nuvlabox-id {:ssh-keys ids}
+                         #(when (instance? js/Error %)
+                            (let [{:keys [status message]} (response/parse-ex-info %)]
+                              (dispatch [::messages-events/add
+                                         {:header  (cond-> (str "error editing " nuvlabox-id)
+                                                           status (str " (" status ")"))
+                                          :content message
+                                          :type    :error}])))]}))
+
+
+(reg-event-fx
   ::create-nuvlabox
   (fn [_ [_ creation-data]]
     {::cimi-api-fx/add [:nuvlabox creation-data
@@ -141,6 +192,7 @@
   (fn [db [_ {:keys [resources]}]]
     (assoc db ::spec/nuvlabox-releases resources)))
 
+
 (reg-event-fx
   ::get-nuvlabox-releases
   (fn [{:keys [db]} _]
@@ -150,3 +202,22 @@
                             :orderby "release-date:desc"
                             :last    10000}
                            #(dispatch [::set-nuvlabox-releases %])]}))
+
+
+(reg-event-db
+  ::set-ssh-keys-available
+  (fn [db [_ {:keys [resources]}]]
+    (assoc db ::spec/ssh-keys-available resources)))
+
+
+(reg-event-fx
+  ::get-ssh-keys-available
+  (fn [{:keys [db]} [_ subtypes additional-filter]]
+    {:db                  (assoc db ::spec/ssh-keys-available nil)
+     ::cimi-api-fx/search [:credential
+                           {:filter (cond-> (apply general-utils/join-or
+                                                   (map #(str "subtype='" % "'") subtypes))
+                                            additional-filter (general-utils/join-and
+                                                                additional-filter))
+                            :last   10000}
+                           #(dispatch [::set-ssh-keys-available %])]}))

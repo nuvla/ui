@@ -140,8 +140,10 @@
      [ui/ModalContent
       [:div
        [:p (@tr [:subscription-required-content])]
-       [ui/Button {:primary true
-                   :on-click #(dispatch [::history-events/navigate "profile"])}
+       [ui/Button {:primary  true
+                   :on-click #(do
+                                (dispatch [::history-events/navigate "profile"])
+                                (dispatch [::events/close-modal]))}
         (@tr [:subscribe])]]]]))
 
 

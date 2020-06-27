@@ -68,7 +68,9 @@
   [{:keys [id state module] :as deployment}]
   (let [credential-id (:parent deployment)
         creds-name    (subscribe [::subs/creds-name-map])
-        [url-name url] @(subscribe [::subs/deployment-url deployment])]
+        [primary-url-name
+         primary-url-pattern] (-> module :content (get :urls []) first)
+        url           @(subscribe [::subs/deployment-url id primary-url-pattern])]
     [ui/TableRow
      [ui/TableCell [values/as-link (general-utils/id->uuid id)
                     :page "dashboard" :label (general-utils/id->short-uuid id)]]
@@ -79,7 +81,7 @@
      [ui/TableCell (when url
                      [:a {:href url, :target "_blank", :rel "noreferrer"}
                       [ui/Icon {:name "external"}]
-                      url-name])]
+                      primary-url-name])]
      [ui/TableCell (-> deployment :created time/parse-iso8601 time/ago)]
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",

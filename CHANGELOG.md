@@ -4,6 +4,9 @@
 
 ### Added
 
+  - New credential creation workflow for SSH keys
+  - SSH key association for NuvlaBox at creation time
+  - SSH key listing in NuvlaBox details page
   - Awesome fonts
   - Profile page - Customer and stripe integration
   - Pricing page
@@ -11,6 +14,10 @@
 
 ### Changes
 
+  - Apps - Edit of ports mapping, urls, env vars, output params,
+    volumes, files and data-types inserted randomly when more
+    than 8 values fix
+  - Dashboard - fix show empty URL in table view
   - Config - new attribute stripe
   - Sign-up - Integration with pricing feature
   - Main - Modal subscription required

@@ -180,7 +180,7 @@
                      [ui/TableHeaderCell {:content "Action"}])]]
                  [ui/TableBody
                   (for [[id port] @ports]
-                    ^{:key id}
+                    ^{:key (str "port_" id)}
                     [single-port port])]]])
         (when @editable?
           [:div {:style {:padding-top 10}}
@@ -266,7 +266,7 @@
                      [ui/TableHeaderCell {:content "Action"}])]]
                  [ui/TableBody
                   (for [[id mount] @mounts]
-                    ^{:key id}
+                    ^{:key (str "mount_" id)}
                     [single-mount mount])]]])
         (when @editable?
           [:div {:style {:padding-top 10}}

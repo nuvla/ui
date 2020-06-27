@@ -108,7 +108,7 @@
                      [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
                  [ui/TableBody
                   (for [[id file] @files]
-                    ^{:key id}
+                    ^{:key (str "file_" id)}
                     [single-file file])]]])
         (when @editable?
           [:div {:style {:padding-top 10}}

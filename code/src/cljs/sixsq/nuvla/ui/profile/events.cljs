@@ -58,10 +58,12 @@
 
 (reg-event-fx
   ::search-existing-customer
-  (fn [_ _]
-    {::cimi-api-fx/search [:customer {} #(if-let [id (-> % :resources first :id)]
-                                           (dispatch [::get-customer id])
-                                           (dispatch [::set-customer nil]))]}))
+  (fn [{{:keys [::session-spec/session]} :db} _]
+    {::cimi-api-fx/search [:customer {:filter (str "parent='" (or (:active-claim session)
+                                                                  (:user session)) "'")}
+                           #(if-let [id (-> % :resources first :id)]
+                              (dispatch [::get-customer id])
+                              (dispatch [::set-customer nil]))]}))
 
 
 (reg-event-fx

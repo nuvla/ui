@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.credentials.views :as cred-views]
     [sixsq.nuvla.ui.infrastructures-detail.views :as infra-detail]
     [sixsq.nuvla.ui.infrastructures.events :as events]
     [sixsq.nuvla.ui.infrastructures.spec :as spec]
@@ -156,29 +157,29 @@
   [coll elm]
   (some #(= elm %) coll))
 
-(defn row-management-credential-selector
-  [subtypes additional-filter editable? value-spec on-change]
+(defn row-csp-credential-selector
+  [subtypes additional-filter disabled? value-spec on-change]
   (let [tr              (subscribe [::i18n-subs/tr])
         mgmt-creds      (subscribe [::subs/management-credentials-available])
         service         (subscribe [::subs/infra-service])
         local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
     (dispatch [::events/fetch-coe-management-credentials-available subtypes additional-filter])
-    (fn [subtypes additional-filter editable? value-spec on-change]
+    (fn [subtypes additional-filter disabled? value-spec on-change]
       (let [value     (:management-credential @service)
             validate? (or @local-validate? @validate-form?)
             valid?    (s/valid? value-spec value)]
         [ui/TableRow
-         [ui/TableCell {:collapsing false}
-          (general-utils/mandatory-name "CSP credential")]
+         [ui/TableCell {:collapsing false} (@tr [:credentials-cloud-short])]
          [ui/TableCell {:error (and validate? (not valid?))}
           (if (pos-int? (count @mgmt-creds))
             ^{:key value}
             [ui/Dropdown {:clearable   true
                           :selection   true
+                          :disabled    disabled?
                           :fluid       true
                           :value       value
-                          :placeholder "Select Cloud Service Provider credential"
+                          :placeholder (@tr [:credentials-cloud-select])
                           :on-change   (ui-callback/callback
                                         :value #(do
                                                  (reset! local-validate? true)
@@ -186,24 +187,25 @@
                           :options     (map (fn [{id :id, infra-name :name}]
                                               {:key id, :value id, :text infra-name})
                                             @mgmt-creds)}]
-            [ui/Message {:content (str "No CSP credential of subtype " subtypes ".")}])]]))))
+            [ui/Message {:content (@tr [:credentials-cloud-not-found])}])]]))))
 
 (defn service-coe
   []
-  (let [tr                 (subscribe [::i18n-subs/tr])
-        is-new?            (subscribe [::subs/is-new?])
-        service            (subscribe [::subs/infra-service])
-        validate-form?     (subscribe [::subs/validate-form?])
-        subtype            (:subtype @service "coe")
-        on-change          (fn [name-kw value]
-                             (let [value (if (= name-kw :multiplicity) (int value) value)]
-                               (dispatch [::events/update-infra-service name-kw value])
-                               (dispatch [::events/validate-coe-service-form])))
-        csp-names          ["exoscale" "google" "amazonec2" "azure"]
-        mgmt-cred-subtypes (map #(str "infrastructure-service-" %) csp-names)]
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        is-new?              (subscribe [::subs/is-new?])
+        service              (subscribe [::subs/infra-service])
+        validate-form?       (subscribe [::subs/validate-form?])
+        subtype              (:subtype @service "swarm")
+        subtype-kw           (keyword subtype)
+        default-multiplicity 1
+        multiplicity         (r/atom default-multiplicity)
+        on-change            (fn [name-kw value]
+                               (let [value (if (= name-kw :multiplicity) (int value) value)]
+                                 (dispatch [::events/update-infra-service name-kw value])
+                                 (dispatch [::events/validate-coe-service-form])))]
     (fn []
       (let [editable? (general-utils/editable? @service @is-new?)
-            {:keys [name description endpoint multiplicity]} @service]
+            {:keys [name description endpoint]} @service]
         [:<>
 
          [acl/AclButton {:default-value (:acl @service)
@@ -222,39 +224,48 @@
          [ui/Divider]
 
          [:div {:style {:color "grey" :font-style "oblique"}}
-          (str "Provide endpoint of existing " subtype " cluster")]
+          (general-utils/format (@tr [:infra-service-give-endpoint-fmt]) (str/capitalize subtype))]
 
          [ui/Table style/definition
           [ui/TableBody
            [uix/TableRowField (@tr [:endpoint]), :placeholder (str "https://" subtype "-example.io:2376"),
-            :default-value endpoint, :spec ::spec/endpoint, :editable? editable?, :required? false,
+            :default-value endpoint, :spec ::spec/endpoint, :editable? (str/blank? (:management-credential @service)), :required? false,
             :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]
 
          [ui/Divider {:horizontal true :as "h4"} "or"]
 
          [:div {:style {:color "grey" :font-style "oblique"}}
-          (str "Provision new " subtype " cluster on Cloud Service Provider")]
+          (general-utils/format (@tr [:coe-provision-fmt]) (str/capitalize subtype))]
 
          [ui/Table style/definition
           [ui/TableBody
-           [uix/TableRowField (@tr [:multiplicity]), :placeholder "cluster size",
-            :default-value multiplicity, :spec ::spec/multiplicity, :editable? editable?, :required? false,
-            :on-change (partial on-change :multiplicity), :validate-form? @validate-form?]]]
-         ;; FIXME: make it work with :multiplicity and use instead of TableRowField.
-         #_[ui/Table {:compact     "very"
-                    :single-line true
-                    :collapsing      true
-                    :style       {:max-width "100%"}}
-          [ui/TableBody
-           [ui/Input {:aria-label   (@tr [:multiplicity])
-                      :tab-index    2
-                      :type         "number"
-                      :min          1
-                      :label        (@tr [:multiplicity])
-                      :defaultValue 1
-                      :on-blur      (partial on-change :multiplicity)}]  ]]
-         [row-management-credential-selector mgmt-cred-subtypes nil editable? ::spec/management-credential
-          (partial on-change :management-credential)]]))))
+           [row-csp-credential-selector cred-views/infrastructure-service-csp-subtyes nil
+            (boolean (:endpoint @service)) (if (:endpoint @service) any? ::spec/management-credential)
+            (partial on-change :management-credential)]]]
+         [ui/Container {:style {:margin  "5px" :display "inline-block"}}
+          [ui/Input {:label       (@tr [:coe-cluster-size])
+                     :placeholder default-multiplicity
+                     :disabled    (boolean (or (:endpoint @service) (not (contains? @service :management-credential))))
+                     :value       @multiplicity
+                     :size        "mini"
+                     :type        "number"
+                     :on-change   (ui-callback/input-callback
+                                   #(do
+                                     (cond
+                                       (number? (general-utils/str->int %)) (reset! multiplicity (general-utils/str->int %))
+                                       (empty? %) (reset! multiplicity 1))
+                                     (on-change :multiplicity @multiplicity)))
+                     :step        1
+                     :min         1}]]
+         [ui/Checkbox {:key             "coe-manager-install"
+                       :label           (@tr [:coe-install-manager-portainer])
+                       :disabled        (boolean (or (:endpoint @service) (not (contains? @service :management-credential))))
+                       :default-checked false
+                       :style           {:margin "1em"}
+                       :on-change       (ui-callback/checked
+                                         (fn [checked]
+                                           (if checked
+                                             (on-change :coe-manager-install true))))}]]))))
 
 
 (defn service-registry

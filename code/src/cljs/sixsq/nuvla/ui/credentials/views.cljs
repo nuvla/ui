@@ -371,20 +371,8 @@
         (dispatch [::events/edit-credential])))))
 
 
-(def infrastructure-service-validation-map
-  {"infrastructure-service-swarm"
-   {:validation-spec ::spec/coe-credential
-    :modal-content   credential-coe},
-   "infrastructure-service-kubernetes"
-   {:validation-spec ::spec/coe-credential
-    :modal-content   credential-coe},
-   "infrastructure-service-minio"
-   {:validation-spec ::spec/minio-credential
-    :modal-content   credential-object-store},
-   "infrastructure-service-vpn"
-   {:validation-spec ::spec/vpn-credential
-    :modal-content   credential-vpn}
-   "infrastructure-service-exoscale"
+(def infrastructure-service-csp-validation-map
+  {"infrastructure-service-exoscale"
    {:validation-spec ::spec/exoscale-credential
     :modal-content   credential-exoscale}
    "infrastructure-service-amazonec2"
@@ -395,10 +383,30 @@
     :modal-content   credential-azure}
    "infrastructure-service-google"
    {:validation-spec ::spec/google-credential
-    :modal-content   credential-google}
-   "infrastructure-service-registry"
-   {:validation-spec ::spec/registry-credential
-    :modal-content   credential-registy}})
+    :modal-content   credential-google}})
+
+
+(def infrastructure-service-csp-subtyes
+  (keys infrastructure-service-csp-validation-map))
+
+
+(def infrastructure-service-validation-map
+  (merge {"infrastructure-service-swarm"
+          {:validation-spec ::spec/coe-credential
+           :modal-content   credential-coe},
+          "infrastructure-service-kubernetes"
+          {:validation-spec ::spec/coe-credential
+           :modal-content   credential-coe},
+          "infrastructure-service-minio"
+          {:validation-spec ::spec/minio-credential
+           :modal-content   credential-object-store},
+          "infrastructure-service-vpn"
+          {:validation-spec ::spec/vpn-credential
+           :modal-content   credential-vpn}
+          "infrastructure-service-registry"
+          {:validation-spec ::spec/registry-credential
+           :modal-content   credential-registy}}
+         infrastructure-service-csp-validation-map))
 
 
 (def infrastructure-service-subtypes

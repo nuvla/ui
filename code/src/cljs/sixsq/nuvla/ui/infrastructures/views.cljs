@@ -11,10 +11,13 @@
     [sixsq.nuvla.ui.credentials.views :as cred-views]
     [sixsq.nuvla.ui.infrastructures-detail.views :as infra-detail]
     [sixsq.nuvla.ui.infrastructures.events :as events]
+    [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.infrastructures.spec :as spec]
     [sixsq.nuvla.ui.infrastructures.subs :as subs]
+    [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -189,6 +192,39 @@
                                             @mgmt-creds)}]
             [ui/Message {:content (@tr [:credentials-cloud-not-found])}])]]))))
 
+
+(defn ssh-keys-selector
+  [disabled?]
+  (let [ssh-keys (subscribe [::subs/ssh-keys])
+        ssh-keys-options (subscribe [::subs/ssh-keys-options])
+        form-valid? (subscribe [::subs/form-valid?])
+        local-validate? (r/atom false)]
+    (dispatch [::events/get-ssh-keys-infra])
+    (fn [disabled?]
+      (let [validate? (or @local-validate? (not @form-valid?))]
+        ^{:key @ssh-keys}
+        [ui/TableRow
+         [ui/TableCell {:collapsing true
+                        :style      {:padding-bottom 8}} "ssh keys"]
+         [ui/TableCell
+          [ui/Dropdown
+           {:multiple      true
+            :clearable     false
+            :selection     true
+            :disabled      disabled?
+            :default-value @ssh-keys
+            :options       @ssh-keys-options
+            :error         (and validate?
+                                (not (s/valid? ::spec/ssh-keys @ssh-keys)))
+            :on-change     (ui-callback/value
+                             #(do
+                                (reset! local-validate? true)
+                                (dispatch [::events/ssh-keys %])
+                                (dispatch [::main-events/changes-protection? true])
+                                (dispatch [::events/validate-coe-service-form])))}]
+          [:span (str/join ", " @ssh-keys)]]]))))
+
+
 (defn service-coe
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
@@ -205,6 +241,7 @@
                                  (dispatch [::events/validate-coe-service-form])))]
     (fn []
       (let [editable? (general-utils/editable? @service @is-new?)
+            mgmt-cred-set? (subscribe [::subs/mgmt-creds-set?])
             {:keys [name description endpoint]} @service]
         [:<>
 
@@ -245,7 +282,7 @@
          [ui/Container {:style {:margin  "5px" :display "inline-block"}}
           [ui/Input {:label       (@tr [:coe-cluster-size])
                      :placeholder default-multiplicity
-                     :disabled    (boolean (or (:endpoint @service) (not (contains? @service :management-credential))))
+                     :disabled        (not @mgmt-cred-set?)
                      :value       @multiplicity
                      :size        "mini"
                      :type        "number"
@@ -259,13 +296,14 @@
                      :min         1}]]
          [ui/Checkbox {:key             "coe-manager-install"
                        :label           (@tr [:coe-install-manager-portainer])
-                       :disabled        (boolean (or (:endpoint @service) (not (contains? @service :management-credential))))
+                       :disabled        (not @mgmt-cred-set?)
                        :default-checked false
                        :style           {:margin "1em"}
                        :on-change       (ui-callback/checked
-                                         (fn [checked]
-                                           (if checked
-                                             (on-change :coe-manager-install true))))}]]))))
+                                          #(on-change :coe-manager-install %))}]
+
+         ^{:key "ssh-keys-selector"}
+         [ssh-keys-selector (not @mgmt-cred-set?)]]))))
 
 
 (defn service-registry

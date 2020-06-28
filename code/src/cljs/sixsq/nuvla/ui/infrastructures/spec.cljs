@@ -73,6 +73,13 @@
                                   :opt-un [::parent]))
 
 
+; SSH keys
+
+(s/def ::ssh-keys-infra any?)
+
+(s/def ::ssh-keys (s/nilable (s/coll-of string?)))
+
+
 ; MinIO
 
 (s/def ::minio-service (s/keys :req-un [::name

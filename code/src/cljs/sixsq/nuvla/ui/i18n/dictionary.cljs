@@ -103,7 +103,6 @@
         :credential-for-details-vpn                "for details on how to configure your OpenVPN client."
         :credential-generate                       "Generated credential"
         :credential-go-to                          "Go to our"
-        ; FIXME: Validate. Update French translation.
         :credential-infra-service-section-sub-text "Credentials to manage infrastructure services: Docker Swarm, Kubernetes, IaaS and S3 storage from cloud providers, such as Amazon, Azure, Google and Exoscale."
         :credential-please-save-this-file          "Please save this file, since Nuvla will not save it (it's your secret!)."
         :credential-save                           "Save credential"

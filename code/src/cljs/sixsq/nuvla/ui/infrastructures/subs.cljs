@@ -1,7 +1,9 @@
 (ns sixsq.nuvla.ui.infrastructures.subs
   (:require
+    [clojure.set :as set]
     [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.infrastructures.spec :as spec]))
+    [sixsq.nuvla.ui.infrastructures.spec :as spec]
+    [clojure.string :as str]))
 
 
 (reg-sub
@@ -87,3 +89,29 @@
   (fn [db]
     (::spec/add-service-modal-visible? db)))
 
+(reg-sub
+ ::ssh-keys
+ (fn [db]
+   (::spec/ssh-keys db)))
+
+
+(reg-sub
+ ::ssh-keys-options
+ (fn [db]
+   (let [ssh-keys-infra          (::spec/ssh-keys-infra db)
+         ssh-keys-set            (-> db
+                                     ::spec/ssh-keys
+                                     set)
+         ssh-keys-infra-set      (set (map :id ssh-keys-infra))
+         not-existing-ssh-keys   (set/difference ssh-keys-set ssh-keys-infra-set)]
+     (map (fn [{:keys [id name]}]
+            {:key id, :value id, :text (or name id)})
+          (concat ssh-keys-infra
+                  (map (fn [id] {:id id}) not-existing-ssh-keys))))))
+
+
+(reg-sub
+  ::mgmt-creds-set?
+  (fn [db]
+    (let [creds (get-in db [::spec/infra-service :management-credential])]
+      (and creds (not (str/blank? creds))))))

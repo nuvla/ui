@@ -243,3 +243,28 @@
   ::update-infra-service
   (fn [db [_ key value]]
     (assoc-in db [::spec/infra-service key] value)))
+
+;; SSH keys
+
+(reg-event-db
+ ::ssh-keys
+ (fn [db [event-type ssh-keys]]
+   (assoc-in db [::spec/infra-service :ssh-keys] ssh-keys)))
+
+
+(reg-event-db
+ ::set-ssh-keys-infra
+ (fn [db [_ {resources :resources}]]
+   (assoc db ::spec/ssh-keys-infra resources)))
+
+
+(reg-event-fx
+ ::get-ssh-keys-infra
+ (fn [_ _]
+   {::cimi-api-fx/search
+    [:credential
+     {:filter "subtype='ssh-key'"
+      :select "id, name"
+      :order  "name:asc, id:asc"
+      :last   10000} #(dispatch [::set-ssh-keys-infra %])]}))
+

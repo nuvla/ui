@@ -156,7 +156,7 @@
 
 
 (defn detail-header
-  [{:keys [id created updated name description properties acl parent subtype method] :as data}]
+  [{:keys [id created updated name description properties acl parent subtype method state] :as data}]
   (when data
     [cc/metadata
      {:title       (or name id)
@@ -174,6 +174,7 @@
              updated (conj (metadata-row "updated" (time/time-value updated)))
              subtype (conj (metadata-row "subtype" subtype))
              method (conj (metadata-row "method" method))
+             method (conj (metadata-row "state" state))
              parent (conj (metadata-row "parent" parent)))]))
 
 

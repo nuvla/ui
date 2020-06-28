@@ -220,7 +220,6 @@
                              #(do
                                 (reset! local-validate? true)
                                 (dispatch [::events/ssh-keys %])
-                                (dispatch [::main-events/changes-protection? true])
                                 (dispatch [::events/validate-coe-service-form])))}]
           [:span (str/join ", " @ssh-keys)]]]))))
 

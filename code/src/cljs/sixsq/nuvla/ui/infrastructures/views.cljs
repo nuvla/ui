@@ -203,25 +203,27 @@
     (fn [disabled?]
       (let [validate? (or @local-validate? (not @form-valid?))]
         ^{:key @ssh-keys}
-        [ui/TableRow
-         [ui/TableCell {:collapsing true
-                        :style      {:padding-bottom 8}} "ssh keys"]
-         [ui/TableCell
-          [ui/Dropdown
-           {:multiple      true
-            :clearable     false
-            :selection     true
-            :disabled      disabled?
-            :default-value @ssh-keys
-            :options       @ssh-keys-options
-            :error         (and validate?
-                                (not (s/valid? ::spec/ssh-keys @ssh-keys)))
-            :on-change     (ui-callback/value
-                             #(do
-                                (reset! local-validate? true)
-                                (dispatch [::events/ssh-keys %])
-                                (dispatch [::events/validate-coe-service-form])))}]
-          [:span (str/join ", " @ssh-keys)]]]))))
+        [ui/Table style/definition
+         [ui/TableBody
+          [ui/TableRow
+           [ui/TableCell {:collapsing true
+                          :style      {:padding-bottom 8}} "ssh keys"]
+           [ui/TableCell
+            [ui/Dropdown
+             {:multiple      true
+              :clearable     false
+              :selection     true
+              :disabled      disabled?
+              :default-value @ssh-keys
+              :options       @ssh-keys-options
+              :error         (and validate?
+                                  (not (s/valid? ::spec/ssh-keys @ssh-keys)))
+              :on-change     (ui-callback/value
+                               #(do
+                                  (reset! local-validate? true)
+                                  (dispatch [::events/ssh-keys %])
+                                  (dispatch [::events/validate-coe-service-form])))}]
+            [:span (str/join ", " @ssh-keys)]]]]]))))
 
 
 (defn service-coe

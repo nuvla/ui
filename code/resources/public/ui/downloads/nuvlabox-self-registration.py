@@ -85,7 +85,7 @@ def prepare_nuvlabox_engine_installation(version, compose_files, workdir, keep_f
     for efile in existing_files:
         filename = "{}/{}".format(workdir, efile)
         if not filename.endswith("backup") and filename not in keep_files:
-            new_file = ".{}.backup".format(filename, now)
+            new_file = "{}.backup".format(filename, now)
             os.rename(filename, new_file)
 
     final_compose_files = []

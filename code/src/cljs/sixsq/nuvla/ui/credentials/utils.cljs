@@ -115,8 +115,8 @@
   (let [name        (get-in db [::spec/credential :name])
         description (get-in db [::spec/credential :description])
         subtype     (get-in db [::spec/credential :subtype])
-        secret      (get-in db [::spec/credential :amazonec2-access-key])
-        key         (get-in db [::spec/credential :amazonec2-secret-key])
+        key         (get-in db [::spec/credential :amazonec2-access-key])
+        secret      (get-in db [::spec/credential :amazonec2-secret-key])
         acl         (get-in db [::spec/credential :acl])]
     (-> {}
         (assoc :name name)

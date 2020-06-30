@@ -80,7 +80,7 @@
           from-str  (@tr [:from])]
       [ui/Segment style/basic
        [ui/CardGroup {:centered true}
-        [PlanComp {:id         "plan_Gx4S6VYf9cbfRK"
+        [PlanComp {:id         "comp-paper-plane"
                    :title      "Paper plane"
                    :subtitle   "Pay as you go"
                    :color      "olive"
@@ -90,7 +90,7 @@
                    :nb-price   "€ 50.00"
                    :dep-number (str up-to-str " 999")
                    :dep-price  "€ 6.00"}]
-        [PlanComp {:id         "plan_Gx4S6VYf9cbfRK2"
+        [PlanComp {:id         "comp-airplane"
                    :title      "Airplane"
                    :subtitle   "20% Discount"
                    :color      "yellow"
@@ -99,7 +99,7 @@
                    :nb-price   "€ 40.00"
                    :dep-number (str from-str " 1'000")
                    :dep-price  "€ 4.80"}]
-        [PlanComp {:id         "plan_Gx4S6VYf9cbfRK3"
+        [PlanComp {:id         "comp-rocket"
                    :title      "Rocket"
                    :subtitle   "35% Discount"
                    :color      "orange"
@@ -108,7 +108,7 @@
                    :nb-price   "€ 32.50"
                    :dep-number (str from-str " 5'000")
                    :dep-price  "€ 3.90"}]
-        [PlanComp {:id         "plan_Gx4S6VYf9cbfRK4"
+        [PlanComp {:id         "comp-starship"
                    :title      "Starship"
                    :subtitle   "43% Discount"
                    :color      "red"

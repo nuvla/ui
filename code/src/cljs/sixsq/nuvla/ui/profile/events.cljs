@@ -260,14 +260,15 @@
   ::set-confirm-card-setup-result
   (fn [{{:keys [::spec/loading
                 ::spec/customer] :as db} :db} [_ result]]
-    (let [res   (-> result (js->clj :keywordize-keys true))
-          error (:error res)]
+    (let [res            (-> result (js->clj :keywordize-keys true))
+          error          (:error res)
+          payment-method (get-in res [:setupIntent :payment_method])]
       (if error
         {:dispatch [::set-error (:message error) :confirm-setup-intent]}
         {:db         (-> db
                          (assoc ::spec/setup-intent nil)
                          (update ::spec/loading disj :confirm-setup-intent))
-         :dispatch-n [[::list-payment-methods]
+         :dispatch-n [[::set-default-payment-method payment-method]
                       [::upcoming-invoice]
                       [::close-modal]]}))))
 

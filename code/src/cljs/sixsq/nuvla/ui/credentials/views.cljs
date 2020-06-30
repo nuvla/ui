@@ -282,7 +282,7 @@
            [uix/TableRowField "api secret", :placeholder "Exoscale API secret", :editable? editable?, :required? true,
             :default-value exoscale-api-secret-key, :spec ::spec/exoscale-api-secret-key, :validate-form? @validate-form?,
             :on-change (partial on-change :exoscale-api-secret-key)]]]
-         [:div {:style {:color "grey" :font-style "oblique"}} "Follow the link below to read about how to obtain credentils."]
+         [:div {:style {:color "grey" :font-style "oblique"}} (@tr [:credential-cloud-follow-link])]
          [:a {:href   "https://community.exoscale.com/documentation/iam/quick-start/"
               :target "_blank"}
           (@tr [:nuvlabox-modal-more-info])]]))))
@@ -315,7 +315,7 @@
            [uix/TableRowField "api secret", :placeholder "AWS EC2 API secret", :editable? editable?, :required? true,
             :default-value amazonec2-secret-key, :spec ::spec/amazonec2-secret-key, :validate-form? @validate-form?,
             :on-change (partial on-change :amazonec2-secret-key)]]]
-         [:div {:style {:color "grey" :font-style "oblique"}} "Follow the link below to read about how to obtain credentils."]
+         [:div {:style {:color "grey" :font-style "oblique"}} (@tr [:credential-cloud-follow-link])]
          [:a {:href   "https://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html"
               :target "_blank"}
           (@tr [:nuvlabox-modal-more-info])]]))))
@@ -351,7 +351,7 @@
            [uix/TableRowField "client secret", :placeholder "Azure Client Secret", :editable? editable?, :required? true,
             :default-value azure-client-secret, :spec ::spec/azure-client-secret, :validate-form? @validate-form?,
             :on-change (partial on-change :azure-client-secret)]]]
-         [:div {:style {:color "grey" :font-style "oblique"}} "Follow the link below to read about how to obtain credentils."]
+         [:div {:style {:color "grey" :font-style "oblique"}} (@tr [:credential-cloud-follow-link])]
          [:a {:href   "https://www.inkoop.io/blog/how-to-get-azure-api-credentials"
               :target "_blank"}
           (@tr [:nuvlabox-modal-more-info])]]))))
@@ -394,7 +394,7 @@
             :default-value refresh-token, :spec ::spec/refresh-token, :validate-form? @validate-form?,
             :on-change (partial on-change :refresh-token)]
            ]]
-         [:div {:style {:color "grey" :font-style "oblique"}} "Follow the link below to read about how to obtain credentils."]
+         [:div {:style {:color "grey" :font-style "oblique"}} (@tr [:credential-cloud-follow-link])]
          [:a {:href   "https://cloud.google.com/docs/authentication/production"
               :target "_blank"}
           (@tr [:nuvlabox-modal-more-info])]]))))
@@ -572,8 +572,6 @@
               [ui/Image {:src   "/ui/images/ssh.png"
                          :style {:max-height 112}}]]]
 
-            [ui/Divider {:horizontal true :as "h4"} "Cloud Service Providers"]
-
             [ui/Card
              {:on-click #(do
                           (dispatch [::events/set-validate-form? false])
@@ -583,9 +581,10 @@
                                      [::events/open-credential-modal
                                       {:subtype "infrastructure-service-exoscale"} true]]))}
              [ui/CardContent {:text-align :center}
-              [ui/Header "Exoscale"]
+              [ui/Header "Cloud Exoscale"]
               [ui/Image {:src   "/ui/images/exoscale.png"
                          :style {:max-width 112}}]]]
+
             [ui/Card
              {:on-click #(do
                           (dispatch [::events/set-validate-form? false])
@@ -595,7 +594,7 @@
                                      [::events/open-credential-modal
                                       {:subtype "infrastructure-service-amazonec2"} true]]))}
              [ui/CardContent {:text-align :center}
-              [ui/Header "Amazon"]
+              [ui/Header "Cloud Amazon"]
               [ui/Image {:src   "/ui/images/aws.png"
                          :style {:max-width 112}}]]]
 
@@ -608,7 +607,7 @@
                                      [::events/open-credential-modal
                                       {:subtype "infrastructure-service-azure"} true]]))}
              [ui/CardContent {:text-align :center}
-              [ui/Header "Azure"]
+              [ui/Header "Cloud Azure"]
               [ui/Image {:src   "/ui/images/azure.png"
                          :style {:max-width 112}}]]]
 
@@ -621,10 +620,9 @@
                                      [::events/open-credential-modal
                                       {:subtype "infrastructure-service-google"} true]]))}
              [ui/CardContent {:text-align :center}
-              [ui/Header "Google"]
+              [ui/Header "Cloud Google"]
               [ui/Image {:src   "/ui/images/gce.png"
-                         :style {:max-width 112}}]]]
-            ]]]]))))
+                         :style {:max-width 112}}]]]]]]]))))
 
 
 (defn generated-credential-modal

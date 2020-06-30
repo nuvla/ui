@@ -97,6 +97,7 @@
         :created-from-module                       "Created from module: "
         :credential                                "credential"
         :credential-choose-type                    "Choose the type of credential you want to add."
+        :credential-cloud-follow-link              "Follow the link below to read about how to obtain credentials."
         :credential-cloud-section                  "Cloud Services"
         :credential-delete-warning                 "I understand that deleting this credential is permanent and cannot be undone. This action might affect services started or created with this credential."
         :credential-for                            "credential for"

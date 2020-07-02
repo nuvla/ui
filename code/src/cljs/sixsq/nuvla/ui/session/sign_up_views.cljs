@@ -72,7 +72,7 @@
                        [ui/FormInput {:name          :email
                                       :label         "Email"
                                       :required      true
-                                      :icon          "at"
+                                      :icon          "envelope"
                                       :icon-position "left"
                                       :auto-focus    true
                                       :auto-complete "off"

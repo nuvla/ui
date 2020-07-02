@@ -172,7 +172,7 @@
            [uix/TableRowField "access-key", :editable? editable?, :required? true,
             :default-value access-key, :spec ::spec/access-key, :validate-form? @validate-form?,
             :on-change (partial on-change :access-key)]
-           [uix/TableRowField "secret-key", :editable? editable?, :required? true,
+           [uix/TableRowField "secret-key", :editable? editable?, :required? true, :type :password,
             :default-value secret-key, :spec ::spec/secret-key, :validate-form? @validate-form?,
             :on-change (partial on-change :secret-key)]
            [row-infrastructure-services-selector ["s3"] nil editable? ::spec/parent
@@ -208,7 +208,7 @@
            [uix/TableRowField "username", :editable? editable?, :required? true,
             :default-value username, :spec ::spec/username, :validate-form? @validate-form?,
             :on-change (partial on-change :username)]
-           [uix/TableRowField "password", :editable? editable?, :required? true,
+           [uix/TableRowField "password", :editable? editable?, :required? true, :type :password,
             :default-value password, :spec ::spec/password, :validate-form? @validate-form?,
             :on-change (partial on-change :password)]
            [row-infrastructure-services-selector ["registry"] nil editable? ::spec/parent
@@ -360,48 +360,46 @@
             [ui/CardContent {:text-align :center}
              [ui/Header "OpenVPN"]
              [ui/Image {:src   "/ui/images/openvpn.png"
-                        :style {:max-width 112}}]]]]
-          [uix/MoreAccordion
-           [ui/CardGroup {:centered true}
-            [ui/Card
-             {:on-click #(do
-                           (dispatch [::events/set-validate-form? false])
-                           (dispatch [::events/form-valid])
-                           (dispatch [::events/close-add-credential-modal])
-                           (dispatch [::events/open-credential-modal
-                                      {:subtype "infrastructure-service-registry"} true]))}
-             [ui/CardContent {:text-align :center}
-              [ui/Header "Docker registry"]
-              [:div]
-              [ui/IconGroup {:size "massive"}
-               [ui/Icon {:name "docker"}]
-               [ui/Icon {:name "database", :corner "bottom right"}]]]]
+                        :style {:max-width 112}}]]]
+           [ui/Card
+            {:on-click #(do
+                          (dispatch [::events/set-validate-form? false])
+                          (dispatch [::events/form-valid])
+                          (dispatch [::events/close-add-credential-modal])
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-registry"} true]))}
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Docker registry"]
+             [:div]
+             [ui/IconGroup {:size "massive"}
+              [ui/Icon {:name "docker"}]
+              [ui/Icon {:name "database", :corner "bottom right"}]]]]
 
-            [ui/Card
-             {:on-click #(do
-                           (dispatch [::events/set-validate-form? false])
-                           (dispatch [::events/form-valid])
-                           (dispatch [::events/close-add-credential-modal])
-                           (dispatch [::events/open-credential-modal
-                                      {:subtype "infrastructure-service-minio"} true]))}
-             [ui/CardContent {:text-align :center}
-              [ui/Header "Object Store"]
-              [:div]
-              [ui/Image {:src   "/ui/images/s3.png"
-                         :style {:max-height 112}}]]]
+           [ui/Card
+            {:on-click #(do
+                          (dispatch [::events/set-validate-form? false])
+                          (dispatch [::events/form-valid])
+                          (dispatch [::events/close-add-credential-modal])
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-minio"} true]))}
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Object Store"]
+             [:div]
+             [ui/Image {:src   "/ui/images/s3.png"
+                        :style {:max-height 112}}]]]
 
-            [ui/Card
-             {:on-click #(do
-                           (dispatch [::events/set-validate-form? false])
-                           (dispatch [::events/form-valid])
-                           (dispatch [::events/close-add-credential-modal])
-                           (dispatch [::events/open-credential-modal
-                                      {:subtype "generate-ssh-key"} true]))}
-             [ui/CardContent {:text-align :center}
-              [ui/Header "SSH Keypair"]
-              [:div]
-              [ui/Image {:src   "/ui/images/ssh.png"
-                         :style {:max-height 112}}]]]]]]]))))
+           [ui/Card
+            {:on-click #(do
+                          (dispatch [::events/set-validate-form? false])
+                          (dispatch [::events/form-valid])
+                          (dispatch [::events/close-add-credential-modal])
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "generate-ssh-key"} true]))}
+            [ui/CardContent {:text-align :center}
+             [ui/Header "SSH Keypair"]
+             [:div]
+             [ui/Image {:src   "/ui/images/ssh.png"
+                        :style {:max-height 112}}]]]]]]))))
 
 
 (defn generated-credential-modal
@@ -516,8 +514,8 @@
     (fn []
       (let [infra-service-creds (filter #(in? infrastructure-service-subtypes (:subtype %))
                                         @credentials)]
-        [ui/Container {:fluid true}
-         [uix/PageHeader "key" (str/capitalize (@tr [:credentials])) :inline true]
+        [ui/Segment style/basic
+         [uix/PageHeader "key" (str/capitalize (@tr [:credentials]))]
          [uix/Accordion
           [:<>
            [:div (@tr [:credential-infra-service-section-sub-text])]
@@ -543,7 +541,7 @@
 (defmethod panel/render :credentials
   [path]
   (timbre/set-level! :info)
-  [:div
+  [:<>
    [credentials]
    [add-credential-modal]
    [credential-modal]

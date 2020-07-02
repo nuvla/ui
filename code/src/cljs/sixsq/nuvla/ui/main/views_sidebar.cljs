@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.main.events :as events]
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
+    [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
@@ -30,7 +31,7 @@
 
     ^{:key (name label-kw)}
     [uix/MenuItemWithIcon
-     {:name      (str/capitalize (or (@tr [label-kw]) (name label-kw)))
+     {:name      (utils/capitalize-first-letter (or (@tr [label-kw]) (name label-kw)))
       :icon-name icon
       :style     {:min-width  sidebar-width
                   :overflow-x "hidden"}
@@ -56,6 +57,7 @@
                   :overflow-x "hidden"}
       :active    @active?
       :on-click  #(navigate url)}]))
+
 
 (defn item-pricing
   []

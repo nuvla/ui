@@ -112,7 +112,8 @@
                                                           :protected? true
                                                           :order      5}
                                        "edge"            {:url        "edge"
-                                                          :label-kw   :edge
+                                                          :label-kw   :nuvlabox
+                                                          :name       "NuvlaBox"
                                                           :icon       "box"
                                                           :protected? true
                                                           :order      6}

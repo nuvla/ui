@@ -23,7 +23,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.utils.general :as utils]))
 
 
 (defn id-selector-formatter [entry]
@@ -519,8 +520,8 @@
                           [results-display]]
                        3 [cimi-detail-views/cimi-detail]
                        [menu-bar])]
-        [:<>
-         [uix/PageHeader "code" (str/upper-case (@tr [:api])) :inline inline]
+        [ui/Segment style/basic
+         [uix/PageHeader "code" (utils/capitalize-first-letter (@tr [:api])) :inline inline]
          children]))))
 
 

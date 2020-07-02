@@ -19,7 +19,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.zip :as zip]))
+    [sixsq.nuvla.ui.utils.zip :as zip]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (def view-type (r/atom :cards))
@@ -70,10 +71,13 @@
 
 (defn MenuBar []
   (let [loading?  (subscribe [::subs/loading?])
-        full-text (subscribe [::subs/full-text-search])]
+        full-text (subscribe [::subs/full-text-search])
+        tr (subscribe [::i18n-subs/tr])]
     (dispatch [::events/refresh])
     (fn []
       [:<>
+       [uix/PageHeader
+        "box" (general-utils/capitalize-first-letter (@tr [:edge]))]
        [ui/Menu {:borderless true, :stackable true}
         [AddButton]
         [ui/MenuItem {:icon     "grid layout"
@@ -724,4 +728,5 @@
                    root)]
     (dispatch [::events/get-vpn-infra])
     (dispatch [::events/get-nuvlabox-releases])
-    [ui/Segment style/basic children]))
+    [ui/Segment style/basic
+     children]))

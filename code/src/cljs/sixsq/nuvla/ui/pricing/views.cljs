@@ -15,6 +15,7 @@
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.profile.views :as profile-views]
     [sixsq.nuvla.ui.utils.general :as general]
+    [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
@@ -151,9 +152,10 @@
 
 (defmethod panel/render :pricing
   [path]
-  (let [stripe (subscribe [::main-subs/stripe])]
+  (let [tr                (subscribe [::i18n-subs/tr])
+        stripe (subscribe [::main-subs/stripe])]
     [ui/Segment style/basic
      [uix/PageHeader
-      "fas fa-cash-register" (str/upper-case "Pricing")]
+      "fas fa-cash-register" (utils/capitalize-first-letter (@tr [:pricing]))]
      (when @stripe
        [Pricing])]))

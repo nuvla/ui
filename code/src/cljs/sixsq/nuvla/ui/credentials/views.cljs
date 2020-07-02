@@ -37,7 +37,7 @@
         local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
     (dispatch [::events/fetch-infrastructure-services-available subtypes additional-filter])
-    (fn [subtype additional-filter editable? value-spec on-change]
+    (fn [subtypes additional-filter editable? value-spec on-change]
       (let [value     (:parent @credential)
             validate? (or @local-validate? @validate-form?)
             valid?    (s/valid? value-spec value)]
@@ -60,7 +60,7 @@
                                               {:key id, :value id, :text infra-name})
                                             @infra-services)}]
             [ui/Message {:content (str (str/capitalize (@tr [:no-infra-service-of-subtype]))
-                                       " " subtype ".")}])]]))))
+                                       " " subtypes ".")}])]]))))
 
 
 (defn credential-coe
@@ -510,6 +510,15 @@
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
                           (dispatch [::events/open-credential-modal
+                                     ;; FIXME: this is wrong, as it predefines the subtype of credential.
+                                     ;; However, the subtype of cred depends on the subtype of COE IS.
+                                     ;; We will overwrite this in utils/db->new-coe-credential depending
+                                     ;; on the subtype of the COE IS user selected.
+                                     ;; Not having subtype at this stage at all, doesn't render the modal.
+                                     ;; Setting it to something other than infrastructure-service-swarm or
+                                     ;; infrastructure-service-kubernetes doesn't work either. So, this is
+                                     ;; a temporary default until COE IS is selected and submit button is
+                                     ;; pressed.
                                      {:subtype "infrastructure-service-swarm"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Swarm / Kubernetes"]

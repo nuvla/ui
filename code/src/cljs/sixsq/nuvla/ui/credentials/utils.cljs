@@ -5,15 +5,22 @@
             [sixsq.nuvla.ui.utils.time :as time]))
 
 
-(defn db->new-swarm-credential
+(defn db->new-coe-credential
   [db]
   (let [name        (get-in db [::spec/credential :name])
         description (get-in db [::spec/credential :description])
-        subtype     (get-in db [::spec/credential :subtype])
+        parent      (get-in db [::spec/credential :parent])
+
+        ;; subtype of the credential has to match the subtype for the infra-service
+        infra-subtype (->> (::spec/infrastructure-services-available db)
+                           (filter #(= (:id %) parent))
+                           first
+                           :subtype)
+        subtype (str "infrastructure-service-" infra-subtype)
+
         ca          (get-in db [::spec/credential :ca])
         cert        (get-in db [::spec/credential :cert])
         key         (get-in db [::spec/credential :key])
-        parent      (get-in db [::spec/credential :parent] [])
         acl         (get-in db [::spec/credential :acl])]
     (-> {}
         (assoc :name name)
@@ -173,7 +180,8 @@
   [db]
   (let [subtype (get-in db [::spec/credential :subtype])]
     (case subtype
-      "infrastructure-service-swarm" (db->new-swarm-credential db)
+      "infrastructure-service-swarm" (db->new-coe-credential db)
+      "infrastructure-service-kubernetes" (db->new-coe-credential db)
       "infrastructure-service-minio" (db->new-minio-credential db)
       "infrastructure-service-vpn" (db->new-vpn-credential db)
       "infrastructure-service-exoscale" (db->new-exoscale-credential db)

@@ -37,12 +37,11 @@
 (s/def ::description utils-spec/nonblank-string)
 (s/def ::parent utils-spec/nonblank-string)
 
-; Swarm
+; COE
 
 (s/def ::ca utils-spec/nonblank-string)
 (s/def ::cert utils-spec/nonblank-string)
 (s/def ::key utils-spec/nonblank-string)
-(s/def ::infrastructure-services any?)
 
 (s/def ::coe-credential (s/keys :req-un [::name
                                          ::description

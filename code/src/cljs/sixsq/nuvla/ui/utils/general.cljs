@@ -94,6 +94,11 @@
        str/join))
 
 
+(defn capitalize-first-letter
+  [s]
+  (str (str/upper-case (first s)) (str/join "" (rest s))))
+
+
 ;;
 ;; json/edn conversions
 ;;

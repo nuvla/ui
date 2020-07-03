@@ -9,9 +9,12 @@
     [sixsq.nuvla.ui.apps.subs :as subs]
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.views-detail :as views-detail]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [taoensso.timbre :as timbre]))
 
@@ -64,11 +67,14 @@
 
 (defmethod panel/render :apps
   [path]
-  (timbre/set-level! :info)
-  [:div
-   [utils-validation/validation-error-message ::subs/form-valid?]
-   [views-detail/version-warning]
-   [views-detail/add-modal]
-   [views-detail/save-modal]
-   [views-detail/logo-url-modal]
-   [apps]])
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (timbre/set-level! :info)
+    [:div
+     ;[uix/PageHeader
+     ; "play" (general-utils/capitalize-first-letter (@tr [:apps-header]))]
+     [utils-validation/validation-error-message ::subs/form-valid?]
+     [views-detail/version-warning]
+     [views-detail/add-modal]
+     [views-detail/save-modal]
+     [views-detail/logo-url-modal]
+     [apps]]))

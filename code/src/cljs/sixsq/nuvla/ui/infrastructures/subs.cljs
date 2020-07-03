@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.infrastructures.subs
   (:require
     [clojure.set :as set]
+    [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.infrastructures.spec :as spec]
-    [clojure.string :as str]))
+    [sixsq.nuvla.ui.infrastructures.spec :as spec]))
 
 
 (reg-sub

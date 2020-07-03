@@ -173,7 +173,7 @@
            [uix/TableRowField "access-key", :editable? editable?, :required? true,
             :default-value access-key, :spec ::spec/access-key, :validate-form? @validate-form?,
             :on-change (partial on-change :access-key)]
-           [uix/TableRowField "secret-key", :editable? editable?, :required? true,
+           [uix/TableRowField "secret-key", :editable? editable?, :required? true, :type :password,
             :default-value secret-key, :spec ::spec/secret-key, :validate-form? @validate-form?,
             :on-change (partial on-change :secret-key)]
            [row-infrastructure-services-selector ["s3"] nil editable? ::spec/parent
@@ -208,7 +208,7 @@
             :on-change (partial on-change :description)]
            [uix/TableRowField "username", :editable? editable?, :required? true,
             :default-value username, :spec ::spec/username, :validate-form? @validate-form?,
-            :on-change (partial on-change :username)]
+            :type :password, :on-change (partial on-change :username)]
            [uix/TableRowField "password", :editable? editable?, :required? true,
             :default-value password, :spec ::spec/password, :validate-form? @validate-form?,
             :on-change (partial on-change :password)]
@@ -257,15 +257,15 @@
 
 (defn credential-exoscale
   []
-  (let [tr                 (subscribe [::i18n-subs/tr])
-        is-new?            (subscribe [::subs/is-new?])
-        credential         (subscribe [::subs/credential])
-        validate-form?     (subscribe [::subs/validate-form?])
-        on-change          (fn [name-kw value]
-                             (dispatch [::events/update-credential name-kw value])
-                             (dispatch [::events/validate-credential-form ::spec/exoscale-credential]))]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        credential     (subscribe [::subs/credential])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-credential name-kw value])
+                         (dispatch [::events/validate-credential-form ::spec/exoscale-credential]))]
     (fn []
-      (let [editable?              (general-utils/editable? @credential @is-new?)
+      (let [editable? (general-utils/editable? @credential @is-new?)
             {:keys [name description exoscale-api-key exoscale-api-secret-key]} @credential]
         [:<>
          [ui/Table style/definition
@@ -290,15 +290,15 @@
 
 (defn credential-amazonec2
   []
-  (let [tr                 (subscribe [::i18n-subs/tr])
-        is-new?            (subscribe [::subs/is-new?])
-        credential         (subscribe [::subs/credential])
-        validate-form?     (subscribe [::subs/validate-form?])
-        on-change          (fn [name-kw value]
-                             (dispatch [::events/update-credential name-kw value])
-                             (dispatch [::events/validate-credential-form ::spec/amazonec2-credential]))]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        credential     (subscribe [::subs/credential])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-credential name-kw value])
+                         (dispatch [::events/validate-credential-form ::spec/amazonec2-credential]))]
     (fn []
-      (let [editable?              (general-utils/editable? @credential @is-new?)
+      (let [editable? (general-utils/editable? @credential @is-new?)
             {:keys [name description amazonec2-access-key amazonec2-secret-key]} @credential]
         [:<>
          [ui/Table style/definition
@@ -323,15 +323,15 @@
 
 (defn credential-azure
   []
-  (let [tr                 (subscribe [::i18n-subs/tr])
-        is-new?            (subscribe [::subs/is-new?])
-        credential         (subscribe [::subs/credential])
-        validate-form?     (subscribe [::subs/validate-form?])
-        on-change          (fn [name-kw value]
-                             (dispatch [::events/update-credential name-kw value])
-                             (dispatch [::events/validate-credential-form ::spec/azure-credential]))]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        credential     (subscribe [::subs/credential])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-credential name-kw value])
+                         (dispatch [::events/validate-credential-form ::spec/azure-credential]))]
     (fn []
-      (let [editable?              (general-utils/editable? @credential @is-new?)
+      (let [editable? (general-utils/editable? @credential @is-new?)
             {:keys [name description azure-subscription-id azure-client-id azure-client-secret]} @credential]
         [:<>
          [ui/Table style/definition
@@ -359,15 +359,15 @@
 
 (defn credential-google
   []
-  (let [tr                 (subscribe [::i18n-subs/tr])
-        is-new?            (subscribe [::subs/is-new?])
-        credential         (subscribe [::subs/credential])
-        validate-form?     (subscribe [::subs/validate-form?])
-        on-change          (fn [name-kw value]
-                             (dispatch [::events/update-credential name-kw value])
-                             (dispatch [::events/validate-credential-form ::spec/google-credential]))]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        credential     (subscribe [::subs/credential])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-credential name-kw value])
+                         (dispatch [::events/validate-credential-form ::spec/google-credential]))]
     (fn []
-      (let [editable?              (general-utils/editable? @credential @is-new?)
+      (let [editable? (general-utils/editable? @credential @is-new?)
             {:keys [name description google-username google-project client-id client-secret refresh-token]} @credential]
         [:<>
          [ui/Table style/definition
@@ -538,100 +538,99 @@
             [ui/CardContent {:text-align :center}
              [ui/Header "OpenVPN"]
              [ui/Image {:src   "/ui/images/openvpn.png"
-                        :style {:max-width 112}}]]]]
-          [uix/MoreAccordion
-           [ui/CardGroup {:centered true}
-            [ui/Card
-             {:on-click #(do
-                           (dispatch [::events/set-validate-form? false])
-                           (dispatch [::events/form-valid])
-                           (dispatch [::events/close-add-credential-modal])
-                           (dispatch [::events/open-credential-modal
-                                      {:subtype "infrastructure-service-registry"} true]))}
-             [ui/CardContent {:text-align :center}
-              [ui/Header "Docker registry"]
-              [:div]
-              [ui/IconGroup {:size "massive"}
-               [ui/Icon {:name "docker"}]
-               [ui/Icon {:name "database", :corner "bottom right"}]]]]
+                        :style {:max-width 112}}]]]
 
-            [ui/Card
-             {:on-click #(do
-                           (dispatch [::events/set-validate-form? false])
-                           (dispatch [::events/form-valid])
-                           (dispatch [::events/close-add-credential-modal])
-                           (dispatch [::events/open-credential-modal
-                                      {:subtype "infrastructure-service-minio"} true]))}
-             [ui/CardContent {:text-align :center}
-              [ui/Header "Object Store"]
-              [:div]
-              [ui/Image {:src   "/ui/images/s3.png"
-                         :style {:max-height 112}}]]]
+           [ui/Card
+            {:on-click #(do
+                          (dispatch [::events/set-validate-form? false])
+                          (dispatch [::events/form-valid])
+                          (dispatch [::events/close-add-credential-modal])
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-registry"} true]))}
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Docker registry"]
+             [:div]
+             [ui/IconGroup {:size "massive"}
+              [ui/Icon {:name "docker"}]
+              [ui/Icon {:name "database", :corner "bottom right"}]]]]
 
-            [ui/Card
-             {:on-click #(do
+           [ui/Card
+            {:on-click #(do
+                          (dispatch [::events/set-validate-form? false])
+                          (dispatch [::events/form-valid])
+                          (dispatch [::events/close-add-credential-modal])
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-minio"} true]))}
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Object Store"]
+             [:div]
+             [ui/Image {:src   "/ui/images/s3.png"
+                        :style {:max-height 112}}]]]
+
+           [ui/Card
+            {:on-click #(do
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
                           (dispatch [::events/open-credential-modal
                                      {:subtype "generate-ssh-key"} true]))}
-             [ui/CardContent {:text-align :center}
-              [ui/Header "SSH Keypair"]
-              [:div]
-              [ui/Image {:src   "/ui/images/ssh.png"
-                         :style {:max-height 112}}]]]
+            [ui/CardContent {:text-align :center}
+             [ui/Header "SSH Keypair"]
+             [:div]
+             [ui/Image {:src   "/ui/images/ssh.png"
+                        :style {:max-height 112}}]]]
 
-            [ui/Card
-             {:on-click #(do
+           [ui/Card
+            {:on-click #(do
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
                           (dispatch [::main-events/subscription-required-dispatch
                                      [::events/open-credential-modal
                                       {:subtype "infrastructure-service-exoscale"} true]]))}
-             [ui/CardContent {:text-align :center}
-              [ui/Header "Cloud Exoscale"]
-              [ui/Image {:src   "/ui/images/exoscale.png"
-                         :style {:max-width 112}}]]]
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Cloud Exoscale"]
+             [ui/Image {:src   "/ui/images/exoscale.png"
+                        :style {:max-width 112}}]]]
 
-            [ui/Card
-             {:on-click #(do
+           [ui/Card
+            {:on-click #(do
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
                           (dispatch [::main-events/subscription-required-dispatch
                                      [::events/open-credential-modal
                                       {:subtype "infrastructure-service-amazonec2"} true]]))}
-             [ui/CardContent {:text-align :center}
-              [ui/Header "Cloud Amazon"]
-              [ui/Image {:src   "/ui/images/aws.png"
-                         :style {:max-width 112}}]]]
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Cloud Amazon"]
+             [ui/Image {:src   "/ui/images/aws.png"
+                        :style {:max-width 112}}]]]
 
-            [ui/Card
-             {:on-click #(do
+           [ui/Card
+            {:on-click #(do
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
                           (dispatch [::main-events/subscription-required-dispatch
                                      [::events/open-credential-modal
                                       {:subtype "infrastructure-service-azure"} true]]))}
-             [ui/CardContent {:text-align :center}
-              [ui/Header "Cloud Azure"]
-              [ui/Image {:src   "/ui/images/azure.png"
-                         :style {:max-width 112}}]]]
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Cloud Azure"]
+             [ui/Image {:src   "/ui/images/azure.png"
+                        :style {:max-width 112}}]]]
 
-            [ui/Card
-             {:on-click #(do
+           [ui/Card
+            {:on-click #(do
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
                           (dispatch [::main-events/subscription-required-dispatch
                                      [::events/open-credential-modal
                                       {:subtype "infrastructure-service-google"} true]]))}
-             [ui/CardContent {:text-align :center}
-              [ui/Header "Cloud Google"]
-              [ui/Image {:src   "/ui/images/gce.png"
-                         :style {:max-width 112}}]]]]]]]))))
+            [ui/CardContent {:text-align :center}
+             [ui/Header "Cloud Google"]
+             [ui/Image {:src   "/ui/images/gce.png"
+                        :style {:max-width 112}}]]]]]]))))
 
 
 (defn generated-credential-modal
@@ -746,8 +745,8 @@
     (fn []
       (let [infra-service-creds (filter #(in? infrastructure-service-subtypes (:subtype %))
                                         @credentials)]
-        [ui/Container {:fluid true}
-         [uix/PageHeader "key" (str/capitalize (@tr [:credentials])) :inline true]
+        [ui/Segment style/basic
+         [uix/PageHeader "key" (str/capitalize (@tr [:credentials]))]
          [uix/Accordion
           [:<>
            [:div (@tr [:credential-infra-service-section-sub-text])]
@@ -773,7 +772,7 @@
 (defmethod panel/render :credentials
   [path]
   (timbre/set-level! :info)
-  [:div
+  [:<>
    [credentials]
    [add-credential-modal]
    [credential-modal]

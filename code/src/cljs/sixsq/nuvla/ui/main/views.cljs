@@ -55,10 +55,22 @@
       (utils/truncate (str segment))]]))
 
 
+(defn format-first-crumb
+  [nav-path]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (utils/capitalize-first-letter (@tr [(keyword (first nav-path))]))))
+
+
+(defn decorate-breadcrumbs
+  [nav-path]
+  (conj (rest nav-path) (format-first-crumb nav-path)))
+
+
 (defn breadcrumbs-links []
-  (let [nav-path (subscribe [::subs/nav-path])]
+  (let [nav-path (subscribe [::subs/nav-path])
+        decorated-nav-path (decorate-breadcrumbs @nav-path)]
     (vec (concat [ui/Breadcrumb {:size :large}]
-                 (->> @nav-path
+                 (->> decorated-nav-path
                       (map crumb (range))
                       (interpose [ui/BreadcrumbDivider {:icon "chevron right"}]))))))
 
@@ -92,15 +104,16 @@
 (defn footer
   []
   (let [grid-style {:style {:padding-top    5
-                            :padding-bottom 5}}]
+                            :padding-bottom 5
+                            :text-align "center"}}]
     [ui/Segment {:style {:border-radius 0}}
      [ui/Grid {:columns 3}
       [ui/GridColumn grid-style "© 2020, SixSq Sàrl"]
-      [ui/GridColumn (assoc grid-style :text-align "center")
+      [ui/GridColumn grid-style
        [:a {:on-click #(dispatch [::history-events/navigate "about"])
             :style    {:cursor "pointer"}}
         [:span#release-version (str "v")]]]
-      [ui/GridColumn (assoc grid-style :text-align "right")
+      [ui/GridColumn grid-style
        [i18n-views/LocaleDropdown]]]]))
 
 
@@ -144,7 +157,9 @@
                    :on-click #(do
                                 (dispatch [::history-events/navigate "profile"])
                                 (dispatch [::events/close-modal]))}
-        (@tr [:subscribe])]]]]))
+        (@tr [:subscribe])]
+       [:p]
+       [:p [ui/Icon {:name "info circle"}] (@tr [:subscription-required-content-group])]]]]))
 
 
 #_(defmulti BootstrapMessage identity)

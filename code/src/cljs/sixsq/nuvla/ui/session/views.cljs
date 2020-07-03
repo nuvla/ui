@@ -80,7 +80,7 @@
            [ui/FormInput {:name          :email
                           :label         "Email"
                           :required      true
-                          :icon          "at"
+                          :icon          "mail"
                           :icon-position "left"
                           :auto-focus    true
                           :auto-complete "on"

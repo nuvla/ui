@@ -300,7 +300,7 @@
 (defn data-set-resources
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Container {:fluid true}
+    [ui/Segment style/basic
      [uix/PageHeader "database" (@tr [:data-processing])]
      [control-bar]
      [application-select-modal]
@@ -314,5 +314,4 @@
   ;; FIXME: find a better way to initialize credentials and data-sets
   (refresh-credentials)
   (refresh-data-sets)
-
   [data-set-resources])

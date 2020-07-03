@@ -5,16 +5,16 @@
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.apps.events :as apps-events]
+    [sixsq.nuvla.ui.apps.subs :as apps-subs]
+    [sixsq.nuvla.ui.credentials.views :as cred-views]
     [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.credentials.views :as cred-views]
     [sixsq.nuvla.ui.infrastructures-detail.views :as infra-detail]
     [sixsq.nuvla.ui.infrastructures.events :as events]
-    [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.infrastructures.spec :as spec]
     [sixsq.nuvla.ui.infrastructures.subs :as subs]
-    [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -438,64 +438,58 @@
        [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
 
        [ui/ModalContent {:scrolling false}
+        [:div {:style {:padding-bottom 20}} (@tr [:register-swarm-note])]
+        [ui/CardGroup {:centered true}
 
-        [:div
-         [:p (@tr [:register-swarm-note])]
-         [ui/CardGroup {:centered true
-                        :style    {:margin-bottom "10px"}}
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-service-modal])
+                        (dispatch [::events/open-service-modal
+                                   (assoc @service :subtype "swarm") true]))}
 
-          [ui/Card
-           {:on-click #(do
-                         (dispatch [::events/set-validate-form? false])
-                         (dispatch [::events/form-valid])
-                         (dispatch [::events/close-add-service-modal])
-                         (dispatch [::events/open-service-modal
-                                    (assoc @service :subtype "swarm") true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Docker Swarm"]
+           [ui/Icon {:name "docker"
+                     :size "massive"}]]]
 
-           [ui/CardContent {:text-align :center}
-            [ui/Header "Docker Swarm"]
-            [ui/Icon {:name "docker"
-                      :size "massive"}]]]
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-service-modal])
+                        (dispatch [::events/open-service-modal
+                                   (assoc @service :subtype "kubernetes") true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Kubernetes"]
+           [ui/Image {:src   "/ui/images/kubernetes.svg"
+                      :style {:max-width 112}}]]]
 
-          [ui/Card
-           {:on-click #(do
-                         (dispatch [::events/set-validate-form? false])
-                         (dispatch [::events/form-valid])
-                         (dispatch [::events/close-add-service-modal])
-                         (dispatch [::events/open-service-modal
-                                    (assoc @service :subtype "kubernetes") true]))}
-           [ui/CardContent {:text-align :center}
-            [ui/Header "Kubernetes"]
-            [ui/Image {:src   "/ui/images/kubernetes.svg"
-                       :style {:max-width 112}}]]]]]
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-service-modal])
+                        (dispatch [::events/open-service-modal
+                                   (assoc @service :subtype "registry") true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Docker Registry"]
+           [ui/IconGroup {:size "massive"}
+            [ui/Icon {:name "docker"}]
+            [ui/Icon {:name "database", :corner "bottom right"}]]]]
 
-        [uix/MoreAccordion
-         [ui/CardGroup {:centered true}
-
-          [ui/Card
-           {:on-click #(do
-                         (dispatch [::events/set-validate-form? false])
-                         (dispatch [::events/form-valid])
-                         (dispatch [::events/close-add-service-modal])
-                         (dispatch [::events/open-service-modal
-                                    (assoc @service :subtype "registry") true]))}
-           [ui/CardContent {:text-align :center}
-            [ui/Header "Docker Registry"]
-            [ui/IconGroup {:size "massive"}
-             [ui/Icon {:name "docker"}]
-             [ui/Icon {:name "database", :corner "bottom right"}]]]]
-
-          [ui/Card
-           {:on-click #(do
-                         (dispatch [::events/set-validate-form? false])
-                         (dispatch [::events/form-valid])
-                         (dispatch [::events/close-add-service-modal])
-                         (dispatch [::events/open-service-modal
-                                    (assoc @service :subtype "s3") true]))}
-           [ui/CardContent {:text-align :center}
-            [ui/Header "Object Store"]
-            [ui/Image {:src   "/ui/images/s3.png"
-                       :style {:max-width 112}}]]]]]]])))
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-service-modal])
+                        (dispatch [::events/open-service-modal
+                                   (assoc @service :subtype "s3") true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Object Store"]
+           [ui/Image {:src   "/ui/images/s3.png"
+                      :style {:max-width 112}}]]]]]])))
 
 
 (defmethod panel/render :infrastructures

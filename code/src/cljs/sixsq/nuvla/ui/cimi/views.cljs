@@ -18,6 +18,7 @@
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.response :as response]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -519,8 +520,8 @@
                           [results-display]]
                        3 [cimi-detail-views/cimi-detail]
                        [menu-bar])]
-        [:<>
-         [uix/PageHeader "code" (str/upper-case (@tr [:api])) :inline inline]
+        [ui/Segment style/basic
+         [uix/PageHeader "code" (utils/capitalize-first-letter (@tr [:api])) :inline inline]
          children]))))
 
 

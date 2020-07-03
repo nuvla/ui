@@ -258,7 +258,7 @@
         {:select "id, name, description, created, subtype, last-check, status"
          :filter (general-utils/join-and
                    (str "parent='" infra-id "'")
-                   (str "subtype='infrastructure-service-swarm'"))}
+                   (str "subtype='infrastructure-service-" (:subtype selected-infra-service) "'"))}
         #(dispatch [::set-credentials %])]})))
 
 

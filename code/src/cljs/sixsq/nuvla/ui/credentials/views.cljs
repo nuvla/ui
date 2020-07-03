@@ -30,14 +30,14 @@
 
 
 (defn row-infrastructure-services-selector
-  [subtype additional-filter editable? value-spec on-change]
+  [subtypes additional-filter editable? value-spec on-change]
   (let [tr              (subscribe [::i18n-subs/tr])
         infra-services  (subscribe [::subs/infrastructure-services-available])
         credential      (subscribe [::subs/credential])
         local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
-    (dispatch [::events/fetch-infrastructure-services-available subtype additional-filter])
-    (fn [subtype additional-filter editable? value-spec on-change]
+    (dispatch [::events/fetch-infrastructure-services-available subtypes additional-filter])
+    (fn [subtypes additional-filter editable? value-spec on-change]
       (let [value     (:parent @credential)
             validate? (or @local-validate? @validate-form?)
             valid?    (s/valid? value-spec value)]
@@ -60,18 +60,19 @@
                                               {:key id, :value id, :text infra-name})
                                             @infra-services)}]
             [ui/Message {:content (str (str/capitalize (@tr [:no-infra-service-of-subtype]))
-                                       " " subtype ".")}])]]))))
+                                       " " subtypes ".")}])]]))))
 
 
-(defn credential-swarm
+(defn credential-coe
   []
   (let [tr             (subscribe [::i18n-subs/tr])
+        coe-subtypes   ["swarm" "kubernetes"]
         is-new?        (subscribe [::subs/is-new?])
         credential     (subscribe [::subs/credential])
         validate-form? (subscribe [::subs/validate-form?])
         on-change      (fn [name-kw value]
                          (dispatch [::events/update-credential name-kw value])
-                         (dispatch [::events/validate-credential-form ::spec/swarm-credential]))]
+                         (dispatch [::events/validate-credential-form ::spec/coe-credential]))]
     (fn []
       (let [editable? (general-utils/editable? @credential @is-new?)
             {:keys [name description ca cert key]} @credential]
@@ -99,7 +100,7 @@
            [uix/TableRowField "key", :placeholder (@tr [:key]), :editable? editable?,
             :required? true, :default-value key, :spec ::spec/key, :type :textarea,
             :on-change (partial on-change :key), :validate-form? @validate-form?]
-           [row-infrastructure-services-selector ["swarm" "kubernetes"] nil editable? ::spec/parent
+           [row-infrastructure-services-selector coe-subtypes nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
 
 
@@ -254,6 +255,151 @@
                                                            (on-change :description %))]]]]))))
 
 
+(defn credential-exoscale
+  []
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        is-new?            (subscribe [::subs/is-new?])
+        credential         (subscribe [::subs/credential])
+        validate-form?     (subscribe [::subs/validate-form?])
+        on-change          (fn [name-kw value]
+                             (dispatch [::events/update-credential name-kw value])
+                             (dispatch [::events/validate-credential-form ::spec/exoscale-credential]))]
+    (fn []
+      (let [editable?              (general-utils/editable? @credential @is-new?)
+            {:keys [name description exoscale-api-key exoscale-api-secret-key]} @credential]
+        [:<>
+         [ui/Table style/definition
+          [ui/TableBody
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :default-value name, :spec ::spec/name, :validate-form? @validate-form?,
+            :on-change (partial on-change :name)]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
+            :on-change (partial on-change :description)]
+           [uix/TableRowField "api key", :placeholder "Exoscale API key", :editable? editable?, :required? true,
+            :default-value exoscale-api-key, :spec ::spec/exoscale-api-key, :validate-form? @validate-form?,
+            :on-change (partial on-change :exoscale-api-key)]
+           [uix/TableRowField "api secret", :placeholder "Exoscale API secret", :editable? editable?, :required? true,
+            :default-value exoscale-api-secret-key, :spec ::spec/exoscale-api-secret-key, :validate-form? @validate-form?,
+            :on-change (partial on-change :exoscale-api-secret-key)]]]
+         [:div {:style {:color "grey" :font-style "oblique"}} (@tr [:credential-cloud-follow-link])]
+         [:a {:href   "https://community.exoscale.com/documentation/iam/quick-start/"
+              :target "_blank"}
+          (@tr [:nuvlabox-modal-more-info])]]))))
+
+
+(defn credential-amazonec2
+  []
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        is-new?            (subscribe [::subs/is-new?])
+        credential         (subscribe [::subs/credential])
+        validate-form?     (subscribe [::subs/validate-form?])
+        on-change          (fn [name-kw value]
+                             (dispatch [::events/update-credential name-kw value])
+                             (dispatch [::events/validate-credential-form ::spec/amazonec2-credential]))]
+    (fn []
+      (let [editable?              (general-utils/editable? @credential @is-new?)
+            {:keys [name description amazonec2-access-key amazonec2-secret-key]} @credential]
+        [:<>
+         [ui/Table style/definition
+          [ui/TableBody
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :default-value name, :spec ::spec/name, :validate-form? @validate-form?,
+            :on-change (partial on-change :name)]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
+            :on-change (partial on-change :description)]
+           [uix/TableRowField "api key", :placeholder "AWS EC2 API key", :editable? editable?, :required? true,
+            :default-value amazonec2-access-key, :spec ::spec/amazonec2-access-key, :validate-form? @validate-form?,
+            :on-change (partial on-change :amazonec2-access-key)]
+           [uix/TableRowField "api secret", :placeholder "AWS EC2 API secret", :editable? editable?, :required? true,
+            :default-value amazonec2-secret-key, :spec ::spec/amazonec2-secret-key, :validate-form? @validate-form?,
+            :on-change (partial on-change :amazonec2-secret-key)]]]
+         [:div {:style {:color "grey" :font-style "oblique"}} (@tr [:credential-cloud-follow-link])]
+         [:a {:href   "https://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html"
+              :target "_blank"}
+          (@tr [:nuvlabox-modal-more-info])]]))))
+
+
+(defn credential-azure
+  []
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        is-new?            (subscribe [::subs/is-new?])
+        credential         (subscribe [::subs/credential])
+        validate-form?     (subscribe [::subs/validate-form?])
+        on-change          (fn [name-kw value]
+                             (dispatch [::events/update-credential name-kw value])
+                             (dispatch [::events/validate-credential-form ::spec/azure-credential]))]
+    (fn []
+      (let [editable?              (general-utils/editable? @credential @is-new?)
+            {:keys [name description azure-subscription-id azure-client-id azure-client-secret]} @credential]
+        [:<>
+         [ui/Table style/definition
+          [ui/TableBody
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :default-value name, :spec ::spec/name, :validate-form? @validate-form?,
+            :on-change (partial on-change :name)]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
+            :on-change (partial on-change :description)]
+           [uix/TableRowField "subscription id", :placeholder "Azure Subscription ID", :editable? editable?, :required? true,
+            :default-value azure-subscription-id, :spec ::spec/azure-subscription-id, :validate-form? @validate-form?,
+            :on-change (partial on-change :azure-subscription-id)]
+           [uix/TableRowField "client id", :placeholder "Azure Client ID", :editable? editable?, :required? true,
+            :default-value azure-client-id, :spec ::spec/azure-client-id, :validate-form? @validate-form?,
+            :on-change (partial on-change :azure-client-id)]
+           [uix/TableRowField "client secret", :placeholder "Azure Client Secret", :editable? editable?, :required? true,
+            :default-value azure-client-secret, :spec ::spec/azure-client-secret, :validate-form? @validate-form?,
+            :on-change (partial on-change :azure-client-secret)]]]
+         [:div {:style {:color "grey" :font-style "oblique"}} (@tr [:credential-cloud-follow-link])]
+         [:a {:href   "https://www.inkoop.io/blog/how-to-get-azure-api-credentials"
+              :target "_blank"}
+          (@tr [:nuvlabox-modal-more-info])]]))))
+
+
+(defn credential-google
+  []
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        is-new?            (subscribe [::subs/is-new?])
+        credential         (subscribe [::subs/credential])
+        validate-form?     (subscribe [::subs/validate-form?])
+        on-change          (fn [name-kw value]
+                             (dispatch [::events/update-credential name-kw value])
+                             (dispatch [::events/validate-credential-form ::spec/google-credential]))]
+    (fn []
+      (let [editable?              (general-utils/editable? @credential @is-new?)
+            {:keys [name description google-username google-project client-id client-secret refresh-token]} @credential]
+        [:<>
+         [ui/Table style/definition
+          [ui/TableBody
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :default-value name, :spec ::spec/name, :validate-form? @validate-form?,
+            :on-change (partial on-change :name)]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
+            :on-change (partial on-change :description)]
+           [uix/TableRowField "username", :placeholder "Google Username", :editable? editable?, :required? true,
+            :default-value google-username, :spec ::spec/google-username, :validate-form? @validate-form?,
+            :on-change (partial on-change :google-username)]
+           [uix/TableRowField "project", :placeholder "Google Project", :editable? editable?, :required? true,
+            :default-value google-project, :spec ::spec/google-project, :validate-form? @validate-form?,
+            :on-change (partial on-change :google-project)]
+           [uix/TableRowField "client id", :placeholder "Google Client ID", :editable? editable?, :required? true,
+            :default-value client-id, :spec ::spec/client-id, :validate-form? @validate-form?,
+            :on-change (partial on-change :client-id)]
+           [uix/TableRowField "client secret", :placeholder "Google Client Secret", :editable? editable?, :required? true,
+            :default-value client-secret, :spec ::spec/client-secret, :validate-form? @validate-form?,
+            :on-change (partial on-change :client-secret)]
+           [uix/TableRowField "refresh token", :placeholder "Google Refresh Token", :editable? editable?, :required? true,
+            :default-value refresh-token, :spec ::spec/refresh-token, :validate-form? @validate-form?,
+            :on-change (partial on-change :refresh-token)]
+           ]]
+         [:div {:style {:color "grey" :font-style "oblique"}} (@tr [:credential-cloud-follow-link])]
+         [:a {:href   "https://cloud.google.com/docs/authentication/production"
+              :target "_blank"}
+          (@tr [:nuvlabox-modal-more-info])]]))))
+
+
 (defn save-callback
   [form-validation-spec]
   (dispatch-sync [::events/set-validate-form? true])
@@ -265,22 +411,45 @@
         (dispatch [::events/edit-credential])))))
 
 
+(def infrastructure-service-csp-validation-map
+  {"infrastructure-service-exoscale"
+   {:validation-spec ::spec/exoscale-credential
+    :modal-content   credential-exoscale}
+   "infrastructure-service-amazonec2"
+   {:validation-spec ::spec/amazonec2-credential
+    :modal-content   credential-amazonec2}
+   "infrastructure-service-azure"
+   {:validation-spec ::spec/azure-credential
+    :modal-content   credential-azure}
+   "infrastructure-service-google"
+   {:validation-spec ::spec/google-credential
+    :modal-content   credential-google}})
+
+
+(def infrastructure-service-csp-subtyes
+  (keys infrastructure-service-csp-validation-map))
+
+
 (def infrastructure-service-validation-map
-  {"infrastructure-service-swarm"
-   {:validation-spec ::spec/swarm-credential
-    :modal-content   credential-swarm},
-   "infrastructure-service-minio"
-   {:validation-spec ::spec/minio-credential
-    :modal-content   credential-object-store},
-   "infrastructure-service-vpn"
-   {:validation-spec ::spec/vpn-credential
-    :modal-content   credential-vpn}
-   "infrastructure-service-registry"
-   {:validation-spec ::spec/registry-credential
-    :modal-content   credential-registy}
-   "generate-ssh-key"
-   {:validation-spec ::spec/ssh-credential
-    :modal-content   credential-ssh}})
+  (merge {"infrastructure-service-swarm"
+          {:validation-spec ::spec/coe-credential
+           :modal-content   credential-coe},
+          "infrastructure-service-kubernetes"
+          {:validation-spec ::spec/coe-credential
+           :modal-content   credential-coe},
+          "infrastructure-service-minio"
+          {:validation-spec ::spec/minio-credential
+           :modal-content   credential-object-store},
+          "infrastructure-service-vpn"
+          {:validation-spec ::spec/vpn-credential
+           :modal-content   credential-vpn}
+          "infrastructure-service-registry"
+          {:validation-spec ::spec/registry-credential
+           :modal-content   credential-registy}
+          "generate-ssh-key"
+          {:validation-spec ::spec/ssh-credential
+           :modal-content   credential-ssh}}
+         infrastructure-service-csp-validation-map))
 
 
 (def infrastructure-service-subtypes
@@ -341,6 +510,15 @@
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
                           (dispatch [::events/open-credential-modal
+                                     ;; FIXME: this is wrong, as it predefines the subtype of credential.
+                                     ;; However, the subtype of cred depends on the subtype of COE IS.
+                                     ;; We will overwrite this in utils/db->new-coe-credential depending
+                                     ;; on the subtype of the COE IS user selected.
+                                     ;; Not having subtype at this stage at all, doesn't render the modal.
+                                     ;; Setting it to something other than infrastructure-service-swarm or
+                                     ;; infrastructure-service-kubernetes doesn't work either. So, this is
+                                     ;; a temporary default until COE IS is selected and submit button is
+                                     ;; pressed.
                                      {:subtype "infrastructure-service-swarm"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Swarm / Kubernetes"]
@@ -392,16 +570,68 @@
 
             [ui/Card
              {:on-click #(do
-                           (dispatch [::events/set-validate-form? false])
-                           (dispatch [::events/form-valid])
-                           (dispatch [::events/close-add-credential-modal])
-                           (dispatch [::events/open-credential-modal
-                                      {:subtype "generate-ssh-key"} true]))}
+                          (dispatch [::events/set-validate-form? false])
+                          (dispatch [::events/form-valid])
+                          (dispatch [::events/close-add-credential-modal])
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "generate-ssh-key"} true]))}
              [ui/CardContent {:text-align :center}
               [ui/Header "SSH Keypair"]
               [:div]
               [ui/Image {:src   "/ui/images/ssh.png"
-                         :style {:max-height 112}}]]]]]]]))))
+                         :style {:max-height 112}}]]]
+
+            [ui/Card
+             {:on-click #(do
+                          (dispatch [::events/set-validate-form? false])
+                          (dispatch [::events/form-valid])
+                          (dispatch [::events/close-add-credential-modal])
+                          (dispatch [::main-events/subscription-required-dispatch
+                                     [::events/open-credential-modal
+                                      {:subtype "infrastructure-service-exoscale"} true]]))}
+             [ui/CardContent {:text-align :center}
+              [ui/Header "Cloud Exoscale"]
+              [ui/Image {:src   "/ui/images/exoscale.png"
+                         :style {:max-width 112}}]]]
+
+            [ui/Card
+             {:on-click #(do
+                          (dispatch [::events/set-validate-form? false])
+                          (dispatch [::events/form-valid])
+                          (dispatch [::events/close-add-credential-modal])
+                          (dispatch [::main-events/subscription-required-dispatch
+                                     [::events/open-credential-modal
+                                      {:subtype "infrastructure-service-amazonec2"} true]]))}
+             [ui/CardContent {:text-align :center}
+              [ui/Header "Cloud Amazon"]
+              [ui/Image {:src   "/ui/images/aws.png"
+                         :style {:max-width 112}}]]]
+
+            [ui/Card
+             {:on-click #(do
+                          (dispatch [::events/set-validate-form? false])
+                          (dispatch [::events/form-valid])
+                          (dispatch [::events/close-add-credential-modal])
+                          (dispatch [::main-events/subscription-required-dispatch
+                                     [::events/open-credential-modal
+                                      {:subtype "infrastructure-service-azure"} true]]))}
+             [ui/CardContent {:text-align :center}
+              [ui/Header "Cloud Azure"]
+              [ui/Image {:src   "/ui/images/azure.png"
+                         :style {:max-width 112}}]]]
+
+            [ui/Card
+             {:on-click #(do
+                          (dispatch [::events/set-validate-form? false])
+                          (dispatch [::events/form-valid])
+                          (dispatch [::events/close-add-credential-modal])
+                          (dispatch [::main-events/subscription-required-dispatch
+                                     [::events/open-credential-modal
+                                      {:subtype "infrastructure-service-google"} true]]))}
+             [ui/CardContent {:text-align :center}
+              [ui/Header "Cloud Google"]
+              [ui/Image {:src   "/ui/images/gce.png"
+                         :style {:max-width 112}}]]]]]]]))))
 
 
 (defn generated-credential-modal

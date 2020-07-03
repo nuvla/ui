@@ -14,14 +14,21 @@
 ; Perform form validation if validate-form? is true.
 
 (reg-event-db
-  ::validate-swarm-service-form
+  ::validate-coe-service-form
   (fn [db [_]]
-    (let [form-spec      ::spec/swarm-service
-          service        (get db ::spec/infra-service)
-          validate-form? (get db ::spec/validate-form?)
-          valid?         (if validate-form?
-                           (if (nil? form-spec) true (s/valid? form-spec service)) true)]
-      (s/explain form-spec service)
+    (let [coe-form-spec          ::spec/coe-service
+          generic-form-spec      ::spec/generic-service
+          service                (get db ::spec/infra-service)
+          validate-form?         (get db ::spec/validate-form?)
+          valid?                 (if validate-form?
+                                   (if (or (nil? coe-form-spec) (nil? generic-form-spec))
+                                     true
+                                     ; :endpoint distinguishes pre-existing from to be deployed COE
+                                     (if (:endpoint service)
+                                       (s/valid? generic-form-spec service)
+                                       (s/valid? coe-form-spec service)))
+                                   true)]
+      (s/explain coe-form-spec service)
       (assoc db ::spec/form-valid? valid?))))
 
 
@@ -80,6 +87,34 @@
   ::reset-infra-service
   (fn [db [_]]
     (assoc db ::spec/infra-service {})))
+
+
+(reg-event-db
+ ::update-credential
+ (fn [db [_ key value]]
+   (assoc-in db [::spec/management-credential key] value)))
+
+
+(reg-event-fx
+ ::set-coe-management-credentials-available
+ (fn [{db :db} [_ response]]
+   (let [mgmt-creds (:resources response)]
+     (cond-> {:db (assoc db ::spec/management-credentials-available mgmt-creds)}
+       (= (:count response) 1) (assoc :dispatch
+                                      [::update-credential :parent
+                                       (-> mgmt-creds first :id)])))))
+
+
+(reg-event-fx
+ ::fetch-coe-management-credentials-available
+ (fn [{:keys [db]} [_ subtypes additional-filter]]
+   {:db                  (assoc db ::spec/management-credentials-available nil)
+    ::cimi-api-fx/search [:credential
+                          {:filter (cond-> (apply general-utils/join-or
+                                                  (map #(str "subtype='" % "'") subtypes))
+                                     additional-filter (general-utils/join-and additional-filter))
+                           :last   10000}
+                          #(dispatch [::set-coe-management-credentials-available %])]}))
 
 
 (reg-event-fx
@@ -208,3 +243,28 @@
   ::update-infra-service
   (fn [db [_ key value]]
     (assoc-in db [::spec/infra-service key] value)))
+
+;; SSH keys
+
+(reg-event-db
+ ::ssh-keys
+ (fn [db [event-type ssh-keys]]
+   (assoc-in db [::spec/infra-service :ssh-keys] ssh-keys)))
+
+
+(reg-event-db
+ ::set-ssh-keys-infra
+ (fn [db [_ {resources :resources}]]
+   (assoc db ::spec/ssh-keys-infra resources)))
+
+
+(reg-event-fx
+ ::get-ssh-keys-infra
+ (fn [_ _]
+   {::cimi-api-fx/search
+    [:credential
+     {:filter "subtype='ssh-key'"
+      :select "id, name"
+      :order  "name:asc, id:asc"
+      :last   10000} #(dispatch [::set-ssh-keys-infra %])]}))
+

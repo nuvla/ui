@@ -51,17 +51,33 @@
 
 (s/def ::parent utils-spec/nonblank-string)
 (s/def ::endpoint utils-spec/nonblank-string)
+(s/def ::multiplicity int?)
+(s/def ::coe-manager-install boolean?)
+(s/def ::management-credential utils-spec/nonblank-string)
 
-(s/def ::swarm-service (s/keys :req-un [::name
-                                        ::description
-                                        ::endpoint]
-                               :opt-un [::parent]))
+(s/def ::coe-service (s/keys :req-un [::name
+                                      ::description
+                                      ::management-credential]
+                             :opt-un [::parent
+                                      ::multiplicity]))
+
+(s/def ::generic-service (s/keys :req-un [::name
+                                          ::description
+                                          ::endpoint]
+                                 :opt-un [::parent]))
 
 
 (s/def ::registry-service (s/keys :req-un [::name
                                            ::description
                                            ::endpoint]
                                   :opt-un [::parent]))
+
+
+; SSH keys
+
+(s/def ::ssh-keys-infra any?)
+
+(s/def ::ssh-keys (s/nilable (s/coll-of string?)))
 
 
 ; MinIO
@@ -71,17 +87,22 @@
                                         ::endpoint]
                                :opt-un [::parent]))
 
+(s/def ::management-credentials-available any?)
 
 (s/def ::db (s/keys :req [::infra-service-groups
                           ::infra-services
                           ::page
+                          ::management-credentials-available
                           ::elements-per-page]))
 
-(def defaults {::infra-service-groups       nil
-               ::infra-services             {}
-               ::service-modal-visible?     false
-               ::add-service-modal-visible? false
-               ::is-new?                    false
-               ::infra-service              nil
-               ::page                       1
-               ::elements-per-page          8})
+(def defaults
+  {::infra-service-groups             nil
+   ::infra-services                   {}
+   ::service-modal-visible?           false
+   ::add-service-modal-visible?       false
+   ::is-new?                          false
+   ::infra-service                    nil
+   ::page                             1
+   ::multiplicity                     1
+   ::management-credentials-available nil
+   ::elements-per-page                8})

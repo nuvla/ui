@@ -11,6 +11,9 @@
   - Profile page - Customer and stripe integration
   - Pricing page
   - Stripe components
+  - Credentials for cloud providers AWS, Azure, Google, Exoscale.
+  - Infrastructure service modal augmented with creation of
+    Docker Swarm or Kubernetes on cloud providers.
 
 ### Changes
 

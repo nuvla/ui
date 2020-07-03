@@ -1,8 +1,13 @@
 (ns sixsq.nuvla.ui.infrastructures.views
   (:require
+    [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.apps.events :as apps-events]
+    [sixsq.nuvla.ui.apps.subs :as apps-subs]
+    [sixsq.nuvla.ui.credentials.views :as cred-views]
     [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -12,6 +17,7 @@
     [sixsq.nuvla.ui.infrastructures.subs :as subs]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -154,18 +160,89 @@
   [coll elm]
   (some #(= elm %) coll))
 
+(defn row-csp-credential-selector
+  [subtypes additional-filter disabled? value-spec on-change]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        mgmt-creds      (subscribe [::subs/management-credentials-available])
+        service         (subscribe [::subs/infra-service])
+        local-validate? (r/atom false)
+        validate-form?  (subscribe [::subs/validate-form?])]
+    (dispatch [::events/fetch-coe-management-credentials-available subtypes additional-filter])
+    (fn [subtypes additional-filter disabled? value-spec on-change]
+      (let [value     (:management-credential @service)
+            validate? (or @local-validate? @validate-form?)
+            valid?    (s/valid? value-spec value)]
+        [ui/TableRow
+         [ui/TableCell {:collapsing false} (@tr [:credentials-cloud-short])]
+         [ui/TableCell {:error (and validate? (not valid?))}
+          (if (pos-int? (count @mgmt-creds))
+            ^{:key value}
+            [ui/Dropdown {:clearable   true
+                          :selection   true
+                          :disabled    disabled?
+                          :fluid       true
+                          :value       value
+                          :placeholder (@tr [:credentials-cloud-select])
+                          :on-change   (ui-callback/callback
+                                        :value #(do
+                                                 (reset! local-validate? true)
+                                                 (on-change %)))
+                          :options     (map (fn [{id :id, infra-name :name}]
+                                              {:key id, :value id, :text infra-name})
+                                            @mgmt-creds)}]
+            [ui/Message {:content (@tr [:credentials-cloud-not-found])}])]]))))
 
-(defn service-swarm
+
+(defn ssh-keys-selector
+  [disabled?]
+  (let [ssh-keys (subscribe [::subs/ssh-keys])
+        ssh-keys-options (subscribe [::subs/ssh-keys-options])
+        form-valid? (subscribe [::subs/form-valid?])
+        local-validate? (r/atom false)]
+    (dispatch [::events/get-ssh-keys-infra])
+    (fn [disabled?]
+      (let [validate? (or @local-validate? (not @form-valid?))]
+        ^{:key @ssh-keys}
+        [ui/Table style/definition
+         [ui/TableBody
+          [ui/TableRow
+           [ui/TableCell {:collapsing true
+                          :style      {:padding-bottom 8}} "ssh keys"]
+           [ui/TableCell
+            [ui/Dropdown
+             {:multiple      true
+              :clearable     false
+              :selection     true
+              :disabled      disabled?
+              :default-value @ssh-keys
+              :options       @ssh-keys-options
+              :error         (and validate?
+                                  (not (s/valid? ::spec/ssh-keys @ssh-keys)))
+              :on-change     (ui-callback/value
+                               #(do
+                                  (reset! local-validate? true)
+                                  (dispatch [::events/ssh-keys %])
+                                  (dispatch [::events/validate-coe-service-form])))}]
+            [:span (str/join ", " @ssh-keys)]]]]]))))
+
+
+(defn service-coe
   []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        is-new?        (subscribe [::subs/is-new?])
-        service        (subscribe [::subs/infra-service])
-        validate-form? (subscribe [::subs/validate-form?])
-        on-change      (fn [name-kw value]
-                         (dispatch [::events/update-infra-service name-kw value])
-                         (dispatch [::events/validate-swarm-service-form]))]
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        is-new?              (subscribe [::subs/is-new?])
+        service              (subscribe [::subs/infra-service])
+        validate-form?       (subscribe [::subs/validate-form?])
+        subtype              (:subtype @service "swarm")
+        subtype-kw           (keyword subtype)
+        default-multiplicity 1
+        multiplicity         (r/atom default-multiplicity)
+        on-change            (fn [name-kw value]
+                               (let [value (if (= name-kw :multiplicity) (int value) value)]
+                                 (dispatch [::events/update-infra-service name-kw value])
+                                 (dispatch [::events/validate-coe-service-form])))]
     (fn []
       (let [editable? (general-utils/editable? @service @is-new?)
+            mgmt-cred-set? (subscribe [::subs/mgmt-creds-set?])
             {:keys [name description endpoint]} @service]
         [:<>
 
@@ -180,10 +257,54 @@
             :validate-form? @validate-form?]
            [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
             :default-value description, :spec ::spec/description,
-            :on-change (partial on-change :description), :validate-form? @validate-form?]
-           [uix/TableRowField (@tr [:endpoint]), :placeholder "https://swarm-example.io::2376",
-            :default-value endpoint, :spec ::spec/endpoint, :editable? editable?, :required? true,
-            :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]]))))
+            :on-change (partial on-change :description), :validate-form? @validate-form?]]]
+
+         [ui/Divider]
+
+         [:div {:style {:color "grey" :font-style "oblique"}}
+          (general-utils/format (@tr [:infra-service-give-endpoint-fmt]) (str/capitalize subtype))]
+
+         [ui/Table style/definition
+          [ui/TableBody
+           [uix/TableRowField (@tr [:endpoint]), :placeholder (str "https://" subtype "-example.io:2376"),
+            :default-value endpoint, :spec ::spec/endpoint, :editable? (str/blank? (:management-credential @service)), :required? false,
+            :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]
+
+         [ui/Divider {:horizontal true :as "h4"} "or"]
+
+         [:div {:style {:color "grey" :font-style "oblique"}}
+          (general-utils/format (@tr [:coe-provision-fmt]) (str/capitalize subtype))]
+
+         [ui/Table style/definition
+          [ui/TableBody
+           [row-csp-credential-selector cred-views/infrastructure-service-csp-subtyes nil
+            (boolean (:endpoint @service)) (if (:endpoint @service) any? ::spec/management-credential)
+            (partial on-change :management-credential)]]]
+         [ui/Container {:style {:margin  "5px" :display "inline-block"}}
+          [ui/Input {:label       (@tr [:coe-cluster-size])
+                     :placeholder default-multiplicity
+                     :disabled        (not @mgmt-cred-set?)
+                     :value       @multiplicity
+                     :size        "mini"
+                     :type        "number"
+                     :on-change   (ui-callback/input-callback
+                                   #(do
+                                     (cond
+                                       (number? (general-utils/str->int %)) (reset! multiplicity (general-utils/str->int %))
+                                       (empty? %) (reset! multiplicity 1))
+                                     (on-change :multiplicity @multiplicity)))
+                     :step        1
+                     :min         1}]]
+         [ui/Checkbox {:key             "coe-manager-install"
+                       :label           (@tr [:coe-install-manager-portainer])
+                       :disabled        (not @mgmt-cred-set?)
+                       :default-checked false
+                       :style           {:margin "1em"}
+                       :on-change       (ui-callback/checked
+                                          #(on-change :coe-manager-install %))}]
+
+         ^{:key "ssh-keys-selector"}
+         [ssh-keys-selector (not @mgmt-cred-set?)]]))))
 
 
 (defn service-registry
@@ -248,12 +369,12 @@
 
 
 (def infrastructure-service-validation-map
-  {"swarm"      {:validation-event ::events/validate-swarm-service-form
-                 :modal-content    service-swarm}
+  {"swarm"      {:validation-event ::events/validate-coe-service-form
+                 :modal-content    service-coe}
    "s3"         {:validation-event ::events/validate-minio-service-form
                  :modal-content    service-object-store}
-   "kubernetes" {:validation-event ::events/validate-swarm-service-form
-                 :modal-content    service-swarm}
+   "kubernetes" {:validation-event ::events/validate-coe-service-form
+                 :modal-content    service-coe}
    "registry"   {:validation-event ::events/validate-registry-service-form
                  :modal-content    service-registry}})
 

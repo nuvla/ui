@@ -37,19 +37,18 @@
 (s/def ::description utils-spec/nonblank-string)
 (s/def ::parent utils-spec/nonblank-string)
 
-; Swarm
+; COE
 
 (s/def ::ca utils-spec/nonblank-string)
 (s/def ::cert utils-spec/nonblank-string)
 (s/def ::key utils-spec/nonblank-string)
-(s/def ::infrastructure-services any?)
 
-(s/def ::swarm-credential (s/keys :req-un [::name
-                                           ::description
-                                           ::ca
-                                           ::cert
-                                           ::key
-                                           ::parent]))
+(s/def ::coe-credential (s/keys :req-un [::name
+                                         ::description
+                                         ::ca
+                                         ::cert
+                                         ::key
+                                         ::parent]))
 
 ; SSH
 
@@ -92,6 +91,50 @@
                                          ::description
                                          ::parent]))
 
+
+; Exoscale CSP
+
+(s/def ::exoscale-api-key utils-spec/nonblank-string)
+(s/def ::exoscale-api-secret-key utils-spec/nonblank-string)
+(s/def ::exoscale-credential (s/keys :req-un [::name
+                                              ::description
+                                              ::exoscale-api-key
+                                              ::exoscale-api-secret-key]))
+
+; Amazon EC2 CSP
+
+(s/def ::amazonec2-access-key utils-spec/nonblank-string)
+(s/def ::amazonec2-secret-key utils-spec/nonblank-string)
+(s/def ::amazonec2-credential (s/keys :req-un [::name
+                                               ::description
+                                               ::amazonec2-access-key
+                                               ::amazonec2-secret-key]))
+
+; Azure CSP
+
+(s/def ::azure-subscription-id utils-spec/nonblank-string)
+(s/def ::azure-client-id utils-spec/nonblank-string)
+(s/def ::azure-client-secret utils-spec/nonblank-string)
+(s/def ::azure-credential (s/keys :req-un [::name
+                                           ::description
+                                           ::azure-subscription-id
+                                           ::azure-client-id
+                                           ::azure-client-secret]))
+
+; Google Compute Engine CSP
+
+(s/def ::google-username utils-spec/nonblank-string)
+(s/def ::google-project utils-spec/nonblank-string)
+(s/def ::client-id utils-spec/nonblank-string)
+(s/def ::client-secret utils-spec/nonblank-string)
+(s/def ::refresh-token utils-spec/nonblank-string)
+(s/def ::google-credential (s/keys :req-un [::name
+                                            ::description
+                                            ::google-username
+                                            ::google-project
+                                            ::client-id
+                                            ::client-secret
+                                            ::refresh-token]))
 
 (s/def ::infrastructure-services-available any?)
 

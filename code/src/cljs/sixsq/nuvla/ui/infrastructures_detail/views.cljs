@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.infrastructures-detail.views
   (:require
     [cljs.spec.alpha :as s]
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
@@ -108,9 +109,16 @@
             :on-change (partial on-change :description)]
 
            [uix/TableRowField (@tr [:endpoint]), :key (str id "-subtype"),
-            :editable? @can-edit?, :spec ::spec/endpoint, :validate-form? @validate-form?,
+            :editable? (not (= "coe" (:method @infra-service))), :spec ::spec/endpoint, :validate-form? @validate-form?,
             :required? true, :default-value endpoint,
-            :on-change (partial on-change :endpoint)]]]
+            :on-change (partial on-change :endpoint)]
+
+           (if (-> @infra-service :cluster-params :coe-manager-endpoint)
+             [uix/TableRowField "COE manager", :key (str id "-subtype"),
+              :editable? false, :spec ::spec/endpoint, :validate-form? @validate-form?,
+              :required? true, :default-value [:a {:href (-> @infra-service :cluster-params :coe-manager-endpoint)
+                                                   :target "_blank"}
+                                               (-> @infra-service :cluster-params :coe-manager-endpoint)]])]]
          (when @can-edit?
            [uix/Button {:text     (@tr [:save])
                         :primary  true

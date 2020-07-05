@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.5.0] - 2020-07-06
+
 ### Added
 
   - New credential creation workflow for SSH keys

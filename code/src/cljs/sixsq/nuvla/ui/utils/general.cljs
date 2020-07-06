@@ -96,7 +96,9 @@
 
 (defn capitalize-first-letter
   [s]
-  (str (str/upper-case (first s)) (str/join "" (rest s))))
+  (some-> (first s)
+          str/upper-case
+          (str (str/join "" (rest s)))))
 
 
 ;;

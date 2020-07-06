@@ -295,8 +295,11 @@
                                      (on-change :multiplicity @multiplicity)))
                      :step        1
                      :min         1}]]
+
          [ui/Checkbox {:key             "coe-manager-install"
-                       :label           (@tr [:coe-install-manager-portainer])
+                       :label           (if (= subtype "swarm")
+                                          (@tr [:coe-install-manager-portainer])
+                                          (@tr [:coe-install-manager-rancher]))
                        :disabled        (not @mgmt-cred-set?)
                        :default-checked false
                        :style           {:margin "1em"}

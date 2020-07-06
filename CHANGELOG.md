@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Updated
+
+  - Update deps
+
 ## [2.5.0] - 2020-07-06
 
 ### Added

@@ -93,19 +93,19 @@
   :source-paths ["src/clj" "src/cljs"]
 
   :profiles
-  {:dev   {:dependencies [[org.clojure/clojure]
-                          [org.clojure/clojurescript
+  {:dev   {:dependencies [[org.clojure/clojure "1.10.1"]
+                          [org.clojure/clojurescript "1.10.758"
                            :exclusions
                            [com.google.javascript/closure-compiler-unshaded
                             org.clojure/google-closure-library
                             org.clojure/google-closure-library-third-party]]
-                          [binaryage/devtools "1.0.0" :scope "test"]
-                          [day8.re-frame/re-frame-10x "0.6.0"]]}
+                          [binaryage/devtools "1.0.2" :scope "test"]
+                          [day8.re-frame/re-frame-10x "0.6.6"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.8.93"]   ;; WARNING: also in package.json
+   :scljs {:dependencies [[thheller/shadow-cljs "2.10.14"]   ;; WARNING: also in package.json
                           [org.clojure/google-closure-library "0.0-20191016-6ae1f72f"]
                           [org.clojure/google-closure-library-third-party "0.0-20191016-6ae1f72f"]
-                          [com.google.javascript/closure-compiler-unshaded "v20191027"]]}}
+                          [com.google.javascript/closure-compiler-unshaded "v20200504"]]}}
 
 
 

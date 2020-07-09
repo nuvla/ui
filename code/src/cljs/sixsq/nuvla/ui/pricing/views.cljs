@@ -46,6 +46,13 @@
            (@tr [(if first-item
                    :you-only-pay-for-resources-you-use
                    :discount-automatically-applies)])]
+
+          [ui/Grid {}
+           [ui/GridRow
+            (when extend [ui/GridColumn {:width 9}])
+            [ui/GridColumn (when extend {:width 7})
+             [:p {:style {:color "grey"}} (@tr [:per-unit])]]]]
+
           [ui/Grid {:divided true, :style {:background-color "lightyellow"
                                            :min-height       95}}
            (when extend
@@ -57,9 +64,7 @@
            [ui/GridColumn (when extend {:width 7})
             nb-number
             [:br]
-            [ui/Label {:color color} nb-price]
-            [:br]
-            (@tr [:per-nuvlabox])]]
+            [ui/Label {:color color} nb-price]]]
           [ui/Grid {:divided true,
                     :style   {:background-color "lightcyan"
                               :min-height       95}}
@@ -71,10 +76,7 @@
            [ui/GridColumn (when extend {:width 7})
             dep-number
             [:br]
-            [ui/Label {:color color} dep-price]
-            [:br]
-            (@tr [:per-deployment])]]
-          ]]))))
+            [ui/Label {:color color} dep-price]]]]]))))
 
 
 (defn Pricing

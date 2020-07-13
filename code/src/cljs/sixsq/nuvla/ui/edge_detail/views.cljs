@@ -270,7 +270,7 @@
 (defn StatusIcon
   [status]
   [ui/Popup
-   {:position "right center"
+   {:position "bottom center"
     :content  status
     :trigger  (r/as-element
                 [ui/Icon {:name  "power"
@@ -420,18 +420,64 @@
           :content "NuvlaBox status not available."}]))))
 
 
+(defn ActionsMenu
+  "This creates a floating (top right) label with a pinned popup menu
+  with a list of available actions for the corresponding resource.
+
+  The list of actions must be passed as an argument, as a list of elements, in the following form (example):
+  [
+    [:a {:href 'nuvla.io/action' :target '_blank'} 'action name']
+  ]"
+  [action-list]
+  [ui/Label {:circular true
+             :floating true
+             :basic    true}
+   [ui/Popup {:position "right center"
+              :on    "click"
+              :pinned  true
+              :trigger (r/as-element [ui/Button
+                                      {:icon   true
+                                       :style  {:margin  "0"
+                                                :padding "0"
+                                                :border  "0px"
+                                                :background  "none"}}
+                                      [ui/Icon {:name   "ellipsis vertical"
+                                                :link  true}]])
+              :content (r/as-element [ui/ListSA {:divided true
+                                                 :relaxed true
+                                                 :vertical-align  "middle"}
+                                      (for [action action-list]
+                                        [ui/ListItem {:key (str "action." (apply str
+                                                                            (take 12
+                                                                              (repeatedly #(char (+ (rand 26) 65))))))}
+                                         [ui/ListContent
+                                          [ui/ListDescription
+                                           action]]])])}]])
+
+
 (defn NuvlaboxCard
   [nuvlabox status & {on-click-fn :on-click}]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        edit-name (r/atom false)]
     (fn [{:keys [id name description created state tags] :as nuvlabox} status]
       ^{:key id}
       [ui/Card (when on-click-fn {:on-click on-click-fn})
        [ui/CardContent
 
+        [ActionsMenu
+         [
+          [:span "action 1"]
+          [:span  "action 2"]]]
+
+
         [ui/CardHeader {:style {:word-wrap "break-word"}}
          [:div {:style {:float "right"}}
           [StatusIcon status :corner "top right"]]
-         [ui/Icon {:name "box"}] (or name id)]
+         [ui/Icon {:name "box"}]
+         [ui/Input {:placeholder (or name id)
+                    ;:value (or name id)
+                    :disabled   (not @edit-name)
+                    :transparent  true}]]
 
         [ui/CardMeta (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))]
 

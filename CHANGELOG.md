@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+  - Re-usable button layout for extra actions menus
+  - Ability to rename NuvlaBox resource 
+
 ### Updated
 
   - Update deps

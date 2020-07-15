@@ -52,6 +52,11 @@
 (s/def ::parent utils-spec/nonblank-string)
 (s/def ::endpoint utils-spec/nonblank-string)
 (s/def ::multiplicity int?)
+(s/def ::cloud-vm-image utils-spec/nonblank-string)
+(s/def ::cloud-vm-size utils-spec/nonblank-string)
+(s/def ::cloud-vm-disk-size int?)
+(s/def ::cloud-region utils-spec/nonblank-string)
+(s/def ::cloud-security-group utils-spec/nonblank-string)
 (s/def ::coe-manager-install boolean?)
 (s/def ::management-credential utils-spec/nonblank-string)
 
@@ -59,7 +64,12 @@
                                       ::description
                                       ::management-credential]
                              :opt-un [::parent
-                                      ::multiplicity]))
+                                      ::multiplicity
+                                      ::cloud-vm-image
+                                      ::cloud-vm-size
+                                      ::cloud-vm-disk-size
+                                      ::cloud-region
+                                      ::cloud-security-group]))
 
 (s/def ::generic-service (s/keys :req-un [::name
                                           ::description

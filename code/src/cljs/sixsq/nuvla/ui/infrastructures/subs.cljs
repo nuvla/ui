@@ -115,3 +115,12 @@
   (fn [db]
     (let [creds (get-in db [::spec/infra-service :management-credential])]
       (and creds (not (str/blank? creds))))))
+
+(reg-sub
+  ::mgmt-cred-subtype
+  (fn [db]
+    (if-let [mgmt-cred-id (get-in db [::spec/infra-service :management-credential])]
+      (->> (::spec/management-credentials-available db)
+           (filter (comp #{mgmt-cred-id} :id))
+           first
+           :subtype))))

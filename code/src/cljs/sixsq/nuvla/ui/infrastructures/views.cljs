@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
@@ -15,6 +16,7 @@
     [sixsq.nuvla.ui.infrastructures.events :as events]
     [sixsq.nuvla.ui.infrastructures.spec :as spec]
     [sixsq.nuvla.ui.infrastructures.subs :as subs]
+    [sixsq.nuvla.ui.infrastructures.utils :as utils]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -226,6 +228,15 @@
             [:span (str/join ", " @ssh-keys)]]]]]))))
 
 
+(defn cloud-help-popup
+  [text cred-subtype]
+  [:span ff/nbsp
+   (ff/help-popup (r/as-element
+                    [:span [:p text]
+                     (if cred-subtype [:a {:href (utils/cloud-param-default-value cred-subtype :cloud-doc-link) :target "_blank"} "See this link." ])])
+                  :on (if cred-subtype "focus" "hover"))])
+
+
 (defn service-coe
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
@@ -233,16 +244,16 @@
         service              (subscribe [::subs/infra-service])
         validate-form?       (subscribe [::subs/validate-form?])
         subtype              (:subtype @service "swarm")
-        subtype-kw           (keyword subtype)
         default-multiplicity 1
         multiplicity         (r/atom default-multiplicity)
         on-change            (fn [name-kw value]
-                               (let [value (if (= name-kw :multiplicity) (int value) value)]
+                               (let [value (if (some #{name-kw} [:multiplicity :cloud-vm-disk-size]) (int value) value)]
                                  (dispatch [::events/update-infra-service name-kw value])
                                  (dispatch [::events/validate-coe-service-form])))]
     (fn []
       (let [editable? (general-utils/editable? @service @is-new?)
             mgmt-cred-set? (subscribe [::subs/mgmt-creds-set?])
+            mgmt-cred-subtype (subscribe [::subs/mgmt-cred-subtype])
             {:keys [name description endpoint]} @service]
         [:<>
 
@@ -307,7 +318,41 @@
                                           #(on-change :coe-manager-install %))}]
 
          ^{:key "ssh-keys-selector"}
-         [ssh-keys-selector (not @mgmt-cred-set?)]]))))
+         [ssh-keys-selector (not @mgmt-cred-set?)]
+
+         [ui/Table style/definition
+          [ui/TableBody
+
+           [uix/TableRowField [:div "VM Size" (cloud-help-popup "Cloud specific VM size definition." @mgmt-cred-subtype)],
+            :placeholder "", :editable? @mgmt-cred-set?, :required? false,
+            :default-value (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-size),
+            :spec ::spec/cloud-vm-size, :on-change (partial on-change :cloud-vm-size), :validate-form? @validate-form?]
+
+           (if (or (nil? @mgmt-cred-subtype) (get-in utils/cloud-params-defaults [@mgmt-cred-subtype :cloud-vm-disk-size]))
+             [uix/TableRowField [:div "VM Disk Size (GB)" (cloud-help-popup "Cloud specific VM disk size definition." @mgmt-cred-subtype)],
+              :placeholder "", :editable? @mgmt-cred-set?, :required? false,
+              :default-value (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-disk-size),
+              :spec ::spec/cloud-vm-disk-size, :on-change (partial on-change :cloud-vm-disk-size), :validate-form? @validate-form?])
+
+           [uix/TableRowField [:div "Region" (cloud-help-popup "Cloud specific region." @mgmt-cred-subtype)],
+            :placeholder "", :editable? @mgmt-cred-set?, :required? false,
+            :default-value (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-region),
+            :spec ::spec/cloud-region, :on-change (partial on-change :cloud-region), :validate-form? @validate-form?]
+
+           [uix/TableRowField [:div "Image" (cloud-help-popup "Cloud specific image." @mgmt-cred-subtype)],
+            :placeholder "", :editable? @mgmt-cred-set?, :required? false,
+            :default-value (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-image),
+            :spec ::spec/cloud-vm-image,
+            :on-change (partial on-change :cloud-vm-image), :validate-form? @validate-form?]
+
+           (if (= utils/infra-service-subtype-exoscale @mgmt-cred-subtype)
+             [uix/TableRowField [:div "Security Group" (cloud-help-popup "Cloud specific security group." @mgmt-cred-subtype)],
+              :editable? @mgmt-cred-set?, :required? true,
+              :placeholder "", :default-value (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-security-group),
+              :spec ::spec/cloud-security-group, :on-change (partial on-change :cloud-security-group),
+              :validate-form? @validate-form?])
+
+           ]]]))))
 
 
 (defn service-registry

@@ -126,7 +126,6 @@
       {::cimi-api-fx/add [:infrastructure-service new-service
                           #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                (dispatch [::close-service-modal])
-                               ;(dispatch [::main-events/check-bootstrap-message])
                                (dispatch [::get-infra-service-groups]))]})))
 
 (reg-event-fx

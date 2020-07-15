@@ -63,7 +63,8 @@
                                                                   (:user session)) "'")}
                            #(if-let [id (-> % :resources first :id)]
                               (dispatch [::get-customer id])
-                              (dispatch [::set-customer nil]))]}))
+                              (do (dispatch [::set-customer nil])
+                                  (dispatch [::set-subscription nil])))]}))
 
 
 (reg-event-fx

@@ -108,13 +108,13 @@
 
         invitation-template? (subscribe [::subs/user-template-exist?
                                          utils/user-tmpl-email-invitation])
-        act-as-options       (subscribe [::subs/act-as-options])]
+        switch-group-options (subscribe [::subs/switch-group-options])]
 
     [ui/DropdownMenu
-     (when (seq @act-as-options)
+     (when (seq @switch-group-options)
        [:<>
-        [ui/DropdownHeader (@tr [:act-as])]
-        (for [account @act-as-options]
+        [ui/DropdownHeader (@tr [:switch-group])]
+        (for [account @switch-group-options]
           ^{:key account}
           [ui/DropdownItem {:text     account
                             :icon     (if (str/starts-with? account "group/") "group" "user")

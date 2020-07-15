@@ -307,15 +307,19 @@
                      :step        1
                      :min         1}]]
 
-         [ui/Checkbox {:key             "coe-manager-install"
-                       :label           (if (= subtype "swarm")
-                                          (@tr [:coe-install-manager-portainer])
-                                          (@tr [:coe-install-manager-rancher]))
-                       :disabled        (not @mgmt-cred-set?)
-                       :default-checked false
-                       :style           {:margin "1em"}
-                       :on-change       (ui-callback/checked
-                                          #(on-change :coe-manager-install %))}]
+         [:span
+          [ui/Checkbox {:key            "coe-manager-install"
+                        :label           (if (= subtype "swarm")
+                                           (@tr [:coe-install-manager-portainer])
+                                           (@tr [:coe-install-manager-rancher]))
+                        :disabled        (not @mgmt-cred-set?)
+                        :default-checked false
+                        :style           {:margin "1em"}
+                        :on-change       (ui-callback/checked
+                                           #(on-change :coe-manager-install %))}]
+          (if (= subtype "swarm")
+            [:a {:href "https://portainer.io" :target "_blank"} "https://portainer.io"]
+            [:a {:href "https://rancher.io" :target "_blank"} "https://rancher.io"])]
 
          ^{:key "ssh-keys-selector"}
          [ssh-keys-selector (not @mgmt-cred-set?)]

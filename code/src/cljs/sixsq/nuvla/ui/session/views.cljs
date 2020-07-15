@@ -118,7 +118,7 @@
           ^{:key account}
           [ui/DropdownItem {:text     account
                             :icon     (if (str/starts-with? account "group/") "group" "user")
-                            :on-click #(dispatch [::events/act-as account])}])
+                            :on-click #(dispatch [::events/switch-group account])}])
         [ui/DropdownDivider]])
 
      (when @invitation-template?

@@ -25,12 +25,12 @@
     (::spec/session db)))
 
 (reg-sub
-  ::act-as-options
+  ::switch-group-options
   :<- [::session]
   :<- [::groups]
   (fn [[{:keys [identifier active-claim] :as session} groups]]
     (when (general-utils/can-operation? "switch-group" session)
-      (cond-> groups
+      (cond-> (remove #(= active-claim %) groups)
               (and (string? active-claim)
                    (str/starts-with? active-claim "group/")) (conj identifier)))))
 

@@ -19,6 +19,7 @@
 
 
 (def infra-service-subtype-exoscale "infrastructure-service-exoscale")
+(def infra-service-subtype-google "infrastructure-service-google")
 ;; TODO: This needs to come from the server as configuration defaults.
 ;; Probably from template(s) or better a configuration resource?
 (def cloud-params-defaults
@@ -40,13 +41,20 @@
     :cloud-region "francecentral"
     :cloud-vm-image "canonical:UbuntuServer:16.04.0-LTS:latest"
     :cloud-doc-link "https://docs.microsoft.com/en-us/azure"}
-   "infrastructure-service-google"
+   infra-service-subtype-google
    {:cloud-vm-size "e2-medium"
     :cloud-vm-disk-size 50
     :cloud-region "europe-west3-a"
+    :cloud-project ""
     :cloud-vm-image "ubuntu-os-cloud/global/images/ubuntu-1804-bionic-v20200610"
     :cloud-doc-link "https://cloud.google.com/docs"}
    })
+
+(def cloud-params-keys (->> cloud-params-defaults
+                            (map #(vec (keys (val %))))
+                            flatten
+                            set
+                            vec))
 
 
 (defn cloud-param-default-value
@@ -77,6 +85,7 @@
         cloud-vm-size         (get-in db [::spec/infra-service :cloud-vm-size] (cloud-param-default-value mgmt-cred-subtype :cloud-vm-size))
         cloud-vm-disk-size    (get-in db [::spec/infra-service :cloud-vm-disk-size] (cloud-param-default-value mgmt-cred-subtype :cloud-vm-disk-size))
         cloud-region          (get-in db [::spec/infra-service :cloud-region] (cloud-param-default-value mgmt-cred-subtype :cloud-region))
+        cloud-project          (get-in db [::spec/infra-service :cloud-project] (cloud-param-default-value mgmt-cred-subtype :cloud-project))
         cloud-security-group  (get-in db [::spec/infra-service :cloud-security-group])
         acl                   (get-in db [::spec/infra-service :acl])]
     (-> {}
@@ -93,6 +102,7 @@
         (cond-> (and (= template-type "coe") (not-empty cloud-vm-size)) (assoc-in [:template :cluster-params :cloud-vm-size] cloud-vm-size))
         (cond-> (and (= template-type "coe") cloud-vm-disk-size) (assoc-in [:template :cluster-params :cloud-vm-disk-size] cloud-vm-disk-size))
         (cond-> (and (= template-type "coe") (not-empty cloud-region)) (assoc-in [:template :cluster-params :cloud-region] cloud-region))
+        (cond-> (and (= template-type "coe") (not-empty cloud-project)) (assoc-in [:template :cluster-params :cloud-project] cloud-project))
         (cond-> (and (= template-type "coe") (not-empty cloud-security-group)) (assoc-in [:template :cluster-params :cloud-security-group] cloud-security-group))
         (cond-> (and (= template-type "coe") coe-manager-install) (assoc-in [:template :cluster-params :coe-manager-install] coe-manager-install))
         (cond-> (and (= template-type "coe") management-credential) (assoc-in [:template :management-credential] management-credential)))))

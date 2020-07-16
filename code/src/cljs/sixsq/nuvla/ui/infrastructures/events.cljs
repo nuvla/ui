@@ -243,6 +243,20 @@
   (fn [db [_ key value]]
     (assoc-in db [::spec/infra-service key] value)))
 
+
+(reg-event-db
+  ::update-infra-service-map
+  (fn [db [_ kvs]]
+    (update-in db [::spec/infra-service] merge kvs)))
+
+
+(reg-event-db
+  ::clear-infra-service-cloud-params
+  (fn [db [_]]
+    (update-in db [::spec/infra-service]
+               (fn [nested] (apply dissoc nested utils/cloud-params-keys)))))
+
+
 ;; SSH keys
 
 (reg-event-db

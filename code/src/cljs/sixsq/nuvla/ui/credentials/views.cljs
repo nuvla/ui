@@ -368,7 +368,7 @@
                          (dispatch [::events/validate-credential-form ::spec/google-credential]))]
     (fn []
       (let [editable? (general-utils/editable? @credential @is-new?)
-            {:keys [name description google-username google-project client-id client-secret refresh-token]} @credential]
+            {:keys [name description google-username client-id client-secret refresh-token]} @credential]
         [:<>
          [ui/Table style/definition
           [ui/TableBody
@@ -381,9 +381,6 @@
            [uix/TableRowField "username", :placeholder "Google Username", :editable? editable?, :required? true,
             :default-value google-username, :spec ::spec/google-username, :validate-form? @validate-form?,
             :on-change (partial on-change :google-username)]
-           [uix/TableRowField "project", :placeholder "Google Project", :editable? editable?, :required? true,
-            :default-value google-project, :spec ::spec/google-project, :validate-form? @validate-form?,
-            :on-change (partial on-change :google-project)]
            [uix/TableRowField "client id", :placeholder "Google Client ID", :editable? editable?, :required? true,
             :default-value client-id, :spec ::spec/client-id, :validate-form? @validate-form?,
             :on-change (partial on-change :client-id)]

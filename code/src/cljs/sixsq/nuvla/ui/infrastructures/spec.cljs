@@ -57,6 +57,7 @@
 (s/def ::cloud-vm-disk-size int?)
 (s/def ::cloud-region utils-spec/nonblank-string)
 (s/def ::cloud-security-group utils-spec/nonblank-string)
+(s/def ::cloud-project utils-spec/nonblank-string)
 (s/def ::coe-manager-install boolean?)
 (s/def ::management-credential utils-spec/nonblank-string)
 
@@ -69,6 +70,7 @@
                                       ::cloud-vm-size
                                       ::cloud-vm-disk-size
                                       ::cloud-region
+                                      ::cloud-project
                                       ::cloud-security-group]))
 
 (s/def ::generic-service (s/keys :req-un [::name

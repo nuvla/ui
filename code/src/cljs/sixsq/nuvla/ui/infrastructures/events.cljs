@@ -13,21 +13,29 @@
 
 ; Perform form validation if validate-form? is true.
 
+(defn map-update-if-empty
+  [coll params]
+  (reduce (fn [ncoll [k v]] (assoc ncoll k (if-not (get coll k nil) v (get coll k))))
+          coll
+          params))
+
 (reg-event-db
   ::validate-coe-service-form
   (fn [db [_]]
-    (let [coe-form-spec          ::spec/coe-service
-          generic-form-spec      ::spec/generic-service
-          service                (get db ::spec/infra-service)
-          validate-form?         (get db ::spec/validate-form?)
-          valid?                 (if validate-form?
-                                   (if (or (nil? coe-form-spec) (nil? generic-form-spec))
-                                     true
-                                     ; :endpoint distinguishes pre-existing from to be deployed COE
-                                     (if (:endpoint service)
-                                       (s/valid? generic-form-spec service)
-                                       (s/valid? coe-form-spec service)))
-                                   true)]
+    (let [coe-form-spec     ::spec/coe-service
+          generic-form-spec ::spec/generic-service
+          mgmt-cred-subtype (utils/mgmt-cred-subtype-by-id db (get-in db [::spec/infra-service :management-credential]))
+          cloud-params      (get utils/cloud-params-defaults mgmt-cred-subtype)
+          service           (map-update-if-empty (get db ::spec/infra-service) cloud-params)
+          validate-form?    (get db ::spec/validate-form?)
+          valid?            (if validate-form?
+                              (if (or (nil? coe-form-spec) (nil? generic-form-spec))
+                                true
+                                ; :endpoint distinguishes pre-existing from to be deployed COE
+                                (if (:endpoint service)
+                                  (s/valid? generic-form-spec service)
+                                  (s/valid? coe-form-spec service)))
+                              true)]
       (s/explain coe-form-spec service)
       (assoc db ::spec/form-valid? valid?))))
 

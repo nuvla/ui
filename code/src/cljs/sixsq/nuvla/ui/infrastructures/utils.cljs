@@ -29,7 +29,7 @@
     :cloud-region "CH-DK-2"
     :cloud-vm-image "Linux Ubuntu 18.04 LTS 64-bit"
     :cloud-security-group "docker_machine"
-    :cloud-doc-link "https://exoscale.com"}
+    :cloud-doc-link "https://www.exoscale.com/compute"}
    "infrastructure-service-amazonec2"
    {:cloud-vm-size "t2.medium"
     :cloud-vm-disk-size 50
@@ -50,6 +50,15 @@
     :cloud-doc-link "https://cloud.google.com/docs"}
    })
 
+
+(defn mgmt-cred-subtype-by-id
+  [db cred-id]
+  (->> (::spec/management-credentials-available db)
+       (filter (comp #{cred-id} :id))
+       first
+       :subtype))
+
+
 (def cloud-params-keys (->> cloud-params-defaults
                             (map #(vec (keys (val %))))
                             flatten
@@ -64,6 +73,14 @@
     ""))
 
 
+(defn calc-disk-size
+  [user-disk-size default-disk-size]
+  (if (= 0 user-disk-size)
+    default-disk-size
+    (if (< user-disk-size 10)
+      10
+      user-disk-size)))
+
 (defn db->new-service
   [db]
   (let [service-name          (get-in db [::spec/infra-service :name])
@@ -72,10 +89,7 @@
         subtype               (get-in db [::spec/infra-service :subtype])
         management-credential (let [mc (get-in db [::spec/infra-service :management-credential])]
                                 (if-not (str/blank? mc) mc))
-        mgmt-cred-subtype     (->> (::spec/management-credentials-available db)
-                                   (filter (comp #{management-credential} :id))
-                                   first
-                                   :subtype)
+        mgmt-cred-subtype     (mgmt-cred-subtype-by-id db management-credential)
         template-type         (if management-credential "coe" "generic")
         endpoint              (if (= template-type "generic") (get-in db [::spec/infra-service :endpoint]))
         multiplicity          (when-not endpoint (get-in db [::spec/infra-service :multiplicity] 1))
@@ -83,7 +97,7 @@
         ssh-keys              (when-not endpoint (get-in db [::spec/infra-service :ssh-keys]))
         cloud-vm-image        (get-in db [::spec/infra-service :cloud-vm-image] (cloud-param-default-value mgmt-cred-subtype :cloud-vm-image))
         cloud-vm-size         (get-in db [::spec/infra-service :cloud-vm-size] (cloud-param-default-value mgmt-cred-subtype :cloud-vm-size))
-        cloud-vm-disk-size    (get-in db [::spec/infra-service :cloud-vm-disk-size] (cloud-param-default-value mgmt-cred-subtype :cloud-vm-disk-size))
+        cloud-vm-disk-size    (calc-disk-size (get-in db [::spec/infra-service :cloud-vm-disk-size]) (cloud-param-default-value mgmt-cred-subtype :cloud-vm-disk-size))
         cloud-region          (get-in db [::spec/infra-service :cloud-region] (cloud-param-default-value mgmt-cred-subtype :cloud-region))
         cloud-project          (get-in db [::spec/infra-service :cloud-project] (cloud-param-default-value mgmt-cred-subtype :cloud-project))
         cloud-security-group  (get-in db [::spec/infra-service :cloud-security-group])

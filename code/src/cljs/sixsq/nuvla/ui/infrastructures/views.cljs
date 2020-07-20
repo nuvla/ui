@@ -162,6 +162,11 @@
   [coll elm]
   (some #(= elm %) coll))
 
+
+(defn cloud-params-default-by-cred-id
+  [db cred-id]
+  (get utils/cloud-params-defaults (utils/mgmt-cred-subtype-by-id db cred-id)))
+
 (defn row-csp-credential-selector
   [subtypes additional-filter disabled? value-spec on-change]
   (let [tr              (subscribe [::i18n-subs/tr])
@@ -174,13 +179,15 @@
       (let [value     (:management-credential @service)
             validate? (or @local-validate? @validate-form?)
             valid?    (s/valid? value-spec value)
-            local-on-change (fn [v]
-                              (if (str/blank? v)
+            local-on-change (fn [cred-id]
+                              (if (str/blank? cred-id)
                                 (do (dispatch-sync [::events/clear-infra-service-cloud-params])
-                                    (on-change v))
-                                (do (dispatch-sync [::events/update-infra-service-map
-                                                    (get utils/cloud-params-defaults utils/infra-service-subtype-google)])
-                                    (on-change v))))]
+                                    (on-change cred-id))
+                                (do
+                                  (dispatch-sync [::events/clear-infra-service-cloud-params])
+                                  (dispatch-sync [::events/update-infra-service-map
+                                                  (cloud-params-default-by-cred-id @re-frame.db/app-db cred-id)])
+                                  (on-change cred-id))))]
         [ui/TableRow
          [ui/TableCell {:collapsing false} (@tr [:credentials-cloud-short])]
          [ui/TableCell {:error (and validate? (not valid?))}
@@ -267,7 +274,7 @@
             cloud-vm-size (or (:cloud-vm-size @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-size))
             cloud-vm-image (or (:cloud-vm-image @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-image))
             cloud-security-group (or (:cloud-security-group @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-security-group))
-            cloud-vm-disk-size (or (:cloud-vm-disk-size @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-disk-size))]
+            cloud-vm-disk-size (if-not @mgmt-cred-set? "" (utils/calc-disk-size (:cloud-vm-disk-size @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-disk-size)))]
         [:<>
 
          [acl/AclButton {:default-value (:acl @service)
@@ -307,7 +314,7 @@
          [ui/Container {:style {:margin  "5px" :display "inline-block"}}
           [ui/Input {:label       (@tr [:coe-cluster-size])
                      :placeholder default-multiplicity
-                     :disabled        (not @mgmt-cred-set?)
+                     :disabled    (not @mgmt-cred-set?)
                      :value       @multiplicity
                      :size        "mini"
                      :type        "number"

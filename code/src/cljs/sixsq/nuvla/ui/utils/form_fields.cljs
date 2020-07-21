@@ -12,13 +12,13 @@
 (def nbsp "\u00a0")
 
 
-(defn help-popup [description]
+(defn help-popup [description & {:keys [on] :or {on "hover"}}]
   (when description
     (let [icon [ui/Icon {:name "help circle"}]]
       [ui/Popup
        {:trigger        (reagent/as-element icon)
         :content        description
-        :on             "hover"
+        :on             on
         :hide-on-scroll true}])))
 
 

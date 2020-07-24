@@ -21,7 +21,9 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
+    [sixsq.nuvla.ui.config :as config]))
 
 
 ;;; VALIDATION SPEC
@@ -814,6 +816,17 @@
 
 (defmethod panel/render :profile
   [path]
-  [:div
-   [Content]
-   [modal-change-password]])
+  (let []
+    [:div
+    [Content]
+    [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/vendor")
+              :method "post"
+              :style  {:margin-top 70
+                       :color      "grey"}}
+     [:input {:hidden        true
+              :name          "redirect-url"
+              :default-value (str @config/path-prefix "/api")}] ;; FIXME
+     [:input {:type "image"
+              :src  "/ui/images/stripe-connect.png"
+              :alt  "Stripe connect"}]]
+    [modal-change-password]]))

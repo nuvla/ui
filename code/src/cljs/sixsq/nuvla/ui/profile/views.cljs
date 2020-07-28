@@ -814,19 +814,33 @@
             )]]))))
 
 
+(defn DashboradVendor
+  []
+  (let [vendor (subscribe [::subs/vendor])]
+    (dispatch [::events/search-existing-vendor])
+    (fn []
+      (when (general-utils/can-operation? "dashboard" @vendor)
+        [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/" (:id @vendor) "/dashboard")
+                  :method "post"
+                  :style  {:margin-top 70
+                           :color      "grey"}}
+         [ui/Button {:type "submit"} "Access vendor dashboard"]]))))
+
 (defmethod panel/render :profile
   [path]
-  (let []
+  (let [vendor (subscribe [::subs/vendor])]
     [:div
-    [Content]
-    [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/vendor")
-              :method "post"
-              :style  {:margin-top 70
-                       :color      "grey"}}
-     [:input {:hidden        true
-              :name          "redirect-url"
-              :default-value (str @config/path-prefix "/api")}] ;; FIXME
-     [:input {:type "image"
-              :src  "/ui/images/stripe-connect.png"
-              :alt  "Stripe connect"}]]
-    [modal-change-password]]))
+     [Content]
+     (when-not @vendor
+       [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/vendor")
+                 :method "post"
+                 :style  {:margin-top 70
+                          :color      "grey"}}
+        [:input {:hidden        true
+                 :name          "redirect-url"
+                 :default-value (str @config/path-prefix "/profile")}]
+        [:input {:type "image"
+                 :src  "/ui/images/stripe-connect.png"
+                 :alt  "Stripe connect"}]])
+     [DashboradVendor]
+     [modal-change-password]]))

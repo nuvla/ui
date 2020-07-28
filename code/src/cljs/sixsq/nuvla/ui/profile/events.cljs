@@ -339,3 +339,29 @@
       {:dispatch [::set-error (-> result response/parse-ex-info :message) :remove-coupon]}
       {:dispatch [::customer-info]
        :db       (update db ::spec/loading disj :remove-coupon)})))
+
+
+
+(reg-event-db
+  ::set-vendor
+  (fn [{:keys [::spec/loading] :as db} [_ vendor]]
+    (assoc db ::spec/vendor vendor
+              ::spec/loading (disj loading :vendor))))
+
+
+(reg-event-fx
+  ::get-vendor
+  (fn [{db :db} [_ id]]
+    {:db               (-> db
+                           (update ::spec/loading conj :vendor))
+     ::cimi-api-fx/get [id #(dispatch [::set-vendor %])]}))
+
+
+(reg-event-fx
+  ::search-existing-vendor
+  (fn [{{:keys [::session-spec/session]} :db} _]
+    {::cimi-api-fx/search [:vendor {:filter (str "parent='" (or (:active-claim session)
+                                                                (:user session)) "'")}
+                           #(if-let [id (-> % :resources first :id)]
+                              (dispatch [::get-vendor id])
+                              (dispatch [::set-vendor nil]))]}))

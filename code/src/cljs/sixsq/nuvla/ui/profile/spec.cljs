@@ -29,6 +29,8 @@
 
 (s/def ::setup-intent any?)
 
+(s/def ::vendor any?)
+
 
 (s/def ::db (s/keys :req [::user
                           ::customer
@@ -41,7 +43,8 @@
                           ::open-modal
                           ::error-message
                           ::loading
-                          ::setup-intent]))
+                          ::setup-intent
+                          ::vendor]))
 
 
 (def defaults {::user              nil
@@ -55,4 +58,5 @@
                ::setup-intent      nil
                ::open-modal        nil
                ::error-message     nil
-               ::loading           #{}})
+               ::loading           #{}
+               ::vendor            nil})

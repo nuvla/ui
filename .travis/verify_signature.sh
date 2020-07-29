@@ -1,4 +1,4 @@
-#!/usr/bin/env sh -xe
+#!/bin/bash -xe
 
 gpg_pubkey=".travis/sixsq.gpg_pubkey.bin"
 signed_file="code/resources/public/ui/downloads/nuvlabox-self-registration.py.gpg"

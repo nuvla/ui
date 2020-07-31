@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.6.0] - 2020-07-31
+
 ### Added
 
   - Re-usable button layout for extra actions menus

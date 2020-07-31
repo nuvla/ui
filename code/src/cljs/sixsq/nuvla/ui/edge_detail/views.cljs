@@ -13,11 +13,13 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.plot :as plot]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -270,7 +272,7 @@
 (defn StatusIcon
   [status]
   [ui/Popup
-   {:position "right center"
+   {:position "bottom center"
     :content  status
     :trigger  (r/as-element
                 [ui/Icon {:name  "power"
@@ -420,18 +422,88 @@
           :content "NuvlaBox status not available."}]))))
 
 
+(defn ActionsMenu
+  "This creates a floating (top right) label with a pinned popup menu
+  with a list of available actions for the corresponding resource.
+
+  The list of actions must be passed as an argument, as a list of elements, in the following form:
+  [
+    {:content \"link text\" :on-click #() :style {}}
+  ]"
+  [action-list]
+  [ui/Label {:circular true
+             :floating true
+             :basic    true}
+   [ui/Popup {:position "right center"
+              :on       "click"
+              :style    {:padding "5px"}
+              :size     "small"
+              :pinned   true
+              :trigger  (r/as-element [ui/Button
+                                       {:icon   true
+                                        :style  {:margin  "0"
+                                                 :padding "0"
+                                                 :border  "0px"
+                                                 :background  "none"}}
+                                       [ui/Icon {:name   "ellipsis vertical"
+                                                 :link  true}]])
+              :content  (r/as-element [ui/ListSA {:vertical-align  "middle"
+                                                  :link        true
+                                                  :selection   true
+                                                  :divided     true}
+                                       (for [action action-list]
+                                         [ui/ListItem {:as "a"
+                                                       :key (str "action." (apply str
+                                                                             (take 12
+                                                                               (repeatedly #(char (+ (rand 26) 65))))))}
+                                          [ui/ListContent
+                                           [ui/ListDescription
+                                            [:span {:on-click  (:on-click action)
+                                                    :style     (:style action)}
+                                             (:content action)]]]])])}]])
+
+
+(defn EditAction
+  [uuid body close-fn]
+  (dispatch [::events/edit
+             uuid body
+             "NuvlaBox updated successfully"])
+  (close-fn))
+
+
 (defn NuvlaboxCard
   [nuvlabox status & {on-click-fn :on-click}]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        edit      (r/atom false)
+        nb-name   (r/atom (:name nuvlabox))
+        close-fn  #(do
+                     (reset! edit false)
+                     (refresh (:id nuvlabox)))]
     (fn [{:keys [id name description created state tags] :as nuvlabox} status]
       ^{:key id}
       [ui/Card (when on-click-fn {:on-click on-click-fn})
        [ui/CardContent
 
+        [ActionsMenu
+         [{:content "Edit" :on-click #(reset! edit true)}]]
+
         [ui/CardHeader {:style {:word-wrap "break-word"}}
          [:div {:style {:float "right"}}
           [StatusIcon status :corner "top right"]]
-         [ui/Icon {:name "box"}] (or name id)]
+         [ui/Icon {:name "box"}]
+         ; we could use just the Input with {:disabled (not @edit) :tranparent (not @edit)}, and get rid of this "if"
+         ; but for some reason, the :placeholder and :default-value properties of the input
+         ; do not get updated after an edit
+         (if @edit
+           [ui/Input {:default-value  (or name id)
+                      :on-key-press   (partial forms/on-return-key #(if (= @nb-name (or name id))
+                                                                      (close-fn)
+                                                                      (EditAction id {:name @nb-name} close-fn)))
+                      :on-change      (ui-callback/input-callback #(reset! nb-name %))
+                      :focus          true
+                      :size           "mini"}]
+           (or name id))]
+
 
         [ui/CardMeta (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))]
 

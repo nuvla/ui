@@ -4,6 +4,8 @@
 
 ### Updated
 
+  - Added support for file signature with GPG for
+    nuvlabox-self-registration.py
   - Switch group adjustment
   - Update deps
 

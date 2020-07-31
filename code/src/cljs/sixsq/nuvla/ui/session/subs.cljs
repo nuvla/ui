@@ -24,6 +24,23 @@
   (fn [db]
     (::spec/session db)))
 
+
+(reg-sub
+  ::active-claim
+  :<- [::session]
+  (fn [{:keys [active-claim user]}]
+    (or active-claim user)))
+
+
+(reg-sub
+  ::active-claim-is-group?
+  :<- [::active-claim]
+  (fn [active-claim]
+    (boolean
+      (some-> active-claim
+              (str/starts-with? "group/")))))
+
+
 (reg-sub
   ::switch-group-options
   :<- [::session]

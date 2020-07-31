@@ -4,6 +4,7 @@
 
 ### Updated
 
+  - Credential - Add VPN credential not possible from group warning
   - Added support for file signature with GPG for
     nuvlabox-self-registration.py
   - Switch group adjustment

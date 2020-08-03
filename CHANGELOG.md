@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Updated
+
+  - Dependency - Update semantic-ui-react to v1.1.0
+
 ## [2.6.0] - 2020-07-31
 
 ### Added

@@ -28,7 +28,7 @@
     :cloud-vm-disk-size 50
     :cloud-region "CH-DK-2"
     :cloud-vm-image "Linux Ubuntu 18.04 LTS 64-bit"
-    :cloud-security-group "docker_machine"
+    :cloud-security-group "docker-machine"
     :cloud-doc-link "https://www.exoscale.com/compute"}
    "infrastructure-service-amazonec2"
    {:cloud-vm-size "t2.medium"

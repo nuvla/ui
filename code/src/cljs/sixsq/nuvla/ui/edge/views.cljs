@@ -211,7 +211,7 @@
                                    :name        (:name creation-data)
                                    :description (:description creation-data)
                                    :script      (str @cimi-fx/NUVLA_URL
-                                                     "/ui/downloads/nuvlabox-self-registration.py")
+                                                     "/ui/downloads/nuvlabox-self-registration.py.gpg")
                                    :endpoint    @cimi-fx/NUVLA_URL
                                    :vpn         (:vpn-server-id creation-data)
                                    :apikey      apikey

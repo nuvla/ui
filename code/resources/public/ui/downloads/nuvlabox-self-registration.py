@@ -123,7 +123,7 @@ def install_nuvlabox_engine(cmd, env=os.environ.copy(), timeout=600):
 
     try:
         result = run(cmd, stdout=PIPE, stderr=STDOUT, env=env, input=None,
-                     timeout=timeout, encoding='UTF-8')
+                     timeout=timeout, universal_newlines=True)
 
     except TimeoutExpired:
         raise Exception('Command execution timed out after {} seconds'.format(timeout))

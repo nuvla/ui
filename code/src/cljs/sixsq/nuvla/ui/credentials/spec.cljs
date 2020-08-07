@@ -124,14 +124,12 @@
 ; Google Compute Engine CSP
 
 (s/def ::google-username utils-spec/nonblank-string)
-(s/def ::google-project utils-spec/nonblank-string)
 (s/def ::client-id utils-spec/nonblank-string)
 (s/def ::client-secret utils-spec/nonblank-string)
 (s/def ::refresh-token utils-spec/nonblank-string)
 (s/def ::google-credential (s/keys :req-un [::name
                                             ::description
                                             ::google-username
-                                            ::google-project
                                             ::client-id
                                             ::client-secret
                                             ::refresh-token]))

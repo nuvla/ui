@@ -52,13 +52,73 @@
       :content     [:h3 content]}]))
 
 
+(defn TerminateButton
+  [infra-service]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        {:keys [id name description]} @infra-service
+        content (str (or name id) (when description " - ") description)]
+    [uix/ModalDanger
+     {:button-text (@tr [:terminate])
+      :on-confirm  #(dispatch [::events/terminate])
+      :danger-msg  (@tr [:infrastructure-terminate-warning])
+      :trigger     (r/as-element [ui/MenuItem
+                                  [ui/Icon {:name "delete"}]
+                                  (@tr [:terminate])])
+      :header      (@tr [:terminate-infrastructure])
+      :content     [:h3 content]}]))
+
+
+(defn StopButton
+  [infra-service]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        {:keys [id name description]} @infra-service
+        content (str (or name id) (when description " - ") description)]
+    [uix/ModalDanger
+     {:button-text (@tr [:stop])
+      :on-confirm  #(dispatch [::events/stop])
+      :danger-msg  (@tr [:infrastructure-stop-warning])
+      :trigger     (r/as-element [ui/MenuItem
+                                  [ui/Icon {:name "stop"}]
+                                  (@tr [:stop])])
+      :header      (@tr [:stop-infrastructure])
+      :content     [:h3 content]}]))
+
+
+(defn StartButton
+  [infra-service]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        {:keys [id name description]} @infra-service
+        content (str (or name id) (when description " - ") description)]
+    [uix/ModalDanger
+     {:button-text (@tr [:start])
+      :on-confirm  #(dispatch [::events/start])
+      :danger-msg  (@tr [:infrastructure-start-warning])
+      :trigger     (r/as-element [ui/MenuItem
+                                  [ui/Icon {:name "rocket"}]
+                                  (@tr [:start])])
+      :header      (@tr [:start-infrastructure])
+      :content     [:h3 content]}]))
+
+
 (defn MenuBar [uuid]
   (let [can-delete?   (subscribe [::subs/can-delete?])
+        can-terminate? (subscribe [::subs/can-terminate?])
+        can-stop? (subscribe [::subs/can-stop?])
+        can-start? (subscribe [::subs/can-start?])
         infra-service (subscribe [::subs/infrastructure-service])
         loading?      (subscribe [::subs/loading?])]
     [ui/Menu {:borderless true}
      (when @can-delete?
        [DeleteButton infra-service])
+
+     (when @can-terminate?
+       [TerminateButton infra-service])
+
+     (when @can-stop?
+       [StopButton infra-service])
+
+     (when @can-start?
+       [StartButton infra-service])
 
      [main-components/RefreshMenu
       {:loading?   @loading?

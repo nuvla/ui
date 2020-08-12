@@ -50,6 +50,10 @@
   (default-error-message response (str "error getting " resource-id)))
 
 
+(defn default-terminate-on-error
+  [resource-id response]
+  (default-error-message response (str "error terminating" resource-id)))
+
 (defn default-delete-on-error
   [resource-id response]
   (default-error-message response (str "error deleting " resource-id)))

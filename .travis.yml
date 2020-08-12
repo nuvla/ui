@@ -4,6 +4,7 @@ jdk:
 - openjdk8
 before_install:
 - sudo apt-get install -y zopfli
+before_script: ./.travis/verify_signature.sh
 cache:
   directories:
   - code/node_modules

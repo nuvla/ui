@@ -24,16 +24,30 @@
   (fn [db]
     (::spec/session db)))
 
+
 (reg-sub
-  ::act-as-options
+  ::active-claim
   :<- [::session]
-  :<- [::roles]
-  (fn [[{:keys [identifier active-claim] :as session} roles]]
-    (when (general-utils/can-operation? "claim" session)
-      (cond-> (filter #(and
-                         (str/starts-with? % "group/")
-                         (not (#{"group/nuvla-anon" "group/nuvla-user"
-                                 "group/nuvla-admin" active-claim} %))) roles)
+  (fn [{:keys [active-claim user]}]
+    (or active-claim user)))
+
+
+(reg-sub
+  ::active-claim-is-group?
+  :<- [::active-claim]
+  (fn [active-claim]
+    (boolean
+      (some-> active-claim
+              (str/starts-with? "group/")))))
+
+
+(reg-sub
+  ::switch-group-options
+  :<- [::session]
+  :<- [::groups]
+  (fn [[{:keys [identifier active-claim] :as session} groups]]
+    (when (general-utils/can-operation? "switch-group" session)
+      (cond-> (remove #(= active-claim %) groups)
               (and (string? active-claim)
                    (str/starts-with? active-claim "group/")) (conj identifier)))))
 
@@ -49,6 +63,13 @@
   :<- [::session]
   (fn [session]
     (set (some-> session :roles (str/split #"\s+")))))
+
+
+(reg-sub
+  ::groups
+  :<- [::session]
+  (fn [session]
+    (set (some-> session :groups (str/split #"\s+")))))
 
 
 (reg-sub
@@ -81,6 +102,20 @@
                  (str/starts-with? active-claim "group/"))
         active-claim)
       identifier)))
+
+
+(reg-sub
+  ::identifier
+  :<- [::session]
+  (fn [session]
+    (:identifier session)))
+
+
+(reg-sub
+  ::active-claim
+  :<- [::session]
+  (fn [session]
+    (:active-claim session)))
 
 
 (reg-sub

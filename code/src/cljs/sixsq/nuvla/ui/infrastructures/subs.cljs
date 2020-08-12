@@ -3,7 +3,8 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.infrastructures.spec :as spec]))
+    [sixsq.nuvla.ui.infrastructures.spec :as spec]
+    [sixsq.nuvla.ui.infrastructures.utils :as utils]))
 
 
 (reg-sub
@@ -115,3 +116,9 @@
   (fn [db]
     (let [creds (get-in db [::spec/infra-service :management-credential])]
       (and creds (not (str/blank? creds))))))
+
+(reg-sub
+  ::mgmt-cred-subtype
+  (fn [db]
+    (if-let [mgmt-cred-id (get-in db [::spec/infra-service :management-credential])]
+      (utils/mgmt-cred-subtype-by-id db mgmt-cred-id))))

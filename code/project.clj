@@ -1,8 +1,8 @@
-(def parent-version "6.7.3")
+(def parent-version "6.7.4")
 (def sixsq-nuvla-api-version "2.0.8")
-(def version "2.5.1-SNAPSHOT")
+(def version "2.6.1-SNAPSHOT")
 
-(defproject sixsq.nuvla.ui/code "2.5.1-SNAPSHOT"
+(defproject sixsq.nuvla.ui/code "2.6.1-SNAPSHOT"
 
   :description "Web Browser User Interface for Nuvla"
 
@@ -78,7 +78,7 @@
   :dependencies [[reagent "0.10.0" :scope "provided"
                   :exclusions [cljsjs/react
                                cljsjs/react-dom]]
-                 [re-frame "0.12.0" :scope "provided"]
+                 [re-frame "1.0.0" :scope "provided"]
                  [day8.re-frame/http-fx "v0.2.0" :scope "provided"]
                  [cljs-ajax "0.8.0" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
@@ -94,18 +94,18 @@
 
   :profiles
   {:dev   {:dependencies [[org.clojure/clojure "1.10.1"]
-                          [org.clojure/clojurescript "1.10.758"
+                          [org.clojure/clojurescript "1.10.773"
                            :exclusions
                            [com.google.javascript/closure-compiler-unshaded
                             org.clojure/google-closure-library
                             org.clojure/google-closure-library-third-party]]
                           [binaryage/devtools "1.0.2" :scope "test"]
-                          [day8.re-frame/re-frame-10x "0.6.6"]]}
+                          [day8.re-frame/re-frame-10x "0.7.0"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.10.14"]   ;; WARNING: also in package.json
+   :scljs {:dependencies [[thheller/shadow-cljs "2.10.17"]   ;; WARNING: also in package.json
                           [org.clojure/google-closure-library "0.0-20191016-6ae1f72f"]
                           [org.clojure/google-closure-library-third-party "0.0-20191016-6ae1f72f"]
-                          [com.google.javascript/closure-compiler-unshaded "v20200504"]]}}
+                          [com.google.javascript/closure-compiler-unshaded "v20200628"]]}}
 
 
 

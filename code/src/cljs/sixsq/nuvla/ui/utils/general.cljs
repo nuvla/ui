@@ -247,6 +247,18 @@
   (can-operation? :delete data))
 
 
+(defn can-terminate? [data]
+  (can-operation? :terminate data))
+
+
+(defn can-stop? [data]
+  (can-operation? :stop data))
+
+
+(defn can-start? [data]
+  (can-operation? :start data))
+
+
 (defn can-bulk-delete? [data]
   (can-operation? :bulk-delete data))
 

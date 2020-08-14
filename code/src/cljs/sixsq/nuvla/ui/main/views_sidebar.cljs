@@ -80,14 +80,15 @@
 (defn logo-item
   []
   (let [tr           (subscribe [::i18n-subs/tr])
-        welcome-page (subscribe [::subs/page-info "welcome"])]
+        welcome-page (subscribe [::subs/page-info "welcome"])
+        custom-marketplace   (subscribe [::subs/custom-marketplace])]
     ^{:key "welcome"}
     [ui/MenuItem {:aria-label (@tr [:welcome])
                   :style      {:overflow-x "hidden"
                                :min-width  sidebar-width}
                   :on-click   #(navigate (:url @welcome-page))}
      [ui/Image {:alt      "logo"
-                :src      "/ui/images/nuvla-logo.png"
+                :src      (if (nil? @custom-marketplace) (utils/logo-src "nuvla") (utils/logo-src @custom-marketplace))
                 :size     "tiny"
                 :style    {:margin-top    "10px"
                            :margin-bottom "10px"}

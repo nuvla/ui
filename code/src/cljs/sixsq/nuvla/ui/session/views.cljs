@@ -16,10 +16,11 @@
     [sixsq.nuvla.ui.session.sign-up-views :as sign-up-views]
     [sixsq.nuvla.ui.session.subs :as subs]
     [sixsq.nuvla.ui.session.utils :as utils]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.spec :as us]))
+    [sixsq.nuvla.ui.utils.spec :as us]
+    [taoensso.timbre :as log]))
 
 
 ;;; VALIDATION SPEC
@@ -179,7 +180,7 @@
        [ui/ButtonGroup {:primary true}
         [ui/Button {:id "nuvla-username-button" :on-click profile-fn}
          [ui/Icon {:name (if (-> @user (or "") (str/starts-with? "group/")) "group" "user")}]
-         [:span {:id "nuvla-username"} (general-utils/truncate @user)]]
+         [:span {:id "nuvla-username"} (utils-general/truncate @user)]]
         dropdown-menu]
        [:div
         (when @signup-template?
@@ -219,16 +220,20 @@
              :style  {:color "white"}}
          [ui/Icon {:name icon}]])]]))
 
+
 (defn LeftPanel
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
         first-path           (subscribe [::main-subs/nav-path-first])
         signup-template?     (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
         eula                 (subscribe [::main-subs/config :eula])
-        terms-and-conditions (subscribe [::main-subs/config :terms-and-conditions])]
+        terms-and-conditions (subscribe [::main-subs/config :terms-and-conditions])
+        custom-marketplace   (subscribe [::main-subs/custom-marketplace])]
     [:div {:class "nuvla-ui-session-left"}
      [ui/Image {:alt      "logo"
-                :src      "/ui/images/nuvla-logo.png"
+                :src      (if (nil? @custom-marketplace)
+                            (utils-general/logo-src "nuvla")
+                            (utils-general/logo-src @custom-marketplace))
                 :size     "medium"
                 :style    {:margin-top    "10px"
                            :margin-bottom "0px"}

@@ -4,10 +4,3 @@
 (def ^:const user-tmpl-email-invitation "user-template/email-invitation")
 (def ^:const session-tmpl-password "session-template/password")
 (def ^:const session-tmpl-password-reset "session-template/password-reset")
-
-
-
-
-
-
-

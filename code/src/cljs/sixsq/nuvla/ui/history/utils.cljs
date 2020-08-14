@@ -93,6 +93,13 @@
       (str protocol "//" host port-field))))
 
 
+(defn hostname
+  "Extracts the hostname from the URL from the javascript window.location object."
+  []
+  (if-let [location (.-location js/window)]
+    (.-hostname location)))
+
+
 (defn trim-path
   [path n]
   (str/join "/" (take (inc n) path)))

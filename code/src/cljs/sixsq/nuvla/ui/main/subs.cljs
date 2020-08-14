@@ -139,6 +139,12 @@
 
 
 (reg-sub
+  ::custom-marketplace
+  (fn [db]
+    (::spec/custom-marketplace db)))
+
+
+(reg-sub
   ::open-modal
   (fn [db]
     (::spec/open-modal db)))

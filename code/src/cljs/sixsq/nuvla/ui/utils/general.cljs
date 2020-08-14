@@ -308,3 +308,8 @@
 (defn format
   [fmt v]
   (gstring/format fmt v))
+
+
+(defn logo-src
+  [logo]
+  (str "/ui/images/" logo "-logo.png"))

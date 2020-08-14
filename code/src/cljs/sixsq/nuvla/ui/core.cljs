@@ -8,11 +8,11 @@
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.db.events :as db-events]
     [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.history.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.views :as main-views]
     [sixsq.nuvla.ui.routes :as routes]
     [sixsq.nuvla.ui.session.events :as session-events]
-    [sixsq.nuvla.ui.utils.defines :as defines]
     [taoensso.timbre :as log]))
 
 
@@ -20,6 +20,17 @@
   (when config/debug?
     (enable-console-print!)
     (log/info "development mode")))
+
+
+(defn render-head
+  []
+  (let [url                  (utils/hostname)
+        url-parts            (clojure.string/split url #"\.")
+        customer-marketplace (first url-parts)]
+    (when (> (count url-parts) 0)
+      (dispatch [::main-events/set-custom-marketplace customer-marketplace])
+      (when-let [head-element (.getElementById js/document "customer-style")]
+        (set! (.-href head-element) (str "/ui/css/" customer-marketplace "-ui.css"))))))
 
 
 (defn render-component-when-present
@@ -69,5 +80,6 @@
   (routes/routes)
   (dispatch [::history-events/initialize @config/path-prefix])
   (swap! fv/conf #(merge % {:atom r/atom}))
+  (render-head)
   (mount-root)
   (log/info "finished initialization"))

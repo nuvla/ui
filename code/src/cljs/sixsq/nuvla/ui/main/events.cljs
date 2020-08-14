@@ -247,6 +247,7 @@
 (reg-event-fx
   ::get-ui-config-good
   (fn [{db :db} [_ {:keys [stripe] :as result}]]
+    (log/info "Config file loaded")
     (cond-> {:db (assoc db ::spec/config result)}
             stripe (assoc :dispatch [::load-stripe]))))
 
@@ -267,6 +268,12 @@
                   :response-format (ajax/json-response-format {:keywords? true})
                   :on-success      [::get-ui-config-good]
                   :on-failure      [::get-ui-config-bad]}}))
+
+
+(reg-event-db
+  ::set-custom-marketplace
+  (fn [db [_ custom-marketplace]]
+    (assoc db ::spec/custom-marketplace custom-marketplace)))
 
 
 (reg-event-db

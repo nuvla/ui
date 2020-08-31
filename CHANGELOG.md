@@ -4,6 +4,8 @@
 
 ### Updated
 
+  - Remove duplicate subscription active-claim
+  - Dependencies update
   - Subscription status past due considered as active
   - Dependency - Update semantic-ui-react to v1.1.0
 

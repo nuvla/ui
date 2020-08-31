@@ -226,17 +226,14 @@
         signup-template?     (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
         eula                 (subscribe [::main-subs/config :eula])
         terms-and-conditions (subscribe [::main-subs/config :terms-and-conditions])]
-    [:div {:style {:padding "75px"}}
+    [:div {:class "nuvla-ui-session-left"}
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"
                 :size     "medium"
-                :style    {:margin-top    "10px"
-                           :margin-bottom "0px"}
                 :centered false}]
      [:br]
 
-     [:div {:style {:margin-top  40
-                    :line-height "normal"
+     [:div {:style {:line-height "normal"
                     :font-size   "2em"}}
       (@tr [:edge-platform-as-a-service])]
      [:br]
@@ -313,7 +310,7 @@
               :style     {:margin           0
                           :background-color "white"}}
 
-     [ui/GridColumn {:style {:background-image    "url(/ui/images/volumlight.png)"
+     [ui/GridColumn {:style {:background-image    "url(/ui/images/session.png)"
                              :background-size     "cover"
                              :background-position "left"
                              :background-repeat   "no-repeat"

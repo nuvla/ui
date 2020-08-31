@@ -64,6 +64,22 @@
     background-color: Gainsboro !important;
 }
 
+.nuvla-ui-session-left {
+    margin-left: 10%;
+    margin-right: 10%;
+    margin-top: 10%;
+    margin-bottom: 10%;
+    padding: 25px;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+@media only screen and (max-width: 768px) {
+    .nuvla-ui-session-left {
+        margin: 0px;
+        margin-bottom: 25%;
+        padding: 10px;
+    }
+}
 
 /*
  * Override the size of inputs within a search dropdown to avoid

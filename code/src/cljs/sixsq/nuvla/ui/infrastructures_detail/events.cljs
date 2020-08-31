@@ -47,3 +47,24 @@
     (let [infra-id (:id infrastructure-service)]
       {::cimi-api-fx/delete [infra-id #(dispatch
                                          [::history-events/navigate "infrastructures"])]})))
+
+
+(reg-event-fx
+  ::terminate
+  (fn [{{:keys [::spec/infrastructure-service]} :db} _]
+    (let [infra-id (:id infrastructure-service)]
+      {::cimi-api-fx/operation [infra-id "terminate" #(dispatch [::history-events/navigate "infrastructures"])]})))
+
+
+(reg-event-fx
+  ::stop
+  (fn [{{:keys [::spec/infrastructure-service]} :db} _]
+    (let [infra-id (:id infrastructure-service)]
+      {::cimi-api-fx/operation [infra-id "stop" #(dispatch [::history-events/navigate "infrastructures"])]})))
+
+
+(reg-event-fx
+  ::start
+  (fn [{{:keys [::spec/infrastructure-service]} :db} _]
+    (let [infra-id (:id infrastructure-service)]
+      {::cimi-api-fx/operation [infra-id "start" #(dispatch [::history-events/navigate "infrastructures"])]})))

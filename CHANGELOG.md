@@ -4,6 +4,7 @@
 
 ### Updated
 
+  - Subscription status past due considered as active
   - Dependency - Update semantic-ui-react to v1.1.0
 
 ## [2.6.0] - 2020-07-31

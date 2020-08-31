@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.profile.subs
   (:require
     [re-frame.core :refer [dispatch reg-sub subscribe]]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.profile.spec :as spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 

@@ -4,6 +4,7 @@
 
 ### Updated
 
+  - User dropdown - z-index fix
   - Subscription modal - group mandatory email field
   - Remove duplicate subscription active-claim
   - Dependencies update

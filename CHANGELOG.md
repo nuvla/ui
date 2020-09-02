@@ -4,6 +4,7 @@
 
 ### Updated
 
+  - Subscription modal - group mandatory email field
   - Remove duplicate subscription active-claim
   - Dependencies update
   - Subscription status past due considered as active

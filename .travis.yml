@@ -5,6 +5,7 @@ jdk:
 before_install:
   - sudo apt-get install -y zopfli
   - cp .travis.settings.xml $HOME/.m2/settings.xml
+  - mvn -B dependency:resolve-plugins dependency:resolve
 before_script:
   - ./.travis/verify_signature.sh
 cache:

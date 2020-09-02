@@ -226,7 +226,7 @@
         <executions>
           <execution>
             <id>default</id>
-            <phase>install</phase>
+            <phase>deploy</phase>
             <goals>
               <goal>build</goal>
               <goal>push</goal>

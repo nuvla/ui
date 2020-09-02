@@ -39,7 +39,7 @@
 
           <execution>
             <id>lein-install</id>
-            <phase>deploy</phase>
+            <phase>install</phase>
             <goals>
               <goal>exec</goal>
             </goals>

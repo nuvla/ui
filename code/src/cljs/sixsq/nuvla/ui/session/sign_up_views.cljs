@@ -100,9 +100,11 @@
                                                     form :password-repeat spec->msg)}]]
 
                        (when @stripe
-                         [ui/FormCheckbox {:label     "Start my trial now"
-                                           :on-change (ui-callback/checked
-                                                        #(reset! create-customer %))}])
+                         [ui/FormGroup {:inline true}
+                          [ui/FormCheckbox {:label     (@tr [:start-trial-now])
+                                            :on-change (ui-callback/checked
+                                                         #(reset! create-customer %))}]
+                          [:span "(" (@tr [:see]) " " [:a {:href "/ui/pricing", :target "_blank"} (@tr [:pricing])] ")"]])
                        (when @create-customer
                          [profile-views/CustomerFormFields form-customer])
                        ]

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.7.0] - 2020-09-04
+
 ### Updated
 
   - User dropdown - z-index fix

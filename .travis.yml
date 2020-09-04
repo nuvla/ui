@@ -5,21 +5,14 @@ jdk:
 before_install:
   - sudo apt-get install -y zopfli
   - cp .travis.settings.xml $HOME/.m2/settings.xml
-  - mvn -B dependency:resolve-plugins dependency:resolve
 before_script:
   - ./.travis/verify_signature.sh
 cache:
   directories:
     - code/node_modules
     - "$HOME/.m2"
-install: mvn install -pl code
 script: skip
-deploy:
-  provider: script
-  script: mvn deploy -pl container
-  skip_cleanup: true
-  on:
-    all_branches: true
+install: mvn deploy
 env:
   global:
   - secure: n+SIXGwjG5ZALmXDvJIQbg4/oakymVztwV5eqgD4CN2ZxOdpunceA6Hd7kMd8rbTMy9jR9SuhSkconSP+hxba+KmHbCGucOXNcDEbIZoQWCl464Zuh7m4050mmWoAI9PvHartIGejMw1dHhDENAv05gihqSbWaRiMxwYL4amEcZnuqt6Tg78e6RX142UNJ5S32oBmp5Xu5Xhaha6HNtQVnAescAT6FXdqtbHHxFiaTDX0PtQZa8LBUfLbAEL28JMOX8HdslMu/bFiUNmu4LxuWkzd7o+B+Mzqyaq0qoDmsEnxo4K6/cyniASw4o6D/SByP5zWJTJi9aVojTWq31fdtijLineWu2vqXop/U+O42JCgVAPiocTV3dhgxcHI4uVsVPI9AL+ShhHs/CxtPFuXKgN/H1WEWQWA3fmf4va/uHo116kaVZP2YRjDujIXqfCbW6rQq+VhYKmO+IG1Y0oVZtR/u1y+7daks3fE3F0jUw1JZLzGqGUf9SH42hmMJPgOZAc+X6rIHhN6q3BKTvCphkUFK1JCtYzQedT+yVi2k2xtAC/aTVrZD98MKAksZ259msgjZKVOZI0Efd7DjAq0L4CH0J6mjQA3zbFxSEHQKP7Ni8BnLMbdrp/+2IPtmwDnbTaqdDO7b32CoX1AUz1grTnLL5ykZ8RGZh7jh5IMqc=

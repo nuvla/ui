@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
@@ -15,6 +16,7 @@
     [sixsq.nuvla.ui.infrastructures.events :as events]
     [sixsq.nuvla.ui.infrastructures.spec :as spec]
     [sixsq.nuvla.ui.infrastructures.subs :as subs]
+    [sixsq.nuvla.ui.infrastructures.utils :as utils]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -160,6 +162,11 @@
   [coll elm]
   (some #(= elm %) coll))
 
+
+(defn cloud-params-default-by-cred-id
+  [db cred-id]
+  (get utils/cloud-params-defaults (utils/mgmt-cred-subtype-by-id db cred-id)))
+
 (defn row-csp-credential-selector
   [subtypes additional-filter disabled? value-spec on-change]
   (let [tr              (subscribe [::i18n-subs/tr])
@@ -171,7 +178,16 @@
     (fn [subtypes additional-filter disabled? value-spec on-change]
       (let [value     (:management-credential @service)
             validate? (or @local-validate? @validate-form?)
-            valid?    (s/valid? value-spec value)]
+            valid?    (s/valid? value-spec value)
+            local-on-change (fn [cred-id]
+                              (if (str/blank? cred-id)
+                                (do (dispatch-sync [::events/clear-infra-service-cloud-params])
+                                    (on-change cred-id))
+                                (do
+                                  (dispatch-sync [::events/clear-infra-service-cloud-params])
+                                  (dispatch-sync [::events/update-infra-service-map
+                                                  (cloud-params-default-by-cred-id @re-frame.db/app-db cred-id)])
+                                  (on-change cred-id))))]
         [ui/TableRow
          [ui/TableCell {:collapsing false} (@tr [:credentials-cloud-short])]
          [ui/TableCell {:error (and validate? (not valid?))}
@@ -184,9 +200,9 @@
                           :value       value
                           :placeholder (@tr [:credentials-cloud-select])
                           :on-change   (ui-callback/callback
-                                        :value #(do
-                                                 (reset! local-validate? true)
-                                                 (on-change %)))
+                                         :value #(do
+                                                   (reset! local-validate? true)
+                                                   (local-on-change %)))
                           :options     (map (fn [{id :id, infra-name :name}]
                                               {:key id, :value id, :text infra-name})
                                             @mgmt-creds)}]
@@ -226,6 +242,15 @@
             [:span (str/join ", " @ssh-keys)]]]]]))))
 
 
+(defn cloud-help-popup
+  [text cred-subtype]
+  [:span ff/nbsp
+   (ff/help-popup (r/as-element
+                    [:span [:p text]
+                     (if cred-subtype [:a {:href (utils/cloud-param-default-value cred-subtype :cloud-doc-link) :target "_blank"} "See this link." ])])
+                  :on (if cred-subtype "focus" "hover"))])
+
+
 (defn service-coe
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
@@ -233,17 +258,23 @@
         service              (subscribe [::subs/infra-service])
         validate-form?       (subscribe [::subs/validate-form?])
         subtype              (:subtype @service "swarm")
-        subtype-kw           (keyword subtype)
         default-multiplicity 1
         multiplicity         (r/atom default-multiplicity)
         on-change            (fn [name-kw value]
-                               (let [value (if (= name-kw :multiplicity) (int value) value)]
+                               (let [value (if (some #{name-kw} [:multiplicity :cloud-vm-disk-size]) (int value) value)]
                                  (dispatch [::events/update-infra-service name-kw value])
                                  (dispatch [::events/validate-coe-service-form])))]
     (fn []
       (let [editable? (general-utils/editable? @service @is-new?)
             mgmt-cred-set? (subscribe [::subs/mgmt-creds-set?])
-            {:keys [name description endpoint]} @service]
+            mgmt-cred-subtype (subscribe [::subs/mgmt-cred-subtype])
+            {:keys [name description endpoint]} @service
+            cloud-project (or (:cloud-project @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-project))
+            cloud-region (or (:cloud-region @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-region))
+            cloud-vm-size (or (:cloud-vm-size @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-size))
+            cloud-vm-image (or (:cloud-vm-image @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-image))
+            cloud-security-group (or (:cloud-security-group @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-security-group))
+            cloud-vm-disk-size (if-not @mgmt-cred-set? "" (utils/calc-disk-size (:cloud-vm-disk-size @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-disk-size)))]
         [:<>
 
          [acl/AclButton {:default-value (:acl @service)
@@ -267,8 +298,8 @@
          [ui/Table style/definition
           [ui/TableBody
            [uix/TableRowField (@tr [:endpoint]), :placeholder (str "https://" subtype "-example.io:2376"),
-            :default-value endpoint, :spec ::spec/endpoint, :editable? (str/blank? (:management-credential @service)), :required? false,
-            :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]
+            :default-value endpoint, :spec ::spec/endpoint, :editable? (str/blank? (:management-credential @service)),
+            :required? false, :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]
 
          [ui/Divider {:horizontal true :as "h4"} "or"]
 
@@ -283,7 +314,7 @@
          [ui/Container {:style {:margin  "5px" :display "inline-block"}}
           [ui/Input {:label       (@tr [:coe-cluster-size])
                      :placeholder default-multiplicity
-                     :disabled        (not @mgmt-cred-set?)
+                     :disabled    (not @mgmt-cred-set?)
                      :value       @multiplicity
                      :size        "mini"
                      :type        "number"
@@ -296,18 +327,57 @@
                      :step        1
                      :min         1}]]
 
-         [ui/Checkbox {:key             "coe-manager-install"
-                       :label           (if (= subtype "swarm")
-                                          (@tr [:coe-install-manager-portainer])
-                                          (@tr [:coe-install-manager-rancher]))
-                       :disabled        (not @mgmt-cred-set?)
-                       :default-checked false
-                       :style           {:margin "1em"}
-                       :on-change       (ui-callback/checked
-                                          #(on-change :coe-manager-install %))}]
+         [:span
+          [ui/Checkbox {:key            "coe-manager-install"
+                        :label           (if (= subtype "swarm")
+                                           (@tr [:coe-install-manager-portainer])
+                                           (@tr [:coe-install-manager-rancher]))
+                        :disabled        (not @mgmt-cred-set?)
+                        :default-checked false
+                        :style           {:margin "1em"}
+                        :on-change       (ui-callback/checked
+                                           #(on-change :coe-manager-install %))}]
+          (if (= subtype "swarm")
+            [:a {:href "https://portainer.io" :target "_blank"} "https://portainer.io"]
+            [:a {:href "https://rancher.io" :target "_blank"} "https://rancher.io"])]
 
          ^{:key "ssh-keys-selector"}
-         [ssh-keys-selector (not @mgmt-cred-set?)]]))))
+         [ssh-keys-selector (not @mgmt-cred-set?)]
+
+         [ui/Table style/definition
+          [ui/TableBody
+
+           [uix/TableRowField [:div "VM Size" (cloud-help-popup "Cloud specific VM size definition." @mgmt-cred-subtype)],
+            :placeholder "", :editable? @mgmt-cred-set?, :required? false,
+            :default-value cloud-vm-size, :spec ::spec/cloud-vm-size, :on-change (partial on-change :cloud-vm-size),
+            :validate-form? @validate-form?]
+
+           (if (or (nil? @mgmt-cred-subtype) (get-in utils/cloud-params-defaults [@mgmt-cred-subtype :cloud-vm-disk-size]))
+             [uix/TableRowField [:div "VM Disk Size (GB)" (cloud-help-popup "Cloud specific VM disk size definition." @mgmt-cred-subtype)],
+              :placeholder "", :editable? @mgmt-cred-set?, :required? false, :default-value cloud-vm-disk-size,
+              :spec ::spec/cloud-vm-disk-size, :on-change (partial on-change :cloud-vm-disk-size), :validate-form? @validate-form?])
+
+           (if (= utils/infra-service-subtype-google @mgmt-cred-subtype)
+             [uix/TableRowField [:div "Project ID" (cloud-help-popup "GCP Project ID." @mgmt-cred-subtype)],
+              :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-project,
+              :spec ::spec/cloud-project, :on-change (partial on-change :cloud-project), :validate-form? @validate-form?])
+
+           [uix/TableRowField [:div "Region" (cloud-help-popup "Cloud specific region." @mgmt-cred-subtype)],
+            :placeholder "", :editable? @mgmt-cred-set?, :required? false,
+            :default-value cloud-region, :spec ::spec/cloud-region, :on-change (partial on-change :cloud-region),
+            :validate-form? @validate-form?]
+
+           [uix/TableRowField [:div "Image" (cloud-help-popup "Cloud specific image." @mgmt-cred-subtype)],
+            :placeholder "", :editable? @mgmt-cred-set?, :required? false, :default-value cloud-vm-image,
+            :spec ::spec/cloud-vm-image, :on-change (partial on-change :cloud-vm-image), :validate-form? @validate-form?]
+
+           (if (= utils/infra-service-subtype-exoscale @mgmt-cred-subtype)
+             [uix/TableRowField [:div "Security Group" (cloud-help-popup "Cloud specific security group." @mgmt-cred-subtype)],
+              :editable? @mgmt-cred-set?, :required? true, :placeholder "", :default-value cloud-security-group,
+              :spec ::spec/cloud-security-group, :on-change (partial on-change :cloud-security-group),
+              :validate-form? @validate-form?])
+
+           ]]]))))
 
 
 (defn service-registry

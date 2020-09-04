@@ -10,7 +10,6 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.pricing.subs :as subs]
     [sixsq.nuvla.ui.profile.events :as profile-event]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.profile.views :as profile-views]
@@ -46,15 +45,22 @@
            (@tr [(if first-item
                    :you-only-pay-for-resources-you-use
                    :discount-automatically-applies)])]
+
+          [ui/Grid {}
+           [ui/GridRow
+            (when extend [ui/GridColumn {:width 9}])
+            [ui/GridColumn (when extend {:width 7})
+             [:p {:style {:color "grey"}} (@tr [:per-unit])]]]]
+
           [ui/Grid {:divided true, :style {:background-color "lightyellow"
                                            :min-height       95}}
            (when extend
-             [ui/GridColumn {:width 11}
+             [ui/GridColumn {:width 9}
               [:div {:style {:text-align "left"}}
                [ui/Icon {:name "box"}]
                "NuvlaBox"
                [:p {:style {:color "grey"}} (@tr [:active-devices-only])]]])
-           [ui/GridColumn (when extend {:width 5})
+           [ui/GridColumn (when extend {:width 7})
             nb-number
             [:br]
             [ui/Label {:color color} nb-price]]]
@@ -62,15 +68,14 @@
                     :style   {:background-color "lightcyan"
                               :min-height       95}}
            (when extend
-             [ui/GridColumn {:width 11}
+             [ui/GridColumn {:width 9}
               [:div {:style {:text-align "left"}} [ui/Icon {:name "play"}]
                "App Deployments"
                [:p {:style {:color "grey"}} (@tr [:active-deployments])]]])
-           [ui/GridColumn (when extend {:width 5})
+           [ui/GridColumn (when extend {:width 7})
             dep-number
             [:br]
-            [ui/Label {:color color} dep-price]]]
-          ]]))))
+            [ui/Label {:color color} dep-price]]]]]))))
 
 
 (defn Pricing

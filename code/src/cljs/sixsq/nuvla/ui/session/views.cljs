@@ -108,17 +108,17 @@
 
         invitation-template? (subscribe [::subs/user-template-exist?
                                          utils/user-tmpl-email-invitation])
-        act-as-options       (subscribe [::subs/act-as-options])]
+        switch-group-options (subscribe [::subs/switch-group-options])]
 
     [ui/DropdownMenu
-     (when (seq @act-as-options)
+     (when (seq @switch-group-options)
        [:<>
-        [ui/DropdownHeader (@tr [:act-as])]
-        (for [account @act-as-options]
+        [ui/DropdownHeader (@tr [:switch-group])]
+        (for [account @switch-group-options]
           ^{:key account}
           [ui/DropdownItem {:text     account
                             :icon     (if (str/starts-with? account "group/") "group" "user")
-                            :on-click #(dispatch [::events/act-as account])}])
+                            :on-click #(dispatch [::events/switch-group account])}])
         [ui/DropdownDivider]])
 
      (when @invitation-template?
@@ -230,13 +230,10 @@
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"
                 :size     "medium"
-                :style    {:margin-top    "10px"
-                           :margin-bottom "0px"}
                 :centered false}]
      [:br]
 
-     [:div {:style {:margin-top  40
-                    :line-height "normal"
+     [:div {:style {:line-height "normal"
                     :font-size   "2em"}}
       (@tr [:edge-platform-as-a-service])]
      [:br]
@@ -313,7 +310,7 @@
               :style     {:margin           0
                           :background-color "white"}}
 
-     [ui/GridColumn {:style {:background-image    "url(/ui/images/volumlight.png)"
+     [ui/GridColumn {:style {:background-image    "url(/ui/images/session.png)"
                              :background-size     "cover"
                              :background-position "left"
                              :background-repeat   "no-repeat"

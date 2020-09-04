@@ -368,7 +368,7 @@
                          (dispatch [::events/validate-credential-form ::spec/google-credential]))]
     (fn []
       (let [editable? (general-utils/editable? @credential @is-new?)
-            {:keys [name description google-username google-project client-id client-secret refresh-token]} @credential]
+            {:keys [name description google-username client-id client-secret refresh-token]} @credential]
         [:<>
          [ui/Table style/definition
           [ui/TableBody
@@ -381,9 +381,6 @@
            [uix/TableRowField "username", :placeholder "Google Username", :editable? editable?, :required? true,
             :default-value google-username, :spec ::spec/google-username, :validate-form? @validate-form?,
             :on-change (partial on-change :google-username)]
-           [uix/TableRowField "project", :placeholder "Google Project", :editable? editable?, :required? true,
-            :default-value google-project, :spec ::spec/google-project, :validate-form? @validate-form?,
-            :on-change (partial on-change :google-project)]
            [uix/TableRowField "client id", :placeholder "Google Client ID", :editable? editable?, :required? true,
             :default-value client-id, :spec ::spec/client-id, :validate-form? @validate-form?,
             :on-change (partial on-change :client-id)]
@@ -490,8 +487,9 @@
 
 (defn add-credential-modal
   []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        visible? (subscribe [::subs/add-credential-modal-visible?])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        visible?  (subscribe [::subs/add-credential-modal-visible?])
+        is-group? (subscribe [::session-subs/active-claim-is-group?])]
     (fn []
       (let []
         [ui/Modal {:open       @visible?
@@ -528,17 +526,22 @@
                         :style {:max-width 112}}]]]
 
            [ui/Card
-            {:on-click #(do
-                          (dispatch [::events/set-validate-form? false])
-                          (dispatch [::events/form-valid])
-                          (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::main-events/subscription-required-dispatch
-                                     [::events/open-credential-modal
-                                      {:subtype "infrastructure-service-vpn"} true]]))}
+            (when (not @is-group?)
+              {:on-click #(do
+                            (dispatch [::events/set-validate-form? false])
+                            (dispatch [::events/form-valid])
+                            (dispatch [::events/close-add-credential-modal])
+                            (dispatch [::main-events/subscription-required-dispatch
+                                       [::events/open-credential-modal
+                                        {:subtype "infrastructure-service-vpn"} true]]))})
             [ui/CardContent {:text-align :center}
              [ui/Header "OpenVPN"]
              [ui/Image {:src   "/ui/images/openvpn.png"
-                        :style {:max-width 112}}]]]
+                        :style {:max-width 112}}]
+             (when @is-group?
+               [:<>
+                [:br]
+                [:i (@tr [:credential-vpn-group-warning])]])]]
 
            [ui/Card
             {:on-click #(do

@@ -4,6 +4,26 @@
 
 ### Updated
 
+  - User dropdown - z-index fix
+  - Subscription modal - group mandatory email field
+  - Remove duplicate subscription active-claim
+  - Dependencies update
+  - Subscription status past due considered as active
+  - Dependency - Update semantic-ui-react to v1.1.0
+
+## [2.6.0] - 2020-07-31
+
+### Added
+
+  - Re-usable button layout for extra actions menus
+  - Ability to rename NuvlaBox resource 
+
+### Updated
+
+  - Credential - Add VPN credential not possible from group warning
+  - Added support for file signature with GPG for
+    nuvlabox-self-registration.py
+  - Switch group adjustment
   - Update deps
 
 ## [2.5.0] - 2020-07-06

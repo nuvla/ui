@@ -112,13 +112,6 @@
 
 
 (reg-sub
-  ::active-claim
-  :<- [::session]
-  (fn [session]
-    (:active-claim session)))
-
-
-(reg-sub
   ::user-id
   :<- [::session]
   (fn [session]

@@ -10,7 +10,6 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.pricing.subs :as subs]
     [sixsq.nuvla.ui.profile.events :as profile-event]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.profile.views :as profile-views]

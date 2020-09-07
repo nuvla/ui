@@ -2,8 +2,15 @@
 
 ## Unreleased
 
+## [2.7.0] - 2020-09-04
+
 ### Updated
 
+  - User dropdown - z-index fix
+  - Subscription modal - group mandatory email field
+  - Remove duplicate subscription active-claim
+  - Dependencies update
+  - Subscription status past due considered as active
   - Dependency - Update semantic-ui-react to v1.1.0
 
 ## [2.6.0] - 2020-07-31

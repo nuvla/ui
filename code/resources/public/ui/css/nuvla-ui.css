@@ -154,3 +154,7 @@ div.search.dropdown > input {
   font-family: 'Font Awesome 5 Pro' !important;
   font-weight: 900 !important;
 }
+
+.ui.dropdown .menu.transition.visible {
+  z-index: 1001;
+}

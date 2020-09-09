@@ -855,21 +855,27 @@
                            :color      "grey"}}
          [ui/Button {:type "submit"} "Access vendor dashboard"]]))))
 
-(defmethod panel/render :profile
-  [path]
+(defn StripeConnect
+  []
   (let [vendor (subscribe [::subs/vendor])]
-    [:div
-     [Content]
+    [:<>
      (when-not @vendor
        [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/vendor")
                  :method "post"
-                 :style  {:margin-top 70
-                          :color      "grey"}}
+                 :style  {:color      "grey"}}
         [:input {:hidden        true
                  :name          "redirect-url"
                  :default-value (str @config/path-prefix "/profile")}]
         [:input {:type "image"
                  :src  "/ui/images/stripe-connect.png"
                  :alt  "Stripe connect"}]])
-     [DashboradVendor]
+     [DashboradVendor]])
+  )
+
+(defmethod panel/render :profile
+  [path]
+  (let [vendor (subscribe [::subs/vendor])]
+    [:div
+     [Content]
+     [StripeConnect]
      [modal-change-password]]))

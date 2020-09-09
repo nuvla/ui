@@ -24,7 +24,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.profile.views :as profile-views]))
 
 
 (defn edit-button-disabled?
@@ -741,10 +742,8 @@
          [:span ff/nbsp (ff/help-popup "Price help")]]
         (when @editable?
           [:<>
-           [ui/Message
-            "Become an application Vendor."
-            [:br]
-            [ui/Button "Stripe Connect"]]
+           [ui/Message "Become an application Vendor."]
+           [profile-views/StripeConnect]
 
            [:p "Here define price if vendor step already done"]])]
        :label "Price"

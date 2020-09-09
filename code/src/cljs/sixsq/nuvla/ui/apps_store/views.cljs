@@ -55,13 +55,21 @@
            :content  (str "COMPATIBILITY: " compatibility)
            :size     "small"
            :trigger  (r/as-element [ui/Icon {:name "info"}])}]])]
-     [ui/Button {:fluid    true
-                 :primary  true
-                 :icon     :rocket
-                 :content  (@tr [:launch])
-                 :on-click #(dispatch [::main-events/subscription-required-dispatch
-                                       [::deployment-dialog-events/create-deployment
-                                        (:id module) :infra-services]])}]]))
+     (if (= 2 1)
+       [ui/Button {:fluid    true
+                   :primary  true
+                   :icon     :rocket
+                   :content  (@tr [:launch])
+                   :on-click #(dispatch [::main-events/subscription-required-dispatch
+                                         [::deployment-dialog-events/create-deployment
+                                          (:id module) :infra-services]])}]
+       [ui/Button {:fluid    true
+                   :negative true
+                   :icon     :cart
+                   :content  "Launch for 4.99$/month"
+                   :on-click #(dispatch [::main-events/subscription-required-dispatch
+                                         [::deployment-dialog-events/create-deployment
+                                          (:id module) :infra-services]])}])]))
 
 
 (defn modules-cards-group

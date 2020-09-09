@@ -37,7 +37,7 @@
               :active    (= step-id @active-step)}
      [ui/Icon {:name icon}]
      [ui/StepContent
-      [ui/StepTitle (@tr [step-id]) " "
+      [ui/StepTitle {:style {:width "10ch"}} (@tr [step-id]) " "
        (case step-id
          :infra-services
          (when @credentials-completed?
@@ -71,6 +71,9 @@
      :registries [registries-step/content]
      :env-variables [env-variables-step/content]
      :files [files-step/content]
+     :billing [ui/Segment
+               [:p "Here will price of the module"]
+               [:p "Coupon if any to apply"]]
      :summary [summary-step/content]
      nil)])
 
@@ -97,6 +100,7 @@
                             (when (some? @private-registries) :registries)
                             :env-variables
                             (when (= module-subtype "application") :files)
+                            :billing
                             :summary]
             visible-steps  (remove nil? steps)]
         [ui/Modal (cond-> {:open       @visible?
@@ -112,19 +116,23 @@
 
          [ui/ModalContent
           [ui/ModalDescription
-
-           [ui/StepGroup {:size "mini", :fluid true}
-            (doall
-              (for [step-id visible-steps]
-                ^{:key step-id}
-                [deployment-step-state (get @step-states step-id)]))]
-
-           [ui/Segment {:loading (not ready?)
-                        :basic   true
-                        :style   {:padding 0
-                                  :height  "25em"}}
-            (when @ready?
-              [step-content @active-step])]]]
+           [ui/Grid {:columns 2, :stackable true}
+            [ui/GridColumn {:width 4}
+             [ui/StepGroup {:size "mini", :fluid true, :vertical true}
+              (doall
+                (for [step-id visible-steps]
+                  ^{:key step-id}
+                  [deployment-step-state (get @step-states step-id)]))]]
+            [ui/GridColumn {:width 12}
+             [ui/Segment {:loading (not ready?)
+                          :basic   true
+                          :style   {:padding 0
+                                    :height  "25em"}}
+              (when @ready?
+                [step-content @active-step])]
+             ]
+            ]
+           ]]
 
          [ui/ModalActions
 

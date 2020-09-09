@@ -266,6 +266,16 @@
      :count (count resources)]))
 
 
+(defn pricing-section
+  []
+  (let [tr   (subscribe [::i18n-subs/tr])]
+    [uix/Accordion
+     [:p "Current subscription, usage, upcoming invoice, invoices, coupon"]
+     :label "Pricing"
+     :default-open false
+     :count "9.98$"]))
+
+
 (defn log-controller
   [go-live?]
   (let [locale        (subscribe [::i18n-subs/locale])
@@ -671,4 +681,5 @@
         [events-section]
         [parameters-section]
         [env-vars-section]
+        [pricing-section]
         [jobs-section]]])))

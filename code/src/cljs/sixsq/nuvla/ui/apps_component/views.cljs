@@ -356,6 +356,7 @@
                          :read-only     (not @editable?)}]
          [apps-views-detail/MenuBar]
          [summary]
+         [apps-views-detail/price-section]
          [ports-section]
          [apps-views-detail/env-variables-section]
          [mounts-section]

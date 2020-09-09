@@ -81,6 +81,8 @@
                                    :icon    "list alternate outline"}
                   :files          {:step-id :files
                                    :icon    "file alternate outline"}
+                  :billing        {:step-id :billing
+                                   :icon    "dollar"}
                   :summary        {:step-id :summary
                                    :icon    "info"}})
 

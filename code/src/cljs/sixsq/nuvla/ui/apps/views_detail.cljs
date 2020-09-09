@@ -729,3 +729,24 @@
                                   (dispatch [::main-events/changes-protection? true])
                                   (dispatch [::events/validate-form])))}]
             [:span (str/join ", " @registries)])]]))))
+
+
+(defn price-section []
+  (let [tr        (subscribe [::i18n-subs/tr])
+        editable? (subscribe [::subs/editable?])]
+    (fn []
+      [uix/Accordion
+       [:<>
+        [:div "Price"
+         [:span ff/nbsp (ff/help-popup "Price help")]]
+        (when @editable?
+          [:<>
+           [ui/Message
+            "Become an application Vendor."
+            [:br]
+            [ui/Button "Stripe Connect"]]
+
+           [:p "Here define price if vendor step already done"]])]
+       :label "Price"
+       :count "4.99$/month"
+       :default-open false])))

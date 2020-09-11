@@ -742,7 +742,7 @@
          [:span ff/nbsp (ff/help-popup "Price help")]]
         (when @editable?
           [:<>
-           [ui/Message "Become an application Vendor."]
+           [ui/Message "Start getting paid for your Software integration and development"]
            [profile-views/StripeConnect]
 
            [:p "Here define price if vendor step already done"]])]

@@ -109,6 +109,12 @@
 
 
 (reg-sub
+  ::price
+  (fn [db]
+    (get-in db [::spec/module-common ::spec/price])))
+
+
+(reg-sub
   ::data-types
   (fn [db]
     (get-in db [::spec/module-common ::spec/data-types])))

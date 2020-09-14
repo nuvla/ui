@@ -394,6 +394,12 @@
 
 
 (reg-event-db
+  ::price
+  (fn [db [_ price]]
+    (assoc-in db [::spec/module-common ::spec/price] (assoc price :currency "EUR"))))
+
+
+(reg-event-db
   ::set-registries-infra
   (fn [db [_ {resources :resources}]]
     (assoc db ::spec/registries-infra resources)))

@@ -25,6 +25,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.profile.events :as profile-events]
+    [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.profile.views :as profile-views]))
 
 
@@ -733,8 +735,12 @@
 
 
 (defn price-section []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        editable? (subscribe [::subs/editable?])]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        editable?       (subscribe [::subs/editable?])
+        loading-vendor? (subscribe [::profile-subs/loading? :vendor])
+        vendor          (subscribe [::profile-subs/vendor])
+        price           (subscribe [::subs/price])]
+    (dispatch [::profile-events/search-existing-vendor])
     (fn []
       [uix/Accordion
        [:<>
@@ -742,10 +748,29 @@
          [:span ff/nbsp (ff/help-popup "Price help")]]
         (when @editable?
           [:<>
-           [ui/Message "Start getting paid for your Software integration and development"]
-           [profile-views/StripeConnect]
-
-           [:p "Here define price if vendor step already done"]])]
+           [ui/Segment {:loading @loading-vendor?, :placeholder true, :textAlign "center"}
+            [ui/Header
+             "Start getting paid for your Software integration and development"]
+            (if (nil? @vendor)
+              [profile-views/StripeConnect]
+              [profile-views/DashboradVendor])]
+           [:<>
+            [:p "Here define price if vendor step already done"]
+            [ui/Input {:labelPosition "right", :type "text", :placeholder "Amount"
+                       :error         (not (s/valid? ::spec/amount (:amount @price)))}
+             [:input {:type      "number"
+                      :step      0.01
+                      :min       0.01
+                      :on-change (ui-callback/input-callback
+                                   #(do
+                                      (dispatch [::events/price
+                                                 {:amount   (when-not (str/blank? %)
+                                                              (js/parseFloat %))
+                                                  :currency "EUR"}])
+                                      (dispatch [::main-events/changes-protection? true])
+                                      (dispatch [::events/validate-form])))}]
+             [ui/Label "$/month"]]]]
+          )]
        :label "Price"
        :count "4.99$/month"
-       :default-open false])))
+       :default-open true])))

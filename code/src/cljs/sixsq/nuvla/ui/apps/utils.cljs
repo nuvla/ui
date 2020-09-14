@@ -116,6 +116,7 @@
         path               (get-in db [::spec/module-common ::spec/path])
         acl                (get-in db [::spec/module-common ::spec/acl])
         private-registries (get-in db [::spec/module-common ::spec/private-registries])
+        price              (get-in db [::spec/module-common ::spec/price])
         env-variables      (env-variables->module db)
         urls               (urls->module db)
         output-parameters  (output-parameters->module db)
@@ -139,6 +140,7 @@
             (assoc-in m [:content :private-registries] private-registries))
           (assoc-in m [:content :output-parameters] output-parameters)
           (assoc-in m [:data-accept-content-types] data-bindings)
+          (assoc-in m [:price] price)
           (sanitize-base m)
           (dissoc m :children))))
 
@@ -186,7 +188,7 @@
 
 (defn module->db
   [db {:keys [name description parent-path content data-accept-content-types
-              path logo-url subtype acl] :as module}]
+              path logo-url subtype acl price] :as module}]
   (-> db
       (assoc-in [::spec/module-common ::spec/name] name)
       (assoc-in [::spec/module-common ::spec/description] description)
@@ -203,7 +205,9 @@
       (assoc-in [::spec/module-common ::spec/data-types]
                 (data-types->db data-accept-content-types))
       (assoc-in [::spec/module-common ::spec/private-registries]
-                (:private-registries content))))
+                (:private-registries content))
+      (assoc-in [::spec/module-common ::spec/price]
+                price)))
 
 
 (defn mandatory-name

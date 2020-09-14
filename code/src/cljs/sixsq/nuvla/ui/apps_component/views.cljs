@@ -16,6 +16,7 @@
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -343,7 +344,8 @@
 (defn view-edit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        editable?     (subscribe [::apps-subs/editable?])]
+        editable?     (subscribe [::apps-subs/editable?])
+        stripe        (subscribe [::main-subs/stripe])]
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
@@ -356,7 +358,8 @@
                          :read-only     (not @editable?)}]
          [apps-views-detail/MenuBar]
          [summary]
-         [apps-views-detail/price-section]
+         (when @stripe
+           [apps-views-detail/price-section])
          [ports-section]
          [apps-views-detail/env-variables-section]
          [mounts-section]

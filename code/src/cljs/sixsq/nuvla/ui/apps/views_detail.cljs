@@ -737,40 +737,31 @@
 (defn price-section []
   (let [tr              (subscribe [::i18n-subs/tr])
         editable?       (subscribe [::subs/editable?])
-        loading-vendor? (subscribe [::profile-subs/loading? :vendor])
-        vendor          (subscribe [::profile-subs/vendor])
         price           (subscribe [::subs/price])]
     (dispatch [::profile-events/search-existing-vendor])
     (fn []
-      [uix/Accordion
-       [:<>
-        [:div "Price"
-         [:span ff/nbsp (ff/help-popup "Price help")]]
-        (when @editable?
-          [:<>
-           [ui/Segment {:loading @loading-vendor?, :placeholder true, :textAlign "center"}
-            [ui/Header
-             "Start getting paid for your Software integration and development"]
-            (if (nil? @vendor)
-              [profile-views/StripeConnect]
-              [profile-views/DashboradVendor])]
-           [:<>
-            [:p "Here define price if vendor step already done"]
+      (let [amount (:amount @price)]
+        [uix/Accordion
+         [:<>
+          [:div "Price"
+           [:span ff/nbsp (ff/help-popup "Define a price for your software.")]]
+          (if @editable?
             [ui/Input {:labelPosition "right", :type "text", :placeholder "Amount"
-                       :error         (not (s/valid? ::spec/amount (:amount @price)))}
-             [:input {:type      "number"
-                      :step      0.01
-                      :min       0.01
-                      :on-change (ui-callback/input-callback
-                                   #(do
-                                      (dispatch [::events/price
-                                                 {:amount   (when-not (str/blank? %)
-                                                              (js/parseFloat %))
-                                                  :currency "EUR"}])
-                                      (dispatch [::main-events/changes-protection? true])
-                                      (dispatch [::events/validate-form])))}]
-             [ui/Label "$/month"]]]]
-          )]
-       :label "Price"
-       :count "4.99$/month"
-       :default-open true])))
+                       :error         (not (s/valid? ::spec/amount amount))}
+             [:input {:type          "number"
+                      :step          1
+                      :min           1
+                      :default-value amount
+                      :on-change     (ui-callback/input-callback
+                                       #(do
+                                          (dispatch [::events/price-amount
+                                                     (when-not (str/blank? %)
+                                                       (js/parseInt %))])
+                                          (dispatch [::main-events/changes-protection? true])
+                                          (dispatch [::events/validate-form])))}]
+             [ui/Label "€/month"]]
+            [ui/Label (str amount "€/month")]
+            )]
+         :label "Price"
+         :count (when amount (str amount "€/month"))
+         :default-open true]))))

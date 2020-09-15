@@ -394,9 +394,9 @@
 
 
 (reg-event-db
-  ::price
-  (fn [db [_ price]]
-    (assoc-in db [::spec/module-common ::spec/price] (assoc price :currency "EUR"))))
+  ::price-amount
+  (fn [db [_ amount]]
+    (assoc-in db [::spec/module-common ::spec/price :amount] amount)))
 
 
 (reg-event-db

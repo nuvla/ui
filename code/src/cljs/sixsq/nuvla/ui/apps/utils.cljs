@@ -140,7 +140,7 @@
             (assoc-in m [:content :private-registries] private-registries))
           (assoc-in m [:content :output-parameters] output-parameters)
           (assoc-in m [:data-accept-content-types] data-bindings)
-          (assoc-in m [:price] price)
+          (cond-> m (:amount price) (assoc-in [:price] price))
           (sanitize-base m)
           (dissoc m :children))))
 

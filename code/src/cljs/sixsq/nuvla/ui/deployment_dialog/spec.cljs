@@ -82,7 +82,7 @@
                   :files          {:step-id :files
                                    :icon    "file alternate outline"}
                   :billing        {:step-id :billing
-                                   :icon    "dollar"}
+                                   :icon    "euro"}
                   :summary        {:step-id :summary
                                    :icon    "info"}})
 

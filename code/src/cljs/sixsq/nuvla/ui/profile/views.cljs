@@ -752,7 +752,7 @@
       (let [{:keys [name percent-off currency amount-off
                     duration duration-in-month] :as coupon} (:coupon @customer-info)]
         [ui/Segment {:padded  true
-                     :color   "blue"
+                     :color   "green"
                      :loading @loading?
                      :style   {:height "100%"}}
          [ui/Header {:as :h2 :dividing true} (@tr [:coupon])]
@@ -802,6 +802,59 @@
                 [AddCouponButton @open?]])]])]))))
 
 
+
+
+(defn DashboradVendor
+  []
+  (let [vendor (subscribe [::subs/vendor])]
+    (when (general-utils/can-operation? "dashboard" @vendor)
+      [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/" (:id @vendor) "/dashboard")
+                :method "post"
+                :style  {:color "grey"}}
+       [ui/Button {:type "submit", :primary true} "Sales dashboard"]])))
+
+
+(defn StripeConnect
+  []
+  [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/vendor")
+            :method "post"
+            :style  {:color "grey"}}
+   [:input {:hidden        true
+            :name          "redirect-url"
+            :default-value (str @config/path-prefix "/profile")}]
+   [:input {:type "image"
+            :src  "/ui/images/stripe-connect.png"
+            :alt  "Stripe connect"}]])
+
+
+
+(defn Vendor
+  []
+  (let [tr       (subscribe [::i18n-subs/tr])
+        loading? (subscribe [::subs/loading? :vendor])
+        vendor   (subscribe [::subs/vendor])]
+    (dispatch [::events/search-existing-vendor])
+    (fn []
+      [ui/Segment {:padded  true
+                   :color   "blue"
+                   :loading @loading?
+                   :style   {:height "100%"}}
+       [ui/Header {:as :h2 :dividing true} (@tr [:vendor])]
+       [ui/Grid {:text-align     "center"
+                 :vertical-align "middle"
+                 :style          {:height "100%"}}
+        [ui/GridColumn
+         [ui/Header {:as :h3, :icon true, :disabled true}
+          [ui/Icon {:className "fad fa-envelope-open-dollar"}]
+          (@tr [:vendor-getting-paid])]
+         [:br]
+         (if @vendor
+           [DashboradVendor]
+           [StripeConnect])
+         ]]]
+      )))
+
+
 (defn Content
   []
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -839,36 +892,14 @@
               [ui/GridColumn
                [PaymentMethods]]
               [ui/GridColumn
-               [Coupon]]]])]]))))
-
-
-
-(defn DashboradVendor
-  []
-  (let [vendor (subscribe [::subs/vendor])]
-    (when (general-utils/can-operation? "dashboard" @vendor)
-      [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/" (:id @vendor) "/dashboard")
-                :method "post"
-                :style  {:color      "grey"}}
-       [ui/Button {:type "submit", :primary true} "Your sells dashboard"]])))
-
-
-(defn StripeConnect
-  []
-  [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/vendor")
-            :method "post"
-            :style  {:color "grey"}}
-   [:input {:hidden        true
-            :name          "redirect-url"
-            :default-value (str @config/path-prefix "/profile")}]
-   [:input {:type "image"
-            :src  "/ui/images/stripe-connect.png"
-            :alt  "Stripe connect"}]])
-
+               [Coupon]]]])
+          (when show-subscription
+            [ui/GridRow {:columns 2}
+             [ui/GridColumn
+              [Vendor]]])]]))))
 
 (defmethod panel/render :profile
   [path]
   [:div
    [Content]
-   [StripeConnect]
    [modal-change-password]])

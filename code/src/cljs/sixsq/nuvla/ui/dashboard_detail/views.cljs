@@ -31,7 +31,7 @@
 
 (defn refresh
   [resource-id]
-  (dispatch [::events/clear-module])
+  (dispatch [::events/reset-db])
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
               :frequency 10000
@@ -268,12 +268,29 @@
 
 (defn pricing-section
   []
-  (let [tr   (subscribe [::i18n-subs/tr])]
-    [uix/Accordion
-     [:p "Current subscription, usage, upcoming invoice, invoices, coupon"]
-     :label "Pricing"
-     :default-open false
-     :count "9.98$"]))
+  (let [tr               (subscribe [::i18n-subs/tr])
+        upcoming-invoice (subscribe [::subs/upcoming-invoice])]
+    (fn []
+      (let [locale @(subscribe [::i18n-subs/locale])
+            {total    :total
+             currency :currency} @upcoming-invoice
+            {:keys [description period]} (some-> @upcoming-invoice :lines first)]
+
+        [uix/Accordion
+         [:div
+          [:b "Details: "]
+          description
+
+          [:br]
+
+          [:b "Period: "]
+          (str (some-> period :start (time/time->format "LL" locale))
+               " - "
+               (some-> period :end (time/time->format "LL" locale)))]
+         :label "Pricing"
+         :default-open false
+         :count (when total (str (if (= currency "eur") "€" currency)
+                                 " " (general-utils/format "%.2f" total)))]))))
 
 
 (defn log-controller
@@ -681,5 +698,6 @@
         [events-section]
         [parameters-section]
         [env-vars-section]
-        [pricing-section]
+        (when (:subscription-id @deployment)
+          [pricing-section])
         [jobs-section]]])))

@@ -18,6 +18,7 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
+    [sixsq.nuvla.ui.profile.events :as profile-events]
     [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -348,6 +349,7 @@
         editable?     (subscribe [::apps-subs/editable?])
         stripe        (subscribe [::main-subs/stripe])
         vendor        (subscribe [::profile-subs/vendor])]
+    (dispatch [::profile-events/search-existing-vendor])
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]

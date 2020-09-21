@@ -78,11 +78,11 @@
 (s/def ::private-registries (s/nilable (s/coll-of string?)))
 
 
-(s/def ::amount (s/nilable pos-int?))
+(s/def ::cent-amount-daily (s/nilable pos-int?))
 
 (s/def ::currency string?)
 
-(s/def ::price (s/nilable (s/keys :req-un [::amount
+(s/def ::price (s/nilable (s/keys :req-un [::cent-amount-daily
                                            ::currency])))
 
 

@@ -190,3 +190,9 @@
   :<- [::current-module-content-id]
   (fn [[module-versions id]]
     (= (-> module-versions last :href) id)))
+
+
+(reg-sub
+  ::upcoming-invoice
+  (fn [db]
+    (::spec/upcoming-invoice db)))

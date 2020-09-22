@@ -364,6 +364,7 @@
          [summary]
          (when (and @stripe @vendor)
            [apps-views-detail/price-section])
+         [apps-views-detail/license-section]
          [ports-section]
          [apps-views-detail/env-variables-section]
          [mounts-section]

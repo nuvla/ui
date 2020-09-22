@@ -399,6 +399,23 @@
     (assoc-in db [::spec/module-common ::spec/price] {:cent-amount-daily amount
                                                       :currency          "EUR"})))
 
+(reg-event-db
+  ::license-name
+  (fn [db [_ name]]
+    (assoc-in db [::spec/module-common ::spec/license :license-name] name)))
+
+
+(reg-event-db
+  ::license-description
+  (fn [db [_ description]]
+    (assoc-in db [::spec/module-common ::spec/license :license-description] description)))
+
+
+(reg-event-db
+  ::license-url
+  (fn [db [_ url]]
+    (assoc-in db [::spec/module-common ::spec/license :license-url] url)))
+
 
 (reg-event-db
   ::set-registries-infra

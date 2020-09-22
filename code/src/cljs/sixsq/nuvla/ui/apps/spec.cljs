@@ -85,6 +85,16 @@
 (s/def ::price (s/nilable (s/keys :req-un [::cent-amount-daily
                                            ::currency])))
 
+(s/def ::license-name spec-utils/nonblank-string)
+
+(s/def ::license-description (s/nilable string?))
+
+(s/def ::license-url spec-utils/nonblank-string)
+
+(s/def ::license (s/nilable (s/keys :req-un [::license-name
+                                             ::license-url]
+                                    :opt-un [::license-description])))
+
 
 (s/def ::module-common (s/keys :req [::name
                                      ::parent-path
@@ -100,7 +110,8 @@
                                      ::output-parameters
                                      ::data-types
                                      ::private-registries
-                                     ::price]))
+                                     ::price
+                                     ::license]))
 
 
 ;; Validation

@@ -772,3 +772,38 @@
                   (str (float (/ amount 100)) "€/day")
                   (str amount "ct€/day"))
          :default-open true]))))
+
+
+(defn license-section []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        editable?      (subscribe [::subs/editable?])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [update-event-kw value]
+                         (dispatch [update-event-kw value])
+                         (dispatch [::main-events/changes-protection? true])
+                         (dispatch [::events/validate-form]))
+        license        (subscribe [::subs/module-license])
+        add-license    (r/atom false)]
+    (fn []
+      (js/console.log @license)
+      [uix/Accordion
+       (if (or (some? @license)
+               @add-license)
+         [ui/Table {:compact    true
+                    :definition true}
+          [ui/TableBody
+           [uix/TableRowField (@tr [:name]), :key "license-name", :editable? @editable?,
+            :spec ::spec/license-name, :validate-form? @validate-form?,
+            :required? true, :default-value (:license-name @license),
+            :on-change (partial on-change ::events/license-name)]
+           [uix/TableRowField (@tr [:description]), :key "license-description",
+            :editable? @editable?, :spec ::spec/license-description, :validate-form? @validate-form?,
+            :required? false, :default-value (:license-description @license),
+            :on-change (partial on-change ::events/license-description)]
+           [uix/TableRowField (@tr [:url]), :key "license-url",
+            :editable? @editable?, :spec ::spec/license-url, :validate-form? @validate-form?,
+            :required? true, :default-value (:license-url @license),
+            :on-change (partial on-change ::events/license-url)]]]
+         [ui/Button {:on-click #(reset! add-license true)} "Add licence"])
+       :label "License"
+       :default-open true])))

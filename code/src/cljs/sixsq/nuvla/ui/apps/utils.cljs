@@ -117,10 +117,12 @@
         acl                (get-in db [::spec/module-common ::spec/acl])
         private-registries (get-in db [::spec/module-common ::spec/private-registries])
         price              (get-in db [::spec/module-common ::spec/price])
+        license            (get-in db [::spec/module-common ::spec/license])
         env-variables      (env-variables->module db)
         urls               (urls->module db)
         output-parameters  (output-parameters->module db)
         data-bindings      (data-binding->module db)]
+    (js/console.log "db->module" license)
     (as-> module m
           (assoc-in m [:name] name)
           (assoc-in m [:description] description)
@@ -141,6 +143,11 @@
           (assoc-in m [:content :output-parameters] output-parameters)
           (assoc-in m [:data-accept-content-types] data-bindings)
           (cond-> m (:cent-amount-daily price) (assoc-in [:price] price))
+          (cond-> m (:license-url license)
+                  (assoc m :license (cond-> {:url  (:license-url license)
+                                             :name (:license-name license)}
+                                            (:license-description license)
+                                            (assoc :description (:license-description license)))))
           (sanitize-base m)
           (dissoc m :children))))
 
@@ -188,7 +195,7 @@
 
 (defn module->db
   [db {:keys [name description parent-path content data-accept-content-types
-              path logo-url subtype acl price] :as module}]
+              path logo-url subtype acl price license] :as module}]
   (-> db
       (assoc-in [::spec/module-common ::spec/name] name)
       (assoc-in [::spec/module-common ::spec/description] description)
@@ -207,7 +214,12 @@
       (assoc-in [::spec/module-common ::spec/private-registries]
                 (:private-registries content))
       (assoc-in [::spec/module-common ::spec/price]
-                price)))
+                price)
+      (assoc-in [::spec/module-common ::spec/license]
+                (when (some? license)
+                  {:license-name        (:name license)
+                   :license-description (:description license)
+                   :license-url         (:url license)}))))
 
 
 (defn mandatory-name

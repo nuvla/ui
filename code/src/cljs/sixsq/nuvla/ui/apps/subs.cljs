@@ -20,6 +20,13 @@
     (::spec/subtype module-common)))
 
 
+(reg-sub
+  ::module-license
+  :<- [::module-common]
+  (fn [module-common _]
+    (::spec/license module-common)))
+
+
 ;; Validation
 
 ; Is the form valid?

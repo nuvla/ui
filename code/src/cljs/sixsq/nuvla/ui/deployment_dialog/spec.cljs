@@ -89,7 +89,7 @@
                                    :icon    "file alternate outline"}
                   :license        {:step-id :license
                                    :icon    "book"}
-                  :billing        {:step-id :billing
+                  :pricing        {:step-id :pricing
                                    :icon    "euro"}
                   :summary        {:step-id :summary
                                    :icon    "info"}})

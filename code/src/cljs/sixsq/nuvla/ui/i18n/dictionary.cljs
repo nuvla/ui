@@ -7,6 +7,7 @@
 (def dictionary
   {:en {:lang                                      "English"
 
+        :period                                    "period"
         :sales-dashboard                           "Sales dashboard"
         :accept-license                            "I accept the license agreement"
         :accept-costs                              "I accept the costs"
@@ -567,6 +568,7 @@
 
    :fr {:lang                                      "Français"
 
+        :period                                    "période"
         :sales-dashboard                           "Tableau de bord des ventes"
         :accept-license                            "J'accepte le contrat de licence"
         :accept-costs                              "J'accepte les coûts"

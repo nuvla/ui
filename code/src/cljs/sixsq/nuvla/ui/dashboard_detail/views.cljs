@@ -266,7 +266,7 @@
      :count (count resources)]))
 
 
-(defn pricing-section
+(defn billing-section
   []
   (let [tr               (subscribe [::i18n-subs/tr])
         upcoming-invoice (subscribe [::subs/upcoming-invoice])]
@@ -278,16 +278,16 @@
 
         [uix/Accordion
          [:div
-          [:b "Details: "]
+          [:b (str/capitalize (@tr [:details])) ": "]
           description
 
           [:br]
 
-          [:b "Period: "]
+          [:b (str/capitalize (@tr [:period])) ": "]
           (str (some-> period :start (time/time->format "LL" locale))
                " - "
                (some-> period :end (time/time->format "LL" locale)))]
-         :label "Pricing"
+         :label (str/capitalize (@tr [:billing]))
          :default-open false
          :count (when total (str (if (= currency "eur") "€" currency)
                                  " " (general-utils/format "%.2f" total)))]))))
@@ -699,5 +699,5 @@
         [parameters-section]
         [env-vars-section]
         (when (:subscription-id @deployment)
-          [pricing-section])
+          [billing-section])
         [jobs-section]]])))

@@ -37,7 +37,7 @@
                            :env-variables @env-variables-completed?
                            :registries @registries-completed?
                            :license @license-completed?
-                           :billing @price-completed?
+                           :pricing @price-completed?
                            completed?)
               :active    (= step-id @active-step)}
      [ui/Icon {:name icon}]
@@ -93,7 +93,7 @@
                                 :checked   @license-accepted?
                                 :on-change (ui-callback/checked
                                              #(dispatch [::events/set-license-accepted? %]))}]]]
-       :billing [ui/Segment
+       :pricing [ui/Segment
                  [:p (str (@tr [:one-day-trial-deployment])) " " (@tr [:deployment-will-cost])
                   [:b (if (>= (:cent-amount-daily @price) 100)
                         (str (float (/ (:cent-amount-daily @price) 100)) "€/" (@tr [:day]))
@@ -131,7 +131,7 @@
                             :env-variables
                             (when (= module-subtype "application") :files)
                             (when @license :license)
-                            (when @price :billing)
+                            (when @price :pricing)
                             :summary]
             visible-steps  (remove nil? steps)]
         [ui/Modal (cond-> {:open       @visible?

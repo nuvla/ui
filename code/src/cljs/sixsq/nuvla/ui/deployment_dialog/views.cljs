@@ -28,7 +28,7 @@
         cred-id                  (subscribe [::subs/selected-credential-id])
         infra-registries-creds   (subscribe [::subs/infra-registries-creds])
         license-completed?       (subscribe [::subs/license-completed?])
-        price-completed?          (subscribe [::subs/price-completed?])]
+        price-completed?         (subscribe [::subs/price-completed?])]
     [ui/Step {:link      true
               :on-click  #(dispatch [::events/set-active-step step-id])
               :completed (case step-id
@@ -69,8 +69,11 @@
 
 (defn step-content
   [active-step]
-  (let [price   (subscribe [::subs/price])
-        license (subscribe [::subs/license])]
+  (let [tr                (subscribe [::i18n-subs/tr])
+        price             (subscribe [::subs/price])
+        license           (subscribe [::subs/license])
+        license-accepted? (subscribe [::subs/license-completed?])
+        price-accepted?   (subscribe [::subs/price-completed?])]
     [ui/Segment style/autoscroll-y
      (case active-step
        :data [data-step/content]
@@ -81,21 +84,22 @@
        :license [ui/Segment
                  [ui/Container
                   [:p
-                   [:b "Do you accept the following license: "]
+                   [:b (@tr [:define-price])]
                    [:a {:href   (:url @license)
                         :target "_blank"} (:name @license)]]
                   (when (:description @license)
                     [:p (:description @license)])
-                  [ui/Checkbox {:label     "I accept the license agreement"
+                  [ui/Checkbox {:label     (@tr [:accept-license])
+                                :checked   @license-accepted?
                                 :on-change (ui-callback/checked
                                              #(dispatch [::events/set-license-accepted? %]))}]]]
        :billing [ui/Segment
-                 [:p "You have one day trial for this deployment.
-                 After the trial period end it will cost : "
+                 [:p (str (@tr [:one-day-trial-deployment])) " " (@tr [:deployment-will-cost])
                   [:b (if (>= (:cent-amount-daily @price) 100)
-                        (str (float (/ (:cent-amount-daily @price) 100)) "€/day")
-                        (str (:cent-amount-daily @price) "ct€/day"))]]
-                 [ui/Checkbox {:label     "I accept the costs"
+                        (str (float (/ (:cent-amount-daily @price) 100)) "€/" (@tr [:day]))
+                        (str (:cent-amount-daily @price) "ct€/" (@tr [:day])))]]
+                 [ui/Checkbox {:label     (@tr [:accept-costs])
+                               :checked   @price-accepted?
                                :on-change (ui-callback/checked
                                             #(dispatch [::events/set-price-accepted? %]))}]]
        :summary [summary-step/content]

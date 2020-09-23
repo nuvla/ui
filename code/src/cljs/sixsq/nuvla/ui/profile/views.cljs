@@ -806,12 +806,13 @@
 
 (defn DashboradVendor
   []
-  (let [vendor (subscribe [::subs/vendor])]
+  (let [tr     (subscribe [::i18n-subs/tr])
+        vendor (subscribe [::subs/vendor])]
     (when (general-utils/can-operation? "dashboard" @vendor)
       [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/" (:id @vendor) "/dashboard")
                 :method "post"
                 :style  {:color "grey"}}
-       [ui/Button {:type "submit", :primary true} "Sales dashboard"]])))
+       [ui/Button {:type "submit", :primary true} (@tr [:sales-dashboard])]])))
 
 
 (defn StripeConnect

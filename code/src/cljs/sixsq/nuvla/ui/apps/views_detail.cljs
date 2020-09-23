@@ -711,7 +711,7 @@
         [ui/TableRow
          [ui/TableCell {:collapsing true
                         :style      {:padding-bottom 8}}
-          (if multiple? "private registries" "private regitry")]
+          (if multiple? "private registries" "private registry")]
          [ui/TableCell
           (if @editable?
             [ui/Dropdown
@@ -742,10 +742,11 @@
       (let [amount (:cent-amount-daily @price)]
         [uix/Accordion
          [:<>
-          [:div "Price"
-           [:span ff/nbsp (ff/help-popup "Define a price for your software.")]]
+          [:div (str/capitalize (@tr [:price]))
+           [:span ff/nbsp (ff/help-popup (@tr [:define-price]))]]
           (if @editable?
-            [ui/Input {:labelPosition "right", :type "text", :placeholder "Amount"
+            [ui/Input {:labelPosition "right", :type "text"
+                       :placeholder   (str/capitalize (@tr [:amount]))
                        :error         (not (s/valid? ::spec/cent-amount-daily amount))}
              [:input {:type          "number"
                       :step          1
@@ -758,19 +759,19 @@
                                                        (js/parseInt %))])
                                           (dispatch [::main-events/changes-protection? true])
                                           (dispatch [::events/validate-form])))}]
-             [ui/Label "ct€/day"]]
-            [ui/Label (str amount "ct€/day")]
+             [ui/Label "ct€/" (@tr [:day])]]
+            [ui/Label (str amount "ct€/" (@tr [:day]))]
             )
-          [:p "Price per month: "
+          [:p (@tr [:price-per-month])
            [:b (str
                  (if (pos-int? amount)
                    (general-utils/format "%.2f" (* amount 0.3))
                    "...")
-                 "€/month")]]]
-         :label "Price"
+                 "€/" (str/capitalize (@tr [:month])))]]]
+         :label (str/capitalize (@tr [:price]))
          :count (if (>= amount 100)
-                  (str (float (/ amount 100)) "€/day")
-                  (str amount "ct€/day"))
+                  (str (float (/ amount 100)) "€/" (@tr [:day]))
+                  (str amount "ct€/" (@tr [:day])))
          :default-open true]))))
 
 
@@ -803,6 +804,6 @@
             :editable? @editable?, :spec ::spec/license-url, :validate-form? @validate-form?,
             :required? true, :default-value (:license-url @license),
             :on-change (partial on-change ::events/license-url)]]]
-         [ui/Button {:on-click #(reset! add-license true)} "Add licence"])
-       :label "License"
+         [ui/Button {:on-click #(reset! add-license true)} (@tr [:add-license])])
+       :label (str/capitalize (@tr [:license]))
        :default-open true])))

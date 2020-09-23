@@ -59,7 +59,8 @@
        [ui/Button {:fluid    true
                    :primary  true
                    :icon     :cart
-                   :content  (str "launch for " (/ (:cent-amount-daily price) 100) "€/day")
+                   :content  (str (@tr [:launch-for])
+                                  (/ (:cent-amount-daily price) 100) "€/" (@tr [:day]))
                    :on-click #(dispatch [::main-events/subscription-required-dispatch
                                          [::deployment-dialog-events/create-deployment
                                           (:id module) :infra-services]])}]

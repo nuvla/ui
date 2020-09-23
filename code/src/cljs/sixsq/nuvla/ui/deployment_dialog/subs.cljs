@@ -57,6 +57,20 @@
 
 
 (reg-sub
+  ::price
+  :<- [::module]
+  (fn [module]
+    (:price module)))
+
+
+(reg-sub
+  ::license
+  :<- [::module]
+  (fn [module]
+    (:license module)))
+
+
+(reg-sub
   ::files
   :<- [::module-content]
   (fn [module-content]
@@ -239,6 +253,18 @@
 
 
 (reg-sub
+  ::license-completed?
+  (fn [db]
+    (::spec/license-accepted? db)))
+
+
+(reg-sub
+  ::price-completed?
+  (fn [db]
+    (::spec/price-accepted? db)))
+
+
+(reg-sub
   ::registries-creds
   (fn [db]
     (::spec/registries-creds db)))
@@ -282,11 +308,17 @@
   :<- [::credentials-completed?]
   :<- [::env-variables-completed?]
   :<- [::registries-completed?]
+  :<- [::license]
+  :<- [::license-completed?]
+  :<- [::price]
+  :<- [::price-completed?]
   (fn [[deployment data-completed? data-step-active?
         credentials-completed? env-variables-completed?
-        registries-completed?]]
+        registries-completed? license license-completed? price price-completed?]]
     (or (not deployment)
         (and (not data-completed?) data-step-active?)
         (not credentials-completed?)
         (not env-variables-completed?)
-        (not registries-completed?))))
+        (not registries-completed?)
+        (and price (not price-completed?))
+        (and license (not license-completed?)))))

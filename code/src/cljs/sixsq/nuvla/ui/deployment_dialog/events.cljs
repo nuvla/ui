@@ -208,7 +208,8 @@
                                      ::spec/cloud-filter nil
                                      ::spec/selected-cloud nil
                                      ::spec/cloud-infra-services nil
-                                     ::spec/data-clouds nil)
+                                     ::spec/data-clouds nil
+                                     ::spec/license-accepted? false)
          ::cimi-api-fx/add [:deployment data on-success]}
         old-deployment-id (assoc ::cimi-api-fx/delete [old-deployment-id #() :on-error #()])))))
 
@@ -355,3 +356,15 @@
   ::set-infra-service-filter
   (fn [db [_ cloud]]
     (set-data-infra-service-and-filter db cloud)))
+
+
+(reg-event-db
+  ::set-license-accepted?
+  (fn [db [_ accepted?]]
+    (assoc db ::spec/license-accepted? accepted?)))
+
+
+(reg-event-db
+  ::set-price-accepted?
+  (fn [db [_ accepted?]]
+    (assoc db ::spec/price-accepted? accepted?)))

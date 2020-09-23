@@ -46,6 +46,10 @@
 
 (s/def ::step-states (s/map-of ::step-id ::step-state))
 
+(s/def ::license-accepted? boolean?)
+
+(s/def ::price-accepted? boolean?)
+
 
 (s/def ::db (s/keys :req [::deploy-modal-visible?
                           ::loading-deployment?
@@ -65,6 +69,8 @@
                           ::selected-cloud
                           ::cloud-filter
                           ::cloud-infra-services            ;; from search to display data
+                          ::license-accepted?
+                          ::price-accepted?
 
                           ::active-step
                           ::data-step-active?
@@ -81,6 +87,8 @@
                                    :icon    "list alternate outline"}
                   :files          {:step-id :files
                                    :icon    "file alternate outline"}
+                  :license        {:step-id :license
+                                   :icon    "book"}
                   :billing        {:step-id :billing
                                    :icon    "euro"}
                   :summary        {:step-id :summary
@@ -107,4 +115,6 @@
                ::cloud-infra-services            nil
                ::active-step                     :data
                ::data-step-active                true
+               :license-accepted?                false
+               ::price-accepted?                 false
                ::step-states                     step-states})

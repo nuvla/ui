@@ -122,7 +122,6 @@
         urls               (urls->module db)
         output-parameters  (output-parameters->module db)
         data-bindings      (data-binding->module db)]
-    (js/console.log "db->module" license)
     (as-> module m
           (assoc-in m [:name] name)
           (assoc-in m [:description] description)

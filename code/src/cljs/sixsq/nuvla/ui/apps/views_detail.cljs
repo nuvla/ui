@@ -785,7 +785,6 @@
         license        (subscribe [::subs/module-license])
         add-license    (r/atom false)]
     (fn []
-      (js/console.log @license)
       [uix/Accordion
        (if (or (some? @license)
                @add-license)

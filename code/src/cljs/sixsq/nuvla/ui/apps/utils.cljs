@@ -143,10 +143,11 @@
           (assoc-in m [:data-accept-content-types] data-bindings)
           (cond-> m (:cent-amount-daily price) (assoc-in [:price] price))
           (cond-> m (:license-url license)
-                  (assoc m :license (cond-> {:url  (:license-url license)
-                                             :name (:license-name license)}
-                                            (:license-description license)
-                                            (assoc :description (:license-description license)))))
+                  (assoc :license
+                         (cond-> {:url  (:license-url license)
+                                  :name (:license-name license)}
+                                 (not (str/blank? (:license-description license)))
+                                 (assoc :description (:license-description license)))))
           (sanitize-base m)
           (dissoc m :children))))
 

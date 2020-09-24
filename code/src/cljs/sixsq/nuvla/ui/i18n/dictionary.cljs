@@ -7,6 +7,9 @@
 (def dictionary
   {:en {:lang                                      "English"
 
+        :sixsq-license                             "SixSq license"
+        :custom-license                            "Custom license"
+        :select-license                            "Select a license:"
         :period                                    "period"
         :sales-dashboard                           "Sales dashboard"
         :accept-license                            "I accept the license agreement"
@@ -568,6 +571,9 @@
 
    :fr {:lang                                      "Français"
 
+        :sixsq-license                             "Licence SixSq"
+        :custom-license                            "Licence personnalisée"
+        :select-license                            "Sélectionner une licence :"
         :period                                    "période"
         :sales-dashboard                           "Tableau de bord des ventes"
         :accept-license                            "J'accepte le contrat de licence"

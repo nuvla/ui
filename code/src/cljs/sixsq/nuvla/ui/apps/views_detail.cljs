@@ -740,70 +740,94 @@
         price     (subscribe [::subs/price])]
     (fn []
       (let [amount (:cent-amount-daily @price)]
-        [uix/Accordion
-         [:<>
-          [:div (str/capitalize (@tr [:price]))
-           [:span ff/nbsp (ff/help-popup (@tr [:define-price]))]]
-          (if @editable?
-            [ui/Input {:labelPosition "right", :type "text"
-                       :placeholder   (str/capitalize (@tr [:amount]))
-                       :error         (not (s/valid? ::spec/cent-amount-daily amount))}
-             [:input {:type          "number"
-                      :step          1
-                      :min           1
-                      :default-value amount
-                      :on-change     (ui-callback/input-callback
-                                       #(do
-                                          (dispatch [::events/cent-amount-daily
-                                                     (when-not (str/blank? %)
-                                                       (js/parseInt %))])
-                                          (dispatch [::main-events/changes-protection? true])
-                                          (dispatch [::events/validate-form])))}]
-             [ui/Label "ct€/" (@tr [:day])]]
-            [ui/Label (str amount "ct€/" (@tr [:day]))]
-            )
-          [:p (@tr [:price-per-month])
-           [:b (str
-                 (if (pos-int? amount)
-                   (general-utils/format "%.2f" (* amount 0.3))
-                   "...")
-                 "€/" (str/capitalize (@tr [:month])))]]]
-         :label (str/capitalize (@tr [:price]))
-         :count (if (>= amount 100)
-                  (str (float (/ amount 100)) "€/" (@tr [:day]))
-                  (str amount "ct€/" (@tr [:day])))
-         :default-open true]))))
+        (when (or @editable? (some? @price))
+          [uix/Accordion
+           [:<>
+            [:div (str/capitalize (@tr [:price]))
+             [:span ff/nbsp (ff/help-popup (@tr [:define-price]))]]
+            (if @editable?
+              [ui/Input {:labelPosition "right", :type "text"
+                         :placeholder   (str/capitalize (@tr [:amount]))
+                         :error         (not (s/valid? ::spec/cent-amount-daily amount))}
+               [:input {:type          "number"
+                        :step          1
+                        :min           1
+                        :default-value amount
+                        :on-change     (ui-callback/input-callback
+                                         #(do
+                                            (dispatch [::events/cent-amount-daily
+                                                       (when-not (str/blank? %)
+                                                         (js/parseInt %))])
+                                            (dispatch [::main-events/changes-protection? true])
+                                            (dispatch [::events/validate-form])))}]
+               [ui/Label "ct€/" (@tr [:day])]]
+              [ui/Label (str amount "ct€/" (@tr [:day]))]
+              )
+            [:p (@tr [:price-per-month])
+             [:b (str
+                   (if (pos-int? amount)
+                     (general-utils/format "%.2f" (* amount 0.3))
+                     "...")
+                   "€/" (str/capitalize (@tr [:month])))]]]
+           :label (str/capitalize (@tr [:price]))
+           :count (if (>= amount 100)
+                    (str (float (/ amount 100)) "€/" (@tr [:day]))
+                    (str amount "ct€/" (@tr [:day])))
+           :default-open true])))))
 
 
 (defn license-section []
   (let [tr             (subscribe [::i18n-subs/tr])
         editable?      (subscribe [::subs/editable?])
         validate-form? (subscribe [::subs/validate-form?])
+        license        (subscribe [::subs/module-license])
         on-change      (fn [update-event-kw value]
                          (dispatch [update-event-kw value])
                          (dispatch [::main-events/changes-protection? true])
                          (dispatch [::events/validate-form]))
-        license        (subscribe [::subs/module-license])
-        add-license    (r/atom false)]
+        sixsq-license  {:license-name        "SixSq"
+                        :license-description "SixSq license"
+                        :license-url         "https://sixsq.com/license"}] ;; FIXME
     (fn []
-      [uix/Accordion
-       (if (or (some? @license)
-               @add-license)
-         [ui/Table {:compact    true
-                    :definition true}
-          [ui/TableBody
-           [uix/TableRowField (@tr [:name]), :key "license-name", :editable? @editable?,
-            :spec ::spec/license-name, :validate-form? @validate-form?,
-            :required? true, :default-value (:license-name @license),
-            :on-change (partial on-change ::events/license-name)]
-           [uix/TableRowField (@tr [:description]), :key "license-description",
-            :editable? @editable?, :spec ::spec/license-description, :validate-form? @validate-form?,
-            :required? false, :default-value (:license-description @license),
-            :on-change (partial on-change ::events/license-description)]
-           [uix/TableRowField (@tr [:url]), :key "license-url",
-            :editable? @editable?, :spec ::spec/license-url, :validate-form? @validate-form?,
-            :required? true, :default-value (:license-url @license),
-            :on-change (partial on-change ::events/license-url)]]]
-         [ui/Button {:on-click #(reset! add-license true)} (@tr [:add-license])])
-       :label (str/capitalize (@tr [:license]))
-       :default-open true])))
+      (let [sixsq-selected? (= (:license-name @license)
+                               (:license-name sixsq-license))
+            is-editable?    (and @editable? (not sixsq-selected?))]
+        (when (or @editable? (some? @license))
+          [uix/Accordion
+           [ui/Form
+            (when @editable?
+              [:<>
+               [ui/FormField [:b (@tr [:select-license])]]
+               [ui/FormRadio {:label     (@tr [:sixsq-license])
+                              :checked   sixsq-selected?
+                              :on-change #(do
+                                            (on-change ::events/license-name
+                                                       (:license-name sixsq-license))
+                                            (on-change ::events/license-description
+                                                       (:license-description sixsq-license))
+                                            (on-change ::events/license-url
+                                                       (:license-url sixsq-license)))}]
+               [ui/FormRadio {:label     (@tr [:custom-license])
+                              :checked   (and (some? (:license-name @license))
+                                              (not= (:license-name @license)
+                                                    (:license-name sixsq-license)))
+                              :on-change #(do (on-change ::events/license-name "")
+                                              (on-change ::events/license-description "")
+                                              (on-change ::events/license-url ""))}]])
+            [ui/FormField
+             [ui/Table {:compact true, :definition true}
+              [ui/TableBody
+               [uix/TableRowField (@tr [:name]), :key "license-name", :editable? is-editable?,
+                :spec ::spec/license-name, :validate-form? @validate-form?,
+                :required? true, :default-value (:license-name @license),
+                :on-change (partial on-change ::events/license-name)]
+               [uix/TableRowField (@tr [:description]), :key "license-description",
+                :editable? is-editable?, :spec ::spec/license-description, :validate-form? @validate-form?,
+                :required? false, :default-value (:license-description @license),
+                :on-change (partial on-change ::events/license-description)]
+               [uix/TableRowField (@tr [:url]), :key "license-url",
+                :editable? is-editable?, :spec ::spec/license-url, :validate-form? @validate-form?,
+                :required? true, :default-value (:license-url @license),
+                :on-change (partial on-change ::events/license-url)]]]]]
+           :label (str/capitalize (@tr [:license]))
+           :default-open true])))))

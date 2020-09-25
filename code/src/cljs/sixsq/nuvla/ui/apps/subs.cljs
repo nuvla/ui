@@ -95,24 +95,44 @@
 
 
 (reg-sub
-  ::private-registries
-  (fn [db]
-    (get-in db [::spec/module-common ::spec/private-registries])))
-
-
-(reg-sub
   ::private-registries-options
   (fn [db]
     (let [registries-infra        (::spec/registries-infra db)
-          private-registries-set  (-> db
-                                      (get-in [::spec/module-common ::spec/private-registries])
-                                      set)
+          private-registries-set  (->> (get-in db [::spec/module-common ::spec/registries])
+                                       vals
+                                       (map ::spec/registry-id)
+                                       (remove nil?)
+                                       set)
           registries-infra-set    (set (map :id registries-infra))
-          not-existing-registries (set/difference private-registries-set registries-infra-set)]
+          not-existing-registries (set/difference private-registries-set registries-infra-set)
+          res (map (fn [{:keys [id name]}]
+                     {:key id, :value id, :text (or name id)})
+                   (concat registries-infra
+                           (map (fn [id] {:id id}) not-existing-registries)))]
       (map (fn [{:keys [id name]}]
              {:key id, :value id, :text (or name id)})
            (concat registries-infra
                    (map (fn [id] {:id id}) not-existing-registries))))))
+
+
+(reg-sub
+  ::registries-credentials
+  (fn [db]
+    (group-by :parent (::spec/registries-credentials db))))
+
+
+(reg-sub
+  ::registries-credentials-options
+  :<- [::registries-credentials]
+  (fn [registries-credentials [_ registry-id]]
+    (let [creds (get registries-credentials registry-id [])]
+      (map (fn [{:keys [id name]}] {:key id, :value id, :text (or name id)}) creds))))
+
+
+(reg-sub
+  ::registries
+  (fn [db]
+    (get-in db [::spec/module-common ::spec/registries])))
 
 
 (reg-sub
@@ -162,9 +182,9 @@
     (or (::spec/validate-docker-compose db)
         (let [docker-compose-valid (get-in db [::spec/module-immutable :valid])]
           (when (boolean? docker-compose-valid)
-           {:valid?    docker-compose-valid
-            :loading?  false
-            :error-msg (get-in db [::spec/module-immutable :validation-message] "")})))))
+            {:valid?    docker-compose-valid
+             :loading?  false
+             :error-msg (get-in db [::spec/module-immutable :validation-message] "")})))))
 
 
 (reg-sub

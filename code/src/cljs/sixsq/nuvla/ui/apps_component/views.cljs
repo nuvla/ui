@@ -113,9 +113,7 @@
      [^{:key "summary-docker-image"}
       [docker-image]
       ^{:key "summary-architectures"}
-      [architectures]
-      ^{:key "summary-private-registries"}
-      [apps-views-detail/private-registries false]]]))
+      [architectures]]]))
 
 
 (defn single-port
@@ -362,6 +360,7 @@
                          :read-only     (not @editable?)}]
          [apps-views-detail/MenuBar]
          [summary]
+         [apps-views-detail/registries-section]
          (when (and @stripe @vendor)
            [apps-views-detail/price-section])
          [apps-views-detail/license-section]

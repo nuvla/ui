@@ -47,9 +47,7 @@
                         :options   [{:key "application", :text "Docker", :value "application"}
                                     {:key   "application_kubernetes", :text "Kubernetes",
                                      :value "application_kubernetes"}]}]
-          @module-subtype)]]
-      ^{:key "summary-private-registries"}
-      [apps-views-detail/private-registries true]]]))
+          @module-subtype)]]]]))
 
 
 (defn single-file [{:keys [id ::spec/file-name ::spec/file-content]}]
@@ -232,6 +230,7 @@
                          :read-only     (not @editable?)}]
          [apps-views-detail/MenuBar]
          [summary]
+         [apps-views-detail/registries-section]
          (when (and @stripe @vendor)
            [apps-views-detail/price-section])
          [apps-views-detail/license-section]

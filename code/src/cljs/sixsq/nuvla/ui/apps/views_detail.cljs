@@ -697,41 +697,77 @@
        :default-open false])))
 
 
-(defn private-registries
-  [multiple?]
-  (let [registries         (subscribe [::subs/private-registries])
-        registries-options (subscribe [::subs/private-registries-options])
-        form-valid?        (subscribe [::subs/form-valid?])
-        editable?          (subscribe [::subs/editable?])
-        local-validate?    (r/atom false)]
+(defn single-registry
+  [{:keys [id ::spec/registry-id ::spec/registry-cred-id] :as registry}]
+  (let [editable?               (subscribe [::subs/editable?])
+        form-valid?             (subscribe [::subs/form-valid?])
+        validate?               (not @form-valid?)
+        registries-options      (subscribe [::subs/private-registries-options])
+        registries-cred-options (subscribe [::subs/registries-credentials-options registry-id])]
+    [ui/TableRow {:error (and validate?
+                              (not (s/valid? ::spec/single-registry registry)))}
+     [ui/TableCell {:floated :left}
+      [ui/Dropdown
+       {:selection     true
+        :default-value registry-id
+        :disabled      (not @editable?)
+        :options       @registries-options
+        :on-change     (ui-callback/value
+                         #(do
+                            (dispatch [::main-events/changes-protection? true])
+                            (dispatch [::events/update-registry-id id %])
+                            (dispatch [::events/validate-form])))}]]
+     [ui/TableCell {:floated :left}
+      [ui/Dropdown
+       {:selection     true
+        :default-value registry-cred-id
+        :disabled      (not @editable?)
+        :options       @registries-cred-options
+        :on-change     (ui-callback/value
+                         #(do
+                            (dispatch [::main-events/changes-protection? true])
+                            (dispatch [::events/update-registry-cred-id id %])
+                            (dispatch [::events/validate-form])))}]]
+     (when @editable?
+       [ui/TableCell {:floated :right
+                      :align   :right}
+        [trash id ::events/remove-registry]])]))
+
+
+(defn registries-section []
+  (let [tr         (subscribe [::i18n-subs/tr])
+        editable?  (subscribe [::subs/editable?])
+        registries (subscribe [::subs/registries])
+        subtype    (subscribe [::subs/module-subtype])]
     (dispatch [::events/get-registries-infra])
-    (fn [multiple?]
-      (let [validate? (or @local-validate? (not @form-valid?))]
-        ^{:key @registries}
-        [ui/TableRow
-         [ui/TableCell {:collapsing true
-                        :style      {:padding-bottom 8}}
-          (if multiple? "private registries" "private registry")]
-         [ui/TableCell
-          (if @editable?
-            [ui/Dropdown
-             {:multiple      multiple?
-              :clearable     (not multiple?)
-              :selection     true
-              :default-value (if multiple? @registries (first @registries))
-              :options       @registries-options
-              :error         (and validate?
-                                  (not (s/valid? ::spec/private-registries @registries)))
-              :on-change     (ui-callback/value
-                               #(do
-                                  (reset! local-validate? true)
-                                  (dispatch [::events/private-registries
-                                             (if multiple?
-                                               %
-                                               (if (str/blank? %) [] [%]))])
-                                  (dispatch [::main-events/changes-protection? true])
-                                  (dispatch [::events/validate-form])))}]
-            [:span (str/join ", " @registries)])]]))))
+    (dispatch [::events/get-registries-credentials])
+    (fn []
+      [uix/Accordion
+       [:<>
+        [:div "Private registries"
+         [:span ff/nbsp (ff/help-popup "Private registries help")]]
+        (if (empty? @registries)
+          [ui/Message
+           "No private registries used"]
+          [:div
+           [ui/Table {:style {:margin-top 10}}
+            [ui/TableHeader
+             [ui/TableRow
+              [ui/TableHeaderCell {:content (r/as-element [utils/mandatory-name "Private registry"])}]
+              [ui/TableHeaderCell {:content "Credential"}]
+              (when @editable?
+                [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
+            [ui/TableBody
+             (for [[id registry] @registries]
+               ^{:key (str "registry-" id)}
+               [single-registry registry])]]])
+        (when (and @editable? (or (not= @subtype "component")
+                                  (and (= @subtype "component")
+                                       (zero? (count @registries)))))
+          [:div {:style {:padding-top 10}}
+           [plus ::events/add-registry]])]
+       :label "Private registries"
+       :count (count @registries)])))
 
 
 (defn price-section []
@@ -773,7 +809,7 @@
            :count (if (>= amount 100)
                     (str (float (/ amount 100)) "€/" (@tr [:day]))
                     (str amount "ct€/" (@tr [:day])))
-           :default-open true])))))
+           :default-open false])))))
 
 
 (defn license-section []
@@ -830,4 +866,5 @@
                 :required? true, :default-value (:license-url @license),
                 :on-change (partial on-change ::events/license-url)]]]]]
            :label (str/capitalize (@tr [:license]))
-           :default-open true])))))
+           :count (:license-name @license)
+           :default-open false])))))

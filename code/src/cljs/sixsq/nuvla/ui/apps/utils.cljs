@@ -78,6 +78,14 @@
                 env-description (assoc :description env-description))))))
 
 
+(defn registries->module
+  [db]
+  (let [registries             (-> db (get-in [::spec/module-common ::spec/registries]) vals)
+        private-registries     (map ::spec/registry-id registries)
+        credentials-registries (map ::spec/registry-cred-id registries)]
+    [private-registries credentials-registries]))
+
+
 (defn urls->module
   [db]
   (into
@@ -108,20 +116,21 @@
 
 (defn db->module
   [module commit-map db]
-  (let [name               (get-in db [::spec/module-common ::spec/name])
-        description        (get-in db [::spec/module-common ::spec/description])
-        parent-path        (get-in db [::spec/module-common ::spec/parent-path])
-        logo-url           (get-in db [::spec/module-common ::spec/logo-url])
-        subtype            (get-in db [::spec/module-common ::spec/subtype])
-        path               (get-in db [::spec/module-common ::spec/path])
-        acl                (get-in db [::spec/module-common ::spec/acl])
-        private-registries (get-in db [::spec/module-common ::spec/private-registries])
-        price              (get-in db [::spec/module-common ::spec/price])
-        license            (get-in db [::spec/module-common ::spec/license])
-        env-variables      (env-variables->module db)
-        urls               (urls->module db)
-        output-parameters  (output-parameters->module db)
-        data-bindings      (data-binding->module db)]
+  (let [name              (get-in db [::spec/module-common ::spec/name])
+        description       (get-in db [::spec/module-common ::spec/description])
+        parent-path       (get-in db [::spec/module-common ::spec/parent-path])
+        logo-url          (get-in db [::spec/module-common ::spec/logo-url])
+        subtype           (get-in db [::spec/module-common ::spec/subtype])
+        path              (get-in db [::spec/module-common ::spec/path])
+        acl               (get-in db [::spec/module-common ::spec/acl])
+        price             (get-in db [::spec/module-common ::spec/price])
+        license           (get-in db [::spec/module-common ::spec/license])
+        env-variables     (env-variables->module db)
+        [private-registries
+         registries-credentials] (registries->module db)
+        urls              (urls->module db)
+        output-parameters (output-parameters->module db)
+        data-bindings     (data-binding->module db)]
     (as-> module m
           (assoc-in m [:name] name)
           (assoc-in m [:description] description)
@@ -139,6 +148,9 @@
           (if (empty? private-registries)
             (update-in m [:content] dissoc :private-registries)
             (assoc-in m [:content :private-registries] private-registries))
+          (if (empty? registries-credentials)
+            (update-in m [:content] dissoc :registries-credentials)
+            (assoc-in m [:content :registries-credentials] registries-credentials))
           (assoc-in m [:content :output-parameters] output-parameters)
           (assoc-in m [:data-accept-content-types] data-bindings)
           (cond-> m (:cent-amount-daily price) (assoc-in [:price] price))
@@ -162,6 +174,16 @@
            ::spec/env-value       value
            ::spec/env-description description
            ::spec/env-required    (or required false)}])))
+
+
+(defn registries->db
+  [private-registries registries-credentials]
+  (into
+    (sorted-map)
+    (for [[id infra-id] (map-indexed vector private-registries)]
+      [id {:id                     id
+           ::spec/registry-id      infra-id
+           ::spec/registry-cred-id (nth registries-credentials id "")}])))
 
 
 (defn urls->db
@@ -211,8 +233,9 @@
                 (output-parameters->db (:output-parameters content)))
       (assoc-in [::spec/module-common ::spec/data-types]
                 (data-types->db data-accept-content-types))
-      (assoc-in [::spec/module-common ::spec/private-registries]
-                (:private-registries content))
+      (assoc-in [::spec/module-common ::spec/registries]
+                (registries->db (:private-registries content)
+                                (:registries-credentials content)))
       (assoc-in [::spec/module-common ::spec/price]
                 price)
       (assoc-in [::spec/module-common ::spec/license]

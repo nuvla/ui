@@ -208,10 +208,10 @@
             :on-change (partial on-change :description)]
            [uix/TableRowField "username", :editable? editable?, :required? true,
             :default-value username, :spec ::spec/username, :validate-form? @validate-form?,
-            :type :password, :on-change (partial on-change :username)]
+            :on-change (partial on-change :username)]
            [uix/TableRowField "password", :editable? editable?, :required? true,
             :default-value password, :spec ::spec/password, :validate-form? @validate-form?,
-            :on-change (partial on-change :password)]
+            :type :password, :on-change (partial on-change :password)]
            [row-infrastructure-services-selector ["registry"] nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
 

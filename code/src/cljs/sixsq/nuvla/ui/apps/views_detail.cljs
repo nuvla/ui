@@ -744,17 +744,18 @@
     (fn []
       [uix/Accordion
        [:<>
-        [:div "Private registries"
-         [:span ff/nbsp (ff/help-popup "Private registries help")]]
+        [:div (@tr [:private-registries])
+         [:span ff/nbsp (ff/help-popup (@tr [:private-registries-help]))]]
         (if (empty? @registries)
           [ui/Message
-           "No private registries used"]
+           (@tr [:private-registries-not-used])]
           [:div
            [ui/Table {:style {:margin-top 10}}
             [ui/TableHeader
              [ui/TableRow
-              [ui/TableHeaderCell {:content (r/as-element [utils/mandatory-name "Private registry"])}]
-              [ui/TableHeaderCell {:content "Credential"}]
+              [ui/TableHeaderCell
+               {:content (r/as-element [utils/mandatory-name (@tr [:private-registries])])}]
+              [ui/TableHeaderCell {:content (str/capitalize (@tr [:credential]))}]
               (when @editable?
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
             [ui/TableBody
@@ -766,7 +767,7 @@
                                        (zero? (count @registries)))))
           [:div {:style {:padding-top 10}}
            [plus ::events/add-registry]])]
-       :label "Private registries"
+       :label (@tr [:private-registries])
        :count (count @registries)])))
 
 

@@ -7,6 +7,9 @@
 (def dictionary
   {:en {:lang                                      "English"
 
+        :private-registries                        "Private registries"
+        :private-registries-help                   "When your module uses images coming from private registries, you should define them in this section."
+        :private-registries-not-used               "No private registries used"
         :sixsq-license                             "SixSq license"
         :custom-license                            "Custom license"
         :select-license                            "Select a license:"
@@ -571,6 +574,9 @@
 
    :fr {:lang                                      "Français"
 
+        :private-registries                        "Private registries"
+        :private-registries-help                   "Quand votre module utilise des images provenant de private registries, vous devez les définir dans cette section."
+        :private-registries-not-used               "Aucun private registry utilisé"
         :sixsq-license                             "Licence SixSq"
         :custom-license                            "Licence personnalisée"
         :select-license                            "Sélectionner une licence :"

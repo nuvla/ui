@@ -104,15 +104,23 @@
 
 (reg-event-fx
   ::set-infra-registries-creds
-  (fn [{db :db} [_ {creds :resources}]]
-    (let [infra-registries-creds (group-by :parent creds)
-          single-cred-choices    (filter #(= 1 (count (second %))) infra-registries-creds)]
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ {creds :resources}]]
+    (let [infra-registries-creds    (group-by :parent creds)
+          pre-selected-cred-ids-set (-> deployment
+                                        (get-in [:module :content :registries-credentials])
+                                        set)
+          single-cred-dispatch      (->> infra-registries-creds
+                                         (filter #(= 1 (count (second %))))
+                                         (mapv (fn [[infra-id [{cred-id :id}]]]
+                                                 [::set-credential-registry infra-id cred-id])))
+          pre-selected-cred-dispatch (->> creds
+                                          (filter #(contains? pre-selected-cred-ids-set (:id %)))
+                                          (mapv (fn [{infra-id :parent cred-id :id}]
+                                                  [::set-credential-registry infra-id cred-id])))
+          select-cred-dispatch (concat single-cred-dispatch pre-selected-cred-dispatch)]
       (cond-> {:db (assoc db ::spec/infra-registries-creds infra-registries-creds
                              ::spec/infra-registries-creds-loading? false)}
-              (seq single-cred-choices) (assoc :dispatch-n
-                                               (mapv (fn [[infra-id [{cred-id :id}]]]
-                                                       [::set-credential-registry infra-id cred-id])
-                                                     single-cred-choices))))))
+              (seq select-cred-dispatch) (assoc :dispatch-n select-cred-dispatch)))))
 
 
 (reg-event-fx

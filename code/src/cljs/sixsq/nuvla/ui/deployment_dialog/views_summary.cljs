@@ -44,7 +44,7 @@
      [ui/TableCell {:collapsing true} (@tr [:images-trust])]
      [ui/TableCell
       (cond
-        dct (for [[image-dct-name image-dct-trust] dct]
+        dct (for [[image-dct-name image-dct-trust] (into (sorted-map) dct)]
               ^{:key (str "image-dct-name-" image-dct-name)}
               [:<>
                [:span (when image-dct-trust

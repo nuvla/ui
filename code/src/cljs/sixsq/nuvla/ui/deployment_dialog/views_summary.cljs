@@ -41,7 +41,7 @@
     [ui/TableRow
      [ui/TableCell {:collapsing true}
       [ui/Icon {:name "image", :size "large"}]]
-     [ui/TableCell {:collapsing true} "Images trust"]       ;;fixme
+     [ui/TableCell {:collapsing true} (@tr [:images-trust])]
      [ui/TableCell
       (cond
         dct (for [[image-dct-name image-dct-trust] dct]

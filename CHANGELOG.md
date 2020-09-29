@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Updated
+
+  - Extended view for peripheral list in NuvlaBox details page, to cope with new resource telemetry attributes
+
 ## [2.7.0] - 2020-09-04
 
 ### Updated

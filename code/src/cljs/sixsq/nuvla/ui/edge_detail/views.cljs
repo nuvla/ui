@@ -111,7 +111,8 @@
              p-video-dev         :video-device
              p-data-gw-url       :local-data-gateway-endpoint
              p-data-sample       :raw-data-sample
-             p-additional-assets :additional-assets} @peripheral
+             p-additional-assets :additional-assets
+             p-resources         :resources} @peripheral
             actions (get-available-actions p-ops)]
 
         (when (pos? (compare p-updated @last-updated))
@@ -165,6 +166,27 @@
            [ui/TableRow
             [ui/TableCell "Updated"]
             [ui/TableCell (time/ago (time/parse-iso8601 p-updated) @locale)]]
+           (when p-resources
+             [ui/TableRow
+              [ui/TableCell "Resources"]
+              [ui/TableCell [ui/Grid {:columns   3,
+                                      :stackable true
+                                      :divided   "vertically"}
+                             (for [resource p-resources]
+                               [ui/GridRow
+                                [ui/GridColumn
+                                 [:div [:span {:style {:font-weight "bold"}}
+                                        "Unit: "]
+                                  (:unit resource)]]
+                                [ui/GridColumn
+                                 [:span [:span {:style {:font-weight "bold"}}
+                                         "Capacity: "]
+                                  (:capacity resource)]]
+                                (when (:load resource)
+                                  [ui/GridColumn
+                                   [:span [:span {:style {:font-weight "bold"}}
+                                           "Load: "]
+                                    (:load resource) "%"]])])]]])
            (when p-additional-assets
              [ui/TableRow
               [ui/TableCell "Additional Assets"]

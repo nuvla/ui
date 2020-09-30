@@ -2,9 +2,11 @@
 
 ## Unreleased
 
-### Updated
+### Added
 
-  - Extended view for peripheral list in NuvlaBox details page, to cope with new resource telemetry attributes
+  - Show if docker images are trusted on the summary of the deployment dialog
+  - Extended view for peripheral list in NuvlaBox details page, to cope with
+    new resource telemetry attributes
 
 ## [2.7.0] - 2020-09-04
 

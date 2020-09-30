@@ -32,6 +32,31 @@
                     (when description [:span description])]]]))
 
 
+(defn images-dct-row
+  []
+  (let [tr (subscribe [::i18n-subs/tr])
+        {:keys [error dct]} @(subscribe [::subs/check-dct])]
+
+    ^{:key "images-dct-row"}
+    [ui/TableRow
+     [ui/TableCell {:collapsing true}
+      [ui/Icon {:name "image", :size "large"}]]
+     [ui/TableCell {:collapsing true} (@tr [:images-trust])]
+     [ui/TableCell
+      (cond
+        dct (for [[image-dct-name image-dct-trust] (into (sorted-map) dct)]
+              ^{:key (str "image-dct-name-" image-dct-name)}
+              [:<>
+               [:span (when image-dct-trust
+                        {:style {:color "green"}})
+                (subs (str image-dct-name) 1) " " (when image-dct-trust
+                                                    [ui/Icon {:className "fas fa-medal"
+                                                              :color     "green"}])]
+               [:br]])
+        error [:p {:style {:color "red"}} error]
+        :else [ui/Icon {:name "circle notch" :loading true}])]]))
+
+
 (defn content
   []
   (let [data-step-active? (subscribe [::subs/data-step-active?])
@@ -45,4 +70,6 @@
       [infra-services-step/summary-row]
       (when @is-application? [files-step/summary-row])
       [env-variables-step/summary-row]
-      (when (seq @registries-creds) [registries-step/summary-row])]]))
+      (when (seq @registries-creds) [registries-step/summary-row])
+      [images-dct-row]
+      ]]))

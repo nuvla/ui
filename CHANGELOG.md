@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+  - Show if docker images are trusted on the summary of the deployment dialog
+
 ## [2.7.0] - 2020-09-04
 
 ### Updated

@@ -46,6 +46,8 @@
 
 (s/def ::step-states (s/map-of ::step-id ::step-state))
 
+(s/def ::check-dct any?)
+
 
 (s/def ::db (s/keys :req [::deploy-modal-visible?
                           ::loading-deployment?
@@ -68,7 +70,8 @@
 
                           ::active-step
                           ::data-step-active?
-                          ::step-states]))
+                          ::step-states
+                          ::check-dct]))
 
 
 (def step-states {:data           {:step-id :data
@@ -105,4 +108,5 @@
                ::cloud-infra-services            nil
                ::active-step                     :data
                ::data-step-active                true
-               ::step-states                     step-states})
+               ::step-states                     step-states
+               ::check-dct                       nil})

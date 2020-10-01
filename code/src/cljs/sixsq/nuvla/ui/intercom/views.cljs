@@ -1,12 +1,12 @@
 (ns sixsq.nuvla.ui.intercom.views
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.intercom.subs :as subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.intercom :as intercom]
-    [clojure.string :as str]))
+    [sixsq.nuvla.ui.utils.intercom :as intercom]))
 
 (defn widget
   []

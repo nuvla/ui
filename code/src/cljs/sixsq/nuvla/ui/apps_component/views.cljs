@@ -16,6 +16,9 @@
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.profile.events :as profile-events]
+    [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -110,9 +113,7 @@
      [^{:key "summary-docker-image"}
       [docker-image]
       ^{:key "summary-architectures"}
-      [architectures]
-      ^{:key "summary-private-registries"}
-      [apps-views-detail/private-registries false]]]))
+      [architectures]]]))
 
 
 (defn single-port
@@ -343,7 +344,10 @@
 (defn view-edit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        editable?     (subscribe [::apps-subs/editable?])]
+        editable?     (subscribe [::apps-subs/editable?])
+        stripe        (subscribe [::main-subs/stripe])
+        vendor        (subscribe [::profile-subs/vendor])]
+    (dispatch [::profile-events/search-existing-vendor])
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
@@ -356,6 +360,10 @@
                          :read-only     (not @editable?)}]
          [apps-views-detail/MenuBar]
          [summary]
+         [apps-views-detail/registries-section]
+         (when (and @stripe @vendor)
+           [apps-views-detail/price-section])
+         [apps-views-detail/license-section]
          [ports-section]
          [apps-views-detail/env-variables-section]
          [mounts-section]

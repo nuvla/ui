@@ -387,10 +387,63 @@
 
 ;; Private registries
 
+
 (reg-event-db
-  ::private-registries
-  (fn [db [_ private-registries]]
-    (assoc-in db [::spec/module-common ::spec/private-registries] private-registries)))
+  ::add-registry
+  (fn [db [_ registry]]
+    (let [id (-> db
+                 (get-in [::spec/module-common ::spec/registries])
+                 utils/sorted-map-new-idx)]
+      (assoc-in db [::spec/module-common ::spec/registries id]
+                (assoc registry :id id
+                                ::spec/registry-cred-id "")))))
+
+
+(reg-event-db
+  ::remove-registry
+  (fn [db [_ id]]
+    (update-in db [::spec/module-common ::spec/registries] dissoc id)))
+
+
+(reg-event-db
+  ::update-registry-id
+  (fn [db [_ id registry-id]]
+    (-> db
+        (assoc-in [::spec/module-common ::spec/registries
+                   id ::spec/registry-id] registry-id)
+        (assoc-in [::spec/module-common ::spec/registries
+                   id ::spec/registry-cred-id] ""))))
+
+
+(reg-event-db
+  ::update-registry-cred-id
+  (fn [db [_ id registry-cred-id]]
+    (assoc-in db [::spec/module-common ::spec/registries
+                  id ::spec/registry-cred-id] registry-cred-id)))
+
+
+(reg-event-db
+  ::cent-amount-daily
+  (fn [db [_ amount]]
+    (assoc-in db [::spec/module-common ::spec/price] {:cent-amount-daily amount
+                                                      :currency          "EUR"})))
+
+(reg-event-db
+  ::license-name
+  (fn [db [_ name]]
+    (assoc-in db [::spec/module-common ::spec/license :license-name] name)))
+
+
+(reg-event-db
+  ::license-description
+  (fn [db [_ description]]
+    (assoc-in db [::spec/module-common ::spec/license :license-description] description)))
+
+
+(reg-event-db
+  ::license-url
+  (fn [db [_ url]]
+    (assoc-in db [::spec/module-common ::spec/license :license-url] url)))
 
 
 (reg-event-db
@@ -408,6 +461,23 @@
        :select "id, name"
        :order  "name:asc, id:asc"
        :last   10000} #(dispatch [::set-registries-infra %])]}))
+
+
+(reg-event-db
+  ::set-registries-credentials
+  (fn [db [_ {resources :resources}]]
+    (assoc db ::spec/registries-credentials resources)))
+
+
+(reg-event-fx
+  ::get-registries-credentials
+  (fn [_ _]
+    {::cimi-api-fx/search
+     [:credential
+      {:filter "subtype='infrastructure-service-registry'"
+       :select "id, name, parent"
+       :order  "name:asc, id:asc"
+       :last   10000} #(dispatch [::set-registries-credentials %])]}))
 
 
 (reg-event-fx

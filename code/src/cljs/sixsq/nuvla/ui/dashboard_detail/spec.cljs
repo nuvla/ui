@@ -31,6 +31,8 @@
 
 (s/def ::deployment-log any?)
 
+(s/def ::upcoming-invoice any?)
+
 
 (s/def ::db (s/keys :req [::loading?
                           ::deployment
@@ -44,7 +46,8 @@
                           ::deployment-log-service
                           ::deployment-log-since
                           ::deployment-log-play?
-                          ::deployment-log]))
+                          ::deployment-log
+                          ::upcoming-invoice]))
 
 
 (defn default-since []
@@ -64,4 +67,5 @@
                ::deployment-log-service    nil
                ::deployment-log-since      (default-since)
                ::deployment-log-play?      false
-               ::deployment-log            nil})
+               ::deployment-log            nil
+               ::upcoming-invoice          nil})

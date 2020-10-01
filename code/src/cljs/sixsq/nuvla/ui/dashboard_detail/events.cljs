@@ -17,15 +17,28 @@
   (fn [db [_ module]]
     (assoc db ::spec/module-versions (:versions module))))
 
+
+(reg-event-db
+  ::set-upcoming-invoice
+  (fn [db [_ upcoming-invoice]]
+    (assoc db ::spec/upcoming-invoice upcoming-invoice)))
+
+
 (reg-event-fx
   ::set-deployment
-  (fn [{{:keys [::spec/module-versions] :as db} :db} [_ resource]]
-    (let [module-href (get-in resource [:module :href])]
+  (fn [{{:keys [::spec/module-versions
+                ::spec/upcoming-invoice] :as db} :db}
+       [_ {:keys [id module subscription-id] :as resource}]]
+    (let [module-href (:href module)]
       (cond-> {:db (assoc db ::spec/loading? false
                              ::spec/deployment resource)}
               (and (not module-versions)
                    module-href) (assoc ::cimi-api-fx/get
-                                       [module-href #(dispatch [::set-module-versions %])])))))
+                                       [module-href #(dispatch [::set-module-versions %])])
+              (and (nil? upcoming-invoice)
+                   subscription-id) (assoc ::cimi-api-fx/operation
+                                           [id "upcoming-invoice"
+                                            #(dispatch [::set-upcoming-invoice %])])))))
 
 
 (reg-event-db
@@ -57,9 +70,10 @@
 
 
 (reg-event-db
-  ::clear-module
+  ::reset-db
   (fn [db]
-    (assoc db ::spec/module-versions nil)))
+    (assoc db ::spec/module-versions nil
+              ::spec/upcoming-invoice nil)))
 
 
 (reg-event-fx

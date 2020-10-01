@@ -10,16 +10,21 @@
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.general :as utils]))
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (reg-event-fx
-  ::close-deploy-modal
-  (fn [{{:keys [::spec/deployment] :as db} :db} _]
-    (cond-> {:db (merge db spec/defaults)}
-            (= (:state deployment) "CREATED") (assoc ::cimi-api-fx/delete [(:id deployment) #()]))))
+  ::reset
+  (fn [{db :db} _]
+    {:db (merge db spec/defaults)}))
+
+
+(reg-event-fx
+  ::delete-deployment
+  (fn [_ [_ id]]
+    {::cimi-api-fx/delete [id #()]}))
 
 
 (reg-event-fx
@@ -105,15 +110,23 @@
 
 (reg-event-fx
   ::set-infra-registries-creds
-  (fn [{db :db} [_ {creds :resources}]]
-    (let [infra-registries-creds (group-by :parent creds)
-          single-cred-choices    (filter #(= 1 (count (second %))) infra-registries-creds)]
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ {creds :resources}]]
+    (let [infra-registries-creds     (group-by :parent creds)
+          pre-selected-cred-ids-set  (-> deployment
+                                         (get-in [:module :content :registries-credentials])
+                                         set)
+          single-cred-dispatch       (->> infra-registries-creds
+                                          (filter #(= 1 (count (second %))))
+                                          (mapv (fn [[infra-id [{cred-id :id}]]]
+                                                  [::set-credential-registry infra-id cred-id])))
+          pre-selected-cred-dispatch (->> creds
+                                          (filter #(contains? pre-selected-cred-ids-set (:id %)))
+                                          (mapv (fn [{infra-id :parent cred-id :id}]
+                                                  [::set-credential-registry infra-id cred-id])))
+          select-cred-dispatch       (concat single-cred-dispatch pre-selected-cred-dispatch)]
       (cond-> {:db (assoc db ::spec/infra-registries-creds infra-registries-creds
                              ::spec/infra-registries-creds-loading? false)}
-              (seq single-cred-choices) (assoc :dispatch-n
-                                               (mapv (fn [[infra-id [{cred-id :id}]]]
-                                                       [::set-credential-registry infra-id cred-id])
-                                                     single-cred-choices))))))
+              (seq select-cred-dispatch) (assoc :dispatch-n select-cred-dispatch)))))
 
 
 (reg-event-fx
@@ -253,7 +266,8 @@
                                      ::spec/cloud-filter nil
                                      ::spec/selected-cloud nil
                                      ::spec/cloud-infra-services nil
-                                     ::spec/data-clouds nil)
+                                     ::spec/data-clouds nil
+                                     ::spec/license-accepted? false)
          ::cimi-api-fx/add [:deployment data on-success]}
         old-deployment-id (assoc ::cimi-api-fx/delete [old-deployment-id #() :on-error #()])))))
 
@@ -307,42 +321,43 @@
         #(dispatch [::set-credentials %])]})))
 
 
+(reg-event-db
+  ::set-error-message
+  (fn [db [_ title content]]
+    (assoc db ::spec/error-message {:title   title
+                                    :content content})))
+
+
 (reg-event-fx
   ::start-deployment
-  (fn [{:keys [db]} [_ id]]
+  (fn [_ [_ id]]
     (let [start-callback (fn [response]
                            (if (instance? js/Error response)
-                             (let [{:keys [status message]} (response/parse-ex-info response)]
-                               (dispatch [::messages-events/add
-                                          {:header  (cond-> (str "error start " id)
-                                                            status (str " (" status ")"))
-                                           :content message
-                                           :type    :error}]))
+                             (dispatch [::set-error-message
+                                        "Error while starting the deployment"
+                                        (-> response response/parse-ex-info :message)])
                              (let [{:keys [status message resource-id]} (response/parse response)
                                    success-msg {:header  (cond-> (str "started " resource-id)
                                                                  status (str " (" status ")"))
                                                 :content message
                                                 :type    :success}]
+                               (dispatch [::reset])
                                (dispatch [::messages-events/add success-msg])
                                (dispatch [:sixsq.nuvla.ui.dashboard-detail.events/get-deployment id])
                                (dispatch [::history-events/navigate
                                           (str "dashboard/" (general-utils/id->uuid id))]))))]
-      {:db                     (assoc db ::spec/deploy-modal-visible? false)
-       ::cimi-api-fx/operation [id "start" start-callback]})))
+      {::cimi-api-fx/operation [id "start" start-callback]})))
 
 
 (reg-event-fx
   ::edit-deployment
-  (fn [{{:keys [::spec/deployment]} :db} _]
+  (fn [{{:keys [::spec/deployment] :as db} :db} _]
     (let [resource-id   (:id deployment)
           edit-callback (fn [response]
                           (if (instance? js/Error response)
-                            (let [{:keys [status message]} (response/parse-ex-info response)]
-                              (dispatch [::messages-events/add
-                                         {:header  (cond-> (str "error editing " resource-id)
-                                                           status (str " (" status ")"))
-                                          :content message
-                                          :type    :error}]))
+                            (dispatch [::set-error-message
+                                       "Error during edition of deployment"
+                                       (-> response response/parse-ex-info :message)])
                             (do
                               (dispatch [::start-deployment resource-id])
                               (dispatch [::intercom-events/set-event "Last app launch" (time/timestamp)]))))]
@@ -400,3 +415,15 @@
   ::set-infra-service-filter
   (fn [db [_ cloud]]
     (set-data-infra-service-and-filter db cloud)))
+
+
+(reg-event-db
+  ::set-license-accepted?
+  (fn [db [_ accepted?]]
+    (assoc db ::spec/license-accepted? accepted?)))
+
+
+(reg-event-db
+  ::set-price-accepted?
+  (fn [db [_ accepted?]]
+    (assoc db ::spec/price-accepted? accepted?)))

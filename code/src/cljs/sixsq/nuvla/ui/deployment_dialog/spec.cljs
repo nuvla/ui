@@ -46,6 +46,12 @@
 
 (s/def ::step-states (s/map-of ::step-id ::step-state))
 
+(s/def ::license-accepted? boolean?)
+
+(s/def ::price-accepted? boolean?)
+
+(s/def ::error-message any?)
+
 (s/def ::check-dct any?)
 
 
@@ -67,10 +73,13 @@
                           ::selected-cloud
                           ::cloud-filter
                           ::cloud-infra-services            ;; from search to display data
+                          ::license-accepted?
+                          ::price-accepted?
 
                           ::active-step
                           ::data-step-active?
                           ::step-states
+                          ::error-message
                           ::check-dct]))
 
 
@@ -84,6 +93,10 @@
                                    :icon    "list alternate outline"}
                   :files          {:step-id :files
                                    :icon    "file alternate outline"}
+                  :license        {:step-id :license
+                                   :icon    "book"}
+                  :pricing        {:step-id :pricing
+                                   :icon    "euro"}
                   :summary        {:step-id :summary
                                    :icon    "info"}})
 
@@ -108,5 +121,8 @@
                ::cloud-infra-services            nil
                ::active-step                     :data
                ::data-step-active                true
+               ::license-accepted?               false
+               ::price-accepted?                 false
+               ::error-message                   nil
                ::step-states                     step-states
                ::check-dct                       nil})

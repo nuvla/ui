@@ -31,7 +31,7 @@
 
 (defn refresh
   [resource-id]
-  (dispatch [::events/clear-module])
+  (dispatch [::events/reset-db])
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
               :frequency 10000
@@ -264,6 +264,36 @@
      :label (str/capitalize (@tr [:job]))
      :default-open false
      :count (count resources)]))
+
+
+(defn billing-section
+  []
+  (let [tr               (subscribe [::i18n-subs/tr])
+        upcoming-invoice (subscribe [::subs/upcoming-invoice])]
+    (fn []
+      (let [locale @(subscribe [::i18n-subs/locale])
+            {total    :total
+             currency :currency} @upcoming-invoice
+            {:keys [description period]} (some-> @upcoming-invoice :lines first)
+            coupon (get-in @upcoming-invoice [:discount :coupon])]
+        [uix/Accordion
+         [:div
+          [:b (str/capitalize (@tr [:details])) ": "]
+          description
+
+          [:br]
+
+          [:b (str/capitalize (@tr [:period])) ": "]
+          (str (some-> period :start (time/time->format "LL" locale))
+               " - "
+               (some-> period :end (time/time->format "LL" locale)))
+          [:br]
+          [:b (str/capitalize (@tr [:coupon])) ": "]
+          (or (:name coupon) "-")]
+         :label (str/capitalize (@tr [:billing]))
+         :default-open false
+         :count (when total (str (if (= currency "eur") "€" currency)
+                                 " " (general-utils/format "%.2f" total)))]))))
 
 
 (defn log-controller
@@ -671,4 +701,6 @@
         [events-section]
         [parameters-section]
         [env-vars-section]
+        (when (:subscription-id @deployment)
+          [billing-section])
         [jobs-section]]])))

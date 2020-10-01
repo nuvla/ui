@@ -15,6 +15,8 @@
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -45,9 +47,7 @@
                         :options   [{:key "application", :text "Docker", :value "application"}
                                     {:key   "application_kubernetes", :text "Kubernetes",
                                      :value "application_kubernetes"}]}]
-          @module-subtype)]]
-      ^{:key "summary-private-registries"}
-      [apps-views-detail/private-registries true]]]))
+          @module-subtype)]]]]))
 
 
 (defn single-file [{:keys [id ::spec/file-name ::spec/file-content]}]
@@ -215,7 +215,9 @@
 (defn view-edit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        editable?     (subscribe [::apps-subs/editable?])]
+        editable?     (subscribe [::apps-subs/editable?])
+        stripe        (subscribe [::main-subs/stripe])
+        vendor        (subscribe [::profile-subs/vendor])]
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
@@ -228,6 +230,10 @@
                          :read-only     (not @editable?)}]
          [apps-views-detail/MenuBar]
          [summary]
+         [apps-views-detail/registries-section]
+         (when (and @stripe @vendor)
+           [apps-views-detail/price-section])
+         [apps-views-detail/license-section]
          [apps-views-detail/env-variables-section]
          [files-section]
          [docker-compose-section]

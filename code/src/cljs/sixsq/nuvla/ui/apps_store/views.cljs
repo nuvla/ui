@@ -30,7 +30,7 @@
                      (dispatch [::apps-events/get-module]))}])
 
 (defn module-card
-  [{:keys [id name description path parent-path subtype compatibility logo-url] :as module}]
+  [{:keys [id name description path parent-path subtype compatibility logo-url price] :as module}]
   (let [tr          (subscribe [::i18n-subs/tr])
         detail-href (str "apps/" path)]
     [ui/Card
@@ -55,13 +55,22 @@
            :content  (str "COMPATIBILITY: " compatibility)
            :size     "small"
            :trigger  (r/as-element [ui/Icon {:name "info"}])}]])]
-     [ui/Button {:fluid    true
-                 :primary  true
-                 :icon     :rocket
-                 :content  (@tr [:launch])
-                 :on-click #(dispatch [::main-events/subscription-required-dispatch
-                                       [::deployment-dialog-events/create-deployment
-                                        (:id module) :infra-services]])}]]))
+     (if price
+       [ui/Button {:fluid    true
+                   :primary  true
+                   :icon     :cart
+                   :content  (str (@tr [:launch-for])
+                                  (/ (:cent-amount-daily price) 100) "€/" (@tr [:day]))
+                   :on-click #(dispatch [::main-events/subscription-required-dispatch
+                                         [::deployment-dialog-events/create-deployment
+                                          (:id module) :infra-services]])}]
+       [ui/Button {:fluid    true
+                   :primary  true
+                   :icon     :rocket
+                   :content  (@tr [:launch])
+                   :on-click #(dispatch [::main-events/subscription-required-dispatch
+                                         [::deployment-dialog-events/create-deployment
+                                          (:id module) :infra-services]])}])]))
 
 
 (defn modules-cards-group

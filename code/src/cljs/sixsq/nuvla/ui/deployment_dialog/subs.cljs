@@ -334,4 +334,11 @@
         (not env-variables-completed?)
         (not registries-completed?)
         (and price (not price-completed?))
-        (and license (not license-completed?)))))
+        (and license (not license-completed?))
+        (not registries-completed?))))
+
+
+(reg-sub
+  ::check-dct
+  (fn [db]
+    (::spec/check-dct db)))

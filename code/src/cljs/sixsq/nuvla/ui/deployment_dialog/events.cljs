@@ -10,6 +10,7 @@
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.response :as response]
     [sixsq.nuvla.ui.utils.time :as time]))
 
@@ -181,6 +182,49 @@
               ::spec/loading-deployment? false)))
 
 
+(reg-event-db
+  ::set-check-dct-result
+  (fn [{:keys [::spec/deployment] :as db} [_ {:keys [target-resource status-message] :as job}]]
+    (if (= (:href target-resource) (:id deployment))
+      (let [result (try
+                    {:dct (utils/json->edn status-message)}
+                    (catch :default _
+                      {:error (str "Error: " status-message)}))]
+       (assoc db ::spec/check-dct result))
+      db)))
+
+
+(reg-event-fx
+  ::set-job-check-dct
+  (fn [_ [_ {:keys [id state] :as job}]]
+    (let [job-finished? (-> state
+                            (#{"STOPPED" "SUCCESS" "FAILED"})
+                            boolean)]
+      (if job-finished?
+        (dispatch [::set-check-dct-result job])
+        (dispatch [::check-dct-later id])))))
+
+
+
+(reg-event-fx
+  ::get-job-check-dct
+  (fn [_ [_ job-id]]
+    {::cimi-api-fx/get [job-id #(dispatch [::set-job-check-dct %])]}))
+
+
+(reg-event-fx
+  ::check-dct-later
+  (fn [_ [_ job-id]]
+    {:dispatch-later
+     [{:ms 3000 :dispatch [::get-job-check-dct job-id]}]}))
+
+
+(reg-event-fx
+  ::check-dct
+  (fn [_ [_ {:keys [id] :as deployment}]]
+    {::cimi-api-fx/operation [id "check-dct" #(dispatch [::check-dct-later (:location %)])]}))
+
+
 (reg-event-fx
   ::get-deployment
   (fn [{:keys [db]} [_ id]]
@@ -192,6 +236,7 @@
                                                    "subtype='swarm'")]
                               (dispatch [::get-infra-services filter])
                               (dispatch [::set-deployment %])
+                              (dispatch [::check-dct %])
                               (when-let [registry-ids (some-> %
                                                               :module
                                                               :content

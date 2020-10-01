@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Added
+
+  - Deployment modal - Price and license sections
+  - Deployment detail - New billing section
+  - Apps - Show price when nonfree module
+  - Module - Price and license sections for module
+  - Profile - Vendor section
+  - Deployment modal - Show if docker images are trusted on the summary
+  - Nuvlabox detail - Extended view for peripheral list in NuvlaBox details
+    page, to cope with new resource telemetry attributes
+
+### Updated
+
+  - Deployment modal - Sections are now vertical
+
 ## [2.7.0] - 2020-09-04
 
 ### Updated

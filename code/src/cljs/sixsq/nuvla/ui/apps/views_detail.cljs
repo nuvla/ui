@@ -16,6 +16,9 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.profile.events :as profile-events]
+    [sixsq.nuvla.ui.profile.subs :as profile-subs]
+    [sixsq.nuvla.ui.profile.views :as profile-views]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -24,10 +27,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.profile.events :as profile-events]
-    [sixsq.nuvla.ui.profile.subs :as profile-subs]
-    [sixsq.nuvla.ui.profile.views :as profile-views]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn edit-button-disabled?

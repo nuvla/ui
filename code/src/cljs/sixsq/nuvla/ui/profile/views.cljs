@@ -6,6 +6,8 @@
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
+    [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
@@ -21,9 +23,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
-    [sixsq.nuvla.ui.config :as config]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 ;;; VALIDATION SPEC

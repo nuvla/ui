@@ -143,11 +143,8 @@
            [ui/TableBody
             [ui/TableRow
              [ui/TableCell {:row-span 2, :width 2} [:h4 "VPN"]]
-             [ui/TableCell {:width 2} [:h5 "1st"]]
-             [ui/TableCell {:width 12, :style {:font-style "italic"}} (@tr [:included])]]
-            [ui/TableRow
-             [ui/TableCell [:h5 (@tr [:additional])]]
-             [ui/TableCell (str "€ 5.00 " (@tr [:per-month-each]))]]]]]
+             [ui/TableCell]
+             [ui/TableCell {:width 12} (@tr [:included])]]]]]
          (when-not @subscription
            [ui/GridColumn {:width 5, :text-align "center"}
             ^{:key (random-uuid)}

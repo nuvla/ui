@@ -15,6 +15,8 @@
 
 ### Updated
 
+  - Pricing - Set VPN price as included
+  - Credential - Remove check for subscription on creation of VPN or IaaS
   - Deployment modal - Sections are now vertical
 
 ## [2.7.0] - 2020-09-04

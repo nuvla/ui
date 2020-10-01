@@ -11,7 +11,6 @@
     [sixsq.nuvla.ui.credentials.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
-    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -531,9 +530,8 @@
                             (dispatch [::events/set-validate-form? false])
                             (dispatch [::events/form-valid])
                             (dispatch [::events/close-add-credential-modal])
-                            (dispatch [::main-events/subscription-required-dispatch
-                                       [::events/open-credential-modal
-                                        {:subtype "infrastructure-service-vpn"} true]]))})
+                            (dispatch [::events/open-credential-modal
+                                       {:subtype "infrastructure-service-vpn"} true]))})
             [ui/CardContent {:text-align :center}
              [ui/Header "OpenVPN"]
              [ui/Image {:src   "/ui/images/openvpn.png"
@@ -588,9 +586,8 @@
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::main-events/subscription-required-dispatch
-                                     [::events/open-credential-modal
-                                      {:subtype "infrastructure-service-exoscale"} true]]))}
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-exoscale"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Cloud Exoscale"]
              [ui/Image {:src   "/ui/images/exoscale.png"
@@ -601,9 +598,8 @@
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::main-events/subscription-required-dispatch
-                                     [::events/open-credential-modal
-                                      {:subtype "infrastructure-service-amazonec2"} true]]))}
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-amazonec2"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Cloud Amazon"]
              [ui/Image {:src   "/ui/images/aws.png"
@@ -614,9 +610,8 @@
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::main-events/subscription-required-dispatch
-                                     [::events/open-credential-modal
-                                      {:subtype "infrastructure-service-azure"} true]]))}
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-azure"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Cloud Azure"]
              [ui/Image {:src   "/ui/images/azure.png"
@@ -627,9 +622,8 @@
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::main-events/subscription-required-dispatch
-                                     [::events/open-credential-modal
-                                      {:subtype "infrastructure-service-google"} true]]))}
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-google"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Cloud Google"]
              [ui/Image {:src   "/ui/images/gce.png"

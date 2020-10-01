@@ -71,6 +71,13 @@
 
 
 (reg-sub
+  ::coupon
+  :<- [::deployment]
+  (fn [deployment]
+    (:coupon deployment)))
+
+
+(reg-sub
   ::files
   :<- [::module-content]
   (fn [module-content]
@@ -275,6 +282,12 @@
   :<- [::module-content]
   (fn [module-content]
     (-> module-content :environmental-variables)))
+
+
+(reg-sub
+  ::error-message
+  (fn [db]
+    (::spec/error-message db)))
 
 
 (reg-sub

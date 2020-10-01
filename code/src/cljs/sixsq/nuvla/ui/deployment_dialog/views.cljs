@@ -73,7 +73,9 @@
         price             (subscribe [::subs/price])
         license           (subscribe [::subs/license])
         license-accepted? (subscribe [::subs/license-completed?])
-        price-accepted?   (subscribe [::subs/price-completed?])]
+        price-accepted?   (subscribe [::subs/price-completed?])
+        deployment        (subscribe [::subs/deployment])
+        coupon            (subscribe [::subs/coupon])]
     [ui/Segment style/autoscroll-y
      (case active-step
        :data [data-step/content]
@@ -93,15 +95,23 @@
                                 :checked   @license-accepted?
                                 :on-change (ui-callback/checked
                                              #(dispatch [::events/set-license-accepted? %]))}]]]
-       :pricing [ui/Segment
-                 [:p (str (@tr [:one-day-trial-deployment])) " " (@tr [:deployment-will-cost])
-                  [:b (if (>= (:cent-amount-daily @price) 100)
-                        (str (float (/ (:cent-amount-daily @price) 100)) "€/" (@tr [:day]))
-                        (str (:cent-amount-daily @price) "ct€/" (@tr [:day])))]]
-                 [ui/Checkbox {:label     (@tr [:accept-costs])
-                               :checked   @price-accepted?
-                               :on-change (ui-callback/checked
-                                            #(dispatch [::events/set-price-accepted? %]))}]]
+       :pricing [:<>
+                 [ui/Segment
+                  [:p (str (@tr [:one-day-trial-deployment])) " " (@tr [:deployment-will-cost])
+                   [:b (if (>= (:cent-amount-daily @price) 100)
+                         (str (float (/ (:cent-amount-daily @price) 100)) "€/" (@tr [:day]))
+                         (str (:cent-amount-daily @price) "ct€/" (@tr [:day])))]]
+                  [ui/Checkbox {:label     (@tr [:accept-costs])
+                                :checked   @price-accepted?
+                                :on-change (ui-callback/checked
+                                             #(dispatch [::events/set-price-accepted? %]))}]]
+                 [ui/Input
+                  {:label         "Coupon"
+                   :placeholder   "code"
+                   :default-value (or @coupon "")
+                   :on-change     (ui-callback/input-callback
+                                    #(dispatch [::events/set-deployment
+                                                (assoc @deployment :coupon %)]))}]]
        :summary [summary-step/content]
        nil)]))
 
@@ -117,12 +127,16 @@
         active-step        (subscribe [::subs/active-step])
         step-states        (subscribe [::subs/step-states])
         license            (subscribe [::subs/license])
-        price              (subscribe [::subs/price])]
+        price              (subscribe [::subs/price])
+        error              (subscribe [::subs/error-message])]
     (fn [show-data?]
       (let [module         (:module @deployment)
             module-name    (:name module)
             module-subtype (:subtype module)
-            hide-fn        #(dispatch [::events/close-deploy-modal])
+            hide-fn        #(do
+                              (when (= (:state @deployment) "CREATED")
+                                (dispatch [::events/delete-deployment (:id @deployment)]))
+                              (dispatch [::events/reset]))
             submit-fn      #(dispatch [::events/edit-deployment])
 
             steps          [(when show-data? :data)
@@ -146,6 +160,10 @@
             "\u2026")]
 
          [ui/ModalContent
+          (when @error
+            [ui/Message {:error   true}
+            [ui/MessageHeader (:title @error)]
+            (:content @error)])
           [ui/ModalDescription
            [ui/Grid {:columns 2, :stackable true}
             [ui/GridColumn {:width 4}
@@ -161,12 +179,8 @@
                                     :height  "25em"}}
               (when @ready?
                 [step-content @active-step])]
-             ]
-            ]
-           ]]
-
+             ]]]]
          [ui/ModalActions
-
           [ui/Button {:primary  true
                       :disabled @launch-disabled?
                       :on-click submit-fn}

@@ -50,6 +50,8 @@
 
 (s/def ::price-accepted? boolean?)
 
+(s/def ::error-message any?)
+
 
 (s/def ::db (s/keys :req [::deploy-modal-visible?
                           ::loading-deployment?
@@ -74,7 +76,8 @@
 
                           ::active-step
                           ::data-step-active?
-                          ::step-states]))
+                          ::step-states
+                          ::error-message]))
 
 
 (def step-states {:data           {:step-id :data
@@ -115,6 +118,7 @@
                ::cloud-infra-services            nil
                ::active-step                     :data
                ::data-step-active                true
-               :license-accepted?                false
+               ::license-accepted?               false
                ::price-accepted?                 false
+               ::error-message                   nil
                ::step-states                     step-states})

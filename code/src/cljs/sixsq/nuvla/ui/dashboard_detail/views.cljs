@@ -274,8 +274,8 @@
       (let [locale @(subscribe [::i18n-subs/locale])
             {total    :total
              currency :currency} @upcoming-invoice
-            {:keys [description period]} (some-> @upcoming-invoice :lines first)]
-
+            {:keys [description period]} (some-> @upcoming-invoice :lines first)
+            coupon (get-in @upcoming-invoice [:discount :coupon])]
         [uix/Accordion
          [:div
           [:b (str/capitalize (@tr [:details])) ": "]
@@ -286,7 +286,10 @@
           [:b (str/capitalize (@tr [:period])) ": "]
           (str (some-> period :start (time/time->format "LL" locale))
                " - "
-               (some-> period :end (time/time->format "LL" locale)))]
+               (some-> period :end (time/time->format "LL" locale)))
+          [:br]
+          [:b (str/capitalize (@tr [:coupon])) ": "]
+          (or (:name coupon) "-")]
          :label (str/capitalize (@tr [:billing]))
          :default-open false
          :count (when total (str (if (= currency "eur") "€" currency)

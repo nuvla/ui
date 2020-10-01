@@ -1,24 +1,16 @@
 (ns sixsq.nuvla.ui.pricing.views
   (:require
-    ["@stripe/react-stripe-js" :as react-stripe]
-    [ajax.core :as ajax]
-    [clojure.string :as str]
     [day8.re-frame.http-fx]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.profile.events :as profile-event]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.profile.views :as profile-views]
-    [sixsq.nuvla.ui.utils.general :as general]
     [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 
 (defn PlanComp

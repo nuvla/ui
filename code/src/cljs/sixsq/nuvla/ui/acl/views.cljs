@@ -341,7 +341,10 @@
   [{:keys [default-value read-only default-active?] :as opts}]
   (let [tr      (subscribe [::i18n-subs/tr])
         active? (r/atom default-active?)
-        acl     (or default-value (when-not read-only {:owners [@(subscribe [::session-subs/user-id])]}))
+        acl     (or default-value
+                    (when-let [user-id (and (not read-only)
+                                            @(subscribe [::session-subs/user-id]))]
+                      {:owners [user-id]}))
         ui-acl  (when acl (r/atom (utils/acl->ui-acl-format acl)))]
     (fn [opts]
       (when ui-acl

@@ -92,7 +92,7 @@
                                                           :order      1}
                                        "apps"            {:url        "apps"
                                                           :label-kw   :apps
-                                                          :icon       "play"
+                                                          :icon       "fas fa-store"
                                                           :protected? true
                                                           :order      2}
                                        "data"            {:url             "data"

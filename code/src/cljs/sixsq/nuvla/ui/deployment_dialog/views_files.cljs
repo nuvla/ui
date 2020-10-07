@@ -46,11 +46,9 @@
   []
   (let [tr    (subscribe [::i18n-subs/tr])
         files (subscribe [::subs/files])]
-    (if (seq @files)
-      [:<>
-       (map-indexed
-         (fn [i file]
-           ^{:key (str (:file-name file) "-" i)}
-           [as-form-text-area i file])
-         @files)]
-      [ui/Message {:success true} (@tr [:no-files])])))
+    [:<>
+     (map-indexed
+       (fn [i file]
+         ^{:key (str (:file-name file) "-" i)}
+         [as-form-text-area i file])
+       @files)]))

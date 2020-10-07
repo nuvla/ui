@@ -7,6 +7,8 @@
     [sixsq.nuvla.ui.deployment-dialog.views-env-variables :as env-variables-step]
     [sixsq.nuvla.ui.deployment-dialog.views-files :as files-step]
     [sixsq.nuvla.ui.deployment-dialog.views-infra-services :as infra-services-step]
+    [sixsq.nuvla.ui.deployment-dialog.views-license :as license-step]
+    [sixsq.nuvla.ui.deployment-dialog.views-price :as price-step]
     [sixsq.nuvla.ui.deployment-dialog.views-registries :as registries-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
@@ -61,15 +63,23 @@
   []
   (let [data-step-active? (subscribe [::subs/data-step-active?])
         is-application?   (subscribe [::subs/is-application?])
-        registries-creds  (subscribe [::subs/registries-creds])]
+        registries-creds  (subscribe [::subs/registries-creds])
+        env-variables     (subscribe [::subs/env-variables])
+        license           (subscribe [::subs/license])
+        price             (subscribe [::subs/price])
+        files             (subscribe [::subs/files])]
     [ui/Table
      [ui/TableBody {:style {:cursor "pointer"}}
       [application-row]
       (when @data-step-active?
         [data-step/summary-row])
       [infra-services-step/summary-row]
-      (when @is-application? [files-step/summary-row])
-      [env-variables-step/summary-row]
+      (when (and @is-application? (seq @files)) [files-step/summary-row])
+      (when (seq @env-variables) [env-variables-step/summary-row])
       (when (seq @registries-creds) [registries-step/summary-row])
       [images-dct-row]
+      (when @license
+        [license-step/summary-row])
+      (when @price
+        [price-step/summary-row])
       ]]))

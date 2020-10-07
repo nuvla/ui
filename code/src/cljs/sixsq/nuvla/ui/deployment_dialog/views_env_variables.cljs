@@ -51,14 +51,10 @@
 
 (defn content
   []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        env-variables (subscribe [::subs/env-variables])]
-
-    (if (seq @env-variables)
-      [ui/Form
-       (map-indexed
-         (fn [i env-variable]
-           ^{:key (str (:name env-variable) "_" i)}
-           [as-form-input i env-variable])
-         @env-variables)]
-      [ui/Message {:success true} (@tr [:no-env-variables-parameters])])))
+  (let [env-variables (subscribe [::subs/env-variables])]
+    [ui/Form
+     (map-indexed
+       (fn [i env-variable]
+         ^{:key (str (:name env-variable) "_" i)}
+         [as-form-input i env-variable])
+       @env-variables)]))

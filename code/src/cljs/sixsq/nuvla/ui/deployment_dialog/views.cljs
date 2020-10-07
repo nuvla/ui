@@ -9,12 +9,13 @@
     [sixsq.nuvla.ui.deployment-dialog.views-env-variables :as env-variables-step]
     [sixsq.nuvla.ui.deployment-dialog.views-files :as files-step]
     [sixsq.nuvla.ui.deployment-dialog.views-infra-services :as infra-services-step]
+    [sixsq.nuvla.ui.deployment-dialog.views-license :as license-step]
+    [sixsq.nuvla.ui.deployment-dialog.views-price :as price-step]
     [sixsq.nuvla.ui.deployment-dialog.views-registries :as registries-step]
     [sixsq.nuvla.ui.deployment-dialog.views-summary :as summary-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 
 (defn deployment-step-state
@@ -69,51 +70,17 @@
 
 (defn step-content
   [active-step]
-  (let [tr                (subscribe [::i18n-subs/tr])
-        price             (subscribe [::subs/price])
-        license           (subscribe [::subs/license])
-        license-accepted? (subscribe [::subs/license-completed?])
-        price-accepted?   (subscribe [::subs/price-completed?])
-        deployment        (subscribe [::subs/deployment])
-        coupon            (subscribe [::subs/coupon])]
-    [ui/Segment style/autoscroll-y
-     (case active-step
-       :data [data-step/content]
-       :infra-services [infra-services-step/content]
-       :registries [registries-step/content]
-       :env-variables [env-variables-step/content]
-       :files [files-step/content]
-       :license [ui/Segment
-                 [ui/Container
-                  [:p
-                   [:b (@tr [:define-price])]
-                   [:a {:href   (:url @license)
-                        :target "_blank"} (:name @license)]]
-                  (when (:description @license)
-                    [:p (:description @license)])
-                  [ui/Checkbox {:label     (@tr [:accept-license])
-                                :checked   @license-accepted?
-                                :on-change (ui-callback/checked
-                                             #(dispatch [::events/set-license-accepted? %]))}]]]
-       :pricing [:<>
-                 [ui/Segment
-                  [:p (str (@tr [:one-day-trial-deployment])) " " (@tr [:deployment-will-cost])
-                   [:b (if (>= (:cent-amount-daily @price) 100)
-                         (str (float (/ (:cent-amount-daily @price) 100)) "€/" (@tr [:day]))
-                         (str (:cent-amount-daily @price) "ct€/" (@tr [:day])))]]
-                  [ui/Checkbox {:label     (@tr [:accept-costs])
-                                :checked   @price-accepted?
-                                :on-change (ui-callback/checked
-                                             #(dispatch [::events/set-price-accepted? %]))}]]
-                 [ui/Input
-                  {:label         "Coupon"
-                   :placeholder   "code"
-                   :default-value (or @coupon "")
-                   :on-change     (ui-callback/input-callback
-                                    #(dispatch [::events/set-deployment
-                                                (assoc @deployment :coupon %)]))}]]
-       :summary [summary-step/content]
-       nil)]))
+  [ui/Segment style/autoscroll-y
+   (case active-step
+     :data [data-step/content]
+     :infra-services [infra-services-step/content]
+     :registries [registries-step/content]
+     :env-variables [env-variables-step/content]
+     :files [files-step/content]
+     :license [license-step/content]
+     :pricing [price-step/content]
+     :summary [summary-step/content]
+     nil)])
 
 
 (defn deploy-modal
@@ -122,12 +89,14 @@
         visible?           (subscribe [::subs/deploy-modal-visible?])
         deployment         (subscribe [::subs/deployment])
         private-registries (subscribe [::subs/private-registries])
+        env-variables      (subscribe [::subs/env-variables])
         ready?             (subscribe [::subs/ready?])
         launch-disabled?   (subscribe [::subs/launch-disabled?])
         active-step        (subscribe [::subs/active-step])
         step-states        (subscribe [::subs/step-states])
         license            (subscribe [::subs/license])
         price              (subscribe [::subs/price])
+        files              (subscribe [::subs/files])
         error              (subscribe [::subs/error-message])]
     (fn [show-data?]
       (let [module         (:module @deployment)
@@ -141,9 +110,10 @@
 
             steps          [(when show-data? :data)
                             :infra-services
-                            (when (some? @private-registries) :registries)
-                            :env-variables
-                            (when (= module-subtype "application") :files)
+                            (when (seq @private-registries) :registries)
+                            (when (seq @env-variables) :env-variables)
+                            (when (and (= module-subtype "application")
+                                       (seq @files)) :files)
                             (when @license :license)
                             (when @price :pricing)
                             :summary]
@@ -161,9 +131,9 @@
 
          [ui/ModalContent
           (when @error
-            [ui/Message {:error   true}
-            [ui/MessageHeader (:title @error)]
-            (:content @error)])
+            [ui/Message {:error true}
+             [ui/MessageHeader (:title @error)]
+             (:content @error)])
           [ui/ModalDescription
            [ui/Grid {:columns 2, :stackable true}
             [ui/GridColumn {:width 4}

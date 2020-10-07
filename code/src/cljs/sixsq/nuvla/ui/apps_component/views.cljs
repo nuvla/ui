@@ -187,7 +187,8 @@
           [:div {:style {:padding-top 10}}
            [apps-views-detail/plus ::events/add-port]])]
        :label (@tr [:module-ports])
-       :count (count @ports)])))
+       :count (count @ports)
+       :default-open false])))
 
 
 (defn single-mount [mount]
@@ -273,7 +274,8 @@
           [:div {:style {:padding-top 10}}
            [apps-views-detail/plus ::events/add-mount]])]
        :label (@tr [:module-mounts])
-       :count (count @mounts)])))
+       :count (count @mounts)
+       :default-open false])))
 
 
 (defn generate-ports-args
@@ -345,9 +347,7 @@
   []
   (let [module-common (subscribe [::apps-subs/module-common])
         editable?     (subscribe [::apps-subs/editable?])
-        stripe        (subscribe [::main-subs/stripe])
-        vendor        (subscribe [::profile-subs/vendor])]
-    (dispatch [::profile-events/search-existing-vendor])
+        stripe        (subscribe [::main-subs/stripe])]
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
@@ -361,7 +361,7 @@
          [apps-views-detail/MenuBar]
          [summary]
          [apps-views-detail/registries-section]
-         (when (and @stripe @vendor)
+         (when @stripe
            [apps-views-detail/price-section])
          [apps-views-detail/license-section]
          [ports-section]

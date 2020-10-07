@@ -187,10 +187,10 @@
   (fn [{:keys [::spec/deployment] :as db} [_ {:keys [target-resource status-message] :as job}]]
     (if (= (:href target-resource) (:id deployment))
       (let [result (try
-                    {:dct (utils/json->edn status-message)}
-                    (catch :default _
-                      {:error (str "Error: " status-message)}))]
-       (assoc db ::spec/check-dct result))
+                     {:dct (utils/json->edn status-message)}
+                     (catch :default _
+                       {:error (str "Error: " status-message)}))]
+        (assoc db ::spec/check-dct result))
       db)))
 
 
@@ -268,7 +268,16 @@
                                      ::spec/cloud-infra-services nil
                                      ::spec/data-clouds nil
                                      ::spec/license-accepted? false)
-         ::cimi-api-fx/add [:deployment data on-success]}
+         ::cimi-api-fx/add [:deployment data on-success
+                            :on-error #(do
+                                         (dispatch [::reset])
+                                         (dispatch
+                                           [::messages-events/add
+                                            (let [{:keys [status message]} (response/parse-ex-info %)]
+                                              {:header  (cond-> "Error during creation of deployment"
+                                                                status (str " (" status ")"))
+                                               :content message
+                                               :type    :error})]))]}
         old-deployment-id (assoc ::cimi-api-fx/delete [old-deployment-id #() :on-error #()])))))
 
 

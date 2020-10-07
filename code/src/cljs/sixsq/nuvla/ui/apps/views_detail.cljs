@@ -18,7 +18,6 @@
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.profile.events :as profile-events]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
-    [sixsq.nuvla.ui.profile.views :as profile-views]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -511,7 +510,8 @@
           [:div {:style {:padding-top 10}}
            [plus ::events/add-env-variable]])]
        :label (@tr [:module-env-variables])
-       :count (count @env-variables)])))
+       :count (count @env-variables)
+       :default-open false])))
 
 
 (defn single-url
@@ -768,38 +768,39 @@
           [:div {:style {:padding-top 10}}
            [plus ::events/add-registry]])]
        :label (@tr [:private-registries])
-       :count (count @registries)])))
+       :count (count @registries)
+       :default-open false])))
 
 
 (defn price-section []
   (let [tr        (subscribe [::i18n-subs/tr])
         editable? (subscribe [::subs/editable?])
-        price     (subscribe [::subs/price])]
+        price     (subscribe [::subs/price])
+        vendor    (subscribe [::profile-subs/vendor])]
+    (dispatch [::profile-events/search-existing-vendor])
     (fn []
       (let [amount (:cent-amount-daily @price)]
-        (when (or @editable? (some? @price))
+        (when (or (and @editable? @vendor) (some? @price))
           [uix/Accordion
            [:<>
             [:div (str/capitalize (@tr [:price]))
              [:span ff/nbsp (ff/help-popup (@tr [:define-price]))]]
-            (if @editable?
-              [ui/Input {:labelPosition "right", :type "text"
-                         :placeholder   (str/capitalize (@tr [:amount]))
-                         :error         (not (s/valid? ::spec/cent-amount-daily amount))}
-               [:input {:type          "number"
-                        :step          1
-                        :min           1
-                        :default-value amount
-                        :on-change     (ui-callback/input-callback
-                                         #(do
-                                            (dispatch [::events/cent-amount-daily
-                                                       (when-not (str/blank? %)
-                                                         (js/parseInt %))])
-                                            (dispatch [::main-events/changes-protection? true])
-                                            (dispatch [::events/validate-form])))}]
-               [ui/Label "ct€/" (@tr [:day])]]
-              [ui/Label (str amount "ct€/" (@tr [:day]))]
-              )
+            [ui/Input {:labelPosition "right", :type "text"
+                       :placeholder   (str/capitalize (@tr [:amount]))
+                       :error         (not (s/valid? ::spec/cent-amount-daily amount))}
+             [:input {:type          "number"
+                      :step          1
+                      :min           1
+                      :default-value amount
+                      :read-only     (not @editable?)
+                      :on-change     (ui-callback/input-callback
+                                       #(do
+                                          (dispatch [::events/cent-amount-daily
+                                                     (when-not (str/blank? %)
+                                                       (js/parseInt %))])
+                                          (dispatch [::main-events/changes-protection? true])
+                                          (dispatch [::events/validate-form])))}]
+             [ui/Label "ct€/" (@tr [:day])]]
             [:p (@tr [:price-per-month])
              [:b (str
                    (if (pos-int? amount)

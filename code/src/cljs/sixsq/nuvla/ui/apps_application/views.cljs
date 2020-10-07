@@ -85,37 +85,37 @@
 
 
 (defn files-section []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        files     (subscribe [::subs/files])
-        editable? (subscribe [::apps-subs/editable?])
-        module-app      (subscribe [::apps-subs/module])
-        compatibility   (:compatibility @module-app)]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        files         (subscribe [::subs/files])
+        editable?     (subscribe [::apps-subs/editable?])
+        module-app    (subscribe [::apps-subs/module])
+        compatibility (:compatibility @module-app)]
     (when (not= compatibility "docker-compose")
       (fn []
-      [uix/Accordion
-       [:<>
-        [:div (@tr [:module-files])
-         [:span ff/nbsp (ff/help-popup (@tr [:module-files-help]))]]
-        (if (empty? @files)
-          [ui/Message
-           (str/capitalize (str (@tr [:no-files]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}}
-                 [ui/TableHeader
-                  [ui/TableRow
-                   [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]
-                   [ui/TableHeaderCell {:content (str/capitalize (@tr [:content]))}]
-                   (when @editable?
-                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
-                 [ui/TableBody
-                  (for [[id file] @files]
-                    ^{:key (str "file_" id)}
-                    [single-file file])]]])
-        (when @editable?
-          [:div {:style {:padding-top 10}}
-           [apps-views-detail/plus ::events/add-file]])]
-       :label (@tr [:module-files])
-       :count (count @files)
-       :default-open false]))))
+        [uix/Accordion
+         [:<>
+          [:div (@tr [:module-files])
+           [:span ff/nbsp (ff/help-popup (@tr [:module-files-help]))]]
+          (if (empty? @files)
+            [ui/Message
+             (str/capitalize (str (@tr [:no-files]) "."))]
+            [:div [ui/Table {:style {:margin-top 10}}
+                   [ui/TableHeader
+                    [ui/TableRow
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:content]))}]
+                     (when @editable?
+                       [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
+                   [ui/TableBody
+                    (for [[id file] @files]
+                      ^{:key (str "file_" id)}
+                      [single-file file])]]])
+          (when @editable?
+            [:div {:style {:padding-top 10}}
+             [apps-views-detail/plus ::events/add-file]])]
+         :label (@tr [:module-files])
+         :count (count @files)
+         :default-open false]))))
 
 
 (defn DockerComposeValidationPopup
@@ -201,7 +201,7 @@
                  (@tr [:module-docker-compose-error])
                  error-msg)]))
           [:div [@tr [:apps-more-info]]
-           [:a {:href "https://docs.nuvla.io/nuvla/add-apps#enabling-fast--dedicated-monitoring-for-application-deployments"
+           [:a {:href   "https://docs.nuvla.io/nuvla/add-apps#enabling-fast--dedicated-monitoring-for-application-deployments"
                 :target "_black"}
             "Nuvla docs"]]]
          :label (if (= @module-subtype "application")

@@ -75,7 +75,7 @@
                                       :icon          "envelope"
                                       :icon-position "left"
                                       :auto-focus    true
-                                      :auto-complete "off"
+                                      :auto-complete "username"
                                       :on-change     (partial fv/event->names->value! form)
                                       :on-blur       (partial fv/event->show-message form)
                                       :error         (fv/?show-message form :email spec->msg)}]

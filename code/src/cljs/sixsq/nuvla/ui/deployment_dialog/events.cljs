@@ -187,7 +187,7 @@
   (fn [{:keys [::spec/deployment] :as db} [_ {:keys [target-resource status-message] :as job}]]
     (if (= (:href target-resource) (:id deployment))
       (let [result (try
-                     {:dct (utils/json->edn status-message)}
+                     {:dct (utils/json->edn status-message :keywordize-keys false)}
                      (catch :default _
                        {:error (str "Error: " status-message)}))]
         (assoc db ::spec/check-dct result))

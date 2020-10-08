@@ -51,9 +51,9 @@
               [:<>
                [:span (when image-dct-trust
                         {:style {:color "green"}})
-                (subs (str image-dct-name) 1) " " (when image-dct-trust
-                                                    [ui/Icon {:className "fas fa-medal"
-                                                              :color     "green"}])]
+                image-dct-name " " (when image-dct-trust
+                                     [ui/Icon {:className "fas fa-medal"
+                                               :color     "green"}])]
                [:br]])
         error [:p {:style {:color "red"}} error]
         :else [ui/Icon {:name "circle notch" :loading true}])]]))

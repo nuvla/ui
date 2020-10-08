@@ -108,49 +108,70 @@
                            #(dispatch [::set-infra-services %])]}))
 
 
+(defn deployment-update-registries
+  [deployment registries-creds-info]
+  (let [registry-ids (get-in deployment [:module :content :private-registries])]
+    (->> registry-ids
+         (map #(-> registries-creds-info (get %) (get :cred-id "")))
+         (assoc deployment :registries-credentials))))
+
+
 (reg-event-fx
   ::set-infra-registries-creds
-  (fn [{{:keys [::spec/deployment] :as db} :db} [_ {creds :resources}]]
-    (let [infra-registries-creds     (group-by :parent creds)
-          pre-selected-cred-ids-set  (-> deployment
-                                         (get-in [:module :content :registries-credentials])
-                                         set)
-          single-cred-dispatch       (->> infra-registries-creds
-                                          (filter #(= 1 (count (second %))))
-                                          (mapv (fn [[infra-id [{cred-id :id}]]]
-                                                  [::set-credential-registry infra-id cred-id])))
-          pre-selected-cred-dispatch (->> creds
-                                          (filter #(contains? pre-selected-cred-ids-set (:id %)))
-                                          (mapv (fn [{infra-id :parent cred-id :id}]
-                                                  [::set-credential-registry infra-id cred-id])))
-          select-cred-dispatch       (concat single-cred-dispatch pre-selected-cred-dispatch)]
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ registry-ids reg-creds-ids
+                                                 infra-registries {creds :resources}]]
+    (let [infra-registries-creds (group-by :parent creds)
+          registries-creds-info  (->>
+                                   registry-ids
+                                   (map-indexed
+                                     (fn [n reg-id]
+                                       (let [cred-id (-> (nth reg-creds-ids n)
+                                                         str/trim
+                                                         not-empty)]
+                                         [reg-id
+                                          {:cred-id      cred-id
+                                           :preselected? (some? cred-id)}])))
+                                   (into {}))
+
+          single-cred-dispatch   (->> infra-registries-creds
+                                      (filter #(= 1 (count (second %))))
+                                      (mapv (fn [[infra-id [{cred-id :id}]]]
+                                              [::set-credential-registry infra-id cred-id])))]
       (cond-> {:db (assoc db ::spec/infra-registries-creds infra-registries-creds
-                             ::spec/infra-registries-creds-loading? false)}
-              (seq select-cred-dispatch) (assoc :dispatch-n select-cred-dispatch)))))
+                             ::spec/infra-registries infra-registries
+                             ::spec/infra-registries-loading? false
+                             ::spec/registries-creds registries-creds-info
+                             ::spec/deployment (deployment-update-registries
+                                                 deployment registries-creds-info))}
+              (seq single-cred-dispatch) (assoc :dispatch-n single-cred-dispatch)))))
 
 
 (reg-event-fx
   ::set-infra-registries
-  (fn [{:keys [db]} [_ {infra-registries :resources}]]
-    {:db                  (assoc db ::spec/infra-registries infra-registries
-                                    ::spec/infra-registries-loading? false
-                                    ::spec/infra-registries-creds nil
-                                    ::spec/infra-registries-creds-loading? true)
-     ::cimi-api-fx/search [:credential
-                           {:filter (general-utils/join-and
-                                      "subtype='infrastructure-service-registry'"
-                                      (apply general-utils/join-or
-                                             (map #(str "parent='" (:id %) "'") infra-registries)))
-                            :select "id, parent, name, description, last-check, status, subtype"
-                            :order  "name:asc,id:asc"}
-                           #(dispatch [::set-infra-registries-creds %])]}))
+  (fn [{:keys [db]} [_ registry-ids reg-creds-ids {infra-registries :resources}]]
+    (cond-> {:db (assoc db ::spec/infra-registries-creds nil)}
+            (seq infra-registries)
+            (assoc ::cimi-api-fx/search
+                   [:credential
+                    {:filter (general-utils/join-and
+                               "subtype='infrastructure-service-registry'"
+                               (apply general-utils/join-or
+                                      (map #(str "parent='" (:id %) "'")
+                                           infra-registries)))
+                     :select "id, parent, name, description, last-check, status, subtype"
+                     :order  "name:asc,id:asc"}
+                    #(dispatch [::set-infra-registries-creds registry-ids
+                                reg-creds-ids infra-registries %])])
+
+            (empty? infra-registries)
+            (assoc :dispatch [::set-infra-registries-creds
+                              registry-ids reg-creds-ids infra-registries {:resources []}]))))
 
 
 (reg-event-fx
   ::get-infra-registries
-  (fn [{:keys [db]} [_ registry-ids]]
-    {:db                  (assoc db ::spec/infra-registries-loading? true
-                                    ::spec/infra-registries)
+  (fn [{:keys [db]} [_ registry-ids reg-creds-ids]]
+    {:db                  (assoc db ::spec/infra-registries-loading? true)
      ::cimi-api-fx/search [:infrastructure-service
                            {:filter (general-utils/join-and
                                       "subtype='registry'"
@@ -158,7 +179,7 @@
                                              (map #(str "id='" % "'") registry-ids))),
                             :select "id, name, description"
                             :order  "name:asc,id:asc"}
-                           #(dispatch [::set-infra-registries %])]}))
+                           #(dispatch [::set-infra-registries registry-ids reg-creds-ids %])]}))
 
 
 (reg-event-fx
@@ -166,12 +187,14 @@
   (fn [{{:keys [::spec/registries-creds
                 ::spec/infra-registries-creds
                 ::spec/deployment] :as db} :db} [_ infra-id cred-id]]
-    (let [update-registries-creds (assoc registries-creds infra-id cred-id)
-          registries-credentials  (->> update-registries-creds vals (remove nil?))
-          credential              (-> infra-registries-creds (get infra-id) first)]
+    (let [update-registries-creds (update registries-creds infra-id assoc :cred-id cred-id)
+          credential              (->> infra-id
+                                       (get infra-registries-creds)
+                                       (some #(when (= (:id %) cred-id) %)))]
       {:db       (assoc db ::spec/registries-creds update-registries-creds
-                           ::spec/deployment (assoc deployment
-                                               :registries-credentials registries-credentials))
+                           ::spec/deployment (deployment-update-registries
+                                               deployment
+                                               update-registries-creds))
        :dispatch [::creds-events/check-credential credential 5]})))
 
 
@@ -229,19 +252,17 @@
   ::get-deployment
   (fn [{:keys [db]} [_ id]]
     {:db               (assoc db ::spec/deployment {:id id})
-     ::cimi-api-fx/get [id #(let [module-subtype (get-in % [:module :subtype])
-                                  is-kubernetes? (= module-subtype "application_kubernetes")
+     ::cimi-api-fx/get [id #(let [{:keys [content subtype]} (:module %)
+                                  is-kubernetes? (= subtype "application_kubernetes")
                                   filter         (if is-kubernetes?
                                                    "subtype='kubernetes'"
                                                    "subtype='swarm'")]
                               (dispatch [::get-infra-services filter])
                               (dispatch [::set-deployment %])
                               (dispatch [::check-dct %])
-                              (when-let [registry-ids (some-> %
-                                                              :module
-                                                              :content
-                                                              :private-registries)]
-                                (dispatch [::get-infra-registries registry-ids]))
+                              (when-let [registry-ids (:private-registries content)]
+                                (dispatch [::get-infra-registries registry-ids
+                                           (:registries-credentials content)]))
                               )]}))
 
 

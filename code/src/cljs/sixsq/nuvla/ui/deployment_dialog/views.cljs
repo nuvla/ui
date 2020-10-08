@@ -85,19 +85,19 @@
 
 (defn deploy-modal
   [show-data?]
-  (let [tr                 (subscribe [::i18n-subs/tr])
-        visible?           (subscribe [::subs/deploy-modal-visible?])
-        deployment         (subscribe [::subs/deployment])
-        private-registries (subscribe [::subs/private-registries])
-        env-variables      (subscribe [::subs/env-variables])
-        ready?             (subscribe [::subs/ready?])
-        launch-disabled?   (subscribe [::subs/launch-disabled?])
-        active-step        (subscribe [::subs/active-step])
-        step-states        (subscribe [::subs/step-states])
-        license            (subscribe [::subs/license])
-        price              (subscribe [::subs/price])
-        files              (subscribe [::subs/files])
-        error              (subscribe [::subs/error-message])]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        visible?         (subscribe [::subs/deploy-modal-visible?])
+        deployment       (subscribe [::subs/deployment])
+        registries-creds (subscribe [::subs/registries-creds-not-preselected])
+        env-variables    (subscribe [::subs/env-variables])
+        ready?           (subscribe [::subs/ready?])
+        launch-disabled? (subscribe [::subs/launch-disabled?])
+        active-step      (subscribe [::subs/active-step])
+        step-states      (subscribe [::subs/step-states])
+        license          (subscribe [::subs/license])
+        price            (subscribe [::subs/price])
+        files            (subscribe [::subs/files])
+        error            (subscribe [::subs/error-message])]
     (fn [show-data?]
       (let [module         (:module @deployment)
             module-name    (:name module)
@@ -110,7 +110,7 @@
 
             steps          [(when show-data? :data)
                             :infra-services
-                            (when (seq @private-registries) :registries)
+                            (when (seq @registries-creds) :registries)
                             (when (seq @env-variables) :env-variables)
                             (when (and (= module-subtype "application")
                                        (seq @files)) :files)

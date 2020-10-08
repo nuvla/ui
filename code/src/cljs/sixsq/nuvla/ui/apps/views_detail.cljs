@@ -706,9 +706,10 @@
         registries-cred-options (subscribe [::subs/registries-credentials-options registry-id])]
     [ui/TableRow {:error (and validate?
                               (not (s/valid? ::spec/single-registry registry)))}
-     [ui/TableCell {:floated :left}
+     [ui/TableCell {:width 7}
       [ui/Dropdown
        {:selection     true
+        :fluid         true
         :default-value registry-id
         :disabled      (not @editable?)
         :options       @registries-options
@@ -717,9 +718,10 @@
                             (dispatch [::main-events/changes-protection? true])
                             (dispatch [::events/update-registry-id id %])
                             (dispatch [::events/validate-form])))}]]
-     [ui/TableCell {:floated :left}
+     [ui/TableCell {:width 7}
       [ui/Dropdown
        {:selection     true
+        :fluid         true
         :default-value registry-cred-id
         :disabled      (not @editable?)
         :options       @registries-cred-options
@@ -728,10 +730,10 @@
                             (dispatch [::main-events/changes-protection? true])
                             (dispatch [::events/update-registry-cred-id id %])
                             (dispatch [::events/validate-form])))}]]
-     (when @editable?
-       [ui/TableCell {:floated :right
-                      :align   :right}
-        [trash id ::events/remove-registry]])]))
+     [ui/TableCell {:width 2}
+      (when @editable?
+        [trash id ::events/remove-registry])]
+     ]))
 
 
 (defn registries-section []
@@ -756,8 +758,7 @@
               [ui/TableHeaderCell
                {:content (r/as-element [utils/mandatory-name (@tr [:private-registries])])}]
               [ui/TableHeaderCell {:content (str/capitalize (@tr [:credential]))}]
-              (when @editable?
-                [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
+              [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}]]]
             [ui/TableBody
              (for [[id registry] @registries]
                ^{:key (str "registry-" id)}

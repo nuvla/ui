@@ -63,7 +63,7 @@
   []
   (let [data-step-active? (subscribe [::subs/data-step-active?])
         is-application?   (subscribe [::subs/is-application?])
-        registries-creds  (subscribe [::subs/registries-creds])
+        registries-count  (subscribe [::subs/module-private-registries-count])
         env-variables     (subscribe [::subs/env-variables])
         license           (subscribe [::subs/license])
         price             (subscribe [::subs/price])
@@ -76,7 +76,7 @@
       [infra-services-step/summary-row]
       (when (and @is-application? (seq @files)) [files-step/summary-row])
       (when (seq @env-variables) [env-variables-step/summary-row])
-      (when (seq @registries-creds) [registries-step/summary-row])
+      (when (pos? @registries-count) [registries-step/summary-row])
       [images-dct-row]
       (when @license
         [license-step/summary-row])

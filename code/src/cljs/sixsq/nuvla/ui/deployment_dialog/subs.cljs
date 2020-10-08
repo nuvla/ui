@@ -187,12 +187,6 @@
 
 
 (reg-sub
-  ::infra-registries-creds-loading?
-  (fn [db]
-    (::spec/infra-registries-creds-loading? db)))
-
-
-(reg-sub
   ::active-step
   (fn [db]
     (::spec/active-step db)))
@@ -247,16 +241,26 @@
   (fn [selected-infra-service]
     (boolean selected-infra-service)))
 
+(reg-sub
+  ::deployment-reg-creds-count
+  :<- [::deployment]
+  (fn [deployment]
+    (->> deployment :registries-credentials (remove str/blank?) count)))
+
+(reg-sub
+  ::module-private-registries-count
+  :<- [::module-content]
+  (fn [module-content]
+    (-> module-content :private-registries count)))
+
 
 (reg-sub
   ::registries-completed?
-  :<- [::private-registries]
-  :<- [::registries-creds]
-  (fn [[private-registries registries-creds]]
-    (or (nil? private-registries)
-        (and
-          (not (empty? private-registries))
-          (= (count private-registries) (->> registries-creds vals (remove nil?) count))))))
+  :<- [::module-private-registries-count]
+  :<- [::deployment-reg-creds-count]
+  (fn [[module-private-registries-count deployment-reg-creds-count]]
+    (= module-private-registries-count
+       deployment-reg-creds-count)))
 
 
 (reg-sub
@@ -278,6 +282,14 @@
 
 
 (reg-sub
+  ::registries-creds-not-preselected
+  :<- [::registries-creds]
+  (fn [registries-creds]
+    (keep (fn [[id {:keys [preselected?]}]]
+            (when-not preselected? id)) registries-creds)))
+
+
+(reg-sub
   ::env-variables
   :<- [::module-content]
   (fn [module-content]
@@ -288,13 +300,6 @@
   ::error-message
   (fn [db]
     (::spec/error-message db)))
-
-
-(reg-sub
-  ::private-registries
-  :<- [::module-content]
-  (fn [module-content]
-    (-> module-content :private-registries distinct seq)))
 
 
 (reg-sub

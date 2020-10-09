@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Updated
+
+## [2.8.0] - 2020-10-09
+
 ### Added
 
   - Deployment modal - Price and license sections

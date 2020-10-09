@@ -205,6 +205,7 @@
                          :placeholder   (or placeholder name)
                          :onMouseEnter  #(reset! active-input? true)
                          :onMouseLeave  #(reset! active-input? false)
+                         :auto-complete "nope"
                          :on-change     (ui-callback/input-callback
                                           #(let [text (when-not (str/blank? %) %)]
                                              (reset! local-validate? true)

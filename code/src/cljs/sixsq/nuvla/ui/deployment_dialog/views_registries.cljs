@@ -32,38 +32,44 @@
 
 
 (defn dropdown-creds
-  [private-registry-id]
-  (let [tr               (subscribe [::i18n-subs/tr])
-        registry         (subscribe [::subs/infra-registry private-registry-id])
-        registry-name    (or (:name @registry) private-registry-id)
-        creds-options    (subscribe [::subs/infra-registries-creds-by-parent-options
-                                     private-registry-id])
-        registry-descr   (:description @registry)
-        registries-creds (subscribe [::subs/registries-creds])
-        default-value    (get-in @registries-creds [private-registry-id :cred-id])]
-    [ui/FormDropdown
-     (cond->
-       {:required      true
+  [private-registry-id info]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        registry       (subscribe [::subs/infra-registry private-registry-id])
+        registry-name  (or (:name @registry) private-registry-id)
+        creds-options  (subscribe [::subs/infra-registries-creds-by-parent-options
+                                   private-registry-id])
+        registry-descr (:description @registry)
+        {:keys [cred-id preselected?]} info]
+    (if preselected?
+      [ui/FormInput
+       {:disabled      true
         :label         (r/as-element [:label registry-name ff/nbsp
-                                      (when registry-descr (ff/help-popup registry-descr))
-                                      (when default-value
-                                        [:span " "
-                                         [creds-comp/CredentialCheckPopup default-value]])])
-        :selection     true
-        :default-value default-value
-        :placeholder   (@tr [:select-credential])
-        :options       @creds-options
-        :on-change     (ui-callback/value
-                         #(dispatch [::events/set-credential-registry private-registry-id %]))}
-       (empty? @creds-options) (assoc :error (@tr [:no-available-creds-registry])))]))
+                                      (when registry-descr (ff/help-popup registry-descr))])
+        :default-value (@tr [:preselected])}]
+      [ui/FormDropdown
+       (cond->
+         {:required      true
+          :label         (r/as-element [:label registry-name ff/nbsp
+                                        (when registry-descr (ff/help-popup registry-descr))
+                                        (when cred-id
+                                          [:span " "
+                                           [creds-comp/CredentialCheckPopup cred-id]])])
+          :selection     true
+          :default-value cred-id
+          :placeholder   (@tr [:select-credential])
+          :options       @creds-options
+          :on-change     (ui-callback/value
+                           #(dispatch [::events/set-credential-registry private-registry-id %]))}
+         (empty? @creds-options) (assoc :error (@tr [:no-available-creds-registry])))]
+      )))
 
 
 (defn content
   []
   (fn []
-    (let [infra-registries (subscribe [::subs/registries-creds-not-preselected])
+    (let [registries-creds (subscribe [::subs/registries-creds])
           loading?         (subscribe [::subs/infra-registries-loading?])]
       [ui/Form {:loading @loading?}
-       (for [private-registry-id @infra-registries]
+       (for [[private-registry-id info] @registries-creds]
          ^{:key private-registry-id}
-         [dropdown-creds private-registry-id])])))
+         [dropdown-creds private-registry-id info])])))

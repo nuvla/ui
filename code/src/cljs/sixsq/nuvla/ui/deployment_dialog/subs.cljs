@@ -282,14 +282,6 @@
 
 
 (reg-sub
-  ::registries-creds-not-preselected
-  :<- [::registries-creds]
-  (fn [registries-creds]
-    (keep (fn [[id {:keys [preselected?]}]]
-            (when-not preselected? id)) registries-creds)))
-
-
-(reg-sub
   ::env-variables
   :<- [::module-content]
   (fn [module-content]

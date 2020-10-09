@@ -88,7 +88,7 @@
   (let [tr               (subscribe [::i18n-subs/tr])
         visible?         (subscribe [::subs/deploy-modal-visible?])
         deployment       (subscribe [::subs/deployment])
-        registries-creds (subscribe [::subs/registries-creds-not-preselected])
+        registries-creds (subscribe [::subs/registries-creds])
         env-variables    (subscribe [::subs/env-variables])
         ready?           (subscribe [::subs/ready?])
         launch-disabled? (subscribe [::subs/launch-disabled?])

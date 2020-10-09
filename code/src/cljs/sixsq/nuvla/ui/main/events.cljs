@@ -32,10 +32,18 @@
 (reg-event-db
   ::set-device
   (fn [{:keys [::spec/device] :as db} [_ new-device]]
-    (log/info "setting device:" new-device)
-    (cond-> (assoc db ::spec/device new-device)
-            (not= device new-device) (assoc ::spec/sidebar-open?
-                                            (not (#{:mobile :tablet} new-device))))))
+    (let [width      (.-innerWidth js/window)
+          new-device (cond
+                       (< width 768) :mobile
+                       (< width 991) :tablet
+                       (< width 1199) :computer
+                       (< width 1919) :large-screen
+                       :else :wide-screen)
+          changed?   (not= device new-device)]
+      (when changed? (log/info "setting device:" new-device))
+      (cond-> (assoc db ::spec/device new-device)
+              changed? (assoc ::spec/sidebar-open?
+                              (not (#{:mobile :tablet} new-device)))))))
 
 
 (reg-event-db

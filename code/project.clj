@@ -83,7 +83,7 @@
                  [cljs-ajax "0.8.1" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
-                 [com.taoensso/timbre "4.10.0" :scope "provided"]
+                 [com.taoensso/timbre "5.1.0" :scope "provided"]
                  [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]
                  [com.taoensso/tempura "1.2.1" :scope "provided"]
                  [com.cemerick/url :scope "provided"]
@@ -101,10 +101,10 @@
                           [binaryage/devtools "1.0.2" :scope "test"]
                           [day8.re-frame/re-frame-10x "0.7.0"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.11.1"]   ;; WARNING: also in package.json
+   :scljs {:dependencies [[thheller/shadow-cljs "2.11.5"]   ;; WARNING: also in package.json
                           [org.clojure/google-closure-library "0.0-20191016-6ae1f72f"]
                           [org.clojure/google-closure-library-third-party "0.0-20191016-6ae1f72f"]
-                          [com.google.javascript/closure-compiler-unshaded "v20200719"]]}}
+                          [com.google.javascript/closure-compiler-unshaded "v20200830"]]}}
 
 
 

@@ -40,8 +40,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.welcome.views]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.welcome.views]))
 
 
 (defn crumb
@@ -67,7 +66,7 @@
 
 
 (defn breadcrumbs-links []
-  (let [nav-path (subscribe [::subs/nav-path])
+  (let [nav-path           (subscribe [::subs/nav-path])
         decorated-nav-path (decorate-breadcrumbs @nav-path)]
     (vec (concat [ui/Breadcrumb {:size :large}]
                  (->> decorated-nav-path
@@ -105,7 +104,7 @@
   []
   (let [grid-style {:style {:padding-top    5
                             :padding-bottom 5
-                            :text-align "center"}}]
+                            :text-align     "center"}}]
     [ui/Segment {:style {:border-radius 0}}
      [ui/Grid {:columns 3}
       [ui/GridColumn grid-style "© 2020, SixSq Sàrl"]
@@ -267,10 +266,7 @@
           resource-path    (subscribe [::subs/nav-path])
           session-loading? (subscribe [::session-subs/session-loading?])]
       (if (and @cep (not @session-loading?))
-        [ui/Responsive {:as            "div"
-                        :id            "nuvla-ui-main"
-                        :fire-on-mount true
-                        :on-update     (responsive/callback #(dispatch [::events/set-device %]))}
+        [:div {:id "nuvla-ui-main"}
          (case (first @resource-path)
            "sign-in" [session-views/SessionPage]
            "sign-up" [session-views/SessionPage]

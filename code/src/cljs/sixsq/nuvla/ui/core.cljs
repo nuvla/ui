@@ -40,6 +40,12 @@
     (.addEventListener js/document "visibilitychange" callback)))
 
 
+(defn screen-size-watcher []
+  (let [callback #(dispatch [::main-events/set-device])]
+    (callback)
+    (.addEventListener js/window "resize" callback)))
+
+
 (defn patch-process
   "patch for npm markdown module that calls into the process object for the
    current working directory"
@@ -66,6 +72,7 @@
   (dispatch-sync [::session-events/initialize])
   (dispatch-sync [::main-events/check-iframe])
   (visibility-watcher)
+  (screen-size-watcher)
   (routes/routes)
   (dispatch [::history-events/initialize @config/path-prefix])
   (swap! fv/conf #(merge % {:atom r/atom}))

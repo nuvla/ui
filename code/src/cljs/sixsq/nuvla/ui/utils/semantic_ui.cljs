@@ -171,6 +171,8 @@
 (def StepGroup (r/adapt-react-class semantic/StepGroup))
 (def StepTitle (r/adapt-react-class semantic/StepTitle))
 
+(def Sticky (r/adapt-react-class semantic/Sticky))
+
 (def Tab (r/adapt-react-class semantic/Tab))
 (def TabPane (r/adapt-react-class semantic/TabPane))
 

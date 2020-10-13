@@ -90,13 +90,14 @@
                           #(dispatch [::events/set-full-text-search %]))}]]]]))))
 
 
-(defn control-bar []
+(defn MenuBar []
   [:div
-   [ui/Menu {:attached "top", :borderless true}
-    [process-button]
-    [main-components/RefreshMenu
-     {:on-refresh #(dispatch [::events/get-data-sets])}]]
-   [ui/Segment {:attached "bottom"}
+   [main-components/StickyBar
+    [ui/Menu {:attached "top", :borderless true}
+     [process-button]
+     [main-components/RefreshMenu
+      {:on-refresh #(dispatch [::events/get-data-sets])}]]]
+   [ui/Segment
     [search-header]]])
 
 
@@ -302,7 +303,7 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment style/basic
      [uix/PageHeader "database" (@tr [:data-processing])]
-     [control-bar]
+     [MenuBar]
      [application-select-modal]
      [deployment-dialog-views/deploy-modal true]
      [queries-cards-group]

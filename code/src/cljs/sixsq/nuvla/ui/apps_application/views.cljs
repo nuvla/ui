@@ -240,7 +240,6 @@
          [apps-views-detail/urls-section]
          [apps-views-detail/output-parameters-section]
          [apps-views-detail/data-types-section]
-         [apps-views-detail/save-action]
          [apps-views-detail/add-modal]
          [apps-views-detail/save-modal]
          [apps-views-detail/logo-url-modal]

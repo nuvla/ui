@@ -70,16 +70,17 @@
         can-delete?       (subscribe [::subs/can-delete?])
         nuvlabox          (subscribe [::subs/nuvlabox])
         loading?          (subscribe [::subs/loading?])]
-    [ui/Menu {:borderless true, :stackable true}
-     (when @can-decommission?
-       [DecommissionButton @nuvlabox])
-     (when @can-delete?
-       [DeleteButton @nuvlabox])
+    [main-components/StickyBar
+     [ui/Menu {:borderless true, :stackable true}
+      (when @can-decommission?
+        [DecommissionButton @nuvlabox])
+      (when @can-delete?
+        [DeleteButton @nuvlabox])
 
-     [main-components/RefreshMenu
-      {:action-id  refresh-action-id
-       :loading?   @loading?
-       :on-refresh #(refresh uuid)}]]))
+      [main-components/RefreshMenu
+       {:action-id  refresh-action-id
+        :loading?   @loading?
+        :on-refresh #(refresh uuid)}]]]))
 
 
 (defn get-available-actions
@@ -462,26 +463,26 @@
               :size     "small"
               :pinned   true
               :trigger  (r/as-element [ui/Button
-                                       {:icon   true
-                                        :style  {:margin  "0"
-                                                 :padding "0"
-                                                 :border  "0px"
-                                                 :background  "none"}}
-                                       [ui/Icon {:name   "ellipsis vertical"
-                                                 :link  true}]])
-              :content  (r/as-element [ui/ListSA {:vertical-align  "middle"
-                                                  :link        true
-                                                  :selection   true
-                                                  :divided     true}
+                                       {:icon  true
+                                        :style {:margin     "0"
+                                                :padding    "0"
+                                                :border     "0px"
+                                                :background "none"}}
+                                       [ui/Icon {:name "ellipsis vertical"
+                                                 :link true}]])
+              :content  (r/as-element [ui/ListSA {:vertical-align "middle"
+                                                  :link           true
+                                                  :selection      true
+                                                  :divided        true}
                                        (for [action action-list]
-                                         [ui/ListItem {:as "a"
+                                         [ui/ListItem {:as  "a"
                                                        :key (str "action." (apply str
-                                                                             (take 12
-                                                                               (repeatedly #(char (+ (rand 26) 65))))))}
+                                                                                  (take 12
+                                                                                        (repeatedly #(char (+ (rand 26) 65))))))}
                                           [ui/ListContent
                                            [ui/ListDescription
-                                            [:span {:on-click  (:on-click action)
-                                                    :style     (:style action)}
+                                            [:span {:on-click (:on-click action)
+                                                    :style    (:style action)}
                                              (:content action)]]]])])}]])
 
 
@@ -495,12 +496,12 @@
 
 (defn NuvlaboxCard
   [nuvlabox status & {on-click-fn :on-click}]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        edit      (r/atom false)
-        nb-name   (r/atom (:name nuvlabox))
-        close-fn  #(do
-                     (reset! edit false)
-                     (refresh (:id nuvlabox)))]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        edit     (r/atom false)
+        nb-name  (r/atom (:name nuvlabox))
+        close-fn #(do
+                    (reset! edit false)
+                    (refresh (:id nuvlabox)))]
     (fn [{:keys [id name description created state tags] :as nuvlabox} status]
       ^{:key id}
       [ui/Card (when on-click-fn {:on-click on-click-fn})
@@ -517,13 +518,13 @@
          ; but for some reason, the :placeholder and :default-value properties of the input
          ; do not get updated after an edit
          (if @edit
-           [ui/Input {:default-value  (or name id)
-                      :on-key-press   (partial forms/on-return-key #(if (= @nb-name (or name id))
-                                                                      (close-fn)
-                                                                      (EditAction id {:name @nb-name} close-fn)))
-                      :on-change      (ui-callback/input-callback #(reset! nb-name %))
-                      :focus          true
-                      :size           "mini"}]
+           [ui/Input {:default-value (or name id)
+                      :on-key-press  (partial forms/on-return-key #(if (= @nb-name (or name id))
+                                                                     (close-fn)
+                                                                     (EditAction id {:name @nb-name} close-fn)))
+                      :on-change     (ui-callback/input-callback #(reset! nb-name %))
+                      :focus         true
+                      :size          "mini"}]
            (or name id))]
 
 

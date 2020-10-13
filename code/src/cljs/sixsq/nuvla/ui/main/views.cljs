@@ -25,6 +25,7 @@
     [sixsq.nuvla.ui.infrastructures.events :as infra-service-events]
     [sixsq.nuvla.ui.infrastructures.views]
     [sixsq.nuvla.ui.intercom.views :as intercom]
+    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as events]
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
@@ -257,35 +258,35 @@
 
 
 (defn app []
-  (fn []
-    (let [show?            (subscribe [::subs/sidebar-open?])
-          cep              (subscribe [::api-subs/cloud-entry-point])
-          iframe?          (subscribe [::subs/iframe?])
-          is-small-device? (subscribe [::subs/is-small-device?])
-          resource-path    (subscribe [::subs/nav-path])
-          session-loading? (subscribe [::session-subs/session-loading?])]
-      (if (and @cep (not @session-loading?))
-        [:div {:id "nuvla-ui-main"}
-         (case (first @resource-path)
-           "sign-in" [session-views/SessionPage]
-           "sign-up" [session-views/SessionPage]
-           "reset-password" [session-views/SessionPage]
-           nil [session-views/SessionPage]
-           [:<>
-            [intercom/widget]
-            [sidebar/menu]
-            [:div {:style {:transition  "0.5s"
-                           :margin-left (if (and (not @is-small-device?) @show?)
-                                          sidebar/sidebar-width "0")}}
-             [ui/Dimmer {:active   (and @is-small-device? @show?)
-                         :inverted true
-                         :style    {:z-index 999}
-                         :on-click #(dispatch [::events/close-sidebar])}]
-             [header]
-             [contents]
-             [ignore-changes-modal]
-             [subscription-required-modal]
-             (when-not @iframe? [footer])]]
-           )]
-        [ui/Container
-         [ui/Loader {:active true :size "massive"}]]))))
+  (let [show?            (subscribe [::subs/sidebar-open?])
+        cep              (subscribe [::api-subs/cloud-entry-point])
+        iframe?          (subscribe [::subs/iframe?])
+        is-small-device? (subscribe [::subs/is-small-device?])
+        resource-path    (subscribe [::subs/nav-path])
+        session-loading? (subscribe [::session-subs/session-loading?])]
+    (if (and @cep (not @session-loading?))
+      [:div {:id "nuvla-ui-main"}
+       (case (first @resource-path)
+         "sign-in" [session-views/SessionPage]
+         "sign-up" [session-views/SessionPage]
+         "reset-password" [session-views/SessionPage]
+         nil [session-views/SessionPage]
+         [:<>
+          [intercom/widget]
+          [sidebar/menu]
+          [:div {:style {:transition  "0.5s"
+                         :margin-left (if (and (not @is-small-device?) @show?)
+                                        sidebar/sidebar-width "0")}}
+           [ui/Dimmer {:active   (and @is-small-device? @show?)
+                       :inverted true
+                       :style    {:z-index 999}
+                       :on-click #(dispatch [::events/close-sidebar])}]
+           [header]
+           [:div {:ref main-components/ref}
+            [contents]
+            [ignore-changes-modal]
+            [subscription-required-modal]
+            (when-not @iframe? [footer])]]]
+         )]
+      [ui/Container
+       [ui/Loader {:active true :size "massive"}]])))

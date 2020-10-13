@@ -353,11 +353,11 @@
             parent (get @module-common ::apps-spec/parent-path)]
         (dispatch [::apps-events/set-form-spec ::spec/module-component])
         [ui/Container {:fluid true}
-         [uix/PageHeader "grid layout" (str parent (when (not-empty parent) "/") name) :inline true]
          [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)
                          :on-change     #(do (dispatch [::apps-events/acl %])
                                              (dispatch [::main-events/changes-protection? true]))
                          :read-only     (not @editable?)}]
+         [uix/PageHeader "grid layout" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
          [summary]
          [apps-views-detail/registries-section]
@@ -371,7 +371,6 @@
          [apps-views-detail/output-parameters-section]
          [apps-views-detail/data-types-section]
          [test-command]
-         [apps-views-detail/save-action]
          [apps-views-detail/add-modal]
          [apps-views-detail/save-modal]
          [apps-views-detail/logo-url-modal]

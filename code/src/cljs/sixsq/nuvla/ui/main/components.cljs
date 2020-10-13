@@ -1,10 +1,13 @@
 (ns sixsq.nuvla.ui.main.components
   (:require
+    ["react" :as react]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+
+(def ref (react/createRef))
 
 
 (defn RefreshedIn
@@ -45,3 +48,11 @@
     [ui/Input (merge {:placeholder (@tr [:search])
                       :icon        "search"}
                      opts)]))
+
+
+(defn StickyBar [Menu]
+  [ui/Sticky {:offset  -1
+              :context ref
+              :style   {:margin-top    11
+                        :margin-bottom 10}}
+   Menu])

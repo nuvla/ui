@@ -69,14 +69,10 @@
 
 
 (defn MenuBar []
-  (let [loading?  (subscribe [::subs/loading?])
-        full-text (subscribe [::subs/full-text-search])
-        tr (subscribe [::i18n-subs/tr])]
+  (let [loading? (subscribe [::subs/loading?])]
     (dispatch [::events/refresh])
     (fn []
-      [:<>
-       [uix/PageHeader
-        "box" (general-utils/capitalize-first-letter (@tr [:edge]))]
+      [main-components/StickyBar
        [ui/Menu {:borderless true, :stackable true}
         [AddButton]
         [ui/MenuItem {:icon     "grid layout"
@@ -91,11 +87,7 @@
         [main-components/RefreshMenu
          {:action-id  events/refresh-id
           :loading?   @loading?
-          :on-refresh #(dispatch [::events/refresh])}]]
-       [main-components/SearchInput
-        {:default-value @full-text
-         :on-change     (ui-callback/input-callback
-                          #(dispatch [::events/set-full-text-search %]))}]])))
+          :on-refresh #(dispatch [::events/refresh])}]]])))
 
 
 (defn NuvlaDocs
@@ -710,21 +702,29 @@
 (defmethod panel/render :edge
   [path]
   (let [[_ uuid] path
-        n        (count path)
-        root     [:<>
-                  [MenuBar]
-                  [StatisticStates]
-                  (case @view-type
-                    :cards [NuvlaboxCards]
-                    :table [NuvlaboxTable]
-                    :map [NuvlaboxMap])
-                  (when-not (= @view-type :map)
-                    [Pagination])
-                  [AddModalWrapper]]
-        children (case n
-                   1 root
-                   2 [edge-detail/EdgeDetails uuid]
-                   root)]
+        n         (count path)
+        full-text (subscribe [::subs/full-text-search])
+        tr        (subscribe [::i18n-subs/tr])
+        root      [:<>
+                   [uix/PageHeader
+                    "box" (general-utils/capitalize-first-letter (@tr [:edge]))]
+                   [MenuBar]
+                   [main-components/SearchInput
+                    {:default-value @full-text
+                     :on-change     (ui-callback/input-callback
+                                      #(dispatch [::events/set-full-text-search %]))}]
+                   [StatisticStates]
+                   (case @view-type
+                     :cards [NuvlaboxCards]
+                     :table [NuvlaboxTable]
+                     :map [NuvlaboxMap])
+                   (when-not (= @view-type :map)
+                     [Pagination])
+                   [AddModalWrapper]]
+        children  (case n
+                    1 root
+                    2 [edge-detail/EdgeDetails uuid]
+                    root)]
     (dispatch [::events/get-vpn-infra])
     (dispatch [::events/get-nuvlabox-releases])
     [ui/Segment style/basic

@@ -85,6 +85,5 @@
                          :read-only     (not @editable?)}]
          [apps-views-detail/MenuBar]
          [summary]
-         [apps-views-detail/save-action]
          [modules-view]
          [apps-views-detail/logo-url-modal]]))))

@@ -679,15 +679,16 @@
                        :size :massive}]]]]]]))))
 
 
-(defn control-bar []
+(defn MenuBar []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Menu {:borderless true}
-     [uix/MenuItemWithIcon
-      {:name      (@tr [:add])
-       :icon-name "add"
-       :on-click  #(dispatch [::events/open-add-credential-modal])}]
-     [main-components/RefreshMenu
-      {:on-refresh #(dispatch [::events/get-credentials])}]]))
+    [main-components/StickyBar
+     [ui/Menu {:borderless true}
+      [uix/MenuItemWithIcon
+       {:name      (@tr [:add])
+        :icon-name "add"
+        :on-click  #(dispatch [::events/open-add-credential-modal])}]
+      [main-components/RefreshMenu
+       {:on-refresh #(dispatch [::events/get-credentials])}]]]))
 
 
 (defn DeleteButton
@@ -747,7 +748,7 @@
          [uix/Accordion
           [:<>
            [:div (@tr [:credential-infra-service-section-sub-text])]
-           [control-bar]
+           [MenuBar]
            (if (empty? infra-service-creds)
              [ui/Message
               (str/capitalize (str (@tr [:no-credentials]) "."))]

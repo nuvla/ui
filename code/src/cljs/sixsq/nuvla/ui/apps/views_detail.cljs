@@ -69,7 +69,9 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         module        (subscribe [::subs/module])
         is-new?       (subscribe [::subs/is-new?])
-        page-changed? (subscribe [::main-subs/changes-protection?])]
+        page-changed? (subscribe [::main-subs/changes-protection?])
+        form-valid?   (subscribe [::subs/form-valid?])
+        editable?     (subscribe [::subs/editable?])]
     (fn []
       (let [subtype          (:subtype @module)
             launchable?      (and subtype (not= "project" subtype))
@@ -78,48 +80,40 @@
             add-disabled?    (or @is-new? @page-changed?)
             id               (:id @module)]
 
-        [ui/Menu {:borderless true}
+        [main-components/StickyBar
+         [ui/Menu {:borderless true}
+          (when @editable?
+            [uix/MenuItemWithIcon
+             {:name      (@tr [:save])
+              :icon-name "save"
+              :disabled  (edit-button-disabled? @page-changed? @form-valid?)
+              :on-click  save-callback}])
 
-         (when launchable?
-           [uix/MenuItemWithIcon
-            {:name      (@tr [:launch])
-             :icon-name "rocket"
-             :disabled  launch-disabled?
-             :on-click  #(dispatch [::main-events/subscription-required-dispatch
-                                    [::deployment-dialog-events/create-deployment
-                                     id :infra-services]])}])
+          (when launchable?
+            [uix/MenuItemWithIcon
+             {:name      (@tr [:launch])
+              :icon-name "rocket"
+              :disabled  launch-disabled?
+              :on-click  #(dispatch [::main-events/subscription-required-dispatch
+                                     [::deployment-dialog-events/create-deployment
+                                      id :infra-services]])}])
 
-         (when add?
-           [uix/MenuItemWithIcon
-            {:name      (@tr [:add])
-             :icon-name "add"
-             :disabled  add-disabled?
-             :on-click  #(dispatch [::events/open-add-modal])}])
+          (when add?
+            [uix/MenuItemWithIcon
+             {:name      (@tr [:add])
+              :icon-name "add"
+              :disabled  add-disabled?
+              :on-click  #(dispatch [::events/open-add-modal])}])
 
-         (when (general-utils/can-delete? @module)
-           [DeleteButton @module])
+          (when (general-utils/can-delete? @module)
+            [DeleteButton @module])
 
-         [main-components/RefreshMenu
-          {:refresh-disabled? @is-new?
-           :on-refresh        #(let [get-module-fn (fn [] (dispatch [::events/get-module]))]
-                                 (if @page-changed?
-                                   (dispatch [::main-events/ignore-changes-modal get-module-fn])
-                                   (get-module-fn)))}]]))))
-
-
-(defn save-action []
-  (let [page-changed? (subscribe [::main-subs/changes-protection?])
-        tr            (subscribe [::i18n-subs/tr])
-        form-valid?   (subscribe [::subs/form-valid?])
-        editable?     (subscribe [::subs/editable?])]
-    (fn []
-      (when @editable?
-        [ui/Button {:primary  true
-                    :style    {:margin-top 10}
-                    :disabled (edit-button-disabled? @page-changed? @form-valid?)
-                    :icon     "save"
-                    :content  (@tr [:save])
-                    :on-click save-callback}]))))
+          [main-components/RefreshMenu
+           {:refresh-disabled? @is-new?
+            :on-refresh        #(let [get-module-fn (fn [] (dispatch [::events/get-module]))]
+                                  (if @page-changed?
+                                    (dispatch [::main-events/ignore-changes-modal get-module-fn])
+                                    (get-module-fn)))}]]]))))
 
 
 (defn save-modal

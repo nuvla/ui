@@ -32,20 +32,21 @@
     [taoensso.timbre :as timbre]))
 
 
-(defn ControlBar []
+(defn MenuBar []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Menu {:borderless true}
-     [ui/MenuMenu {:position "left"}
-      [uix/MenuItemWithIcon
-       {:name      (@tr [:add])
-        :icon-name "plus"
-        :position  "right"
-        :on-click  #(do
-                      (dispatch-sync [::events/reset-service-group])
-                      (dispatch-sync [::events/reset-infra-service])
-                      (dispatch [::events/open-add-service-modal]))}]]
-     [main-components/RefreshMenu
-      {:on-refresh #(dispatch [::events/get-infra-service-groups])}]]))
+    [main-components/StickyBar
+     [ui/Menu {:borderless true}
+      [ui/MenuMenu {:position "left"}
+       [uix/MenuItemWithIcon
+        {:name      (@tr [:add])
+         :icon-name "plus"
+         :position  "right"
+         :on-click  #(do
+                       (dispatch-sync [::events/reset-service-group])
+                       (dispatch-sync [::events/reset-infra-service])
+                       (dispatch [::events/open-add-service-modal]))}]]
+      [main-components/RefreshMenu
+       {:on-refresh #(dispatch [::events/get-infra-service-groups])}]]]))
 
 
 (def service-icons
@@ -145,7 +146,7 @@
             total-pages       (general-utils/total-pages infra-group-count @elements-per-page)]
         [:<>
          [uix/PageHeader "cloud" (@tr [:infra-services])]
-         [ControlBar]
+         [MenuBar]
          (when (pos-int? infra-group-count)
            [:<>
             [ServiceGroups @isgs]

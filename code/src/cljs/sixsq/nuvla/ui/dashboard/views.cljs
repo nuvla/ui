@@ -42,24 +42,25 @@
                                      #(dispatch [::events/set-active-only? %]))}]]))
 
 
-(defn menu-bar
+(defn MenuBar
   []
   (let [view     (subscribe [::subs/view])
         loading? (subscribe [::subs/loading?])]
     (fn []
       [:<>
-       [ui/Menu {:borderless true, :stackable true}
-        [ui/MenuItem {:icon     "grid layout"
-                      :active   (= @view "cards")
-                      :on-click #(dispatch [::events/set-view "cards"])}]
-        [ui/MenuItem {:icon     "table"
-                      :active   (= @view "table")
-                      :on-click #(dispatch [::events/set-view "table"])}]
+       [main-components/StickyBar
+        [ui/Menu {:borderless true, :stackable true}
+         [ui/MenuItem {:icon     "grid layout"
+                       :active   (= @view "cards")
+                       :on-click #(dispatch [::events/set-view "cards"])}]
+         [ui/MenuItem {:icon     "table"
+                       :active   (= @view "table")
+                       :on-click #(dispatch [::events/set-view "table"])}]
 
-        [main-components/RefreshMenu
-         {:action-id  events/refresh-action-id
-          :loading?   @loading?
-          :on-refresh refresh}]]
+         [main-components/RefreshMenu
+          {:action-id  events/refresh-action-id
+           :loading?   @loading?
+           :on-refresh refresh}]]]
 
        [control-bar]])))
 
@@ -151,7 +152,7 @@
 
         [ui/Container {:fluid true}
          [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard]))]
-         [menu-bar]
+         [MenuBar]
          [ui/Segment style/basic
           [deployments-display deployments-list]]
          [uix/Pagination

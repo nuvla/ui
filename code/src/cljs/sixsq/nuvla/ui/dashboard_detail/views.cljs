@@ -656,16 +656,17 @@
 (defn MenuBar
   [{:keys [id] :as deployment}]
   (let [loading? (subscribe [::subs/loading?])]
-    [ui/Menu {:borderless true}
-     [StartButton deployment]
-     [ShutdownButton deployment :menu-item? true]
-     [FetchModuleButton deployment]
-     [CloneButton deployment]
-     [DeleteButton deployment :menu-item? true]
-     [main-components/RefreshMenu
-      {:action-id  refresh-action-id
-       :loading?   @loading?
-       :on-refresh #(refresh id)}]]))
+    [main-components/StickyBar
+     [ui/Menu {:borderless true}
+      [StartButton deployment]
+      [ShutdownButton deployment :menu-item? true]
+      [FetchModuleButton deployment]
+      [CloneButton deployment]
+      [DeleteButton deployment :menu-item? true]
+      [main-components/RefreshMenu
+       {:action-id  refresh-action-id
+        :loading?   @loading?
+        :on-refresh #(refresh id)}]]]))
 
 
 (defn event-get-timestamp
@@ -688,12 +689,12 @@
       [ui/Segment (merge style/basic {:loading @loading?})
        [ui/Container {:fluid true}
         [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard])) :inline true]
+        [MenuBar @deployment]
         (when @acl
           [acl/AclButton
            {:default-value @acl
             :read-only     @read-only?
             :on-change     #(dispatch [::events/edit resource-id (assoc @deployment :acl %)])}])
-        [MenuBar @deployment]
         [summary @deployment]
         [urls-section]
         [module-version-section]

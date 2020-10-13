@@ -101,28 +101,29 @@
 
 
 (defn MenuBar [uuid]
-  (let [can-delete?   (subscribe [::subs/can-delete?])
+  (let [can-delete?    (subscribe [::subs/can-delete?])
         can-terminate? (subscribe [::subs/can-terminate?])
-        can-stop? (subscribe [::subs/can-stop?])
-        can-start? (subscribe [::subs/can-start?])
-        infra-service (subscribe [::subs/infrastructure-service])
-        loading?      (subscribe [::subs/loading?])]
-    [ui/Menu {:borderless true}
-     (when @can-delete?
-       [DeleteButton infra-service])
+        can-stop?      (subscribe [::subs/can-stop?])
+        can-start?     (subscribe [::subs/can-start?])
+        infra-service  (subscribe [::subs/infrastructure-service])
+        loading?       (subscribe [::subs/loading?])]
+    [main-components/StickyBar
+     [ui/Menu {:borderless true}
+      (when @can-delete?
+        [DeleteButton infra-service])
 
-     (when @can-terminate?
-       [TerminateButton infra-service])
+      (when @can-terminate?
+        [TerminateButton infra-service])
 
-     (when @can-stop?
-       [StopButton infra-service])
+      (when @can-stop?
+        [StopButton infra-service])
 
-     (when @can-start?
-       [StartButton infra-service])
+      (when @can-start?
+        [StartButton infra-service])
 
-     [main-components/RefreshMenu
-      {:loading?   @loading?
-       :on-refresh #(refresh uuid)}]]))
+      [main-components/RefreshMenu
+       {:loading?   @loading?
+        :on-refresh #(refresh uuid)}]]]))
 
 
 (defn InfraService
@@ -176,7 +177,7 @@
            (if (-> @infra-service :cluster-params :coe-manager-endpoint)
              [uix/TableRowField "COE manager", :key (str id "-subtype"),
               :editable? false, :spec ::spec/endpoint, :validate-form? @validate-form?,
-              :required? true, :default-value [:a {:href (-> @infra-service :cluster-params :coe-manager-endpoint)
+              :required? true, :default-value [:a {:href   (-> @infra-service :cluster-params :coe-manager-endpoint)
                                                    :target "_blank"}
                                                (-> @infra-service :cluster-params :coe-manager-endpoint)]])]]
          (when @can-edit?

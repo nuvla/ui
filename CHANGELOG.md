@@ -4,6 +4,8 @@
 
 ### Updated
 
+  - Use sticky bar for mostly all menubar in pages
+  - Main components - Sticky bar
   - Dependencies update
 
 ## [2.8.0] - 2020-10-09

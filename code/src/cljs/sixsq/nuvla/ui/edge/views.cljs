@@ -404,7 +404,8 @@
                               nuvlabox-ssh-keys new-private-ssh-key on-close-fn tr]
          :else [:<>
                 [ui/ModalHeader
-                 [ui/Icon {:name "add"}] (str (@tr [:nuvlabox-modal-new-nuvlabox]) (:name @creation-data))]
+                 [ui/Icon {:name "add"}] (str (@tr [:nuvlabox-modal-new-nuvlabox])
+                                              " " (:name @creation-data))]
 
                 [ui/ModalContent
                  [ui/Divider {:horizontal true :as "h3"}

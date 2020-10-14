@@ -10,32 +10,25 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
-(defn get-state-count
-  [state]
-  (api/search @CLIENT :nuvlabox (cond-> {:last 0}
-                                        state (assoc :filter (utils/state-filter state)))))
-
-
 (reg-fx
   ::state-nuvlaboxes
   (fn [[callback]]
     (go
-      (let [total           (<! (get-state-count nil))
-            new             (<! (get-state-count utils/state-new))
-            activated       (<! (get-state-count utils/state-activated))
-            commissioned    (<! (get-state-count utils/state-commissioned))
-            decommissioning (<! (get-state-count utils/state-decommissioning))
-            decommissioned  (<! (get-state-count utils/state-decommissioned))
-            error           (<! (get-state-count utils/state-error))]
-
-        (callback {:total           (:count total)
-                   :new             (:count new)
-                   :activated       (:count activated)
-                   :commissioned    (:count commissioned)
-                   :decommissioning (:count decommissioning)
-                   :decommissioned  (:count decommissioned)
-                   :error           (:count error)})))))
-
+      (let [cimi-params  {:last        0
+                          :aggregation "value_count:id,terms:state"}
+            aggregations (:aggregations (<! (api/search @CLIENT :nuvlabox cimi-params)))
+            states-count (->> aggregations
+                              :terms:state
+                              :buckets
+                              (map (juxt :key :doc_count))
+                              (into {}))]
+        (callback {:total           (get-in aggregations [:value_count:id :value] 0)
+                   :new             (get states-count utils/state-new 0)
+                   :activated       (get states-count utils/state-activated 0)
+                   :commissioned    (get states-count utils/state-commissioned 0)
+                   :decommissioning (get states-count utils/state-decommissioning 0)
+                   :decommissioned  (get states-count utils/state-decommissioned 0)
+                   :error           (get states-count utils/state-error 0)})))))
 
 
 (defn get-status-collection

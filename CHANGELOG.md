@@ -4,6 +4,7 @@
 
 ### Updated
 
+  - Edge - Optimize number of requests for stats
   - Use sticky bar for mostly all menubar in pages
   - Main components - Sticky bar
   - Dependencies update

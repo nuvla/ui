@@ -4,6 +4,10 @@
 
 ### Updated
 
+## [2.8.1] - 2020-10-15
+
+### Updated
+
   - Edge - Optimize number of requests for stats
   - Use sticky bar for mostly all menubar in pages
   - Main components - Sticky bar

@@ -8,6 +8,7 @@
   - Use sticky bar for mostly all menubar in pages
   - Main components - Sticky bar
   - Dependencies update
+  - Improved launch dialog steps validation
 
 ## [2.8.0] - 2020-10-09
 

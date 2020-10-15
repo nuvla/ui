@@ -79,6 +79,10 @@
   (fn [db [_ active-step]]
     (assoc db ::spec/active-step active-step)))
 
+(reg-event-db
+  ::set-launch-status
+  (fn [db [_ step-id status]]
+    (assoc-in db [::spec/step-states step-id :status] status)))
 
 (reg-event-fx
   ::set-selected-infra-service

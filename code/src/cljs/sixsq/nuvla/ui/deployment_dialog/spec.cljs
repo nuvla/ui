@@ -39,8 +39,11 @@
 
 (s/def ::icon string?)
 
+(s/def ::status #{:loading :ok :warning})
+
 (s/def ::step-state (s/keys :req-un [::step-id
-                                     ::icon]))
+                                     ::icon]
+                            :opt-un [::status]))
 
 (s/def ::data-step-active? boolean?)
 

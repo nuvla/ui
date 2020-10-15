@@ -142,6 +142,10 @@
   (fn [db]
     (::spec/infra-services db)))
 
+(reg-sub
+  ::launch-status-registries
+  (fn [db [_ step-id]]
+    (get-in db [::spec/step-states step-id :status])))
 
 (reg-sub
   ::infra-registries
@@ -262,6 +266,17 @@
     (= module-private-registries-count
        deployment-reg-creds-count)))
 
+(reg-sub
+  ::launch-status
+  (fn [db]
+    (let [steps-status (->> (::spec/step-states db)
+                            vals
+                            (map :status)
+                            (remove nil?))]
+      (cond
+        (some #{:warning} steps-status) :warning
+        (some #{:loading} steps-status) :loading
+        :else :ok))))
 
 (reg-sub
   ::license-completed?

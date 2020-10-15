@@ -17,6 +17,12 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.style :as style]))
 
+(defn get-check-status
+  [loading? invalid?]
+  (cond
+    loading? :loading
+    invalid? :warning
+    :else :ok))
 
 (defn deployment-step-state
   [{:keys [step-id completed? icon] :as step-state}]
@@ -27,45 +33,57 @@
         data-completed?          (subscribe [::subs/data-completed?])
         registries-completed?    (subscribe [::subs/registries-completed?])
         cred-id                  (subscribe [::subs/selected-credential-id])
-        infra-registries-creds   (subscribe [::subs/infra-registries-creds])
+        registries-creds         (subscribe [::subs/registries-creds])
         license-completed?       (subscribe [::subs/license-completed?])
-        price-completed?         (subscribe [::subs/price-completed?])]
+        price-completed?         (subscribe [::subs/price-completed?])
+        credential-loading?      (subscribe [::creds-subs/credential-check-loading? @cred-id])
+        credential-invalid?      (subscribe [::creds-subs/credential-check-status-invalid? @cred-id])
+        registries-status        (subscribe [::subs/launch-status-registries :registries])]
+
     [ui/Step {:link      true
               :on-click  #(dispatch [::events/set-active-step step-id])
               :completed (case step-id
                            :data @data-completed?
-                           :infra-services @credentials-completed?
+                           :infra-services (and @credentials-completed? (not @credential-loading?) (not @credential-invalid?))
                            :env-variables @env-variables-completed?
-                           :registries @registries-completed?
+                           :registries (and @registries-completed? (= :ok @registries-status))
                            :license @license-completed?
                            :pricing @price-completed?
                            completed?)
               :active    (= step-id @active-step)}
-     [ui/Icon {:name icon}]
+     (or
+       (case step-id
+         :infra-services (do
+                           (dispatch [::events/set-launch-status
+                                      step-id
+                                      (get-check-status @credential-loading? @credential-invalid?)])
+                           (when @credentials-completed? [creds-comp/CredentialCheckPopup @cred-id]))
+
+         :registries (when @registries-completed?
+                       (let [selected-reg-creds (->> (vals @registries-creds)
+                                                   (map (fn [{:keys [cred-id preselected?]}]
+                                                          (when-not preselected? cred-id)))
+                                                   (remove nil?))
+                           creds-reg-status (map
+                                              (fn [cred-reg-id]
+                                                (let [loading? (subscribe [::creds-subs/credential-check-loading? cred-reg-id])
+                                                      invalid? (subscribe [::creds-subs/credential-check-status-invalid? cred-reg-id])]
+                                                  [cred-reg-id (get-check-status @loading? @invalid?)])) selected-reg-creds)
+                           focused-cred-reg (or (some (fn [[_ status :as c]] (when (= status :warning) c)) creds-reg-status)
+                                                (some (fn [[_ status :as c]] (when (= status :loading) c)) creds-reg-status)
+                                                (first creds-reg-status))
+
+                           [cred-reg reg-cred-status] focused-cred-reg]
+
+                       (dispatch [::events/set-launch-status step-id (or reg-cred-status :ok)])
+                       (when cred-reg [creds-comp/CredentialCheckPopup cred-reg])))
+         nil)
+       [ui/Icon {:name icon}])
+
+
      [ui/StepContent
       [ui/StepTitle {:style {:width "10ch"}} (@tr [step-id]) " "
-       (case step-id
-         :infra-services
-         (when @credentials-completed?
-           [creds-comp/CredentialCheckPopup @cred-id])
-         :registries
-         (when @registries-completed?
-           (let [registries-creds (map first (vals @infra-registries-creds))
-                 focused-cred-reg (or
-                                    (some
-                                      (fn [{cred-reg-id :id}]
-                                        (when (or
-                                                @(subscribe
-                                                   [::creds-subs/credential-check-loading?
-                                                    cred-reg-id])
-                                                @(subscribe
-                                                   [::creds-subs/credential-check-status-invalid?
-                                                    cred-reg-id]))
-                                          cred-reg-id)) registries-creds)
-                                    (:id (first registries-creds)))]
-
-             [creds-comp/CredentialCheckPopup focused-cred-reg]))
-         nil)]]]))
+       ]]]))
 
 
 (defn step-content
@@ -82,6 +100,13 @@
      :summary [summary-step/content]
      nil)])
 
+(defn need-force-launch?
+  []
+  (let [launch-disabled?       (subscribe [::subs/launch-disabled?])
+        cred-id                (subscribe [::subs/selected-credential-id])
+        credentials-completed? (subscribe [::subs/credentials-completed?])
+        credential-invalid?    (subscribe [::creds-subs/credential-check-status-invalid? @cred-id])]
+    (boolean (or @launch-disabled? (and @credentials-completed? (not @credential-invalid?))))))
 
 (defn deploy-modal
   [show-data?]
@@ -92,6 +117,7 @@
         env-variables    (subscribe [::subs/env-variables])
         ready?           (subscribe [::subs/ready?])
         launch-disabled? (subscribe [::subs/launch-disabled?])
+        launch-status    (subscribe [::subs/launch-status])
         active-step      (subscribe [::subs/active-step])
         step-states      (subscribe [::subs/step-states])
         license          (subscribe [::subs/license])
@@ -151,9 +177,13 @@
                 [step-content @active-step])]
              ]]]]
          [ui/ModalActions
-          [ui/Button {:primary  true
+          [ui/Button {:color    (if (= @launch-status :warning) "yellow" "blue")
                       :disabled @launch-disabled?
                       :on-click submit-fn}
            [ui/Icon {:name     "rocket"
                      :disabled @launch-disabled?}]
-           (@tr [:launch])]]]))))
+           (@tr (if (not= @launch-status :ok)
+                  [:launch-force]
+                  [:launch]))
+           ]]]))))
+

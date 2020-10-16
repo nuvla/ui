@@ -4,6 +4,8 @@
 
 ### Updated
 
+  - Main - Nuvla logo redirect to /
+
 ## [2.8.1] - 2020-10-15
 
 ### Updated

@@ -79,13 +79,12 @@
 
 (defn logo-item
   []
-  (let [tr           (subscribe [::i18n-subs/tr])
-        welcome-page (subscribe [::subs/page-info "welcome"])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     ^{:key "welcome"}
     [ui/MenuItem {:aria-label (@tr [:welcome])
                   :style      {:overflow-x "hidden"
                                :min-width  sidebar-width}
-                  :on-click   #(navigate (:url @welcome-page))}
+                  :href       "/"}
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"
                 :size     "tiny"

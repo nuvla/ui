@@ -4,6 +4,7 @@
 
 ### Updated
 
+  - Apps - License Terms & Conditions url updated
   - Main - Nuvla logo redirect to /
 
 ## [2.8.1] - 2020-10-15

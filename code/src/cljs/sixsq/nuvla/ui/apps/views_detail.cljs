@@ -820,7 +820,7 @@
                          (dispatch [::events/validate-form]))
         sixsq-license  {:license-name        "SixSq"
                         :license-description "SixSq license"
-                        :license-url         "https://sixsq.com/terms/general-terms-and-conditions"}]
+                        :license-url         "https://nuvla.io/terms/tos"}]
     (fn []
       (let [sixsq-selected? (= (:license-name @license)
                                (:license-name sixsq-license))

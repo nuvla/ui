@@ -4,6 +4,7 @@
 
 ### Updated
 
+  - Apps - Version not taken into account at launch fix
   - Apps - License Terms & Conditions url updated
   - Main - Nuvla logo redirect to /
 

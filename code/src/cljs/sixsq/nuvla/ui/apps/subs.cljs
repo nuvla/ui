@@ -49,11 +49,6 @@
 
 
 (reg-sub
-  ::version-warning?
-  ::spec/version-warning?)
-
-
-(reg-sub
   ::completed?
   ::spec/completed?)
 
@@ -105,10 +100,10 @@
                                        set)
           registries-infra-set    (set (map :id registries-infra))
           not-existing-registries (set/difference private-registries-set registries-infra-set)
-          res (map (fn [{:keys [id name]}]
-                     {:key id, :value id, :text (or name id)})
-                   (concat registries-infra
-                           (map (fn [id] {:id id}) not-existing-registries)))]
+          res                     (map (fn [{:keys [id name]}]
+                                         {:key id, :value id, :text (or name id)})
+                                       (concat registries-infra
+                                               (map (fn [id] {:id id}) not-existing-registries)))]
       (map (fn [{:keys [id name]}]
              {:key id, :value id, :text (or name id)})
            (concat registries-infra
@@ -196,3 +191,41 @@
               :content
               (dissoc :commit :author))
           (-> module-immutable :content (dissoc :commit :author)))))
+
+
+(reg-sub
+  ::versions
+  :<- [::module]
+  (fn [{:keys [versions]}]
+    (reverse (map-indexed vector versions))))
+
+
+(reg-sub
+  ::module-content-id
+  :<- [::module]
+  (fn [{{:keys [id]} :content}]
+    id))
+
+
+(reg-sub
+  ::is-latest-version?
+  :<- [::versions]
+  :<- [::module-content-id]
+  (fn [[versions id]]
+    (or (nil? id)
+        (= (some-> versions first second :href)
+           id))))
+
+
+(reg-sub
+  ::module-id-version
+  :<- [::module]
+  :<- [::versions]
+  :<- [::is-latest-version?]
+  :<- [::module-content-id]
+  (fn [[module versions is-latest? current]]
+    (let [id (:id module)]
+      (if is-latest?
+        id
+        (str id "_" (some (fn [[i {:keys [href]}]] (when (= current href) i)) versions))
+        ))))

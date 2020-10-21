@@ -71,7 +71,7 @@
     {:db         (assoc db ::spec/selected-credential-id id
                            ::spec/deployment (assoc deployment :parent id))
      :dispatch-n [(when data-step-active? [::set-data-filters])
-                  [::creds-events/check-credential credential 5]]}))
+                  [::creds-events/check-credential credential 2]]}))
 
 
 (reg-event-db
@@ -199,7 +199,7 @@
                            ::spec/deployment (deployment-update-registries
                                                deployment
                                                update-registries-creds))
-       :dispatch [::creds-events/check-credential credential 5]})))
+       :dispatch [::creds-events/check-credential credential 2]})))
 
 
 (reg-event-db

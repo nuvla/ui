@@ -3,6 +3,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
+    [sixsq.nuvla.ui.credentials.utils :as creds-utils]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
     [sixsq.nuvla.ui.deployment-dialog.views-data :as data-step]
@@ -16,13 +17,6 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.style :as style]))
-
-(defn get-check-status
-  [loading? invalid?]
-  (cond
-    loading? :loading
-    invalid? :warning
-    :else :ok))
 
 (defn deployment-step-state
   [{:keys [step-id completed? icon] :as step-state}]
@@ -56,7 +50,7 @@
          :infra-services (do
                            (dispatch [::events/set-launch-status
                                       step-id
-                                      (get-check-status @credential-loading? @credential-invalid?)])
+                                      (creds-utils/credential-check-status @credential-loading? @credential-invalid?)])
                            (when @credentials-completed? [creds-comp/CredentialCheckPopup @cred-id]))
 
          :registries (when @registries-completed?
@@ -68,7 +62,7 @@
                                               (fn [cred-reg-id]
                                                 (let [loading? (subscribe [::creds-subs/credential-check-loading? cred-reg-id])
                                                       invalid? (subscribe [::creds-subs/credential-check-status-invalid? cred-reg-id])]
-                                                  [cred-reg-id (get-check-status @loading? @invalid?)])) selected-reg-creds)
+                                                  [cred-reg-id (creds-utils/credential-check-status @loading? @invalid?)])) selected-reg-creds)
                            focused-cred-reg (or (some (fn [[_ status :as c]] (when (= status :warning) c)) creds-reg-status)
                                                 (some (fn [[_ status :as c]] (when (= status :loading) c)) creds-reg-status)
                                                 (first creds-reg-status))

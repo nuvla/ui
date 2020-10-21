@@ -61,8 +61,7 @@
           (if @editable?
             [:div
              [apps-views-detail/input "docker-registry" "docker-registry" registry
-              (@tr [:module-docker-registry-placeholder])
-              ::events/update-docker-registry ::spec/registry]
+              "docker.io" ::events/update-docker-registry ::spec/registry]
              [:span " "]
              [apps-views-detail/input "docker-repository-image-name" "docker-repository-image-name"
               (str/join "/" (remove nil? [repository image-name]))

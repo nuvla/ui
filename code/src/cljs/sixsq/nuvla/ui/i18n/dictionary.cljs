@@ -262,7 +262,6 @@
         :module-docker-image-label                 "docker image"
         :module-docker-image-placeholder           "nuvla/example-ubuntu"
         :module-docker-name-help                   "Docker image name"
-        :module-docker-registry-placeholder        "hub.docker.com"
         :module-docker-tag-placeholder             "latest"
         :module-env-variables                      "Environment Variables"
         :module-env-variables-help                 "Environment variables definitions for the container, with some extra options such as description and required fields."

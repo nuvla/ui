@@ -138,8 +138,6 @@
 
 (s/def ::active-input (s/nilable string?))
 
-(s/def ::version-warning? boolean?)
-
 (s/def ::is-new? boolean?)
 
 (s/def ::completed? boolean?)
@@ -175,7 +173,6 @@
                ::form-spec               nil
                ::form-valid?             true
                ::validate-form?          false
-               ::version-warning?        false
                ::is-new?                 false
                ::completed?              true
                ::add-modal-visible?      false

@@ -94,18 +94,6 @@
 
 
 (reg-event-db
-  ::set-version-warning
-  (fn [db [_]]
-    (assoc db ::spec/version-warning? true)))
-
-
-(reg-event-db
-  ::clear-version-warning
-  (fn [db [_]]
-    (assoc db ::spec/version-warning? false)))
-
-
-(reg-event-db
   ::set-module
   (fn [{:keys [::spec/validate-docker-compose] :as db} [_ {:keys [id] :as module}]]
     (let [db      (assoc db ::spec/completed? true

@@ -71,14 +71,16 @@
         is-new?       (subscribe [::subs/is-new?])
         page-changed? (subscribe [::main-subs/changes-protection?])
         form-valid?   (subscribe [::subs/form-valid?])
-        editable?     (subscribe [::subs/editable?])]
+        editable?     (subscribe [::subs/editable?])
+        module-id     (subscribe [::subs/module-id-version])]
     (fn []
       (let [subtype          (:subtype @module)
             launchable?      (and subtype (not= "project" subtype))
             launch-disabled? (or @is-new? @page-changed?)
             add?             (= "project" (:subtype @module))
             add-disabled?    (or @is-new? @page-changed?)
-            id               (:id @module)]
+            id               (:id @module)
+            id-content       (get-in @module [:content :id])]
 
         [main-components/StickyBar
          [ui/Menu {:borderless true}
@@ -96,7 +98,7 @@
               :disabled  launch-disabled?
               :on-click  #(dispatch [::main-events/subscription-required-dispatch
                                      [::deployment-dialog-events/create-deployment
-                                      id :infra-services]])}])
+                                      @module-id :infra-services]])}])
 
           (when add?
             [uix/MenuItemWithIcon
@@ -250,10 +252,10 @@
 
 
 (defn version-warning []
-  (let [version-warning? (subscribe [::subs/version-warning?])]
+  (let [latest? (subscribe [::subs/is-latest-version?])]
     (fn []
       (let []
-        [ui/Message {:hidden  (not @version-warning?)
+        [ui/Message {:hidden  @latest?
                      :warning true}
          [ui/MessageHeader "Warning!"]
          [ui/MessageContent "This is not the latest version. Click or tap "

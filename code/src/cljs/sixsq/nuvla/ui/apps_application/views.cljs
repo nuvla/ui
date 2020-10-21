@@ -37,7 +37,7 @@
       [ui/TableRow
        [ui/TableCell {:collapsing true
                       :style      {:padding-bottom 8}} "subtype"]
-       [ui/TableCell {:style {:padding-left (when-not @editable? 24)}}
+       [ui/TableCell
         (if @editable?
           [ui/Dropdown {:selection true,
                         :fluid     true

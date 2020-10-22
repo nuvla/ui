@@ -7,9 +7,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.profile.effects :as profile-fx]
     [sixsq.nuvla.ui.profile.events :as profile-events]
-    [sixsq.nuvla.ui.profile.spec :as profile-spec]
     [sixsq.nuvla.ui.session.effects :as fx]
     [sixsq.nuvla.ui.session.spec :as spec]
     [sixsq.nuvla.ui.utils.response :as response]))
@@ -72,6 +70,7 @@
   (fn [db _]
     (assoc db ::spec/loading? false)))
 
+
 (reg-event-db
   ::set-error-message
   (fn [db [_ error-message]]
@@ -85,16 +84,6 @@
      :dispatch [::clear-loading]}))
 
 
-(defn default-submit-callback
-  [close-modal success-msg response]
-  (dispatch [::clear-loading])
-  (dispatch [::initialize])
-  (when close-modal
-    (dispatch [::close-modal]))
-  (when success-msg
-    (dispatch [::set-success-message success-msg])))
-
-
 (reg-event-fx
   ::submit
   (fn [{{:keys [::spec/server-redirect-uri] :as db} :db} [_ form-id form-data opts]]
@@ -102,11 +91,20 @@
            success-msg  :success-msg,
            callback-add :callback-add,
            redirect-url :redirect-url
+           navigate-to  :navigate-to
            :or          {close-modal  true
                          redirect-url server-redirect-uri}} opts
 
           on-success    (or callback-add
-                            (partial default-submit-callback close-modal success-msg))
+                            #(do
+                               (dispatch [::clear-loading])
+                               (dispatch [::initialize])
+                               (when close-modal
+                                 (dispatch [::close-modal]))
+                               (when success-msg
+                                 (dispatch [::set-success-message success-msg]))
+                               (when navigate-to
+                                 (dispatch [::history-events/navigate navigate-to]))))
 
           on-error      #(let [{:keys [message]} (response/parse-ex-info %)]
                            (dispatch [::clear-loading])

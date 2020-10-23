@@ -119,6 +119,7 @@
                                           :names->value
                                           (dissoc :password-repeat))
                                  opts {:success-msg  (@tr [:validation-email-success-msg])
+                                       :navigate-to  "sign-in"
                                        :redirect-url (str @server-redirect-uri "?message="
                                                           callback-msg-on-validation)}]
                              (if @create-customer

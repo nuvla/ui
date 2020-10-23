@@ -35,7 +35,7 @@
                       :size      "tiny"
                       :onDismiss #(dispatch [::events/set-success-message nil])}
           [ui/MessageHeader (str/capitalize (@tr [:success]))]
-          [:p @success-message]])
+          [:p (@tr [@success-message])]])
 
        FormFields
 

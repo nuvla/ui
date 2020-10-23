@@ -15,7 +15,7 @@
         loading?  (subscribe [::subs/credential-check-loading? cred-id])
         invalid?  (subscribe [::subs/credential-check-status-invalid? cred-id])
         status    (subscribe [::subs/credential-check-status cred-id])]
-    (when @status
+    (when (and @status (or @loading? @invalid?))
       [ui/Popup {:trigger  (r/as-element
                              [ui/Icon {:name    (cond
                                                   @loading? "circle notched"

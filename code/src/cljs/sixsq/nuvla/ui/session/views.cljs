@@ -12,6 +12,7 @@
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.session.events :as events]
     [sixsq.nuvla.ui.session.reset-password-views :as reset-password-views]
+    [sixsq.nuvla.ui.session.set-password-views :as set-password-views]
     [sixsq.nuvla.ui.session.sign-in-views :as sign-in-views]
     [sixsq.nuvla.ui.session.sign-up-views :as sign-up-views]
     [sixsq.nuvla.ui.session.subs :as subs]
@@ -44,11 +45,10 @@
                                email-encoded (-> form-data :email js/encodeURI)]
                            (dispatch [::events/submit utils/user-tmpl-email-invitation
                                       (:names->value @form)
-                                      {:success-msg  (@tr [:invitation-email-success-msg])
+                                      {:success-msg  :invitation-email-success-msg
+                                       :close-modal  false
                                        :redirect-url (str @config/path-prefix
-                                                          "/reset-password"
-                                                          "?invited-user="
-                                                          email-encoded)}])))]
+                                                          "/set-password" )}])))]
         [ui/Modal
          {:id        "modal-create-user"
           :size      :tiny
@@ -56,7 +56,7 @@
           :closeIcon true
           :on-close  #(do
                         (dispatch [::events/close-modal])
-                        (reset! form (fv/init-form form-conf)))}
+                        (reset! form @(fv/init-form form-conf)))}
 
          [ui/ModalHeader (@tr [:invite-user])]
 
@@ -74,7 +74,7 @@
                          :size      "tiny"
                          :onDismiss #(dispatch [::events/set-success-message nil])}
              [ui/MessageHeader (@tr [:success])]
-             [:p @success-message]])
+             [:p (@tr [@success-message])]])
 
           [ui/Form
            [ui/FormInput {:name          :email
@@ -289,6 +289,7 @@
       "sign-in" [sign-in-views/Form]
       "sign-up" [sign-up-views/Form]
       "reset-password" [reset-password-views/Form]
+      "set-password" [set-password-views/Form]
       [sign-in-views/Form])))
 
 

@@ -1,9 +1,12 @@
 (ns sixsq.nuvla.ui.session.events
   (:require
+    [ajax.core :as ajax]
     [clojure.string :as str]
+    [day8.re-frame.http-fx]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.events :as cimi-events]
+    [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
@@ -120,6 +123,53 @@
                                    ::spec/success-message nil
                                    ::spec/error-message nil)
        ::cimi-api-fx/add [collection-kw template on-success :on-error on-error]})))
+
+
+(reg-event-fx
+  ::set-password-success
+  (fn [_ [_ success-message]]
+    {:dispatch-n [[::clear-loading]
+                  [::initialize]
+                  [::set-success-message success-message]
+                  [::history-events/navigate "sign-in"]]}))
+
+
+(reg-event-fx
+  ::set-password-error
+  (fn [_ [_ response]]
+    {:dispatch-n [[::clear-loading]
+                  [::set-error-message (get-in response [:response :message])]]}))
+
+
+(reg-event-fx
+  ::reset-password
+  (fn [{db :db} [_ form]]
+    {:db         (assoc db ::spec/loading? true
+                           ::spec/success-message nil
+                           ::spec/error-message nil)
+     :http-xhrio {:method          :put
+                  :uri             (str @cimi-api-fx/NUVLA_URL "/api/hook/reset-password")
+                  :format          (ajax/json-request-format)
+                  :params          (assoc form :redirect-url
+                                               (str @config/path-prefix "/set-password"))
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [::set-password-success :reset-password-sucess-inst]
+                  :on-failure      [::set-password-error]}}))
+
+
+(reg-event-fx
+  ::set-password
+  (fn [{db :db} [_ callback form]]
+    {:db         (assoc db ::spec/loading? true
+                           ::spec/success-message nil
+                           ::spec/error-message nil)
+     :http-xhrio {:method          :put
+                  :uri             callback
+                  :format          (ajax/json-request-format)
+                  :params          form
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [::set-password-success :set-password-success]
+                  :on-failure      [::set-password-error]}}))
 
 
 (reg-event-fx

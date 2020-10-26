@@ -270,6 +270,7 @@
          "sign-in" [session-views/SessionPage]
          "sign-up" [session-views/SessionPage]
          "reset-password" [session-views/SessionPage]
+         "set-password" [session-views/SessionPage]
          nil [session-views/SessionPage]
          [:<>
           [intercom/widget]

@@ -118,7 +118,7 @@
                            (let [data (-> @form
                                           :names->value
                                           (dissoc :password-repeat))
-                                 opts {:success-msg  (@tr [:validation-email-success-msg])
+                                 opts {:success-msg  :validation-email-success-msg
                                        :navigate-to  "sign-in"
                                        :redirect-url (str @server-redirect-uri "?message="
                                                           callback-msg-on-validation)}]

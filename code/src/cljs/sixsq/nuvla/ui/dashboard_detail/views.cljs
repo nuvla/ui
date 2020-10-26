@@ -5,6 +5,10 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps.views-versions :as views-versions]
+    [sixsq.nuvla.ui.credentials.components :as creds-comp]
+    [sixsq.nuvla.ui.credentials.events :as creds-events]
+    [sixsq.nuvla.ui.credentials.subs :as creds-subs]
+    [sixsq.nuvla.ui.credentials.utils :as creds-utils]
     [sixsq.nuvla.ui.dashboard-detail.events :as events]
     [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
     [sixsq.nuvla.ui.dashboard-detail.subs :as subs]
@@ -448,39 +452,45 @@
 
 (defn ShutdownButton
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        open?     (r/atom false)
-        icon-name "stop"]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        credential (subscribe [::creds-subs/credential])
+        open?      (r/atom false)
+        icon-name  "stop"]
     (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
-      (let [{:keys [id name description module]} deployment
-            text1  (str (or name id) (when description " - ") description)
-            text2  (str (@tr [:created-from-module]) (or (:name module) (:id module)))
-            button (action-button
-                     {:label?      label?
-                      :menu-item?  menu-item?
-                      :on-click    (fn [event]
-                                     (reset! open? true)
-                                     (.stopPropagation event)
-                                     (.preventDefault event))
-                      :disabled?   (not (general-utils/can-operation? "stop" deployment))
-                      :icon-name   icon-name
-                      :button-text (@tr [:shutdown])
-                      :popup-text  (@tr [:deployment-shutdown-msg])})]
+      (let [{:keys [id name description module parent]} deployment
+            cred-loading?     (subscribe [::creds-subs/credential-check-loading? parent])
+            cred-invalid?     (subscribe [::creds-subs/credential-check-status-invalid? parent])
+            cred-check-status (creds-utils/credential-check-status @cred-loading? @cred-invalid?)
+            text1             (str (or name id) (when description " - ") description)
+            text2             (str (@tr [:created-from-module]) (or (:name module) (:id module)))
+            button            (action-button
+                                {:label?      label?
+                                 :menu-item?  menu-item?
+                                 :on-click    (fn [event]
+                                                (reset! open? true)
+                                                (dispatch [::events/check-credential parent])
+                                                (.stopPropagation event)
+                                                (.preventDefault event))
+                                 :disabled?   (not (general-utils/can-operation? "stop" deployment))
+                                 :icon-name   icon-name
+                                 :button-text (@tr [:shutdown])
+                                 :popup-text  (@tr [:deployment-shutdown-msg])})]
         ^{:key (random-uuid)}
         [uix/ModalDanger
-         {:on-close    (fn [event]
-                         (reset! open? false)
-                         (.stopPropagation event)
-                         (.preventDefault event))
-          :on-confirm  #(do
-                          (dispatch [::events/stop-deployment id])
-                          (reset! open? false))
-          :open        @open?
-          :trigger     (r/as-element button)
-          :content     [:<> [:h3 text1] [:p text2]]
-          :header      (@tr [:shutdown-deployment])
-          :danger-msg  (@tr [:deployment-shutdown-msg])
-          :button-text (@tr [:shutdown])}]))))
+         {:on-close     (fn [event]
+                          (reset! open? false)
+                          (.stopPropagation event)
+                          (.preventDefault event))
+          :on-confirm   #(do
+                           (dispatch [::events/stop-deployment id])
+                           (reset! open? false))
+          :open         @open?
+          :trigger      (r/as-element button)
+          :content      [:<> [:h3 text1] [:p text2]]
+          :header       (@tr [:shutdown-deployment])
+          :danger-msg   (@tr [:deployment-shutdown-msg])
+          :button-text  (@tr [(if (= :ok cred-check-status) :shutdown :shutdown-force)])
+          :modal-action [creds-comp/CredentialCheckPopup parent]}]))))
 
 
 (defn DeleteButton

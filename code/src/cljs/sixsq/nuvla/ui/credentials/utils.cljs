@@ -256,3 +256,11 @@
       (credential-can-op-check? credential)
       (or (not (credential-status-valid credential))
           (credential-is-outdated? credential delta-minutes)))))
+
+
+(defn credential-check-status
+  [loading? invalid?]
+  (cond
+    loading? :loading
+    invalid? :warning
+    :else :ok))

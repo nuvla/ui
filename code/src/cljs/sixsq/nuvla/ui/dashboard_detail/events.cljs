@@ -2,6 +2,7 @@
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [sixsq.nuvla.ui.credentials.events :as creds-events]
     [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
     [sixsq.nuvla.ui.dashboard.events :as dashboard-events]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -303,3 +304,12 @@
                                                                   status (str " (" status ")"))
                                                  :content message
                                                  :type    :success}]))))]}))
+
+
+(reg-event-fx
+  ::check-credential
+  (fn [db [_ credential-href]]
+    {::cimi-api-fx/get [credential-href
+                        #(dispatch [::creds-events/check-credential % 1])
+                        ]}))
+

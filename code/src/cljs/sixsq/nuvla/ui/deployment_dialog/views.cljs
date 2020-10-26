@@ -3,6 +3,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
+    [sixsq.nuvla.ui.credentials.utils :as creds-utils]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
     [sixsq.nuvla.ui.deployment-dialog.views-data :as data-step]
@@ -16,13 +17,6 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.style :as style]))
-
-(defn get-check-status
-  [loading? invalid?]
-  (cond
-    loading? :loading
-    invalid? :warning
-    :else :ok))
 
 (defn deployment-step-state
   [{:keys [step-id completed? icon] :as step-state}]
@@ -53,30 +47,31 @@
               :active    (= step-id @active-step)}
      (or
        (case step-id
-         :infra-services (do
+         :infra-services (let [check-status (creds-utils/credential-check-status @credential-loading? @credential-invalid?)]
                            (dispatch [::events/set-launch-status
                                       step-id
-                                      (get-check-status @credential-loading? @credential-invalid?)])
-                           (when @credentials-completed? [creds-comp/CredentialCheckPopup @cred-id]))
+                                      check-status])
+                           (when (and @credentials-completed? (not= :ok check-status)) [creds-comp/CredentialCheckPopup @cred-id]))
 
          :registries (when @registries-completed?
                        (let [selected-reg-creds (->> (vals @registries-creds)
-                                                   (map (fn [{:keys [cred-id preselected?]}]
-                                                          (when-not preselected? cred-id)))
-                                                   (remove nil?))
-                           creds-reg-status (map
-                                              (fn [cred-reg-id]
-                                                (let [loading? (subscribe [::creds-subs/credential-check-loading? cred-reg-id])
-                                                      invalid? (subscribe [::creds-subs/credential-check-status-invalid? cred-reg-id])]
-                                                  [cred-reg-id (get-check-status @loading? @invalid?)])) selected-reg-creds)
-                           focused-cred-reg (or (some (fn [[_ status :as c]] (when (= status :warning) c)) creds-reg-status)
-                                                (some (fn [[_ status :as c]] (when (= status :loading) c)) creds-reg-status)
-                                                (first creds-reg-status))
+                                                     (map (fn [{:keys [cred-id preselected?]}]
+                                                            (when-not preselected? cred-id)))
+                                                     (remove nil?))
+                             creds-reg-status   (map
+                                                  (fn [cred-reg-id]
+                                                    (let [loading? (subscribe [::creds-subs/credential-check-loading? cred-reg-id])
+                                                          invalid? (subscribe [::creds-subs/credential-check-status-invalid? cred-reg-id])]
+                                                      [cred-reg-id (creds-utils/credential-check-status @loading? @invalid?)])) selected-reg-creds)
+                             focused-cred-reg   (or (some (fn [[_ status :as c]] (when (= status :warning) c)) creds-reg-status)
+                                                    (some (fn [[_ status :as c]] (when (= status :loading) c)) creds-reg-status)
+                                                    (first creds-reg-status))
 
-                           [cred-reg reg-cred-status] focused-cred-reg]
+                             [cred-reg reg-cred-status] focused-cred-reg]
 
-                       (dispatch [::events/set-launch-status step-id (or reg-cred-status :ok)])
-                       (when cred-reg [creds-comp/CredentialCheckPopup cred-reg])))
+                         (dispatch [::events/set-launch-status step-id (or reg-cred-status :ok)])
+                         (when (and cred-reg (not= :ok reg-cred-status)) [creds-comp/CredentialCheckPopup cred-reg])
+                         ))
          nil)
        [ui/Icon {:name icon}])
 

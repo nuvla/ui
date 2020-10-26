@@ -4,6 +4,7 @@
 
 ### Updated
 
+  - Shutdown modal - check credential
   - Sign-up - Redirect to sign-in after sign-up to fix
     safari save password
   - Apps - Docker image registry placeholder fix

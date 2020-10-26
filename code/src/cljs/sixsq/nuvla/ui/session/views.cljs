@@ -46,6 +46,7 @@
                            (dispatch [::events/submit utils/user-tmpl-email-invitation
                                       (:names->value @form)
                                       {:success-msg  :invitation-email-success-msg
+                                       :close-modal  false
                                        :redirect-url (str @config/path-prefix
                                                           "/set-password" )}])))]
         [ui/Modal
@@ -55,7 +56,7 @@
           :closeIcon true
           :on-close  #(do
                         (dispatch [::events/close-modal])
-                        (reset! form (fv/init-form form-conf)))}
+                        (reset! form @(fv/init-form form-conf)))}
 
          [ui/ModalHeader (@tr [:invite-user])]
 

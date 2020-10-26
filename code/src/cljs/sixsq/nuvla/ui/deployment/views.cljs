@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.dashboard-detail.views
+(ns sixsq.nuvla.ui.deployment.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
@@ -9,9 +9,9 @@
     [sixsq.nuvla.ui.credentials.events :as creds-events]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.credentials.utils :as creds-utils]
-    [sixsq.nuvla.ui.dashboard-detail.events :as events]
-    [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
-    [sixsq.nuvla.ui.dashboard-detail.subs :as subs]
+    [sixsq.nuvla.ui.deployment.events :as events]
+    [sixsq.nuvla.ui.deployment.spec :as spec]
+    [sixsq.nuvla.ui.deployment.subs :as subs]
     [sixsq.nuvla.ui.dashboard.subs :as dashboard-subs]
     [sixsq.nuvla.ui.dashboard.utils :as utils]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
@@ -21,6 +21,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -30,7 +31,7 @@
     [sixsq.nuvla.ui.utils.values :as values]))
 
 
-(def refresh-action-id :dashboard-detail-get-deployment)
+(def refresh-action-id :deployment-get-deployment)
 
 
 (defn refresh
@@ -599,7 +600,7 @@
                {:as       :div
                 :link     true
                 :on-click (fn [event]
-                            (dispatch [::history-events/navigate (utils/detail-href id)])
+                            (dispatch [::history-events/navigate (utils/deployment-href id)])
                             (.preventDefault event))})
      [ui/Image {:src      (or module-logo-url "")
                 :bordered true
@@ -698,7 +699,7 @@
       ^{:key uuid}
       [ui/Segment (merge style/basic {:loading @loading?})
        [ui/Container {:fluid true}
-        [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard])) :inline true]
+        [uix/PageHeader "sitemap" (str/capitalize (@tr [:deployment])) :inline true]
         [MenuBar @deployment]
         (when @acl
           [acl/AclButton
@@ -715,3 +716,11 @@
         (when (:subscription-id @deployment)
           [billing-section])
         [jobs-section]]])))
+
+(defmethod panel/render :deployment
+  [path]
+  (let [[_ uuid] path
+        n        (count path)]
+    (case n
+      2 [ui/Segment style/basic [deployment-detail uuid]]
+      (dispatch [::history-events/navigate (str "dashboard")]))))

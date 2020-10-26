@@ -2,7 +2,7 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.dashboard-detail.views :as dashboard-detail-views]
+    [sixsq.nuvla.ui.deployment.views :as deployment-views]
     [sixsq.nuvla.ui.dashboard.events :as events]
     [sixsq.nuvla.ui.dashboard.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -90,10 +90,10 @@
      [ui/TableCell
       (cond
         (general-utils/can-operation? "stop" deployment)
-        [dashboard-detail-views/ShutdownButton deployment]
+        [deployment-views/ShutdownButton deployment]
 
         (general-utils/can-delete? deployment)
-        [dashboard-detail-views/DeleteButton deployment])]]))
+        [deployment-views/DeleteButton deployment])]]))
 
 
 (defn vertical-data-table
@@ -122,7 +122,7 @@
   [ui/CardGroup {:centered true}
    (for [{:keys [id] :as deployment} deployments-list]
      ^{:key id}
-     [dashboard-detail-views/DeploymentCard deployment])])
+     [deployment-views/DeploymentCard deployment])])
 
 
 (defn deployments-display
@@ -152,14 +152,21 @@
 
         [ui/Container {:fluid true}
          [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard]))]
-         [MenuBar]
-         [ui/Segment style/basic
-          [deployments-display deployments-list]]
-         [uix/Pagination
-          {:totalitems   total-deployments
-           :totalPages   total-pages
-           :activePage   @page
-           :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]))))
+         [uix/Accordion
+          [:<>
+           [MenuBar]
+           [ui/Segment style/basic
+            [deployments-display deployments-list]]
+           [uix/Pagination
+            {:totalitems   total-deployments
+             :totalPages   total-pages
+             :activePage   @page
+             :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]
+           ]
+          :label (str " " (str/capitalize (@tr [:deployments])))
+          :count total-deployments
+          :icon "sitemap"]
+         ]))))
 
 
 (defmethod panel/render :dashboard
@@ -169,6 +176,6 @@
         root     [dashboard-main]
         children (case n
                    1 root
-                   2 ^{:key uuid} [dashboard-detail-views/deployment-detail uuid]
+                   2 ^{:key uuid} [deployment-views/deployment-detail uuid]
                    root)]
     [ui/Segment style/basic children]))

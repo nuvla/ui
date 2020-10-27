@@ -18,39 +18,40 @@
 
 
 (defn versions-table
-  [versions & {:keys [on-click]}]
-  (let [current-version @(subscribe [::subs/module-content-id])]
-    [ui/Table
-     [ui/TableHeader
-      [ui/TableRow
-       [ui/TableHeaderCell {:width "1"} "Version"]
-       [ui/TableHeaderCell {:width "1"} "Author"]
-       [ui/TableHeaderCell {:width "14"} "Commit message"]]]
-     [ui/TableBody
-      (for [[i v] versions]
-        (let [{:keys [href commit author]} v
-              is-current? (= current-version href)]
-          ^{:key (str "version" i)}
-          [ui/TableRow (when is-current? {:active true})
-           [ui/TableCell
-            (if on-click
-              [:a {:style    {:cursor "pointer"}
-                   :on-click #(on-click i)}
-               (str "v" i)]
-              (str "v" i))
-            (when is-current? " <<")]
-           [ui/TableCell author]
-           [ui/TableCell commit]]
-          ))]]))
+  [versions current-version & {:keys [on-click]}]
+  [ui/Table
+   [ui/TableHeader
+    [ui/TableRow
+     [ui/TableHeaderCell {:width "1"} "Version"]
+     [ui/TableHeaderCell {:width "1"} "Author"]
+     [ui/TableHeaderCell {:width "14"} "Commit message"]]]
+   [ui/TableBody
+    (for [[i v] versions]
+      (let [{:keys [href commit author]} v
+            is-current? (= current-version href)]
+        ^{:key (str "version" i)}
+        [ui/TableRow (when is-current? {:active true})
+         [ui/TableCell
+          (if on-click
+            [:a {:style    {:cursor "pointer"}
+                 :on-click #(on-click i)}
+             (str "v" i)]
+            (str "v" i))
+          (when is-current? " <<")]
+         [ui/TableCell author]
+         [ui/TableCell commit]]
+        ))]])
 
 
 (defn versions []
-  (let [show-versions? (reagent/atom false)
-        versions       (subscribe [::subs/versions])]
+  (let [show-versions?  (reagent/atom false)
+        versions        (subscribe [::subs/versions])
+        current-version (subscribe [::subs/module-content-id])]
     (fn []
       (when (seq @versions)
         [:div
          [show-versions show-versions?]
          (when @show-versions?
-           [versions-table @versions :on-click #(dispatch [::events/get-module %])])]
+           [versions-table @versions @current-version
+            :on-click #(dispatch [::events/get-module %])])]
         ))))

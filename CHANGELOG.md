@@ -4,6 +4,8 @@
 
 ### Updated
 
+  - Deps - Popper dependency fix
+  - Dashboard detail - version bug fix
   - Shutdown modal - check credential
   - Sign-up - Redirect to sign-in after sign-up to fix
     safari save password

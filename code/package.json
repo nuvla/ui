@@ -21,6 +21,7 @@
     "source-map-support": "^0.5.19"
   },
   "dependencies": {
+    "@popperjs/core": "^2.5.3",
     "@stripe/react-stripe-js": "^1.1.2",
     "@stripe/stripe-js": "^1.9.0",
     "bluebird": "^3.7.2",
@@ -43,6 +44,6 @@
     "react-leaflet": "^2.7.0",
     "react-markdown": "^4.3.1",
     "semantic-ui-css": "^2.4.1",
-    "semantic-ui-react": "^2.0.0"
+    "semantic-ui-react": "^2.0.1"
   }
 }

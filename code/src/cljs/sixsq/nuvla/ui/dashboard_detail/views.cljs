@@ -6,7 +6,6 @@
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps.views-versions :as views-versions]
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
-    [sixsq.nuvla.ui.credentials.events :as creds-events]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.credentials.utils :as creds-utils]
     [sixsq.nuvla.ui.dashboard-detail.events :as events]
@@ -86,9 +85,7 @@
     (fn []
       [uix/Accordion
        [ui/Segment style/autoscroll-x
-        [views-versions/versions-table @module-versions @module-content-id
-         :on-click #(dispatch [::history-events/navigate
-                               (str "apps/" (:path @module) "?version=" @current-version)])]]
+        [views-versions/versions-table @module-versions @module-content-id]]
        :default-open false
        :count (str "v" (or @current-version "-"))
        :label "Module versions"])))

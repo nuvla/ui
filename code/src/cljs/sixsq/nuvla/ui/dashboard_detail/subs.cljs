@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.dashboard-detail.subs
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
     [sixsq.nuvla.ui.dashboard.utils :as dashboard-utils]
@@ -163,7 +162,7 @@
 (reg-sub
   ::module-versions
   (fn [db]
-    (::spec/module-versions db)))
+    (reverse (map-indexed vector (::spec/module-versions db)))))
 
 
 (reg-sub
@@ -181,7 +180,7 @@
       (some
         (fn [[idx item]]
           (when (= (:href item) id) idx))
-        (map-indexed vector module-versions)))))
+        module-versions))))
 
 
 (reg-sub
@@ -189,7 +188,7 @@
   :<- [::module-versions]
   :<- [::current-module-content-id]
   (fn [[module-versions id]]
-    (= (-> module-versions last :href) id)))
+    (= (-> module-versions first second :href) id)))
 
 
 (reg-sub

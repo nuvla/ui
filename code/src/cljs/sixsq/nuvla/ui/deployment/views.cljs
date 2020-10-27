@@ -699,7 +699,7 @@
       ^{:key uuid}
       [ui/Segment (merge style/basic {:loading @loading?})
        [ui/Container {:fluid true}
-        [uix/PageHeader "sitemap" (str/capitalize (@tr [:deployment])) :inline true]
+        [uix/PageHeader "rocket" (str/capitalize (@tr [:deployment])) :inline true]
         [MenuBar @deployment]
         (when @acl
           [acl/AclButton

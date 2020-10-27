@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.deployment.views :as deployment-views]
     [sixsq.nuvla.ui.dashboard.events :as events]
     [sixsq.nuvla.ui.dashboard.subs :as subs]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
@@ -165,17 +166,15 @@
            ]
           :label (str " " (str/capitalize (@tr [:deployments])))
           :count total-deployments
-          :icon "sitemap"]
+          :icon "rocket"]
          ]))))
 
 
 (defmethod panel/render :dashboard
   [path]
-  (let [n        (count path)
+  (let [n    (count path)
         [_ uuid] path
-        root     [dashboard-main]
-        children (case n
-                   1 root
-                   2 ^{:key uuid} [deployment-views/deployment-detail uuid]
-                   root)]
-    [ui/Segment style/basic children]))
+        root [dashboard-main]]
+    (case n
+      2 ^{:key uuid} (dispatch [::history-events/navigate (str "deployment/" uuid)])
+      [ui/Segment style/basic root])))

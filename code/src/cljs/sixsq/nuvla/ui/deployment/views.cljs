@@ -680,6 +680,21 @@
         :on-refresh #(refresh id)}]]]))
 
 
+(defn error
+  [{:keys [state] :as deployment}]
+  (let [jobs            (subscribe [::subs/jobs])
+        failed_jobs     (filter #(= (:state %) "FAILED") (:resources @jobs) )
+        last_failed_job (first failed_jobs)
+        action          (:action last_failed_job)
+        last_line       (last (str/split-lines (get last_failed_job :status-message "")))]
+    (when (and
+            (= state "ERROR")
+            (some? last_failed_job))
+      [ui/Message {:error true}
+       [ui/MessageHeader (str "Job " action " failed")]
+       [ui/MessageContent last_line]])))
+
+
 (defn event-get-timestamp
   [event]
   (-> event :timestamp time/parse-iso8601))
@@ -707,6 +722,7 @@
             :read-only     @read-only?
             :on-change     #(dispatch [::events/edit resource-id (assoc @deployment :acl %)])}])
         [summary @deployment]
+        [error @deployment]
         [urls-section]
         [module-version-section]
         [logs-section]
@@ -722,5 +738,5 @@
   (let [[_ uuid] path
         n        (count path)]
     (case n
-      2 [ui/Segment style/basic [deployment-detail uuid]]
+      2 [deployment-detail uuid]
       (dispatch [::history-events/navigate (str "dashboard")]))))

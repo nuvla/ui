@@ -4,6 +4,8 @@
 
 ### Updated
 
+  - Deployment - Show last failed job on top
+  - Dashboard detail - renamed deployment
   - Deps - Popper dependency fix
   - Dashboard detail - version bug fix
   - Shutdown modal - check credential

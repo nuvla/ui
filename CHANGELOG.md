@@ -4,6 +4,9 @@
 
 ### Updated
 
+  - Deployment - Click on error message make user
+    go to job section
+
 ## [2.9.0] - 2020-10-28
 
 ### Updated

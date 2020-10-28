@@ -258,13 +258,14 @@
 
 
 (defn jobs-section
-  []
+  [job-open?]
   (let [tr   (subscribe [::i18n-subs/tr])
         jobs (subscribe [::subs/jobs])
         {:keys [resources]} @jobs]
     [uix/Accordion [jobs-table @jobs]
+     :id "job-section"
      :label (str/capitalize (@tr [:job]))
-     :default-open false
+     :!control-open? job-open?
      :count (count resources)]))
 
 
@@ -678,9 +679,9 @@
 
 
 (defn error
-  [{:keys [state] :as deployment}]
+  [{:keys [state]} !job-open?]
   (let [jobs            (subscribe [::subs/jobs])
-        failed_jobs     (filter #(= (:state %) "FAILED") (:resources @jobs) )
+        failed_jobs     (filter #(= (:state %) "FAILED") (:resources @jobs))
         last_failed_job (first failed_jobs)
         action          (:action last_failed_job)
         last_line       (last (str/split-lines (get last_failed_job :status-message "")))]
@@ -688,7 +689,13 @@
             (= state "ERROR")
             (some? last_failed_job))
       [ui/Message {:error true}
-       [ui/MessageHeader (str "Job " action " failed")]
+       [ui/MessageHeader
+        {:style    {:cursor "pointer"}
+         :on-click (fn [_]
+                     (reset! !job-open? true)
+                     (set! (.-hash js/window.location) "")
+                     (js/setTimeout #(set! (.-hash js/window.location) "job-section") 100))}
+        (str "Job " action " failed")]
        [ui/MessageContent last_line]])))
 
 
@@ -704,8 +711,8 @@
         read-only?  (subscribe [::subs/is-read-only?])
         acl         (subscribe [::subs/deployment-acl])
         resource-id (str "deployment/" uuid)
-        loading?    (subscribe [::subs/loading? resource-id])]
-
+        loading?    (subscribe [::subs/loading? resource-id])
+        job-open?   (r/atom false)]
     (refresh resource-id)
     (fn [uuid]
       ^{:key uuid}
@@ -719,7 +726,7 @@
             :read-only     @read-only?
             :on-change     #(dispatch [::events/edit resource-id (assoc @deployment :acl %)])}])
         [summary @deployment]
-        [error @deployment]
+        [error @deployment job-open?]
         [urls-section]
         [module-version-section]
         [logs-section]
@@ -728,12 +735,12 @@
         [env-vars-section]
         (when (:subscription-id @deployment)
           [billing-section])
-        [jobs-section]]])))
+        [jobs-section job-open?]]])))
 
 (defmethod panel/render :deployment
   [path]
   (let [[_ uuid] path
-        n        (count path)]
+        n (count path)]
     (case n
       2 [deployment-detail uuid]
       (dispatch [::history-events/navigate (str "dashboard")]))))

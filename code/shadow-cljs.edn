@@ -20,8 +20,7 @@
 
                                 :dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL
                                                                 #_"https://nuvla.io"
-                                                                #_"https://localhost"
-                                                                "https://194.182.161.53"
+                                                                "https://localhost"
                                                                 re_frame.trace.trace_enabled_QMARK_ true}
                                              :compiler-options {:infer-externs :auto}}
 

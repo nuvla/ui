@@ -73,9 +73,9 @@
   (= state "STARTED"))
 
 
-(defn detail-href
+(defn deployment-href
   [id]
-  (str "dashboard/" (general-utils/id->uuid id)))
+  (str "deployment/" (general-utils/id->uuid id)))
 
 
 (defn get-query-params

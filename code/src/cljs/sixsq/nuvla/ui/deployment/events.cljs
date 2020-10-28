@@ -1,9 +1,9 @@
-(ns sixsq.nuvla.ui.dashboard-detail.events
+(ns sixsq.nuvla.ui.deployment.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.credentials.events :as creds-events]
-    [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
+    [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.dashboard.events :as dashboard-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -242,13 +242,13 @@
                            [::fetch-deployment-log]
                            [::create-log])
                          [::main-events/action-interval-delete
-                          :dashboard-detail-get-deployment-log])}
+                          :deployment-get-deployment-log])}
             (and play?
                  deployment-log-id)
             (assoc :dispatch-later
                    [{:ms       5000
                      :dispatch [::main-events/action-interval-start
-                                {:id        :dashboard-detail-get-deployment-log
+                                {:id        :deployment-get-deployment-log
                                  :frequency 10000
                                  :event     [::get-deployment-log]}]}]))))
 

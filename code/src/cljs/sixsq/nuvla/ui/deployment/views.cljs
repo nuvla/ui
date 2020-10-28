@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.dashboard-detail.views
+(ns sixsq.nuvla.ui.deployment.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
@@ -8,9 +8,9 @@
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.credentials.utils :as creds-utils]
-    [sixsq.nuvla.ui.dashboard-detail.events :as events]
-    [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
-    [sixsq.nuvla.ui.dashboard-detail.subs :as subs]
+    [sixsq.nuvla.ui.deployment.events :as events]
+    [sixsq.nuvla.ui.deployment.spec :as spec]
+    [sixsq.nuvla.ui.deployment.subs :as subs]
     [sixsq.nuvla.ui.dashboard.subs :as dashboard-subs]
     [sixsq.nuvla.ui.dashboard.utils :as utils]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
@@ -20,6 +20,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -29,7 +30,7 @@
     [sixsq.nuvla.ui.utils.values :as values]))
 
 
-(def refresh-action-id :dashboard-detail-get-deployment)
+(def refresh-action-id :deployment-get-deployment)
 
 
 (defn refresh
@@ -596,7 +597,7 @@
                {:as       :div
                 :link     true
                 :on-click (fn [event]
-                            (dispatch [::history-events/navigate (utils/detail-href id)])
+                            (dispatch [::history-events/navigate (utils/deployment-href id)])
                             (.preventDefault event))})
      [ui/Image {:src      (or module-logo-url "")
                 :bordered true
@@ -676,6 +677,21 @@
         :on-refresh #(refresh id)}]]]))
 
 
+(defn error
+  [{:keys [state] :as deployment}]
+  (let [jobs            (subscribe [::subs/jobs])
+        failed_jobs     (filter #(= (:state %) "FAILED") (:resources @jobs) )
+        last_failed_job (first failed_jobs)
+        action          (:action last_failed_job)
+        last_line       (last (str/split-lines (get last_failed_job :status-message "")))]
+    (when (and
+            (= state "ERROR")
+            (some? last_failed_job))
+      [ui/Message {:error true}
+       [ui/MessageHeader (str "Job " action " failed")]
+       [ui/MessageContent last_line]])))
+
+
 (defn event-get-timestamp
   [event]
   (-> event :timestamp time/parse-iso8601))
@@ -695,7 +711,7 @@
       ^{:key uuid}
       [ui/Segment (merge style/basic {:loading @loading?})
        [ui/Container {:fluid true}
-        [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard])) :inline true]
+        [uix/PageHeader "rocket" (str/capitalize (@tr [:deployment])) :inline true]
         [MenuBar @deployment]
         (when @acl
           [acl/AclButton
@@ -703,6 +719,7 @@
             :read-only     @read-only?
             :on-change     #(dispatch [::events/edit resource-id (assoc @deployment :acl %)])}])
         [summary @deployment]
+        [error @deployment]
         [urls-section]
         [module-version-section]
         [logs-section]
@@ -712,3 +729,11 @@
         (when (:subscription-id @deployment)
           [billing-section])
         [jobs-section]]])))
+
+(defmethod panel/render :deployment
+  [path]
+  (let [[_ uuid] path
+        n        (count path)]
+    (case n
+      2 [deployment-detail uuid]
+      (dispatch [::history-events/navigate (str "dashboard")]))))

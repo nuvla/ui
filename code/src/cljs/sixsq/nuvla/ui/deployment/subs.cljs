@@ -1,7 +1,7 @@
-(ns sixsq.nuvla.ui.dashboard-detail.subs
+(ns sixsq.nuvla.ui.deployment.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
+    [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.dashboard.utils :as dashboard-utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 

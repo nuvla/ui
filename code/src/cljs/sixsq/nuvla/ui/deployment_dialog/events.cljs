@@ -377,9 +377,9 @@
                                                 :type    :success}]
                                (dispatch [::reset])
                                (dispatch [::messages-events/add success-msg])
-                               (dispatch [:sixsq.nuvla.ui.dashboard-detail.events/get-deployment id])
+                               (dispatch [:sixsq.nuvla.ui.deployment.events/get-deployment id])
                                (dispatch [::history-events/navigate
-                                          (str "dashboard/" (general-utils/id->uuid id))]))))]
+                                          (str "deployment/" (general-utils/id->uuid id))]))))]
       {::cimi-api-fx/operation [id "start" start-callback]})))
 
 

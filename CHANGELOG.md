@@ -4,6 +4,10 @@
 
 ### Updated
 
+## [2.9.0] - 2020-10-28
+
+### Updated
+
   - Deployment - Show last failed job on top
   - Dashboard detail - renamed deployment
   - Deps - Popper dependency fix

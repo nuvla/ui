@@ -61,12 +61,13 @@
 
 (defn logo-item
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr  (subscribe [::i18n-subs/tr])
+        url (subscribe [::subs/config :nuvla-logo-url])]
     ^{:key "welcome"}
-    [ui/MenuItem {:aria-label (@tr [:welcome])
-                  :style      {:overflow-x "hidden"
-                               :min-width  sidebar-width}
-                  :href       "/"}
+    [ui/MenuItem (cond-> {:aria-label (@tr [:welcome])
+                          :style      {:overflow-x "hidden"
+                                       :min-width  sidebar-width}}
+                         @url (assoc :href @url))
      [ui/Image {:alt      "logo"
                 :src      "/ui/images/nuvla-logo.png"
                 :size     "tiny"

@@ -4,6 +4,8 @@
 
 ### Updated
 
+  - Sidebar - logo link is defined by config nuvla-logo-url
+  - Config - new nuvla-logo-url attribute
   - Config - new pricing-url attribute
   - Pricing - Remove pricing page
   - Deployment - Click on error message make user

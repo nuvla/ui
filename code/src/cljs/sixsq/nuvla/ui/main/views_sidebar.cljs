@@ -59,24 +59,6 @@
       :on-click  #(navigate url)}]))
 
 
-(defn item-pricing
-  []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        url      "pricing"
-        active?  (subscribe [::subs/nav-url-active? url])
-
-        label-kw :pricing
-        icon     "fas fa-cash-register"]
-    ^{:key (name label-kw)}
-    [uix/MenuItemWithIcon
-     {:name      (str/capitalize (@tr [label-kw]))
-      :icon-name icon
-      :style     {:min-width  sidebar-width
-                  :overflow-x "hidden"}
-      :active    @active?
-      :on-click  #(navigate url)}]))
-
-
 (defn logo-item
   []
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -101,8 +83,7 @@
         iframe?       @(subscribe [::subs/iframe?])
         pages-list    @(subscribe [::subs/pages-list])
         is-admin?     @(subscribe [::session-subs/is-admin?])
-        is-ocre-user? @(subscribe [::session-subs/has-role? "group/ocre-user"])
-        stripe        @(subscribe [::subs/stripe])]
+        is-ocre-user? @(subscribe [::session-subs/has-role? "group/ocre-user"])]
     [ui/Menu {:id         "nuvla-ui-sidebar"
               :style      {:transition "0.5s"
                            :width      (if show? sidebar-width "0")}
@@ -116,5 +97,4 @@
        (when (or (not iframe?) iframe-visble?)
          ^{:key url}
          [item label-kw url icon protected?]))
-     (when (or is-admin? is-ocre-user?) [item-ocre])
-     (when stripe [item-pricing])]))
+     (when (or is-admin? is-ocre-user?) [item-ocre])]))

@@ -32,7 +32,6 @@
     [sixsq.nuvla.ui.messages.views :as messages]
     [sixsq.nuvla.ui.ocre.views]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.pricing.views]
     [sixsq.nuvla.ui.profile.views]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.session.views :as session-views]

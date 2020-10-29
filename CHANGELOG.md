@@ -4,6 +4,8 @@
 
 ### Updated
 
+  - Config - new pricing-url attribute
+  - Pricing - Remove pricing page
   - Deployment - Click on error message make user
     go to job section
 

@@ -7,5 +7,6 @@
   "eula": null,
   "terms-and-conditions": null,
   "mapbox-access-token": null,
-  "stripe": null
+  "stripe": null,
+  "pricing-url": null
 }

@@ -23,7 +23,6 @@
     [sixsq.nuvla.ui.main.spec :as main]
     [sixsq.nuvla.ui.messages.spec :as messages]
     [sixsq.nuvla.ui.ocre.spec :as ocre]
-    [sixsq.nuvla.ui.pricing.spec :as pricing]
     [sixsq.nuvla.ui.profile.spec :as profile]
     [sixsq.nuvla.ui.session.spec :as session]))
 
@@ -48,8 +47,7 @@
                      ::edge-detail/db
                      ::profile/db
                      ::ocre/db
-                     ::session/db
-                     ::pricing/db))
+                     ::session/db))
 
 
 (def default-db
@@ -75,5 +73,4 @@
          edge-detail/defaults
          profile/defaults
          ocre/defaults
-         session/defaults
-         pricing/defaults))
+         session/defaults))

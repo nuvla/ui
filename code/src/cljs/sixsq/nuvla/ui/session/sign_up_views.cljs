@@ -55,6 +55,7 @@
                                                "user-template/nuvla"])
         stripe                     (subscribe [::main-subs/stripe])
         pricing-catalogue          (subscribe [::profile-subs/pricing-catalogue])
+        pricing-url                (subscribe [::main-subs/config :pricing-url])
         create-customer            (r/atom false)
         form-customer-conf         {:form-spec    ::profile-views/customer
                                     :names->value {:fullname       ""
@@ -104,10 +105,11 @@
                           [ui/FormCheckbox {:label     (@tr [:start-trial-now])
                                             :on-change (ui-callback/checked
                                                          #(reset! create-customer %))}]
-                          [:span "(" (@tr [:see]) " " [:a {:href "/ui/pricing", :target "_blank"} (@tr [:pricing])] ")"]])
+                          (when @pricing-url
+                            [:span "(" (@tr [:see]) " " [:a {:href @pricing-url, :target "_blank"}
+                                                        (@tr [:pricing])] ")"])])
                        (when @create-customer
-                         [profile-views/CustomerFormFields form-customer])
-                       ]
+                         [profile-views/CustomerFormFields form-customer])]
         :submit-text  (@tr [:sign-up])
         :submit-fn    #(let [form-signup-valid?   (fv/validate-form-and-show? form)
                              form-customer-valid? (if @create-customer

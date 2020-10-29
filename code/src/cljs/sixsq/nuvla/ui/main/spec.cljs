@@ -80,7 +80,10 @@
                ::actions-interval     {}
                ::content-key          (random-uuid)
                ::pages                {"welcome"         {:url        "welcome"
-                                                          :protected? false}
+                                                          :label-kw   :home
+                                                          :icon       "home"
+                                                          :protected? false
+                                                          :order      0}
                                        "documentation"   {:url        "documentation"
                                                           :label-kw   :api-doc
                                                           :icon       "info"

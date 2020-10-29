@@ -4,6 +4,8 @@
 
 ### Updated
 
+  - Resource-metadata - Too big, optimization to get it only
+    on api documentation page
   - Sidebar - logo link is defined by config nuvla-logo-url
   - Config - new nuvla-logo-url attribute
   - Config - new pricing-url attribute

@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.apps-component.subs
   (:require
     [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.apps-component.spec :as spec]
-    [sixsq.nuvla.ui.docs.subs :as docs-subs]))
+    [sixsq.nuvla.ui.apps-component.spec :as spec]))
 
 
 (reg-sub
@@ -39,12 +38,3 @@
   ::module-component
   (fn [db]
     (get-in db [::spec/module-component])))
-
-
-(reg-sub
-  ::architectures-options
-  :<- [::docs-subs/document {:resource-metadata "resource-metadata/module-component"}]
-  (fn [module-component-metadata _]
-    (->> module-component-metadata :attributes
-         (filter #(= (:name %) "architectures")) first :child-types first :value-scope :values
-         (map (fn [arch] {:key arch, :value arch, :text arch})))))

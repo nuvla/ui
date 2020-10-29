@@ -9,7 +9,6 @@
     [sixsq.nuvla.ui.cimi.events :as events]
     [sixsq.nuvla.ui.cimi.subs :as subs]
     [sixsq.nuvla.ui.cimi.utils :as cimi-utils]
-    [sixsq.nuvla.ui.docs.subs :as docs-subs]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -49,7 +48,7 @@
 
 (defn table-header-cell
   [label]
-  (let [sort-icon (subscribe [::subs/orderby-label-icon label])
+  (let [sort-icon      (subscribe [::subs/orderby-label-icon label])
         next-direction (case @sort-icon
                          "sort ascending" (str label ":desc")
                          "sort descending" ""
@@ -378,23 +377,22 @@
         collection-name  (subscribe [::subs/collection-name])
         default-text     (general-utils/edn->json {})
         text             (atom default-text)
-        collection       (subscribe [::subs/collection])
         selected-tmpl-id (r/atom nil)]
     (fn []
-      (let [resource-metadata           (subscribe [::docs-subs/document @collection])
-            collection-template-href    (some-> @collection-name cimi-utils/collection-template-href)
-            templates-info              (subscribe [::subs/collection-templates collection-template-href])
-            selected-tmpl-resource-meta (subscribe [::docs-subs/document (get @templates-info @selected-tmpl-id)])]
+      (let [collection-tmpl-href (some-> @collection-name cimi-utils/collection-template-href)
+            templates-info       (subscribe [::subs/collection-templates collection-tmpl-href])]
         (when @show?
           [ui/Modal
            {:size    "large", :closeIcon true, :open @show?,
             :onClose #(dispatch [::events/hide-add-modal])}
 
-           [ui/ModalContent
-            [:div
+           [ui/ModalHeader (str/capitalize (@tr [:add])) " " @collection-name]
 
+           [ui/ModalContent
+            [:<>
              (when @templates-info
-               [ui/Dropdown {:selection   true
+               [ui/Dropdown {:style       {:margin-bottom 10}
+                             :selection   true
                              :placeholder "select a resource template"
                              :value       @selected-tmpl-id
                              :options     (forms/descriptions->options (vals @templates-info))
@@ -408,13 +406,7 @@
                                                           (assoc :href @selected-tmpl-id)
                                                           general-utils/edn->json))))}])
 
-             [:br]
-             [:br]
-
-             [forms/resource-editor (or @selected-tmpl-id collection-name) text
-              :resource-meta (if @templates-info
-                               @selected-tmpl-resource-meta
-                               @resource-metadata)]]]
+             [forms/resource-editor (or @selected-tmpl-id collection-name) text]]]
 
            [ui/ModalActions
             [uix/Button
@@ -428,7 +420,8 @@
               :on-click (fn []
                           (try
                             (let [data (cond->> (general-utils/json->edn @text)
-                                                @selected-tmpl-id (general-utils/create-template @collection-name))]
+                                                @selected-tmpl-id (general-utils/create-template
+                                                                    @collection-name))]
                               (dispatch [::events/create-resource data]))
                             (catch :default e
                               (dispatch [::messages-events/add

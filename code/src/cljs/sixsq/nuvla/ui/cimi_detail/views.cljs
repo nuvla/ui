@@ -6,7 +6,6 @@
     [sixsq.nuvla.ui.cimi-detail.events :as events]
     [sixsq.nuvla.ui.cimi-detail.subs :as subs]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
-    [sixsq.nuvla.ui.docs.subs :as docs-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -28,8 +27,7 @@
     (fn []
       (let [resource-id       (path->resource-id @path)
             correct-resource? (= resource-id @cached-resource-id)
-            {:keys [updated acl] :as resource-value} @resource
-            resource-metadata (subscribe [::docs-subs/document resource-value])]
+            {:keys [updated acl] :as resource-value} @resource]
 
         ;; forces a refresh when the correct resource isn't cached
         (when-not correct-resource?
@@ -49,5 +47,4 @@
            {:on-refresh #(dispatch [::events/get resource-id])
             :loading?   @loading?}]
           (when (and (not @loading?) correct-resource?) @resource)
-          (:base-uri @cep)
-          @resource-metadata]]))))
+          (:base-uri @cep)]]))))

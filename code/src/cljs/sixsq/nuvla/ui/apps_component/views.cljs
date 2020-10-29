@@ -17,8 +17,6 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.profile.events :as profile-events]
-    [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -75,12 +73,11 @@
 
 (defn architectures
   []
-  (let [architectures         (subscribe [::subs/architectures])
-        architectures-options (subscribe [::subs/architectures-options])
-        form-valid?           (subscribe [::apps-subs/form-valid?])
-        editable?             (subscribe [::apps-subs/editable?])
-        local-validate?       (r/atom false)
-        label                 "architectures"]
+  (let [architectures   (subscribe [::subs/architectures])
+        form-valid?     (subscribe [::apps-subs/form-valid?])
+        editable?       (subscribe [::apps-subs/editable?])
+        local-validate? (r/atom false)
+        label           "architectures"]
     (fn []
       (let [validate? (or @local-validate? (not @form-valid?))]
         ^{:key @architectures}
@@ -94,7 +91,12 @@
                           :multiple      true
                           :selection     true
                           :default-value @architectures
-                          :options       @architectures-options
+                          :options       (map (fn [arch] {:key arch, :value arch, :text arch})
+                                              ["386", "amd64", "amd64p32", "arm", "armbe", "arm64",
+                                               "arm64/v8", "arm64be", "arm/v5", "arm/v6", "arm/v7",
+                                               "ppc", "ppc64", "ppc64le", "mips", "mipsle",
+                                               "mips64", "mips64le", "mips64p32", "mips64p32le",
+                                               "s390", "s390x", "sparc", "sparc64"])
                           :error         (and validate?
                                               (not (s/valid? ::spec/architectures @architectures)))
                           :on-change     (ui-callback/value

@@ -4,11 +4,8 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-detail.events :as api-detail-events]
-    [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
-    [sixsq.nuvla.ui.docs.subs :as docs-subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -42,17 +39,17 @@
                         (on-cancel))]
 
         [ui/Modal
-         {:open      (boolean @show?)
+         {:open       (boolean @show?)
           :close-icon true
-          :on-close  #(reset! show? false)
-          :trigger   (r/as-element
-                       [ui/MenuItem (cond-> {:aria-label menu-item-label
-                                             :name       menu-item-label
-                                             :on-click   #(reset! show? true)}
-                                            position (assoc :position position))
-                        (when icon
-                          [ui/Icon {:name icon}])
-                        menu-item-label])}
+          :on-close   #(reset! show? false)
+          :trigger    (r/as-element
+                        [ui/MenuItem (cond-> {:aria-label menu-item-label
+                                              :name       menu-item-label
+                                              :on-click   #(reset! show? true)}
+                                             position (assoc :position position))
+                         (when icon
+                           [ui/Icon {:name icon}])
+                         menu-item-label])}
          [ui/ModalHeader title-text]
          [ui/ModalContent (cond-> {}
                                   scrolling? (assoc :scrolling true)) body]
@@ -60,27 +57,20 @@
           [action-buttons button-confirm-label "cancel" action-fn cancel-fn]]]))))
 
 
-(defn action-button
-  [label title-text body on-confirm on-cancel & [scrolling?]]
-  [action-button-icon label label nil title-text body on-confirm on-cancel scrolling?])
-
-
 (defn edit-button
   "Creates an edit that will bring up an edit dialog and will save the
    modified resource when saved."
-  [{:keys [id] :as data} description action-fn]
-  (let [tr                (subscribe [::i18n-subs/tr])
-        text              (atom (general-utils/edn->json data))
-        collection        (subscribe [::cimi-subs/collection-name])
-        resource-metadata (subscribe [::docs-subs/document @collection])]
-    (fn [{:keys [id] :as data} description action-fn]
+  [data action-fn]
+  (let [tr   (subscribe [::i18n-subs/tr])
+        text (atom (general-utils/edn->json data))]
+    (fn [{:keys [id] :as data} action-fn]
       (reset! text (general-utils/edn->json data))
       [action-button-icon
        (@tr [:raw])
        (@tr [:save])
        "pencil"
        (str (@tr [:editing]) " " id)
-       [forms/resource-editor id text :resource-meta @resource-metadata]
+       [forms/resource-editor id text]
        (fn []
          (try
            (action-fn (general-utils/json->edn @text))
@@ -132,16 +122,16 @@
 ;; errors for duplicate keys, which may happen when the data contains :key.
 ;; It is probably a bad idea to have a first argument that can be a map
 ;; as this will be confused with reagent options.
-(defn operation-button [{:keys [id] :as data} description [label href operation-uri]]
+(defn operation-button [{:keys [id] :as data} [label operation-uri]]
   (case label
-    "edit" ^{:key "edit"} [edit-button data description #(dispatch [::api-detail-events/edit id %])]
+    "edit" ^{:key "edit"} [edit-button data #(dispatch [::api-detail-events/edit id %])]
     "delete" ^{:key "delete"} [delete-button data #(dispatch [::api-detail-events/delete id])]
     ^{:key operation-uri} [other-button label data #(dispatch [::api-detail-events/operation id operation-uri])]))
 
 
-(defn format-operations [refresh-button {:keys [operations] :as data} base-uri description]
+(defn format-operations [refresh-button {:keys [operations] :as data} base-uri]
   (let [ops (map (juxt #(general-utils/operation-name (:rel %)) #(str base-uri (:href %)) :rel) operations)]
-    (vec (concat [refresh-button] (map (partial operation-button data description) ops)))))
+    (vec (concat [refresh-button] (map (partial operation-button data) ops)))))
 
 
 (defn metadata-row
@@ -185,9 +175,9 @@
 
 
 (defn tuple-to-row
-  [[key value display-name helper]]
+  [[key value]]
   [ui/TableRow
-   [ui/TableCell {:collapsing true} (or display-name (str key)) ff/nbsp [ff/help-popup helper]]
+   [ui/TableCell {:collapsing true} (str key)]
    [ui/TableCell {:style {:max-width     "80ex"             ;; FIXME: need to get this from parent container
                           :text-overflow "ellipsis"
                           :overflow      "hidden"}} (if (vector? value)
@@ -195,36 +185,23 @@
                                                       (values/format-value value))]])
 
 
-(defn data-to-tuple-fn
-  [attributes]
-  (fn [[field-name field-value]]
-    (let [attributes-map (->> attributes (map (juxt #(-> % :name keyword) identity)) (into {}))]
-
-      [(strip-attr-ns field-name)
-       field-value
-       (-> attributes-map field-name :display-name)
-       (-> attributes-map field-name :description)])))
-
-
 (defn group-table-sui
-  [group-data {:keys [attributes] :as description}]
+  [group-data]
   (let [data (sort-by first group-data)]
-    (table/definition-table (->> data
-                                 (map (data-to-tuple-fn attributes))
-                                 (map tuple-to-row)))))
+    (table/definition-table (map tuple-to-row data))))
 
 
 (defn detail-menu
-  [refresh-button data base-uri description]
+  [refresh-button data base-uri]
   (vec (concat [ui/Menu {:borderless true}]
-               (format-operations nil data base-uri description)
+               (format-operations nil data base-uri)
                [refresh-button])))
 
 
 (defn resource-detail
   "Provides a generic visualization of a CIMI resource document."
-  [refresh-button {:keys [acl] :as data} base-uri description]
+  [refresh-button data base-uri]
   [:<>
-   (detail-menu refresh-button data base-uri description)
+   (detail-menu refresh-button data base-uri)
    (detail-header data)
-   (group-table-sui (general-utils/remove-common-attrs data) description)])
+   (group-table-sui (general-utils/remove-common-attrs data))])

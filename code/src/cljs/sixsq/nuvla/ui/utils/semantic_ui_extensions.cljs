@@ -237,9 +237,10 @@
 
 
 (defn ModalDanger
-  [{:keys [button-text on-confirm danger-msg header content trigger open on-close modal-action]}]
+  [{:keys [button-text on-confirm danger-msg header content trigger open on-close modal-action
+           control-confirmed?]}]
   (let [tr         (subscribe [::i18n-subs/tr])
-        confirmed? (r/atom (nil? danger-msg))
+        confirmed? (or control-confirmed? (r/atom (nil? danger-msg)))
         clicked?   (r/atom false)]
     (fn [{:keys [button-text on-confirm danger-msg header content trigger open on-close modal-action]}]
       [ui/Modal (cond->

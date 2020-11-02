@@ -4,6 +4,7 @@
 
 ### Updated
 
+  - Deployment - Stop modal fix checkbox danger modal
   - Resource-metadata - Too big, optimization to get it only
     on api documentation page
   - Sidebar - logo link is defined by config nuvla-logo-url

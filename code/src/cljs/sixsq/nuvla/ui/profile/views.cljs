@@ -856,6 +856,32 @@
       )))
 
 
+(defn BillingContact
+  []
+  (let [tr            (subscribe [::i18n-subs/tr])
+        loading?      (subscribe [::subs/loading? :customer-info])
+        customer-info (subscribe [::subs/customer-info])]
+    (dispatch [::events/customer-info])
+    (fn []
+      (let [{:keys [street-address city country postal-code]} (:address @customer-info)
+            fullname (:fullname @customer-info)]
+        [ui/Segment {:padded  true
+                     :color   "grey"
+                     :loading @loading?
+                     :style   {:height "100%"}}
+         [ui/Header {:as :h2 :dividing true} (@tr [:billing-contact])]
+         [ui/Table {:basic "very"}
+          [ui/TableBody
+           [ui/TableRow
+            [ui/TableCell {:width 5} [:b (str/capitalize (@tr [:name]))]]
+            [ui/TableCell {:width 11} fullname]]
+           [ui/TableRow
+            [ui/TableCell [:b (@tr [:street-address])]]
+            [ui/TableCell street-address [:br] postal-code " - " city [:br] country]]
+           ]]
+         ]))))
+
+
 (defn Content
   []
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -891,13 +917,16 @@
                [Invoices]]]
              [ui/GridRow {:columns 2}
               [ui/GridColumn
-               [PaymentMethods]]
+               [Coupon]]
               [ui/GridColumn
-               [Coupon]]]])
+               [BillingContact]]]])
           (when show-subscription
             [ui/GridRow {:columns 2}
              [ui/GridColumn
-              [Vendor]]])]]))))
+              [Vendor]]
+             (when show-customer-sections
+               [ui/GridColumn
+              [PaymentMethods]])])]]))))
 
 (defmethod panel/render :profile
   [path]

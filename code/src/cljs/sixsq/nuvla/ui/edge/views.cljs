@@ -698,7 +698,104 @@
                                             (filter #(:location %)))]
          ^{:key id}
          [NuvlaboxMapPoint nuvlabox]))]))
+;; Filter
+;; int enum(string) string boolean date (location, null values)
 
+(defn FilterField
+  [{:keys [field type active]}]
+  [:<>
+   [ui/MenuItem
+    [ui/Checkbox {:label    (str/capitalize field)
+                  :on-click (ui-callback/checked #(reset! active %))}]]
+   [ui/TransitionGroup {:animation "fade down"
+                        :duration  200}
+    (when @active
+      [ui/MenuItem {:active true}
+       [ui/Form
+        [ui/FormField
+         [ui/Dropdown {:default-value "="
+                       :inline        true
+                       :options       [{:key "=", :value "=" :text "equal to"}
+                                       {:key "!=", :value "!=" :text "not equal to"}
+                                       {:key "^=", :value "^=" :text "start with"}]}]]
+        [ui/FormInput {:list "state"}]
+        [:datalist {:id "state"}
+         [:option {:value "NEW"} "NEW"]
+         [:option {:value "ACTIVATED"} "ACTIVATED"]
+         ]]
+       ])]
+   ])
+
+(defn Filter-1
+  []
+  (let [fields-list (map #(assoc % :active (r/atom false))
+                         [{:field "name"
+                           :type  "string"}
+                          {:field "created"
+                           :type  "datetime"}
+                          {:field "updated"
+                           :type  "datetime"}
+                          {:field "tag"
+                           :type  "string"}
+                          {:field "version"
+                           :type  "int"}
+                          {:field "owner"
+                           :type  "ref"}])]
+    (fn []
+      [ui/Popup {:trigger   (r/as-element
+                              [ui/Button {:as "div" :label-position "right" :floated "right"}
+                               [ui/Button {:basic true :icon true :color "grey"}
+                                [ui/Icon {:name "filter"}] "Filter"]
+                               [ui/Label {:as "a" :color "blue" :basic true} "3"]])
+                 :on        "click"
+                 :position  "bottom right"
+                 :style     {:padding 0}
+                 :basic     true
+                 :open      true
+                 :flowing   true
+                 :wide      true
+                 :hoverable true}
+       [:div
+        [ui/Menu {:borderless true :attached "top" :fluid true}
+         [ui/MenuItem {:active true}
+          [ui/Button {:size "mini" :compact true} "Clear"]]
+         [ui/MenuItem {:active true :name "Filters"}]
+         [ui/MenuItem {:active true}
+          [ui/Button {:size "mini" :compact true :primary true} "Done"]]]
+        [ui/Menu {:attached "bottom" :vertical true :fluid true}
+         (doall
+           (for [{:keys [field] :as field-info} fields-list]
+             ^{:key field}
+             [FilterField field-info]
+             ))
+
+         #_[ui/MenuItem
+            [ui/Checkbox {:label "Name"}]
+            ]
+         #_[ui/MenuItem
+            [ui/Checkbox {:label "State" :on-click (ui-callback/checked #(reset! visible %))}]]
+         #_[ui/TransitionGroup {:animation "fade down"
+                                :duration  200}
+            (when @visible
+              [ui/MenuItem {:active true}
+               [ui/Form
+                [ui/FormField
+                 [ui/Dropdown {:default-value "="
+                               :inline        true
+                               :options       [{:key "=", :value "=" :text "equal to"}
+                                               {:key "!=", :value "!=" :text "not equal to"}
+                                               {:key "^=", :value "^=" :text "start with"}]}]]
+                [ui/FormInput {:list "state"}]
+                [:datalist {:id "state"}
+                 [:option {:value "NEW"} "NEW"]
+                 [:option {:value "ACTIVATED"} "ACTIVATED"]
+                 ]]
+               ])]
+         #_[ui/MenuItem
+            [ui/Checkbox {:label "Tag"}]
+            ]
+         ]]
+       ])))
 
 (defmethod panel/render :edge
   [path]
@@ -714,6 +811,7 @@
                     {:default-value @full-text
                      :on-change     (ui-callback/input-callback
                                       #(dispatch [::events/set-full-text-search %]))}]
+                   [Filter-1]
                    [StatisticStates]
                    (case @view-type
                      :cards [NuvlaboxCards]

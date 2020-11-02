@@ -4,6 +4,7 @@
 
 ### Updated
 
+  - Deployment - Stop modal fix checkbox danger modal
   - Profile - Billing contact
   - Resource-metadata - Too big, optimization to get it only
     on api documentation page

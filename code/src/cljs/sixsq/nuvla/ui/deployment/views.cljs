@@ -454,6 +454,7 @@
   (let [tr         (subscribe [::i18n-subs/tr])
         credential (subscribe [::creds-subs/credential])
         open?      (r/atom false)
+        checked?   (r/atom false)
         icon-name  "stop"]
     (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
       (let [{:keys [id name description module parent]} deployment
@@ -476,20 +477,21 @@
                                  :popup-text  (@tr [:deployment-shutdown-msg])})]
         ^{:key (random-uuid)}
         [uix/ModalDanger
-         {:on-close     (fn [event]
-                          (reset! open? false)
-                          (.stopPropagation event)
-                          (.preventDefault event))
-          :on-confirm   #(do
-                           (dispatch [::events/stop-deployment id])
-                           (reset! open? false))
-          :open         @open?
-          :trigger      (r/as-element button)
-          :content      [:<> [:h3 text1] [:p text2]]
-          :header       (@tr [:shutdown-deployment])
-          :danger-msg   (@tr [:deployment-shutdown-msg])
-          :button-text  (@tr [(if (= :ok cred-check-status) :shutdown :shutdown-force)])
-          :modal-action [creds-comp/CredentialCheckPopup parent]}]))))
+         {:on-close           (fn [event]
+                                (reset! open? false)
+                                (.stopPropagation event)
+                                (.preventDefault event))
+          :on-confirm         #(do
+                                 (dispatch [::events/stop-deployment id])
+                                 (reset! open? false))
+          :open               @open?
+          :control-confirmed? checked?
+          :trigger            (r/as-element button)
+          :content            [:<> [:h3 text1] [:p text2]]
+          :header             (@tr [:shutdown-deployment])
+          :danger-msg         (@tr [:deployment-shutdown-msg])
+          :button-text        (@tr [(if (= :ok cred-check-status) :shutdown :shutdown-force)])
+          :modal-action       [creds-comp/CredentialCheckPopup parent]}]))))
 
 
 (defn DeleteButton

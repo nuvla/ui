@@ -701,73 +701,179 @@
 ;; Filter
 ;; int enum(string) string boolean date (location, null values)
 
+(defn StringOperation
+  [field-info update-fn]
+  [ui/FormField
+   [ui/Dropdown {:value     (:op field-info)
+                 :inline    true
+                 :upward    false
+                 :on-change (ui-callback/value #(update-fn (assoc field-info :op %)))
+                 :options   [{:key "=", :value "=" :text "equal to"}
+                             {:key "!=", :value "!=" :text "not equal to"}
+                             {:key "^=", :value "^=" :text "start with"}]}]])
+
+(defmulti FilterFieldDetail (fn [field-info _] (:type field-info)))
+
+(defmethod FilterFieldDetail :default [_ _])
+
+(defmethod FilterFieldDetail :enum
+  [{:keys [attr type active op value options] :as field-info} update-fn]
+  (let [custom-options (r/atom [])]
+    (fn [{:keys [attr type active op value options] :as field-info} update-fn]
+      [ui/Form
+       [StringOperation field-info update-fn]
+
+       [ui/FormDropdown
+        {:selection       true
+         :options         (concat
+                            (map (fn [v] {:key v, :value v, :text v}) options)
+                            @custom-options)
+         :value           value
+         :search          true
+         :upward          false
+         :allow-additions true
+         :addition-label  ""
+         :on-add-item     (ui-callback/value #(swap! custom-options conj {:key %, :value %, :text %}))
+         :on-change       (ui-callback/value #(update-fn (assoc field-info :value %)))}]
+       ])))
+
+
+#_(defmethod FilterFieldDetail :string
+    [{:keys [attr type active op value options] :as field-info} update-fn]
+    (let [nuvlaboxes (subscribe [::subs/nuvlaboxes])]
+      (fn []
+        (js/console.log @nuvlaboxes)
+        [ui/Form
+         [StringOperation field-info update-fn]
+         [ui/FormInput {:list      (str attr "_list")
+                        :value     (or value "")
+                        :on-change (ui-callback/value #(update-fn (assoc field-info :value %)))}]
+         [:datalist {:id (str attr "_list")}
+          (for [v (map :key (get-in @nuvlaboxes [:aggregations (keyword "terms:name") :buckets] []))]
+            ^{:key (random-uuid)}
+            [:option v])]])))
+
+
+(defmethod FilterFieldDetail :string
+  [{:keys [attr type active op value options] :as field-info} update-fn]
+  (let [nuvlaboxes     (subscribe [::subs/nuvlaboxes])
+        custom-options (r/atom [])]
+    (fn [{:keys [attr type active op value options] :as field-info} update-fn]
+      [ui/Form
+       [StringOperation field-info update-fn]
+       [ui/FormDropdown
+        {:selection       true
+         :options         (concat
+                            (map (fn [{v :key}] {:key v, :value v, :text v})
+                                 (get-in @nuvlaboxes [:aggregations (keyword "terms:name") :buckets] []))
+                            @custom-options)
+         :value           value
+         :search          true
+         :upward          false
+         :allow-additions true
+         :addition-label  ""
+         :on-add-item     (ui-callback/value #(swap! custom-options conj {:key %, :value %, :text %}))
+         :on-change       (ui-callback/value #(update-fn (assoc field-info :value %)))}]])))
+
+
+(defmethod FilterFieldDetail :int
+  [{:keys [attr type active op value options] :as field-info} update-fn]
+  (fn [{:keys [attr type active op value options] :as field-info} update-fn]
+    (js/console.log value)
+    [ui/Form
+     [ui/FormField
+      [ui/Dropdown {:value     (:op field-info)
+                    :inline    true
+                    :upward    false
+                    :on-change (ui-callback/value #(update-fn (assoc field-info :op %)))
+                    :options   [{:key "=", :value "=" :text "="}
+                                {:key "<", :value "<" :text "<"}
+                                {:key ">", :value ">" :text ">"}
+                                {:key "<=", :value "<=" :text "<="}
+                                {:key ">=", :value ">=" :text ">="}]}]]
+     [ui/FormInput {:type      "number"
+                    :value     value
+                    :on-change (ui-callback/value
+                                 #(update-fn (assoc field-info :value (if (str/blank? %)
+                                                                        ""
+                                                                        (js/parseInt %)))))}]]))
+
 (defn FilterField
-  [{:keys [field type active]}]
+  [{:keys [attr type active op value options] :as field-info} update-fn]
   [:<>
    [ui/MenuItem
-    [ui/Checkbox {:label    (str/capitalize field)
-                  :on-click (ui-callback/checked #(reset! active %))}]]
+    [ui/Checkbox {:label    (str/capitalize attr)
+                  :checked  active
+                  :on-click (ui-callback/checked #(update-fn (assoc field-info :active %)))}]]
    [ui/TransitionGroup {:animation "fade down"
                         :duration  200}
-    (when @active
+    (when active
       [ui/MenuItem {:active true}
-       [ui/Form
-        [ui/FormField
-         [ui/Dropdown {:default-value "="
-                       :inline        true
-                       :options       [{:key "=", :value "=" :text "equal to"}
-                                       {:key "!=", :value "!=" :text "not equal to"}
-                                       {:key "^=", :value "^=" :text "start with"}]}]]
-        [ui/FormInput {:list "state"}]
-        [:datalist {:id "state"}
-         [:option {:value "NEW"} "NEW"]
-         [:option {:value "ACTIVATED"} "ACTIVATED"]
-         ]]
+       [FilterFieldDetail field-info update-fn]
        ])]
    ])
 
+
 (defn Filter-1
   []
-  (let [fields-list (map #(assoc % :active (r/atom false))
-                         [{:field "name"
-                           :type  "string"}
-                          {:field "created"
-                           :type  "datetime"}
-                          {:field "updated"
-                           :type  "datetime"}
-                          {:field "tag"
-                           :type  "string"}
-                          {:field "version"
-                           :type  "int"}
-                          {:field "owner"
-                           :type  "ref"}])]
+  (let [fields      [{:attr "name"
+                      :type :string}
+                     {:attr "created"
+                      :type :datetime}
+                     {:attr "updated"
+                      :type :datetime}
+                     {:attr    "state"
+                      :type    :enum
+                      :options ["NEW"
+                                "ACTIVATED"
+                                "COMMISSIONED"
+                                "DECOMMISSIONING" "DECOMMISSIONED"
+                                "ERROR"]}
+                     {:attr "tag"
+                      :type :string}
+                     {:attr "version"
+                      :type :int}
+                     {:attr "owner"
+                      :type :query}]
+        init-fields (fn [] (into {} (map-indexed
+                                      (fn [i el]
+                                        [i (assoc el :active false
+                                                     :op "="
+                                                     :value nil)]) fields)))
+        fields-list (r/atom (init-fields))]
     (fn []
+      (js/console.log @fields-list)
       [ui/Popup {:trigger   (r/as-element
                               [ui/Button {:as "div" :label-position "right" :floated "right"}
                                [ui/Button {:basic true :icon true :color "grey"}
                                 [ui/Icon {:name "filter"}] "Filter"]
-                               [ui/Label {:as "a" :color "blue" :basic true} "3"]])
+                               [ui/Label {:as "a" :color "blue" :basic true}
+                                (count (filter :active (vals @fields-list)))]])
                  :on        "click"
                  :position  "bottom right"
-                 :style     {:padding 0}
+                 :style     {:padding 0
+                             :max-width 200}
                  :basic     true
                  :open      true
                  :flowing   true
                  :wide      true
                  :hoverable true}
-       [:div
-        [ui/Menu {:borderless true :attached "top" :fluid true}
+       [:<>
+        [ui/Menu {:borderless true :fluid true :size "tiny" :style {:margin-bottom -1}}
          [ui/MenuItem {:active true}
-          [ui/Button {:size "mini" :compact true} "Clear"]]
+          [ui/Button {:size     "mini"
+                      :compact  true
+                      :on-click #(reset! fields-list (init-fields))} "Clear"]]
          [ui/MenuItem {:active true :name "Filters"}]
          [ui/MenuItem {:active true}
           [ui/Button {:size "mini" :compact true :primary true} "Done"]]]
-        [ui/Menu {:attached "bottom" :vertical true :fluid true}
-         (doall
-           (for [{:keys [field] :as field-info} fields-list]
-             ^{:key field}
-             [FilterField field-info]
-             ))
+        [ui/Menu {:vertical true :fluid true :size "tiny" :style {:margin-top -1
+                                                                  :max-height "50vh"
+                                                                  :overflow   "auto"}}
+         (for [[i field-info] @fields-list]
+           ^{:key (:attr field-info)}
+           [FilterField field-info
+            (fn [field] (swap! fields-list assoc i field))])
 
          #_[ui/MenuItem
             [ui/Checkbox {:label "Name"}]

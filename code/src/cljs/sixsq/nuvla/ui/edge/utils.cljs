@@ -103,12 +103,13 @@
 
 (defn get-query-params
   [full-text-search page elements-per-page state-selector]
-  {:first   (inc (* (dec page) elements-per-page))
-   :last    (* page elements-per-page)
-   :orderby "created:desc"
-   :filter  (general-utils/join-and
-              (when state-selector (state-filter state-selector))
-              (general-utils/fulltext-query-string full-text-search))})
+  {:first       (inc (* (dec page) elements-per-page))
+   :last        (* page elements-per-page)
+   :orderby     "created:desc"
+   :aggregation "terms:name"
+   :filter      (general-utils/join-and
+                  (when state-selector (state-filter state-selector))
+                  (general-utils/fulltext-query-string full-text-search))})
 
 
 (defn prepare-compose-files

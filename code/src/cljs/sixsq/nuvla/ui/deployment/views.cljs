@@ -24,6 +24,7 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.spec :as spec-utils]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
@@ -701,6 +702,28 @@
        [ui/MessageContent last_line]])))
 
 
+(defn vpn-info
+  [{:keys [state module]}]
+  (let [{module-content :content} module
+        [_ url]     (-> module-content (get :urls []) first)
+        tr          (subscribe [::i18n-subs/tr])
+        primary-url (subscribe [::subs/url url])
+        parameters  (subscribe [::subs/deployment-parameters])
+        started?    (utils/is-started? state)
+        hostname    (or (get-in @parameters ["hostname" :value]) "")]
+    (when (and started? @primary-url (spec-utils/private-ipv4? hostname))
+      [ui/Message {:info true}
+       [ui/MessageHeader (@tr [:vpn-information])]
+       [ui/MessageContent
+        (@tr [:deployment-run-private-ip]) ". "
+        [:br]
+        (@tr [:deployment-access-url]) " "
+        [:a {:on-click #(dispatch [::history-events/navigate "credentials"]) :href "#"}
+         (@tr [:create-vpn-credential])] " " (@tr [:and]) " "
+        [:a {:href "https://docs.nuvla.io/nuvla/vpn" :target "_blank"} (@tr [:connect-vpn])] "."
+        ]])))
+
+
 (defn event-get-timestamp
   [event]
   (-> event :timestamp time/parse-iso8601))
@@ -729,6 +752,7 @@
             :on-change     #(dispatch [::events/edit resource-id (assoc @deployment :acl %)])}])
         [summary @deployment]
         [error @deployment job-open?]
+        [vpn-info @deployment]
         [urls-section]
         [module-version-section]
         [logs-section]

@@ -313,7 +313,45 @@
              :label        (@tr [:filter])
              :defaultValue $filter
              :placeholder  "e.g. connector/href^='exoscale-' and resource:type='VM' and resource:ram>=8096"
-             :on-blur      (ui-callback/input ::events/set-filter)}]]]]))))
+             :on-blur      (ui-callback/input ::events/set-filter)}]]]
+         #_[ui/FormGroup {:widths "equal"}
+            [ui/FormField
+
+             #_[ui/Grid {:stackable true :columns 4}
+                [ui/GridColumn
+                 [ui/Segment {:compact true}
+                  [ui/Dropdown {:placeholder "fieldname" :style {:background-color "beige"}}]
+                  [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
+                  [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]
+                  [ui/Icon {:name "x" :color "red"}]]]
+                [ui/GridColumn
+                 [ui/Segment {:compact true}
+                  [ui/Dropdown {:placeholder "fieldname" :style {:background-color "beige"}}]
+                  [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
+                  [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]
+                  [ui/Icon {:name "x" :color "red"}]]]
+                [ui/GridColumn
+                 [ui/Segment {:compact true}
+                  [ui/Dropdown {:placeholder "fieldname" :style {:background-color "beige"}}]
+                  [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
+                  [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]
+                  [ui/Icon {:name "x" :color "red"}]]]
+                [ui/GridColumn
+                 [ui/Segment {:compact true}
+                  [ui/Dropdown {:placeholder "fieldname" :style {:background-color "beige"}}]
+                  [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
+                  [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]
+                  [ui/Icon {:name "x" :color "red"}]]]
+                [ui/GridColumn
+                 [ui/Segment {:compact true}
+                  [ui/Dropdown {:placeholder "fieldname" :style {:background-color "beige"}}]
+                  [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
+                  [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]
+                  [ui/Icon {:name "x" :color "red"}]]]
+
+                ]
+             ]]
+         ]))))
 
 
 (defn format-field-item [selections-atom item]
@@ -517,7 +555,187 @@
          [uix/PageHeader "code" (utils/capitalize-first-letter (@tr [:api])) :inline inline]
          children]))))
 
+(def fields-options [{:key "Name", :value "Name", :text "Name"}
+                     {:key "Tag", :value "Tag", :text "Tag"}])
+
+(defn PopupLogic
+  [structs i]
+  (let [on-click-fn #(reset! structs (into []
+                                           (concat (subvec @structs 0 (inc i))
+                                                   [{:el    "logic"
+                                                     :value %}
+                                                    {:el "empty"}]
+                                                   (subvec @structs (inc i)))))]
+    [ui/Popup {:trigger   (r/as-element
+                            [:div [:input {:style     {:width        10
+                                                       :border-style "none"
+                                                       :outline      0}
+                                           :maxlength 0}]])
+               ;:pinned    true
+               :on        "click"
+               :hoverable true
+               :position  "bottom center"}
+     [ui/ButtonGroup {:size "mini" :basic true}
+      [ui/Button "("]
+      [ui/Button {:on-click (partial on-click-fn "or")} "OR"]
+      [ui/Button {:on-click (partial on-click-fn "and")} "AND"]
+      [ui/Button ")"]]]))
+
+(defn CellSouche
+  [structs i]
+  (js/console.log i (get-in @structs [(dec i) :el]))
+  (if (= "comp" (get-in @structs [(dec i) :el]))
+    [PopupLogic structs i]
+    #_[ui/Dropdown {:style         {:border-style "solid", :border-width 1}
+                    :icon          ""
+                    :trigger       (r/as-element [ui/Icon {:name "plus"}])
+                    :value         ""
+                    :auto-complete "off"
+                    :search        true
+                    :on-change     (ui-callback/value
+                                     #(do
+                                        (js/console.log %)
+                                        (reset! structs (into []
+                                                              (concat (subvec @structs 0 (inc i))
+                                                                      [{:el    "logic"
+                                                                        :value %}
+                                                                       {:el "empty"}]
+                                                                      (subvec @structs (inc i)))))))
+                    :options       [{:key "OR", :value "or", :text "OR"}
+                                    {:key "AND", :value "and", :text "AND"}]}]
+    [ui/Dropdown {:style     {:border-style "solid", :border-width 1}
+                  :icon      ""
+                  :value     ""
+                  :search    true
+                  :on-change (ui-callback/value
+                               #(reset! structs (into []
+                                                      (concat (subvec @structs 0 (inc i))
+                                                              [{:el    "comp"
+                                                                :field %}
+                                                               {:el "empty"}]
+                                                              (subvec @structs (inc i))))))
+                  :options   fields-options}]))
+
+(defn FitlerFancy
+  []
+  (let [structs (r/atom [{:el "empty"}
+                         ;{:el "logic" :value "AND"}
+                         ;{:el "empty"}
+                         ;{:el "comp" :field "Tag"}
+                         ;{:el "empty"}
+                         ])]
+    (fn []
+      (let [errors [1]]
+        [:<>
+         [:div {:style {:background-color "white"
+                        :border-color     "#85b7d9"
+                        :border-style     "solid"
+                        :border-width     1
+                        :padding          10
+                        :display          "flex"
+                        :flex-wrap        "wrap"
+                        :align-items      "center"}}
+          (for [[i {:keys [el field value] :as s}] (map-indexed vector @structs)]
+            (cond
+              (= el "empty") ^{:key i} [CellSouche structs i]
+              (= el "logic") ^{:key i} [ui/Label
+                                        {:style    {:cursor "pointer"}
+                                         :on-click #(reset! structs
+                                                            (assoc @structs i
+                                                                            (assoc s :value
+                                                                                     (if (= value "OR") "AND" "OR"))))}
+                                        [ui/Icon {:name     "remove circle"
+                                                  :style    {:cursor       "pointer"
+                                                             :margin-right ".5em"}
+                                                  :on-click #(do
+                                                               (reset! structs
+                                                                       (into []
+                                                                             (concat
+                                                                               (subvec @structs 0 i)
+                                                                               (subvec @structs (+ i 2)))
+                                                                             ))
+                                                               (.stopPropagation %))}]
+                                        (str/upper-case value)]
+              (= el "comp") ^{:key i} [:div {:style {:padding-right 10}}
+                                       [ui/Icon {:name     "remove circle"
+                                                 :style    {:cursor "pointer"}
+                                                 :on-click #(reset! structs
+                                                                    (into []
+                                                                          (concat
+                                                                            (subvec @structs 0 i)
+                                                                            (subvec @structs (+ i 2)))
+                                                                          ))}]
+                                       [ui/Dropdown (cond-> {:placeholder "fieldname"
+                                                             :options     fields-options
+                                                             :style       {:background-color "beige"}}
+                                                            field (assoc :value field))]
+                                       [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
+                                       [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]])
+            )]
+
+         [:h4 (str (->>
+                     @structs
+                     (remove #(= (:el %) "empty"))
+                     (map #(if (= (:el %) "logic") (:value %) (str (:field %) "='" (:value %) "'")))
+                     (str/join " ")))]
+         ]))))
 
 (defmethod panel/render :api
   [path]
-  [cimi-resource])
+
+
+
+  [:<>
+   [FitlerFancy]
+   #_[:div {:style {:background-color "white"
+                    :border-color     "#85b7d9"
+                    :border-style     "solid"
+                    :border-width     1
+                    :padding          10
+                    :display          "flex"
+                    :flex-wrap        "wrap"
+                    :align-items      "center"}}
+
+      [:div {:style {:padding-right 10}}
+       [ui/Icon {:name "remove circle"}]
+       [ui/Dropdown {:placeholder "fieldname" :style {:background-color "beige"}}]
+       [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
+       [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]]
+
+      [:div {:style {:padding-right 10}}
+       [ui/Label {:color "blue"} "OR"]]
+
+      [:div {:style {:padding-right 10}}
+       [ui/Icon {:name "remove circle"}]
+       [ui/Dropdown {:placeholder "fieldname" :style {:background-color "beige"}}]
+       [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
+       [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]]
+      [:div {:style {:padding-right 10}}
+       [ui/Label {:color "blue"} "AND"]]
+
+      [:div {:style {:padding-right 10}}
+       [ui/Icon {:name "remove circle"}]
+       [ui/Dropdown {:placeholder "fieldname" :style {:background-color "beige"}}]
+       [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
+       [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]]
+
+      [:div {:style {:padding-right 10}}
+       [ui/Label {:color "blue"} "AND"]]
+
+      [:div {:style {:padding-right 10}}
+       [ui/Icon {:name "remove circle"}]
+       [ui/Dropdown {:placeholder "fieldname" :style {:background-color "beige"}}]
+       [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
+       [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]]
+
+      [ui/Popup {:trigger (r/as-element [:input {:style {
+                                                         ;:border-width 0
+                                                         :max-width     10
+                                                         :outline-width 0}}])
+                 :open    true
+                 :offset  [-16 0]
+                 :header  "Test"
+                 :content "Something"}]
+      ]
+
+   [cimi-resource]])

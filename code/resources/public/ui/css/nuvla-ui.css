@@ -158,3 +158,10 @@ div.search.dropdown > input {
 .ui.dropdown .menu.transition.visible {
   z-index: 1001;
 }
+
+.ui.message a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+

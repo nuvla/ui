@@ -592,6 +592,29 @@
 ;             ))
 ;  )
 
+
+
+;;;; METHOD 2 optimized
+
+;(->>
+;  (loop [attrs  (get m "attributes")
+;         result []]
+;    (if (seq attrs)
+;      (let [{:keys [leafs nested]} (group-by #(if (empty? (get % "child-types")) :leafs :nested) attrs)
+;            new-attrs (mapcat (fn [{:strs [type child-types] :as in}]
+;                                (if (= type "array")
+;                                  [(-> in
+;                                       (dissoc "child-types")
+;                                       (assoc "type" (-> child-types first (get "type"))))]
+;                                  (map #(assoc % "name" (str (get in "name") "/" (get % "name"))) child-types))) nested)]
+;        (recur new-attrs (concat result leafs)))
+;      result
+;      ))
+;  (filter #(get % "indexed"))
+;  (map #(list (get % "name") (get % "type")))
+;  (sort-by first)
+;  )
+
 (def attributes {"name"    {:attr "name"
                             :type :string}
                  "created" {:attr "created"

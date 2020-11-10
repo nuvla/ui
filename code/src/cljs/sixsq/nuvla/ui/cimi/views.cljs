@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
     [sixsq.nuvla.ui.cimi.events :as events]
     [sixsq.nuvla.ui.cimi.subs :as subs]
+    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.cimi.utils :as cimi-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history]
@@ -304,54 +305,22 @@
                       :placeholder  "e.g. min:resource:vcpu, ..."
                       :on-blur      (ui-callback/input ::events/set-aggregation)}]]]
 
-         [ui/FormGroup {:widths "equal"}
-          [ui/FormField
-           ^{:key (str "filter:" $filter)}
-           [ui/Input
-            {:aria-label   (@tr [:filter])
-             :tab-index    7
-             :type         "text"
-             :label        (@tr [:filter])
-             :defaultValue $filter
-             :placeholder  "e.g. connector/href^='exoscale-' and resource:type='VM' and resource:ram>=8096"
-             :on-blur      (ui-callback/input ::events/set-filter)}]]]
-         #_[ui/FormGroup {:widths "equal"}
-            [ui/FormField
+         [ui/FormField
+          ^{:key (str "filter:" $filter)}
+          [ui/Input
+           {:className "labeled"
+            :action (boolean @selected-id)}
+           [ui/Label (@tr [:filter])]
+           [:input {:aria-label   (@tr [:filter])
+                    :tab-index    7
+                    :type         "text"
+                    :placeholder  "e.g. connector/href^='exoscale-' and resource:type='VM' and resource:ram>=8096"
+                    :defaultValue $filter
+                    :on-blur      (ui-callback/input ::events/set-filter)}]
+           (when @selected-id
+             ^{:key (str "magic-" @selected-id)}
+             [filter-comp/ButtonFilter @selected-id #(dispatch [::events/set-filter %])])]]
 
-             #_[ui/Grid {:stackable true :columns 4}
-                [ui/GridColumn
-                 [ui/Segment {:compact true}
-                  [ui/Dropdown {:placeholder "fieldname" :style {:background-color "beige"}}]
-                  [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
-                  [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]
-                  [ui/Icon {:name "x" :color "red"}]]]
-                [ui/GridColumn
-                 [ui/Segment {:compact true}
-                  [ui/Dropdown {:placeholder "fieldname" :style {:background-color "beige"}}]
-                  [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
-                  [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]
-                  [ui/Icon {:name "x" :color "red"}]]]
-                [ui/GridColumn
-                 [ui/Segment {:compact true}
-                  [ui/Dropdown {:placeholder "fieldname" :style {:background-color "beige"}}]
-                  [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
-                  [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]
-                  [ui/Icon {:name "x" :color "red"}]]]
-                [ui/GridColumn
-                 [ui/Segment {:compact true}
-                  [ui/Dropdown {:placeholder "fieldname" :style {:background-color "beige"}}]
-                  [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
-                  [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]
-                  [ui/Icon {:name "x" :color "red"}]]]
-                [ui/GridColumn
-                 [ui/Segment {:compact true}
-                  [ui/Dropdown {:placeholder "fieldname" :style {:background-color "beige"}}]
-                  [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
-                  [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]
-                  [ui/Icon {:name "x" :color "red"}]]]
-
-                ]
-             ]]
          ]))))
 
 
@@ -557,299 +526,6 @@
          children]))))
 
 
-;
-;(def metadata "{\n  \"description\" : \"\\nThis resource represents a module--the generic term for any project, image,\\ncomponent, or application.\\n\",\n  \"updated\" : \"2020-10-28T12:15:06.934Z\",\n  \"name\" : \"module\",\n  \"created\" : \"2020-10-28T12:15:06.934Z\",\n  \"id\" : \"resource-metadata/module\",\n  \"resource-type\" : \"resource-metadata\",\n  \"type-uri\" : \"module\",\n  \"attributes\" : [ {\n    \"child-types\" : [ {\n      \"child-types\" : [ {\n        \"indexed\" : true,\n        \"description\" : \"unique identifier for a principal\",\n        \"editable\" : true,\n        \"name\" : \"item\",\n        \"section\" : \"data\",\n        \"sensitive\" : false,\n        \"server-managed\" : false,\n        \"type\" : \"string\",\n        \"hidden\" : false,\n        \"display-name\" : \"item\"\n      } ],\n      \"indexed\" : true,\n      \"description\" : \"list of principals that can edit resource metadata\",\n      \"editable\" : true,\n      \"name\" : \"edit-meta\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"array\",\n      \"hidden\" : false,\n      \"display-name\" : \"edit metadata\"\n    }, {\n      \"child-types\" : [ {\n        \"indexed\" : true,\n        \"description\" : \"unique identifier for a principal\",\n        \"editable\" : true,\n        \"name\" : \"item\",\n        \"section\" : \"data\",\n        \"sensitive\" : false,\n        \"server-managed\" : false,\n        \"type\" : \"string\",\n        \"hidden\" : false,\n        \"display-name\" : \"item\"\n      } ],\n      \"indexed\" : true,\n      \"description\" : \"list of principals that can edit resource ACL\",\n      \"editable\" : true,\n      \"name\" : \"edit-acl\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"array\",\n      \"hidden\" : false,\n      \"display-name\" : \"edit ACL\"\n    }, {\n      \"child-types\" : [ {\n        \"indexed\" : true,\n        \"description\" : \"unique identifier for a principal\",\n        \"editable\" : true,\n        \"name\" : \"item\",\n        \"section\" : \"data\",\n        \"sensitive\" : false,\n        \"server-managed\" : false,\n        \"type\" : \"string\",\n        \"hidden\" : false,\n        \"display-name\" : \"item\"\n      } ],\n      \"indexed\" : true,\n      \"description\" : \"list of principals that can delete a resource\",\n      \"editable\" : true,\n      \"name\" : \"delete\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"array\",\n      \"hidden\" : false,\n      \"display-name\" : \"delete\"\n    }, {\n      \"child-types\" : [ {\n        \"indexed\" : true,\n        \"description\" : \"unique identifier for a principal\",\n        \"editable\" : true,\n        \"name\" : \"item\",\n        \"section\" : \"data\",\n        \"sensitive\" : false,\n        \"server-managed\" : false,\n        \"type\" : \"string\",\n        \"hidden\" : false,\n        \"display-name\" : \"item\"\n      } ],\n      \"indexed\" : true,\n      \"description\" : \"list of principals that can view resource data\",\n      \"editable\" : true,\n      \"name\" : \"view-data\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"array\",\n      \"hidden\" : false,\n      \"display-name\" : \"view data\"\n    }, {\n      \"child-types\" : [ {\n        \"indexed\" : true,\n        \"description\" : \"unique identifier for a principal\",\n        \"editable\" : true,\n        \"name\" : \"item\",\n        \"section\" : \"data\",\n        \"sensitive\" : false,\n        \"server-managed\" : false,\n        \"type\" : \"string\",\n        \"hidden\" : false,\n        \"display-name\" : \"item\"\n      } ],\n      \"indexed\" : true,\n      \"description\" : \"list of principals that can view resource metadata\",\n      \"editable\" : true,\n      \"name\" : \"view-meta\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"array\",\n      \"hidden\" : false,\n      \"display-name\" : \"view metadata\"\n    }, {\n      \"child-types\" : [ {\n        \"indexed\" : true,\n        \"description\" : \"unique identifier for a principal\",\n        \"editable\" : true,\n        \"name\" : \"item\",\n        \"section\" : \"data\",\n        \"sensitive\" : false,\n        \"server-managed\" : false,\n        \"type\" : \"string\",\n        \"hidden\" : false,\n        \"display-name\" : \"item\"\n      } ],\n      \"indexed\" : true,\n      \"description\" : \"list of owners of a resource\",\n      \"editable\" : true,\n      \"name\" : \"owners\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"array\",\n      \"hidden\" : false,\n      \"display-name\" : \"owners\"\n    }, {\n      \"child-types\" : [ {\n        \"indexed\" : true,\n        \"description\" : \"unique identifier for a principal\",\n        \"editable\" : true,\n        \"name\" : \"item\",\n        \"section\" : \"data\",\n        \"sensitive\" : false,\n        \"server-managed\" : false,\n        \"type\" : \"string\",\n        \"hidden\" : false,\n        \"display-name\" : \"item\"\n      } ],\n      \"indexed\" : true,\n      \"description\" : \"list of principals that can edit resource data\",\n      \"editable\" : true,\n      \"name\" : \"edit-data\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"array\",\n      \"hidden\" : false,\n      \"display-name\" : \"edit data\"\n    }, {\n      \"child-types\" : [ {\n        \"indexed\" : true,\n        \"description\" : \"unique identifier for a principal\",\n        \"editable\" : true,\n        \"name\" : \"item\",\n        \"section\" : \"data\",\n        \"sensitive\" : false,\n        \"server-managed\" : false,\n        \"type\" : \"string\",\n        \"hidden\" : false,\n        \"display-name\" : \"item\"\n      } ],\n      \"indexed\" : true,\n      \"description\" : \"list of principals that can manage a resource via custom actions\",\n      \"editable\" : true,\n      \"name\" : \"manage\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"array\",\n      \"hidden\" : false,\n      \"display-name\" : \"manage\"\n    }, {\n      \"child-types\" : [ {\n        \"indexed\" : true,\n        \"description\" : \"unique identifier for a principal\",\n        \"editable\" : true,\n        \"name\" : \"item\",\n        \"section\" : \"data\",\n        \"sensitive\" : false,\n        \"server-managed\" : false,\n        \"type\" : \"string\",\n        \"hidden\" : false,\n        \"display-name\" : \"item\"\n      } ],\n      \"indexed\" : true,\n      \"description\" : \"list of principals that can view resource ACL\",\n      \"editable\" : true,\n      \"name\" : \"view-acl\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"array\",\n      \"hidden\" : false,\n      \"display-name\" : \"view ACL\"\n    } ],\n    \"indexed\" : true,\n    \"description\" : \"resource ACL\",\n    \"editable\" : true,\n    \"name\" : \"acl\",\n    \"section\" : \"acl\",\n    \"sensitive\" : false,\n    \"server-managed\" : false,\n    \"type\" : \"map\",\n    \"hidden\" : false,\n    \"display-name\" : \"ACL\",\n    \"order\" : 0,\n    \"required\" : [ \"owners\" ]\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"module compatibility\",\n    \"editable\" : false,\n    \"name\" : \"compatibility\",\n    \"fulltext\" : true,\n    \"section\" : \"data\",\n    \"sensitive\" : false,\n    \"server-managed\" : true,\n    \"type\" : \"string\",\n    \"hidden\" : false,\n    \"display-name\" : \"compatibility\",\n    \"order\" : 35\n  }, {\n    \"indexed\" : false,\n    \"description\" : \"module content\",\n    \"editable\" : false,\n    \"name\" : \"content\",\n    \"section\" : \"data\",\n    \"sensitive\" : false,\n    \"server-managed\" : true,\n    \"type\" : \"map\",\n    \"hidden\" : false,\n    \"display-name\" : \"content\",\n    \"order\" : 37\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"creation timestamp (UTC) for resource\",\n    \"editable\" : false,\n    \"name\" : \"created\",\n    \"section\" : \"meta\",\n    \"sensitive\" : false,\n    \"server-managed\" : true,\n    \"type\" : \"date-time\",\n    \"hidden\" : false,\n    \"display-name\" : \"created\",\n    \"order\" : 4\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"user id who created the resource\",\n    \"editable\" : false,\n    \"name\" : \"created-by\",\n    \"section\" : \"meta\",\n    \"sensitive\" : false,\n    \"server-managed\" : true,\n    \"type\" : \"string\",\n    \"hidden\" : false,\n    \"display-name\" : \"created-by\",\n    \"order\" : 11\n  }, {\n    \"child-types\" : [ {\n      \"indexed\" : true,\n      \"description\" : \"Multipurpose Internet Mail Extensions (MIME) type\",\n      \"editable\" : true,\n      \"name\" : \"item\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"string\",\n      \"hidden\" : false,\n      \"display-name\" : \"item\"\n    } ],\n    \"indexed\" : true,\n    \"description\" : \"list of accepted data content types\",\n    \"editable\" : true,\n    \"name\" : \"data-accept-content-types\",\n    \"fulltext\" : true,\n    \"section\" : \"data\",\n    \"sensitive\" : false,\n    \"server-managed\" : false,\n    \"type\" : \"array\",\n    \"hidden\" : false,\n    \"display-name\" : \"accepted content types\",\n    \"order\" : 37\n  }, {\n    \"child-types\" : [ {\n      \"indexed\" : true,\n      \"description\" : \"a sequence of one or more non-whitespace characters\",\n      \"editable\" : true,\n      \"name\" : \"item\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"string\",\n      \"hidden\" : false,\n      \"display-name\" : \"item\"\n    } ],\n    \"indexed\" : true,\n    \"description\" : \"list of data access protocols understood by module\",\n    \"editable\" : true,\n    \"name\" : \"data-access-protocols\",\n    \"fulltext\" : true,\n    \"section\" : \"data\",\n    \"sensitive\" : false,\n    \"server-managed\" : false,\n    \"type\" : \"array\",\n    \"hidden\" : false,\n    \"display-name\" : \"data access protocols\",\n    \"order\" : 38\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"human-readable description of resource\",\n    \"editable\" : true,\n    \"name\" : \"description\",\n    \"fulltext\" : true,\n    \"section\" : \"meta\",\n    \"sensitive\" : false,\n    \"server-managed\" : false,\n    \"type\" : \"string\",\n    \"hidden\" : false,\n    \"display-name\" : \"description\",\n    \"order\" : 7\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"unique resource identifier\",\n    \"editable\" : false,\n    \"name\" : \"id\",\n    \"fulltext\" : true,\n    \"section\" : \"meta\",\n    \"sensitive\" : false,\n    \"server-managed\" : true,\n    \"type\" : \"resource-id\",\n    \"hidden\" : false,\n    \"display-name\" : \"identifier\",\n    \"order\" : 0\n  }, {\n    \"child-types\" : [ {\n      \"indexed\" : true,\n      \"description\" : \"short, human-readable name for resource\",\n      \"editable\" : true,\n      \"name\" : \"name\",\n      \"fulltext\" : true,\n      \"section\" : \"meta\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"string\",\n      \"hidden\" : false,\n      \"display-name\" : \"name\",\n      \"order\" : 6\n    }, {\n      \"indexed\" : true,\n      \"description\" : \"Uniform Resource Locator\",\n      \"editable\" : true,\n      \"name\" : \"url\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"string\",\n      \"hidden\" : false,\n      \"display-name\" : \"url\"\n    }, {\n      \"indexed\" : true,\n      \"description\" : \"human-readable description of resource\",\n      \"editable\" : true,\n      \"name\" : \"description\",\n      \"fulltext\" : true,\n      \"section\" : \"meta\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"string\",\n      \"hidden\" : false,\n      \"display-name\" : \"description\",\n      \"order\" : 7\n    } ],\n    \"indexed\" : true,\n    \"editable\" : true,\n    \"name\" : \"license\",\n    \"section\" : \"data\",\n    \"sensitive\" : false,\n    \"server-managed\" : false,\n    \"type\" : \"map\",\n    \"hidden\" : false,\n    \"display-name\" : \"license\",\n    \"order\" : 39,\n    \"required\" : [ \"name\", \"url\" ]\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"URL for the module's logo\",\n    \"editable\" : true,\n    \"name\" : \"logo-url\",\n    \"section\" : \"data\",\n    \"sensitive\" : false,\n    \"server-managed\" : false,\n    \"type\" : \"string\",\n    \"hidden\" : false,\n    \"display-name\" : \"logo URL\",\n    \"order\" : 36\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"short, human-readable name for resource\",\n    \"editable\" : true,\n    \"name\" : \"name\",\n    \"fulltext\" : true,\n    \"section\" : \"meta\",\n    \"sensitive\" : false,\n    \"server-managed\" : false,\n    \"type\" : \"string\",\n    \"hidden\" : false,\n    \"display-name\" : \"name\",\n    \"order\" : 6\n  }, {\n    \"child-types\" : [ {\n      \"child-types\" : [ {\n        \"indexed\" : true,\n        \"description\" : \"URI for operation\",\n        \"editable\" : false,\n        \"name\" : \"href\",\n        \"section\" : \"data\",\n        \"sensitive\" : false,\n        \"server-managed\" : true,\n        \"type\" : \"uri\",\n        \"hidden\" : false,\n        \"display-name\" : \"href\"\n      }, {\n        \"indexed\" : true,\n        \"description\" : \"URL for performing action\",\n        \"editable\" : false,\n        \"name\" : \"rel\",\n        \"section\" : \"data\",\n        \"sensitive\" : false,\n        \"server-managed\" : true,\n        \"type\" : \"string\",\n        \"hidden\" : false,\n        \"display-name\" : \"rel\"\n      } ],\n      \"indexed\" : true,\n      \"description\" : \"operation definition (name, URL) for a resource\",\n      \"editable\" : false,\n      \"name\" : \"item\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : true,\n      \"type\" : \"map\",\n      \"hidden\" : false,\n      \"display-name\" : \"item\",\n      \"required\" : [ \"href\", \"rel\" ]\n    } ],\n    \"indexed\" : false,\n    \"description\" : \"list of authorized resource operations\",\n    \"editable\" : false,\n    \"name\" : \"operations\",\n    \"section\" : \"meta\",\n    \"sensitive\" : false,\n    \"server-managed\" : true,\n    \"type\" : \"array\",\n    \"hidden\" : false,\n    \"display-name\" : \"operations\",\n    \"order\" : 10\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"reference to parent resource\",\n    \"editable\" : false,\n    \"name\" : \"parent\",\n    \"section\" : \"meta\",\n    \"sensitive\" : false,\n    \"server-managed\" : true,\n    \"type\" : \"resource-id\",\n    \"hidden\" : false,\n    \"display-name\" : \"parent\",\n    \"order\" : 1\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"parent path for module\",\n    \"editable\" : false,\n    \"name\" : \"parent-path\",\n    \"section\" : \"data\",\n    \"sensitive\" : false,\n    \"server-managed\" : true,\n    \"type\" : \"string\",\n    \"hidden\" : false,\n    \"display-name\" : \"parent path\",\n    \"order\" : 33\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"module path\",\n    \"editable\" : true,\n    \"name\" : \"path\",\n    \"fulltext\" : true,\n    \"section\" : \"data\",\n    \"sensitive\" : false,\n    \"server-managed\" : false,\n    \"type\" : \"string\",\n    \"hidden\" : false,\n    \"display-name\" : \"path\",\n    \"order\" : 32\n  }, {\n    \"child-types\" : [ {\n      \"indexed\" : true,\n      \"description\" : \"identifier of product id\",\n      \"editable\" : false,\n      \"name\" : \"product-id\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : true,\n      \"type\" : \"string\",\n      \"hidden\" : false,\n      \"display-name\" : \"product-id\"\n    }, {\n      \"indexed\" : true,\n      \"description\" : \"identifier of price id\",\n      \"editable\" : false,\n      \"name\" : \"price-id\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : true,\n      \"type\" : \"string\",\n      \"hidden\" : false,\n      \"display-name\" : \"price-id\"\n    }, {\n      \"indexed\" : true,\n      \"description\" : \"identifier of account id\",\n      \"editable\" : false,\n      \"name\" : \"account-id\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : true,\n      \"type\" : \"string\",\n      \"hidden\" : false,\n      \"display-name\" : \"account-id\"\n    }, {\n      \"indexed\" : true,\n      \"description\" : \"string containing something other than only whitespace\",\n      \"editable\" : true,\n      \"name\" : \"currency\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"string\",\n      \"hidden\" : false,\n      \"display-name\" : \"currency\"\n    }, {\n      \"indexed\" : true,\n      \"description\" : \"cent amount by day\",\n      \"editable\" : true,\n      \"name\" : \"cent-amount-daily\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"integer\",\n      \"hidden\" : false,\n      \"display-name\" : \"cent-amount-daily\"\n    } ],\n    \"indexed\" : true,\n    \"editable\" : true,\n    \"name\" : \"price\",\n    \"section\" : \"data\",\n    \"sensitive\" : false,\n    \"server-managed\" : false,\n    \"type\" : \"map\",\n    \"hidden\" : false,\n    \"display-name\" : \"price\",\n    \"order\" : 38,\n    \"required\" : [ \"product-id\", \"price-id\", \"account-id\", \"currency\", \"cent-amount-daily\" ]\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"reference to the resource's metadata\",\n    \"editable\" : false,\n    \"name\" : \"resource-metadata\",\n    \"section\" : \"meta\",\n    \"sensitive\" : false,\n    \"server-managed\" : true,\n    \"type\" : \"resource-id\",\n    \"hidden\" : false,\n    \"display-name\" : \"resource metadata\",\n    \"order\" : 3\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"resource type identifier\",\n    \"editable\" : false,\n    \"name\" : \"resource-type\",\n    \"section\" : \"meta\",\n    \"sensitive\" : false,\n    \"server-managed\" : true,\n    \"type\" : \"uri\",\n    \"hidden\" : false,\n    \"display-name\" : \"resource type\",\n    \"order\" : 2\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"module type\",\n    \"editable\" : false,\n    \"name\" : \"subtype\",\n    \"fulltext\" : true,\n    \"section\" : \"data\",\n    \"sensitive\" : false,\n    \"server-managed\" : false,\n    \"type\" : \"string\",\n    \"hidden\" : false,\n    \"display-name\" : \"subtype\",\n    \"order\" : 34\n  }, {\n    \"child-types\" : [ {\n      \"indexed\" : true,\n      \"editable\" : true,\n      \"name\" : \"item\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : false,\n      \"type\" : \"string\",\n      \"hidden\" : false,\n      \"display-name\" : \"item\"\n    } ],\n    \"indexed\" : true,\n    \"description\" : \"client defined tags of the resource\",\n    \"editable\" : true,\n    \"name\" : \"tags\",\n    \"fulltext\" : true,\n    \"section\" : \"meta\",\n    \"sensitive\" : false,\n    \"server-managed\" : false,\n    \"type\" : \"array\",\n    \"hidden\" : false,\n    \"display-name\" : \"tags\",\n    \"order\" : 9\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"latest resource update timestamp (UTC)\",\n    \"editable\" : false,\n    \"name\" : \"updated\",\n    \"section\" : \"meta\",\n    \"sensitive\" : false,\n    \"server-managed\" : true,\n    \"type\" : \"date-time\",\n    \"hidden\" : false,\n    \"display-name\" : \"updated\",\n    \"order\" : 5\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"user id who updated the resource\",\n    \"editable\" : false,\n    \"name\" : \"updated-by\",\n    \"section\" : \"meta\",\n    \"sensitive\" : false,\n    \"server-managed\" : true,\n    \"type\" : \"string\",\n    \"hidden\" : false,\n    \"display-name\" : \"updated-by\",\n    \"order\" : 12\n  }, {\n    \"indexed\" : true,\n    \"description\" : \"content is valid\",\n    \"editable\" : true,\n    \"name\" : \"valid\",\n    \"section\" : \"data\",\n    \"sensitive\" : false,\n    \"server-managed\" : false,\n    \"type\" : \"boolean\",\n    \"hidden\" : false,\n    \"display-name\" : \"valid\",\n    \"order\" : 36\n  }, {\n    \"indexed\" : true,\n    \"editable\" : true,\n    \"name\" : \"validation-message\",\n    \"section\" : \"data\",\n    \"sensitive\" : false,\n    \"server-managed\" : false,\n    \"type\" : \"string\",\n    \"hidden\" : false,\n    \"display-name\" : \"validation-message\",\n    \"order\" : 37\n  }, {\n    \"child-types\" : [ {\n      \"indexed\" : false,\n      \"description\" : \"module version identifier\",\n      \"editable\" : false,\n      \"name\" : \"item\",\n      \"section\" : \"data\",\n      \"sensitive\" : false,\n      \"server-managed\" : true,\n      \"type\" : \"resource-id\",\n      \"hidden\" : false,\n      \"display-name\" : \"item\"\n    } ],\n    \"indexed\" : false,\n    \"description\" : \"list of module versions\",\n    \"editable\" : false,\n    \"name\" : \"versions\",\n    \"section\" : \"data\",\n    \"sensitive\" : false,\n    \"server-managed\" : true,\n    \"type\" : \"array\",\n    \"hidden\" : false,\n    \"display-name\" : \"versions\",\n    \"order\" : 35\n  } ],\n  \"required\" : [ \"acl\", \"created\", \"id\", \"parent-path\", \"path\", \"resource-type\", \"subtype\", \"updated\" ]\n}")
-;
-;(defn visit-simplify
-;  [in]
-;  (println "In: " (str in))
-;  (if (map? in)
-;    (let [out (let [type        (get in "type")
-;                    child-types (seq (get in "child-types"))]
-;                (if child-types
-;                  (if (= type "array")
-;                    (-> in
-;                        (dissoc "child-types")
-;                        (assoc "type" (-> child-types first (get "type"))))
-;                    (map #(assoc % "name" (str (get in "name") "/" (get % "name"))) child-types))
-;                  in)
-;                )]
-;      (println "Out: " out)
-;      out
-;      )
-;    in))
-;
-;
-;(defn generate-attribute-list-from-metadata
-;  []
-;  (println "########"
-;           (->>
-;             (get m "attributes")
-;             (clojure.walk/postwalk visit-simplify)
-;             flatten
-;             (filter #(get % "indexed"))
-;             (map #(list (get % "name") (get % "type")))
-;             ))
-;  )
-
-
-
-;;;; METHOD 2 optimized
-
-;(->>
-;  (loop [attrs  (get m "attributes")
-;         result []]
-;    (if (seq attrs)
-;      (let [{:keys [leafs nested]} (group-by #(if (empty? (get % "child-types")) :leafs :nested) attrs)
-;            new-attrs (mapcat (fn [{:strs [type child-types] :as in}]
-;                                (if (= type "array")
-;                                  [(-> in
-;                                       (dissoc "child-types")
-;                                       (assoc "type" (-> child-types first (get "type"))))]
-;                                  (map #(assoc % "name" (str (get in "name") "/" (get % "name"))) child-types))) nested)]
-;        (recur new-attrs (concat result leafs)))
-;      result
-;      ))
-;  (filter #(get % "indexed"))
-;  (map #(list (get % "name") (get % "type")))
-;  (sort-by first)
-;  )
-
-(def attributes {"name"    {:attr "name"
-                            :type :string}
-                 "created" {:attr "created"
-                            :type :datetime}
-                 "updated" {:attr "updated"
-                            :type :datetime}
-                 "state"   {:attr    "state"
-                            :type    :string
-                            :options ["NEW"
-                                      "ACTIVATED"
-                                      "COMMISSIONED"
-                                      "DECOMMISSIONING" "DECOMMISSIONED"
-                                      "ERROR"]}
-                 "tag"     {:attr "tag"
-                            :type :string}
-                 "version" {:attr "version"
-                            :type :int}
-                 "owner"   {:attr "owner"
-                            :type :query}})
-
-(def attributes-options (map (fn [{:keys [attr]}] {:key attr, :value attr, :text attr})
-                             (vals attributes)))
-
-(defn CellSouche
-  [structs i]
-  (js/console.log i (get-in @structs [(dec i) :el]))
-  (js/console.log "Reloading CellSouche")
-  (let []
-    (fn [structs i]
-      [ui/Dropdown
-       {:trigger              (r/as-element [:span])
-        :value                nil
-        :select-on-navigation false
-        :select-on-blur       false
-        :header               "Insert an element"
-        :on-change            (ui-callback/value
-                                #(do
-                                   (js/console.log %)
-                                   (reset! structs
-                                           (into []
-                                                 (concat (subvec @structs 0 (inc i))
-                                                         [(if (= "attribute" %)
-                                                            {:el "attribute"}
-                                                            {:el    "logic"
-                                                             :value %})
-                                                          {:el "empty"}]
-                                                         (subvec @structs (inc i)))))))
-        :options              [{:key "Attribute", :value "attribute", :text "Attribute"}
-                               {:key "AND", :value "and", :text "AND"}
-                               {:key "OR", :value "or", :text "OR"}
-                               {:key "(", :value "(", :text "("}
-                               {:key ")", :value ")", :text ")"}]
-        :icon                 ""
-        :pointing             "top left"
-        :style                {:cursor "text"}}])))
-
-
-(defn CellLogic
-  [structs i]
-  (js/console.log "Reloading CellLogic" i)
-  (fn [structs i]
-    (let [{:keys [value] :as s} (nth @structs i)]
-      [ui/Label
-       {:style {:cursor "pointer"}
-        :color "blue"}
-       (str/upper-case value)
-       [ui/Icon {:name     "delete"
-                 :style    {:cursor       "pointer"
-                            :margin-right ".5em"}
-                 :on-click #(reset! structs
-                                    (into []
-                                          (concat
-                                            (subvec @structs 0 i)
-                                            (subvec @structs (+ i 2)))
-                                          ))}]])))
-
-
-(defn CellAttribute
-  [structs i]
-  (js/console.log "Reloading CellAttribute" i)
-  (fn [structs i]
-    (let [{:keys [attribute value] :as s} (nth @structs i)
-          {attr-type :type} (get attributes attribute)]
-      [ui/Label {:size "large"}
-       [ui/Dropdown
-        (cond-> {:search      true
-                 :placeholder "attribute name"
-                 :on-change   (ui-callback/value
-                                #(reset! structs
-                                         (assoc-in @structs [i :attribute] %)))
-                 :options     attributes-options
-                 :style       {:background-color "beige"}}
-                attribute (assoc :value attribute))]
-       (cond
-         (= attr-type :string) [:<>
-                                [ui/Dropdown {:placeholder "op"
-                                              :on-change   (ui-callback/value
-                                                             #(reset! structs
-                                                                      (assoc-in @structs [i :op] %)))
-                                              :search      true
-                                              :options     [{:key "equal", :value "=", :text "Equal"}
-                                                            {:key "start-with", :value "^=", :text "Start with"}
-                                                            {:key "not-equal", :value "!=", :text "Not equal"}
-                                                            {:key "like", :value "==", :text "Like"}]
-                                              :style       {:font-style       "italic"
-                                                            :background-color "antiquewhite"}}]
-                                [ui/Dropdown {:placeholder "value"
-                                              :style       {:background-color "aliceblue"}}]]
-
-         (= attr-type :int) [:<>
-                             [ui/Dropdown {:placeholder "op"
-                                           :search      true
-                                           :on-change   (ui-callback/value
-                                                          #(reset! structs
-                                                                   (assoc-in @structs [i :op] %)))
-                                           :options     [{:key "=", :value "=" :text "="}
-                                                         {:key "<", :value "<" :text "<"}
-                                                         {:key ">", :value ">" :text ">"}
-                                                         {:key "<=", :value "<=" :text "<="}
-                                                         {:key ">=", :value ">=" :text ">="}]
-                                           :style       {:font-style       "italic"
-                                                         :background-color "antiquewhite"}}]
-                             [ui/Input
-                              {:type        "number"
-                               :size        "mini"
-                               :style       {:background-color "aliceblue"
-                                             :width            50}
-                               :transparent true
-                               :placeholder "value"
-                               :value       (or value "")
-                               :on-change   (ui-callback/value
-                                              #(reset! structs
-                                                       (assoc-in @structs [i :value]
-                                                                 (if (str/blank? %)
-                                                                   nil
-                                                                   (js/parseInt %)))))}]
-
-                             ]
-         (= attr-type :datetime) [:<>
-                                  [ui/Dropdown {:placeholder "op"
-                                                :search      true
-                                                :on-change   (ui-callback/value
-                                                               #(reset! structs
-                                                                        (assoc-in @structs [i :op] %)))
-                                                :options     [{:key "=", :value "=" :text "="}
-                                                              {:key "<", :value "<" :text "<"}
-                                                              {:key ">", :value ">" :text ">"}
-                                                              {:key "<=", :value "<=" :text "<="}
-                                                              {:key ">=", :value ">=" :text ">="}]
-                                                :style       {:font-style       "italic"
-                                                              :background-color "antiquewhite"}}]
-                                  [ui/DatePicker (cond-> {:custom-input     (r/as-element [ui/Input {:style       {:background-color "aliceblue"
-                                                                                                                   :width            50}
-                                                                                                     :transparent true}])
-                                                          :show-time-select true
-                                                          :date-format      "d MMMM YYYY, hh:mm a"
-                                                          :on-change        #(reset! structs
-                                                                                     (assoc-in @structs [i :value] %))
-                                                          }
-                                                         value (assoc :selected value))]
-                                  #_[ui/Input
-                                     {:type        "number"
-                                      :size        "mini"
-                                      :style       {:background-color "aliceblue"
-                                                    :width            50}
-                                      :transparent true
-                                      :placeholder "value"
-                                      :value       (or value "")
-                                      :on-change   (ui-callback/value
-                                                     #(reset! structs
-                                                              (assoc-in @structs [i :value]
-                                                                        (if (str/blank? %)
-                                                                          nil
-                                                                          (js/parseInt %)))))}]
-
-                                  ]
-         :else [:<>
-                [ui/Dropdown {:placeholder "op" :style {:background-color "antiquewhite"}}]
-                [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]
-                ]
-         )
-       " "
-       [ui/Icon {:name     "delete"
-                 :color    "grey"
-                 :link     true
-                 :on-click #(reset! structs
-                                    (into []
-                                          (concat
-                                            (subvec @structs 0 i)
-                                            (subvec @structs (+ i 2)))
-                                          ))}]])))
-
-
-
-(defn FitlerFancy
-  []
-  (let [structs (r/atom [{:el "empty"}
-                         {:el "attribute" :attribute "created"}
-                         {:el "empty"}
-                         {:el "logic" :value "and"}
-                         {:el "empty"}
-                         ])]
-    (fn []
-      [:<>
-       [:div {:style {:background-color "white"
-                      :border-color     "#85b7d9"
-                      :border-style     "solid"
-                      :border-width     1
-                      :border-radius    ".28571429rem"
-                      :padding          10
-                      :display          "flex"
-                      :flex-wrap        "wrap"
-                      :align-items      "center"}}
-        (for [[i {:keys [el attribute value] :as s}] (map-indexed vector @structs)]
-          (cond
-            (= el "empty") ^{:key i} [CellSouche structs i]
-            (= el "logic") ^{:key i} [CellLogic structs i]
-            (= el "attribute") ^{:key i} [CellAttribute structs i])
-          )]
-
-       [:h4 (str (->>
-                   @structs
-                   (remove #(= (:el %) "empty"))
-                   (map #(if (= (:el %) "logic")
-                           (:value %)
-                           (str (:attribute %) " " (:op %) " "
-                                (cond
-                                  (= (get-in attributes [(:attribute %) :type]) :string) (str "'" (:value %) "'")
-                                  (= (get-in attributes [(:attribute %) :type]) :datetime) (when (:value %) (str "'" (time/time->utc-str (:value %)) "'"))
-                                  :else (:value %)))))
-                   (str/join " ")))]
-       ])))
-
 (defmethod panel/render :api
   [path]
-  [:<>
-   [FitlerFancy]
-   [cimi-resource]])
+  [cimi-resource])

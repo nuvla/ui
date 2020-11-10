@@ -11,6 +11,7 @@
     [sixsq.nuvla.ui.cimi.spec :as api]
     [sixsq.nuvla.ui.credentials.spec :as credential]
     [sixsq.nuvla.ui.dashboard.spec :as dashboard]
+    [sixsq.nuvla.ui.filter-comp.spec :as filter-comp]
     [sixsq.nuvla.ui.data.spec :as data]
     [sixsq.nuvla.ui.deployment-dialog.spec :as deployment-dialog]
     [sixsq.nuvla.ui.docs.spec :as docs]
@@ -37,6 +38,7 @@
                      ::deployment-dialog/db
                      ::data/db
                      ::docs/db
+                     ::filter-comp/db
                      ::i18n/db
                      ::infra-service/db
                      ::infra-service-detail/db
@@ -63,6 +65,7 @@
          deployment-dialog/defaults
          credential/defaults
          docs/defaults
+         filter-comp/defaults
          i18n/defaults
          infra-service/defaults
          infra-service-detail/defaults

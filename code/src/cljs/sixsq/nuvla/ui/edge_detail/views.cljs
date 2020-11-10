@@ -232,6 +232,8 @@
          :default-open false
          :icon (case p-interface
                  "USB" "usb"
+                 "bluetooth" "bluetooth b"
+                 "bluetooth-le" "bluetooth b"
                  nil)]))))
 
 

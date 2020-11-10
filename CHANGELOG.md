@@ -16,6 +16,7 @@
   - Pricing - Remove pricing page
   - Deployment - Click on error message make user
     go to job section
+  - NuvlaBox - add new icon for Bluetooth peripherals
 
 ## [2.9.0] - 2020-10-28
 

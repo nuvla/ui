@@ -40,3 +40,49 @@
   (let [res (cimi-parser text)]
     (when (insta/failure? res)
       (->> res insta/get-failure prn-str str/split-lines rest (str/join "\n")))))
+
+
+(defn filter-str->data
+  [filter-str]
+  (let [parsed-filter (cimi-parser filter-str)]
+    (js/console.log parsed-filter)
+    (when-not (insta/failure? parsed-filter)
+      (->> parsed-filter
+           (insta/transform
+             {:AndExpr           (fn [& args]
+                                   (if (= (count args) 1)
+                                     [(first args)]
+                                     [(first args)
+                                      {:el "logic" :value "and"}
+                                      (second args)]))
+              :Filter            (fn [& args]
+                                   (if (= (count args) 1)
+                                     [(first args)]
+                                     [(first args)
+                                      {:el "logic" :value "or"}
+                                      (second args)]))
+              :EqOp              identity
+              :FullTextOp        identity
+              :PrefixOp          identity
+              :RelOp             identity
+              :Comp              (fn [a o v]
+                                   (if (string? a)
+                                     {:el        "attribute"
+                                      :attribute a
+                                      :operation o
+                                      :value     v}
+                                     [{:el "logic" :value "("}
+                                      a
+                                      {:el "logic" :value ")"}]))
+              :Attribute         identity
+              :IntValue          int
+              :DoubleQuoteString #(subs % 1 (dec (count %)))
+              :SingleQuoteString #(subs % 1 (dec (count %)))
+              :BoolValue         #(case %
+                                    "true" true
+                                    "false" false)
+              :NullValue         (constantly nil)
+              :DateValue         identity})
+           flatten
+           (interpose {:el "empty"})
+           vector))))

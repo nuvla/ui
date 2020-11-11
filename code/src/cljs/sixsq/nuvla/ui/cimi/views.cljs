@@ -309,7 +309,7 @@
           ^{:key (str "filter:" $filter)}
           [ui/Input
            {:className "labeled"
-            :action (boolean @selected-id)}
+            :action    (boolean @selected-id)}
            [ui/Label (@tr [:filter])]
            [:input {:aria-label   (@tr [:filter])
                     :tab-index    7
@@ -318,8 +318,8 @@
                     :defaultValue $filter
                     :on-blur      (ui-callback/input ::events/set-filter)}]
            (when @selected-id
-             ^{:key (str "magic-" @selected-id)}
-             [filter-comp/ButtonFilter @selected-id #(dispatch [::events/set-filter %])])]]
+             ^{:key  (str "magic-" @selected-id)}
+             [filter-comp/ButtonFilter @selected-id $filter #(dispatch [::events/set-filter %])])]]
 
          ]))))
 

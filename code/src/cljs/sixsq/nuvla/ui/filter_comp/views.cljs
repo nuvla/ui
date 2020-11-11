@@ -78,15 +78,14 @@
 
 
 (defn DropdownStringValue
-  [resource-name data i]
-  (let [attributes  (subscribe [::subs/resource-metadata-attributes])
-        {:keys [attribute] :as s} (nth @data i)
-        {value-scope :value-scope} (get @attributes attribute)
+  [attribute-info resource-name data i]
+  (let [{:keys [attribute] :as s} (nth @data i)
+        {value-scope :value-scope} attribute-info
         enum-values (seq (:values value-scope))
         values      (r/atom (or enum-values []))]
     (when-not enum-values
       (dispatch [::events/terms-attribute resource-name attribute values]))
-    (fn [resource-name data i]
+    (fn [attribute-info resource-name data i]
       (let [{:keys [value] :as s} (nth @data i)]
         [DropdownInput
          (cond-> {:placeholder "value"
@@ -98,14 +97,131 @@
                  @values (assoc :options (map (fn [v] {:key v, :value v, :text v}) @values))
                  )]))))
 
+(defn dispatch-value-attribute
+  [{attr-type :type} resource-name data i]
+  (cond
+    (#{"string" "uri" "resource-id"} attr-type) :string
+    (#{"integer" "long"} attr-type) :integer
+    (= "date-time" attr-type) :date-time
+    (= "boolean" attr-type) :boolean
+    :else :string))
+
+(defmulti ValueAttribute dispatch-value-attribute)
+
+(defmethod ValueAttribute :string
+  [attribute-info resource-name data i]
+  (let [attr-name (-> @data (nth i) :attribute)]
+    [:<>
+     [ui/Dropdown {:placeholder "operation"
+                   :on-change   (ui-callback/value
+                                  #(reset! data (assoc-in @data [i :op] %)))
+                   :search      true
+                   :options     [{:key "equal", :value "=", :text "Equal"}
+                                 {:key "start-with", :value "^=", :text "Start with"}
+                                 {:key "not-equal", :value "!=", :text "Not equal"}
+                                 {:key "like", :value "==", :text "Like"}]
+                   :style       {:font-style       "italic"
+                                 :background-color "antiquewhite"}}]
+     ^{:key (str i "_" attr-name)}
+     [DropdownStringValue attribute-info resource-name data i]]))
+
+(defmethod ValueAttribute :integer
+  [attribute-info resource-name data i]
+  [:<>
+   [ui/Dropdown {:placeholder "operation"
+                 :search      true
+                 :on-change   (ui-callback/value
+                                #(reset! data
+                                         (assoc-in @data [i :op] %)))
+                 :options     [{:key "=", :value "=" :text "="}
+                               {:key "<", :value "<" :text "<"}
+                               {:key ">", :value ">" :text ">"}
+                               {:key "<=", :value "<=" :text "<="}
+                               {:key ">=", :value ">=" :text ">="}]
+                 :style       {:font-style       "italic"
+                               :background-color "antiquewhite"}}]
+   [ui/Input
+    {:type        "number"
+     :size        "mini"
+     :style       {:background-color "aliceblue"
+                   :width            50}
+     :transparent true
+     :placeholder "value"
+     :value       (or (-> @data (nth i) :value) "")
+     :on-change   (ui-callback/value
+                    #(reset! data
+                             (assoc-in @data [i :value]
+                                       (if (str/blank? %)
+                                         nil
+                                         (js/parseInt %)))))}]])
+
+
+(defmethod ValueAttribute :boolean
+  [attribute-info resource-name data i]
+  [:<>
+   [ui/Dropdown {:placeholder "operation"
+                 :search      true
+                 :on-change   (ui-callback/value
+                                #(reset! data
+                                         (assoc-in @data [i :op] %)))
+                 :options     [{:key "=", :value "=" :text "is"}
+                               {:key "!=", :value "!=" :text "is not"}]
+                 :style       {:font-style       "italic"
+                               :background-color "antiquewhite"}}]
+   [ui/Dropdown {:placeholder "value"
+                 :options     [{:key "true", :value true, :text "true"}
+                               {:key "false", :value true, :text "false"}]
+                 :value       (-> @data (nth i) :value)
+                 :search      true
+                 :on-change   (ui-callback/value
+                                #(reset! data
+                                         (assoc-in @data [i :value] %)))
+                 :style       {:background-color "aliceblue"}}]])
+
+
+(defmethod ValueAttribute :date-time
+  [attribute-info resource-name data i]
+  (let [value (-> @data (nth i) :value)]
+    [:<>
+     [ui/Dropdown {:placeholder "operation"
+                   :search      true
+                   :on-change   (ui-callback/value
+                                  #(reset! data
+                                           (assoc-in @data [i :op] %)))
+                   :options     [{:key "=", :value "=" :text "="}
+                                 {:key "<", :value "<" :text "<"}
+                                 {:key ">", :value ">" :text ">"}
+                                 {:key "<=", :value "<=" :text "<="}
+                                 {:key ">=", :value ">=" :text ">="}]
+                   :style       {:font-style       "italic"
+                                 :background-color "antiquewhite"}}]
+     [ui/DatePicker (cond->
+                      {:custom-input     (r/as-element
+                                           [ui/Input {:style       {:background-color "aliceblue"
+                                                                    :width            160}
+                                                      :transparent true}])
+                       :show-time-select true
+                       :date-format      "LLL"
+                       :on-change        #(reset! data
+                                                  (assoc-in @data [i :value] %))
+                       }
+                      value (assoc :selected value))]]))
+
+
+(defmethod ValueAttribute :default
+  [attribute-info resource-name data i]
+  [:<>
+   [ui/Dropdown {:placeholder "operation" :style {:background-color "antiquewhite"}}]
+   [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]
+   ])
 
 (defn CellAttribute
   [resource-name data i]
   (let [attribute-options (subscribe [::subs/resource-metadata-attributes-options resource-name])
         attributes        (subscribe [::subs/resource-metadata-attributes resource-name])]
     (fn [resource-name data i]
-      (let [{:keys [attribute value] :as s} (nth @data i)
-            {attr-type :type} (get @attributes attribute)]
+      (let [{:keys [attribute] :as s} (nth @data i)
+            attribute-info (get @attributes attribute)]
         [ui/Label {:size "large"}
          [ui/Dropdown
           (cond-> {:search      true
@@ -118,79 +234,7 @@
                    :options     @attribute-options
                    :style       {:background-color "beige"}}
                   attribute (assoc :value attribute))]
-         (cond
-           (#{"string" "uri" "resource-id"} attr-type)
-           [:<>
-            [ui/Dropdown {:placeholder "operation"
-                          :on-change   (ui-callback/value
-                                         #(reset! data
-                                                  (assoc-in @data [i :op] %)))
-                          :search      true
-                          :options     [{:key "equal", :value "=", :text "Equal"}
-                                        {:key "start-with", :value "^=", :text "Start with"}
-                                        {:key "not-equal", :value "!=", :text "Not equal"}
-                                        {:key "like", :value "==", :text "Like"}]
-                          :style       {:font-style       "italic"
-                                        :background-color "antiquewhite"}}]
-            ^{:key (str i "_" attribute)}
-            [DropdownStringValue resource-name data i]]
-
-           (#{"integer" "long"} attr-type) [:<>
-                                            [ui/Dropdown {:placeholder "operation"
-                                                          :search      true
-                                                          :on-change   (ui-callback/value
-                                                                         #(reset! data
-                                                                                  (assoc-in @data [i :op] %)))
-                                                          :options     [{:key "=", :value "=" :text "="}
-                                                                        {:key "<", :value "<" :text "<"}
-                                                                        {:key ">", :value ">" :text ">"}
-                                                                        {:key "<=", :value "<=" :text "<="}
-                                                                        {:key ">=", :value ">=" :text ">="}]
-                                                          :style       {:font-style       "italic"
-                                                                        :background-color "antiquewhite"}}]
-                                            [ui/Input
-                                             {:type        "number"
-                                              :size        "mini"
-                                              :style       {:background-color "aliceblue"
-                                                            :width            50}
-                                              :transparent true
-                                              :placeholder "value"
-                                              :value       (or value "")
-                                              :on-change   (ui-callback/value
-                                                             #(reset! data
-                                                                      (assoc-in @data [i :value]
-                                                                                (if (str/blank? %)
-                                                                                  nil
-                                                                                  (js/parseInt %)))))}]
-
-                                            ]
-           (= attr-type "date-time") [:<>
-                                      [ui/Dropdown {:placeholder "operation"
-                                                    :search      true
-                                                    :on-change   (ui-callback/value
-                                                                   #(reset! data
-                                                                            (assoc-in @data [i :op] %)))
-                                                    :options     [{:key "=", :value "=" :text "="}
-                                                                  {:key "<", :value "<" :text "<"}
-                                                                  {:key ">", :value ">" :text ">"}
-                                                                  {:key "<=", :value "<=" :text "<="}
-                                                                  {:key ">=", :value ">=" :text ">="}]
-                                                    :style       {:font-style       "italic"
-                                                                  :background-color "antiquewhite"}}]
-                                      [ui/DatePicker (cond-> {:custom-input     (r/as-element [ui/Input {:style       {:background-color "aliceblue"
-                                                                                                                       :width            160}
-                                                                                                         :transparent true}])
-                                                              :show-time-select true
-                                                              :date-format      "LLL"
-                                                              :on-change        #(reset! data
-                                                                                         (assoc-in @data [i :value] %))
-                                                              }
-                                                             value (assoc :selected value))]]
-           :else [:<>
-                  [ui/Dropdown {:placeholder "operation" :style {:background-color "antiquewhite"}}]
-                  [ui/Dropdown {:placeholder "value" :style {:background-color "aliceblue"}}]
-                  ]
-           )
+         [ValueAttribute attribute-info resource-name data i]
          " "
          [DeleteIcon {:on-click #(reset! data
                                          (into []
@@ -240,11 +284,14 @@
   [resource-name set-filter-fn]
   (let [open?       (r/atom false)
         show-error? (r/atom false)
-        close-fn    #(reset! open? false)
+        init-data [{:el "empty"}
+                   {:el "attribute"}
+                   {:el "empty"}]
+        data        (r/atom init-data)
+        close-fn    #(do
+                       (reset! open? false)
+                       (reset! data init-data))
         open-fn     #(reset! open? true)
-        data        (r/atom [{:el "empty"}
-                             {:el "attribute"}
-                             {:el "empty"}])
         attributes  (subscribe [::subs/resource-metadata-attributes resource-name])]
     (dispatch [::events/get-resource-metadata resource-name])
     (fn [resource-name set-filter-fn]

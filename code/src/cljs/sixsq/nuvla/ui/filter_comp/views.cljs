@@ -6,10 +6,9 @@
     [sixsq.nuvla.ui.filter-comp.events :as events]
     [sixsq.nuvla.ui.filter-comp.subs :as subs]
     [sixsq.nuvla.ui.filter-comp.utils :as utils]
-    [instaparse.core :as insta]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn DeleteIcon
@@ -28,8 +27,8 @@
        (merge {:allow-additions    true
                :addition-label     ""
                :no-results-message ""}
-              (assoc props :options (concat (:options props)
-                                            @additional-opts)
+              (assoc props :options (set (concat (:options props)
+                                                 @additional-opts))
                            :on-add-item (ui-callback/value #(swap! additional-opts conj
                                                                    {:key %, :value %, :text %}))
                            :search true
@@ -87,7 +86,7 @@
     (when-not enum-values
       (dispatch [::events/terms-attribute resource-name attribute values]))
     (fn [attribute-info resource-name data i]
-      (let [{:keys [value] :as s} (nth @data i)]
+      (let [{:keys [operation value] :as s} (nth @data i)]
         [DropdownInput
          (cond-> {:placeholder "value"
                   :value       value
@@ -95,8 +94,13 @@
                   :on-change   (ui-callback/value
                                  #(reset! data
                                           (assoc-in @data [i :value] %)))}
-                 @values (assoc :options (map (fn [v] {:key v, :value v, :text v}) @values))
+                 @values (assoc :options
+                                (map (fn [v] {:key v, :value v, :text v})
+                                     (cond-> @values
+                                             value (conj value)
+                                             (#{"=" "!="} operation) (conj "<NULL>"))))
                  )]))))
+
 
 (defn dispatch-value-attribute
   [{attr-type :type} resource-name data i]
@@ -129,7 +133,8 @@
 
 (defmethod ValueAttribute :number
   [{attr-type :type :as attribue-info} resource-name data i]
-  (let [{:keys [value operation]} (nth @data i)]
+  (let [{:keys [value operation]} (nth @data i)
+        value-is-null? (= value "<NULL>")]
     [:<>
      [ui/Dropdown {:placeholder "operation"
                    :search      true
@@ -144,22 +149,25 @@
                                  {:key ">=", :value ">=" :text ">="}]
                    :style       {:font-style       "italic"
                                  :background-color "antiquewhite"}}]
-     [ui/Input
-      {:type        "number"
-       :size        "mini"
-       :style       {:background-color "aliceblue"
-                     :width            50}
-       :transparent true
-       :placeholder "value"
-       :value       (or value "")
-       :on-change   (ui-callback/value
-                      #(reset! data
-                               (assoc-in @data [i :value]
-                                         (if (str/blank? %)
-                                           nil
-                                           ((if (#{"integer" "long"} attr-type)
-                                              js/parseInt
-                                              js/parseFloat) %)))))}]]))
+     [:span {:style {:background-color "aliceblue"
+                     :width            50}}
+      (when value-is-null? "<NULL>")
+      [ui/Input
+       {:type        "number"
+        :size        "mini"
+        ;:style       {:background-color "aliceblue"
+        ;              :width            50}
+        :transparent true
+        :placeholder "value"
+        :value       (if (and (some? value) (not value-is-null?)) value "")
+        :on-change   (ui-callback/value
+                       #(reset! data
+                                (assoc-in @data [i :value]
+                                          (if (str/blank? %)
+                                            nil
+                                            ((if (#{"integer" "long"} attr-type)
+                                               js/parseInt
+                                               js/parseFloat) %)))))}]]]))
 
 
 (defmethod ValueAttribute :boolean
@@ -178,7 +186,8 @@
                                  :background-color "antiquewhite"}}]
      [ui/Dropdown {:placeholder "value"
                    :options     [{:key "true", :value true, :text "true"}
-                                 {:key "false", :value true, :text "false"}]
+                                 {:key "false", :value true, :text "false"}
+                                 {:key "<NULL>", :value "<NULL>", :text "<NULL>"}]
                    :value       value
                    :search      true
                    :on-change   (ui-callback/value
@@ -189,7 +198,9 @@
 
 (defmethod ValueAttribute :date-time
   [attribute-info resource-name data i]
-  (let [{:keys [value operation]} (nth @data i)]
+  (let [{:keys [value operation]} (nth @data i)
+        value-is-null? (= value "<NULL>")
+        value-now-expression? (boolean (re-find #"now" value))]
     [:<>
      [ui/Dropdown {:placeholder "operation"
                    :search      true
@@ -204,16 +215,23 @@
                                  {:key ">=", :value ">=" :text ">="}]
                    :style       {:font-style       "italic"
                                  :background-color "antiquewhite"}}]
-     [ui/DatePicker (cond->
-                      {:custom-input     (r/as-element
-                                           [ui/Input {:style       {:background-color "aliceblue"
-                                                                    :width            160}
-                                                      :transparent true}])
-                       :show-time-select true
-                       :date-format      "LLL"
-                       :on-change        #(reset! data (assoc-in @data [i :value] %))
-                       }
-                      value (assoc :selected value))]]))
+     [:span {:style {:background-color "aliceblue"
+                     :width            160}}
+      (when value-is-null? "<NULL>")
+      (when value-now-expression? value)
+      [ui/DatePicker (cond->
+                       {:custom-input     (r/as-element
+                                            [ui/Input {:style       {:background-color "aliceblue"
+                                                                     :width            160}
+                                                       :transparent true}])
+                        :show-time-select true
+                        :date-format      "LLL"
+                        :on-change        #(reset! data (assoc-in @data [i :value]
+                                                                  (time/time->utc-str %)))}
+                       (and value
+                            (not value-is-null?)
+                            (not value-now-expression?))
+                       (assoc :selected (time/parse-iso8601 value)))]]]))
 
 
 (defn CellAttribute
@@ -264,27 +282,9 @@
         (= el "attribute") ^{:key i} [CellAttribute resource-name data i]))]])
 
 
-(defn data->filter
-  [data attributes]
-  (->>
-    data
-    (remove #(= (:el %) "empty"))
-    (map #(if (= (:el %) "logic")
-            (:value %)
-            (str (:attribute %) " " (:operation %) " "
-                 (cond
-                   (#{"string" "uri" "resource-id"}
-                    (get-in attributes [(:attribute %) :type])) (str "'" (:value %) "'")
-                   (= (get-in attributes [(:attribute %) :type])
-                      "date-time") (when (:value %) (str "'" (time/time->utc-str (:value %)) "'"))
-                   :else (:value %))
-                 )))
-    (str/join " ")))
-
 (defn ButtonFilter
-  [resource-name default-filter set-filter-fn]
-  (let [open?       (r/atom false)
-        show-error? (r/atom false)
+  [{:keys [resource-name open? default-filter on-done]}]
+  (let [show-error? (r/atom false)
         init-data   (or (when-not (str/blank? default-filter)
                           (utils/filter-str->data default-filter))
                         [{:el "empty"} {:el "attribute"} {:el "empty"}])
@@ -295,8 +295,8 @@
         open-fn     #(reset! open? true)
         attributes  (subscribe [::subs/resource-metadata-attributes resource-name])]
     (dispatch [::events/get-resource-metadata resource-name])
-    (fn [resource-name default-filter set-filter-fn]
-      (let [filter-string (data->filter @data @attributes)
+    (fn [{:keys [resource-name open? default-filter on-done]}]
+      (let [filter-string (utils/data->filter-str @data @attributes)
             error         (when (and @show-error? (not (str/blank? filter-string)))
                             (utils/filter-syntax-error filter-string))]
         [ui/Modal
@@ -310,27 +310,23 @@
 
          [ui/ModalContent
           [FitlerFancy resource-name data]
-          #_[:p (str (utils/cimi-parser "(a='a' and a=\"b\" and a=1 and a=null and a = false and a < '') or b=true"))]
-          [:br]
-          #_[:p (str
-                  (utils/filter-str->data "(a='a' and a=\"b\" and a=1 and a=null and a = false and a < '2020-11-11T21:00:00Z') or b=true"))]
           [ui/Message {:error (some? error)}
-           [ui/MessageHeader (str/capitalize "Result:")
+           [ui/MessageHeader {:style {:margin-bottom 10}}
+            (str/capitalize "Result:")
             [ui/Button {:floated  "right"
                         :icon     true
                         :toggle   true
                         :active   @show-error?
                         :on-click #(swap! show-error? not)}
-             [ui/Icon {:className "fad fa-spell-check"}]]
-            ]
-           [:p {:style {:font-family "monospace" :white-space "pre"}}
+             [ui/Icon {:className "fad fa-spell-check"}]]]
+           [ui/MessageContent {:style {:font-family "monospace" :white-space "pre"}}
             (or error filter-string)]]]
          [ui/ModalActions
           [ui/Button
            {:positive true
             :disabled (some? error)
             :on-click #(do
-                         (set-filter-fn filter-string)
+                         (on-done filter-string)
                          (close-fn))}
            "Done"]]])
       )))

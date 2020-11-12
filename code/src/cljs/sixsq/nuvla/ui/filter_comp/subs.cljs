@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.filter-comp.subs
   (:require
-    [re-frame.core :refer [subscribe dispatch reg-sub]]
-    [sixsq.nuvla.ui.filter-comp.spec :as spec]))
+    [re-frame.core :refer [dispatch reg-sub subscribe]]
+    [sixsq.nuvla.ui.filter-comp.spec :as spec]
+    [sixsq.nuvla.ui.filter-comp.utils :as utils]))
 
 
 (reg-sub
@@ -20,24 +21,8 @@
 (reg-sub
   ::resource-metadata-attributes
   (fn [[_ resource-name]] (subscribe [::resource-metadata resource-name]))
-  (fn [resource-metadta]
-    (->> (loop [attrs  (:attributes resource-metadta)
-                result []]
-           (if (seq attrs)
-             (let [{:keys [leafs nested]} (group-by #(if (empty? (:child-types %))
-                                                       :leafs :nested) attrs)
-                   new-attrs (mapcat (fn [{:keys [type child-types] :as in}]
-                                       (if (= type "array")
-                                         [(-> in
-                                              (dissoc :child-types)
-                                              (assoc :type (-> child-types first :type)))]
-                                         (map #(assoc % :name (str (:name in) "/" (:name %)))
-                                              child-types))) nested)]
-               (recur new-attrs (concat result leafs)))
-             result))
-         (filter :indexed)
-         (map (juxt :name identity))
-         (into (sorted-map)))))
+  (fn [resource-metadata]
+    (utils/cimi-metadata-simplifier resource-metadata)))
 
 
 (reg-sub

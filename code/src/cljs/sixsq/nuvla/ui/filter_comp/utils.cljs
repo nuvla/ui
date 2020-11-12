@@ -1,38 +1,61 @@
 (ns sixsq.nuvla.ui.filter-comp.utils
-  (:require [instaparse.core :as insta]
-            [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [instaparse.core :as insta]))
 
-(def cimi-parser (insta/parser
-                   "Filter          ::= AndExpr | AndExpr <'or'> Filter
-                    AndExpr         ::= Comp | Comp <'and'> AndExpr
-                    Comp            ::= Attribute EqOp Value
-                    | Attribute RelOp OrdinalValue
-                    | Attribute PrefixOp StringValue
-                    | Attribute FullTextOp StringValue
-                    | WS <'('> Filter <')'> WS
 
-                    FullTextOp      ::= '=='
-                    PrefixOp        ::= '^='
-                    EqOp            ::= '=' | '!='
-                    RelOp           ::= '<' | '<=' | '>=' | '>'
+(defn cimi-metadata-simplifier
+  [resource-metadta]
+  (->> (loop [attrs  (:attributes resource-metadta)
+              result []]
+         (if (seq attrs)
+           (let [{:keys [leafs nested]} (group-by #(if (empty? (:child-types %))
+                                                     :leafs :nested) attrs)
+                 new-attrs (mapcat (fn [{:keys [type child-types] :as in}]
+                                     (if (= type "array")
+                                       [(-> in
+                                            (dissoc :child-types)
+                                            (assoc :type (-> child-types first :type)))]
+                                       (map #(assoc % :name (str (:name in) "/" (:name %)))
+                                            child-types))) nested)]
+             (recur new-attrs (concat result leafs)))
+           result))
+       (filter :indexed)
+       (map (juxt :name identity))
+       (into (sorted-map))))
 
-                    Attribute       ::= WS NamespaceTerm ('/' NamespaceTerm)* WS
 
-                    <NamespaceTerm> ::= (Term ':' Term) | Term
-                    <Term>          ::= #'([a-zA-Z][\\w-]*[\\w]+)|[a-zA-Z]'
-                    <OrdinalValue>  ::= IntValue | DateValue | StringValue
-                    <NominalValue>  ::= BoolValue | NullValue
-                    <Value>         ::= OrdinalValue | NominalValue
-                    IntValue        ::= WS #'\\d+' WS
-                    DateValue       ::= WS #'\\d+-\\d+(-\\d+)?(T\\d+:\\d+:\\d+(\\.\\d+)?(Z|[+-]\\d+:\\d+))?' WS
-                    <StringValue>   ::= WS (DoubleQuoteString | SingleQuoteString) WS
-                    BoolValue       ::= WS ('true' | 'false') WS
-                    NullValue       ::= WS 'null' WS
+(def cimi-parser
+  (insta/parser
+    "Filter          ::= AndExpr | AndExpr <'or'> Filter
+     AndExpr         ::= Comp | Comp <'and'> AndExpr
+     Comp            ::= Attribute EqOp Value
+     | Attribute RelOp OrdinalValue
+     | Attribute PrefixOp StringValue
+     | Attribute FullTextOp StringValue
+     | WS <'('> Filter <')'> WS
 
-                    <WS>            ::= <#'\\s*'>
+     FullTextOp      ::= '=='
+     PrefixOp        ::= '^='
+     EqOp            ::= '=' | '!='
+     RelOp           ::= '<' | '<=' | '>=' | '>'
 
-                    DoubleQuoteString ::= #\"\\\"[^\\\"\\\\]*(?:\\\\.[^\\\"\\\\]*)*\\\"\"
-                    SingleQuoteString ::= #\"'[^'\\\\]*(?:\\\\.[^'\\\\]*)*'\""))
+     Attribute       ::= WS NamespaceTerm ('/' NamespaceTerm)* WS
+
+     <NamespaceTerm> ::= (Term ':' Term) | Term
+     <Term>          ::= #'([a-zA-Z][\\w-]*[\\w]+)|[a-zA-Z]'
+     <OrdinalValue>  ::= IntValue | DateValue | StringValue
+     <NominalValue>  ::= BoolValue | NullValue
+     <Value>         ::= OrdinalValue | NominalValue
+     IntValue        ::= WS #'\\d+' WS
+     DateValue       ::= WS #'\\d+-\\d+(-\\d+)?(T\\d+:\\d+:\\d+(\\.\\d+)?(Z|[+-]\\d+:\\d+))?' WS
+     <StringValue>   ::= WS (DoubleQuoteString | SingleQuoteString) WS
+     BoolValue       ::= WS ('true' | 'false') WS
+     NullValue       ::= WS 'null' WS
+
+     <WS>            ::= <#'\\s*'>
+
+     DoubleQuoteString ::= #\"\\\"[^\\\"\\\\]*(?:\\\\.[^\\\"\\\\]*)*\\\"\"
+     SingleQuoteString ::= #\"'[^'\\\\]*(?:\\\\.[^'\\\\]*)*'\""))
 
 
 (defn filter-syntax-error
@@ -40,6 +63,7 @@
   (let [res (cimi-parser text)]
     (when (insta/failure? res)
       (->> res insta/get-failure prn-str str/split-lines rest (str/join "\n")))))
+
 
 (defn transform
   [parsed]
@@ -78,7 +102,7 @@
        :BoolValue         #(case %
                              "true" true
                              "false" false)
-       :NullValue         (constantly nil)
+       :NullValue         (constantly "<NULL>")
        :DateValue         identity})
     flatten))
 
@@ -92,3 +116,18 @@
                     res
                     [{:el "empty"}])
             (into [] res)))))
+
+
+(defn data->filter-str
+  [data attributes]
+  (->>
+    data
+    (remove #(= (:el %) "empty"))
+    (map
+      #(let [{:keys [el attribute operation value]} %
+             attr-type (get-in attributes [attribute :type])]
+         (cond
+           (= el "logic") value
+           (= value "<NULL>") (str/join [attribute operation "null"])
+           :else (str/join [attribute operation (when value (str "'" value "'"))]))))
+    (str/join " ")))

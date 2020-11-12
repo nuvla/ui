@@ -8,8 +8,8 @@
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
     [sixsq.nuvla.ui.cimi.events :as events]
     [sixsq.nuvla.ui.cimi.subs :as subs]
-    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.cimi.utils :as cimi-utils]
+    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -24,8 +24,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn id-selector-formatter [entry]
@@ -232,7 +232,8 @@
 (defn search-header []
   (let [tr           (subscribe [::i18n-subs/tr])
         query-params (subscribe [::subs/query-params])
-        selected-id  (subscribe [::subs/collection-name])]
+        selected-id  (subscribe [::subs/collection-name])
+        filter-open? (r/atom false)]
     (fn []
       ;; reset visible values of parameters
       (let [{$filter      :filter,
@@ -318,9 +319,12 @@
                     :defaultValue $filter
                     :on-blur      (ui-callback/input ::events/set-filter)}]
            (when @selected-id
-             ^{:key  (str "magic-" @selected-id)}
-             [filter-comp/ButtonFilter @selected-id $filter #(dispatch [::events/set-filter %])])]]
-
+             ^{:key (str "filter-composer-" $filter)}
+             [filter-comp/ButtonFilter
+              {:resource-name  @selected-id
+               :default-filter $filter
+               :open?          filter-open?
+               :on-done        #(dispatch [::events/set-filter %])}])]]
          ]))))
 
 

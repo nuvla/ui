@@ -123,10 +123,14 @@
          [ui/Table {:basic  "very"
                     :padded false}
           [ui/TableBody
-           (when p-product
+           (when p-name
              [ui/TableRow
               [ui/TableCell "Name"]
-              [ui/TableCell (str p-name " " p-product)]])
+              [ui/TableCell p-name]])
+           (when p-product
+             [ui/TableRow
+              [ui/TableCell "Product"]
+              [ui/TableCell p-product]])
            (when p-serial-num
              [ui/TableRow
               [ui/TableCell "Serial Number"]

@@ -238,6 +238,9 @@
                  "USB" "usb"
                  "bluetooth" "bluetooth b"
                  "bluetooth-le" "bluetooth b"
+                 "SSDP" "chart network"
+                 "WS-Discovery" "chart network"
+                 "Bonjour/Avahi" "chart network"
                  nil)]))))
 
 

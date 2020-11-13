@@ -2,10 +2,14 @@
 
 ## Unreleased
 
-  - Deployment - info message about VPN when the infra has a private IP.
+### Added
+
+  - Filter composer component
+  - Deployment - Info message about VPN when the infra has a private IP
 
 ### Updated
 
+  - Cimi page - Filter composer
   - Deployment - Stop modal fix checkbox danger modal
   - Profile - Billing contact
   - Resource-metadata - Too big, optimization to get it only

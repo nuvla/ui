@@ -9,6 +9,7 @@
     [sixsq.nuvla.ui.cimi.events :as events]
     [sixsq.nuvla.ui.cimi.subs :as subs]
     [sixsq.nuvla.ui.cimi.utils :as cimi-utils]
+    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -23,6 +24,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
@@ -230,7 +232,8 @@
 (defn search-header []
   (let [tr           (subscribe [::i18n-subs/tr])
         query-params (subscribe [::subs/query-params])
-        selected-id  (subscribe [::subs/collection-name])]
+        selected-id  (subscribe [::subs/collection-name])
+        filter-open? (r/atom false)]
     (fn []
       ;; reset visible values of parameters
       (let [{$filter      :filter,
@@ -303,17 +306,26 @@
                       :placeholder  "e.g. min:resource:vcpu, ..."
                       :on-blur      (ui-callback/input ::events/set-aggregation)}]]]
 
-         [ui/FormGroup {:widths "equal"}
-          [ui/FormField
-           ^{:key (str "filter:" $filter)}
-           [ui/Input
-            {:aria-label   (@tr [:filter])
-             :tab-index    7
-             :type         "text"
-             :label        (@tr [:filter])
-             :defaultValue $filter
-             :placeholder  "e.g. connector/href^='exoscale-' and resource:type='VM' and resource:ram>=8096"
-             :on-blur      (ui-callback/input ::events/set-filter)}]]]]))))
+         [ui/FormField
+          ^{:key (str "filter:" $filter)}
+          [ui/Input
+           {:className "labeled"
+            :action    (boolean @selected-id)}
+           [ui/Label (@tr [:filter])]
+           [:input {:aria-label   (@tr [:filter])
+                    :tab-index    7
+                    :type         "text"
+                    :placeholder  "e.g. connector/href^='exoscale-' and resource:type='VM' and resource:ram>=8096"
+                    :defaultValue $filter
+                    :on-blur      (ui-callback/input ::events/set-filter)}]
+           ^{:key (str "filter-composer-" @selected-id)}
+           [filter-comp/ButtonFilter
+            {:resource-name  @selected-id
+             :default-filter $filter
+             :disabled?      (nil? @selected-id)
+             :open?          filter-open?
+             :on-done        #(dispatch [::events/set-filter %])}]]]
+         ]))))
 
 
 (defn format-field-item [selections-atom item]

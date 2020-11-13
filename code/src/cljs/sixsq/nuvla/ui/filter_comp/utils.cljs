@@ -3,6 +3,14 @@
             [instaparse.core :as insta]))
 
 
+(def ^:const value-null "<NULL>")
+
+
+(defn value-is-null?
+  [value]
+  (= value value-null))
+
+
 (defn cimi-metadata-simplifier
   [resource-metadta]
   (->> (loop [attrs  (:attributes resource-metadta)
@@ -65,7 +73,7 @@
       (->> res insta/get-failure prn-str str/split-lines rest (str/join "\n")))))
 
 
-(defn transform
+(defn transform->data
   [parsed]
   (->>
     parsed
@@ -102,7 +110,7 @@
        :BoolValue         #(case %
                              "true" true
                              "false" false)
-       :NullValue         (constantly "<NULL>")
+       :NullValue         (constantly value-null)
        :DateValue         identity})
     flatten))
 
@@ -111,7 +119,8 @@
   [filter-str]
   (let [parsed-filter (cimi-parser filter-str)]
     (when-not (insta/failure? parsed-filter)
-      (as-> (transform parsed-filter) res
+      (as-> (transform->data parsed-filter) res
+            (interpose {:el "empty"} res)
             (concat [{:el "empty"}]
                     res
                     [{:el "empty"}])
@@ -119,15 +128,15 @@
 
 
 (defn data->filter-str
-  [data attributes]
+  [data]
   (->>
     data
     (remove #(= (:el %) "empty"))
     (map
-      #(let [{:keys [el attribute operation value]} %
-             attr-type (get-in attributes [attribute :type])]
+      #(let [{:keys [el attribute operation value]} %]
          (cond
            (= el "logic") value
-           (= value "<NULL>") (str/join [attribute operation "null"])
-           :else (str/join [attribute operation (when value (str "'" value "'"))]))))
+           (value-is-null? value) (str/join [attribute operation "null"])
+           (string? value) (str/join [attribute operation (when value (str "'" value "'"))])
+           :else (str/join [attribute operation (when value value)]))))
     (str/join " ")))

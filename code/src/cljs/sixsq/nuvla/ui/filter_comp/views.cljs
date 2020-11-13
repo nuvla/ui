@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.filter-comp.events :as events]
     [sixsq.nuvla.ui.filter-comp.subs :as subs]
     [sixsq.nuvla.ui.filter-comp.utils :as utils]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -80,10 +81,10 @@
 (defn DropdownStringValue
   [attribute-info resource-name data i]
   (let [{:keys [attribute] :as s} (nth @data i)
-        {value-scope :value-scope} attribute-info
+        {:keys [value-scope sensitive]} attribute-info
         enum-values (seq (:values value-scope))
         values      (r/atom (or enum-values []))]
-    (when-not enum-values
+    (when-not (or enum-values sensitive)
       (dispatch [::events/terms-attribute resource-name attribute values]))
     (fn [attribute-info resource-name data i]
       (let [{:keys [operation value] :as s} (nth @data i)]
@@ -95,10 +96,15 @@
                                  #(reset! data
                                           (assoc-in @data [i :value] %)))}
                  @values (assoc :options
-                                (map (fn [v] {:key v, :value v, :text v})
-                                     (cond-> @values
-                                             value (conj value)
-                                             (#{"=" "!="} operation) (conj "<NULL>"))))
+                                (cond-> (map (fn [v] {:key  v, :value v,
+                                                      :text (general-utils/truncate (str v) 50)})
+                                             (cond-> @values
+                                                     (and value
+                                                          (not (utils/value-is-null? value)))
+                                                     (conj value)))
+                                        (#{"=" "!="} operation) (conj {:key   utils/value-null
+                                                                       :value utils/value-null
+                                                                       :text  "<NULL>"})))
                  )]))))
 
 
@@ -134,7 +140,7 @@
 (defmethod ValueAttribute :number
   [{attr-type :type :as attribue-info} resource-name data i]
   (let [{:keys [value operation]} (nth @data i)
-        value-is-null? (= value "<NULL>")]
+        value-is-null? (utils/value-is-null? value)]
     [:<>
      [ui/Dropdown {:placeholder "operation"
                    :search      true
@@ -151,12 +157,10 @@
                                  :background-color "antiquewhite"}}]
      [:span {:style {:background-color "aliceblue"
                      :width            50}}
-      (when value-is-null? "<NULL>")
+      (when value-is-null? utils/value-null)
       [ui/Input
        {:type        "number"
         :size        "mini"
-        ;:style       {:background-color "aliceblue"
-        ;              :width            50}
         :transparent true
         :placeholder "value"
         :value       (if (and (some? value) (not value-is-null?)) value "")
@@ -187,7 +191,8 @@
      [ui/Dropdown {:placeholder "value"
                    :options     [{:key "true", :value true, :text "true"}
                                  {:key "false", :value true, :text "false"}
-                                 {:key "<NULL>", :value "<NULL>", :text "<NULL>"}]
+                                 {:key  utils/value-null, :value utils/value-null,
+                                  :text utils/value-null}]
                    :value       value
                    :search      true
                    :on-change   (ui-callback/value
@@ -199,7 +204,7 @@
 (defmethod ValueAttribute :date-time
   [attribute-info resource-name data i]
   (let [{:keys [value operation]} (nth @data i)
-        value-is-null? (= value "<NULL>")
+        value-is-null?        (utils/value-is-null? value)
         value-now-expression? (boolean (re-find #"now" value))]
     [:<>
      [ui/Dropdown {:placeholder "operation"
@@ -217,7 +222,7 @@
                                  :background-color "antiquewhite"}}]
      [:span {:style {:background-color "aliceblue"
                      :width            160}}
-      (when value-is-null? "<NULL>")
+      (when value-is-null? utils/value-null)
       (when value-now-expression? value)
       [ui/DatePicker (cond->
                        {:custom-input     (r/as-element
@@ -276,10 +281,10 @@
                   :flex-wrap        "wrap"
                   :align-items      "center"}}
     (for [[i {:keys [el] :as s}] (map-indexed vector @data)]
-      (cond
-        (= el "empty") ^{:key i} [CellEmpty resource-name data i]
-        (= el "logic") ^{:key i} [CellLogic resource-name data i]
-        (= el "attribute") ^{:key i} [CellAttribute resource-name data i]))]])
+      (case el
+        "empty" ^{:key i} [CellEmpty resource-name data i]
+        "logic" ^{:key i} [CellLogic resource-name data i]
+        "attribute" ^{:key i} [CellAttribute resource-name data i]))]])
 
 
 (defn ButtonFilter
@@ -292,15 +297,15 @@
         close-fn    #(do
                        (reset! open? false)
                        (reset! data init-data))
-        open-fn     #(reset! open? true)
-        attributes  (subscribe [::subs/resource-metadata-attributes resource-name])]
-    (dispatch [::events/get-resource-metadata resource-name])
+        open-fn     #(reset! open? true)]
+    (when resource-name (dispatch [::events/get-resource-metadata resource-name]))
     (fn [{:keys [resource-name open? default-filter on-done]}]
-      (let [filter-string (utils/data->filter-str @data @attributes)
+      (let [filter-string (utils/data->filter-str @data)
             error         (when (and @show-error? (not (str/blank? filter-string)))
                             (utils/filter-syntax-error filter-string))]
         [ui/Modal
          {:trigger    (r/as-element [ui/Button {:icon     "magic"
+                                                :disabled (nil? resource-name)
                                                 :on-click open-fn}])
           :open       @open?
           :on-close   close-fn
@@ -308,25 +313,27 @@
 
          [ui/ModalHeader "Filter composer"]
 
-         [ui/ModalContent
-          [FitlerFancy resource-name data]
-          [ui/Message {:error (some? error)}
-           [ui/MessageHeader {:style {:margin-bottom 10}}
-            (str/capitalize "Result:")
-            [ui/Button {:floated  "right"
-                        :icon     true
-                        :toggle   true
-                        :active   @show-error?
-                        :on-click #(swap! show-error? not)}
-             [ui/Icon {:className "fad fa-spell-check"}]]]
-           [ui/MessageContent {:style {:font-family "monospace" :white-space "pre"}}
-            (or error filter-string)]]]
-         [ui/ModalActions
-          [ui/Button
-           {:positive true
-            :disabled (some? error)
-            :on-click #(do
-                         (on-done filter-string)
-                         (close-fn))}
-           "Done"]]])
+         (when resource-name
+           [:<>
+            [ui/ModalContent
+             [FitlerFancy resource-name data]
+             [ui/Message {:error (some? error)}
+              [ui/MessageHeader {:style {:margin-bottom 10}}
+               (str/capitalize "Result:")
+               [ui/Button {:floated  "right"
+                           :icon     true
+                           :toggle   true
+                           :active   @show-error?
+                           :on-click #(swap! show-error? not)}
+                [ui/Icon {:className "fad fa-spell-check"}]]]
+              [ui/MessageContent {:style {:font-family "monospace" :white-space "pre"}}
+               (or error filter-string)]]]
+            [ui/ModalActions
+             [ui/Button
+              {:positive true
+               :disabled (some? error)
+               :on-click #(do
+                            (on-done filter-string)
+                            (close-fn))}
+              "Done"]]])])
       )))

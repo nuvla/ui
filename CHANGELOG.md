@@ -2,8 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+  - Filter composer component
+
 ### Updated
 
+  - Cimi page - Filter composer
   - Deployment - Stop modal fix checkbox danger modal
   - Profile - Billing contact
   - Resource-metadata - Too big, optimization to get it only

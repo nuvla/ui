@@ -318,13 +318,13 @@
                     :placeholder  "e.g. connector/href^='exoscale-' and resource:type='VM' and resource:ram>=8096"
                     :defaultValue $filter
                     :on-blur      (ui-callback/input ::events/set-filter)}]
-           (when @selected-id
-             ^{:key (str "filter-composer-" $filter)}
-             [filter-comp/ButtonFilter
-              {:resource-name  @selected-id
-               :default-filter $filter
-               :open?          filter-open?
-               :on-done        #(dispatch [::events/set-filter %])}])]]
+           ^{:key (str "filter-composer-" @selected-id)}
+           [filter-comp/ButtonFilter
+            {:resource-name  @selected-id
+             :default-filter $filter
+             :disabled?      (nil? @selected-id)
+             :open?          filter-open?
+             :on-done        #(dispatch [::events/set-filter %])}]]]
          ]))))
 
 

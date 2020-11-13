@@ -238,9 +238,9 @@
                  "USB" "usb"
                  "bluetooth" "bluetooth b"
                  "bluetooth-le" "bluetooth b"
-                 "SSDP" "chart network"
-                 "WS-Discovery" "chart network"
-                 "Bonjour/Avahi" "chart network"
+                 "SSDP" "fas fa-chart-network"
+                 "WS-Discovery" "fas fa-chart-network"
+                 "Bonjour/Avahi" "fas fa-chart-network"
                  nil)]))))
 
 

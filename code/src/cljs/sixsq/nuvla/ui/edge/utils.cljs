@@ -31,6 +31,15 @@
     nil))
 
 
+(defn operational-status->color
+  [status]
+  (case status
+    "OPERATIONAL" "green"
+    "DEGRADED" "red"
+    "UNKNOWN" "yellow"
+    nil))
+
+
 (defn map-status->color
   [status]
   (case status

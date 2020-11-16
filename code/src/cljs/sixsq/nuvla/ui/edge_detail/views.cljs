@@ -302,9 +302,9 @@
 
 
 (defn StatusIcon
-  [status]
+  [status & {:keys [corner] :or {corner "bottom center"} :as position}]
   [ui/Popup
-   {:position "bottom center"
+   {:position corner
     :content  status
     :trigger  (r/as-element
                 [ui/Icon {:name  "power"
@@ -312,10 +312,9 @@
 
 
 (defn Heartbeat
-  [updated]
+  [updated nb-id]
   (let [updated-moment           (time/parse-iso8601 updated)
-        {:keys [id]} @(subscribe [::subs/nuvlabox])
-        status                   (subscribe [::edge-subs/status-nuvlabox id])
+        status                   (subscribe [::edge-subs/status-nuvlabox nb-id])
         next-heartbeat-moment    (subscribe [::subs/next-heartbeat-moment])
         next-heartbeat-times-ago (time/ago @next-heartbeat-moment)
 
@@ -324,12 +323,8 @@
                                    (str "Next heartbeat is expected " next-heartbeat-times-ago)
                                    (str "Next heartbeat was expected " next-heartbeat-times-ago))]
 
-    [uix/Accordion
-     [:<>
-      [:p last-heartbeat-msg]
-      [:p next-heartbeat-msg]]
-     :label "Heartbeat"
-     :icon "heartbeat"]))
+    [:p [ui/Icon {:name "heartbeat"
+                  :size "big"}] (str last-heartbeat-msg ". " next-heartbeat-msg)]))
 
 
 (defn Load
@@ -445,7 +440,7 @@
       (if @nuvlabox-status
         (let [{:keys [resources updated next-heartbeat]} @nuvlabox-status]
           [ui/Container {:fluid true}
-           [Heartbeat updated next-heartbeat]
+           ;[Heartbeat updated next-heartbeat]
            (when resources
              [Load resources])
            [Peripherals]])
@@ -486,8 +481,8 @@
                                        (for [action action-list]
                                          [ui/ListItem {:as  "a"
                                                        :key (str "action." (apply str
-                                                                                  (take 12
-                                                                                        (repeatedly #(char (+ (rand 26) 65))))))}
+                                                                             (take 12
+                                                                               (repeatedly #(char (+ (rand 26) 65))))))}
                                           [ui/ListContent
                                            [ui/ListDescription
                                             [:span {:on-click (:on-click action)
@@ -609,7 +604,7 @@
                                               [ui/ListContent
                                                [ui/ListHeader
                                                 [:a {:href   (str @config/path-prefix
-                                                                  "/api/" (:id sshkey))
+                                                               "/api/" (:id sshkey))
                                                      :target "_blank"}
                                                  (or (:name sshkey) (:id sshkey))]]
                                                [ui/ListDescription
@@ -627,8 +622,8 @@
 
          (when (->> [hostname ip docker-server-version
                      operating-system architecture last-boot]
-                    (remove #(or (nil? %) (str/blank? %)))
-                    seq)
+                 (remove #(or (nil? %) (str/blank? %)))
+                 seq)
            [ui/Segment
             [ui/CardGroup {:centered true}
              (when operating-system
@@ -659,6 +654,244 @@
 
          [LocationAccordion @nuvlabox]]))))
 
+(defn TabOverview
+  []
+  (let [nuvlabox    (subscribe [::subs/nuvlabox])
+        locale      (subscribe [::i18n-subs/locale])
+        nb-status   (subscribe [::subs/nuvlabox-status])
+        ssh-creds   (subscribe [::subs/nuvlabox-ssh-keys])
+        tr          (subscribe [::i18n-subs/tr])]
+    (fn []
+      (let [{:keys [id name description created updated
+                    version refresh-interval owner tags ssh-keys]} @nuvlabox
+            {:keys [hostname ip docker-server-version
+                    operating-system architecture last-boot
+                    status nuvlabox-api-endpoint
+                    nuvlabox-engine-version docker-plugins] status-updated :updated} @nb-status]
+        (when (not= (count ssh-keys) (count (:associated-ssh-keys @ssh-creds)))
+          (dispatch [::events/get-nuvlabox-ssh-keys ssh-keys]))
+        [ui/TabPane
+         [ui/Grid {:columns   2,
+                   :stackable true
+                   :padded    true
+                   :relaxed   "very"}
+          (when status
+          [ui/GridRow {:columns 2
+                       :centered  true
+                       :text-align  "center"}
+             [:h5 "Operational Status: " [ui/Label {:circular true
+                                                    :size     "mini"
+                                                    :color    (utils/operational-status->color status)}
+                                          status]]])
+          [ui/GridRow
+           [ui/GridColumn {:stretched true}
+            [ui/Segment {:secondary   true
+                         :color       "blue"
+                         :raised      true}
+             [:h4 "NuvlaBox "
+              (when nuvlabox-engine-version
+                [ui/Label {:circular  true
+                           :color     "blue"
+                           :size      "tiny"}
+                 nuvlabox-engine-version])]
+             [ui/Table {:basic  "very"
+                        :padded false}
+              [ui/TableBody
+               [ui/TableRow
+                [ui/TableCell "ID"]
+                [ui/TableCell id]]
+               (when name
+                 [ui/TableRow
+                  [ui/TableCell "Name"]
+                  [ui/TableCell name]])
+               (when description
+                 [ui/TableRow
+                  [ui/TableCell "Description"]
+                  [ui/TableCell description]])
+               [ui/TableRow
+                [ui/TableCell "Owner"]
+                [ui/TableCell owner]]
+               [ui/TableRow
+                [ui/TableCell "Telemetry Period"]
+                [ui/TableCell (str refresh-interval " seconds")]]
+               (when nuvlabox-api-endpoint
+                 [ui/TableRow
+                  [ui/TableCell "NuvlaBox API Endpoint"]
+                  [ui/TableCell nuvlabox-api-endpoint]])
+               [ui/TableRow
+                [ui/TableCell "Created"]
+                [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
+               [ui/TableRow
+                [ui/TableCell "Updated"]
+                [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]
+               [ui/TableRow
+                [ui/TableCell "Version"]
+                [ui/TableCell version]]]]]]
+           [ui/GridColumn {:stretched true}
+            [ui/Segment {:secondary   true
+                         :color       "black"
+                         :raised      true}
+             [:h4 "Host"]
+             [ui/Table {:basic  "very"
+                        :padded false}
+              [ui/TableBody
+               (when hostname
+                 [ui/TableRow
+                  [ui/TableCell "Hostname"]
+                  [ui/TableCell hostname]])
+               (when operating-system
+                 [ui/TableRow
+                  [ui/TableCell "OS"]
+                  [ui/TableCell operating-system]])
+               (when architecture
+                 [ui/TableRow
+                  [ui/TableCell "Architecture"]
+                  [ui/TableCell architecture]])
+               (when ip
+                 [ui/TableRow
+                  [ui/TableCell "IP"]
+                  [ui/TableCell ip]])
+               (when (pos? (count (:associated-ssh-keys @ssh-creds)))
+                 [ui/TableRow
+                  [ui/TableCell "SSH Keys"]
+                  [ui/TableCell [ui/Popup
+                                 {:hoverable true
+                                  :flowing   true
+                                  :position  "bottom center"
+                                  :content   (r/as-element [ui/ListSA {:divided true
+                                                                       :relaxed true}
+                                                            (for [sshkey (:associated-ssh-keys @ssh-creds)]
+                                                              [ui/ListItem {:key (:id sshkey)}
+                                                               [ui/ListContent
+                                                                [ui/ListHeader
+                                                                 [:a {:href   (str @config/path-prefix
+                                                                                "/api/" (:id sshkey))
+                                                                      :target "_blank"}
+                                                                  (or (:name sshkey) (:id sshkey))]]
+                                                                [ui/ListDescription
+                                                                 (str (subs (:public-key sshkey) 0 55) " ...")]]])])
+                                  :trigger   (r/as-element [ui/Icon {:name   "key"
+                                                                     :fitted true}
+                                                            (@tr [:nuvlabox-detail-ssh-enabled])
+                                                            [ui/Icon {:name   "angle down"
+                                                                      :fitted true}]])}]]])
+               (when docker-server-version
+                 [ui/TableRow
+                  [ui/TableCell "Docker Server Version"]
+                  [ui/TableCell docker-server-version]])
+               (when docker-plugins
+                 [ui/TableRow
+                  [ui/TableCell "Docker Plugins"]
+                  [ui/TableCell docker-plugins]])
+               [ui/TableRow
+                [ui/TableCell "Last Boot"]
+                [ui/TableCell (time/time->format last-boot)]]]]]]]
+         [ui/GridRow
+          [ui/GridColumn
+           [ui/Segment {:basic     true}
+            [Heartbeat status-updated id]]]
+          (when tags
+            [ui/GridColumn
+             [ui/Segment {:secondary   true
+                          :color       "teal"
+                          :raised      true}
+              [:h4 "Tags"]
+              [ui/LabelGroup {:size  "tiny"
+                              :color "teal"
+                              :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+               (for [tag tags]
+                 ^{:key (str id "-" tag)}
+                 [ui/Label {:style {:max-width     "15ch"
+                                    :overflow      "hidden"
+                                    :text-overflow "ellipsis"
+                                    :white-space   "nowrap"}}
+                  [ui/Icon {:name "tag"}] tag])]]])]]]))))
+
+
+(defn TabLocationMap
+  [{:keys [id location] :as nuvlabox}]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        zoom         (atom 3)
+        new-location (r/atom nil)]
+    (fn [{:keys [id location] :as nuvlabox}]
+      (let [update-new-location #(reset! new-location %)
+            position            (some-> (or @new-location location) map/longlat->latlong)]
+         [:div
+          (if position (@tr [:map-drag-to-update-nb-location])
+                       (@tr [:map-click-to-set-nb-location]))
+          [map/MapBox
+           {:style             {:height 400
+                                :cursor (when-not location "pointer")}
+            :center            (or position map/sixsq-latlng)
+            :zoom              @zoom
+            :onViewportChanged #(reset! zoom (.-zoom %))
+            :on-click          (when-not position
+                                 (map/click-location update-new-location))}
+           (when position
+             [map/Marker {:position    position
+                          :draggable   true
+                          :on-drag-end (map/drag-end-location update-new-location)}])]
+          [:div {:align "right"}
+           [ui/Button {:on-click #(reset! new-location nil)}
+            (@tr [:cancel])]
+           [ui/Button {:primary  true
+                       :on-click #(dispatch
+                                    [::events/edit id
+                                     (assoc nuvlabox
+                                       :location
+                                       (update @new-location 0 map/normalize-lng))
+                                     "NuvlaBox position updated successfully"])}
+            (@tr [:save])]]]))))
+
+
+(defn TabLocation
+  []
+  (let [nuvlabox  (subscribe [::subs/nuvlabox])]
+    [ui/TabPane
+     [TabLocationMap @nuvlabox]]))
+
+
+(def tabs
+  [{:menuItem {:content "Overview"
+               :key     "overview"
+               :icon    "info"}
+    :render (fn [] (r/as-element [TabOverview]))}
+   {:menuItem {:content "Location"
+               :key     "location"
+               :icon    "map"}
+    :render (fn [] (r/as-element [TabLocation]))}
+   {:menuItem {:content "Share"
+               :key     "share"
+               :icon    "share alternate"} :render (fn [] (r/as-element [ui/TabPane
+                                                    "contennt"]))}])
+
+(defn TabPrototype
+  []
+  [ui/Tab
+   {:menu   {:secondary true
+             :pointing  true
+             :style {:display "flex"
+                     :flex-direction "row"
+                     :flex-wrap "wrap"}}
+    :panes  tabs}])
+
+
+(defn PageHeader
+  []
+  (let [nuvlabox  (subscribe [::subs/nuvlabox])]
+    (fn []
+      (let [status       @(subscribe [::edge-subs/status-nuvlabox (:id @nuvlabox)])
+            id           (:id @nuvlabox)
+            name         (:name @nuvlabox)
+            state        (:state @nuvlabox)]
+        [:div
+         [:h2 {:style {:margin "0 0 0 0"}}
+          [StatusIcon status :corner "left center"]
+          (or name id)]
+         [:p {:style {:margin "0.5em 0 1em 0"}}
+          [:span {:style {:font-weight  "bold"}} "State: "]
+          state]]))))
+
 
 (defn EdgeDetails
   [uuid]
@@ -666,6 +899,9 @@
   (fn [uuid]
     ^{:key uuid}
     [ui/Container {:fluid true}
+     [PageHeader]
      [MenuBar uuid]
+     [TabPrototype]
+     [ui/Divider {:horizontal true} "OR"]
      [SummarySection]
      [StatusSection]]))

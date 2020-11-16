@@ -4,6 +4,12 @@
 
 ### Updated
 
+## [2.10.1] - 2020-11-16
+
+### Updated
+
+  - Edge - Remove filter prototype
+
 ## [2.10.0] - 2020-11-16
 
 ### Added

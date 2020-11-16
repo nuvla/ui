@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Updated
+
+## [2.10.0] - 2020-11-16
+
 ### Added
 
   - Filter composer component

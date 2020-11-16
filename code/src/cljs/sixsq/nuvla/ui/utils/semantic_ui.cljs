@@ -187,7 +187,6 @@
 (def TextArea (r/adapt-react-class semantic/TextArea))
 
 (def Transition (r/adapt-react-class semantic/Transition))
-(def TransitionGroup (r/adapt-react-class semantic/TransitionGroup))
 
 (def TransitionablePortal (r/adapt-react-class semantic/TransitionablePortal))
 

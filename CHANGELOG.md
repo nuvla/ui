@@ -4,6 +4,12 @@
 
 ### Updated
 
+## [2.10.2] - 2020-11-16
+
+### Updated
+
+  - CIMI DETAIL - cimi resources presented as keys fix
+
 ## [2.10.1] - 2020-11-16
 
 ### Updated

@@ -177,7 +177,7 @@
 (defn tuple-to-row
   [[key value]]
   [ui/TableRow
-   [ui/TableCell {:collapsing true} (str key)]
+   [ui/TableCell {:collapsing true} (name key)]
    [ui/TableCell {:style {:max-width     "80ex"             ;; FIXME: need to get this from parent container
                           :text-overflow "ellipsis"
                           :overflow      "hidden"}} (if (vector? value)

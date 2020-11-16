@@ -129,9 +129,9 @@
                                    registry-ids
                                    (map-indexed
                                      (fn [n reg-id]
-                                       (let [cred-id (-> (nth reg-creds-ids n)
-                                                         str/trim
-                                                         not-empty)]
+                                       (let [cred-id (some-> (nth reg-creds-ids n)
+                                                             str/trim
+                                                             not-empty)]
                                          [reg-id
                                           {:cred-id      cred-id
                                            :preselected? (some? cred-id)}])))

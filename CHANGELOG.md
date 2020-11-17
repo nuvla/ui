@@ -2,7 +2,11 @@
 
 ## Unreleased
 
+## [2.10.3] - 2020-11-17
+
 ### Updated
+
+  - CIMI DETAIL - operation button action regression fix
 
 ## [2.10.2] - 2020-11-16
 

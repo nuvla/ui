@@ -5,7 +5,6 @@
     [sixsq.nuvla.ui.acl.views :as acl-views]
     [sixsq.nuvla.ui.cimi-detail.events :as events]
     [sixsq.nuvla.ui.cimi-detail.subs :as subs]
-    [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -19,8 +18,7 @@
 
 (defn cimi-detail
   []
-  (let [cep                (subscribe [::cimi-subs/cloud-entry-point])
-        path               (subscribe [::main-subs/nav-path])
+  (let [path               (subscribe [::main-subs/nav-path])
         loading?           (subscribe [::subs/loading?])
         cached-resource-id (subscribe [::subs/resource-id])
         resource           (subscribe [::subs/resource])]
@@ -46,5 +44,4 @@
           [main-components/RefreshMenu
            {:on-refresh #(dispatch [::events/get resource-id])
             :loading?   @loading?}]
-          (when (and (not @loading?) correct-resource?) @resource)
-          (:base-uri @cep)]]))))
+          (when (and (not @loading?) correct-resource?) @resource)]]))))

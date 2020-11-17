@@ -3,6 +3,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.acl.utils :as acl-utils]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.edge-detail.events :as events]
@@ -13,13 +14,16 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.plot :as plot]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -31,7 +35,6 @@
              {:id        refresh-action-id
               :frequency 10000
               :event     [::events/get-nuvlabox (str "nuvlabox/" uuid)]}]))
-
 
 
 (defn DecommissionButton
@@ -244,62 +247,6 @@
                  nil)]))))
 
 
-(defn Peripherals
-  []
-  (let [ids (subscribe [::subs/nuvlabox-peripherals-ids])]
-    (fn []
-      [uix/Accordion
-       [:div
-        (doall
-          (for [id @ids]
-            ^{:key id}
-            [Peripheral id]))]
-       :label "Peripherals"
-       :icon "usb"
-       :count (count @ids)])))
-
-
-(defn LocationAccordion
-  [{:keys [id location] :as nuvlabox}]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        zoom         (atom 3)
-        new-location (r/atom nil)]
-    (fn [{:keys [id location] :as nuvlabox}]
-      (let [update-new-location #(reset! new-location %)
-            position            (some-> (or @new-location location) map/longlat->latlong)]
-
-        [uix/Accordion
-         [:div
-          (if position (@tr [:map-drag-to-update-nb-location])
-                       (@tr [:map-click-to-set-nb-location]))
-          [map/MapBox
-           {:style             {:height 400
-                                :cursor (when-not location "pointer")}
-            :center            (or position map/sixsq-latlng)
-            :zoom              @zoom
-            :onViewportChanged #(reset! zoom (.-zoom %))
-            :on-click          (when-not position
-                                 (map/click-location update-new-location))}
-           (when position
-             [map/Marker {:position    position
-                          :draggable   true
-                          :on-drag-end (map/drag-end-location update-new-location)}])]
-          [:div {:align "right"}
-           [ui/Button {:on-click #(reset! new-location nil)}
-            (@tr [:cancel])]
-           [ui/Button {:primary  true
-                       :on-click #(dispatch
-                                    [::events/edit id
-                                     (assoc nuvlabox
-                                       :location
-                                       (update @new-location 0 map/normalize-lng))
-                                     "NuvlaBox position updated successfully"])}
-            (@tr [:save])]
-           ]]
-         :default-open false
-         :label "Location"
-         :icon "map"]))))
-
 
 (defn StatusIcon
   [status & {:keys [corner] :or {corner "bottom center"} :as position}]
@@ -329,7 +276,6 @@
 
 (defn Load
   [resources]
-  [uix/Accordion
    (let [load-stats      (u/load-statistics resources)
          net-stats       (u/load-net-stats (:net-stats resources))
          number-of-stats (count load-stats)]
@@ -417,36 +363,7 @@
                                          :position "bottom"}
                                 :scales {:yAxes [{:type       "logarithmic"
                                                   :scaleLabel {:labelString "bytes"
-                                                               :display     true}}]}}}]]]])])
-
-   :label [:span "Resource Consumption "
-           [ui/Popup
-            {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
-             :content        "Let your NuvlaBox apps subscribe to the internal MQTT topics
-                                          to access these values locally"
-             :header         "data-gateway"
-             :position       "right center"
-             :inverted       true
-             :wide           true
-             :on             "hover"
-             :hide-on-scroll true}]]
-   :icon "thermometer half"])
-
-
-(defn StatusSection
-  []
-  (let [nuvlabox-status (subscribe [::subs/nuvlabox-status])]
-    (fn []
-      (if @nuvlabox-status
-        (let [{:keys [resources updated next-heartbeat]} @nuvlabox-status]
-          [ui/Container {:fluid true}
-           ;[Heartbeat updated next-heartbeat]
-           (when resources
-             [Load resources])
-           [Peripherals]])
-        [ui/Message
-         {:warning true
-          :content "NuvlaBox status not available."}]))))
+                                                               :display     true}}]}}}]]]])]))
 
 
 (defn ActionsMenu
@@ -552,115 +469,18 @@
             ])]]])))
 
 
-(defn SummarySection
-  []
-  (let [nuvlabox  (subscribe [::subs/nuvlabox])
-        nb-status (subscribe [::subs/nuvlabox-status])
-        can-edit? (subscribe [::subs/can-edit?])
-        ssh-creds (subscribe [::subs/nuvlabox-ssh-keys])
-        acl-open  (r/atom false)
-        tr        (subscribe [::i18n-subs/tr])]
-
-    (fn []
-      (let [status       @(subscribe [::edge-subs/status-nuvlabox (:id @nuvlabox)])
-            {:keys [hostname ip docker-server-version
-                    operating-system architecture last-boot]} @nb-status
-
-            card-options {:color "black"
-                          :style {:max-width 200}}]
-        (when (not= (count (:ssh-keys @nuvlabox)) (count (:associated-ssh-keys @ssh-creds)))
-          (dispatch [::events/get-nuvlabox-ssh-keys (:ssh-keys @nuvlabox)]))
-        [:<>
-         (when (:acl @nuvlabox)
-           ^{:key (:updated @nuvlabox)}
-           [acl/AclButton
-            {:default-value   (:acl @nuvlabox)
-             :read-only       (not @can-edit?)
-             :default-active? @acl-open
-             :on-change       #(do
-                                 (reset! acl-open true)
-                                 (dispatch [::events/edit
-                                            (:id @nuvlabox) (assoc @nuvlabox :acl %)
-                                            "NuvlaBox ACL updated successfully"]))}])
-         [ui/Grid {:columns 3, :stackable true}
-          [ui/GridRow
-           [ui/GridColumn
-            (when last-boot
-              [ui/Label {:color    "grey"
-                         :basic    true
-                         :circular true}
-               (str "Last boot: " (time/time->format last-boot))])
-
-            (when (pos? (count (:associated-ssh-keys @ssh-creds)))
-              [ui/Segment {:compact true}
-               [ui/Popup
-                {:hoverable true
-                 :flowing   true
-                 :position  "bottom center"
-                 :content   (r/as-element [ui/ListSA {:divided true
-                                                      :relaxed true}
-                                           (for [sshkey (:associated-ssh-keys @ssh-creds)]
-                                             [ui/ListItem {:key (:id sshkey)}
-                                              [ui/ListContent
-                                               [ui/ListHeader
-                                                [:a {:href   (str @config/path-prefix
-                                                               "/api/" (:id sshkey))
-                                                     :target "_blank"}
-                                                 (or (:name sshkey) (:id sshkey))]]
-                                               [ui/ListDescription
-                                                (str (subs (:public-key sshkey) 0 55) " ...")]]])])
-                 :trigger   (r/as-element [ui/Icon {:name   "key"
-                                                    :fitted true}
-                                           (@tr [:nuvlabox-detail-ssh-enabled])
-                                           [ui/Icon {:name   "angle down"
-                                                     :fitted true}]])}]
-               ])]
-           [ui/GridColumn
-            [ui/CardGroup {:centered true}
-             (when @nuvlabox
-               [NuvlaboxCard @nuvlabox status])]]]]
-
-         (when (->> [hostname ip docker-server-version
-                     operating-system architecture last-boot]
-                 (remove #(or (nil? %) (str/blank? %)))
-                 seq)
-           [ui/Segment
-            [ui/CardGroup {:centered true}
-             (when operating-system
-               [ui/Card card-options
-                [ui/CardContent
-                 [ui/CardHeader "Operating System"]
-                 [ui/CardMeta operating-system]]])
-             (when hostname
-               [ui/Card card-options
-                [ui/CardContent
-                 [ui/CardHeader "Hostname"]
-                 [ui/CardMeta hostname]]])
-             (when architecture
-               [ui/Card card-options
-                [ui/CardContent
-                 [ui/CardHeader "Architecture"]
-                 [ui/CardMeta architecture]]])
-             (when ip
-               [ui/Card card-options
-                [ui/CardContent
-                 [ui/CardHeader "IP"]
-                 [ui/CardMeta ip]]])
-             (when docker-server-version
-               [ui/Card card-options
-                [ui/CardContent
-                 [ui/CardHeader "Docker Version"]
-                 [ui/CardMeta docker-server-version]]])]])
-
-         [LocationAccordion @nuvlabox]]))))
-
 (defn TabOverview
   []
   (let [nuvlabox    (subscribe [::subs/nuvlabox])
         locale      (subscribe [::i18n-subs/locale])
         nb-status   (subscribe [::subs/nuvlabox-status])
         ssh-creds   (subscribe [::subs/nuvlabox-ssh-keys])
-        tr          (subscribe [::i18n-subs/tr])]
+        tr          (subscribe [::i18n-subs/tr])
+        edit        (r/atom false)
+        old-nb-name (r/atom (:name @nuvlabox))
+        close-fn    #(do
+                       (reset! edit false)
+                       (refresh (:id @nuvlabox)))]
     (fn []
       (let [{:keys [id name description created updated
                     version refresh-interval owner tags ssh-keys]} @nuvlabox
@@ -699,18 +519,31 @@
               [ui/TableBody
                [ui/TableRow
                 [ui/TableCell "ID"]
-                [ui/TableCell id]]
+                [ui/TableCell [values/as-link id :label id]]]
                (when name
                  [ui/TableRow
                   [ui/TableCell "Name"]
-                  [ui/TableCell name]])
+                  [ui/TableCell [ui/Icon {:name "pencil"
+                                          :on-click #(reset! edit true)
+                                          :style  {:cursor  "pointer"}}]
+                   " "
+                   (if @edit
+                     [ui/Input {:default-value name
+                                :on-key-press  (partial forms/on-return-key
+                                                 #(if (= @old-nb-name name id)
+                                                    (close-fn)
+                                                    (EditAction id {:name @old-nb-name} close-fn)))
+                                :on-change     (ui-callback/input-callback #(reset! old-nb-name %))
+                                :focus         true
+                                :size          "mini"}]
+                     name)]])
                (when description
                  [ui/TableRow
                   [ui/TableCell "Description"]
                   [ui/TableCell description]])
                [ui/TableRow
                 [ui/TableCell "Owner"]
-                [ui/TableCell owner]]
+                [ui/TableCell [values/as-link owner :label (general-utils/id->short-uuid owner)]]]
                [ui/TableRow
                 [ui/TableCell "Telemetry Period"]
                 [ui/TableCell (str refresh-interval " seconds")]]
@@ -732,6 +565,7 @@
                          :color       "black"
                          :raised      true}
              [:h4 "Host"]
+             (if @nb-status
              [ui/Table {:basic  "very"
                         :padded false}
               [ui/TableBody
@@ -783,14 +617,17 @@
                  [ui/TableRow
                   [ui/TableCell "Docker Plugins"]
                   [ui/TableCell docker-plugins]])
-               [ui/TableRow
-                [ui/TableCell "Last Boot"]
-                [ui/TableCell (time/time->format last-boot)]]]]]]]
+               (when last-boot
+                 [ui/TableRow
+                  [ui/TableCell "Last Boot"]
+                  [ui/TableCell (time/time->format last-boot)]])]]
+             ;else
+             [ui/Message {:content  "NuvlaBox Status not available"}])]]]
          [ui/GridRow
           [ui/GridColumn
            [ui/Segment {:basic     true}
             [Heartbeat status-updated id]]]
-          (when tags
+          (when (> (count tags) 0)
             [ui/GridColumn
              [ui/Segment {:secondary   true
                           :color       "teal"
@@ -851,6 +688,142 @@
      [TabLocationMap @nuvlabox]]))
 
 
+(defn TabAcls
+  []
+  (let [nuvlabox  (subscribe [::subs/nuvlabox])
+        can-edit? (subscribe [::subs/can-edit?])
+        acl-open  (r/atom false)]
+    (fn []
+      (let [default-value (:acl @nuvlabox)
+            acl     (or default-value
+                      (when-let [user-id (and @can-edit?
+                                           @(subscribe [::session-subs/user-id]))]
+                        {:owners [user-id]}))
+            ui-acl  (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
+        [ui/TabPane
+         (when (:acl @nuvlabox)
+           ^{:key (:updated @nuvlabox)}
+           [acl/AclWidget {:default-value (:acl @nuvlabox)
+                           :read-only (not @can-edit?)
+                           :mode  true
+                           :on-change #(do
+                                         (reset! acl-open true)
+                                         (dispatch [::events/edit
+                                                    (:id @nuvlabox) (assoc @nuvlabox :acl %)
+                                                    "NuvlaBox ACL updated successfully"]))}
+            ui-acl])]))))
+
+
+(defn TabLoad
+  []
+  (let [nuvlabox-status (subscribe [::subs/nuvlabox-status])]
+    (fn []
+      (let [{:keys [resources]} @nuvlabox-status]
+        [ui/TabPane
+        (if resources
+          [Load resources]
+          [ui/Message
+           {:warning true
+            :content "NuvlaBox resource consumption not available."}])]))))
+
+
+(defn TabPeripherals
+  []
+  (let [ids (subscribe [::subs/nuvlabox-peripherals-ids])]
+    (fn []
+      [ui/TabPane
+       [:div
+        (doall
+          (for [id @ids]
+            ^{:key id}
+            [Peripheral id]))]])))
+
+
+(defn TabEvents
+  []
+  (let [tr          (subscribe [::i18n-subs/tr])
+        events      @(subscribe [::subs/nuvlabox-events])]
+    [ui/TabPane
+     [ui/Table {:basic  "very"}
+      [ui/TableHeader
+       [ui/TableRow
+        [ui/TableHeaderCell [:span (@tr [:event])]]
+        [ui/TableHeaderCell [:span (@tr [:timestamp])]]
+        [ui/TableHeaderCell [:span (@tr [:category])]]
+        [ui/TableHeaderCell [:span (@tr [:state])]]]]
+      [ui/TableBody
+       (for [{:keys [id content timestamp category] :as event} events]
+         ^{:key id}
+         [ui/TableRow
+          [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
+          [ui/TableCell timestamp]
+          [ui/TableCell category]
+          [ui/TableCell (:state content)]])]]]))
+
+
+(defn TabVulnerabilities
+  []
+  (let [nb-status   (subscribe [::subs/nuvlabox-status])]
+    (fn []
+      (let [vulns   (:vulnerabilities @nb-status)
+            summary   (:summary vulns)
+            items     (:items   vulns)]
+        [ui/TabPane
+         [ui/StatisticGroup {:width "four"
+                             :size  "tiny"
+                             :style {:margin     "25px auto"
+                                      :display    "block"
+                                      :text-align "center"
+                                      :width      "100%"}}
+          [ui/Statistic {:color "black"}
+           [ui/StatisticValue (count items)]
+           [ui/StatisticLabel "total"]]
+          [ui/Statistic {:color "red"}
+           [ui/StatisticValue (count items)]
+           [ui/StatisticLabel
+            [ui/Popup
+             {:trigger        (r/as-element [:span "critical"])
+              :content        "CVSS: 9.0-10.0"
+              :position       "bottom center"
+              :on             "hover"
+              :size           "tiny"
+              :hide-on-scroll true}]]]
+          [ui/Statistic {:color "orange"}
+           [ui/StatisticValue (count items)]
+           [ui/StatisticLabel
+            [ui/Popup
+             {:trigger        (r/as-element [:span "high"])
+              :content        "CVSS: 7.0-8.9"
+              :position       "bottom center"
+              :on             "hover"
+              :size           "tiny"
+              :hide-on-scroll true}]]]
+          [ui/Statistic {:color "yellow"}
+           [ui/StatisticValue (count items)]
+           [ui/StatisticLabel
+            [ui/Popup
+             {:trigger        (r/as-element [:span "medium"])
+              :content        "CVSS: 4.0-6.9"
+              :position       "bottom center"
+              :on             "hover"
+              :size           "tiny"
+              :hide-on-scroll true}]]]
+          [ui/Statistic {:color "green"}
+           [ui/StatisticValue (count items)]
+           [ui/StatisticLabel
+            [ui/Popup
+             {:trigger        (r/as-element [:span "low"])
+              :content        "CVSS: 0.1-3.9"
+              :position       "bottom center"
+              :on             "hover"
+              :size           "tiny"
+              :hide-on-scroll true}]]]]
+
+          summary
+         ]
+
+        ))))
+
 (def tabs
   [{:menuItem {:content "Overview"
                :key     "overview"
@@ -860,10 +833,43 @@
                :key     "location"
                :icon    "map"}
     :render (fn [] (r/as-element [TabLocation]))}
+   {:menuItem {:content (r/as-element [ui/Popup
+                                       {:trigger        (r/as-element [:span "Resource Consumption"])
+                                        :content        "Let your NuvlaBox apps subscribe to the internal MQTT topics
+                                          to access these values locally"
+                                        :header         "data-gateway"
+                                        :position       "top center"
+                                        :inverted       true
+                                        :wide           true
+                                        :on             "hover"
+                                        :size           "tiny"
+                                        :hide-on-scroll true}])
+               :key     "res-cons"
+               :icon    "thermometer half"}
+    :render (fn [] (r/as-element [TabLoad]))}
+   {:menuItem {:content (r/as-element [:<>
+                                       [:span "Peripherals"
+                                        [ui/Label {:circular true
+                                                   :size "tiny"
+                                                   :floating   true}
+                                         (count @(subscribe [::subs/nuvlabox-peripherals-ids]))]]
+                                       ])
+               :key     "peripherals"
+               :icon    "usb"}
+    :render (fn [] (r/as-element [TabPeripherals]))}
+   {:menuItem {:content "Events"
+               :key     "events"
+               :icon    "clipboard list"}
+    :render (fn [] (r/as-element [TabEvents]))}
+   {:menuItem {:content "Vulnerabilities"
+               :key     "vuln"
+               :icon    "shield alt"}
+    :render (fn [] (r/as-element [TabVulnerabilities]))}
    {:menuItem {:content "Share"
                :key     "share"
-               :icon    "share alternate"} :render (fn [] (r/as-element [ui/TabPane
-                                                    "contennt"]))}])
+               :icon    "users"}
+    :render (fn [] (r/as-element [TabAcls]))}])
+
 
 (defn TabPrototype
   []
@@ -901,7 +907,4 @@
     [ui/Container {:fluid true}
      [PageHeader]
      [MenuBar uuid]
-     [TabPrototype]
-     [ui/Divider {:horizontal true} "OR"]
-     [SummarySection]
-     [StatusSection]]))
+     [TabPrototype]]))

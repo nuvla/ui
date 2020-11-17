@@ -32,6 +32,12 @@
                                                (into {})))))
 
 
+(reg-event-db
+  ::set-nuvlabox-events
+  (fn [db [_ nuvlabox-events]]
+    (assoc db ::spec/nuvlabox-events nuvlabox-events)))
+
+
 (reg-event-fx
   ::set-nuvlabox
   (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status id :id :as nuvlabox}]]
@@ -57,6 +63,21 @@
 
 
 (reg-event-fx
+  ::get-nuvlabox-events
+  (fn [_ [_ href]]
+    (let [filter-str   (str "content/resource/href='" href "'")
+          order-by-str "timestamp:desc"
+          select-str   "id, content, severity, timestamp, category"
+          query-params {:filter  filter-str
+                        :orderby order-by-str
+                        :select  select-str}]
+      {::cimi-api-fx/search [:event
+                             (general-utils/prepare-params query-params)
+                             #(dispatch [::set-nuvlabox-events (:resources %)])
+                             ]})))
+
+
+(reg-event-fx
   ::get-nuvlabox
   (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ id]]
     (cond-> {::cimi-api-fx/get    [id #(dispatch [::set-nuvlabox %])
@@ -65,7 +86,8 @@
                                    {:filter  (str "parent='" id "'")
                                     :last    10000
                                     :orderby "id"}
-                                   #(dispatch [::set-nuvlabox-peripherals %])]}
+                                   #(dispatch [::set-nuvlabox-peripherals %])]
+             :dispatch-n          [[::get-nuvlabox-events id]]}
             (not= (:id nuvlabox) id) (assoc :db (merge db spec/defaults)))))
 
 

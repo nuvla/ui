@@ -11,7 +11,8 @@
     [sixsq.nuvla.ui.deployment-dialog.views-price :as price-step]
     [sixsq.nuvla.ui.deployment-dialog.views-registries :as registries-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.deployment-dialog.views-module-version :as module-version-step]))
 
 
 (defn application-row
@@ -74,6 +75,7 @@
       (when @data-step-active?
         [data-step/summary-row])
       [infra-services-step/summary-row]
+      [module-version-step/summary-row]
       (when (and @is-application? (seq @files)) [files-step/summary-row])
       (when (seq @env-variables) [env-variables-step/summary-row])
       (when (pos? @registries-count) [registries-step/summary-row])

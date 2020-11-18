@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Updated
+
+  :todo - Deployment - Remove fetch button from deployment detail page
+  - Deployment modal - Add version selection section
+
 ## [2.10.3] - 2020-11-17
 
 ### Updated

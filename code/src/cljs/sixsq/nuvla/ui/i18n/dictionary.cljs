@@ -7,6 +7,7 @@
 (def dictionary
   {:en {:lang                                      "English"
 
+        :module-version                            "Module version"
         :about                                     "about"
         :about-subtitle                            "This software is brought to you"
         :accept                                    "Accept "
@@ -577,6 +578,7 @@
 
    :fr {:lang                                      "Français"
 
+        :module-version                            "Version du module"
         :about                                     "à propos"
         :about-subtitle                            "Ce logiciel vous est fournit"
         :accept                                    "Accepter l'"

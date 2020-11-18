@@ -13,6 +13,7 @@
     [sixsq.nuvla.ui.deployment-dialog.views-license :as license-step]
     [sixsq.nuvla.ui.deployment-dialog.views-price :as price-step]
     [sixsq.nuvla.ui.deployment-dialog.views-registries :as registries-step]
+    [sixsq.nuvla.ui.deployment-dialog.views-module-version :as module-versions-step]
     [sixsq.nuvla.ui.deployment-dialog.views-summary :as summary-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -87,6 +88,7 @@
    (case active-step
      :data [data-step/content]
      :infra-services [infra-services-step/content]
+     :module-version [module-versions-step/content]
      :registries [registries-step/content]
      :env-variables [env-variables-step/content]
      :files [files-step/content]
@@ -110,7 +112,7 @@
         deployment       (subscribe [::subs/deployment])
         registries-creds (subscribe [::subs/registries-creds])
         env-variables    (subscribe [::subs/env-variables])
-        ready?           (subscribe [::subs/ready?])
+        loading?         (subscribe [::subs/loading-deployment?])
         launch-disabled? (subscribe [::subs/launch-disabled?])
         launch-status    (subscribe [::subs/launch-status])
         active-step      (subscribe [::subs/active-step])
@@ -131,6 +133,7 @@
 
             steps          [(when show-data? :data)
                             :infra-services
+                            :module-version
                             (when (seq @registries-creds) :registries)
                             (when (seq @env-variables) :env-variables)
                             (when (and (= module-subtype "application")
@@ -146,10 +149,9 @@
 
          [ui/ModalHeader
           [ui/Icon {:name "rocket", :size "large"}]
-          (if @ready?
-            (str "\u00a0" module-name)
-            "\u2026")]
-
+          (if @loading?
+            "\u2026"
+            (str "\u00a0" module-name))]
          [ui/ModalContent
           (when @error
             [ui/Message {:error true}
@@ -164,11 +166,11 @@
                   ^{:key step-id}
                   [deployment-step-state (get @step-states step-id)]))]]
             [ui/GridColumn {:width 12}
-             [ui/Segment {:loading (not ready?)
+             [ui/Segment {:loading @loading?
                           :basic   true
                           :style   {:padding 0
                                     :height  "25em"}}
-              (when @ready?
+              (when-not @loading?
                 [step-content @active-step])]
              ]]]]
          [ui/ModalActions

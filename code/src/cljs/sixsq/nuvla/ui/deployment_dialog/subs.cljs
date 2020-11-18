@@ -11,21 +11,16 @@
 
 
 (reg-sub
-  ::loading-deployment?
-  ::spec/loading-deployment?)
-
-
-(reg-sub
-  ::ready?
-  :<- [::loading-deployment?]
-  :<- [::deployment]
-  (fn [[loading-deployment? deployment]]
-    (and (not loading-deployment?) deployment)))
-
-
-(reg-sub
   ::deployment
-  ::spec/deployment)
+  (fn [db]
+    (::spec/deployment db)))
+
+
+(reg-sub
+  ::loading-deployment?
+  :<- [::deployment]
+  (fn [deployment]
+    (nil? deployment)))
 
 
 (reg-sub
@@ -47,6 +42,13 @@
   :<- [::module]
   (fn [module]
     (:name module)))
+
+
+(reg-sub
+  ::module-id
+  :<- [::module]
+  (fn [module]
+    (:id module)))
 
 
 (reg-sub
@@ -82,6 +84,31 @@
   :<- [::module-content]
   (fn [module-content]
     (:files module-content)))
+
+
+(reg-sub
+  ::current-module-content-id
+  :<- [::module-content]
+  (fn [module-content]
+    (:id module-content)))
+
+
+(reg-sub
+  ::module-versions
+  (fn [db]
+    (reverse (map-indexed vector (::spec/module-versions db)))))
+
+
+(reg-sub
+  ::current-module-version
+  :<- [::module-versions]
+  :<- [::current-module-content-id]
+  (fn [[module-versions id]]
+    (when id
+      (some
+        (fn [[idx item]]
+          (when (= (:href item) id) idx))
+        module-versions))))
 
 
 (reg-sub

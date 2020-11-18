@@ -205,8 +205,7 @@
 (reg-event-db
   ::set-deployment
   (fn [db [_ deployment]]
-    (assoc db ::spec/deployment deployment
-              ::spec/loading-deployment? false)))
+    (assoc db ::spec/deployment deployment)))
 
 
 (reg-event-db
@@ -281,8 +280,7 @@
           old-deployment-id (:id deployment)
           on-success        #(dispatch [::get-deployment (:resource-id %)])]
       (cond->
-        {:db               (assoc db ::spec/loading-deployment? true
-                                     ::spec/deployment nil
+        {:db               (assoc db ::spec/deployment nil
                                      ::spec/selected-credential-id nil
                                      ::spec/selected-infra-service nil
                                      ::spec/deploy-modal-visible? (not (boolean do-not-open-modal?))
@@ -292,7 +290,8 @@
                                      ::spec/selected-cloud nil
                                      ::spec/cloud-infra-services nil
                                      ::spec/data-clouds nil
-                                     ::spec/license-accepted? false)
+                                     ::spec/license-accepted? false
+                                     ::spec/module-versions nil)
          ::cimi-api-fx/add [:deployment data on-success
                             :on-error #(do
                                          (dispatch [::reset])
@@ -318,8 +317,7 @@
   (fn [{db :db} [_ first-step {:keys [parent id] :as deployment}]]
     (when (= :data first-step)
       (dispatch [::get-data-records]))
-    (cond-> {:db       (assoc db ::spec/loading-deployment? true
-                                 ::spec/deployment nil
+    (cond-> {:db       (assoc db ::spec/deployment nil
                                  ::spec/selected-credential-id nil
                                  ::spec/selected-infra-service nil
                                  ::spec/deploy-modal-visible? true
@@ -328,7 +326,8 @@
                                  ::spec/cloud-filter nil
                                  ::spec/selected-cloud nil
                                  ::spec/cloud-infra-services nil
-                                 ::spec/data-clouds nil)
+                                 ::spec/data-clouds nil
+                                 ::spec/module-versions nil)
              :dispatch [::get-deployment id]}
             parent (assoc ::cimi-api-fx/get [parent #(dispatch [::reselect-credential %])]))))
 
@@ -461,3 +460,24 @@
   ::set-price-accepted?
   (fn [db [_ accepted?]]
     (assoc db ::spec/price-accepted? accepted?)))
+
+
+(reg-event-db
+  ::set-module-versions
+  (fn [db [_ module]]
+    (assoc db ::spec/module-versions (:versions module))))
+
+
+(reg-event-fx
+  ::get-module-versions
+  (fn [_ [_ module-id]]
+    {::cimi-api-fx/get [module-id #(dispatch [::set-module-versions %])]}))
+
+
+(reg-event-fx
+  ::fetch-module
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ module-version-href]]
+    {:db                     (assoc db ::spec/deployment nil)
+     ::cimi-api-fx/operation [(:id deployment) "fetch-module"
+                              #(dispatch [::set-deployment %])
+                              {:module {:href module-version-href}}]}))

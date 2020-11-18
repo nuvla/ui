@@ -82,8 +82,7 @@
   []
   (let [module-versions   (subscribe [::subs/module-versions])
         module-content-id (subscribe [::subs/current-module-content-id])
-        current-version   (subscribe [::subs/current-module-version])
-        module            (subscribe [::subs/deployment-module])]
+        current-version   (subscribe [::subs/current-module-version])]
     (fn []
       [uix/Accordion
        [ui/Segment style/autoscroll-x

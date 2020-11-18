@@ -761,68 +761,182 @@
           [ui/TableCell (:state content)]])]]]))
 
 
+(def vuln-critical-color "#f41906")
+(def vuln-high-color "#f66e0a")
+(def vuln-medium-color "#fbbc06")
+(def vuln-low-color "#21b802")
+(def vuln-unknown-color "#949494")
+
+
+; there's a similar function in edge.views which can maybe be generalized
+(defn VulnStatisticState
+  [value label label-popup color state-selector]
+  (let [selected?      (or
+                         (= label @state-selector)
+                         (and (= label "collected")
+                           (= @state-selector nil)))
+        selected-style    (if selected? {:color "black"
+                                         :font-weight "bold"
+                                         :padding   "10px"}
+                                        {:color color
+                                         :font-weight "normal"
+                                         :padding "3px"})]
+    [ui/Statistic {:style    {:cursor "pointer"}
+                   :on-click #(dispatch [::events/set-vuln-severity-selector
+                                         (if (= label "collected") nil label)])}
+     [ui/StatisticValue {:style selected-style}
+                         (or value "-")]
+     [ui/StatisticLabel [ui/Popup
+                         {:trigger        (r/as-element [:span {:style selected-style} label])
+                          :content        label-popup
+                          :position       "bottom center"
+                          :on             "hover"
+                          :size           "tiny"
+                          :hide-on-scroll true}]]]))
+
+
+(defn VulnerabilitiesTableBody
+  [vulnerability-id product vulnerability-score color]
+  [ui/TableRow
+   [ui/TableCell vulnerability-id]
+   [ui/TableCell product]
+   [ui/TableCell {:style {:background-color color
+                          :font-weight  "bold"}} vulnerability-score]])
+
+
 (defn TabVulnerabilities
   []
-  (let [nb-status   (subscribe [::subs/nuvlabox-status])]
+  (let [nb-status       (subscribe [::subs/nuvlabox-status])
+        state-selector  (subscribe [::subs/vuln-severity-selector])]
     (fn []
       (let [vulns   (:vulnerabilities @nb-status)
             summary   (:summary vulns)
-            items     (:items   vulns)]
+            items     (:items   vulns)
+            items-extended (into []
+                             (map
+                               (fn [{:keys [vulnerability-score] :as item}]
+                                 (if vulnerability-score
+                                   (cond
+                                     (>= vulnerability-score 9.0) (assoc item
+                                                                    :severity "CRITICAL"
+                                                                    :color    vuln-critical-color)
+                                     (and (< vulnerability-score 9.0)
+                                       (>= vulnerability-score 7.0)) (assoc item
+                                                                       :severity "HIGH"
+                                                                       :color    vuln-high-color)
+                                     (and (< vulnerability-score 7.0)
+                                       (>= vulnerability-score 4.0)) (assoc item
+                                                                       :severity "MEDIUM"
+                                                                       :color    vuln-medium-color)
+                                     (< vulnerability-score 4.0) (assoc item
+                                                                   :severity "LOW"
+                                                                   :color    vuln-low-color))
+                                   (assoc item :severity "UNKNOWN" :color vuln-unknown-color))) items))
+            items-severity (group-by :severity items-extended)]
         [ui/TabPane
-         [ui/StatisticGroup {:width "four"
-                             :size  "tiny"
-                             :style {:margin     "25px auto"
-                                      :display    "block"
-                                      :text-align "center"
-                                      :width      "100%"}}
-          [ui/Statistic {:color "black"}
-           [ui/StatisticValue (count items)]
-           [ui/StatisticLabel "total"]]
-          [ui/Statistic {:color "red"}
-           [ui/StatisticValue (count items)]
-           [ui/StatisticLabel
-            [ui/Popup
-             {:trigger        (r/as-element [:span "critical"])
-              :content        "CVSS: 9.0-10.0"
-              :position       "bottom center"
-              :on             "hover"
-              :size           "tiny"
-              :hide-on-scroll true}]]]
-          [ui/Statistic {:color "orange"}
-           [ui/StatisticValue (count items)]
-           [ui/StatisticLabel
-            [ui/Popup
-             {:trigger        (r/as-element [:span "high"])
-              :content        "CVSS: 7.0-8.9"
-              :position       "bottom center"
-              :on             "hover"
-              :size           "tiny"
-              :hide-on-scroll true}]]]
-          [ui/Statistic {:color "yellow"}
-           [ui/StatisticValue (count items)]
-           [ui/StatisticLabel
-            [ui/Popup
-             {:trigger        (r/as-element [:span "medium"])
-              :content        "CVSS: 4.0-6.9"
-              :position       "bottom center"
-              :on             "hover"
-              :size           "tiny"
-              :hide-on-scroll true}]]]
-          [ui/Statistic {:color "green"}
-           [ui/StatisticValue (count items)]
-           [ui/StatisticLabel
-            [ui/Popup
-             {:trigger        (r/as-element [:span "low"])
-              :content        "CVSS: 0.1-3.9"
-              :position       "bottom center"
-              :on             "hover"
-              :size           "tiny"
-              :hide-on-scroll true}]]]]
+         (if vulns
+           [:<>
+            [ui/Container {:text-align "center"
+                           :style {:margin  "5px"}}
+             [ui/Label {:basic  true}
+              "Total vulnerabilities found:"
+              [ui/LabelDetail (:total summary)]]
+             [ui/Label {:basic  true}
+              [ui/Popup
+               {:trigger  (r/as-element [ui/Icon {:name "info circle"}])
+                :content  (r/as-element
+                            [ui/ListSA {:bulleted true}
+                             (map (fn [k] [ui/ListItem k]) (:affected-products summary))])
+                :position       "bottom center"
+                :on             "hover"
+                :size           "tiny"
+                :hide-on-scroll true}]
+              "Affected products:"
+              [ui/LabelDetail (count (:affected-products summary))]]
+            (when (:average-score summary)
+              [ui/Label {:basic  true}
+               "Average CVSS score:"
+               [ui/LabelDetail (:average-score summary)]])]
+           [ui/Grid {:stackable true}
+            [ui/GridRow
+             [ui/GridColumn {:width 7
+                             :style {:min-height "150px"}}
+              [plot/Polar {:height  150
+                           :data    {:labels   (map (fn [[key v]] key) items-severity)
+                                     :datasets [{:data            (map (fn [[k values]] (count values)) items-severity)
+                                                 :backgroundColor (map (fn [[k v]] (:color (first v))) items-severity)}]}
+                           :options {:title  {:display true,
+                                              :text    "Vulnerabilities by Severity"
+                                              :position    "top"},
+                                     :legend {:display  true
+                                              :position "left"}}}]]
+             [ui/GridColumn {:width 9}
+              [ui/StatisticGroup {:width (count items-severity)
+                                  :size   "mini"
+                                  :style {:display    "inline-block"
+                                          :text-align "center"
+                                          :width      "100%"
+                                          :margin     "5px"}}
 
-          summary
-         ]
+               [VulnStatisticState
+                (count items)
+                "collected"
+                "Most severe vulnerabilities"
+                "grey"
+                state-selector]
+               [VulnStatisticState
+                (count (get items-severity "CRITICAL"))
+                "critical"
+                "CVSS: 9.0-10.0"
+                vuln-critical-color
+                state-selector]
+               [VulnStatisticState
+                (count (get items-severity "HIGH"))
+                "high"
+                "CVSS: 7.0-8.9"
+                vuln-high-color
+                state-selector]
+               [VulnStatisticState
+                (count (get items-severity "MEDIUM"))
+                "medium"
+                "CVSS: 4.0-6.9"
+                vuln-medium-color
+                state-selector]
+               [VulnStatisticState
+                (count (get items-severity "LOW"))
+                "low"
+                "CVSS: 0.1-3.9"
+                vuln-low-color
+                state-selector]
+               [VulnStatisticState
+                (count (get items-severity "UNKNOWN"))
+                "unknown"
+                "without CVSS score"
+                vuln-unknown-color
+                state-selector]]
 
-        ))))
+             [:div {:style {:max-height "25em"
+                            :width  "100%"
+                            :overflow-y "auto"}}
+              [ui/Table {:basic  "very"}
+              [ui/TableHeader
+               [ui/TableRow
+                [ui/TableHeaderCell "Vulnerability ID"]
+                [ui/TableHeaderCell "Affected Product"]
+                [ui/TableHeaderCell "CVSS Score"]]]
+
+              [ui/TableBody
+               (if @state-selector
+                 (for [{:keys [vulnerability-id product vulnerability-score color] :as selected-severity}
+                       (get items-severity (str/upper-case @state-selector))]
+                   ^{:key vulnerability-id}
+                   [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color])
+                 (for [{:keys [vulnerability-id product vulnerability-score color] :as item} items-extended]
+                   ^{:key vulnerability-id}
+                   [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color]))]]]]]]]
+
+           [ui/Message {:content  "Vulnerability scanning is not enabled"}])]))))
+
 
 (def tabs
   [{:menuItem {:content "Overview"
@@ -873,13 +987,14 @@
 
 (defn TabPrototype
   []
-  [ui/Tab
-   {:menu   {:secondary true
-             :pointing  true
-             :style {:display "flex"
-                     :flex-direction "row"
-                     :flex-wrap "wrap"}}
-    :panes  tabs}])
+  (fn []
+    [ui/Tab
+     {:menu   {:secondary true
+               :pointing  true
+               :style {:display "flex"
+                       :flex-direction "row"
+                       :flex-wrap "wrap"}}
+      :panes  tabs}]))
 
 
 (defn PageHeader

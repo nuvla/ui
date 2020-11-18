@@ -29,7 +29,7 @@
 
 (def Radar (reagent/adapt-react-class chartjs2/Radar))
 
-;(def Polar (reagent/adapt-react-class chartjs2/Polar))
+(def Polar (reagent/adapt-react-class chartjs2/Polar))
 
 ;(def Bubble (reagent/adapt-react-class chartjs2/Bubble))
 

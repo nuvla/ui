@@ -38,6 +38,12 @@
     (assoc db ::spec/nuvlabox-events nuvlabox-events)))
 
 
+(reg-event-db
+  ::set-vuln-severity-selector
+  (fn [db [_ vuln-severity]]
+    (assoc db ::spec/vuln-severity-selector vuln-severity)))
+
+
 (reg-event-fx
   ::set-nuvlabox
   (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status id :id :as nuvlabox}]]

@@ -29,6 +29,7 @@
   (fn [db]
     (::spec/nuvlabox-peripherals db)))
 
+
 (reg-sub
   ::nuvlabox-peripherals-ids
   :<- [::nuvlabox-peripherals]
@@ -47,6 +48,12 @@
   ::nuvlabox-events
   (fn [db]
     (::spec/nuvlabox-events db)))
+
+
+(reg-sub
+  ::vuln-severity-selector
+  (fn [db]
+    (::spec/vuln-severity-selector db)))
 
 
 (reg-sub

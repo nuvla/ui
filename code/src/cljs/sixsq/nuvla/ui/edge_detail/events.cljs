@@ -63,23 +63,34 @@
        [:credential
         {:filter (cond-> (apply general-utils/join-or
                                 (map #(str "id='" % "'") ssh-keys-ids)))
-         ;:select "id,name,public-key"
          :last   100}
         #(dispatch [::set-nuvlabox-ssh-keys {:associated-ssh-keys (:resources %)}])]})))
 
 
 (reg-event-fx
+  ::set-page
+  (fn [{db :db} [_ page]]
+    {:db       (assoc db ::spec/page page)
+     :dispatch [::get-nuvlabox-events]}))
+
+
+(reg-event-fx
   ::get-nuvlabox-events
-  (fn [_ [_ href]]
+  (fn [{{:keys [::spec/page
+                ::spec/elements-per-page] :as db} :db} [_ href]]
     (let [filter-str   (str "content/resource/href='" href "'")
-          order-by-str "timestamp:desc"
+          order-by-str "created:desc"
           select-str   "id, content, severity, timestamp, category"
-          query-params {:filter  filter-str
-                        :orderby order-by-str
-                        :select  select-str}]
+          first        (inc (* (dec page) elements-per-page))
+          last         (* page elements-per-page)
+          query-params {:filter   filter-str
+                        :orderby  order-by-str
+                        :select   select-str
+                        :first    first
+                        :last     last}]
       {::cimi-api-fx/search [:event
                              (general-utils/prepare-params query-params)
-                             #(dispatch [::set-nuvlabox-events (:resources %)])
+                             #(dispatch [::set-nuvlabox-events %])
                              ]})))
 
 

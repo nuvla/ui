@@ -10,6 +10,8 @@
 (s/def ::nuvlabox-peripherals (s/nilable any?))
 (s/def ::nuvlabox-events (s/nilable any?))
 (s/def ::vuln-severity-selector (s/nilable any?))
+(s/def ::elements-per-page int?)
+(s/def ::page int?)
 
 
 (s/def ::db (s/keys :req [::loading?
@@ -18,7 +20,9 @@
                           ::nuvlabox-ssh-keys
                           ::nuvlabox-peripherals
                           ::nuvlabox-events
-                          ::vuln-severity-selector]))
+                          ::vuln-severity-selector
+                          ::elements-per-page
+                          ::page]))
 
 
 (def defaults {::loading?             true
@@ -27,4 +31,6 @@
                ::nuvlabox-ssh-keys    nil
                ::nuvlabox-peripherals nil
                ::nuvlabox-events      nil
-               ::vuln-severity-selector nil})
+               ::vuln-severity-selector nil
+               ::elements-per-page    15
+               ::page                 1})

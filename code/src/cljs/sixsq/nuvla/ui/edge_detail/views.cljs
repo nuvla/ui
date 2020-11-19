@@ -94,6 +94,7 @@
 (defn Peripheral
   [id]
   (let [locale       (subscribe [::i18n-subs/locale])
+        tr           (subscribe [::i18n-subs/tr])
         last-updated (r/atom "1970-01-01T00:00:00Z")
         button-load? (r/atom false)
         peripheral   (subscribe [::subs/nuvlabox-peripheral id])]
@@ -123,100 +124,101 @@
           (reset! button-load? false)
           (reset! last-updated p-updated))
         [uix/Accordion
-         [ui/Table {:basic  "very"
-                    :padded false}
-          [ui/TableBody
-           (when p-name
-             [ui/TableRow
-              [ui/TableCell "Name"]
-              [ui/TableCell p-name]])
-           (when p-product
-             [ui/TableRow
-              [ui/TableCell "Product"]
-              [ui/TableCell p-product]])
-           (when p-serial-num
-             [ui/TableRow
-              [ui/TableCell "Serial Number"]
-              [ui/TableCell p-serial-num]])
-           (when p-descr
-             [ui/TableRow
-              [ui/TableCell "Description"]
-              [ui/TableCell p-descr]])
-           [ui/TableRow
-            [ui/TableCell "Classes"]
-            [ui/TableCell (str/join ", " p-classes)]]
-           [ui/TableRow
-            [ui/TableCell "Available"]
-            [ui/TableCell
-             [ui/Icon {:name "circle", :color (if p-available "green" "red")}]
-             (if p-available "Yes" "No")]]
-           (when p-interface
-             [ui/TableRow
-              [ui/TableCell "Interface"]
-              [ui/TableCell p-interface]])
-           (when p-device-path
-             [ui/TableRow
-              [ui/TableCell "Device Path"]
-              [ui/TableCell p-device-path]])
-           (when p-video-dev
-             [ui/TableRow
-              [ui/TableCell "Video Device"]
-              [ui/TableCell p-video-dev]])
-           [ui/TableRow
-            [ui/TableCell "Identifier"]
-            [ui/TableCell p-identifier]]
-           [ui/TableRow
-            [ui/TableCell "Vendor"]
-            [ui/TableCell p-vendor]]
-           [ui/TableRow
-            [ui/TableCell "Created"]
-            [ui/TableCell (time/ago (time/parse-iso8601 p-created) @locale)]]
-           [ui/TableRow
-            [ui/TableCell "Updated"]
-            [ui/TableCell (time/ago (time/parse-iso8601 p-updated) @locale)]]
-           (when p-resources
-             [ui/TableRow
-              [ui/TableCell "Resources"]
-              [ui/TableCell [ui/Grid {:columns   3,
-                                      :stackable true
-                                      :divided   "vertically"}
-                             (for [resource p-resources]
-                               [ui/GridRow
-                                [ui/GridColumn
-                                 [:div [:span {:style {:font-weight "bold"}}
-                                        "Unit: "]
-                                  (:unit resource)]]
-                                [ui/GridColumn
-                                 [:span [:span {:style {:font-weight "bold"}}
-                                         "Capacity: "]
-                                  (:capacity resource)]]
-                                (when (:load resource)
-                                  [ui/GridColumn
-                                   [:span [:span {:style {:font-weight "bold"}}
-                                           "Load: "]
-                                    (:load resource) "%"]])])]]])
-           (when p-additional-assets
-             [ui/TableRow
-              [ui/TableCell "Additional Assets"]
-              [ui/TableCell (map (fn [[key value]]
-                                   [ui/Segment {:vertical true}
-                                    [:div {:style {:font-weight "bold" :font-variant "small-caps"}}
-                                     (str (name key) ": ")]
-                                    (map (fn [val]
-                                           [:div val]) value)]) p-additional-assets)]])
-           (when p-data-gw-url
-             [ui/TableRow {:positive true}
-              [ui/TableCell "Data Gateway Connection"]
-              [ui/TableCell p-data-gw-url]])
-           (when p-data-sample
-             [ui/TableRow {:positive true}
-              [ui/TableCell "Raw Data Sample"]
-              [ui/TableCell p-data-sample]])]]
+         [ui/Segment {:basic "very"}
+          [ui/Table {:basic  "very"
+                     :padded false}
+           [ui/TableBody
+            (when p-name
+              [ui/TableRow
+               [ui/TableCell "Name"]
+               [ui/TableCell p-name]])
+            (when p-product
+              [ui/TableRow
+               [ui/TableCell "Product"]
+               [ui/TableCell p-product]])
+            (when p-serial-num
+              [ui/TableRow
+               [ui/TableCell "Serial Number"]
+               [ui/TableCell p-serial-num]])
+            (when p-descr
+              [ui/TableRow
+               [ui/TableCell "Description"]
+               [ui/TableCell p-descr]])
+            [ui/TableRow
+             [ui/TableCell "Classes"]
+             [ui/TableCell (str/join ", " p-classes)]]
+            [ui/TableRow
+             [ui/TableCell "Available"]
+             [ui/TableCell
+              [ui/Icon {:name "circle", :color (if p-available "green" "red")}]
+              (if p-available "Yes" "No")]]
+            (when p-interface
+              [ui/TableRow
+               [ui/TableCell "Interface"]
+               [ui/TableCell p-interface]])
+            (when p-device-path
+              [ui/TableRow
+               [ui/TableCell "Device Path"]
+               [ui/TableCell p-device-path]])
+            (when p-video-dev
+              [ui/TableRow
+               [ui/TableCell "Video Device"]
+               [ui/TableCell p-video-dev]])
+            [ui/TableRow
+             [ui/TableCell "Identifier"]
+             [ui/TableCell p-identifier]]
+            [ui/TableRow
+             [ui/TableCell "Vendor"]
+             [ui/TableCell p-vendor]]
+            [ui/TableRow
+             [ui/TableCell "Created"]
+             [ui/TableCell (time/ago (time/parse-iso8601 p-created) @locale)]]
+            [ui/TableRow
+             [ui/TableCell "Updated"]
+             [ui/TableCell (time/ago (time/parse-iso8601 p-updated) @locale)]]
+            (when p-resources
+              [ui/TableRow
+               [ui/TableCell "Resources"]
+               [ui/TableCell [ui/Grid {:columns   3,
+                                       :stackable true
+                                       :divided   "vertically"}
+                              (for [resource p-resources]
+                                [ui/GridRow
+                                 [ui/GridColumn
+                                  [:div [:span {:style {:font-weight "bold"}}
+                                         "Unit: "]
+                                   (:unit resource)]]
+                                 [ui/GridColumn
+                                  [:span [:span {:style {:font-weight "bold"}}
+                                          "Capacity: "]
+                                   (:capacity resource)]]
+                                 (when (:load resource)
+                                   [ui/GridColumn
+                                    [:span [:span {:style {:font-weight "bold"}}
+                                            "Load: "]
+                                     (:load resource) "%"]])])]]])
+            (when p-additional-assets
+              [ui/TableRow
+               [ui/TableCell "Additional Assets"]
+               [ui/TableCell (map (fn [[key value]]
+                                    [ui/Segment {:vertical true}
+                                     [:div {:style {:font-weight "bold" :font-variant "small-caps"}}
+                                      (str (name key) ": ")]
+                                     (map (fn [val]
+                                            [:div val]) value)]) p-additional-assets)]])
+            (when p-data-gw-url
+              [ui/TableRow {:positive true}
+               [ui/TableCell "Data Gateway Connection"]
+               [ui/TableCell p-data-gw-url]])
+            (when p-data-sample
+              [ui/TableRow {:positive true}
+               [ui/TableCell "Raw Data Sample"]
+               [ui/TableCell p-data-sample]])]]]
          :label [:span (or p-name p-product)
                  (when (pos? (count actions))
                    [ui/Popup
                     {:position "left center"
-                     :content  "Click to start/stop routing this peripheral's data through the Data Gateway"
+                     :content  (@tr [:nuvlabox-datagateway-action])
                      :header   "data-gateway"
                      :wide     "very"
                      :size     "small"
@@ -270,8 +272,8 @@
                                    (str "Next heartbeat is expected " next-heartbeat-times-ago)
                                    (str "Next heartbeat was expected " next-heartbeat-times-ago))]
 
-    [:p [ui/Icon {:name "heartbeat"
-                  :size "big"}] (str last-heartbeat-msg ". " next-heartbeat-msg)]))
+    [ui/Message {:icon "heartbeat"
+                 :content (str last-heartbeat-msg ". " next-heartbeat-msg)}]))
 
 
 (defn Load
@@ -362,7 +364,7 @@
                                          :text     (:title net-stats)
                                          :position "bottom"}
                                 :scales {:yAxes [{:type       "logarithmic"
-                                                  :scaleLabel {:labelString "bytes"
+                                                  :scaleLabel {:labelString "megabytes"
                                                                :display     true}}]}}}]]]])]))
 
 
@@ -487,22 +489,14 @@
             {:keys [hostname ip docker-server-version
                     operating-system architecture last-boot
                     status nuvlabox-api-endpoint
-                    nuvlabox-engine-version docker-plugins] status-updated :updated} @nb-status]
+                    nuvlabox-engine-version docker-plugins] status-updated :updated} @nb-status
+            online-status  @(subscribe [::edge-subs/status-nuvlabox id])]
         (when (not= (count ssh-keys) (count (:associated-ssh-keys @ssh-creds)))
           (dispatch [::events/get-nuvlabox-ssh-keys ssh-keys]))
         [ui/TabPane
          [ui/Grid {:columns   2,
                    :stackable true
-                   :padded    true
-                   :relaxed   "very"}
-          (when status
-          [ui/GridRow {:columns 2
-                       :centered  true
-                       :text-align  "center"}
-             [:h5 "Operational Status: " [ui/Label {:circular true
-                                                    :size     "mini"
-                                                    :color    (utils/operational-status->color status)}
-                                          status]]])
+                   :padded    true}
           [ui/GridRow
            [ui/GridColumn {:stretched true}
             [ui/Segment {:secondary   true
@@ -622,11 +616,28 @@
                   [ui/TableCell "Last Boot"]
                   [ui/TableCell (time/time->format last-boot)]])]]
              ;else
-             [ui/Message {:content  "NuvlaBox Status not available"}])]]]
+             [ui/Message {:content  (@tr [:nuvlabox-status-unavailable])}])]]]
          [ui/GridRow
           [ui/GridColumn
-           [ui/Segment {:basic     true}
-            [Heartbeat status-updated id]]]
+           [ui/Segment {:secondary   true
+                        :color       (utils/status->color online-status)
+                        :raised      true}
+            [:h4 "Status " ]
+            [:p {:style {:margin "0.5em 0 1em 0"}}
+             "Operational Status: "
+             [ui/Popup
+              {:trigger  (r/as-element [ui/Label {:circular true
+                                                  :size     "small"
+                                                  :horizontal true
+                                                  :color    (utils/operational-status->color status)}
+                                        status])
+               :content        (@tr [:nuvlabox-operational-status-popup])
+               :position       "bottom center"
+               :on             "hover"
+               :size           "tiny"
+               :hide-on-scroll true}]]
+            [Heartbeat status-updated id]
+            ]]
           (when (> (count tags) 0)
             [ui/GridColumn
              [ui/Segment {:secondary   true
@@ -677,7 +688,7 @@
                                      (assoc nuvlabox
                                        :location
                                        (update @new-location 0 map/normalize-lng))
-                                     "NuvlaBox position updated successfully"])}
+                                     (@tr [:nuvlabox-position-update])])}
             (@tr [:save])]]]))))
 
 
@@ -690,7 +701,8 @@
 
 (defn TabAcls
   []
-  (let [nuvlabox  (subscribe [::subs/nuvlabox])
+  (let [tr        (subscribe [::i18n-subs/tr])
+        nuvlabox  (subscribe [::subs/nuvlabox])
         can-edit? (subscribe [::subs/can-edit?])
         acl-open  (r/atom false)]
     (fn []
@@ -710,13 +722,14 @@
                                          (reset! acl-open true)
                                          (dispatch [::events/edit
                                                     (:id @nuvlabox) (assoc @nuvlabox :acl %)
-                                                    "NuvlaBox ACL updated successfully"]))}
+                                                    (@tr [:nuvlabox-acl-updated])]))}
             ui-acl])]))))
 
 
 (defn TabLoad
   []
-  (let [nuvlabox-status (subscribe [::subs/nuvlabox-status])]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        nuvlabox-status (subscribe [::subs/nuvlabox-status])]
     (fn []
       (let [{:keys [resources]} @nuvlabox-status]
         [ui/TabPane
@@ -724,41 +737,67 @@
           [Load resources]
           [ui/Message
            {:warning true
-            :content "NuvlaBox resource consumption not available."}])]))))
+            :content (@tr [:nuvlabox-resources-unavailable])}])]))))
 
 
 (defn TabPeripherals
   []
-  (let [ids (subscribe [::subs/nuvlabox-peripherals-ids])]
+  (let [peripherals-per-id (subscribe [::subs/nuvlabox-peripherals])]
     (fn []
-      [ui/TabPane
-       [:div
-        (doall
-          (for [id @ids]
-            ^{:key id}
-            [Peripheral id]))]])))
+      (let [peripheral-resources  (into [] (map (fn [[id res]] res) @peripherals-per-id))
+            per-interface   (group-by :interface peripheral-resources)]
+        [ui/TabPane
+         (for [[interface peripherals] per-interface]
+           ^{:key interface}
+           [uix/Accordion
+            (for [id (map :id peripherals)]
+              ^{:key id}
+              [Peripheral id])
+            :title-size :h4
+            :default-open false
+            :styled? false
+            :count (count peripherals)
+            :label interface])]))))
 
 
 (defn TabEvents
   []
-  (let [tr          (subscribe [::i18n-subs/tr])
-        events      @(subscribe [::subs/nuvlabox-events])]
-    [ui/TabPane
-     [ui/Table {:basic  "very"}
-      [ui/TableHeader
-       [ui/TableRow
-        [ui/TableHeaderCell [:span (@tr [:event])]]
-        [ui/TableHeaderCell [:span (@tr [:timestamp])]]
-        [ui/TableHeaderCell [:span (@tr [:category])]]
-        [ui/TableHeaderCell [:span (@tr [:state])]]]]
-      [ui/TableBody
-       (for [{:keys [id content timestamp category] :as event} events]
-         ^{:key id}
-         [ui/TableRow
-          [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
-          [ui/TableCell timestamp]
-          [ui/TableCell category]
-          [ui/TableCell (:state content)]])]]]))
+  (let [tr                (subscribe [::i18n-subs/tr])
+        nuvlabox          (subscribe [::subs/nuvlabox])
+        all-events        (subscribe [::subs/nuvlabox-events])
+        elements-per-page (subscribe [::subs/elements-per-page])
+        total-elements    (get @all-events :count 0)
+        total-pages       (general-utils/total-pages total-elements @elements-per-page)
+        page              (subscribe [::subs/page])]
+    (fn []
+      (let [events            (:resources @all-events)]
+        [ui/TabPane
+         (if (and (pos? total-elements) (= (count events) 0))
+           [ui/Loader {:active true
+                        :inline "centered"}]
+           [ui/Table {:basic  "very"}
+            [ui/TableHeader
+             [ui/TableRow
+              [ui/TableHeaderCell [:span (@tr [:event])]]
+              [ui/TableHeaderCell [:span (@tr [:timestamp])]]
+              [ui/TableHeaderCell [:span (@tr [:category])]]
+              [ui/TableHeaderCell [:span (@tr [:state])]]]]
+            [ui/TableBody
+             (for [{:keys [id content timestamp category] :as event} events]
+               ^{:key id}
+               [ui/TableRow
+                [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
+                [ui/TableCell timestamp]
+                [ui/TableCell category]
+                [ui/TableCell (:state content)]])]])
+
+
+         [uix/Pagination {:totalPages   total-pages
+                          :activePage   @page
+                          :onPageChange (ui-callback/callback
+                                          :activePage #(do
+                                                         (dispatch [::events/set-page %])
+                                                         (refresh (:id @nuvlabox))))}]]))))
 
 
 (def vuln-critical-color "#f41906")
@@ -806,7 +845,8 @@
 
 (defn TabVulnerabilities
   []
-  (let [nb-status       (subscribe [::subs/nuvlabox-status])
+  (let [tr              (subscribe [::i18n-subs/tr])
+        nb-status       (subscribe [::subs/nuvlabox-status])
         state-selector  (subscribe [::subs/vuln-severity-selector])]
     (fn []
       (let [vulns   (:vulnerabilities @nb-status)
@@ -839,7 +879,7 @@
             [ui/Container {:text-align "center"
                            :style {:margin  "5px"}}
              [ui/Label {:basic  true}
-              "Total vulnerabilities found:"
+              (@tr [:nuvlabox-total-vuln])
               [ui/LabelDetail (:total summary)]]
              [ui/Label {:basic  true}
               [ui/Popup
@@ -851,94 +891,99 @@
                 :on             "hover"
                 :size           "tiny"
                 :hide-on-scroll true}]
-              "Affected products:"
+              (@tr [:nuvlabox-vuln-affected])
               [ui/LabelDetail (count (:affected-products summary))]]
-            (when (:average-score summary)
-              [ui/Label {:basic  true}
-               "Average CVSS score:"
-               [ui/LabelDetail (:average-score summary)]])]
-           [ui/Grid {:stackable true}
-            [ui/GridRow
-             [ui/GridColumn {:width 7
-                             :style {:min-height "150px"}}
-              [plot/Polar {:height  150
-                           :data    {:labels   (map (fn [[key v]] key) items-severity)
-                                     :datasets [{:data            (map (fn [[k values]] (count values)) items-severity)
-                                                 :backgroundColor (map (fn [[k v]] (:color (first v))) items-severity)}]}
-                           :options {:title  {:display true,
-                                              :text    "Vulnerabilities by Severity"
-                                              :position    "top"},
-                                     :legend {:display  true
-                                              :position "left"}}}]]
-             [ui/GridColumn {:width 9}
-              [ui/StatisticGroup {:width (count items-severity)
-                                  :size   "mini"
-                                  :style {:display    "inline-block"
-                                          :text-align "center"
-                                          :width      "100%"
-                                          :margin     "5px"}}
+             (when (:average-score summary)
+               [ui/Label {:basic  true}
+                (@tr [:nuvlabox-vuln-cvss])
+                [ui/LabelDetail (:average-score summary)]])]
 
-               [VulnStatisticState
-                (count items)
-                "collected"
-                "Most severe vulnerabilities"
-                "grey"
-                state-selector]
-               [VulnStatisticState
-                (count (get items-severity "CRITICAL"))
-                "critical"
-                "CVSS: 9.0-10.0"
-                vuln-critical-color
-                state-selector]
-               [VulnStatisticState
-                (count (get items-severity "HIGH"))
-                "high"
-                "CVSS: 7.0-8.9"
-                vuln-high-color
-                state-selector]
-               [VulnStatisticState
-                (count (get items-severity "MEDIUM"))
-                "medium"
-                "CVSS: 4.0-6.9"
-                vuln-medium-color
-                state-selector]
-               [VulnStatisticState
-                (count (get items-severity "LOW"))
-                "low"
-                "CVSS: 0.1-3.9"
-                vuln-low-color
-                state-selector]
-               [VulnStatisticState
-                (count (get items-severity "UNKNOWN"))
-                "unknown"
-                "without CVSS score"
-                vuln-unknown-color
-                state-selector]]
+            ; taking too much space at the moment. TBD later, once more plots are added
+            ;[ui/Segment {:secondary   true
+            ;             :color       "olive"
+            ;             :raised      true}
+            ; [plot/Polar {:height  80
+            ;              :data    {:labels   (map (fn [[key v]] key) items-severity)
+            ;                        :datasets [{:data            (map (fn [[k values]] (count values)) items-severity)
+            ;                                    :backgroundColor (map (fn [[k v]] (:color (first v))) items-severity)}]}
+            ;              :options {:title  {:display true,
+            ;                                 :text    "Vulnerabilities by Severity"
+            ;                                 :position    "top"},
+            ;                        :legend {:display  true
+            ;                                 :position "left"}}}]]
+
+            [ui/Segment {:secondary   true
+                         :color       "brown"
+                         :raised      true}
+             [ui/StatisticGroup {:width (count items-severity)
+                                 :size   "mini"
+                                 :style {:display    "inline-block"
+                                         :text-align "center"
+                                         :width      "100%"
+                                         :margin     "5px"}}
+
+              [VulnStatisticState
+               (count items)
+               "collected"
+               (@tr [:nuvlabox-vuln-most-severe])
+               "grey"
+               state-selector]
+              [VulnStatisticState
+               (count (get items-severity "CRITICAL"))
+               "critical"
+               "CVSS: 9.0-10.0"
+               vuln-critical-color
+               state-selector]
+              [VulnStatisticState
+               (count (get items-severity "HIGH"))
+               "high"
+               "CVSS: 7.0-8.9"
+               vuln-high-color
+               state-selector]
+              [VulnStatisticState
+               (count (get items-severity "MEDIUM"))
+               "medium"
+               "CVSS: 4.0-6.9"
+               vuln-medium-color
+               state-selector]
+              [VulnStatisticState
+               (count (get items-severity "LOW"))
+               "low"
+               "CVSS: 0.1-3.9"
+               vuln-low-color
+               state-selector]
+              [VulnStatisticState
+               (count (get items-severity "UNKNOWN"))
+               "unknown"
+               "without CVSS score"
+               vuln-unknown-color
+               state-selector]]
 
              [:div {:style {:max-height "25em"
                             :width  "100%"
                             :overflow-y "auto"}}
               [ui/Table {:basic  "very"}
-              [ui/TableHeader
-               [ui/TableRow
-                [ui/TableHeaderCell "Vulnerability ID"]
-                [ui/TableHeaderCell "Affected Product"]
-                [ui/TableHeaderCell "CVSS Score"]]]
+               [ui/TableHeader
+                [ui/TableRow
+                 [ui/TableHeaderCell "ID"]
+                 [ui/TableHeaderCell "Product"]
+                 [ui/TableHeaderCell "CVSS Score"]]]
 
-              [ui/TableBody
-               (if @state-selector
-                 (for [{:keys [vulnerability-id product vulnerability-score color] :as selected-severity}
-                       (get items-severity (str/upper-case @state-selector))]
-                   ^{:key vulnerability-id}
-                   [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color])
-                 (for [{:keys [vulnerability-id product vulnerability-score color] :as item} items-extended]
-                   ^{:key vulnerability-id}
-                   [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color]))]]]]]]]
+               [ui/TableBody
+                (if @state-selector
+                  (for [{:keys [vulnerability-id product vulnerability-score color] :as selected-severity}
+                        (get items-severity (str/upper-case @state-selector))]
+                    ^{:key vulnerability-id}
+                    [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color])
+                  (for [{:keys [vulnerability-id product vulnerability-score color] :as item} items-extended]
+                    ^{:key vulnerability-id}
+                    [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color]))]]]]]
 
-           [ui/Message {:content  "Vulnerability scanning is not enabled"}])]))))
+           [ui/Message {:content  (@tr [:nuvlabox-vuln-unavailable])}])]))))
 
 
-(def tabs
+(defn tabs
+  [count-peripherals tr]
   [{:menuItem {:content "Overview"
                :key     "overview"
                :icon    "info"}
@@ -949,8 +994,7 @@
     :render (fn [] (r/as-element [TabLocation]))}
    {:menuItem {:content (r/as-element [ui/Popup
                                        {:trigger        (r/as-element [:span "Resource Consumption"])
-                                        :content        "Let your NuvlaBox apps subscribe to the internal MQTT topics
-                                          to access these values locally"
+                                        :content        (tr [:nuvlabox-datagateway-popup])
                                         :header         "data-gateway"
                                         :position       "top center"
                                         :inverted       true
@@ -961,13 +1005,11 @@
                :key     "res-cons"
                :icon    "thermometer half"}
     :render (fn [] (r/as-element [TabLoad]))}
-   {:menuItem {:content (r/as-element [:<>
-                                       [:span "Peripherals"
-                                        [ui/Label {:circular true
-                                                   :size "tiny"
-                                                   :floating   true}
-                                         (count @(subscribe [::subs/nuvlabox-peripherals-ids]))]]
-                                       ])
+   {:menuItem {:content (r/as-element [:span "Peripherals"
+                                       [ui/Label {:circular true
+                                                  :size "mini"
+                                                  :attached  "top right"}
+                                        count-peripherals]])
                :key     "peripherals"
                :icon    "usb"}
     :render (fn [] (r/as-element [TabPeripherals]))}
@@ -977,7 +1019,7 @@
     :render (fn [] (r/as-element [TabEvents]))}
    {:menuItem {:content "Vulnerabilities"
                :key     "vuln"
-               :icon    "shield alt"}
+               :icon    "shield"}
     :render (fn [] (r/as-element [TabVulnerabilities]))}
    {:menuItem {:content "Share"
                :key     "share"
@@ -985,21 +1027,24 @@
     :render (fn [] (r/as-element [TabAcls]))}])
 
 
-(defn TabPrototype
+(defn TabsNuvlaBox
   []
   (fn []
-    [ui/Tab
-     {:menu   {:secondary true
-               :pointing  true
-               :style {:display "flex"
-                       :flex-direction "row"
-                       :flex-wrap "wrap"}}
-      :panes  tabs}]))
+    (let [count-peripherals (subscribe [::subs/nuvlabox-peripherals-ids])
+          tr                (subscribe [::i18n-subs/tr])]
+      [ui/Tab
+       {:menu   {:secondary true
+                 :pointing  true
+                 :style {:display "flex"
+                         :flex-direction "row"
+                         :flex-wrap "wrap"}}
+        :panes  (tabs (count @count-peripherals) @tr)}])))
 
 
 (defn PageHeader
   []
-  (let [nuvlabox  (subscribe [::subs/nuvlabox])]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        nuvlabox        (subscribe [::subs/nuvlabox])]
     (fn []
       (let [status       @(subscribe [::edge-subs/status-nuvlabox (:id @nuvlabox)])
             id           (:id @nuvlabox)
@@ -1010,7 +1055,15 @@
           [StatusIcon status :corner "left center"]
           (or name id)]
          [:p {:style {:margin "0.5em 0 1em 0"}}
-          [:span {:style {:font-weight  "bold"}} "State: "]
+          [:span {:style {:font-weight  "bold"}}
+           "State "
+           [ui/Popup
+            {:trigger  (r/as-element [ui/Icon {:name "question circle"}])
+             :content        (@tr [:nuvlabox-state])
+             :position       "bottom center"
+             :on             "hover"
+             :size           "tiny"
+             :hide-on-scroll true}] ": "]
           state]]))))
 
 
@@ -1022,4 +1075,4 @@
     [ui/Container {:fluid true}
      [PageHeader]
      [MenuBar uuid]
-     [TabPrototype]]))
+     [TabsNuvlaBox]]))

@@ -64,7 +64,7 @@
   [{:keys [capacity load topic raw-sample]}]
   (let [percent (-> (general-utils/percentage load capacity)
                     (general-utils/round-up))]
-    {:label        ["load" "free"]
+    {:label        ["load [last 15 min]" "free"]
      :title        (str capacity "-core CPU (load %)")
      :percentage   percent
      :value        (- 100 percent)
@@ -98,9 +98,9 @@
 (defn load-net-stats
   [net-stats]
   {:label (map :interface net-stats)
-   :title (str "Network Stats")
-   :tx    (map :bytes-transmitted net-stats)
-   :rx    (map :bytes-received net-stats)})
+   :title (str "Total Network Stats per Interface")
+   :tx    (map (fn [t] (/ t 1000000)) (map :bytes-transmitted net-stats))
+   :rx    (map (fn [t] (/ t 1000000)) (map :bytes-received net-stats))})
 
 
 (defn load-statistics

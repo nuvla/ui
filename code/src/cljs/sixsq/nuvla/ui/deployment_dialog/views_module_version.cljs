@@ -1,12 +1,12 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-module-version
   (:require
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [reagent.core :as r]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn get-version-id
   [module-versions version]
@@ -44,24 +44,22 @@
         [ui/Segment {:clearing true}
          [ui/Form
           [ui/Message {:info    true
-                       :header  "Quick tip"
-                       :content "In this section, you can update deployment module version to latest, or do a rollback to an antherior version in case of trouble."}]
+                       :header  (@tr [:quick-tip])
+                       :content (@tr [:quick-tip-fetch-module])}]
           [ui/FormDropdown {:value     (or @selected-version @current-version)
                             :scrolling true
                             :selection true
                             :on-change (ui-callback/value #(reset! selected-version %))
                             :fluid     true
                             :options   options}]
-          [ui/Button {:disabled       (or
-                                        (nil? @selected-version)
-                                        (= @current-version @selected-version))
-                      :floated        "right"
-                      :icon           "history"
-                      :content        "Fetch"
-                      :positive       true
-                      :label-position "right"
-                      :on-click       #(dispatch [::events/fetch-module
-                                                  (->> @selected-version
-                                                       (get-version-id @versions)
-                                                       (str @module-id "_"))])}]]]))))
+          [ui/Button {:disabled (or
+                                  (nil? @selected-version)
+                                  (= @current-version @selected-version))
+                      :floated  "right"
+                      :content  (@tr [:change-version])
+                      :primary  true
+                      :on-click #(dispatch [::events/fetch-module
+                                            (->> @selected-version
+                                                 (get-version-id @versions)
+                                                 (str @module-id "_"))])}]]]))))
 

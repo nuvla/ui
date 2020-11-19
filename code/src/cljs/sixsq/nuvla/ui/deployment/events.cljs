@@ -78,17 +78,6 @@
 
 
 (reg-event-fx
-  ::fetch-module
-  (fn [{{:keys [::spec/deployment] :as db} :db} [_ id]]
-    {::cimi-api-fx/operation [id "fetch-module"
-                              #(do (dispatch [::set-deployment %])
-                                   (dispatch [::messages-events/add
-                                              {:header  "Fetch module"
-                                               :message (str "Fetch module " % " done.")
-                                               :type    :success}]))]}))
-
-
-(reg-event-fx
   ::stop-deployment
   (fn [{:keys [db]} [_ href]]
     {:db                     db
@@ -308,7 +297,7 @@
 
 (reg-event-fx
   ::check-credential
-  (fn [db [_ credential-href]]
+  (fn [_ [_ credential-href]]
     {::cimi-api-fx/get [credential-href
                         #(dispatch [::creds-events/check-credential % 1])
                         ]}))

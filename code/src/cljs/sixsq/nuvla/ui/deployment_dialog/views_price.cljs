@@ -12,10 +12,10 @@
 
 (defn summary-row
   []
-  (let [tr                 (subscribe [::i18n-subs/tr])
+  (let [tr               (subscribe [::i18n-subs/tr])
         price            (subscribe [::subs/price])
         price-completed? (subscribe [::subs/price-completed?])
-        on-click-fn        #(dispatch [::events/set-active-step :pricing])]
+        on-click-fn      #(dispatch [::events/set-active-step :pricing])]
     [ui/TableRow {:active   false
                   :on-click on-click-fn}
      [ui/TableCell {:collapsing true}

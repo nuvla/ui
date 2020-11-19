@@ -160,7 +160,7 @@
                 [env-var-to-row env-var])])]]
          :count (count env-vars)
          :default-open false
-         :label (str/capitalize (@tr [:env-variables]))]))))
+         :label (@tr [:env-variables])]))))
 
 
 (def event-fields #{:id :content :timestamp :category})
@@ -563,20 +563,6 @@
      button]))
 
 
-(defn FetchModuleButton
-  [{:keys [id] :as deployment}]
-  (let [tr         (subscribe [::i18n-subs/tr])
-        is-latest? (subscribe [::subs/is-latest-module-versions?])]
-    (action-button
-      {:button-text (@tr [:fetch])
-       :popup-text  (@tr [:deployment-fetch-msg])
-       :disabled?   (or (not (general-utils/can-operation? "fetch-module" deployment))
-                        @is-latest?)
-       :icon-name   "history"
-       :menu-item?  true
-       :on-click    #(dispatch [::events/fetch-module id])})))
-
-
 (defn DeploymentCard
   [{:keys [id state module tags] :as deployment} & {:keys [clickable?]
                                                     :or   {clickable? true}}]
@@ -671,7 +657,6 @@
      [ui/Menu {:borderless true}
       [StartButton deployment]
       [ShutdownButton deployment :menu-item? true]
-      [FetchModuleButton deployment]
       [CloneButton deployment]
       [DeleteButton deployment :menu-item? true]
       [main-components/RefreshMenu

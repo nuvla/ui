@@ -122,15 +122,15 @@
 ;; errors for duplicate keys, which may happen when the data contains :key.
 ;; It is probably a bad idea to have a first argument that can be a map
 ;; as this will be confused with reagent options.
-(defn operation-button [{:keys [id] :as data} [label operation-uri]]
-  (case label
+(defn operation-button [{:keys [id] :as data} operation]
+  (case operation
     "edit" ^{:key "edit"} [edit-button data #(dispatch [::api-detail-events/edit id %])]
     "delete" ^{:key "delete"} [delete-button data #(dispatch [::api-detail-events/delete id])]
-    ^{:key operation-uri} [other-button label data #(dispatch [::api-detail-events/operation id operation-uri])]))
+    ^{:key operation} [other-button operation data #(dispatch [::api-detail-events/operation id operation])]))
 
 
-(defn format-operations [refresh-button {:keys [operations] :as data} base-uri]
-  (let [ops (map (juxt #(general-utils/operation-name (:rel %)) #(str base-uri (:href %)) :rel) operations)]
+(defn format-operations [refresh-button {:keys [operations] :as data}]
+    (let [ops (map #(general-utils/operation-name (:rel %)) operations)]
     (vec (concat [refresh-button] (map (partial operation-button data) ops)))))
 
 
@@ -177,7 +177,7 @@
 (defn tuple-to-row
   [[key value]]
   [ui/TableRow
-   [ui/TableCell {:collapsing true} (str key)]
+   [ui/TableCell {:collapsing true} (name key)]
    [ui/TableCell {:style {:max-width     "80ex"             ;; FIXME: need to get this from parent container
                           :text-overflow "ellipsis"
                           :overflow      "hidden"}} (if (vector? value)
@@ -192,16 +192,16 @@
 
 
 (defn detail-menu
-  [refresh-button data base-uri]
+  [refresh-button data]
   (vec (concat [ui/Menu {:borderless true}]
-               (format-operations nil data base-uri)
+               (format-operations nil data)
                [refresh-button])))
 
 
 (defn resource-detail
   "Provides a generic visualization of a CIMI resource document."
-  [refresh-button data base-uri]
+  [refresh-button data]
   [:<>
-   (detail-menu refresh-button data base-uri)
+   (detail-menu refresh-button data)
    (detail-header data)
    (group-table-sui (general-utils/remove-common-attrs data))])

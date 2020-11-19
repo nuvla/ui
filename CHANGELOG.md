@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+## [2.10.3] - 2020-11-17
+
+### Updated
+
+  - CIMI DETAIL - operation button action regression fix
+
+## [2.10.2] - 2020-11-16
+
+### Updated
+
+  - CIMI DETAIL - cimi resources presented as keys fix
+
+## [2.10.1] - 2020-11-16
+
+### Updated
+
+  - Edge - Remove filter prototype
+
+## [2.10.0] - 2020-11-16
+
 ### Added
 
   - Filter composer component

@@ -15,7 +15,11 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [reagent.core :as r]
+    [clojure.set :as set]))
+
+(def selected-set (r/atom #{}))
 
 
 (defn refresh
@@ -45,25 +49,40 @@
 
 (defn MenuBar
   []
-  (let [view     (subscribe [::subs/view])
-        loading? (subscribe [::subs/loading?])]
+  (let [view        (subscribe [::subs/view])
+        loading?    (subscribe [::subs/loading?])
+        deployments (subscribe [::subs/deployments])]
     (fn []
-      [:<>
-       [main-components/StickyBar
-        [ui/Menu {:borderless true, :stackable true}
-         [ui/MenuItem {:icon     "grid layout"
-                       :active   (= @view "cards")
-                       :on-click #(dispatch [::events/set-view "cards"])}]
-         [ui/MenuItem {:icon     "table"
-                       :active   (= @view "table")
-                       :on-click #(dispatch [::events/set-view "table"])}]
+      (let [visible-deps-ids (->> @deployments
+                                  :resources
+                                  (map :id)
+                                  set)
+            count-selected (count @selected-set)]
+        [:<>
+         [main-components/StickyBar
+          [ui/Menu {:borderless true, :stackable true}
+           [ui/MenuItem {:icon     "grid layout"
+                         :active   (= @view "cards")
+                         :on-click #(dispatch [::events/set-view "cards"])}]
+           [ui/MenuItem {:icon     "table"
+                         :active   (= @view "table")
+                         :on-click #(dispatch [::events/set-view "table"])}]
+           [ui/MenuItem {:on-click #(swap! selected-set set/union visible-deps-ids)}
+            [ui/Icon {:name "check square outline"}]
+            "Select all"]
+           [ui/MenuItem {:on-click #(swap! selected-set set/difference visible-deps-ids)}
+            [ui/Icon {:name "square outline"}]
+            "Unselect all"]
+           [ui/MenuItem
+            "Selected"
+            [ui/Label (when (pos? count-selected) {:color "teal"}) count-selected]]
 
-         [main-components/RefreshMenu
-          {:action-id  events/refresh-action-id
-           :loading?   @loading?
-           :on-refresh refresh}]]]
+           [main-components/RefreshMenu
+            {:action-id  events/refresh-action-id
+             :loading?   @loading?
+             :on-refresh refresh}]]]
 
-       [control-bar]])))
+         [control-bar]]))))
 
 
 (defn row-fn
@@ -117,13 +136,15 @@
           ^{:key id}
           [row-fn deployment])]])))
 
-
 (defn cards-data-table
   [deployments-list]
   [ui/CardGroup {:centered true}
-   (for [{:keys [id] :as deployment} deployments-list]
-     ^{:key id}
-     [deployment-views/DeploymentCard deployment])])
+   (doall
+     (for [{:keys [id] :as deployment} deployments-list]
+       ^{:key id}
+       [deployment-views/DeploymentCard deployment
+        :on-select #(swap! selected-set (if % conj disj) id)
+        :selected? (boolean (@selected-set id))]))])
 
 
 (defn deployments-display

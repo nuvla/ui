@@ -452,11 +452,10 @@
 
 (defn ShutdownButton
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
-  (let [tr         (subscribe [::i18n-subs/tr])
-        credential (subscribe [::creds-subs/credential])
-        open?      (r/atom false)
-        checked?   (r/atom false)
-        icon-name  "stop"]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        open?     (r/atom false)
+        checked?  (r/atom false)
+        icon-name "stop"]
     (fn [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
       (let [{:keys [id name description module parent]} deployment
             cred-loading?     (subscribe [::creds-subs/credential-check-loading? parent])
@@ -579,7 +578,8 @@
 
 
 (defn DeploymentCard
-  [{:keys [id state module tags] :as deployment} & {:keys [clickable?]
+  [{:keys [id state module tags] :as deployment} & {:keys [clickable? on-select
+                                                           selected?]
                                                     :or   {clickable? true}}]
   (let [tr            (subscribe [::i18n-subs/tr])
         creds-name    (subscribe [::dashboard-subs/creds-name-map])
@@ -603,6 +603,16 @@
                 :on-click (fn [event]
                             (dispatch [::history-events/navigate (utils/deployment-href id)])
                             (.preventDefault event))})
+     (when on-select
+       [:div {:style {:position "absolute"
+                      :top      "-7px"
+                      :left     "-7px"}}
+        [ui/Checkbox {:style    {:z-index 1}
+                      :checked selected?
+                      :on-click #(do
+                                   (js/console.log (not selected?))
+                                   (on-select (not selected?))
+                                   (.stopPropagation %))}]])
      [ui/Image {:src      (or module-logo-url "")
                 :bordered true
                 :style    {:width      "auto"
@@ -705,7 +715,7 @@
 (defn vpn-info
   [{:keys [state module]}]
   (let [{module-content :content} module
-        [_ url]     (-> module-content (get :urls []) first)
+        [_ url] (-> module-content (get :urls []) first)
         tr          (subscribe [::i18n-subs/tr])
         primary-url (subscribe [::subs/url url])
         parameters  (subscribe [::subs/deployment-parameters])

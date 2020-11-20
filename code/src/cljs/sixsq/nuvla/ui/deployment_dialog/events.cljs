@@ -327,6 +327,7 @@
                                  ::spec/selected-cloud nil
                                  ::spec/cloud-infra-services nil
                                  ::spec/data-clouds nil
+                                 ::spec/registries-creds nil
                                  ::spec/module-versions nil)
              :dispatch [::get-deployment id]}
             parent (assoc ::cimi-api-fx/get [parent #(dispatch [::reselect-credential %])]))))
@@ -475,9 +476,16 @@
 
 
 (reg-event-fx
-  ::fetch-module
+  ::fetch-module-operation
   (fn [{{:keys [::spec/deployment] :as db} :db} [_ module-version-href]]
     {:db                     (assoc db ::spec/deployment nil)
      ::cimi-api-fx/operation [(:id deployment) "fetch-module"
-                              #(dispatch [::set-deployment %])
+                              #(dispatch [::open-deployment-modal :infra-services %])
                               {:module {:href module-version-href}}]}))
+
+
+(reg-event-fx
+  ::fetch-module
+  (fn [{{:keys [::spec/deployment]} :db} [_ module-version-href]]
+    {::cimi-api-fx/edit [(:id deployment) deployment
+                         #(dispatch [::fetch-module-operation module-version-href])]}))

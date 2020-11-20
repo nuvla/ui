@@ -40,7 +40,8 @@
                                    private-registry-id])
         registry-descr (:description @registry)
         {:keys [cred-id preselected?]} info]
-    (if preselected?
+    (if (and preselected?
+             (not (some #(= cred-id (:value %)) @creds-options)))
       [ui/FormInput
        {:disabled      true
         :label         (r/as-element [:label registry-name ff/nbsp
@@ -69,7 +70,8 @@
   (fn []
     (let [registries-creds (subscribe [::subs/registries-creds])
           loading?         (subscribe [::subs/infra-registries-loading?])]
-      [ui/Form {:loading @loading?}
-       (for [[private-registry-id info] @registries-creds]
-         ^{:key private-registry-id}
-         [dropdown-creds private-registry-id info])])))
+      [ui/Segment
+       [ui/Form {:loading @loading?}
+        (for [[private-registry-id info] @registries-creds]
+          ^{:key private-registry-id}
+          [dropdown-creds private-registry-id info])]])))

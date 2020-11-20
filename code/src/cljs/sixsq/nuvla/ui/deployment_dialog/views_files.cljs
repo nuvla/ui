@@ -44,9 +44,8 @@
 
 (defn content
   []
-  (let [tr    (subscribe [::i18n-subs/tr])
-        files (subscribe [::subs/files])]
-    [:<>
+  (let [files (subscribe [::subs/files])]
+    [ui/Segment
      (map-indexed
        (fn [i file]
          ^{:key (str (:file-name file) "-" i)}

@@ -48,6 +48,7 @@
                        :content (@tr [:quick-tip-fetch-module])}]
           [ui/FormDropdown {:value     (or @selected-version @current-version)
                             :scrolling true
+                            :upward    false
                             :selection true
                             :on-change (ui-callback/value #(reset! selected-version %))
                             :fluid     true

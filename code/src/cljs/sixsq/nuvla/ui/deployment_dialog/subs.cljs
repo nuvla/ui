@@ -290,8 +290,7 @@
   :<- [::module-private-registries-count]
   :<- [::deployment-reg-creds-count]
   (fn [[module-private-registries-count deployment-reg-creds-count]]
-    (= module-private-registries-count
-       deployment-reg-creds-count)))
+    (>= deployment-reg-creds-count module-private-registries-count)))
 
 (reg-sub
   ::launch-status

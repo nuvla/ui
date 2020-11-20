@@ -52,9 +52,10 @@
 (defn content
   []
   (let [env-variables (subscribe [::subs/env-variables])]
-    [ui/Form
-     (map-indexed
-       (fn [i env-variable]
-         ^{:key (str (:name env-variable) "_" i)}
-         [as-form-input i env-variable])
-       @env-variables)]))
+    [ui/Segment
+     [ui/Form
+      (map-indexed
+        (fn [i env-variable]
+          ^{:key (str (:name env-variable) "_" i)}
+          [as-form-input i env-variable])
+        @env-variables)]]))

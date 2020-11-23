@@ -12,6 +12,7 @@
 (s/def ::vuln-severity-selector (s/nilable any?))
 (s/def ::elements-per-page int?)
 (s/def ::page int?)
+(s/def ::nuvlabox-vulns (s/nilable any?))
 
 
 (s/def ::db (s/keys :req [::loading?
@@ -22,7 +23,8 @@
                           ::nuvlabox-events
                           ::vuln-severity-selector
                           ::elements-per-page
-                          ::page]))
+                          ::page
+                          ::nuvlabox-vulns]))
 
 
 (def defaults {::loading?             true
@@ -33,4 +35,5 @@
                ::nuvlabox-events      nil
                ::vuln-severity-selector nil
                ::elements-per-page    15
-               ::page                 1})
+               ::page                 1
+               ::nuvlabox-vulns       nil})

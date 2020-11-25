@@ -7,7 +7,8 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]))
 
 
 (defn summary-row
@@ -28,7 +29,7 @@
                            "€/" (str/capitalize (@tr [:month])))]]]))
 
 
-(defn content
+(defmethod utils/step-content :pricing
   []
   (let [tr               (subscribe [::i18n-subs/tr])
         price            (subscribe [::subs/price])

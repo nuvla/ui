@@ -10,7 +10,7 @@
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.general :as utils]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.utils.response :as response]
     [sixsq.nuvla.ui.utils.time :as time]))
 
@@ -25,6 +25,12 @@
   ::delete-deployment
   (fn [_ [_ id]]
     {::cimi-api-fx/delete [id #()]}))
+
+
+(reg-event-db
+  ::show-data
+  (fn [db _]
+    (assoc db ::spec/show-data? true)))
 
 
 (reg-event-fx
@@ -213,7 +219,7 @@
   (fn [{:keys [::spec/deployment] :as db} [_ {:keys [target-resource status-message] :as job}]]
     (if (= (:href target-resource) (:id deployment))
       (let [result (try
-                     {:dct (utils/json->edn status-message :keywordize-keys false)}
+                     {:dct (general-utils/json->edn status-message :keywordize-keys false)}
                      (catch :default _
                        {:error (str "Error: " status-message)}))]
         (assoc db ::spec/check-dct result))
@@ -255,7 +261,7 @@
   ::get-deployment
   (fn [{:keys [db]} [_ id]]
     {:db               (assoc db ::spec/deployment {:id id})
-     ::cimi-api-fx/get [id #(let [{:keys [content subtype]} (:module %)
+     ::cimi-api-fx/get [id #(let [{:keys [content subtype href]} (:module %)
                                   is-kubernetes? (= subtype "application_kubernetes")
                                   filter         (if is-kubernetes?
                                                    "subtype='kubernetes'"
@@ -263,6 +269,8 @@
                               (dispatch [::get-infra-services filter])
                               (dispatch [::set-deployment %])
                               (dispatch [::check-dct %])
+                              (dispatch [::get-module-versions href])
+                              (dispatch [::set-selected-version (:id content)])
                               (when-let [registry-ids (:private-registries content)]
                                 (dispatch [::get-infra-registries registry-ids
                                            (:registries-credentials content)]))
@@ -291,7 +299,8 @@
                                      ::spec/cloud-infra-services nil
                                      ::spec/data-clouds nil
                                      ::spec/license-accepted? false
-                                     ::spec/module-versions nil)
+                                     ::spec/module-versions nil
+                                     ::spec/selected-version nil)
          ::cimi-api-fx/add [:deployment data on-success
                             :on-error #(do
                                          (dispatch [::reset])
@@ -328,7 +337,8 @@
                                  ::spec/cloud-infra-services nil
                                  ::spec/data-clouds nil
                                  ::spec/registries-creds nil
-                                 ::spec/module-versions nil)
+                                 ::spec/module-versions nil
+                                 ::spec/selected-version nil)
              :dispatch [::get-deployment id]}
             parent (assoc ::cimi-api-fx/get [parent #(dispatch [::reselect-credential %])]))))
 
@@ -464,6 +474,12 @@
 
 
 (reg-event-db
+  ::set-selected-version
+  (fn [db [_ version]]
+    (assoc db ::spec/selected-version version)))
+
+
+(reg-event-db
   ::set-module-versions
   (fn [db [_ module]]
     (assoc db ::spec/module-versions (:versions module))))
@@ -475,17 +491,18 @@
     {::cimi-api-fx/get [module-id #(dispatch [::set-module-versions %])]}))
 
 
-(reg-event-fx
-  ::fetch-module-operation
-  (fn [{{:keys [::spec/deployment] :as db} :db} [_ module-version-href]]
-    {:db                     (assoc db ::spec/deployment nil)
-     ::cimi-api-fx/operation [(:id deployment) "fetch-module"
-                              #(dispatch [::open-deployment-modal :infra-services %])
-                              {:module {:href module-version-href}}]}))
+;(reg-event-fx
+;  ::merge-module
+;  (fn [{{:keys [::spec/registries-creds]} :db} [_ deployment resolved-module]]
+;    {::cimi-api-fx/edit [(:id deployment) (-> deployment
+;                                              (update :module utils/merge-module resolved-module)
+;                                              (deployment-update-registries registries-creds))
+;                         #(dispatch [::open-deployment-modal :infra-services %])]}))
 
 
 (reg-event-fx
   ::fetch-module
   (fn [{{:keys [::spec/deployment]} :db} [_ module-version-href]]
-    {::cimi-api-fx/edit [(:id deployment) deployment
-                         #(dispatch [::fetch-module-operation module-version-href])]}))
+    {::cimi-api-fx/get
+     [module-version-href
+      #(dispatch [::set-deployment (update deployment :module utils/merge-module %)])]}))

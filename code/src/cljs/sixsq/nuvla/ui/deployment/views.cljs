@@ -452,7 +452,6 @@
 (defn ShutdownButton
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr         (subscribe [::i18n-subs/tr])
-        credential (subscribe [::creds-subs/credential])
         open?      (r/atom false)
         checked?   (r/atom false)
         icon-name  "stop"]
@@ -546,18 +545,24 @@
      button]))
 
 
-(defn StartButton
-  [{:keys [data] :as deployment}]
+(defn StartUpdateButton
+  [{:keys [data state] :as deployment}]
   (let [tr         (subscribe [::i18n-subs/tr])
+        start      (#{"CREATED" "STOPPED"} state)
         first-step (if data :data :infra-services)
         button     (action-button
-                     {:button-text (@tr [:restart])
-                      :popup-text  (@tr [:deployment-restart-msg])
-                      :icon-name   "play"
+                     {:button-text (if start
+                                     (@tr [:start])
+                                     (@tr [:update]))
+                      :popup-text  (@tr [(if start :deployment-start-msg
+                                                   :deployment-update-msg)])
+                      :icon-name   (if start "play" "sync")
                       :menu-item?  true
-                      :disabled?   (not (general-utils/can-operation? "start" deployment))
-                      :on-click    #(dispatch [::deployment-dialog-events/open-deployment-modal first-step
-                                               deployment])})]
+                      :disabled?   (if start
+                                     (not (general-utils/can-operation? "start" deployment))
+                                     false #_(not (general-utils/can-operation? "update" deployment)))
+                      :on-click    #(dispatch [::deployment-dialog-events/open-deployment-modal
+                                               first-step deployment])})]
     [:<>
      [deployment-dialog-views/deploy-modal]
      button]))
@@ -655,7 +660,7 @@
   (let [loading? (subscribe [::subs/loading?])]
     [main-components/StickyBar
      [ui/Menu {:borderless true}
-      [StartButton deployment]
+      [StartUpdateButton deployment]
       [ShutdownButton deployment :menu-item? true]
       [CloneButton deployment]
       [DeleteButton deployment :menu-item? true]
@@ -689,7 +694,7 @@
 (defn vpn-info
   [{:keys [state module]}]
   (let [{module-content :content} module
-        [_ url]     (-> module-content (get :urls []) first)
+        [_ url] (-> module-content (get :urls []) first)
         tr          (subscribe [::i18n-subs/tr])
         primary-url (subscribe [::subs/url url])
         parameters  (subscribe [::subs/deployment-parameters])

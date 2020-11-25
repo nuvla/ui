@@ -6,7 +6,8 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]))
 
 
 (defn summary-row
@@ -27,22 +28,25 @@
 
 (defn as-form-text-area
   [index {:keys [file-name file-content]}]
-  (let [deployment (subscribe [::subs/deployment])]
+  (let [deployment (subscribe [::subs/deployment])
+        start?     (subscribe [::subs/deployment-start?])]
     [uix/Accordion
      [ui/Form
       [ui/TextArea
-       {:rows          10
+       {:disabled      (not @start?)
+        :rows          10
         :default-value file-content
         :on-change     (ui-callback/value
-                         #(dispatch [::events/set-deployment (assoc-in
-                                                               @deployment
-                                                               [:module :content :files
-                                                                index :file-content] %)]))}]]
+                         #(dispatch [::events/set-deployment
+                                     (assoc-in
+                                       @deployment
+                                       [:module :content :files
+                                        index :file-content] %)]))}]]
      :label file-name
      :default-open false]))
 
 
-(defn content
+(defmethod utils/step-content :files
   []
   (let [files (subscribe [::subs/files])]
     [ui/Segment

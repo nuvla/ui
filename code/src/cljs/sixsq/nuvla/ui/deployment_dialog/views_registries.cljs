@@ -8,7 +8,8 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]))
 
 
 (defn summary-row
@@ -65,13 +66,12 @@
       )))
 
 
-(defn content
+(defmethod utils/step-content :registries
   []
-  (fn []
-    (let [registries-creds (subscribe [::subs/registries-creds])
-          loading?         (subscribe [::subs/infra-registries-loading?])]
-      [ui/Segment
-       [ui/Form {:loading @loading?}
-        (for [[private-registry-id info] @registries-creds]
-          ^{:key private-registry-id}
-          [dropdown-creds private-registry-id info])]])))
+  (let [registries-creds (subscribe [::subs/registries-creds])
+        loading?         (subscribe [::subs/infra-registries-loading?])]
+    [ui/Segment
+     [ui/Form {:loading @loading?}
+      (for [[private-registry-id info] @registries-creds]
+        ^{:key private-registry-id}
+        [dropdown-creds private-registry-id info])]]))

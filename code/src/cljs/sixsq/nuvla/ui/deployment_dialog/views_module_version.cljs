@@ -6,7 +6,8 @@
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]))
 
 (defn get-version-id
   [module-versions version]
@@ -27,35 +28,32 @@
      [ui/TableCell [:div [:span "v" (get-version-id @versions @current-version)]]]]))
 
 
-(defn content
+(defmethod utils/step-content :module-version
   []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        module-id        (subscribe [::subs/module-id])
-        versions         (subscribe [::subs/module-versions])
-        current-version  (subscribe [::subs/current-module-content-id])
-        selected-version (r/atom nil)]
+  (let [tr                 (subscribe [::i18n-subs/tr])
+        versions           (subscribe [::subs/module-versions])
+        module-id          (subscribe [::subs/module-id])
+        selected-version   (subscribe [::subs/selected-version])
+        version-completed? (subscribe [::subs/version-completed?])]
     (fn []
       (let [options (map (fn [[idx {:keys [href commit]}]]
                            {:key   idx,
                             :value href
                             :text  (str "v" idx " | " commit)}) @versions)]
-        (when (and @module-id (not (seq @versions)))
-          (dispatch [::events/get-module-versions @module-id]))
         [ui/Segment {:clearing true}
          [ui/Form
           [ui/Message {:info    true
                        :header  (@tr [:quick-tip])
                        :content (@tr [:quick-tip-fetch-module])}]
-          [ui/FormDropdown {:value     (or @selected-version @current-version)
+          [ui/FormDropdown {:value     @selected-version
                             :scrolling true
                             :upward    false
                             :selection true
-                            :on-change (ui-callback/value #(reset! selected-version %))
+                            :on-change (ui-callback/value
+                                         #(dispatch [::events/set-selected-version %]))
                             :fluid     true
                             :options   options}]
-          [ui/Button {:disabled (or
-                                  (nil? @selected-version)
-                                  (= @current-version @selected-version))
+          [ui/Button {:disabled @version-completed?
                       :floated  "right"
                       :content  (@tr [:change-version])
                       :primary  true

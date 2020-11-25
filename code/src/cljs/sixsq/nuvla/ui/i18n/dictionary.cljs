@@ -7,6 +7,8 @@
 (def dictionary
   {:en {:lang                                      "English"
 
+        :not-last-version                          "This is not the latest version."
+        :deployment-update-msg                     "Deployment update allow to apply a change to environment variables or to update the used module version."
         :about                                     "about"
         :about-subtitle                            "This software is brought to you"
         :accept                                    "Accept "
@@ -156,7 +158,7 @@
         :deployment-access-url                     "To access URLs of this deployment, you might need to"
         :deployment-clone-msg                      "Duplicate the deployment on any infrastructure. Only the following attributes are cloned: name, description, tags, module and data. All others are reset."
         :deployment-delete-msg                     "Permanently deletes the deployment and all its related sub-resources. e.g. Deployment api-key, deployment-parameters, deployment logs session."
-        :deployment-restart-msg                    "Starts a previously shut down deployment."
+        :deployment-start-msg                      "Starts the deployment."
         :deployment-run-private-ip                 "This deployment runs on a infrastructure/device with a Private/VPN IP"
         :deployment-shutdown-msg                   "Shut down the deployment. Deployment resources like containers, configs and secrets are removed."
         :deployment-will-cost                      "After the trial period end it will cost: "
@@ -415,7 +417,6 @@
         :reset-password                            "Reset password"
         :reset-password-sucess-inst                "An email has been sent with instructions for resetting your password."
         :resource-type                             "resource type"
-        :restart                                   "restart"
         :results                                   "results"
         :return-code                               "return code"
         :rights                                    "rights"
@@ -580,6 +581,8 @@
 
    :fr {:lang                                      "Français"
 
+        :not-last-version                          "Celle-ci n'est pas la dernière version."
+        :deployment-update-msg                     "La mise à jour du déploiement permet d'appliquer un changement sur les variables d'environement ou de mettre à jour la version du module utilisée."
         :about                                     "à propos"
         :about-subtitle                            "Ce logiciel vous est fournit"
         :accept                                    "Accepter l'"
@@ -709,7 +712,7 @@
         :deployment-access-url                     "Pour accéder aux URLs de ce déploiement, vous pourriez avoir besoin de"
         :deployment-clone-msg                      "Duplique le déploiement sur n'importe quelle infrastructure. Seuls les attributs suivants sont clonés: nom, description, tags, module et données. Tous les autres attributs sont réinitialisés."
         :deployment-delete-msg                     "Supprime définitivement le déploiement et toutes ses sous-ressources associées. Par exemple : clé API du déploiement, paramètres du déploiement, logs du déploiement."
-        :deployment-restart-msg                    "Démarre le déploiement arrêté au préalable. Tous les attributs du déploiement sont conservés."
+        :deployment-start-msg                      "Démarre le déploiement."
         :deployment-run-private-ip                 "Ce déploiement s'exécute sur un périphérique ou une infrastructure avec une IP VPN ou une IP privée"
         :deployment-shutdown-msg                   "Arrêtez le déploiement. Les ressources du déploiement telles que les containers, les configs et les secrets sont supprimées."
         :deployment-will-cost                      "Après la fin de la période d'essai, il vous coutera : "
@@ -955,7 +958,6 @@
         :reset-password                            "réinitialiser le mot de passe"
         :reset-password-sucess-inst                "Un e-mail a été envoyé avec des instructions pour réinitialiser votre mot de passe."
         :resource-type                             "type de ressource"
-        :restart                                   "redémarrer"
         :results                                   "résultats"
         :return-code                               "code de retour"
         :rights                                    "droits"

@@ -8,7 +8,8 @@
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]))
+    [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]))
 
 (defn summary-row
   []
@@ -53,11 +54,17 @@
   [{:keys [id name description] :as credential}]
   (let [tr                  (subscribe [::i18n-subs/tr])
         selected-credential (subscribe [::subs/selected-credential])
+        start?              (subscribe [::subs/deployment-start?])
         status              (subscribe [::creds-subs/credential-check-status id])
         cred-valid?         (subscribe [::creds-subs/credential-check-status-valid? id])
-        last-check          (subscribe [::creds-subs/credential-check-last-check id])]
-    [ui/ListItem {:active   (= id (:id @selected-credential))
-                  :on-click #(dispatch [::events/set-selected-credential credential])}
+        last-check          (subscribe [::creds-subs/credential-check-last-check id])
+        selected?           (= id (:id @selected-credential))]
+    [ui/ListItem (cond-> {:active selected?}
+                         (and selected? (not @start?))
+                         (assoc :style {:background-color "rgba(0,0,0,.05)"
+                                        :padding ".5em .5em"})
+                         @start? (assoc :on-click #(dispatch [::events/set-selected-credential
+                                                              credential])))
      [ui/ListIcon {:vertical-align "middle"}
       [ui/IconGroup {:size "big"}
        [ui/Icon {:name "key"}]
@@ -80,11 +87,12 @@
 (defn creds-list
   []
   (let [tr          (subscribe [::i18n-subs/tr])
-        credentials (subscribe [::subs/credentials])]
+        credentials (subscribe [::subs/credentials])
+        start?      (subscribe [::subs/deployment-start?])]
     (if (seq @credentials)
       [ui/ListSA {:divided   true
                   :relaxed   true
-                  :selection true}
+                  :selection @start?}
        (doall
          (for [{:keys [id] :as credential} @credentials]
            ^{:key id}
@@ -100,7 +108,8 @@
     [:<>
      [ui/AccordionTitle {:active   active?
                          :on-click #(dispatch [::events/set-selected-infra-service
-                                               infra-service])}
+                                               infra-service])
+                         }
       [ui/Icon {:name "dropdown"}]
       (if (= subtype "kubernetes")
         [ui/Image {:src   "/ui/images/kubernetes.svg"
@@ -118,17 +127,16 @@
        [creds-list]]]]))
 
 
-(defn content
-  []
-  (fn []
-    (let [tr             (subscribe [::i18n-subs/tr])
-          infra-services (subscribe [::subs/infra-services])
-          loading?       (subscribe [::subs/infra-services-loading?])]
-      [ui/Segment (assoc style/basic :loading @loading?)
-       (if (seq @infra-services)
-         [ui/Accordion {:fluid true, :styled true}
-          (doall
-            (for [{:keys [id] :as infra-service} @infra-services]
-              ^{:key id}
-              [item infra-service]))]
-         [ui/Message {:error true} (@tr [:no-infra-services])])])))
+(defmethod utils/step-content :infra-services
+  [step-id]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        infra-services (subscribe [::subs/infra-services])
+        loading?       (subscribe [::subs/infra-services-loading?])]
+    [ui/Segment (assoc style/basic :loading @loading?)
+     (if (seq @infra-services)
+       [ui/Accordion {:fluid true, :styled true}
+        (doall
+          (for [{:keys [id] :as infra-service} @infra-services]
+            ^{:key id}
+            [item infra-service]))]
+       [ui/Message {:error true} (@tr [:no-infra-services])])]))

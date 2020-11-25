@@ -12,7 +12,8 @@
     [sixsq.nuvla.ui.deployment-dialog.views-price :as price-step]
     [sixsq.nuvla.ui.deployment-dialog.views-registries :as registries-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]))
 
 
 (defn application-row
@@ -60,7 +61,7 @@
         :else [ui/Icon {:name "circle notch" :loading true}])]]))
 
 
-(defn content
+(defmethod utils/step-content :summary
   []
   (let [data-step-active? (subscribe [::subs/data-step-active?])
         is-application?   (subscribe [::subs/is-application?])

@@ -58,6 +58,8 @@
 
 (s/def ::module-versions any?)
 
+(s/def ::selected-version any?)
+
 
 (s/def ::db (s/keys :req [::deploy-modal-visible?
                           ::deployment
@@ -84,7 +86,8 @@
                           ::step-states
                           ::error-message
                           ::check-dct
-                          ::module-versions]))
+                          ::module-versions
+                          ::selected-version]))
 
 
 (def step-states {:data           {:step-id :data
@@ -108,6 +111,7 @@
 
 
 (def defaults {::deploy-modal-visible?      false
+               ::show-data?                 false
                ::deployment                 nil
                ::credentials                nil
                ::credentials-loading?       false
@@ -131,4 +135,5 @@
                ::error-message              nil
                ::step-states                step-states
                ::check-dct                  nil
-               ::module-versions            nil})
+               ::module-versions            nil
+               ::selected-version           nil})

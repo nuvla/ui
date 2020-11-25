@@ -6,7 +6,8 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]))
 
 
 (defn summary-row
@@ -49,7 +50,7 @@
                                                                index :value] %)]))}]]))
 
 
-(defn content
+(defmethod utils/step-content :env-variables
   []
   (let [env-variables (subscribe [::subs/env-variables])]
     [ui/Segment

@@ -27,7 +27,7 @@
     "bluebird": "^3.7.2",
     "chart.js": "^2.9.3",
     "codemirror": "^5.58.1",
-    "highlight.js": "9.18.1",
+    "highlight.js": "10.1.2",
     "js-yaml": "^3.14.0",
     "jszip": "^3.5.0",
     "leaflet": "^1.7.1",

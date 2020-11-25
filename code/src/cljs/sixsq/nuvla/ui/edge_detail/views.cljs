@@ -238,13 +238,16 @@
                                   (first actions)])}])]
          :title-size :h4
          :default-open false
-         :icon (case p-interface
-                 "USB" "usb"
-                 "bluetooth" "bluetooth b"
-                 "bluetooth-le" "bluetooth b"
-                 "SSDP" "fas fa-chart-network"
-                 "WS-Discovery" "fas fa-chart-network"
-                 "Bonjour/Avahi" "fas fa-chart-network"
+         :icon (if p-interface
+                 (case (str/lower-case p-interface)
+                   "usb" "usb"
+                   "bluetooth" "bluetooth b"
+                   "bluetooth-le" "bluetooth b"
+                   "ssdp" "fas fa-chart-network"
+                   "ws-discovery" "fas fa-chart-network"
+                   "bonjour/avahi" "fas fa-chart-network"
+                   "gpu" "microchip"
+                   nil)
                  nil)]))))
 
 

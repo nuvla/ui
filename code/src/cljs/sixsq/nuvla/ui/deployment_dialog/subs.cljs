@@ -74,6 +74,13 @@
 
 
 (reg-sub
+  ::modal-operation
+  :<- [::deployment-start?]
+  (fn [start?]
+    (if start? "start" "update")))
+
+
+(reg-sub
   ::modal-action-button-text
   :<- [::i18n-subs/tr]
   :<- [::deployment-start?]
@@ -433,7 +440,6 @@
   :<- [::selected-version]
   :<- [::is-latest-version?]
   (fn [[current-version selected-version is-latest?]]
-    (js/console.log current-version selected-version is-latest?)
     (or (and
           (some? current-version)
           (some? selected-version)

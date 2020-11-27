@@ -373,38 +373,40 @@
 
 
 (reg-event-fx
-  ::start-deployment
-  (fn [_ [_ id]]
-    (let [start-callback (fn [response]
-                           (if (instance? js/Error response)
-                             (dispatch [::set-error-message
-                                        "Error while starting the deployment"
-                                        (-> response response/parse-ex-info :message)])
-                             (let [{:keys [status message resource-id]} (response/parse response)
-                                   success-msg {:header  (cond-> (str "started " resource-id)
-                                                                 status (str " (" status ")"))
-                                                :content message
-                                                :type    :success}]
-                               (dispatch [::reset])
-                               (dispatch [::messages-events/add success-msg])
-                               (dispatch [:sixsq.nuvla.ui.deployment.events/get-deployment id])
-                               (dispatch [::history-events/navigate
-                                          (str "deployment/" (general-utils/id->uuid id))]))))]
-      {::cimi-api-fx/operation [id "start" start-callback]})))
+  ::deployment-operation
+  (fn [_ [_ id operation]]
+    (let [callback (fn [response]
+                     (if (instance? js/Error response)
+                       (dispatch [::set-error-message
+                                  (str "Error while " operation "ing the deployment")
+                                  (-> response response/parse-ex-info :message)])
+                       (let [{:keys [status message resource-id]} (response/parse response)
+                             success-msg {:header  (cond-> (str operation "ed " resource-id)
+                                                           status (str " (" status ")"))
+                                          :content message
+                                          :type    :success}]
+                         (dispatch [::reset])
+                         (dispatch [::messages-events/add success-msg])
+                         (dispatch [:sixsq.nuvla.ui.deployment.events/get-deployment id])
+                         (dispatch [::history-events/navigate
+                                    (str "deployment/" (general-utils/id->uuid id))]))))]
+      {::cimi-api-fx/operation [id operation callback]})))
 
 
 (reg-event-fx
   ::edit-deployment
-  (fn [{{:keys [::spec/deployment] :as db} :db} _]
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ operation]]
     (let [resource-id   (:id deployment)
+          operation     (or operation "start")
           edit-callback (fn [response]
                           (if (instance? js/Error response)
                             (dispatch [::set-error-message
                                        "Error during edition of deployment"
                                        (-> response response/parse-ex-info :message)])
                             (do
-                              (dispatch [::start-deployment resource-id])
-                              (dispatch [::intercom-events/set-event "Last app launch" (time/timestamp)]))))]
+                              (dispatch [::deployment-operation resource-id operation])
+                              (dispatch [::intercom-events/set-event "Last app launch"
+                                         (time/timestamp)]))))]
       {::cimi-api-fx/edit [resource-id deployment edit-callback]})))
 
 

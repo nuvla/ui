@@ -117,15 +117,15 @@
     (let [cred-loading? @(subscribe [::creds-subs/credential-check-loading? cred-id])
           cred-invalid? @(subscribe [::creds-subs/credential-check-status-invalid? cred-id])]
       (case step-id
-       :data data-completed?
-       :infra-services (and credentials-completed?
-                            (not cred-loading?)
-                            (not cred-invalid?))
-       :env-variables env-variables-completed?
-       :registries (and registries-completed? (= :ok registries-status))
-       :license license-completed?
-       :pricing price-completed?
-       false))))
+        :data data-completed?
+        :infra-services (and credentials-completed?
+                             (not cred-loading?)
+                             (not cred-invalid?))
+        :env-variables env-variables-completed?
+        :registries (and registries-completed? (= :ok registries-status))
+        :license license-completed?
+        :pricing price-completed?
+        false))))
 
 
 (reg-sub
@@ -226,9 +226,19 @@
 
 
 (reg-sub
-  ::module-versions
+  ::module-info
   (fn [db]
-    (reverse (map-indexed vector (::spec/module-versions db)))))
+    (::spec/module-info db)))
+
+
+(reg-sub
+  ::module-versions
+  :<- [::module-info]
+  (fn [module-info]
+    (->> module-info
+         :versions
+         (map-indexed vector)
+         reverse)))
 
 
 (reg-sub
@@ -250,6 +260,12 @@
   ::selected-version
   (fn [db]
     (::spec/selected-version db)))
+
+
+(reg-sub
+  ::original-module
+  (fn [db]
+    (::spec/original-module db)))
 
 
 (reg-sub
@@ -542,3 +558,14 @@
   ::check-dct
   (fn [db]
     (::spec/check-dct db)))
+
+
+(reg-sub
+  ::new-price
+  :<- [::deployment-start?]
+  :<- [::module-info]
+  :<- [::original-module]
+  (fn [[deployment-start? {new-price :price} {current-price :price}]]
+    (when (and (not deployment-start?)
+               (not= (:cent-amount-daily current-price) (:cent-amount-daily new-price)))
+      new-price)))

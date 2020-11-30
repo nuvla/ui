@@ -19,7 +19,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
-    [reagent.core :as r]))
+    [reagent.core :as r]
+    [clojure.string :as str]))
 
 
 (defmulti StepIcon :step-id)
@@ -54,11 +55,9 @@
         completed? (subscribe [::subs/version-completed?])]
     (if @completed?
       [ui/Popup {:trigger  (r/as-element
-                             [ui/Icon {:name  (if @is-latest? "check" "warning sign")
-                                       :color (if @is-latest? "green" "yellow")
-                                       :size  "large"}])
-                 :header   (@tr [:warning])
-                 :content  (@tr [:not-last-version])
+                             [ui/Icon {:name  (if @is-latest? "check" "info circle")
+                                       :color (if @is-latest? "green" "blue")}])
+                 :content  (@tr [:new-version-exist])
                  :wide     "very"
                  :disabled @is-latest?
                  :position "top center"}]
@@ -112,7 +111,7 @@
               :active    @active?}
      [StepIcon step-state]
      [ui/StepContent
-      [ui/StepTitle {:style {:width "10ch"}} (@tr [step-id]) " "]]]))
+      [ui/StepTitle {:style {:width "10ch"}} (str/capitalize (@tr [step-id])) " "]]]))
 
 
 (defn step-content-segment

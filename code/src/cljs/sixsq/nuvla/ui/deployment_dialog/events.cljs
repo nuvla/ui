@@ -269,8 +269,9 @@
                               (dispatch [::get-infra-services filter])
                               (dispatch [::set-deployment %])
                               (dispatch [::check-dct %])
-                              (dispatch [::get-module-versions href])
+                              (dispatch [::get-module-info href])
                               (dispatch [::set-selected-version (:id content)])
+                              (dispatch [::set-original-module (:module %)])
                               (when-let [registry-ids (:private-registries content)]
                                 (dispatch [::get-infra-registries registry-ids
                                            (:registries-credentials content)]))
@@ -299,8 +300,9 @@
                                      ::spec/cloud-infra-services nil
                                      ::spec/data-clouds nil
                                      ::spec/license-accepted? false
-                                     ::spec/module-versions nil
-                                     ::spec/selected-version nil)
+                                     ::spec/module-info nil
+                                     ::spec/selected-version nil
+                                     ::spec/original-module nil)
          ::cimi-api-fx/add [:deployment data on-success
                             :on-error #(do
                                          (dispatch [::reset])
@@ -337,8 +339,9 @@
                                  ::spec/cloud-infra-services nil
                                  ::spec/data-clouds nil
                                  ::spec/registries-creds nil
-                                 ::spec/module-versions nil
-                                 ::spec/selected-version nil)
+                                 ::spec/module-info nil
+                                 ::spec/selected-version nil
+                                 ::spec/original-module nil)
              :dispatch [::get-deployment id]}
             parent (assoc ::cimi-api-fx/get [parent #(dispatch [::reselect-credential %])]))))
 
@@ -482,24 +485,21 @@
 
 
 (reg-event-db
-  ::set-module-versions
+  ::set-original-module
   (fn [db [_ module]]
-    (assoc db ::spec/module-versions (:versions module))))
+    (assoc db ::spec/original-module module)))
+
+
+(reg-event-db
+  ::set-module-info
+  (fn [db [_ module]]
+    (assoc db ::spec/module-info module)))
 
 
 (reg-event-fx
-  ::get-module-versions
+  ::get-module-info
   (fn [_ [_ module-id]]
-    {::cimi-api-fx/get [module-id #(dispatch [::set-module-versions %])]}))
-
-
-;(reg-event-fx
-;  ::merge-module
-;  (fn [{{:keys [::spec/registries-creds]} :db} [_ deployment resolved-module]]
-;    {::cimi-api-fx/edit [(:id deployment) (-> deployment
-;                                              (update :module utils/merge-module resolved-module)
-;                                              (deployment-update-registries registries-creds))
-;                         #(dispatch [::open-deployment-modal :infra-services %])]}))
+    {::cimi-api-fx/get [module-id #(dispatch [::set-module-info %])]}))
 
 
 (reg-event-fx

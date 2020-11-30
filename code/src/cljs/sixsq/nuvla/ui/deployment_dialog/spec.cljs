@@ -56,10 +56,11 @@
 
 (s/def ::check-dct any?)
 
-(s/def ::module-versions any?)
+(s/def ::module-info any?)
 
 (s/def ::selected-version any?)
 
+(s/def ::original-module any?)
 
 (s/def ::db (s/keys :req [::deploy-modal-visible?
                           ::deployment
@@ -86,8 +87,9 @@
                           ::step-states
                           ::error-message
                           ::check-dct
-                          ::module-versions
-                          ::selected-version]))
+                          ::module-info
+                          ::selected-version
+                          ::original-module]))
 
 
 (def step-states {:data           {:step-id :data
@@ -135,5 +137,6 @@
                ::error-message              nil
                ::step-states                step-states
                ::check-dct                  nil
-               ::module-versions            nil
-               ::selected-version           nil})
+               ::module-info                nil
+               ::selected-version           nil
+               ::original-module            nil})

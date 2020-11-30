@@ -9,6 +9,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -319,14 +320,21 @@
              [ui/TableHeader
               [ui/TableRow
                [ui/TableCell {:content ""}]
-               [ui/TableCell {:content (str/capitalize (@tr [:enable]))}]
-               [ui/TableCell {:content (str/capitalize (@tr [:notification-method]))}]
-               [ui/TableCell {:content (str/capitalize (@tr [:subscriptions]))}]]]
+               [ui/TableCell
+                [:span (str/capitalize (@tr [:enable]))]
+                [:span ff/nbsp (ff/help-popup (@tr [:notifications-enable-disable-help]))]]
+               [ui/TableCell
+                [:span (str/capitalize (@tr [:notification-method]))]
+                [:span ff/nbsp (ff/help-popup (@tr [:notifications-method-help]))]]
+               [ui/TableCell
+                [:span (str/capitalize (@tr [:subscriptions]))]
+                [:span ff/nbsp (ff/help-popup (@tr [:subscriptions-manage-help]))]]]]
              [ui/TableBody
               [ui/TableRow
                [ui/TableCell {:floated :left
                               :width   2}
-                [:span (str/capitalize (@tr [:state-change]))]]
+                [:span (str/capitalize (@tr [:state-change]))]
+                [:span ff/nbsp (ff/help-popup (@tr [:subscription-infra-svc-state-change-help]))]]
                [ui/TableCell {:floated :left
                               :width   2}
                 [:span

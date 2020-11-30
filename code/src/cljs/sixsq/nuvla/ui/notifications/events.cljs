@@ -70,8 +70,9 @@
 
 (reg-event-db
   ::validate-notification-method-form
-  (fn [db [_ form-spec]]
-    (let [notif-method   (get db ::spec/notification-method)
+  (fn [db]
+    (let [form-spec ::spec/notification-method
+          notif-method   (get db ::spec/notification-method)
           validate-form? (get db ::spec/validate-form?)
           valid?         (if validate-form? (if (nil? form-spec) true (s/valid? form-spec notif-method)) true)]
       (s/explain form-spec notif-method)
@@ -227,6 +228,64 @@
     (assoc db ::spec/notification-subscriptions-modal-visible? false)))
 
 
+(reg-event-db
+  ::open-edit-subscription-modal
+  (fn [db [_ subscription]]
+    (-> db
+        (assoc ::spec/subscription subscription)
+        (assoc ::spec/edit-subscription-modal-visible? true))))
+
+
+(reg-event-db
+  ::close-edit-subscription-modal
+  (fn [db _]
+    (assoc db ::spec/edit-subscription-modal-visible? false)))
+
+
+(reg-event-db
+  ::update-subscription
+  (fn [db [_ key value]]
+    (assoc-in db [::spec/subscription key] value)))
+
+
+(reg-event-db
+  ::validate-subscription-form
+  (fn [db]
+    (let [form-spec ::spec/subscription
+          subscription   (get db ::spec/subscription)
+          validate-form? (get db ::spec/validate-form?)
+          valid?         (if validate-form? (if (nil? form-spec) true (s/valid? form-spec subscription)) true)]
+      (s/explain form-spec subscription)
+      (assoc db ::spec/form-valid? valid?))))
+
+
+(reg-event-fx
+  ::edit-subscription
+  (fn [{{:keys [::spec/subscription] :as db} :db} [_]]
+    (let [id             (:id subscription)
+          new-subs (utils/db->new-subscription db)]
+      (if (nil? id)
+        {:db               db
+         ::cimi-api-fx/add [:subscription new-subs
+                            #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
+                                 (dispatch [::get-notification-subscriptions])
+                                 (let [{:keys [status message resource-id]} (response/parse %)]
+                                   (dispatch [::messages-events/add
+                                              {:header  (cond-> (str "added " resource-id)
+                                                                status (str " (" status ")"))
+                                               :content message
+                                               :type    :success}])))]}
+        {:db                db
+         ::cimi-api-fx/edit [id subscription
+                             #(if (instance? js/Error %)
+                                (let [{:keys [status message]} (response/parse-ex-info %)]
+                                  (dispatch [::messages-events/add
+                                             {:header  (cond-> (str "error editing " id)
+                                                               status (str " (" status ")"))
+                                              :content message
+                                              :type    :error}]))
+                                (do (dispatch [::cimi-detail-events/get (:id %)])
+                                    (dispatch [::get-notification-subscriptions])))]}))))
 ;;
 ;; generic
 ;;

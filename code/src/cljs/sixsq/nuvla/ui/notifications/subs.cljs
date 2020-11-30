@@ -52,9 +52,9 @@
 
 
 (reg-sub
-  ::subscriptions-modal-visible?
+  ::edit-subscription-modal-visible?
   (fn [db]
-    (::spec/notification-subscriptions-modal-visible? db)))
+    (::spec/edit-subscription-modal-visible? db)))
 
 
 (reg-sub

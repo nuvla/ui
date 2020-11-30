@@ -3,6 +3,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.notifications.events :as events]
     [sixsq.nuvla.ui.notifications.spec :as spec]
     [sixsq.nuvla.ui.notifications.subs :as subs]
@@ -17,11 +18,6 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [taoensso.timbre :as timbre]))
-
-
-(defn manage-callback-subscriptions
-  [subscriptions]
-  (println "Managing subscriptions..." @subscriptions))
 
 
 (defn save-callback-notification-subscription-config
@@ -46,6 +42,18 @@
         (dispatch [::events/edit-notification-method])))))
 
 
+(defn save-callback-subscription
+  [form-validation-spec]
+  (dispatch-sync [::events/set-validate-form? true])
+  (dispatch-sync [::events/validate-subscription-form form-validation-spec])
+  (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)]
+    (when form-valid?
+      (do
+        (dispatch [::events/set-validate-form? false])
+        (dispatch [::events/edit-subscription])
+        (dispatch [::events/close-edit-subscription-modal])))))
+
+
 (defn DeleteButtonSubscriptions
   [sub]
   (let [tr      (subscribe [::i18n-subs/tr])
@@ -64,7 +72,7 @@
 
 (defn single-notification-subscription
   [{:keys [status resource method] :as notif-subs} notif-methods]
-  (let [method-name (-> (filter #(= method (:id %)) notif-methods)
+  (let [method-name (-> (filter #(= method (:id %)) @notif-methods)
                         first
                         :name)]
     [ui/TableRow
@@ -89,7 +97,7 @@
         [ui/Icon {:name     :cog
                   :color    :blue
                   :style    {:cursor :pointer}
-                  :on-click #(dispatch [::events/open-add-update-notification-method-modal notif-subs false])}])]]))
+                  :on-click #(dispatch [::events/open-edit-subscription-modal notif-subs false])}])]]))
 
 
 (defn manage-subscriptions-modal
@@ -120,8 +128,95 @@
            [ui/TableBody
             (for [sub @subscriptions]
               ^{:key (:id sub)}
-              [single-notification-subscription sub @notif-methods])]]
+              [single-notification-subscription sub notif-methods])]]
           [utils-validation/validation-error-message ::subs/form-valid?]]]))))
+
+
+(defn subs-method-dropdown
+  [current-value notif-methods]
+  ^{:key current-value}
+  [ui/Dropdown
+   {:selection     true
+    :fluid         false
+    :default-value (if (not (nil? current-value))
+                     current-value
+                     (-> @notif-methods first :id))
+    :on-change     (ui-callback/value
+                     #(do (dispatch-sync [::events/update-subscription :method %])))
+    :options       (map (fn [{id :id, method-name :name}]
+                          {:key id, :value id, :text method-name})
+                        @notif-methods)}])
+
+
+(defn subs-status-dropdown
+  [current-value]
+  ^{:key current-value}
+  [ui/Dropdown
+   {:selection     true
+    :fluid         false
+    :default-value current-value
+    :on-change     (ui-callback/value
+                     #(do (dispatch-sync [::events/update-subscription :status %])))
+    :options       (map (fn [v] {:key v, :value v, :text v}) ["enabled" "disabled"])}])
+
+
+(defn edit-subscription-modal
+  []
+  (let [tr (subscribe [::i18n-subs/tr])
+        notif-methods (subscribe [::subs/notification-methods])
+        visible? (subscribe [::subs/edit-subscription-modal-visible?])
+        validate-form? (subscribe [::subs/validate-form?])
+        form-valid? (subscribe [::subs/form-valid?])
+        subscription (subscribe [::subs/subscription])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-subscription name-kw value])
+                         (dispatch [::events/validate-subscription-form]))]
+    (dispatch [::events/get-notification-methods])
+    (fn []
+      (let [editable? true
+            header (str/capitalize (str (@tr [:edit]) " " (@tr [:subscription])))
+            {:keys [name description method status type kind category resource]} @subscription]
+        [:div]
+        [ui/Modal {:open       @visible?
+                   :close-icon true
+                   :on-close   #(dispatch [::events/close-edit-subscription-modal])}
+
+         [ui/ModalHeader header]
+
+         [ui/ModalContent {:scrolling false}
+          [utils-validation/validation-error-message ::subs/form-valid?]
+          [ui/Table style/definition
+           [ui/TableBody
+            [uix/TableRowField "name", :editable? editable?, :default-value name,
+             :required? false, :spec ::spec/name, :on-change (partial on-change :name),
+             :validate-form? @validate-form?]
+            [uix/TableRowField "description", :editable? editable?, :required? false,
+             :default-value description, :spec ::spec/description,
+             :on-change (partial on-change :description), :validate-form? @validate-form?]]
+           [ui/TableRow
+            [ui/TableCell {:collapsing true
+                           :style      {:padding-bottom 8}} "method"]
+            [ui/TableCell
+             [subs-method-dropdown method notif-methods]]]
+           [ui/TableRow
+            [ui/TableCell {:collapsing true
+                           :style      {:padding-bottom 8}} "status"]
+            [ui/TableCell
+             [subs-status-dropdown status]]]
+           [uix/TableRowField "type", :editable? false, :default-value type, :required? false]
+           [uix/TableRowField "kind", :editable? false, :default-value kind, :required? false]
+           [uix/TableRowField "category", :editable? false, :default-value category, :required? false]
+           [uix/TableRowField "resource"
+            :editable? false
+            :default-value [history/link (str "api/" resource) resource]
+            :required? false]]]
+
+         [ui/ModalActions
+          [uix/Button {:text     (@tr [:save])
+                       :positive true
+                       :disabled (when-not @form-valid? true)
+                       :active   true
+                       :on-click #(save-callback-subscription ::spec/subscription)}]]]))))
 
 
 (defn add-notification-method-modal
@@ -187,7 +282,8 @@
       [uix/MenuItemWithIcon
        {:name      (@tr [:add])
         :icon-name "add"
-        :on-click  #(dispatch [::events/open-add-update-notification-method-modal {} true])}]]]))
+        ;:on-click  #(dispatch [::events/open-add-update-notification-method-modal {} true])
+        }]]]))
 
 
 (defn MenuBarNotificationMethod
@@ -297,7 +393,6 @@
     (dispatch [::events/get-notification-subscription-configs])
     (dispatch [::events/get-notification-subscriptions])
     (dispatch [::events/get-notification-methods])
-    (dispatch [::events/get-notification-method])
     (fn []
       (let [infra-service-subs-confs (filter #(= collection (:collection %)) @subscription-configs)
             infra-service-state-subs-conf (first (filter #(= category (:category %)) infra-service-subs-confs))]
@@ -424,5 +519,6 @@
   (timbre/set-level! :info)
   [:<>
    [TabsAll]
+   [edit-subscription-modal]
    [add-notification-method-modal]
    [manage-subscriptions-modal]])

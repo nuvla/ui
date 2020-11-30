@@ -3,26 +3,33 @@
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.utils.spec :as utils-spec]))
 
+(s/def ::name utils-spec/nonblank-string)
+(s/def ::description utils-spec/nonblank-string)
+(s/def ::method utils-spec/nonblank-string)
+(s/def ::type utils-spec/nonblank-string)
+(s/def ::category utils-spec/nonblank-string)
+
+;;
+;; notification method
+;;
 
 (s/def ::notification-methods (s/nilable any?))
 (s/def ::add-notification-method-modal-visible? boolean?)
 (s/def ::notification-method-modal-visible? boolean?)
 
-(s/def ::name utils-spec/nonblank-string)
-(s/def ::description utils-spec/nonblank-string)
-
-(s/def ::method utils-spec/nonblank-string)
 (s/def ::destination utils-spec/nonblank-string)
 (s/def ::notification-method (s/keys :req-un [::name
                                               ::description
                                               ::method
                                               ::destination]))
 
+;;
+;; notification subscription configuration
+;;
+
 (s/def ::notification-subscription-configs (s/nilable any?))
 
-(s/def ::type utils-spec/nonblank-string)
 (s/def ::collection utils-spec/nonblank-string)
-(s/def ::category utils-spec/nonblank-string)
 (s/def ::enabled boolean?)
 (s/def ::notification-subscription-config (s/keys :req-un [::name
                                                            ::description
@@ -32,18 +39,32 @@
                                                            ::method
                                                            ::enabled]))
 (s/def ::notification-subscriptions-modal-visible? boolean?)
-(s/def ::notification-subscriptions (s/nilable any?))
 
 ;;
-;; subscriptions
+;; individual subscriptions
 ;;
+
+(s/def ::kind utils-spec/nonblank-string)
+(s/def ::resource utils-spec/nonblank-string)
+(s/def ::status utils-spec/nonblank-string)
 
 (s/def ::subscriptions (s/nilable any?))
+(s/def ::notification-subscriptions (s/nilable any?))
 
-(s/def ::subscription (s/nilable any?))
+(s/def ::subscription (s/keys :req-un [::type
+                                       ::kind
+                                       ::category
+                                       ::resource
+                                       ::status
+                                       ::method]
+                              :opt-un [::name
+                                       ::description]))
 
+(s/def ::edit-subscription-modal-visible? boolean?)
 
+;;
 ;; Validation
+;;
 
 (s/def ::form-valid? boolean?)
 

@@ -220,25 +220,25 @@
 
 
 (defn single-notification-method
-  [{:keys [method name description] :as notif-method}]
+  [{:keys [method name description destination] :as notif-method}]
   [ui/TableRow
-   [ui/TableCell {:floated :left
-                  :width   2}
+   [ui/TableCell {:floated :left}
     [:span name]]
-   [ui/TableCell {:floated :left
-                  :width   9}
+   [ui/TableCell {:floated :left}
     [:span description]]
-   [ui/TableCell {:floated :left
-                  :width   4}
+   [ui/TableCell {:floated :left}
     [:span method]]
+   [ui/TableCell {:floated :left
+                  :style   {:overflow      "hidden"
+                            :text-overflow "ellipsis"
+                            :max-width     "20ch"}}
+    [:span destination]]
    [ui/TableCell {:floated :right
                   :width   1
                   :align   :right
                   :style   {}}
-
     (when (general-utils/can-delete? notif-method)
       [DeleteButtonNotificationMethod notif-method])
-
     (when (general-utils/can-edit? notif-method)
       [ui/Icon {:name     :cog
                 :color    :blue
@@ -387,6 +387,7 @@
                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:method]))}]
+                    [ui/TableHeaderCell {:content (str/capitalize (@tr [:destination]))}]
                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}]]]
                   [ui/TableBody
                    (for [notif-method @all-methods]

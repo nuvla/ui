@@ -30,6 +30,7 @@
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
     [sixsq.nuvla.ui.messages.views :as messages]
+    [sixsq.nuvla.ui.notifications.views]
     [sixsq.nuvla.ui.ocre.views]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.profile.views]

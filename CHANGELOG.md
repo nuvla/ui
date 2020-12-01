@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+  - Edge Detail - new tab based design
+
 ## [2.10.3] - 2020-11-17
 
 ### Updated

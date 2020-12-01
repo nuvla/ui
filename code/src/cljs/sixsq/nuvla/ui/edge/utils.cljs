@@ -9,7 +9,11 @@
 (def state-decommissioning "DECOMMISSIONING")
 (def state-decommissioned "DECOMMISSIONED")
 (def state-error "ERROR")
-
+(def vuln-critical-color "#f41906")
+(def vuln-high-color "#f66e0a")
+(def vuln-medium-color "#fbbc06")
+(def vuln-low-color "#21b802")
+(def vuln-unknown-color "#949494")
 
 (defn state->icon
   [state]
@@ -28,6 +32,15 @@
     :online "green"
     :offline "red"
     :unknown "yellow"
+    nil))
+
+
+(defn operational-status->color
+  [status]
+  (case status
+    "OPERATIONAL" "green"
+    "DEGRADED" "red"
+    "UNKNOWN" "yellow"
     nil))
 
 
@@ -55,7 +68,7 @@
   [{:keys [capacity load topic raw-sample]}]
   (let [percent (-> (general-utils/percentage load capacity)
                     (general-utils/round-up))]
-    {:label        ["load" "free"]
+    {:label        ["load [last 15 min]" "free"]
      :title        (str capacity "-core CPU (load %)")
      :percentage   percent
      :value        (- 100 percent)
@@ -89,9 +102,9 @@
 (defn load-net-stats
   [net-stats]
   {:label (map :interface net-stats)
-   :title (str "Network Stats")
-   :tx    (map :bytes-transmitted net-stats)
-   :rx    (map :bytes-received net-stats)})
+   :title (str "Total Network Stats per Interface")
+   :tx    (map (fn [t] (/ t 1000000)) (map :bytes-transmitted net-stats))
+   :rx    (map (fn [t] (/ t 1000000)) (map :bytes-received net-stats))})
 
 
 (defn load-statistics

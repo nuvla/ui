@@ -128,14 +128,14 @@
 
 
 (defn Accordion
-  [content & {:keys [id label count icon default-open title-size on-open on-close !control-open?]
-              :or   {default-open true, title-size :h3, on-open #(), on-close #()}}]
+  [content & {:keys [id label count icon default-open title-size on-open on-close !control-open? styled?]
+              :or   {default-open true, title-size :h3, on-open #(), on-close #(), styled? true}}]
   (let [active? (or !control-open? (r/atom default-open))]
     (fn [content & {:keys [id label count icon default-open title-size]
                     :or   {default-open true, title-size :h3, on-open #(), on-close #()}}]
       [ui/Accordion {:id        id
                      :fluid     true
-                     :styled    true
+                     :styled    styled?
                      :style     {:margin-top    "10px"
                                  :margin-bottom "10px"}
                      :exclusive false}

@@ -1,26 +1,26 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.credentials.utils :as creds-utils]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.deployment-dialog.views-license]
-    [sixsq.nuvla.ui.deployment-dialog.views-price]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.deployment-dialog.views-data]
-    [sixsq.nuvla.ui.deployment-dialog.views-infra-services]
     [sixsq.nuvla.ui.deployment-dialog.views-env-variables]
     [sixsq.nuvla.ui.deployment-dialog.views-files]
+    [sixsq.nuvla.ui.deployment-dialog.views-infra-services]
+    [sixsq.nuvla.ui.deployment-dialog.views-license]
     [sixsq.nuvla.ui.deployment-dialog.views-module-version]
+    [sixsq.nuvla.ui.deployment-dialog.views-price]
     [sixsq.nuvla.ui.deployment-dialog.views-registries]
     [sixsq.nuvla.ui.deployment-dialog.views-summary]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
-    [reagent.core :as r]
-    [clojure.string :as str]))
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 
 (defmulti StepIcon :step-id)

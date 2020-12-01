@@ -4,8 +4,10 @@
 
 ### Updated
 
-  - Deployment detail - Remove fetch button
+  - Deployment detail - Support udpate feature
+  - Deployment modal - Support udpate feature
   - Deployment modal - Add version selection section
+  - Edge Detail - new tab based design
 
 ## [2.10.3] - 2020-11-17
 

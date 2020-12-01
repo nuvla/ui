@@ -2,9 +2,9 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
-    [sixsq.nuvla.ui.deployment-dialog.spec :as spec]))
+    [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]))
 
 
 (reg-sub

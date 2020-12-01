@@ -70,7 +70,7 @@
   ::modal-action-button-icon
   :<- [::deployment-start?]
   (fn [start?]
-    (if start? "rocket" "sync")))
+    (if start? "rocket" "redo")))
 
 
 (reg-sub

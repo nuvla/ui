@@ -556,7 +556,7 @@
                                      (@tr [:update]))
                       :popup-text  (@tr [(if start :deployment-start-msg
                                                    :deployment-update-msg)])
-                      :icon-name   (if start "play" "sync")
+                      :icon-name   (if start "play" "redo")
                       :menu-item?  true
                       :disabled?   (if start
                                      (not (general-utils/can-operation? "start" deployment))

@@ -560,7 +560,7 @@
                       :menu-item?  true
                       :disabled?   (if start
                                      (not (general-utils/can-operation? "start" deployment))
-                                     false #_(not (general-utils/can-operation? "update" deployment)))
+                                     (not (general-utils/can-operation? "update" deployment)))
                       :on-click    #(dispatch [::deployment-dialog-events/open-deployment-modal
                                                first-step deployment])})]
     [:<>

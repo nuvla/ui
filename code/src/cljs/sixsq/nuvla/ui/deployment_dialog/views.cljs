@@ -136,7 +136,6 @@
         button-color     (subscribe [::subs/modal-action-button-color])
         button-disabled? (subscribe [::subs/modal-action-button-disabled?])
         operation        (subscribe [::subs/modal-operation])]
-    (when show-data? (dispatch [::events/show-data]))
     (fn [show-data?]
       (let [hide-fn   #(do
                          (when (= (:state @deployment) "CREATED")

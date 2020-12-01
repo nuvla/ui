@@ -27,12 +27,6 @@
     {::cimi-api-fx/delete [id #()]}))
 
 
-(reg-event-db
-  ::show-data
-  (fn [db _]
-    (assoc db ::spec/show-data? true)))
-
-
 (reg-event-fx
   ::set-credentials
   (fn [{{:keys [::spec/selected-credential-id
@@ -274,7 +268,9 @@
                               (dispatch [::set-original-module (:module %)])
                               (when-let [registry-ids (:private-registries content)]
                                 (dispatch [::get-infra-registries registry-ids
-                                           (:registries-credentials content)]))
+                                           (or
+                                             (:registries-credentials %)
+                                             (:registries-credentials content))]))
                               )]}))
 
 
@@ -381,10 +377,12 @@
     (let [callback (fn [response]
                      (if (instance? js/Error response)
                        (dispatch [::set-error-message
-                                  (str "Error while " operation "ing the deployment")
+                                  (str "Error occured during \"" operation
+                                       "\" action on deployment")
                                   (-> response response/parse-ex-info :message)])
                        (let [{:keys [status message resource-id]} (response/parse response)
-                             success-msg {:header  (cond-> (str operation "ed " resource-id)
+                             success-msg {:header  (cond-> (str operation " " resource-id
+                                                                " with success")
                                                            status (str " (" status ")"))
                                           :content message
                                           :type    :success}]

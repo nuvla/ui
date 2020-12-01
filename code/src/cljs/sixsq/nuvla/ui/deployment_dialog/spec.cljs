@@ -113,7 +113,6 @@
 
 
 (def defaults {::deploy-modal-visible?      false
-               ::show-data?                 false
                ::deployment                 nil
                ::credentials                nil
                ::credentials-loading?       false

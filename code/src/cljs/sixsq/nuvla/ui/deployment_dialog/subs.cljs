@@ -14,12 +14,6 @@
 
 
 (reg-sub
-  ::show-data?
-  (fn [db]
-    (::spec/show-data? db)))
-
-
-(reg-sub
   ::deployment-state
   :<- [::deployment]
   (fn [deployment]
@@ -35,25 +29,36 @@
 
 (reg-sub
   ::visible-steps
-  :<- [::show-data?]
+  :<- [::data-step-active?]
   :<- [::registries-creds]
   :<- [::env-variables]
   :<- [::module-subtype]
   :<- [::files]
   :<- [::license]
   :<- [::price]
-  (fn [[show-data? registries-creds env-variables module-subtype files license price]]
-    (remove nil?
-            [(when show-data? :data)
-             :infra-services
-             :module-version
-             (when (seq registries-creds) :registries)
-             (when (seq env-variables) :env-variables)
-             (when (and (= module-subtype "application")
-                        (seq files)) :files)
-             (when license :license)
-             (when price :pricing)
-             :summary])))
+  :<- [::deployment-start?]
+  (fn [[data-step-active? registries-creds env-variables module-subtype files license price start?]]
+    (->> [(when data-step-active? :data)
+          :infra-services
+          :module-version
+          (when (seq registries-creds) :registries)
+          (when (seq env-variables) :env-variables)
+          (when (and
+                  start?
+                  (= module-subtype "application")
+                  (seq files)) :files)
+          (when license :license)
+          (when price :pricing)
+          :summary]
+         (remove nil?)
+         set)))
+
+
+(reg-sub
+  ::is-step-visible?
+  :<- [::visible-steps]
+  (fn [visible-steps-set [_ step]]
+    (boolean (visible-steps-set step))))
 
 
 (reg-sub

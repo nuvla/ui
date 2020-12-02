@@ -41,6 +41,7 @@
                                        [:module :content :files
                                         index :file-content] %)]))}]]
      :label file-name
+     :title-size :div
      :default-open false]))
 
 

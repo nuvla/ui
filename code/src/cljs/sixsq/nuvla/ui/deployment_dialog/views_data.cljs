@@ -3,6 +3,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
@@ -83,7 +84,7 @@
       [cloud-list-item (assoc options :on-click-fn on-click-fn)])))
 
 
-(defn content
+(defmethod utils/step-content :data
   []
   (let [tr          (subscribe [::i18n-subs/tr])
         data-clouds (subscribe [::subs/data-clouds])]

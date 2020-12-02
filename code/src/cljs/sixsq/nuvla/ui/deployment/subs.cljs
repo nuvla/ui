@@ -184,14 +184,6 @@
 
 
 (reg-sub
-  ::is-latest-module-versions?
-  :<- [::module-versions]
-  :<- [::current-module-content-id]
-  (fn [[module-versions id]]
-    (= (-> module-versions first second :href) id)))
-
-
-(reg-sub
   ::upcoming-invoice
   (fn [db]
     (::spec/upcoming-invoice db)))

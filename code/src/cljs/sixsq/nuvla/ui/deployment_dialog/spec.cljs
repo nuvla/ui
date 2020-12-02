@@ -5,7 +5,6 @@
 
 (s/def ::deploy-modal-visible? boolean?)
 
-(s/def ::loading-deployment? boolean?)
 (s/def ::deployment any?)
 
 (s/def ::credentials any?)
@@ -57,9 +56,13 @@
 
 (s/def ::check-dct any?)
 
+(s/def ::module-info any?)
+
+(s/def ::selected-version any?)
+
+(s/def ::original-module any?)
 
 (s/def ::db (s/keys :req [::deploy-modal-visible?
-                          ::loading-deployment?
                           ::deployment
                           ::infra-services
                           ::infra-services-loading?
@@ -83,13 +86,18 @@
                           ::data-step-active?
                           ::step-states
                           ::error-message
-                          ::check-dct]))
+                          ::check-dct
+                          ::module-info
+                          ::selected-version
+                          ::original-module]))
 
 
 (def step-states {:data           {:step-id :data
                                    :icon    "database"}
                   :infra-services {:step-id :infra-services
                                    :icon    "cloud"}
+                  :module-version {:step-id :module-version
+                                   :icon    "list ol"}
                   :registries     {:step-id :registries
                                    :icon    "docker"}
                   :env-variables  {:step-id :env-variables
@@ -104,28 +112,30 @@
                                    :icon    "info"}})
 
 
-(def defaults {::deploy-modal-visible?           false
-               ::loading-deployment?             false
-               ::deployment                      nil
-               ::credentials                     nil
-               ::credentials-loading?            false
-               ::infra-services                  nil
-               ::infra-services-loading?         false
-               ::infra-registries                nil
-               ::infra-registries-loading?       false
-               ::infra-registries-creds          nil
-               ::registries-creds                {}
-               ::invisible-registries-creds      []
-               ::selected-infra-service          nil
-               ::selected-credential-id          nil
-               ::data-clouds                     nil
-               ::selected-cloud                  nil
-               ::cloud-filter                    nil
-               ::cloud-infra-services            nil
-               ::active-step                     :data
-               ::data-step-active                true
-               ::license-accepted?               false
-               ::price-accepted?                 false
-               ::error-message                   nil
-               ::step-states                     step-states
-               ::check-dct                       nil})
+(def defaults {::deploy-modal-visible?      false
+               ::deployment                 nil
+               ::credentials                nil
+               ::credentials-loading?       false
+               ::infra-services             nil
+               ::infra-services-loading?    false
+               ::infra-registries           nil
+               ::infra-registries-loading?  false
+               ::infra-registries-creds     nil
+               ::registries-creds           {}
+               ::invisible-registries-creds []
+               ::selected-infra-service     nil
+               ::selected-credential-id     nil
+               ::data-clouds                nil
+               ::selected-cloud             nil
+               ::cloud-filter               nil
+               ::cloud-infra-services       nil
+               ::active-step                :data
+               ::data-step-active           true
+               ::license-accepted?          false
+               ::price-accepted?            false
+               ::error-message              nil
+               ::step-states                step-states
+               ::check-dct                  nil
+               ::module-info                nil
+               ::selected-version           nil
+               ::original-module            nil})

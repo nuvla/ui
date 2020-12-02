@@ -28,13 +28,11 @@
 
 (defn as-form-text-area
   [index {:keys [file-name file-content]}]
-  (let [deployment (subscribe [::subs/deployment])
-        start?     (subscribe [::subs/deployment-start?])]
+  (let [deployment (subscribe [::subs/deployment])]
     [uix/Accordion
      [ui/Form
       [ui/TextArea
-       {:disabled      (not @start?)
-        :rows          10
+       {:rows          10
         :default-value file-content
         :on-change     (ui-callback/value
                          #(dispatch [::events/set-deployment

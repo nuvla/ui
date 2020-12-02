@@ -380,10 +380,8 @@
                                   (str "Error occured during \"" operation
                                        "\" action on deployment")
                                   (-> response response/parse-ex-info :message)])
-                       (let [{:keys [status message resource-id]} (response/parse response)
-                             success-msg {:header  (cond-> (str operation " " resource-id
-                                                                " with success")
-                                                           status (str " (" status ")"))
+                       (let [{:keys [message]} (response/parse response)
+                             success-msg {:header  (str operation " action called successfully")
                                           :content message
                                           :type    :success}]
                          (dispatch [::reset])

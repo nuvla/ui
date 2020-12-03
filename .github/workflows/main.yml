@@ -1,0 +1,68 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+            - name: Cache local Maven repository
+              
+      - name: Cache local NPM repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+            
+      - name: Install zopfli
+        run: sudo apt-get install -y zopfli
+      
+      - name: Verify signature NuvlaBox script
+        run: ./.travis/verify_signature.sh
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+          
+      - uses: s4u/maven-settings-action@v2.2.0
+        with:
+          githubServer: false
+          override: true
+          servers: |
+              [{
+                  "id": "docker.io",
+                  "username": "${{ secrets.SIXSQ_DOCKER_USERNAME }}",
+                  "password": "${{ secrets.SIXSQ_DOCKER_PASSWORD }}"
+              }]
+              
+      - name: Build with Maven
+        run: mvn deploy

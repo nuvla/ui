@@ -66,8 +66,8 @@ jobs:
               
       - name: Build with Maven
         env:
-          TRAVIS_BRANCH: ${{ GITHUB_REF }}
-          TRAVIS_BUILD_NUMBER: ${{ GITHUB_RUN_ID }}
+          TRAVIS_BRANCH: ${{ github.ref }}
+          TRAVIS_BUILD_NUMBER: ${{ github.run_id }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: mvn deploy

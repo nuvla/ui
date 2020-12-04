@@ -24,7 +24,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      
+
       - name: Cache local Maven repository
         uses: actions/cache@v2
         with:
@@ -33,7 +33,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
             - name: Cache local Maven repository
-              
+
       - name: Cache local NPM repository
         uses: actions/cache@v2
         with:
@@ -41,10 +41,10 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
-            
+
       - name: Install zopfli
         run: sudo apt-get install -y zopfli
-      
+
       - name: Verify signature NuvlaBox script
         run: ./.travis/verify_signature.sh
 
@@ -52,21 +52,26 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-          
+
       - uses: s4u/maven-settings-action@v2.2.0
         with:
           githubServer: false
           override: true
           servers: |
-              [{
-                  "id": "docker.io",
-                  "username": "${{ secrets.SIXSQ_DOCKER_USERNAME }}",
-                  "password": "${{ secrets.SIXSQ_DOCKER_PASSWORD }}"
-              }]
-              
+            [{
+                "id": "docker.io",
+                "username": "${{ secrets.SIXSQ_DOCKER_USERNAME }}",
+                "password": "${{ secrets.SIXSQ_DOCKER_PASSWORD }}"
+            }]
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
+
       - name: Build with Maven
         env:
-          TRAVIS_BRANCH: ${{ github.ref }}
+          TRAVIS_BRANCH: ${{ steps.extract_branch.outputs.branch }}
           TRAVIS_PULL_REQUEST_BRANCH: ${{ github.head_ref }}
           TRAVIS_BUILD_NUMBER: ${{ github.run_id }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

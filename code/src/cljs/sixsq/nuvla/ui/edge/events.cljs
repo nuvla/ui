@@ -96,26 +96,29 @@
 
 (reg-event-fx
   ::create-ssh-key
-  (fn [_ [_ ssh-template]]
+  (fn [_ [_ ssh-template dispatch-vector]]
     {::cimi-api-fx/add [:credential ssh-template
                         #(do
                            (dispatch [::set-nuvlabox-ssh-keys {:ids         [(:resource-id %)]
                                                                :public-keys [(:public-key %)]}])
-                           (dispatch [::set-nuvlabox-created-private-ssh-key (:private-key %)]))]}))
+                           (dispatch [::set-nuvlabox-created-private-ssh-key (:private-key %)])
+                           (dispatch dispatch-vector))]}))
 
 
 (reg-event-fx
   ::find-nuvlabox-ssh-keys
-  (fn [_ [_ ssh-keys-ids]]
+  (fn [_ [_ ssh-keys-ids dispatch-vector]]
     {::cimi-api-fx/search
      [:credential
       {:filter (cond-> (apply general-utils/join-or
                               (map #(str "id='" % "'") ssh-keys-ids)))
        :select "public-key"
        :last   10000}
-      #(dispatch [::set-nuvlabox-ssh-keys {:ids         ssh-keys-ids
+      #(do
+         (dispatch [::set-nuvlabox-ssh-keys {:ids         ssh-keys-ids
                                            :public-keys (into [] (map :public-key
-                                                                      (:resources %)))}])]}))
+                                                                      (:resources %)))}])
+         (dispatch dispatch-vector))]}))
 
 
 (reg-event-db
@@ -161,13 +164,14 @@
   ::create-nuvlabox-usb-api-key
   (fn [_ [_ creation-data]]
     {::cimi-api-fx/add [:credential creation-data
-                        #(dispatch [::set-nuvlabox-usb-api-key %])]}))
+                        #(dispatch [::set-nuvlabox-usb-api-key {:resource-id (:resource-id %)
+                                                                :secret-key (:secret-key %)}])]}))
 
 
 (reg-event-db
   ::set-nuvlabox-usb-api-key
-  (fn [db [_ {:keys [resource-id secret-key]}]]
-    (assoc db ::spec/nuvlabox-usb-api-key {:resource-id resource-id :secret-key secret-key})))
+  (fn [db [_ apikey]]
+    (assoc db ::spec/nuvlabox-usb-api-key apikey)))
 
 
 (reg-event-db

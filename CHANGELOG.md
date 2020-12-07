@@ -5,6 +5,7 @@
 ### Changed
 
   - Edge Detail - new tab based design
+  - Edge - fix SSH key assignment to NuvlaBox at creation time
 
 ## [2.10.3] - 2020-11-17
 

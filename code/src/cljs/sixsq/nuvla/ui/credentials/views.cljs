@@ -442,6 +442,9 @@
           "infrastructure-service-registry"
           {:validation-spec ::spec/registry-credential
            :modal-content   credential-registy}
+          "ssh-key"
+          {:validation-spec ::spec/ssh-credential
+           :modal-content   credential-ssh}
           "generate-ssh-key"
           {:validation-spec ::spec/ssh-credential
            :modal-content   credential-ssh}}

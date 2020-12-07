@@ -4,6 +4,9 @@
 
 ### Updated
 
+  - Filter comp - Processing of resources metadata do
+    not consider vector of map type fix (#499)
+
 ## [2.11.0] - 2020-12-07
 
 ### Added

@@ -19,6 +19,12 @@
 
 
 (reg-sub
+  ::nuvlabox-vulns
+  (fn [db]
+    (::spec/nuvlabox-vulns db)))
+
+
+(reg-sub
   ::nuvlabox-ssh-keys
   (fn [db]
     (::spec/nuvlabox-ssh-keys db)))

@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -40,7 +41,8 @@
                                    private-registry-id])
         registry-descr (:description @registry)
         {:keys [cred-id preselected?]} info]
-    (if preselected?
+    (if (and preselected?
+             (not (some #(= cred-id (:value %)) @creds-options)))
       [ui/FormInput
        {:disabled      true
         :label         (r/as-element [:label registry-name ff/nbsp
@@ -64,12 +66,12 @@
       )))
 
 
-(defn content
+(defmethod utils/step-content :registries
   []
-  (fn []
-    (let [registries-creds (subscribe [::subs/registries-creds])
-          loading?         (subscribe [::subs/infra-registries-loading?])]
-      [ui/Form {:loading @loading?}
-       (for [[private-registry-id info] @registries-creds]
-         ^{:key private-registry-id}
-         [dropdown-creds private-registry-id info])])))
+  (let [registries-creds (subscribe [::subs/registries-creds])
+        loading?         (subscribe [::subs/infra-registries-loading?])]
+    [ui/Segment
+     [ui/Form {:loading @loading?}
+      (for [[private-registry-id info] @registries-creds]
+        ^{:key private-registry-id}
+        [dropdown-creds private-registry-id info])]]))

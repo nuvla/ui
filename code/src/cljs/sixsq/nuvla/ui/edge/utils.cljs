@@ -9,7 +9,11 @@
 (def state-decommissioning "DECOMMISSIONING")
 (def state-decommissioned "DECOMMISSIONED")
 (def state-error "ERROR")
-
+(def vuln-critical-color "#f41906")
+(def vuln-high-color "#f66e0a")
+(def vuln-medium-color "#fbbc06")
+(def vuln-low-color "#21b802")
+(def vuln-unknown-color "#949494")
 
 (defn state->icon
   [state]

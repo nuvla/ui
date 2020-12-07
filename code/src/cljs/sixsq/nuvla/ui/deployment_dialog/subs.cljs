@@ -2,30 +2,155 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
-    [sixsq.nuvla.ui.deployment-dialog.spec :as spec]))
+    [sixsq.nuvla.ui.credentials.subs :as creds-subs]
+    [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]))
 
 
 (reg-sub
   ::deploy-modal-visible?
-  ::spec/deploy-modal-visible?)
+  (fn [db]
+    (::spec/deploy-modal-visible? db)))
 
 
 (reg-sub
-  ::loading-deployment?
-  ::spec/loading-deployment?)
-
-
-(reg-sub
-  ::ready?
-  :<- [::loading-deployment?]
+  ::deployment-state
   :<- [::deployment]
-  (fn [[loading-deployment? deployment]]
-    (and (not loading-deployment?) deployment)))
+  (fn [deployment]
+    (:state deployment)))
+
+
+(reg-sub
+  ::deployment-start?
+  :<- [::deployment-state]
+  (fn [state]
+    (boolean (#{"CREATED" "STOPPED"} state))))
+
+
+(reg-sub
+  ::visible-steps
+  :<- [::data-step-active?]
+  :<- [::registries-creds]
+  :<- [::env-variables]
+  :<- [::module-subtype]
+  :<- [::files]
+  :<- [::license]
+  :<- [::price]
+  :<- [::deployment-start?]
+  (fn [[data-step-active? registries-creds env-variables module-subtype files license price start?]]
+    (->> [(when data-step-active? :data)
+          :infra-services
+          :module-version
+          (when (seq registries-creds) :registries)
+          (when (seq env-variables) :env-variables)
+          (when (and
+                  start?
+                  (= module-subtype "application")
+                  (seq files)) :files)
+          (when license :license)
+          (when price :pricing)
+          :summary]
+         (remove nil?)
+         set)))
+
+
+(reg-sub
+  ::is-step-visible?
+  :<- [::visible-steps]
+  (fn [visible-steps-set [_ step]]
+    (boolean (visible-steps-set step))))
+
+
+(reg-sub
+  ::modal-header-text
+  :<- [::loading-deployment?]
+  :<- [::module-name]
+  (fn [[loading? module-name]]
+    (if loading?
+      "\u2026"
+      (str "\u00a0" module-name))))
+
+
+(reg-sub
+  ::modal-action-button-icon
+  :<- [::deployment-start?]
+  (fn [start?]
+    (if start? "rocket" "redo")))
+
+
+(reg-sub
+  ::modal-operation
+  :<- [::deployment-start?]
+  (fn [start?]
+    (if start? "start" "update")))
+
+
+(reg-sub
+  ::modal-action-button-text
+  :<- [::i18n-subs/tr]
+  :<- [::deployment-start?]
+  :<- [::is-launch-status? :ok]
+  (fn [[tr start? launch-status-ok?]]
+    (tr [(cond
+           (and start? launch-status-ok?) :launch
+           (and start? (not launch-status-ok?)) :launch-force
+           (and (not start?) launch-status-ok?) :update
+           :else :update-force)])))
+
+
+(reg-sub
+  ::modal-action-button-color
+  :<- [::is-launch-status? :warning]
+  (fn [launch-status-warning?]
+    (if launch-status-warning? "yellow" "blue")))
+
+
+(reg-sub
+  ::step-completed?
+  (fn [_ _]
+    [(subscribe [::selected-credential-id])
+     (subscribe [::data-completed?])
+     (subscribe [::env-variables-completed?])
+     (subscribe [::price-completed?])
+     (subscribe [::license-completed?])
+     (subscribe [::registries-completed?])
+     (subscribe [::credentials-completed?])
+     (subscribe [::launch-status-registries :registries])])
+  (fn [[cred-id data-completed? env-variables-completed? price-completed? license-completed?
+        registries-completed? credentials-completed? registries-status]
+       [_ step-id]]
+    (let [cred-loading? @(subscribe [::creds-subs/credential-check-loading? cred-id])
+          cred-invalid? @(subscribe [::creds-subs/credential-check-status-invalid? cred-id])]
+      (case step-id
+        :data data-completed?
+        :infra-services (and credentials-completed?
+                             (not cred-loading?)
+                             (not cred-invalid?))
+        :env-variables env-variables-completed?
+        :registries (and registries-completed? (= :ok registries-status))
+        :license license-completed?
+        :pricing price-completed?
+        false))))
+
+
+(reg-sub
+  ::step-active?
+  :<- [::active-step]
+  (fn [active-step [_ step-id]]
+    (= active-step step-id)))
 
 
 (reg-sub
   ::deployment
-  ::spec/deployment)
+  (fn [db]
+    (::spec/deployment db)))
+
+
+(reg-sub
+  ::loading-deployment?
+  :<- [::deployment]
+  (fn [deployment]
+    (nil? deployment)))
 
 
 (reg-sub
@@ -47,6 +172,20 @@
   :<- [::module]
   (fn [module]
     (:name module)))
+
+
+(reg-sub
+  ::module-subtype
+  :<- [::module]
+  (fn [module]
+    (:subtype module)))
+
+
+(reg-sub
+  ::module-id
+  :<- [::module]
+  (fn [module]
+    (:id module)))
 
 
 (reg-sub
@@ -82,6 +221,56 @@
   :<- [::module-content]
   (fn [module-content]
     (:files module-content)))
+
+
+(reg-sub
+  ::current-module-content-id
+  :<- [::module-content]
+  (fn [module-content]
+    (:id module-content)))
+
+
+(reg-sub
+  ::module-info
+  (fn [db]
+    (::spec/module-info db)))
+
+
+(reg-sub
+  ::module-versions
+  :<- [::module-info]
+  (fn [module-info]
+    (->> module-info
+         :versions
+         (map-indexed vector)
+         reverse)))
+
+
+(reg-sub
+  ::latest-version
+  :<- [::module-versions]
+  (fn [module-versions]
+    (some-> module-versions first second :href)))
+
+
+(reg-sub
+  ::is-latest-version?
+  :<- [::latest-version]
+  :<- [::current-module-content-id]
+  (fn [[latest-version current-version]]
+    (and latest-version (= latest-version current-version))))
+
+
+(reg-sub
+  ::selected-version
+  (fn [db]
+    (::spec/selected-version db)))
+
+
+(reg-sub
+  ::original-module
+  (fn [db]
+    (::spec/original-module db)))
 
 
 (reg-sub
@@ -263,8 +452,20 @@
   :<- [::module-private-registries-count]
   :<- [::deployment-reg-creds-count]
   (fn [[module-private-registries-count deployment-reg-creds-count]]
-    (= module-private-registries-count
-       deployment-reg-creds-count)))
+    (>= deployment-reg-creds-count module-private-registries-count)))
+
+
+(reg-sub
+  ::version-completed?
+  :<- [::current-module-content-id]
+  :<- [::selected-version]
+  :<- [::is-latest-version?]
+  (fn [[current-version selected-version is-latest?]]
+    (or (and
+          (some? current-version)
+          (some? selected-version)
+          (= current-version selected-version))
+        (and is-latest? (nil? selected-version)))))
 
 (reg-sub
   ::launch-status
@@ -277,6 +478,13 @@
         (some #{:warning} steps-status) :warning
         (some #{:loading} steps-status) :loading
         :else :ok))))
+
+
+(reg-sub
+  ::is-launch-status?
+  :<- [::launch-status]
+  (fn [launch-status [_ v]]
+    (= launch-status v)))
 
 (reg-sub
   ::license-completed?
@@ -326,7 +534,7 @@
 
 
 (reg-sub
-  ::launch-disabled?
+  ::modal-action-button-disabled?
   :<- [::deployment]
   :<- [::data-completed?]
   :<- [::data-step-active?]
@@ -337,9 +545,9 @@
   :<- [::license-completed?]
   :<- [::price]
   :<- [::price-completed?]
-  (fn [[deployment data-completed? data-step-active?
-        credentials-completed? env-variables-completed?
-        registries-completed? license license-completed? price price-completed?]]
+  :<- [::version-completed?]
+  (fn [[deployment data-completed? data-step-active? credentials-completed? env-variables-completed?
+        registries-completed? license license-completed? price price-completed? version-completed?]]
     (or (not deployment)
         (and (not data-completed?) data-step-active?)
         (not credentials-completed?)
@@ -347,10 +555,22 @@
         (not registries-completed?)
         (and price (not price-completed?))
         (and license (not license-completed?))
-        (not registries-completed?))))
+        (not registries-completed?)
+        (not version-completed?))))
 
 
 (reg-sub
   ::check-dct
   (fn [db]
     (::spec/check-dct db)))
+
+
+(reg-sub
+  ::new-price
+  :<- [::deployment-start?]
+  :<- [::module-info]
+  :<- [::original-module]
+  (fn [[deployment-start? {new-price :price} {current-price :price}]]
+    (when (and (not deployment-start?)
+               (not= (:cent-amount-daily current-price) (:cent-amount-daily new-price)))
+      new-price)))

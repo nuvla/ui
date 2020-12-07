@@ -3,11 +3,13 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.deployment-dialog.views-data :as data-step]
     [sixsq.nuvla.ui.deployment-dialog.views-env-variables :as env-variables-step]
     [sixsq.nuvla.ui.deployment-dialog.views-files :as files-step]
     [sixsq.nuvla.ui.deployment-dialog.views-infra-services :as infra-services-step]
     [sixsq.nuvla.ui.deployment-dialog.views-license :as license-step]
+    [sixsq.nuvla.ui.deployment-dialog.views-module-version :as module-version-step]
     [sixsq.nuvla.ui.deployment-dialog.views-price :as price-step]
     [sixsq.nuvla.ui.deployment-dialog.views-registries :as registries-step]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -59,27 +61,26 @@
         :else [ui/Icon {:name "circle notch" :loading true}])]]))
 
 
-(defn content
+(defmethod utils/step-content :summary
   []
-  (let [data-step-active? (subscribe [::subs/data-step-active?])
-        is-application?   (subscribe [::subs/is-application?])
-        registries-count  (subscribe [::subs/module-private-registries-count])
-        env-variables     (subscribe [::subs/env-variables])
-        license           (subscribe [::subs/license])
-        price             (subscribe [::subs/price])
-        files             (subscribe [::subs/files])]
+  (let [visible-license?    (subscribe [::subs/is-step-visible? :license])
+        visible-pricing?    (subscribe [::subs/is-step-visible? :pricing])
+        visible-data?       (subscribe [::subs/is-step-visible? :data])
+        visible-files?      (subscribe [::subs/is-step-visible? :files])
+        visible-env?        (subscribe [::subs/is-step-visible? :env-variables])
+        visible-registries? (subscribe [::subs/is-step-visible? :registries])]
     [ui/Table
      [ui/TableBody {:style {:cursor "pointer"}}
       [application-row]
-      (when @data-step-active?
+      (when @visible-data?
         [data-step/summary-row])
       [infra-services-step/summary-row]
-      (when (and @is-application? (seq @files)) [files-step/summary-row])
-      (when (seq @env-variables) [env-variables-step/summary-row])
-      (when (pos? @registries-count) [registries-step/summary-row])
+      [module-version-step/summary-row]
+      (when @visible-files? [files-step/summary-row])
+      (when @visible-env? [env-variables-step/summary-row])
+      (when @visible-registries? [registries-step/summary-row])
       [images-dct-row]
-      (when @license
+      (when @visible-license?
         [license-step/summary-row])
-      (when @price
-        [price-step/summary-row])
-      ]]))
+      (when @visible-pricing?
+        [price-step/summary-row])]]))

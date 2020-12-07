@@ -82,8 +82,7 @@
   []
   (let [module-versions   (subscribe [::subs/module-versions])
         module-content-id (subscribe [::subs/current-module-content-id])
-        current-version   (subscribe [::subs/current-module-version])
-        module            (subscribe [::subs/deployment-module])]
+        current-version   (subscribe [::subs/current-module-version])]
     (fn []
       [uix/Accordion
        [ui/Segment style/autoscroll-x
@@ -161,7 +160,7 @@
                 [env-var-to-row env-var])])]]
          :count (count env-vars)
          :default-open false
-         :label (str/capitalize (@tr [:env-variables]))]))))
+         :label (@tr [:env-variables])]))))
 
 
 (def event-fields #{:id :content :timestamp :category})
@@ -453,7 +452,6 @@
 (defn ShutdownButton
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr         (subscribe [::i18n-subs/tr])
-        credential (subscribe [::creds-subs/credential])
         open?      (r/atom false)
         checked?   (r/atom false)
         icon-name  "stop"]
@@ -547,35 +545,27 @@
      button]))
 
 
-(defn StartButton
-  [{:keys [data] :as deployment}]
+(defn StartUpdateButton
+  [{:keys [data state] :as deployment}]
   (let [tr         (subscribe [::i18n-subs/tr])
+        start      (#{"CREATED" "STOPPED"} state)
         first-step (if data :data :infra-services)
         button     (action-button
-                     {:button-text (@tr [:restart])
-                      :popup-text  (@tr [:deployment-restart-msg])
-                      :icon-name   "play"
+                     {:button-text (if start
+                                     (@tr [:start])
+                                     (@tr [:update]))
+                      :popup-text  (@tr [(if start :deployment-start-msg
+                                                   :deployment-update-msg)])
+                      :icon-name   (if start "play" "redo")
                       :menu-item?  true
-                      :disabled?   (not (general-utils/can-operation? "start" deployment))
-                      :on-click    #(dispatch [::deployment-dialog-events/open-deployment-modal first-step
-                                               deployment])})]
+                      :disabled?   (if start
+                                     (not (general-utils/can-operation? "start" deployment))
+                                     (not (general-utils/can-operation? "update" deployment)))
+                      :on-click    #(dispatch [::deployment-dialog-events/open-deployment-modal
+                                               first-step deployment])})]
     [:<>
      [deployment-dialog-views/deploy-modal]
      button]))
-
-
-(defn FetchModuleButton
-  [{:keys [id] :as deployment}]
-  (let [tr         (subscribe [::i18n-subs/tr])
-        is-latest? (subscribe [::subs/is-latest-module-versions?])]
-    (action-button
-      {:button-text (@tr [:fetch])
-       :popup-text  (@tr [:deployment-fetch-msg])
-       :disabled?   (or (not (general-utils/can-operation? "fetch-module" deployment))
-                        @is-latest?)
-       :icon-name   "history"
-       :menu-item?  true
-       :on-click    #(dispatch [::events/fetch-module id])})))
 
 
 (defn DeploymentCard
@@ -670,9 +660,8 @@
   (let [loading? (subscribe [::subs/loading?])]
     [main-components/StickyBar
      [ui/Menu {:borderless true}
-      [StartButton deployment]
+      [StartUpdateButton deployment]
       [ShutdownButton deployment :menu-item? true]
-      [FetchModuleButton deployment]
       [CloneButton deployment]
       [DeleteButton deployment :menu-item? true]
       [main-components/RefreshMenu
@@ -705,7 +694,7 @@
 (defn vpn-info
   [{:keys [state module]}]
   (let [{module-content :content} module
-        [_ url]     (-> module-content (get :urls []) first)
+        [_ url] (-> module-content (get :urls []) first)
         tr          (subscribe [::i18n-subs/tr])
         primary-url (subscribe [::subs/url url])
         parameters  (subscribe [::subs/deployment-parameters])

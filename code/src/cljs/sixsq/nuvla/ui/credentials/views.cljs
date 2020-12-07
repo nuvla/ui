@@ -744,7 +744,7 @@
       (let [infra-service-creds (filter #(in? infrastructure-service-subtypes (:subtype %))
                                         @credentials)]
         [ui/Segment style/basic
-         [uix/PageHeader "key" (str/capitalize (@tr [:credentials]))]
+         [uix/PageHeader "key" (@tr [:credentials])]
          [uix/Accordion
           [:<>
            [:div (@tr [:credential-infra-service-section-sub-text])]

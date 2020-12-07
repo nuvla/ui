@@ -7,6 +7,24 @@
   - Edge Detail - new tab based design
   - Edge - fix SSH key assignment to NuvlaBox at creation time
 
+### Updated
+
+  - Filter comp - Processing of resources metadata do
+    not consider vector of map type fix (#499)
+
+## [2.11.0] - 2020-12-07
+
+### Added
+
+  - BUILD - Support for github actions
+
+### Updated
+
+  - Deployment detail - Support udpate feature
+  - Deployment modal - Support udpate feature
+  - Deployment modal - Add version selection section
+  - Edge Detail - new tab based design
+
 ## [2.10.3] - 2020-11-17
 
 ### Updated

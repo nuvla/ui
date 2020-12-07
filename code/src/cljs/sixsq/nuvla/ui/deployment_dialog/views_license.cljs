@@ -4,6 +4,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -25,7 +26,7 @@
      [ui/TableCell [:div [:span (:name @license)]]]]))
 
 
-(defn content
+(defmethod utils/step-content :license
   []
   (let [tr                 (subscribe [::i18n-subs/tr])
         license            (subscribe [::subs/license])

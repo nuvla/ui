@@ -2,13 +2,9 @@
 
 ## Unreleased
 
-### Changed
-
-  - Edge Detail - new tab based design
-  - Edge - fix SSH key assignment to NuvlaBox at creation time
-
 ### Updated
 
+  - Edge - fix SSH key assignment to NuvlaBox at creation time
   - Credential views - Fix SSH visibility in credentials list
   - Filter comp - Processing of resources metadata do
     not consider vector of map type fix (#499)

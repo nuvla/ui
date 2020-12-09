@@ -8,6 +8,7 @@
   - Credential views - Fix SSH visibility in credentials list
   - Filter comp - Processing of resources metadata do
     not consider vector of map type fix (#499)
+  - Edge detail - minor fixes
 
 ## [2.11.0] - 2020-12-07
 

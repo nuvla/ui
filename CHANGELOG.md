@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.12.0] - 2020-12-10
+
 ### Updated
 
   - Edge - fix SSH key assignment to NuvlaBox at creation time

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+ - Deployment modal - distinguish credential check error and only let deploy if credential is not invalid
+
 ## [2.12.0] - 2020-12-10
 
 ### Changed

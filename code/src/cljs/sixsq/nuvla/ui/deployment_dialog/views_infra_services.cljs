@@ -56,7 +56,6 @@
         selected-credential (subscribe [::subs/selected-credential])
         start?              (subscribe [::subs/deployment-start?])
         status              (subscribe [::creds-subs/credential-check-status id])
-        cred-valid?         (subscribe [::creds-subs/credential-check-status-valid? id])
         last-check          (subscribe [::creds-subs/credential-check-last-check id])
         selected?           (= id (:id @selected-credential))]
     [ui/ListItem (cond-> {:active selected?}
@@ -70,8 +69,14 @@
        [ui/Icon {:name "key"}]
        (when (some? @status)
          [ui/Icon {:corner true
-                   :name   (if @cred-valid? "thumbs up" "thumbs down")
-                   :color  (if @cred-valid? "green" "red")}])]]
+                   :name   (cond
+                             (= @status "INVALID") "thumbs down"
+                             (= @status "VALID") "thumbs up"
+                             :else "question")
+                   :color  (cond
+                             (= @status "INVALID") "red"
+                             (= @status "VALID") "green"
+                             :else "grey")}])]]
      [ui/ListContent
       [ui/ListHeader (or name id)]
       (when description

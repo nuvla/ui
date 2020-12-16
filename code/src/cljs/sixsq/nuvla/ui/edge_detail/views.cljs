@@ -994,7 +994,6 @@
                                         :content        (tr [:nuvlabox-datagateway-popup])
                                         :header         "data-gateway"
                                         :position       "top center"
-                                        :inverted       true
                                         :wide           true
                                         :on             "hover"
                                         :size           "tiny"

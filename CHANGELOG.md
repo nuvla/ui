@@ -2,7 +2,23 @@
 
 ## Unreleased
 
-### Updated
+## [2.12.0] - 2020-12-10
+
+### Changed
+
+  - Edge - fix SSH key assignment to NuvlaBox at creation time
+  - Credential views - Fix SSH visibility in credentials list
+  - Filter comp - Processing of resources metadata do
+    not consider vector of map type fix (#499)
+  - Edge detail - minor fixes
+
+## [2.11.0] - 2020-12-07
+
+### Added
+
+  - BUILD - Support for github actions
+
+### Changed
 
   - Deployment detail - Support udpate feature
   - Deployment modal - Support udpate feature
@@ -11,19 +27,19 @@
 
 ## [2.10.3] - 2020-11-17
 
-### Updated
+### Changed
 
   - CIMI DETAIL - operation button action regression fix
 
 ## [2.10.2] - 2020-11-16
 
-### Updated
+### Changed
 
   - CIMI DETAIL - cimi resources presented as keys fix
 
 ## [2.10.1] - 2020-11-16
 
-### Updated
+### Changed
 
   - Edge - Remove filter prototype
 
@@ -34,7 +50,7 @@
   - Filter composer component
   - Deployment - Info message about VPN when the infra has a private IP
 
-### Updated
+### Changed
 
   - Cimi page - Filter composer
   - Deployment - Stop modal fix checkbox danger modal
@@ -51,7 +67,7 @@
 
 ## [2.9.0] - 2020-10-28
 
-### Updated
+### Changed
 
   - Deployment - Show last failed job on top
   - Dashboard detail - renamed deployment
@@ -67,7 +83,7 @@
 
 ## [2.8.1] - 2020-10-15
 
-### Updated
+### Changed
 
   - Edge - Optimize number of requests for stats
   - Use sticky bar for mostly all menubar in pages
@@ -88,7 +104,7 @@
   - Nuvlabox detail - Extended view for peripheral list in NuvlaBox details
     page, to cope with new resource telemetry attributes
 
-### Updated
+### Changed
 
   - Pricing - Set VPN price as included
   - Credential - Remove check for subscription on creation of VPN or IaaS
@@ -96,7 +112,7 @@
 
 ## [2.7.0] - 2020-09-04
 
-### Updated
+### Changed
 
   - User dropdown - z-index fix
   - Subscription modal - group mandatory email field
@@ -112,7 +128,7 @@
   - Re-usable button layout for extra actions menus
   - Ability to rename NuvlaBox resource
 
-### Updated
+### Changed
 
   - Credential - Add VPN credential not possible from group warning
   - Added support for file signature with GPG for
@@ -135,7 +151,7 @@
   - Infrastructure service modal augmented with creation of
     Docker Swarm or Kubernetes on cloud providers.
 
-### Changes
+### Changed
 
   - Apps - Edit of ports mapping, urls, env vars, output params,
     volumes, files and data-types inserted randomly when more
@@ -152,7 +168,7 @@
 
 ## [2.4.15] - 2020-05-12
 
-### Changes
+### Changed
 
   - Container - exclude config.json and nuvla-logo.png from
     precompress mvn prepare-package

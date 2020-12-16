@@ -19,12 +19,17 @@
            (let [{:keys [leafs nested]} (group-by #(if (empty? (:child-types %))
                                                      :leafs :nested) attrs)
                  new-attrs (mapcat (fn [{:keys [type child-types] :as in}]
-                                     (if (= type "array")
-                                       [(-> in
-                                            (dissoc :child-types)
-                                            (assoc :type (-> child-types first :type)))]
-                                       (map #(assoc % :name (str (:name in) "/" (:name %)))
-                                            child-types))) nested)]
+                                     (let [is-array? (= type "array")]
+                                       (if (and (= type "array")
+                                                (= (-> child-types first :type) "array"))
+                                         [(-> in
+                                              (dissoc :child-types)
+                                              (assoc :type (-> child-types first :type)))]
+                                         (map #(assoc %
+                                                 :name
+                                                 (cond-> (:name in)
+                                                         (not is-array?) (str "/" (:name %))))
+                                              child-types)))) nested)]
              (recur new-attrs (concat result leafs)))
            result))
        (filter :indexed)

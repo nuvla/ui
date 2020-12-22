@@ -8,7 +8,8 @@
     [sixsq.nuvla.ui.credentials.utils :as utils]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 
 
@@ -235,3 +236,10 @@
         need-check? (assoc ::cimi-api-fx/operation
                            [id "check" #(dispatch [::set-check-cred-job-id (:location %)])])
         ))))
+
+
+(reg-event-db
+  ::set-credentials-active-tab-index
+  (fn [db [_ active-tab-index]]
+    (log/error "active-tab-index: " active-tab-index)
+    (assoc db ::spec/credential-active-tab-index active-tab-index)))

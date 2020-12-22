@@ -19,7 +19,8 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
-    [taoensso.timbre :as timbre]))
+    [taoensso.timbre :as timbre]
+    [taoensso.timbre :as log]))
 
 
 (defn in?
@@ -442,17 +443,21 @@
     :modal-content   credential-coe},
    "infrastructure-service-kubernetes"
    {:validation-spec ::spec/coe-credential
-    :modal-content   credential-coe},
-   "infrastructure-service-minio"
-   {:validation-spec ::spec/minio-credential
-    :modal-content   credential-object-store},
-   "infrastructure-service-registry"
-   {:validation-spec ::spec/registry-credential
-    :modal-content   credential-registy}})
+    :modal-content   credential-coe}})
 
 
 (def coe-service-subtypes
   (keys infrastructure-service-coe-validation-map))
+
+
+(def infrastructure-service-registry-validation-map
+  {"infrastructure-service-registry"
+   {:validation-spec ::spec/registry-credential
+    :modal-content   credential-registy}})
+
+
+(def registry-service-subtypes
+  (keys infrastructure-service-registry-validation-map))
 
 
 (def infrastructure-service-access-keys-validation-map
@@ -475,7 +480,33 @@
   (merge infrastructure-service-csp-validation-map
          infrastructure-service-storage-validation-map
          infrastructure-service-coe-validation-map
-         infrastructure-service-access-keys-validation-map))
+         infrastructure-service-access-keys-validation-map
+         infrastructure-service-registry-validation-map))
+
+
+(def tab-indices
+  {:coe-services      0
+   :cloud-services    1
+   :access-services   2
+   :storage-services  3
+   :registry-services 4})
+
+
+(defn subtype->tab-index
+  [subtype]
+  (case subtype
+    "infrastructure-service-minio" (:storage-services tab-indices)
+    "infrastructure-service-swarm" (:coe-services tab-indices)
+    "infrastructure-service-kubernetes" (:coe-services tab-indices)
+    "infrastructure-service-registry" (:registry-services tab-indices)
+    "infrastructure-service-azure" (:cloud-services tab-indices)
+    "infrastructure-service-google" (:cloud-services tab-indices)
+    "infrastructure-service-amazonec2" (:cloud-services tab-indices)
+    "infrastructure-service-exoscale" (:cloud-services tab-indices)
+    "infrastructure-service-vpn" (:access-services tab-indices)
+    "ssh-key" (:access-services tab-indices)
+    "generate-ssh-key" (:access-services tab-indices)
+    0))
 
 
 (defn credential-modal
@@ -486,11 +517,12 @@
         credential  (subscribe [::subs/credential])
         is-new?     (subscribe [::subs/is-new?])]
     (fn []
-      (let [subtype         (:subtype @credential "")
-            header          (str/capitalize (str (if is-new? (@tr [:new]) (@tr [:update])) " " (@tr [:credential])))
-            validation-item (get infrastructure-service-validation-map subtype)
-            validation-spec (:validation-spec validation-item)
-            modal-content   (:modal-content validation-item)]
+      (let [subtype          (:subtype @credential "")
+            active-tab-index (subtype->tab-index subtype)
+            header           (str/capitalize (str (if is-new? (@tr [:new]) (@tr [:update])) " " (@tr [:credential])))
+            validation-item  (get infrastructure-service-validation-map subtype)
+            validation-spec  (:validation-spec validation-item)
+            modal-content    (:modal-content validation-item)]
         (if (empty? subtype)
           [:div]
           [ui/Modal {:open       @visible?
@@ -507,7 +539,9 @@
                          :positive true
                          :disabled (when-not @form-valid? true)
                          :active   true
-                         :on-click #(save-callback validation-spec)}]]])))))
+                         :on-click #(do (save-callback validation-spec)
+                                        (dispatch [::events/set-credentials-active-tab-index
+                                                   active-tab-index]))}]]])))))
 
 
 (defn add-credential-modal
@@ -733,7 +767,6 @@
       :button-text (@tr [:delete])}]))
 
 
-;subtype name description
 (defn single-credential
   [{:keys [subtype name description] :as credential}]
   [ui/TableRow
@@ -799,32 +832,40 @@
 
 (defn credentials
   []
-  (let [credentials           (subscribe [::subs/credentials])
-        coe-service-creds     (filter #(in? coe-service-subtypes (:subtype %))
-                                      @credentials)
-        cloud-service-creds   (filter #(in? infrastructure-service-csp-subtypes (:subtype %))
-                                      @credentials)
-        access-key-creds      (filter #(in? access-keys-subtypes (:subtype %))
-                                      @credentials)
-        storage-service-creds (filter #(in? infrastructure-service-storage-subtypes (:subtype %))
-                                      @credentials)]
+  (let [credentials            (subscribe [::subs/credentials])
+        coe-service-creds      (filter #(in? coe-service-subtypes (:subtype %))
+                                       @credentials)
+        cloud-service-creds    (filter #(in? infrastructure-service-csp-subtypes (:subtype %))
+                                       @credentials)
+        access-key-creds       (filter #(in? access-keys-subtypes (:subtype %))
+                                       @credentials)
+        storage-service-creds  (filter #(in? infrastructure-service-storage-subtypes (:subtype %))
+                                       @credentials)
+        register-service-creds (filter #(in? registry-service-subtypes (:subtype %))
+                                       @credentials)]
     [(credential coe-service-creds :coe-services :credential-coe-service-section-sub-text "docker")
      (credential cloud-service-creds :cloud-services :credential-cloud-service-section-sub-text "cloud")
      (credential access-key-creds :access-keys :credential-ssh-keys-section-sub-text "key")
-     (credential storage-service-creds :storage-services :credential-storage-service-section-sub-text "disk")]))
+     (credential storage-service-creds :storage-services :credential-storage-service-section-sub-text "disk")
+     (credential register-service-creds :registry-services :credential-registry-service-section-sub-text "docker")]))
 
 
 (defn TabsCredentials
   []
   (dispatch [::events/get-credentials])
   (fn []
-    [ui/Tab
-     {:menu  {:secondary true
-              :pointing  true
-              :style     {:display        "flex"
-                          :flex-direction "row"
-                          :flex-wrap      "wrap"}}
-      :panes (credentials)}]))
+    (let [active-index (subscribe [::subs/credential-active-tab-index])]
+      [ui/Tab
+       {:menu        {:secondary true
+                      :pointing  true
+                      :style     {:display        "flex"
+                                  :flex-direction "row"
+                                  :flex-wrap      "wrap"}}
+        :panes       (credentials)
+        :activeIndex @active-index
+        :onTabChange (fn [_ data]
+                       (let [active-index (. data -activeIndex)]
+                         (dispatch [::events/set-credentials-active-tab-index active-index])))}])))
 
 
 (defmethod panel/render :credentials

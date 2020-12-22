@@ -164,10 +164,9 @@
              :activePage   @page
              :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]
            ]
-          :label (str " " (str/capitalize (@tr [:deployments])))
+          :label (str/capitalize (@tr [:deployments]))
           :count total-deployments
-          :icon "rocket"]
-         ]))))
+          :icon "rocket"]]))))
 
 
 (defmethod panel/render :dashboard

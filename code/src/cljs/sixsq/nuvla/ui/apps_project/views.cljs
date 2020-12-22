@@ -59,8 +59,7 @@
 
           [uix/Accordion
            [format-module-children children]
-           :label (str/capitalize (@tr [:apps-sub-modules]))
-           :title-size :h2])))))
+           :label (str/capitalize (@tr [:apps-sub-modules]))])))))
 
 
 (defn clear-module [])

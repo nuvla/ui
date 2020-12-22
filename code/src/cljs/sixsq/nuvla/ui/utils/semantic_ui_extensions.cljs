@@ -151,7 +151,7 @@
          [ui/Icon {:name (if @active? "dropdown" "caret right")}]
 
          (when icon
-           [Icon {:name icon}])
+           [:<> [Icon {:name icon}] " "])
 
          label
 

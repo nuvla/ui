@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Profile - Send events to Intercom related to trial period
+    end email notifications
   - Deployment modal - On update credential can be changed
   - Deployment modal - On update only selected infra is visible
   - Tools - Re-frame-10x is disabled by default

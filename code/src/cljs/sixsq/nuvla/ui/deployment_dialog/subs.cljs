@@ -331,6 +331,18 @@
   (fn [db]
     (::spec/infra-services db)))
 
+
+(reg-sub
+  ::visible-infra-services
+  :<- [::infra-services]
+  :<- [::deployment-start?]
+  :<- [::selected-infra-service]
+  (fn [[infra-services deployment-start? selected-infra-service]]
+    (if deployment-start?
+      infra-services
+      [selected-infra-service])))
+
+
 (reg-sub
   ::launch-status-registries
   (fn [db [_ step-id]]

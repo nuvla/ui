@@ -10,6 +10,7 @@
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.profile.events :as events]
@@ -124,7 +125,9 @@
 (defn Session
   []
   (let [tr      (subscribe [::i18n-subs/tr])
-        session (subscribe [::session-subs/session])]
+        session (subscribe [::session-subs/session])
+        user-id (:user @session)]
+      (dispatch [::intercom-events/set-event "nuvla-user-id" user-id])
     [ui/Segment {:padded true, :color "teal", :style {:height "100%"}}
      [ui/Header {:as :h2 :dividing true} "Session"]
      (if @session
@@ -138,7 +141,7 @@
           [ui/TableCell (-> @session :expiry time/parse-iso8601 time/ago)]]
          [ui/TableRow
           [ui/TableCell [:b "User id"]]
-          [ui/TableCell (values/as-href {:href (:user @session)})]]
+          [ui/TableCell (values/as-href {:href user-id})]]
          [ui/TableRow
           [ui/TableCell [:b "Roles"]]
           [ui/TableCell (values/format-collection (sort (str/split (:roles @session) #"\s+")))]]]]
@@ -504,17 +507,22 @@
 
 (defn PaymentMethods
   []
-  (let [tr                     (subscribe [::i18n-subs/tr])
-        loading?               (subscribe [::subs/loading? :payment-methods])
-        open?                  (subscribe [::subs/modal-open? :add-payment-method])
-        customer               (subscribe [::subs/customer])
-        cards-bank-accounts    (subscribe [::subs/cards-bank-accounts])
-        default-payment-method (subscribe [::subs/default-payment-method])]
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        loading?             (subscribe [::subs/loading? :payment-methods])
+        open?                (subscribe [::subs/modal-open? :add-payment-method])
+        customer             (subscribe [::subs/customer])
+        subscription-user-id (:created-by @customer)
+        cards-bank-accounts  (subscribe [::subs/cards-bank-accounts])
+        default-pm           (subscribe [::subs/default-payment-method])
+        session              (subscribe [::session-subs/session])
+        user-id              (:user @session)]
     (dispatch [::events/list-payment-methods])
     (fn []
-      (let [default            @default-payment-method
-            set-as-default-str (@tr [:set-as-default])
+      (let [set-as-default-str (@tr [:set-as-default])
             delete-str         (str/capitalize (@tr [:delete]))]
+        (dispatch [::intercom-events/set-event "Has payment methods" (some? @default-pm)])
+        (dispatch [::intercom-events/set-event "Subscription owner" subscription-user-id])
+        (dispatch [::intercom-events/set-event "Is subscription owner" (= user-id subscription-user-id)])
         [ui/Segment {:padded  true
                      :color   "purple"
                      :loading @loading?
@@ -524,7 +532,7 @@
            [ui/Table {:basic "very"}
             [ui/TableBody
              (for [{:keys [last4 brand payment-method exp-month exp-year]} @cards-bank-accounts]
-               (let [is-default? (= default payment-method)]
+               (let [is-default? (= @default-pm payment-method)]
                  ^{:key (str payment-method)}
                  [ui/TableRow
                   [ui/TableCell
@@ -926,7 +934,7 @@
               [Vendor]]
              (when show-customer-sections
                [ui/GridColumn
-              [PaymentMethods]])])]]))))
+                [PaymentMethods]])])]]))))
 
 (defmethod panel/render :profile
   [path]

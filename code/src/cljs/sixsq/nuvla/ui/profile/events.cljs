@@ -274,7 +274,6 @@
                       [::close-modal]]}))))
 
 
-
 (reg-event-db
   ::set-setup-intent
   (fn [{:keys [::spec/loading] :as db} [_ setup-itent]]

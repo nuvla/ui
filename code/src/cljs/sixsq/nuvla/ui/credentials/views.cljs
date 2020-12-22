@@ -761,50 +761,70 @@
                 :on-click #(dispatch [::events/open-credential-modal credential false])}])]])
 
 
+(defn credentials-pane
+  [section-sub-text credentials]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/TabPane
+     [:div (@tr [section-sub-text])]
+     (if (empty? credentials)
+       [ui/Message
+        (str/capitalize (str (@tr [:no-credentials]) "."))]
+       [:div [ui/Table {:style {:margin-top 10}}
+              [ui/TableHeader
+               [ui/TableRow
+                [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
+                [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
+                [ui/TableHeaderCell {:content (str/capitalize (@tr [:type]))}]
+                [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}]]]
+              [ui/TableBody
+               (for [credential credentials]
+                 ^{:key (:id credential)}
+                 [single-credential credential])]]])]))
+
+
 (defn credential
   [credentials section-name section-sub-text icon]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [uix/Accordion
-     [:<>
-      [:div (@tr [section-sub-text])]
-      (if (empty? credentials)
-        [ui/Message
-         (str/capitalize (str (@tr [:no-credentials]) "."))]
-        [:div [ui/Table {:style {:margin-top 10}}
-               [ui/TableHeader
-                [ui/TableRow
-                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
-                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
-                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:type]))}]
-                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}]]]
-               [ui/TableBody
-                (for [credential credentials]
-                  ^{:key (:id credential)}
-                  [single-credential credential])]]])]
-     :label (@tr [section-name])
-     :count (count credentials)
-     :icon icon]))
+  (let [tr               (subscribe [::i18n-subs/tr])
+        credential-count (count credentials)]
+    {:menuItem {:content (r/as-element [:span (@tr [section-name])
+                                        (when (> credential-count 0) [ui/Label {:circular true
+                                                                                :size     "mini"
+                                                                                :attached "top right"}
+                                                                      credential-count])])
+                :key     section-name
+                :icon    icon}
+
+     :render   (fn [] (r/as-element [credentials-pane section-sub-text credentials]))}))
 
 
 (defn credentials
   []
-  (let [tr          (subscribe [::i18n-subs/tr])
-        credentials (subscribe [::subs/credentials])]
-    (dispatch [::events/get-credentials])
-    (fn []
-      (let [coe-service-creds     (filter #(in? coe-service-subtypes (:subtype %))
-                                          @credentials)
-            cloud-service-creds   (filter #(in? infrastructure-service-csp-subtypes (:subtype %))
-                                          @credentials)
-            access-key-creds      (filter #(in? access-keys-subtypes (:subtype %))
-                                          @credentials)
-            storage-service-creds (filter #(in? infrastructure-service-storage-subtypes (:subtype %))
-                                          @credentials)]
-        [:<>
-         [credential coe-service-creds :coe-services :credential-coe-service-section-sub-text "docker"]
-         [credential cloud-service-creds :cloud-services :credential-cloud-service-section-sub-text "cloud"]
-         [credential access-key-creds :access-keys :credential-ssh-keys-section-sub-text "key"]
-         [credential storage-service-creds :storage-services :credential-storage-service-section-sub-text "disk"]]))))
+  (let [credentials           (subscribe [::subs/credentials])
+        coe-service-creds     (filter #(in? coe-service-subtypes (:subtype %))
+                                      @credentials)
+        cloud-service-creds   (filter #(in? infrastructure-service-csp-subtypes (:subtype %))
+                                      @credentials)
+        access-key-creds      (filter #(in? access-keys-subtypes (:subtype %))
+                                      @credentials)
+        storage-service-creds (filter #(in? infrastructure-service-storage-subtypes (:subtype %))
+                                      @credentials)]
+    [(credential coe-service-creds :coe-services :credential-coe-service-section-sub-text "docker")
+     (credential cloud-service-creds :cloud-services :credential-cloud-service-section-sub-text "cloud")
+     (credential access-key-creds :access-keys :credential-ssh-keys-section-sub-text "key")
+     (credential storage-service-creds :storage-services :credential-storage-service-section-sub-text "disk")]))
+
+
+(defn TabsCredentials
+  []
+  (dispatch [::events/get-credentials])
+  (fn []
+    [ui/Tab
+     {:menu  {:secondary true
+              :pointing  true
+              :style     {:display        "flex"
+                          :flex-direction "row"
+                          :flex-wrap      "wrap"}}
+      :panes (credentials)}]))
 
 
 (defmethod panel/render :credentials
@@ -813,7 +833,7 @@
     [ui/Segment style/basic
      [uix/PageHeader "key" (@tr [:credentials])]
      [MenuBar]
-     [credentials]
+     [TabsCredentials]
      [add-credential-modal]
      [credential-modal]
      [generated-credential-modal]]))

@@ -239,7 +239,6 @@
 
 
 (reg-event-db
-  ::set-credentials-active-tab-index
+  ::set-active-tab-index
   (fn [db [_ active-tab-index]]
-    (log/error "active-tab-index: " active-tab-index)
-    (assoc db ::spec/credential-active-tab-index active-tab-index)))
+    (assoc db ::spec/active-tab-index active-tab-index)))

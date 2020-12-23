@@ -492,21 +492,22 @@
    :registry-services 4})
 
 
-(defn subtype->tab-index
+(defn subtype->info
   [subtype]
   (case subtype
-    "infrastructure-service-minio" (:storage-services tab-indices)
-    "infrastructure-service-swarm" (:coe-services tab-indices)
-    "infrastructure-service-kubernetes" (:coe-services tab-indices)
-    "infrastructure-service-registry" (:registry-services tab-indices)
-    "infrastructure-service-azure" (:cloud-services tab-indices)
-    "infrastructure-service-google" (:cloud-services tab-indices)
-    "infrastructure-service-amazonec2" (:cloud-services tab-indices)
-    "infrastructure-service-exoscale" (:cloud-services tab-indices)
-    "infrastructure-service-vpn" (:access-services tab-indices)
-    "ssh-key" (:access-services tab-indices)
-    "generate-ssh-key" (:access-services tab-indices)
-    0))
+    "infrastructure-service-minio" {:tab-index (:storage-services tab-indices), :icon "disk", :name "S3/Minio"}
+    "infrastructure-service-swarm" {:tab-index (:coe-services tab-indices), :icon "docker", :name "Docker Swarm"}
+    "infrastructure-service-kubernetes" {:tab-index (:coe-services tab-indices), :icon "docker", :name "Kubernetes"}
+    "infrastructure-service-registry"
+    {:tab-index (:registry-services tab-indices), :icon "docker", :name "Docker Registry"}
+    "infrastructure-service-azure" {:tab-index (:cloud-services tab-indices), :icon "cloud", :name "Microsoft Azure"}
+    "infrastructure-service-google" {:tab-index (:cloud-services tab-indices), :icon "cloud", :name "Google Compute"}
+    "infrastructure-service-amazonec2" {:tab-index (:cloud-services tab-indices), :icon "cloud", :name "AWS EC2"}
+    "infrastructure-service-exoscale" {:tab-index (:cloud-services tab-indices), :icon "cloud", :name "Exoscale"}
+    "infrastructure-service-vpn" {:tab-index (:access-services tab-indices), :icon "key", :name "VPN"}
+    "ssh-key" {:tab-index (:access-services tab-indices), :icon "key", :name "SSH keys"}
+    "generate-ssh-key" {:tab-index (:access-services tab-indices), :icon "key", :name "SSH keys"}
+    {:tab-index 0, :icon "cloud", :name ""}))
 
 
 (defn credential-modal
@@ -518,8 +519,13 @@
         is-new?     (subscribe [::subs/is-new?])]
     (fn []
       (let [subtype          (:subtype @credential "")
-            active-tab-index (subtype->tab-index subtype)
-            header           (str/capitalize (str (if is-new? (@tr [:new]) (@tr [:update])) " " (@tr [:credential])))
+            active-tab-index (:tab-index (subtype->info subtype))
+            icon             (:icon (subtype->info subtype))
+            name             (:name (subtype->info subtype))
+            header           (str (str/capitalize (str (if @is-new?
+                                                         (@tr [:new])
+                                                         (@tr [:update])))
+                                                  ) " " name " " (@tr [:credential]))
             validation-item  (get infrastructure-service-validation-map subtype)
             validation-spec  (:validation-spec validation-item)
             modal-content    (:modal-content validation-item)]
@@ -527,9 +533,12 @@
           [:div]
           [ui/Modal {:open       @visible?
                      :close-icon true
-                     :on-close   #(dispatch [::events/close-credential-modal])}
+                     :on-close   #(do (dispatch [::events/close-credential-modal])
+                                      ;(dispatch [::events/set-active-tab-index
+                                      ;           active-tab-index])
+                                      )}
 
-           [ui/ModalHeader header]
+           [ui/ModalHeader [:span [ui/Icon {:name icon}] " " header]]
 
            [ui/ModalContent {:scrolling false}
             [utils-validation/validation-error-message ::subs/form-valid?]
@@ -540,7 +549,7 @@
                          :disabled (when-not @form-valid? true)
                          :active   true
                          :on-click #(do (save-callback validation-spec)
-                                        (dispatch [::events/set-credentials-active-tab-index
+                                        (dispatch [::events/set-active-tab-index
                                                    active-tab-index]))}]]])))))
 
 
@@ -808,7 +817,7 @@
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
                 [ui/TableHeaderCell {:content (str/capitalize (@tr [:type]))}]
-                [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}]]]
+                [ui/TableHeaderCell {:content (str/capitalize (@tr [:actions]))}]]]
               [ui/TableBody
                (for [credential credentials]
                  ^{:key (:id credential)}
@@ -826,7 +835,6 @@
                                                                       credential-count])])
                 :key     section-name
                 :icon    icon}
-
      :render   (fn [] (r/as-element [credentials-pane section-sub-text credentials]))}))
 
 
@@ -854,7 +862,7 @@
   []
   (dispatch [::events/get-credentials])
   (fn []
-    (let [active-index (subscribe [::subs/credential-active-tab-index])]
+    (let [active-index (subscribe [::subs/active-tab-index])]
       [ui/Tab
        {:menu        {:secondary true
                       :pointing  true
@@ -865,7 +873,7 @@
         :activeIndex @active-index
         :onTabChange (fn [_ data]
                        (let [active-index (. data -activeIndex)]
-                         (dispatch [::events/set-credentials-active-tab-index active-index])))}])))
+                         (dispatch [::events/set-active-tab-index active-index])))}])))
 
 
 (defmethod panel/render :credentials

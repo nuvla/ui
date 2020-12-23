@@ -133,7 +133,8 @@
   (fn [status]
     (= status "VALID")))
 
+
 (reg-sub
-  ::credential-active-tab-index
+  ::active-tab-index
   (fn [db]
-    (get-in db [::spec/credential-active-tab-index])))
+    (get-in db [::spec/active-tab-index])))

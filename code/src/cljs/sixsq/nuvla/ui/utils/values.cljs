@@ -73,3 +73,10 @@
     (vec (concat [ui/ListSA] (map format-item v)))
     v))
 
+(defn status->color
+  [status]
+  (case status
+    :online "green"
+    :offline "red"
+    :unknown "yellow"
+    nil))

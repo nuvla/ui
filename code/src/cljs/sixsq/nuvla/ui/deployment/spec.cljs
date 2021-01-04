@@ -33,6 +33,8 @@
 
 (s/def ::upcoming-invoice any?)
 
+(s/def ::active-tab-index number?)
+
 
 (s/def ::db (s/keys :req [::loading?
                           ::deployment
@@ -47,7 +49,8 @@
                           ::deployment-log-since
                           ::deployment-log-play?
                           ::deployment-log
-                          ::upcoming-invoice]))
+                          ::upcoming-invoice
+                          ::active-tab-index]))
 
 
 (defn default-since []
@@ -68,4 +71,5 @@
                ::deployment-log-since      (default-since)
                ::deployment-log-play?      false
                ::deployment-log            nil
-               ::upcoming-invoice          nil})
+               ::upcoming-invoice          nil
+               ::active-tab-index          0})

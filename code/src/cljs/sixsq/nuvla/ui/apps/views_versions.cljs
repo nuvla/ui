@@ -19,7 +19,7 @@
 
 (defn versions-table
   [versions current-version & {:keys [on-click]}]
-  [ui/Table
+  [ui/Table {:basic "very"}
    [ui/TableHeader
     [ui/TableRow
      [ui/TableHeaderCell {:width "1"} "Version"]
@@ -39,8 +39,7 @@
             (str "v" i))
           (when is-current? " <<")]
          [ui/TableCell author]
-         [ui/TableCell commit]]
-        ))]])
+         [ui/TableCell commit]]))]])
 
 
 (defn versions []
@@ -53,5 +52,4 @@
          [show-versions show-versions?]
          (when @show-versions?
            [versions-table @versions @current-version
-            :on-click #(dispatch [::events/get-module %])])]
-        ))))
+            :on-click #(dispatch [::events/get-module %])])]))))

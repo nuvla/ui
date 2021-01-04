@@ -164,4 +164,10 @@ div.search.dropdown > input {
     text-decoration: underline;
 }
 
+tr.active td:first-child {
+    padding-left: 5px !important;
+}
 
+tr.active td {
+    font-weight: bold !important;
+}

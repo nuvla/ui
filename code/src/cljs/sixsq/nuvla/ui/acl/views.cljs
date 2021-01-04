@@ -13,7 +13,8 @@
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.acl.utils :as acl-utils]))
 
 
 (defn is-advanced-mode?
@@ -335,6 +336,31 @@
          (when (or (not read-only)
                    (not (utils/acl-rights-empty? @ui-acl)))
            [AclRights opts ui-acl])]))))
+
+
+(defn TabAcls
+  [e can-edit? edit-event]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    {:menuItem {:content "Share"
+                :key     "share"
+                :icon    "users"}
+     :render   (fn [] (r/as-element [(fn []
+                                       (let [default-value (:acl @e)
+                                             acl           (or default-value
+                                                               (when-let [user-id (and can-edit?
+                                                                                       @(subscribe [::session-subs/user-id]))]
+                                                                 {:owners [user-id]}))
+                                             ui-acl        (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
+                                         [:<>
+                                          (when (:acl @e)
+                                            ^{:key (:updated @e)}
+                                            [AclWidget {:default-value (:acl @e)
+                                                        :read-only     (not can-edit?)
+                                                        :on-change     #(do
+                                                                          (dispatch [edit-event
+                                                                                     (:id @e) (assoc @e :acl %)
+                                                                                     (@tr [:acl-updated])]))}
+                                             ui-acl])]))]))}))
 
 
 (defn AclButton

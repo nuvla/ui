@@ -725,30 +725,6 @@
      [TabLocationMap @nuvlabox]]))
 
 
-(defn TabAcls
-  []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        nuvlabox  (subscribe [::subs/nuvlabox])
-        can-edit? (subscribe [::subs/can-edit?])]
-    (fn []
-      (let [default-value (:acl @nuvlabox)
-            acl           (or default-value
-                              (when-let [user-id (and @can-edit?
-                                                      @(subscribe [::session-subs/user-id]))]
-                                {:owners [user-id]}))
-            ui-acl        (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
-        [ui/TabPane
-         (when (:acl @nuvlabox)
-           ^{:key (:updated @nuvlabox)}
-           [acl/AclWidget {:default-value (:acl @nuvlabox)
-                           :read-only     (not @can-edit?)
-                           :on-change     #(do
-                                             (dispatch [::events/edit
-                                                        (:id @nuvlabox) (assoc @nuvlabox :acl %)
-                                                        (@tr [:nuvlabox-acl-updated])]))}
-            ui-acl])]))))
-
-
 (defn TabLoad
   []
   (let [tr              (subscribe [::i18n-subs/tr])
@@ -981,46 +957,45 @@
 
 (defn tabs
   [count-peripherals tr]
-  [{:menuItem {:content "Overview"
-               :key     "overview"
-               :icon    "info"}
-    :render   (fn [] (r/as-element [TabOverview]))}
-   {:menuItem {:content "Location"
-               :key     "location"
-               :icon    "map"}
-    :render   (fn [] (r/as-element [TabLocation]))}
-   {:menuItem {:content (r/as-element [ui/Popup
-                                       {:trigger        (r/as-element [:span "Resource Consumption"])
-                                        :content        (tr [:nuvlabox-datagateway-popup])
-                                        :header         "data-gateway"
-                                        :position       "top center"
-                                        :wide           true
-                                        :on             "hover"
-                                        :size           "tiny"
-                                        :hide-on-scroll true}])
-               :key     "res-cons"
-               :icon    "thermometer half"}
-    :render   (fn [] (r/as-element [TabLoad]))}
-   {:menuItem {:content (r/as-element [:span "Peripherals"
-                                       [ui/Label {:circular true
-                                                  :size     "mini"
-                                                  :attached "top right"}
-                                        count-peripherals]])
-               :key     "peripherals"
-               :icon    "usb"}
-    :render   (fn [] (r/as-element [TabPeripherals]))}
-   {:menuItem {:content "Events"
-               :key     "events"
-               :icon    "clipboard list"}
-    :render   (fn [] (r/as-element [TabEvents]))}
-   {:menuItem {:content "Vulnerabilities"
-               :key     "vuln"
-               :icon    "shield"}
-    :render   (fn [] (r/as-element [TabVulnerabilities]))}
-   {:menuItem {:content "Share"
-               :key     "share"
-               :icon    "users"}
-    :render   (fn [] (r/as-element [TabAcls]))}])
+  (let [nuvlabox  (subscribe [::subs/nuvlabox])
+        can-edit? (subscribe [::subs/can-edit?])]
+    [{:menuItem {:content "Overview"
+                 :key     "overview"
+                 :icon    "info"}
+      :render   (fn [] (r/as-element [TabOverview]))}
+     {:menuItem {:content "Location"
+                 :key     "location"
+                 :icon    "map"}
+      :render   (fn [] (r/as-element [TabLocation]))}
+     {:menuItem {:content (r/as-element [ui/Popup
+                                         {:trigger        (r/as-element [:span "Resource Consumption"])
+                                          :content        (tr [:nuvlabox-datagateway-popup])
+                                          :header         "data-gateway"
+                                          :position       "top center"
+                                          :wide           true
+                                          :on             "hover"
+                                          :size           "tiny"
+                                          :hide-on-scroll true}])
+                 :key     "res-cons"
+                 :icon    "thermometer half"}
+      :render   (fn [] (r/as-element [TabLoad]))}
+     {:menuItem {:content (r/as-element [:span "Peripherals"
+                                         [ui/Label {:circular true
+                                                    :size     "mini"
+                                                    :attached "top right"}
+                                          count-peripherals]])
+                 :key     "peripherals"
+                 :icon    "usb"}
+      :render   (fn [] (r/as-element [TabPeripherals]))}
+     {:menuItem {:content "Events"
+                 :key     "events"
+                 :icon    "clipboard list"}
+      :render   (fn [] (r/as-element [TabEvents]))}
+     {:menuItem {:content "Vulnerabilities"
+                 :key     "vuln"
+                 :icon    "shield"}
+      :render   (fn [] (r/as-element [TabVulnerabilities]))}
+     (acl/TabAcls nuvlabox @can-edit? ::events/edit)]))
 
 
 (defn TabsNuvlaBox

@@ -339,28 +339,31 @@
 
 
 (defn TabAcls
-  [e can-edit? edit-event]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    {:menuItem {:content "Share"
-                :key     "share"
-                :icon    "users"}
-     :render   (fn [] (r/as-element [(fn []
-                                       (let [default-value (:acl @e)
-                                             acl           (or default-value
-                                                               (when-let [user-id (and can-edit?
-                                                                                       @(subscribe [::session-subs/user-id]))]
-                                                                 {:owners [user-id]}))
-                                             ui-acl        (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
-                                         [:<>
-                                          (when (:acl @e)
-                                            ^{:key (:updated @e)}
-                                            [AclWidget {:default-value (:acl @e)
-                                                        :read-only     (not can-edit?)
-                                                        :on-change     #(do
-                                                                          (dispatch [edit-event
-                                                                                     (:id @e) (assoc @e :acl %)
-                                                                                     (@tr [:acl-updated])]))}
-                                             ui-acl])]))]))}))
+  ([e can-edit? edit-event] (TabAcls e can-edit? edit-event nil))
+  ([e can-edit? edit-event error]
+   (let [tr (subscribe [::i18n-subs/tr])]
+     {:menuItem {:content "Share"
+                 :key     "share"
+                 :icon    "users"}
+      :render   (fn [] (r/as-element [:<>
+                                      (when (some? error) error)
+                                      [(fn []
+                                         (let [default-value (:acl @e)
+                                               acl           (or default-value
+                                                                 (when-let [user-id (and can-edit?
+                                                                                         @(subscribe [::session-subs/user-id]))]
+                                                                   {:owners [user-id]}))
+                                               ui-acl        (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
+                                           [:<>
+                                            (when (:acl @e)
+                                              ^{:key (:updated @e)}
+                                              [AclWidget {:default-value (:acl @e)
+                                                          :read-only     (not can-edit?)
+                                                          :on-change     #(do
+                                                                            (dispatch [edit-event
+                                                                                       (:id @e) (assoc @e :acl %)
+                                                                                       (@tr [:acl-updated])]))}
+                                               ui-acl])]))]]))})))
 
 
 (defn AclButton

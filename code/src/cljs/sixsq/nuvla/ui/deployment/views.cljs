@@ -29,8 +29,7 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.forms :as forms]))
+    [taoensso.timbre :as log]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -45,6 +44,28 @@
               :event     [::events/get-deployment resource-id]}]))
 
 
+(defn error
+  []
+  (let [{:keys [state]} @(subscribe [::subs/deployment])
+        jobs            (subscribe [::subs/jobs])
+        failed_jobs     (filter #(= (:state %) "FAILED") (:resources @jobs))
+        last_failed_job (first failed_jobs)
+        action          (:action last_failed_job)
+        last_line       (last (str/split-lines (get last_failed_job :status-message "")))]
+    (log/error "state: " state)
+    (log/error "failed_jobs: " failed_jobs)
+    (when (and
+            (= state "ERROR")
+            (some? last_failed_job))
+      [ui/Message {:error true}
+       [ui/MessageHeader
+        {:style    {:cursor "pointer"}
+         :on-click (fn [_]
+                     (dispatch [::events/set-active-tab-index 8]))}
+        (str "Job " action " failed")]
+       [ui/MessageContent last_line]])))
+
+
 (defn url-to-row
   [url-name url-pattern]
   (let [tr  (subscribe [::i18n-subs/tr])
@@ -53,15 +74,10 @@
      [ui/TableCell url-name]
      [ui/TableCell
       (if @url
-        [:<>
-         [:a {:href @url, :target "_blank"} @url]
-         [ui/CopyToClipboard {:text @url}
-          [:span " "
-           [ui/Popup
-            (cond-> {:content (r/as-element [:p (@tr [:copy-to-clipboard])])
-                     :trigger (r/as-element [ui/Icon
-                                             {:name  "clipboard"
-                                              :color "blue"}])})]]]]
+        (values/copy-value-to-clipboard
+          [:a {:href @url, :target "_blank"} @url]
+          @url
+          (@tr [:copy-to-clipboard]))
         url-pattern)]]))
 
 
@@ -78,20 +94,22 @@
                                                                url-count])])
                 :key     "urls"
                 :icon    "linkify"}
-     :render   (fn [] (r/as-element (if (empty? urls)
-                                      [ui/Message {:warning true}
-                                       [ui/Icon {:name "warning sign"}]
-                                       (@tr [:no-urls])]
-                                      [ui/TabPane
-                                       [ui/Table {:basic "very"}
-                                        [ui/TableHeader
-                                         [ui/TableRow
-                                          [ui/TableHeaderCell [:span (@tr [:name])]]
-                                          [ui/TableHeaderCell [:span (@tr [:url])]]]]
-                                        [ui/TableBody
-                                         (for [[url-name url-pattern] urls]
-                                           ^{:key url-name}
-                                           [url-to-row url-name url-pattern])]]])))}))
+     :render   (fn [] (r/as-element [:<>
+                                     [error]
+                                     (if (empty? urls)
+                                       [ui/Message {:warning true}
+                                        [ui/Icon {:name "warning sign"}]
+                                        (@tr [:no-urls])]
+                                       [ui/TabPane
+                                        [ui/Table {:basic "very"}
+                                         [ui/TableHeader
+                                          [ui/TableRow
+                                           [ui/TableHeaderCell [:span (@tr [:name])]]
+                                           [ui/TableHeaderCell [:span (@tr [:url])]]]]
+                                         [ui/TableBody
+                                          (for [[url-name url-pattern] urls]
+                                            ^{:key url-name}
+                                            [url-to-row url-name url-pattern])]]])]))}))
 
 
 (defn module-version-section
@@ -103,8 +121,10 @@
     {:menuItem {:content (r/as-element [:span (@tr [:module-version])])
                 :key     "versions"
                 :icon    "linkify"}
-     :render   (fn [] (r/as-element [ui/TabPane
-                                     [views-versions/versions-table @module-versions @module-content-id]]))}))
+     :render   (fn [] (r/as-element [:<>
+                                     [error]
+                                     [ui/TabPane
+                                      [views-versions/versions-table @module-versions @module-content-id]]]))}))
 
 
 (defn item-to-row
@@ -116,19 +136,8 @@
                                     (cond-> {:content (r/as-element [:p description])
                                              :trigger (r/as-element [:p name " " [ui/Icon {:name "info circle"}]])})]
                                    name)]
-                   [ui/TableCell value [ui/CopyToClipboard {:text value}
-                                        [:a {:href  "#"
-                                             :style {:font-size   "0.9em"
-                                                     :color       "grey"
-                                                     :font-style  "italic"
-                                                     :font-weight "lighter"}}
-                                         (when (some? value)
-                                           [:span " "
-                                            [ui/Popup
-                                             (cond-> {:content (r/as-element [:p (@tr [:copy-to-clipboard])])
-                                                      :trigger (r/as-element [ui/Icon
-                                                                              {:name  "clipboard"
-                                                                               :color "blue"}])})]])]]]]]
+                   [ui/TableCell (when (not-empty value)
+                                   (values/copy-value-to-clipboard value value (@tr [:copy-to-clipboard])))]]]
     table-row))
 
 
@@ -143,21 +152,23 @@
                                                                  items-count])])
                 :key     section-key
                 :icon    "list ol"}
-     :render   (fn [] (r/as-element (if (empty? items)
-                                      [ui/Message {:warning true}
-                                       [ui/Icon {:name "warning sign"}]
-                                       (@tr [empty-msg])]
-                                      [ui/TabPane
-                                       [ui/Table {:basic "very"}
-                                        [ui/TableHeader
-                                         [ui/TableRow
-                                          [ui/TableHeaderCell [:span (@tr [:name])]]
-                                          [ui/TableHeaderCell [:span (@tr [:value])]]]]
-                                        (when-not (empty? items)
-                                          [ui/TableBody
-                                           (for [{name :name :as item} items]
-                                             ^{:key name}
-                                             [item-to-row item])])]])))}))
+     :render   (fn [] (r/as-element [:<>
+                                     [error]
+                                     (if (empty? items)
+                                       [ui/Message {:warning true}
+                                        [ui/Icon {:name "warning sign"}]
+                                        (@tr [empty-msg])]
+                                       [ui/TabPane
+                                        [ui/Table {:basic "very"}
+                                         [ui/TableHeader
+                                          [ui/TableRow
+                                           [ui/TableHeaderCell [:span (@tr [:name])]]
+                                           [ui/TableHeaderCell [:span (@tr [:value])]]]]
+                                         (when-not (empty? items)
+                                           [ui/TableBody
+                                            (for [{name :name :as item} items]
+                                              ^{:key name}
+                                              [item-to-row item])])]])]))}))
 
 
 (defn parameters-section
@@ -229,7 +240,9 @@
                                                                  event-count])])
                 :key     "events"
                 :icon    "bolt"}
-     :render   (fn [] (r/as-element [events-table events-info]))}))
+     :render   (fn [] (r/as-element [:<>
+                                     [error]
+                                     [events-table events-info]]))}))
 
 
 (defn job-map-to-row
@@ -279,7 +292,7 @@
 
 
 (defn jobs-section
-  [job-open?]
+  []
   (let [tr        (subscribe [::i18n-subs/tr])
         jobs      (subscribe [::subs/jobs])
         {:keys [resources]} @jobs
@@ -291,7 +304,9 @@
                                                                job-count])])
                 :key     "job-section"
                 :icon    "bolt"}
-     :render   (fn [] (r/as-element [jobs-table @jobs]))}))
+     :render   (fn [] (r/as-element [:<>
+                                     [error]
+                                     [jobs-table @jobs]]))}))
 
 
 (defn billing-section
@@ -301,26 +316,46 @@
         deployment       (subscribe [::subs/deployment])
         locale           (subscribe [::i18n-subs/locale])
         {total    :total
-         currency :currency} {:total 100.45 :currency "eur"} ;@upcoming-invoice
+         currency :currency} @upcoming-invoice              ;{:total 100.45 :currency "eur"}
         {:keys [description period]} (some-> @upcoming-invoice :lines first)
         coupon           (get-in @upcoming-invoice [:discount :coupon])]
-    (when (or true (:subscription-id @deployment))
+    (when (some? (:subscription-id @deployment))
+      ;[ui/Message {:warning true}
+      ; [ui/Icon {:name "warning sign"}]
+      ; (@tr [:free-app])]
       {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:billing]))])
                   :key     "billing"
                   :icon    "eur"}
-       :render   (fn [] (r/as-element [ui/Segment
-                                       [:b (str/capitalize (@tr [:details])) ": "]
-                                       description
-
-                                       [:br]
-
-                                       [:b (str/capitalize (@tr [:period])) ": "]
-                                       (str (some-> period :start (time/time->format "LL" @locale))
+       :render   (fn [] (r/as-element [:<>
+                                       [error]
+                                       [ui/Segment
+                                        [ui/Table {:collapsing true
+                                                   :basic      "very"
+                                                   :padded     false}
+                                         [ui/TableBody
+                                          [ui/TableRow
+                                           [ui/TableCell
+                                            [:b (str/capitalize (@tr [:details])) ": "]]
+                                           [ui/TableCell
+                                            description]]
+                                          [ui/TableRow
+                                           [ui/TableCell
+                                            [:b (str/capitalize (@tr [:period])) ": "]]
+                                           [ui/TableCell
+                                            (some-> period :start (time/time->format "LL" @locale))
                                             " - "
-                                            (some-> period :end (time/time->format "LL" @locale)))
-                                       [:br]
-                                       [:b (str/capitalize (@tr [:coupon])) ": "]
-                                       (or (:name coupon) "-")]))})))
+                                            (some-> period :end (time/time->format "LL" @locale))]]
+                                          [ui/TableRow
+                                           [ui/TableCell
+                                            [:b (str/capitalize (@tr [:coupon])) ": "]]
+                                           [ui/TableCell
+                                            (or (:name coupon) "-")]]
+                                          [ui/TableRow
+                                           [ui/TableCell
+                                            [:b (str/capitalize (@tr [:total])) ": "]]
+                                           [ui/TableCell
+                                            (or total "-") " " currency]]]
+                                         ]]]))})))
 
 
 (defn log-controller
@@ -436,7 +471,9 @@
     {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:logs]))])
                 :key     "logs"
                 :icon    "file code"}
-     :render   (fn [] (r/as-element [logs-viewer-wrapper]))}))
+     :render   (fn [] (r/as-element [:<>
+                                     [error]
+                                     [logs-viewer-wrapper]]))}))
 
 
 
@@ -669,30 +706,10 @@
                    :rel      "noreferrer"}])]))
 
 
-(defn error
-  [{:keys [state]} !job-open?]
-  (let [jobs            (subscribe [::subs/jobs])
-        failed_jobs     (filter #(= (:state %) "FAILED") (:resources @jobs))
-        last_failed_job (first failed_jobs)
-        action          (:action last_failed_job)
-        last_line       (last (str/split-lines (get last_failed_job :status-message "")))]
-    (when (and
-            (= state "ERROR")
-            (some? last_failed_job))
-      [ui/Message {:error true}
-       [ui/MessageHeader
-        {:style    {:cursor "pointer"}
-         :on-click (fn [_]
-                     (reset! !job-open? true)
-                     (set! (.-hash js/window.location) "")
-                     (js/setTimeout #(set! (.-hash js/window.location) "job-section") 100))}
-        (str "Job " action " failed")]
-       [ui/MessageContent last_line]])))
-
-
 (defn vpn-info
-  [{:keys [state module]}]
-  (let [{module-content :content} module
+  []
+  (let [{:keys [state module]} @(subscribe [::subs/deployment])
+        {module-content :content} module
         [_ url] (-> module-content (get :urls []) first)
         tr          (subscribe [::i18n-subs/tr])
         primary-url (subscribe [::subs/url url])
@@ -708,8 +725,7 @@
         (@tr [:deployment-access-url]) " "
         [:a {:on-click #(dispatch [::history-events/navigate "credentials"]) :href "#"}
          (@tr [:create-vpn-credential])] " " (@tr [:and]) " "
-        [:a {:href "https://docs.nuvla.io/nuvla/vpn" :target "_blank"} (@tr [:connect-vpn])] "."
-        ]])))
+        [:a {:href "https://docs.nuvla.io/nuvla/vpn" :target "_blank"} (@tr [:connect-vpn])] "."]])))
 
 
 (defn up-to-date?
@@ -752,14 +768,6 @@
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:project]))]
           [ui/TableCell [values/as-link parent-path :label parent-path :page "apps"]]])
-       ;^{:key "module-owners"}
-       ;[ui/TableRow
-       ; [ui/TableCell (str/capitalize (@tr [:owner-owners]))]
-       ; [ui/TableCell [:div (interpose ", " (seq (for [o owners]
-       ;                                            (do
-       ;                                              ^{:key "aaaa"}
-       ;                                              (values/as-link o :label (general-utils/id->short-uuid o))))))]]
-       ; ]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:created]))]
         [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
@@ -881,6 +889,7 @@
   []
   (let []
     [ui/TabPane
+     [vpn-info]
      [ui/Grid {:columns   2,
                :stackable true
                :padded    true}
@@ -903,17 +912,16 @@
       ]]))
 
 (defn overview
-  [deployment job-open?]
+  [deployment]
   (let []
     {:menuItem {:content (r/as-element [:span "Overview"])
                 :key     "overview"
                 :icon    "info"}
      :render   (fn [] (r/as-element [:<>
+                                     [error]
                                      [overview-pane]
                                      [ui/CardGroup {:centered true}
-                                      [DeploymentCard @deployment :clickable? false]]
-                                     [error @deployment @job-open?]
-                                     [vpn-info @deployment]]))}))
+                                      [DeploymentCard @deployment :clickable? false]]]))}))
 
 
 (defn MenuBar
@@ -933,10 +941,9 @@
 
 (defn deployment-detail-panes
   [uuid]
-  (let [job-open?  (r/atom false)
-        deployment (subscribe [::subs/deployment])
+  (let [deployment (subscribe [::subs/deployment])
         read-only? (subscribe [::subs/is-read-only?])]
-    [(overview deployment job-open?)
+    [(overview deployment)
      (urls-section)
      (module-version-section)
      (logs-section)
@@ -944,8 +951,8 @@
      (parameters-section)
      (env-vars-section)
      (billing-section)
-     (jobs-section job-open?)
-     (acl/TabAcls deployment (not @read-only?) ::events/edit)]))
+     (jobs-section)
+     (acl/TabAcls deployment (not @read-only?) ::events/edit [error])]))
 
 
 (defn depl-state->status

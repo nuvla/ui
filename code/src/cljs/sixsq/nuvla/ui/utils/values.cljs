@@ -3,6 +3,7 @@
   (:require
     [clojure.pprint :refer [pprint]]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
@@ -73,6 +74,7 @@
     (vec (concat [ui/ListSA] (map format-item v)))
     v))
 
+
 (defn status->color
   [status]
   (case status
@@ -80,3 +82,14 @@
     :offline "red"
     :unknown "yellow"
     nil))
+
+
+(defn copy-value-to-clipboard
+  [value value-to-copy popup-text]
+  [ui/CopyToClipboard {:text value-to-copy}
+   [:span value " "
+    [ui/Popup
+     (cond-> {:content (r/as-element [:p popup-text])
+              :trigger (r/as-element [ui/Icon
+                                      {:name  "clipboard outline"
+                                       :color "blue"}])})]]])

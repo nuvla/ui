@@ -395,6 +395,7 @@
         :offset                                       "offset"
         :or-use-github-accout                         "or use your Github account"
         :order                                        "order"
+        :owner                                        "owner"
         :owner-owners                                 "owner(s)"
         :owners                                       "owners"
         :parameters                                   "parameters"

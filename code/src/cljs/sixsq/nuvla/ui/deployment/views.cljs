@@ -52,8 +52,6 @@
         last_failed_job (first failed_jobs)
         action          (:action last_failed_job)
         last_line       (last (str/split-lines (get last_failed_job :status-message "")))]
-    (log/error "state: " state)
-    (log/error "failed_jobs: " failed_jobs)
     (when (and
             (= state "ERROR")
             (some? last_failed_job))
@@ -320,9 +318,6 @@
         {:keys [description period]} (some-> @upcoming-invoice :lines first)
         coupon           (get-in @upcoming-invoice [:discount :coupon])]
     (when (some? (:subscription-id @deployment))
-      ;[ui/Message {:warning true}
-      ; [ui/Icon {:name "warning sign"}]
-      ; (@tr [:free-app])]
       {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:billing]))])
                   :key     "billing"
                   :icon    "eur"}
@@ -625,87 +620,6 @@
      button]))
 
 
-(defn DeploymentCard_X
-  [{:keys [id state module tags] :as deployment} & {:keys [clickable?]
-                                                    :or   {clickable? true}}]
-  (let [tr            (subscribe [::i18n-subs/tr])
-        creds-name    (subscribe [::dashboard-subs/creds-name-map])
-        credential-id (:parent deployment)
-        {module-logo-url :logo-url
-         module-name     :name
-         module-path     :path
-         module-content  :content} module
-        cred-info     (get @creds-name credential-id credential-id)
-        [primary-url-name
-         primary-url-pattern] (-> module-content (get :urls []) first)
-        primary-url   (if clickable?
-                        (subscribe [::dashboard-subs/deployment-url id primary-url-pattern])
-                        (subscribe [::subs/url primary-url-pattern]))
-        started?      (utils/is-started? state)]
-
-    ^{:key id}
-    [ui/Card (when clickable?
-               {:as       :div
-                :link     true
-                :on-click (fn [event]
-                            (dispatch [::history-events/navigate (utils/deployment-href id)])
-                            (.preventDefault event))})
-     [ui/Image {:src      (or module-logo-url "")
-                :bordered true
-                :style    {:width      "auto"
-                           :height     "100px"
-                           :padding    "20px"
-                           :object-fit "contain"}}]
-
-     (when clickable?
-       (cond
-         (general-utils/can-operation? "stop" deployment) [ShutdownButton deployment :label? true]
-         (general-utils/can-delete? deployment) [DeleteButton deployment :label? true]))
-
-     [ui/CardContent
-
-      [ui/Segment (merge style/basic {:floated "right"})
-       [:p {:style {:color "initial"}} state]
-       [ui/Loader {:active        (utils/deployment-in-transition? state)
-                   :indeterminate true}]]
-
-      [ui/CardHeader (if clickable?
-                       [:span [:p {:style {:overflow      "hidden",
-                                           :text-overflow "ellipsis",
-                                           :max-width     "20ch"}} module-name]]
-                       [history-views/link (str "apps/" module-path) module-name])]
-
-      [ui/CardMeta (str (@tr [:created]) " " (-> deployment :created time/parse-iso8601 time/ago))]
-
-      [ui/CardDescription
-
-       (when-not (str/blank? cred-info)
-         [:div [ui/Icon {:name "key"}] cred-info])]
-
-      [ui/LabelGroup {:size  "tiny"
-                      :color "teal"
-                      :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-       (for [tag tags]
-         ^{:key (str id "-" tag)}
-         [ui/Label {:style {:max-width     "15ch"
-                            :overflow      "hidden"
-                            :text-overflow "ellipsis"
-                            :white-space   "nowrap"}}
-          [ui/Icon {:name "tag"}] tag
-          ])]]
-
-     (when (and started? @primary-url)
-       [ui/Button {:color    "green"
-                   :icon     "external"
-                   :content  primary-url-name
-                   :fluid    true
-                   :href     @primary-url
-                   :on-click (fn [event]
-                               (.stopPropagation event))
-                   :target   "_blank"
-                   :rel      "noreferrer"}])]))
-
-
 (defn vpn-info
   []
   (let [{:keys [state module]} @(subscribe [::subs/deployment])
@@ -774,9 +688,6 @@
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:updated]))]
         [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]
-       [ui/TableRow
-        [ui/TableCell (str/capitalize (@tr [:version-number]))]
-        [ui/TableCell @version " " (up-to-date? @version @versions)]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:id]))]
         [ui/TableCell [values/as-link id :label (subs id 11)]]]]]]))
@@ -864,26 +775,98 @@
 
 (defn TabOverviewSummary
   []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        deployment (subscribe [::subs/deployment])
-        locale     (subscribe [::i18n-subs/locale])
-        version    (subscribe [::subs/current-module-version])
-        versions   (subscribe [::subs/module-versions])
-        module     (:module @deployment)
-        id         (:id module)
-        {:keys [created updated name acl description parent-path path logo-url]} module
-        owners     (:owners acl)]
-    [ui/Segment {:secondary true
-                 :color     "blue"
-                 :raised    true}
-     [:h4 "Summary"]
-     [ui/Image {:src      (or logo-url "")
-                :bordered true
-                :style    {:width      "auto"
-                           :height     "100px"
-                           :padding    "20px"
-                           :object-fit "contain"}}]
-     [DeploymentCard @deployment :clickable? false]]))
+  (let [tr            (subscribe [::i18n-subs/tr])
+        deployment    (subscribe [::subs/deployment])
+        locale        (subscribe [::i18n-subs/locale])
+        version       (subscribe [::subs/current-module-version])
+        versions      (subscribe [::subs/module-versions])
+        module        (:module @deployment)
+        id            (:id module)
+        {:keys [logo-url]} module
+        {:keys [id state module tags acl]} @deployment
+        owners        (:owners acl)
+        creds-name    (subscribe [::dashboard-subs/creds-name-map])
+        credential-id (:parent @deployment)
+        {module-logo-url :logo-url
+         module-name     :name
+         module-path     :path
+         module-content  :content} module
+        cred-info     (get @creds-name credential-id credential-id)
+        [primary-url-name
+         primary-url-pattern] (-> module-content (get :urls []) first)
+        primary-url   (subscribe [::subs/url primary-url-pattern])
+        started?      (utils/is-started? state)]
+
+    [ui/SegmentGroup {:style  {:display "flex", :justify-content "space-between", :background "#f3f4f5"}
+                      :raised true}
+     [ui/Segment {:secondary true
+                  :color     "green"
+                  :raised    true}
+      [ui/Segment (merge style/basic {:floated "right"})
+       [ui/Image {:src      (or logo-url "")
+                  :bordered true
+                  :style    {:width      "auto"
+                             :height     "100px"
+                             :padding    "20px"
+                             :object-fit "contain"}}]]
+
+      [:h4 {:style {:margin-top 0}} "Summary"]
+
+      [ui/Table {:basic "very" :style {:display "inline", :floated "left"}}
+       [ui/TableBody
+        (when tags
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:tags]))]
+           [ui/TableCell
+            [ui/LabelGroup {:size  "tiny"
+                            :color "teal"
+                            :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+             (for [tag tags]
+               ^{:key (str id "-" tag)}
+               [ui/Label {:style {:max-width     "15ch"
+                                  :overflow      "hidden"
+                                  :text-overflow "ellipsis"
+                                  :white-space   "nowrap"}}
+                [ui/Icon {:name "tag"}] tag
+                ])]]])
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (str (@tr [:created])))]
+         [ui/TableCell (-> @deployment :created time/parse-iso8601 time/ago)]]
+        [ui/TableRow
+         [ui/TableCell "Id"]
+         [ui/TableCell (when (some? id) (subs id 11))]]
+        (when (not-empty owners)
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:owner]))]
+           [ui/TableCell (str/join ", " owners)]])
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (@tr [:status]))]
+         [ui/TableCell
+          state
+          [ui/Loader {:active        (utils/deployment-in-transition? state)
+                      :indeterminate true}]]]
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (@tr [:credential]))]
+         [ui/TableCell
+          (when-not (str/blank? cred-info)
+            [:div [ui/Icon {:name "key"}] cred-info])]]
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (@tr [:version-number]))]
+         [ui/TableCell @version " " (up-to-date? @version @versions)]]]]]
+     (when (and started? @primary-url)
+       [ui/Segment {:style    {:padding 0}
+                    :attached true}
+        [ui/Button {:color    "green"
+                    :icon     "external"
+                    :content  primary-url-name
+                    :attached true
+                    :href     @primary-url
+                    :on-click (fn [event]
+                                ; FIXME: with "attached true", the default link behaviour doesn't work
+                                (js/window.open @primary-url)
+                                (.stopPropagation event))
+                    :target   "_blank"
+                    :rel      "noreferrer"}]])]))
 
 (defn overview-pane
   []
@@ -895,9 +878,9 @@
                :padded    true}
       [ui/GridRow
        [ui/GridColumn {:stretched true}
-        [TabOverviewModule]]
-       [ui/GridColumn {:stretched true}
         [TabOverviewSummary]]
+       [ui/GridColumn {:stretched true}
+        [TabOverviewModule]]
        ;[ui/GridColumn {:stretched true}
        ; [TabOverviewHost @nb-status ssh-creds tr]]
        ]
@@ -912,16 +895,14 @@
       ]]))
 
 (defn overview
-  [deployment]
-  (let []
+  []
+  (let [deployment (subscribe [::subs/deployment])]
     {:menuItem {:content (r/as-element [:span "Overview"])
                 :key     "overview"
                 :icon    "info"}
      :render   (fn [] (r/as-element [:<>
                                      [error]
-                                     [overview-pane]
-                                     [ui/CardGroup {:centered true}
-                                      [DeploymentCard @deployment :clickable? false]]]))}))
+                                     [overview-pane]]))}))
 
 
 (defn MenuBar
@@ -943,7 +924,7 @@
   [uuid]
   (let [deployment (subscribe [::subs/deployment])
         read-only? (subscribe [::subs/is-read-only?])]
-    [(overview deployment)
+    [(overview)
      (urls-section)
      (module-version-section)
      (logs-section)

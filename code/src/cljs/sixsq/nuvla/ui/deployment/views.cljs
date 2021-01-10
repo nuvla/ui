@@ -89,9 +89,9 @@
                    :content  url-name
                    :href     @url
                    :on-click (fn [event]
-                               ; FIXME: with "attached true", the default link behaviour doesn't work
                                (js/window.open @url)
-                               (.stopPropagation event))
+                               (.stopPropagation event)
+                               (.preventDefault event))
                    :target   "_blank"
                    :rel      "noreferrer"}]))))
 
@@ -868,9 +868,7 @@
      [ui/Segment {:attached  false
                   :secondary true}
       (for [[i [url-name url-pattern]] (map-indexed list urls)]
-        (do
-          (log/error "[i [url-name url-pattern]]: " i " " url-name " " url-pattern)
-          (url-to-button url-name url-pattern (= i 0))))]]))
+        (url-to-button url-name url-pattern (= i 0)))]]))
 
 (defn overview-pane
   []

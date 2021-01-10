@@ -88,8 +88,9 @@
   [value value-to-copy popup-text]
   [ui/CopyToClipboard {:text value-to-copy}
    [:span value " "
-    [ui/Popup
-     (cond-> {:content (r/as-element [:p popup-text])
-              :trigger (r/as-element [ui/Icon
-                                      {:name  "clipboard outline"
-                                       :color "blue"}])})]]])
+    [ui/Popup {:content (r/as-element [:p popup-text])
+               :trigger (r/as-element [ui/Icon
+                                       {:class ["hide"]
+                                        :name  "clipboard outline"
+                                        :color "blue"
+                                        :style {:color "black"}}])}]]])

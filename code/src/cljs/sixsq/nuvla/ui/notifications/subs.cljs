@@ -63,6 +63,27 @@
     (::spec/notification-subscriptions-modal-visible? db)))
 
 
+(reg-sub
+  ::add-trigger-modal-visible?
+  (fn [db]
+    (::spec/add-subscription-modal-visible? db)))
+
+
+(reg-sub
+  ::resource-kind
+  ::spec/resource-kind)
+
+
+(reg-sub
+  ::resource-tag
+  ::spec/resource-tag)
+
+
+(reg-sub
+  ::resource-tags-available
+  ::spec/resource-tags-available)
+
+
 ;; Validation
 
 ; Is the form valid?

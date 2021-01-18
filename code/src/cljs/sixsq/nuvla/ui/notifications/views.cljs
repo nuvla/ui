@@ -54,6 +54,18 @@
         (dispatch [::events/close-edit-subscription-modal])))))
 
 
+(defn save-callback-add-subscription
+  [form-validation-spec]
+  (dispatch-sync [::events/set-validate-form? true])
+  (dispatch-sync [::events/validate-subscription-form form-validation-spec])
+  (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)]
+    (when form-valid?
+      (do
+        (dispatch [::events/set-validate-form? false])
+        (dispatch [::events/edit-subscription])
+        (dispatch [::events/close-edit-subscription-modal])))))
+
+
 (defn DeleteButtonSubscriptions
   [sub]
   (let [tr      (subscribe [::i18n-subs/tr])
@@ -218,6 +230,117 @@
                        :active   true
                        :on-click #(save-callback-subscription ::spec/subscription)}]]]))))
 
+(defn select-resources
+  []
+  (let [component-type (subscribe [::subs/resource-kind])]
+    [
+     [^{:key "component_type"}
+      [ui/TableRow
+       [ui/TableCell {:collapsing true
+                      :style      {:padding-bottom 8}} "Component"]
+       [ui/TableCell
+        [ui/Dropdown {:selection true,
+                      :fluid     true
+                      :value     @component-type
+                      :on-change (ui-callback/value #(dispatch [::events/set-resource-kind %]))
+                      :options   [{:key "nuvlabox-status", :text "NuvlaBox Telemetry", :value "nuvlabox-status"}
+                                  {:key "infrastructure-service", :text "Infrastructure Service", :value "infrastructure-service"}]}]
+        ]]]]))
+
+(def component-metrics
+  {"nuvlabox" [{:key "cpu load" :text "cpu load" :value "load"}
+               {:key "ram usage" :text "ram usage" :value "ram"}
+               {:key "disk usage" :text "disk usage" :value "disk"}
+               ]
+   "infrastructure-service" [{:key "state" :text "state" :value "state"}]})
+
+
+(def component-options
+  [{:key "nuvlabox", :text "NuvlaBox Telemetry", :value "nuvlabox"}
+   {:key "infrastructure-service", :text "Infrastructure Service", :value "infrastructure-service"}])
+
+(defn resource-tag-options
+  []
+  (let [resource-tags (subscribe [::subs/resource-tags-available])]
+    (vec (map (fn [v] {:key (:key v)
+                       :value (:key v)
+                       :text (str (:key v) " :: " (:doc_count v))})
+         @resource-tags))))
+
+
+(defn add-subscription-modal
+  []
+  (println "add subscription...")
+  (let [tr (subscribe [::i18n-subs/tr])
+        visible? (subscribe [::subs/add-trigger-modal-visible?])
+        validate-form? (subscribe [::subs/validate-form?])
+        form-valid? (subscribe [::subs/form-valid?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-notification-method name-kw value])
+                         (dispatch [::events/validate-notification-method-form]))
+        resource-kind (subscribe [::subs/resource-kind])
+        resource-tag (subscribe [::subs/resource-tag])
+        ]
+
+    (fn []
+      (let [header (str/capitalize (str (@tr [:add]) " " (@tr [:subscription])))]
+        [:div]
+        [ui/Modal {:open       @visible?
+                   :close-icon true
+                   :on-close   #(dispatch [::events/close-add-subscription-modal])}
+
+         [ui/ModalHeader header]
+
+         [ui/ModalContent {:scrolling false}
+          [utils-validation/validation-error-message ::subs/form-valid?]
+          [ui/Header {:as "h3"} "General"]
+          [ui/Table style/definition
+           [ui/TableBody
+            [uix/TableRowField (str (@tr [:subscription]) " " (@tr [:name])), :editable? true, :default-value name,
+             :required? true, :spec ::spec/name, :on-change (partial on-change :name),
+             :validate-form? @validate-form?]
+            ]]
+          [ui/Header {:as "h3"} "Components"]
+          [ui/Table style/definition
+           [ui/TableBody
+            [ui/TableRow
+             [ui/TableCell {:collapsing true
+                            :style      {:padding-bottom 8}} "Component"]
+             [ui/TableCell
+              [ui/Dropdown {:selection true
+                            ;:value     @resource-kind
+                            :on-change (ui-callback/value #(do
+                                                             (dispatch [::events/fetch-tags-available %])
+                                                             (dispatch [::events/set-resource-kind %])))
+                            :options   component-options}]]]
+            [ui/TableRow
+             [ui/TableCell {:collapsing true
+                            :style      {:padding-bottom 8}} "Tags"]
+             [ui/TableCell
+              [ui/Dropdown {:selection true
+                            ;:value     @resource-tag
+                            :on-change (ui-callback/value #(dispatch [::events/set-resource-tag %]))
+                            :options   (resource-tag-options)}]]]
+            ]]
+
+
+          [ui/Header {:as "h3"} "Criteria"]
+          [ui/Table style/definition
+           [ui/TableBody
+            [ui/TableCell {:collapsing true
+                           :style      {:padding-bottom 8}} "Metric"]
+            [ui/TableCell
+             [ui/Dropdown {:selection true
+                           :on-change (ui-callback/value #(dispatch [::events/set-criteria-metric %]))
+                           :options   (get component-metrics @resource-kind)}]]]
+           ]]
+         [ui/ModalActions
+          [uix/Button {:text     (@tr [:create])
+                       :positive true
+                       :disabled (when-not @form-valid? true)
+                       :active   true
+                       :on-click #(save-callback-add-subscription ::spec/subscription)}]]]
+        ))))
 
 (defn add-notification-method-modal
   []
@@ -274,7 +397,7 @@
                        :on-click #(save-callback-notification-method ::spec/notification-method)}]]]))))
 
 
-(defn MenuBarSubscriptions
+(defn MenuBarSubscription
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [main-components/StickyBar
@@ -282,8 +405,7 @@
       [uix/MenuItemWithIcon
        {:name      (@tr [:add])
         :icon-name "add"
-        ;:on-click  #(dispatch [::events/open-add-update-notification-method-modal {} true])
-        }]]]))
+        :on-click  #(dispatch [::events/open-add-subscription-modal {} nil])}]]]))
 
 
 (defn MenuBarNotificationMethod
@@ -405,7 +527,7 @@
                                                                     :name        name
                                                                     :description name}]))
         [ui/TabPane
-         [MenuBarSubscriptions]
+         [MenuBarSubscription]
          [uix/Accordion
           [:<>
            [:div
@@ -521,4 +643,5 @@
    [TabsAll]
    [edit-subscription-modal]
    [add-notification-method-modal]
+   [add-subscription-modal]
    [manage-subscriptions-modal]])

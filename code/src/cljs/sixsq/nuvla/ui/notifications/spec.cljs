@@ -39,14 +39,25 @@
                                                            ::method
                                                            ::enabled]))
 (s/def ::notification-subscriptions-modal-visible? boolean?)
+(s/def ::add-subscription-modal-visible? boolean?)
+
+(def component-types #{"nuvlabox"
+                       "infrastructure-service"
+                       "deployment"})
+
+(s/def ::component-type (s/spec component-types))
 
 ;;
 ;; individual subscriptions
 ;;
 
 (s/def ::kind utils-spec/nonblank-string)
+(s/def ::resource-kind utils-spec/nonblank-string)
+(s/def ::resource-tag utils-spec/nonblank-string)
+(s/def ::resource-tags-available any?)
 (s/def ::resource utils-spec/nonblank-string)
 (s/def ::status utils-spec/nonblank-string)
+(s/def ::criteria-metric utils-spec/nonblank-string)
 
 (s/def ::subscriptions (s/nilable any?))
 (s/def ::notification-subscriptions (s/nilable any?))
@@ -56,6 +67,7 @@
                                        ::category
                                        ::resource
                                        ::status
+                                       ::criteria-metric
                                        ::method]
                               :opt-un [::name
                                        ::description]))

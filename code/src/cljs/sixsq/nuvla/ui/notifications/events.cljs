@@ -186,6 +186,25 @@
                                     (dispatch [::get-notification-subscription-configs])))]}))))
 
 
+(reg-event-fx
+  ::set-tags-available
+  (fn [{:keys [db]} [_ tags-response]]
+    (println "... set-tags-available tags-response" tags-response)
+    (let [buckets        (get-in tags-response
+                                 [:aggregations (keyword "terms:tags") :buckets])
+          _ (println "... set-tags-available" buckets)]
+      {:db       (assoc db ::spec/resource-tags-available buckets)})))
+
+
+(reg-event-fx
+  ::fetch-tags-available
+  (fn [{:keys [db]} [_ resource-kind]]
+      (println "... fetch-tags-available" resource-kind)
+      {::cimi-api-fx/search [(keyword resource-kind) {:last 0
+                                                      :aggregation "terms:tags"}
+                             #(dispatch [::set-tags-available %])]}))
+
+
 ;;
 ;; subscriptions
 ;;
@@ -195,6 +214,27 @@
   ::set-subscriptions
   (fn [db [_ subs]]
     (assoc db ::spec/subscriptions subs)))
+
+
+(reg-event-db
+  ::set-resource-kind
+  (fn [db [_ resource-kind]]
+    (println ".... set-resource-kind" resource-kind)
+    (assoc db ::spec/resource-kind resource-kind)))
+
+
+(reg-event-db
+  ::set-resource-tag
+  (fn [db [_ resource-tag]]
+    (println ".... set-resource-tag" resource-tag)
+    (assoc db ::spec/resource-tag resource-tag)))
+
+
+(reg-event-db
+  ::set-criteria-metric
+  (fn [db [_ metric]]
+    (println ".... set-criteria-metric" metric)
+    (assoc db ::spec/criteria-metric metric)))
 
 
 (reg-event-fx
@@ -212,6 +252,20 @@
   (fn [{:keys [db]} [_ id]]
     {:db                  db
      ::cimi-api-fx/delete [id #(dispatch [::get-notification-subscriptions])]}))
+
+
+(reg-event-db
+  ::open-add-subscription-modal
+  (fn [db [_ comp-type]]
+    (-> db
+        (assoc ::spec/component-type comp-type)
+        (assoc ::spec/add-subscription-modal-visible? true))))
+
+
+(reg-event-db
+  ::close-add-subscription-modal
+  (fn [db _]
+    (assoc db ::spec/add-subscription-modal-visible? false)))
 
 
 (reg-event-db
@@ -286,6 +340,8 @@
                                               :type    :error}]))
                                 (do (dispatch [::cimi-detail-events/get (:id %)])
                                     (dispatch [::get-notification-subscriptions])))]}))))
+
+
 ;;
 ;; generic
 ;;

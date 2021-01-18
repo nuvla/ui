@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.docs-detail.views
   (:require
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.docs.subs :as subs]
+    [sixsq.nuvla.ui.docs.events :as docs-events]
+    [sixsq.nuvla.ui.docs.subs :as docs-subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -136,8 +137,10 @@
 
 (defn docs-detail
   [resource-id]
-  (let [documents (subscribe [::subs/documents])]
+  (let [documents (subscribe [::docs-subs/documents])]
     (fn [resource-id]
+      (when (nil? @documents)
+        (dispatch [::docs-events/get-documents]))
       (let [document (get @documents resource-id)]
         [ui/Container {:fluid true}
          [metadata-section document]

@@ -54,17 +54,12 @@
   [{:keys [id name description] :as credential}]
   (let [tr                  (subscribe [::i18n-subs/tr])
         selected-credential (subscribe [::subs/selected-credential])
-        start?              (subscribe [::subs/deployment-start?])
         status              (subscribe [::creds-subs/credential-check-status id])
         cred-valid?         (subscribe [::creds-subs/credential-check-status-valid? id])
         last-check          (subscribe [::creds-subs/credential-check-last-check id])
         selected?           (= id (:id @selected-credential))]
-    [ui/ListItem (cond-> {:active selected?}
-                         (and selected? (not @start?))
-                         (assoc :style {:background-color "rgba(0,0,0,.05)"
-                                        :padding ".5em .5em"})
-                         @start? (assoc :on-click #(dispatch [::events/set-selected-credential
-                                                              credential])))
+    [ui/ListItem (cond-> {:active selected?
+                          :on-click #(dispatch [::events/set-selected-credential credential])})
      [ui/ListIcon {:vertical-align "middle"}
       [ui/IconGroup {:size "big"}
        [ui/Icon {:name "key"}]
@@ -87,12 +82,11 @@
 (defn creds-list
   []
   (let [tr          (subscribe [::i18n-subs/tr])
-        credentials (subscribe [::subs/credentials])
-        start?      (subscribe [::subs/deployment-start?])]
+        credentials (subscribe [::subs/credentials])]
     (if (seq @credentials)
       [ui/ListSA {:divided   true
                   :relaxed   true
-                  :selection @start?}
+                  :selection true}
        (doall
          (for [{:keys [id] :as credential} @credentials]
            ^{:key id}
@@ -130,7 +124,7 @@
 (defmethod utils/step-content :infra-services
   [step-id]
   (let [tr             (subscribe [::i18n-subs/tr])
-        infra-services (subscribe [::subs/infra-services])
+        infra-services (subscribe [::subs/visible-infra-services])
         loading?       (subscribe [::subs/infra-services-loading?])]
     [ui/Segment (assoc style/basic :loading @loading?)
      (if (seq @infra-services)

@@ -340,7 +340,7 @@
   (fn [[infra-services deployment-start? selected-infra-service]]
     (if deployment-start?
       infra-services
-      [selected-infra-service])))
+      (when selected-infra-service [selected-infra-service]))))
 
 
 (reg-sub

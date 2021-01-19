@@ -103,3 +103,9 @@
   :<- [::nuvlabox]
   (fn [nuvlabox _]
     (general-utils/can-delete? nuvlabox)))
+
+
+(reg-sub
+  ::active-tab-index
+  (fn [db]
+    (get-in db [::spec/active-tab-index])))

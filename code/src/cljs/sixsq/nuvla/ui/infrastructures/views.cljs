@@ -309,7 +309,7 @@
 
          [ui/Table style/definition
           [ui/TableBody
-           [row-csp-credential-selector cred-views/infrastructure-service-csp-subtyes nil
+           [row-csp-credential-selector cred-views/infrastructure-service-csp-subtypes nil
             (boolean (:endpoint @service)) (if (:endpoint @service) any? ::spec/management-credential)
             (partial on-change :management-credential)]]]
          [ui/Container {:style {:margin  "5px" :display "inline-block"}}

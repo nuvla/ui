@@ -67,8 +67,6 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     (timbre/set-level! :info)
     [:div
-     ;[uix/PageHeader
-     ; "play" (general-utils/capitalize-first-letter (@tr [:apps-header]))]
      [utils-validation/validation-error-message ::subs/form-valid?]
      [views-detail/version-warning]
      [views-detail/add-modal]

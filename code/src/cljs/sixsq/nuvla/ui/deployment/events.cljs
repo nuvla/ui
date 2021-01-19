@@ -263,7 +263,7 @@
 
 (reg-event-fx
   ::edit
-  (fn [_ [_ resource-id data]]
+  (fn [_ [_ resource-id data success-msg]]
     {::cimi-api-fx/edit [resource-id data
                          #(if (instance? js/Error %)
                             (let [{:keys [status message]} (response/parse-ex-info %)]
@@ -272,7 +272,13 @@
                                                            status (str " (" status ")"))
                                           :content message
                                           :type    :error}]))
-                            (dispatch [::set-deployment %]))]}))
+                            (do
+                              (when success-msg
+                                (dispatch [::messages-events/add
+                                           {:header  success-msg
+                                            :content success-msg
+                                            :type    :success}]))
+                              (dispatch [::set-deployment %])))]}))
 
 
 (reg-event-fx
@@ -302,3 +308,8 @@
                         #(dispatch [::creds-events/check-credential % 1])
                         ]}))
 
+
+(reg-event-db
+  ::set-active-tab-index
+  (fn [db [_ active-tab-index]]
+    (assoc db ::spec/active-tab-index active-tab-index)))

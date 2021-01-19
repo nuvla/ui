@@ -19,6 +19,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.utils.zip :as zip]))
 
 
@@ -90,13 +91,26 @@
           :on-refresh #(dispatch [::events/refresh])}]]])))
 
 
+(defonce usb-doc-anchor "install-via-usb-stick")
+(defonce compose-doc-anchor "install-via-compose-file-bundle")
+
+
+(defn NuvlaDocLink
+  "anchor should match the html id in the doc page"
+  ([tr text-key] [NuvlaDocLink tr text-key nil])
+  ([tr text-key anchor]
+   [:a {:href   (str "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/quickstart.html" (when anchor (str "#" anchor)))
+        :target "_blank"}
+    (@tr [text-key])]))
+
+
 (defn NuvlaDocs
-  [tr]
+  "anchor should match the html id in the doc page"
+  [tr anchor]
   [ui/Container {:text-align :center
                  :style      {:margin "0.5em"}}
    [:span (@tr [:nuvlabox-documentation])
-    [:a {:href   "https://docs.nuvla.io/docs/nuvlabox/nuvlabox-engine/quickstart.html"
-         :target "_blank"} "Nuvla Docs"]]])
+    [NuvlaDocLink tr :nuvla-docs anchor]]])
 
 
 (defn CreatedNuvlaBox
@@ -138,51 +152,47 @@
                           [ui/Icon {:name "privacy"}] private-ssh-key-file])}])
 
          [ui/ModalContent
-          [ui/CardGroup {:centered true}
-           [ui/Card
-            [ui/CardContent {:text-align :center}
-             [ui/Header [:span {:style {:overflow-wrap "break-word"}} nuvlabox-name-or-id]]
-             [ui/Icon {:name  "box"
-                       :color "green"
-                       :size  :massive}]]
-            [ui/CopyToClipboard {:text nuvlabox-id}
-             [ui/Button {:positive true
-                         :icon     "clipboard"
-                         :content  (@tr [:copy-nuvlabox-id])}]]]]]
+          [ui/Container
+           [ui/CardGroup {:centered true}
+            [ui/Card
+             [ui/CardContent {:text-align :center}
+              [ui/Header [:span {:style {:overflow-wrap "break-word"}} nuvlabox-name-or-id]]
+              [ui/Icon {:name  "box"
+                        :color "green"
+                        :size  :massive}]]
+             [ui/CopyToClipboard {:text nuvlabox-id}
+              [ui/Button {:positive true
+                          :icon     "clipboard"
+                          :content  (@tr [:copy-nuvlabox-id])}]]]]
 
-         [ui/Divider {:horizontal true}
-          [ui/Header (@tr [:nuvlabox-quick-install])]]
+           [ui/Divider {:horizontal true}
+            [ui/Header (@tr [:nuvlabox-quick-install])]]
 
-         [ui/Segment {:loading    (nil? @zip-url)
-                      :text-align :center
-                      :raised     true}
-          [ui/Label {:circular true
-                     :color    "green"} "1"]
-          [:h5 {:style {:margin "0.5em 0 1em 0"}}
-           (str/capitalize (@tr [:download])) " compose file(s)"]
-          [:a {:href     @zip-url
-               :target   "_blank"
-               :style    {:margin "1em"}
-               :download "nuvlabox-engine.zip"} "nuvlabox-engine.zip"]]
+           [ui/SegmentGroup {:raised true}
+            [ui/Segment {:loading    (nil? @zip-url)
+                         :text-align :center}
+             [ui/Label {:circular true
+                        :color    "green"} "1"]
+             [:h5 {:style {:margin "0.5em 0 1em 0"}}
+              (str/capitalize (@tr [:download])) " compose file(s)"]
+             [:a {:href     @zip-url
+                  :target   "_blank"
+                  :style    {:margin "1em"}
+                  :download "nuvlabox-engine.zip"} "nuvlabox-engine.zip " [ui/Icon {:name "download"}]]]
 
-         [ui/Segment {:text-align :center
-                      :raised     true}
-          [ui/Label {:circular true
-                     :color    "green"} "2"]
-          [:h5 {:style {:margin "0.5em 0 1em 0"}}
-           (@tr [:nuvlabox-unzip-execute])
-           [ui/CopyToClipboard {:text execute-command}
-            [:a {:href  "#"
-                 :style {:font-size   "0.9em"
-                         :color       "grey"
-                         :font-style  "italic"
-                         :font-weight "lighter"}} "(click to copy)"]]]
-          [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]
-
-         [NuvlaDocs tr]
+            [ui/Segment {:text-align :center}
+             [ui/Label {:circular true
+                        :color    "green"} "2"]
+             [:h5 {:style {:margin "0.5em 0 1em 0"}}
+              (@tr [:nuvlabox-unzip-execute])
+              (values/copy-value-to-clipboard "" execute-command (@tr [:copy-command-to-clipboard]))]
+             [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]]]
+          [:div {:style {:margin "20px 0px 0px 0px"}}
+           [NuvlaDocs tr compose-doc-anchor]]]
 
          [ui/ModalActions
-          [ui/Button {:on-click on-close-fn} (@tr [:close])]]]))))
+          [ui/Button {:positive true
+                      :on-click on-close-fn} (@tr [:close])]]]))))
 
 
 (defn CreatedNuvlaBoxUSBTrigger
@@ -243,61 +253,64 @@
                           [ui/Icon {:name "privacy"}] private-ssh-key-file])}])
 
          [ui/ModalContent
-          [ui/CardGroup {:centered true}
-           [ui/Card
-            [ui/CardContent {:text-align :center}
-             [ui/Header [:span {:style {:overflow-wrap "break-word"}}
-                         (@tr [:nuvlabox-modal-usb-trigger-file])]]
-             [ui/Icon {:name    (if apikey "file code" "spinner")
-                       :loading (nil? apikey)
-                       :color   "green"
-                       :size    :massive}]]
-            [:a {:href     (str "data:text/plain;charset=utf-8,"
-                                (js/encodeURIComponent
-                                  (general-utils/edn->json nuvlabox-trigger-file)))
-                 :target   "_blank"
-                 :download "nuvlabox-installation-trigger-usb.nuvla"}
-             [ui/Button {:positive       true
-                         :fluid          true
-                         :loading        (nil? apikey)
-                         :icon           "download"
-                         :label-position "left"
-                         :as             "div"
-                         :content        (@tr [:download])}]]]]]
+          [ui/Container
+           [ui/CardGroup {:centered true}
+            [ui/Card
+             [ui/CardContent {:text-align :center}
+              [ui/Header [:span {:style {:overflow-wrap "break-word"}}
+                          (@tr [:nuvlabox-modal-usb-trigger-file])]]
+              [ui/Icon {:name    (if apikey "file code" "spinner")
+                        :loading (nil? apikey)
+                        :color   "green"
+                        :size    :massive}]]
+             [:a {:href     (str "data:text/plain;charset=utf-8,"
+                                 (js/encodeURIComponent
+                                   (general-utils/edn->json nuvlabox-trigger-file)))
+                  :target   "_blank"
+                  :download "nuvlabox-installation-trigger-usb.nuvla"}
+              [ui/Button {:positive       true
+                          :fluid          true
+                          :loading        (nil? apikey)
+                          :icon           "download"
+                          :label-position "left"
+                          :as             "div"
+                          :content        (@tr [:download])}]]]]
 
-         [ui/Divider {:horizontal true}
-          [ui/Header (@tr [:instructions])]]
+           [ui/Divider {:horizontal true}
+            [ui/Header (@tr [:instructions])]]
 
-         [ui/Segment {:loading    (nil? nuvlabox-trigger-file)
-                      :text-align :center
-                      :raised     true}
-          [ui/Label {:circular true
-                     :color    "green"} "1"]
-          [:h5 {:style {:margin "0.5em 0 1em 0"}}
-           (@tr [:nuvlabox-modal-usb-copy])
-           [ui/Popup {:content (@tr [:nuvlabox-modal-usb-copy-warning])
-                      :trigger (r/as-element [ui/Icon {:name "info circle"}])}]]]
+           [ui/SegmentGroup {:raised true}
+            [ui/Segment {:loading    (nil? nuvlabox-trigger-file)
+                         :text-align :center
+                         :raised     true}
+             [ui/Label {:circular true
+                        :color    "green"} "1"]
+             [:h5 {:style {:margin "0.5em 0 1em 0"}}
+              (@tr [:nuvlabox-modal-usb-copy])
+              [ui/Popup {:content (@tr [:nuvlabox-modal-usb-copy-warning])
+                         :trigger (r/as-element [ui/Icon {:name "info circle"}])}]]]
 
-         [ui/Segment {:text-align :center
-                      :raised     true}
-          [ui/Label {:circular true
-                     :color    "green"} "2"]
-          [:h5 {:style {:margin "0.5em 0 1em 0"}}
-           (@tr [:nuvlabox-modal-usb-plug])]
-          [:span (@tr [:nuvlabox-modal-usb-plug-info])]]
+            [ui/Segment {:text-align :center
+                         :raised     true}
+             [ui/Label {:circular true
+                        :color    "green"} "2"]
+             [:h5 {:style {:margin "0.5em 0 1em 0"}}
+              (@tr [:nuvlabox-modal-usb-plug])]
+             [:span (@tr [:nuvlabox-modal-usb-plug-info])]]
 
-         [ui/Segment {:text-align :center
-                      :raised     true}
-          [ui/Label {:circular true
-                     :color    "green"} "3"]
-          [:h5 {:style {:margin "0.5em 0 1em 0"}}
-           (@tr [:repeat])]
-          [:span (@tr [:repeat-info])]]
+            [ui/Segment {:text-align :center
+                         :raised     true}
+             [ui/Label {:circular true
+                        :color    "green"} "3"]
+             [:h5 {:style {:margin "0.5em 0 1em 0"}}
+              (@tr [:repeat])]
+             [:span (@tr [:repeat-info])]]]]]
 
-         [NuvlaDocs tr]
+         [NuvlaDocs tr usb-doc-anchor]
 
          [ui/ModalActions
-          [ui/Button {:on-click on-close-fn} (@tr [:close])]]]))))
+          [ui/Button {:positive true
+                      :on-click on-close-fn} (@tr [:close])]]]))))
 
 
 (defn AddModal
@@ -571,55 +584,60 @@
                      (@tr [:nuvlabox-modal-install-method])]
 
                     [ui/Form
-                     [ui/FormCheckbox {:label     "Compose file bundle"
-                                       :radio     true
-                                       :error     (not (nil? @install-strategy-error))
-                                       :checked   (= @install-strategy "compose")
-                                       :on-change #(do
-                                                     (reset! install-strategy "compose")
-                                                     (reset! install-strategy-error nil))}]
+                     [ui/Segment {:raised true}
 
-                     [:div {:style {:color "grey" :font-style "oblique"}}
-                      (@tr [:create-nuvlabox-compose])]
+                      [ui/FormCheckbox {:label     "Compose file bundle"
+                                        :radio     true
+                                        :error     (not (nil? @install-strategy-error))
+                                        :checked   (= @install-strategy "compose")
+                                        :on-change #(do
+                                                      (reset! install-strategy "compose")
+                                                      (reset! install-strategy-error nil))}]
 
-                     [ui/Divider {:hidden true}]
+                      [:div {:style {:color "grey" :font-style "oblique"}}
+                       (@tr [:create-nuvlabox-compose])]
+                      [NuvlaDocLink tr :nuvlabox-modal-more-info compose-doc-anchor]
 
-                     [ui/FormCheckbox {:label     "USB stick"
-                                       :radio     true
-                                       :error     (not (nil? @install-strategy-error))
-                                       :checked   (= @install-strategy "usb")
-                                       :on-change #(do
-                                                     (reset! install-strategy "usb")
-                                                     (reset! install-strategy-error nil))}]
+                      [ui/Divider {:fitted     true
+                                   :horizontal true
+                                   :style      {:text-transform "lowercase"
+                                                :margin         "10px 0"}} "Or"]
 
-                     [:div {:style {:color "grey" :font-style "oblique"}}
-                      (@tr [:create-nuvlabox-usb])]
-                     [:a {:href   "https://docs.nuvla.io"
-                          :target "_blank"}
-                      (@tr [:nuvlabox-modal-more-info])]
-                     ]
+                      [ui/FormCheckbox {:label     "USB stick"
+                                        :radio     true
+                                        :error     (not (nil? @install-strategy-error))
+                                        :checked   (= @install-strategy "usb")
+                                        :on-change #(do
+                                                      (reset! install-strategy "usb")
+                                                      (reset! install-strategy-error nil))}]
 
-                    [ui/Container {:style {:margin  "5px"
-                                           :display (if (= @install-strategy "usb")
-                                                      "inline-block" "none")}}
-                     [ui/Input {:label       (@tr [:nuvlabox-modal-usb-expires])
-                                :placeholder default-ttl
-                                :value       @usb-trigger-key-ttl
-                                :size        "mini"
-                                :type        "number"
-                                :on-change   (ui-callback/input-callback
-                                               #(cond
-                                                  (number? (general-utils/str->int %))
-                                                  (reset! usb-trigger-key-ttl
-                                                          (general-utils/str->int %))
-                                                  (empty? %) (reset! usb-trigger-key-ttl 0)))
-                                :step        1
-                                :min         0}]
-                     [ui/Popup {:content  (@tr [:nuvlabox-modal-usb-expires-popup] [default-ttl])
-                                :position "right center"
-                                :wide     true
-                                :trigger  (r/as-element [ui/Icon {:name  "question"
-                                                                  :color "grey"}])}]]])]
+                      [:div {:style {:color "grey" :font-style "oblique"}}
+                       (@tr [:create-nuvlabox-usb])]
+
+                      [:div {:style {:margin  "10px 5px 5px 5px"
+                                     :display (if (= @install-strategy "usb")
+                                                "block" "none")}}
+                       [ui/Input {:label       (@tr [:nuvlabox-modal-usb-expires])
+                                  :placeholder default-ttl
+                                  :value       @usb-trigger-key-ttl
+                                  :size        "mini"
+                                  :type        "number"
+                                  :on-change   (ui-callback/input-callback
+                                                 #(cond
+                                                    (number? (general-utils/str->int %))
+                                                    (reset! usb-trigger-key-ttl
+                                                            (general-utils/str->int %))
+                                                    (empty? %) (reset! usb-trigger-key-ttl 0)))
+                                  :step        1
+                                  :min         0}]
+                       [ui/Popup {:content  (@tr [:nuvlabox-modal-usb-expires-popup] [default-ttl])
+                                  :position "right center"
+                                  :wide     true
+                                  :trigger  (r/as-element [ui/Icon {:name  "question"
+                                                                    :color "grey"}])}]]
+
+                      [NuvlaDocLink tr :nuvlabox-modal-more-info usb-doc-anchor]
+                      ]]])]
 
                 [ui/ModalActions
                  [:span {:style {:color "#9f3a38" :display (if (not (nil? @install-strategy-error))

@@ -278,100 +278,100 @@
                                      (str "Next heartbeat is expected " next-heartbeat-times-ago)
                                      (str "Next heartbeat was expected " next-heartbeat-times-ago)))]
 
-    [ui/Message {:icon "heartbeat"
+    [ui/Message {:icon    "heartbeat"
                  :content (str last-heartbeat-msg ". " next-heartbeat-msg)}]))
 
 
 (defn Load
   [resources]
-   (let [load-stats      (utils/load-statistics resources)
-         net-stats       (utils/load-net-stats (:net-stats resources))
-         number-of-stats (count load-stats)]
-     ; TODO: if the number-of-stats grows if should split into a new row
-     [ui/Grid {:columns   number-of-stats,
-               :stackable true
-               :divided   true
-               :celled    "internally"}
-      [ui/GridRow
-       (for [stat load-stats]
-         ^{:key (:title stat)}
-         [ui/GridColumn
-          [:div
-           [plot/Doughnut {:height  250
-                           :data    {:labels   (:label stat)
-                                     :datasets [{:data            [(:percentage stat), (:value stat)]
-                                                 :backgroundColor ["rgb(230, 99, 100)",
-                                                                   "rgba(155, 99, 132, 0.1)",
-                                                                   "rgb(230, 99, 100)"]
-                                                 :borderColor     ["rgba(230, 99, 100,1)"]
-                                                 :borderWidth     3}]}
-                           :options {:legend              {:display true
-                                                           :labels  {:fontColor "grey"}}
-                                     :title               {:display  true
-                                                           :text     (:title stat)
-                                                           :position "bottom"}
-                                     :maintainAspectRatio false
-                                     :circumference       4.14
-                                     :rotation            -3.64
-                                     :cutoutPercentage    60}}]]
+  (let [load-stats      (utils/load-statistics resources)
+        net-stats       (utils/load-net-stats (:net-stats resources))
+        number-of-stats (count load-stats)]
+    ; TODO: if the number-of-stats grows if should split into a new row
+    [ui/Grid {:columns   number-of-stats,
+              :stackable true
+              :divided   true
+              :celled    "internally"}
+     [ui/GridRow
+      (for [stat load-stats]
+        ^{:key (:title stat)}
+        [ui/GridColumn
+         [:div
+          [plot/Doughnut {:height  250
+                          :data    {:labels   (:label stat)
+                                    :datasets [{:data            [(:percentage stat), (:value stat)]
+                                                :backgroundColor ["rgb(230, 99, 100)",
+                                                                  "rgba(155, 99, 132, 0.1)",
+                                                                  "rgb(230, 99, 100)"]
+                                                :borderColor     ["rgba(230, 99, 100,1)"]
+                                                :borderWidth     3}]}
+                          :options {:legend              {:display true
+                                                          :labels  {:fontColor "grey"}}
+                                    :title               {:display  true
+                                                          :text     (:title stat)
+                                                          :position "bottom"}
+                                    :maintainAspectRatio false
+                                    :circumference       4.14
+                                    :rotation            -3.64
+                                    :cutoutPercentage    60}}]]
 
-          (when (pos? (count (:data-gateway stat)))
-            [ui/Container {:key        (:topic stat)
-                           :text-align :center}
-             [ui/LabelGroup {:key  (:topic stat)
-                             :size "tiny"}
-              [ui/Label {:color "blue"
-                         :basic true
-                         :image true}
-               "Topic: "
-               [ui/LabelDetail
-                (first (:data-gateway stat))]]
-              [ui/Label {:color "blue"
-                         :basic true
-                         :image true}
-               "Raw sample: "
-               [ui/LabelDetail
-                (last (:data-gateway stat))]]]]
-            )
+         (when (pos? (count (:data-gateway stat)))
+           [ui/Container {:key        (:topic stat)
+                          :text-align :center}
+            [ui/LabelGroup {:key  (:topic stat)
+                            :size "tiny"}
+             [ui/Label {:color "blue"
+                        :basic true
+                        :image true}
+              "Topic: "
+              [ui/LabelDetail
+               (first (:data-gateway stat))]]
+             [ui/Label {:color "blue"
+                        :basic true
+                        :image true}
+              "Raw sample: "
+              [ui/LabelDetail
+               (last (:data-gateway stat))]]]]
+           )
 
 
-          ; TODO: the data-gateway stats should be in a popup instead of raw text. But fails some unknown reason,
-          ;[ui/Popup
-          ; {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
-          ;  :content        "Let your NuvlaBox apps subscribe to the internal MQTT to access these values locally"
-          ;  :header         "data-gateway"
-          ;  :position       "right center"
-          ;  :inverted       true
-          ;  :wide           true
-          ;
-          ;  :on             "hover"
-          ;  :hide-on-scroll true}]
-          ])]
-      (when (pos? (count (:label net-stats)))
-        [ui/GridRow {:centered true
-                     :columns  2}
-         [ui/GridColumn
-          [:div
-           [plot/Bar {:height  200
-                      :data    {:labels   (:label net-stats)
-                                :datasets [{:label           "Received",
-                                            :data            (:rx net-stats)
-                                            :backgroundColor "rgb(182, 219, 238)"
-                                            :borderColor     "white"
-                                            :borderWidth     1}
-                                           {:label           "Transmitted",
-                                            :data            (:tx net-stats)
-                                            :backgroundColor "rgb(230, 99, 100)"
-                                            :borderColor     "white"
-                                            :borderWidth     1}]}
-                      :options {:legend {:display true
-                                         :labels  {:fontColor "grey"}}
-                                :title  {:display  true
-                                         :text     (:title net-stats)
-                                         :position "bottom"}
-                                :scales {:yAxes [{:type       "logarithmic"
-                                                  :scaleLabel {:labelString "megabytes"
-                                                               :display     true}}]}}}]]]])]))
+         ; TODO: the data-gateway stats should be in a popup instead of raw text. But fails some unknown reason,
+         ;[ui/Popup
+         ; {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
+         ;  :content        "Let your NuvlaBox apps subscribe to the internal MQTT to access these values locally"
+         ;  :header         "data-gateway"
+         ;  :position       "right center"
+         ;  :inverted       true
+         ;  :wide           true
+         ;
+         ;  :on             "hover"
+         ;  :hide-on-scroll true}]
+         ])]
+     (when (pos? (count (:label net-stats)))
+       [ui/GridRow {:centered true
+                    :columns  2}
+        [ui/GridColumn
+         [:div
+          [plot/Bar {:height  200
+                     :data    {:labels   (:label net-stats)
+                               :datasets [{:label           "Received",
+                                           :data            (:rx net-stats)
+                                           :backgroundColor "rgb(182, 219, 238)"
+                                           :borderColor     "white"
+                                           :borderWidth     1}
+                                          {:label           "Transmitted",
+                                           :data            (:tx net-stats)
+                                           :backgroundColor "rgb(230, 99, 100)"
+                                           :borderColor     "white"
+                                           :borderWidth     1}]}
+                     :options {:legend {:display true
+                                        :labels  {:fontColor "grey"}}
+                               :title  {:display  true
+                                        :text     (:title net-stats)
+                                        :position "bottom"}
+                               :scales {:yAxes [{:type       "logarithmic"
+                                                 :scaleLabel {:labelString "megabytes"
+                                                              :display     true}}]}}}]]]])]))
 
 
 (defn ActionsMenu
@@ -406,8 +406,8 @@
                                        (for [action action-list]
                                          [ui/ListItem {:as  "a"
                                                        :key (str "action." (apply str
-                                                                             (take 12
-                                                                               (repeatedly #(char (+ (rand 26) 65))))))}
+                                                                                  (take 12
+                                                                                        (repeatedly #(char (+ (rand 26) 65))))))}
                                           [ui/ListContent
                                            [ui/ListDescription
                                             [:span {:on-click (:on-click action)
@@ -479,14 +479,14 @@
            version refresh-interval owner] :as nuvlabox}
    {:keys [nuvlabox-api-endpoint nuvlabox-engine-version] :as nb-status}
    locale edit old-nb-name close-fn]
-  [ui/Segment {:secondary   true
-               :color       "blue"
-               :raised      true}
+  [ui/Segment {:secondary true
+               :color     "blue"
+               :raised    true}
    [:h4 "NuvlaBox "
     (when nuvlabox-engine-version
-      [ui/Label {:circular  true
-                 :color     "blue"
-                 :size      "tiny"}
+      [ui/Label {:circular true
+                 :color    "blue"
+                 :size     "tiny"}
        nuvlabox-engine-version])]
    [ui/Table {:basic  "very"
               :padded false}
@@ -497,16 +497,16 @@
      (when name
        [ui/TableRow
         [ui/TableCell "Name"]
-        [ui/TableCell [ui/Icon {:name "pencil"
+        [ui/TableCell [ui/Icon {:name     "pencil"
                                 :on-click #(reset! edit true)
-                                :style  {:cursor  "pointer"}}]
+                                :style    {:cursor "pointer"}}]
          " "
          (if @edit
            [ui/Input {:default-value name
                       :on-key-press  (partial forms/on-return-key
-                                       #(if (= @old-nb-name name id)
-                                          (close-fn)
-                                          (EditAction id {:name @old-nb-name} close-fn)))
+                                              #(if (= @old-nb-name name id)
+                                                 (close-fn)
+                                                 (EditAction id {:name @old-nb-name} close-fn)))
                       :on-change     (ui-callback/input-callback #(reset! old-nb-name %))
                       :focus         true
                       :size          "mini"}]
@@ -540,9 +540,9 @@
   [{:keys [hostname ip docker-server-version
            operating-system architecture last-boot docker-plugins] :as nb-status}
    ssh-creds tr]
-  [ui/Segment {:secondary   true
-               :color       "black"
-               :raised      true}
+  [ui/Segment {:secondary true
+               :color     "black"
+               :raised    true}
    [:h4 "Host"]
    (if nb-status
      [ui/Table {:basic  "very"
@@ -578,7 +578,7 @@
                                                        [ui/ListContent
                                                         [ui/ListHeader
                                                          [:a {:href   (str @config/path-prefix
-                                                                        "/api/" (:id sshkey))
+                                                                           "/api/" (:id sshkey))
                                                               :target "_blank"}
                                                           (or (:name sshkey) (:id sshkey))]]
                                                         [ui/ListDescription
@@ -601,24 +601,24 @@
           [ui/TableCell "Last Boot"]
           [ui/TableCell (time/time->format last-boot)]])]]
      ;else
-     [ui/Message {:content  (@tr [:nuvlabox-status-unavailable])}])])
+     [ui/Message {:content (@tr [:nuvlabox-status-unavailable])}])])
 
 
 (defn TabOverviewStatus
   [{:keys [updated status] :as nb-status} nb-id online-status tr]
-  [ui/Segment {:secondary   true
-               :color       (utils/status->color online-status)
-               :raised      true}
-   [:h4 "Status " ]
+  [ui/Segment {:secondary true
+               :color     (utils/status->color online-status)
+               :raised    true}
+   [:h4 "Status "]
    (when status
      [:div {:style {:margin "0.5em 0 1em 0"}}
       "Operational Status: "
       [ui/Popup
-       {:trigger  (r/as-element [ui/Label {:circular true
-                                           :size     "small"
-                                           :horizontal true
-                                           :color    (utils/operational-status->color status)}
-                                 status])
+       {:trigger        (r/as-element [ui/Label {:circular   true
+                                                 :size       "small"
+                                                 :horizontal true
+                                                 :color      (utils/operational-status->color status)}
+                                       status])
         :content        (@tr [:nuvlabox-operational-status-popup])
         :position       "bottom center"
         :on             "hover"
@@ -629,9 +629,9 @@
 
 (defn TabOverviewTags
   [{:keys [id tags] :as nuvlabox}]
-  [ui/Segment {:secondary   true
-               :color       "teal"
-               :raised      true}
+  [ui/Segment {:secondary true
+               :color     "teal"
+               :raised    true}
    [:h4 "Tags"]
    [ui/LabelGroup {:size  "tiny"
                    :color "teal"
@@ -659,7 +659,7 @@
                        (refresh (:id @nuvlabox)))]
     (fn []
       (let [{:keys [id tags ssh-keys]} @nuvlabox
-            online-status  @(subscribe [::edge-subs/status-nuvlabox id])]
+            online-status @(subscribe [::edge-subs/status-nuvlabox id])]
         (when (not= (count ssh-keys) (count (:associated-ssh-keys @ssh-creds)))
           (dispatch [::events/get-nuvlabox-ssh-keys ssh-keys]))
         [ui/TabPane
@@ -673,13 +673,13 @@
            [ui/GridColumn {:stretched true}
             [TabOverviewHost @nb-status ssh-creds tr]]]
 
-         [ui/GridRow
-          [ui/GridColumn
-           [TabOverviewStatus @nb-status id online-status tr]]
+          [ui/GridRow
+           [ui/GridColumn
+            [TabOverviewStatus @nb-status id online-status tr]]
 
-          (when (> (count tags) 0)
-            [ui/GridColumn
-             [TabOverviewTags @nuvlabox]])]]]))))
+           (when (> (count tags) 0)
+             [ui/GridColumn
+              [TabOverviewTags @nuvlabox]])]]]))))
 
 
 (defn TabLocationMap
@@ -690,63 +690,39 @@
     (fn [{:keys [id location] :as nuvlabox}]
       (let [update-new-location #(reset! new-location %)
             position            (some-> (or @new-location location) map/longlat->latlong)]
-         [:div
-          (if position (@tr [:map-drag-to-update-nb-location])
-                       (@tr [:map-click-to-set-nb-location]))
-          [map/MapBox
-           {:style             {:height 400
-                                :cursor (when-not location "pointer")}
-            :center            (or position map/sixsq-latlng)
-            :zoom              @zoom
-            :onViewportChanged #(reset! zoom (.-zoom %))
-            :on-click          (when-not position
-                                 (map/click-location update-new-location))}
-           (when position
-             [map/Marker {:position    position
-                          :draggable   true
-                          :on-drag-end (map/drag-end-location update-new-location)}])]
-          [:div {:align "right"}
-           [ui/Button {:on-click #(reset! new-location nil)}
-            (@tr [:cancel])]
-           [ui/Button {:primary  true
-                       :on-click #(dispatch
-                                    [::events/edit id
-                                     (assoc nuvlabox
-                                       :location
-                                       (update @new-location 0 map/normalize-lng))
-                                     (@tr [:nuvlabox-position-update])])}
-            (@tr [:save])]]]))))
+        [:div
+         (if position (@tr [:map-drag-to-update-nb-location])
+                      (@tr [:map-click-to-set-nb-location]))
+         [map/MapBox
+          {:style             {:height 400
+                               :cursor (when-not location "pointer")}
+           :center            (or position map/sixsq-latlng)
+           :zoom              @zoom
+           :onViewportChanged #(reset! zoom (.-zoom %))
+           :on-click          (when-not position
+                                (map/click-location update-new-location))}
+          (when position
+            [map/Marker {:position    position
+                         :draggable   true
+                         :on-drag-end (map/drag-end-location update-new-location)}])]
+         [:div {:align "right"}
+          [ui/Button {:on-click #(reset! new-location nil)}
+           (@tr [:cancel])]
+          [ui/Button {:primary  true
+                      :on-click #(dispatch
+                                   [::events/edit id
+                                    (assoc nuvlabox
+                                      :location
+                                      (update @new-location 0 map/normalize-lng))
+                                    (@tr [:nuvlabox-position-update])])}
+           (@tr [:save])]]]))))
 
 
 (defn TabLocation
   []
-  (let [nuvlabox  (subscribe [::subs/nuvlabox])]
+  (let [nuvlabox (subscribe [::subs/nuvlabox])]
     [ui/TabPane
      [TabLocationMap @nuvlabox]]))
-
-
-(defn TabAcls
-  []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        nuvlabox  (subscribe [::subs/nuvlabox])
-        can-edit? (subscribe [::subs/can-edit?])]
-    (fn []
-      (let [default-value (:acl @nuvlabox)
-            acl     (or default-value
-                      (when-let [user-id (and @can-edit?
-                                           @(subscribe [::session-subs/user-id]))]
-                        {:owners [user-id]}))
-            ui-acl  (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
-        [ui/TabPane
-         (when (:acl @nuvlabox)
-           ^{:key (:updated @nuvlabox)}
-           [acl/AclWidget {:default-value (:acl @nuvlabox)
-                           :read-only (not @can-edit?)
-                           :on-change #(do
-                                         (dispatch [::events/edit
-                                                    (:id @nuvlabox) (assoc @nuvlabox :acl %)
-                                                    (@tr [:nuvlabox-acl-updated])]))}
-            ui-acl])]))))
 
 
 (defn TabLoad
@@ -756,19 +732,19 @@
     (fn []
       (let [{:keys [resources]} @nuvlabox-status]
         [ui/TabPane
-        (if resources
-          [Load resources]
-          [ui/Message
-           {:warning true
-            :content (@tr [:nuvlabox-resources-unavailable])}])]))))
+         (if resources
+           [Load resources]
+           [ui/Message
+            {:warning true
+             :content (@tr [:nuvlabox-resources-unavailable])}])]))))
 
 
 (defn TabPeripherals
   []
   (let [peripherals-per-id (subscribe [::subs/nuvlabox-peripherals])]
     (fn []
-      (let [peripheral-resources  (into [] (map (fn [[id res]] res) @peripherals-per-id))
-            per-interface   (group-by :interface peripheral-resources)]
+      (let [peripheral-resources (into [] (map (fn [[id res]] res) @peripherals-per-id))
+            per-interface        (group-by :interface peripheral-resources)]
         [ui/TabPane
          (for [[interface peripherals] per-interface]
            ^{:key interface}
@@ -793,12 +769,12 @@
         total-pages       (general-utils/total-pages total-elements @elements-per-page)
         page              (subscribe [::subs/page])]
     (fn []
-      (let [events            (:resources @all-events)]
+      (let [events (:resources @all-events)]
         [ui/TabPane
          (if (and (pos? total-elements) (= (count events) 0))
            [ui/Loader {:active true
-                        :inline "centered"}]
-           [ui/Table {:basic  "very"}
+                       :inline "centered"}]
+           [ui/Table {:basic "very"}
             [ui/TableHeader
              [ui/TableRow
               [ui/TableHeaderCell [:span (@tr [:event])]]
@@ -829,18 +805,18 @@
   (let [selected?      (or
                          (= label @state-selector)
                          (and (= label "collected")
-                           (nil? @state-selector)))
-        selected-style    (if selected? {:color "black"
-                                         :font-weight "bold"
-                                         :padding   "10px"}
-                                        {:color color
-                                         :font-weight "normal"
-                                         :padding "3px"})]
+                              (nil? @state-selector)))
+        selected-style (if selected? {:color       "black"
+                                      :font-weight "bold"
+                                      :padding     "10px"}
+                                     {:color       color
+                                      :font-weight "normal"
+                                      :padding     "3px"})]
     [ui/Statistic {:style    {:cursor "pointer"}
                    :on-click #(dispatch [::events/set-vuln-severity-selector
                                          (if (= label "collected") nil label)])}
      [ui/StatisticValue {:style selected-style}
-                         (or value "-")]
+      (or value "-")]
      [ui/StatisticLabel [ui/Popup
                          {:trigger        (r/as-element [:span {:style selected-style} label])
                           :content        label-popup
@@ -856,34 +832,34 @@
    [ui/TableCell vulnerability-id]
    [ui/TableCell product]
    [ui/TableCell {:style {:background-color color
-                          :font-weight  "bold"}} vulnerability-score]])
+                          :font-weight      "bold"}} vulnerability-score]])
 
 
 (defn TabVulnerabilities
   []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        nb-status       (subscribe [::subs/nuvlabox-status])
-        state-selector  (subscribe [::subs/vuln-severity-selector])
-        vulns           (subscribe [::subs/nuvlabox-vulns])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        nb-status      (subscribe [::subs/nuvlabox-status])
+        state-selector (subscribe [::subs/vuln-severity-selector])
+        vulns          (subscribe [::subs/nuvlabox-vulns])]
     (fn []
       (let [
-            summary           (:summary @vulns)
-            items-extended    (:items   @vulns)
-            items-severity    (group-by :severity items-extended)]
+            summary        (:summary @vulns)
+            items-extended (:items @vulns)
+            items-severity (group-by :severity items-extended)]
         [ui/TabPane
          (if @vulns
            [:<>
             [ui/Container {:text-align "center"
-                           :style {:margin  "5px"}}
-             [ui/Label {:basic  true}
+                           :style      {:margin "5px"}}
+             [ui/Label {:basic true}
               (@tr [:nuvlabox-total-vuln])
               [ui/LabelDetail (:total summary)]]
-             [ui/Label {:basic  true}
+             [ui/Label {:basic true}
               [ui/Popup
-               {:trigger  (r/as-element [ui/Icon {:name "info circle"}])
-                :content  (r/as-element
-                            [ui/ListSA {:bulleted true}
-                             (map (fn [k] [ui/ListItem k]) (:affected-products summary))])
+               {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
+                :content        (r/as-element
+                                  [ui/ListSA {:bulleted true}
+                                   (map (fn [k] [ui/ListItem k]) (:affected-products summary))])
                 :position       "bottom center"
                 :on             "hover"
                 :size           "tiny"
@@ -891,7 +867,7 @@
               (@tr [:nuvlabox-vuln-affected])
               [ui/LabelDetail (count (:affected-products summary))]]
              (when (:average-score summary)
-               [ui/Label {:basic  true}
+               [ui/Label {:basic true}
                 (@tr [:nuvlabox-vuln-cvss])
                 [ui/LabelDetail (:average-score summary)]])]
 
@@ -909,11 +885,11 @@
             ;                        :legend {:display  true
             ;                                 :position "left"}}}]]
 
-            [ui/Segment {:secondary   true
-                         :color       "brown"
-                         :raised      true}
+            [ui/Segment {:secondary true
+                         :color     "brown"
+                         :raised    true}
              [ui/StatisticGroup {:width (count items-severity)
-                                 :size   "mini"
+                                 :size  "mini"
                                  :style {:display    "inline-block"
                                          :text-align "center"
                                          :width      "100%"
@@ -957,9 +933,9 @@
                state-selector]]
 
              [:div {:style {:max-height "25em"
-                            :width  "100%"
+                            :width      "100%"
                             :overflow-y "auto"}}
-              [ui/Table {:basic  "very"}
+              [ui/Table {:basic "very"}
                [ui/TableHeader
                 [ui/TableRow
                  [ui/TableHeaderCell "ID"]
@@ -976,85 +952,89 @@
                     ^{:key vulnerability-id}
                     [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color]))]]]]]
 
-           [ui/Message {:content  (@tr [:nuvlabox-vuln-unavailable])}])]))))
+           [ui/Message {:content (@tr [:nuvlabox-vuln-unavailable])}])]))))
 
 
 (defn tabs
   [count-peripherals tr]
-  [{:menuItem {:content "Overview"
-               :key     "overview"
-               :icon    "info"}
-    :render (fn [] (r/as-element [TabOverview]))}
-   {:menuItem {:content "Location"
-               :key     "location"
-               :icon    "map"}
-    :render (fn [] (r/as-element [TabLocation]))}
-   {:menuItem {:content (r/as-element [ui/Popup
-                                       {:trigger        (r/as-element [:span "Resource Consumption"])
-                                        :content        (tr [:nuvlabox-datagateway-popup])
-                                        :header         "data-gateway"
-                                        :position       "top center"
-                                        :wide           true
-                                        :on             "hover"
-                                        :size           "tiny"
-                                        :hide-on-scroll true}])
-               :key     "res-cons"
-               :icon    "thermometer half"}
-    :render (fn [] (r/as-element [TabLoad]))}
-   {:menuItem {:content (r/as-element [:span "Peripherals"
-                                       [ui/Label {:circular true
-                                                  :size "mini"
-                                                  :attached  "top right"}
-                                        count-peripherals]])
-               :key     "peripherals"
-               :icon    "usb"}
-    :render (fn [] (r/as-element [TabPeripherals]))}
-   {:menuItem {:content "Events"
-               :key     "events"
-               :icon    "clipboard list"}
-    :render (fn [] (r/as-element [TabEvents]))}
-   {:menuItem {:content "Vulnerabilities"
-               :key     "vuln"
-               :icon    "shield"}
-    :render (fn [] (r/as-element [TabVulnerabilities]))}
-   {:menuItem {:content "Share"
-               :key     "share"
-               :icon    "users"}
-    :render (fn [] (r/as-element [TabAcls]))}])
+  (let [nuvlabox  (subscribe [::subs/nuvlabox])
+        can-edit? (subscribe [::subs/can-edit?])]
+    [{:menuItem {:content "Overview"
+                 :key     "overview"
+                 :icon    "info"}
+      :render   (fn [] (r/as-element [TabOverview]))}
+     {:menuItem {:content "Location"
+                 :key     "location"
+                 :icon    "map"}
+      :render   (fn [] (r/as-element [TabLocation]))}
+     {:menuItem {:content (r/as-element [ui/Popup
+                                         {:trigger        (r/as-element [:span "Resource Consumption"])
+                                          :content        (tr [:nuvlabox-datagateway-popup])
+                                          :header         "data-gateway"
+                                          :position       "top center"
+                                          :wide           true
+                                          :on             "hover"
+                                          :size           "tiny"
+                                          :hide-on-scroll true}])
+                 :key     "res-cons"
+                 :icon    "thermometer half"}
+      :render   (fn [] (r/as-element [TabLoad]))}
+     {:menuItem {:content (r/as-element [:span "Peripherals"
+                                         [ui/Label {:circular true
+                                                    :size     "mini"
+                                                    :attached "top right"}
+                                          count-peripherals]])
+                 :key     "peripherals"
+                 :icon    "usb"}
+      :render   (fn [] (r/as-element [TabPeripherals]))}
+     {:menuItem {:content "Events"
+                 :key     "events"
+                 :icon    "clipboard list"}
+      :render   (fn [] (r/as-element [TabEvents]))}
+     {:menuItem {:content "Vulnerabilities"
+                 :key     "vuln"
+                 :icon    "shield"}
+      :render   (fn [] (r/as-element [TabVulnerabilities]))}
+     (acl/TabAcls nuvlabox @can-edit? ::events/edit)]))
 
 
 (defn TabsNuvlaBox
   []
   (fn []
     (let [count-peripherals (subscribe [::subs/nuvlabox-peripherals-ids])
-          tr                (subscribe [::i18n-subs/tr])]
+          tr                (subscribe [::i18n-subs/tr])
+          active-index      (subscribe [::subs/active-tab-index])]
       [ui/Tab
-       {:menu   {:secondary true
-                 :pointing  true
-                 :style {:display "flex"
-                         :flex-direction "row"
-                         :flex-wrap "wrap"}}
-        :panes  (tabs (count @count-peripherals) @tr)}])))
+       {:menu        {:secondary true
+                      :pointing  true
+                      :style     {:display        "flex"
+                                  :flex-direction "row"
+                                  :flex-wrap      "wrap"}}
+        :panes       (tabs (count @count-peripherals) @tr)
+        :activeIndex @active-index
+        :onTabChange (fn [_ data]
+                       (let [active-index (. data -activeIndex)]
+                         (dispatch [::events/set-active-tab-index active-index])))}])))
 
 
 (defn PageHeader
   []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        nuvlabox        (subscribe [::subs/nuvlabox])]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        nuvlabox (subscribe [::subs/nuvlabox])]
     (fn []
-      (let [status       @(subscribe [::edge-subs/status-nuvlabox (:id @nuvlabox)])
-            id           (:id @nuvlabox)
-            name         (:name @nuvlabox)
-            state        (:state @nuvlabox)]
+      (let [status @(subscribe [::edge-subs/status-nuvlabox (:id @nuvlabox)])
+            id     (:id @nuvlabox)
+            name   (:name @nuvlabox)
+            state  (:state @nuvlabox)]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
           [StatusIcon status :corner "left center"]
           (or name id)]
          [:p {:style {:margin "0.5em 0 1em 0"}}
-          [:span {:style {:font-weight  "bold"}}
+          [:span {:style {:font-weight "bold"}}
            "State "
            [ui/Popup
-            {:trigger  (r/as-element [ui/Icon {:name "question circle"}])
+            {:trigger        (r/as-element [ui/Icon {:name "question circle"}])
              :content        (@tr [:nuvlabox-state])
              :position       "bottom center"
              :on             "hover"

@@ -23,3 +23,9 @@
   ::full-text-search
   (fn [db]
     (::spec/full-text-search db)))
+
+
+(reg-sub
+  ::active-tab-index
+  (fn [db]
+    (get-in db [::spec/active-tab-index])))

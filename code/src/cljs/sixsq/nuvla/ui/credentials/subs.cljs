@@ -132,3 +132,9 @@
   (fn [[_ id]] (subscribe [::credential-check-status id]))
   (fn [status]
     (= status "VALID")))
+
+
+(reg-sub
+  ::active-tab-index
+  (fn [db]
+    (get-in db [::spec/active-tab-index])))

@@ -14,4 +14,4 @@
 
 
 (def defaults {::loading?  true
-               ::documents {}})
+               ::documents nil})

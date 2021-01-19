@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.notifications.events
   (:require
     [cljs.spec.alpha :as s]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [re-frame.core :refer [dispatch dispatch-sync reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.notifications.spec :as spec]
@@ -122,23 +122,30 @@
 
 (reg-event-db
   ::set-notification-subscription-config
-  (fn [db [_ subs-confs]]
-    (assoc db ::spec/notification-subscription-config subs-confs)))
+  (fn [db [_ subs-conf]]
+    (assoc db ::spec/notification-subscription-config subs-conf)))
 
 
 (reg-event-db
   ::update-notification-subscription-config
   (fn [db [_ key value]]
-    (assoc-in db [::spec/notification-subscription-config key] value)))
+    (if (map? value)
+      (update-in db [::spec/notification-subscription-config key] merge value)
+      (assoc-in db [::spec/notification-subscription-config key] value))))
 
 
 (reg-event-db
   ::validate-notification-subscription-config-form
-  (fn [db [_ form-spec]]
-    (let [notif-method   (get db ::spec/notification-subscription-config)
+  (fn [db [_]]
+    (let [form-spec ::spec/notification-subscription-config
+          subs-config   (get db ::spec/notification-subscription-config)
           validate-form? (get db ::spec/validate-form?)
-          valid?         (if validate-form? (if (nil? form-spec) true (s/valid? form-spec notif-method)) true)]
-      (s/explain form-spec notif-method)
+          valid?         (if validate-form?
+                           (if (nil? form-spec)
+                             true
+                             (s/valid? form-spec subs-config))
+                           true)]
+      (s/explain form-spec subs-config)
       (assoc db ::spec/form-valid? valid?))))
 
 
@@ -189,20 +196,30 @@
 (reg-event-fx
   ::set-tags-available
   (fn [{:keys [db]} [_ tags-response]]
-    (println "... set-tags-available tags-response" tags-response)
-    (let [buckets        (get-in tags-response
-                                 [:aggregations (keyword "terms:tags") :buckets])
-          _ (println "... set-tags-available" buckets)]
-      {:db       (assoc db ::spec/resource-tags-available buckets)})))
+    (let [buckets (get-in tags-response
+                          [:aggregations (keyword "terms:tags") :buckets])]
+      {:db (assoc db ::spec/resource-tags-available buckets)})))
+
+
+(reg-event-db
+  ::reset-tags-available
+  (fn [db [_]]
+    (assoc db ::spec/resource-tags-available [])))
 
 
 (reg-event-fx
   ::fetch-tags-available
   (fn [{:keys [db]} [_ resource-kind]]
-      (println "... fetch-tags-available" resource-kind)
       {::cimi-api-fx/search [(keyword resource-kind) {:last 0
                                                       :aggregation "terms:tags"}
                              #(dispatch [::set-tags-available %])]}))
+
+
+(reg-event-fx
+  ::fetch-components-number
+  (fn [{:keys [db]} [_ component]]
+    {::cimi-api-fx/search [(keyword component) {:last 0}
+                           #(dispatch [::set-components-number (:count %)])]}))
 
 
 ;;
@@ -217,24 +234,48 @@
 
 
 (reg-event-db
-  ::set-resource-kind
-  (fn [db [_ resource-kind]]
-    (println ".... set-resource-kind" resource-kind)
-    (assoc db ::spec/resource-kind resource-kind)))
+  ::set-collection
+  (fn [db [_ collection]]
+    (assoc db ::spec/collection collection)))
 
 
 (reg-event-db
   ::set-resource-tag
   (fn [db [_ resource-tag]]
-    (println ".... set-resource-tag" resource-tag)
     (assoc db ::spec/resource-tag resource-tag)))
 
 
 (reg-event-db
   ::set-criteria-metric
   (fn [db [_ metric]]
-    (println ".... set-criteria-metric" metric)
     (assoc db ::spec/criteria-metric metric)))
+
+
+(reg-event-db
+  ::set-components-number
+  (fn [db [_ num]]
+    (assoc db ::spec/components-number num)))
+
+
+(reg-event-db
+  ::set-components-tagged-number
+  (fn [db [_ tag]]
+    (let [tags-all (::spec/resource-tags-available db)]
+      (if (not-empty tag)
+        (assoc db ::spec/components-number (:doc_count (first (filter (comp #{tag} :key) tags-all))))
+        (dispatch [::fetch-components-number (get-in db [::spec/notification-subscription-config :collection])])))))
+
+
+(reg-event-db
+  ::set-criteria-condition
+  (fn [db [_ condition]]
+    (assoc db ::spec/criteria-condition condition)))
+
+
+(reg-event-db
+  ::set-criteria-value
+  (fn [db [_ value]]
+    (assoc db ::spec/criteria-value value)))
 
 
 (reg-event-fx

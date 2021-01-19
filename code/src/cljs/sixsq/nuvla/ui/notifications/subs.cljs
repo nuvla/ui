@@ -70,8 +70,9 @@
 
 
 (reg-sub
-  ::resource-kind
-  ::spec/resource-kind)
+  ::collection
+  (fn [db]
+    (get-in db [::spec/notification-subscription-config :collection])))
 
 
 (reg-sub
@@ -82,6 +83,17 @@
 (reg-sub
   ::resource-tags-available
   ::spec/resource-tags-available)
+
+
+(reg-sub
+  ::components-number
+  ::spec/components-number)
+
+
+(reg-sub
+  ::criteria-metric
+  (fn [db]
+    (get-in db [::spec/notification-subscription-config :criteria :metric])))
 
 
 ;; Validation

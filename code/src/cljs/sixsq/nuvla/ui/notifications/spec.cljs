@@ -29,15 +29,41 @@
 
 (s/def ::notification-subscription-configs (s/nilable any?))
 
+(s/def ::resource-tag utils-spec/nonblank-string)
+(s/def ::resource-filter string?)
+(s/def ::resource-tags-available any?)
+
+(s/def ::kind utils-spec/nonblank-string)
+(s/def ::metric utils-spec/nonblank-string)
+(s/def ::value utils-spec/nonblank-string)
+(s/def ::condition utils-spec/nonblank-string)
+(s/def ::window integer?)
+(s/def ::value-type utils-spec/nonblank-string)
+
+(s/def ::criteria
+  (s/keys :req-un [::kind
+                   ::metric
+                   ::value
+                   ::condition]
+          :opt-un [::window
+                   ::value-type]))
+(s/def ::metric utils-spec/nonblank-string)
+(s/def ::criteria-value utils-spec/nonblank-string)
+(s/def ::criteria-condition utils-spec/nonblank-string)
+
+(s/def ::components-number utils-spec/nonblank-string)
 (s/def ::collection utils-spec/nonblank-string)
 (s/def ::enabled boolean?)
 (s/def ::notification-subscription-config (s/keys :req-un [::name
                                                            ::description
-                                                           ::type
-                                                           ::collection
+                                                           ::enabled
+
                                                            ::category
-                                                           ::method
-                                                           ::enabled]))
+                                                           ::collection
+                                                           ::resource-filter
+
+                                                           ::criteria
+                                                           ]))
 (s/def ::notification-subscriptions-modal-visible? boolean?)
 (s/def ::add-subscription-modal-visible? boolean?)
 
@@ -51,13 +77,8 @@
 ;; individual subscriptions
 ;;
 
-(s/def ::kind utils-spec/nonblank-string)
-(s/def ::resource-kind utils-spec/nonblank-string)
-(s/def ::resource-tag utils-spec/nonblank-string)
-(s/def ::resource-tags-available any?)
 (s/def ::resource utils-spec/nonblank-string)
 (s/def ::status utils-spec/nonblank-string)
-(s/def ::criteria-metric utils-spec/nonblank-string)
 
 (s/def ::subscriptions (s/nilable any?))
 (s/def ::notification-subscriptions (s/nilable any?))
@@ -67,7 +88,6 @@
                                        ::category
                                        ::resource
                                        ::status
-                                       ::criteria-metric
                                        ::method]
                               :opt-un [::name
                                        ::description]))

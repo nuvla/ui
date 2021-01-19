@@ -167,5 +167,5 @@
                ::error-message                     nil
                ::infrastructure-services-available nil
                ::credential-check-table            nil
-               ::active-tab-index       1})
+               ::active-tab-index                  1})
 

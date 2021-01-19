@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Credential - tab based design
+  - Deployment - tab based design
   - Deployment modal - On update credential can be changed
   - Deployment modal - On update only selected infra is visible
   - Tools - Re-frame-10x is disabled by default

@@ -28,8 +28,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -58,8 +57,7 @@
       [ui/Message {:error true}
        [ui/MessageHeader
         {:style    {:cursor "pointer"}
-         :on-click (fn [_]
-                     (dispatch [::events/set-active-tab-index 8]))}
+         :on-click #(dispatch [::events/set-active-tab-index 8])}
         (str "Job " action " failed")]
        [ui/MessageContent last_line]])))
 
@@ -103,28 +101,30 @@
         urls           (get @module-content :urls)
         url-count      (count urls)]
     {:menuItem {:content (r/as-element [:span (@tr [:url])
-                                        (when (> url-count 0) [ui/Label {:circular true
-                                                                         :size     "mini"
-                                                                         :attached "top right"}
-                                                               url-count])])
+                                        (when (> url-count 0)
+                                          [ui/Label {:circular true
+                                                     :size     "mini"
+                                                     :attached "top right"}
+                                           url-count])])
                 :key     "urls"
                 :icon    "linkify"}
-     :render   (fn [] (r/as-element [:<>
-                                     (if (empty? urls)
-                                       [ui/Message {:warning true}
-                                        [ui/Icon {:name "warning sign"}]
-                                        (@tr [:no-urls])]
-                                       [ui/TabPane
-                                        [ui/Table {:basic   "very"
-                                                   :columns 2}
-                                         [ui/TableHeader
-                                          [ui/TableRow
-                                           [ui/TableHeaderCell [:span (@tr [:name])]]
-                                           [ui/TableHeaderCell [:span (@tr [:url])]]]]
-                                         [ui/TableBody
-                                          (for [[url-name url-pattern] urls]
-                                            ^{:key url-name}
-                                            [url-to-row url-name url-pattern])]]])]))}))
+     :render   (fn []
+                 (r/as-element
+                   (if (empty? urls)
+                     [ui/Message {:warning true}
+                      [ui/Icon {:name "warning sign"}]
+                      (@tr [:no-urls])]
+                     [ui/TabPane
+                      [ui/Table {:basic   "very"
+                                 :columns 2}
+                       [ui/TableHeader
+                        [ui/TableRow
+                         [ui/TableHeaderCell [:span (@tr [:name])]]
+                         [ui/TableHeaderCell [:span (@tr [:url])]]]]
+                       [ui/TableBody
+                        (for [[url-name url-pattern] urls]
+                          ^{:key url-name}
+                          [url-to-row url-name url-pattern])]]])))}))
 
 
 (defn module-version-section
@@ -163,30 +163,34 @@
   [items section-key section-name empty-msg]
   (let [tr          (subscribe [::i18n-subs/tr])
         items-count (count items)]
-    {:menuItem {:content (r/as-element [:span (@tr [section-name])
-                                        (when (> items-count 0) [ui/Label {:circular true
-                                                                           :size     "mini"
-                                                                           :attached "top right"}
-                                                                 items-count])])
+    {:menuItem {:content (r/as-element
+                           [:span (@tr [section-name])
+                            (when (> items-count 0)
+                              [ui/Label {:circular true
+                                         :size     "mini"
+                                         :attached "top right"}
+                               items-count])])
                 :key     section-key
                 :icon    "list ol"}
-     :render   (fn [] (r/as-element [:<>
-                                     (if (empty? items)
-                                       [ui/Message {:warning true}
-                                        [ui/Icon {:name "warning sign"}]
-                                        (@tr [empty-msg])]
-                                       [ui/TabPane
-                                        [ui/Table {:basic   "very"
-                                                   :columns 2}
-                                         [ui/TableHeader
-                                          [ui/TableRow
-                                           [ui/TableHeaderCell [:span (@tr [:name])]]
-                                           [ui/TableHeaderCell [:span (@tr [:value])]]]]
-                                         (when-not (empty? items)
-                                           [ui/TableBody
-                                            (for [{name :name :as item} items]
-                                              ^{:key name}
-                                              [item-to-row item])])]])]))}))
+     :render   (fn []
+                 (r/as-element
+                   [:<>
+                    (if (empty? items)
+                      [ui/Message {:warning true}
+                       [ui/Icon {:name "warning sign"}]
+                       (@tr [empty-msg])]
+                      [ui/TabPane
+                       [ui/Table {:basic   "very"
+                                  :columns 2}
+                        [ui/TableHeader
+                         [ui/TableRow
+                          [ui/TableHeaderCell [:span (@tr [:name])]]
+                          [ui/TableHeaderCell [:span (@tr [:value])]]]]
+                        (when-not (empty? items)
+                          [ui/TableBody
+                           (for [{name :name :as item} items]
+                             ^{:key name}
+                             [item-to-row item])])]])]))}))
 
 
 (defn parameters-section
@@ -337,33 +341,35 @@
       {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:billing]))])
                   :key     "billing"
                   :icon    "eur"}
-       :render   (fn [] (r/as-element [ui/Segment
-                                       [ui/Table {:collapsing true
-                                                  :basic      "very"
-                                                  :padded     false}
-                                        [ui/TableBody
-                                         [ui/TableRow
-                                          [ui/TableCell
-                                           [:b (str/capitalize (@tr [:details])) ": "]]
-                                          [ui/TableCell
-                                           description]]
-                                         [ui/TableRow
-                                          [ui/TableCell
-                                           [:b (str/capitalize (@tr [:period])) ": "]]
-                                          [ui/TableCell
-                                           (some-> period :start (time/time->format "LL" @locale))
-                                           " - "
-                                           (some-> period :end (time/time->format "LL" @locale))]]
-                                         [ui/TableRow
-                                          [ui/TableCell
-                                           [:b (str/capitalize (@tr [:coupon])) ": "]]
-                                          [ui/TableCell
-                                           (or (:name coupon) "-")]]
-                                         [ui/TableRow
-                                          [ui/TableCell
-                                           [:b (str/capitalize (@tr [:total])) ": "]]
-                                          [ui/TableCell
-                                           (or total "-") " " currency]]]]]))})))
+       :render   (fn []
+                   (r/as-element
+                     [ui/Segment
+                      [ui/Table {:collapsing true
+                                 :basic      "very"
+                                 :padded     false}
+                       [ui/TableBody
+                        [ui/TableRow
+                         [ui/TableCell
+                          [:b (str/capitalize (@tr [:details])) ": "]]
+                         [ui/TableCell
+                          description]]
+                        [ui/TableRow
+                         [ui/TableCell
+                          [:b (str/capitalize (@tr [:period])) ": "]]
+                         [ui/TableCell
+                          (some-> period :start (time/time->format "LL" @locale))
+                          " - "
+                          (some-> period :end (time/time->format "LL" @locale))]]
+                        [ui/TableRow
+                         [ui/TableCell
+                          [:b (str/capitalize (@tr [:coupon])) ": "]]
+                         [ui/TableCell
+                          (or (:name coupon) "-")]]
+                        [ui/TableRow
+                         [ui/TableCell
+                          [:b (str/capitalize (@tr [:total])) ": "]]
+                         [ui/TableCell
+                          (or total "-") " " currency]]]]]))})))
 
 
 (defn log-controller
@@ -668,12 +674,9 @@
   (let [tr         (subscribe [::i18n-subs/tr])
         deployment (subscribe [::subs/deployment])
         locale     (subscribe [::i18n-subs/locale])
-        version    (subscribe [::subs/current-module-version])
-        versions   (subscribe [::subs/module-versions])
         module     (:module @deployment)
         id         (:id module "")
-        {:keys [created updated name acl description parent-path path logo-url]} module
-        owners     (:owners acl)]
+        {:keys [created updated name acl description parent-path path logo-url]} module]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
@@ -792,24 +795,17 @@
         version       (subscribe [::subs/current-module-version])
         versions      (subscribe [::subs/module-versions])
         module        (:module @deployment)
-        id            (:id module)
         {:keys [logo-url]} module
         {:keys [id state module tags acl]} @deployment
         owners        (:owners acl)
         creds-name    (subscribe [::dashboard-subs/creds-name-map])
         credential-id (:parent @deployment)
-        {module-logo-url :logo-url
-         module-name     :name
-         module-path     :path
-         module-content  :content} module
+        {module-content  :content} module
         cred-info     (get @creds-name credential-id credential-id)
-        urls          (:urls module-content)
-        [primary-url-name
-         primary-url-pattern] (-> module-content (get :urls []) first)
-        primary-url   (subscribe [::subs/url primary-url-pattern])
-        started?      (utils/is-started? state)]
+        urls          (:urls module-content)]
 
-    [ui/SegmentGroup {:style  {:display "flex", :justify-content "space-between", :background "#f3f4f5"}
+    [ui/SegmentGroup {:style  {:display "flex", :justify-content "space-between",
+                               :background "#f3f4f5"}
                       :raised true}
      [ui/Segment {:secondary true
                   :color     "green"
@@ -886,11 +882,10 @@
 
 (defn overview
   []
-  (let [deployment (subscribe [::subs/deployment])]
-    {:menuItem {:content (r/as-element [:span "Overview"])
-                :key     "overview"
-                :icon    "info"}
-     :render   (fn [] (r/as-element [overview-pane]))}))
+  {:menuItem {:content (r/as-element [:span "Overview"])
+              :key     "overview"
+              :icon    "info"}
+   :render   (fn [] (r/as-element [overview-pane]))})
 
 
 (defn MenuBar

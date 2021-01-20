@@ -71,7 +71,7 @@
      [ui/TableCell {:class ["show-on-hover-value"]}
       (if @url
         (values/copy-value-to-clipboard
-          [:a {:href @url, :target "_blank"} @url]
+          [:a {:href @url, :target "_blank"} @url false]
           @url
           (@tr [:copy-to-clipboard]))
         url-pattern)]]))
@@ -154,7 +154,7 @@
                     {:class ["show-on-hover-value"]}
                     (when (not-empty value)
                       (if (> (count value) 1)
-                        (values/copy-value-to-clipboard value value (@tr [:copy-to-clipboard]))
+                        (values/copy-value-to-clipboard value value (@tr [:copy-to-clipboard]) false)
                         value))]]]
     table-row))
 

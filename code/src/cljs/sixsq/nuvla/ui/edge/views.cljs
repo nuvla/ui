@@ -113,6 +113,22 @@
     [NuvlaDocLink tr :nuvla-docs anchor]]])
 
 
+(defn CreateSSHKeyMessage
+  [new-private-ssh-key private-ssh-key-file tr]
+  [ui/Message {:icon    true
+               :warning true}
+   [ui/Icon {:name "warning"}]
+   [ui/MessageContent
+    [ui/MessageHeader
+     [:span
+      [:a {:href     (str "data:text/plain;charset=utf-8,"
+                          (js/encodeURIComponent new-private-ssh-key))
+           :target   "_blank"
+           :download private-ssh-key-file
+           :key      private-ssh-key-file}
+       [ui/Icon {:name "privacy"}] private-ssh-key-file]]]
+    (@tr [:nuvlabox-modal-private-ssh-key-info])]])
+
 (defn CreatedNuvlaBox
   [nuvlabox-id creation-data nuvlabox-release-data nuvlabox-ssh-keys new-private-ssh-key on-close-fn tr]
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
@@ -140,16 +156,8 @@
           [ui/Icon {:name "box"}] (str nuvlabox-name-or-id " created")]
 
          (when @new-private-ssh-key
-           [ui/Message
-            {:negative true
-             :content  (@tr [:nuvlabox-modal-private-ssh-key-info])
-             :header   (r/as-element
-                         [:a {:href     (str "data:text/plain;charset=utf-8,"
-                                             (js/encodeURIComponent @new-private-ssh-key))
-                              :target   "_blank"
-                              :download private-ssh-key-file
-                              :key      private-ssh-key-file}
-                          [ui/Icon {:name "privacy"}] private-ssh-key-file])}])
+           [ui/Segment {:basic true}
+            [CreateSSHKeyMessage @new-private-ssh-key private-ssh-key-file tr]])
 
          [ui/ModalContent
           [ui/Container
@@ -186,9 +194,10 @@
              [:h5 {:style {:margin "0.5em 0 1em 0"}}
               (@tr [:nuvlabox-unzip-execute])
               (values/copy-value-to-clipboard "" execute-command (@tr [:copy-command-to-clipboard]))]
-             [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]]]
-          [:div {:style {:margin "20px 0px 0px 0px"}}
-           [NuvlaDocs tr compose-doc-anchor]]]
+             [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]]
+
+           [:div {:style {:margin "20px 0px 0px 0px"}}
+            [NuvlaDocs tr compose-doc-anchor]]]]
 
          [ui/ModalActions
           [ui/Button {:positive true
@@ -223,34 +232,24 @@
         [:<>
          [ui/ModalHeader
           [ui/Icon {:name "usb"}] (@tr [:nuvlabox-modal-usb-header])]
-         [ui/Message {:attached true
-                      :icon     true
-                      :floating true}
-          [ui/Icon {:name (if apikey "check circle outline" "spinner")}]
-          [ui/MessageContent
-           [ui/MessageHeader
-            (@tr [:nuvlabox-usb-key])]
-           (if apikey
-             [:span (str (@tr [:nuvlabox-usb-key-ready]) " ")
-              [:a {:href   (str "api/" apikey)
-                   :target "_blank"}
-               apikey] " "
-              [ui/Popup {:content (@tr [:nuvlabox-modal-usb-apikey-warning])
-                         :trigger (r/as-element [ui/Icon {:name  "exclamation triangle"
-                                                          :color "orange"}])}]]
-             (@tr [:nuvlabox-usb-key-wait]))]]
 
-         (when @new-private-ssh-key
-           [ui/Message
-            {:negative true
-             :content  (@tr [:nuvlabox-modal-private-ssh-key-info])
-             :header   (r/as-element
-                         [:a {:href     (str "data:text/plain;charset=utf-8,"
-                                             (js/encodeURIComponent @new-private-ssh-key))
-                              :target   "_blank"
-                              :download private-ssh-key-file
-                              :key      private-ssh-key-file}
-                          [ui/Icon {:name "privacy"}] private-ssh-key-file])}])
+         [ui/Segment {:basic true}
+          [ui/Message {:icon true}
+           [ui/Icon {:name (if apikey "check circle outline" "spinner")}]
+           [ui/MessageContent
+            [ui/MessageHeader
+             (@tr [:nuvlabox-usb-key])]
+            (if apikey
+              [:span (str (@tr [:nuvlabox-usb-key-ready]) " ")
+               [:a {:href   (str "api/" apikey)
+                    :target "_blank"}
+                apikey] " "
+               [ui/Popup {:content (@tr [:nuvlabox-modal-usb-apikey-warning])
+                          :trigger (r/as-element [ui/Icon {:name  "exclamation triangle"
+                                                           :color "orange"}])}]]
+              (@tr [:nuvlabox-usb-key-wait]))]]
+          (when @new-private-ssh-key
+            [CreateSSHKeyMessage @new-private-ssh-key private-ssh-key-file tr])]
 
          [ui/ModalContent
           [ui/Container
@@ -304,9 +303,10 @@
                         :color    "green"} "3"]
              [:h5 {:style {:margin "0.5em 0 1em 0"}}
               (@tr [:repeat])]
-             [:span (@tr [:repeat-info])]]]]]
+             [:span (@tr [:repeat-info])]]]]
 
-         [NuvlaDocs tr usb-doc-anchor]
+          [:div {:style {:margin "20px 0px 0px 0px"}}
+           [NuvlaDocs tr usb-doc-anchor]]]
 
          [ui/ModalActions
           [ui/Button {:positive true

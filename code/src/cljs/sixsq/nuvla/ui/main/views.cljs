@@ -107,7 +107,7 @@
                             :text-align     "center"}}]
     [ui/Segment {:style {:border-radius 0}}
      [ui/Grid {:columns 3}
-      [ui/GridColumn grid-style "© 2020, SixSq Sàrl"]
+      [ui/GridColumn grid-style "© 2021, SixSq Sàrl"]
       [ui/GridColumn grid-style
        [:a {:on-click #(dispatch [::history-events/navigate "about"])
             :style    {:cursor "pointer"}}

@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Credential - tab based design
+  - Deployment - tab based design
   - Docs - Fetch documents when user goes directly to details page
   - Profile - Send events to Intercom related to trial period
     end email notifications

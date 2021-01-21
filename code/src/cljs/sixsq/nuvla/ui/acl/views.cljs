@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.acl.events :as events]
     [sixsq.nuvla.ui.acl.subs :as subs]
     [sixsq.nuvla.ui.acl.utils :as utils]
+    [sixsq.nuvla.ui.acl.utils :as acl-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -321,7 +322,9 @@
   (let [mode   (r/atom (or mode :simple))
         ui-acl (or ui-acl
                    (r/atom
-                     (let [acl (or default-value (when-not read-only {:owners #{@(subscribe [::session-subs/user-id])}}))]
+                     (let [acl (or default-value
+                                   (when-not read-only
+                                     {:owners #{@(subscribe [::session-subs/user-id])}}))]
                        (utils/acl->ui-acl-format acl))))]
     (fn [{:keys [on-change read-only] :as opts}]
       (let [opts (assoc opts :mode mode
@@ -335,6 +338,33 @@
          (when (or (not read-only)
                    (not (utils/acl-rights-empty? @ui-acl)))
            [AclRights opts ui-acl])]))))
+
+
+(defn TabAcls
+  ([e can-edit? edit-event] (TabAcls e can-edit? edit-event nil))
+  ([e can-edit? edit-event error]
+   (let [tr            (subscribe [::i18n-subs/tr])
+         default-value (:acl @e)
+         acl           (or default-value
+                           (when-let [user-id (and can-edit?
+                                                   @(subscribe [::session-subs/user-id]))]
+                             {:owners [user-id]}))
+         ui-acl        (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
+     {:menuItem {:content "Share"
+                 :key     "share"
+                 :icon    "users"}
+      :render   (fn []
+                  (r/as-element
+                    [:<>
+                     (when (some? error) error)
+                     (when default-value
+                       ^{:key (:updated @e)}
+                       [AclWidget {:default-value default-value
+                                   :read-only     (not can-edit?)
+                                   :on-change     #(dispatch [edit-event
+                                                              (:id @e) (assoc @e :acl %)
+                                                              (@tr [:acl-updated])])}
+                        ui-acl])]))})))
 
 
 (defn AclButton

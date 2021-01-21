@@ -13,6 +13,7 @@
 (s/def ::elements-per-page int?)
 (s/def ::page int?)
 (s/def ::nuvlabox-vulns (s/nilable any?))
+(s/def ::active-tab-index number?)
 
 
 (s/def ::db (s/keys :req [::loading?
@@ -24,16 +25,18 @@
                           ::vuln-severity-selector
                           ::elements-per-page
                           ::page
-                          ::nuvlabox-vulns]))
+                          ::nuvlabox-vulns
+                          ::active-tab-index]))
 
 
-(def defaults {::loading?             true
-               ::nuvlabox             nil
-               ::nuvlabox-status      nil
-               ::nuvlabox-ssh-keys    nil
-               ::nuvlabox-peripherals nil
-               ::nuvlabox-events      nil
+(def defaults {::loading?               true
+               ::nuvlabox               nil
+               ::nuvlabox-status        nil
+               ::nuvlabox-ssh-keys      nil
+               ::nuvlabox-peripherals   nil
+               ::nuvlabox-events        nil
                ::vuln-severity-selector nil
-               ::elements-per-page    15
-               ::page                 1
-               ::nuvlabox-vulns       nil})
+               ::elements-per-page      15
+               ::page                   1
+               ::nuvlabox-vulns         nil
+               ::active-tab-index       0})

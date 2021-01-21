@@ -102,8 +102,7 @@
     [:<>
      [ui/AccordionTitle {:active   active?
                          :on-click #(dispatch [::events/set-selected-infra-service
-                                               infra-service])
-                         }
+                                               infra-service])}
       [ui/Icon {:name "dropdown"}]
       (if (= subtype "kubernetes")
         [ui/Image {:src   "/ui/images/kubernetes.svg"

@@ -235,3 +235,9 @@
         need-check? (assoc ::cimi-api-fx/operation
                            [id "check" #(dispatch [::set-check-cred-job-id (:location %)])])
         ))))
+
+
+(reg-event-db
+  ::set-active-tab-index
+  (fn [db [_ active-tab-index]]
+    (assoc db ::spec/active-tab-index active-tab-index)))

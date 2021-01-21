@@ -214,3 +214,9 @@
                                    (dispatch [::check-custom-action-job
                                               resource-id operation (:location %)])
                                    ))]}))
+
+
+(reg-event-db
+  ::set-active-tab-index
+  (fn [db [_ active-tab-index]]
+    (assoc db ::spec/active-tab-index active-tab-index)))

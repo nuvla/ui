@@ -119,7 +119,7 @@
              (let [{:keys [children]} @module]
                [apps-project-views/format-module-children children]))]
           :label (str/capitalize (@tr [:all-projects]))
-          :title-size :h2]]))))
+          :icon "fas fa-folder"]]))))
 
 
 (defn appstore
@@ -132,19 +132,18 @@
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
-        [ui/Container {:fluid true}
-         [uix/Accordion
-          [:<>
-           [control-bar]
-           [modules-cards-group (get @modules :resources [])]
-           [uix/Pagination
-            {:totalitems   total-modules
-             :totalPages   total-pages
-             :activePage   @page
-             :onPageChange (ui-callback/callback
-                             :activePage #(dispatch [::events/set-page %]))}]]
-          :label (str/capitalize (@tr [:appstore]))
-          :title-size :h2]]))))
+        [uix/Accordion
+         [:<>
+          [control-bar]
+          [modules-cards-group (get @modules :resources [])]
+          [uix/Pagination
+           {:totalitems   total-modules
+            :totalPages   total-pages
+            :activePage   @page
+            :onPageChange (ui-callback/callback
+                            :activePage #(dispatch [::events/set-page %]))}]]
+         :icon "fas fa-store"
+         :label (str/capitalize (@tr [:appstore]))]))))
 
 
 (defn root-view

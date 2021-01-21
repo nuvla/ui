@@ -19,11 +19,6 @@
     (::spec/notification-methods db)))
 
 (reg-sub
-  ::notification-subscription-configs
-  (fn [db]
-    (::spec/notification-subscription-configs db)))
-
-(reg-sub
   ::add-notification-method-modal-visible?
   (fn [db]
     (::spec/add-notification-method-modal-visible? db)))
@@ -34,6 +29,25 @@
   (fn [db]
     (::spec/notification-method-modal-visible? db)))
 
+
+(reg-sub
+  ::notification-method-create-button-visible?
+  (fn [db]
+    (::spec/notification-method-create-button-visible? db)))
+
+;;
+;; subscription configuration
+;;
+
+(reg-sub
+  ::notification-subscription-configs
+  (fn [db]
+    (::spec/notification-subscription-configs db)))
+
+(reg-sub
+  ::notification-subscription-config
+  (fn [db]
+    (::spec/notification-subscription-config db)))
 
 ;;
 ;; subscription
@@ -67,6 +81,18 @@
   ::add-trigger-modal-visible?
   (fn [db]
     (::spec/add-subscription-modal-visible? db)))
+
+
+(reg-sub
+  ::subscription-config-modal-visible?
+  (fn [db]
+    (::spec/add-subscription-config-modal-visible? db)))
+
+
+(reg-sub
+  ::edit-subscription-config-modal-visible?
+  (fn [db]
+    (::spec/edit-subscription-config-modal-visible? db)))
 
 
 (reg-sub

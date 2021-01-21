@@ -22,20 +22,26 @@
   [db]
   (let [name (get-in db [::spec/notification-subscription-config :name])
         description (get-in db [::spec/notification-subscription-config :description])
-        type (get-in db [::spec/notification-subscription-config :type])
-        collection (get-in db [::spec/notification-subscription-config :collection])
+        resource-kind (or (get-in db [::spec/notification-subscription-config :collection])
+                          (get-in db [::spec/notification-subscription-config :resource-kind]))
+        resource-filter (get-in db [::spec/notification-subscription-config :resource-filter])
         category (get-in db [::spec/notification-subscription-config :category])
-        method (get-in db [::spec/notification-subscription-config :method])
+        method-id (get-in db [::spec/notification-subscription-config :method-id])
         enabled (get-in db [::spec/notification-subscription-config :enabled])
+        criteria (get-in db [::spec/notification-subscription-config :criteria])
+        criteria (if (= "boolean" (:kind criteria))
+                   (assoc criteria :value "true")
+                   criteria)
         acl (get-in db [::spec/notification-subscription-config :acl])]
     (-> {}
         (assoc :name name)
         (assoc :description description)
-        (assoc :type type)
-        (assoc :collection collection)
-        (assoc :category category)
-        (assoc :method method)
         (assoc :enabled enabled)
+        (assoc :method-id method-id)
+        (assoc :resource-kind resource-kind)
+        (assoc :resource-filter resource-filter)
+        (assoc :category category)
+        (assoc :criteria criteria)
         (assoc :acl acl))))
 
 

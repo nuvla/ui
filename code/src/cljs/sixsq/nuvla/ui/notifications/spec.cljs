@@ -43,9 +43,9 @@
 (s/def ::criteria
   (s/keys :req-un [::kind
                    ::metric
-                   ::value
                    ::condition]
           :opt-un [::window
+                   ::value
                    ::value-type]))
 (s/def ::metric utils-spec/nonblank-string)
 (s/def ::criteria-value utils-spec/nonblank-string)
@@ -54,18 +54,18 @@
 (s/def ::components-number utils-spec/nonblank-string)
 (s/def ::collection utils-spec/nonblank-string)
 (s/def ::enabled boolean?)
-(s/def ::notification-subscription-config (s/keys :req-un [::name
-                                                           ::description
-                                                           ::enabled
-
-                                                           ::category
-                                                           ::collection
-                                                           ::resource-filter
-
-                                                           ::criteria
-                                                           ]))
+(s/def ::notification-subscription-config
+  (s/keys :req-un [::name
+                   ::description
+                   ::enabled
+                   ::category
+                   ::collection
+                   ::resource-filter
+                   ::criteria]))
 (s/def ::notification-subscriptions-modal-visible? boolean?)
 (s/def ::add-subscription-modal-visible? boolean?)
+(s/def ::add-subscription-config-modal-visible? boolean?)
+(s/def ::edit-subscription-config-modal-visible? boolean?)
 
 (def component-types #{"nuvlabox"
                        "infrastructure-service"
@@ -115,3 +115,4 @@
                ::add-notification-method-modal-visible? false
                ::notification-method-modal-visible?     false})
 
+(s/def ::notification-method-create-button-visible? boolean?)

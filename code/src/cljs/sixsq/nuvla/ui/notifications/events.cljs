@@ -110,6 +110,12 @@
                                     (dispatch [::get-notification-methods])))]}))))
 
 
+(reg-event-db
+  ::deactivate-notification-method-create-button
+  (fn [db [_]]
+    (assoc db ::spec/notification-method-create-button-visible? false)))
+
+
 ;;
 ;; subscription-config
 ;;
@@ -137,8 +143,8 @@
 (reg-event-db
   ::validate-notification-subscription-config-form
   (fn [db [_]]
-    (let [form-spec ::spec/notification-subscription-config
-          subs-config   (get db ::spec/notification-subscription-config)
+    (let [subs-config   (get db ::spec/notification-subscription-config)
+          form-spec ::spec/notification-subscription-config
           validate-form? (get db ::spec/validate-form?)
           valid?         (if validate-form?
                            (if (nil? form-spec)
@@ -160,8 +166,7 @@
   (fn [{:keys [db]} [_]]
     {:db                  (assoc db ::spec/completed? false)
      ::cimi-api-fx/search [:subscription-config
-                           {:filter "type='notification'"
-                            :orderby "name:asc, id:asc"}
+                           {:orderby "name:asc, id:asc"}
                            #(dispatch [::set-notification-subscription-configs (:resources %)])]}))
 
 (reg-event-fx
@@ -181,7 +186,7 @@
                                                :content message
                                                :type    :success}])))]}
         {:db                db
-         ::cimi-api-fx/edit [id notification-subscription-config
+         ::cimi-api-fx/edit [id new-subs-config
                              #(if (instance? js/Error %)
                                 (let [{:keys [status message]} (response/parse-ex-info %)]
                                   (dispatch [::messages-events/add
@@ -293,6 +298,41 @@
   (fn [{:keys [db]} [_ id]]
     {:db                  db
      ::cimi-api-fx/delete [id #(dispatch [::get-notification-subscriptions])]}))
+
+
+(reg-event-fx ::delete-subscription-config
+              (fn [{:keys [db]} [_ id]]
+                {:db                  db
+                 ::cimi-api-fx/delete [id #(dispatch [::get-notification-subscription-configs])]}))
+
+
+(reg-event-db
+  ::open-add-subscription-config-modal
+  (fn [db [_ subs-conf]]
+    (-> db
+        (assoc ::spec/notification-subscription-config subs-conf)
+        (assoc ::spec/add-subscription-config-modal-visible? true))))
+
+
+(reg-event-db
+  ::close-add-subscription-config-modal
+  (fn [db _]
+    (assoc db ::spec/add-subscription-config-modal-visible? false)))
+
+
+(reg-event-db
+  ::open-edit-subscription-config-modal
+  (fn [db [_ subs-conf]]
+    (let [sc (assoc subs-conf :collection (:resource-kind subs-conf))]
+      (-> db
+        (assoc ::spec/notification-subscription-config sc)
+        (assoc ::spec/edit-subscription-config-modal-visible? true)))))
+
+
+(reg-event-db
+  ::close-edit-subscription-config-modal
+  (fn [db _]
+    (assoc db ::spec/edit-subscription-config-modal-visible? false)))
 
 
 (reg-event-db

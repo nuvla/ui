@@ -382,6 +382,7 @@
       (let [header (str/capitalize (str (@tr [:add]) " " (@tr [:subscription])))]
         (dispatch [::events/update-notification-subscription-config :enabled true])
         (dispatch [::events/update-notification-subscription-config :category "notification"])
+        (dispatch [::events/update-notification-subscription-config :resource-filter ""])
         [:div]
         [ui/Modal {:open       @visible?
                    :close-icon true
@@ -808,7 +809,7 @@
         [ui/TabPane
          [MenuBarSubscription]
          (if (empty? @subscription-configs)
-           [ui/Message (str/capitalize "No subscription configurations defined")]
+           [ui/Message (str/capitalize (@tr [:no-subscription-configs-defined]))]
            (for [[resource-kind resource-subs-confs] subs-confs-all]
              (if-not (empty? resource-subs-confs)
                ^{:key resource-kind}

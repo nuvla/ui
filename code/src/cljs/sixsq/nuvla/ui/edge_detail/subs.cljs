@@ -2,6 +2,7 @@
   (:require
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.edge-detail.spec :as spec]
+    [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.time :as time]))
 
@@ -16,6 +17,13 @@
   ::nuvlabox-status
   (fn [db]
     (::spec/nuvlabox-status db)))
+
+
+(reg-sub
+  ::nuvlabox-online-status
+  :<- [::nuvlabox-status]
+  (fn [{:keys [online]}]
+    (utils/status->keyword online)))
 
 
 (reg-sub

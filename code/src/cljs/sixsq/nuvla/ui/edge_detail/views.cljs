@@ -3,17 +3,14 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.utils :as acl-utils]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.edge-detail.events :as events]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]
-    [sixsq.nuvla.ui.edge.subs :as edge-subs]
     [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
@@ -263,9 +260,9 @@
 
 
 (defn Heartbeat
-  [updated nb-id]
+  [updated]
   (let [updated-moment           (time/parse-iso8601 updated)
-        status                   (subscribe [::edge-subs/status-nuvlabox nb-id])
+        status                   (subscribe [::subs/nuvlabox-online-status])
         next-heartbeat-moment    (subscribe [::subs/next-heartbeat-moment])
         next-heartbeat-times-ago (time/ago @next-heartbeat-moment)
 
@@ -405,9 +402,7 @@
                                                   :divided        true}
                                        (for [action action-list]
                                          [ui/ListItem {:as  "a"
-                                                       :key (str "action." (apply str
-                                                                                  (take 12
-                                                                                        (repeatedly #(char (+ (rand 26) 65))))))}
+                                                       :key (str "action." (random-uuid))}
                                           [ui/ListContent
                                            [ui/ListDescription
                                             [:span {:on-click (:on-click action)
@@ -421,57 +416,6 @@
              uuid body
              "NuvlaBox updated successfully"])
   (close-fn))
-
-
-(defn NuvlaboxCard
-  [nuvlabox status & {on-click-fn :on-click}]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        edit     (r/atom false)
-        nb-name  (r/atom (:name nuvlabox))
-        close-fn #(do
-                    (reset! edit false)
-                    (refresh (:id nuvlabox)))]
-    (fn [{:keys [id name description created state tags] :as nuvlabox} status]
-      ^{:key id}
-      [ui/Card (when on-click-fn {:on-click on-click-fn})
-       [ui/CardContent
-
-        [ui/CardHeader {:style {:word-wrap "break-word"}}
-         [:div {:style {:float "right"}}
-          [StatusIcon status :corner "top right"]]
-         [ui/Icon {:name "box"}]
-         ; we could use just the Input with {:disabled (not @edit) :tranparent (not @edit)}, and get rid of this "if"
-         ; but for some reason, the :placeholder and :default-value properties of the input
-         ; do not get updated after an edit
-         (if @edit
-           [ui/Input {:default-value (or name id)
-                      :on-key-press  (partial forms/on-return-key #(if (= @nb-name (or name id))
-                                                                     (close-fn)
-                                                                     (EditAction id {:name @nb-name} close-fn)))
-                      :on-change     (ui-callback/input-callback #(reset! nb-name %))
-                      :focus         true
-                      :size          "mini"}]
-           (or name id))]
-
-
-        [ui/CardMeta (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))]
-
-        [:p {:align "right"} state]
-
-        (when-not (str/blank? description)
-          [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description])
-
-        [ui/LabelGroup {:size  "tiny"
-                        :color "teal"
-                        :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-         (for [tag tags]
-           ^{:key (str id "-" tag)}
-           [ui/Label {:style {:max-width     "15ch"
-                              :overflow      "hidden"
-                              :text-overflow "ellipsis"
-                              :white-space   "nowrap"}}
-            [ui/Icon {:name "tag"}] tag
-            ])]]])))
 
 
 (defn TabOverviewNuvlaBox
@@ -647,19 +591,19 @@
 
 (defn TabOverview
   []
-  (let [nuvlabox    (subscribe [::subs/nuvlabox])
-        locale      (subscribe [::i18n-subs/locale])
-        nb-status   (subscribe [::subs/nuvlabox-status])
-        ssh-creds   (subscribe [::subs/nuvlabox-ssh-keys])
-        tr          (subscribe [::i18n-subs/tr])
-        edit        (r/atom false)
-        old-nb-name (r/atom (:name @nuvlabox))
-        close-fn    #(do
-                       (reset! edit false)
-                       (refresh (:id @nuvlabox)))]
+  (let [nuvlabox      (subscribe [::subs/nuvlabox])
+        locale        (subscribe [::i18n-subs/locale])
+        nb-status     (subscribe [::subs/nuvlabox-status])
+        online-status (subscribe [::subs/nuvlabox-online-status])
+        ssh-creds     (subscribe [::subs/nuvlabox-ssh-keys])
+        tr            (subscribe [::i18n-subs/tr])
+        edit          (r/atom false)
+        old-nb-name   (r/atom (:name @nuvlabox))
+        close-fn      #(do
+                         (reset! edit false)
+                         (refresh (:id @nuvlabox)))]
     (fn []
-      (let [{:keys [id tags ssh-keys]} @nuvlabox
-            online-status @(subscribe [::edge-subs/status-nuvlabox id])]
+      (let [{:keys [id tags ssh-keys]} @nuvlabox]
         (when (not= (count ssh-keys) (count (:associated-ssh-keys @ssh-creds)))
           (dispatch [::events/get-nuvlabox-ssh-keys ssh-keys]))
         [ui/TabPane
@@ -675,7 +619,7 @@
 
           [ui/GridRow
            [ui/GridColumn
-            [TabOverviewStatus @nb-status id online-status tr]]
+            [TabOverviewStatus @nb-status id @online-status tr]]
 
            (when (> (count tags) 0)
              [ui/GridColumn
@@ -838,12 +782,10 @@
 (defn TabVulnerabilities
   []
   (let [tr             (subscribe [::i18n-subs/tr])
-        nb-status      (subscribe [::subs/nuvlabox-status])
         state-selector (subscribe [::subs/vuln-severity-selector])
         vulns          (subscribe [::subs/nuvlabox-vulns])]
     (fn []
-      (let [
-            summary        (:summary @vulns)
+      (let [summary        (:summary @vulns)
             items-extended (:items @vulns)
             items-severity (group-by :severity items-extended)]
         [ui/TabPane
@@ -1020,15 +962,15 @@
 (defn PageHeader
   []
   (let [tr       (subscribe [::i18n-subs/tr])
-        nuvlabox (subscribe [::subs/nuvlabox])]
+        nuvlabox (subscribe [::subs/nuvlabox])
+        status   (subscribe [::subs/nuvlabox-online-status])]
     (fn []
-      (let [status @(subscribe [::edge-subs/status-nuvlabox (:id @nuvlabox)])
-            id     (:id @nuvlabox)
+      (let [id     (:id @nuvlabox)
             name   (:name @nuvlabox)
             state  (:state @nuvlabox)]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
-          [StatusIcon status :corner "left center"]
+          [StatusIcon @status :corner "left center"]
           (or name id)]
          [:p {:style {:margin "0.5em 0 1em 0"}}
           [:span {:style {:font-weight "bold"}}

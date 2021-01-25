@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.edge.subs
   (:require
     [re-frame.core :refer [dispatch reg-sub subscribe]]
-    [sixsq.nuvla.ui.edge.spec :as spec]))
+    [sixsq.nuvla.ui.edge.spec :as spec]
+    [sixsq.nuvla.ui.edge.utils :as utils]))
 
 
 (reg-sub
@@ -52,20 +53,37 @@
     (::spec/state-nuvlaboxes db)))
 
 
+#_(reg-sub
+    ::nuvlaboxes-online-status
+    (fn [db]
+      (::spec/status-nuvlaboxes db)))
+
+
+#_(reg-sub
+    ::nuvlabox-online-status
+    :<- [::nuvlaboxes-online-status]
+    (fn [{:keys [online offline]} [_ nuvlabox-id]]
+      (cond
+        (contains? online nuvlabox-id) :online
+        (contains? offline nuvlabox-id) :offline
+        :else :unknown)))
+
+
 (reg-sub
-  ::status-nuvlaboxes
+  ::nuvlaboxes-online-status
   (fn [db]
-    (::spec/status-nuvlaboxes db)))
+    (::spec/nuvlaboxes-online-status db)))
 
 
 (reg-sub
-  ::status-nuvlabox
-  :<- [::status-nuvlaboxes]
-  (fn [{:keys [online offline]} [_ nuvlabox-id]]
-    (cond
-      (contains? online nuvlabox-id) :online
-      (contains? offline nuvlabox-id) :offline
-      :else :unknown)))
+  ::nuvlabox-online-status
+  :<- [::nuvlaboxes-online-status]
+  (fn [resources [_ nuvlabox-id]]
+    (let [online (-> resources
+                     (get nuvlabox-id {})
+                     :online)]
+      (utils/status->keyword online))))
+
 
 (reg-sub
   ::modal-visible?

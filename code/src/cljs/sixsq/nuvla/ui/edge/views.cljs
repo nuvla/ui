@@ -13,11 +13,13 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.utils.zip :as zip]))
@@ -657,7 +659,7 @@
 
 (defn NuvlaboxRow
   [{:keys [id state name] :as nuvlabox}]
-  (let [status   (subscribe [::subs/status-nuvlabox id])
+  (let [status   (subscribe [::subs/nuvlabox-online-status id])
         uuid     (general-utils/id->uuid id)
         on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
     [ui/TableRow {:on-click on-click
@@ -702,7 +704,7 @@
 
 (defn NuvlaboxMapPoint
   [{:keys [id name location] :as nuvlabox}]
-  (let [status   (subscribe [::subs/status-nuvlabox id])
+  (let [status   (subscribe [::subs/nuvlabox-online-status id])
         uuid     (general-utils/id->uuid id)
         on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
     [map/CircleMarker {:on-click on-click
@@ -713,17 +715,50 @@
      [map/Tooltip (or name id)]]))
 
 
+(defn NuvlaboxCard
+  [nuvlabox status]
+  (let [tr       (subscribe [::i18n-subs/tr])]
+    (fn [{:keys [id name description created state tags] :as nuvlabox} status]
+      ^{:key id}
+      [ui/Card {:on-click #(dispatch [::history-events/navigate
+                                      (str "edge/" (general-utils/id->uuid id))])}
+       [ui/CardContent
+
+        [ui/CardHeader {:style {:word-wrap "break-word"}}
+         [:div {:style {:float "right"}}
+          [edge-detail/StatusIcon status :corner "top right"]]
+         [ui/Icon {:name "box"}]
+         (or name id)]
+
+        [ui/CardMeta (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))]
+
+        [:p {:align "right"} state]
+
+        (when-not (str/blank? description)
+          [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description])
+
+        [ui/LabelGroup {:size  "tiny"
+                        :color "teal"
+                        :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+         (for [tag tags]
+           ^{:key (str id "-" tag)}
+           [ui/Label {:style {:max-width     "15ch"
+                              :overflow      "hidden"
+                              :text-overflow "ellipsis"
+                              :white-space   "nowrap"}}
+            [ui/Icon {:name "tag"}] tag
+            ])]]])))
+
+
 (defn NuvlaboxCards
   []
   (let [nuvlaboxes (subscribe [::subs/nuvlaboxes])]
     [ui/CardGroup {:centered true}
      (doall
        (for [{:keys [id] :as nuvlabox} (:resources @nuvlaboxes)]
-         (let [status      (subscribe [::subs/status-nuvlabox id])
-               uuid        (general-utils/id->uuid id)
-               on-click-fn #(dispatch [::history-events/navigate (str "edge/" uuid)])]
+         (let [status      (subscribe [::subs/nuvlabox-online-status id])]
            ^{:key id}
-           [edge-detail/NuvlaboxCard nuvlabox @status :on-click on-click-fn])))]))
+           [NuvlaboxCard nuvlabox @status])))]))
 
 
 (defn NuvlaboxMap

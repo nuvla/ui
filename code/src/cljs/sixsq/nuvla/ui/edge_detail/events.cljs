@@ -4,8 +4,6 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.edge-detail.spec :as spec]
-    [sixsq.nuvla.ui.edge.effects :as edge-fx]
-    [sixsq.nuvla.ui.edge.events :as edge-events]
     [sixsq.nuvla.ui.edge.utils :as edge-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -74,7 +72,7 @@
 
 (reg-event-fx
   ::set-nuvlabox
-  (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status id :id :as nuvlabox}]]
+  (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status :as nuvlabox}]]
     {:db                             (assoc db ::spec/nuvlabox nuvlabox
                                                ::spec/loading? false)
      ::cimi-api-fx/get               [nb-status-id #(do
@@ -82,8 +80,7 @@
                                                       (dispatch [::set-nuvlabox-vulns (:vulnerabilities %)]))
                                       :on-error #(do
                                                    (dispatch [::set-nuvlabox-status nil])
-                                                   (dispatch [::set-nuvlabox-vulns nil]))]
-     ::edge-fx/get-status-nuvlaboxes [[id] #(dispatch [::edge-events/set-status-nuvlaboxes %])]}))
+                                                   (dispatch [::set-nuvlabox-vulns nil]))]}))
 
 
 (reg-event-fx

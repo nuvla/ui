@@ -17,6 +17,8 @@
 
 (s/def ::status-nuvlaboxes any?)
 
+(s/def ::nuvlaboxes-online-status any?)
+
 (s/def ::open-modal (s/nilable keyword?))
 
 (s/def ::nuvlabox-created-id (s/nilable string?))
@@ -45,6 +47,7 @@
                           ::nuvlabox-releases
                           ::state-nuvlaboxes
                           ::status-nuvlaboxes
+                          ::nuvlaboxes-online-status
                           ::page
                           ::elements-per-page
                           ::total-elements
@@ -64,6 +67,7 @@
                ::nuvlabox-releases        nil
                ::state-nuvlaboxes         nil
                ::status-nuvlaboxes        nil
+               ::nuvlaboxes-online-status nil
                ::page                     1
                ::elements-per-page        9
                ::total-elements           0

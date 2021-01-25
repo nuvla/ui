@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - Edge - Move and simplification of NuvlaBox card component
+  - Edge detail - Use NuvlaBox new online attribute
+  - Edge - Use NuvlaBox new online attribute
   - Credential - tab based design
   - Deployment - tab based design
   - Docs - Fetch documents when user goes directly to details page

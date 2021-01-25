@@ -75,6 +75,7 @@
       (do
         (dispatch [::events/set-validate-form? false])
         (dispatch [::events/edit-subscription-config])
+        (dispatch [::events/reset-subscription-config-all])
         (dispatch [::events/close-add-subscription-config-modal])))))
 
 
@@ -87,6 +88,7 @@
       (do
         (dispatch [::events/set-validate-form? false])
         (dispatch [::events/edit-subscription-config])
+        (dispatch [::events/reset-subscription-config-all])
         (dispatch [::events/close-edit-subscription-config-modal])))))
 
 
@@ -350,10 +352,11 @@
 (defn resource-tag-options
   []
   (let [resource-tags (subscribe [::subs/resource-tags-available])]
-    (vec (map (fn [v] {:key   (:key v)
+    (->> @resource-tags
+         (map (fn [v] {:key   (:key v)
                        :value (:key v)
-                       :text  (str (:key v) " :: " (:doc_count v))})
-              @resource-tags))))
+                       :text  (str (:key v) " :: " (:doc_count v))}))
+         vec)))
 
 (defn criteria-metric-kind
   [component metric-name]
@@ -361,7 +364,7 @@
        (get-in criteria-condition-type)
        name))
 
-(defn add-subscription-modal
+(defn add-subscription-config-modal
   []
   (let [tr (subscribe [::i18n-subs/tr])
         visible? (subscribe [::subs/subscription-config-modal-visible?])
@@ -373,21 +376,20 @@
         notif-methods (subscribe [::subs/notification-methods])
         collection (subscribe [::subs/collection])
         criteria-metric (subscribe [::subs/criteria-metric])
-        components-number (subscribe [::subs/components-number])
-        subscription-config (subscribe [::subs/notification-subscription-config])]
+        components-number (subscribe [::subs/components-number])]
     (dispatch [::events/get-notification-methods])
     (dispatch [::events/set-components-number 0])
     (dispatch [::events/reset-tags-available])
+    #_(dispatch [::events/update-notification-subscription-config :resource-filter ""])
     (fn []
       (let [header (str/capitalize (str (@tr [:add]) " " (@tr [:subscription])))]
         (dispatch [::events/update-notification-subscription-config :enabled true])
         (dispatch [::events/update-notification-subscription-config :category "notification"])
-        (dispatch [::events/update-notification-subscription-config :resource-filter ""])
         [:div]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(do
-                                  (dispatch [::events/set-components-number 0])
+                                  (dispatch [::events/reset-subscription-config-all])
                                   (dispatch [::events/close-add-subscription-config-modal]))}
 
          [ui/ModalHeader header]
@@ -496,7 +498,7 @@
         components-number (subscribe [::subs/components-number])
         subscription-config (subscribe [::subs/notification-subscription-config])]
     (dispatch [::events/get-notification-methods])
-    (dispatch [::events/set-components-number 0])
+    ;(dispatch [::events/set-components-number 0])
     (dispatch [::events/reset-tags-available])
     (fn []
       (let [header (str/capitalize (str (@tr [:edit]) " " (@tr [:subscription])))
@@ -507,6 +509,7 @@
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(do
+                                  (dispatch [::events/reset-subscription-config-all])
                                   (dispatch [::events/close-edit-subscription-config-modal]))}
 
          [ui/ModalHeader header]
@@ -784,11 +787,7 @@
         subscriptions (subscribe [::subs/subscriptions])
         on-change (fn [name-kw value]
                     (dispatch-sync [::events/update-notification-subscription-config name-kw value])
-                    (dispatch [::events/validate-notification-subscription-config-form]))
-        type "notification"
-        collection "infrastructure-service"
-        category "notification"
-        name (str type " " collection " " category)]
+                    (dispatch [::events/validate-notification-subscription-config-form]))]
     (dispatch [::events/get-notification-subscription-configs])
     (dispatch [::events/get-notification-subscriptions])
     (dispatch [::events/get-notification-methods])
@@ -796,16 +795,7 @@
       (let [infra-service-subs-confs (filter #(= "infrastructure-service" (:resource-kind %)) @subscription-configs)
             nuvlabox-subs-confs (filter #(= "nuvlabox" (:resource-kind %)) @subscription-configs)
             subs-confs-all {"infrastructure-service" infra-service-subs-confs
-                            "nuvlabox"               nuvlabox-subs-confs}
-            infra-service-state-subs-conf (first (filter #(= category (:category %)) infra-service-subs-confs))]
-        (if infra-service-state-subs-conf
-          (dispatch [::events/set-notification-subscription-config infra-service-state-subs-conf])
-          (dispatch [::events/set-notification-subscription-config {:type        type
-                                                                    :collection  collection
-                                                                    :category    category
-                                                                    :enabled     true
-                                                                    :name        name
-                                                                    :description name}]))
+                            "nuvlabox"               nuvlabox-subs-confs}]
         [ui/TabPane
          [MenuBarSubscription]
          (if (empty? @subscription-configs)
@@ -937,6 +927,6 @@
    [TabsAll]
    [edit-subscription-modal]
    [add-notification-method-modal]
-   [add-subscription-modal]
+   [add-subscription-config-modal]
    [edit-subscription-config-modal]
    [manage-subscriptions-modal]])

@@ -215,9 +215,10 @@
 (reg-event-fx
   ::fetch-tags-available
   (fn [{:keys [db]} [_ resource-kind]]
-      {::cimi-api-fx/search [(keyword resource-kind) {:last 0
+    (when (not-empty resource-kind)
+      {::cimi-api-fx/search [(keyword resource-kind) {:last        0
                                                       :aggregation "terms:tags"}
-                             #(dispatch [::set-tags-available %])]}))
+                             #(dispatch [::set-tags-available %])]})))
 
 
 (reg-event-fx
@@ -225,6 +226,15 @@
   (fn [{:keys [db]} [_ component]]
     {::cimi-api-fx/search [(keyword component) {:last 0}
                            #(dispatch [::set-components-number (:count %)])]}))
+
+
+(reg-event-db
+  ::reset-subscription-config-all
+  (fn [db [_]]
+    (assoc db ::spec/notification-subscription-config {})
+    (assoc db ::spec/components-number 0)
+    (assoc db ::spec/resource-tags-available [])
+    (assoc db ::spec/collection nil)))
 
 
 ;;
@@ -300,10 +310,11 @@
      ::cimi-api-fx/delete [id #(dispatch [::get-notification-subscriptions])]}))
 
 
-(reg-event-fx ::delete-subscription-config
-              (fn [{:keys [db]} [_ id]]
-                {:db                  db
-                 ::cimi-api-fx/delete [id #(dispatch [::get-notification-subscription-configs])]}))
+(reg-event-fx
+  ::delete-subscription-config
+  (fn [{:keys [db]} [_ id]]
+    {:db                  db
+     ::cimi-api-fx/delete [id #(dispatch [::get-notification-subscription-configs])]}))
 
 
 (reg-event-db

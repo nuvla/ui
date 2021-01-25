@@ -53,22 +53,6 @@
     (::spec/state-nuvlaboxes db)))
 
 
-#_(reg-sub
-    ::nuvlaboxes-online-status
-    (fn [db]
-      (::spec/status-nuvlaboxes db)))
-
-
-#_(reg-sub
-    ::nuvlabox-online-status
-    :<- [::nuvlaboxes-online-status]
-    (fn [{:keys [online offline]} [_ nuvlabox-id]]
-      (cond
-        (contains? online nuvlabox-id) :online
-        (contains? offline nuvlabox-id) :offline
-        :else :unknown)))
-
-
 (reg-sub
   ::nuvlaboxes-online-status
   (fn [db]

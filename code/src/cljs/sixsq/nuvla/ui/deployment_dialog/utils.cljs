@@ -45,6 +45,7 @@
                                  (coll->map current-val-fn))]
     (into [] (vals (merge-with merge resolved-params-map current-params-map)))))
 
+
 (defn merge-module
   [{current-content :content :as current-module}
    {resolved-content :content :as resolved-module}]
@@ -65,3 +66,8 @@
               (seq env) (assoc :environmental-variables env)
               (seq files) (assoc :files files))
       :href (:id current-module))))
+
+
+(defn infra-support-pull?
+  [{:keys [capabilities] :as infrastructure-service}]
+  (contains? (set capabilities) "NUVLA_JOB_PULL"))

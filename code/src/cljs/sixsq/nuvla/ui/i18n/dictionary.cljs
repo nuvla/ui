@@ -7,6 +7,8 @@
 (def dictionary
   {:en {:lang                                         "English"
 
+        :schedule-launch                              "schedule launch"
+        :schedule-update                              "schedule update"
         :about                                        "about"
         :about-subtitle                               "This software is brought to you"
         :accept                                       "Accept "

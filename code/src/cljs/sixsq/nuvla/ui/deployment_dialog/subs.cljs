@@ -4,7 +4,8 @@
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]))
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]))
 
 
 (reg-sub
@@ -86,16 +87,36 @@
 
 
 (reg-sub
+  ::execution-mode
+  :<- [::deployment]
+  :<- [::selected-infra-service]
+  :<- [::selected-credential-id]
+  (fn [[deployment infra-service cred-id]]
+    (or (:execution-mode deployment)
+        (let [cred-unknown? @(subscribe [::creds-subs/credential-check-status-unknown? cred-id])
+              cred-loading? @(subscribe [::creds-subs/credential-check-loading? cred-id])]
+          (if (utils/infra-support-pull? infra-service)
+            (if (and cred-unknown? (not cred-loading?))
+              "pull"
+              "mixed")
+            "push")))))
+
+
+(reg-sub
   ::modal-action-button-text
   :<- [::i18n-subs/tr]
   :<- [::deployment-start?]
   :<- [::is-launch-status? :ok]
-  (fn [[tr start? launch-status-ok?]]
-    (tr [(cond
-           (and start? launch-status-ok?) :launch
-           (and start? (not launch-status-ok?)) :launch-force
-           (and (not start?) launch-status-ok?) :update
-           :else :update-force)])))
+  :<- [::execution-mode]
+  (fn [[tr start? launch-status-ok? execution-mode]]
+    (let [execution-mode-pull? (= execution-mode "pull")]
+      (tr [(cond
+             (and start? execution-mode-pull?) :schedule-launch
+             (and (not start?) execution-mode-pull?) :schedule-update
+             (and start? launch-status-ok?) :launch
+             (and start? (not launch-status-ok?)) :launch-force
+             (and (not start?) launch-status-ok?) :update
+             :else :update-force)]))))
 
 
 (reg-sub

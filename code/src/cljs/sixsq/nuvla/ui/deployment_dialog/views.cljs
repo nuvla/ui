@@ -135,13 +135,14 @@
         button-text      (subscribe [::subs/modal-action-button-text])
         button-color     (subscribe [::subs/modal-action-button-color])
         button-disabled? (subscribe [::subs/modal-action-button-disabled?])
-        operation        (subscribe [::subs/modal-operation])]
+        operation        (subscribe [::subs/modal-operation])
+        exec-mode        (subscribe [::subs/execution-mode])]
     (fn [show-data?]
       (let [hide-fn   #(do
                          (when (= (:state @deployment) "CREATED")
                            (dispatch [::events/delete-deployment (:id @deployment)]))
                          (dispatch [::events/reset]))
-            submit-fn #(dispatch [::events/edit-deployment @operation])]
+            submit-fn #(dispatch [::events/edit-deployment @operation @exec-mode])]
         [ui/Modal (cond-> {:open       @open?
                            :close-icon true
                            :on-close   hide-fn}

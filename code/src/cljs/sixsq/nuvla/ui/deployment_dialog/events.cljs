@@ -107,7 +107,7 @@
                                     ::spec/infra-services nil)
      ::cimi-api-fx/search [:infrastructure-service
                            {:filter filter,
-                            :select "id, name, description, subtype"
+                            :select "id, name, description, subtype, capabilities"
                             :order  "name:asc,id:asc"}
                            #(dispatch [::set-infra-services %])]}))
 
@@ -394,9 +394,10 @@
 
 (reg-event-fx
   ::edit-deployment
-  (fn [{{:keys [::spec/deployment] :as db} :db} [_ operation]]
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ operation exec-mode]]
     (let [resource-id   (:id deployment)
           operation     (or operation "start")
+          dep           (assoc deployment :execution-mode exec-mode)
           edit-callback (fn [response]
                           (if (instance? js/Error response)
                             (dispatch [::set-error-message
@@ -406,7 +407,7 @@
                               (dispatch [::deployment-operation resource-id operation])
                               (dispatch [::intercom-events/set-event "Last app launch"
                                          (time/timestamp)]))))]
-      {::cimi-api-fx/edit [resource-id deployment edit-callback]})))
+      {::cimi-api-fx/edit [resource-id dep edit-callback]})))
 
 
 (reg-event-db

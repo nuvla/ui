@@ -135,6 +135,13 @@
 
 
 (reg-sub
+  ::credential-check-status-unknown?
+  (fn [[_ id]] (subscribe [::credential-check-status id]))
+  (fn [status]
+    (= status "UNKNOWN")))
+
+
+(reg-sub
   ::active-tab-index
   (fn [db]
     (get-in db [::spec/active-tab-index])))

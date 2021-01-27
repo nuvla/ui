@@ -141,12 +141,12 @@
         registries-completed? credentials-completed? registries-status]
        [_ step-id]]
     (let [cred-loading? @(subscribe [::creds-subs/credential-check-loading? cred-id])
-          cred-invalid? @(subscribe [::creds-subs/credential-check-status-invalid? cred-id])]
+          cred-valid?   @(subscribe [::creds-subs/credential-check-status-valid? cred-id])]
       (case step-id
         :data data-completed?
         :infra-services (and credentials-completed?
                              (not cred-loading?)
-                             (not cred-invalid?))
+                             cred-valid?)
         :env-variables env-variables-completed?
         :registries (and registries-completed? (= :ok registries-status))
         :license license-completed?
@@ -579,9 +579,12 @@
   :<- [::price]
   :<- [::price-completed?]
   :<- [::version-completed?]
+  :<- [::selected-credential-id]
   (fn [[deployment data-completed? data-step-active? credentials-completed? env-variables-completed?
-        registries-completed? license license-completed? price price-completed? version-completed?]]
-    (or (not deployment)
+        registries-completed? license license-completed? price price-completed? version-completed?
+        selected-credential-id]]
+    (let [cred-invalid? @(subscribe [::creds-subs/credential-check-status-invalid? selected-credential-id])]
+      (or (not deployment)
         (and (not data-completed?) data-step-active?)
         (not credentials-completed?)
         (not env-variables-completed?)
@@ -589,7 +592,8 @@
         (and price (not price-completed?))
         (and license (not license-completed?))
         (not registries-completed?)
-        (not version-completed?))))
+        (not version-completed?)
+        cred-invalid?))))
 
 
 (reg-sub

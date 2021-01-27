@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Deployment modal - distinguish credential check error and only
+    let deploy if credential is not invalid
   - Edge - Move and simplification of NuvlaBox card component
   - Edge detail - Use NuvlaBox new online attribute
   - Edge - Use NuvlaBox new online attribute

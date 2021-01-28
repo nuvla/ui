@@ -116,7 +116,7 @@
                         (if collection
                           (dispatch-sync [::events/update-notification-subscription-config :collection collection]))
                         (if save?
-                          (save-callback-notification-subscription-config))))
+                          (dispatch [::events/set-notif-method-id %]))))
     :options       (map (fn [{id :id, method-name :name}]
                           {:key id, :value id, :text method-name})
                         @notif-methods)}])
@@ -836,7 +836,7 @@
                                                                (on-change :method-id (-> @notif-methods
                                                                                          first
                                                                                          :id)))
-                                                             (save-callback-notification-subscription-config)))}]]]
+                                                             (dispatch [::events/toggle-enabled (:id subs-conf) %])))}]]]
                        [ui/TableCell {:floated :left
                                       :width   4}
                         [subs-notif-method-dropdown (:method-id subs-conf) notif-methods true (:resource-kind subs-conf)]]

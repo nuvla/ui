@@ -16,7 +16,6 @@
     [sixsq.nuvla.ui.docs.spec :as docs]
     [sixsq.nuvla.ui.edge-detail.spec :as edge-detail]
     [sixsq.nuvla.ui.edge.spec :as edge]
-    [sixsq.nuvla.ui.filter-comp.spec :as filter-comp]
     [sixsq.nuvla.ui.i18n.spec :as i18n]
     [sixsq.nuvla.ui.infrastructures-detail.spec :as infra-service-detail]
     [sixsq.nuvla.ui.infrastructures.spec :as infra-service]
@@ -38,7 +37,6 @@
                      ::deployment-dialog/db
                      ::data/db
                      ::docs/db
-                     ::filter-comp/db
                      ::i18n/db
                      ::infra-service/db
                      ::infra-service-detail/db
@@ -65,7 +63,6 @@
          deployment-dialog/defaults
          credential/defaults
          docs/defaults
-         filter-comp/defaults
          i18n/defaults
          infra-service/defaults
          infra-service-detail/defaults

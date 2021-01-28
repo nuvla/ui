@@ -5,6 +5,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.infrastructures-detail.events :as events]
     [sixsq.nuvla.ui.infrastructures-detail.spec :as spec]
@@ -12,7 +13,6 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
@@ -200,6 +200,6 @@
       ^{:key uuid}
       [ui/Container {:fluid true}
        [MenuBar uuid]
-       [resource-details/detail-header @infra-service]
+       [cimi-detail-views/detail-header @infra-service]
        ^{:key uuid}
        [InfraService]])))

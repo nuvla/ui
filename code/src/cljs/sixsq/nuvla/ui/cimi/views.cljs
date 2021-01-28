@@ -19,7 +19,6 @@
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.general :as utils]
-    [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.response :as response]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -468,7 +467,7 @@
 (defn delete-resources-button
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [resource-details/action-button-icon
+    [cimi-detail-views/action-button-icon
      (@tr [:delete-resources])
      (@tr [:yes])
      "trash"

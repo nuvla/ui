@@ -247,9 +247,9 @@
 
 (reg-event-fx
   ::set-notif-method-id
-  (fn [{:keys [db]} [_ method-id]]
-    (let [rid (get-in db [::spec/notification-subscription-config :id])]
-      {::cimi-api-fx/operation [rid "set-notif-method-id" #() {:method-id method-id}]})))
+  (fn [{:keys [db]} [_ subs-conf-id method-id]]
+    (println subs-conf-id method-id)
+    {::cimi-api-fx/operation [subs-conf-id "set-notif-method-id" #() {:method-id method-id}]}))
 
 
 ;;

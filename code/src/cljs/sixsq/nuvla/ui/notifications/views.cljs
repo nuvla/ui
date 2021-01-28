@@ -102,7 +102,7 @@
 
 
 (defn subs-notif-method-dropdown
-  [current-value notif-methods save? collection]
+  [current-value notif-methods save? collection subs-conf-id]
   ^{:key current-value}
   [ui/FormDropdown
    {:selection     true
@@ -116,7 +116,7 @@
                         (if collection
                           (dispatch-sync [::events/update-notification-subscription-config :collection collection]))
                         (if save?
-                          (dispatch [::events/set-notif-method-id %]))))
+                          (dispatch [::events/set-notif-method-id subs-conf-id %]))))
     :options       (map (fn [{id :id, method-name :name}]
                           {:key id, :value id, :text method-name})
                         @notif-methods)}])
@@ -839,7 +839,8 @@
                                                              (dispatch [::events/toggle-enabled (:id subs-conf) %])))}]]]
                        [ui/TableCell {:floated :left
                                       :width   4}
-                        [subs-notif-method-dropdown (:method-id subs-conf) notif-methods true (:resource-kind subs-conf)]]
+                        [subs-notif-method-dropdown
+                         (:method-id subs-conf) notif-methods true (:resource-kind subs-conf) (:id subs-conf)]]
                        [ui/TableCell {:floated :left
                                       :width   1
                                       :align   :right

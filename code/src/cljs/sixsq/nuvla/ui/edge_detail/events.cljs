@@ -21,27 +21,27 @@
   ::set-nuvlabox-vulns
   (fn [db [_ nuvlabox-vulns]]
     (assoc db ::spec/nuvlabox-vulns {:summary (:summary nuvlabox-vulns)
-                                     :items (into []
-                                      (map
-                                        (fn [{:keys [vulnerability-score] :as item}]
-                                          (if vulnerability-score
-                                            (cond
-                                              (>= vulnerability-score 9.0) (assoc item
-                                                                             :severity "CRITICAL"
-                                                                             :color    edge-utils/vuln-critical-color)
-                                              (and (< vulnerability-score 9.0)
-                                                (>= vulnerability-score 7.0)) (assoc item
-                                                                                :severity "HIGH"
-                                                                                :color    edge-utils/vuln-high-color)
-                                              (and (< vulnerability-score 7.0)
-                                                (>= vulnerability-score 4.0)) (assoc item
-                                                                                :severity "MEDIUM"
-                                                                                :color    edge-utils/vuln-medium-color)
-                                              (< vulnerability-score 4.0) (assoc item
-                                                                            :severity "LOW"
-                                                                            :color    edge-utils/vuln-low-color))
-                                            (assoc item :severity "UNKNOWN" :color edge-utils/vuln-unknown-color)))
-                                        (:items nuvlabox-vulns)))})))
+                                     :items   (into []
+                                                    (map
+                                                      (fn [{:keys [vulnerability-score] :as item}]
+                                                        (if vulnerability-score
+                                                          (cond
+                                                            (>= vulnerability-score 9.0) (assoc item
+                                                                                           :severity "CRITICAL"
+                                                                                           :color edge-utils/vuln-critical-color)
+                                                            (and (< vulnerability-score 9.0)
+                                                                 (>= vulnerability-score 7.0)) (assoc item
+                                                                                                 :severity "HIGH"
+                                                                                                 :color edge-utils/vuln-high-color)
+                                                            (and (< vulnerability-score 7.0)
+                                                                 (>= vulnerability-score 4.0)) (assoc item
+                                                                                                 :severity "MEDIUM"
+                                                                                                 :color edge-utils/vuln-medium-color)
+                                                            (< vulnerability-score 4.0) (assoc item
+                                                                                          :severity "LOW"
+                                                                                          :color edge-utils/vuln-low-color))
+                                                          (assoc item :severity "UNKNOWN" :color edge-utils/vuln-unknown-color)))
+                                                      (:items nuvlabox-vulns)))})))
 
 
 (reg-event-db
@@ -73,14 +73,14 @@
 (reg-event-fx
   ::set-nuvlabox
   (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status :as nuvlabox}]]
-    {:db                             (assoc db ::spec/nuvlabox nuvlabox
-                                               ::spec/loading? false)
-     ::cimi-api-fx/get               [nb-status-id #(do
-                                                      (dispatch [::set-nuvlabox-status %])
-                                                      (dispatch [::set-nuvlabox-vulns (:vulnerabilities %)]))
-                                      :on-error #(do
-                                                   (dispatch [::set-nuvlabox-status nil])
-                                                   (dispatch [::set-nuvlabox-vulns nil]))]}))
+    {:db               (assoc db ::spec/nuvlabox nuvlabox
+                                 ::spec/loading? false)
+     ::cimi-api-fx/get [nb-status-id #(do
+                                        (dispatch [::set-nuvlabox-status %])
+                                        (dispatch [::set-nuvlabox-vulns (:vulnerabilities %)]))
+                        :on-error #(do
+                                     (dispatch [::set-nuvlabox-status nil])
+                                     (dispatch [::set-nuvlabox-vulns nil]))]}))
 
 
 (reg-event-fx
@@ -90,10 +90,43 @@
       (dispatch [::set-nuvlabox-ssh-keys {}])
       {::cimi-api-fx/search
        [:credential
-        {:filter (cond-> (apply general-utils/join-or
-                                (map #(str "id='" % "'") ssh-keys-ids)))
+        {:filter (->> ssh-keys-ids
+                      (map #(str "id='" % "'"))
+                      (apply general-utils/join-or))
          :last   100}
         #(dispatch [::set-nuvlabox-ssh-keys {:associated-ssh-keys (:resources %)}])]})))
+
+
+(reg-event-fx
+  ::get-ssh-keys-not-associated
+  (fn [{{{:keys [ssh-keys]} ::spec/nuvlabox} :db} [_ callback-fn]]
+    (if (empty? ssh-keys)
+      (callback-fn [])
+      {::cimi-api-fx/search
+       [:credential
+        {:filter (->> ssh-keys
+                      (map #(str "id!='" % "'"))
+                      (apply general-utils/join-and)
+                      (general-utils/join-and "subtype=\"ssh-key\""))
+         :last   100}
+        #(callback-fn (get % :resources []))]})))
+
+
+
+(reg-event-fx
+  ::add-ssh-key
+  (fn [_ [_ resource-id operation data callback-fn]]
+    {::cimi-api-fx/operation
+     [resource-id operation
+      #(if (instance? js/Error %)
+         (let [{:keys [status message]} (response/parse-ex-info %)]
+           (dispatch [::messages-events/add
+                      {:header  (cond-> (str "error executing operation " operation)
+                                        status (str " (" status ")"))
+                       :content message
+                       :type    :error}]))
+         (callback-fn (:message %)))
+      data]}))
 
 
 (reg-event-fx
@@ -112,11 +145,11 @@
           select-str   "id, content, severity, timestamp, category"
           first        (inc (* (dec page) elements-per-page))
           last         (* page elements-per-page)
-          query-params {:filter   filter-str
-                        :orderby  order-by-str
-                        :select   select-str
-                        :first    first
-                        :last     last}]
+          query-params {:filter  filter-str
+                        :orderby order-by-str
+                        :select  select-str
+                        :first   first
+                        :last    last}]
       {::cimi-api-fx/search [:event
                              (general-utils/prepare-params query-params)
                              #(dispatch [::set-nuvlabox-events %])

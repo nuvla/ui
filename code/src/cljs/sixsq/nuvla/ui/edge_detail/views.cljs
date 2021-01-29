@@ -19,7 +19,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -64,22 +65,98 @@
       :content     [:h3 content]}]))
 
 
+(defn SshKeysDropdown
+  [on-change-fn]
+  (let [ssh-keys (r/atom nil)]
+    (dispatch [::events/get-ssh-keys-not-associated #(reset! ssh-keys %)])
+    (fn [on-change-fn]
+      [ui/FormDropdown {:label       "SSH key"
+                        :loading     (nil? @ssh-keys)
+                        :placeholder "To generate a new SSH keypair, leave this field empty"
+                        :on-change   (ui-callback/value on-change-fn)
+                        :clearable   true
+                        :options     (map (fn [{:keys [id name]}]
+                                            {:key id, :text (or name id), :value id}) @ssh-keys)
+                        :selection   true}])))
+
+
+(defn AddSSHButton
+  [{:keys [id] :as resource} operation show?]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        close-fn     #(reset! show? false)
+        form-data    (r/atom {:execution-mode "push"})
+        key-data     (r/atom nil)
+        on-change-fn (fn [k v]
+                       (if (str/blank? v)
+                         (swap! form-data dissoc k)
+                         (swap! form-data assoc k v)))
+        operation-fn #(dispatch [::events/add-ssh-key id operation @form-data
+                                 (fn [ssh-key] (reset! key-data ssh-key))])]
+    (fn [resource operation show?]
+      [ui/Modal
+       {:open       @show?
+        :close-icon true
+        :on-close   close-fn
+        :trigger    (r/as-element
+                      [ui/MenuItem {:on-click #(reset! show? true)}
+                       [ui/Icon {:name "braille"}]
+                       "Add ssh key"])}
+       [ui/ModalHeader [:div "Add ssh key"]]
+       [ui/ModalContent
+        [ui/Form
+         [ui/FormDropdown {:label         "Execution mode"
+                           :selection     true
+                           :default-value (:execution-mode @form-data)
+                           :on-change     (ui-callback/value (partial on-change-fn :execution-mode))
+                           :options       [{:key "push", :text "push", :value "push"}
+                                           {:key "mixed", :text "mixed", :value "mixed"}
+                                           {:key "pull", :text "pull", :value "pull"}]}]
+         [SshKeysDropdown (ui-callback/value (partial on-change-fn :credential))]
+
+         (when @key-data
+           [ui/FormField
+            [:a {:href     (str "data:text/plain;charset=utf-8,"
+                                (js/encodeURIComponent @key-data))
+                 :target   "_blank"
+                 :download "ssh_private.key"}
+             [ui/Button {:positive       true
+                         :fluid          true
+                         :icon           "download"
+                         :label-position "left"
+                         :as             "div"
+                         :content        (@tr [:download])}]]])]]
+       [ui/ModalActions
+        [cimi-detail-views/action-buttons
+         (@tr [:add]) (@tr [:cancel])
+         operation-fn close-fn]]])))
+
+(defmethod cimi-detail-views/other-button ["nuvlabox" "add-ssh-key"]
+  [resource operation]
+  (let [show? (r/atom false)]
+    (fn [resource operation]
+     ^{:key (str "add-ssh-button" @show?)}
+     [AddSSHButton resource operation show?])))
+
+
 (defn MenuBar [uuid]
   (let [can-decommission? (subscribe [::subs/can-decommission?])
         can-delete?       (subscribe [::subs/can-delete?])
         nuvlabox          (subscribe [::subs/nuvlabox])
         loading?          (subscribe [::subs/loading?])]
-    [main-components/StickyBar
-     [ui/Menu {:borderless true, :stackable true}
-      (when @can-decommission?
-        [DecommissionButton @nuvlabox])
-      (when @can-delete?
-        [DeleteButton @nuvlabox])
+    (fn []
+      [main-components/StickyBar
+      [ui/Menu {:borderless true, :stackable true}
+       (when @can-decommission?
+         [DecommissionButton @nuvlabox])
+       (when @can-delete?
+         [DeleteButton @nuvlabox])
 
-      [main-components/RefreshMenu
-       {:action-id  refresh-action-id
-        :loading?   @loading?
-        :on-refresh #(refresh uuid)}]]]))
+       [cimi-detail-views/format-operations @nuvlabox #{"decommission" "commission" "check-api"}]
+
+       [main-components/RefreshMenu
+        {:action-id  refresh-action-id
+         :loading?   @loading?
+         :on-refresh #(refresh uuid)}]]])))
 
 
 (defn get-available-actions
@@ -965,9 +1042,9 @@
         nuvlabox (subscribe [::subs/nuvlabox])
         status   (subscribe [::subs/nuvlabox-online-status])]
     (fn []
-      (let [id     (:id @nuvlabox)
-            name   (:name @nuvlabox)
-            state  (:state @nuvlabox)]
+      (let [id    (:id @nuvlabox)
+            name  (:name @nuvlabox)
+            state (:state @nuvlabox)]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
           [StatusIcon @status :corner "left center"]

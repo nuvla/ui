@@ -30,10 +30,10 @@
   :<- [::orderby-map]
   (fn [orderby-map [_ label]]
     (let [sort-direction (get orderby-map label)
-          direction (case sort-direction
-                      "asc" " ascending"
-                      "desc" " descending"
-                      "")]
+          direction      (case sort-direction
+                           "asc" " ascending"
+                           "desc" " descending"
+                           "")]
       (str "sort" direction))))
 
 
@@ -131,6 +131,18 @@
   (fn [[_ resource-name]] (subscribe [::resource-metadata resource-name]))
   (fn [resource-metadata]
     (utils/cimi-metadata-simplifier resource-metadata)))
+
+
+(reg-sub
+  ::resource-metadata-input-parameters
+  (fn [[_ resource-name operation]] [(subscribe [::resource-metadata resource-name])
+                                     (atom operation)])
+  (fn [[resource-metadata operation]]
+    (some->> resource-metadata
+             :actions
+             (some #(when (= (:name %) operation) %))
+             :input-parameters
+             (remove #(= (:type %) "map")))))
 
 
 (reg-sub

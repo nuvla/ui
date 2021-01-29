@@ -115,42 +115,38 @@
 
 (defmethod other-button :default
   [{:keys [resource-type] :as resource} operation]
-  (let [tr                (subscribe [::i18n-subs/tr])
-        resource-metadata (subscribe [::cimi-subs/resource-metadata resource-type])
-        form-data         (atom {})]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        params    (subscribe [::cimi-subs/resource-metadata-input-parameters resource-type operation])
+        form-data (atom {})]
     (fn [{:keys [id] :as resource} operation]
-      (let [input-parameters (some->> @resource-metadata
-                                      :actions
-                                      (filter #(= (:name %) operation))
-                                      first
-                                      :input-parameters)]
-        [action-button-icon
-         operation
-         operation
-         (case operation
-           "download" "cloud download"
-           "upload" "cloud upload"
-           "describe" "info"
-           "ready" "check"
-           "start" "rocket"
-           "stop" "stop"
-           "cog")
-         (@tr [:execute-action] [operation])
-         [:<>
-          [:p (@tr [:execute-action-msg] [operation (:id resource)])]
-          (when input-parameters
-            [ui/Form
-             (for [input-param input-parameters]
-               ^{:key (:name input-param)}
-               [ff/form-field #(swap! form-data assoc %2 %3) :a (assoc input-param
-                                                                  :editable true
-                                                                  :help (:description input-param))])])]
-         #(dispatch [::events/operation id operation @form-data])
-         (constantly nil)])
+      [action-button-icon
+       operation
+       operation
+       (case operation
+         "download" "cloud download"
+         "upload" "cloud upload"
+         "describe" "info"
+         "ready" "check"
+         "start" "rocket"
+         "stop" "stop"
+         "cog")
+       (@tr [:execute-action] [operation])
+       [:<>
+        [:p (@tr [:execute-action-msg] [operation (:id resource)])]
+        (when @params
+          [ui/Form
+           (for [param @params]
+             ^{:key (:name param)}
+             [ff/form-field #(swap! form-data assoc %2 %3)
+              :operation-form (assoc param
+                                :editable true
+                                :help (:description param))])])]
+       #(dispatch [::events/operation id operation @form-data])
+       (constantly nil)]
       )))
 
 
-(defmethod other-button ["nuvlabox" "revoke-ssh-key"]
+#_(defmethod other-button ["nuvlabox" "revoke-ssh-key"]
   [{:keys [id] :as resource} operation]
   (let [tr (subscribe [::i18n-subs/tr])]
     [action-button-icon

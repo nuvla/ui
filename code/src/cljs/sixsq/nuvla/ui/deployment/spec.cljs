@@ -13,12 +13,6 @@
 
 (s/def ::events any?)
 
-(s/def ::jobs any?)
-
-(s/def ::jobs-per-page pos-int?)
-
-(s/def ::job-page nat-int?)
-
 (s/def ::node-parameters any?)
 
 (s/def ::deployment-log-id (s/nilable string?))
@@ -40,10 +34,7 @@
                           ::deployment
                           ::deployment-parameters
                           ::events
-                          ::jobs
                           ::node-parameters
-                          ::jobs-per-page
-                          ::job-page
                           ::deployment-log-id
                           ::deployment-log-service
                           ::deployment-log-since
@@ -61,9 +52,6 @@
                ::deployment-parameters     nil
                ::module-versions           nil
                ::events                    nil
-               ::jobs                      nil
-               ::jobs-per-page             10
-               ::job-page                  1
                ::node-parameters           nil
                ::deployment-log-controller nil
                ::deployment-log-id         nil

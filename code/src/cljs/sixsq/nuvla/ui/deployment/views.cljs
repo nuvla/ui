@@ -18,6 +18,8 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.job.subs :as job-subs]
+    [sixsq.nuvla.ui.job.views :as job-views]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
@@ -41,25 +43,6 @@
              {:id        refresh-action-id
               :frequency 10000
               :event     [::events/get-deployment resource-id]}]))
-
-
-(defn error
-  []
-  (let [{:keys [state]} @(subscribe [::subs/deployment])
-        jobs            (subscribe [::subs/jobs])
-        failed_jobs     (filter #(= (:state %) "FAILED") (:resources @jobs))
-        last_failed_job (first failed_jobs)
-        action          (:action last_failed_job)
-        last_line       (last (str/split-lines (get last_failed_job :status-message "")))]
-    (when (and
-            (= state "ERROR")
-            (some? last_failed_job))
-      [ui/Message {:error true}
-       [ui/MessageHeader
-        {:style    {:cursor "pointer"}
-         :on-click #(dispatch [::events/set-active-tab-index 8])}
-        (str "Job " action " failed")]
-       [ui/MessageContent last_line]])))
 
 
 (defn url-to-row
@@ -275,56 +258,6 @@
    [ui/TableCell progress]
    [ui/TableCell return-code]
    [ui/TableCell {:style {:white-space "pre"}} status-message]])
-
-
-(defn jobs-table
-  [jobs]
-  (let [tr                (subscribe [::i18n-subs/tr])
-        elements-per-page (subscribe [::subs/jobs-per-page])
-        page              (subscribe [::subs/job-page])]
-    (fn [{:keys [resources] :as jobs}]
-      (let [total-elements (get jobs :count 0)
-            total-pages    (general-utils/total-pages total-elements @elements-per-page)]
-        (if (empty? resources)
-          [ui/Message {:warning true}
-           [ui/Icon {:name "warning sign"}]
-           (@tr [:no-jobs-to-show])]
-          [ui/TabPane
-           [ui/Table {:basic "very"}
-            [ui/TableHeader
-             [ui/TableRow
-              [ui/TableHeaderCell [:span (@tr [:job])]]
-              [ui/TableHeaderCell [:span (@tr [:action])]]
-              [ui/TableHeaderCell [:span (@tr [:timestamp])]]
-              [ui/TableHeaderCell [:span (@tr [:state])]]
-              [ui/TableHeaderCell [:span (@tr [:progress])]]
-              [ui/TableHeaderCell [:span (@tr [:return-code])]]
-              [ui/TableHeaderCell [:span (@tr [:message])]]]]
-            [ui/TableBody
-             (for [{:keys [id] :as job} resources]
-               ^{:key id}
-               [job-map-to-row job])]]
-
-           [uix/Pagination {:totalPages   total-pages
-                            :activePage   @page
-                            :onPageChange (ui-callback/callback
-                                            :activePage #(dispatch [::events/set-job-page %]))}]])))))
-
-
-(defn jobs-section
-  []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        jobs      (subscribe [::subs/jobs])
-        {:keys [resources]} @jobs
-        job-count (count resources)]
-    {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:jobs]))
-                                        (when (> job-count 0) [ui/Label {:circular true
-                                                                         :size     "mini"
-                                                                         :attached "top right"}
-                                                               job-count])])
-                :key     "job-section"
-                :icon    "bolt"}
-     :render   (fn [] (r/as-element [jobs-table @jobs]))}))
 
 
 (defn billing-section
@@ -791,7 +724,6 @@
   []
   (let [tr            (subscribe [::i18n-subs/tr])
         deployment    (subscribe [::subs/deployment])
-        locale        (subscribe [::i18n-subs/locale])
         version       (subscribe [::subs/current-module-version])
         versions      (subscribe [::subs/module-versions])
         module        (:module @deployment)
@@ -864,7 +796,8 @@
      [ui/Segment {:attached  false
                   :secondary true}
       (for [[i [url-name url-pattern]] (map-indexed list urls)]
-        (url-to-button url-name url-pattern (= i 0)))]]))
+        ^{:key url-name}
+        [url-to-button url-name url-pattern (= i 0)])]]))
 
 (defn overview-pane
   []
@@ -915,7 +848,7 @@
      (parameters-section)
      (env-vars-section)
      (billing-section)
-     (jobs-section)
+     (job-views/jobs-section)
      (acl/TabAcls deployment (not @read-only?) ::events/edit)]))
 
 
@@ -959,6 +892,24 @@
              :size           "tiny"
              :hide-on-scroll true}] ": "]
           state]]))))
+
+
+(defn error
+  []
+  (let [{:keys [state]} @(subscribe [::subs/deployment])
+        jobs            (subscribe [::job-subs/jobs])
+        last-failed-job (some #(when (= (:state %) "FAILED") %) (:resources @jobs))
+        action          (:action last-failed-job)
+        last-line       (last (str/split-lines (get last-failed-job :status-message "")))]
+    (when (and
+            (= state "ERROR")
+            (some? last-failed-job))
+      [ui/Message {:error true}
+       [ui/MessageHeader
+        {:style    {:cursor "pointer"}
+         :on-click #(dispatch [::events/set-active-tab-index 8])}
+        (str "Job " action " failed")]
+       [ui/MessageContent last-line]])))
 
 
 (defn TabsDeployment

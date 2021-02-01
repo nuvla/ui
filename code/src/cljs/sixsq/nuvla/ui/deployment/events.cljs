@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.dashboard.events :as dashboard-events]
     [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -65,7 +66,7 @@
     (let [different-deployment? (not= (:id deployment) id)]
       (cond-> {:dispatch-n       [[::get-deployment-parameters id]
                                   [::get-events id]
-                                  [::get-jobs id]]
+                                  [::job-events/get-jobs id]]
                ::cimi-api-fx/get [id #(dispatch [::set-deployment %])]}
               different-deployment? (assoc :db (merge db spec/defaults))))))
 
@@ -112,36 +113,6 @@
       {::cimi-api-fx/search [:event
                              (general-utils/prepare-params query-params)
                              #(dispatch [::set-events (:resources %)])]})))
-
-
-(reg-event-fx
-  ::set-job-page
-  (fn [{{:keys [::spec/deployment] :as db} :db} [_ page]]
-    {:dispatch [::get-jobs (:id deployment)]
-     :db       (assoc db ::spec/job-page page)}))
-
-
-(reg-event-db
-  ::set-jobs
-  (fn [db [_ jobs]]
-    (assoc db ::spec/jobs jobs)))
-
-
-(reg-event-fx
-  ::get-jobs
-  (fn [{{:keys [::spec/job-page
-                ::spec/jobs-per-page]} :db} [_ href]]
-    (let [filter-str   (str "target-resource/href='" href "'")
-          select-str   (str "id, action, time-of-status-change, updated, state, "
-                            "target-resource, return-code, progress, status-message")
-          query-params {:filter  filter-str
-                        :select  select-str
-                        :first   (inc (* (dec job-page) jobs-per-page))
-                        :last    (* job-page jobs-per-page)
-                        :orderby "created:desc"}]
-      {::cimi-api-fx/search [:job
-                             (general-utils/prepare-params query-params)
-                             #(dispatch [::set-jobs %])]})))
 
 
 (reg-event-db

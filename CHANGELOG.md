@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Edge detail - New job tab and an error message is visible 
+    when last executed job is failed
   - Edge detail - Specific modals for add ssh key and for revoke
     ssh key
   - Operation modal - When a specific modal exist show it 

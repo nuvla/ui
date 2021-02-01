@@ -101,6 +101,13 @@
           (str (str/join "" (rest s)))))
 
 
+(defn name->display-name
+  [name]
+  (some-> name
+          (str/replace #"-" " ")
+          (capitalize-words)))
+
+
 ;;
 ;; json/edn conversions
 ;;

@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.edge-detail.spec :as spec]
     [sixsq.nuvla.ui.edge.utils :as edge-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
@@ -129,7 +130,7 @@
          (do
            (let [{:keys [status message]} (response/parse %)]
              (dispatch [::messages-events/add
-                        {:header  (cond-> (str "success executing operation " operation)
+                        {:header  (cond-> (str "operation " operation " will be executed soon")
                                           status (str " (" status ")"))
                          :content message
                          :type    :success}]))
@@ -175,7 +176,8 @@
                                     :last    10000
                                     :orderby "id"}
                                    #(dispatch [::set-nuvlabox-peripherals %])]
-             :dispatch-n          [[::get-nuvlabox-events id]]}
+             :dispatch-n          [[::get-nuvlabox-events id]
+                                   [::job-events/get-jobs id]]}
             (not= (:id nuvlabox) id) (assoc :db (merge db spec/defaults)))))
 
 

@@ -96,24 +96,6 @@
 
 
 (reg-sub
-  ::jobs
-  (fn [db]
-    (::spec/jobs db)))
-
-
-(reg-sub
-  ::jobs-per-page
-  (fn [db]
-    (::spec/jobs-per-page db)))
-
-
-(reg-sub
-  ::job-page
-  (fn [db]
-    (::spec/job-page db)))
-
-
-(reg-sub
   ::deployment-parameters
   (fn [db]
     (->> db

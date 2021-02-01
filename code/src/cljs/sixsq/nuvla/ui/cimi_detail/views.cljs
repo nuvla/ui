@@ -42,7 +42,8 @@
 
 (defn action-button-icon
   [menu-item-label button-confirm-label icon title-text body on-confirm on-cancel & [scrolling? position]]
-  (let [show? (r/atom false)]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        show? (r/atom false)]
     (fn [menu-item-label button-confirm-label icon title-text body on-confirm on-cancel & [scrolling? position]]
       (let [action-fn (fn []
                         (reset! show? false)
@@ -64,10 +65,9 @@
                            [ui/Icon {:name icon}])
                          menu-item-label])}
          [ui/ModalHeader title-text]
-         [ui/ModalContent (cond-> {}
-                                  scrolling? (assoc :scrolling true)) body]
+         [ui/ModalContent {:scrolling (boolean scrolling?)} body]
          [ui/ModalActions
-          [action-buttons button-confirm-label "cancel" action-fn cancel-fn]]]))))
+          [action-buttons button-confirm-label (@tr [:cancel]) action-fn cancel-fn]]]))))
 
 
 (defn edit-button
@@ -115,13 +115,14 @@
 
 (defmethod other-button :default
   [{:keys [resource-type] :as resource} operation]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        params    (subscribe [::cimi-subs/resource-metadata-input-parameters resource-type operation])
-        form-data (atom {})]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        params     (subscribe [::cimi-subs/resource-metadata-input-parameters resource-type operation])
+        form-data  (atom {})
+        op-display (general-utils/name->display-name operation)]
     (fn [{:keys [id] :as resource} operation]
       [action-button-icon
-       operation
-       operation
+       op-display
+       op-display
        (case operation
          "download" "cloud download"
          "upload" "cloud upload"
@@ -130,33 +131,20 @@
          "start" "rocket"
          "stop" "stop"
          "cog")
-       (@tr [:execute-action] [operation])
-       [:<>
-        [:p (@tr [:execute-action-msg] [operation (:id resource)])]
-        (when @params
-          [ui/Form
-           (for [param @params]
-             ^{:key (:name param)}
-             [ff/form-field #(swap! form-data assoc %2 %3)
-              :operation-form (assoc param
-                                :editable true
-                                :help (:description param))])])]
+       op-display
+       (if @params
+         [ui/Form
+          (for [param @params]
+            ^{:key (:name param)}
+            [ff/form-field #(swap! form-data assoc %2 %3)
+             :operation-form (assoc param
+                               :editable true
+                               :display-name (general-utils/name->display-name (:name param))
+                               :help (:description param))])]
+         [:p (@tr [:execute-action-msg] [operation])])
        #(dispatch [::events/operation id operation @form-data])
        (constantly nil)]
       )))
-
-
-#_(defmethod other-button ["nuvlabox" "revoke-ssh-key"]
-  [{:keys [id] :as resource} operation]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [action-button-icon
-     operation
-     operation
-     "square"
-     (@tr [:execute-action] [operation])
-     [:p "EXAMPLE specific modal available"]
-     #(dispatch [::events/operation id operation])
-     (constantly nil)]))
 
 
 ;; Explicit keys have been added to the operation buttons to avoid react

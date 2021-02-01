@@ -4,11 +4,14 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.edge-detail.events :as events]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]
     [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.job.subs :as job-subs]
+    [sixsq.nuvla.ui.job.views :as job-views]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.forms :as forms]
@@ -19,8 +22,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -1040,12 +1042,13 @@
       :render   (fn [] (r/as-element [TabPeripherals]))}
      {:menuItem {:content "Events"
                  :key     "events"
-                 :icon    "clipboard list"}
+                 :icon    "bolt"}
       :render   (fn [] (r/as-element [TabEvents]))}
      {:menuItem {:content "Vulnerabilities"
                  :key     "vuln"
                  :icon    "shield"}
       :render   (fn [] (r/as-element [TabVulnerabilities]))}
+     (job-views/jobs-section)
      (acl/TabAcls nuvlabox @can-edit? ::events/edit)]))
 
 
@@ -1094,6 +1097,24 @@
           state]]))))
 
 
+(def errors-dissmissed (r/atom #{}))
+
+(defn Error
+  []
+  (let [jobs       (subscribe [::job-subs/jobs])]
+    (fn []
+      (let [{:keys [id action state status-message] :as last-job} (some-> @jobs :resources first)]
+        (when (and (not (@errors-dissmissed id))
+                   (= state "FAILED"))
+          [ui/Message {:error      true
+                       :on-dismiss #(swap! errors-dissmissed conj id)}
+           [ui/MessageHeader
+            {:style    {:cursor "pointer"}
+             :on-click #(dispatch [::events/set-active-tab-index 7])}
+            (str "Job " action " failed")]
+           [ui/MessageContent (last (str/split-lines (or status-message "")))]])))))
+
+
 (defn EdgeDetails
   [uuid]
   (refresh uuid)
@@ -1102,4 +1123,5 @@
     [ui/Container {:fluid true}
      [PageHeader]
      [MenuBar uuid]
+     [Error]
      [TabsNuvlaBox]]))

@@ -33,9 +33,9 @@
 
 
 (reg-sub
-  ::nuvlabox-ssh-keys
+  ::nuvlabox-associated-ssh-keys
   (fn [db]
-    (::spec/nuvlabox-ssh-keys db)))
+    (::spec/nuvlabox-associated-ssh-keys db)))
 
 
 (reg-sub

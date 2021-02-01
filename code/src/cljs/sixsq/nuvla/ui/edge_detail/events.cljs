@@ -45,9 +45,9 @@
 
 
 (reg-event-db
-  ::set-nuvlabox-ssh-keys
+  ::set-nuvlabox-associated-ssh-keys
   (fn [db [_ ssh-keys]]
-    (assoc db ::spec/nuvlabox-ssh-keys ssh-keys)))
+    (assoc db ::spec/nuvlabox-associated-ssh-keys ssh-keys)))
 
 
 (reg-event-db
@@ -84,17 +84,17 @@
 
 
 (reg-event-fx
-  ::get-nuvlabox-ssh-keys
+  ::get-nuvlabox-associated-ssh-keys
   (fn [_ [_ ssh-keys-ids]]
     (if (empty? ssh-keys-ids)
-      (dispatch [::set-nuvlabox-ssh-keys {}])
+      (dispatch [::set-nuvlabox-associated-ssh-keys {}])
       {::cimi-api-fx/search
        [:credential
         {:filter (->> ssh-keys-ids
                       (map #(str "id='" % "'"))
                       (apply general-utils/join-or))
          :last   100}
-        #(dispatch [::set-nuvlabox-ssh-keys {:associated-ssh-keys (:resources %)}])]})))
+        #(dispatch [::set-nuvlabox-associated-ssh-keys (:resources %)])]})))
 
 
 (reg-event-fx
@@ -114,8 +114,8 @@
 
 
 (reg-event-fx
-  ::add-ssh-key
-  (fn [_ [_ resource-id operation data callback-fn]]
+  ::add-revoke-ssh-key
+  (fn [_ [_ resource-id operation data on-success-fn on-error-fn]]
     {::cimi-api-fx/operation
      [resource-id operation
       #(if (instance? js/Error %)
@@ -124,8 +124,17 @@
                       {:header  (cond-> (str "error executing operation " operation)
                                         status (str " (" status ")"))
                        :content message
-                       :type    :error}]))
-         (callback-fn (:message %)))
+                       :type    :error}])
+           (on-error-fn))
+         (do
+           (let [{:keys [status message]} (response/parse %)]
+             (dispatch [::messages-events/add
+                        {:header  (cond-> (str "success executing operation " operation)
+                                          status (str " (" status ")"))
+                         :content message
+                         :type    :success}]))
+           (on-success-fn (:message %))
+           (dispatch [::get-nuvlabox resource-id])))
       data]}))
 
 

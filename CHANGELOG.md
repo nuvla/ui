@@ -4,6 +4,12 @@
 
 ### Changed
 
+  - Edge detail - Specific modals for add ssh key and for revoke
+    ssh key
+  - Operation modal - When a specific modal exist show it 
+    instead of generic modal
+  - Cimi detail - operation support action operation body when
+    metadata is defined
   - Deployment modal - distinguish credential check error and only
     let deploy if credential is not invalid
   - Edge - Move and simplification of NuvlaBox card component

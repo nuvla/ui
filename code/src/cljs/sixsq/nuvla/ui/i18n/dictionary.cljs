@@ -7,6 +7,7 @@
 (def dictionary
   {:en {:lang                                         "English"
 
+        :leave-empty-to-generate-ssh-keypair          "To generate a new SSH keypair, leave this field empty"
         :schedule-launch                              "schedule launch"
         :schedule-update                              "schedule update"
         :about                                        "about"
@@ -620,6 +621,9 @@
 
    :fr {:lang                                      "Français"
 
+        :leave-empty-to-generate-ssh-keypair       "Pour générer une nouvelle pair de clé SSH, laisser ce champs vide"
+        :schedule-launch                           "plannifer le lancement"
+        :schedule-update                           "plannifier la mise à jour"
         :about                                     "à propos"
         :about-subtitle                            "Ce logiciel vous est fournit"
         :accept                                    "Accepter l'"

@@ -66,42 +66,59 @@
 
 
 (defn SshKeysDropdown
-  [on-change-fn]
-  (let [ssh-keys (r/atom nil)]
-    (dispatch [::events/get-ssh-keys-not-associated #(reset! ssh-keys %)])
-    (fn [on-change-fn]
-      [ui/FormDropdown {:label       "SSH key"
-                        :loading     (nil? @ssh-keys)
-                        :placeholder "To generate a new SSH keypair, leave this field empty"
-                        :on-change   (ui-callback/value on-change-fn)
-                        :clearable   true
-                        :options     (map (fn [{:keys [id name]}]
-                                            {:key id, :text (or name id), :value id}) @ssh-keys)
-                        :selection   true}])))
+  [operation on-change-fn]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        is-add?  (= operation "add-ssh-key")
+        ssh-keys (if is-add?
+                   (r/atom nil)
+                   (subscribe [::subs/nuvlabox-associated-ssh-keys]))]
+    (when is-add?
+      (dispatch [::events/get-ssh-keys-not-associated #(reset! ssh-keys %)]))
+    (fn [operation on-change-fn]
+      [ui/FormDropdown
+       {:label       "SSH key"
+        :loading     (nil? @ssh-keys)
+        :placeholder (if is-add?
+                       (@tr [:leave-empty-to-generate-ssh-keypair])
+                       (@tr [:select-credential]))
+        :on-change   (ui-callback/value on-change-fn)
+        :clearable   true
+        :options     (map (fn [{:keys [id name]}]
+                            {:key id, :text (or name id), :value id}) @ssh-keys)
+        :selection   true}])))
 
 
-(defn AddSSHButton
-  [{:keys [id] :as resource} operation show?]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        close-fn     #(reset! show? false)
-        form-data    (r/atom {:execution-mode "push"})
-        key-data     (r/atom nil)
-        on-change-fn (fn [k v]
-                       (if (str/blank? v)
-                         (swap! form-data dissoc k)
-                         (swap! form-data assoc k v)))
-        operation-fn #(dispatch [::events/add-ssh-key id operation @form-data
-                                 (fn [ssh-key] (reset! key-data ssh-key))])]
-    (fn [resource operation show?]
+(defn AddRevokeSSHButton
+  [{:keys [id] :as resource} operation show? title icon button-text]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        close-fn      #(reset! show? false)
+        form-data     (r/atom {:execution-mode "push"})
+        key-data      (r/atom nil)
+        loading?      (r/atom nil)
+        on-change-fn  (fn [k v]
+                        (if (str/blank? v)
+                          (swap! form-data dissoc k)
+                          (swap! form-data assoc k v)))
+        on-success-fn (fn [ssh-key]
+                        (reset! loading? false)
+                        (if (:credential @form-data)
+                          (close-fn)
+                          (reset! key-data ssh-key)))
+        on-error-fn   close-fn
+        on-click-fn   #(do
+                         (reset! loading? true)
+                         (dispatch [::events/add-revoke-ssh-key id operation @form-data
+                                    on-success-fn on-error-fn]))]
+    (fn [resource operation show? title icon button-text]
       [ui/Modal
        {:open       @show?
         :close-icon true
         :on-close   close-fn
         :trigger    (r/as-element
                       [ui/MenuItem {:on-click #(reset! show? true)}
-                       [ui/Icon {:name "braille"}]
-                       "Add ssh key"])}
-       [ui/ModalHeader [:div "Add ssh key"]]
+                       [ui/Icon {:name icon}]
+                       title])}
+       [ui/ModalHeader [:div title]]
        [ui/ModalContent
         [ui/Form
          [ui/FormDropdown {:label         "Execution mode"
@@ -111,7 +128,7 @@
                            :options       [{:key "push", :text "push", :value "push"}
                                            {:key "mixed", :text "mixed", :value "mixed"}
                                            {:key "pull", :text "pull", :value "pull"}]}]
-         [SshKeysDropdown (ui-callback/value (partial on-change-fn :credential))]
+         [SshKeysDropdown operation (partial on-change-fn :credential)]
 
          (when @key-data
            [ui/FormField
@@ -126,16 +143,31 @@
                          :as             "div"
                          :content        (@tr [:download])}]]])]]
        [ui/ModalActions
-        [cimi-detail-views/action-buttons
-         (@tr [:add]) (@tr [:cancel])
-         operation-fn close-fn]]])))
+        [uix/Button
+         {:text     (@tr [:cancel])
+          :on-click close-fn}]
+        [uix/Button
+         {:text     (if @key-data (@tr [:close]) button-text)
+          :primary  true
+          :loading  (true? @loading?)
+          :on-click (if @key-data close-fn on-click-fn)}]]])))
+
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "add-ssh-key"]
   [resource operation]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        show? (r/atom false)]
+    (fn [resource operation]
+      ^{:key (str "add-ssh-button" @show?)}
+      [AddRevokeSSHButton resource operation show? "Add ssh key" "add" (@tr [:add])])))
+
+
+(defmethod cimi-detail-views/other-button ["nuvlabox" "revoke-ssh-key"]
+  [resource operation]
   (let [show? (r/atom false)]
     (fn [resource operation]
-     ^{:key (str "add-ssh-button" @show?)}
-     [AddSSHButton resource operation show?])))
+      ^{:key (str "revoke-ssh-button" @show?)}
+      [AddRevokeSSHButton resource operation show? "Revoke ssh key" "minus" "revoke"])))
 
 
 (defn MenuBar [uuid]
@@ -145,18 +177,18 @@
         loading?          (subscribe [::subs/loading?])]
     (fn []
       [main-components/StickyBar
-      [ui/Menu {:borderless true, :stackable true}
-       (when @can-decommission?
-         [DecommissionButton @nuvlabox])
-       (when @can-delete?
-         [DeleteButton @nuvlabox])
+       [ui/Menu {:borderless true, :stackable true}
+        (when @can-decommission?
+          [DecommissionButton @nuvlabox])
+        (when @can-delete?
+          [DeleteButton @nuvlabox])
 
-       [cimi-detail-views/format-operations @nuvlabox #{"decommission" "commission" "check-api"}]
+        [cimi-detail-views/format-operations @nuvlabox #{"decommission" "commission" "check-api"}]
 
-       [main-components/RefreshMenu
-        {:action-id  refresh-action-id
-         :loading?   @loading?
-         :on-refresh #(refresh uuid)}]]])))
+        [main-components/RefreshMenu
+         {:action-id  refresh-action-id
+          :loading?   @loading?
+          :on-refresh #(refresh uuid)}]]])))
 
 
 (defn get-available-actions
@@ -585,7 +617,7 @@
          [ui/TableRow
           [ui/TableCell "IP"]
           [ui/TableCell ip]])
-       (when (pos? (count (:associated-ssh-keys @ssh-creds)))
+       (when (pos? (count @ssh-creds))
          [ui/TableRow
           [ui/TableCell "SSH Keys"]
           [ui/TableCell [ui/Popup
@@ -594,7 +626,7 @@
                           :position  "bottom center"
                           :content   (r/as-element [ui/ListSA {:divided true
                                                                :relaxed true}
-                                                    (for [sshkey (:associated-ssh-keys @ssh-creds)]
+                                                    (for [sshkey @ssh-creds]
                                                       [ui/ListItem {:key (:id sshkey)}
                                                        [ui/ListContent
                                                         [ui/ListHeader
@@ -672,7 +704,7 @@
         locale        (subscribe [::i18n-subs/locale])
         nb-status     (subscribe [::subs/nuvlabox-status])
         online-status (subscribe [::subs/nuvlabox-online-status])
-        ssh-creds     (subscribe [::subs/nuvlabox-ssh-keys])
+        ssh-creds     (subscribe [::subs/nuvlabox-associated-ssh-keys])
         tr            (subscribe [::i18n-subs/tr])
         edit          (r/atom false)
         old-nb-name   (r/atom (:name @nuvlabox))
@@ -681,8 +713,8 @@
                          (refresh (:id @nuvlabox)))]
     (fn []
       (let [{:keys [id tags ssh-keys]} @nuvlabox]
-        (when (not= (count ssh-keys) (count (:associated-ssh-keys @ssh-creds)))
-          (dispatch [::events/get-nuvlabox-ssh-keys ssh-keys]))
+        (when (not= (count ssh-keys) (count @ssh-creds))
+          (dispatch [::events/get-nuvlabox-associated-ssh-keys ssh-keys]))
         [ui/TabPane
          [ui/Grid {:columns   2,
                    :stackable true

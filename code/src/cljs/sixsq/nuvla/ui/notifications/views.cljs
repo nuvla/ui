@@ -316,7 +316,7 @@
   {"nuvlabox"               [{:key "cpu load" :text "CPU load %" :value "load"}
                              {:key "ram usage" :text "RAM usage %" :value "ram"}
                              {:key "disk usage" :text "Disk usage %" :value "disk"}
-                             {:key "state" :text "NB available" :value "state"}]
+                             {:key "state" :text "NB online" :value "state"}]
    "infrastructure-service" [{:key "status" :text "status" :value "status"}]})
 
 (def criteria-conditions

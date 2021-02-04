@@ -94,9 +94,7 @@
      :render   (fn []
                  (r/as-element
                    (if (empty? urls)
-                     [ui/Message {:warning true}
-                      [ui/Icon {:name "warning sign"}]
-                      (@tr [:no-urls])]
+                     [uix/WarningMsgNoElements (@tr [:no-urls])]
                      [ui/TabPane
                       [ui/Table {:basic   "very"
                                  :columns 2}
@@ -591,12 +589,13 @@
 
 (defn up-to-date?
   [v versions]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        last-version (count versions)]
-    (if (= v (dec last-version))
-      [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date]) ")"]
-      [:span [ui/Icon {:name "warning", :color "orange"}]
-       (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))])))
+  (when v
+    (let [tr           (subscribe [::i18n-subs/tr])
+         last-version (count versions)]
+     (if (= v (dec last-version))
+       [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date]) ")"]
+       [:span [ui/Icon {:name "warning", :color "orange"}]
+        (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))]))))
 
 
 (defn TabOverviewModule

@@ -13,6 +13,8 @@
 
 ### Changed
 
+  - Acl - Vertical align owner and dropdown
+  - Deployment - Overview tab, state transition loader moved
   - Operation modal - When a specific modal exist show it 
     instead of generic modal
   - Cimi detail - operation support action operation body when

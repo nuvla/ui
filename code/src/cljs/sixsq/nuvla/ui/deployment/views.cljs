@@ -114,8 +114,7 @@
   []
   (let [tr                (subscribe [::i18n-subs/tr])
         module-versions   (subscribe [::subs/module-versions])
-        module-content-id (subscribe [::subs/current-module-content-id])
-        current-version   (subscribe [::subs/current-module-version])]
+        module-content-id (subscribe [::subs/current-module-content-id])]
     {:menuItem {:content (r/as-element [:span (@tr [:module-version])])
                 :key     "versions"
                 :icon    "linkify"}
@@ -779,10 +778,10 @@
            [ui/TableCell (str/join ", " owners)]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:status]))]
-         [ui/TableCell
-          state
-          [ui/Loader {:active        (utils/deployment-in-transition? state)
-                      :indeterminate true}]]]
+         [ui/TableCell state
+          " "
+          (when (utils/deployment-in-transition? state)
+            [ui/Icon {:loading true :name "circle notch" :color "grey"}])]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:credential]))]
          [ui/TableCell

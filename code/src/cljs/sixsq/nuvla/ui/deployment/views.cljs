@@ -143,7 +143,7 @@
 
 
 (defn list-section
-  [items section-key section-name empty-msg]
+  [items section-key section-name]
   (let [tr          (subscribe [::i18n-subs/tr])
         items-count (count items)]
     {:menuItem {:content (r/as-element
@@ -159,9 +159,7 @@
                  (r/as-element
                    [:<>
                     (if (empty? items)
-                      [ui/Message {:warning true}
-                       [ui/Icon {:name "warning sign"}]
-                       (@tr [empty-msg])]
+                      [uix/WarningMsgNoElements]
                       [ui/TabPane
                        [ui/Table {:basic   "very"
                                   :columns 2}
@@ -180,14 +178,14 @@
   []
   (let [deployment-parameters (subscribe [::subs/deployment-parameters])
         params                (vals @deployment-parameters)]
-    (list-section params "parameters-section" :module-output-parameters :no-items-to-show)))
+    (list-section params "parameters-section" :module-output-parameters)))
 
 
 (defn env-vars-section
   []
   (let [module-content (subscribe [::subs/deployment-module-content])
         env-vars       (get @module-content :environmental-variables [])]
-    (list-section env-vars "env-vars" :env-variables :no-items-to-show)))
+    (list-section env-vars "env-vars" :env-variables)))
 
 
 (def event-fields #{:id :content :timestamp :category})

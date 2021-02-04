@@ -25,7 +25,7 @@
    [ui/TableCell {:style {:white-space "pre"}} status-message]])
 
 
-(defn jobs-table
+(defn JobsTable
   [jobs]
   (let [tr                (subscribe [::i18n-subs/tr])
         elements-per-page (subscribe [::subs/jobs-per-page])
@@ -34,9 +34,7 @@
       (let [total-elements (get jobs :count 0)
             total-pages    (general-utils/total-pages total-elements @elements-per-page)]
         (if (empty? resources)
-          [ui/Message {:warning true}
-           [ui/Icon {:name "warning sign"}]
-           (@tr [:no-jobs-to-show])]
+          [uix/WarningMsgNoElements]
           [ui/TabPane
            [ui/Table {:basic "very"}
             [ui/TableHeader
@@ -72,5 +70,5 @@
                                                                job-count])])
                 :key     "job-section"
                 :icon    "clipboard list"}
-     :render   (fn [] (r/as-element [jobs-table @jobs]))}))
+     :render   (fn [] (r/as-element [JobsTable @jobs]))}))
 

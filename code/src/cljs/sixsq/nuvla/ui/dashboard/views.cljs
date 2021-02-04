@@ -19,8 +19,8 @@
 
 
 (defn refresh
-  []
-  (dispatch [::events/refresh]))
+  [& opts]
+  (dispatch [::events/refresh opts]))
 
 
 (defn control-bar []
@@ -101,21 +101,23 @@
   [deployments-list]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [deployments-list]
-      [ui/Table
-       (merge style/single-line {:stackable true})
-       [ui/TableHeader
-        [ui/TableRow
-         [ui/TableHeaderCell (@tr [:id])]
-         [ui/TableHeaderCell (@tr [:module])]
-         [ui/TableHeaderCell (@tr [:status])]
-         [ui/TableHeaderCell (@tr [:url])]
-         [ui/TableHeaderCell (@tr [:created])]
-         [ui/TableHeaderCell (@tr [:infrastructure])]
-         [ui/TableHeaderCell (@tr [:actions])]]]
-       [ui/TableBody
-        (for [{:keys [id] :as deployment} deployments-list]
-          ^{:key id}
-          [row-fn deployment])]])))
+      (if (empty? deployments-list)
+        [uix/WarningMsgNoElements]
+        [ui/Table
+        (merge style/single-line {:stackable true})
+        [ui/TableHeader
+         [ui/TableRow
+          [ui/TableHeaderCell (@tr [:id])]
+          [ui/TableHeaderCell (@tr [:module])]
+          [ui/TableHeaderCell (@tr [:status])]
+          [ui/TableHeaderCell (@tr [:url])]
+          [ui/TableHeaderCell (@tr [:created])]
+          [ui/TableHeaderCell (@tr [:infrastructure])]
+          [ui/TableHeaderCell (@tr [:actions])]]]
+        [ui/TableBody
+         (for [{:keys [id] :as deployment} deployments-list]
+           ^{:key id}
+           [row-fn deployment])]]))))
 
 
 (defn cards-data-table
@@ -144,7 +146,7 @@
         page              (subscribe [::subs/page])
         deployments       (subscribe [::subs/deployments])
         tr                (subscribe [::i18n-subs/tr])]
-    (refresh)
+    (refresh :init? true)
     (fn []
       (let [total-deployments (:count @deployments)
             total-pages       (general-utils/total-pages

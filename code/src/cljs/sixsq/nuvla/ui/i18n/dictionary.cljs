@@ -331,7 +331,6 @@
         :no-infra-service-of-subtype                  "no available infrastructure of subtype"
         :no-infra-services                            "no infrastructure service found"
         :no-items-to-show                             "There are no items to show"
-        :no-jobs-to-show                              "There are no jobs to show"
         :no-messages                                  "no messages"
         :no-mounts                                    "no volumes or mounts for this applications"
         :no-output-parameters                         "no output parameters defined for the application"

@@ -6,6 +6,9 @@
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
     [sixsq.nuvla.ui.config :as config]
+    [sixsq.nuvla.ui.dashboard.events :as dashboard-events]
+    [sixsq.nuvla.ui.dashboard.subs :as dashboard-subs]
+    [sixsq.nuvla.ui.dashboard.views :as dashboard-views]
     [sixsq.nuvla.ui.edge-detail.events :as events]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]
     [sixsq.nuvla.ui.edge.utils :as utils]
@@ -512,8 +515,8 @@
                                                   :selection      true
                                                   :divided        true}
                                        (for [action action-list]
-                                         [ui/ListItem {:as  "a"
-                                                       :key (str "action." (random-uuid))}
+                                         ^{:key (str "action." (random-uuid))}
+                                         [ui/ListItem {:as "a"}
                                           [ui/ListContent
                                            [ui/ListDescription
                                             [:span {:on-click (:on-click action)
@@ -629,7 +632,8 @@
                           :content   (r/as-element [ui/ListSA {:divided true
                                                                :relaxed true}
                                                     (for [sshkey @ssh-creds]
-                                                      [ui/ListItem {:key (:id sshkey)}
+                                                      ^{:key (:id sshkey)}
+                                                      [ui/ListItem
                                                        [ui/ListContent
                                                         [ui/ListHeader
                                                          [:a {:href   (str @config/path-prefix
@@ -801,17 +805,19 @@
       (let [peripheral-resources (into [] (map (fn [[id res]] res) @peripherals-per-id))
             per-interface        (group-by :interface peripheral-resources)]
         [ui/TabPane
-         (for [[interface peripherals] per-interface]
-           ^{:key interface}
-           [uix/Accordion
-            (for [id (map :id peripherals)]
-              ^{:key id}
-              [Peripheral id])
-            :title-size :h4
-            :default-open false
-            :styled? false
-            :count (count peripherals)
-            :label interface])]))))
+         (if (empty? peripheral-resources)
+           [uix/WarningMsgNoElements]
+           (for [[interface peripherals] per-interface]
+             ^{:key interface}
+             [uix/Accordion
+              (for [id (map :id peripherals)]
+                ^{:key id}
+                [Peripheral id])
+              :title-size :h4
+              :default-open false
+              :styled? false
+              :count (count peripherals)
+              :label interface]))]))))
 
 
 (defn TabEvents
@@ -852,6 +858,31 @@
                                           :activePage #(do
                                                          (dispatch [::events/set-page %])
                                                          (refresh (:id @nuvlabox))))}]]))))
+
+
+(defn TabDeployments
+  [uuid]
+  (let [elements          (subscribe [::dashboard-subs/deployments])
+        elements-per-page (subscribe [::dashboard-subs/elements-per-page])
+        page              (subscribe [::dashboard-subs/page])
+        loading?          (subscribe [::dashboard-subs/loading?])]
+    (dashboard-views/refresh :init? true :nuvlabox (str "nuvlabox/" uuid))
+    (fn [uuid]
+      (let [total-elements (:count @elements)
+            total-pages    (general-utils/total-pages total-elements @elements-per-page)
+            deployments    (:resources @elements)]
+        [ui/TabPane
+         (if @loading?
+           [ui/Loader {:active true
+                       :inline "centered"}]
+           [dashboard-views/vertical-data-table deployments])
+
+         (when (pos? (:count @elements))
+           [uix/Pagination {:totalPages   total-pages
+                            :activePage   @page
+                            :onPageChange (ui-callback/callback
+                                            :activePage
+                                            #(dispatch [::dashboard-events/set-page %]))}])]))))
 
 
 ; there's a similar function in edge.views which can maybe be generalized
@@ -912,7 +943,9 @@
                {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
                 :content        (r/as-element
                                   [ui/ListSA {:bulleted true}
-                                   (map (fn [k] [ui/ListItem k]) (:affected-products summary))])
+                                   (map (fn [k]
+                                          ^{:key (random-uuid)}
+                                          [ui/ListItem k]) (:affected-products summary))])
                 :position       "bottom center"
                 :on             "hover"
                 :size           "tiny"
@@ -1009,7 +1042,7 @@
 
 
 (defn tabs
-  [count-peripherals tr]
+  [uuid count-peripherals tr]
   (let [nuvlabox  (subscribe [::subs/nuvlabox])
         can-edit? (subscribe [::subs/can-edit?])]
     [{:menuItem {:content "Overview"
@@ -1020,15 +1053,16 @@
                  :key     "location"
                  :icon    "map"}
       :render   (fn [] (r/as-element [TabLocation]))}
-     {:menuItem {:content (r/as-element [ui/Popup
-                                         {:trigger        (r/as-element [:span "Resource Consumption"])
-                                          :content        (tr [:nuvlabox-datagateway-popup])
-                                          :header         "data-gateway"
-                                          :position       "top center"
-                                          :wide           true
-                                          :on             "hover"
-                                          :size           "tiny"
-                                          :hide-on-scroll true}])
+     {:menuItem {:content (r/as-element
+                            [ui/Popup
+                             {:trigger        (r/as-element [:span "Resource Consumption"])
+                              :content        (tr [:nuvlabox-datagateway-popup])
+                              :header         "data-gateway"
+                              :position       "top center"
+                              :wide           true
+                              :on             "hover"
+                              :size           "tiny"
+                              :hide-on-scroll true}])
                  :key     "res-cons"
                  :icon    "thermometer half"}
       :render   (fn [] (r/as-element [TabLoad]))}
@@ -1044,6 +1078,10 @@
                  :key     "events"
                  :icon    "bolt"}
       :render   (fn [] (r/as-element [TabEvents]))}
+     {:menuItem {:content "Deployments"
+                 :key     "deployments"
+                 :icon    "sitemap"}
+      :render   (fn [] (r/as-element [TabDeployments uuid]))}
      {:menuItem {:content "Vulnerabilities"
                  :key     "vuln"
                  :icon    "shield"}
@@ -1053,8 +1091,8 @@
 
 
 (defn TabsNuvlaBox
-  []
-  (fn []
+  [uuid]
+  (fn [uuid]
     (let [count-peripherals (subscribe [::subs/nuvlabox-peripherals-ids])
           tr                (subscribe [::i18n-subs/tr])
           active-index      (subscribe [::subs/active-tab-index])]
@@ -1064,7 +1102,7 @@
                       :style     {:display        "flex"
                                   :flex-direction "row"
                                   :flex-wrap      "wrap"}}
-        :panes       (tabs (count @count-peripherals) @tr)
+        :panes       (tabs uuid (count @count-peripherals) @tr)
         :activeIndex @active-index
         :onTabChange (fn [_ data]
                        (let [active-index (. data -activeIndex)]
@@ -1101,7 +1139,7 @@
 
 (defn Error
   []
-  (let [jobs       (subscribe [::job-subs/jobs])]
+  (let [jobs (subscribe [::job-subs/jobs])]
     (fn []
       (let [{:keys [id action state status-message] :as last-job} (some-> @jobs :resources first)]
         (when (and (not (@errors-dissmissed id))
@@ -1124,4 +1162,4 @@
      [PageHeader]
      [MenuBar uuid]
      [Error]
-     [TabsNuvlaBox]]))
+     [TabsNuvlaBox uuid]]))

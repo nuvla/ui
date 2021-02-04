@@ -299,3 +299,12 @@
         ^{:key (str futur-moment @refresh)}
         [:span
          (if (neg? delta-seconds) 0 (js/Math.round delta-seconds))]))))
+
+
+(defn WarningMsgNoElements
+  [message]
+  (let [tr    (subscribe [::i18n-subs/tr])]
+    (fn [message]
+      [ui/Message {:warning true}
+       [ui/Icon {:name "warning sign"}]
+       (or message (@tr [:no-items-to-show]))])))

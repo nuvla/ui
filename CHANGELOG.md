@@ -2,12 +2,17 @@
 
 ## Unreleased
 
-### Changed
+### Added
 
-  - Edge detail - New job tab and an error message is visible 
+  - UIX - Message warning no elements to show
+  - Edge detail - New deployments tab
+  - Edge detail - New jobs tab and an error message is visible 
     when last executed job is failed
   - Edge detail - Specific modals for add ssh key and for revoke
     ssh key
+
+### Changed
+
   - Operation modal - When a specific modal exist show it 
     instead of generic modal
   - Cimi detail - operation support action operation body when

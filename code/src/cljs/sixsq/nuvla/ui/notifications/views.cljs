@@ -542,6 +542,7 @@
                                             (dispatch [::events/fetch-tags-available %])
                                             (on-change :collection %)))
                             :value     collection
+                            :disabled  true
                             :options   component-options}]]]
             [ui/TableRow
              [ui/TableCell {:collapsing true
@@ -557,6 +558,7 @@
                                                                           ""
                                                                           (str "tags='" % "'")))))
                             :value     filter-tag
+                            :disabled  true
                             :options   (resource-tag-options)}]]]]]
 
           [ui/Header {:as "h3"} "Criteria"]

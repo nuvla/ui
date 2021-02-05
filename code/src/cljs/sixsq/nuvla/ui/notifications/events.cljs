@@ -248,7 +248,6 @@
 (reg-event-fx
   ::set-notif-method-id
   (fn [{:keys [db]} [_ subs-conf-id method-id]]
-    (println subs-conf-id method-id)
     {::cimi-api-fx/operation [subs-conf-id "set-notif-method-id" #() {:method-id method-id}]}))
 
 
@@ -313,7 +312,7 @@
   (fn [{:keys [db]} [_]]
     {:db                  (assoc db ::spec/completed? false)
      ::cimi-api-fx/search [:subscription
-                           {:filter "type='notification'"
+                           {:filter "category='notification'"
                             :orderby "name:asc, id:asc"}
                            #(dispatch [::set-subscriptions (:resources %)])]}))
 

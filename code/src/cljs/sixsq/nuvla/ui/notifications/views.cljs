@@ -148,27 +148,24 @@
 
 
 (defn single-notification-subscription
-  [{:keys [status resource method] :as notif-subs} notif-methods]
-  (let [method-name (-> (filter #(= method (:id %)) @notif-methods)
+  [{:keys [enabled resource-id method-id] :as notif-subs} notif-methods]
+  (let [method-name (-> (filter #(= method-id (:id %)) @notif-methods)
                         first
                         :name)]
     [ui/TableRow
      [ui/TableCell {:floated :left
                     :width   2}
-      [:span status]]
+      [:span (if enabled "enabled" "disabled")]]
+     [ui/TableCell {:floated :left
+                    :width   2}
+      [:span method-name]]
      [ui/TableCell {:floated :left
                     :width   9}
-      [:span resource]]
-     [ui/TableCell {:floated :left
-                    :width   4}
-      [:span method-name]]
+      [:span [history/link (str "api/" resource-id) resource-id]]]
      [ui/TableCell {:floated :right
                     :width   1
                     :align   :right
                     :style   {}}
-
-      (when (general-utils/can-delete? notif-subs)
-        [DeleteButtonSubscriptions notif-subs])
 
       (when (general-utils/can-edit? notif-subs)
         [ui/Icon {:name     :cog
@@ -181,7 +178,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])
         notif-methods (subscribe [::subs/notification-methods])
-        subscriptions (subscribe [::subs/subscriptions])
+        subscriptions (subscribe [::subs/notification-subscriptions])
         visible? (subscribe [::subs/notification-subscriptions-modal-visible?])]
     (dispatch [::events/get-notification-methods])
     (dispatch [::events/get-notification-subscriptions])
@@ -199,8 +196,8 @@
            [ui/TableHeader
             [ui/TableRow
              [ui/TableHeaderCell {:content (str/capitalize (@tr [:status]))}]
-             [ui/TableHeaderCell {:content (str/capitalize (@tr [:resource]))}]
              [ui/TableHeaderCell {:content (str/capitalize (@tr [:method]))}]
+             [ui/TableHeaderCell {:content (str/capitalize (@tr [:resource]))}]
              [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}]]]
            [ui/TableBody
             (for [sub @subscriptions]
@@ -210,11 +207,12 @@
 
 
 (defn subs-method-dropdown
-  [current-value notif-methods]
+  [current-value notif-methods disabled?]
   ^{:key current-value}
   [ui/Dropdown
    {:selection     true
     :fluid         false
+    :disabled      disabled?
     :default-value (if (not (nil? current-value))
                      current-value
                      (-> @notif-methods first :id))
@@ -252,7 +250,7 @@
     (fn []
       (let [editable? true
             header (str/capitalize (str (@tr [:edit]) " " (@tr [:subscription])))
-            {:keys [name description method status type kind category resource]} @subscription]
+            {:keys [name description method-id enabled category resource-id resource-kind]} @subscription]
         [:div]
         [ui/Modal {:open       @visible?
                    :close-icon true
@@ -264,34 +262,29 @@
           [utils-validation/validation-error-message ::subs/form-valid?]
           [ui/Table style/definition
            [ui/TableBody
-            [uix/TableRowField "name", :editable? editable?, :default-value name,
+            [uix/TableRowField "name", :editable? false, :default-value name,
              :required? false, :spec ::spec/name, :on-change (partial on-change :name),
              :validate-form? @validate-form?]
-            [uix/TableRowField "description", :editable? editable?, :required? false,
+            [uix/TableRowField "description", :editable? false, :required? false,
              :default-value description, :spec ::spec/description,
              :on-change (partial on-change :description), :validate-form? @validate-form?]]
            [ui/TableRow
             [ui/TableCell {:collapsing true
                            :style      {:padding-bottom 8}} "method"]
             [ui/TableCell
-             [subs-method-dropdown method notif-methods]]]
-           [ui/TableRow
-            [ui/TableCell {:collapsing true
-                           :style      {:padding-bottom 8}} "status"]
-            [ui/TableCell
-             [subs-status-dropdown status]]]
-           [uix/TableRowField "type", :editable? false, :default-value type, :required? false]
-           [uix/TableRowField "kind", :editable? false, :default-value kind, :required? false]
+             [subs-method-dropdown method-id notif-methods true]]]
+           [uix/TableRowField "enabled", :editable? false, :default-value (str enabled), :required? false]
+           [uix/TableRowField "resource-kind", :editable? false, :default-value resource-kind, :required? false]
            [uix/TableRowField "category", :editable? false, :default-value category, :required? false]
            [uix/TableRowField "resource"
             :editable? false
-            :default-value [history/link (str "api/" resource) resource]
+            :default-value [history/link (str "api/" resource-id) resource-id]
             :required? false]]]
 
          [ui/ModalActions
           [uix/Button {:text     (@tr [:save])
                        :positive true
-                       :disabled (when-not @form-valid? true)
+                       :disabled true  #_(when-not @form-valid? true)
                        :active   true
                        :on-click #(save-callback-subscription ::spec/subscription)}]]]))))
 
@@ -847,11 +840,13 @@
                                       :width   1
                                       :align   :right
                                       :style   {}}
-                        [uix/Button {:text     (@tr [:manage])
-                                     :positive true
-                                     :disabled (empty? @subscriptions)
-                                     :active   true
-                                     :on-click #(dispatch [::events/open-notification-subscription-modal @subscriptions])}]]
+                        (let [subscrs (filter #(= (:id subs-conf) (:parent %)) @subscriptions)]
+                          [uix/Button {:text     (@tr [:manage])
+                                       :positive true
+                                       :disabled (empty? subscrs)
+                                       :active   true
+                                       :on-click #(dispatch [::events/open-notification-subscription-modal subscrs])}])
+                        ]
                        [ui/TableCell {:floated :right
                                       :width   1
                                       :align   :right

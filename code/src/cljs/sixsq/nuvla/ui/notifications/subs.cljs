@@ -64,6 +64,11 @@
   (fn [db]
     (::spec/subscriptions db)))
 
+(reg-sub
+  ::notification-subscriptions
+  (fn [db]
+    (::spec/notification-subscriptions db)))
+
 
 (reg-sub
   ::edit-subscription-modal-visible?

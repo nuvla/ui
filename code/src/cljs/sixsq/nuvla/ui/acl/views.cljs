@@ -94,7 +94,7 @@
 (defn OwnerItem
   [{:keys [on-change]} ui-acl removable? principal]
   (let [principal-name @(subscribe [::subs/principal-name principal])]
-    [ui/ListItem
+    [ui/ListItem {:style {:vertical-align "middle"}}
      [ui/ListContent
       [ui/ListHeader
        [PrincipalIcon principal]
@@ -286,7 +286,7 @@
                [OwnerItem opts ui-acl (>= (count owners) 2) owner])
 
              (when-not read-only
-               [ui/ListItem
+               [ui/ListItem {:style {:vertical-align "middle"}}
                 [ui/ListContent
                  [ui/ListHeader
                   [DropdownPrincipals

@@ -2,8 +2,25 @@
 
 ## Unreleased
 
+### Added
+
+  - UIX - Message warning no elements to show
+  - Edge detail - New deployments tab
+  - Edge detail - New jobs tab and an error message is visible 
+    when last executed job is failed
+  - Edge detail - Specific modals for add ssh key and for revoke
+    ssh key
+
 ### Changed
 
+  - Acl - Vertical align owner and dropdown
+  - Deployment - Overview tab, state transition loader moved
+  - Operation modal - When a specific modal exist show it 
+    instead of generic modal
+  - Cimi detail - operation support action operation body when
+    metadata is defined
+  - Deployment modal - distinguish credential check error and only
+    let deploy if credential is not invalid
   - Edge - Move and simplification of NuvlaBox card component
   - Edge detail - Use NuvlaBox new online attribute
   - Edge - Use NuvlaBox new online attribute

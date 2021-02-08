@@ -16,11 +16,11 @@
     [sixsq.nuvla.ui.docs.spec :as docs]
     [sixsq.nuvla.ui.edge-detail.spec :as edge-detail]
     [sixsq.nuvla.ui.edge.spec :as edge]
-    [sixsq.nuvla.ui.filter-comp.spec :as filter-comp]
     [sixsq.nuvla.ui.i18n.spec :as i18n]
     [sixsq.nuvla.ui.infrastructures-detail.spec :as infra-service-detail]
     [sixsq.nuvla.ui.infrastructures.spec :as infra-service]
     [sixsq.nuvla.ui.intercom.spec :as intercom]
+    [sixsq.nuvla.ui.job.spec :as job]
     [sixsq.nuvla.ui.main.spec :as main]
     [sixsq.nuvla.ui.messages.spec :as messages]
     [sixsq.nuvla.ui.ocre.spec :as ocre]
@@ -38,7 +38,6 @@
                      ::deployment-dialog/db
                      ::data/db
                      ::docs/db
-                     ::filter-comp/db
                      ::i18n/db
                      ::infra-service/db
                      ::infra-service-detail/db
@@ -49,7 +48,8 @@
                      ::edge-detail/db
                      ::profile/db
                      ::ocre/db
-                     ::session/db))
+                     ::session/db
+                     ::job/db))
 
 
 (def default-db
@@ -65,7 +65,6 @@
          deployment-dialog/defaults
          credential/defaults
          docs/defaults
-         filter-comp/defaults
          i18n/defaults
          infra-service/defaults
          infra-service-detail/defaults
@@ -76,4 +75,5 @@
          edge-detail/defaults
          profile/defaults
          ocre/defaults
-         session/defaults))
+         session/defaults
+         job/defaults))

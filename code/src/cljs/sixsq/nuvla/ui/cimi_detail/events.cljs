@@ -18,7 +18,8 @@
      ::cimi-api-fx/get [resource-id #(dispatch [::set-resource %])
                         :on-error #(do
                                      (cimi-api-fx/default-get-on-error resource-id %)
-                                     (dispatch [::history-events/navigate (str "api/" collection-name)]))]}))
+                                     (dispatch [::history-events/navigate
+                                                (str "api/" collection-name)]))]}))
 
 
 (reg-event-db
@@ -60,7 +61,7 @@
 
 (reg-event-fx
   ::operation
-  (fn [_ [_ resource-id operation]]
+  (fn [_ [_ resource-id operation data]]
     {::cimi-api-fx/operation
      [resource-id operation
       #(if (instance? js/Error %)
@@ -75,4 +76,6 @@
                       {:header  (cond-> (str "success executing operation " operation)
                                         status (str " (" status ")"))
                        :content message
-                       :type    :success}])))]}))
+                       :type    :success}])))
+      data]}))
+

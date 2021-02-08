@@ -38,9 +38,9 @@
   [{:keys [step-id] :as step-state}]
   (let [cred-id                (subscribe [::subs/selected-credential-id])
         credential-loading?    (subscribe [::creds-subs/credential-check-loading? @cred-id])
-        credential-invalid?    (subscribe [::creds-subs/credential-check-status-invalid? @cred-id])
+        credential-valid?    (subscribe [::creds-subs/credential-check-status-valid? @cred-id])
         check-status           (creds-utils/credential-check-status
-                                 @credential-loading? @credential-invalid?)
+                                 @credential-loading? (not @credential-valid?))
         credentials-completed? (subscribe [::subs/credentials-completed?])]
     (dispatch [::events/set-launch-status step-id check-status])
     (or (when (and @credentials-completed? (not= :ok check-status))
@@ -135,13 +135,14 @@
         button-text      (subscribe [::subs/modal-action-button-text])
         button-color     (subscribe [::subs/modal-action-button-color])
         button-disabled? (subscribe [::subs/modal-action-button-disabled?])
-        operation        (subscribe [::subs/modal-operation])]
+        operation        (subscribe [::subs/modal-operation])
+        exec-mode        (subscribe [::subs/execution-mode])]
     (fn [show-data?]
       (let [hide-fn   #(do
                          (when (= (:state @deployment) "CREATED")
                            (dispatch [::events/delete-deployment (:id @deployment)]))
                          (dispatch [::events/reset]))
-            submit-fn #(dispatch [::events/edit-deployment @operation])]
+            submit-fn #(dispatch [::events/edit-deployment @operation @exec-mode])]
         [ui/Modal (cond-> {:open       @open?
                            :close-icon true
                            :on-close   hide-fn}

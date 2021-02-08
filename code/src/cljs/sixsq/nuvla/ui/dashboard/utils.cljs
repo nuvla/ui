@@ -79,11 +79,14 @@
 
 
 (defn get-query-params
-  [full-text-search active-only? page elements-per-page]
+  [full-text-search active-only? nuvlabox page elements-per-page]
   (let [filter-active-only? (when active-only? "state!='STOPPED'")
+        filter-nuvlabox (when nuvlabox (str "nuvlabox='" nuvlabox "'"))
         full-text-search    (when-not (str/blank? full-text-search)
                               (str "fulltext=='" full-text-search "*'"))
-        filter              (str/join " and " (remove nil? [filter-active-only? full-text-search]))]
+        filter              (str/join " and " (remove nil? [filter-active-only?
+                                                            filter-nuvlabox
+                                                            full-text-search]))]
     (cond-> {:first   (inc (* (dec page) elements-per-page))
              :last    (* page elements-per-page)
              :orderby "created:desc"}

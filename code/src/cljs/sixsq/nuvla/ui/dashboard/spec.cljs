@@ -8,6 +8,8 @@
 
 (s/def ::active-only? boolean?)
 
+(s/def ::nuvlabox (s/nilable string?))
+
 (s/def ::deployments any?)
 
 (s/def ::page int?)
@@ -29,6 +31,7 @@
                           ::elements-per-page
                           ::full-text-search
                           ::active-only?
+                          ::nuvlabox
                           ::creds-name-map
                           ::view]))
 
@@ -37,6 +40,7 @@
                ::elements-per-page      9
                ::full-text-search       nil
                ::active-only?           true
+               ::nuvlabox               nil
                ::deployments            nil
                ::deployments-params-map nil
                ::creds-name-map         {}

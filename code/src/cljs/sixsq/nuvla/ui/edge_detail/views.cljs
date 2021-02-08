@@ -4,11 +4,17 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
     [sixsq.nuvla.ui.config :as config]
+    [sixsq.nuvla.ui.dashboard.events :as dashboard-events]
+    [sixsq.nuvla.ui.dashboard.subs :as dashboard-subs]
+    [sixsq.nuvla.ui.dashboard.views :as dashboard-views]
     [sixsq.nuvla.ui.edge-detail.events :as events]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]
     [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.job.subs :as job-subs]
+    [sixsq.nuvla.ui.job.views :as job-views]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.forms :as forms]
@@ -64,22 +70,130 @@
       :content     [:h3 content]}]))
 
 
+(defn SshKeysDropdown
+  [operation on-change-fn]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        is-add?  (= operation "add-ssh-key")
+        ssh-keys (if is-add?
+                   (r/atom nil)
+                   (subscribe [::subs/nuvlabox-associated-ssh-keys]))]
+    (when is-add?
+      (dispatch [::events/get-ssh-keys-not-associated #(reset! ssh-keys %)]))
+    (fn [operation on-change-fn]
+      [ui/FormDropdown
+       {:label       "SSH key"
+        :loading     (nil? @ssh-keys)
+        :placeholder (if is-add?
+                       (@tr [:leave-empty-to-generate-ssh-keypair])
+                       (@tr [:select-credential]))
+        :on-change   (ui-callback/value on-change-fn)
+        :clearable   true
+        :options     (map (fn [{:keys [id name]}]
+                            {:key id, :text (or name id), :value id}) @ssh-keys)
+        :selection   true}])))
+
+
+(defn AddRevokeSSHButton
+  [{:keys [id] :as resource} operation show? title icon button-text]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        close-fn      #(reset! show? false)
+        form-data     (r/atom {:execution-mode "push"})
+        key-data      (r/atom nil)
+        loading?      (r/atom nil)
+        on-change-fn  (fn [k v]
+                        (if (str/blank? v)
+                          (swap! form-data dissoc k)
+                          (swap! form-data assoc k v)))
+        on-success-fn (fn [ssh-key]
+                        (reset! loading? false)
+                        (if (:credential @form-data)
+                          (close-fn)
+                          (reset! key-data ssh-key)))
+        on-error-fn   close-fn
+        on-click-fn   #(do
+                         (reset! loading? true)
+                         (dispatch [::events/add-revoke-ssh-key id operation @form-data
+                                    on-success-fn on-error-fn]))]
+    (fn [resource operation show? title icon button-text]
+      [ui/Modal
+       {:open       @show?
+        :close-icon true
+        :on-close   close-fn
+        :trigger    (r/as-element
+                      [ui/MenuItem {:on-click #(reset! show? true)}
+                       [ui/Icon {:name icon}]
+                       title])}
+       [ui/ModalHeader [:div title]]
+       [ui/ModalContent
+        [ui/Form
+         [ui/FormDropdown {:label         "Execution mode"
+                           :selection     true
+                           :default-value (:execution-mode @form-data)
+                           :on-change     (ui-callback/value (partial on-change-fn :execution-mode))
+                           :options       [{:key "push", :text "push", :value "push"}
+                                           {:key "mixed", :text "mixed", :value "mixed"}
+                                           {:key "pull", :text "pull", :value "pull"}]}]
+         [SshKeysDropdown operation (partial on-change-fn :credential)]
+
+         (when @key-data
+           [ui/FormField
+            [:a {:href     (str "data:text/plain;charset=utf-8,"
+                                (js/encodeURIComponent @key-data))
+                 :target   "_blank"
+                 :download "ssh_private.key"}
+             [ui/Button {:positive       true
+                         :fluid          true
+                         :icon           "download"
+                         :label-position "left"
+                         :as             "div"
+                         :content        (@tr [:download])}]]])]]
+       [ui/ModalActions
+        [uix/Button
+         {:text     (@tr [:cancel])
+          :on-click close-fn}]
+        [uix/Button
+         {:text     (if @key-data (@tr [:close]) button-text)
+          :primary  true
+          :loading  (true? @loading?)
+          :on-click (if @key-data close-fn on-click-fn)}]]])))
+
+
+(defmethod cimi-detail-views/other-button ["nuvlabox" "add-ssh-key"]
+  [resource operation]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        show? (r/atom false)]
+    (fn [resource operation]
+      ^{:key (str "add-ssh-button" @show?)}
+      [AddRevokeSSHButton resource operation show? "Add ssh key" "add" (@tr [:add])])))
+
+
+(defmethod cimi-detail-views/other-button ["nuvlabox" "revoke-ssh-key"]
+  [resource operation]
+  (let [show? (r/atom false)]
+    (fn [resource operation]
+      ^{:key (str "revoke-ssh-button" @show?)}
+      [AddRevokeSSHButton resource operation show? "Revoke ssh key" "minus" "revoke"])))
+
+
 (defn MenuBar [uuid]
   (let [can-decommission? (subscribe [::subs/can-decommission?])
         can-delete?       (subscribe [::subs/can-delete?])
         nuvlabox          (subscribe [::subs/nuvlabox])
         loading?          (subscribe [::subs/loading?])]
-    [main-components/StickyBar
-     [ui/Menu {:borderless true, :stackable true}
-      (when @can-decommission?
-        [DecommissionButton @nuvlabox])
-      (when @can-delete?
-        [DeleteButton @nuvlabox])
+    (fn []
+      [main-components/StickyBar
+       [ui/Menu {:borderless true, :stackable true}
+        (when @can-decommission?
+          [DecommissionButton @nuvlabox])
+        (when @can-delete?
+          [DeleteButton @nuvlabox])
 
-      [main-components/RefreshMenu
-       {:action-id  refresh-action-id
-        :loading?   @loading?
-        :on-refresh #(refresh uuid)}]]]))
+        [cimi-detail-views/format-operations @nuvlabox #{"decommission" "commission" "check-api"}]
+
+        [main-components/RefreshMenu
+         {:action-id  refresh-action-id
+          :loading?   @loading?
+          :on-refresh #(refresh uuid)}]]])))
 
 
 (defn get-available-actions
@@ -401,8 +515,8 @@
                                                   :selection      true
                                                   :divided        true}
                                        (for [action action-list]
-                                         [ui/ListItem {:as  "a"
-                                                       :key (str "action." (random-uuid))}
+                                         ^{:key (str "action." (random-uuid))}
+                                         [ui/ListItem {:as "a"}
                                           [ui/ListContent
                                            [ui/ListDescription
                                             [:span {:on-click (:on-click action)
@@ -508,7 +622,7 @@
          [ui/TableRow
           [ui/TableCell "IP"]
           [ui/TableCell ip]])
-       (when (pos? (count (:associated-ssh-keys @ssh-creds)))
+       (when (pos? (count @ssh-creds))
          [ui/TableRow
           [ui/TableCell "SSH Keys"]
           [ui/TableCell [ui/Popup
@@ -517,8 +631,9 @@
                           :position  "bottom center"
                           :content   (r/as-element [ui/ListSA {:divided true
                                                                :relaxed true}
-                                                    (for [sshkey (:associated-ssh-keys @ssh-creds)]
-                                                      [ui/ListItem {:key (:id sshkey)}
+                                                    (for [sshkey @ssh-creds]
+                                                      ^{:key (:id sshkey)}
+                                                      [ui/ListItem
                                                        [ui/ListContent
                                                         [ui/ListHeader
                                                          [:a {:href   (str @config/path-prefix
@@ -595,7 +710,7 @@
         locale        (subscribe [::i18n-subs/locale])
         nb-status     (subscribe [::subs/nuvlabox-status])
         online-status (subscribe [::subs/nuvlabox-online-status])
-        ssh-creds     (subscribe [::subs/nuvlabox-ssh-keys])
+        ssh-creds     (subscribe [::subs/nuvlabox-associated-ssh-keys])
         tr            (subscribe [::i18n-subs/tr])
         edit          (r/atom false)
         old-nb-name   (r/atom (:name @nuvlabox))
@@ -604,8 +719,8 @@
                          (refresh (:id @nuvlabox)))]
     (fn []
       (let [{:keys [id tags ssh-keys]} @nuvlabox]
-        (when (not= (count ssh-keys) (count (:associated-ssh-keys @ssh-creds)))
-          (dispatch [::events/get-nuvlabox-ssh-keys ssh-keys]))
+        (when (not= (count ssh-keys) (count @ssh-creds))
+          (dispatch [::events/get-nuvlabox-associated-ssh-keys ssh-keys]))
         [ui/TabPane
          [ui/Grid {:columns   2,
                    :stackable true
@@ -690,17 +805,19 @@
       (let [peripheral-resources (into [] (map (fn [[id res]] res) @peripherals-per-id))
             per-interface        (group-by :interface peripheral-resources)]
         [ui/TabPane
-         (for [[interface peripherals] per-interface]
-           ^{:key interface}
-           [uix/Accordion
-            (for [id (map :id peripherals)]
-              ^{:key id}
-              [Peripheral id])
-            :title-size :h4
-            :default-open false
-            :styled? false
-            :count (count peripherals)
-            :label interface])]))))
+         (if (empty? peripheral-resources)
+           [uix/WarningMsgNoElements]
+           (for [[interface peripherals] per-interface]
+             ^{:key interface}
+             [uix/Accordion
+              (for [id (map :id peripherals)]
+                ^{:key id}
+                [Peripheral id])
+              :title-size :h4
+              :default-open false
+              :styled? false
+              :count (count peripherals)
+              :label interface]))]))))
 
 
 (defn TabEvents
@@ -741,6 +858,31 @@
                                           :activePage #(do
                                                          (dispatch [::events/set-page %])
                                                          (refresh (:id @nuvlabox))))}]]))))
+
+
+(defn TabDeployments
+  [uuid]
+  (let [elements          (subscribe [::dashboard-subs/deployments])
+        elements-per-page (subscribe [::dashboard-subs/elements-per-page])
+        page              (subscribe [::dashboard-subs/page])
+        loading?          (subscribe [::dashboard-subs/loading?])]
+    (dashboard-views/refresh :init? true :nuvlabox (str "nuvlabox/" uuid))
+    (fn [uuid]
+      (let [total-elements (:count @elements)
+            total-pages    (general-utils/total-pages total-elements @elements-per-page)
+            deployments    (:resources @elements)]
+        [ui/TabPane
+         (if @loading?
+           [ui/Loader {:active true
+                       :inline "centered"}]
+           [dashboard-views/vertical-data-table deployments])
+
+         (when (pos? (:count @elements))
+           [uix/Pagination {:totalPages   total-pages
+                            :activePage   @page
+                            :onPageChange (ui-callback/callback
+                                            :activePage
+                                            #(dispatch [::dashboard-events/set-page %]))}])]))))
 
 
 ; there's a similar function in edge.views which can maybe be generalized
@@ -801,7 +943,9 @@
                {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
                 :content        (r/as-element
                                   [ui/ListSA {:bulleted true}
-                                   (map (fn [k] [ui/ListItem k]) (:affected-products summary))])
+                                   (map (fn [k]
+                                          ^{:key (random-uuid)}
+                                          [ui/ListItem k]) (:affected-products summary))])
                 :position       "bottom center"
                 :on             "hover"
                 :size           "tiny"
@@ -898,7 +1042,7 @@
 
 
 (defn tabs
-  [count-peripherals tr]
+  [uuid count-peripherals tr]
   (let [nuvlabox  (subscribe [::subs/nuvlabox])
         can-edit? (subscribe [::subs/can-edit?])]
     [{:menuItem {:content "Overview"
@@ -909,15 +1053,16 @@
                  :key     "location"
                  :icon    "map"}
       :render   (fn [] (r/as-element [TabLocation]))}
-     {:menuItem {:content (r/as-element [ui/Popup
-                                         {:trigger        (r/as-element [:span "Resource Consumption"])
-                                          :content        (tr [:nuvlabox-datagateway-popup])
-                                          :header         "data-gateway"
-                                          :position       "top center"
-                                          :wide           true
-                                          :on             "hover"
-                                          :size           "tiny"
-                                          :hide-on-scroll true}])
+     {:menuItem {:content (r/as-element
+                            [ui/Popup
+                             {:trigger        (r/as-element [:span "Resource Consumption"])
+                              :content        (tr [:nuvlabox-datagateway-popup])
+                              :header         "data-gateway"
+                              :position       "top center"
+                              :wide           true
+                              :on             "hover"
+                              :size           "tiny"
+                              :hide-on-scroll true}])
                  :key     "res-cons"
                  :icon    "thermometer half"}
       :render   (fn [] (r/as-element [TabLoad]))}
@@ -931,18 +1076,23 @@
       :render   (fn [] (r/as-element [TabPeripherals]))}
      {:menuItem {:content "Events"
                  :key     "events"
-                 :icon    "clipboard list"}
+                 :icon    "bolt"}
       :render   (fn [] (r/as-element [TabEvents]))}
+     {:menuItem {:content "Deployments"
+                 :key     "deployments"
+                 :icon    "sitemap"}
+      :render   (fn [] (r/as-element [TabDeployments uuid]))}
      {:menuItem {:content "Vulnerabilities"
                  :key     "vuln"
                  :icon    "shield"}
       :render   (fn [] (r/as-element [TabVulnerabilities]))}
+     (job-views/jobs-section)
      (acl/TabAcls nuvlabox @can-edit? ::events/edit)]))
 
 
 (defn TabsNuvlaBox
-  []
-  (fn []
+  [uuid]
+  (fn [uuid]
     (let [count-peripherals (subscribe [::subs/nuvlabox-peripherals-ids])
           tr                (subscribe [::i18n-subs/tr])
           active-index      (subscribe [::subs/active-tab-index])]
@@ -952,7 +1102,7 @@
                       :style     {:display        "flex"
                                   :flex-direction "row"
                                   :flex-wrap      "wrap"}}
-        :panes       (tabs (count @count-peripherals) @tr)
+        :panes       (tabs uuid (count @count-peripherals) @tr)
         :activeIndex @active-index
         :onTabChange (fn [_ data]
                        (let [active-index (. data -activeIndex)]
@@ -965,9 +1115,9 @@
         nuvlabox (subscribe [::subs/nuvlabox])
         status   (subscribe [::subs/nuvlabox-online-status])]
     (fn []
-      (let [id     (:id @nuvlabox)
-            name   (:name @nuvlabox)
-            state  (:state @nuvlabox)]
+      (let [id    (:id @nuvlabox)
+            name  (:name @nuvlabox)
+            state (:state @nuvlabox)]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
           [StatusIcon @status :corner "left center"]
@@ -985,6 +1135,24 @@
           state]]))))
 
 
+(def errors-dissmissed (r/atom #{}))
+
+(defn Error
+  []
+  (let [jobs (subscribe [::job-subs/jobs])]
+    (fn []
+      (let [{:keys [id action state status-message] :as last-job} (some-> @jobs :resources first)]
+        (when (and (not (@errors-dissmissed id))
+                   (= state "FAILED"))
+          [ui/Message {:error      true
+                       :on-dismiss #(swap! errors-dissmissed conj id)}
+           [ui/MessageHeader
+            {:style    {:cursor "pointer"}
+             :on-click #(dispatch [::events/set-active-tab-index 7])}
+            (str "Job " action " failed")]
+           [ui/MessageContent (last (str/split-lines (or status-message "")))]])))))
+
+
 (defn EdgeDetails
   [uuid]
   (refresh uuid)
@@ -993,4 +1161,5 @@
     [ui/Container {:fluid true}
      [PageHeader]
      [MenuBar uuid]
-     [TabsNuvlaBox]]))
+     [Error]
+     [TabsNuvlaBox uuid]]))

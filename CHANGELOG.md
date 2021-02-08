@@ -32,6 +32,7 @@
   - Deployment modal - On update credential can be changed
   - Deployment modal - On update only selected infra is visible
   - Tools - Re-frame-10x is disabled by default
+  - Static resources - update NB auto installer Python script
 
 ## [2.12.0] - 2020-12-10
 

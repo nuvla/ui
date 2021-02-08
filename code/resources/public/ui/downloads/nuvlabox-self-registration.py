@@ -22,6 +22,10 @@ The expected JSON schema is:
   "description": "<base description>",
   "vpn": "infrastructure-service/<uuid>",
   "assets": ["docker-compose.yml", <other compose files to install alongside>],
+  "environment": {
+            "HOSTNAME": "myhostname",
+            "SKIP_MINIMUM_REQUIREMENTS": True
+            },
   "ssh": {
             "ids": ["credential/111-bbb-ccc", ...],
             "public-keys": ["ssh-rsa AAA...", ...]
@@ -148,7 +152,6 @@ if __name__ == "__main__":
     installation_strategy = "OVERWRITE"    # default
     nuvlabox_id = None
     previous_conf = {}
-    new_conf = {}
     if not os.path.exists(nb_workdir):
         os.makedirs(nb_workdir)
     else:
@@ -170,6 +173,7 @@ if __name__ == "__main__":
     nb_vpn_server_id = nb_trigger_json.get('vpn')
     nb_assets = nb_trigger_json['assets']
     nb_ssh = nb_trigger_json.get('ssh', {})
+    new_conf = nb_trigger_json.get('environment', {})
 
     nb_ssh_pubkeys = nb_ssh.get('public-keys', [])
     nb_version = nb_release.split('.')[0]

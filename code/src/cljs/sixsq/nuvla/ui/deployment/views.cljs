@@ -486,7 +486,10 @@
           :content            [:<> [:h3 text1] [:p text2]]
           :header             (@tr [:shutdown-deployment])
           :danger-msg         (@tr [:deployment-shutdown-msg])
-          :button-text        (@tr [(if (= :ok cred-check-status) :shutdown :shutdown-force)])
+          :button-text        (@tr [(cond
+                                      (= "pull" (:execution-mode deployment)) :schedule-shutdown
+                                      (= :ok cred-check-status) :shutdown
+                                      :else :shutdown-force)])
           :modal-action       [creds-comp/CredentialCheckPopup parent]}]))))
 
 
@@ -591,11 +594,11 @@
   [v versions]
   (when v
     (let [tr           (subscribe [::i18n-subs/tr])
-         last-version (count versions)]
-     (if (= v (dec last-version))
-       [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date]) ")"]
-       [:span [ui/Icon {:name "warning", :color "orange"}]
-        (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))]))))
+          last-version (count versions)]
+      (if (= v (dec last-version))
+        [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date]) ")"]
+        [:span [ui/Icon {:name "warning", :color "orange"}]
+         (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))]))))
 
 
 (defn TabOverviewModule
@@ -728,11 +731,11 @@
         owners        (:owners acl)
         creds-name    (subscribe [::dashboard-subs/creds-name-map])
         credential-id (:parent @deployment)
-        {module-content  :content} module
+        {module-content :content} module
         cred-info     (get @creds-name credential-id credential-id)
         urls          (:urls module-content)]
 
-    [ui/SegmentGroup {:style  {:display "flex", :justify-content "space-between",
+    [ui/SegmentGroup {:style  {:display    "flex", :justify-content "space-between",
                                :background "#f3f4f5"}
                       :raised true}
      [ui/Segment {:secondary true

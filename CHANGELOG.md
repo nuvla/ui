@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.13.0] - 2021-02-09
+
 ### Added
 
   - UIX - Message warning no elements to show

@@ -188,7 +188,8 @@
         (when @can-delete?
           [DeleteButton @nuvlabox])
 
-        [cimi-detail-views/format-operations @nuvlabox #{"decommission" "commission" "check-api"}]
+        [cimi-detail-views/format-operations @nuvlabox #{"edit" "delete" "activate" "decommission"
+                                                         "commission" "check-api"}]
 
         [main-components/RefreshMenu
          {:action-id  refresh-action-id

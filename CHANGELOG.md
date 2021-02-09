@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## [2.13.1] - 2021-02-09
+
+### Changed
+
+  - Edge detail - Hide raw edit, duplicated delete and activate
+    operations from menubar
+
 ## [2.13.0] - 2021-02-09
 
 ### Added

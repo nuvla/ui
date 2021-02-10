@@ -82,8 +82,7 @@
   [full-text-search active-only? nuvlabox page elements-per-page]
   (let [filter-active-only? (when active-only? "state!='STOPPED'")
         filter-nuvlabox (when nuvlabox (str "nuvlabox='" nuvlabox "'"))
-        full-text-search    (when-not (str/blank? full-text-search)
-                              (str "fulltext=='" full-text-search "*'"))
+        full-text-search    (general-utils/fulltext-query-string full-text-search)
         filter              (str/join " and " (remove nil? [filter-active-only?
                                                             filter-nuvlabox
                                                             full-text-search]))]

@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Fulltext search enhanced
+  - ACL - Search users fix
   - Edge detail - Specific modal for nuvlabox update operation
   - Edge detail - Add modal fix bug in existing list of ssh
     keys without a name

@@ -31,9 +31,7 @@
 (reg-event-fx
   ::search-users
   (fn [_ [_ users-search]]
-    (let [users-search-escaped (str/escape users-search {\' "\\'"
-                                                         \\ "\\\\"})
-          filter-str           (general-utils/fulltext-query-string users-search-escaped)]
+    (let [filter-str           (general-utils/fulltext-query-string "name" users-search)]
       {::cimi-api-fx/search [:user {:filter filter-str
                                     :select "id, name"
                                     :order  "name:asc, id:asc"

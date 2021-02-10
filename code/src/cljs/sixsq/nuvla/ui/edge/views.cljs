@@ -13,7 +13,6 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -325,15 +324,11 @@
         vpn-infra-opts             (subscribe [::subs/vpn-infra-options])
         nb-releases                (subscribe [::subs/nuvlabox-releases])
         ssh-credentials            (subscribe [::subs/ssh-keys-available])
-        nb-releases-options        (map
-                                     (fn [{:keys [release]}]
-                                       {:key release, :text release, :value release})
-                                     @nb-releases)
-        nb-releases-by-rel         (group-by :release @nb-releases)
+        nb-releases-by-id          (group-by :id @nb-releases)
         default-data               {:refresh-interval 30}
         first-nb-release           (first @nb-releases)
         creation-data              (r/atom default-data)
-        default-release-data       {:nb-rel      (:release first-nb-release)
+        default-release-data       {:nb-rel      (:id first-nb-release)
                                     :nb-selected first-nb-release
                                     :nb-assets   (->> first-nb-release
                                                       :compose-files
@@ -505,45 +500,39 @@
                                     :on-change   (ui-callback/callback
                                                    :value #(reset! ssh-chosen-keys %))
                                     :options     (map (fn [{id :id, name :name}]
-                                                        {:key id, :value id, :text name})
+                                                        {:key id, :value id, :text (or name id)})
                                                       @ssh-credentials)}]
 
                       [ui/Message {:content (str/capitalize
-                                              (@tr [:nuvlabox-modal-no-ssh-keys-avail]))}]
-                      ))
+                                              (@tr [:nuvlabox-modal-no-ssh-keys-avail]))}]))]
 
-                  ]
-
-                 (let [{nb-rel                                  :nb-rel
-                        nb-assets                               :nb-assets
-                        {:keys [compose-files url pre-release]} :nb-selected}
+                 (let [{nb-rel                                          :nb-rel
+                        nb-assets                                       :nb-assets
+                        {:keys [release compose-files url pre-release]} :nb-selected}
                        @nuvlabox-release-data]
                    [ui/Container
                     [ui/Divider {:horizontal true :as "h3"}
-                     (@tr [:nuvlabox-modal-version])]
-                    [ui/Dropdown {:selection   true
-                                  :placeholder nb-rel
-                                  :value       nb-rel
-                                  :options     nb-releases-options
-                                  :on-change   (ui-callback/value
-                                                 (fn [value]
-                                                   (swap! nuvlabox-release-data
-                                                          assoc :nb-rel value)
-                                                   (swap! creation-data assoc
-                                                          :version (-> value
-                                                                       utils/get-major-version
-                                                                       general-utils/str->int))
-                                                   (swap! nuvlabox-release-data assoc
-                                                          :nb-selected
-                                                          (->> value
-                                                               (get nb-releases-by-rel)
-                                                               (into (sorted-map))))
-                                                   (swap! nuvlabox-release-data assoc :nb-assets
-                                                          (set (map :scope
-                                                                    (:compose-files
-                                                                      (:nb-selected
-                                                                        @nuvlabox-release-data)))))
-                                                   ))}]
+                     (@tr [:version])]
+                    [edge-detail/DropdownReleases
+                     {:placeholder release
+                      :value       nb-rel
+                      :on-change   (ui-callback/value
+                                     (fn [value]
+                                       (swap! nuvlabox-release-data
+                                              assoc :nb-rel value)
+                                       (let [nb-selected (->> value
+                                                              (get nb-releases-by-id)
+                                                              first)]
+                                         (swap! creation-data assoc
+                                                :version (-> nb-selected
+                                                             :release
+                                                             utils/get-major-version
+                                                             general-utils/str->int))
+                                         (swap! nuvlabox-release-data
+                                                assoc :nb-selected nb-selected)
+                                         (swap! nuvlabox-release-data assoc :nb-assets
+                                                (set (map :scope (:compose-files nb-selected)))))
+                                       ))}]
                     [:a {:href   url
                          :target "_blank"
                          :style  {:margin "1em"}}
@@ -717,7 +706,7 @@
 
 (defn NuvlaboxCard
   [nuvlabox status]
-  (let [tr       (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (fn [{:keys [id name description created state tags] :as nuvlabox} status]
       ^{:key id}
       [ui/Card {:on-click #(dispatch [::history-events/navigate
@@ -756,7 +745,7 @@
     [ui/CardGroup {:centered true}
      (doall
        (for [{:keys [id] :as nuvlabox} (:resources @nuvlaboxes)]
-         (let [status      (subscribe [::subs/nuvlabox-online-status id])]
+         (let [status (subscribe [::subs/nuvlabox-online-status id])]
            ^{:key id}
            [NuvlaboxCard nuvlabox @status])))]))
 

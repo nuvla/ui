@@ -218,7 +218,7 @@
   (fn [{:keys [db]} _]
     {:db                  (assoc db ::spec/nuvlabox-releases nil)
      ::cimi-api-fx/search [:nuvlabox-release
-                           {:select  "release, pre-release, release-notes, url, compose-files "
+                           {:select  "id, release, pre-release, release-notes, url, compose-files"
                             :orderby "release-date:desc"
                             :last    10000}
                            #(dispatch [::set-nuvlabox-releases %])]}))

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed
+
+  - Edge detail - Specific modal for nuvlabox update operation
+  - Edge detail - Add modal fix bug in existing list of ssh
+    keys without a name
+
 ## [2.13.1] - 2021-02-09
 
 ### Changed

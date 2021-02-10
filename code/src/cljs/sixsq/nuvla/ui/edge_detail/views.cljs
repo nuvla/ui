@@ -11,6 +11,8 @@
     [sixsq.nuvla.ui.dashboard.views :as dashboard-views]
     [sixsq.nuvla.ui.edge-detail.events :as events]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]
+    [sixsq.nuvla.ui.edge.events :as edge-events]
+    [sixsq.nuvla.ui.edge.subs :as edge-subs]
     [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.job.subs :as job-subs]
@@ -93,6 +95,20 @@
         :selection   true}])))
 
 
+
+(defn DropdownReleases
+  [opts]
+  (let [releases (subscribe [::edge-subs/nuvlabox-releases-options])]
+    (fn [opts]
+      (when (empty? @releases)
+        (dispatch [::edge-events/get-nuvlabox-releases]))
+      [ui/Dropdown
+       (merge {:selection true
+               :loading   (empty? @releases)
+               :options   @releases}
+              opts)])))
+
+
 (defn AddRevokeSSHButton
   [{:keys [id] :as resource} operation show? title icon button-text]
   (let [tr            (subscribe [::i18n-subs/tr])
@@ -112,7 +128,7 @@
         on-error-fn   close-fn
         on-click-fn   #(do
                          (reset! loading? true)
-                         (dispatch [::events/add-revoke-ssh-key id operation @form-data
+                         (dispatch [::events/operation id operation @form-data
                                     on-success-fn on-error-fn]))]
     (fn [resource operation show? title icon button-text]
       [ui/Modal
@@ -158,6 +174,52 @@
           :on-click (if @key-data close-fn on-click-fn)}]]])))
 
 
+(defn UpdateButton
+  [{:keys [id] :as resource} operation show? title icon button-text]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        status        (subscribe [::subs/nuvlabox-status])
+        close-fn      #(reset! show? false)
+        form-data     (r/atom nil)
+        on-change-fn  #(swap! form-data assoc :nuvlabox-release %)
+        on-success-fn close-fn
+        on-error-fn   close-fn
+        on-click-fn   #(dispatch [::events/operation id operation @form-data
+                                  on-success-fn on-error-fn])]
+    (fn [{:keys [id] :as resource} operation show? title icon button-text]
+      (when (not= (:parent @status))
+        (dispatch [::events/get-nuvlabox id]))
+      (let [correct-nb? (= (:parent @status) id)]
+        (when-not correct-nb?
+          ;; needed to make modal work in cimi detail page
+          (dispatch [::events/get-nuvlabox id]))
+        [ui/Modal
+         {:open       @show?
+          :close-icon true
+          :on-close   close-fn
+          :trigger    (r/as-element
+                        [ui/MenuItem {:on-click #(reset! show? true)}
+                         [ui/Icon {:name icon}]
+                         title])}
+         [ui/ModalHeader [:div title]]
+         [ui/ModalContent
+          [ui/Segment
+           [:b "Current Engine Version: "]
+           [:i nil (when correct-nb? (get @status :nuvlabox-engine-version ""))]]
+          [ui/Segment
+           [:b "Update to: "]
+           [DropdownReleases {:placeholder "select a version"
+                              :on-change   (ui-callback/value #(on-change-fn %))}]]]
+         [ui/ModalActions
+          [uix/Button
+           {:text     (@tr [:cancel])
+            :on-click close-fn}]
+          [uix/Button
+           {:text     button-text
+            :disabled (str/blank? (:nuvlabox-release @form-data))
+            :primary  true
+            :on-click on-click-fn}]]]))))
+
+
 (defmethod cimi-detail-views/other-button ["nuvlabox" "add-ssh-key"]
   [resource operation]
   (let [tr    (subscribe [::i18n-subs/tr])
@@ -173,6 +235,15 @@
     (fn [resource operation]
       ^{:key (str "revoke-ssh-button" @show?)}
       [AddRevokeSSHButton resource operation show? "Revoke ssh key" "minus" "revoke"])))
+
+
+(defmethod cimi-detail-views/other-button ["nuvlabox" "update-nuvlabox"]
+  [resource operation]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        show? (r/atom false)]
+    (fn [resource operation]
+      ^{:key (str "update-nuvlabox" @show?)}
+      [UpdateButton resource operation show? "Update NuvlaBox" "download" (@tr [:update])])))
 
 
 (defn MenuBar [uuid]

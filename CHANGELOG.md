@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+  - Edge detail - Modal update warning message for old NBE
+
 ## [2.13.2] - 2021-02-10
 
 ### Changed

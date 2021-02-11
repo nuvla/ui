@@ -173,6 +173,15 @@
           :loading  (true? @loading?)
           :on-click (if @key-data close-fn on-click-fn)}]]])))
 
+(defn is-old-version?
+  [nb-version]
+  (or
+    (str/blank? nb-version)
+    (let [p (->> (str/split nb-version #"\.")
+                 (map #(js/parseInt %)))]
+      (or (< (first p) 1)
+          (and (= (first p) 1)
+               (< (second p) 14))))))
 
 (defn UpdateButton
   [{:keys [id] :as resource} operation show? title icon button-text]
@@ -188,7 +197,8 @@
     (fn [{:keys [id] :as resource} operation show? title icon button-text]
       (when (not= (:parent @status))
         (dispatch [::events/get-nuvlabox id]))
-      (let [correct-nb? (= (:parent @status) id)]
+      (let [correct-nb? (= (:parent @status) id)
+            nb-version  (get @status :nuvlabox-engine-version "")]
         (when-not correct-nb?
           ;; needed to make modal work in cimi detail page
           (dispatch [::events/get-nuvlabox id]))
@@ -202,9 +212,21 @@
                          title])}
          [ui/ModalHeader [:div title]]
          [ui/ModalContent
-          [ui/Segment
-           [:b "Current Engine Version: "]
-           [:i nil (when correct-nb? (get @status :nuvlabox-engine-version ""))]]
+          (when correct-nb?
+            [:<>
+             (when (is-old-version? nb-version)
+               [ui/Message
+                {:warning true
+                 :header  "NuvlaBox update warning"
+                 :content (r/as-element
+                            [:span (str "Your NuvlaBox version is older than v1.14. "
+                                        "The update operation might not work as expected. ")
+                             [:a {:href   "https://github.com/nuvla/ui/issues/525"
+                                  :target "_blank"}
+                              "See more"]])}])
+             [ui/Segment
+              [:b "Current Engine Version: "]
+              [:i nb-version]]])
           [ui/Segment
            [:b "Update to: "]
            [DropdownReleases {:placeholder "select a version"

@@ -6,8 +6,7 @@
     [re-frame.core :refer [dispatch reg-fx]]
     [sixsq.nuvla.client.api :as api]
     [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]
-    [sixsq.nuvla.ui.edge.utils :as utils]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.edge.utils :as utils]))
 
 
 (reg-fx
@@ -29,35 +28,3 @@
                    :decommissioning (get states-count utils/state-decommissioning 0)
                    :decommissioned  (get states-count utils/state-decommissioned 0)
                    :error           (get states-count utils/state-error 0)})))))
-
-
-(defn get-status-collection
-  [nuvlabox-ids filter-heartbeat]
-  (let [filter-nuvlabox-ids (->> nuvlabox-ids
-                                 (map #(str "parent='" % "'"))
-                                 (apply general-utils/join-or))
-        filter              (general-utils/join-and filter-nuvlabox-ids filter-heartbeat)]
-
-    (api/search @CLIENT :nuvlabox-status {:filter filter
-                                          :select "id, parent, updated, next-heartbeat"})))
-
-
-(reg-fx
-  ::get-status-nuvlaboxes
-  (fn [[nuvlaboxes-ids callback]]
-    (go
-      (let [offline-nuvlaboxes (<! (get-status-collection
-                                     nuvlaboxes-ids
-                                     utils/filter-offline-status))
-            online-nuvlaboxes  (<! (get-status-collection
-                                     nuvlaboxes-ids
-                                     utils/filter-online-status))]
-
-        (callback {:offline (->> offline-nuvlaboxes
-                                 :resources
-                                 (map :parent)
-                                 (set))
-                   :online  (->> online-nuvlaboxes
-                                 :resources
-                                 (map :parent)
-                                 (set))})))))

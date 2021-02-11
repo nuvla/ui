@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.edge.subs
   (:require
     [re-frame.core :refer [dispatch reg-sub subscribe]]
-    [sixsq.nuvla.ui.edge.spec :as spec]))
+    [sixsq.nuvla.ui.edge.spec :as spec]
+    [sixsq.nuvla.ui.edge.utils :as utils]))
 
 
 (reg-sub
@@ -53,19 +54,20 @@
 
 
 (reg-sub
-  ::status-nuvlaboxes
+  ::nuvlaboxes-online-status
   (fn [db]
-    (::spec/status-nuvlaboxes db)))
+    (::spec/nuvlaboxes-online-status db)))
 
 
 (reg-sub
-  ::status-nuvlabox
-  :<- [::status-nuvlaboxes]
-  (fn [{:keys [online offline]} [_ nuvlabox-id]]
-    (cond
-      (contains? online nuvlabox-id) :online
-      (contains? offline nuvlabox-id) :offline
-      :else :unknown)))
+  ::nuvlabox-online-status
+  :<- [::nuvlaboxes-online-status]
+  (fn [resources [_ nuvlabox-id]]
+    (let [online (-> resources
+                     (get nuvlabox-id {})
+                     :online)]
+      (utils/status->keyword online))))
+
 
 (reg-sub
   ::modal-visible?
@@ -103,6 +105,17 @@
   ::nuvlabox-releases
   (fn [db]
     (::spec/nuvlabox-releases db)))
+
+
+(reg-sub
+  ::nuvlabox-releases-options
+  :<- [::nuvlabox-releases]
+  (fn [nuvlabox-releases]
+    (map
+      (fn [{:keys [id release]}]
+        {:key release, :text release, :value id})
+      nuvlabox-releases)))
+
 
 (reg-sub
   ::ssh-keys-available

@@ -45,6 +45,8 @@
 
 (s/def ::selected-rows (s/nilable set?))
 
+(s/def ::resource-metadata any?)
+
 (s/def ::db (s/keys :req [::cloud-entry-point
                           ::query-params
                           ::loading?
@@ -72,4 +74,5 @@
                ::available-fields            ["id", "name"]
                ::show-add-modal?             false
                ::collections-templates-cache {}
-               ::selected-rows               #{}})
+               ::selected-rows               #{}
+               ::resource-metadata           {}})

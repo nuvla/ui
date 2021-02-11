@@ -26,6 +26,14 @@
     (get icons-map state)))
 
 
+(defn status->keyword
+  [online]
+  (case online
+    true :online
+    false :offline
+    :unknown))
+
+
 (defn status->color
   [status]
   (case status
@@ -51,11 +59,6 @@
     :offline "red"
     :unknown "orange"
     nil))
-
-
-(def filter-offline-status (str "next-heartbeat < 'now'"))
-
-(def filter-online-status (str "next-heartbeat >= 'now'"))
 
 
 (defn state-filter

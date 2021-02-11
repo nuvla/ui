@@ -35,40 +35,49 @@
         default-value (or value default "")
         read-only     (not editable)
         on-change-fn  (ui-callback/value #(update-fn form-id name %))]
-    ^{:key name}
-    [ui/FormField {:required required}
-     (when-not hidden [:label label nbsp (help-popup help)])
-     (cond
-       values [ui/Dropdown {:selection     true
-                            :search        true
-                            :clearable     true
-                            :disabled      read-only
-                            :default-value default-value
-                            :on-change     on-change-fn
-                            :options       (map (fn [v] {:key v, :value v, :text v}) values)}]
-       :else [ui/Input
-              (cond-> {:type          (if sensitive "password" "text")
-                       :name          name
+    (when default-value
+      (update-fn form-id name default-value))
+    (fn [update-fn form-id {:keys [name display-name help hidden sensitive value-scope
+                                   required editable] :as attribute}]
+      ^{:key name}
+      [ui/FormField {:required required}
+       (when-not hidden [:label label nbsp (help-popup help)])
+       (if values
+         [ui/Dropdown {:selection     true
+                       :search        true
+                       :clearable     true
+                       :disabled      read-only
                        :default-value default-value
-                       :read-only     read-only
-                       :on-change     on-change-fn}
-                      hidden (assoc :style {:display "none"}))])]))
+                       :on-change     on-change-fn
+                       :options       (map (fn [v] {:key v, :value v, :text v}) values)}]
+         [ui/Input
+          (cond-> {:type          (if sensitive "password" "text")
+                   :name          name
+                   :default-value default-value
+                   :read-only     read-only
+                   :on-change     on-change-fn}
+                  hidden (assoc :style {:display "none"}))])])))
 
 
 (defmethod form-field :integer
   [update-fn form-id {:keys [name display-name help hidden value-scope
                              required editable] :as attribute}]
-  (let [label (or display-name name)]
-    ^{:key name}
-    [ui/FormField {:required required}
-     (when-not hidden [:label label nbsp (help-popup help)])
-     [ui/Input
-      (cond-> {:type          "number"
-               :name          name
-               :default-value (or (:value value-scope) (:default value-scope) "")
-               :read-only     (not editable)
-               :on-change     (ui-callback/value #(update-fn form-id name (utils/str->int %)))}
-              hidden (assoc :style {:display "none"}))]]))
+  (let [label (or display-name name)
+        default-value (or (:value value-scope) (:default value-scope))]
+    (when default-value
+      (update-fn form-id name default-value))
+    (fn [update-fn form-id {:keys [name display-name help hidden value-scope
+                                   required editable] :as attribute}]
+      ^{:key name}
+      [ui/FormField {:required required}
+       (when-not hidden [:label label nbsp (help-popup help)])
+       [ui/Input
+        (cond-> {:type          "number"
+                 :name          name
+                 :default-value (or default-value "")
+                 :read-only     (not editable)
+                 :on-change     (ui-callback/value #(update-fn form-id name (utils/str->int %)))}
+                hidden (assoc :style {:display "none"}))]])))
 
 (defn date-time-form
   [update-fn form-id {:keys [value-scope] :as attribute}]
@@ -102,16 +111,20 @@
 (defmethod form-field :boolean
   [update-fn form-id {:keys [name display-name help hidden value-scope
                              required editable] :as attribute}]
-  (let [label (or display-name name)]
-    ^{:key name}
-    [ui/FormField {:required required}
-     (when-not hidden [:label label nbsp (help-popup help)])
-     [ui/Checkbox
-      (cond-> {:name          name
-               :default-value (or (:value value-scope) (:default value-scope) false)
-               :read-only     (not editable)
-               :on-change     (ui-callback/checked #(update-fn form-id name %))}
-              hidden (assoc :style {:display "none"}))]]))
+  (let [label (or display-name name)
+        default-value (or (:value value-scope) (:default value-scope) false)]
+    (update-fn form-id name default-value)
+    (fn [update-fn form-id {:keys [name display-name help hidden value-scope
+                                   required editable] :as attribute}]
+      ^{:key name}
+      [ui/FormField {:required required}
+       (when-not hidden [:label label nbsp (help-popup help)])
+       [ui/Checkbox
+        (cond-> {:name          name
+                 :default-value default-value
+                 :read-only     (not editable)
+                 :on-change     (ui-callback/checked #(update-fn form-id name %))}
+                hidden (assoc :style {:display "none"}))]])))
 
 
 (defmethod form-field :resource-id

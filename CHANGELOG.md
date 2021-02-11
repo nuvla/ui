@@ -2,8 +2,47 @@
 
 ## Unreleased
 
+## [2.13.2] - 2021-02-10
+
 ### Changed
 
+  - Fulltext search enhanced
+  - ACL - Search users fix
+  - Edge detail - Specific modal for nuvlabox update operation
+  - Edge detail - Add modal fix bug in existing list of ssh
+    keys without a name
+
+## [2.13.1] - 2021-02-09
+
+### Changed
+
+  - Edge detail - Hide raw edit, duplicated delete and activate
+    operations from menubar
+
+## [2.13.0] - 2021-02-09
+
+### Added
+
+  - UIX - Message warning no elements to show
+  - Edge detail - New deployments tab
+  - Edge detail - New jobs tab and an error message is visible 
+    when last executed job is failed
+  - Edge detail - Specific modals for add ssh key and for revoke
+    ssh key
+
+### Changed
+
+  - Acl - Vertical align owner and dropdown
+  - Deployment - Overview tab, state transition loader moved
+  - Operation modal - When a specific modal exist show it 
+    instead of generic modal
+  - Cimi detail - operation support action operation body when
+    metadata is defined
+  - Deployment modal - distinguish credential check error and only
+    let deploy if credential is not invalid
+  - Edge - Move and simplification of NuvlaBox card component
+  - Edge detail - Use NuvlaBox new online attribute
+  - Edge - Use NuvlaBox new online attribute
   - Credential - tab based design
   - Deployment - tab based design
   - Docs - Fetch documents when user goes directly to details page
@@ -12,6 +51,7 @@
   - Deployment modal - On update credential can be changed
   - Deployment modal - On update only selected infra is visible
   - Tools - Re-frame-10x is disabled by default
+  - Static resources - update NB auto installer Python script
 
 ## [2.12.0] - 2020-12-10
 

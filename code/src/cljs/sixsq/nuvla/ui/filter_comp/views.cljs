@@ -3,8 +3,9 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.cimi.events :as cimi-events]
+    [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.filter-comp.events :as events]
-    [sixsq.nuvla.ui.filter-comp.subs :as subs]
     [sixsq.nuvla.ui.filter-comp.utils :as utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -241,8 +242,8 @@
 
 (defn CellAttribute
   [resource-name data i]
-  (let [attribute-options (subscribe [::subs/resource-metadata-attributes-options resource-name])
-        attributes        (subscribe [::subs/resource-metadata-attributes resource-name])]
+  (let [attribute-options (subscribe [::cimi-subs/resource-metadata-attributes-options resource-name])
+        attributes        (subscribe [::cimi-subs/resource-metadata-attributes resource-name])]
     (fn [resource-name data i]
       (let [{:keys [attribute] :as s} (nth @data i)
             attribute-info (get @attributes attribute)]
@@ -298,7 +299,7 @@
                        (reset! open? false)
                        (reset! data init-data))
         open-fn     #(reset! open? true)]
-    (when resource-name (dispatch [::events/get-resource-metadata resource-name]))
+    (when resource-name (dispatch [::cimi-events/get-resource-metadata resource-name]))
     (fn [{:keys [resource-name open? default-filter on-done]}]
       (let [filter-string (utils/data->filter-str @data)
             error         (when (and @show-error? (not (str/blank? filter-string)))

@@ -18,6 +18,8 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.job.subs :as job-subs]
+    [sixsq.nuvla.ui.job.views :as job-views]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
@@ -41,25 +43,6 @@
              {:id        refresh-action-id
               :frequency 10000
               :event     [::events/get-deployment resource-id]}]))
-
-
-(defn error
-  []
-  (let [{:keys [state]} @(subscribe [::subs/deployment])
-        jobs            (subscribe [::subs/jobs])
-        failed_jobs     (filter #(= (:state %) "FAILED") (:resources @jobs))
-        last_failed_job (first failed_jobs)
-        action          (:action last_failed_job)
-        last_line       (last (str/split-lines (get last_failed_job :status-message "")))]
-    (when (and
-            (= state "ERROR")
-            (some? last_failed_job))
-      [ui/Message {:error true}
-       [ui/MessageHeader
-        {:style    {:cursor "pointer"}
-         :on-click #(dispatch [::events/set-active-tab-index 8])}
-        (str "Job " action " failed")]
-       [ui/MessageContent last_line]])))
 
 
 (defn url-to-row
@@ -111,9 +94,7 @@
      :render   (fn []
                  (r/as-element
                    (if (empty? urls)
-                     [ui/Message {:warning true}
-                      [ui/Icon {:name "warning sign"}]
-                      (@tr [:no-urls])]
+                     [uix/WarningMsgNoElements (@tr [:no-urls])]
                      [ui/TabPane
                       [ui/Table {:basic   "very"
                                  :columns 2}
@@ -131,8 +112,7 @@
   []
   (let [tr                (subscribe [::i18n-subs/tr])
         module-versions   (subscribe [::subs/module-versions])
-        module-content-id (subscribe [::subs/current-module-content-id])
-        current-version   (subscribe [::subs/current-module-version])]
+        module-content-id (subscribe [::subs/current-module-content-id])]
     {:menuItem {:content (r/as-element [:span (@tr [:module-version])])
                 :key     "versions"
                 :icon    "linkify"}
@@ -160,7 +140,7 @@
 
 
 (defn list-section
-  [items section-key section-name empty-msg]
+  [items section-key section-name]
   (let [tr          (subscribe [::i18n-subs/tr])
         items-count (count items)]
     {:menuItem {:content (r/as-element
@@ -176,9 +156,7 @@
                  (r/as-element
                    [:<>
                     (if (empty? items)
-                      [ui/Message {:warning true}
-                       [ui/Icon {:name "warning sign"}]
-                       (@tr [empty-msg])]
+                      [uix/WarningMsgNoElements]
                       [ui/TabPane
                        [ui/Table {:basic   "very"
                                   :columns 2}
@@ -197,14 +175,14 @@
   []
   (let [deployment-parameters (subscribe [::subs/deployment-parameters])
         params                (vals @deployment-parameters)]
-    (list-section params "parameters-section" :module-output-parameters :no-items-to-show)))
+    (list-section params "parameters-section" :module-output-parameters)))
 
 
 (defn env-vars-section
   []
   (let [module-content (subscribe [::subs/deployment-module-content])
         env-vars       (get @module-content :environmental-variables [])]
-    (list-section env-vars "env-vars" :env-variables :no-items-to-show)))
+    (list-section env-vars "env-vars" :env-variables)))
 
 
 (def event-fields #{:id :content :timestamp :category})
@@ -275,56 +253,6 @@
    [ui/TableCell progress]
    [ui/TableCell return-code]
    [ui/TableCell {:style {:white-space "pre"}} status-message]])
-
-
-(defn jobs-table
-  [jobs]
-  (let [tr                (subscribe [::i18n-subs/tr])
-        elements-per-page (subscribe [::subs/jobs-per-page])
-        page              (subscribe [::subs/job-page])]
-    (fn [{:keys [resources] :as jobs}]
-      (let [total-elements (get jobs :count 0)
-            total-pages    (general-utils/total-pages total-elements @elements-per-page)]
-        (if (empty? resources)
-          [ui/Message {:warning true}
-           [ui/Icon {:name "warning sign"}]
-           (@tr [:no-jobs-to-show])]
-          [ui/TabPane
-           [ui/Table {:basic "very"}
-            [ui/TableHeader
-             [ui/TableRow
-              [ui/TableHeaderCell [:span (@tr [:job])]]
-              [ui/TableHeaderCell [:span (@tr [:action])]]
-              [ui/TableHeaderCell [:span (@tr [:timestamp])]]
-              [ui/TableHeaderCell [:span (@tr [:state])]]
-              [ui/TableHeaderCell [:span (@tr [:progress])]]
-              [ui/TableHeaderCell [:span (@tr [:return-code])]]
-              [ui/TableHeaderCell [:span (@tr [:message])]]]]
-            [ui/TableBody
-             (for [{:keys [id] :as job} resources]
-               ^{:key id}
-               [job-map-to-row job])]]
-
-           [uix/Pagination {:totalPages   total-pages
-                            :activePage   @page
-                            :onPageChange (ui-callback/callback
-                                            :activePage #(dispatch [::events/set-job-page %]))}]])))))
-
-
-(defn jobs-section
-  []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        jobs      (subscribe [::subs/jobs])
-        {:keys [resources]} @jobs
-        job-count (count resources)]
-    {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:jobs]))
-                                        (when (> job-count 0) [ui/Label {:circular true
-                                                                         :size     "mini"
-                                                                         :attached "top right"}
-                                                               job-count])])
-                :key     "job-section"
-                :icon    "bolt"}
-     :render   (fn [] (r/as-element [jobs-table @jobs]))}))
 
 
 (defn billing-section
@@ -558,7 +486,10 @@
           :content            [:<> [:h3 text1] [:p text2]]
           :header             (@tr [:shutdown-deployment])
           :danger-msg         (@tr [:deployment-shutdown-msg])
-          :button-text        (@tr [(if (= :ok cred-check-status) :shutdown :shutdown-force)])
+          :button-text        (@tr [(cond
+                                      (= "pull" (:execution-mode deployment)) :schedule-shutdown
+                                      (= :ok cred-check-status) :shutdown
+                                      :else :shutdown-force)])
           :modal-action       [creds-comp/CredentialCheckPopup parent]}]))))
 
 
@@ -661,12 +592,13 @@
 
 (defn up-to-date?
   [v versions]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        last-version (count versions)]
-    (if (= v (dec last-version))
-      [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date]) ")"]
-      [:span [ui/Icon {:name "warning", :color "orange"}]
-       (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))])))
+  (when v
+    (let [tr           (subscribe [::i18n-subs/tr])
+          last-version (count versions)]
+      (if (= v (dec last-version))
+        [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date]) ")"]
+        [:span [ui/Icon {:name "warning", :color "orange"}]
+         (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))]))))
 
 
 (defn TabOverviewModule
@@ -791,7 +723,6 @@
   []
   (let [tr            (subscribe [::i18n-subs/tr])
         deployment    (subscribe [::subs/deployment])
-        locale        (subscribe [::i18n-subs/locale])
         version       (subscribe [::subs/current-module-version])
         versions      (subscribe [::subs/module-versions])
         module        (:module @deployment)
@@ -800,11 +731,11 @@
         owners        (:owners acl)
         creds-name    (subscribe [::dashboard-subs/creds-name-map])
         credential-id (:parent @deployment)
-        {module-content  :content} module
+        {module-content :content} module
         cred-info     (get @creds-name credential-id credential-id)
         urls          (:urls module-content)]
 
-    [ui/SegmentGroup {:style  {:display "flex", :justify-content "space-between",
+    [ui/SegmentGroup {:style  {:display    "flex", :justify-content "space-between",
                                :background "#f3f4f5"}
                       :raised true}
      [ui/Segment {:secondary true
@@ -849,10 +780,10 @@
            [ui/TableCell (str/join ", " owners)]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:status]))]
-         [ui/TableCell
-          state
-          [ui/Loader {:active        (utils/deployment-in-transition? state)
-                      :indeterminate true}]]]
+         [ui/TableCell state
+          " "
+          (when (utils/deployment-in-transition? state)
+            [ui/Icon {:loading true :name "circle notch" :color "grey"}])]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:credential]))]
          [ui/TableCell
@@ -864,7 +795,8 @@
      [ui/Segment {:attached  false
                   :secondary true}
       (for [[i [url-name url-pattern]] (map-indexed list urls)]
-        (url-to-button url-name url-pattern (= i 0)))]]))
+        ^{:key url-name}
+        [url-to-button url-name url-pattern (= i 0)])]]))
 
 (defn overview-pane
   []
@@ -915,7 +847,7 @@
      (parameters-section)
      (env-vars-section)
      (billing-section)
-     (jobs-section)
+     (job-views/jobs-section)
      (acl/TabAcls deployment (not @read-only?) ::events/edit)]))
 
 
@@ -959,6 +891,24 @@
              :size           "tiny"
              :hide-on-scroll true}] ": "]
           state]]))))
+
+
+(defn error
+  []
+  (let [{:keys [state]} @(subscribe [::subs/deployment])
+        jobs            (subscribe [::job-subs/jobs])
+        last-failed-job (some #(when (= (:state %) "FAILED") %) (:resources @jobs))
+        action          (:action last-failed-job)
+        last-line       (last (str/split-lines (get last-failed-job :status-message "")))]
+    (when (and
+            (= state "ERROR")
+            (some? last-failed-job))
+      [ui/Message {:error true}
+       [ui/MessageHeader
+        {:style    {:cursor "pointer"}
+         :on-click #(dispatch [::events/set-active-tab-index 8])}
+        (str "Job " action " failed")]
+       [ui/MessageContent last-line]])))
 
 
 (defn TabsDeployment

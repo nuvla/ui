@@ -234,3 +234,22 @@
           on-success    #(do (dispatch [::select-all-row false])
                              (dispatch [::get-results]))]
       {::cimi-api-fx/delete-bulk [resource-type on-success filter-str]})))
+
+
+(reg-event-db
+  ::set-resource-metadata
+  (fn [db [_ resource-name metadata]]
+    (assoc-in db [::spec/resource-metadata resource-name] metadata)))
+
+
+(reg-event-fx
+  ::get-resource-metadata
+  (fn [{{:keys [::spec/resource-metadata]} :db} [_ resource-name]]
+    (when (nil? (get resource-metadata resource-name))
+      {::cimi-api-fx/get [(str "resource-metadata/"
+                               (case resource-name
+                                 "nuvlabox" "nuvlabox-1"
+                                 "nuvlabox-status" "nuvlabox-status-1"
+                                 "nuvlabox-peripheral" "nuvlabox-peripheral-1-1"
+                                 resource-name))
+                          #(dispatch [::set-resource-metadata resource-name %])]})))

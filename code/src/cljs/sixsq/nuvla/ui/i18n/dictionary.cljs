@@ -351,7 +351,6 @@
         :notifications-enable-disable-help            "Enable/disable notifications of this type globally."
         :notifications-method-help                    "Default notification method."
         :nuvlabox                                     "NuvlaBox"
-        :nuvlabox                                     "NuvlaBox"
         :nuvlabox-ctrl                                "edge control"
         :nuvlabox-datagateway-action                  "Click to start/stop routing this peripheral's data through the Data Gateway"
         :nuvlabox-datagateway-popup                   "Subscribe your apps to the MQTT data-gateway to access the 'nuvlabox-status' attributes"

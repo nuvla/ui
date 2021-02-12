@@ -135,12 +135,6 @@
                        :href       "https://docs.nuvla.io/"
                        :target     "_blank"
                        :rel        "noreferrer"}]
-     [ui/DropdownItem {:aria-label (@tr [:knowledge-base])
-                       :icon       "info circle"
-                       :text       (@tr [:knowledge-base])
-                       :href       "https://support.sixsq.com/solution/categories"
-                       :target     "_blank"
-                       :rel        "noreferrer"}]
      [ui/DropdownItem {:aria-label (@tr [:support])
                        :icon       "mail"
                        :text       (@tr [:support])

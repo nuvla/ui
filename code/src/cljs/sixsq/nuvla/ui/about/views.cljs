@@ -2,8 +2,6 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-
-    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
@@ -29,22 +27,28 @@
                  :src      "/ui/images/by_sixsq_mark_red_on_transparent_128px.png"}]]
      [ui/ListSA
       [ui/ListItem (@tr [:version-number]) ": " [:span#release-version "v"]]
-      [ui/ListItem [:a {:href "https://sixsq.com/nuvla"} (str/capitalize (@tr [:product-info]))]]
-      [ui/ListItem [:a {:href "https://docs.nuvla.io"}
+      [ui/ListItem [:a {:href   "https://sixsq.com/nuvla"
+                        :target "_blank"}
+                    (str/capitalize (@tr [:product-info]))]]
+      [ui/ListItem [:a {:href   "https://docs.nuvla.io"
+                        :target "_blank"}
                     (str/capitalize (@tr [:documentation]))]]
-      [ui/ListItem [:a {:on-click #(dispatch
-                                     [::history-events/navigate "documentation"])
-                        :style    {:cursor "pointer"}}
+      [ui/ListItem [:a {:href   "https://docs.nuvla.io/nuvla/api"
+                        :target "_blank"}
                     (@tr [:api-doc])]]
-      [ui/ListItem [:a {:href "https://sixsq.com/personae"} (@tr [:personae-desc])]]
-      [ui/ListItem [:a {:href "https://github.com/nuvla/deployment/releases"}
+      [ui/ListItem [:a {:href   "https://docs.nuvla.io/whoami"
+                        :target "_blank"} (@tr [:personae-desc])]]
+      [ui/ListItem [:a {:href   "https://github.com/nuvla/deployment/blob/master/CHANGELOG.md"
+                        :target "_blank"}
                     (str/capitalize (@tr [:release-notes]))]]
-      [ui/ListItem [:a {:href "https://github.com/nuvla"}
+      [ui/ListItem [:a {:href   "https://github.com/nuvla"
+                        :target "_blank"}
                     (str/capitalize (@tr [:source-code-on]))
                     " GitHub"]]
       [ui/ListItem (str/capitalize (@tr [:core-license]))
        ": "
-       [:a {:href "https://www.apache.org/licenses/LICENSE-2.0.html"}
+       [:a {:href   "https://www.apache.org/licenses/LICENSE-2.0.html"
+            :target "_blank"}
         "Apache 2.0"]]]
      [:div
       [ui/Image {:centered true

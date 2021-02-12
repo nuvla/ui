@@ -221,7 +221,8 @@
                  :content (r/as-element
                             [:span (str "Your NuvlaBox version is older than v1.14. "
                                         "The update operation might not work as expected. ")
-                             [:a {:href   "https://github.com/nuvla/ui/issues/525"
+                             [:a {:href   (str "https://docs.nuvla.io/nuvlabox/"
+                                               "nuvlabox-engine/quickstart.html#from-nuvla")
                                   :target "_blank"}
                               "See more"]])}])
              [ui/Segment

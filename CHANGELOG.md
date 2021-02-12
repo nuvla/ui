@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+### Changed
+
+  - Fix/update broken external links
+  - Edge detail - Modal update warning message for old NBE
+
+## [2.13.2] - 2021-02-10
+
+### Changed
+
+  - Fulltext search enhanced
+  - ACL - Search users fix
+  - Edge detail - Specific modal for nuvlabox update operation
+  - Edge detail - Add modal fix bug in existing list of ssh
+    keys without a name
+
+## [2.13.1] - 2021-02-09
+
+### Changed
+
+  - Edge detail - Hide raw edit, duplicated delete and activate
+    operations from menubar
+
+## [2.13.0] - 2021-02-09
+
 ### Added
 
   - UIX - Message warning no elements to show

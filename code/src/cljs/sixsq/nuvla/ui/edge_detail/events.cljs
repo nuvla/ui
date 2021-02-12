@@ -21,28 +21,29 @@
 (reg-event-db
   ::set-nuvlabox-vulns
   (fn [db [_ nuvlabox-vulns]]
-    (assoc db ::spec/nuvlabox-vulns {:summary (:summary nuvlabox-vulns)
-                                     :items   (into []
-                                                    (map
-                                                      (fn [{:keys [vulnerability-score] :as item}]
-                                                        (if vulnerability-score
-                                                          (cond
-                                                            (>= vulnerability-score 9.0) (assoc item
-                                                                                           :severity "CRITICAL"
-                                                                                           :color edge-utils/vuln-critical-color)
-                                                            (and (< vulnerability-score 9.0)
-                                                                 (>= vulnerability-score 7.0)) (assoc item
-                                                                                                 :severity "HIGH"
-                                                                                                 :color edge-utils/vuln-high-color)
-                                                            (and (< vulnerability-score 7.0)
-                                                                 (>= vulnerability-score 4.0)) (assoc item
-                                                                                                 :severity "MEDIUM"
-                                                                                                 :color edge-utils/vuln-medium-color)
-                                                            (< vulnerability-score 4.0) (assoc item
-                                                                                          :severity "LOW"
-                                                                                          :color edge-utils/vuln-low-color))
-                                                          (assoc item :severity "UNKNOWN" :color edge-utils/vuln-unknown-color)))
-                                                      (:items nuvlabox-vulns)))})))
+    (assoc db ::spec/nuvlabox-vulns
+              {:summary (:summary nuvlabox-vulns)
+               :items   (into []
+                              (map
+                                (fn [{:keys [vulnerability-score] :as item}]
+                                  (if vulnerability-score
+                                    (cond
+                                      (>= vulnerability-score 9.0) (assoc item
+                                                                     :severity "CRITICAL"
+                                                                     :color edge-utils/vuln-critical-color)
+                                      (and (< vulnerability-score 9.0)
+                                           (>= vulnerability-score 7.0)) (assoc item
+                                                                           :severity "HIGH"
+                                                                           :color edge-utils/vuln-high-color)
+                                      (and (< vulnerability-score 7.0)
+                                           (>= vulnerability-score 4.0)) (assoc item
+                                                                           :severity "MEDIUM"
+                                                                           :color edge-utils/vuln-medium-color)
+                                      (< vulnerability-score 4.0) (assoc item
+                                                                    :severity "LOW"
+                                                                    :color edge-utils/vuln-low-color))
+                                    (assoc item :severity "UNKNOWN" :color edge-utils/vuln-unknown-color)))
+                                (:items nuvlabox-vulns)))})))
 
 
 (reg-event-db
@@ -115,7 +116,7 @@
 
 
 (reg-event-fx
-  ::add-revoke-ssh-key
+  ::operation
   (fn [_ [_ resource-id operation data on-success-fn on-error-fn]]
     {::cimi-api-fx/operation
      [resource-id operation

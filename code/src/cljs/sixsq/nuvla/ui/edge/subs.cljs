@@ -106,6 +106,17 @@
   (fn [db]
     (::spec/nuvlabox-releases db)))
 
+
+(reg-sub
+  ::nuvlabox-releases-options
+  :<- [::nuvlabox-releases]
+  (fn [nuvlabox-releases]
+    (map
+      (fn [{:keys [id release]}]
+        {:key release, :text release, :value id})
+      nuvlabox-releases)))
+
+
 (reg-sub
   ::ssh-keys-available
   (fn [db]

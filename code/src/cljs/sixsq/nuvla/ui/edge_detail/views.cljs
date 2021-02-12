@@ -178,7 +178,7 @@
   (or
     (str/blank? nb-version)
     (let [p (->> (str/split nb-version #"\.")
-                 (map #(js/parseInt %)))]
+                 (map js/parseInt))]
       (or (< (first p) 1)
           (and (= (first p) 1)
                (< (second p) 14))))))

@@ -5,7 +5,9 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [clojure.string :as str]
+    [reagent.core :as r]))
 
 (def ref (react/createRef))
 
@@ -56,3 +58,26 @@
               :style   {:margin-top    11
                         :margin-bottom 10}}
    Menu])
+
+
+(defn ErrorJobsMessage
+  [resource-subs job-subs set-active-tab-index-event job-tab-index]
+  (let [errors-dissmissed (r/atom #{})]
+    (fn [resource-subscription]
+      (let [{:keys [state]} @(subscribe [resource-subscription])
+            jobs            (subscribe [job-subs])
+            last-failed-job (some #(when (= (:state %) "FAILED") %) (:resources @jobs))
+            action          (:action last-failed-job)
+            id              (:id last-failed-job)
+            last-line       (last (str/split-lines (get last-failed-job :status-message "")))]
+        (when (and
+                (not (@errors-dissmissed id))
+                ;(= state "ERROR")
+                (some? last-failed-job))
+          [ui/Message {:error      true
+                       :on-dismiss #(swap! errors-dissmissed conj id)}
+           [ui/MessageHeader
+            {:style    {:cursor "pointer"}
+             :on-click #(dispatch [set-active-tab-index-event job-tab-index])}
+            (str "Job " action " failed")]
+           [ui/MessageContent last-line]])))))

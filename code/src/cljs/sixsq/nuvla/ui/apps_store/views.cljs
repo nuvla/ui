@@ -10,12 +10,14 @@
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
+    [sixsq.nuvla.ui.deployment.views :as deployment-views]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -28,6 +30,14 @@
   [main-components/RefreshMenu
    {:on-refresh #(do (dispatch [::events/get-modules])
                      (dispatch [::apps-events/get-module]))}])
+
+
+(defn refresh-my-apps-menu
+  []
+  (let [owner (subscribe [::session-subs/user-id])]
+    [main-components/RefreshMenu
+     {:on-refresh #(do (dispatch [::events/get-my-modules owner]))}]))
+
 
 (defn module-card
   [{:keys [id name description path parent-path subtype compatibility logo-url price] :as module}]
@@ -93,6 +103,12 @@
      [refresh-menu]]))
 
 
+(defn my-apps-control-bar
+  []
+  [ui/Menu {:secondary true}
+   [refresh-my-apps-menu]])
+
+
 (defn control-bar-projects []
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Menu {:borderless true}
@@ -109,17 +125,14 @@
     (dispatch [::apps-events/get-module])
     (fn []
       (let []
-        [ui/Container {:fluid true}
+        [:<>
          [apps-views-detail/add-modal]
          [apps-views-detail/format-error @module]
-         [uix/Accordion
-          [:<>
-           [control-bar-projects]
-           (when (and @module (not (instance? js/Error @module)))
-             (let [{:keys [children]} @module]
-               [apps-project-views/format-module-children children]))]
-          :label (str/capitalize (@tr [:all-projects]))
-          :icon "fas fa-folder"]]))))
+         [:<>
+          [control-bar-projects]
+          (when (and @module (not (instance? js/Error @module)))
+            (let [{:keys [children]} @module]
+              [apps-project-views/format-module-children children]))]]))))
 
 
 (defn appstore
@@ -132,23 +145,130 @@
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
-        [uix/Accordion
-         [:<>
-          [control-bar]
-          [modules-cards-group (get @modules :resources [])]
-          [uix/Pagination
-           {:totalitems   total-modules
-            :totalPages   total-pages
-            :activePage   @page
-            :onPageChange (ui-callback/callback
-                            :activePage #(dispatch [::events/set-page %]))}]]
-         :icon "fas fa-store"
-         :label (str/capitalize (@tr [:appstore]))]))))
+        [:<>
+         [control-bar]
+         [modules-cards-group (get @modules :resources [])]
+         [uix/Pagination
+          {:totalitems   total-modules
+           :totalPages   total-pages
+           :activePage   @page
+           :onPageChange (ui-callback/callback
+                           :activePage #(dispatch [::events/set-page %]))}]]))))
+
+
+(defn TabMyApps
+  []
+  (let [tr                (subscribe [::i18n-subs/tr])
+        modules           (subscribe [::subs/modules])
+        elements-per-page (subscribe [::subs/elements-per-page])
+        page              (subscribe [::subs/page])]
+    (dispatch [::events/get-my-modules])
+    (fn []
+      (let [total-modules (get @modules :count 0)
+            total-pages   (general-utils/total-pages total-modules @elements-per-page)]
+        [ui/Segment
+         [my-apps-control-bar]
+         [modules-cards-group (get @modules :resources [])]
+         [uix/Pagination
+          {:totalitems   total-modules
+           :totalPages   total-pages
+           :activePage   @page
+           :onPageChange (ui-callback/callback
+                           :activePage #(dispatch [::events/set-page %]))}]]))))
+
+
+(defn TabGettingStarted
+  []
+  (let [tr                (subscribe [::i18n-subs/tr])
+        modules           (subscribe [::subs/modules])
+        elements-per-page (subscribe [::subs/elements-per-page])
+        page              (subscribe [::subs/page])]
+    (dispatch [::events/get-getting-started-modules])
+    (fn []
+      (let [total-modules (get @modules :count 0)
+            total-pages   (general-utils/total-pages total-modules @elements-per-page)]
+        [ui/Segment
+         [:div "Here's a good place to start."]
+         [modules-cards-group (get @modules :resources [])]
+         [uix/Pagination
+          {:totalitems   total-modules
+           :totalPages   total-pages
+           :activePage   @page
+           :onPageChange (ui-callback/callback
+                           :activePage #(dispatch [::events/set-page %]))}]]))))
+
+
+(defn TabAllApps
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn []
+      [ui/TabPane
+       [appstore]])))
+
+
+(defn TabNavigator
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn []
+      [ui/TabPane
+       [root-projects]])))
+
+
+(defn TabRunningApps
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn []
+      [ui/TabPane
+       [deployment-views/deployments-main-content]])))
+
+
+(defn tabs
+  []
+  [{:menuItem {:content "Getting Started"
+               :key     "getting-started"
+               :icon    "certificate"}
+    :render   (fn [] (r/as-element [TabGettingStarted]))}
+   {:menuItem {:content "All Apps"
+               :key     "overview"
+               :icon    "fa-th"}
+    :render   (fn [] (r/as-element [TabAllApps]))}
+   {:menuItem {:content "Navigate Apps"
+               :key     "navigate"
+               :icon    "folder open"}
+    :render   (fn [] (r/as-element [TabNavigator]))}
+   {:menuItem {:content "My Apps"
+               :key     "my-apps"
+               :icon    "user"}
+    :render   (fn [] (r/as-element [TabMyApps]))}
+   {:menuItem {:content "Running Apps"
+               :key     "running-apps"
+               :icon    "rocket"}
+    :render   (fn [] (r/as-element [TabRunningApps]))}])
+
+
+(defn TabsAppStore
+  []
+  (fn []
+    (let [tr           (subscribe [::i18n-subs/tr])
+          active-index (subscribe [::subs/active-tab-index])]
+      [ui/Tab
+       {:menu        {:secondary true
+                      :pointing  true
+                      :style     {:display        "flex"
+                                  :flex-direction "row"
+                                  :flex-wrap      "wrap"}}
+        :panes       (tabs)
+        :activeIndex @active-index
+        :onTabChange (fn [_ data]
+                       (let [active-index (. data -activeIndex)]
+                         (dispatch [::events/set-active-tab-index active-index])))}])))
 
 
 (defn root-view
   []
-  [ui/Container {:fluid true}
-   [appstore]
-   [root-projects]
-   [deployment-dialog-views/deploy-modal]])
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Container {:fluid true}
+     [:<>
+      [uix/PageHeader "fas fa-store" (general-utils/capitalize-first-letter (@tr [:appstore]))]
+      [TabsAppStore]
+      [deployment-dialog-views/deploy-modal]]]))

@@ -292,6 +292,18 @@
          "'")))
 
 
+(defn owner-like-query-string
+  [owner]
+  (when-not (str/blank? owner)
+    (str "acl/owners=='" owner "'")))
+
+
+(defn by-tag-query-string
+  [tag]
+  (when-not (str/blank? tag)
+    (str "tags=='" tag "'")))
+
+
 ;; Math
 
 (defn round-up

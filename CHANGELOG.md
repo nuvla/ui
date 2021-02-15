@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+ - Notifications tab with an ability to manage notification methods and
+   notification subscriptions.
+
 ## [2.13.2] - 2021-02-10
 
 ### Changed

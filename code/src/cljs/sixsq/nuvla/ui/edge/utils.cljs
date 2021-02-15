@@ -105,7 +105,7 @@
 (defn load-net-stats
   [net-stats]
   {:label (map :interface net-stats)
-   :title (str "Total Network Stats per Interface")
+   :title (str "Cumulative Network Stats per Interface")
    :tx    (map (fn [t] (/ t 1000000)) (map :bytes-transmitted net-stats))
    :rx    (map (fn [t] (/ t 1000000)) (map :bytes-received net-stats))})
 

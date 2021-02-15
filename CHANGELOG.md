@@ -7,6 +7,11 @@
  - Notifications tab with an ability to manage notification methods and
    notification subscriptions.
 
+### Changed
+
+  - Fix/update broken external links
+  - Edge detail - Modal update warning message for old NBE
+
 ## [2.13.2] - 2021-02-10
 
 ### Changed

@@ -95,7 +95,7 @@
                   :color "blue"}]
         [ui/Header {:as :h4}
          (@tr [:welcome-video-subheader-pre]) " "
-         [:a {:href "https://sixsq.com/videos"}
+           [:a {:href "https://sixsq.com/media/videos.html"}
           (@tr [:video-channel])]
          " " (@tr [:welcome-video-subheader-post])]]]]
 

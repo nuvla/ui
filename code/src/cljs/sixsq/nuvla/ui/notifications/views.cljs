@@ -26,9 +26,8 @@
   (dispatch-sync [::events/validate-notification-subscription-config-form])
   (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)]
     (when form-valid?
-      (do
-        (dispatch [::events/set-validate-form? false])
-        (dispatch [::events/edit-subscription-config])))))
+      (dispatch [::events/set-validate-form? false])
+      (dispatch [::events/edit-subscription-config]))))
 
 
 (defn save-callback-notification-method
@@ -37,9 +36,8 @@
   (dispatch-sync [::events/validate-notification-method-form form-validation-spec])
   (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)]
     (when form-valid?
-      (do
-        (dispatch [::events/set-validate-form? false])
-        (dispatch [::events/edit-notification-method])))))
+      (dispatch [::events/set-validate-form? false])
+      (dispatch [::events/edit-notification-method]))))
 
 
 (defn save-callback-subscription
@@ -48,10 +46,9 @@
   (dispatch-sync [::events/validate-subscription-form form-validation-spec])
   (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)]
     (when form-valid?
-      (do
-        (dispatch [::events/set-validate-form? false])
-        (dispatch [::events/edit-subscription])
-        (dispatch [::events/close-edit-subscription-modal])))))
+      (dispatch [::events/set-validate-form? false])
+      (dispatch [::events/edit-subscription])
+      (dispatch [::events/close-edit-subscription-modal]))))
 
 
 (defn save-callback-add-subscription
@@ -60,10 +57,9 @@
   (dispatch-sync [::events/validate-subscription-form form-validation-spec])
   (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)]
     (when form-valid?
-      (do
-        (dispatch [::events/set-validate-form? false])
-        (dispatch [::events/edit-subscription])
-        (dispatch [::events/close-edit-subscription-modal])))))
+      (dispatch [::events/set-validate-form? false])
+      (dispatch [::events/edit-subscription])
+      (dispatch [::events/close-edit-subscription-modal]))))
 
 
 (defn save-callback-add-subscription-config
@@ -72,11 +68,10 @@
   (dispatch-sync [::events/validate-notification-subscription-config-form form-validation-spec])
   (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)]
     (when form-valid?
-      (do
-        (dispatch [::events/set-validate-form? false])
-        (dispatch [::events/edit-subscription-config])
-        (dispatch [::events/reset-subscription-config-all])
-        (dispatch [::events/close-add-subscription-config-modal])))))
+      (dispatch [::events/set-validate-form? false])
+      (dispatch [::events/edit-subscription-config])
+      (dispatch [::events/reset-subscription-config-all])
+      (dispatch [::events/close-add-subscription-config-modal]))))
 
 
 (defn save-callback-edit-subscription-config
@@ -85,11 +80,10 @@
   (dispatch-sync [::events/validate-notification-subscription-config-form form-validation-spec])
   (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)]
     (when form-valid?
-      (do
-        (dispatch [::events/set-validate-form? false])
-        (dispatch [::events/edit-subscription-config])
-        (dispatch [::events/reset-subscription-config-all])
-        (dispatch [::events/close-edit-subscription-config-modal])))))
+      (dispatch [::events/set-validate-form? false])
+      (dispatch [::events/edit-subscription-config])
+      (dispatch [::events/reset-subscription-config-all])
+      (dispatch [::events/close-edit-subscription-config-modal]))))
 
 
 (defn subs-notif-method-create-button
@@ -107,7 +101,7 @@
   [ui/FormDropdown
    {:selection     true
     :fluid         false
-    :default-value (if (not (nil? current-value))
+    :default-value (if (not (some? current-value))
                      current-value
                      (-> @notif-methods first :id))
     :on-change     (ui-callback/value
@@ -217,7 +211,7 @@
                      current-value
                      (-> @notif-methods first :id))
     :on-change     (ui-callback/value
-                     #(do (dispatch-sync [::events/update-subscription :method %])))
+                     #(dispatch-sync [::events/update-subscription :method %]))
     :options       (map (fn [{id :id, method-name :name}]
                           {:key id, :value id, :text method-name})
                         @notif-methods)}])
@@ -231,7 +225,7 @@
     :fluid         false
     :default-value current-value
     :on-change     (ui-callback/value
-                     #(do (dispatch-sync [::events/update-subscription :status %])))
+                     #(dispatch-sync [::events/update-subscription :status %]))
     :options       (map (fn [v] {:key v, :value v, :text v}) ["enabled" "disabled"])}])
 
 
@@ -241,15 +235,13 @@
         notif-methods (subscribe [::subs/notification-methods])
         visible? (subscribe [::subs/edit-subscription-modal-visible?])
         validate-form? (subscribe [::subs/validate-form?])
-        form-valid? (subscribe [::subs/form-valid?])
         subscription (subscribe [::subs/subscription])
         on-change (fn [name-kw value]
                     (dispatch [::events/update-subscription name-kw value])
                     (dispatch [::events/validate-subscription-form]))]
     (dispatch [::events/get-notification-methods])
     (fn []
-      (let [editable? true
-            header (str/capitalize (str (@tr [:edit]) " " (@tr [:subscription])))
+      (let [header (str/capitalize (str (@tr [:edit]) " " (@tr [:subscription])))
             {:keys [name description method-id enabled category resource-id resource-kind]} @subscription]
         [:div]
         [ui/Modal {:open       @visible?
@@ -284,26 +276,25 @@
          [ui/ModalActions
           [uix/Button {:text     (@tr [:save])
                        :positive true
-                       :disabled true  #_(when-not @form-valid? true)
+                       :disabled true
                        :active   true
                        :on-click #(save-callback-subscription ::spec/subscription)}]]]))))
 
 (defn select-resources
   []
   (let [component-type (subscribe [::subs/collection])]
-    [
-     [^{:key "component_type"}
-      [ui/TableRow
-       [ui/TableCell {:collapsing true
-                      :style      {:padding-bottom 8}} "Component"]
-       [ui/TableCell
-        [ui/Dropdown {:selection true,
-                      :fluid     true
-                      :value     @component-type
-                      :on-change (ui-callback/value #(dispatch [::events/set-collection %]))
-                      :options   [{:key "nuvlabox-status", :text "NuvlaBox Telemetry", :value "nuvlabox-status"}
-                                  {:key "infrastructure-service", :text "Infrastructure Service", :value "infrastructure-service"}]}]
-        ]]]]))
+    [^{:key "component_type"}
+     [ui/TableRow
+      [ui/TableCell {:collapsing true
+                     :style      {:padding-bottom 8}} "Component"]
+      [ui/TableCell
+       [ui/Dropdown {:selection true,
+                     :fluid     true
+                     :value     @component-type
+                     :on-change (ui-callback/value #(dispatch [::events/set-collection %]))
+                     :options   [{:key "nuvlabox-status", :text "NuvlaBox Telemetry", :value "nuvlabox-status"}
+                                 {:key "infrastructure-service", :text "Infrastructure Service", :value "infrastructure-service"}]}]
+       ]]]))
 
 (def criteria-metric-options
   {"nuvlabox"               [{:key "cpu load" :text "CPU load %" :value "load"}
@@ -373,7 +364,6 @@
     (dispatch [::events/get-notification-methods])
     (dispatch [::events/set-components-number 0])
     (dispatch [::events/reset-tags-available])
-    #_(dispatch [::events/update-notification-subscription-config :resource-filter ""])
     (fn []
       (let [header (str/capitalize (str (@tr [:add]) " " (@tr [:subscription])))]
         (dispatch [::events/update-notification-subscription-config :enabled true])
@@ -873,25 +863,23 @@
         all-methods (subscribe [::subs/notification-methods])]
     (dispatch [::events/get-notification-methods])
     (fn []
-      (let []
-        [ui/TabPane
-         [MenuBarNotificationMethod]
-         [:div methods]
-         (if (empty? @all-methods)
-           [ui/Message
-            (str/capitalize (@tr [:no-notification-method-defined]))]
-           [:div [ui/Table {:style {:margin-top 10}}
-                  [ui/TableHeader
-                   [ui/TableRow
-                    [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
-                    [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
-                    [ui/TableHeaderCell {:content (str/capitalize (@tr [:method]))}]
-                    [ui/TableHeaderCell {:content (str/capitalize (@tr [:destination]))}]
-                    [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}]]]
-                  [ui/TableBody
-                   (for [notif-method @all-methods]
-                     ^{:key (:id notif-method)}
-                     [single-notification-method notif-method])]]])]))))
+      [ui/TabPane
+       [MenuBarNotificationMethod]
+       (if (empty? @all-methods)
+         [ui/Message
+          (str/capitalize (@tr [:no-notification-method-defined]))]
+         [:div [ui/Table {:style {:margin-top 10}}
+                [ui/TableHeader
+                 [ui/TableRow
+                  [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
+                  [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
+                  [ui/TableHeaderCell {:content (str/capitalize (@tr [:method]))}]
+                  [ui/TableHeaderCell {:content (str/capitalize (@tr [:destination]))}]
+                  [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}]]]
+                [ui/TableBody
+                 (for [notif-method @all-methods]
+                   ^{:key (:id notif-method)}
+                   [single-notification-method notif-method])]]])])))
 
 
 (defn tabs

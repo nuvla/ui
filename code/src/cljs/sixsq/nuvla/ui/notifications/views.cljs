@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.notifications.views
   (:require
+    [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
@@ -591,6 +592,31 @@
                        :on-click #(save-callback-edit-subscription-config ::spec/notification-subscription-config)}]]]
         ))))
 
+(defn notif-method-select-dropdown
+  [method on-change]
+  (println "notif-method-select-dropdown....")
+  (let [tr (subscribe [::i18n-subs/tr])
+        local-validate? (r/atom false)
+        validate-form?  (subscribe [::subs/validate-form?])]
+    (fn [method on-change]
+      (let [validate? (or @local-validate? @validate-form?)
+            valid?    (s/valid? ::spec/method method)]
+        [ui/TableRow
+         [ui/TableCell {:collapsing true
+                        :style      {:padding-bottom 8}}
+          (general-utils/mandatory-name (@tr [:method]))]
+         [ui/TableCell {:error (and validate? (not valid?))}
+          [ui/Dropdown {:selection true
+                        :fluid     true
+                        :value     method
+                        :on-change (ui-callback/value
+                                     #(do
+                                        (reset! local-validate? true)
+                                        (dispatch [::events/method (str/lower-case %)])
+                                        (on-change :method (str/lower-case %))))
+                        :options   [{:key "slack", :text "Slack", :value "slack"}
+                                    {:key "email", :text "Email", :value "email"}]}]]]))))
+
 (defn add-notification-method-modal
   []
   (let [tr (subscribe [::i18n-subs/tr])
@@ -623,20 +649,7 @@
             [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
              :default-value description, :spec ::spec/description,
              :on-change (partial on-change :description), :validate-form? @validate-form?]
-            [ui/TableRow
-             [ui/TableCell {:collapsing true
-                            :style      {:padding-bottom 8}}
-              (general-utils/mandatory-name "method")]
-             [ui/TableCell
-              [ui/Dropdown {:selection true
-                            :fluid     true
-                            :value     method
-                            :on-change (ui-callback/value
-                                         #(do
-                                            (dispatch [::events/method (str/lower-case %)])
-                                            (on-change :method (str/lower-case %))))
-                            :options   [{:key "slack", :text "Slack", :value "slack"}
-                                        {:key "email", :text "Email", :value "email"}]}]]]
+            [notif-method-select-dropdown method on-change]
             [uix/TableRowField (@tr [:destination]), :editable? editable?, :required? true,
              :default-value destination, :spec ::spec/destination,
              :on-change (partial on-change :destination), :validate-form? @validate-form?]

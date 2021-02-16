@@ -140,7 +140,8 @@
 
 (reg-sub
   ::validate-form?
-  ::spec/validate-form?)
+  (fn [db]
+    (::spec/validate-form? db)))
 
 
 (reg-sub

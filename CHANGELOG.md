@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+  - Fix: empty filter as default for components notification config.
+
 ## [2.14.0] - 2021-02-16
 
 ### Added

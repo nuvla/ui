@@ -178,7 +178,6 @@
     (dispatch [::events/get-notification-subscriptions])
     (fn []
       (let [header (@tr [:subscriptions-manage])]
-        [:div]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-notification-subscription-modal])}
@@ -481,7 +480,6 @@
         components-number (subscribe [::subs/components-number])
         subscription-config (subscribe [::subs/notification-subscription-config])]
     (dispatch [::events/get-notification-methods])
-    ;(dispatch [::events/set-components-number 0])
     (dispatch [::events/reset-tags-available])
     (fn []
       (let [header (str/capitalize (str (@tr [:edit]) " " (@tr [:subscription])))
@@ -582,10 +580,9 @@
                   :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]]
               )]]
           [ui/Header {:as "h3"} "Notification"]
-          [:<>
-           [subs-notif-method-dropdown method-id notif-methods false]
-           [:span ff/nbsp ff/nbsp]
-           [subs-notif-method-create-button]]]
+          [subs-notif-method-dropdown method-id notif-methods false]
+          [:span ff/nbsp ff/nbsp]
+          [subs-notif-method-create-button]]
          [ui/ModalActions
           [uix/Button {:text     (@tr [:save])
                        :positive true

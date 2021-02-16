@@ -73,7 +73,11 @@
     (let [form-spec ::spec/notification-method
           notif-method   (get db ::spec/notification-method)
           validate-form? (get db ::spec/validate-form?)
-          valid?         (if validate-form? (if (nil? form-spec) true (s/valid? form-spec notif-method)) true)]
+          valid?         (if validate-form?
+                           (if (nil? form-spec)
+                             true
+                             (s/valid? form-spec notif-method))
+                           true)]
       (s/explain form-spec notif-method)
       (assoc db ::spec/form-valid? valid?))))
 

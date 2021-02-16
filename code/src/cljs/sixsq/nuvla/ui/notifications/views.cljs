@@ -625,19 +625,22 @@
              :on-change (partial on-change :description), :validate-form? @validate-form?]
             [ui/TableRow
              [ui/TableCell {:collapsing true
-                            :style      {:padding-bottom 8}} "method"]
+                            :style      {:padding-bottom 8}}
+              (general-utils/mandatory-name "method")]
              [ui/TableCell
               [ui/Dropdown {:selection true
                             :fluid     true
                             :value     method
                             :on-change (ui-callback/value
-                                         #(dispatch [::events/method (str/lower-case %)]))
+                                         #(do
+                                            (dispatch [::events/method (str/lower-case %)])
+                                            (on-change :method (str/lower-case %))))
                             :options   [{:key "slack", :text "Slack", :value "slack"}
-                                        {:key "email", :text "Email", :value "email"}]}]]]]
-
-           [uix/TableRowField (@tr [:destination]), :editable? editable?, :required? true,
-            :default-value destination, :spec ::spec/destination,
-            :on-change (partial on-change :destination), :validate-form? @validate-form?]]]
+                                        {:key "email", :text "Email", :value "email"}]}]]]
+            [uix/TableRowField (@tr [:destination]), :editable? editable?, :required? true,
+             :default-value destination, :spec ::spec/destination,
+             :on-change (partial on-change :destination), :validate-form? @validate-form?]
+            ]]]
 
          [ui/ModalActions
           [uix/Button {:text     (if (true? @is-new?) (@tr [:create]) (@tr [:save]))

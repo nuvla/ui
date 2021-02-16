@@ -368,6 +368,7 @@
       (let [header (str/capitalize (str (@tr [:add]) " " (@tr [:subscription])))]
         (dispatch [::events/update-notification-subscription-config :enabled true])
         (dispatch [::events/update-notification-subscription-config :category "notification"])
+        (dispatch [::events/update-notification-subscription-config :resource-filter ""])
         [:div]
         [ui/Modal {:open       @visible?
                    :close-icon true

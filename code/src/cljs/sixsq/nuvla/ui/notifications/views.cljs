@@ -622,18 +622,19 @@
              :validate-form? @validate-form?]
             [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
              :default-value description, :spec ::spec/description,
-             :on-change (partial on-change :description), :validate-form? @validate-form?]]
-           [ui/TableRow
-            [ui/TableCell {:collapsing true
-                           :style      {:padding-bottom 8}} "method"]
-            [ui/TableCell
-             [ui/Dropdown {:selection true
-                           :fluid     true
-                           :value     method
-                           :on-change (ui-callback/value
-                                        #(dispatch [::events/method (str/lower-case %)]))
-                           :options   [{:key "slack", :text "Slack", :value "slack"}
-                                       {:key "email", :text "Email", :value "email"}]}]]]
+             :on-change (partial on-change :description), :validate-form? @validate-form?]
+            [ui/TableRow
+             [ui/TableCell {:collapsing true
+                            :style      {:padding-bottom 8}} "method"]
+             [ui/TableCell
+              [ui/Dropdown {:selection true
+                            :fluid     true
+                            :value     method
+                            :on-change (ui-callback/value
+                                         #(dispatch [::events/method (str/lower-case %)]))
+                            :options   [{:key "slack", :text "Slack", :value "slack"}
+                                        {:key "email", :text "Email", :value "email"}]}]]]]
+
            [uix/TableRowField (@tr [:destination]), :editable? editable?, :required? true,
             :default-value destination, :spec ::spec/destination,
             :on-change (partial on-change :destination), :validate-form? @validate-form?]]]

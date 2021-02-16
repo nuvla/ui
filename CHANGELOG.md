@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.14.0] - 2021-02-16
+
 ### Added
 
  - Notifications tab with an ability to manage notification methods and

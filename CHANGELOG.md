@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+ - Notifications tab with an ability to manage notification methods and
+   notification subscriptions.
+
 ### Changed
 
   - Fix/update broken external links

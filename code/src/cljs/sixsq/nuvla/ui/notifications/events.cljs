@@ -33,7 +33,7 @@
 
 (reg-event-fx
   ::get-notification-methods
-  (fn [{:keys [db]} [_]]
+  (fn [{:keys [db]} _]
     {:db                  (assoc db ::spec/completed? false)
      ::cimi-api-fx/search [:notification-method
                            {:orderby "name:asc, id:asc"}
@@ -57,9 +57,8 @@
 
 (reg-event-fx
   ::delete-notification-method
-  (fn [{:keys [db]} [_ id]]
-    {:db                  db
-     ::cimi-api-fx/delete [id #(dispatch [::get-notification-methods])]}))
+  (fn [_ [_ id]]
+    {::cimi-api-fx/delete [id #(dispatch [::get-notification-methods])]}))
 
 
 (reg-event-db
@@ -239,7 +238,7 @@
 
 (reg-event-fx
   ::toggle-enabled
-  (fn [{:keys [db]} [_ rid enabled]]
+  (fn [_ [_ rid enabled]]
     (if enabled
       {::cimi-api-fx/operation [rid "enable" #() {}]}
       {::cimi-api-fx/operation [rid "disable" #() {}]})))

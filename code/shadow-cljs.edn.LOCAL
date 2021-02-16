@@ -19,7 +19,7 @@
                                                           ;day8.re-frame-10x.preload
                                                           ]}
 
-                                :dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL "https://194.182.164.191:443"
+                                :dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL "https://159.100.251.148:443"
                                                                 re_frame.trace.trace_enabled_QMARK_ true}
                                              :compiler-options {:infer-externs :auto}}
 

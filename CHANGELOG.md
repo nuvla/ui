@@ -5,6 +5,7 @@
 ### Changed
 
   - Ocre - Decommission voucher resources
+  - Help message for notification destination.
 
 ## [2.14.1] - 2021-02-16
 

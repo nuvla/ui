@@ -192,11 +192,11 @@
 
 (defn TableRowField
   [name & {:keys [key placeholder default-value spec on-change
-                  required? editable? validate-form? type]}]
+                  required? editable? validate-form? type input-help-msg]}]
   (let [local-validate? (r/atom false)
         active-input?   (r/atom false)]
     (fn [name & {:keys [key placeholder default-value spec on-change required?
-                        editable? validate-form? type]
+                        editable? validate-form? type input-help-msg]
                  :or   {editable? true, spec any?, type :input}}]
       (let [name-label  (cond-> name
                                 (and editable? required?) (general-utils/mandatory-name))
@@ -215,6 +215,7 @@
          [ui/TableCell {:collapsing true} name-label]
          ^{:key (or key name)}
          [ui/TableCell
+          input-help-msg
           (if editable?
             (if (#{:input :password} type)
               [ui/Input (assoc common-opts

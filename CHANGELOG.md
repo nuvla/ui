@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+  - Ocre - Decommission voucher resources
+
 ## [2.14.1] - 2021-02-16
 
 ### Changed

@@ -78,6 +78,10 @@
   (fn [db]
     (::spec/vuln-severity-selector db)))
 
+(reg-sub
+  ::matching-vulns-from-db
+  (fn [db]
+    (::spec/matching-vulns-from-db db)))
 
 (reg-sub
   ::next-heartbeat-moment

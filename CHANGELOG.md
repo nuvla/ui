@@ -8,6 +8,7 @@
 
  - Notifications tab with an ability to manage notification methods and
    notification subscriptions.
+ - Edge detail - dynamic lookup on the vulnerabilities DB to get more details on each NuvlaBox vulnerability
 
 ### Changed
 

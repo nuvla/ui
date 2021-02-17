@@ -10,6 +10,7 @@
 (s/def ::nuvlabox-peripherals (s/nilable any?))
 (s/def ::nuvlabox-events (s/nilable any?))
 (s/def ::vuln-severity-selector (s/nilable any?))
+(s/def ::matching-vulns-from-db (s/nilable any?))
 (s/def ::elements-per-page int?)
 (s/def ::page int?)
 (s/def ::nuvlabox-vulns (s/nilable any?))
@@ -23,6 +24,7 @@
                           ::nuvlabox-peripherals
                           ::nuvlabox-events
                           ::vuln-severity-selector
+                          ::matching-vulns-from-db
                           ::elements-per-page
                           ::page
                           ::nuvlabox-vulns
@@ -36,6 +38,7 @@
                ::nuvlabox-peripherals         nil
                ::nuvlabox-events              nil
                ::vuln-severity-selector       nil
+               ::matching-vulns-from-db       nil
                ::elements-per-page            15
                ::page                         1
                ::nuvlabox-vulns               nil

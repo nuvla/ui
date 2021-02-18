@@ -22,7 +22,7 @@
 (defn version-comparison-modal
   [left right version-left version-right]
   (if (and left right)
-    [ui/ModalContent
+    [ui/ModalContent {:scrolling  true}
      [ui/DiffViewer {:old-value    (general-utils/edn->json left)
                      :new-value    (general-utils/edn->json right)
                      :split-view   true
@@ -53,7 +53,7 @@
           [:span (@tr [:compare-version]) " "
            [ui/Dropdown {:selection   true
                          :compact     true
-                         :placeholder (@tr [:select-version])
+                         :placeholder " "
                          :value       @compare-one
                          :search      true
                          :on-change   (ui-callback/value
@@ -66,7 +66,7 @@
            " vs "
            [ui/Dropdown {:selection   true
                          :compact     true
-                         :placeholder (@tr [:select-version])
+                         :placeholder " "
                          :value       @compare-two
                          :search      true
                          :on-change   (ui-callback/value
@@ -80,8 +80,7 @@
            [ui/Modal {:open       @compare?
                       :dimmer     "blurring"
                       :on-close   on-close-fn
-                      :size       "large"
-                      :scrolling  true}
+                      :size       "large"}
             [version-comparison-modal @module-compare-left @module-compare-right @compare-one @compare-two]]])))))
 
 

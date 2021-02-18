@@ -2,9 +2,11 @@
 
 ## Unreleased
 
+  - Apps - ability to apply diff between two module versions
+
 ### Changed
 
-  - Dependency - NPM diff package
+  - Dependency - NPM react-diff-viewer package
   - Ocre - Decommission voucher resources
   - Help message for notification destination.
 

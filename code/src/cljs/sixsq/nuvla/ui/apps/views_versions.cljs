@@ -5,8 +5,8 @@
             [sixsq.nuvla.ui.apps.subs :as subs]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-            [cljsjs.jsdiff :as jsdiff]))
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn show-versions [show-versions?]
@@ -20,70 +20,69 @@
 
 
 (defn version-comparison-modal
-  [version-one version-two]
-  [:<>
-  [ui/ModalHeader
-   [ui/Icon {:name "box"}] "Comparing"]
-  [ui/ModalContent
-   [jsdiff]
-   [ui/CodeMirror {:value      version-two
-                   :autoCursor true
-                   :options    {:mode              "application/json"
-                                :read-only         true
-                                :line-numbers      true
-                                :style-active-line true}
-                   ;:on-change  (fn [editor data value]
-                   ;              (dispatch [::events/update-docker-compose nil value])
-                   ;              (dispatch [::main-events/changes-protection? true])
-                   ;              (dispatch [::apps-events/validate-form])
-                   ;              (reset! local-validate? true))
-                   }]]]
-  )
+  [left right version-left version-right]
+  (if (and left right)
+    [ui/ModalContent
+     [ui/DiffViewer {:old-value    (general-utils/edn->json left)
+                     :new-value    (general-utils/edn->json right)
+                     :split-view   true
+                     :left-title   (str "v" version-left)
+                     :right-title  (str "v" version-right)}]]
+    [ui/Container
+     [ui/Loader {:active true
+                 :inverted true}]]))
+
 
 (defn versions-compare [versions]
   (let [versions-opt  (map (fn [version] {:key (first version)
-                                          :value (:href (second version))
+                                          :value (first version)
                                           :text (str "v" (first version))})
                         versions)
         tr            (subscribe [::i18n-subs/tr])
         compare-one   (reagent/atom nil)
         compare-two   (reagent/atom nil)
         compare?      (reagent/atom false)
+        module        (subscribe [::subs/module])
+        module-compare-left   (subscribe [::subs/compare-module-left])
+        module-compare-right  (subscribe [::subs/compare-module-right])
         on-close-fn   #(do
-                        (reset! compare? false))]
+                         (reset! compare? false))]
     (fn []
-    [:span (@tr [:compare-version]) " "
-     [ui/Dropdown {:selection   true
-                   :compact     true
-                   :placeholder (@tr [:select-version])
-                   :value       @compare-one
-                   :search      true
-                   :on-change   (ui-callback/value
-                                  (fn [value]
-                                    (reset! compare-one value)
-                                    (when @compare-two
-                                      (reset! compare? true))))
-                   :options     versions-opt}]
-     " vs "
-     [ui/Dropdown {:selection   true
-                   :compact     true
-                   :placeholder (@tr [:select-version])
-                   :value       @compare-two
-                   :search      true
-                   :on-change   (ui-callback/value
-                                  (fn [value]
-                                    (reset! compare-two value)
-                                    (when @compare-one
-                                      (reset! compare? true))))
-                   :options     versions-opt}]
+      (let [module-id   (:id @module)]
+        (when module-id
+          [:span (@tr [:compare-version]) " "
+           [ui/Dropdown {:selection   true
+                         :compact     true
+                         :placeholder (@tr [:select-version])
+                         :value       @compare-one
+                         :search      true
+                         :on-change   (ui-callback/value
+                                        (fn [value]
+                                          (reset! compare-one value)
+                                          (dispatch [::events/get-module-to-compare (str module-id "_" value) "left"])
+                                          (when @compare-two
+                                            (reset! compare? true))))
+                         :options     versions-opt}]
+           " vs "
+           [ui/Dropdown {:selection   true
+                         :compact     true
+                         :placeholder (@tr [:select-version])
+                         :value       @compare-two
+                         :search      true
+                         :on-change   (ui-callback/value
+                                        (fn [value]
+                                          (reset! compare-two value)
+                                          (dispatch [::events/get-module-to-compare (str module-id "_" value) "right"])
+                                          (when @compare-one
+                                            (reset! compare? true))))
+                         :options     versions-opt}]
 
-
-     [ui/Modal {:open       @compare?
-                :close-icon true
-                :dimmer     "blurring"
-                :on-close   on-close-fn}
-      [version-comparison-modal @compare-one @compare-two]
-      ]])))
+           [ui/Modal {:open       @compare?
+                      :dimmer     "blurring"
+                      :on-close   on-close-fn
+                      :size       "large"
+                      :scrolling  true}
+            [version-comparison-modal @module-compare-left @module-compare-right @compare-one @compare-two]]])))))
 
 
 (defn versions-table

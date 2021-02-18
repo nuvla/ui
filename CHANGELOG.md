@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Dependency - NPM diff package
   - Ocre - Decommission voucher resources
   - Help message for notification destination.
 

@@ -404,7 +404,6 @@
         :nuvlabox-vuln-unavailable                    "Vulnerability scanning is not enabled"
         :object-count                                 "Number of data objects: %1"
         :objects                                      "objects"
-        :ocre                                         "OCRE"
         :offset                                       "offset"
         :or-use-github-accout                         "or use your Github account"
         :order                                        "order"

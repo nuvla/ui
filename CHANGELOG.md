@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Changed
+
+  - Ocre - Decommission voucher resources
+  - Help message for notification destination.
+
+## [2.14.1] - 2021-02-16
+
+### Changed
+
+  - Fix: empty filter as default for components notification config.
+
 ## [2.14.0] - 2021-02-16
 
 ### Added

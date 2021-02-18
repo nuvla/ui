@@ -368,6 +368,7 @@
       (let [header (str/capitalize (str (@tr [:add]) " " (@tr [:subscription])))]
         (dispatch [::events/update-notification-subscription-config :enabled true])
         (dispatch [::events/update-notification-subscription-config :category "notification"])
+        (dispatch [::events/update-notification-subscription-config :resource-filter ""])
         [:div]
         [ui/Modal {:open       @visible?
                    :close-icon true
@@ -594,7 +595,6 @@
 
 (defn notif-method-select-dropdown
   [method on-change]
-  (println "notif-method-select-dropdown....")
   (let [tr (subscribe [::i18n-subs/tr])
         local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
@@ -652,8 +652,11 @@
             [notif-method-select-dropdown method on-change]
             [uix/TableRowField (@tr [:destination]), :editable? editable?, :required? true,
              :default-value destination, :spec ::spec/destination,
-             :on-change (partial on-change :destination), :validate-form? @validate-form?]
-            ]]]
+             :on-change (partial on-change :destination), :validate-form? @validate-form?,
+             :input-help-msg (case (:method @notif-method)
+                               "slack" [:a {:href "https://api.slack.com/messaging/webhooks" :target "_blank"} "Slack webhook help page"]
+                               "email" "Space separated list of email addresses"
+                               "")]]]]
 
          [ui/ModalActions
           [uix/Button {:text     (if (true? @is-new?) (@tr [:create]) (@tr [:save]))

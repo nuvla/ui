@@ -142,3 +142,27 @@
 (defn get-major-version
   [full-version]
   (-> (str/split full-version #"\.") first))
+
+(defn format-update-data
+  [form-data]
+  (let [payload-releated (select-keys form-data [:project-name :working-dir
+                                                 :environment :config-files])
+        payload?         (some (fn [[_ v]] (not (str/blank? v))) payload-releated)
+        payload          (when payload?
+                           (-> payload-releated
+                               (update :environment str/split #"\n")
+                               (update :config-files str/split #"\n")))]
+    (cond-> (select-keys form-data [:nuvlabox-release])
+            payload (assoc :payload (general-utils/edn->json payload)))))
+
+
+(defn form-update-data-incomplete?
+  [{:keys [project-name working-dir environment config-files] :as form-data}]
+  (let [payload?            (->> [project-name working-dir environment config-files]
+                                 (some (complement str/blank?))
+                                 boolean)
+        payload-incomplete? (->> [project-name working-dir config-files]
+                                 (some str/blank?)
+                                 boolean)]
+    (or (str/blank? (:nuvlabox-release form-data))
+        (and payload? payload-incomplete?))))

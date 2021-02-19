@@ -357,14 +357,14 @@
         :open      @show?
         :on-close  #(reset! show? false)
         :trigger   (r/as-element
-                     [uix/MenuItemWithIcon
-                      {:name      (@tr [:columns])
-                       :icon-name "columns"
-                       :disabled  (nil? @selected-id)
-                       :on-click  (fn []
-                                    (reset! selections (set @selected-fields))
-                                    (reset! show? true))}])}
-       [ui/ModalHeader (@tr [:fields])]
+                     [uix/MenuItem
+                      {:name     (@tr [:columns])
+                       :icon     "columns"
+                       :disabled (nil? @selected-id)
+                       :on-click (fn []
+                                   (reset! selections (set @selected-fields))
+                                   (reset! show? true))}])}
+       [uix/ModalHeader {:header (@tr [:fields])}]
        [ui/ModalContent
         {:scrolling true}
         (format-field-list available-fields selections)]
@@ -396,7 +396,7 @@
            {:size    "large", :closeIcon true, :open @show?,
             :onClose #(dispatch [::events/hide-add-modal])}
 
-           [ui/ModalHeader (str/capitalize (@tr [:add])) " " @collection-name]
+           [uix/ModalHeader {:header (str (@tr [:add]))} " " @collection-name]
 
            [ui/ModalContent
             [:<>
@@ -458,10 +458,10 @@
 (defn create-button
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [uix/MenuItemWithIcon
-     {:name      (@tr [:add])
-      :icon-name "add"
-      :on-click  #(dispatch [::events/show-add-modal])}]))
+    [uix/MenuItem
+     {:name     (@tr [:add])
+      :icon     "add"
+      :on-click #(dispatch [::events/show-add-modal])}]))
 
 
 (defn delete-resources-button

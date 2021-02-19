@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.messages.views
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
@@ -40,9 +41,7 @@
     :on-close   #(do
                    (reset! visible? false)
                    (when f (f)))}
-   [ui/ModalHeader
-    [ui/Icon {:name icon-name}]
-    header]
+   [uix/ModalHeader {:header header :icon icon-name}]
    (when content
      [ui/ModalContent {:scrolling true}
       [:pre content]])])
@@ -84,7 +83,7 @@
                    :close-icon true
                    :on-close   hide-fn}
 
-         [ui/ModalHeader [ui/Icon {:name icon-name}] header "\u2001\u00a0"]
+         [uix/ModalHeader {:header header :icon icon-name}]
 
          [ui/ModalContent {:scrolling true}
           (when content [:pre content])]

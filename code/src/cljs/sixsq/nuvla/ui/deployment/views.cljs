@@ -432,7 +432,7 @@
                              {:on-click on-click
                               :disabled disabled?}
                              [ui/Icon {:name icon-name}]
-                             button-text]
+                             (str/capitalize button-text)]
                  :else [ui/Icon {:name     icon-name
                                  :style    {:cursor "pointer"}
                                  :color    "red"

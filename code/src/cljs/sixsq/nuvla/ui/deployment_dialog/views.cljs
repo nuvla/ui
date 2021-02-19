@@ -20,6 +20,7 @@
     [sixsq.nuvla.ui.deployment-dialog.views-summary]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]))
 
 
@@ -148,10 +149,7 @@
                            :on-close   hide-fn}
                           show-data? (assoc :size "large"))
 
-         [ui/ModalHeader
-          [ui/Icon {:name @button-icon
-                    :size "large"}]
-          @header-text]
+         [uix/ModalHeader {:header @header-text :icon @button-icon}]
          [ui/ModalContent
           (when @error
             [ui/Message {:error true}

@@ -37,14 +37,14 @@
     [main-components/StickyBar
      [ui/Menu {:borderless true}
       [ui/MenuMenu {:position "left"}
-       [uix/MenuItemWithIcon
-        {:name      (@tr [:add])
-         :icon-name "plus"
-         :position  "right"
-         :on-click  #(do
-                       (dispatch-sync [::events/reset-service-group])
-                       (dispatch-sync [::events/reset-infra-service])
-                       (dispatch [::events/open-add-service-modal]))}]]
+       [uix/MenuItem
+        {:name     (@tr [:add])
+         :icon     "plus"
+         :position "right"
+         :on-click #(do
+                      (dispatch-sync [::events/reset-service-group])
+                      (dispatch-sync [::events/reset-infra-service])
+                      (dispatch [::events/open-add-service-modal]))}]]
       [main-components/RefreshMenu
        {:on-refresh #(dispatch [::events/get-infra-service-groups])}]]]))
 
@@ -177,9 +177,9 @@
         validate-form?  (subscribe [::subs/validate-form?])]
     (dispatch [::events/fetch-coe-management-credentials-available subtypes additional-filter])
     (fn [subtypes additional-filter disabled? value-spec on-change]
-      (let [value     (:management-credential @service)
-            validate? (or @local-validate? @validate-form?)
-            valid?    (s/valid? value-spec value)
+      (let [value           (:management-credential @service)
+            validate?       (or @local-validate? @validate-form?)
+            valid?          (s/valid? value-spec value)
             local-on-change (fn [cred-id]
                               (if (str/blank? cred-id)
                                 (do (dispatch-sync [::events/clear-infra-service-cloud-params])
@@ -212,10 +212,10 @@
 
 (defn ssh-keys-selector
   [disabled?]
-  (let [ssh-keys (subscribe [::subs/ssh-keys])
+  (let [ssh-keys         (subscribe [::subs/ssh-keys])
         ssh-keys-options (subscribe [::subs/ssh-keys-options])
-        form-valid? (subscribe [::subs/form-valid?])
-        local-validate? (r/atom false)]
+        form-valid?      (subscribe [::subs/form-valid?])
+        local-validate?  (r/atom false)]
     (dispatch [::events/get-ssh-keys-infra])
     (fn [disabled?]
       (let [validate? (or @local-validate? (not @form-valid?))]
@@ -248,7 +248,7 @@
   [:span ff/nbsp
    (ff/help-popup (r/as-element
                     [:span [:p text]
-                     (if cred-subtype [:a {:href (utils/cloud-param-default-value cred-subtype :cloud-doc-link) :target "_blank"} "See this link." ])])
+                     (if cred-subtype [:a {:href (utils/cloud-param-default-value cred-subtype :cloud-doc-link) :target "_blank"} "See this link."])])
                   :on (if cred-subtype "focus" "hover"))])
 
 
@@ -266,16 +266,16 @@
                                  (dispatch [::events/update-infra-service name-kw value])
                                  (dispatch [::events/validate-coe-service-form])))]
     (fn []
-      (let [editable? (general-utils/editable? @service @is-new?)
-            mgmt-cred-set? (subscribe [::subs/mgmt-creds-set?])
-            mgmt-cred-subtype (subscribe [::subs/mgmt-cred-subtype])
+      (let [editable?            (general-utils/editable? @service @is-new?)
+            mgmt-cred-set?       (subscribe [::subs/mgmt-creds-set?])
+            mgmt-cred-subtype    (subscribe [::subs/mgmt-cred-subtype])
             {:keys [name description endpoint]} @service
-            cloud-project (or (:cloud-project @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-project))
-            cloud-region (or (:cloud-region @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-region))
-            cloud-vm-size (or (:cloud-vm-size @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-size))
-            cloud-vm-image (or (:cloud-vm-image @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-image))
+            cloud-project        (or (:cloud-project @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-project))
+            cloud-region         (or (:cloud-region @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-region))
+            cloud-vm-size        (or (:cloud-vm-size @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-size))
+            cloud-vm-image       (or (:cloud-vm-image @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-image))
             cloud-security-group (or (:cloud-security-group @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-security-group))
-            cloud-vm-disk-size (if-not @mgmt-cred-set? "" (utils/calc-disk-size (:cloud-vm-disk-size @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-disk-size)))]
+            cloud-vm-disk-size   (if-not @mgmt-cred-set? "" (utils/calc-disk-size (:cloud-vm-disk-size @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-disk-size)))]
         [:<>
 
          [acl/AclButton {:default-value (:acl @service)
@@ -312,7 +312,7 @@
            [row-csp-credential-selector cred-views/infrastructure-service-csp-subtypes nil
             (boolean (:endpoint @service)) (if (:endpoint @service) any? ::spec/management-credential)
             (partial on-change :management-credential)]]]
-         [ui/Container {:style {:margin  "5px" :display "inline-block"}}
+         [ui/Container {:style {:margin "5px" :display "inline-block"}}
           [ui/Input {:label       (@tr [:coe-cluster-size])
                      :placeholder default-multiplicity
                      :disabled    (not @mgmt-cred-set?)
@@ -320,16 +320,16 @@
                      :size        "mini"
                      :type        "number"
                      :on-change   (ui-callback/input-callback
-                                   #(do
-                                     (cond
-                                       (number? (general-utils/str->int %)) (reset! multiplicity (general-utils/str->int %))
-                                       (empty? %) (reset! multiplicity 1))
-                                     (on-change :multiplicity @multiplicity)))
+                                    #(do
+                                       (cond
+                                         (number? (general-utils/str->int %)) (reset! multiplicity (general-utils/str->int %))
+                                         (empty? %) (reset! multiplicity 1))
+                                       (on-change :multiplicity @multiplicity)))
                      :step        1
                      :min         1}]]
 
          [:span
-          [ui/Checkbox {:key            "coe-manager-install"
+          [ui/Checkbox {:key             "coe-manager-install"
                         :label           (if (= subtype "swarm")
                                            (@tr [:coe-install-manager-portainer])
                                            (@tr [:coe-install-manager-rancher]))
@@ -486,7 +486,7 @@
                      :close-icon true
                      :on-close   #(dispatch [::events/close-service-modal])}
 
-           [ui/ModalHeader header]
+           [uix/ModalHeader {:header header}]
 
            [ui/ModalContent {:scrolling false}
             [utils-validation/validation-error-message ::subs/form-valid?]
@@ -509,7 +509,7 @@
                  :close-icon true
                  :on-close   #(dispatch [::events/close-add-service-modal])}
 
-       [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
+       [uix/ModalHeader {:header (@tr [:add]) :icon "add"}]
 
        [ui/ModalContent {:scrolling false}
         [:div {:style {:padding-bottom 20}} (@tr [:register-swarm-note])]

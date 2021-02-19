@@ -139,7 +139,7 @@
                       [ui/MenuItem {:on-click #(reset! show? true)}
                        [ui/Icon {:name icon}]
                        title])}
-       [ui/ModalHeader [:div title]]
+       [uix/ModalHeader {:header title}]
        [ui/ModalContent
         [ui/Form
          [ui/FormDropdown {:label         "Execution mode"
@@ -211,7 +211,7 @@
                         [ui/MenuItem {:on-click #(reset! show? true)}
                          [ui/Icon {:name icon}]
                          title])}
-         [ui/ModalHeader [:div title]]
+         [uix/ModalHeader {:header title}]
          [ui/ModalContent
           (when correct-nb?
             [:<>

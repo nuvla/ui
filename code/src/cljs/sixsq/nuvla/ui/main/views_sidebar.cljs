@@ -29,15 +29,15 @@
         active?  (subscribe [::subs/nav-url-active? url])]
 
     ^{:key (name label-kw)}
-    [uix/MenuItemWithIcon
-     {:name      (utils/capitalize-first-letter (or (@tr [label-kw]) (name label-kw)))
-      :icon-name icon
-      :style     {:min-width  sidebar-width
-                  :overflow-x "hidden"}
-      :active    @active?
-      :on-click  (if (and protected? (not @is-user?))
-                   #(dispatch [::history-events/navigate "sign-in"])
-                   #(navigate url))}]))
+    [uix/MenuItem
+     {:name     (or (@tr [label-kw]) (name label-kw))
+      :icon     icon
+      :style    {:min-width  sidebar-width
+                 :overflow-x "hidden"}
+      :active   @active?
+      :on-click (if (and protected? (not @is-user?))
+                  #(dispatch [::history-events/navigate "sign-in"])
+                  #(navigate url))}]))
 
 
 (defn logo-item
@@ -61,9 +61,9 @@
   "Provides the sidebar menu for selecting major components/panels of the
    application."
   []
-  (let [show?         @(subscribe [::subs/sidebar-open?])
-        iframe?       @(subscribe [::subs/iframe?])
-        pages-list    @(subscribe [::subs/pages-list])]
+  (let [show?      @(subscribe [::subs/sidebar-open?])
+        iframe?    @(subscribe [::subs/iframe?])
+        pages-list @(subscribe [::subs/pages-list])]
     [ui/Menu {:id         "nuvla-ui-sidebar"
               :style      {:transition "0.5s"
                            :width      (if show? sidebar-width "0")}

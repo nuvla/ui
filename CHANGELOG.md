@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Deployment detail - Version behind fix
   - Edge details - Update Nuvlabox modal support a payload
   - Ocre - Decommission voucher resources
   - Help message for notification destination.

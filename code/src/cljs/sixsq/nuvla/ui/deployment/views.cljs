@@ -116,8 +116,9 @@
     {:menuItem {:content (r/as-element [:span (@tr [:module-version])])
                 :key     "versions"
                 :icon    "linkify"}
-     :render   (fn [] (r/as-element [ui/TabPane
-                                     [views-versions/versions-table @module-versions @module-content-id]]))}))
+     :render   (fn [] (r/as-element
+                        [ui/TabPane
+                         [views-versions/versions-table @module-versions @module-content-id]]))}))
 
 
 (defn item-to-row
@@ -587,15 +588,16 @@
         (@tr [:deployment-access-url]) " "
         [:a {:on-click #(dispatch [::history-events/navigate "credentials"]) :href "#"}
          (@tr [:create-vpn-credential])] " " (@tr [:and]) " "
-        [:a {:href "https://docs.nuvla.io/nuvla/vpn" :target "_blank"} (@tr [:connect-vpn])] "."]])))
+        [:a {:href   "https://docs.nuvla.io/nuvla/vpn"
+             :target "_blank"} (@tr [:connect-vpn])] "."]])))
 
 
 (defn up-to-date?
   [v versions]
   (when v
     (let [tr           (subscribe [::i18n-subs/tr])
-          last-version (count versions)]
-      (if (= v (dec last-version))
+          last-version (ffirst versions)]
+      (if (= v last-version)
         [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date]) ")"]
         [:span [ui/Icon {:name "warning", :color "orange"}]
          (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))]))))

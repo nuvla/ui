@@ -139,7 +139,7 @@
                       [ui/MenuItem {:on-click #(reset! show? true)}
                        [ui/Icon {:name icon}]
                        title])}
-       [ui/ModalHeader [:div title]]
+       [uix/ModalHeader {:header title}]
        [ui/ModalContent
         [ui/Form
          [ui/FormDropdown {:label         "Execution mode"
@@ -192,7 +192,8 @@
         on-change-fn  #(swap! form-data assoc :nuvlabox-release %)
         on-success-fn close-fn
         on-error-fn   close-fn
-        on-click-fn   #(dispatch [::events/operation id operation @form-data
+        on-click-fn   #(dispatch [::events/operation id operation
+                                  (utils/format-update-data @form-data)
                                   on-success-fn on-error-fn])]
     (fn [{:keys [id] :as resource} operation show? title icon button-text]
       (when (not= (:parent @status))
@@ -210,7 +211,7 @@
                         [ui/MenuItem {:on-click #(reset! show? true)}
                          [ui/Icon {:name icon}]
                          title])}
-         [ui/ModalHeader [:div title]]
+         [uix/ModalHeader {:header title}]
          [ui/ModalContent
           (when correct-nb?
             [:<>
@@ -226,19 +227,51 @@
                                   :target "_blank"}
                               "See more"]])}])
              [ui/Segment
-              [:b "Current Engine Version: "]
+              [:b (@tr [:current-version])]
               [:i nb-version]]])
           [ui/Segment
-           [:b "Update to: "]
-           [DropdownReleases {:placeholder "select a version"
-                              :on-change   (ui-callback/value #(on-change-fn %))}]]]
+           [:b (@tr [:update-to])]
+           [DropdownReleases {:placeholder (@tr [:select-version])
+                              :on-change   (ui-callback/value #(on-change-fn %))}]]
+          [uix/Accordion
+           [:<>
+            [ui/Form
+             [ui/FormInput {:label         "Project"
+                            :placeholder   "nuvlabox"
+                            :required      true
+                            :default-value (:project-name @form-data)
+                            :on-change     (ui-callback/input-callback
+                                             #(swap! form-data assoc :project-name %))}]
+             [ui/FormInput {:label         "Working directory"
+                            :placeholder   "/home/ubuntu/nuvlabox-engine"
+                            :required      true
+                            :default-value (:working-dir @form-data)
+                            :on-change     (ui-callback/input-callback
+                                             #(swap! form-data assoc :working-dir %))}]
+             [ui/FormField
+              [:label [general-utils/mandatory-name "Config files"]]
+              [ui/TextArea {:placeholder   "docker-compose.yml\ndocker-compose.gpu.yml\n..."
+                            :required      true
+                            :default-value (:config-files @form-data)
+                            :on-change     (ui-callback/input-callback
+                                             #(swap! form-data assoc :config-files %))}]]
+             [ui/FormField
+              [:label "Environment"]
+              [ui/TextArea {:placeholder   "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
+                            :default-value (:environment @form-data)
+                            :on-change     (ui-callback/input-callback
+                                             #(swap! form-data assoc :environment %))}]]]]
+           :label (@tr [:advanced])
+           :title-size :h4
+           :default-open false]
+          ]
          [ui/ModalActions
           [uix/Button
            {:text     (@tr [:cancel])
             :on-click close-fn}]
           [uix/Button
            {:text     button-text
-            :disabled (str/blank? (:nuvlabox-release @form-data))
+            :disabled (utils/form-update-data-incomplete? @form-data)
             :primary  true
             :on-click on-click-fn}]]]))))
 

@@ -57,7 +57,7 @@
                         (dispatch [::events/close-modal])
                         (reset! form @(fv/init-form form-conf)))}
 
-         [ui/ModalHeader (@tr [:invite-user])]
+         [uix/ModalHeader {:header (@tr [:invite-user])}]
 
          [ui/ModalContent
 

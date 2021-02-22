@@ -7,6 +7,11 @@
 ### Changed
 
   - Dependency - NPM react-diff-viewer package
+  - Menubar buttons - Capitalize all of them
+  - Modal headers - Capitalize all of them
+  - Format operation - some action names are lower case
+  - Deployment detail - Version behind fix
+  - Edge details - Update Nuvlabox modal support a payload
   - Ocre - Decommission voucher resources
   - Help message for notification destination.
 

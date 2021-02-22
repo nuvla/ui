@@ -62,6 +62,9 @@
 
 (s/def ::original-module any?)
 
+
+(s/def ::submit-loading? boolean?)
+
 (s/def ::db (s/keys :req [::deploy-modal-visible?
                           ::deployment
                           ::infra-services
@@ -89,7 +92,8 @@
                           ::check-dct
                           ::module-info
                           ::selected-version
-                          ::original-module]))
+                          ::original-module
+                          ::submit-loading?]))
 
 
 (def step-states {:data           {:step-id :data
@@ -138,4 +142,5 @@
                ::check-dct                  nil
                ::module-info                nil
                ::selected-version           nil
-               ::original-module            nil})
+               ::original-module            nil
+               ::submit-loading?            false})

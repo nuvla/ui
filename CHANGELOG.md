@@ -7,6 +7,7 @@
 ### Changed
 
   - Dependency - NPM react-diff-viewer package
+  - Deployment modal - Submit button show loading when clicked
   - Menubar buttons - Capitalize all of them
   - Modal headers - Capitalize all of them
   - Format operation - some action names are lower case

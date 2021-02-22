@@ -371,15 +371,22 @@
                                     :content content})))
 
 
+(reg-event-db
+  ::set-submit-loading?
+  (fn [db [_ loading?]]
+    (assoc db ::spec/submit-loading? loading?)))
+
+
 (reg-event-fx
   ::deployment-operation
   (fn [_ [_ id operation]]
     (let [callback (fn [response]
                      (if (instance? js/Error response)
-                       (dispatch [::set-error-message
-                                  (str "Error occured during \"" operation
-                                       "\" action on deployment")
-                                  (-> response response/parse-ex-info :message)])
+                       (do (dispatch [::set-error-message
+                                      (str "Error occured during \"" operation
+                                           "\" action on deployment")
+                                      (-> response response/parse-ex-info :message)])
+                           (dispatch [::set-submit-loading? false]))
                        (let [{:keys [message]} (response/parse response)
                              success-msg {:header  (str operation " action called successfully")
                                           :content message
@@ -400,14 +407,17 @@
           dep           (assoc deployment :execution-mode exec-mode)
           edit-callback (fn [response]
                           (if (instance? js/Error response)
-                            (dispatch [::set-error-message
-                                       "Error during edition of deployment"
-                                       (-> response response/parse-ex-info :message)])
+                            (do
+                              (dispatch [::set-error-message
+                                        "Error during edition of deployment"
+                                        (-> response response/parse-ex-info :message)])
+                              (dispatch [::set-submit-loading? false]))
                             (do
                               (dispatch [::deployment-operation resource-id operation])
                               (dispatch [::intercom-events/set-event "Last app launch"
                                          (time/timestamp)]))))]
-      {::cimi-api-fx/edit [resource-id dep edit-callback]})))
+      {:db (assoc db ::spec/submit-loading? true)
+       ::cimi-api-fx/edit [resource-id dep edit-callback]})))
 
 
 (reg-event-db

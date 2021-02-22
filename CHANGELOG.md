@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+### Changed
+
+  - Deployment modal - Submit button show loading when clicked
+  - Menubar buttons - Capitalize all of them
+  - Modal headers - Capitalize all of them
+  - Format operation - some action names are lower case
+  - Deployment detail - Version behind fix
+  - Edge details - Update Nuvlabox modal support a payload
+  - Ocre - Decommission voucher resources
+  - Help message for notification destination.
+
+## [2.14.1] - 2021-02-16
+
+### Changed
+
+  - Fix: empty filter as default for components notification config.
+
 ## [2.14.0] - 2021-02-16
 
 ### Added

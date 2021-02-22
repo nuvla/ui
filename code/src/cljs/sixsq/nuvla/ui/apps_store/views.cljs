@@ -96,10 +96,10 @@
 (defn control-bar-projects []
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Menu {:borderless true}
-     [uix/MenuItemWithIcon
-      {:name      (@tr [:add])
-       :icon-name "add"
-       :on-click  #(dispatch [::apps-events/open-add-modal])}]
+     [uix/MenuItem
+      {:name     (@tr [:add])
+       :icon     "add"
+       :on-click #(dispatch [::apps-events/open-add-modal])}]
      [refresh-menu]]))
 
 

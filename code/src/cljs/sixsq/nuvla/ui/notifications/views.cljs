@@ -5,11 +5,11 @@
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.history.views :as history]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.notifications.events :as events]
     [sixsq.nuvla.ui.notifications.spec :as spec]
     [sixsq.nuvla.ui.notifications.subs :as subs]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -119,16 +119,15 @@
 
 (defn subs-notif-method-select-or-add
   [current-method notif-methods save?]
-  (let [create-method? (empty? @notif-methods)]
-    (fn [current-method notif-methods]
-      [:<>
-       [subs-notif-method-dropdown current-method notif-methods save? nil]
-       [subs-notif-method-create-button]])))
+  (fn [current-method notif-methods]
+    [:<>
+     [subs-notif-method-dropdown current-method notif-methods save? nil]
+     [subs-notif-method-create-button]]))
 
 
 (defn DeleteButtonSubscriptions
   [sub]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr      (subscribe [::i18n-subs/tr])
         {:keys [id name description]} sub
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
@@ -159,8 +158,7 @@
       [:span [history/link (str "api/" resource-id) resource-id]]]
      [ui/TableCell {:floated :right
                     :width   1
-                    :align   :right
-                    :style   {}}
+                    :align   :right}
 
       (when (general-utils/can-edit? notif-subs)
         [ui/Icon {:name     :cog
@@ -171,10 +169,10 @@
 
 (defn manage-subscriptions-modal
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr            (subscribe [::i18n-subs/tr])
         notif-methods (subscribe [::subs/notification-methods])
         subscriptions (subscribe [::subs/notification-subscriptions])
-        visible? (subscribe [::subs/notification-subscriptions-modal-visible?])]
+        visible?      (subscribe [::subs/notification-subscriptions-modal-visible?])]
     (dispatch [::events/get-notification-methods])
     (dispatch [::events/get-notification-subscriptions])
     (fn []
@@ -183,7 +181,7 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/close-notification-subscription-modal])}
 
-         [ui/ModalHeader header]
+         [uix/ModalHeader {:header header}]
 
          [ui/ModalContent {:scrolling false}
           [ui/Table {:style {:margin-top 10}}
@@ -231,14 +229,14 @@
 
 (defn edit-subscription-modal
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        notif-methods (subscribe [::subs/notification-methods])
-        visible? (subscribe [::subs/edit-subscription-modal-visible?])
+  (let [tr             (subscribe [::i18n-subs/tr])
+        notif-methods  (subscribe [::subs/notification-methods])
+        visible?       (subscribe [::subs/edit-subscription-modal-visible?])
         validate-form? (subscribe [::subs/validate-form?])
-        subscription (subscribe [::subs/subscription])
-        on-change (fn [name-kw value]
-                    (dispatch [::events/update-subscription name-kw value])
-                    (dispatch [::events/validate-subscription-form]))]
+        subscription   (subscribe [::subs/subscription])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-subscription name-kw value])
+                         (dispatch [::events/validate-subscription-form]))]
     (dispatch [::events/get-notification-methods])
     (fn []
       (let [header (str/capitalize (str (@tr [:edit]) " " (@tr [:subscription])))
@@ -248,7 +246,7 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/close-edit-subscription-modal])}
 
-         [ui/ModalHeader header]
+         [uix/ModalHeader {:header header}]
 
          [ui/ModalContent {:scrolling false}
           [utils-validation/validation-error-message ::subs/form-valid?]
@@ -325,9 +323,8 @@
 (defn get-criteria-condition-options
   []
   (let [component (subscribe [::subs/collection])
-        metric (subscribe [::subs/criteria-metric])]
-    ((keyword @metric) (get criteria-condition-options @component))
-    ))
+        metric    (subscribe [::subs/criteria-metric])]
+    ((keyword @metric) (get criteria-condition-options @component))))
 
 (def component-options
   [{:key "nuvlabox", :text "NuvlaBox Telemetry", :value "nuvlabox"}
@@ -350,16 +347,16 @@
 
 (defn add-subscription-config-modal
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        visible? (subscribe [::subs/subscription-config-modal-visible?])
-        validate-form? (subscribe [::subs/validate-form?])
-        form-valid? (subscribe [::subs/form-valid?])
-        on-change (fn [name-kw value]
-                    (dispatch [::events/update-notification-subscription-config name-kw value])
-                    (dispatch [::events/validate-notification-subscription-config-form]))
-        notif-methods (subscribe [::subs/notification-methods])
-        collection (subscribe [::subs/collection])
-        criteria-metric (subscribe [::subs/criteria-metric])
+  (let [tr                (subscribe [::i18n-subs/tr])
+        visible?          (subscribe [::subs/subscription-config-modal-visible?])
+        validate-form?    (subscribe [::subs/validate-form?])
+        form-valid?       (subscribe [::subs/form-valid?])
+        on-change         (fn [name-kw value]
+                            (dispatch [::events/update-notification-subscription-config name-kw value])
+                            (dispatch [::events/validate-notification-subscription-config-form]))
+        notif-methods     (subscribe [::subs/notification-methods])
+        collection        (subscribe [::subs/collection])
+        criteria-metric   (subscribe [::subs/criteria-metric])
         components-number (subscribe [::subs/components-number])]
     (dispatch [::events/get-notification-methods])
     (dispatch [::events/set-components-number 0])
@@ -368,6 +365,7 @@
       (let [header (str/capitalize (str (@tr [:add]) " " (@tr [:subscription])))]
         (dispatch [::events/update-notification-subscription-config :enabled true])
         (dispatch [::events/update-notification-subscription-config :category "notification"])
+        (dispatch [::events/update-notification-subscription-config :resource-filter ""])
         [:div]
         [ui/Modal {:open       @visible?
                    :close-icon true
@@ -375,7 +373,7 @@
                                   (dispatch [::events/reset-subscription-config-all])
                                   (dispatch [::events/close-add-subscription-config-modal]))}
 
-         [ui/ModalHeader header]
+         [uix/ModalHeader {:header header}]
 
          [ui/ModalContent {:scrolling false}
           [utils-validation/validation-error-message ::subs/form-valid?]
@@ -469,21 +467,21 @@
 
 (defn edit-subscription-config-modal
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        visible? (subscribe [::subs/edit-subscription-config-modal-visible?])
-        validate-form? (subscribe [::subs/validate-form?])
-        form-valid? (subscribe [::subs/form-valid?])
-        on-change (fn [name-kw value]
-                    (dispatch [::events/update-notification-subscription-config name-kw value])
-                    (dispatch [::events/validate-notification-subscription-config-form]))
-        notif-methods (subscribe [::subs/notification-methods])
-        criteria-metric (subscribe [::subs/criteria-metric])
-        components-number (subscribe [::subs/components-number])
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        visible?            (subscribe [::subs/edit-subscription-config-modal-visible?])
+        validate-form?      (subscribe [::subs/validate-form?])
+        form-valid?         (subscribe [::subs/form-valid?])
+        on-change           (fn [name-kw value]
+                              (dispatch [::events/update-notification-subscription-config name-kw value])
+                              (dispatch [::events/validate-notification-subscription-config-form]))
+        notif-methods       (subscribe [::subs/notification-methods])
+        criteria-metric     (subscribe [::subs/criteria-metric])
+        components-number   (subscribe [::subs/components-number])
         subscription-config (subscribe [::subs/notification-subscription-config])]
     (dispatch [::events/get-notification-methods])
     (dispatch [::events/reset-tags-available])
     (fn []
-      (let [header (str/capitalize (str (@tr [:edit]) " " (@tr [:subscription])))
+      (let [header     (str/capitalize (str (@tr [:edit]) " " (@tr [:subscription])))
             {:keys [name description method-id collection resource-filter criteria]} @subscription-config
             filter-tag (last (str/split (str/replace (or resource-filter "") #"'" "") #"="))]
         (dispatch [::events/fetch-tags-available collection])
@@ -494,7 +492,7 @@
                                   (dispatch [::events/reset-subscription-config-all])
                                   (dispatch [::events/close-edit-subscription-config-modal]))}
 
-         [ui/ModalHeader header]
+         [uix/ModalHeader {:header header}]
 
          [ui/ModalContent {:scrolling false}
           [utils-validation/validation-error-message ::subs/form-valid?]
@@ -594,8 +592,7 @@
 
 (defn notif-method-select-dropdown
   [method on-change]
-  (println "notif-method-select-dropdown....")
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr              (subscribe [::i18n-subs/tr])
         local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
     (fn [method on-change]
@@ -619,25 +616,25 @@
 
 (defn add-notification-method-modal
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        visible? (subscribe [::subs/notification-method-modal-visible?])
+  (let [tr             (subscribe [::i18n-subs/tr])
+        visible?       (subscribe [::subs/notification-method-modal-visible?])
         validate-form? (subscribe [::subs/validate-form?])
-        form-valid? (subscribe [::subs/form-valid?])
-        notif-method (subscribe [::subs/notification-method])
-        on-change (fn [name-kw value]
-                    (dispatch [::events/update-notification-method name-kw value])
-                    (dispatch [::events/validate-notification-method-form]))
-        is-new? (subscribe [::subs/is-new?])]
+        form-valid?    (subscribe [::subs/form-valid?])
+        notif-method   (subscribe [::subs/notification-method])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-notification-method name-kw value])
+                         (dispatch [::events/validate-notification-method-form]))
+        is-new?        (subscribe [::subs/is-new?])]
     (fn []
       (let [editable? (general-utils/editable? @notif-method @is-new?)
-            header (str/capitalize (str (if (true? @is-new?) (@tr [:new]) (@tr [:update])) " " (@tr [:notification-method])))
+            header    (str/capitalize (str (if (true? @is-new?) (@tr [:new]) (@tr [:update])) " " (@tr [:notification-method])))
             {:keys [name description method destination]} @notif-method]
         [:div]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-update-notification-method-modal])}
 
-         [ui/ModalHeader header]
+         [uix/ModalHeader {:header header}]
 
          [ui/ModalContent {:scrolling false}
           [utils-validation/validation-error-message ::subs/form-valid?]
@@ -652,8 +649,11 @@
             [notif-method-select-dropdown method on-change]
             [uix/TableRowField (@tr [:destination]), :editable? editable?, :required? true,
              :default-value destination, :spec ::spec/destination,
-             :on-change (partial on-change :destination), :validate-form? @validate-form?]
-            ]]]
+             :on-change (partial on-change :destination), :validate-form? @validate-form?,
+             :input-help-msg (case (:method @notif-method)
+                               "slack" [:a {:href "https://api.slack.com/messaging/webhooks" :target "_blank"} "Slack webhook help page"]
+                               "email" "Space separated list of email addresses"
+                               "")]]]]
 
          [ui/ModalActions
           [uix/Button {:text     (if (true? @is-new?) (@tr [:create]) (@tr [:save]))
@@ -668,10 +668,10 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [main-components/StickyBar
      [ui/Menu {:borderless true}
-      [uix/MenuItemWithIcon
-       {:name      (@tr [:add])
-        :icon-name "add"
-        :on-click  #(dispatch [::events/open-add-subscription-config-modal {}])}]]]))
+      [uix/MenuItem
+       {:name     (@tr [:add])
+        :icon     "add"
+        :on-click #(dispatch [::events/open-add-subscription-config-modal {}])}]]]))
 
 
 (defn MenuBarNotificationMethod
@@ -679,17 +679,17 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [main-components/StickyBar
      [ui/Menu {:borderless true}
-      [uix/MenuItemWithIcon
-       {:name      (@tr [:add])
-        :icon-name "add"
-        :on-click  #(dispatch [::events/open-add-update-notification-method-modal {} true])}]
+      [uix/MenuItem
+       {:name     (@tr [:add])
+        :icon     "add"
+        :on-click #(dispatch [::events/open-add-update-notification-method-modal {} true])}]
       [main-components/RefreshMenu
        {:on-refresh #(dispatch [::events/get-notification-methods])}]]]))
 
 
 (defn DeleteButtonNotificationMethod
   [notif-method]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr      (subscribe [::i18n-subs/tr])
         {:keys [id name description]} notif-method
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
@@ -719,8 +719,7 @@
     [:span destination]]
    [ui/TableCell {:floated :right
                   :width   1
-                  :align   :right
-                  :style   {}}
+                  :align   :right}
     (when (general-utils/can-delete? notif-method)
       [DeleteButtonNotificationMethod notif-method])
     (when (general-utils/can-edit? notif-method)
@@ -732,7 +731,7 @@
 
 (defn DeleteButtonSubscriptionConfig
   [sub]
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr      (subscribe [::i18n-subs/tr])
         {:keys [id name description]} sub
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
@@ -780,21 +779,21 @@
 
 (defn TabSubscriptions
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr                   (subscribe [::i18n-subs/tr])
         subscription-configs (subscribe [::subs/notification-subscription-configs])
-        notif-methods (subscribe [::subs/notification-methods])
-        subscriptions (subscribe [::subs/subscriptions])
-        on-change (fn [name-kw value]
-                    (dispatch-sync [::events/update-notification-subscription-config name-kw value])
-                    (dispatch [::events/validate-notification-subscription-config-form]))]
+        notif-methods        (subscribe [::subs/notification-methods])
+        subscriptions        (subscribe [::subs/subscriptions])
+        on-change            (fn [name-kw value]
+                               (dispatch-sync [::events/update-notification-subscription-config name-kw value])
+                               (dispatch [::events/validate-notification-subscription-config-form]))]
     (dispatch [::events/get-notification-subscription-configs])
     (dispatch [::events/get-notification-subscriptions])
     (dispatch [::events/get-notification-methods])
     (fn []
       (let [infra-service-subs-confs (filter #(= "infrastructure-service" (:resource-kind %)) @subscription-configs)
-            nuvlabox-subs-confs (filter #(= "nuvlabox" (:resource-kind %)) @subscription-configs)
-            subs-confs-all {"infrastructure-service" infra-service-subs-confs
-                            "nuvlabox"               nuvlabox-subs-confs}]
+            nuvlabox-subs-confs      (filter #(= "nuvlabox" (:resource-kind %)) @subscription-configs)
+            subs-confs-all           {"infrastructure-service" infra-service-subs-confs
+                                      "nuvlabox"               nuvlabox-subs-confs}]
         [ui/TabPane
          [MenuBarSubscription]
          (if (empty? @subscription-configs)
@@ -840,8 +839,7 @@
                        (:method-id subs-conf) notif-methods true (:resource-kind subs-conf) (:id subs-conf)]]
                      [ui/TableCell {:floated :left
                                     :width   1
-                                    :align   :right
-                                    :style   {}}
+                                    :align   :right}
                       (let [subscrs (filter #(= (:id subs-conf) (:parent %)) @subscriptions)]
                         [uix/Button {:text     (@tr [:manage])
                                      :positive true
@@ -851,8 +849,7 @@
                       ]
                      [ui/TableCell {:floated :right
                                     :width   1
-                                    :align   :right
-                                    :style   {}}
+                                    :align   :right}
                       (when (general-utils/can-delete? subs-conf)
                         [DeleteButtonSubscriptionConfig subs-conf])
                       (when (general-utils/can-edit? subs-conf)
@@ -861,7 +858,7 @@
                                   :style    {:cursor :pointer}
                                   :on-click #(dispatch [::events/open-edit-subscription-config-modal subs-conf])}])]])
                   ]]
-                #_[:<> [:divNB RAM usage ]]
+                #_[:<> [:divNB RAM usage]]
                 :title-size :h4
                 :default-open false
                 :count (count resource-subs-confs)
@@ -872,7 +869,7 @@
 
 (defn TabMethods
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr          (subscribe [::i18n-subs/tr])
         all-methods (subscribe [::subs/notification-methods])]
     (dispatch [::events/get-notification-methods])
     (fn []

@@ -611,3 +611,9 @@
     (when (and (not deployment-start?)
                (not= (:cent-amount-daily current-price) (:cent-amount-daily new-price)))
       new-price)))
+
+
+(reg-sub
+  ::submit-loading?
+  (fn [db]
+    (::spec/submit-loading? db)))

@@ -31,19 +31,19 @@
                        (str/starts-with? name "fas ")) (-> (dissoc :name)
                                                            (assoc :className name)))])
 
-(defn MenuItemWithIcon
+(defn MenuItem
   "Provides a menu item that reuses the name for the :name property and as the
    MenuItem label. The optional icon-name specifies the icon to use. The
    loading? parameter specifies if the icon should be spinning."
-  [{:keys [name icon-name loading?] :as options}]
+  [{:keys [name icon loading?] :as options}]
   (let [final-opts (-> options
-                       (dissoc :icon-name :loading?)
+                       (dissoc :icon :loading?)
                        (assoc :aria-label name))]
     [ui/MenuItem final-opts
-     (when icon-name
-       [Icon (cond-> {:name icon-name}
+     (when icon
+       [Icon (cond-> {:name icon}
                      (boolean? loading?) (assoc :loading loading?))])
-     name]))
+     (str/capitalize name)]))
 
 
 (defn MenuItemForSearch
@@ -61,23 +61,6 @@
      name]))
 
 
-(defn MenuItemForFilter
-  "Provides a standard menu item for the filter button that toggles the
-   visibility of a filter panel. The :name property is used as the label and
-   for the :aria-label value."
-  [{:keys [name visible?] :as options}]
-  (let [final-opts (-> options
-                       (dissoc :visible?)
-                       (assoc :aria-label name))]
-    [ui/MenuMenu {:position "right"}
-     [ui/MenuItem final-opts
-      [ui/IconGroup
-       [ui/Icon {:name "filter"}]
-       [ui/Icon {:name   (if visible? "chevron down" "chevron right")
-                 :corner true}]]
-      name]]))
-
-
 (defn MenuItemSectionToggle
   "Provides a standard menu item that is intended to toggle the visibility of a
    section. There is no textual label."
@@ -88,6 +71,14 @@
         icon-name  (if visible? "chevron down" "chevron up")]
     [ui/MenuItem final-opts
      [ui/Icon {:name icon-name}]]))
+
+
+(defn ModalHeader
+  [{:keys [header icon]}]
+  [ui/ModalHeader
+   (when icon
+     [ui/Icon {:name "add"}])
+   (str/capitalize header)])
 
 
 (defn Pagination
@@ -192,11 +183,11 @@
 
 (defn TableRowField
   [name & {:keys [key placeholder default-value spec on-change
-                  required? editable? validate-form? type]}]
+                  required? editable? validate-form? type input-help-msg]}]
   (let [local-validate? (r/atom false)
         active-input?   (r/atom false)]
     (fn [name & {:keys [key placeholder default-value spec on-change required?
-                        editable? validate-form? type]
+                        editable? validate-form? type input-help-msg]
                  :or   {editable? true, spec any?, type :input}}]
       (let [name-label  (cond-> name
                                 (and editable? required?) (general-utils/mandatory-name))
@@ -215,6 +206,7 @@
          [ui/TableCell {:collapsing true} name-label]
          ^{:key (or key name)}
          [ui/TableCell
+          input-help-msg
           (if editable?
             (if (#{:input :password} type)
               [ui/Input (assoc common-opts
@@ -256,7 +248,7 @@
                                  (reset! clicked? false))}
                   (some? open) (assoc :open open))
 
-       (when header [ui/ModalHeader header])
+       (when header [ui/ModalHeader (str/capitalize header)])
 
        [ui/ModalContent {:scrolling false}
         (when content content)
@@ -303,7 +295,7 @@
 
 (defn WarningMsgNoElements
   [message]
-  (let [tr    (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (fn [message]
       [ui/Message {:warning true}
        [ui/Icon {:name "warning sign"}]

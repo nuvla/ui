@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.data.views
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.apps.utils :as application-utils]
@@ -33,13 +34,13 @@
   (let [tr        (subscribe [::i18n-subs/tr])
         data-sets (subscribe [::subs/selected-data-set-ids])]
     (fn []
-      [uix/MenuItemWithIcon
-       {:name      (@tr [:process])
-        :disabled  (not (seq @data-sets))
-        :icon-name "rocket"
-        :position  "left"
-        :on-click  #(dispatch [::main-events/subscription-required-dispatch
-                               [::events/open-application-select-modal]])}])))
+      [uix/MenuItem
+       {:name     (@tr [:process])
+        :disabled (not (seq @data-sets))
+        :icon     "rocket"
+        :position "left"
+        :on-click #(dispatch [::main-events/subscription-required-dispatch
+                              [::events/open-application-select-modal]])}])))
 
 
 (defn search-header []
@@ -162,7 +163,7 @@
                    :close-icon true
                    :on-close   hide-fn}
 
-         [ui/ModalHeader [ui/Icon {:name "sitemap"}] "\u00a0" (@tr [:select-application])]
+         [uix/ModalHeader {:header (@tr [:select-application]) :icon "sitemap"}]
 
          [ui/ModalContent {:scrolling true}
           [ui/ModalDescription
@@ -214,7 +215,7 @@
                    :close-icon true
                    :on-close   hide-fn}
 
-         [ui/ModalHeader [ui/Icon {:name "sitemap"}] "\u00a0" (@tr [:select-application])]
+         [uix/ModalHeader {:header (@tr [:select-application]) :icon "sitemap"}]
 
          [ui/ModalContent {:scrolling true}
           [ui/ModalDescription

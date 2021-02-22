@@ -536,7 +536,7 @@
                                       ;           active-tab-index])
                                       )}
 
-           [ui/ModalHeader [:span [ui/Icon {:name icon}] " " header]]
+           [uix/ModalHeader {:header header :icon icon}]
 
            [ui/ModalContent {:scrolling false}
             [utils-validation/validation-error-message ::subs/form-valid?]
@@ -562,7 +562,7 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-credential-modal])}
 
-         [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
+         [uix/ModalHeader {:header (@tr [:add]) :icon "add"}]
 
          [ui/ModalContent {:scrolling false}
           [:div {:style {:padding-bottom 20}} (@tr [:credential-choose-type])]
@@ -717,7 +717,7 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/set-generated-credential-modal nil])}
 
-         [ui/ModalHeader (@tr [:credential-generate])]
+         [uix/ModalHeader {:header (@tr [:credential-generate])}]
 
          [ui/ModalContent {:scrolling false}
 
@@ -750,10 +750,10 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [main-components/StickyBar
      [ui/Menu {:borderless true}
-      [uix/MenuItemWithIcon
-       {:name      (@tr [:add])
-        :icon-name "add"
-        :on-click  #(dispatch [::events/open-add-credential-modal])}]
+      [uix/MenuItem
+       {:name     (@tr [:add])
+        :icon     "add"
+        :on-click #(dispatch [::events/open-add-credential-modal])}]
       [main-components/RefreshMenu
        {:on-refresh #(dispatch [::events/get-credentials])}]]]))
 

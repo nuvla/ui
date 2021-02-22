@@ -47,7 +47,7 @@
       :danger-msg  (@tr [:infrastructure-delete-warning])
       :trigger     (r/as-element [ui/MenuItem
                                   [ui/Icon {:name "trash"}]
-                                  (@tr [:delete])])
+                                  (str/capitalize (@tr [:delete]))])
       :header      (@tr [:delete-infrastructure])
       :content     [:h3 content]}]))
 
@@ -63,7 +63,7 @@
       :danger-msg  (@tr [:infrastructure-terminate-warning])
       :trigger     (r/as-element [ui/MenuItem
                                   [ui/Icon {:name "delete"}]
-                                  (@tr [:terminate])])
+                                  (str/capitalize (@tr [:terminate]))])
       :header      (@tr [:terminate-infrastructure])
       :content     [:h3 content]}]))
 

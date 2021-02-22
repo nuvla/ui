@@ -9,6 +9,7 @@
     [sixsq.nuvla.ui.filter-comp.utils :as utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
@@ -312,7 +313,7 @@
           :on-close   close-fn
           :close-icon true}
 
-         [ui/ModalHeader "Filter composer"]
+         [uix/ModalHeader {:header "Filter composer"}]
 
          (when resource-name
            [:<>

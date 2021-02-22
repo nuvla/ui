@@ -154,6 +154,10 @@
 
 (s/def ::validate-docker-compose any?)
 
+(s/def ::compare-module-left any?)
+
+(s/def ::compare-module-right any?)
+
 (s/def ::db (s/keys :req [::active-input
                           ::form-spec
                           ::form-valid?
@@ -167,7 +171,9 @@
                           ::commit-message
                           ::registries-infra
                           ::registries-credentials
-                          ::validate-docker-compose]))
+                          ::validate-docker-compose
+                          ::compare-module-left
+                          ::compare-module-right]))
 
 (def defaults {::active-input            nil
                ::form-spec               nil
@@ -183,4 +189,6 @@
                ::registries              nil
                ::registries-infra        nil
                ::registries-credentials  nil
-               ::validate-docker-compose nil})
+               ::validate-docker-compose nil
+               ::compare-module-left     nil
+               ::compare-module-right    nil})

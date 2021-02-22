@@ -468,6 +468,21 @@
        :last   10000} #(dispatch [::set-registries-credentials %])]}))
 
 
+(reg-event-db
+  ::set-module-to-compare
+  (fn [db [_ which-one module]]
+    (if (= which-one "left")
+      (assoc db ::spec/compare-module-left module)
+      (assoc db ::spec/compare-module-right module))))
+
+
+(reg-event-fx
+  ::get-module-to-compare
+  (fn [_ [_ module-id-version which-one]]
+    {::cimi-api-fx/get
+     [module-id-version #(dispatch [::set-module-to-compare which-one %])]}))
+
+
 (reg-event-fx
   ::check-validate-docker-compose-job
   (fn [{{:keys [::spec/module] :as db} :db}

@@ -53,6 +53,12 @@
 
 
 (reg-event-db
+  ::set-matching-vulns-from-db
+  (fn [db [_ vulns]]
+    (assoc db ::spec/matching-vulns-from-db (zipmap (map :name vulns) vulns))))
+
+
+(reg-event-db
   ::set-nuvlabox-peripherals
   (fn [db [_ nuvlabox-peripherals]]
     (assoc db ::spec/nuvlabox-peripherals (->> (get nuvlabox-peripherals :resources [])
@@ -79,7 +85,9 @@
                                  ::spec/loading? false)
      ::cimi-api-fx/get [nb-status-id #(do
                                         (dispatch [::set-nuvlabox-status %])
-                                        (dispatch [::set-nuvlabox-vulns (:vulnerabilities %)]))
+                                        (dispatch [::set-nuvlabox-vulns (:vulnerabilities %)])
+                                        (dispatch [::get-matching-vulns-from-db (map :vulnerability-id
+                                                                                  (:items (:vulnerabilities %)))]))
                         :on-error #(do
                                      (dispatch [::set-nuvlabox-status nil])
                                      (dispatch [::set-nuvlabox-vulns nil]))]}))
@@ -113,6 +121,19 @@
          :last   100}
         #(callback-fn (get % :resources []))]})))
 
+
+(reg-event-fx
+  ::get-matching-vulns-from-db
+  (fn [_ [_ vuln-ids]]
+    (if (empty? vuln-ids)
+      (dispatch [::set-matching-vulns-from-db {}])
+      {::cimi-api-fx/search
+       [:vulnerability
+        {:filter (->> vuln-ids
+                   (map #(str "name='" % "'"))
+                   (apply general-utils/join-or))
+         :last   110}
+        #(dispatch [::set-matching-vulns-from-db (:resources %)])]})))
 
 
 (reg-event-fx

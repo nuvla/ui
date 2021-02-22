@@ -5,9 +5,7 @@
 
 
 (def dictionary
-  {:en {:lang                                          "English"
-
-        :about                                         "about"
+  {:en {:about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
         :accept-costs                                  "I accept the costs"
@@ -87,6 +85,7 @@
         :columns                                       "columns"
         :coming-soon                                   "Coming soon"
         :commit-placeholder                            "Commit message - explicit is better"
+        :compare-version                               "Compare versions"
         :component                                     "component"
         :configure                                     "configure"
         :confirm-subscribe-text                        "Do you confirm the creation of a new subscription?"
@@ -247,6 +246,7 @@
         :keep-data-control                             "You keep control of your data, we take away the pain of remote management."
         :key                                           "client's private certificate"
         :knowledge-base                                "knowledge base"
+        :lang                                          "English"
         :last                                          "last"
         :last-30-days                                  "last 30 days"
         :last-7-days                                   "last 7 days"
@@ -635,14 +635,9 @@
         :welcome-video-subheader-post                  "to see talks, presentations and tutorials"
         :welcome-video-subheader-pre                   "Access our"
         :yes                                           "yes"
-        :yesterday                                     "yesterday"
-        }
+        :yesterday                                     "yesterday"}
 
-
-
-   :fr {:lang                                          "Français"
-
-        :about                                         "à propos"
+   :fr {:about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"
         :accept-costs                                  "J'accepte les coûts"
@@ -709,6 +704,7 @@
         :cloud                                         "nuage"
         :columns                                       "colonnes"
         :commit-placeholder                            "Message d'enregistrement - un message clair c'est mieux"
+        :compare-version                               "Comparer versions"
         :component                                     "composant"
         :configure                                     "configurer"
         :confirm-subscribe-text                        "Confirmez vous la création d'une nouvelle souscription ?"
@@ -843,6 +839,7 @@
         :jobs                                          "tâches"
         :keep-data-control                             "Vous gardez le contrôle de vos données, nous prenons en charge la gestion à distance."
         :knowledge-base                                "base de connaissance"
+        :lang                                          "Français"
         :last                                          "fin"
         :last-30-days                                  "derniers 30 jours"
         :last-7-days                                   "derniers 7 jours"
@@ -1208,6 +1205,4 @@
         :welcome-video-subheader-post                  "pour accéder à des présentations et tutoriels"
         :welcome-video-subheader-pre                   "Accèder à notre"
         :yes                                           "oui"
-        :yesterday                                     "hier"
-
-        }})
+        :yesterday                                     "hier"}})

@@ -17,6 +17,7 @@
     ["codemirror/mode/javascript/javascript"]
     ["codemirror/mode/shell/shell"]
     ["codemirror/mode/yaml/yaml"]
+    ["react-diff-viewer" :as react-diff-viewer]
     ["react-codemirror2" :as code-mirror]
     ["react-copy-to-clipboard" :as copy-to-clipboard]
     ["react-datepicker" :as date-picker]
@@ -209,3 +210,9 @@
 
 (def CodeMirror (r/adapt-react-class code-mirror/UnControlled))
 ;;(def CodeMirrorControlled (r/adapt-react-class code-mirror/Controlled))
+
+
+;;
+;; Diff viewer
+;;
+(def DiffViewer (r/adapt-react-class react-diff-viewer/default))

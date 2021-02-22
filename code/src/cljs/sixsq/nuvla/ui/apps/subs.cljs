@@ -208,6 +208,18 @@
 
 
 (reg-sub
+  ::compare-module-left
+  (fn [db]
+    (::spec/compare-module-left db)))
+
+
+(reg-sub
+  ::compare-module-right
+  (fn [db]
+    (::spec/compare-module-right db)))
+
+
+(reg-sub
   ::is-latest-version?
   :<- [::versions]
   :<- [::module-content-id]

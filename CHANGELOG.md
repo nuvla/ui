@@ -2,8 +2,11 @@
 
 ## Unreleased
 
+  - Apps - ability to apply diff between two module versions
+
 ### Changed
 
+  - Dependency - NPM react-diff-viewer package
   - Deployment modal - Submit button show loading when clicked
   - Menubar buttons - Capitalize all of them
   - Modal headers - Capitalize all of them
@@ -25,6 +28,7 @@
 
  - Notifications tab with an ability to manage notification methods and
    notification subscriptions.
+ - Edge detail - dynamic lookup on the vulnerabilities DB to get more details on each NuvlaBox vulnerability
 
 ### Changed
 

@@ -1041,9 +1041,26 @@
 
 
 (defn VulnerabilitiesTableBody
-  [vulnerability-id product vulnerability-score color]
+  [vulnerability-id product vulnerability-score color matching-vuln-db]
   [ui/TableRow
-   [ui/TableCell vulnerability-id]
+   [ui/TableCell (if matching-vuln-db
+                   [ui/Popup
+                    {:trigger        (r/as-element [:span {:style {:text-decoration "underline"}} vulnerability-id])
+                     :header         vulnerability-id
+                     :content        (r/as-element [:div
+                                                    [:span (:description matching-vuln-db)]
+                                                    [:hr]
+                                                    [:a {:href (:reference matching-vuln-db)
+                                                         :target "_blank"}
+                                                     (:reference matching-vuln-db)]])
+                     :position       "right center"
+                     :on             "hover"
+                     :wide           "very"
+                     :size           "tiny"
+                     :hoverable      true
+                     :hide-on-scroll true}]
+                   vulnerability-id
+                   )]
    [ui/TableCell product]
    [ui/TableCell {:style {:background-color color
                           :font-weight      "bold"}} vulnerability-score]])
@@ -1053,11 +1070,13 @@
   []
   (let [tr             (subscribe [::i18n-subs/tr])
         state-selector (subscribe [::subs/vuln-severity-selector])
-        vulns          (subscribe [::subs/nuvlabox-vulns])]
+        vulns          (subscribe [::subs/nuvlabox-vulns])
+        matching-vulns (subscribe [::subs/matching-vulns-from-db])]
     (fn []
       (let [summary        (:summary @vulns)
             items-extended (:items @vulns)
-            items-severity (group-by :severity items-extended)]
+            items-severity (group-by :severity items-extended)
+            vulns-in-db    @matching-vulns]
         [ui/TabPane
          (if @vulns
            [:<>
@@ -1161,10 +1180,10 @@
                   (for [{:keys [vulnerability-id product vulnerability-score color] :as selected-severity}
                         (get items-severity (str/upper-case @state-selector))]
                     ^{:key vulnerability-id}
-                    [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color])
+                    [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color (get vulns-in-db vulnerability-id)])
                   (for [{:keys [vulnerability-id product vulnerability-score color] :as item} items-extended]
                     ^{:key vulnerability-id}
-                    [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color]))]]]]]
+                    [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color (get vulns-in-db vulnerability-id)]))]]]]]
 
            [ui/Message {:content (@tr [:nuvlabox-vuln-unavailable])}])]))))
 

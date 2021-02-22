@@ -4,7 +4,9 @@
             [sixsq.nuvla.ui.apps.events :as events]
             [sixsq.nuvla.ui.apps.subs :as subs]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn show-versions [show-versions?]
@@ -15,6 +17,71 @@
          :on-click #(reset! show-versions? (not @show-versions?))}
      [ui/Icon {:name icon-name}]
      label]))
+
+
+(defn version-comparison-modal
+  [left right version-left version-right]
+  (if (and left right)
+    [ui/ModalContent {:scrolling  true}
+     [ui/DiffViewer {:old-value    (general-utils/edn->json left)
+                     :new-value    (general-utils/edn->json right)
+                     :split-view   true
+                     :left-title   (str "v" version-left)
+                     :right-title  (str "v" version-right)}]]
+    [ui/Container
+     [ui/Loader {:active true
+                 :inverted true}]]))
+
+
+(defn versions-compare [versions]
+  (let [versions-opt  (map (fn [version] {:key (first version)
+                                          :value (first version)
+                                          :text (str "v" (first version))})
+                        versions)
+        tr            (subscribe [::i18n-subs/tr])
+        compare-one   (reagent/atom nil)
+        compare-two   (reagent/atom nil)
+        compare?      (reagent/atom false)
+        module        (subscribe [::subs/module])
+        module-compare-left   (subscribe [::subs/compare-module-left])
+        module-compare-right  (subscribe [::subs/compare-module-right])
+        on-close-fn   #(do
+                         (reset! compare? false))]
+    (fn []
+      (let [module-id   (:id @module)]
+        (when module-id
+          [:span (@tr [:compare-version]) " "
+           [ui/Dropdown {:selection   true
+                         :compact     true
+                         :placeholder " "
+                         :value       @compare-one
+                         :search      true
+                         :on-change   (ui-callback/value
+                                        (fn [value]
+                                          (reset! compare-one value)
+                                          (dispatch [::events/get-module-to-compare (str module-id "_" value) "left"])
+                                          (when @compare-two
+                                            (reset! compare? true))))
+                         :options     versions-opt}]
+           " vs "
+           [ui/Dropdown {:selection   true
+                         :compact     true
+                         :placeholder " "
+                         :value       @compare-two
+                         :search      true
+                         :on-change   (ui-callback/value
+                                        (fn [value]
+                                          (reset! compare-two value)
+                                          (dispatch [::events/get-module-to-compare (str module-id "_" value) "right"])
+                                          (when @compare-one
+                                            (reset! compare? true))))
+                         :options     versions-opt}]
+
+           [ui/Modal {:open       @compare?
+                      :dimmer     "blurring"
+                      :on-close   on-close-fn
+                      :size       "large"}
+            [version-comparison-modal @module-compare-left @module-compare-right @compare-one @compare-two]]])))))
 
 
 (defn versions-table
@@ -50,6 +117,9 @@
       (when (seq @versions)
         [:div
          [show-versions show-versions?]
+         (when (and (> (count @versions) 1) @show-versions?)
+           [:div
+            [versions-compare @versions]])
          (when @show-versions?
            [versions-table @versions @current-version
             :on-click #(dispatch [::events/get-module %])])]))))

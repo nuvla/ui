@@ -2,10 +2,11 @@
 
 ## Unreleased
 
-  - Apps - ability to apply diff between two module versions
+## [2.15.0] - 2021-02-22
 
 ### Changed
 
+  - Apps - ability to apply diff between two module versions
   - Dependency - NPM react-diff-viewer package
   - Deployment modal - Submit button show loading when clicked
   - Menubar buttons - Capitalize all of them

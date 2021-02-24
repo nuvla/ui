@@ -1044,21 +1044,24 @@
   [vulnerability-id product vulnerability-score color matching-vuln-db]
   [ui/TableRow
    [ui/TableCell (if matching-vuln-db
-                   [ui/Popup
-                    {:trigger        (r/as-element [:span {:style {:text-decoration "underline"}} vulnerability-id])
-                     :header         vulnerability-id
-                     :content        (r/as-element [:div
-                                                    [:span (:description matching-vuln-db)]
-                                                    [:hr]
-                                                    [:a {:href (:reference matching-vuln-db)
-                                                         :target "_blank"}
-                                                     (:reference matching-vuln-db)]])
-                     :position       "right center"
-                     :on             "hover"
-                     :wide           "very"
-                     :size           "tiny"
-                     :hoverable      true
-                     :hide-on-scroll true}]
+                   [:<>
+                    vulnerability-id
+                    " "
+                    [ui/Popup
+                     {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
+                      :header         vulnerability-id
+                      :content        (r/as-element [:div
+                                                     [:span (:description matching-vuln-db)]
+                                                     [:hr]
+                                                     [:a {:href   (:reference matching-vuln-db)
+                                                          :target "_blank"}
+                                                      (:reference matching-vuln-db)]])
+                      :position       "right center"
+                      :on             "hover"
+                      :wide           "very"
+                      :size           "tiny"
+                      :hoverable      true
+                      :hide-on-scroll true}]]
                    vulnerability-id
                    )]
    [ui/TableCell product]

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+  - Notifications page - open first accordion, added refresh buttons,
+    displaying number of actual subscriptions per configuration.
+
 ## [2.15.0] - 2021-02-22
 
 ### Changed

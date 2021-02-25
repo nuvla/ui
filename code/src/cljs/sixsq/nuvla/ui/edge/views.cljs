@@ -423,7 +423,8 @@
 
     (dispatch [::events/get-ssh-keys-available ["ssh-key"] nil])
     (fn []
-      (when (= (count @vpn-infra-opts) 1)
+      (when (and (= (count @vpn-infra-opts) 1)
+                 (nil? (:vpn-server-id @creation-data)))
         (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
       [ui/Modal {:open       @visible?
                  :close-icon true
@@ -453,7 +454,7 @@
                     [ui/TableCell {:collapsing true} "vpn"]
                     ^{:key (or key name)}
                     [ui/TableCell
-                     [ui/Dropdown {:clearable   (> (count @vpn-infra-opts) 1)
+                     [ui/Dropdown {:clearable   true
                                    :selection   true
                                    :fluid       true
                                    :placeholder (@tr [:none])

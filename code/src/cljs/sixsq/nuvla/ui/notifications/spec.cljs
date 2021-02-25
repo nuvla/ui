@@ -54,6 +54,7 @@
 (s/def ::components-number utils-spec/nonblank-string)
 (s/def ::collection utils-spec/nonblank-string)
 (s/def ::enabled boolean?)
+(s/def ::notification-subscription-config-id utils-spec/nonblank-string)
 (s/def ::notification-subscription-config
   (s/keys :req-un [::name
                    ::description
@@ -81,6 +82,9 @@
 (s/def ::status utils-spec/nonblank-string)
 
 (s/def ::subscriptions (s/nilable any?))
+(s/def ::subscriptions-for-parent (s/nilable any?))
+(s/def ::subscriptions-by-parent (s/nilable any?))
+(s/def ::subscriptions-by-parent-counts (s/nilable any?))
 (s/def ::notification-subscriptions (s/nilable any?))
 
 (s/def ::subscription (s/keys :req-un [::type

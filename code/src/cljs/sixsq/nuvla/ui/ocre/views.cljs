@@ -3,7 +3,7 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [sixsq.nuvla.ui.utils.spec :refer [only-keys]])
   (:require
-    ["papaparse" :as papa]
+    ;    ["papaparse" :as papa]
     [cljs.core.async :refer [<! timeout]]
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
@@ -176,12 +176,13 @@
 (defn check-file [e]
   (let [target (.-currentTarget e)
         file   (-> target .-files (aget 0))]
-    (papa/parse
-      file
-      #js {:header          true
-           :transformHeader #(str/lower-case %)
-           :preview         10
-           :complete        (partial check-file-error file)})))
+    ;(papa/parse
+    ;  file
+    ;  #js {:header          true
+    ;       :transformHeader #(str/lower-case %)
+    ;       :preview         10
+    ;       :complete        (partial check-file-error file)})
+    ))
 
 
 (defn send-vouchers-server
@@ -207,11 +208,12 @@
 
 (defn import-vouchers
   [user-id]
-  (papa/parse
-    @valid-file
-    #js {:header          true
-         :complete        (partial send-vouchers-server user-id)
-         :transformHeader #(str/lower-case %)}))
+  ;(papa/parse
+  ;  @valid-file
+  ;  #js {:header          true
+  ;       :complete        (partial send-vouchers-server user-id)
+  ;       :transformHeader #(str/lower-case %)})
+  )
 
 
 (defn export-collection

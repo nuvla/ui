@@ -21,10 +21,12 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.utils.zip :as zip]))
+    [sixsq.nuvla.ui.utils.zip :as zip]
+    [taoensso.timbre :as log]))
 
 
 (def view-type (r/atom :cards))
+
 
 (defn StatisticState
   [value icon label]
@@ -47,16 +49,31 @@
 (defn StatisticStates
   []
   (let [{:keys [total new activated commissioned
-                decommissioning decommissioned error]} @(subscribe [::subs/state-nuvlaboxes])]
-    [ui/StatisticGroup (merge {:size "tiny"} style/center-block)
-     [StatisticState total "box" "TOTAL"]
-     [StatisticState new (utils/state->icon utils/state-new) "NEW"]
-     [StatisticState activated (utils/state->icon utils/state-activated) "ACTIVATED"]
-     [StatisticState commissioned (utils/state->icon utils/state-commissioned) "COMMISSIONED"]
-     [StatisticState decommissioning
-      (utils/state->icon utils/state-decommissioning) "DECOMMISSIONING"]
-     [StatisticState decommissioned (utils/state->icon utils/state-decommissioned) "DECOMMISSIONED"]
-     [StatisticState error (utils/state->icon utils/state-error) "ERROR"]]))
+                decommissioning decommissioned error] :as nb_s} @(subscribe [::subs/state-nuvlaboxes])
+        status (subscribe [::subs/nuvlaboxes-online-status])
+        state (subscribe [::subs/state-nuvlaboxes])
+        online (count (filter #(true? (:online %)) (vals @status)))
+        offline (count (filter #(false? (:online %)) (vals @status)))
+        unknown (- total (+ online offline))
+        ]
+    (log/error "STATUS: " @status)
+    (log/error "STATE: " @state)
+    [:<>
+     [ui/StatisticGroup (merge {:size "tiny"} style/center-block)
+      [StatisticState total "box" "TOTAL"]
+      [StatisticState online "power green" "ONLINE"]
+      [StatisticState offline "power off red" "OFFLINE"]
+      [StatisticState unknown "power off yellow" "UNKNOWN"]
+      [ui/Statistic [ui/StatisticValue {:style {:margin "0 10px"}} [ui/Icon {:name "angle double down grey"}]]]
+      ]
+     [ui/StatisticGroup (merge {:size "tiny"} style/center-block)
+      [StatisticState new (utils/state->icon utils/state-new) "NEW"]
+      [StatisticState activated (utils/state->icon utils/state-activated) "ACTIVATED"]
+      [StatisticState commissioned (utils/state->icon utils/state-commissioned) "COMMISSIONED"]
+      [StatisticState decommissioning
+       (utils/state->icon utils/state-decommissioning) "DECOMMISSIONING"]
+      [StatisticState decommissioned (utils/state->icon utils/state-decommissioned) "DECOMMISSIONED"]
+      [StatisticState error (utils/state->icon utils/state-error) "ERROR"]]]))
 
 
 (defn AddButton

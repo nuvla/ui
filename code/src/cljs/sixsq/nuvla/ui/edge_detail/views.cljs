@@ -27,7 +27,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [taoensso.timbre :as log]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -189,6 +190,10 @@
         status        (subscribe [::subs/nuvlabox-status])
         close-fn      #(reset! show? false)
         form-data     (r/atom nil)
+        project       (-> @status :installation-parameters :project-name)
+        working-dir   (-> @status :installation-parameters :working-dir)
+        config-files  (-> @status :installation-parameters :config-files)
+        environment   (-> @status :installation-parameters :environment)
         on-change-fn  #(swap! form-data assoc :nuvlabox-release %)
         on-success-fn close-fn
         on-error-fn   close-fn
@@ -198,6 +203,10 @@
     (fn [{:keys [id] :as resource} operation show? title icon button-text]
       (when (not= (:parent @status))
         (dispatch [::events/get-nuvlabox id]))
+      (swap! form-data assoc :project-name project)
+      (swap! form-data assoc :working-dir working-dir)
+      (swap! form-data assoc :config-files (str/join "\n" config-files))
+      (swap! form-data assoc :environment (str/join "\n" environment))
       (let [correct-nb? (= (:parent @status) id)
             nb-version  (get @status :nuvlabox-engine-version "")]
         (when-not correct-nb?
@@ -236,27 +245,29 @@
           [uix/Accordion
            [:<>
             [ui/Form
-             [ui/FormInput {:label         "Project"
+             [ui/FormInput {:label         (str/capitalize (@tr [:project]))
                             :placeholder   "nuvlabox"
                             :required      true
                             :default-value (:project-name @form-data)
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :project-name %))}]
-             [ui/FormInput {:label         "Working directory"
+             [ui/FormInput {:label         (str/capitalize (@tr [:working-directory]))
                             :placeholder   "/home/ubuntu/nuvlabox-engine"
                             :required      true
                             :default-value (:working-dir @form-data)
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :working-dir %))}]
              [ui/FormField
-              [:label [general-utils/mandatory-name "Config files"]]
+              [:label
+               [general-utils/mandatory-name (@tr [:config-files])]
+               [main-components/InfoPopup (@tr [:config-file-info])]]
               [ui/TextArea {:placeholder   "docker-compose.yml\ndocker-compose.gpu.yml\n..."
                             :required      true
                             :default-value (:config-files @form-data)
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :config-files %))}]]
              [ui/FormField
-              [:label "Environment"]
+              [:label (@tr [:env-variables]) " " [main-components/InfoPopup (@tr [:env-variables-info])]]
               [ui/TextArea {:placeholder   "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
                             :default-value (:environment @form-data)
                             :on-change     (ui-callback/input-callback

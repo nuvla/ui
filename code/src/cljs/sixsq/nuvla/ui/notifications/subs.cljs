@@ -64,11 +64,35 @@
   (fn [db]
     (::spec/subscriptions db)))
 
+
+(reg-sub
+  ::subscriptions-by-parent
+  (fn [db]
+    (::spec/subscriptions-by-parent db)))
+
+
+(reg-sub
+  ::subscriptions-by-parent-counts
+  (fn [db]
+    (::spec/subscriptions-by-parent-counts db)))
+
+
+(reg-sub
+  ::subscriptions-for-parent
+  (fn [db]
+    (::spec/subscriptions-for-parent db)))
+
+
 (reg-sub
   ::notification-subscriptions
   (fn [db]
     (::spec/notification-subscriptions db)))
 
+
+(reg-sub
+  ::notification-subscription-config-id
+  (fn [db]
+    (::spec/notification-subscription-config-id db)))
 
 (reg-sub
   ::edit-subscription-modal-visible?

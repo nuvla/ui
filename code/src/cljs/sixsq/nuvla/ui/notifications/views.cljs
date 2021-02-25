@@ -112,9 +112,9 @@
                           (dispatch-sync [::events/update-notification-subscription-config :collection collection]))
                         (if save?
                           (dispatch [::events/set-notif-method-id subs-conf-id %]))))
-    :options       (map (fn [{id :id, method-name :name}]
-                          {:key id, :value id, :text method-name})
-                        @notif-methods)}])
+    :options       (doall (map (fn [{id :id, method-name :name}]
+                                 {:key id, :value id, :text method-name})
+                               @notif-methods))}])
 
 
 (defn subs-notif-method-select-or-add
@@ -169,14 +169,17 @@
 
 (defn manage-subscriptions-modal
   []
-  (let [tr            (subscribe [::i18n-subs/tr])
+  (let [tr (subscribe [::i18n-subs/tr])
         notif-methods (subscribe [::subs/notification-methods])
-        subscriptions (subscribe [::subs/notification-subscriptions])
-        visible?      (subscribe [::subs/notification-subscriptions-modal-visible?])]
+        subscriptions (subscribe [::subs/subscriptions-for-parent])
+        subs-config-id (subscribe [::subs/notification-subscription-config-id])
+        visible? (subscribe [::subs/notification-subscriptions-modal-visible?])]
     (dispatch [::events/get-notification-methods])
-    (dispatch [::events/get-notification-subscriptions])
+    (dispatch [::events/get-notification-subscriptions @subs-config-id])
     (fn []
-      (let [header (@tr [:subscriptions-manage])]
+      (let [header (@tr [:subscriptions-manage])
+            current-subs (fn [sc-id ss]
+                           (filter #(= @sc-id (:parent %)) @ss))]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-notification-subscription-modal])}
@@ -192,9 +195,22 @@
              [ui/TableHeaderCell {:content (str/capitalize (@tr [:resource]))}]
              [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}]]]
            [ui/TableBody
-            (for [sub @subscriptions]
-              ^{:key (:id sub)}
-              [single-notification-subscription sub notif-methods])]]
+            (doall
+              (for [sub (current-subs subs-config-id subscriptions)]
+                ^{:key (:id sub)}
+                [single-notification-subscription sub notif-methods]))]]
+
+          [ui/Menu {:borderless true
+                    :secondary  true}
+           (if (empty? (current-subs subs-config-id subscriptions))
+             [uix/MenuItem
+              {:name (@tr [:no-subscriptions-available])
+               :fixed "right"
+               :text true}])
+           [main-components/RefreshMenu
+            {:on-refresh #(dispatch [::events/get-notification-subscriptions @subs-config-id])}]]
+
+
           [utils-validation/validation-error-message ::subs/form-valid?]]]))))
 
 
@@ -361,11 +377,11 @@
     (dispatch [::events/get-notification-methods])
     (dispatch [::events/set-components-number 0])
     (dispatch [::events/reset-tags-available])
+    (dispatch [::events/update-notification-subscription-config :resource-filter ""])
     (fn []
       (let [header (str/capitalize (str (@tr [:add]) " " (@tr [:subscription])))]
         (dispatch [::events/update-notification-subscription-config :enabled true])
         (dispatch [::events/update-notification-subscription-config :category "notification"])
-        (dispatch [::events/update-notification-subscription-config :resource-filter ""])
         [:div]
         [ui/Modal {:open       @visible?
                    :close-icon true
@@ -671,7 +687,11 @@
       [uix/MenuItem
        {:name     (@tr [:add])
         :icon     "add"
-        :on-click #(dispatch [::events/open-add-subscription-config-modal {}])}]]]))
+        :on-click #(dispatch [::events/open-add-subscription-config-modal {}])}]
+      [main-components/RefreshMenu
+       {:on-refresh #(do
+                       (dispatch-sync [::events/get-notification-subscriptions])
+                       (dispatch [::events/get-notification-subscription-configs]))}] ]]))
 
 
 (defn MenuBarNotificationMethod
@@ -782,23 +802,24 @@
   (let [tr                   (subscribe [::i18n-subs/tr])
         subscription-configs (subscribe [::subs/notification-subscription-configs])
         notif-methods        (subscribe [::subs/notification-methods])
-        subscriptions        (subscribe [::subs/subscriptions])
+        subs-by-parent       (subscribe [::subs/subscriptions-by-parent])
+        subs-by-parent-counts       (subscribe [::subs/subscriptions-by-parent-counts])
         on-change            (fn [name-kw value]
                                (dispatch-sync [::events/update-notification-subscription-config name-kw value])
                                (dispatch [::events/validate-notification-subscription-config-form]))]
     (dispatch [::events/get-notification-subscription-configs])
-    (dispatch [::events/get-notification-subscriptions])
+    (dispatch-sync [::events/get-notification-subscriptions])
     (dispatch [::events/get-notification-methods])
     (fn []
       (let [infra-service-subs-confs (filter #(= "infrastructure-service" (:resource-kind %)) @subscription-configs)
             nuvlabox-subs-confs      (filter #(= "nuvlabox" (:resource-kind %)) @subscription-configs)
-            subs-confs-all           {"infrastructure-service" infra-service-subs-confs
-                                      "nuvlabox"               nuvlabox-subs-confs}]
+            subs-confs-all           {"nuvlabox"               nuvlabox-subs-confs
+                                      "infrastructure-service" infra-service-subs-confs}]
         [ui/TabPane
          [MenuBarSubscription]
          (if (empty? @subscription-configs)
            [ui/Message (str/capitalize (@tr [:no-subscription-configs-defined]))]
-           (for [[resource-kind resource-subs-confs] subs-confs-all]
+           (doall (for [[idx resource-kind resource-subs-confs] (map-indexed (fn [i [k v]] [i k v]) subs-confs-all)]
              (if-not (empty? resource-subs-confs)
                ^{:key resource-kind}
                [uix/Accordion
@@ -809,7 +830,7 @@
                  [subscription-configs-table-header tr]
 
                  [ui/TableBody
-                  (for [subs-conf resource-subs-confs]
+                  (doall (for [subs-conf resource-subs-confs]
                     ^{:key subs-conf}
                     [ui/TableRow
                      [ui/TableCell {:floated :left
@@ -837,16 +858,22 @@
                                     :width   4}
                       [subs-notif-method-dropdown
                        (:method-id subs-conf) notif-methods true (:resource-kind subs-conf) (:id subs-conf)]]
-                     [ui/TableCell {:floated :left
-                                    :width   1
+
+                     (let [subs-conf-id (:id subs-conf)]
+                       [ui/TableCell {:floated :left
+                                    :width   2
                                     :align   :right}
-                      (let [subscrs (filter #(= (:id subs-conf) (:parent %)) @subscriptions)]
                         [uix/Button {:text     (@tr [:manage])
                                      :positive true
-                                     :disabled (empty? subscrs)
+                                     :size     "small"
                                      :active   true
-                                     :on-click #(dispatch [::events/open-notification-subscription-modal subscrs])}])
-                      ]
+                                     :on-click #(do
+                                                  (dispatch [::events/set-notification-subscription-config-id subs-conf-id])
+                                                  (dispatch [::events/get-notification-subscriptions subs-conf-id])
+                                                  (dispatch [::events/open-notification-subscription-modal (get @subs-by-parent subs-conf-id)]))}]
+
+                      [:span ff/nbsp ff/nbsp [ui/Label {:circular true} (get @subs-by-parent-counts subs-conf-id 0)]]])
+
                      [ui/TableCell {:floated :right
                                     :width   1
                                     :align   :right}
@@ -856,14 +883,13 @@
                         [ui/Icon {:name     :cog
                                   :color    :blue
                                   :style    {:cursor :pointer}
-                                  :on-click #(dispatch [::events/open-edit-subscription-config-modal subs-conf])}])]])
+                                  :on-click #(dispatch [::events/open-edit-subscription-config-modal subs-conf])}])]]))
                   ]]
-                #_[:<> [:divNB RAM usage]]
                 :title-size :h4
-                :default-open false
+                :default-open (= 0 idx)
                 :count (count resource-subs-confs)
                 :label (get resource-to-collection-names resource-kind)]
-               )))
+               ))))
          ]))))
 
 

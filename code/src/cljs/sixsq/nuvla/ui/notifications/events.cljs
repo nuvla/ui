@@ -130,6 +130,12 @@
 
 
 (reg-event-db
+  ::set-notification-subscription-config-id
+  (fn [db [_ subs-conf-id]]
+    (assoc db ::spec/notification-subscription-config-id subs-conf-id)))
+
+
+(reg-event-db
   ::set-notification-subscription-config
   (fn [db [_ subs-conf]]
     (assoc db ::spec/notification-subscription-config subs-conf)))
@@ -266,6 +272,24 @@
 
 
 (reg-event-db
+  ::set-subscriptions-for-parent
+  (fn [db [_ subs]]
+    (assoc db ::spec/subscriptions-for-parent subs)))
+
+
+(reg-event-db
+  ::set-subscriptions-by-parent
+  (fn [db [_ subs]]
+    (assoc db ::spec/subscriptions-by-parent subs)))
+
+
+(reg-event-db
+  ::set-subscriptions-by-parent-counts
+  (fn [db [_ subs-counts]]
+    (assoc db ::spec/subscriptions-by-parent-counts subs-counts)))
+
+
+(reg-event-db
   ::set-collection
   (fn [db [_ collection]]
     (assoc db ::spec/collection collection)))
@@ -312,12 +336,26 @@
 
 (reg-event-fx
   ::get-notification-subscriptions
-  (fn [{:keys [db]} [_]]
-    {:db                  (assoc db ::spec/completed? false)
-     ::cimi-api-fx/search [:subscription
-                           {:filter "category='notification'"
-                            :orderby "name:asc, id:asc"}
-                           #(dispatch [::set-subscriptions (:resources %)])]}))
+  (fn [{:keys [db]} [_ parent]]
+    (let [flt (if parent
+                (str "category='notification' and parent='" parent "'")
+                "category='notification'")
+          callback (fn
+                     [{:keys [resources]}]
+                     (if parent
+                       (dispatch [::set-subscriptions-for-parent resources])
+                       (let [subs-by-parent (reduce (fn [m [k v]]
+                                                      (assoc m k (conj (get m k []) v)))
+                                                    {}
+                                                    (apply concat (map (fn [v] {(get v :parent) v}) resources)))
+                             counts (reduce into {} (map (fn [[k v]] {k (count v)}) subs-by-parent))]
+                         (dispatch [::set-subscriptions-by-parent subs-by-parent])
+                         (dispatch [::set-subscriptions-by-parent-counts counts])
+                         (dispatch [::set-subscriptions resources]))))]
+      {:db                  (assoc db ::spec/completed? false)
+       ::cimi-api-fx/search [:subscription
+                             {:filter flt :orderby "name:asc, id:asc"}
+                             callback]})))
 
 
 (reg-event-fx
@@ -379,7 +417,7 @@
   ::open-notification-subscription-modal
   (fn [db [_ notif-subs]]
     (-> db
-        (assoc ::spec/notification-subscriptions notif-subs)
+        (assoc ::spec/subscriptions-for-parent notif-subs)
         (assoc ::spec/notification-subscriptions-modal-visible? true))))
 
 

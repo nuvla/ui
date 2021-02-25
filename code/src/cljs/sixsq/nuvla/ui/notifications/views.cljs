@@ -186,15 +186,6 @@
 
          [uix/ModalHeader {:header header}]
 
-         [ui/Menu {:borderless true
-                   :secondary  true}
-          (if (empty? (current-subs subs-config-id subscriptions))
-            [uix/MenuItem
-             {:name (@tr [:no-subscriptions-available])
-              :fixed "right"
-              :text true}])
-          [main-components/RefreshMenu
-           {:on-refresh #(dispatch [::events/get-notification-subscriptions @subs-config-id])}]]
          [ui/ModalContent {:scrolling false}
           [ui/Table {:style {:margin-top 10}}
            [ui/TableHeader
@@ -208,6 +199,16 @@
               (for [sub (current-subs subs-config-id subscriptions)]
                 ^{:key (:id sub)}
                 [single-notification-subscription sub notif-methods]))]]
+
+          [ui/Menu {:borderless true
+                    :secondary  true}
+           (if (empty? (current-subs subs-config-id subscriptions))
+             [uix/MenuItem
+              {:name (@tr [:no-subscriptions-available])
+               :fixed "right"
+               :text true}])
+           [main-components/RefreshMenu
+            {:on-refresh #(dispatch [::events/get-notification-subscriptions @subs-config-id])}]]
 
 
           [utils-validation/validation-error-message ::subs/form-valid?]]]))))

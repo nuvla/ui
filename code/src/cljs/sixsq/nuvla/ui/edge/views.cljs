@@ -26,54 +26,79 @@
 
 
 (def view-type (r/atom :cards))
+(def show-state-statistics (r/atom false))
 
 
 (defn StatisticState
-  [value icon label]
-  (let [state-selector (subscribe [::subs/state-selector])
-        selected?      (or
-                         (= label @state-selector)
-                         (and (= label "TOTAL")
-                              (= @state-selector nil)))
-        color          (if selected? "black" "grey")]
-    [ui/Statistic {:style    {:cursor "pointer"}
-                   :color    color
-                   :on-click #(dispatch [::events/set-state-selector
-                                         (if (= label "TOTAL") nil label)])}
-     [ui/StatisticValue (or value "-")
-      "\u2002"
-      [ui/Icon {:size (when selected? "large") :name icon}]]
-     [ui/StatisticLabel label]]))
+  ([value icon label]
+   (StatisticState value icon label "black"))
+  ([value icon label positive-color]
+   (let [state-selector (subscribe [::subs/state-selector])
+         selected?      (or
+                          (= label @state-selector)
+                          (and (= label "TOTAL")
+                               (= @state-selector nil)))
+         color          (if (pos? value) positive-color "grey")]
+     [ui/Statistic {:style    {:cursor "pointer"}
+                    :color    color
+                    :on-click #(dispatch [::events/set-state-selector
+                                          (if (= label "TOTAL") nil label)])}
+      [ui/StatisticValue
+       (or value "-")
+       "\u2002"
+       [ui/Icon {:size (when selected? "large")
+                 :name icon}]]
+      [ui/StatisticLabel label]])))
 
 
 (defn StatisticStates
   []
   (let [{:keys [total new activated commissioned
                 decommissioning decommissioned error] :as nb_s} @(subscribe [::subs/state-nuvlaboxes])
-        status (subscribe [::subs/nuvlaboxes-online-status])
-        state (subscribe [::subs/state-nuvlaboxes])
-        online (count (filter #(true? (:online %)) (vals @status)))
+        status  (subscribe [::subs/nuvlaboxes-online-status])
+        state   (subscribe [::subs/state-nuvlaboxes])
+        online  (count (filter #(true? (:online %)) (vals @status)))
         offline (count (filter #(false? (:online %)) (vals @status)))
-        unknown (- total (+ online offline))
-        ]
-    (log/error "STATUS: " @status)
-    (log/error "STATE: " @state)
+        unknown (- total (+ online offline))]
     [:<>
      [ui/StatisticGroup (merge {:size "tiny"} style/center-block)
       [StatisticState total "box" "TOTAL"]
-      [StatisticState online "power green" "ONLINE"]
-      [StatisticState offline "power off red" "OFFLINE"]
-      [StatisticState unknown "power off yellow" "UNKNOWN"]
-      [ui/Statistic [ui/StatisticValue {:style {:margin "0 10px"}} [ui/Icon {:name "angle double down grey"}]]]
+      [StatisticState online "power" "ONLINE" "green"]
+      [StatisticState offline "power off" "OFFLINE" "red"]
+      [StatisticState unknown "power off" "UNKNOWN" "yellow"]
+      [ui/Statistic
+       {:size     "tiny"
+        :style    {:cursor "pointer"}
+        :on-click #((reset! show-state-statistics (not @show-state-statistics))
+                     (when @show-state-statistics (dispatch [::events/set-state-selector nil])))}
+       [ui/StatisticValue {:style {:margin "0 10px"}}
+        [ui/Icon {:name (if @show-state-statistics "angle double up" "angle double down")}]]]
       ]
-     [ui/StatisticGroup (merge {:size "tiny"} style/center-block)
-      [StatisticState new (utils/state->icon utils/state-new) "NEW"]
-      [StatisticState activated (utils/state->icon utils/state-activated) "ACTIVATED"]
-      [StatisticState commissioned (utils/state->icon utils/state-commissioned) "COMMISSIONED"]
-      [StatisticState decommissioning
-       (utils/state->icon utils/state-decommissioning) "DECOMMISSIONING"]
-      [StatisticState decommissioned (utils/state->icon utils/state-decommissioned) "DECOMMISSIONED"]
-      [StatisticState error (utils/state->icon utils/state-error) "ERROR"]]]))
+     [ui/Segment (assoc-in (merge {:style {:margin     "0px auto 20px auto"
+                                           :padding    "1em 1.5em 0 0"
+                                           :text-align "center"
+                                           ;:width      "100%"
+                                           }}
+                                  {:id      "statistics-state"
+                                   :compact true
+                                   :width   "auto"})
+                           [:style :display] (if @show-state-statistics "table" "none"))
+      [:h4 "Commissioning State"]
+      [ui/StatisticGroup
+       (merge {:style {:margin     "10px auto 10px auto"
+                       :display    "block"
+                       :text-align "center"
+                       :width      "100%"}}
+              {:size    "tiny"
+               :id      "statistics-state"
+               :compact true})
+       [StatisticState new (utils/state->icon utils/state-new) "NEW"]
+       [StatisticState activated (utils/state->icon utils/state-activated) "ACTIVATED"]
+       [StatisticState commissioned (utils/state->icon utils/state-commissioned) "COMMISSIONED"]
+       [StatisticState decommissioning
+        (utils/state->icon utils/state-decommissioning) "DECOMMISSIONING"]
+       [StatisticState decommissioned (utils/state->icon utils/state-decommissioned) "DECOMMISSIONED"]
+       [StatisticState error (utils/state->icon utils/state-error) "ERROR"]]]]))
 
 
 (defn AddButton

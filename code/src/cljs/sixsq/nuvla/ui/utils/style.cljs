@@ -36,7 +36,7 @@
 
 
 (def center-block
-  {:style {:margin     "25px auto 10px auto"
+  {:style {:margin     "10px auto 10px auto"
            :display    "block"
            :text-align "center"
            :width      "100%"}})

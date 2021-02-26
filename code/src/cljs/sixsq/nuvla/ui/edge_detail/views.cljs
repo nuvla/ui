@@ -200,13 +200,15 @@
         on-click-fn   #(dispatch [::events/operation id operation
                                   (utils/format-update-data @form-data)
                                   on-success-fn on-error-fn])]
+
+    (swap! form-data assoc :project-name project)
+    (swap! form-data assoc :working-dir working-dir)
+    (swap! form-data assoc :config-files (str/join "\n" config-files))
+    (swap! form-data assoc :environment (str/join "\n" environment))
+
     (fn [{:keys [id] :as resource} operation show? title icon button-text]
       (when (not= (:parent @status))
         (dispatch [::events/get-nuvlabox id]))
-      (swap! form-data assoc :project-name project)
-      (swap! form-data assoc :working-dir working-dir)
-      (swap! form-data assoc :config-files (str/join "\n" config-files))
-      (swap! form-data assoc :environment (str/join "\n" environment))
       (let [correct-nb? (= (:parent @status) id)
             nb-version  (get @status :nuvlabox-engine-version "")]
         (when-not correct-nb?
@@ -227,14 +229,14 @@
              (when (is-old-version? nb-version)
                [ui/Message
                 {:warning true
-                 :header  "NuvlaBox update warning"
+                 :icon    {:name "warning sign", :size "large"}
+                 :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
-                            [:span (str "Your NuvlaBox version is older than v1.14. "
-                                        "The update operation might not work as expected. ")
+                            [:span (str (@tr [:nuvlabox-update-warning-content])) " "
                              [:a {:href   (str "https://docs.nuvla.io/nuvlabox/"
                                                "nuvlabox-engine/quickstart.html#from-nuvla")
                                   :target "_blank"}
-                              "See more"]])}])
+                              (str/capitalize (@tr [:see-more]))]])}])
              [ui/Segment
               [:b (@tr [:current-version])]
               [:i nb-version]]])

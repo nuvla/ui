@@ -86,6 +86,7 @@
         :columns                                      "columns"
         :coming-soon                                  "Coming soon"
         :commit-placeholder                           "Commit message - explicit is better"
+        :commissionning-states                         "Commissioning States"
         :component                                    "component"
         :configure                                    "configure"
         :confirm-subscribe-text                       "Do you confirm the creation of a new subscription?"

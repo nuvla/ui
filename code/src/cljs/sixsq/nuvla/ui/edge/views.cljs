@@ -67,6 +67,7 @@
               {:trigger  (r/as-element
                            [ui/Statistic
                             {:size     "tiny"
+                             :class    "slight-up"
                              :style    {:cursor "pointer"}
                              :on-click #(when clickable? (do (reset! show-state-statistics (not @show-state-statistics))
                                                              (when-not @show-state-statistics
@@ -88,7 +89,7 @@
                                           :compact true
                                           :width   "auto"})
                                   [:style :display] (if @show-state-statistics "table" "none"))
-             [:h4 "Commissioning State"]
+             [:h4 (@tr [:commissionning-states])]
              [ui/StatisticGroup
               (merge {:style {:margin     "10px auto 10px auto"
                               :display    "block"

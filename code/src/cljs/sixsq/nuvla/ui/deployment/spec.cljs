@@ -12,6 +12,8 @@
 
 (s/def ::deployments any?)
 
+(s/def ::deployments-summary any?)
+
 (s/def ::page int?)
 
 (s/def ::elements-per-page int?)
@@ -24,8 +26,17 @@
 
 (s/def ::deployments-params-map {})
 
+(s/def ::state-selector #{"all"
+                          "started"
+                          "starting"
+                          "created"
+                          "stopped"
+                          "error"
+                          "queued"})
+
 (s/def ::db (s/keys :req [::loading?
                           ::deployments
+                          ::deployments-summary
                           ::deployments-params-map
                           ::page
                           ::elements-per-page
@@ -33,15 +44,18 @@
                           ::active-only?
                           ::nuvlabox
                           ::creds-name-map
-                          ::view]))
+                          ::view
+                          ::state-selector]))
 
 (def defaults {::loading?               false
                ::page                   1
-               ::elements-per-page      9
+               ::elements-per-page      8
                ::full-text-search       nil
                ::active-only?           true
                ::nuvlabox               nil
                ::deployments            nil
+               ::deployments-summary    nil
                ::deployments-params-map nil
                ::creds-name-map         {}
-               ::view                   "cards"})
+               ::view                   "cards"
+               ::state-selector         "all"})

@@ -12,22 +12,26 @@
     [taoensso.timbre :as log]))
 
 
-(def refresh-action-id :deployment-get-deployments)
+(def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
+(def refresh-action-deployments-id :dashboard-get-deployments)
+(def refresh-action-nuvlaboxes-id :dashboard-get-nuvlaboxes-summary)
+
 
 (reg-event-fx
   ::refresh
-  (fn [{db :db} [_ {:keys [init? nuvlabox]}]]
+  (fn [{db :db} [_ {:keys [init?]}]]
+
     {:db (cond-> db
-                 init? (assoc :db (merge db spec/defaults))
-                 nuvlabox (assoc-in [:db ::spec/nuvlabox] nuvlabox))
+                 init? (assoc :db (merge db spec/defaults)))
      :fx [[:dispatch [::main-events/action-interval-start
-                      {:id        refresh-action-id
+                      {:id        refresh-action-deployments-summary-id
+                       :frequency 20000
+                       :event     [::get-deployments-summary]}]]
+          [:dispatch [::main-events/action-interval-start
+                      {:id        refresh-action-deployments-id
                        :frequency 20000
                        :event     [::get-deployments]}]]
-          [:dispatch [::main-events/action-interval-start
-                      {:id        refresh-action-id
-                       :frequency 20000
-                       :event     [::edge-events/get-nuvlaboxes]}]]]}))
+          ]}))
 
 
 (reg-event-fx
@@ -62,47 +66,39 @@
 (reg-event-fx
   ::set-deployments
   (fn [{:keys [db]} [_ {:keys [resources] :as deployments}]]
-    (let [deployments-resource-ids (map :id resources)
-          deployments-creds-ids    (distinct (map :parent resources))
-          filter-deps-ids          (str/join " or " (map #(str "parent='" % "'")
-                                                         deployments-resource-ids))
-          query-params             {:filter (str "(" filter-deps-ids ") and value!=null")
-                                    :select "parent, id, deployment, name, value"
-                                    :last   10000}
-          callback                 (fn [response]
-                                     (when-not (instance? js/Error response)
-                                       (dispatch [::set-deployments-params-map response])))]
-      (cond-> {:db       (assoc db ::spec/loading? false
-                                   ::spec/deployments deployments)
-               :dispatch [::set-creds-ids deployments-creds-ids]}
-              (not-empty deployments-resource-ids) (assoc ::cimi-api-fx/search
-                                                          [:deployment-parameter
-                                                           query-params callback])))))
+    {:db (assoc db ::spec/loading? false
+                   ::spec/deployments deployments)}))
 
 
 (reg-event-fx
   ::get-deployments
   (fn [{{:keys [::spec/full-text-search
-                ::spec/active-only?
+                ;::spec/active-only?
+                ::spec/state-selector
                 ::spec/nuvlabox
+                ;::spec/state
                 ::spec/page
                 ::spec/elements-per-page]} :db} _]
-    {::cimi-api-fx/search [:deployment (utils/get-query-params full-text-search active-only?
-                                                               nuvlabox page elements-per-page)
-                           #(dispatch [::set-deployments %])]}))
+    (let [state (if (= "all" state-selector) nil state-selector)]
+      {::cimi-api-fx/search [:deployment (utils/get-query-params full-text-search state ;active-only?
+                                                                 nuvlabox page elements-per-page)
+                             #(dispatch [::set-deployments %])]
+       })))
 
 
 (reg-event-fx
-  ; FIXME: this is a hack.  We probably need a different api call just to retreive the deployment summary
-  ::get-all-deployments
-  (fn [{{:keys [::spec/full-text-search
-                ::spec/active-only?
-                ::spec/nuvlabox
-                ::spec/page
-                ::spec/elements-per-page]} :db} _]
-    {::cimi-api-fx/search [:deployment (utils/get-query-params full-text-search false
-                                                               nuvlabox page elements-per-page)
-                           #(dispatch [::set-deployments %])]}))
+  ::set-deployments-summary
+  (fn [{:keys [db]} [_ deployments]]
+    (let [states (get-in deployments [:aggregations :terms:state :buckets])]
+      {:db (assoc db ::spec/loading? false
+                     ::spec/deployments-summary deployments)})))
+
+
+(reg-event-fx
+  ::get-deployments-summary
+  (fn [{{:keys [::spec/full-text-search]} :db} _]
+    {::cimi-api-fx/search [:deployment (utils/get-query-params-summary full-text-search)
+                           #(dispatch [::set-deployments-summary %])]}))
 
 
 (reg-event-fx
@@ -136,6 +132,12 @@
      :dispatch [::refresh]}))
 
 (reg-event-db
+  ::set-nuvlabox
+  (fn [db [_ nuvlabox]]
+    (assoc db ::spec/nuvlabox nuvlabox)))
+
+
+(reg-event-db
   ::set-view
   (fn [db [_ view-type]]
     (assoc db ::spec/view view-type)))
@@ -154,3 +156,11 @@
                        :content message
                        :type    :error}]))
          (dispatch [::get-deployments]))]}))
+
+
+(reg-event-fx
+  ::set-state-selector
+  (fn [{db :db} [_ state-selector]]
+    (dispatch [::get-deployments])
+    {:db (assoc db ::spec/state-selector state-selector
+                   ::spec/page 1)}))

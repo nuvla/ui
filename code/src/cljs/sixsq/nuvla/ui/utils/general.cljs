@@ -333,3 +333,9 @@
 (defn format
   [fmt v]
   (gstring/format fmt v))
+
+
+(defn aggregate-to-map
+  "convert the aggregate structure returned by Nuvla into a terms/value map"
+  [aggregate]
+  (into {} (for [a aggregate] {(keyword (val (first a))) (val (second a))})))

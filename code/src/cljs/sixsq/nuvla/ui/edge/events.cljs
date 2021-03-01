@@ -9,16 +9,21 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
+(def refresh-summary-id :nuvlabox-get-nuvlaboxes-summary)
 
 (reg-event-fx
   ::refresh
   (fn [_ _]
-    {:dispatch [::main-events/action-interval-start {:id        refresh-id
-                                                     :frequency 10000
-                                                     :event     [::get-nuvlaboxes]}]}))
+    {:fx [[:dispatch [::main-events/action-interval-start {:id        refresh-id
+                                                           :frequency 10000
+                                                           :event     [::get-nuvlaboxes]}]]
+          [:dispatch [::main-events/action-interval-start {:id        refresh-summary-id
+                                                           :frequency 10000
+                                                           :event     [::get-nuvlaboxes-summary]}]]]}))
 
 
 (reg-event-fx
@@ -76,6 +81,23 @@
                                                   (:resources %)])])))))
 
 
+(reg-event-fx
+  ::set-nuvlaboxes-summary
+  (fn [{db :db} [_ nuvlaboxes-summary]]
+    {:db (assoc db ::spec/nuvlaboxes-summary nuvlaboxes-summary)}))
+
+
+(reg-event-fx
+  ::get-nuvlaboxes-summary
+  (fn [{{:keys [::spec/full-text-search] :as db} :db} _]
+    {:db                   (assoc db ::spec/loading? true)
+     ::cimi-api-fx/search  [:nuvlabox
+                            (utils/get-query-summary-params full-text-search)
+                            #(dispatch [::set-nuvlaboxes-summary %])]
+     ;::fx/state-nuvlaboxes [#(dispatch [::set-state-nuvlaboxes %])]
+     }))
+
+
 (reg-event-db
   ::set-state-nuvlaboxes
   (fn [db [_ state-nuvlaboxes]]
@@ -92,7 +114,7 @@
   ::set-nuvlaboxes-online-status
   (fn [db [_ resources]]
     (assoc db ::spec/nuvlaboxes-online-status (->> resources
-                                                   (map (juxt :parent  identity))
+                                                   (map (juxt :parent identity))
                                                    (into {})))))
 
 

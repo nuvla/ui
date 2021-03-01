@@ -52,6 +52,12 @@
 
 
 (reg-sub
+  ::credentials-summary
+  (fn [db]
+    (::spec/credentials-summary db)))
+
+
+(reg-sub
   ::credential-password
   (fn [db]
     (::spec/credential-password db)))

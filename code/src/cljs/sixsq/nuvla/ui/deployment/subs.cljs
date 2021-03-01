@@ -18,6 +18,12 @@
 
 
 (reg-sub
+  ::deployments-summary
+  (fn [db]
+    (::spec/deployments-summary db)))
+
+
+(reg-sub
   ::elements-per-page
   (fn [db]
     (::spec/elements-per-page db)))
@@ -67,3 +73,8 @@
                                          (into {}))]
       (when (utils/running-replicas? deployment-params-by-name)
         (utils/resolve-url-pattern url-pattern deployment-params-by-name)))))
+
+(reg-sub
+  ::state-selector
+  (fn [db]
+    (::spec/state-selector db)))

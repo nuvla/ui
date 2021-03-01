@@ -2,7 +2,23 @@
   (:require
     [clojure.string :as str]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [taoensso.timbre :as log]))
+
+
+(def status-started "STARTED")
+(def status-starting "STARTING")
+(def status-stopped "STOPPED")
+(def status-error "ERROR")
+
+
+(defn status->icon
+  [status]
+  (let [icons-map {status-started  "fas fa-play"
+                   status-starting "fas fa-spinner"
+                   status-stopped "fas fa-stop"
+                   status-error    "fas fa-exclamation"}]
+    (get icons-map status)))
 
 
 (defn resolve-url-pattern
@@ -53,7 +69,7 @@
     (->> deployment-parameters
          (filter is-replicas-running?)
          (map is-value-positive?)
-         (every? true?))                      ;; careful, this returns true for an empty collection!
+         (every? true?))                                    ;; careful, this returns true for an empty collection!
     false))
 
 
@@ -79,14 +95,27 @@
 
 
 (defn get-query-params
-  [full-text-search active-only? nuvlabox page elements-per-page]
-  (let [filter-active-only? (when active-only? "state!='STOPPED'")
-        filter-nuvlabox (when nuvlabox (str "nuvlabox='" nuvlabox "'"))
-        full-text-search    (general-utils/fulltext-query-string full-text-search)
-        filter              (str/join " and " (remove nil? [filter-active-only?
-                                                            filter-nuvlabox
-                                                            full-text-search]))]
-    (cond-> {:first   (inc (* (dec page) elements-per-page))
-             :last    (* page elements-per-page)
-             :orderby "created:desc"}
+  [full-text-search state nuvlabox page elements-per-page]
+  (let [filter-state     (when state (str "state='" state "'"))
+        filter-nuvlabox  (when nuvlabox (str "nuvlabox='" nuvlabox "'"))
+        full-text-search (general-utils/fulltext-query-string full-text-search)
+        filter           (str/join " and " (remove nil? [filter-state
+                                                         filter-nuvlabox
+                                                         full-text-search]))]
+    (cond-> {:first       (inc (* (dec page) elements-per-page))
+             :last        (* page elements-per-page)
+             :aggregation "terms:state"
+             :orderby     "created:desc"}
+            (not (str/blank? filter)) (assoc :filter filter))))
+
+
+(defn get-query-params-summary
+  [full-text-search]
+  (let [full-text-search (general-utils/fulltext-query-string full-text-search)
+        filter           full-text-search
+        aggregate        "terms:state"]
+    (cond-> {:orderby     "created:desc"
+             :aggregation aggregate
+             :first       0
+             :last        0}
             (not (str/blank? filter)) (assoc :filter filter))))

@@ -4,43 +4,37 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.deployment.events :as events]
     [sixsq.nuvla.ui.deployment.subs :as subs]
+    [sixsq.nuvla.ui.deployment.utils :as utils]
     [sixsq.nuvla.ui.deployment-detail.views :as deployment-detail-views]
-    [sixsq.nuvla.ui.edge.events :as edge-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.style :as utils-style]
+    [sixsq.nuvla.ui.utils.values :as values]
+    [taoensso.timbre :as log]
+    [reagent.core :as r]))
 
 
 (defn refresh
   [& opts]
-  (dispatch [::events/refresh opts])
-  (dispatch [::edge-events/refresh]))
+  (dispatch [::events/refresh opts]))
 
 
 (defn control-bar []
   (let [tr           (subscribe [::i18n-subs/tr])
         active-only? (subscribe [::subs/active-only?])
         full-text    (subscribe [::subs/full-text-search])]
-    [:span
+    [:span                                                  ;{:style {:display "inline"}}
 
      [main-components/SearchInput
       {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))
        :default-value @full-text}]
-
-     ^{:key (str "activeOnly:" @active-only?)}
-     [ui/Checkbox {:style          {:margin-left 10}
-                   :defaultChecked @active-only?
-                   :toggle         true
-                   :fitted         true
-                   :label          (@tr [:active?])
-                   :on-change      (ui-callback/checked
-                                     #(dispatch [::events/set-active-only? %]))}]]))
+     ]))
 
 
 (defn MenuBar
@@ -59,11 +53,9 @@
                        :on-click #(dispatch [::events/set-view "table"])}]
 
          [main-components/RefreshMenu
-          {:action-id  events/refresh-action-id
+          {:action-id  events/refresh-action-deployments-id
            :loading?   @loading?
-           :on-refresh refresh}]]]
-
-       [control-bar]])))
+           :on-refresh refresh}]]]])))
 
 
 (defn row-fn
@@ -74,8 +66,8 @@
          primary-url-pattern] (-> module :content (get :urls []) first)
         url           @(subscribe [::subs/deployment-url id primary-url-pattern])]
     [ui/TableRow
-     [ui/TableCell [values/as-link (general-utils/id->uuid id)
-                    :page "dashboard" :label (general-utils/id->short-uuid id)]]
+     [ui/TableCell [values/as-link (utils-general/id->uuid id)
+                    :page "dashboard" :label (utils-general/id->short-uuid id)]]
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}} (:name module)]
@@ -90,10 +82,10 @@
                             :max-width     "20ch"}} (get @creds-name credential-id credential-id)]
      [ui/TableCell
       (cond
-        (general-utils/can-operation? "stop" deployment)
+        (utils-general/can-operation? "stop" deployment)
         [deployment-detail-views/ShutdownButton deployment]
 
-        (general-utils/can-delete? deployment)
+        (utils-general/can-delete? deployment)
         [deployment-detail-views/DeleteButton deployment])]]))
 
 
@@ -122,10 +114,13 @@
 
 (defn cards-data-table
   [deployments-list]
-  [ui/CardGroup {:centered true}
-   (for [{:keys [id] :as deployment} deployments-list]
-     ^{:key id}
-     [deployment-detail-views/DeploymentCard deployment])])
+  [:div utils-style/center-items
+   [ui/CardGroup {:centered    true
+                  :itemsPerRow 4
+                  :stackable   true}
+    (for [{:keys [id] :as deployment} deployments-list]
+      ^{:key id}
+      [deployment-detail-views/DeploymentCard deployment])]])
 
 
 (defn deployments-display
@@ -140,6 +135,56 @@
          [vertical-data-table deployments-list])])))
 
 
+(defn StatisticStates
+  ([] [StatisticStates true])
+  ([clickable?]
+   (let [tr         (subscribe [::i18n-subs/tr])
+         summary    (subscribe [::subs/deployments-summary])
+         open-popup (r/atom true)]
+     ;(time/sleep 5000 #(reset! open-popup false))
+     (fn [clickable?]
+       (let [terms         (utils-general/aggregate-to-map (get-in @summary [:aggregations :terms:state :buckets]))
+             started       (:STARTED terms 0)
+             starting      (:STARTIN terms 0)
+             created       (:CREATED terms 0)
+             stopped       (:STOPPED terms 0)
+             error         (:ERROR terms 0)
+             queued        (:QUEUED terms 0)
+             starting-plus (+ starting created queued)
+             total         (:count @summary)
+             ]
+         [:div {:style {:margin     "10px auto 10px auto"
+                        :text-align "center"
+                        :width      "100%"}}
+          [ui/StatisticGroup (merge {:widths (if clickable? nil 5) :size "tiny"}
+                                    {:style {:margin-right "0px"
+                                             :display      "block"}})
+           [main-components/StatisticState total ["fas fa-rocket"] "TOTAL" clickable?
+            ::events/set-state-selector ::subs/state-selector]
+           [main-components/StatisticState started [(utils/status->icon utils/status-started)] utils/status-started
+            clickable? "green"
+            ::events/set-state-selector ::subs/state-selector]
+           [main-components/StatisticState starting-plus [(utils/status->icon utils/status-starting)]
+            utils/status-starting clickable? "yellow"
+            ::events/set-state-selector ::subs/state-selector]
+           [main-components/StatisticState stopped [(utils/status->icon utils/status-stopped)] utils/status-stopped
+            clickable? "yellow"
+            ::events/set-state-selector ::subs/state-selector]
+           (if clickable?
+             [ui/Popup {:trigger  (r/as-element
+                                    [main-components/StatisticState error [(utils/status->icon utils/status-error)]
+                                     utils/status-error clickable? "red"
+                                     ::events/set-state-selector ::subs/state-selector])
+                        :open     @open-popup
+                        :position "right center"
+                        :offset   [0 20]}
+              [ui/PopupContent
+               [:span [ui/Icon {:name "arrow left"}] (@tr [:statistics-select-info])]]]
+             [main-components/StatisticState error [(utils/status->icon utils/status-error)] utils/status-error
+              clickable? "red" ::events/set-state-selector ::subs/state-selector])
+           ]])))))
+
+
 (defn deployments-main-content
   []
   (let
@@ -147,12 +192,18 @@
      page              (subscribe [::subs/page])
      deployments       (subscribe [::subs/deployments])
      total-deployments (:count @deployments)
-     total-pages       (general-utils/total-pages
+     total-pages       (utils-general/total-pages
                          (get @deployments :count 0) @elements-per-page)
      deployments-list  (get @deployments :resources [])]
+    (refresh :init? true)
     [:<>
      [MenuBar]
      [ui/Segment style/basic
+      [:div {:style {:display "flex"}}
+       [control-bar]
+       [StatisticStates true]
+       [ui/Input {:style {:visibility "hidden"}
+                  :icon  "search"}]]
       [deployments-display deployments-list]]
      [uix/Pagination
       {:totalitems   total-deployments

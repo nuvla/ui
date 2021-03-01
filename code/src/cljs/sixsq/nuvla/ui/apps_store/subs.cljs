@@ -29,3 +29,9 @@
   ::active-tab-index
   (fn [db]
     (get-in db [::spec/active-tab-index])))
+
+
+(reg-sub
+  ::state-selector
+  (fn [db]
+    (::spec/state-selector db)))

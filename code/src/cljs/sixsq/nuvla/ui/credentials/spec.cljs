@@ -8,6 +8,8 @@
 
 (s/def ::credentials any?)
 
+(s/def ::credentials-summary any?)
+
 (s/def ::credential-password string?)
 
 (s/def ::add-credential-modal-visible? boolean?)
@@ -143,6 +145,7 @@
                           ::generated-credential-modal
                           ::credential
                           ::credentials
+                          ::credentials-summary
                           ::active-input
                           ::form-spec
                           ::form-valid?
@@ -158,6 +161,7 @@
                ::credential-modal-visible?         false
                ::generated-credential-modal        nil
                ::credentials                       []
+               ::credentials-summary               []
                ::credential                        {}
                ::active-input                      nil
                ::form-spec                         nil

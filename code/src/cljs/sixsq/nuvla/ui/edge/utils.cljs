@@ -9,6 +9,11 @@
 (def state-decommissioning "DECOMMISSIONING")
 (def state-decommissioned "DECOMMISSIONED")
 (def state-error "ERROR")
+
+(def status-online "ONLINE")
+(def status-offline "OFFLINE")
+(def status-unknown "UNKNOWN")
+
 (def vuln-critical-color "#f41906")
 (def vuln-high-color "#f66e0a")
 (def vuln-medium-color "#fbbc06")
@@ -16,14 +21,23 @@
 (def vuln-unknown-color "#949494")
 
 (defn state->icon
+  "Commissioning state"
   [state]
-  (let [icons-map {state-activated       "handshake"
-                   state-new             "dolly"
-                   state-commissioned    "check"
-                   state-decommissioning "eraser"
-                   state-decommissioned  "trash"
-                   state-error           "exclamation"}]
+  (let [icons-map {state-activated       "fas fa-handshake"
+                   state-new             "fas fa-dolly"
+                   state-commissioned    "fas fa-check"
+                   state-decommissioning "fas fa-eraser"
+                   state-decommissioned  "fas fa-trash"
+                   state-error           "fas fa-exclamation"}]
     (get icons-map state)))
+
+
+(defn status->icon
+  [status]
+  (let [icons-map {status-online   "fas fa-power-off"
+                   status-offline  "fas fa-power-off"
+                   status-unknown  "fas fa-question"}]
+    (get icons-map status)))
 
 
 (defn status->keyword
@@ -125,6 +139,14 @@
    :filter  (general-utils/join-and
               (when state-selector (state-filter state-selector))
               (general-utils/fulltext-query-string full-text-search))})
+
+
+(defn get-query-summary-params
+  [full-text-search]
+  {:first       0
+   :last        0
+   :aggregation "terms:state"
+   :filter      (general-utils/fulltext-query-string full-text-search)})
 
 
 (defn prepare-compose-files

@@ -42,6 +42,11 @@
            :width      "100%"}})
 
 
+(def center-items
+  {:style {:max-width "1200px"
+           :margin    "auto"}})
+
+
 ;;
 ;; common styles for Tables
 ;;

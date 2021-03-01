@@ -30,6 +30,12 @@
 
 
 (reg-sub
+  ::nuvlaboxes-summary
+  (fn [db]
+    (::spec/nuvlaboxes-summary db)))
+
+
+(reg-sub
   ::state-selector
   (fn [db]
     (::spec/state-selector db)))

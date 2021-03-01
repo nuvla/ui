@@ -11,6 +11,8 @@
 
 (s/def ::nuvlaboxes any?)
 
+(s/def ::nuvlaboxes-summary any?)
+
 (s/def ::nuvlabox-releases any?)
 
 (s/def ::state-nuvlaboxes any?)
@@ -44,6 +46,7 @@
 
 (s/def ::db (s/keys :req [::loading?
                           ::nuvlaboxes
+                          ::nuvlaboxes-summary
                           ::nuvlabox-releases
                           ::state-nuvlaboxes
                           ::status-nuvlaboxes
@@ -64,6 +67,7 @@
 
 (def defaults {::loading?                 false
                ::nuvlaboxes               nil
+               ::nuvlaboxes-summary       nil
                ::nuvlabox-releases        nil
                ::state-nuvlaboxes         nil
                ::status-nuvlaboxes        nil

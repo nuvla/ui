@@ -27,7 +27,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [taoensso.timbre :as log]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -961,7 +962,8 @@
         elements-per-page (subscribe [::deployment-subs/elements-per-page])
         page              (subscribe [::deployment-subs/page])
         loading?          (subscribe [::deployment-subs/loading?])]
-    (deployment-views/refresh :init? true :nuvlabox (str "nuvlabox/" uuid))
+    (dispatch [::deployment-events/set-nuvlabox (str "nuvlabox/" uuid)])
+    (deployment-views/refresh :init? true)
     (fn [uuid]
       (let [total-elements (:count @elements)
             total-pages    (general-utils/total-pages total-elements @elements-per-page)

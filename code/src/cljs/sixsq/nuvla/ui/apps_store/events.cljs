@@ -63,6 +63,20 @@
         (search-modules-cofx full-text-search elements-per-page page))))
 
 
+(defn summary-modules-cofx
+  [cofx full-text-search]
+  (assoc cofx ::cimi-api-fx/search
+              [:module (utils/get-query-summary-params full-text-search)
+               #(dispatch [::set-modules %])]))
+
+
+(reg-event-fx
+  ::get-modules-summary
+  (fn [{{:keys [::spec/full-text-search] :as db} :db} _]
+    (-> {:db (assoc db ::spec/modules nil)}
+        (summary-modules-cofx full-text-search))))
+
+
 (reg-event-fx
   ::set-full-text-search
   (fn [{{:keys [::spec/elements-per-page] :as db} :db} [_ full-text-search]]
@@ -85,3 +99,11 @@
   ::set-active-tab-index
   (fn [db [_ active-tab-index]]
     (assoc db ::spec/active-tab-index active-tab-index)))
+
+
+(reg-event-fx
+  ::set-state-selector
+  (fn [{db :db} [_ state-selector]]
+    (dispatch [::get-modules])
+    {:db (assoc db ::spec/state-selector state-selector
+                   ::spec/page 1)}))

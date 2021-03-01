@@ -4,6 +4,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
     [sixsq.nuvla.ui.apps.views-versions :as views-versions]
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
@@ -924,4 +925,6 @@
         n (count path)]
     (case n
       2 [TabsDeployment uuid]
-      (dispatch [::history-events/navigate (str "deployment")]))))
+      (do
+        (dispatch [::apps-store-events/set-active-tab-index 2])
+        (dispatch [::history-events/navigate (str "apps")])))))

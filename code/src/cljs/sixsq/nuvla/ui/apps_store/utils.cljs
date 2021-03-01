@@ -39,3 +39,19 @@
                 "subtype='application'"
                 "subtype='application_kubernetes'")
               (general-utils/by-tag-query-string tag))})
+
+
+(defn get-query-summary-params
+  [full-text-search]
+  {:first   0
+   :last    0
+   :orderby "created:desc"
+   :aggregation "terms:subtype"
+   :filter  (general-utils/join-and
+              (general-utils/join-or
+                "subtype='component'"
+                "subtype='application'"
+                "subtype='application_kubernetes'")
+              (general-utils/fulltext-query-string full-text-search))})
+
+

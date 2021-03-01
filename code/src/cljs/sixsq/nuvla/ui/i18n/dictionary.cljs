@@ -496,6 +496,7 @@
         :start-trial-now                              "Start my free trial now"
         :state                                        "state"
         :statistics                                   "statistics"
+        :statistics-select-info                       "Click/tap to filter."
         :status                                       "status"
         :stop                                         "stop"
         :stop-infrastructure                          "Stop infrastructure?"

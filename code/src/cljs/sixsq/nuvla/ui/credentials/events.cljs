@@ -73,6 +73,24 @@
 
 
 (reg-event-db
+  ::set-credentials-summary
+  (fn [db [_ credentials]]
+    (assoc db ::spec/credentials-summary credentials)))
+
+
+(reg-event-fx
+  ::get-credentials-summary
+  (fn [{:keys [db]} [_]]
+    {:db                  (assoc db ::spec/completed? false)
+     ::cimi-api-fx/search [:credential
+                           {:orderby "name:asc, id:asc"
+                            :aggregation "terms:subtype"
+                            :first 0
+                            :last 0}
+                           #(dispatch [::set-credentials-summary %])]}))
+
+
+(reg-event-db
   ::set-generated-credential-modal
   (fn [db [_ credential]]
     (assoc db ::spec/generated-credential-modal credential)))

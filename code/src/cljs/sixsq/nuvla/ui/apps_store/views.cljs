@@ -21,7 +21,7 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.style :as utils-style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
@@ -46,18 +46,18 @@
     [ui/Card
      (when logo-url
        [ui/Image {:src   logo-url
-                  :style {:width      "auto"
-                          :height     "100px"
-                          :object-fit "contain"}}])
+                  :style {:height     "100px"
+                          :object-fit "contain"}
+                  :fluid true}])
      [ui/CardContent {:href     detail-href
                       :on-click (fn [event]
                                   (dispatch [::history-events/navigate detail-href])
                                   (.preventDefault event))}
-      [ui/CardHeader {:style {:word-wrap "break-word"}}
+      [ui/CardHeader {:style     {:word-wrap "break-word"}}
        [ui/Icon {:name (apps-utils/subtype-icon subtype)}]
        (or name id)]
       [ui/CardMeta {:style {:word-wrap "break-word"}} parent-path]
-      [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]
+      [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} (general-utils/truncate description 125)]
       (when compatibility
         [ui/Label {:color "grey", :corner "right"}
          [ui/Popup
@@ -85,8 +85,10 @@
 
 (defn modules-cards-group
   [modules-list]
-  [ui/Segment style/basic
-   [ui/CardGroup {:centered true}
+  [ui/Segment utils-style/basic
+   [ui/CardGroup {:centered    true
+                  :itemsPerRow 4
+                  :stackable   true}
     (for [{:keys [id] :as module} modules-list]
       ^{:key id}
       [module-card module])]])
@@ -147,7 +149,8 @@
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
         [:<>
          [control-bar]
-         [modules-cards-group (get @modules :resources [])]
+         [:div utils-style/center-items
+          [modules-cards-group (get @modules :resources [])]]
          [uix/Pagination
           {:totalitems   total-modules
            :totalPages   total-pages
@@ -214,7 +217,7 @@
        [root-projects]])))
 
 
-(defn TabRunningApps
+(defn TabDeployments
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn []
@@ -224,26 +227,27 @@
 
 (defn tabs
   []
-  [{:menuItem {:content "Getting Started"
-               :key     "getting-started"
-               :icon    "certificate"}
-    :render   (fn [] (r/as-element [TabGettingStarted]))}
+  [
+   ;{:menuItem {:content "Getting Started"
+   ;            :key     "getting-started"
+   ;            :icon    "certificate"}
+   ; :render   (fn [] (r/as-element [TabGettingStarted]))}
    {:menuItem {:content "All Apps"
                :key     "overview"
-               :icon    "fa-th"}
+               :icon    "grid layout"}
     :render   (fn [] (r/as-element [TabAllApps]))}
    {:menuItem {:content "Navigate Apps"
                :key     "navigate"
                :icon    "folder open"}
     :render   (fn [] (r/as-element [TabNavigator]))}
-   {:menuItem {:content "My Apps"
-               :key     "my-apps"
-               :icon    "user"}
-    :render   (fn [] (r/as-element [TabMyApps]))}
-   {:menuItem {:content "Running Apps"
-               :key     "running-apps"
+   ;{:menuItem {:content "My Apps"
+   ;            :key     "my-apps"
+   ;            :icon    "user"}
+   ; :render   (fn [] (r/as-element [TabMyApps]))}
+   {:menuItem {:content "Deployments"
+               :key     "deployments"
                :icon    "rocket"}
-    :render   (fn [] (r/as-element [TabRunningApps]))}])
+    :render   (fn [] (r/as-element [TabDeployments]))}])
 
 
 (defn TabsAppStore

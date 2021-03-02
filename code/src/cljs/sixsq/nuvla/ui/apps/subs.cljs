@@ -241,3 +241,15 @@
         id
         (str id "_" (some (fn [[i {:keys [href]}]] (when (= current href) i)) versions))
         ))))
+
+
+(reg-sub
+  ::copy-module
+  (fn [db]
+    (::spec/copy-module db)))
+
+
+(reg-sub
+  ::paste-modal-visible?
+  (fn [db]
+    (::spec/paste-modal-visible? db)))

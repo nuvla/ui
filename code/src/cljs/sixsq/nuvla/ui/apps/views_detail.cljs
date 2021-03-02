@@ -105,6 +105,17 @@
               :disabled add-disabled?
               :on-click #(dispatch [::events/open-add-modal])}])
 
+          [uix/MenuItem
+           {:name     (@tr [:copy])
+            :icon     "copy"
+            :on-click #(dispatch [::events/copy])}]
+
+          (when (= "project" subtype)
+            [uix/MenuItem
+             {:name     (@tr [:paste])
+              :icon     "paste"
+              :on-click #(dispatch [::events/open-paste-modal])}])
+
           (when (general-utils/can-delete? @module)
             [DeleteButton @module])
 
@@ -248,6 +259,40 @@
                        :color (when-not parent :grey)}]]]
            ]]]))))
 
+
+(defn paste-modal
+  []
+  (let [tr              (subscribe [::i18n-subs/tr])
+        copy-module     (subscribe [::subs/copy-module])
+        visible?        (subscribe [::subs/paste-modal-visible?])
+        module-name     (:name @copy-module)
+        new-module-name (r/atom module-name)]
+    (fn []
+      (let [paste-fn #(do (dispatch [::events/close-paste-modal])
+                          (dispatch [::events/commit-message nil])
+                          (dispatch [::events/paste-module @new-module-name])
+                          (reset! new-module-name module-name))]
+        [ui/Modal {:open       @visible?
+                   :close-icon true
+                   :on-close   #(dispatch [::events/close-paste-modal])}
+
+         [uix/ModalHeader {:header (str (@tr [:paste-modal-header]))
+                           :icon   "paste"}]
+
+         [ui/ModalContent
+          [ui/Input {:fluid         true
+                     :default-value @new-module-name
+                     :auto-focus    true
+                     :focus         true
+                     :on-change     (ui-callback/input-callback
+                                      #(reset! new-module-name %))
+                     :on-key-press  (partial forms/on-return-key paste-fn)}]]
+
+         [ui/ModalActions
+          [uix/Button {:text     (@tr [:paste])
+                       :positive true
+                       :active   true
+                       :on-click paste-fn}]]]))))
 
 (defn version-warning []
   (let [latest? (subscribe [::subs/is-latest-version?])]

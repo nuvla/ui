@@ -71,5 +71,6 @@
      [views-detail/version-warning]
      [views-detail/add-modal]
      [views-detail/save-modal]
+     [views-detail/paste-modal]
      [views-detail/logo-url-modal]
      [apps]]))

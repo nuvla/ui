@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.credentials.events :as creds-events]
     [sixsq.nuvla.ui.data.spec :as data-spec]
     [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -15,10 +16,15 @@
 
 
 (reg-event-fx
-  ::close-deploy-modal
-  (fn [{{:keys [::spec/deployment] :as db} :db} _]
-    (cond-> {:db (merge db spec/defaults)}
-            (= (:state deployment) "CREATED") (assoc ::cimi-api-fx/delete [(:id deployment) #()]))))
+  ::reset
+  (fn [{db :db} _]
+    {:db (merge db spec/defaults)}))
+
+
+(reg-event-fx
+  ::delete-deployment
+  (fn [_ [_ id]]
+    {::cimi-api-fx/delete [id #()]}))
 
 
 (reg-event-fx
@@ -65,7 +71,7 @@
     {:db         (assoc db ::spec/selected-credential-id id
                            ::spec/deployment (assoc deployment :parent id))
      :dispatch-n [(when data-step-active? [::set-data-filters])
-                  [::creds-events/check-credential credential 5]]}))
+                  [::creds-events/check-credential credential 2]]}))
 
 
 (reg-event-db
@@ -73,6 +79,10 @@
   (fn [db [_ active-step]]
     (assoc db ::spec/active-step active-step)))
 
+(reg-event-db
+  ::set-launch-status
+  (fn [db [_ step-id status]]
+    (assoc-in db [::spec/step-states step-id :status] status)))
 
 (reg-event-fx
   ::set-selected-infra-service
@@ -97,46 +107,75 @@
                                     ::spec/infra-services nil)
      ::cimi-api-fx/search [:infrastructure-service
                            {:filter filter,
-                            :select "id, name, description, subtype"
+                            :select "id, name, description, subtype, capabilities"
                             :order  "name:asc,id:asc"}
                            #(dispatch [::set-infra-services %])]}))
 
 
+(defn deployment-update-registries
+  [deployment registries-creds-info]
+  (let [registry-ids (get-in deployment [:module :content :private-registries])]
+    (->> registry-ids
+         (map #(-> registries-creds-info (get %) (get :cred-id "")))
+         (assoc deployment :registries-credentials))))
+
+
 (reg-event-fx
   ::set-infra-registries-creds
-  (fn [{db :db} [_ {creds :resources}]]
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ registry-ids reg-creds-ids
+                                                 infra-registries {creds :resources}]]
     (let [infra-registries-creds (group-by :parent creds)
-          single-cred-choices    (filter #(= 1 (count (second %))) infra-registries-creds)]
+          registries-creds-info  (->>
+                                   registry-ids
+                                   (map-indexed
+                                     (fn [n reg-id]
+                                       (let [cred-id (some-> (nth reg-creds-ids n)
+                                                             str/trim
+                                                             not-empty)]
+                                         [reg-id
+                                          {:cred-id      cred-id
+                                           :preselected? (some? cred-id)}])))
+                                   (into {}))
+
+          single-cred-dispatch   (->> infra-registries-creds
+                                      (filter #(= 1 (count (second %))))
+                                      (mapv (fn [[infra-id [{cred-id :id}]]]
+                                              [::set-credential-registry infra-id cred-id])))]
       (cond-> {:db (assoc db ::spec/infra-registries-creds infra-registries-creds
-                             ::spec/infra-registries-creds-loading? false)}
-              (seq single-cred-choices) (assoc :dispatch-n
-                                               (mapv (fn [[infra-id [{cred-id :id}]]]
-                                                       [::set-credential-registry infra-id cred-id])
-                                                     single-cred-choices))))))
+                             ::spec/infra-registries infra-registries
+                             ::spec/infra-registries-loading? false
+                             ::spec/registries-creds registries-creds-info
+                             ::spec/deployment (deployment-update-registries
+                                                 deployment registries-creds-info))}
+              (seq single-cred-dispatch) (assoc :dispatch-n single-cred-dispatch)))))
 
 
 (reg-event-fx
   ::set-infra-registries
-  (fn [{:keys [db]} [_ {infra-registries :resources}]]
-    {:db                  (assoc db ::spec/infra-registries infra-registries
-                                    ::spec/infra-registries-loading? false
-                                    ::spec/infra-registries-creds nil
-                                    ::spec/infra-registries-creds-loading? true)
-     ::cimi-api-fx/search [:credential
-                           {:filter (general-utils/join-and
-                                      "subtype='infrastructure-service-registry'"
-                                      (apply general-utils/join-or
-                                             (map #(str "parent='" (:id %) "'") infra-registries)))
-                            :select "id, parent, name, description, last-check, status, subtype"
-                            :order  "name:asc,id:asc"}
-                           #(dispatch [::set-infra-registries-creds %])]}))
+  (fn [{:keys [db]} [_ registry-ids reg-creds-ids {infra-registries :resources}]]
+    (cond-> {:db (assoc db ::spec/infra-registries-creds nil)}
+            (seq infra-registries)
+            (assoc ::cimi-api-fx/search
+                   [:credential
+                    {:filter (general-utils/join-and
+                               "subtype='infrastructure-service-registry'"
+                               (apply general-utils/join-or
+                                      (map #(str "parent='" (:id %) "'")
+                                           infra-registries)))
+                     :select "id, parent, name, description, last-check, status, subtype"
+                     :order  "name:asc,id:asc"}
+                    #(dispatch [::set-infra-registries-creds registry-ids
+                                reg-creds-ids infra-registries %])])
+
+            (empty? infra-registries)
+            (assoc :dispatch [::set-infra-registries-creds
+                              registry-ids reg-creds-ids infra-registries {:resources []}]))))
 
 
 (reg-event-fx
   ::get-infra-registries
-  (fn [{:keys [db]} [_ registry-ids]]
-    {:db                  (assoc db ::spec/infra-registries-loading? true
-                                    ::spec/infra-registries)
+  (fn [{:keys [db]} [_ registry-ids reg-creds-ids]]
+    {:db                  (assoc db ::spec/infra-registries-loading? true)
      ::cimi-api-fx/search [:infrastructure-service
                            {:filter (general-utils/join-and
                                       "subtype='registry'"
@@ -144,7 +183,7 @@
                                              (map #(str "id='" % "'") registry-ids))),
                             :select "id, name, description"
                             :order  "name:asc,id:asc"}
-                           #(dispatch [::set-infra-registries %])]}))
+                           #(dispatch [::set-infra-registries registry-ids reg-creds-ids %])]}))
 
 
 (reg-event-fx
@@ -152,38 +191,86 @@
   (fn [{{:keys [::spec/registries-creds
                 ::spec/infra-registries-creds
                 ::spec/deployment] :as db} :db} [_ infra-id cred-id]]
-    (let [update-registries-creds (assoc registries-creds infra-id cred-id)
-          registries-credentials  (->> update-registries-creds vals (remove nil?))
-          credential              (-> infra-registries-creds (get infra-id) first)]
+    (let [update-registries-creds (update registries-creds infra-id assoc :cred-id cred-id)
+          credential              (->> infra-id
+                                       (get infra-registries-creds)
+                                       (some #(when (= (:id %) cred-id) %)))]
       {:db       (assoc db ::spec/registries-creds update-registries-creds
-                           ::spec/deployment (assoc deployment
-                                               :registries-credentials registries-credentials))
-       :dispatch [::creds-events/check-credential credential 5]})))
+                           ::spec/deployment (deployment-update-registries
+                                               deployment
+                                               update-registries-creds))
+       :dispatch [::creds-events/check-credential credential 2]})))
 
 
 (reg-event-db
   ::set-deployment
   (fn [db [_ deployment]]
-    (assoc db ::spec/deployment deployment
-              ::spec/loading-deployment? false)))
+    (assoc db ::spec/deployment deployment)))
+
+
+(reg-event-db
+  ::set-check-dct-result
+  (fn [{:keys [::spec/deployment] :as db} [_ {:keys [target-resource status-message] :as job}]]
+    (if (= (:href target-resource) (:id deployment))
+      (let [result (try
+                     {:dct (general-utils/json->edn status-message :keywordize-keys false)}
+                     (catch :default _
+                       {:error (str "Error: " status-message)}))]
+        (assoc db ::spec/check-dct result))
+      db)))
+
+
+(reg-event-fx
+  ::set-job-check-dct
+  (fn [_ [_ {:keys [id state] :as job}]]
+    (let [job-finished? (-> state
+                            (#{"STOPPED" "SUCCESS" "FAILED"})
+                            boolean)]
+      (if job-finished?
+        (dispatch [::set-check-dct-result job])
+        (dispatch [::check-dct-later id])))))
+
+
+
+(reg-event-fx
+  ::get-job-check-dct
+  (fn [_ [_ job-id]]
+    {::cimi-api-fx/get [job-id #(dispatch [::set-job-check-dct %])]}))
+
+
+(reg-event-fx
+  ::check-dct-later
+  (fn [_ [_ job-id]]
+    {:dispatch-later
+     [{:ms 3000 :dispatch [::get-job-check-dct job-id]}]}))
+
+
+(reg-event-fx
+  ::check-dct
+  (fn [_ [_ {:keys [id] :as deployment}]]
+    {::cimi-api-fx/operation [id "check-dct" #(dispatch [::check-dct-later (:location %)])]}))
 
 
 (reg-event-fx
   ::get-deployment
   (fn [{:keys [db]} [_ id]]
     {:db               (assoc db ::spec/deployment {:id id})
-     ::cimi-api-fx/get [id #(let [module-subtype (get-in % [:module :subtype])
-                                  is-kubernetes? (= module-subtype "application_kubernetes")
+     ::cimi-api-fx/get [id #(let [{:keys [content subtype href]} (:module %)
+                                  is-kubernetes? (= subtype "application_kubernetes")
                                   filter         (if is-kubernetes?
                                                    "subtype='kubernetes'"
                                                    "subtype='swarm'")]
                               (dispatch [::get-infra-services filter])
                               (dispatch [::set-deployment %])
-                              (when-let [registry-ids (some-> %
-                                                              :module
-                                                              :content
-                                                              :private-registries)]
-                                (dispatch [::get-infra-registries registry-ids]))
+                              (dispatch [::check-dct %])
+                              (dispatch [::get-module-info href])
+                              (dispatch [::set-selected-version (:id content)])
+                              (dispatch [::set-original-module (:module %)])
+                              (when-let [registry-ids (:private-registries content)]
+                                (dispatch [::get-infra-registries registry-ids
+                                           (or
+                                             (:registries-credentials %)
+                                             (:registries-credentials content))]))
                               )]}))
 
 
@@ -198,8 +285,7 @@
           old-deployment-id (:id deployment)
           on-success        #(dispatch [::get-deployment (:resource-id %)])]
       (cond->
-        {:db               (assoc db ::spec/loading-deployment? true
-                                     ::spec/deployment nil
+        {:db               (assoc db ::spec/deployment nil
                                      ::spec/selected-credential-id nil
                                      ::spec/selected-infra-service nil
                                      ::spec/deploy-modal-visible? (not (boolean do-not-open-modal?))
@@ -208,8 +294,21 @@
                                      ::spec/cloud-filter nil
                                      ::spec/selected-cloud nil
                                      ::spec/cloud-infra-services nil
-                                     ::spec/data-clouds nil)
-         ::cimi-api-fx/add [:deployment data on-success]}
+                                     ::spec/data-clouds nil
+                                     ::spec/license-accepted? false
+                                     ::spec/module-info nil
+                                     ::spec/selected-version nil
+                                     ::spec/original-module nil)
+         ::cimi-api-fx/add [:deployment data on-success
+                            :on-error #(do
+                                         (dispatch [::reset])
+                                         (dispatch
+                                           [::messages-events/add
+                                            (let [{:keys [status message]} (response/parse-ex-info %)]
+                                              {:header  (cond-> "Error during creation of deployment"
+                                                                status (str " (" status ")"))
+                                               :content message
+                                               :type    :error})]))]}
         old-deployment-id (assoc ::cimi-api-fx/delete [old-deployment-id #() :on-error #()])))))
 
 
@@ -225,8 +324,7 @@
   (fn [{db :db} [_ first-step {:keys [parent id] :as deployment}]]
     (when (= :data first-step)
       (dispatch [::get-data-records]))
-    (cond-> {:db       (assoc db ::spec/loading-deployment? true
-                                 ::spec/deployment nil
+    (cond-> {:db       (assoc db ::spec/deployment nil
                                  ::spec/selected-credential-id nil
                                  ::spec/selected-infra-service nil
                                  ::spec/deploy-modal-visible? true
@@ -235,7 +333,11 @@
                                  ::spec/cloud-filter nil
                                  ::spec/selected-cloud nil
                                  ::spec/cloud-infra-services nil
-                                 ::spec/data-clouds nil)
+                                 ::spec/data-clouds nil
+                                 ::spec/registries-creds nil
+                                 ::spec/module-info nil
+                                 ::spec/selected-version nil
+                                 ::spec/original-module nil)
              :dispatch [::get-deployment id]}
             parent (assoc ::cimi-api-fx/get [parent #(dispatch [::reselect-credential %])]))))
 
@@ -262,46 +364,60 @@
         #(dispatch [::set-credentials %])]})))
 
 
+(reg-event-db
+  ::set-error-message
+  (fn [db [_ title content]]
+    (assoc db ::spec/error-message {:title   title
+                                    :content content})))
+
+
+(reg-event-db
+  ::set-submit-loading?
+  (fn [db [_ loading?]]
+    (assoc db ::spec/submit-loading? loading?)))
+
+
 (reg-event-fx
-  ::start-deployment
-  (fn [{:keys [db]} [_ id]]
-    (let [start-callback (fn [response]
-                           (if (instance? js/Error response)
-                             (let [{:keys [status message]} (response/parse-ex-info response)]
-                               (dispatch [::messages-events/add
-                                          {:header  (cond-> (str "error start " id)
-                                                            status (str " (" status ")"))
-                                           :content message
-                                           :type    :error}]))
-                             (let [{:keys [status message resource-id]} (response/parse response)
-                                   success-msg {:header  (cond-> (str "started " resource-id)
-                                                                 status (str " (" status ")"))
-                                                :content message
-                                                :type    :success}]
-                               (dispatch [::messages-events/add success-msg])
-                               (dispatch [:sixsq.nuvla.ui.dashboard-detail.events/get-deployment id])
-                               (dispatch [::history-events/navigate
-                                          (str "dashboard/" (general-utils/id->uuid id))]))))]
-      {:db                     (assoc db ::spec/deploy-modal-visible? false)
-       ::cimi-api-fx/operation [id "start" start-callback]})))
+  ::deployment-operation
+  (fn [_ [_ id operation]]
+    (let [callback (fn [response]
+                     (if (instance? js/Error response)
+                       (do (dispatch [::set-error-message
+                                      (str "Error occured during \"" operation
+                                           "\" action on deployment")
+                                      (-> response response/parse-ex-info :message)])
+                           (dispatch [::set-submit-loading? false]))
+                       (let [{:keys [message]} (response/parse response)
+                             success-msg {:header  (str operation " action called successfully")
+                                          :content message
+                                          :type    :success}]
+                         (dispatch [::reset])
+                         (dispatch [::messages-events/add success-msg])
+                         (dispatch [:sixsq.nuvla.ui.deployment.events/get-deployment id])
+                         (dispatch [::history-events/navigate
+                                    (str "deployment/" (general-utils/id->uuid id))]))))]
+      {::cimi-api-fx/operation [id operation callback]})))
 
 
 (reg-event-fx
   ::edit-deployment
-  (fn [{{:keys [::spec/deployment]} :db} _]
+  (fn [{{:keys [::spec/deployment] :as db} :db} [_ operation exec-mode]]
     (let [resource-id   (:id deployment)
+          operation     (or operation "start")
+          dep           (assoc deployment :execution-mode exec-mode)
           edit-callback (fn [response]
                           (if (instance? js/Error response)
-                            (let [{:keys [status message]} (response/parse-ex-info response)]
-                              (dispatch [::messages-events/add
-                                         {:header  (cond-> (str "error editing " resource-id)
-                                                           status (str " (" status ")"))
-                                          :content message
-                                          :type    :error}]))
                             (do
-                              (dispatch [::start-deployment resource-id])
-                              (dispatch [::intercom-events/set-event "Last app launch" (time/timestamp)]))))]
-      {::cimi-api-fx/edit [resource-id deployment edit-callback]})))
+                              (dispatch [::set-error-message
+                                        "Error during edition of deployment"
+                                        (-> response response/parse-ex-info :message)])
+                              (dispatch [::set-submit-loading? false]))
+                            (do
+                              (dispatch [::deployment-operation resource-id operation])
+                              (dispatch [::intercom-events/set-event "Last app launch"
+                                         (time/timestamp)]))))]
+      {:db (assoc db ::spec/submit-loading? true)
+       ::cimi-api-fx/edit [resource-id dep edit-callback]})))
 
 
 (reg-event-db
@@ -355,3 +471,47 @@
   ::set-infra-service-filter
   (fn [db [_ cloud]]
     (set-data-infra-service-and-filter db cloud)))
+
+
+(reg-event-db
+  ::set-license-accepted?
+  (fn [db [_ accepted?]]
+    (assoc db ::spec/license-accepted? accepted?)))
+
+
+(reg-event-db
+  ::set-price-accepted?
+  (fn [db [_ accepted?]]
+    (assoc db ::spec/price-accepted? accepted?)))
+
+
+(reg-event-db
+  ::set-selected-version
+  (fn [db [_ version]]
+    (assoc db ::spec/selected-version version)))
+
+
+(reg-event-db
+  ::set-original-module
+  (fn [db [_ module]]
+    (assoc db ::spec/original-module module)))
+
+
+(reg-event-db
+  ::set-module-info
+  (fn [db [_ module]]
+    (assoc db ::spec/module-info module)))
+
+
+(reg-event-fx
+  ::get-module-info
+  (fn [_ [_ module-id]]
+    {::cimi-api-fx/get [module-id #(dispatch [::set-module-info %])]}))
+
+
+(reg-event-fx
+  ::fetch-module
+  (fn [{{:keys [::spec/deployment]} :db} [_ module-version-href]]
+    {::cimi-api-fx/get
+     [module-version-href
+      #(dispatch [::set-deployment (update deployment :module utils/merge-module %)])]}))

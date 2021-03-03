@@ -30,7 +30,7 @@
                      (dispatch [::apps-events/get-module]))}])
 
 (defn module-card
-  [{:keys [id name description path parent-path subtype compatibility logo-url] :as module}]
+  [{:keys [id name description path parent-path subtype compatibility logo-url price] :as module}]
   (let [tr          (subscribe [::i18n-subs/tr])
         detail-href (str "apps/" path)]
     [ui/Card
@@ -55,13 +55,22 @@
            :content  (str "COMPATIBILITY: " compatibility)
            :size     "small"
            :trigger  (r/as-element [ui/Icon {:name "info"}])}]])]
-     [ui/Button {:fluid    true
-                 :primary  true
-                 :icon     :rocket
-                 :content  (@tr [:launch])
-                 :on-click #(dispatch [::main-events/subscription-required-dispatch
-                                       [::deployment-dialog-events/create-deployment
-                                        (:id module) :infra-services]])}]]))
+     (if price
+       [ui/Button {:fluid    true
+                   :primary  true
+                   :icon     :cart
+                   :content  (str (@tr [:launch-for])
+                                  (/ (:cent-amount-daily price) 100) "€/" (@tr [:day]))
+                   :on-click #(dispatch [::main-events/subscription-required-dispatch
+                                         [::deployment-dialog-events/create-deployment
+                                          (:id module) :infra-services]])}]
+       [ui/Button {:fluid    true
+                   :primary  true
+                   :icon     :rocket
+                   :content  (@tr [:launch])
+                   :on-click #(dispatch [::main-events/subscription-required-dispatch
+                                         [::deployment-dialog-events/create-deployment
+                                          (:id module) :infra-services]])}])]))
 
 
 (defn modules-cards-group
@@ -87,10 +96,10 @@
 (defn control-bar-projects []
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Menu {:borderless true}
-     [uix/MenuItemWithIcon
-      {:name      (@tr [:add])
-       :icon-name "add"
-       :on-click  #(dispatch [::apps-events/open-add-modal])}]
+     [uix/MenuItem
+      {:name     (@tr [:add])
+       :icon     "add"
+       :on-click #(dispatch [::apps-events/open-add-modal])}]
      [refresh-menu]]))
 
 
@@ -110,7 +119,7 @@
              (let [{:keys [children]} @module]
                [apps-project-views/format-module-children children]))]
           :label (str/capitalize (@tr [:all-projects]))
-          :title-size :h2]]))))
+          :icon "fas fa-folder"]]))))
 
 
 (defn appstore
@@ -123,19 +132,18 @@
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
-        [ui/Container {:fluid true}
-         [uix/Accordion
-          [:<>
-           [control-bar]
-           [modules-cards-group (get @modules :resources [])]
-           [uix/Pagination
-            {:totalitems   total-modules
-             :totalPages   total-pages
-             :activePage   @page
-             :onPageChange (ui-callback/callback
-                             :activePage #(dispatch [::events/set-page %]))}]]
-          :label (str/capitalize (@tr [:appstore]))
-          :title-size :h2]]))))
+        [uix/Accordion
+         [:<>
+          [control-bar]
+          [modules-cards-group (get @modules :resources [])]
+          [uix/Pagination
+           {:totalitems   total-modules
+            :totalPages   total-pages
+            :activePage   @page
+            :onPageChange (ui-callback/callback
+                            :activePage #(dispatch [::events/set-page %]))}]]
+         :icon "fas fa-store"
+         :label (str/capitalize (@tr [:appstore]))]))))
 
 
 (defn root-view

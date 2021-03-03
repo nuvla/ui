@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.acl.events :as events]
     [sixsq.nuvla.ui.acl.subs :as subs]
     [sixsq.nuvla.ui.acl.utils :as utils]
+    [sixsq.nuvla.ui.acl.utils :as acl-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -93,7 +94,7 @@
 (defn OwnerItem
   [{:keys [on-change]} ui-acl removable? principal]
   (let [principal-name @(subscribe [::subs/principal-name principal])]
-    [ui/ListItem
+    [ui/ListItem {:style {:vertical-align "middle"}}
      [ui/ListContent
       [ui/ListHeader
        [PrincipalIcon principal]
@@ -285,7 +286,7 @@
                [OwnerItem opts ui-acl (>= (count owners) 2) owner])
 
              (when-not read-only
-               [ui/ListItem
+               [ui/ListItem {:style {:vertical-align "middle"}}
                 [ui/ListContent
                  [ui/ListHeader
                   [DropdownPrincipals
@@ -321,7 +322,9 @@
   (let [mode   (r/atom (or mode :simple))
         ui-acl (or ui-acl
                    (r/atom
-                     (let [acl (or default-value (when-not read-only {:owners #{@(subscribe [::session-subs/user-id])}}))]
+                     (let [acl (or default-value
+                                   (when-not read-only
+                                     {:owners #{@(subscribe [::session-subs/user-id])}}))]
                        (utils/acl->ui-acl-format acl))))]
     (fn [{:keys [on-change read-only] :as opts}]
       (let [opts (assoc opts :mode mode
@@ -337,11 +340,41 @@
            [AclRights opts ui-acl])]))))
 
 
+(defn TabAcls
+  ([e can-edit? edit-event] (TabAcls e can-edit? edit-event nil))
+  ([e can-edit? edit-event error]
+   (let [tr            (subscribe [::i18n-subs/tr])
+         default-value (:acl @e)
+         acl           (or default-value
+                           (when-let [user-id (and can-edit?
+                                                   @(subscribe [::session-subs/user-id]))]
+                             {:owners [user-id]}))
+         ui-acl        (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
+     {:menuItem {:content "Share"
+                 :key     "share"
+                 :icon    "users"}
+      :render   (fn []
+                  (r/as-element
+                    [:<>
+                     (when (some? error) error)
+                     (when default-value
+                       ^{:key (:updated @e)}
+                       [AclWidget {:default-value default-value
+                                   :read-only     (not can-edit?)
+                                   :on-change     #(dispatch [edit-event
+                                                              (:id @e) (assoc @e :acl %)
+                                                              (@tr [:acl-updated])])}
+                        ui-acl])]))})))
+
+
 (defn AclButton
   [{:keys [default-value read-only default-active?] :as opts}]
   (let [tr      (subscribe [::i18n-subs/tr])
         active? (r/atom default-active?)
-        acl     (or default-value (when-not read-only {:owners [@(subscribe [::session-subs/user-id])]}))
+        acl     (or default-value
+                    (when-let [user-id (and (not read-only)
+                                            @(subscribe [::session-subs/user-id]))]
+                      {:owners [user-id]}))
         ui-acl  (when acl (r/atom (utils/acl->ui-acl-format acl)))]
     (fn [opts]
       (when ui-acl

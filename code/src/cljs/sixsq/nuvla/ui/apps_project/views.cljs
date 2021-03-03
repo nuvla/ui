@@ -59,8 +59,7 @@
 
           [uix/Accordion
            [format-module-children children]
-           :label (str/capitalize (@tr [:apps-sub-modules]))
-           :title-size :h2])))))
+           :label (str/capitalize (@tr [:apps-sub-modules]))])))))
 
 
 (defn clear-module [])
@@ -85,6 +84,5 @@
                          :read-only     (not @editable?)}]
          [apps-views-detail/MenuBar]
          [summary]
-         [apps-views-detail/save-action]
          [modules-view]
          [apps-views-detail/logo-url-modal]]))))

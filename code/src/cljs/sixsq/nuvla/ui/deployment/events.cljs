@@ -1,10 +1,12 @@
-(ns sixsq.nuvla.ui.dashboard-detail.events
+(ns sixsq.nuvla.ui.deployment.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
+    [sixsq.nuvla.ui.credentials.events :as creds-events]
     [sixsq.nuvla.ui.dashboard.events :as dashboard-events]
+    [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -17,15 +19,28 @@
   (fn [db [_ module]]
     (assoc db ::spec/module-versions (:versions module))))
 
+
+(reg-event-db
+  ::set-upcoming-invoice
+  (fn [db [_ upcoming-invoice]]
+    (assoc db ::spec/upcoming-invoice upcoming-invoice)))
+
+
 (reg-event-fx
   ::set-deployment
-  (fn [{{:keys [::spec/module-versions] :as db} :db} [_ resource]]
-    (let [module-href (get-in resource [:module :href])]
+  (fn [{{:keys [::spec/module-versions
+                ::spec/upcoming-invoice] :as db} :db}
+       [_ {:keys [id module subscription-id] :as resource}]]
+    (let [module-href (:href module)]
       (cond-> {:db (assoc db ::spec/loading? false
                              ::spec/deployment resource)}
               (and (not module-versions)
                    module-href) (assoc ::cimi-api-fx/get
-                                       [module-href #(dispatch [::set-module-versions %])])))))
+                                       [module-href #(dispatch [::set-module-versions %])])
+              (and (nil? upcoming-invoice)
+                   subscription-id) (assoc ::cimi-api-fx/operation
+                                           [id "upcoming-invoice"
+                                            #(dispatch [::set-upcoming-invoice %])])))))
 
 
 (reg-event-db
@@ -51,26 +66,16 @@
     (let [different-deployment? (not= (:id deployment) id)]
       (cond-> {:dispatch-n       [[::get-deployment-parameters id]
                                   [::get-events id]
-                                  [::get-jobs id]]
+                                  [::job-events/get-jobs id]]
                ::cimi-api-fx/get [id #(dispatch [::set-deployment %])]}
               different-deployment? (assoc :db (merge db spec/defaults))))))
 
 
 (reg-event-db
-  ::clear-module
+  ::reset-db
   (fn [db]
-    (assoc db ::spec/module-versions nil)))
-
-
-(reg-event-fx
-  ::fetch-module
-  (fn [{{:keys [::spec/deployment] :as db} :db} [_ id]]
-    {::cimi-api-fx/operation [id "fetch-module"
-                              #(do (dispatch [::set-deployment %])
-                                   (dispatch [::messages-events/add
-                                              {:header  "Fetch module"
-                                               :message (str "Fetch module " % " done.")
-                                               :type    :success}]))]}))
+    (assoc db ::spec/module-versions nil
+              ::spec/upcoming-invoice nil)))
 
 
 (reg-event-fx
@@ -108,36 +113,6 @@
       {::cimi-api-fx/search [:event
                              (general-utils/prepare-params query-params)
                              #(dispatch [::set-events (:resources %)])]})))
-
-
-(reg-event-fx
-  ::set-job-page
-  (fn [{{:keys [::spec/deployment] :as db} :db} [_ page]]
-    {:dispatch [::get-jobs (:id deployment)]
-     :db       (assoc db ::spec/job-page page)}))
-
-
-(reg-event-db
-  ::set-jobs
-  (fn [db [_ jobs]]
-    (assoc db ::spec/jobs jobs)))
-
-
-(reg-event-fx
-  ::get-jobs
-  (fn [{{:keys [::spec/job-page
-                ::spec/jobs-per-page]} :db} [_ href]]
-    (let [filter-str   (str "target-resource/href='" href "'")
-          select-str   (str "id, action, time-of-status-change, updated, state, "
-                            "target-resource, return-code, progress, status-message")
-          query-params {:filter  filter-str
-                        :select  select-str
-                        :first   (inc (* (dec job-page) jobs-per-page))
-                        :last    (* job-page jobs-per-page)
-                        :orderby "created:desc"}]
-      {::cimi-api-fx/search [:job
-                             (general-utils/prepare-params query-params)
-                             #(dispatch [::set-jobs %])]})))
 
 
 (reg-event-db
@@ -227,13 +202,13 @@
                            [::fetch-deployment-log]
                            [::create-log])
                          [::main-events/action-interval-delete
-                          :dashboard-detail-get-deployment-log])}
+                          :deployment-get-deployment-log])}
             (and play?
                  deployment-log-id)
             (assoc :dispatch-later
                    [{:ms       5000
                      :dispatch [::main-events/action-interval-start
-                                {:id        :dashboard-detail-get-deployment-log
+                                {:id        :deployment-get-deployment-log
                                  :frequency 10000
                                  :event     [::get-deployment-log]}]}]))))
 
@@ -259,7 +234,7 @@
 
 (reg-event-fx
   ::edit
-  (fn [_ [_ resource-id data]]
+  (fn [_ [_ resource-id data success-msg]]
     {::cimi-api-fx/edit [resource-id data
                          #(if (instance? js/Error %)
                             (let [{:keys [status message]} (response/parse-ex-info %)]
@@ -268,7 +243,13 @@
                                                            status (str " (" status ")"))
                                           :content message
                                           :type    :error}]))
-                            (dispatch [::set-deployment %]))]}))
+                            (do
+                              (when success-msg
+                                (dispatch [::messages-events/add
+                                           {:header  success-msg
+                                            :content success-msg
+                                            :type    :success}]))
+                              (dispatch [::set-deployment %])))]}))
 
 
 (reg-event-fx
@@ -289,3 +270,17 @@
                                                                   status (str " (" status ")"))
                                                  :content message
                                                  :type    :success}]))))]}))
+
+
+(reg-event-fx
+  ::check-credential
+  (fn [_ [_ credential-href]]
+    {::cimi-api-fx/get [credential-href
+                        #(dispatch [::creds-events/check-credential % 1])
+                        ]}))
+
+
+(reg-event-db
+  ::set-active-tab-index
+  (fn [db [_ active-tab-index]]
+    (assoc db ::spec/active-tab-index active-tab-index)))

@@ -5,6 +5,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.infrastructures-detail.events :as events]
     [sixsq.nuvla.ui.infrastructures-detail.spec :as spec]
@@ -12,7 +13,6 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.utils.resource-details :as resource-details]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
@@ -47,7 +47,7 @@
       :danger-msg  (@tr [:infrastructure-delete-warning])
       :trigger     (r/as-element [ui/MenuItem
                                   [ui/Icon {:name "trash"}]
-                                  (@tr [:delete])])
+                                  (str/capitalize (@tr [:delete]))])
       :header      (@tr [:delete-infrastructure])
       :content     [:h3 content]}]))
 
@@ -63,7 +63,7 @@
       :danger-msg  (@tr [:infrastructure-terminate-warning])
       :trigger     (r/as-element [ui/MenuItem
                                   [ui/Icon {:name "delete"}]
-                                  (@tr [:terminate])])
+                                  (str/capitalize (@tr [:terminate]))])
       :header      (@tr [:terminate-infrastructure])
       :content     [:h3 content]}]))
 
@@ -101,28 +101,29 @@
 
 
 (defn MenuBar [uuid]
-  (let [can-delete?   (subscribe [::subs/can-delete?])
+  (let [can-delete?    (subscribe [::subs/can-delete?])
         can-terminate? (subscribe [::subs/can-terminate?])
-        can-stop? (subscribe [::subs/can-stop?])
-        can-start? (subscribe [::subs/can-start?])
-        infra-service (subscribe [::subs/infrastructure-service])
-        loading?      (subscribe [::subs/loading?])]
-    [ui/Menu {:borderless true}
-     (when @can-delete?
-       [DeleteButton infra-service])
+        can-stop?      (subscribe [::subs/can-stop?])
+        can-start?     (subscribe [::subs/can-start?])
+        infra-service  (subscribe [::subs/infrastructure-service])
+        loading?       (subscribe [::subs/loading?])]
+    [main-components/StickyBar
+     [ui/Menu {:borderless true}
+      (when @can-delete?
+        [DeleteButton infra-service])
 
-     (when @can-terminate?
-       [TerminateButton infra-service])
+      (when @can-terminate?
+        [TerminateButton infra-service])
 
-     (when @can-stop?
-       [StopButton infra-service])
+      (when @can-stop?
+        [StopButton infra-service])
 
-     (when @can-start?
-       [StartButton infra-service])
+      (when @can-start?
+        [StartButton infra-service])
 
-     [main-components/RefreshMenu
-      {:loading?   @loading?
-       :on-refresh #(refresh uuid)}]]))
+      [main-components/RefreshMenu
+       {:loading?   @loading?
+        :on-refresh #(refresh uuid)}]]]))
 
 
 (defn InfraService
@@ -176,7 +177,7 @@
            (if (-> @infra-service :cluster-params :coe-manager-endpoint)
              [uix/TableRowField "COE manager", :key (str id "-subtype"),
               :editable? false, :spec ::spec/endpoint, :validate-form? @validate-form?,
-              :required? true, :default-value [:a {:href (-> @infra-service :cluster-params :coe-manager-endpoint)
+              :required? true, :default-value [:a {:href   (-> @infra-service :cluster-params :coe-manager-endpoint)
                                                    :target "_blank"}
                                                (-> @infra-service :cluster-params :coe-manager-endpoint)]])]]
          (when @can-edit?
@@ -199,6 +200,6 @@
       ^{:key uuid}
       [ui/Container {:fluid true}
        [MenuBar uuid]
-       [resource-details/detail-header @infra-service]
+       [cimi-detail-views/detail-header @infra-service]
        ^{:key uuid}
        [InfraService]])))

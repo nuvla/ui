@@ -12,7 +12,7 @@
 
 (s/def ::error-message (s/nilable string?))
 
-(s/def ::success-message (s/nilable string?))
+(s/def ::success-message (s/nilable keyword?))
 
 (s/def ::redirect-uri (s/nilable string?))
 

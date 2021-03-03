@@ -16,6 +16,8 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.profile.events :as profile-events]
+    [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -56,7 +58,7 @@
      {:on-confirm  #(dispatch [::events/delete-module id])
       :trigger     (r/as-element [ui/MenuItem
                                   [ui/Icon {:name "trash"}]
-                                  (@tr [:delete])])
+                                  (str/capitalize (@tr [:delete]))])
       :content     [:h3 content]
       :header      (@tr [:delete-module])
       :danger-msg  (@tr [:module-delete-warning])
@@ -67,57 +69,51 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         module        (subscribe [::subs/module])
         is-new?       (subscribe [::subs/is-new?])
-        page-changed? (subscribe [::main-subs/changes-protection?])]
+        page-changed? (subscribe [::main-subs/changes-protection?])
+        form-valid?   (subscribe [::subs/form-valid?])
+        editable?     (subscribe [::subs/editable?])
+        module-id     (subscribe [::subs/module-id-version])]
     (fn []
       (let [subtype          (:subtype @module)
             launchable?      (and subtype (not= "project" subtype))
             launch-disabled? (or @is-new? @page-changed?)
             add?             (= "project" (:subtype @module))
-            add-disabled?    (or @is-new? @page-changed?)
-            id               (:id @module)]
+            add-disabled?    (or @is-new? @page-changed?)]
 
-        [ui/Menu {:borderless true}
+        [main-components/StickyBar
+         [ui/Menu {:borderless true}
+          (when @editable?
+            [uix/MenuItem
+             {:name     (@tr [:save])
+              :icon     "save"
+              :disabled (edit-button-disabled? @page-changed? @form-valid?)
+              :on-click save-callback}])
 
-         (when launchable?
-           [uix/MenuItemWithIcon
-            {:name      (@tr [:launch])
-             :icon-name "rocket"
-             :disabled  launch-disabled?
-             :on-click  #(dispatch [::main-events/subscription-required-dispatch
+          (when launchable?
+            [uix/MenuItem
+             {:name     (@tr [:launch])
+              :icon     "rocket"
+              :disabled launch-disabled?
+              :on-click #(dispatch [::main-events/subscription-required-dispatch
                                     [::deployment-dialog-events/create-deployment
-                                     id :infra-services]])}])
+                                     @module-id :infra-services]])}])
 
-         (when add?
-           [uix/MenuItemWithIcon
-            {:name      (@tr [:add])
-             :icon-name "add"
-             :disabled  add-disabled?
-             :on-click  #(dispatch [::events/open-add-modal])}])
+          (when add?
+            [uix/MenuItem
+             {:name     (@tr [:add])
+              :icon     "add"
+              :disabled add-disabled?
+              :on-click #(dispatch [::events/open-add-modal])}])
 
-         (when (general-utils/can-delete? @module)
-           [DeleteButton @module])
+          (when (general-utils/can-delete? @module)
+            [DeleteButton @module])
 
-         [main-components/RefreshMenu
-          {:refresh-disabled? @is-new?
-           :on-refresh        #(let [get-module-fn (fn [] (dispatch [::events/get-module]))]
-                                 (if @page-changed?
-                                   (dispatch [::main-events/ignore-changes-modal get-module-fn])
-                                   (get-module-fn)))}]]))))
-
-
-(defn save-action []
-  (let [page-changed? (subscribe [::main-subs/changes-protection?])
-        tr            (subscribe [::i18n-subs/tr])
-        form-valid?   (subscribe [::subs/form-valid?])
-        editable?     (subscribe [::subs/editable?])]
-    (fn []
-      (when @editable?
-        [ui/Button {:primary  true
-                    :style    {:margin-top 10}
-                    :disabled (edit-button-disabled? @page-changed? @form-valid?)
-                    :icon     "save"
-                    :content  (@tr [:save])
-                    :on-click save-callback}]))))
+          [main-components/RefreshMenu
+           {:refresh-disabled? @is-new?
+            :on-refresh        #(let [get-module-fn (fn [] (dispatch [::events/get-module]))]
+                                  (if @page-changed?
+                                    (dispatch [::main-events/ignore-changes-modal get-module-fn])
+                                    (get-module-fn)))}]]]))))
 
 
 (defn save-modal
@@ -139,7 +135,7 @@
                    :on-close   #(do (dispatch [::events/commit-message nil])
                                     (dispatch [::events/close-save-modal]))}
 
-         [ui/ModalHeader (str/capitalize (str (@tr [:save]) " " (@tr [:component])))]
+         [uix/ModalHeader {:header (str (@tr [:save]) " " (@tr [:component]))}]
 
          [ui/ModalContent
           (if @need-commit?
@@ -172,7 +168,7 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/close-logo-url-modal])}
 
-         [ui/ModalHeader (@tr [:select-logo-url])]
+         [uix/ModalHeader {:header (@tr [:select-logo-url])}]
 
          [ui/ModalContent
           [ui/Input {:default-value (or (:logo-url @module) "")
@@ -202,7 +198,7 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-modal])}
 
-         [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
+         [uix/ModalHeader {:header (@tr [:add]) :icon "add"}]
 
          [ui/ModalContent {:scrolling false}
           [ui/CardGroup {:centered true}
@@ -254,10 +250,10 @@
 
 
 (defn version-warning []
-  (let [version-warning? (subscribe [::subs/version-warning?])]
+  (let [latest? (subscribe [::subs/is-latest-version?])]
     (fn []
       (let []
-        [ui/Message {:hidden  (not @version-warning?)
+        [ui/Message {:hidden  @latest?
                      :warning true}
          [ui/MessageHeader "Warning!"]
          [ui/MessageContent "This is not the latest version. Click or tap "
@@ -486,7 +482,7 @@
     (fn []
       [uix/Accordion
        [:<>
-        [:div (str/capitalize (@tr [:env-variables]))
+        [:div (@tr [:env-variables])
          [:span ff/nbsp (ff/help-popup (@tr [:module-env-variables-help]))]]
         (if (empty? @env-variables)
           [ui/Message
@@ -508,7 +504,8 @@
           [:div {:style {:padding-top 10}}
            [plus ::events/add-env-variable]])]
        :label (@tr [:module-env-variables])
-       :count (count @env-variables)])))
+       :count (count @env-variables)
+       :default-open false])))
 
 
 (defn single-url
@@ -694,38 +691,177 @@
        :default-open false])))
 
 
-(defn private-registries
-  [multiple?]
-  (let [registries         (subscribe [::subs/private-registries])
-        registries-options (subscribe [::subs/private-registries-options])
-        form-valid?        (subscribe [::subs/form-valid?])
-        editable?          (subscribe [::subs/editable?])
-        local-validate?    (r/atom false)]
+(defn single-registry
+  [{:keys [id ::spec/registry-id ::spec/registry-cred-id] :as registry}]
+  (let [editable?               (subscribe [::subs/editable?])
+        form-valid?             (subscribe [::subs/form-valid?])
+        validate?               (not @form-valid?)
+        registries-options      (subscribe [::subs/private-registries-options])
+        registries-cred-options (subscribe [::subs/registries-credentials-options registry-id])]
+    [ui/TableRow {:error (and validate?
+                              (not (s/valid? ::spec/single-registry registry)))}
+     [ui/TableCell {:width 7}
+      [ui/Dropdown
+       {:selection     true
+        :fluid         true
+        :default-value registry-id
+        :disabled      (not @editable?)
+        :options       @registries-options
+        :on-change     (ui-callback/value
+                         #(do
+                            (dispatch [::main-events/changes-protection? true])
+                            (dispatch [::events/update-registry-id id %])
+                            (dispatch [::events/validate-form])))}]]
+     [ui/TableCell {:width 7}
+      [ui/Dropdown
+       {:selection     true
+        :fluid         true
+        :default-value registry-cred-id
+        :disabled      (not @editable?)
+        :options       @registries-cred-options
+        :on-change     (ui-callback/value
+                         #(do
+                            (dispatch [::main-events/changes-protection? true])
+                            (dispatch [::events/update-registry-cred-id id %])
+                            (dispatch [::events/validate-form])))}]]
+     [ui/TableCell {:width 2}
+      (when @editable?
+        [trash id ::events/remove-registry])]
+     ]))
+
+
+(defn registries-section []
+  (let [tr         (subscribe [::i18n-subs/tr])
+        editable?  (subscribe [::subs/editable?])
+        registries (subscribe [::subs/registries])
+        subtype    (subscribe [::subs/module-subtype])]
     (dispatch [::events/get-registries-infra])
-    (fn [multiple?]
-      (let [validate? (or @local-validate? (not @form-valid?))]
-        ^{:key @registries}
-        [ui/TableRow
-         [ui/TableCell {:collapsing true
-                        :style      {:padding-bottom 8}}
-          (if multiple? "private registries" "private regitry")]
-         [ui/TableCell
-          (if @editable?
-            [ui/Dropdown
-             {:multiple      multiple?
-              :clearable     (not multiple?)
-              :selection     true
-              :default-value (if multiple? @registries (first @registries))
-              :options       @registries-options
-              :error         (and validate?
-                                  (not (s/valid? ::spec/private-registries @registries)))
-              :on-change     (ui-callback/value
-                               #(do
-                                  (reset! local-validate? true)
-                                  (dispatch [::events/private-registries
-                                             (if multiple?
-                                               %
-                                               (if (str/blank? %) [] [%]))])
-                                  (dispatch [::main-events/changes-protection? true])
-                                  (dispatch [::events/validate-form])))}]
-            [:span (str/join ", " @registries)])]]))))
+    (dispatch [::events/get-registries-credentials])
+    (fn []
+      [uix/Accordion
+       [:<>
+        [:div (@tr [:private-registries])
+         [:span ff/nbsp (ff/help-popup (@tr [:private-registries-help]))]]
+        (if (empty? @registries)
+          [ui/Message
+           (@tr [:private-registries-not-used])]
+          [:div
+           [ui/Table {:style {:margin-top 10}}
+            [ui/TableHeader
+             [ui/TableRow
+              [ui/TableHeaderCell
+               {:content (r/as-element [utils/mandatory-name (@tr [:private-registries])])}]
+              [ui/TableHeaderCell {:content (str/capitalize (@tr [:credential]))}]
+              [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}]]]
+            [ui/TableBody
+             (for [[id registry] @registries]
+               ^{:key (str "registry-" id)}
+               [single-registry registry])]]])
+        (when (and @editable? (or (not= @subtype "component")
+                                  (and (= @subtype "component")
+                                       (zero? (count @registries)))))
+          [:div {:style {:padding-top 10}}
+           [plus ::events/add-registry]])]
+       :label (@tr [:private-registries])
+       :count (count @registries)
+       :default-open false])))
+
+
+(defn price-section []
+  (let [tr        (subscribe [::i18n-subs/tr])
+        editable? (subscribe [::subs/editable?])
+        price     (subscribe [::subs/price])
+        vendor    (subscribe [::profile-subs/vendor])]
+    (dispatch [::profile-events/search-existing-vendor])
+    (fn []
+      (let [amount (:cent-amount-daily @price)]
+        (when (or (and @editable? @vendor) (some? @price))
+          [uix/Accordion
+           [:<>
+            [:div (str/capitalize (@tr [:price]))
+             [:span ff/nbsp (ff/help-popup (@tr [:define-price]))]]
+            [ui/Input {:labelPosition "right", :type "text"
+                       :placeholder   (str/capitalize (@tr [:amount]))
+                       :error         (not (s/valid? ::spec/cent-amount-daily amount))}
+             [:input {:type          "number"
+                      :step          1
+                      :min           1
+                      :default-value amount
+                      :read-only     (not @editable?)
+                      :on-change     (ui-callback/input-callback
+                                       #(do
+                                          (dispatch [::events/cent-amount-daily
+                                                     (when-not (str/blank? %)
+                                                       (js/parseInt %))])
+                                          (dispatch [::main-events/changes-protection? true])
+                                          (dispatch [::events/validate-form])))}]
+             [ui/Label "ct€/" (@tr [:day])]]
+            [:p (@tr [:price-per-month])
+             [:b (str
+                   (if (pos-int? amount)
+                     (general-utils/format "%.2f" (* amount 0.3))
+                     "...")
+                   "€/" (str/capitalize (@tr [:month])))]]]
+           :label (str/capitalize (@tr [:price]))
+           :count (if (>= amount 100)
+                    (str (float (/ amount 100)) "€/" (@tr [:day]))
+                    (str amount "ct€/" (@tr [:day])))
+           :default-open false])))))
+
+
+(defn license-section []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        editable?      (subscribe [::subs/editable?])
+        validate-form? (subscribe [::subs/validate-form?])
+        license        (subscribe [::subs/module-license])
+        on-change      (fn [update-event-kw value]
+                         (dispatch [update-event-kw value])
+                         (dispatch [::main-events/changes-protection? true])
+                         (dispatch [::events/validate-form]))
+        sixsq-license  {:license-name        "SixSq"
+                        :license-description "SixSq license"
+                        :license-url         "https://nuvla.io/terms/tos"}]
+    (fn []
+      (let [sixsq-selected? (= (:license-name @license)
+                               (:license-name sixsq-license))
+            is-editable?    (and @editable? (not sixsq-selected?))]
+        (when (or @editable? (some? @license))
+          [uix/Accordion
+           [ui/Form
+            (when @editable?
+              [:<>
+               [ui/FormField [:b (@tr [:select-license])]]
+               [ui/FormRadio {:label     (@tr [:sixsq-license])
+                              :checked   sixsq-selected?
+                              :on-change #(do
+                                            (on-change ::events/license-name
+                                                       (:license-name sixsq-license))
+                                            (on-change ::events/license-description
+                                                       (:license-description sixsq-license))
+                                            (on-change ::events/license-url
+                                                       (:license-url sixsq-license)))}]
+               [ui/FormRadio {:label     (@tr [:custom-license])
+                              :checked   (and (some? (:license-name @license))
+                                              (not= (:license-name @license)
+                                                    (:license-name sixsq-license)))
+                              :on-change #(do (on-change ::events/license-name "")
+                                              (on-change ::events/license-description "")
+                                              (on-change ::events/license-url ""))}]])
+            [ui/FormField
+             [ui/Table {:compact true, :definition true}
+              [ui/TableBody
+               [uix/TableRowField (@tr [:name]), :key "license-name", :editable? is-editable?,
+                :spec ::spec/license-name, :validate-form? @validate-form?,
+                :required? true, :default-value (:license-name @license),
+                :on-change (partial on-change ::events/license-name)]
+               [uix/TableRowField (@tr [:description]), :key "license-description",
+                :editable? is-editable?, :spec ::spec/license-description, :validate-form? @validate-form?,
+                :required? false, :default-value (:license-description @license),
+                :on-change (partial on-change ::events/license-description)]
+               [uix/TableRowField (@tr [:url]), :key "license-url",
+                :editable? is-editable?, :spec ::spec/license-url, :validate-form? @validate-form?,
+                :required? true, :default-value (:license-url @license),
+                :on-change (partial on-change ::events/license-url)]]]]]
+           :label (str/capitalize (@tr [:license]))
+           :count (:license-name @license)
+           :default-open false])))))

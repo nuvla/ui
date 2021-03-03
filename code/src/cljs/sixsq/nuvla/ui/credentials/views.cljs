@@ -11,7 +11,6 @@
     [sixsq.nuvla.ui.credentials.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
-    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -19,8 +18,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.validation :as utils-validation]
-    [taoensso.timbre :as timbre]))
+    [sixsq.nuvla.ui.utils.validation :as utils-validation]))
 
 
 (defn in?
@@ -208,10 +206,10 @@
             :on-change (partial on-change :description)]
            [uix/TableRowField "username", :editable? editable?, :required? true,
             :default-value username, :spec ::spec/username, :validate-form? @validate-form?,
-            :type :password, :on-change (partial on-change :username)]
+            :on-change (partial on-change :username)]
            [uix/TableRowField "password", :editable? editable?, :required? true,
             :default-value password, :spec ::spec/password, :validate-form? @validate-form?,
-            :on-change (partial on-change :password)]
+            :type :password, :on-change (partial on-change :password)]
            [row-infrastructure-services-selector ["registry"] nil editable? ::spec/parent
             (partial on-change :parent)]]]]))))
 
@@ -423,34 +421,91 @@
     :modal-content   credential-google}})
 
 
-(def infrastructure-service-csp-subtyes
+(def infrastructure-service-csp-subtypes
   (keys infrastructure-service-csp-validation-map))
 
 
+(def infrastructure-service-storage-validation-map
+  {"infrastructure-service-minio"
+   {:validation-spec ::spec/minio-credential
+    :modal-content   credential-object-store}})
+
+
+(def infrastructure-service-storage-subtypes
+  (keys infrastructure-service-storage-validation-map))
+
+
+(def infrastructure-service-coe-validation-map
+  {"infrastructure-service-swarm"
+   {:validation-spec ::spec/coe-credential
+    :modal-content   credential-coe},
+   "infrastructure-service-kubernetes"
+   {:validation-spec ::spec/coe-credential
+    :modal-content   credential-coe}})
+
+
+(def coe-service-subtypes
+  (keys infrastructure-service-coe-validation-map))
+
+
+(def infrastructure-service-registry-validation-map
+  {"infrastructure-service-registry"
+   {:validation-spec ::spec/registry-credential
+    :modal-content   credential-registy}})
+
+
+(def registry-service-subtypes
+  (keys infrastructure-service-registry-validation-map))
+
+
+(def infrastructure-service-access-keys-validation-map
+  {"infrastructure-service-vpn"
+   {:validation-spec ::spec/vpn-credential
+    :modal-content   credential-vpn}
+   "ssh-key"
+   {:validation-spec ::spec/ssh-credential
+    :modal-content   credential-ssh}
+   "generate-ssh-key"
+   {:validation-spec ::spec/ssh-credential
+    :modal-content   credential-ssh}})
+
+
+(def access-keys-subtypes
+  (keys infrastructure-service-access-keys-validation-map))
+
+
 (def infrastructure-service-validation-map
-  (merge {"infrastructure-service-swarm"
-          {:validation-spec ::spec/coe-credential
-           :modal-content   credential-coe},
-          "infrastructure-service-kubernetes"
-          {:validation-spec ::spec/coe-credential
-           :modal-content   credential-coe},
-          "infrastructure-service-minio"
-          {:validation-spec ::spec/minio-credential
-           :modal-content   credential-object-store},
-          "infrastructure-service-vpn"
-          {:validation-spec ::spec/vpn-credential
-           :modal-content   credential-vpn}
-          "infrastructure-service-registry"
-          {:validation-spec ::spec/registry-credential
-           :modal-content   credential-registy}
-          "generate-ssh-key"
-          {:validation-spec ::spec/ssh-credential
-           :modal-content   credential-ssh}}
-         infrastructure-service-csp-validation-map))
+  (merge infrastructure-service-csp-validation-map
+         infrastructure-service-storage-validation-map
+         infrastructure-service-coe-validation-map
+         infrastructure-service-access-keys-validation-map
+         infrastructure-service-registry-validation-map))
 
 
-(def infrastructure-service-subtypes
-  (keys infrastructure-service-validation-map))
+(def tab-indices
+  {:coe-services      0
+   :cloud-services    1
+   :access-services   2
+   :storage-services  3
+   :registry-services 4})
+
+
+(defn subtype->info
+  [subtype]
+  (case subtype
+    "infrastructure-service-minio" {:tab-index (:storage-services tab-indices), :icon "disk", :name "S3/Minio"}
+    "infrastructure-service-swarm" {:tab-index (:coe-services tab-indices), :icon "docker", :name "Docker Swarm"}
+    "infrastructure-service-kubernetes" {:tab-index (:coe-services tab-indices), :icon "docker", :name "Kubernetes"}
+    "infrastructure-service-registry"
+    {:tab-index (:registry-services tab-indices), :icon "docker", :name "Docker Registry"}
+    "infrastructure-service-azure" {:tab-index (:cloud-services tab-indices), :icon "cloud", :name "Microsoft Azure"}
+    "infrastructure-service-google" {:tab-index (:cloud-services tab-indices), :icon "cloud", :name "Google Compute"}
+    "infrastructure-service-amazonec2" {:tab-index (:cloud-services tab-indices), :icon "cloud", :name "AWS EC2"}
+    "infrastructure-service-exoscale" {:tab-index (:cloud-services tab-indices), :icon "cloud", :name "Exoscale"}
+    "infrastructure-service-vpn" {:tab-index (:access-services tab-indices), :icon "key", :name "VPN"}
+    "ssh-key" {:tab-index (:access-services tab-indices), :icon "key", :name "SSH keys"}
+    "generate-ssh-key" {:tab-index (:access-services tab-indices), :icon "key", :name "SSH keys"}
+    {:tab-index 0, :icon "cloud", :name ""}))
 
 
 (defn credential-modal
@@ -461,18 +516,27 @@
         credential  (subscribe [::subs/credential])
         is-new?     (subscribe [::subs/is-new?])]
     (fn []
-      (let [subtype         (:subtype @credential "")
-            header          (str/capitalize (str (if is-new? (@tr [:new]) (@tr [:update])) " " (@tr [:credential])))
-            validation-item (get infrastructure-service-validation-map subtype)
-            validation-spec (:validation-spec validation-item)
-            modal-content   (:modal-content validation-item)]
+      (let [subtype          (:subtype @credential "")
+            active-tab-index (:tab-index (subtype->info subtype))
+            icon             (:icon (subtype->info subtype))
+            name             (:name (subtype->info subtype))
+            header           (str (str/capitalize (str (if @is-new?
+                                                         (@tr [:new])
+                                                         (@tr [:update])))
+                                                  ) " " name " " (@tr [:credential]))
+            validation-item  (get infrastructure-service-validation-map subtype)
+            validation-spec  (:validation-spec validation-item)
+            modal-content    (:modal-content validation-item)]
         (if (empty? subtype)
           [:div]
           [ui/Modal {:open       @visible?
                      :close-icon true
-                     :on-close   #(dispatch [::events/close-credential-modal])}
+                     :on-close   #(do (dispatch [::events/close-credential-modal])
+                                      ;(dispatch [::events/set-active-tab-index
+                                      ;           active-tab-index])
+                                      )}
 
-           [ui/ModalHeader header]
+           [uix/ModalHeader {:header header :icon icon}]
 
            [ui/ModalContent {:scrolling false}
             [utils-validation/validation-error-message ::subs/form-valid?]
@@ -482,7 +546,9 @@
                          :positive true
                          :disabled (when-not @form-valid? true)
                          :active   true
-                         :on-click #(save-callback validation-spec)}]]])))))
+                         :on-click #(do (save-callback validation-spec)
+                                        (dispatch [::events/set-active-tab-index
+                                                   active-tab-index]))}]]])))))
 
 
 (defn add-credential-modal
@@ -496,7 +562,7 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-credential-modal])}
 
-         [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
+         [uix/ModalHeader {:header (@tr [:add]) :icon "add"}]
 
          [ui/ModalContent {:scrolling false}
           [:div {:style {:padding-bottom 20}} (@tr [:credential-choose-type])]
@@ -531,9 +597,8 @@
                             (dispatch [::events/set-validate-form? false])
                             (dispatch [::events/form-valid])
                             (dispatch [::events/close-add-credential-modal])
-                            (dispatch [::main-events/subscription-required-dispatch
-                                       [::events/open-credential-modal
-                                        {:subtype "infrastructure-service-vpn"} true]]))})
+                            (dispatch [::events/open-credential-modal
+                                       {:subtype "infrastructure-service-vpn"} true]))})
             [ui/CardContent {:text-align :center}
              [ui/Header "OpenVPN"]
              [ui/Image {:src   "/ui/images/openvpn.png"
@@ -588,9 +653,8 @@
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::main-events/subscription-required-dispatch
-                                     [::events/open-credential-modal
-                                      {:subtype "infrastructure-service-exoscale"} true]]))}
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-exoscale"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Cloud Exoscale"]
              [ui/Image {:src   "/ui/images/exoscale.png"
@@ -601,9 +665,8 @@
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::main-events/subscription-required-dispatch
-                                     [::events/open-credential-modal
-                                      {:subtype "infrastructure-service-amazonec2"} true]]))}
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-amazonec2"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Cloud Amazon"]
              [ui/Image {:src   "/ui/images/aws.png"
@@ -614,9 +677,8 @@
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::main-events/subscription-required-dispatch
-                                     [::events/open-credential-modal
-                                      {:subtype "infrastructure-service-azure"} true]]))}
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-azure"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Cloud Azure"]
              [ui/Image {:src   "/ui/images/azure.png"
@@ -627,9 +689,8 @@
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::main-events/subscription-required-dispatch
-                                     [::events/open-credential-modal
-                                      {:subtype "infrastructure-service-google"} true]]))}
+                          (dispatch [::events/open-credential-modal
+                                     {:subtype "infrastructure-service-google"} true]))}
             [ui/CardContent {:text-align :center}
              [ui/Header "Cloud Google"]
              [ui/Image {:src   "/ui/images/gce.png"
@@ -656,7 +717,7 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/set-generated-credential-modal nil])}
 
-         [ui/ModalHeader (@tr [:credential-generate])]
+         [uix/ModalHeader {:header (@tr [:credential-generate])}]
 
          [ui/ModalContent {:scrolling false}
 
@@ -685,15 +746,16 @@
                        :size :massive}]]]]]]))))
 
 
-(defn control-bar []
+(defn MenuBar []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Menu {:borderless true}
-     [uix/MenuItemWithIcon
-      {:name      (@tr [:add])
-       :icon-name "add"
-       :on-click  #(dispatch [::events/open-add-credential-modal])}]
-     [main-components/RefreshMenu
-      {:on-refresh #(dispatch [::events/get-credentials])}]]))
+    [main-components/StickyBar
+     [ui/Menu {:borderless true}
+      [uix/MenuItem
+       {:name     (@tr [:add])
+        :icon     "add"
+        :on-click #(dispatch [::events/open-add-credential-modal])}]
+      [main-components/RefreshMenu
+       {:on-refresh #(dispatch [::events/get-credentials])}]]]))
 
 
 (defn DeleteButton
@@ -712,7 +774,6 @@
       :button-text (@tr [:delete])}]))
 
 
-;subtype name description
 (defn single-credential
   [{:keys [subtype name description] :as credential}]
   [ui/TableRow
@@ -740,43 +801,86 @@
                 :on-click #(dispatch [::events/open-credential-modal credential false])}])]])
 
 
+(defn credentials-pane
+  [section-sub-text credentials]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/TabPane
+     [:div (@tr [section-sub-text])]
+     (if (empty? credentials)
+       [ui/Message
+        (str/capitalize (str (@tr [:no-credentials]) "."))]
+       [:div [ui/Table {:style {:margin-top 10}}
+              [ui/TableHeader
+               [ui/TableRow
+                [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
+                [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
+                [ui/TableHeaderCell {:content (str/capitalize (@tr [:type]))}]
+                [ui/TableHeaderCell {:content (str/capitalize (@tr [:actions]))}]]]
+              [ui/TableBody
+               (for [credential credentials]
+                 ^{:key (:id credential)}
+                 [single-credential credential])]]])]))
+
+
+(defn credential
+  [credentials section-name section-sub-text icon]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        credential-count (count credentials)]
+    {:menuItem {:content (r/as-element [:span (@tr [section-name])
+                                        (when (> credential-count 0) [ui/Label {:circular true
+                                                                                :size     "mini"
+                                                                                :attached "top right"}
+                                                                      credential-count])])
+                :key     section-name
+                :icon    icon}
+     :render   (fn [] (r/as-element [credentials-pane section-sub-text credentials]))}))
+
+
 (defn credentials
   []
-  (let [tr          (subscribe [::i18n-subs/tr])
-        credentials (subscribe [::subs/credentials])]
-    (dispatch [::events/get-credentials])
-    (fn []
-      (let [infra-service-creds (filter #(in? infrastructure-service-subtypes (:subtype %))
-                                        @credentials)]
-        [ui/Segment style/basic
-         [uix/PageHeader "key" (str/capitalize (@tr [:credentials]))]
-         [uix/Accordion
-          [:<>
-           [:div (@tr [:credential-infra-service-section-sub-text])]
-           [control-bar]
-           (if (empty? infra-service-creds)
-             [ui/Message
-              (str/capitalize (str (@tr [:no-credentials]) "."))]
-             [:div [ui/Table {:style {:margin-top 10}}
-                    [ui/TableHeader
-                     [ui/TableRow
-                      [ui/TableHeaderCell {:content (str/capitalize (@tr [:name]))}]
-                      [ui/TableHeaderCell {:content (str/capitalize (@tr [:description]))}]
-                      [ui/TableHeaderCell {:content (str/capitalize (@tr [:type]))}]
-                      [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}]]]
-                    [ui/TableBody
-                     (for [credential infra-service-creds]
-                       ^{:key (:id credential)}
-                       [single-credential credential])]]])]
-          :label (@tr [:infra-services])
-          :count (count infra-service-creds)]]))))
+  (let [credentials            (subscribe [::subs/credentials])
+        coe-service-creds      (filter #(in? coe-service-subtypes (:subtype %))
+                                       @credentials)
+        cloud-service-creds    (filter #(in? infrastructure-service-csp-subtypes (:subtype %))
+                                       @credentials)
+        access-key-creds       (filter #(in? access-keys-subtypes (:subtype %))
+                                       @credentials)
+        storage-service-creds  (filter #(in? infrastructure-service-storage-subtypes (:subtype %))
+                                       @credentials)
+        register-service-creds (filter #(in? registry-service-subtypes (:subtype %))
+                                       @credentials)]
+    [(credential coe-service-creds :coe-services :credential-coe-service-section-sub-text "docker")
+     (credential cloud-service-creds :cloud-services :credential-cloud-service-section-sub-text "cloud")
+     (credential access-key-creds :access-keys :credential-ssh-keys-section-sub-text "key")
+     (credential storage-service-creds :storage-services :credential-storage-service-section-sub-text "disk")
+     (credential register-service-creds :registry-services :credential-registry-service-section-sub-text "docker")]))
+
+
+(defn TabsCredentials
+  []
+  (dispatch [::events/get-credentials])
+  (fn []
+    (let [active-index (subscribe [::subs/active-tab-index])]
+      [ui/Tab
+       {:menu        {:secondary true
+                      :pointing  true
+                      :style     {:display        "flex"
+                                  :flex-direction "row"
+                                  :flex-wrap      "wrap"}}
+        :panes       (credentials)
+        :activeIndex @active-index
+        :onTabChange (fn [_ data]
+                       (let [active-index (. data -activeIndex)]
+                         (dispatch [::events/set-active-tab-index active-index])))}])))
 
 
 (defmethod panel/render :credentials
   [path]
-  (timbre/set-level! :info)
-  [:<>
-   [credentials]
-   [add-credential-modal]
-   [credential-modal]
-   [generated-credential-modal]])
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Segment style/basic
+     [uix/PageHeader "key" (@tr [:credentials])]
+     [MenuBar]
+     [TabsCredentials]
+     [add-credential-modal]
+     [credential-modal]
+     [generated-credential-modal]]))

@@ -31,19 +31,19 @@
                        (str/starts-with? name "fas ")) (-> (dissoc :name)
                                                            (assoc :className name)))])
 
-(defn MenuItemWithIcon
+(defn MenuItem
   "Provides a menu item that reuses the name for the :name property and as the
    MenuItem label. The optional icon-name specifies the icon to use. The
    loading? parameter specifies if the icon should be spinning."
-  [{:keys [name icon-name loading?] :as options}]
+  [{:keys [name icon loading?] :as options}]
   (let [final-opts (-> options
-                       (dissoc :icon-name :loading?)
+                       (dissoc :icon :loading?)
                        (assoc :aria-label name))]
     [ui/MenuItem final-opts
-     (when icon-name
-       [Icon (cond-> {:name icon-name}
+     (when icon
+       [Icon (cond-> {:name icon}
                      (boolean? loading?) (assoc :loading loading?))])
-     name]))
+     (str/capitalize name)]))
 
 
 (defn MenuItemForSearch
@@ -61,23 +61,6 @@
      name]))
 
 
-(defn MenuItemForFilter
-  "Provides a standard menu item for the filter button that toggles the
-   visibility of a filter panel. The :name property is used as the label and
-   for the :aria-label value."
-  [{:keys [name visible?] :as options}]
-  (let [final-opts (-> options
-                       (dissoc :visible?)
-                       (assoc :aria-label name))]
-    [ui/MenuMenu {:position "right"}
-     [ui/MenuItem final-opts
-      [ui/IconGroup
-       [ui/Icon {:name "filter"}]
-       [ui/Icon {:name   (if visible? "chevron down" "chevron right")
-                 :corner true}]]
-      name]]))
-
-
 (defn MenuItemSectionToggle
   "Provides a standard menu item that is intended to toggle the visibility of a
    section. There is no textual label."
@@ -88,6 +71,14 @@
         icon-name  (if visible? "chevron down" "chevron up")]
     [ui/MenuItem final-opts
      [ui/Icon {:name icon-name}]]))
+
+
+(defn ModalHeader
+  [{:keys [header icon]}]
+  [ui/ModalHeader
+   (when icon
+     [ui/Icon {:name "add"}])
+   (str/capitalize header)])
 
 
 (defn Pagination
@@ -128,13 +119,14 @@
 
 
 (defn Accordion
-  [content & {:keys [label count icon default-open title-size on-open on-close]
-              :or   {default-open true, title-size :h3, on-open #(), on-close #()}}]
-  (let [active? (r/atom default-open)]
-    (fn [content & {:keys [label count icon default-open title-size]
+  [content & {:keys [id label count icon default-open title-size on-open on-close !control-open? styled?]
+              :or   {default-open true, title-size :h3, on-open #(), on-close #(), styled? true}}]
+  (let [active? (or !control-open? (r/atom default-open))]
+    (fn [content & {:keys [id label count icon default-open title-size]
                     :or   {default-open true, title-size :h3, on-open #(), on-close #()}}]
-      [ui/Accordion {:fluid     true
-                     :styled    true
+      [ui/Accordion {:id        id
+                     :fluid     true
+                     :styled    styled?
                      :style     {:margin-top    "10px"
                                  :margin-bottom "10px"}
                      :exclusive false}
@@ -150,7 +142,7 @@
          [ui/Icon {:name (if @active? "dropdown" "caret right")}]
 
          (when icon
-           [ui/Icon {:name icon}])
+           [:<> [Icon {:name icon}] " "])
 
          label
 
@@ -191,11 +183,11 @@
 
 (defn TableRowField
   [name & {:keys [key placeholder default-value spec on-change
-                  required? editable? validate-form? type]}]
+                  required? editable? validate-form? type input-help-msg]}]
   (let [local-validate? (r/atom false)
         active-input?   (r/atom false)]
     (fn [name & {:keys [key placeholder default-value spec on-change required?
-                        editable? validate-form? type]
+                        editable? validate-form? type input-help-msg]
                  :or   {editable? true, spec any?, type :input}}]
       (let [name-label  (cond-> name
                                 (and editable? required?) (general-utils/mandatory-name))
@@ -205,6 +197,7 @@
                          :placeholder   (or placeholder name)
                          :onMouseEnter  #(reset! active-input? true)
                          :onMouseLeave  #(reset! active-input? false)
+                         :auto-complete "nope"
                          :on-change     (ui-callback/input-callback
                                           #(let [text (when-not (str/blank? %) %)]
                                              (reset! local-validate? true)
@@ -213,6 +206,7 @@
          [ui/TableCell {:collapsing true} name-label]
          ^{:key (or key name)}
          [ui/TableCell
+          input-help-msg
           (if editable?
             (if (#{:input :password} type)
               [ui/Input (assoc common-opts
@@ -235,11 +229,12 @@
 
 
 (defn ModalDanger
-  [{:keys [button-text on-confirm danger-msg header content trigger open on-close]}]
+  [{:keys [button-text on-confirm danger-msg header content trigger open on-close modal-action
+           control-confirmed?]}]
   (let [tr         (subscribe [::i18n-subs/tr])
-        confirmed? (r/atom (nil? danger-msg))
+        confirmed? (or control-confirmed? (r/atom (nil? danger-msg)))
         clicked?   (r/atom false)]
-    (fn [{:keys [button-text on-confirm danger-msg header content trigger open on-close]}]
+    (fn [{:keys [button-text on-confirm danger-msg header content trigger open on-close modal-action]}]
       [ui/Modal (cond->
                   {:on-click   (fn [event]
                                  (.stopPropagation event)
@@ -253,7 +248,7 @@
                                  (reset! clicked? false))}
                   (some? open) (assoc :open open))
 
-       (when header [ui/ModalHeader header])
+       (when header [ui/ModalHeader (str/capitalize header)])
 
        [ui/ModalContent {:scrolling false}
         (when content content)
@@ -266,6 +261,7 @@
                                             :on-change #(swap! confirmed? not)}]]])]
 
        [ui/ModalActions
+        (when modal-action modal-action)
         [Button {:text     (str/capitalize button-text)
                  :negative true
                  :disabled (or (not @confirmed?) @clicked?)
@@ -295,3 +291,12 @@
         ^{:key (str futur-moment @refresh)}
         [:span
          (if (neg? delta-seconds) 0 (js/Math.round delta-seconds))]))))
+
+
+(defn WarningMsgNoElements
+  [message]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn [message]
+      [ui/Message {:warning true}
+       [ui/Icon {:name "warning sign"}]
+       (or message (@tr [:no-items-to-show]))])))

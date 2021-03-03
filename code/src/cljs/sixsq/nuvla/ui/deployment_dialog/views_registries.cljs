@@ -1,27 +1,25 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-registries
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
-    [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn summary-row
   []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        registries-creds (subscribe [::subs/registries-creds])
-        completed?       (subscribe [::subs/registries-completed?])
+  (let [tr          (subscribe [::i18n-subs/tr])
+        count       (subscribe [::subs/module-private-registries-count])
+        completed?  (subscribe [::subs/registries-completed?])
 
-        description      (str "Count: " (count @registries-creds))
-        on-click-fn      #(dispatch [::events/set-active-step :registries])]
+        description (str "Count: " @count)
+        on-click-fn #(dispatch [::events/set-active-step :registries])]
 
     ^{:key "registries"}
     [ui/TableRow {:active   false
@@ -35,45 +33,45 @@
 
 
 (defn dropdown-creds
-  [private-registry-id]
-  (let [tr               (subscribe [::i18n-subs/tr])
-        registry         (subscribe [::subs/infra-registry private-registry-id])
-        registry-name    (or (:name @registry) private-registry-id)
-        loading?         (subscribe [::subs/infra-registries-creds-loading?])
-        creds-options    (subscribe [::subs/infra-registries-creds-by-parent-options
-                                     private-registry-id])
-        registry-descr   (:description @registry)
-        registries-creds (subscribe [::subs/registries-creds])
-        default-value    (get @registries-creds private-registry-id)]
-    (if @registry
+  [private-registry-id info]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        registry       (subscribe [::subs/infra-registry private-registry-id])
+        registry-name  (or (:name @registry) private-registry-id)
+        creds-options  (subscribe [::subs/infra-registries-creds-by-parent-options
+                                   private-registry-id])
+        registry-descr (:description @registry)
+        {:keys [cred-id preselected?]} info]
+    (if (and preselected?
+             (not (some #(= cred-id (:value %)) @creds-options)))
+      [ui/FormInput
+       {:disabled      true
+        :label         (r/as-element [:label registry-name ff/nbsp
+                                      (when registry-descr (ff/help-popup registry-descr))])
+        :default-value (@tr [:preselected])}]
       [ui/FormDropdown
        (cond->
          {:required      true
-          :loading       @loading?
           :label         (r/as-element [:label registry-name ff/nbsp
                                         (when registry-descr (ff/help-popup registry-descr))
-                                        (when default-value
+                                        (when cred-id
                                           [:span " "
-                                           [creds-comp/CredentialCheckPopup default-value]])])
+                                           [creds-comp/CredentialCheckPopup cred-id]])])
           :selection     true
-          :default-value (get @registries-creds private-registry-id)
+          :default-value cred-id
           :placeholder   (@tr [:select-credential])
           :options       @creds-options
           :on-change     (ui-callback/value
                            #(dispatch [::events/set-credential-registry private-registry-id %]))}
-         (and
-           (not @loading?)
-           (empty? @creds-options)) (assoc :error "No credentials available for this registry"))]
-      [ui/Message {:negative true}
-       "No infrastructure found with following id " private-registry-id "!"])))
+         (empty? @creds-options) (assoc :error (@tr [:no-available-creds-registry])))]
+      )))
 
 
-(defn content
+(defmethod utils/step-content :registries
   []
-  (fn []
-    (let [private-registries (subscribe [::subs/private-registries])
-          loading?           (subscribe [::subs/infra-registries-loading?])]
-      [ui/Form {:loading @loading?}
-       (for [private-registry-id @private-registries]
-         ^{:key private-registry-id}
-         [dropdown-creds private-registry-id])])))
+  (let [registries-creds (subscribe [::subs/registries-creds])
+        loading?         (subscribe [::subs/infra-registries-loading?])]
+    [ui/Segment
+     [ui/Form {:loading @loading?}
+      (for [[private-registry-id info] @registries-creds]
+        ^{:key private-registry-id}
+        [dropdown-creds private-registry-id info])]]))

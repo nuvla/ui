@@ -18,7 +18,8 @@
      ::cimi-api-fx/get [resource-id #(dispatch [::set-resource %])
                         :on-error #(do
                                      (cimi-api-fx/default-get-on-error resource-id %)
-                                     (dispatch [::history-events/navigate (str "api/" collection-name)]))]}))
+                                     (dispatch [::history-events/navigate
+                                                (str "api/" collection-name)]))]}))
 
 
 (reg-event-db
@@ -60,19 +61,21 @@
 
 (reg-event-fx
   ::operation
-  (fn [_ [_ resource-id operation]]
-    {::cimi-api-fx/operation [resource-id operation
-                              #(let [op (second (re-matches #"(?:.*/)?(.*)" operation))]
-                                 (if (instance? js/Error %)
-                                   (let [{:keys [status message]} (response/parse-ex-info %)]
-                                     (dispatch [::messages-events/add
-                                                {:header  (cond-> (str "error executing operation " op)
-                                                                  status (str " (" status ")"))
-                                                 :content message
-                                                 :type    :error}]))
-                                   (let [{:keys [status message]} (response/parse %)]
-                                     (dispatch [::messages-events/add
-                                                {:header  (cond-> (str "success executing operation " op)
-                                                                  status (str " (" status ")"))
-                                                 :content message
-                                                 :type    :success}]))))]}))
+  (fn [_ [_ resource-id operation data]]
+    {::cimi-api-fx/operation
+     [resource-id operation
+      #(if (instance? js/Error %)
+         (let [{:keys [status message]} (response/parse-ex-info %)]
+           (dispatch [::messages-events/add
+                      {:header  (cond-> (str "error executing operation " operation)
+                                        status (str " (" status ")"))
+                       :content message
+                       :type    :error}]))
+         (let [{:keys [status message]} (response/parse %)]
+           (dispatch [::messages-events/add
+                      {:header  (cond-> (str "success executing operation " operation)
+                                        status (str " (" status ")"))
+                       :content message
+                       :type    :success}])))
+      data]}))
+

@@ -14,11 +14,13 @@
 
 (reg-event-fx
   ::refresh
-  (fn [_ _]
-    {:dispatch [::main-events/action-interval-start
-                {:id        refresh-action-id
-                 :frequency 20000
-                 :event     [::get-deployments]}]}))
+  (fn [{db :db} [_ {:keys [init? nuvlabox]}]]
+    (cond-> {:dispatch [::main-events/action-interval-start
+                        {:id        refresh-action-id
+                         :frequency 20000
+                         :event     [::get-deployments]}]}
+            init? (assoc :db (merge db spec/defaults))
+            nuvlabox (assoc-in [:db ::spec/nuvlabox] nuvlabox))))
 
 
 (reg-event-fx
@@ -75,10 +77,11 @@
   ::get-deployments
   (fn [{{:keys [::spec/full-text-search
                 ::spec/active-only?
+                ::spec/nuvlabox
                 ::spec/page
-                ::spec/elements-per-page] :as db} :db} _]
+                ::spec/elements-per-page]} :db} _]
     {::cimi-api-fx/search [:deployment (utils/get-query-params full-text-search active-only?
-                                                               page elements-per-page)
+                                                               nuvlabox page elements-per-page)
                            #(dispatch [::set-deployments %])]}))
 
 

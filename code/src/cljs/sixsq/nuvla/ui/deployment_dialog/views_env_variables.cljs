@@ -3,6 +3,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -49,16 +50,13 @@
                                                                index :value] %)]))}]]))
 
 
-(defn content
+(defmethod utils/step-content :env-variables
   []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        env-variables (subscribe [::subs/env-variables])]
-
-    (if (seq @env-variables)
-      [ui/Form
-       (map-indexed
-         (fn [i env-variable]
-           ^{:key (str (:name env-variable) "_" i)}
-           [as-form-input i env-variable])
-         @env-variables)]
-      [ui/Message {:success true} (@tr [:no-env-variables-parameters])])))
+  (let [env-variables (subscribe [::subs/env-variables])]
+    [ui/Segment
+     [ui/Form
+      (map-indexed
+        (fn [i env-variable]
+          ^{:key (str (:name env-variable) "_" i)}
+          [as-form-input i env-variable])
+        @env-variables)]]))

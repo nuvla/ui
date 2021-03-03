@@ -15,6 +15,8 @@
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -35,7 +37,7 @@
       [ui/TableRow
        [ui/TableCell {:collapsing true
                       :style      {:padding-bottom 8}} "subtype"]
-       [ui/TableCell {:style {:padding-left (when-not @editable? 24)}}
+       [ui/TableCell
         (if @editable?
           [ui/Dropdown {:selection true,
                         :fluid     true
@@ -45,9 +47,7 @@
                         :options   [{:key "application", :text "Docker", :value "application"}
                                     {:key   "application_kubernetes", :text "Kubernetes",
                                      :value "application_kubernetes"}]}]
-          @module-subtype)]]
-      ^{:key "summary-private-registries"}
-      [apps-views-detail/private-registries true]]]))
+          @module-subtype)]]]]))
 
 
 (defn single-file [{:keys [id ::spec/file-name ::spec/file-content]}]
@@ -85,37 +85,37 @@
 
 
 (defn files-section []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        files     (subscribe [::subs/files])
-        editable? (subscribe [::apps-subs/editable?])
-        module-app      (subscribe [::apps-subs/module])
-        compatibility   (:compatibility @module-app)]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        files         (subscribe [::subs/files])
+        editable?     (subscribe [::apps-subs/editable?])
+        module-app    (subscribe [::apps-subs/module])
+        compatibility (:compatibility @module-app)]
     (when (not= compatibility "docker-compose")
       (fn []
-      [uix/Accordion
-       [:<>
-        [:div (@tr [:module-files])
-         [:span ff/nbsp (ff/help-popup (@tr [:module-files-help]))]]
-        (if (empty? @files)
-          [ui/Message
-           (str/capitalize (str (@tr [:no-files]) "."))]
-          [:div [ui/Table {:style {:margin-top 10}}
-                 [ui/TableHeader
-                  [ui/TableRow
-                   [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]
-                   [ui/TableHeaderCell {:content (str/capitalize (@tr [:content]))}]
-                   (when @editable?
-                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
-                 [ui/TableBody
-                  (for [[id file] @files]
-                    ^{:key (str "file_" id)}
-                    [single-file file])]]])
-        (when @editable?
-          [:div {:style {:padding-top 10}}
-           [apps-views-detail/plus ::events/add-file]])]
-       :label (@tr [:module-files])
-       :count (count @files)
-       :default-open false]))))
+        [uix/Accordion
+         [:<>
+          [:div (@tr [:module-files])
+           [:span ff/nbsp (ff/help-popup (@tr [:module-files-help]))]]
+          (if (empty? @files)
+            [ui/Message
+             (str/capitalize (str (@tr [:no-files]) "."))]
+            [:div [ui/Table {:style {:margin-top 10}}
+                   [ui/TableHeader
+                    [ui/TableRow
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:filename]))}]
+                     [ui/TableHeaderCell {:content (str/capitalize (@tr [:content]))}]
+                     (when @editable?
+                       [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}])]]
+                   [ui/TableBody
+                    (for [[id file] @files]
+                      ^{:key (str "file_" id)}
+                      [single-file file])]]])
+          (when @editable?
+            [:div {:style {:padding-top 10}}
+             [apps-views-detail/plus ::events/add-file]])]
+         :label (@tr [:module-files])
+         :count (count @files)
+         :default-open false]))))
 
 
 (defn DockerComposeValidationPopup
@@ -201,7 +201,7 @@
                  (@tr [:module-docker-compose-error])
                  error-msg)]))
           [:div [@tr [:apps-more-info]]
-           [:a {:href "https://docs.nuvla.io/nuvla/add-apps#enabling-fast--dedicated-monitoring-for-application-deployments"
+           [:a {:href   "https://docs.nuvla.io/nuvla/add-apps#enabling-fast--dedicated-monitoring-for-application-deployments"
                 :target "_black"}
             "Nuvla docs"]]]
          :label (if (= @module-subtype "application")
@@ -215,7 +215,9 @@
 (defn view-edit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        editable?     (subscribe [::apps-subs/editable?])]
+        editable?     (subscribe [::apps-subs/editable?])
+        stripe        (subscribe [::main-subs/stripe])
+        vendor        (subscribe [::profile-subs/vendor])]
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
@@ -228,13 +230,16 @@
                          :read-only     (not @editable?)}]
          [apps-views-detail/MenuBar]
          [summary]
+         [apps-views-detail/registries-section]
+         (when (and @stripe @vendor)
+           [apps-views-detail/price-section])
+         [apps-views-detail/license-section]
          [apps-views-detail/env-variables-section]
          [files-section]
          [docker-compose-section]
          [apps-views-detail/urls-section]
          [apps-views-detail/output-parameters-section]
          [apps-views-detail/data-types-section]
-         [apps-views-detail/save-action]
          [apps-views-detail/add-modal]
          [apps-views-detail/save-modal]
          [apps-views-detail/logo-url-modal]

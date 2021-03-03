@@ -1,9 +1,10 @@
 (ns sixsq.nuvla.ui.cimi.subs
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch reg-sub]]
+    [re-frame.core :refer [dispatch reg-sub subscribe]]
     [sixsq.nuvla.ui.cimi.events :as events]
     [sixsq.nuvla.ui.cimi.spec :as spec]
+    [sixsq.nuvla.ui.filter-comp.utils :as utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
@@ -29,10 +30,10 @@
   :<- [::orderby-map]
   (fn [orderby-map [_ label]]
     (let [sort-direction (get orderby-map label)
-          direction (case sort-direction
-                      "asc" " ascending"
-                      "desc" " descending"
-                      "")]
+          direction      (case sort-direction
+                           "asc" " ascending"
+                           "desc" " descending"
+                           "")]
       (str "sort" direction))))
 
 
@@ -110,3 +111,42 @@
   :<- [::selected-rows]
   (fn [selected-rows [_ id]]
     (contains? selected-rows id)))
+
+
+(reg-sub
+  ::resources-metadata-map
+  (fn [db]
+    (::spec/resource-metadata db)))
+
+
+(reg-sub
+  ::resource-metadata
+  :<- [::resources-metadata-map]
+  (fn [resources-metadata-map [_ resource-name]]
+    (get resources-metadata-map resource-name)))
+
+
+(reg-sub
+  ::resource-metadata-attributes
+  (fn [[_ resource-name]] (subscribe [::resource-metadata resource-name]))
+  (fn [resource-metadata]
+    (utils/cimi-metadata-simplifier resource-metadata)))
+
+
+(reg-sub
+  ::resource-metadata-input-parameters
+  (fn [[_ resource-name operation]] [(subscribe [::resource-metadata resource-name])
+                                     (atom operation)])
+  (fn [[resource-metadata operation]]
+    (some->> resource-metadata
+             :actions
+             (some #(when (= (:name %) operation) %))
+             :input-parameters
+             (remove #(= (:type %) "map")))))
+
+
+(reg-sub
+  ::resource-metadata-attributes-options
+  (fn [[_ resource-name]] (subscribe [::resource-metadata-attributes resource-name]))
+  (fn [attributes]
+    (map (fn [a] {:key a, :text a :value a}) (keys attributes))))

@@ -55,6 +55,7 @@
                                                "user-template/nuvla"])
         stripe                     (subscribe [::main-subs/stripe])
         pricing-catalogue          (subscribe [::profile-subs/pricing-catalogue])
+        pricing-url                (subscribe [::main-subs/config :pricing-url])
         create-customer            (r/atom false)
         form-customer-conf         {:form-spec    ::profile-views/customer
                                     :names->value {:fullname       ""
@@ -75,7 +76,7 @@
                                       :icon          "envelope"
                                       :icon-position "left"
                                       :auto-focus    true
-                                      :auto-complete "off"
+                                      :auto-complete "username"
                                       :on-change     (partial fv/event->names->value! form)
                                       :on-blur       (partial fv/event->show-message form)
                                       :error         (fv/?show-message form :email spec->msg)}]
@@ -100,12 +101,15 @@
                                                     form :password-repeat spec->msg)}]]
 
                        (when @stripe
-                         [ui/FormCheckbox {:label     "Start my trial now"
-                                           :on-change (ui-callback/checked
-                                                        #(reset! create-customer %))}])
+                         [ui/FormGroup {:inline true}
+                          [ui/FormCheckbox {:label     (@tr [:start-trial-now])
+                                            :on-change (ui-callback/checked
+                                                         #(reset! create-customer %))}]
+                          (when @pricing-url
+                            [:span "(" (@tr [:see]) " " [:a {:href @pricing-url, :target "_blank"}
+                                                        (@tr [:pricing])] ")"])])
                        (when @create-customer
-                         [profile-views/CustomerFormFields form-customer])
-                       ]
+                         [profile-views/CustomerFormFields form-customer])]
         :submit-text  (@tr [:sign-up])
         :submit-fn    #(let [form-signup-valid?   (fv/validate-form-and-show? form)
                              form-customer-valid? (if @create-customer
@@ -116,7 +120,8 @@
                            (let [data (-> @form
                                           :names->value
                                           (dissoc :password-repeat))
-                                 opts {:success-msg  (@tr [:validation-email-success-msg])
+                                 opts {:success-msg  :validation-email-success-msg
+                                       :navigate-to  "sign-in"
                                        :redirect-url (str @server-redirect-uri "?message="
                                                           callback-msg-on-validation)}]
                              (if @create-customer

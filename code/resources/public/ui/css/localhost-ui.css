@@ -2,5 +2,13 @@
     background-color: #E5A13C;
 }
 
+.ui.primary.button:hover, .ui.primary.buttons .button:hover {
+    background-color: #BF8E46;
+}
+
+.ui.primary.button:active, .ui.primary.buttons .button:active {
+    background-color: #BF8E46;
+}
+
 div {
 }

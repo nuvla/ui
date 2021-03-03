@@ -86,7 +86,10 @@
                ::actions-interval     {}
                ::content-key          (random-uuid)
                ::pages                {"welcome"         {:url        "welcome"
-                                                          :protected? false}
+                                                          :label-kw   :home
+                                                          :icon       "home"
+                                                          :protected? false
+                                                          :order      0}
                                        "documentation"   {:url        "documentation"
                                                           :label-kw   :api-doc
                                                           :icon       "info"
@@ -98,7 +101,7 @@
                                                           :order      1}
                                        "apps"            {:url        "apps"
                                                           :label-kw   :apps
-                                                          :icon       "play"
+                                                          :icon       "fas fa-store"
                                                           :protected? true
                                                           :order      2}
                                        "data"            {:url             "data"
@@ -123,11 +126,16 @@
                                                           :icon       "box"
                                                           :protected? true
                                                           :order      6}
+                                       "notifications"   {:url        "notifications"
+                                                          :label-kw   :notifications
+                                                          :icon       "bell"
+                                                          :protected? false
+                                                          :order      7}
                                        "api"             {:url        "api"
                                                           :label-kw   :api
                                                           :icon       "code"
                                                           :protected? false
-                                                          :order      7}
+                                                          :order      8}
                                        }
                ::open-modal           nil
                ::stripe               nil})

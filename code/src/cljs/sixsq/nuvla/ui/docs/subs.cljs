@@ -2,7 +2,6 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-sub]]
-    [sixsq.nuvla.ui.docs.events :as events]
     [sixsq.nuvla.ui.docs.spec :as spec]))
 
 
@@ -29,13 +28,3 @@
                                         (subs 0 (- (count resource-name)
                                                    (count "collection"))))]
             (str "resource-metadata/" collection-name))))
-
-
-(reg-sub
-  ::document
-  :<- [::documents]
-  (fn [documents [_ resource]]
-    (if (seq documents)
-      (let [resource-metadata-id (resolve-metadata-id resource)]
-        (get documents resource-metadata-id))
-      (dispatch [::events/get-documents]))))

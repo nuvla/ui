@@ -20,10 +20,9 @@
     [sixsq.nuvla.ui.infrastructures-detail.spec :as infra-service-detail]
     [sixsq.nuvla.ui.infrastructures.spec :as infra-service]
     [sixsq.nuvla.ui.intercom.spec :as intercom]
+    [sixsq.nuvla.ui.job.spec :as job]
     [sixsq.nuvla.ui.main.spec :as main]
     [sixsq.nuvla.ui.messages.spec :as messages]
-    [sixsq.nuvla.ui.ocre.spec :as ocre]
-    [sixsq.nuvla.ui.pricing.spec :as pricing]
     [sixsq.nuvla.ui.profile.spec :as profile]
     [sixsq.nuvla.ui.session.spec :as session]))
 
@@ -47,9 +46,8 @@
                      ::edge/db
                      ::edge-detail/db
                      ::profile/db
-                     ::ocre/db
                      ::session/db
-                     ::pricing/db))
+                     ::job/db))
 
 
 (def default-db
@@ -74,6 +72,5 @@
          edge/defaults
          edge-detail/defaults
          profile/defaults
-         ocre/defaults
          session/defaults
-         pricing/defaults))
+         job/defaults))

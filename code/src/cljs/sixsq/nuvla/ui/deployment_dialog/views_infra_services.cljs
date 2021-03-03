@@ -4,12 +4,12 @@
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
+    [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 (defn summary-row
   []
@@ -55,17 +55,23 @@
   (let [tr                  (subscribe [::i18n-subs/tr])
         selected-credential (subscribe [::subs/selected-credential])
         status              (subscribe [::creds-subs/credential-check-status id])
-        cred-valid?         (subscribe [::creds-subs/credential-check-status-valid? id])
-        last-check          (subscribe [::creds-subs/credential-check-last-check id])]
-    [ui/ListItem {:active   (= id (:id @selected-credential))
-                  :on-click #(dispatch [::events/set-selected-credential credential])}
+        last-check          (subscribe [::creds-subs/credential-check-last-check id])
+        selected?           (= id (:id @selected-credential))]
+    [ui/ListItem (cond-> {:active selected?
+                          :on-click #(dispatch [::events/set-selected-credential credential])})
      [ui/ListIcon {:vertical-align "middle"}
       [ui/IconGroup {:size "big"}
        [ui/Icon {:name "key"}]
        (when (some? @status)
          [ui/Icon {:corner true
-                   :name   (if @cred-valid? "thumbs up" "thumbs down")
-                   :color  (if @cred-valid? "green" "red")}])]]
+                   :name   (cond
+                             (= @status "INVALID") "thumbs down"
+                             (= @status "VALID") "thumbs up"
+                             :else "question")
+                   :color  (cond
+                             (= @status "INVALID") "red"
+                             (= @status "VALID") "green"
+                             :else "grey")}])]]
      [ui/ListContent
       [ui/ListHeader (or name id)]
       (when description
@@ -119,17 +125,16 @@
        [creds-list]]]]))
 
 
-(defn content
-  []
-  (fn []
-    (let [tr             (subscribe [::i18n-subs/tr])
-          infra-services (subscribe [::subs/infra-services])
-          loading?       (subscribe [::subs/infra-services-loading?])]
-      [ui/Segment (assoc style/basic :loading @loading?)
-       (if (seq @infra-services)
-         [ui/Accordion {:fluid true, :styled true}
-          (doall
-            (for [{:keys [id] :as infra-service} @infra-services]
-              ^{:key id}
-              [item infra-service]))]
-         [ui/Message {:error true} (@tr [:no-infra-services])])])))
+(defmethod utils/step-content :infra-services
+  [step-id]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        infra-services (subscribe [::subs/visible-infra-services])
+        loading?       (subscribe [::subs/infra-services-loading?])]
+    [ui/Segment (assoc style/basic :loading @loading?)
+     (if (seq @infra-services)
+       [ui/Accordion {:fluid true, :styled true}
+        (doall
+          (for [{:keys [id] :as infra-service} @infra-services]
+            ^{:key id}
+            [item infra-service]))]
+       [ui/Message {:error true} (@tr [:no-infra-services])])]))

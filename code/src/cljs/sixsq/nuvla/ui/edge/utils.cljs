@@ -9,7 +9,11 @@
 (def state-decommissioning "DECOMMISSIONING")
 (def state-decommissioned "DECOMMISSIONED")
 (def state-error "ERROR")
-
+(def vuln-critical-color "#f41906")
+(def vuln-high-color "#f66e0a")
+(def vuln-medium-color "#fbbc06")
+(def vuln-low-color "#21b802")
+(def vuln-unknown-color "#949494")
 
 (defn state->icon
   [state]
@@ -22,12 +26,29 @@
     (get icons-map state)))
 
 
+(defn status->keyword
+  [online]
+  (case online
+    true :online
+    false :offline
+    :unknown))
+
+
 (defn status->color
   [status]
   (case status
     :online "green"
     :offline "red"
     :unknown "yellow"
+    nil))
+
+
+(defn operational-status->color
+  [status]
+  (case status
+    "OPERATIONAL" "green"
+    "DEGRADED" "red"
+    "UNKNOWN" "yellow"
     nil))
 
 
@@ -40,11 +61,6 @@
     nil))
 
 
-(def filter-offline-status (str "next-heartbeat < 'now'"))
-
-(def filter-online-status (str "next-heartbeat >= 'now'"))
-
-
 (defn state-filter
   [state]
   (str "state='" state "'"))
@@ -55,7 +71,7 @@
   [{:keys [capacity load topic raw-sample]}]
   (let [percent (-> (general-utils/percentage load capacity)
                     (general-utils/round-up))]
-    {:label        ["load" "free"]
+    {:label        ["load [last 15 min]" "free"]
      :title        (str capacity "-core CPU (load %)")
      :percentage   percent
      :value        (- 100 percent)
@@ -89,9 +105,9 @@
 (defn load-net-stats
   [net-stats]
   {:label (map :interface net-stats)
-   :title (str "Network Stats")
-   :tx    (map :bytes-transmitted net-stats)
-   :rx    (map :bytes-received net-stats)})
+   :title (str "Cumulative Network Stats per Interface")
+   :tx    (map (fn [t] (/ t 1000000)) (map :bytes-transmitted net-stats))
+   :rx    (map (fn [t] (/ t 1000000)) (map :bytes-received net-stats))})
 
 
 (defn load-statistics
@@ -126,3 +142,27 @@
 (defn get-major-version
   [full-version]
   (-> (str/split full-version #"\.") first))
+
+(defn format-update-data
+  [form-data]
+  (let [payload-releated (select-keys form-data [:project-name :working-dir
+                                                 :environment :config-files])
+        payload?         (some (fn [[_ v]] (not (str/blank? v))) payload-releated)
+        payload          (when payload?
+                           (-> payload-releated
+                               (update :environment str/split #"\n")
+                               (update :config-files str/split #"\n")))]
+    (cond-> (select-keys form-data [:nuvlabox-release])
+            payload (assoc :payload (general-utils/edn->json payload)))))
+
+
+(defn form-update-data-incomplete?
+  [{:keys [project-name working-dir environment config-files] :as form-data}]
+  (let [payload?            (->> [project-name working-dir environment config-files]
+                                 (some (complement str/blank?))
+                                 boolean)
+        payload-incomplete? (->> [project-name working-dir config-files]
+                                 (some str/blank?)
+                                 boolean)]
+    (or (str/blank? (:nuvlabox-release form-data))
+        (and payload? payload-incomplete?))))

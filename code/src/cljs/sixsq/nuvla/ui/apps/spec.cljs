@@ -75,7 +75,31 @@
 
 (s/def ::data-types (s/map-of any? (s/merge ::data-type-map)))
 
-(s/def ::private-registries (s/nilable (s/coll-of string?)))
+(s/def ::registry-id spec-utils/nonblank-string)
+
+(s/def ::registry-cred-id string?)
+
+(s/def ::single-registry (s/keys :req [::registry-cred-id
+                                       ::registry-id]))
+
+(s/def ::registries (s/map-of any? (s/merge ::single-registry)))
+
+(s/def ::cent-amount-daily (s/nilable pos-int?))
+
+(s/def ::currency string?)
+
+(s/def ::price (s/nilable (s/keys :req-un [::cent-amount-daily
+                                           ::currency])))
+
+(s/def ::license-name spec-utils/nonblank-string)
+
+(s/def ::license-description (s/nilable string?))
+
+(s/def ::license-url spec-utils/nonblank-string)
+
+(s/def ::license (s/nilable (s/keys :req-un [::license-name
+                                             ::license-url]
+                                    :opt-un [::license-description])))
 
 
 (s/def ::module-common (s/keys :req [::name
@@ -91,7 +115,8 @@
                                      ::urls
                                      ::output-parameters
                                      ::data-types
-                                     ::private-registries]))
+                                     ::price
+                                     ::license]))
 
 
 ;; Validation
@@ -113,8 +138,6 @@
 
 (s/def ::active-input (s/nilable string?))
 
-(s/def ::version-warning? boolean?)
-
 (s/def ::is-new? boolean?)
 
 (s/def ::completed? boolean?)
@@ -127,7 +150,13 @@
 
 (s/def ::registries-infra any?)
 
+(s/def ::registries-credentials any?)
+
 (s/def ::validate-docker-compose any?)
+
+(s/def ::compare-module-left any?)
+
+(s/def ::compare-module-right any?)
 
 (s/def ::db (s/keys :req [::active-input
                           ::form-spec
@@ -141,13 +170,15 @@
                           ::save-modal-visible?
                           ::commit-message
                           ::registries-infra
-                          ::validate-docker-compose]))
+                          ::registries-credentials
+                          ::validate-docker-compose
+                          ::compare-module-left
+                          ::compare-module-right]))
 
 (def defaults {::active-input            nil
                ::form-spec               nil
                ::form-valid?             true
                ::validate-form?          false
-               ::version-warning?        false
                ::is-new?                 false
                ::completed?              true
                ::add-modal-visible?      false
@@ -155,5 +186,9 @@
                ::save-modal-visible?     false
                ::default-logo-url        "/ui/images/noimage.png"
                ::commit-message          ""
+               ::registries              nil
                ::registries-infra        nil
-               ::validate-docker-compose nil})
+               ::registries-credentials  nil
+               ::validate-docker-compose nil
+               ::compare-module-left     nil
+               ::compare-module-right    nil})

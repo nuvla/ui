@@ -17,7 +17,7 @@
     [:<>
      [:div {:style {:float "right"}} [i18n-views/LocaleDropdown]]
      [:div {:style {:margin-left "10%"
-                    :margin-top  "30%"}}
+                    :margin-top  "25%"}}
       [:span {:style {:font-size "1.4em"}} title [:b title-bold]]
 
 
@@ -35,7 +35,7 @@
                       :size      "tiny"
                       :onDismiss #(dispatch [::events/set-success-message nil])}
           [ui/MessageHeader (str/capitalize (@tr [:success]))]
-          [:p @success-message]])
+          [:p (@tr [@success-message])]])
 
        FormFields
 

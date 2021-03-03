@@ -81,27 +81,27 @@
 (reg-event-fx
   ::edit-credential
   (fn [{{:keys [::spec/credential] :as db} :db} [_]]
-    (let [id             (:id credential)
-          new-credential (utils/db->new-credential db)]
+    (let [id (:id credential)]
       (if (nil? id)
-        {:db               db
-         ::cimi-api-fx/add [:credential new-credential
-                            #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
-                                 (dispatch [::close-credential-modal])
-                                 (dispatch [::get-credentials])
-                                 ;(dispatch [::main-events/check-bootstrap-message])
-                                 (when
-                                   (contains?
-                                     #{"credential-template/create-credential-vpn-customer"}
-                                     (get-in new-credential [:template :href]))
-                                   (dispatch [::set-generated-credential-modal %]))
-                                 (let [{:keys [status message resource-id]} (response/parse %)]
-                                    (dispatch [::messages-events/add
-                                               {:header  (cond-> (str "added " resource-id)
-                                                           status (str " (" status ")"))
-                                                :content message
-                                                :type    :success}]))
-                                 )]}
+        (let [new-credential (utils/db->new-credential db)]
+          {:db               db
+           ::cimi-api-fx/add [:credential new-credential
+                              #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
+                                   (dispatch [::close-credential-modal])
+                                   (dispatch [::get-credentials])
+                                   ;(dispatch [::main-events/check-bootstrap-message])
+                                   (when
+                                     (contains?
+                                       #{"credential-template/create-credential-vpn-customer"}
+                                       (get-in new-credential [:template :href]))
+                                     (dispatch [::set-generated-credential-modal %]))
+                                   (let [{:keys [status message resource-id]} (response/parse %)]
+                                     (dispatch [::messages-events/add
+                                                {:header  (cond-> (str "added " resource-id)
+                                                                  status (str " (" status ")"))
+                                                 :content message
+                                                 :type    :success}]))
+                                   )]})
         {:db                db
          ::cimi-api-fx/edit [id credential
                              #(if (instance? js/Error %)
@@ -235,3 +235,9 @@
         need-check? (assoc ::cimi-api-fx/operation
                            [id "check" #(dispatch [::set-check-cred-job-id (:location %)])])
         ))))
+
+
+(reg-event-db
+  ::set-active-tab-index
+  (fn [db [_ active-tab-index]]
+    (assoc db ::spec/active-tab-index active-tab-index)))

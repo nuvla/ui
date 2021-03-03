@@ -40,18 +40,20 @@
        {:title        (@tr [:login-to])
         :title-bold   (@tr [:account])
         :FormFields   [:<>
-                       [ui/FormInput {:name       :username
-                                      :label      (@tr [:username])
-                                      :auto-focus true
-                                      :on-change  (partial fv/event->names->value! form)
-                                      :on-blur    (partial fv/event->show-message form)
-                                      :error      (fv/?show-message form :username spec->msg)}]
-                       [ui/FormInput {:name      :password
-                                      :label     (str/capitalize (@tr [:password]))
-                                      :type      "password"
-                                      :on-change (partial fv/event->names->value! form)
-                                      :on-blur   (partial fv/event->show-message form)
-                                      :error     (fv/?show-message form :password spec->msg)}]
+                       [ui/FormInput {:name          :username
+                                      :label         (@tr [:username])
+                                      :auto-focus    true
+                                      :auto-complete "username"
+                                      :on-change     (partial fv/event->names->value! form)
+                                      :on-blur       (partial fv/event->show-message form)
+                                      :error         (fv/?show-message form :username spec->msg)}]
+                       [ui/FormInput {:name          :password
+                                      :label         (str/capitalize (@tr [:password]))
+                                      :type          "password"
+                                      :auto-complete "current-password"
+                                      :on-change     (partial fv/event->names->value! form)
+                                      :on-blur       (partial fv/event->show-message form)
+                                      :error         (fv/?show-message form :password spec->msg)}]
                        [ui/FormField
                         [history-views/link "reset-password" (@tr [:forgot-password])]]]
         :submit-text  (@tr [:sign-in])

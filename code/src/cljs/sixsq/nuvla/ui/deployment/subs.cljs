@@ -1,9 +1,8 @@
-(ns sixsq.nuvla.ui.dashboard-detail.subs
+(ns sixsq.nuvla.ui.deployment.subs
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.dashboard-detail.spec :as spec]
     [sixsq.nuvla.ui.dashboard.utils :as dashboard-utils]
+    [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
@@ -97,24 +96,6 @@
 
 
 (reg-sub
-  ::jobs
-  (fn [db]
-    (::spec/jobs db)))
-
-
-(reg-sub
-  ::jobs-per-page
-  (fn [db]
-    (::spec/jobs-per-page db)))
-
-
-(reg-sub
-  ::job-page
-  (fn [db]
-    (::spec/job-page db)))
-
-
-(reg-sub
   ::deployment-parameters
   (fn [db]
     (->> db
@@ -163,7 +144,7 @@
 (reg-sub
   ::module-versions
   (fn [db]
-    (::spec/module-versions db)))
+    (reverse (map-indexed vector (::spec/module-versions db)))))
 
 
 (reg-sub
@@ -181,12 +162,16 @@
       (some
         (fn [[idx item]]
           (when (= (:href item) id) idx))
-        (map-indexed vector module-versions)))))
+        module-versions))))
 
 
 (reg-sub
-  ::is-latest-module-versions?
-  :<- [::module-versions]
-  :<- [::current-module-content-id]
-  (fn [[module-versions id]]
-    (= (-> module-versions last :href) id)))
+  ::upcoming-invoice
+  (fn [db]
+    (::spec/upcoming-invoice db)))
+
+
+(reg-sub
+  ::active-tab-index
+  (fn [db]
+    (get-in db [::spec/active-tab-index])))

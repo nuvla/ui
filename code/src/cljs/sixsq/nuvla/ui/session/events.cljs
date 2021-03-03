@@ -1,15 +1,16 @@
 (ns sixsq.nuvla.ui.session.events
   (:require
+    [ajax.core :as ajax]
     [clojure.string :as str]
+    [day8.re-frame.http-fx]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.events :as cimi-events]
+    [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.profile.effects :as profile-fx]
     [sixsq.nuvla.ui.profile.events :as profile-events]
-    [sixsq.nuvla.ui.profile.spec :as profile-spec]
     [sixsq.nuvla.ui.session.effects :as fx]
     [sixsq.nuvla.ui.session.spec :as spec]
     [sixsq.nuvla.ui.utils.response :as response]))
@@ -72,6 +73,7 @@
   (fn [db _]
     (assoc db ::spec/loading? false)))
 
+
 (reg-event-db
   ::set-error-message
   (fn [db [_ error-message]]
@@ -85,16 +87,6 @@
      :dispatch [::clear-loading]}))
 
 
-(defn default-submit-callback
-  [close-modal success-msg response]
-  (dispatch [::clear-loading])
-  (dispatch [::initialize])
-  (when close-modal
-    (dispatch [::close-modal]))
-  (when success-msg
-    (dispatch [::set-success-message success-msg])))
-
-
 (reg-event-fx
   ::submit
   (fn [{{:keys [::spec/server-redirect-uri] :as db} :db} [_ form-id form-data opts]]
@@ -102,11 +94,20 @@
            success-msg  :success-msg,
            callback-add :callback-add,
            redirect-url :redirect-url
+           navigate-to  :navigate-to
            :or          {close-modal  true
                          redirect-url server-redirect-uri}} opts
 
           on-success    (or callback-add
-                            (partial default-submit-callback close-modal success-msg))
+                            #(do
+                               (dispatch [::clear-loading])
+                               (dispatch [::initialize])
+                               (when close-modal
+                                 (dispatch [::close-modal]))
+                               (when success-msg
+                                 (dispatch [::set-success-message success-msg]))
+                               (when navigate-to
+                                 (dispatch [::history-events/navigate navigate-to]))))
 
           on-error      #(let [{:keys [message]} (response/parse-ex-info %)]
                            (dispatch [::clear-loading])
@@ -122,6 +123,53 @@
                                    ::spec/success-message nil
                                    ::spec/error-message nil)
        ::cimi-api-fx/add [collection-kw template on-success :on-error on-error]})))
+
+
+(reg-event-fx
+  ::set-password-success
+  (fn [_ [_ success-message]]
+    {:dispatch-n [[::clear-loading]
+                  [::initialize]
+                  [::set-success-message success-message]
+                  [::history-events/navigate "sign-in"]]}))
+
+
+(reg-event-fx
+  ::set-password-error
+  (fn [_ [_ response]]
+    {:dispatch-n [[::clear-loading]
+                  [::set-error-message (get-in response [:response :message])]]}))
+
+
+(reg-event-fx
+  ::reset-password
+  (fn [{db :db} [_ form]]
+    {:db         (assoc db ::spec/loading? true
+                           ::spec/success-message nil
+                           ::spec/error-message nil)
+     :http-xhrio {:method          :put
+                  :uri             (str @cimi-api-fx/NUVLA_URL "/api/hook/reset-password")
+                  :format          (ajax/json-request-format)
+                  :params          (assoc form :redirect-url
+                                               (str @config/path-prefix "/set-password"))
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [::set-password-success :reset-password-sucess-inst]
+                  :on-failure      [::set-password-error]}}))
+
+
+(reg-event-fx
+  ::set-password
+  (fn [{db :db} [_ callback form]]
+    {:db         (assoc db ::spec/loading? true
+                           ::spec/success-message nil
+                           ::spec/error-message nil)
+     :http-xhrio {:method          :put
+                  :uri             callback
+                  :format          (ajax/json-request-format)
+                  :params          form
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [::set-password-success :set-password-success]
+                  :on-failure      [::set-password-error]}}))
 
 
 (reg-event-fx

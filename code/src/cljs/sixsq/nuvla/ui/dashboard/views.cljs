@@ -2,9 +2,10 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.dashboard-detail.views :as dashboard-detail-views]
     [sixsq.nuvla.ui.dashboard.events :as events]
     [sixsq.nuvla.ui.dashboard.subs :as subs]
+    [sixsq.nuvla.ui.deployment.views :as deployment-views]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
@@ -18,8 +19,8 @@
 
 
 (defn refresh
-  []
-  (dispatch [::events/refresh]))
+  [& opts]
+  (dispatch [::events/refresh opts]))
 
 
 (defn control-bar []
@@ -42,24 +43,25 @@
                                      #(dispatch [::events/set-active-only? %]))}]]))
 
 
-(defn menu-bar
+(defn MenuBar
   []
   (let [view     (subscribe [::subs/view])
         loading? (subscribe [::subs/loading?])]
     (fn []
       [:<>
-       [ui/Menu {:borderless true, :stackable true}
-        [ui/MenuItem {:icon     "grid layout"
-                      :active   (= @view "cards")
-                      :on-click #(dispatch [::events/set-view "cards"])}]
-        [ui/MenuItem {:icon     "table"
-                      :active   (= @view "table")
-                      :on-click #(dispatch [::events/set-view "table"])}]
+       [main-components/StickyBar
+        [ui/Menu {:borderless true, :stackable true}
+         [ui/MenuItem {:icon     "grid layout"
+                       :active   (= @view "cards")
+                       :on-click #(dispatch [::events/set-view "cards"])}]
+         [ui/MenuItem {:icon     "table"
+                       :active   (= @view "table")
+                       :on-click #(dispatch [::events/set-view "table"])}]
 
-        [main-components/RefreshMenu
-         {:action-id  events/refresh-action-id
-          :loading?   @loading?
-          :on-refresh refresh}]]
+         [main-components/RefreshMenu
+          {:action-id  events/refresh-action-id
+           :loading?   @loading?
+           :on-refresh refresh}]]]
 
        [control-bar]])))
 
@@ -89,31 +91,33 @@
      [ui/TableCell
       (cond
         (general-utils/can-operation? "stop" deployment)
-        [dashboard-detail-views/ShutdownButton deployment]
+        [deployment-views/ShutdownButton deployment]
 
         (general-utils/can-delete? deployment)
-        [dashboard-detail-views/DeleteButton deployment])]]))
+        [deployment-views/DeleteButton deployment])]]))
 
 
 (defn vertical-data-table
   [deployments-list]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [deployments-list]
-      [ui/Table
-       (merge style/single-line {:stackable true})
-       [ui/TableHeader
-        [ui/TableRow
-         [ui/TableHeaderCell (@tr [:id])]
-         [ui/TableHeaderCell (@tr [:module])]
-         [ui/TableHeaderCell (@tr [:status])]
-         [ui/TableHeaderCell (@tr [:url])]
-         [ui/TableHeaderCell (@tr [:created])]
-         [ui/TableHeaderCell (@tr [:infrastructure])]
-         [ui/TableHeaderCell (@tr [:actions])]]]
-       [ui/TableBody
-        (for [{:keys [id] :as deployment} deployments-list]
-          ^{:key id}
-          [row-fn deployment])]])))
+      (if (empty? deployments-list)
+        [uix/WarningMsgNoElements]
+        [ui/Table
+        (merge style/single-line {:stackable true})
+        [ui/TableHeader
+         [ui/TableRow
+          [ui/TableHeaderCell (@tr [:id])]
+          [ui/TableHeaderCell (@tr [:module])]
+          [ui/TableHeaderCell (@tr [:status])]
+          [ui/TableHeaderCell (@tr [:url])]
+          [ui/TableHeaderCell (@tr [:created])]
+          [ui/TableHeaderCell (@tr [:infrastructure])]
+          [ui/TableHeaderCell (@tr [:actions])]]]
+        [ui/TableBody
+         (for [{:keys [id] :as deployment} deployments-list]
+           ^{:key id}
+           [row-fn deployment])]]))))
 
 
 (defn cards-data-table
@@ -121,7 +125,7 @@
   [ui/CardGroup {:centered true}
    (for [{:keys [id] :as deployment} deployments-list]
      ^{:key id}
-     [dashboard-detail-views/DeploymentCard deployment])])
+     [deployment-views/DeploymentCard deployment])])
 
 
 (defn deployments-display
@@ -142,7 +146,7 @@
         page              (subscribe [::subs/page])
         deployments       (subscribe [::subs/deployments])
         tr                (subscribe [::i18n-subs/tr])]
-    (refresh)
+    (refresh :init? true)
     (fn []
       (let [total-deployments (:count @deployments)
             total-pages       (general-utils/total-pages
@@ -151,23 +155,27 @@
 
         [ui/Container {:fluid true}
          [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard]))]
-         [menu-bar]
-         [ui/Segment style/basic
-          [deployments-display deployments-list]]
-         [uix/Pagination
-          {:totalitems   total-deployments
-           :totalPages   total-pages
-           :activePage   @page
-           :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]))))
+         [uix/Accordion
+          [:<>
+           [MenuBar]
+           [ui/Segment style/basic
+            [deployments-display deployments-list]]
+           [uix/Pagination
+            {:totalitems   total-deployments
+             :totalPages   total-pages
+             :activePage   @page
+             :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]
+           ]
+          :label (str/capitalize (@tr [:deployments]))
+          :count total-deployments
+          :icon "rocket"]]))))
 
 
 (defmethod panel/render :dashboard
   [path]
-  (let [n        (count path)
+  (let [n    (count path)
         [_ uuid] path
-        root     [dashboard-main]
-        children (case n
-                   1 root
-                   2 ^{:key uuid} [dashboard-detail-views/deployment-detail uuid]
-                   root)]
-    [ui/Segment style/basic children]))
+        root [dashboard-main]]
+    (case n
+      2 ^{:key uuid} (dispatch [::history-events/navigate (str "deployment/" uuid)])
+      [ui/Segment style/basic root])))

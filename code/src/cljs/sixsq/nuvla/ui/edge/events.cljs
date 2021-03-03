@@ -63,9 +63,17 @@
       (cond->
         {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
                        ::spec/loading? false)}
-        (not-empty resources) (assoc ::fx/get-status-nuvlaboxes
-                                     [(map :id resources)
-                                      #(dispatch [::set-status-nuvlaboxes %])])))))
+        (not-empty resources) (assoc ::cimi-api-fx/search
+                                     [:nuvlabox-status
+                                      {:filter (->> resources
+                                                    (map :nuvlabox-status)
+                                                    (remove nil?)
+                                                    (map #(str "id='" % "'"))
+                                                    (apply general-utils/join-or))
+                                       :select "id, parent, online"
+                                       :last   10000}
+                                      #(dispatch [::set-nuvlaboxes-online-status
+                                                  (:resources %)])])))))
 
 
 (reg-event-db
@@ -78,6 +86,14 @@
   ::set-status-nuvlaboxes
   (fn [db [_ status-nuvlaboxes]]
     (assoc db ::spec/status-nuvlaboxes status-nuvlaboxes)))
+
+
+(reg-event-db
+  ::set-nuvlaboxes-online-status
+  (fn [db [_ resources]]
+    (assoc db ::spec/nuvlaboxes-online-status (->> resources
+                                                   (map (juxt :parent  identity))
+                                                   (into {})))))
 
 
 (reg-event-fx
@@ -96,26 +112,29 @@
 
 (reg-event-fx
   ::create-ssh-key
-  (fn [_ [_ ssh-template]]
+  (fn [_ [_ ssh-template dispatch-vector]]
     {::cimi-api-fx/add [:credential ssh-template
                         #(do
                            (dispatch [::set-nuvlabox-ssh-keys {:ids         [(:resource-id %)]
                                                                :public-keys [(:public-key %)]}])
-                           (dispatch [::set-nuvlabox-created-private-ssh-key (:private-key %)]))]}))
+                           (dispatch [::set-nuvlabox-created-private-ssh-key (:private-key %)])
+                           (dispatch dispatch-vector))]}))
 
 
 (reg-event-fx
   ::find-nuvlabox-ssh-keys
-  (fn [_ [_ ssh-keys-ids]]
+  (fn [_ [_ ssh-keys-ids dispatch-vector]]
     {::cimi-api-fx/search
      [:credential
       {:filter (cond-> (apply general-utils/join-or
                               (map #(str "id='" % "'") ssh-keys-ids)))
        :select "public-key"
        :last   10000}
-      #(dispatch [::set-nuvlabox-ssh-keys {:ids         ssh-keys-ids
-                                           :public-keys (into [] (map :public-key
-                                                                      (:resources %)))}])]}))
+      #(do
+         (dispatch [::set-nuvlabox-ssh-keys {:ids         ssh-keys-ids
+                                             :public-keys (into [] (map :public-key
+                                                                        (:resources %)))}])
+         (dispatch dispatch-vector))]}))
 
 
 (reg-event-db
@@ -161,13 +180,14 @@
   ::create-nuvlabox-usb-api-key
   (fn [_ [_ creation-data]]
     {::cimi-api-fx/add [:credential creation-data
-                        #(dispatch [::set-nuvlabox-usb-api-key %])]}))
+                        #(dispatch [::set-nuvlabox-usb-api-key {:resource-id (:resource-id %)
+                                                                :secret-key  (:secret-key %)}])]}))
 
 
 (reg-event-db
   ::set-nuvlabox-usb-api-key
-  (fn [db [_ {:keys [resource-id secret-key]}]]
-    (assoc db ::spec/nuvlabox-usb-api-key {:resource-id resource-id :secret-key secret-key})))
+  (fn [db [_ apikey]]
+    (assoc db ::spec/nuvlabox-usb-api-key apikey)))
 
 
 (reg-event-db
@@ -198,7 +218,7 @@
   (fn [{:keys [db]} _]
     {:db                  (assoc db ::spec/nuvlabox-releases nil)
      ::cimi-api-fx/search [:nuvlabox-release
-                           {:select  "release, pre-release, release-notes, url, compose-files "
+                           {:select  "id, release, pre-release, release-notes, url, compose-files"
                             :orderby "release-date:desc"
                             :last    10000}
                            #(dispatch [::set-nuvlabox-releases %])]}))

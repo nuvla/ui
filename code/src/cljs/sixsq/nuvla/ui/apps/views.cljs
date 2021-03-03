@@ -13,8 +13,6 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [taoensso.timbre :as timbre]))
 
@@ -55,7 +53,6 @@
             is-root?    (empty? module-name)
             is-new?     (not (empty? new-subtype))]
         (dispatch [::events/is-new? (not (empty? new-subtype))])
-        (dispatch [::events/clear-version-warning])
         (if is-root?
           [apps-store-views/root-view]
           (do
@@ -70,8 +67,6 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     (timbre/set-level! :info)
     [:div
-     ;[uix/PageHeader
-     ; "play" (general-utils/capitalize-first-letter (@tr [:apps-header]))]
      [utils-validation/validation-error-message ::subs/form-valid?]
      [views-detail/version-warning]
      [views-detail/add-modal]

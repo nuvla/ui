@@ -4,7 +4,6 @@
     [clojure.string :as str]
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -12,6 +11,7 @@
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.session.events :as events]
     [sixsq.nuvla.ui.session.reset-password-views :as reset-password-views]
+    [sixsq.nuvla.ui.session.set-password-views :as set-password-views]
     [sixsq.nuvla.ui.session.sign-in-views :as sign-in-views]
     [sixsq.nuvla.ui.session.sign-up-views :as sign-up-views]
     [sixsq.nuvla.ui.session.subs :as subs]
@@ -45,11 +45,10 @@
                                email-encoded (-> form-data :email js/encodeURI)]
                            (dispatch [::events/submit utils/user-tmpl-email-invitation
                                       (:names->value @form)
-                                      {:success-msg  (@tr [:invitation-email-success-msg])
+                                      {:success-msg  :invitation-email-success-msg
+                                       :close-modal  false
                                        :redirect-url (str @config/path-prefix
-                                                          "/reset-password"
-                                                          "?invited-user="
-                                                          email-encoded)}])))]
+                                                          "/set-password" )}])))]
         [ui/Modal
          {:id        "modal-create-user"
           :size      :tiny
@@ -57,9 +56,9 @@
           :closeIcon true
           :on-close  #(do
                         (dispatch [::events/close-modal])
-                        (reset! form (fv/init-form form-conf)))}
+                        (reset! form @(fv/init-form form-conf)))}
 
-         [ui/ModalHeader (@tr [:invite-user])]
+         [uix/ModalHeader {:header (@tr [:invite-user])}]
 
          [ui/ModalContent
 
@@ -75,7 +74,7 @@
                          :size      "tiny"
                          :onDismiss #(dispatch [::events/set-success-message nil])}
              [ui/MessageHeader (@tr [:success])]
-             [:p @success-message]])
+             [:p (@tr [@success-message])]])
 
           [ui/Form
            [ui/FormInput {:name          :email
@@ -135,12 +134,6 @@
                        :icon       "book"
                        :text       (@tr [:documentation])
                        :href       "https://docs.nuvla.io/"
-                       :target     "_blank"
-                       :rel        "noreferrer"}]
-     [ui/DropdownItem {:aria-label (@tr [:knowledge-base])
-                       :icon       "info circle"
-                       :text       (@tr [:knowledge-base])
-                       :href       "https://support.sixsq.com/solution/categories"
                        :target     "_blank"
                        :rel        "noreferrer"}]
      [ui/DropdownItem {:aria-label (@tr [:support])
@@ -235,13 +228,10 @@
                             (utils-general/logo-src "nuvla")
                             (utils-general/logo-src @custom-marketplace))
                 :size     "medium"
-                :style    {:margin-top    "10px"
-                           :margin-bottom "0px"}
                 :centered false}]
      [:br]
 
-     [:div {:style {:margin-top  40
-                    :line-height "normal"
+     [:div {:style {:line-height "normal"
                     :font-size   "2em"}}
       (@tr [:edge-platform-as-a-service])]
      [:br]
@@ -297,6 +287,7 @@
       "sign-in" [sign-in-views/Form]
       "sign-up" [sign-up-views/Form]
       "reset-password" [reset-password-views/Form]
+      "set-password" [set-password-views/Form]
       [sign-in-views/Form])))
 
 
@@ -318,7 +309,7 @@
               :style     {:margin           0
                           :background-color "white"}}
 
-     [ui/GridColumn {:style {:background-image    "url(/ui/images/volumlight.png)"
+     [ui/GridColumn {:style {:background-image    "url(/ui/images/session.png)"
                              :background-size     "cover"
                              :background-position "left"
                              :background-repeat   "no-repeat"

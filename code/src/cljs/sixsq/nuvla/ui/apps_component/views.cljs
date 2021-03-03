@@ -16,6 +16,7 @@
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.form-fields :as forms]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -58,8 +59,7 @@
           (if @editable?
             [:div
              [apps-views-detail/input "docker-registry" "docker-registry" registry
-              (@tr [:module-docker-registry-placeholder])
-              ::events/update-docker-registry ::spec/registry]
+              "docker.io" ::events/update-docker-registry ::spec/registry]
              [:span " "]
              [apps-views-detail/input "docker-repository-image-name" "docker-repository-image-name"
               (str/join "/" (remove nil? [repository image-name]))
@@ -73,12 +73,11 @@
 
 (defn architectures
   []
-  (let [architectures         (subscribe [::subs/architectures])
-        architectures-options (subscribe [::subs/architectures-options])
-        form-valid?           (subscribe [::apps-subs/form-valid?])
-        editable?             (subscribe [::apps-subs/editable?])
-        local-validate?       (r/atom false)
-        label                 "architectures"]
+  (let [architectures   (subscribe [::subs/architectures])
+        form-valid?     (subscribe [::apps-subs/form-valid?])
+        editable?       (subscribe [::apps-subs/editable?])
+        local-validate? (r/atom false)
+        label           "architectures"]
     (fn []
       (let [validate? (or @local-validate? (not @form-valid?))]
         ^{:key @architectures}
@@ -92,7 +91,12 @@
                           :multiple      true
                           :selection     true
                           :default-value @architectures
-                          :options       @architectures-options
+                          :options       (map (fn [arch] {:key arch, :value arch, :text arch})
+                                              ["386", "amd64", "amd64p32", "arm", "armbe", "arm64",
+                                               "arm64/v8", "arm64be", "arm/v5", "arm/v6", "arm/v7",
+                                               "ppc", "ppc64", "ppc64le", "mips", "mipsle",
+                                               "mips64", "mips64le", "mips64p32", "mips64p32le",
+                                               "s390", "s390x", "sparc", "sparc64"])
                           :error         (and validate?
                                               (not (s/valid? ::spec/architectures @architectures)))
                           :on-change     (ui-callback/value
@@ -110,9 +114,7 @@
      [^{:key "summary-docker-image"}
       [docker-image]
       ^{:key "summary-architectures"}
-      [architectures]
-      ^{:key "summary-private-registries"}
-      [apps-views-detail/private-registries false]]]))
+      [architectures]]]))
 
 
 (defn single-port
@@ -186,7 +188,8 @@
           [:div {:style {:padding-top 10}}
            [apps-views-detail/plus ::events/add-port]])]
        :label (@tr [:module-ports])
-       :count (count @ports)])))
+       :count (count @ports)
+       :default-open false])))
 
 
 (defn single-mount [mount]
@@ -272,7 +275,8 @@
           [:div {:style {:padding-top 10}}
            [apps-views-detail/plus ::events/add-mount]])]
        :label (@tr [:module-mounts])
-       :count (count @mounts)])))
+       :count (count @mounts)
+       :default-open false])))
 
 
 (defn generate-ports-args
@@ -343,19 +347,24 @@
 (defn view-edit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        editable?     (subscribe [::apps-subs/editable?])]
+        editable?     (subscribe [::apps-subs/editable?])
+        stripe        (subscribe [::main-subs/stripe])]
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
         (dispatch [::apps-events/set-form-spec ::spec/module-component])
         [ui/Container {:fluid true}
-         [uix/PageHeader "grid layout" (str parent (when (not-empty parent) "/") name) :inline true]
          [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)
                          :on-change     #(do (dispatch [::apps-events/acl %])
                                              (dispatch [::main-events/changes-protection? true]))
                          :read-only     (not @editable?)}]
+         [uix/PageHeader "grid layout" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
          [summary]
+         [apps-views-detail/registries-section]
+         (when @stripe
+           [apps-views-detail/price-section])
+         [apps-views-detail/license-section]
          [ports-section]
          [apps-views-detail/env-variables-section]
          [mounts-section]
@@ -363,7 +372,6 @@
          [apps-views-detail/output-parameters-section]
          [apps-views-detail/data-types-section]
          [test-command]
-         [apps-views-detail/save-action]
          [apps-views-detail/add-modal]
          [apps-views-detail/save-modal]
          [apps-views-detail/logo-url-modal]

@@ -2,6 +2,7 @@
   (:require
     [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.edge-detail.spec :as spec]
+    [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.time :as time]))
 
@@ -19,15 +20,29 @@
 
 
 (reg-sub
-  ::nuvlabox-ssh-keys
+  ::nuvlabox-online-status
+  :<- [::nuvlabox-status]
+  (fn [{:keys [online]}]
+    (utils/status->keyword online)))
+
+
+(reg-sub
+  ::nuvlabox-vulns
   (fn [db]
-    (::spec/nuvlabox-ssh-keys db)))
+    (::spec/nuvlabox-vulns db)))
+
+
+(reg-sub
+  ::nuvlabox-associated-ssh-keys
+  (fn [db]
+    (::spec/nuvlabox-associated-ssh-keys db)))
 
 
 (reg-sub
   ::nuvlabox-peripherals
   (fn [db]
     (::spec/nuvlabox-peripherals db)))
+
 
 (reg-sub
   ::nuvlabox-peripherals-ids
@@ -42,6 +57,31 @@
   (fn [nuvlabox-peripherals [_ id]]
     (get nuvlabox-peripherals id)))
 
+
+(reg-sub
+  ::nuvlabox-events
+  (fn [db]
+    (::spec/nuvlabox-events db)))
+
+(reg-sub
+  ::elements-per-page
+  (fn [db]
+    (::spec/elements-per-page db)))
+
+(reg-sub
+  ::page
+  (fn [db]
+    (::spec/page db)))
+
+(reg-sub
+  ::vuln-severity-selector
+  (fn [db]
+    (::spec/vuln-severity-selector db)))
+
+(reg-sub
+  ::matching-vulns-from-db
+  (fn [db]
+    (::spec/matching-vulns-from-db db)))
 
 (reg-sub
   ::next-heartbeat-moment
@@ -75,3 +115,9 @@
   :<- [::nuvlabox]
   (fn [nuvlabox _]
     (general-utils/can-delete? nuvlabox)))
+
+
+(reg-sub
+  ::active-tab-index
+  (fn [db]
+    (get-in db [::spec/active-tab-index])))

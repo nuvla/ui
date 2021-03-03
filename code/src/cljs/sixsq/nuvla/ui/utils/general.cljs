@@ -101,6 +101,13 @@
           (str (str/join "" (rest s)))))
 
 
+(defn name->display-name
+  [name]
+  (some-> name
+          (str/replace #"-" " ")
+          (capitalize-words)))
+
+
 ;;
 ;; json/edn conversions
 ;;
@@ -267,6 +274,7 @@
   [data is-new?]
   (or is-new? (can-edit? data)))
 
+
 (defn mandatory-name
   [name]
   [:span name [:sup " " [ui/Icon {:name  :asterisk
@@ -275,14 +283,19 @@
 
 
 (defn fulltext-query-string
-  [fulltext]
-  (when-not (str/blank? fulltext)
-    (str "fulltext=='"
-         (->> (str/split fulltext #" ")
-              (remove str/blank?)
-              (map #(str % "*"))
-              (str/join "+"))
-         "'")))
+  ([fulltext]
+   (fulltext-query-string "fulltext" fulltext))
+  ([field fulltext]
+   (when-not (str/blank? fulltext)
+     (str field
+          "=='"
+          (-> fulltext
+              (str/escape {\' "\\'", \\ "\\\\"})
+              (str/split #" ")
+              (->> (remove str/blank?)
+                   (map #(str % "*"))
+                   (str/join " ")))
+          "'"))))
 
 
 ;; Math

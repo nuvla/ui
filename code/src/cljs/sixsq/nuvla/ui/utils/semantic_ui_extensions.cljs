@@ -78,7 +78,7 @@
   [{:keys [header icon]}]
   [ui/ModalHeader
    (when icon
-     [ui/Icon {:name "add"}])
+     [ui/Icon {:name icon}])
    (str/capitalize header)])
 
 

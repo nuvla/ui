@@ -270,7 +270,8 @@
         visible?        (subscribe [::subs/paste-modal-visible?])
         copy-module     (subscribe [::subs/copy-module])
         module-name     (:name @copy-module)
-        new-module-name (r/atom module-name)]
+        new-module-name (r/atom module-name)
+        form-valid?     (r/atom true)]
     @copy-module
     ;    (log/error "paste-modal out")
     (fn []
@@ -287,18 +288,24 @@
                            :icon   "paste"}]
 
          [ui/ModalContent
-          [ui/Input {:fluid         true
-                     :default-value @new-module-name
-                     :auto-focus    true
-                     :focus         true
-                     :on-change     (ui-callback/input-callback
-                                      #(reset! new-module-name %))
-                     :on-key-press  (partial forms/on-return-key paste-fn)}]]
+          [:div (@tr [:paste-modal-content])]
+          [:h5 {:style {:margin-top "10px"}} (:parent-path @copy-module) "/" (:name @copy-module)]
+          [ui/Table {:compact    true
+                     :definition true}
+           [ui/TableBody
+
+            [uix/TableRowField (@tr [:new-name]), :key "new-name", :editable? true,
+             :spec ::spec/name, :validate-form? true, :required? true,
+             :default-value @new-module-name, :on-change #(do (log/error ">" % "<") (reset! new-module-name %)
+                                                              (reset! form-valid? (s/valid? ::spec/name %)))]
+            ]]]
 
          [ui/ModalActions
+          [forms/validation-error-msg (@tr [:paste-modal-validation-error]) (not @form-valid?)]
           [uix/Button {:text     (@tr [:paste])
                        :positive true
                        :active   true
+                       :disabled (not @form-valid?)
                        :on-click paste-fn}]]]))))
 
 

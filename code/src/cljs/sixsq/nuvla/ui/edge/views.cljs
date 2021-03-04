@@ -13,6 +13,7 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -630,9 +631,7 @@
                       ]]])]
 
                 [ui/ModalActions
-                 [:span {:style {:color "#9f3a38" :display (if (not (nil? @install-strategy-error))
-                                                             "inline-block" "none")}}
-                  (@tr [:nuvlabox-modal-missing-fields])]
+                 [utils-forms/validation-error-msg (@tr [:nuvlabox-modal-missing-fields]) (not (nil? @install-strategy-error))]
                  [ui/Button {:positive true
                              :loading  @creating
                              :on-click on-add-fn}

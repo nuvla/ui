@@ -10,7 +10,8 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 
 (defn Button
@@ -35,7 +36,7 @@
   "Provides a menu item that reuses the name for the :name property and as the
    MenuItem label. The optional icon-name specifies the icon to use. The
    loading? parameter specifies if the icon should be spinning."
-  [{:keys [name icon loading?] :as options}]
+  [{:keys [name icon loading? disabled] :as options}]
   (let [final-opts (-> options
                        (dissoc :icon :loading?)
                        (assoc :aria-label name))]

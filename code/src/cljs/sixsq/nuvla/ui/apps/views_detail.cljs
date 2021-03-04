@@ -26,7 +26,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 
 (defn edit-button-disabled?
@@ -72,7 +73,8 @@
         page-changed? (subscribe [::main-subs/changes-protection?])
         form-valid?   (subscribe [::subs/form-valid?])
         editable?     (subscribe [::subs/editable?])
-        module-id     (subscribe [::subs/module-id-version])]
+        module-id     (subscribe [::subs/module-id-version])
+        copy-module   (subscribe [::subs/copy-module])]
     (fn []
       (let [subtype          (:subtype @module)
             launchable?      (and subtype (not= "project" subtype))
@@ -105,15 +107,17 @@
               :disabled add-disabled?
               :on-click #(dispatch [::events/open-add-modal])}])
 
-          [uix/MenuItem
-           {:name     (@tr [:copy])
-            :icon     "copy"
-            :on-click #(dispatch [::events/copy])}]
+          (when (not= "project" subtype)
+            [uix/MenuItem
+             {:name     (@tr [:copy])
+              :icon     "copy"
+              :on-click #(dispatch [::events/copy])}])
 
           (when (= "project" subtype)
             [uix/MenuItem
              {:name     (@tr [:paste])
               :icon     "paste"
+              :disabled (when (nil? @copy-module) true)
               :on-click #(dispatch [::events/open-paste-modal])}])
 
           (when (general-utils/can-delete? @module)
@@ -263,15 +267,18 @@
 (defn paste-modal
   []
   (let [tr              (subscribe [::i18n-subs/tr])
-        copy-module     (subscribe [::subs/copy-module])
         visible?        (subscribe [::subs/paste-modal-visible?])
+        copy-module     (subscribe [::subs/copy-module])
         module-name     (:name @copy-module)
         new-module-name (r/atom module-name)]
+    @copy-module
+    ;    (log/error "paste-modal out")
     (fn []
       (let [paste-fn #(do (dispatch [::events/close-paste-modal])
                           (dispatch [::events/commit-message nil])
                           (dispatch [::events/paste-module @new-module-name])
                           (reset! new-module-name module-name))]
+        ;        (log/error "paste-modal in: " @new-module-name)
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-paste-modal])}
@@ -293,6 +300,7 @@
                        :positive true
                        :active   true
                        :on-click paste-fn}]]]))))
+
 
 (defn version-warning []
   (let [latest? (subscribe [::subs/is-latest-version?])]

@@ -597,7 +597,7 @@
 (reg-event-fx
   ::paste-module
   (fn [{{:keys [::spec/copy-module ::session-spec/user ::spec/module] :as db} :db} [_ new-module-name]]
-    (log/error "new-module-name: " new-module-name)
+    ;(log/error "new-module-name: " new-module-name)
     (let [copy-module-name  (:name copy-module)
           copy-parent-path  (:parent-path copy-module)
           paste-parent-path (:path module)

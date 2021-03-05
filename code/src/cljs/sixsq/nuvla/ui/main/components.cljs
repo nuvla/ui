@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.main.components
   (:require
     ["react" :as react]
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as subs]
@@ -29,14 +30,14 @@
   [loading? on-click refresh-disabled?]
   (let [tr       (subscribe [::i18n-subs/tr])
         on-click (or on-click #())]
-    [uix/MenuItemWithIcon
-     {:name      (@tr [:refresh])
-      :icon-name "refresh"
-      :loading?  (boolean loading?)
-      :on-click  on-click
-      :style     {:cursor "pointer"
-                  :color  "black"}
-      :disabled  (boolean refresh-disabled?)}]))
+    [uix/MenuItem
+     {:name     (@tr [:refresh])
+      :icon     "refresh"
+      :loading? (boolean loading?)
+      :on-click on-click
+      :style    {:cursor "pointer"
+                 :color  "black"}
+      :disabled (boolean refresh-disabled?)}]))
 
 
 (defn RefreshMenu

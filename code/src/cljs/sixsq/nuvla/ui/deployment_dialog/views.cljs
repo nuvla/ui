@@ -20,6 +20,7 @@
     [sixsq.nuvla.ui.deployment-dialog.views-summary]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]))
 
 
@@ -38,7 +39,7 @@
   [{:keys [step-id] :as step-state}]
   (let [cred-id                (subscribe [::subs/selected-credential-id])
         credential-loading?    (subscribe [::creds-subs/credential-check-loading? @cred-id])
-        credential-valid?    (subscribe [::creds-subs/credential-check-status-valid? @cred-id])
+        credential-valid?      (subscribe [::creds-subs/credential-check-status-valid? @cred-id])
         check-status           (creds-utils/credential-check-status
                                  @credential-loading? (not @credential-valid?))
         credentials-completed? (subscribe [::subs/credentials-completed?])]
@@ -136,7 +137,8 @@
         button-color     (subscribe [::subs/modal-action-button-color])
         button-disabled? (subscribe [::subs/modal-action-button-disabled?])
         operation        (subscribe [::subs/modal-operation])
-        exec-mode        (subscribe [::subs/execution-mode])]
+        exec-mode        (subscribe [::subs/execution-mode])
+        submit-loading?  (subscribe [::subs/submit-loading?])]
     (fn [show-data?]
       (let [hide-fn   #(do
                          (when (= (:state @deployment) "CREATED")
@@ -148,10 +150,7 @@
                            :on-close   hide-fn}
                           show-data? (assoc :size "large"))
 
-         [ui/ModalHeader
-          [ui/Icon {:name @button-icon
-                    :size "large"}]
-          @header-text]
+         [uix/ModalHeader {:header @header-text :icon @button-icon}]
          [ui/ModalContent
           (when @error
             [ui/Message {:error true}
@@ -176,6 +175,7 @@
          [ui/ModalActions
           [ui/Button {:color    @button-color
                       :disabled @button-disabled?
+                      :loading  @submit-loading?
                       :on-click submit-fn}
            [ui/Icon {:name @button-icon}]
            @button-text]]]))))

@@ -58,7 +58,7 @@
      {:on-confirm  #(dispatch [::events/delete-module id])
       :trigger     (r/as-element [ui/MenuItem
                                   [ui/Icon {:name "trash"}]
-                                  (@tr [:delete])])
+                                  (str/capitalize (@tr [:delete]))])
       :content     [:h3 content]
       :header      (@tr [:delete-module])
       :danger-msg  (@tr [:module-delete-warning])
@@ -78,34 +78,32 @@
             launchable?      (and subtype (not= "project" subtype))
             launch-disabled? (or @is-new? @page-changed?)
             add?             (= "project" (:subtype @module))
-            add-disabled?    (or @is-new? @page-changed?)
-            id               (:id @module)
-            id-content       (get-in @module [:content :id])]
+            add-disabled?    (or @is-new? @page-changed?)]
 
         [main-components/StickyBar
          [ui/Menu {:borderless true}
           (when @editable?
-            [uix/MenuItemWithIcon
-             {:name      (@tr [:save])
-              :icon-name "save"
-              :disabled  (edit-button-disabled? @page-changed? @form-valid?)
-              :on-click  save-callback}])
+            [uix/MenuItem
+             {:name     (@tr [:save])
+              :icon     "save"
+              :disabled (edit-button-disabled? @page-changed? @form-valid?)
+              :on-click save-callback}])
 
           (when launchable?
-            [uix/MenuItemWithIcon
-             {:name      (@tr [:launch])
-              :icon-name "rocket"
-              :disabled  launch-disabled?
-              :on-click  #(dispatch [::main-events/subscription-required-dispatch
-                                     [::deployment-dialog-events/create-deployment
-                                      @module-id :infra-services]])}])
+            [uix/MenuItem
+             {:name     (@tr [:launch])
+              :icon     "rocket"
+              :disabled launch-disabled?
+              :on-click #(dispatch [::main-events/subscription-required-dispatch
+                                    [::deployment-dialog-events/create-deployment
+                                     @module-id :infra-services]])}])
 
           (when add?
-            [uix/MenuItemWithIcon
-             {:name      (@tr [:add])
-              :icon-name "add"
-              :disabled  add-disabled?
-              :on-click  #(dispatch [::events/open-add-modal])}])
+            [uix/MenuItem
+             {:name     (@tr [:add])
+              :icon     "add"
+              :disabled add-disabled?
+              :on-click #(dispatch [::events/open-add-modal])}])
 
           (when (general-utils/can-delete? @module)
             [DeleteButton @module])
@@ -137,7 +135,7 @@
                    :on-close   #(do (dispatch [::events/commit-message nil])
                                     (dispatch [::events/close-save-modal]))}
 
-         [ui/ModalHeader (str/capitalize (str (@tr [:save]) " " (@tr [:component])))]
+         [uix/ModalHeader {:header (str (@tr [:save]) " " (@tr [:component]))}]
 
          [ui/ModalContent
           (if @need-commit?
@@ -170,7 +168,7 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/close-logo-url-modal])}
 
-         [ui/ModalHeader (@tr [:select-logo-url])]
+         [uix/ModalHeader {:header (@tr [:select-logo-url])}]
 
          [ui/ModalContent
           [ui/Input {:default-value (or (:logo-url @module) "")
@@ -200,7 +198,7 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-modal])}
 
-         [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
+         [uix/ModalHeader {:header (@tr [:add]) :icon "add"}]
 
          [ui/ModalContent {:scrolling false}
           [ui/CardGroup {:centered true}

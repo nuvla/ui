@@ -595,8 +595,8 @@
   [v versions]
   (when v
     (let [tr           (subscribe [::i18n-subs/tr])
-          last-version (count versions)]
-      (if (= v (dec last-version))
+          last-version (ffirst versions)]
+      (if (= v last-version)
         [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date]) ")"]
         [:span [ui/Icon {:name "warning", :color "orange"}]
          (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))]))))

@@ -30,7 +30,7 @@
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
     [sixsq.nuvla.ui.messages.views :as messages]
-    [sixsq.nuvla.ui.ocre.views]
+    [sixsq.nuvla.ui.notifications.views]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.profile.views]
     [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -125,7 +125,7 @@
                :close-icon true
                :on-close   ignore-changes-fn}
 
-     [ui/ModalHeader (str/capitalize (str (@tr [:ignore-changes?])))]
+     [uix/ModalHeader {:header (@tr [:ignore-changes?])}]
 
      [ui/ModalContent {:content (@tr [:ignore-changes-content])}]
 
@@ -146,7 +146,7 @@
                :size       "small"
                :on-close   #(dispatch [::events/close-modal])}
 
-     [ui/ModalHeader (@tr [:subscription-required])]
+     [uix/ModalHeader {:header (@tr [:subscription-required])}]
 
      [ui/ModalContent
       [:div

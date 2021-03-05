@@ -24,7 +24,6 @@
     [sixsq.nuvla.ui.job.spec :as job]
     [sixsq.nuvla.ui.main.spec :as main]
     [sixsq.nuvla.ui.messages.spec :as messages]
-    [sixsq.nuvla.ui.ocre.spec :as ocre]
     [sixsq.nuvla.ui.profile.spec :as profile]
     [sixsq.nuvla.ui.session.spec :as session]))
 
@@ -49,7 +48,6 @@
                      ::edge/db
                      ::edge-detail/db
                      ::profile/db
-                     ::ocre/db
                      ::session/db
                      ::job/db))
 
@@ -77,6 +75,5 @@
          edge/defaults
          edge-detail/defaults
          profile/defaults
-         ocre/defaults
          session/defaults
          job/defaults))

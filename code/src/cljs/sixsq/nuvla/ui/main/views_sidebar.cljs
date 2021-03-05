@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.main.views-sidebar
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -30,33 +29,15 @@
         active?  (subscribe [::subs/nav-url-active? url])]
 
     ^{:key (name label-kw)}
-    [uix/MenuItemWithIcon
-     {:name      (utils/capitalize-first-letter (or (@tr [label-kw]) (name label-kw)))
-      :icon-name icon
-      :style     {:min-width  sidebar-width
-                  :overflow-x "hidden"}
-      :active    @active?
-      :on-click  (if (and protected? (not @is-user?))
-                   #(dispatch [::history-events/navigate "sign-in"])
-                   #(navigate url))}]))
-
-
-(defn item-ocre
-  []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        url      "ocre"
-        active?  (subscribe [::subs/nav-url-active? url])
-
-        label-kw :ocre
-        icon     "credit card outline"]
-    ^{:key (name label-kw)}
-    [uix/MenuItemWithIcon
-     {:name      (str/capitalize (@tr [label-kw]))
-      :icon-name icon
-      :style     {:min-width  sidebar-width
-                  :overflow-x "hidden"}
-      :active    @active?
-      :on-click  #(navigate url)}]))
+    [uix/MenuItem
+     {:name     (or (@tr [label-kw]) (name label-kw))
+      :icon     icon
+      :style    {:min-width  sidebar-width
+                 :overflow-x "hidden"}
+      :active   @active?
+      :on-click (if (and protected? (not @is-user?))
+                  #(dispatch [::history-events/navigate "sign-in"])
+                  #(navigate url))}]))
 
 
 (defn logo-item
@@ -80,11 +61,9 @@
   "Provides the sidebar menu for selecting major components/panels of the
    application."
   []
-  (let [show?         @(subscribe [::subs/sidebar-open?])
-        iframe?       @(subscribe [::subs/iframe?])
-        pages-list    @(subscribe [::subs/pages-list])
-        is-admin?     @(subscribe [::session-subs/is-admin?])
-        is-ocre-user? @(subscribe [::session-subs/has-role? "group/ocre-user"])]
+  (let [show?      @(subscribe [::subs/sidebar-open?])
+        iframe?    @(subscribe [::subs/iframe?])
+        pages-list @(subscribe [::subs/pages-list])]
     [ui/Menu {:id         "nuvla-ui-sidebar"
               :style      {:transition "0.5s"
                            :width      (if show? sidebar-width "0")}
@@ -97,5 +76,4 @@
      (for [{:keys [url label-kw icon protected? iframe-visble?]} pages-list]
        (when (or (not iframe?) iframe-visble?)
          ^{:key url}
-         [item label-kw url icon protected?]))
-     (when (or is-admin? is-ocre-user?) [item-ocre])]))
+         [item label-kw url icon protected?]))]))

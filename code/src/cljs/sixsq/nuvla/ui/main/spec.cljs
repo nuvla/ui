@@ -120,11 +120,16 @@
                                                           :icon       "box"
                                                           :protected? true
                                                           :order      6}
+                                       "notifications"   {:url        "notifications"
+                                                          :label-kw   :notifications
+                                                          :icon       "bell"
+                                                          :protected? false
+                                                          :order      7}
                                        "api"             {:url        "api"
                                                           :label-kw   :api
                                                           :icon       "code"
                                                           :protected? false
-                                                          :order      7}
+                                                          :order      8}
                                        }
                ::open-modal           nil
                ::stripe               nil})

@@ -67,7 +67,7 @@
                       (dispatch [::events/close-modal])
                       (reset! form (fv/init-form form-conf)))}
 
-       [ui/ModalHeader (@tr [:change-password])]
+       [uix/ModalHeader {:header (@tr [:change-password])}]
 
        [ui/ModalContent
 
@@ -127,7 +127,7 @@
   (let [tr      (subscribe [::i18n-subs/tr])
         session (subscribe [::session-subs/session])
         user-id (:user @session)]
-      (dispatch [::intercom-events/set-event "nuvla-user-id" user-id])
+    (dispatch [::intercom-events/set-event "nuvla-user-id" user-id])
     [ui/Segment {:padded true, :color "teal", :style {:height "100%"}}
      [ui/Header {:as :h2 :dividing true} "Session"]
      (if @session
@@ -347,7 +347,7 @@
                         (reset! form @(fv/init-form form-conf))
                         (dispatch [::events/close-modal]))
          :close-icon true}
-        [ui/ModalHeader (@tr [:subscribe])]
+        [uix/ModalHeader {:header (@tr [:subscribe])}]
         [ui/ModalContent
          [ui/Form {:error   (boolean @error)
                    :loading @loading-create-customer?}
@@ -456,7 +456,7 @@
          :size       "small"
          :on-close   #(dispatch [::events/close-modal])
          :close-icon true}
-        [ui/ModalHeader (@tr [:add-payment-method])]
+        [uix/ModalHeader {:header (@tr [:add-payment-method])}]
         [ui/ModalContent
          [ui/Form {:error   (boolean @error)
                    :loading @loading-confirm-setup?}
@@ -722,7 +722,7 @@
          :size       "small"
          :on-close   #(dispatch [::events/close-modal])
          :close-icon true}
-        [ui/ModalHeader (@tr [:add-coupon])]
+        [uix/ModalHeader {:header (@tr [:add-coupon])}]
         [ui/ModalContent
          [ui/Form {:error   (boolean @error)
                    :loading @loading?}

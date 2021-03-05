@@ -63,8 +63,8 @@
                                              position (assoc :position position))
                          (when icon
                            [ui/Icon {:name icon}])
-                         menu-item-label])}
-         [ui/ModalHeader title-text]
+                         (str/capitalize menu-item-label)])}
+         [uix/ModalHeader {:header title-text}]
          [ui/ModalContent {:scrolling (boolean scrolling?)} body]
          [ui/ModalActions
           [action-buttons button-confirm-label (@tr [:cancel]) action-fn cancel-fn]]]))))

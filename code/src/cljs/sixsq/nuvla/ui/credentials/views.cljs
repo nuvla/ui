@@ -18,7 +18,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.validation :as utils-validation]))
+    [sixsq.nuvla.ui.utils.validation :as utils-validation]
+    [taoensso.timbre :as log]))
 
 
 (defn in?
@@ -458,6 +459,16 @@
   (keys infrastructure-service-registry-validation-map))
 
 
+(def api-key-validation-map
+  {"api-key"
+   {:validation-spec ::spec/registry-credential
+    :modal-content   credential-registy}})
+
+
+(def api-key-subtypes
+  (keys api-key-validation-map))
+
+
 (def infrastructure-service-access-keys-validation-map
   {"infrastructure-service-vpn"
    {:validation-spec ::spec/vpn-credential
@@ -479,7 +490,8 @@
          infrastructure-service-storage-validation-map
          infrastructure-service-coe-validation-map
          infrastructure-service-access-keys-validation-map
-         infrastructure-service-registry-validation-map))
+         infrastructure-service-registry-validation-map
+         api-key-validation-map))
 
 
 (def tab-indices
@@ -487,7 +499,8 @@
    :cloud-services    1
    :access-services   2
    :storage-services  3
-   :registry-services 4})
+   :registry-services 4
+   :api-keys          5})
 
 
 (defn subtype->info
@@ -504,6 +517,7 @@
     "infrastructure-service-exoscale" {:tab-index (:cloud-services tab-indices), :icon "cloud", :name "Exoscale"}
     "infrastructure-service-vpn" {:tab-index (:access-services tab-indices), :icon "key", :name "VPN"}
     "ssh-key" {:tab-index (:access-services tab-indices), :icon "key", :name "SSH keys"}
+    "api-key" {:tab-index (:api-keys tab-indices), :icon "key", :name "API keys"}
     "generate-ssh-key" {:tab-index (:access-services tab-indices), :icon "key", :name "SSH keys"}
     {:tab-index 0, :icon "cloud", :name ""}))
 
@@ -522,21 +536,19 @@
             name             (:name (subtype->info subtype))
             header           (str (str/capitalize (str (if @is-new?
                                                          (@tr [:new])
-                                                         (@tr [:update])))
-                                                  ) " " name " " (@tr [:credential]))
+                                                         (@tr [:update]))))
+                                  " " name " " (@tr [:credential]))
             validation-item  (get infrastructure-service-validation-map subtype)
             validation-spec  (:validation-spec validation-item)
             modal-content    (:modal-content validation-item)]
+        (log/error subtype)
         (if (empty? subtype)
           [:div]
           [ui/Modal {:open       @visible?
                      :close-icon true
-                     :on-close   #(do (dispatch [::events/close-credential-modal])
-                                      ;(dispatch [::events/set-active-tab-index
-                                      ;           active-tab-index])
-                                      )}
+                     :on-close   #(do (dispatch [::events/close-credential-modal]))}
 
-           [ui/ModalHeader [:span [ui/Icon {:name icon}] " " header]]
+           [uix/ModalHeader {:header header :icon icon}]
 
            [ui/ModalContent {:scrolling false}
             [utils-validation/validation-error-message ::subs/form-valid?]
@@ -562,7 +574,7 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/close-add-credential-modal])}
 
-         [ui/ModalHeader [ui/Icon {:name "add"}] (@tr [:add])]
+         [uix/ModalHeader {:header (@tr [:add]) :icon "add"}]
 
          [ui/ModalContent {:scrolling false}
           [:div {:style {:padding-bottom 20}} (@tr [:credential-choose-type])]
@@ -717,7 +729,7 @@
                    :close-icon true
                    :on-close   #(dispatch [::events/set-generated-credential-modal nil])}
 
-         [ui/ModalHeader (@tr [:credential-generate])]
+         [uix/ModalHeader {:header (@tr [:credential-generate])}]
 
          [ui/ModalContent {:scrolling false}
 
@@ -750,10 +762,10 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     [main-components/StickyBar
      [ui/Menu {:borderless true}
-      [uix/MenuItemWithIcon
-       {:name      (@tr [:add])
-        :icon-name "add"
-        :on-click  #(dispatch [::events/open-add-credential-modal])}]
+      [uix/MenuItem
+       {:name     (@tr [:add])
+        :icon     "add"
+        :on-click #(dispatch [::events/open-add-credential-modal])}]
       [main-components/RefreshMenu
        {:on-refresh #(dispatch [::events/get-credentials])}]]]))
 
@@ -848,12 +860,15 @@
         storage-service-creds  (filter #(in? infrastructure-service-storage-subtypes (:subtype %))
                                        @credentials)
         register-service-creds (filter #(in? registry-service-subtypes (:subtype %))
+                                       @credentials)
+        api-key-creds          (filter #(in? api-key-subtypes (:subtype %))
                                        @credentials)]
     [(credential coe-service-creds :coe-services :credential-coe-service-section-sub-text "docker")
      (credential cloud-service-creds :cloud-services :credential-cloud-service-section-sub-text "cloud")
      (credential access-key-creds :access-keys :credential-ssh-keys-section-sub-text "key")
      (credential storage-service-creds :storage-services :credential-storage-service-section-sub-text "disk")
-     (credential register-service-creds :registry-services :credential-registry-service-section-sub-text "docker")]))
+     (credential register-service-creds :registry-services :credential-registry-service-section-sub-text "docker")
+     (credential api-key-creds :api-keys :api-keys-section-sub-text "key")]))
 
 
 (defn TabsCredentials

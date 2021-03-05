@@ -4,6 +4,41 @@
 
 ### Changed
 
+  - Edge page - Allow creation of Nuvlabox without VPN
+  - Notifications page - open first accordion, added refresh buttons,
+    displaying number of actual subscriptions per configuration.
+
+## [2.15.0] - 2021-02-22
+
+### Changed
+
+  - Apps - ability to apply diff between two module versions
+  - Dependency - NPM react-diff-viewer package
+  - Deployment modal - Submit button show loading when clicked
+  - Menubar buttons - Capitalize all of them
+  - Modal headers - Capitalize all of them
+  - Format operation - some action names are lower case
+  - Deployment detail - Version behind fix
+  - Edge details - Update Nuvlabox modal support a payload
+  - Ocre - Decommission voucher resources
+  - Help message for notification destination.
+
+## [2.14.1] - 2021-02-16
+
+### Changed
+
+  - Fix: empty filter as default for components notification config.
+
+## [2.14.0] - 2021-02-16
+
+### Added
+
+ - Notifications tab with an ability to manage notification methods and
+   notification subscriptions.
+ - Edge detail - dynamic lookup on the vulnerabilities DB to get more details on each NuvlaBox vulnerability
+
+### Changed
+
   - Fix/update broken external links
   - Edge detail - Modal update warning message for old NBE
 

@@ -115,12 +115,12 @@
 (defn AddButton
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [uix/MenuItemWithIcon
-     {:name      (@tr [:add])
-      :icon-name "add"
-      :on-click  #(dispatch
-                    [::main-events/subscription-required-dispatch
-                     [::events/open-modal :add]])}]))
+    [uix/MenuItem
+     {:name     (@tr [:add])
+      :icon     "add"
+      :on-click #(dispatch
+                   [::main-events/subscription-required-dispatch
+                    [::events/open-modal :add]])}]))
 
 
 (defn MenuBar []
@@ -206,8 +206,7 @@
             execute-command     (str "docker-compose -p nuvlabox -f "
                                      (str/join " -f " (map :name download-files)) " up -d")]
         [:<>
-         [ui/ModalHeader
-          [ui/Icon {:name "box"}] (str nuvlabox-name-or-id " created")]
+         [uix/ModalHeader {:header (str nuvlabox-name-or-id " created") :icon "box"}]
 
          (when @new-private-ssh-key
            [ui/Segment {:basic true}
@@ -284,8 +283,7 @@
                                     (assoc nb-trigger-file-base :ssh @nuvlabox-ssh-keys)
                                     nb-trigger-file-base)]
         [:<>
-         [ui/ModalHeader
-          [ui/Icon {:name "usb"}] (@tr [:nuvlabox-modal-usb-header])]
+         [uix/ModalHeader {:header (@tr [:nuvlabox-modal-usb-header]) :icon "usb"}]
 
          [ui/Segment {:basic true}
           [ui/Message {:icon true}
@@ -478,7 +476,8 @@
 
     (dispatch [::events/get-ssh-keys-available ["ssh-key"] nil])
     (fn []
-      (when (= (count @vpn-infra-opts) 1)
+      (when (and (= (count @vpn-infra-opts) 1)
+                 (nil? (:vpn-server-id @creation-data)))
         (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
       [ui/Modal {:open       @visible?
                  :close-icon true
@@ -489,9 +488,9 @@
          @usb-api-key [CreatedNuvlaBoxUSBTrigger @creation-data @nuvlabox-release-data @usb-api-key
                        nuvlabox-ssh-keys new-private-ssh-key on-close-fn tr]
          :else [:<>
-                [ui/ModalHeader
-                 [ui/Icon {:name "add"}] (str (@tr [:nuvlabox-modal-new-nuvlabox])
-                                              " " (:name @creation-data))]
+                [uix/ModalHeader {:header (str (@tr [:nuvlabox-modal-new-nuvlabox])
+                                               " " (:name @creation-data))
+                                  :icon   "add"}]
 
                 [ui/ModalContent
                  [ui/Divider {:horizontal true :as "h3"}
@@ -508,7 +507,7 @@
                     [ui/TableCell {:collapsing true} "vpn"]
                     ^{:key (or key name)}
                     [ui/TableCell
-                     [ui/Dropdown {:clearable   (> (count @vpn-infra-opts) 1)
+                     [ui/Dropdown {:clearable   true
                                    :selection   true
                                    :fluid       true
                                    :placeholder (@tr [:none])

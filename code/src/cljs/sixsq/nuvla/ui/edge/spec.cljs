@@ -73,7 +73,7 @@
                ::status-nuvlaboxes        nil
                ::nuvlaboxes-online-status nil
                ::page                     1
-               ::elements-per-page        9
+               ::elements-per-page        8
                ::total-elements           0
                ::full-text-search         nil
                ::state-selector           nil

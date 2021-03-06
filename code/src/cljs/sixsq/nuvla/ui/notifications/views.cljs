@@ -102,19 +102,18 @@
     ^{:key current-value}
     [ui/FormDropdown
      {:selection     true
-      :multiple      true
-      :placeholder   (@tr [:notification-methods])
+      :placeholder   (@tr [:notification-method])
       :fluid         false
       :default-value (if (not (nil? current-value))
                        current-value
                        (-> @notif-methods first :id))
       :on-change     (ui-callback/value
                        #(do
-                          (dispatch-sync [::events/update-notification-subscription-config :method-ids %])
+                          (dispatch-sync [::events/update-notification-subscription-config :method-id %])
                           (if collection
                             (dispatch-sync [::events/update-notification-subscription-config :collection collection]))
                           (if (and (> (count %) 0) save?)
-                            (dispatch [::events/set-notif-method-ids subs-conf-id %]))))
+                            (dispatch [::events/set-notif-method-id subs-conf-id %]))))
       :options       (doall
                        (map (fn [{id :id, method-name :name}]
                               {:key id, :value id, :text method-name})
@@ -146,18 +145,17 @@
 
 
 (defn single-notification-subscription
-  [{:keys [enabled resource-id method-ids] :as notif-subs} notif-methods]
-  (let [method-names (str/join ", " (for [method-id method-ids]
-                                      (-> (filter #(= method-id (:id %)) @notif-methods)
-                                          first
-                                          :name)))]
+  [{:keys [enabled resource-id method-id] :as notif-subs} notif-methods]
+  (let [method-name (-> (filter #(= method-id (:id %)) @notif-methods)
+                        first
+                        :name)]
     [ui/TableRow
      [ui/TableCell {:floated :left
                     :width   2}
       [:span (if enabled "enabled" "disabled")]]
      [ui/TableCell {:floated :left
                     :width   2}
-      [:span method-names]]
+      [:span method-name]]
      [ui/TableCell {:floated :left
                     :width   9}
       [:span [history/link (str "api/" resource-id) resource-id]]]
@@ -224,7 +222,6 @@
   ^{:key current-value}
   [ui/Dropdown
    {:selection     true
-    :multiple      true
     :fluid         false
     :disabled      disabled?
     :default-value (if (not (nil? current-value))
@@ -262,7 +259,7 @@
     (dispatch [::events/get-notification-methods])
     (fn []
       (let [header (str/capitalize (str (@tr [:edit]) " " (@tr [:subscription])))
-            {:keys [name description method-ids enabled category resource-id resource-kind]} @subscription]
+            {:keys [name description method-id enabled category resource-id resource-kind]} @subscription]
         [:div]
         [ui/Modal {:open       @visible?
                    :close-icon true
@@ -284,7 +281,7 @@
             [ui/TableCell {:collapsing true
                            :style      {:padding-bottom 8}} (@tr [:methods])]
             [ui/TableCell
-             [subs-method-dropdown method-ids notif-methods true]]]
+             [subs-method-dropdown method-id notif-methods true]]]
            [uix/TableRowField "enabled", :editable? false, :default-value (str enabled), :required? false]
            [uix/TableRowField "resource-kind", :editable? false, :default-value resource-kind, :required? false]
            [uix/TableRowField "category", :editable? false, :default-value category, :required? false]
@@ -511,7 +508,7 @@
     (dispatch [::events/reset-subscription-config-all])
     (fn []
       (let [header     (str/capitalize (str (@tr [:edit]) " " (@tr [:subscription])))
-            {:keys [name description method-ids collection resource-filter criteria]} @subscription-config
+            {:keys [name description method-id collection resource-filter criteria]} @subscription-config
             filter-tag (last (str/split (str/replace (or resource-filter "") #"'" "") #"="))]
         (dispatch [::events/fetch-tags-available collection])
         (dispatch [::events/set-components-tagged-number filter-tag])
@@ -612,7 +609,7 @@
                   :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]]
               )]]
           [ui/Header {:as "h3"} "Notification"]
-          [subs-notif-method-dropdown method-ids notif-methods false]
+          [subs-notif-method-dropdown method-id notif-methods false]
           [:span ff/nbsp ff/nbsp]
           [subs-notif-method-create-button]]
          [ui/ModalActions
@@ -791,8 +788,8 @@
      [:span (str/capitalize (@tr [:enable]))]
      [:span ff/nbsp (ff/help-popup (@tr [:notifications-enable-disable-help]))]]
     [ui/TableCell
-     [:span (str/capitalize (@tr [:notification-methods]))]
-     [:span ff/nbsp (ff/help-popup (@tr [:notifications-methods-help]))]]
+     [:span (str/capitalize (@tr [:notification-method]))]
+     [:span ff/nbsp (ff/help-popup (@tr [:notifications-method-help]))]]
     [ui/TableCell
      [:span (str/capitalize (@tr [:subscriptions]))]
      [:span ff/nbsp (ff/help-popup (@tr [:subscriptions-manage-help]))]]
@@ -872,7 +869,7 @@
                      [ui/TableCell {:floated :left
                                     :width   4}
                       [subs-notif-method-dropdown
-                       (:method-ids subs-conf) notif-methods true (:resource-kind subs-conf) (:id subs-conf)]]
+                       (:method-id subs-conf) notif-methods true (:resource-kind subs-conf) (:id subs-conf)]]
 
                      (let [subs-conf-id (:id subs-conf)]
                        [ui/TableCell {:floated :left

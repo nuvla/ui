@@ -256,9 +256,9 @@
 
 
 (reg-event-fx
-  ::set-notif-method-ids
-  (fn [_ [_ subs-conf-id method-ids]]
-    {::cimi-api-fx/operation [subs-conf-id "set-notif-method-ids" #() {:method-ids method-ids}]}))
+  ::set-notif-method-id
+  (fn [_ [_ subs-conf-id method-id]]
+    {::cimi-api-fx/operation [subs-conf-id "set-notif-method-id" #() {:method-id method-id}]}))
 
 
 ;;

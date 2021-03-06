@@ -78,6 +78,8 @@
     (assoc db ::spec/credentials-summary credentials)))
 
 
+"FIXME: aggregation is limited to 10 terms. In this case, there are more than 10 terms for
+  credentials. Filter first and aggregate second, and do this twice?"
 (reg-event-fx
   ::get-credentials-summary
   (fn [{:keys [db]} [_]]

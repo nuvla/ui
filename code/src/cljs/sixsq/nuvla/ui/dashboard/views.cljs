@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
     [sixsq.nuvla.ui.credentials.events :as credentials-events]
     [sixsq.nuvla.ui.credentials.subs :as credentials-subs]
+    [sixsq.nuvla.ui.credentials.views :as credentials-views]
     [sixsq.nuvla.ui.dashboard.events :as events]
     [sixsq.nuvla.ui.dashboard.subs :as subs]
     [sixsq.nuvla.ui.deployment.events :as deployment-events]
@@ -186,6 +187,30 @@
                               (dispatch [::history-events/navigate resource]))}]]))
 
 
+(defn TabOverviewCredentials
+  []
+  (let [tr    (subscribe [::i18n-subs/tr])
+        icon  "key"
+        color "brown"
+        {:keys [resource tab-index tab-index-event]} utils/target-creds]
+    [ui/Segment {:secondary true
+                 :color     color
+                 :raised    true
+                 :style     {:display         "flex"
+                             :flex-direction  "column"
+                             :justify-content "space-between"}}
+
+     [:h4 [ui/Icon {:name icon}] (str/upper-case (@tr [:credentials]))]
+
+     [credentials-views/StatisticStates false]
+
+     [ui/Button {:color    color
+                 :icon     icon
+                 :style    {:align-self "start"}
+                 :content  "Show me"
+                 :on-click #(dispatch [::history-events/navigate resource])}]]))
+
+
 (defn Statistic
   [value icon label target]
   (let [color (if (pos? value) "black" "grey")
@@ -244,7 +269,8 @@
             [ui/GridColumn {:stretched true}
              [TabOverviewDeployments]]
             [ui/GridColumn {:stretched true}
-             [TabOverviewNuvlaBox]]]]]]))))
+             [TabOverviewNuvlaBox]]]
+           ]]]))))
 
 
 (defmethod panel/render :dashboard

@@ -136,6 +136,10 @@
                                             ::client-secret
                                             ::refresh-token]))
 
+(s/def ::hashed-password any?)
+
+(s/def ::state-selector any?)
+
 (s/def ::infrastructure-services-available any?)
 
 (s/def ::active-tab-index number?)
@@ -152,6 +156,7 @@
                           ::validate-form?
                           ::credential-password
                           ::error-message
+                          ::state-selector
                           ::infrastructure-services-available
                           ::active-tab-index
                           ::credential-check-table]))
@@ -169,6 +174,7 @@
                ::validate-form?                    false
                ::credential-password               nil
                ::error-message                     nil
+               ::state-selector                    nil
                ::infrastructure-services-available nil
                ::credential-check-table            nil
                ::active-tab-index                  1})

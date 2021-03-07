@@ -1,15 +1,21 @@
 (ns sixsq.nuvla.ui.i18n.utils
   (:require
+    [cljs.reader :as reader]
     [sixsq.nuvla.ui.i18n.dictionary :refer [dictionary]]
-    [taoensso.tempura :as tempura]))
+    [sixsq.nuvla.ui.utils.general :as utils-general]
+    [taoensso.tempura :as tempura]
+    [taoensso.timbre :as log]))
 
 
 (defn create-tr-fn
   "Returns a translation function from the dictionary and the provided
    locale-id, which can be either a string or keyword. The English locale (en)
-   is always the fallback."
-  [locale-id]
-  (partial tempura/tr {:dict dictionary :default-locale :en} [(keyword locale-id)]))
+   is always the fallback. If a theme is defined, merge last that theme
+   dictionary."
+  ([locale-id] (create-tr-fn locale-id nil))
+  ([locale-id theme-dictionary]
+   (let [themed-dict (if theme-dictionary (utils-general/deep-merge dictionary theme-dictionary) dictionary)]
+     (partial tempura/tr {:dict themed-dict, :default-locale :en} [(keyword locale-id)]))))
 
 
 (defn get-locale-label

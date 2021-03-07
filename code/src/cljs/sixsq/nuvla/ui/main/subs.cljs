@@ -139,9 +139,9 @@
 
 
 (reg-sub
-  ::custom-marketplace
+  ::theme-root
   (fn [db]
-    (::spec/custom-marketplace db)))
+    (::spec/theme db)))
 
 
 (reg-sub

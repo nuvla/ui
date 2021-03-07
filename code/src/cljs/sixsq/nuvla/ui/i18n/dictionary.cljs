@@ -584,7 +584,7 @@
         :welcome-doc-subheader-pre                     "Find"
         :welcome-header                                "We enable your edge, as a Service"
         :welcome-how-to-header                         "How To's"
-        :welcome-how-to-launch-1-header                "Find you app in the App Store"
+        :welcome-how-to-launch-1-header                "Find your app in the App Store"
         :welcome-how-to-launch-1-subheader-post        "contains public and private containerised apps. Use the search field to find what you are looking for. Try 'nginx examples'. Then click 'launch'"
         :welcome-how-to-launch-1-subheader-pre         "The"
         :welcome-how-to-launch-2-header                "Configure the app"

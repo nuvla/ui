@@ -48,14 +48,13 @@
 (s/def ::open-modal (s/nilable keyword?))
 
 
-(s/def ::custom-marketplace any?)
+(s/def ::theme any?)
 
 (s/def ::stripe any?)
 
-
 (s/def ::db (s/keys :req [::iframe?
                           ::config
-                          ::custom-marketplace
+                          ::theme
                           ::device
                           ::sidebar-open?
                           ::visible?
@@ -73,7 +72,7 @@
 
 (def defaults {::iframe?              false
                ::config               {}
-               ::custom-marketplace   nil
+               ::theme                "/"
                ::device               :computer
                ::sidebar-open?        true
                ::visible?             true

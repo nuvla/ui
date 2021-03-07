@@ -6,6 +6,7 @@
     [day8.re-frame.http-fx]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
     [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
+    [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
     [sixsq.nuvla.ui.main.effects :as fx]
     [sixsq.nuvla.ui.main.spec :as spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -263,15 +264,15 @@
 (reg-event-db
   ::get-ui-config-bad
   (fn [db [_ response]]
-    (log/info "Failed to load UI configuration file")
+    (log/error "Failed to load UI configuration file")
     db))
 
 
 (reg-event-fx
   ::get-ui-config
-  (fn [_ _]
+  (fn [{{:keys [::spec/theme] :as db} :db} _]
     {:http-xhrio {:method          :get
-                  :uri             "/ui/config/config.json"
+                  :uri             (str theme "config.json")
                   :timeout         8000
                   :response-format (ajax/json-response-format {:keywords? true})
                   :on-success      [::get-ui-config-good]
@@ -279,9 +280,9 @@
 
 
 (reg-event-db
-  ::set-custom-marketplace
-  (fn [db [_ custom-marketplace]]
-    (assoc db ::spec/custom-marketplace custom-marketplace)))
+  ::set-theme
+  (fn [db [_ theme]]
+    (assoc db ::spec/theme (str "/ui/themes/" theme "/"))))
 
 
 (reg-event-db

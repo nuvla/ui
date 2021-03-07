@@ -9,6 +9,7 @@
     [sixsq.nuvla.ui.db.events :as db-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.utils :as utils]
+    [sixsq.nuvla.ui.i18n.events :as i18n-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.views :as main-views]
     [sixsq.nuvla.ui.routes :as routes]
@@ -24,13 +25,13 @@
 
 (defn render-head
   []
-  (let [url                  (utils/hostname)
-        url-parts            (clojure.string/split url #"\.")
-        customer-marketplace (first url-parts)]
+  (let [url       (utils/hostname)
+        url-parts (clojure.string/split url #"\.")
+        theme     (first url-parts)]
     (when (> (count url-parts) 0)
-      (dispatch [::main-events/set-custom-marketplace customer-marketplace])
+      (dispatch-sync [::main-events/set-theme theme])
       (when-let [head-element (.getElementById js/document "customer-style")]
-        (set! (.-href head-element) (str "/ui/css/" customer-marketplace "-ui.css"))))))
+        (set! (.-href head-element) (str "/ui/themes/" theme "/css/" theme "-ui.css"))))))
 
 
 (defn render-component-when-present
@@ -79,7 +80,9 @@
   (dev-setup)
   (dispatch-sync [::db-events/initialize-db])
   (dispatch-sync [::api-events/get-cloud-entry-point])
+  (render-head)
   (dispatch-sync [::main-events/get-ui-config])
+  (dispatch-sync [::i18n-events/get-theme-dictionary])
   (dispatch-sync [::session-events/initialize])
   (dispatch-sync [::main-events/check-iframe])
   (visibility-watcher)
@@ -87,6 +90,5 @@
   (routes/routes)
   (dispatch [::history-events/initialize @config/path-prefix])
   (swap! fv/conf #(merge % {:atom r/atom}))
-  (render-head)
   (mount-root)
   (log/info "finished initialization"))

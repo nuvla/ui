@@ -48,7 +48,7 @@
                                       {:success-msg  :invitation-email-success-msg
                                        :close-modal  false
                                        :redirect-url (str @config/path-prefix
-                                                          "/set-password" )}])))]
+                                                          "/set-password")}])))]
         [ui/Modal
          {:id        "modal-create-user"
           :size      :tiny
@@ -221,12 +221,10 @@
         signup-template?     (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
         eula                 (subscribe [::main-subs/config :eula])
         terms-and-conditions (subscribe [::main-subs/config :terms-and-conditions])
-        custom-marketplace   (subscribe [::main-subs/custom-marketplace])]
+        theme-root           (subscribe [::main-subs/theme-root])]
     [:div {:class "nuvla-ui-session-left"}
      [ui/Image {:alt      "logo"
-                :src      (if (nil? @custom-marketplace)
-                            (utils-general/logo-src "nuvla")
-                            (utils-general/logo-src @custom-marketplace))
+                :src      (utils-general/logo-src @theme-root)
                 :size     "medium"
                 :centered false}]
      [:br]

@@ -7,7 +7,10 @@
 
 (s/def ::tr fn?)
 
-(s/def ::db (s/keys :req [::locale ::tr]))
+(s/def ::theme-dictionary any?)
 
-(def defaults {::locale "en"
-               ::tr     (utils/create-tr-fn "en")})
+(s/def ::db (s/keys :req [::locale ::theme-dictionary ::tr]))
+
+(def defaults {::locale           "en"
+               ::theme-dictionary nil
+               ::tr               (utils/create-tr-fn "en")})

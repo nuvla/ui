@@ -324,5 +324,15 @@
 
 
 (defn logo-src
-  [logo]
-  (str "/ui/images/" logo "-logo.png"))
+  [theme-root]
+  (str theme-root "images/main-logo.png"))
+
+
+(defn deep-merge
+  "Recursively merges maps (see: https://dnaeon.github.io/recursively-merging-maps-in-clojure)."
+  [& maps]
+  (letfn [(m [& xs]
+            (if (some #(and (map? %) (not (record? %))) xs)
+              (apply merge-with m xs)
+              (last xs)))]
+    (reduce m maps)))

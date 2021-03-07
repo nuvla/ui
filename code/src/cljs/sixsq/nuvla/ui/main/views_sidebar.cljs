@@ -44,15 +44,15 @@
   []
   (let [tr           (subscribe [::i18n-subs/tr])
         welcome-page (subscribe [::subs/page-info "welcome"])
-        custom-marketplace   (subscribe [::subs/custom-marketplace])
-        url (subscribe [::subs/config :nuvla-logo-url])]
+        theme-root   (subscribe [::subs/theme-root])
+        url          (subscribe [::subs/config :nuvla-logo-url])]
     ^{:key "welcome"}
     [ui/MenuItem (cond-> {:aria-label (@tr [:welcome])
                           :style      {:overflow-x "hidden"
                                        :min-width  sidebar-width}}
                          @url (assoc :href @url))
      [ui/Image {:alt      "logo"
-                :src      (if (nil? @custom-marketplace) (utils/logo-src "nuvla") (utils/logo-src @custom-marketplace))
+                :src      (utils/logo-src @theme-root)
                 :size     "tiny"
                 :style    {:margin-top    "10px"
                            :margin-bottom "10px"}

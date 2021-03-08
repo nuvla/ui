@@ -28,7 +28,7 @@
   (let [url       (utils/hostname)
         url-parts (clojure.string/split url #"\.")
         theme     (first url-parts)]
-    (when (> (count url-parts) 0)
+    (when (> (count url-parts) 2)
       (dispatch-sync [::main-events/set-theme theme])
       (when-let [head-element (.getElementById js/document "customer-style")]
         (set! (.-href head-element) (str "/ui/themes/" theme "/css/" theme "-ui.css"))))))

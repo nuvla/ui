@@ -41,54 +41,6 @@
        :on-refresh refresh}]]))
 
 
-(defn TabOverviewCredentials
-  []
-  (let [creds      (subscribe [::credentials-subs/credentials])
-        grouped    (group-by :state (map #(select-keys % [:state]) (:resources @creds)))
-        no-of-apps (count (:resources @creds))
-        color      "orange"
-        icon       "key"
-        {:keys [resource tab-index tab-index-event]} utils/target-creds]
-    [ui/Segment {:secondary true
-                 :color     color
-                 :raised    true}
-     [:h4 [ui/Icon {:name icon}] "Credentials "
-      (when @creds
-        [ui/Label {:circular true
-                   :color    color
-                   :size     "tiny"}
-         no-of-apps])]
-     [ui/Table {:basic  "very"
-                :padded false}
-      [ui/TableBody
-       [ui/TableRow
-        [ui/TableCell "Commissioned"]
-        [ui/TableCell (count (get grouped "COMMISSIONED"))]]
-       [ui/TableRow
-        [ui/TableCell "New"]
-        [ui/TableCell (count (get grouped "NEW"))]]
-       [ui/TableRow
-        [ui/TableCell "Activated"]
-        [ui/TableCell (count (get grouped "Activated"))]]
-       [ui/TableRow
-        [ui/TableCell "Decommissioning"]
-        [ui/TableCell (count (get grouped "DECOMMISSIONING"))]]
-       [ui/TableRow
-        [ui/TableCell "Decommissioned"]
-        [ui/TableCell (count (get grouped "DECOMMISSIONED"))]]
-       [ui/TableRow
-        [ui/TableCell "Error"]
-        [ui/TableCell (count (get grouped "ERROR"))]]
-       ]]
-     [ui/Button {:fluid    true
-                 :icon     icon
-                 :color    color
-                 :content  "Show me"
-                 :on-click #((when (and tab-index tab-index-event)
-                               (dispatch [tab-index-event tab-index]))
-                              (dispatch [::history-events/navigate resource]))}]]))
-
-
 (defn TabOverviewApps
   []
   (let [apps       (subscribe [::apps-store-subs/modules])

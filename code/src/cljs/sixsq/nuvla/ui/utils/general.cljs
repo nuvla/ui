@@ -338,4 +338,4 @@
 (defn aggregate-to-map
   "convert the aggregate structure returned by Nuvla into a terms/value map"
   [aggregate]
-  (into {} (for [a aggregate] {(keyword (val (first a))) (val (second a))})))
+  (into {} (for [a aggregate] {(keyword (str (:key a))) (:doc_count a)})))

@@ -47,8 +47,9 @@
              decommissioned  (:DECOMMISSIONED terms 0)
              error           (:ERROR terms 0)
              total           (:count @summary)
-             online          (count (filter #(true? (:online %)) (vals @status)))
-             offline         (count (filter #(false? (:online %)) (vals @status)))
+             online-statuses (general-utils/aggregate-to-map (get-in @summary [:aggregations :terms:online :buckets]))
+             online          (:1 online-statuses)
+             offline         (:0 online-statuses)
              unknown         (- total (+ online offline))]
          [:div {:style {:margin     "10px auto 10px auto"
                         :text-align "center"
@@ -706,7 +707,7 @@
     [ui/TableRow {:on-click on-click
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
-      [edge-detail/StatusIcon @status]]
+      [edge-detail/OnlineStatusIcon @status]]
      [ui/TableCell {:collapsing true}
       [ui/Icon {:name (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]]))
@@ -759,9 +760,9 @@
 
 
 (defn NuvlaboxCard
-  [nuvlabox status]
+  [nuvlabox]
   (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [id name description created state tags] :as nuvlabox} status]
+    (fn [{:keys [id name description created state tags online] :as nuvlabox}]
       ^{:key id}
       [ui/Card {:on-click #(dispatch [::history-events/navigate
                                       (str "edge/" (general-utils/id->uuid id))])}
@@ -769,7 +770,7 @@
 
         [ui/CardHeader {:style {:word-wrap "break-word"}}
          [:div {:style {:float "right"}}
-          [edge-detail/StatusIcon status :corner "top right"]]
+          [edge-detail/OnlineStatusIcon online :corner "top right"]]
          [ui/Icon {:name "box"}]
          (or name id)]
 
@@ -801,9 +802,8 @@
                     :itemsPerRow 4}
       (doall
         (for [{:keys [id] :as nuvlabox} (:resources @nuvlaboxes)]
-          (let [status (subscribe [::subs/nuvlabox-online-status id])]
-            ^{:key id}
-            [NuvlaboxCard nuvlabox @status])))]]))
+          ^{:key id}
+          [NuvlaboxCard nuvlabox]))]]))
 
 
 (defn NuvlaboxMap

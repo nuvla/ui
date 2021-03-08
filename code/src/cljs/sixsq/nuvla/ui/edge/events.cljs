@@ -51,8 +51,7 @@
      ::cimi-api-fx/search  [:nuvlabox
                             (utils/get-query-params full-text-search page elements-per-page
                                                     state-selector)
-                            #(dispatch [::set-nuvlaboxes %])]
-     ::fx/state-nuvlaboxes [#(dispatch [::set-state-nuvlaboxes %])]}))
+                            #(dispatch [::set-nuvlaboxes %])]}))
 
 
 (reg-event-fx
@@ -68,17 +67,7 @@
       (cond->
         {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
                        ::spec/loading? false)}
-        (not-empty resources) (assoc ::cimi-api-fx/search
-                                     [:nuvlabox-status
-                                      {:filter (->> resources
-                                                    (map :nuvlabox-status)
-                                                    (remove nil?)
-                                                    (map #(str "id='" % "'"))
-                                                    (apply general-utils/join-or))
-                                       :select "id, parent, online"
-                                       :last   10000}
-                                      #(dispatch [::set-nuvlaboxes-online-status
-                                                  (:resources %)])])))))
+        ))))
 
 
 (reg-event-fx
@@ -92,38 +81,18 @@
   (fn [{{:keys [::spec/full-text-search] :as db} :db} _]
     {:db                   (assoc db ::spec/loading? true)
      ::cimi-api-fx/search  [:nuvlabox
-                            (utils/get-query-summary-params full-text-search)
+                            (utils/get-query-aggregation-params full-text-search "terms:online,terms:state")
                             #(dispatch [::set-nuvlaboxes-summary %])]
      ;::fx/state-nuvlaboxes [#(dispatch [::set-state-nuvlaboxes %])]
      }))
 
 
-(reg-event-db
-  ::set-state-nuvlaboxes
-  (fn [db [_ state-nuvlaboxes]]
-    (assoc db ::spec/state-nuvlaboxes state-nuvlaboxes)))
-
-
-(reg-event-db
-  ::set-status-nuvlaboxes
-  (fn [db [_ status-nuvlaboxes]]
-    (assoc db ::spec/status-nuvlaboxes status-nuvlaboxes)))
-
-
-(reg-event-db
-  ::set-nuvlaboxes-online-status
-  (fn [db [_ resources]]
-    (assoc db ::spec/nuvlaboxes-online-status (->> resources
-                                                   (map (juxt :parent identity))
-                                                   (into {})))))
-
-
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
-    (dispatch [::get-nuvlaboxes])
     {:db (assoc db ::spec/state-selector state-selector
-                   ::spec/page 1)}))
+                   ::spec/page 1)
+     :dispatch [::get-nuvlaboxes]}))
 
 
 (reg-event-db

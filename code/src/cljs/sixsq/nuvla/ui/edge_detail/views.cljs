@@ -492,7 +492,7 @@
 
 
 
-(defn StatusIcon
+(defn OnlineStatusIcon
   [status & {:keys [corner] :or {corner "bottom center"} :as position}]
   [ui/Popup
    {:position corner
@@ -1264,15 +1264,12 @@
 (defn PageHeader
   []
   (let [tr       (subscribe [::i18n-subs/tr])
-        nuvlabox (subscribe [::subs/nuvlabox])
-        status   (subscribe [::subs/nuvlabox-online-status])]
+        nuvlabox (subscribe [::subs/nuvlabox])]
     (fn []
-      (let [id    (:id @nuvlabox)
-            name  (:name @nuvlabox)
-            state (:state @nuvlabox)]
+      (let [{:keys [id name state online]} @nuvlabox]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
-          [StatusIcon @status :corner "left center"]
+          [OnlineStatusIcon online :corner "left center"]
           (or name id)]
          [:p {:style {:margin "0.5em 0 1em 0"}}
           [:span {:style {:font-weight "bold"}}

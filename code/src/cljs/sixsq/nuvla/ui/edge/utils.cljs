@@ -34,9 +34,9 @@
 
 (defn status->icon
   [status]
-  (let [icons-map {status-online   "fas fa-power-off"
-                   status-offline  "fas fa-power-off"
-                   status-unknown  "fas fa-question"}]
+  (let [icons-map {status-online  "fas fa-power-off"
+                   status-offline "fas fa-power-off"
+                   status-unknown "fas fa-question"}]
     (get icons-map status)))
 
 
@@ -51,10 +51,9 @@
 (defn status->color
   [status]
   (case status
-    :online "green"
-    :offline "red"
-    :unknown "yellow"
-    nil))
+    true "green"
+    false "red"
+    "yellow"))
 
 
 (defn operational-status->color
@@ -76,8 +75,14 @@
 
 
 (defn state-filter
+  "Build a filter according to selected state. The default case condition corresponds
+   to the commissioning state, while the first three correspond to the online state."
   [state]
-  (str "state='" state "'"))
+  (case state
+    "ONLINE" "online=true"
+    "OFFLINE" "online=false"
+    "UNKNOWN" "online!=true and online!=false"
+    (str "state='" state "'")))
 
 
 
@@ -141,11 +146,11 @@
               (general-utils/fulltext-query-string full-text-search))})
 
 
-(defn get-query-summary-params
-  [full-text-search]
+(defn get-query-aggregation-params
+  [full-text-search aggregation]
   {:first       0
    :last        0
-   :aggregation "terms:state"
+   :aggregation aggregation
    :filter      (general-utils/fulltext-query-string full-text-search)})
 
 

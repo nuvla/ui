@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.main.components
   (:require
     ["react" :as react]
+    [reagent.core :as r]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -57,3 +58,9 @@
               :style   {:margin-top    11
                         :margin-bottom 10}}
    Menu])
+
+
+(defn InfoPopup
+  [message]
+  [ui/Popup {:content message
+             :trigger (r/as-element [ui/Icon {:name "info circle"}])}])

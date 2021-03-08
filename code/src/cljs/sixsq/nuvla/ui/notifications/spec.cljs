@@ -47,7 +47,9 @@
           :opt-un [::window
                    ::value
                    ::value-type]))
-(s/def ::metric utils-spec/nonblank-string)
+(s/def ::method-ids
+  (s/and (s/coll-of utils-spec/nonblank-string :distinct true :kind vector?)
+         not-empty))
 (s/def ::criteria-value utils-spec/nonblank-string)
 (s/def ::criteria-condition utils-spec/nonblank-string)
 
@@ -61,8 +63,9 @@
                    ::enabled
                    ::category
                    ::collection
-                   ::resource-filter
-                   ::criteria]))
+                   ::method-ids
+                   ::criteria]
+          :opt-un [::resource-filter]))
 (s/def ::notification-subscriptions-modal-visible? boolean?)
 (s/def ::add-subscription-modal-visible? boolean?)
 (s/def ::add-subscription-config-modal-visible? boolean?)

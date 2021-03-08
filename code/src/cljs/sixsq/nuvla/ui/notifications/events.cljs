@@ -152,8 +152,8 @@
 (reg-event-db
   ::validate-notification-subscription-config-form
   (fn [db [_]]
-    (let [subs-config   (get db ::spec/notification-subscription-config)
-          form-spec ::spec/notification-subscription-config
+    (let [subs-config    (get db ::spec/notification-subscription-config)
+          form-spec      ::spec/notification-subscription-config
           validate-form? (get db ::spec/validate-form?)
           valid?         (if validate-form?
                            (if (nil? form-spec)
@@ -233,8 +233,9 @@
 (reg-event-fx
   ::fetch-components-number
   (fn [_ [_ component]]
-    {::cimi-api-fx/search [(keyword component) {:last 0}
-                           #(dispatch [::set-components-number (:count %)])]}))
+    (if component
+      {::cimi-api-fx/search [(keyword component) {:last 0}
+                             #(dispatch [::set-components-number (:count %)])]})))
 
 
 (reg-event-db
@@ -255,9 +256,9 @@
 
 
 (reg-event-fx
-  ::set-notif-method-id
-  (fn [_ [_ subs-conf-id method-id]]
-    {::cimi-api-fx/operation [subs-conf-id "set-notif-method-id" #() {:method-id method-id}]}))
+  ::set-notif-method-ids
+  (fn [_ [_ subs-conf-id method-ids]]
+    {::cimi-api-fx/operation [subs-conf-id "set-notif-method-ids" #() {:method-ids method-ids}]}))
 
 
 ;;

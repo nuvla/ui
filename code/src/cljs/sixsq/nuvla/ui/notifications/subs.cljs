@@ -142,7 +142,9 @@
 
 (reg-sub
   ::components-number
-  ::spec/components-number)
+  (fn [db]
+    (get db ::spec/components-number)))
+
 
 
 (reg-sub

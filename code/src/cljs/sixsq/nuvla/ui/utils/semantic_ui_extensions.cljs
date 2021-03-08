@@ -36,7 +36,7 @@
   "Provides a menu item that reuses the name for the :name property and as the
    MenuItem label. The optional icon-name specifies the icon to use. The
    loading? parameter specifies if the icon should be spinning."
-  [{:keys [name icon loading? disabled] :as options}]
+  [{:keys [name icon loading?] :as options}]
   (let [final-opts (-> options
                        (dissoc :icon :loading?)
                        (assoc :aria-label name))]

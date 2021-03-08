@@ -273,13 +273,11 @@
         new-module-name (r/atom module-name)
         form-valid?     (r/atom true)]
     @copy-module
-    ;    (log/error "paste-modal out")
     (fn []
       (let [paste-fn #(do (dispatch [::events/close-paste-modal])
                           (dispatch [::events/commit-message nil])
                           (dispatch [::events/paste-module @new-module-name])
                           (reset! new-module-name module-name))]
-        ;        (log/error "paste-modal in: " @new-module-name)
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(dispatch [::events/close-paste-modal])}

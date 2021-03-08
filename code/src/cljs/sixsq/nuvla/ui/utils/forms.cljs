@@ -20,11 +20,11 @@
   (mapv (fn [{:keys [id label]}] {:value id, :text (or label id)}) descriptions))
 
 
-(def red "#9f3a38")
+(def dark-red "#9f3a38")
 
 (defn validation-error-msg
   [message show?]
-  [:span {:style {:color red :display (if show? "inline-block" "none")}} message])
+  [:span {:style {:color dark-red :display (if show? "inline-block" "none")}} message])
 
 
 ;;

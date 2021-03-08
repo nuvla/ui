@@ -4,6 +4,10 @@
 
 ### Changed
 
+## [2.16.0] - 2021-03-08
+
+### Changed
+
   - Edge page - Allow creation of Nuvlabox without VPN
   - Notifications page - open first accordion, added refresh buttons,
     displaying number of actual subscriptions per configuration. Allow 

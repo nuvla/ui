@@ -6,7 +6,8 @@
 
   - Edge page - Allow creation of Nuvlabox without VPN
   - Notifications page - open first accordion, added refresh buttons,
-    displaying number of actual subscriptions per configuration.
+    displaying number of actual subscriptions per configuration. Allow 
+    to define multiple notification methods per subscription configuraiton.
 
 ## [2.15.0] - 2021-02-22
 

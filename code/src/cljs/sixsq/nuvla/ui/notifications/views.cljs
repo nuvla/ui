@@ -579,6 +579,7 @@
                             :style      {:padding-bottom 8}} "Metric"]
              [ui/TableCell
               [ui/Dropdown {:selection true
+                            :disabled  true
                             :value     (:metric criteria)
                             :options   (get criteria-metric-options collection)
                             :on-change (ui-callback/value
@@ -592,6 +593,7 @@
                               :style      {:padding-bottom 8}} "Condition"]
                [ui/TableCell
                 [ui/Dropdown {:selection true
+                              :disabled  true
                               :options   (if (nil? (keyword @criteria-metric))
                                            []
                                            ((keyword @criteria-metric) (get criteria-condition-options collection)))

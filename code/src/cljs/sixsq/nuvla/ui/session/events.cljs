@@ -3,7 +3,7 @@
     [ajax.core :as ajax]
     [clojure.string :as str]
     [day8.re-frame.http-fx]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [re-frame.core :refer [dispatch dispatch-sync reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi.events :as cimi-events]
     [sixsq.nuvla.ui.config :as config]
@@ -14,6 +14,18 @@
     [sixsq.nuvla.ui.session.effects :as fx]
     [sixsq.nuvla.ui.session.spec :as spec]
     [sixsq.nuvla.ui.utils.response :as response]))
+
+
+(reg-event-fx
+  ::initialize-sync
+  (fn [{db :db} _]
+    {:db                   (assoc db ::spec/loading-session? true)
+     ::cimi-api-fx/session [(fn [session]
+                              (dispatch-sync [::set-session session])
+                              (when session
+                                #_(dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])
+                                (dispatch-sync [:sixsq.nuvla.ui.main.events/notifications-polling])
+                                (dispatch-sync [::profile-events/search-existing-customer])))]}))
 
 
 (reg-event-fx

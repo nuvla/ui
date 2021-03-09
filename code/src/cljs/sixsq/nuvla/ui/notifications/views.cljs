@@ -594,6 +594,7 @@
                [ui/TableCell
                 [ui/Dropdown {:selection true
                               :disabled  true
+                              :value     (:condition criteria)
                               :options   (if (nil? (keyword @criteria-metric))
                                            []
                                            ((keyword @criteria-metric) (get criteria-condition-options collection)))

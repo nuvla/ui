@@ -80,6 +80,9 @@
         [ui/MenuItem {:icon     "grid layout"
                       :active   (= @view-type :cards)
                       :on-click #(reset! view-type :cards)}]
+        [ui/MenuItem {:icon     "fas fa-chart-network"
+                      :active   (= @view-type :cluster)
+                      :on-click #(reset! view-type :cluster)}]
         [ui/MenuItem {:icon     "table"
                       :active   (= @view-type :table)
                       :on-click #(reset! view-type :table)}]
@@ -780,6 +783,7 @@
                    [StatisticStates]
                    (case @view-type
                      :cards [NuvlaboxCards]
+                     :cluster [NuvlaboxClusters]
                      :table [NuvlaboxTable]
                      :map [NuvlaboxMap])
                    (when-not (= @view-type :map)

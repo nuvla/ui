@@ -9,13 +9,16 @@
     [taoensso.timbre :as log]))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-locale
-  (fn [db [_ locale]]
+  (fn [{db :db} [_ locale]]
     (let [theme-dictionary (::spec/theme-dictionary db nil)]
       (-> db
           (assoc :sixsq.nuvla.ui.i18n.spec/locale locale)
-          (assoc :sixsq.nuvla.ui.i18n.spec/tr (utils/create-tr-fn locale theme-dictionary))))))
+          (assoc :sixsq.nuvla.ui.i18n.spec/tr (utils/create-tr-fn locale theme-dictionary)))
+      {:db db
+       :storage/set {:session? false
+                     :name :local :value local}})))
 
 
 (reg-event-fx
@@ -36,9 +39,9 @@
 
 (reg-event-fx
   ::get-theme-dictionary
-  (fn [{{:keys [::main-spec/theme] :as db} :db} _]
+  (fn [{{:keys [::main-spec/theme-root] :as db} :db} _]
     {:http-xhrio {:method          :get
-                  :uri             (str theme "dictionary.json")
+                  :uri             (str theme-root "dictionary.json")
                   :timeout         8000
                   :response-format (ajax/json-response-format {:keywords? true})
                   :on-success      [::get-theme-dictionary-good]

@@ -11,7 +11,9 @@
     [sixsq.nuvla.ui.main.spec :as spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.messages.spec :as messages-spec]
+    [sixsq.nuvla.ui.profile.spec :as profile-spec]
     [sixsq.nuvla.ui.session.events :as session-events]
+    [sixsq.nuvla.ui.session.spec :as session-spec]
     [sixsq.nuvla.ui.utils.general :as u]
     [sixsq.nuvla.ui.utils.time :as time]
     [taoensso.timbre :as log]))
@@ -270,19 +272,40 @@
 
 (reg-event-fx
   ::get-ui-config
-  (fn [{{:keys [::spec/theme] :as db} :db} _]
-    {:http-xhrio {:method          :get
-                  :uri             (str theme "config.json")
-                  :timeout         8000
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [::get-ui-config-good]
-                  :on-failure      [::get-ui-config-bad]}}))
+  (fn [{{:keys [::spec/theme-root] :as db} :db} _]
+    (let [config (if theme-root (str theme-root "config/config.json")
+                                "/ui/config/config.json")]
+      {:http-xhrio {:method          :get
+                    :uri             config
+                    :timeout         8000
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::get-ui-config-good]
+                    :on-failure      [::get-ui-config-bad]}})))
+
+
+(defn ->theme-root
+  [theme]
+  (str "/ui/themes/" theme "/"))
 
 
 (reg-event-db
-  ::set-theme
+  ::set-theme-hostname
   (fn [db [_ theme]]
-    (assoc db ::spec/theme (str "/ui/themes/" theme "/"))))
+    (log/info "Setting hostname theme: " theme)
+    (-> db
+        (assoc ::spec/theme-hostname theme)
+        (assoc ::spec/theme-root (->theme-root theme))
+        (assoc ::spec/theme theme))))
+
+
+(reg-event-db
+  ::set-theme-session
+  (fn [db [_ theme]]
+    (log/info "Setting session theme: " theme)
+    (-> db
+        (assoc ::spec/theme-session theme)
+        (assoc ::spec/theme-root (->theme-root theme))
+        (assoc ::spec/theme theme))))
 
 
 (reg-event-db

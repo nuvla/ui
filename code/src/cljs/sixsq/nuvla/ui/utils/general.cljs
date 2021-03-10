@@ -325,7 +325,9 @@
 
 (defn logo-src
   [theme-root]
-  (str theme-root "images/main-logo.png"))
+  (let [part "images/nuvla-logo.png"]
+    (if theme-root (str theme-root part)
+                   (str "/ui/" part))))
 
 
 (defn deep-merge

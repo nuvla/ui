@@ -1,15 +1,13 @@
 (ns sixsq.nuvla.ui.core
   (:require
     [form-validator.core :as fv]
-    [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]
+    [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [reagent.dom :as rdom]
     [sixsq.nuvla.ui.cimi.events :as api-events]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.db.events :as db-events]
     [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.history.utils :as utils]
-    [sixsq.nuvla.ui.i18n.events :as i18n-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.views :as main-views]
     [sixsq.nuvla.ui.routes :as routes]
@@ -23,17 +21,6 @@
     (log/info "development mode")))
 
 
-(defn render-head
-  []
-  (let [url       (utils/hostname)
-        url-parts (clojure.string/split url #"\.")
-        theme     (first url-parts)]
-    (when (> (count url-parts) 2)
-      (dispatch-sync [::main-events/set-theme theme])
-      (when-let [head-element (.getElementById js/document "customer-style")]
-        (set! (.-href head-element) (str "/ui/themes/" theme "/css/" theme "-ui.css"))))))
-
-
 (defn render-component-when-present
   ([tag comp & {:keys [initialization-fn]}]
    (when-let [container-element (.getElementById js/document tag)]
@@ -44,7 +31,7 @@
 
 (defn mount-root []
   (clear-subscription-cache!)
-  (render-component-when-present "app" main-views/app))
+  (render-component-when-present "app" main-views/AppWrapper))
 
 
 (defn visibility-watcher []
@@ -80,9 +67,6 @@
   (dev-setup)
   (dispatch-sync [::db-events/initialize-db])
   (dispatch-sync [::api-events/get-cloud-entry-point])
-  (render-head)
-  (dispatch-sync [::main-events/get-ui-config])
-  (dispatch-sync [::i18n-events/get-theme-dictionary])
   (dispatch-sync [::session-events/initialize])
   (dispatch-sync [::main-events/check-iframe])
   (visibility-watcher)

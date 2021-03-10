@@ -47,6 +47,9 @@
 
 (s/def ::open-modal (s/nilable keyword?))
 
+(s/def ::theme-hostname any?)
+
+(s/def ::theme-session any?)
 
 (s/def ::theme any?)
 
@@ -54,6 +57,8 @@
 
 (s/def ::db (s/keys :req [::iframe?
                           ::config
+                          ::theme-hostname
+                          ::theme-session
                           ::theme
                           ::device
                           ::sidebar-open?
@@ -72,7 +77,10 @@
 
 (def defaults {::iframe?              false
                ::config               {}
-               ::theme                "/"
+               ::theme                nil
+               ::theme-hostname       nil
+               ::theme-session        nil
+               ::theme-root           nil
                ::device               :computer
                ::sidebar-open?        true
                ::visible?             true

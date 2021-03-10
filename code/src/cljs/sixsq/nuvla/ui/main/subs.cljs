@@ -139,9 +139,15 @@
 
 
 (reg-sub
-  ::theme-root
+  ::theme
   (fn [db]
     (::spec/theme db)))
+
+
+(reg-sub
+  ::theme-root
+  (fn [db]
+    (::spec/theme-root db)))
 
 
 (reg-sub

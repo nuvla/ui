@@ -11,7 +11,6 @@
     [sixsq.nuvla.ui.apps.views]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.cimi.views]
-    [sixsq.nuvla.ui.credentials.events :as credential-events]
     [sixsq.nuvla.ui.credentials.views]
     [sixsq.nuvla.ui.dashboard.views]
     [sixsq.nuvla.ui.data.views]
@@ -19,10 +18,10 @@
     [sixsq.nuvla.ui.edge.views]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.utils :as history-utils]
+    [sixsq.nuvla.ui.i18n.events :as i18n-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
     [sixsq.nuvla.ui.infrastructures-detail.views]
-    [sixsq.nuvla.ui.infrastructures.events :as infra-service-events]
     [sixsq.nuvla.ui.infrastructures.views]
     [sixsq.nuvla.ui.intercom.views :as intercom]
     [sixsq.nuvla.ui.main.components :as main-components]
@@ -256,7 +255,46 @@
    [messages/alert-modal]])
 
 
-(defn app []
+(defn SetThemeHostname
+  []
+  (let [url       (history-utils/hostname)
+        url-parts (str/split url #"\.")
+        theme     (when (> (count url-parts) 0) (first url-parts))]
+    (when theme
+      (dispatch [::events/set-theme-hostname theme]))))
+
+
+(defn SetThemeSession
+  []
+  (let [session (subscribe [::session-subs/session])]
+    (when @session
+      (dispatch [::events/set-theme-session "kontron"]))))
+
+
+(defn RenderHead
+  []
+  (let [theme      (subscribe [::subs/theme])
+        theme-root (subscribe [::subs/theme-root])]
+    (when (and @theme @theme-root)
+      (when-let [head-element (.getElementById js/document "customer-style")]
+        (set! (.-href head-element) (str @theme-root "/css/" @theme "-ui.css"))
+        ))))
+
+
+(defn InitializeTheme
+  []
+  (let [session (subscribe [::session-subs/session])
+        theme-root (subscribe [::subs/theme-root])]
+    @session
+    (dispatch [::events/get-ui-config])
+    (when @theme-root
+      (dispatch [::i18n-events/get-theme-dictionary]))
+    (SetThemeHostname)
+    (SetThemeSession)
+    (RenderHead)))
+
+
+(defn App []
   (let [show?            (subscribe [::subs/sidebar-open?])
         cep              (subscribe [::api-subs/cloud-entry-point])
         iframe?          (subscribe [::subs/iframe?])
@@ -290,3 +328,9 @@
          )]
       [ui/Container
        [ui/Loader {:active true :size "massive"}]])))
+
+
+(defn AppWrapper
+  []
+  (InitializeTheme)
+  [App])

@@ -70,7 +70,7 @@
                                                     (remove nil?)
                                                     (map #(str "id='" % "'"))
                                                     (apply general-utils/join-or))
-                                       :select "id, parent, online"
+                                       :select "id, parent, online, updated, cluster-id, cluster-nodes, cluster-node-role, orchestrator"
                                        :last   10000}
                                       #(dispatch [::set-nuvlaboxes-online-status
                                                   (:resources %)])])))))

@@ -26,6 +26,10 @@
 
 (def view-type (r/atom :cards))
 
+(def orchestration-icons
+  {:swarm      "docker"
+   :kubernetes "/ui/images/kubernetes.svg"})
+
 (defn StatisticState
   [value icon label]
   (let [state-selector (subscribe [::subs/state-selector])
@@ -80,9 +84,9 @@
         [ui/MenuItem {:icon     "grid layout"
                       :active   (= @view-type :cards)
                       :on-click #(reset! view-type :cards)}]
-        [ui/MenuItem {:icon     "fas fa-chart-network"
-                      :active   (= @view-type :cluster)
-                      :on-click #(reset! view-type :cluster)}]
+        [ui/MenuItem {:active   (= @view-type :cluster)
+                      :on-click #(reset! view-type :cluster)}
+         [ui/Icon {:className "fas fa-chart-network"}]]
         [ui/MenuItem {:icon     "table"
                       :active   (= @view-type :table)
                       :on-click #(reset! view-type :table)}]
@@ -750,6 +754,62 @@
          (let [status (subscribe [::subs/nuvlabox-online-status id])]
            ^{:key id}
            [NuvlaboxCard nuvlabox @status])))]))
+
+
+(defn ClusterCard
+  [id nuvlabox-statuses nuvlaboxes-per-id cluster-nodes]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn []
+      ^{:key id}
+
+      (let [orchestrator   (:orchestrator (first nuvlabox-statuses))
+            orch-icon      (get orchestration-icons (keyword orchestrator) "question circle")]
+        [ui/Card {:on-click #(dispatch [::history-events/navigate
+                                        (str "edge/" (general-utils/id->uuid id))])}
+         [ui/CardContent
+
+          [ui/CardHeader {:style {:word-wrap "break-word"}}
+           [ui/Icon {:className "fas fa-chart-network"}]
+           (if (> (count id) 22)
+             (str (apply str (take 21 id)) "...")
+             id)]
+
+          [ui/CardMeta
+           "Orchestrator: " orchestrator " " [ui/Icon {:name orch-icon}]]
+
+          [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}}
+           (str "Nodes in the cluster: " (count cluster-nodes))]
+
+          [ui/ListSA {:divided  true
+                      :vertical-align "middle"}
+           (doall
+             (for [{:keys [parent updated] :as status} nuvlabox-statuses]
+               ^{:key parent}
+               [ui/ListItem
+                [ui/Image {:avatar  true}
+                 [ui/Icon {:className "fas fa-crown"}]]
+                [ui/ListContent
+                 [ui/ListHeader (:name (into {} (get nuvlaboxes-per-id parent)))
+                  [:div {:style {:float "right"}}
+                   [edge-detail/StatusIcon
+                    (utils/status->keyword (:online (into {} (get nuvlaboxes-per-id parent)))) :corner "top right"]]]
+                 [ui/ListDescription (str (@tr [:updated]) " " (-> updated time/parse-iso8601 time/ago))]]]))]]]))))
+
+
+(defn NuvlaboxClusters
+  []
+  (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
+        nbs-per-id        (group-by :id (:resources @nuvlaboxes))
+        status-per-nb     (subscribe [::subs/nuvlaboxes-online-status])
+        nuvlabox-statuses   (vals @status-per-nb)
+        status-per-cluster  (group-by :cluster-id nuvlabox-statuses)
+        cluster-nodes     (distinct (apply concat (map :cluster-nodes nuvlabox-statuses)))]
+    [ui/CardGroup {:centered true}
+     (doall
+       (for [[cluster-id nodes-statuses] status-per-cluster]
+         (when cluster-id
+           ^{:key cluster-id}
+           [ClusterCard cluster-id nodes-statuses nbs-per-id cluster-nodes])))]))
 
 
 (defn NuvlaboxMap

@@ -26,6 +26,8 @@
 
 (def view-type (r/atom :cards))
 
+(def hide-cluster-card (r/atom false))
+
 (def orchestration-icons
   {:swarm      "docker"
    :kubernetes "/ui/images/kubernetes.svg"})
@@ -90,7 +92,8 @@
         [ui/MenuItem {:icon     "grid layout"
                       :active   (= @view-type :cards)
                       :on-click #(reset! view-type :cards)}]
-        [ui/MenuItem {:active   (= @view-type :cluster)
+        [ui/MenuItem {:disabled @hide-cluster-card
+                      :active   (= @view-type :cluster)
                       :on-click #(reset! view-type :cluster)}
          [ui/Icon {:className "fas fa-chart-network"}]]
         [ui/MenuItem {:icon     "table"
@@ -768,8 +771,6 @@
 (defn ClusterCard
   [id nuvlabox-statuses nuvlaboxes-per-id cluster-nodes]
   (let [tr (subscribe [::i18n-subs/tr])]
-    (fn []
-      ^{:key id}
       (let [orchestrator   (:orchestrator (first nuvlabox-statuses))
             orch-icon      (get orchestration-icons (keyword orchestrator) "question circle")]
         [ui/Card {:color    "black"
@@ -801,7 +802,7 @@
                   [:div {:style {:float "right"}}
                    [edge-detail/StatusIcon
                     (utils/status->keyword (:online (into {} (get nuvlaboxes-per-id parent)))) :corner "top right"]]]
-                 [ui/ListDescription (str (@tr [:updated]) " " (-> updated time/parse-iso8601 time/ago))]]]))]]]))))
+                 [ui/ListDescription (str (@tr [:updated]) " " (-> updated time/parse-iso8601 time/ago))]]]))]]])))
 
 
 (defn NuvlaboxClusters
@@ -812,12 +813,12 @@
         nuvlabox-statuses   (vals @status-per-nb)
         status-per-cluster  (group-by :cluster-id nuvlabox-statuses)
         cluster-nodes     (distinct (apply concat (map :cluster-nodes nuvlabox-statuses)))]
-    [ui/CardGroup {:centered true}
+    (fn []    [ui/CardGroup {:centered true}
      (doall
        (for [[cluster-id nodes-statuses] status-per-cluster]
          (when cluster-id
            ^{:key cluster-id}
-           [ClusterCard cluster-id nodes-statuses nbs-per-id cluster-nodes])))]))
+           [ClusterCard cluster-id nodes-statuses nbs-per-id cluster-nodes])))])))
 
 
 (defn NuvlaboxMap
@@ -842,6 +843,7 @@
         full-text (subscribe [::subs/full-text-search])
         tr        (subscribe [::i18n-subs/tr])
         root      [:<>
+                   (reset! hide-cluster-card false)
                    [uix/PageHeader "box" (general-utils/capitalize-first-letter (@tr [:edge]))]
                    [MenuBar]
                    [main-components/SearchInput
@@ -876,7 +878,10 @@
         children  (case n
                     1 root
                     2 [edge-detail/EdgeDetails uuid]
-                    3 cluster-view
+                    3 [:<>
+                       (reset! view-type :cards)
+                       (reset! hide-cluster-card true)
+                       cluster-view]
                     root)]
     (dispatch [::events/get-vpn-infra])
     (dispatch [::events/get-nuvlabox-releases])

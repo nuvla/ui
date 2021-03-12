@@ -19,6 +19,12 @@
 
 (s/def ::nuvlaboxes-online-status any?)
 
+(s/def ::nuvlabox-cluster-nodes any?)
+
+(s/def ::cluster-nodes any?)
+
+(s/def ::cluster-id any?)
+
 (s/def ::open-modal (s/nilable keyword?))
 
 (s/def ::nuvlabox-created-id (s/nilable string?))
@@ -59,7 +65,10 @@
                           ::nuvlabox-ssh-key
                           ::nuvlabox-private-ssh-key
                           ::vpn-infra
-                          ::ssh-keys-available]))
+                          ::ssh-keys-available
+                          ::nuvlabox-cluster-nodes
+                          ::cluster-nodes
+                          ::cluster-id]))
 
 
 (def defaults {::loading?                 false
@@ -79,4 +88,7 @@
                ::nuvlabox-ssh-key         nil
                ::nuvlabox-private-ssh-key nil
                ::vpn-infra                nil
-               ::ssh-keys-available       nil})
+               ::ssh-keys-available       nil
+               ::cluster-id               nil
+               ::cluster-nodes            nil
+               ::nuvlabox-cluster-nodes   nil})

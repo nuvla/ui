@@ -41,13 +41,21 @@
   (fn [{{:keys [::spec/state-selector
                 ::spec/page
                 ::spec/elements-per-page
-                ::spec/full-text-search] :as db} :db} _]
+                ::spec/full-text-search
+                ::spec/nuvlabox-cluster-nodes] :as db} :db} _]
     {:db                   (assoc db ::spec/loading? true)
      ::cimi-api-fx/search  [:nuvlabox
                             (utils/get-query-params full-text-search page elements-per-page
                                                     state-selector)
                             #(dispatch [::set-nuvlaboxes %])]
-     ::fx/state-nuvlaboxes [#(dispatch [::set-state-nuvlaboxes %])]}))
+     ::fx/state-nuvlaboxes [#(dispatch [::set-state-nuvlaboxes %])
+                            (if (not-empty nuvlabox-cluster-nodes)
+                              (->> nuvlabox-cluster-nodes
+                                (map :parent)
+                                (remove nil?)
+                                (map #(str "id='" % "'"))
+                                (apply general-utils/join-or))
+                              nil)]}))
 
 
 (reg-event-fx
@@ -70,7 +78,7 @@
                                                     (remove nil?)
                                                     (map #(str "id='" % "'"))
                                                     (apply general-utils/join-or))
-                                       :select "id, parent, online, updated, cluster-id, cluster-nodes, cluster-node-role, orchestrator"
+                                       :select "id, parent, online, updated, node-id, cluster-id, cluster-nodes, cluster-node-role, orchestrator"
                                        :last   10000}
                                       #(dispatch [::set-nuvlaboxes-online-status
                                                   (:resources %)])])))))
@@ -80,6 +88,41 @@
   ::set-state-nuvlaboxes
   (fn [db [_ state-nuvlaboxes]]
     (assoc db ::spec/state-nuvlaboxes state-nuvlaboxes)))
+
+
+(reg-event-fx
+  ::get-cluster-nodes
+  (fn [{:keys [db]} [_ cluster-id]]
+    {:db                  (assoc db ::spec/cluster-id cluster-id)
+     ::cimi-api-fx/search [:nuvlabox-status
+                           {:select  "cluster-nodes"
+                            :filter  (str "cluster-id='" cluster-id "'")
+                            :last    10000}
+                           #(dispatch [::get-nuvlabox-status-from-cluster-nodes
+                                       (distinct (apply concat (map :cluster-nodes (:resources %))))])]}))
+
+
+(reg-event-fx
+  ::get-nuvlabox-status-from-cluster-nodes
+  (fn [{:keys [db]} [_ cluster-nodes]]
+      {:db                      (assoc db ::spec/cluster-nodes cluster-nodes)}
+      (if (not-empty cluster-nodes)
+        {::cimi-api-fx/search
+         [:nuvlabox-status
+          {:select  "id, parent, online, updated, node-id, cluster-id, cluster-nodes, cluster-node-role, orchestrator"
+           :filter  (->> cluster-nodes
+                      (remove nil?)
+                      (map #(str "node-id='" % "'"))
+                      (apply general-utils/join-or))
+           :last    10000}
+          #(dispatch [::set-nuvlabox-cluster-nodes (:resources %)])]}
+        (dispatch [::set-nuvlabox-cluster-nodes nil]))))
+
+
+(reg-event-db
+  ::set-nuvlabox-cluster-nodes
+  (fn [db [_ nuvlabox-cluster-nodes]]
+    (assoc db ::spec/nuvlabox-cluster-nodes nuvlabox-cluster-nodes)))
 
 
 (reg-event-db

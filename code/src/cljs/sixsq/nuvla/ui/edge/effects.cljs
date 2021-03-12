@@ -11,10 +11,13 @@
 
 (reg-fx
   ::state-nuvlaboxes
-  (fn [[callback]]
+  (fn [[callback filter]]
     (go
-      (let [cimi-params  {:last        0
-                          :aggregation "value_count:id,terms:state"}
+      (let [base-cimi-params  {:last        0
+                               :aggregation "value_count:id,terms:state"}
+            cimi-params  (if filter
+                           (assoc base-cimi-params :filter filter)
+                           base-cimi-params)
             aggregations (:aggregations (<! (api/search @CLIENT :nuvlabox cimi-params)))
             states-count (->> aggregations
                               :terms:state

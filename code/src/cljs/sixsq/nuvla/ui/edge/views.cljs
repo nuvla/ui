@@ -33,7 +33,7 @@
    :kubernetes "/ui/images/kubernetes.svg"})
 
 (defn StatisticState
-  [value icon label]
+  [value icon label class-name]
   (let [state-selector (subscribe [::subs/state-selector])
         selected?      (or
                          (= label @state-selector)
@@ -46,7 +46,7 @@
                                          (if (= label "TOTAL") nil label)])}
      [ui/StatisticValue (or value "-")
       "\u2002"
-      [ui/Icon {:size (when selected? "large") :name icon}]]
+      [ui/Icon {:size (when selected? "large") :name icon :className class-name}]]
      [ui/StatisticLabel label]]))
 
 
@@ -54,14 +54,13 @@
   []
   (let [{:keys [total new activated commissioned
                 decommissioning decommissioned error]} @(subscribe [::subs/state-nuvlaboxes])
-        status-per-nb       (subscribe [::subs/nuvlaboxes-online-status])
+        status-per-nb (subscribe [::subs/nuvlaboxes-online-status])
         clusters      (filter some? (distinct (map :cluster-id (vals @status-per-nb))))]
     [ui/StatisticGroup (merge {:size "tiny"} style/center-block)
      (if (= @view-type :cluster)
-       [StatisticState (count clusters) "box" "TOTAL"]
-       [StatisticState total "box" "TOTAL"])
-     (when-not (= @view-type :cluster)
+       [StatisticState (count clusters) nil "TOTAL" "fas fa-chart-network"]
        [:<>
+        [StatisticState total "box" "TOTAL"]
         [StatisticState new (utils/state->icon utils/state-new) "NEW"]
         [StatisticState activated (utils/state->icon utils/state-activated) "ACTIVATED"]
         [StatisticState commissioned (utils/state->icon utils/state-commissioned) "COMMISSIONED"]
@@ -690,7 +689,7 @@
 
 
 (defn NuvlaboxTable
-  []
+  [cluster-id]
   (let [nuvlaboxes (subscribe [::subs/nuvlaboxes])]
     [ui/Table {:compact "very", :selectable true}
      [ui/TableHeader
@@ -720,9 +719,9 @@
 
 
 (defn NuvlaboxCard
-  [nuvlabox status]
+  [nuvlabox status nuvlabox-status]
   (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [id name description created state tags] :as nuvlabox} status]
+    (fn [{:keys [id name description created state tags] :as nuvlabox} status nuvlabox-status]
       ^{:key id}
       [ui/Card {:on-click #(dispatch [::history-events/navigate
                                       (str "edge/" (general-utils/id->uuid id))])}
@@ -731,7 +730,13 @@
         [ui/CardHeader {:style {:word-wrap "break-word"}}
          [:div {:style {:float "right"}}
           [edge-detail/StatusIcon status :corner "top right"]]
+         [ui/IconGroup
+
          [ui/Icon {:name "box"}]
+          (when (= (:cluster-node-role (get nuvlabox-status id)) "manager")
+            [ui/Icon {:className "fas fa-crown"
+                      :corner true
+                      :color  "blue"}])]
          (or name id)]
 
         [ui/CardMeta (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))]
@@ -756,21 +761,57 @@
 
 (defn NuvlaboxCards
   [cluster-id]
-  (let [all-nuvlaboxes (subscribe [::subs/nuvlaboxes])
-        selected-nuvlaboxes (if cluster-id
-                              (get (group-by :cluster-id (:resources @all-nuvlaboxes)) cluster-id)
-                              (:resources @all-nuvlaboxes))]
-    [ui/CardGroup {:centered true}
-     (doall
-       (for [{:keys [id] :as nuvlabox} selected-nuvlaboxes]
-         (let [status (subscribe [::subs/nuvlabox-online-status id])]
-           ^{:key id}
-           [NuvlaboxCard nuvlabox @status])))]))
+  (let [tr (subscribe [::i18n-subs/tr])
+        all-nuvlaboxes            (subscribe [::subs/nuvlaboxes])
+        status-per-nb             (subscribe [::subs/nuvlaboxes-online-status])
+        nuvlabox-statuses         (vals @status-per-nb)
+        nuvlabox-status-by-node-id  (group-by :node-id nuvlabox-statuses)
+        status-per-cluster        (group-by :cluster-id nuvlabox-statuses)
+        cluster-nodes             (if cluster-id
+                                    (distinct (apply concat (map :cluster-nodes (get status-per-cluster cluster-id))))
+                                    nil)
+        selected-nuvlaboxes       (if cluster-nodes
+                                    (for [node-id cluster-nodes]
+                                      (let [nb-status (first (get nuvlabox-status-by-node-id node-id))]
+                                        (when nb-status
+                                          (first (get (group-by :id (:resources @all-nuvlaboxes)) (:parent nb-status))))))
+                                    (:resources @all-nuvlaboxes))
+        cards                     [ui/CardGroup {:centered true}
+                                   (doall
+                                     (for [{:keys [id] :as nuvlabox} selected-nuvlaboxes]
+                                       (when id
+                                         (let [status (subscribe [::subs/nuvlabox-online-status id])]
+                                           ^{:key id}
+                                           [NuvlaboxCard nuvlabox @status @status-per-nb]))))]
+        cid   (subscribe [::subs/nuvlabox-cluster-nodes])]
+
+    (if cluster-id
+      [:<>
+       [ui/SegmentGroup {:stacked true
+                         :color "black"}
+        [ui/Segment
+         [ui/Header {:as "h3"
+                     :float       "left"
+                     :icon        (r/as-element [ui/Icon {:className "fas fa-chart-network"}])
+                     :content     cluster-id
+                     :subheader   (str
+                                    (count selected-nuvlaboxes)
+                                    (@tr [:out-of])
+                                    (count cluster-nodes)
+                                    " "
+                                    (if (> (count selected-nuvlaboxes) 1)
+                                      (str (@tr [:they-are]) " NuvlaBox " (@tr [:node]) "s")
+                                      (str (@tr [:it-is-a]) " NuvlaBox " (@tr [:node]))) )}]]
+        [ui/Segment
+         cards]]]
+      cards)))
 
 
 (defn ClusterCard
   [id nuvlabox-statuses nuvlaboxes-per-id cluster-nodes]
   (let [tr (subscribe [::i18n-subs/tr])]
+    (fn []
+      ^{:key id}
       (let [orchestrator   (:orchestrator (first nuvlabox-statuses))
             orch-icon      (get orchestration-icons (keyword orchestrator) "question circle")]
         [ui/Card {:color    "black"
@@ -802,7 +843,7 @@
                   [:div {:style {:float "right"}}
                    [edge-detail/StatusIcon
                     (utils/status->keyword (:online (into {} (get nuvlaboxes-per-id parent)))) :corner "top right"]]]
-                 [ui/ListDescription (str (@tr [:updated]) " " (-> updated time/parse-iso8601 time/ago))]]]))]]])))
+                 [ui/ListDescription (str (@tr [:updated]) " " (-> updated time/parse-iso8601 time/ago))]]]))]]]))))
 
 
 (defn NuvlaboxClusters
@@ -811,14 +852,15 @@
         nbs-per-id        (group-by :id (:resources @nuvlaboxes))
         status-per-nb     (subscribe [::subs/nuvlaboxes-online-status])
         nuvlabox-statuses   (vals @status-per-nb)
-        status-per-cluster  (group-by :cluster-id nuvlabox-statuses)
-        cluster-nodes     (distinct (apply concat (map :cluster-nodes nuvlabox-statuses)))]
-    (fn []    [ui/CardGroup {:centered true}
-     (doall
-       (for [[cluster-id nodes-statuses] status-per-cluster]
-         (when cluster-id
-           ^{:key cluster-id}
-           [ClusterCard cluster-id nodes-statuses nbs-per-id cluster-nodes])))])))
+        status-per-cluster  (group-by :cluster-id nuvlabox-statuses)]
+    (fn []
+      [ui/CardGroup {:centered true}
+       (doall
+         (for [[cluster-id nodes-statuses] status-per-cluster]
+           (when cluster-id
+             (let [cluster-nodes  (distinct (apply concat (map :cluster-nodes nodes-statuses)))]
+               ^{:key cluster-id}
+               [ClusterCard cluster-id nodes-statuses nbs-per-id cluster-nodes]))))])))
 
 
 (defn NuvlaboxMap
@@ -869,8 +911,8 @@
                        [StatisticStates]
                        (case @view-type
                          :cards [NuvlaboxCards cluster-id]
-                         :cluster [NuvlaboxClusters]
-                         :table [NuvlaboxTable]
+                         :cluster nil
+                         :table [NuvlaboxTable cluster-id]
                          :map [NuvlaboxMap])
                        (when-not (= @view-type :map)
                          [Pagination])
@@ -878,13 +920,15 @@
         children  (case n
                     1 root
                     2 [edge-detail/EdgeDetails uuid]
-                    3 [:<>
-                       (reset! view-type :cards)
+                    3 (do
+                       (when (= @view-type :cluster)
+                         (reset! view-type :cards))
                        (reset! hide-cluster-card true)
-                       cluster-view]
+                       cluster-view)
                     root)]
     (dispatch [::events/get-vpn-infra])
     (dispatch [::events/get-nuvlabox-releases])
+    (dispatch [::events/get-cluster-nodes cluster-id])
     (if (and (= uuid "cluster") (not cluster-id))
       (dispatch [::history-events/navigate "edge/"])
       [ui/Segment style/basic

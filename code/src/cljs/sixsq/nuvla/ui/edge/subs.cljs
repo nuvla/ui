@@ -54,6 +54,24 @@
 
 
 (reg-sub
+  ::nuvlabox-cluster-nodes
+  (fn [db]
+    (::spec/nuvlabox-cluster-nodes db)))
+
+
+(reg-sub
+  ::cluster-nodes
+  (fn [db]
+    (::spec/cluster-nodes db)))
+
+
+(reg-sub
+  ::cluster-id
+  (fn [db]
+    (::spec/cluster-id db)))
+
+
+(reg-sub
   ::nuvlaboxes-online-status
   (fn [db]
     (::spec/nuvlaboxes-online-status db)))

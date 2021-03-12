@@ -109,7 +109,7 @@
 (def Input (r/adapt-react-class semantic/Input))
 
 (def Header (r/adapt-react-class semantic/Header))
-;;(def HeaderContent (r/adapt-react-class semantic/HeaderContent))
+(def HeaderContent (r/adapt-react-class semantic/HeaderContent))
 (def HeaderSubheader (r/adapt-react-class semantic/HeaderSubheader))
 
 (def Label (r/adapt-react-class semantic/Label))

@@ -11,6 +11,7 @@
     [sixsq.nuvla.ui.apps.views]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.cimi.views]
+    [sixsq.nuvla.ui.credentials.events :as credentials-events]
     [sixsq.nuvla.ui.credentials.views]
     [sixsq.nuvla.ui.dashboard.views]
     [sixsq.nuvla.ui.data.views]
@@ -23,6 +24,7 @@
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
     [sixsq.nuvla.ui.infrastructures-detail.views]
     [sixsq.nuvla.ui.infrastructures.views]
+    [sixsq.nuvla.ui.infrastructures.events :as infra-service-events]
     [sixsq.nuvla.ui.intercom.views :as intercom]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as events]
@@ -191,7 +193,7 @@
                        [:a
                         {:style    {:cursor "pointer"}
                          :on-click #(do (dispatch [::history-events/navigate "credentials"])
-                                        (dispatch [::credential-events/open-add-credential-modal]))}
+                                        (dispatch [::credentials-events/open-add-credential-modal]))}
                         (str " " (@tr [:click-here]))]])}]))
 
 

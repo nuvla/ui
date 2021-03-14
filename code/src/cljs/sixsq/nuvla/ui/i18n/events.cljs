@@ -18,7 +18,7 @@
           (assoc :sixsq.nuvla.ui.i18n.spec/tr (utils/create-tr-fn locale theme-dictionary)))
       {:db db
        :storage/set {:session? false
-                     :name :local :value local}})))
+                     :name :local :value locale}})))
 
 
 (reg-event-fx

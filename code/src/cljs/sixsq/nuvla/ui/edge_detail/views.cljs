@@ -14,6 +14,7 @@
     [sixsq.nuvla.ui.edge.events :as edge-events]
     [sixsq.nuvla.ui.edge.subs :as edge-subs]
     [sixsq.nuvla.ui.edge.utils :as utils]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.job.subs :as job-subs]
     [sixsq.nuvla.ui.job.views :as job-views]
@@ -32,6 +33,11 @@
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
+
+
+(def orchestration-icons
+  {:swarm      "docker"
+   :kubernetes "/ui/images/kubernetes.svg"})
 
 
 (defn refresh
@@ -740,7 +746,7 @@
            operating-system architecture last-boot docker-plugins] :as nb-status}
    ssh-creds tr]
   [ui/Segment {:secondary true
-               :color     "black"
+               :color     "grey"
                :raised    true}
    [:h4 "Host"]
    (if nb-status
@@ -805,7 +811,7 @@
 
 
 (defn TabOverviewStatus
-  [{:keys [updated status] :as nb-status} nb-id online-status tr]
+  [{:keys [updated status status-notes] :as nb-status} nb-id online-status tr]
   [ui/Segment {:secondary true
                :color     (utils/status->color online-status)
                :raised    true}
@@ -823,7 +829,14 @@
         :position       "bottom center"
         :on             "hover"
         :size           "tiny"
-        :hide-on-scroll true}]])
+        :hide-on-scroll true}]
+      (when (not-empty status-notes)
+        [ui/Message {:color "brown"
+                     :size  "tiny"}
+         [ui/MessageHeader
+          [ui/Icon {:name  "sticky note"}]
+          "Notes"]
+         [ui/MessageList {:items status-notes}]])])
    [Heartbeat updated nb-id]])
 
 
@@ -844,6 +857,82 @@
                          :white-space   "nowrap"}}
        [ui/Icon {:name "tag"}] tag])]])
 
+
+(defn TabOverviewCluster
+  [{:keys [node-id cluster-id swarm-node-cert-expiry-date cluster-join-address
+           cluster-node-role cluster-managers cluster-nodes orchestrator] :as nuvlabox}]
+  [ui/Segment {:secondary true
+               :color     "black"
+               :raised    true}
+   [:h4 "Cluster Status "
+    (when orchestrator
+      [ui/Label {:circular true
+                 :color    "blue"
+                 :size     "tiny"
+                 :basic    true
+                 :float    "right"
+                 :horizontal  true
+                 :style   {:float "right"}}
+       [ui/Icon {:name (get orchestration-icons (keyword orchestrator) "question circle")}] orchestrator])]
+   [ui/Table {:basic  "very"
+              :padded false}
+    [ui/TableBody
+     [ui/TableRow
+      [ui/TableCell "Node ID"]
+      [ui/TableCell node-id]]
+     (when cluster-id
+       [ui/TableRow
+        [ui/TableCell "Cluster ID"]
+        [ui/TableCell [:a {:on-click #(dispatch [::history-events/navigate
+                                                    (str "edge/cluster/" cluster-id)])
+                              :style  {:cursor  "pointer"}}
+                       cluster-id]]])
+     [ui/TableRow
+      [ui/TableCell "Node Role"]
+      [ui/TableCell cluster-node-role
+       (when (= cluster-node-role "manager")
+         [:<>
+         (str " ")
+         [ui/Icon {:className "fas fa-crown"
+                   :corner true
+                   :color  "blue"}]])]]
+     (when cluster-join-address
+       [ui/TableRow
+        [ui/TableCell "Cluster Join Address"]
+        [ui/TableCell cluster-join-address]])
+     (when cluster-managers
+       [ui/TableRow
+        [ui/TableCell "Cluster Managers"]
+        [ui/TableCell
+         [ui/LabelGroup {:size  "tiny"
+                         :basic true
+                         :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+          (for [manager cluster-managers]
+            ^{:key (str manager)}
+            [ui/Label {:style {:max-width     "15ch"
+                               :overflow      "hidden"
+                               :text-overflow "ellipsis"
+                               :white-space   "nowrap"}}
+             manager])]]])
+     (when cluster-nodes
+       [ui/TableRow
+        [ui/TableCell "Cluster Nodes"]
+        [ui/TableCell
+         [ui/LabelGroup {:size  "tiny"
+                         :basic true
+                         :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+          (for [node cluster-nodes]
+            ^{:key (str node)}
+            [ui/Label {:style {:max-width     "15ch"
+                               :overflow      "hidden"
+                               :text-overflow "ellipsis"
+                               :white-space   "nowrap"}}
+             node])]]])
+
+     (when swarm-node-cert-expiry-date
+       [ui/TableRow
+        [ui/TableCell "Swarm Certificate Expiry Date"]
+        [ui/TableCell swarm-node-cert-expiry-date]])]]])
 
 (defn TabOverview
   []
@@ -873,13 +962,16 @@
            [ui/GridColumn {:stretched true}
             [TabOverviewHost @nb-status ssh-creds tr]]]
 
-          [ui/GridRow
-           [ui/GridColumn
-            [TabOverviewStatus @nb-status id @online-status tr]]
+          [ui/GridColumn {:stretched true}
+           [TabOverviewStatus @nb-status id @online-status tr]]
 
-           (when (> (count tags) 0)
-             [ui/GridColumn
-              [TabOverviewTags @nuvlabox]])]]]))))
+          (when (:node-id @nb-status)
+            [ui/GridColumn {:stretched true}
+             [TabOverviewCluster @nb-status]])
+
+          (when (> (count tags) 0)
+            [ui/GridColumn
+             [TabOverviewTags @nuvlabox]])]]))))
 
 
 (defn TabLocationMap

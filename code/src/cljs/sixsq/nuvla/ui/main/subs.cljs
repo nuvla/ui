@@ -151,6 +151,18 @@
 
 
 (reg-sub
+  ::theme-ready?
+  (fn [db]
+    (::spec/theme-ready? db)))
+
+
+(reg-sub
+  ::theme-hostname-ready?
+  (fn [db]
+    (::spec/theme-hostname-ready? db)))
+
+
+(reg-sub
   ::open-modal
   (fn [db]
     (::spec/open-modal db)))

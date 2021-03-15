@@ -88,7 +88,8 @@
                  [com.taoensso/tempura "1.2.1" :scope "provided"]
                  [com.cemerick/url :scope "provided"]
                  [kwladyka/form-validator-cljs "1.2.1"]
-                 [instaparse]]
+                 [instaparse]
+                 [com.degel/re-frame-storage-fx "0.1.1"]]
 
   :source-paths ["src/clj" "src/cljs"]
 

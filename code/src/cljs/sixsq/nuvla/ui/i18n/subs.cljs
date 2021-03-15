@@ -14,5 +14,4 @@
 (reg-sub
   ::tr
   (fn [db]
-    (or (::spec/tr db)
-        (utils/create-tr-fn "en"))))
+    (::spec/tr db)))

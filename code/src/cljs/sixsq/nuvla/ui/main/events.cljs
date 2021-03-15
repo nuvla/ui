@@ -260,7 +260,8 @@
   (fn [{db :db} [_ {:keys [stripe] :as result}]]
     (log/info "Config file loaded")
     (cond-> {:db (assoc db ::spec/config result)}
-            stripe (assoc :dispatch [::load-stripe]))))
+            ;stripe (assoc :dispatch [::load-stripe])
+            )))
 
 
 (reg-event-db
@@ -295,8 +296,13 @@
     (-> db
         (assoc ::spec/theme-hostname theme)
         (assoc ::spec/theme-root (->theme-root theme))
-        (assoc ::spec/theme theme))))
+        (assoc ::spec/theme theme)
+        (assoc ::spec/theme-hostname-ready? true))))
 
+(reg-event-db
+  ::set-theme-hostname-ready?
+  (fn [db [_ ready?]]
+    (assoc db ::spec/theme-hostname-ready? ready?)))
 
 (reg-event-db
   ::set-theme-session
@@ -306,6 +312,12 @@
         (assoc ::spec/theme-session theme)
         (assoc ::spec/theme-root (->theme-root theme))
         (assoc ::spec/theme theme))))
+
+
+(reg-event-db
+  ::set-theme-ready?
+  (fn [db [_ ready?]]
+    (assoc db ::spec/theme-ready? ready?)))
 
 
 (reg-event-db
@@ -349,3 +361,20 @@
                    dispatch-vector
                    [::open-modal :subscription-required])})))
 
+
+(reg-event-fx
+  ::render-head
+  (fn [{{:keys [::spec/theme
+                ::spec/theme-root]} :db} [_]]
+    (let [head-element (.getElementById js/document "customer-style")]
+      (set! (.-href head-element) (str theme-root "/css/" theme "-ui.css"))
+      nil)))
+
+
+(reg-event-fx
+  ::initialize-theme
+  (fn [{{:keys [::spec/theme
+                ::spec/theme-root]} :db} [_]]
+    (let []
+      {:dispatch-n [[::render-head]
+                    []]})))

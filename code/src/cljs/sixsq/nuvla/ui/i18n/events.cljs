@@ -1,8 +1,9 @@
 (ns sixsq.nuvla.ui.i18n.events
   (:require
     [ajax.core :as ajax]
+    [com.degel.re-frame.storage :as storage]
     [day8.re-frame.http-fx]
-    [re-frame.core :refer [reg-event-db reg-event-fx]]
+    [re-frame.core :refer [reg-event-db reg-event-fx inject-cofx]]
     [sixsq.nuvla.ui.i18n.utils :as utils]
     [sixsq.nuvla.ui.i18n.spec :as spec]
     [sixsq.nuvla.ui.main.spec :as main-spec]
@@ -11,23 +12,33 @@
 
 (reg-event-fx
   ::set-locale
-  (fn [{db :db} [_ locale]]
-    (let [theme-dictionary (::spec/theme-dictionary db nil)]
-      (-> db
-          (assoc :sixsq.nuvla.ui.i18n.spec/locale locale)
-          (assoc :sixsq.nuvla.ui.i18n.spec/tr (utils/create-tr-fn locale theme-dictionary)))
-      {:db db
+  (fn [{db :db} [_ locale-new]]
+    (let [theme-dictionary (::spec/theme-dictionary db)
+          locale-db        (::spec/locale db)
+          locale           (or locale-new locale-db)]
+      {:db          (cond-> db
+                            locale-new (assoc ::spec/locale locale-new)
+                            true (assoc ::spec/tr (utils/create-tr-fn locale theme-dictionary)))
        :storage/set {:session? false
-                     :name :local :value locale}})))
+                     :name     :nuvla.ui.locale
+                     :value    locale}
+       })))
+
+
+(reg-event-fx
+  ::get-locale-from-local-storage
+  [(inject-cofx :storage/get {:name :nuvla.ui.locale})]
+  (fn [{db :db locale :storage/get}]
+    (when-not (empty? locale)
+      {:db (assoc db ::spec/locale locale)})))
 
 
 (reg-event-fx
   ::get-theme-dictionary-good
-  (fn [{db :db} [_ {:keys [stripe] :as result}]]
-    (log/info "Theme dictionary loaded")
-    (let [local (::spec/locale db)]
-      {:db       (assoc db ::spec/theme-dictionary result)
-       :dispatch [::set-locale local]})))
+  (fn [{{:keys [locale] :as db} :db} [_ result]]
+    (log/info "Theme dictionary loaded: " locale)
+    {:db       (assoc db ::spec/theme-dictionary result)
+     :dispatch [::set-locale locale]}))
 
 
 (reg-event-db

@@ -13,4 +13,5 @@
 
 (def defaults {::locale           "en"
                ::theme-dictionary nil
-               ::tr               (utils/create-tr-fn "en")})
+               ::tr               nil                       ;(utils/create-tr-fn "en")
+               })

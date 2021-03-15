@@ -5,7 +5,8 @@
     [clojure.string :as str]
     [goog.string :as gstring]
     [goog.string.format]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [taoensso.timbre :as log]))
 
 
 (defn str->int
@@ -326,8 +327,8 @@
 (defn logo-src
   [theme-root]
   (let [part "images/nuvla-logo.png"]
-    (if theme-root (str theme-root part)
-                   (str "/ui/" part))))
+    (if (empty? theme-root) (str "/ui/" part)
+                            (str theme-root part))))
 
 
 (defn deep-merge

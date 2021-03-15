@@ -31,7 +31,7 @@
 
 (defn mount-root []
   (clear-subscription-cache!)
-  (render-component-when-present "app" main-views/AppWrapper))
+  (render-component-when-present "app" main-views/App))
 
 
 (defn visibility-watcher []
@@ -69,6 +69,7 @@
   (dispatch-sync [::api-events/get-cloud-entry-point])
   (dispatch-sync [::session-events/initialize])
   (dispatch-sync [::main-events/check-iframe])
+  (main-views/initialize-theme)
   (visibility-watcher)
   (screen-size-watcher)
   (routes/routes)

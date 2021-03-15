@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.main.views
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.about.views]
     [sixsq.nuvla.ui.apps-application.views]
     [sixsq.nuvla.ui.apps-component.views]
@@ -23,8 +23,8 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
     [sixsq.nuvla.ui.infrastructures-detail.views]
-    [sixsq.nuvla.ui.infrastructures.views]
     [sixsq.nuvla.ui.infrastructures.events :as infra-service-events]
+    [sixsq.nuvla.ui.infrastructures.views]
     [sixsq.nuvla.ui.intercom.views :as intercom]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as events]
@@ -40,7 +40,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.welcome.views]))
+    [sixsq.nuvla.ui.welcome.views]
+    [taoensso.timbre :as log]))
 
 
 (defn crumb
@@ -257,53 +258,41 @@
    [messages/alert-modal]])
 
 
-(defn SetThemeHostname
+(defn set-theme-hostname
   []
   (let [url       (history-utils/hostname)
         url-parts (str/split url #"\.")
         theme     (when (> (count url-parts) 0) (first url-parts))]
-    (when theme
-      (dispatch [::events/set-theme-hostname theme]))))
+    (if theme
+      (dispatch-sync [::events/set-theme-hostname theme])
+      (dispatch-sync [::events/set-theme-hostname-ready? true]))))
 
 
-(defn SetThemeSession
+(defn initialize-theme
   []
-  (let [session (subscribe [::session-subs/session])]
-    (when @session
-      (dispatch [::events/set-theme-session "kontron"]))))
-
-
-(defn RenderHead
-  []
-  (let [theme      (subscribe [::subs/theme])
-        theme-root (subscribe [::subs/theme-root])]
-    (when (and @theme @theme-root)
-      (when-let [head-element (.getElementById js/document "customer-style")]
-        (set! (.-href head-element) (str @theme-root "/css/" @theme "-ui.css"))
-        ))))
-
-
-(defn InitializeTheme
-  []
-  (let [session (subscribe [::session-subs/session])
-        theme-root (subscribe [::subs/theme-root])]
-    @session
-    (dispatch [::events/get-ui-config])
-    (when @theme-root
-      (dispatch [::i18n-events/get-theme-dictionary]))
-    (SetThemeHostname)
-    (SetThemeSession)
-    (RenderHead)))
+  (dispatch-sync [::i18n-events/get-locale-from-local-storage])
+  (set-theme-hostname)
+  ;;(SetThemeSession)
+  (dispatch-sync [::i18n-events/get-theme-dictionary])
+  (dispatch-sync [::events/get-ui-config])
+  (dispatch-sync [::events/render-head])
+  (dispatch-sync [::i18n-events/set-locale])
+  (dispatch-sync [::events/set-theme-ready? true])
+  (log/info "Theme loaded"))
 
 
 (defn App []
-  (let [show?            (subscribe [::subs/sidebar-open?])
-        cep              (subscribe [::api-subs/cloud-entry-point])
-        iframe?          (subscribe [::subs/iframe?])
-        is-small-device? (subscribe [::subs/is-small-device?])
-        resource-path    (subscribe [::subs/nav-path])
-        session-loading? (subscribe [::session-subs/session-loading?])]
-    (if (and @cep (not @session-loading?))
+  (let [show?                 (subscribe [::subs/sidebar-open?])
+        cep                   (subscribe [::api-subs/cloud-entry-point])
+        iframe?               (subscribe [::subs/iframe?])
+        is-small-device?      (subscribe [::subs/is-small-device?])
+        resource-path         (subscribe [::subs/nav-path])
+        session-loading?      (subscribe [::session-subs/session-loading?])
+        theme-ready?          (subscribe [::subs/theme-ready?])
+        theme-hostname-ready? (subscribe [::subs/theme-hostname-ready?])
+        theme-root            (subscribe [::subs/theme-root])
+        tr                    (subscribe [::i18n-subs/tr])]
+    (if (and @cep (not @session-loading?) @theme-ready? @theme-hostname-ready? @theme-root)
       [:div {:id "nuvla-ui-main"}
        (case (first @resource-path)
          "sign-in" [session-views/SessionPage]
@@ -330,9 +319,3 @@
          )]
       [ui/Container
        [ui/Loader {:active true :size "massive"}]])))
-
-
-(defn AppWrapper
-  []
-  (InitializeTheme)
-  [App])

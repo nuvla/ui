@@ -16,7 +16,7 @@
 
                                 :devtools   {:after-load sixsq.nuvla.ui.core/mount-root
                                              :preloads   [devtools.preload
-                                                          #_day8.re-frame-10x.preload]}
+                                                          day8.re-frame-10x.preload]}
 
                                 :dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL
                                                                 "https://nuvla.io"

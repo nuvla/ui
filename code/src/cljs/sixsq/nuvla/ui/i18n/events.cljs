@@ -21,8 +21,7 @@
                             true (assoc ::spec/tr (utils/create-tr-fn locale theme-dictionary)))
        :storage/set {:session? false
                      :name     :nuvla.ui.locale
-                     :value    locale}
-       })))
+                     :value    locale}})))
 
 
 (reg-event-fx

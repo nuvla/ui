@@ -163,6 +163,12 @@
 
 
 (reg-sub
+  ::theme-session-ready?
+  (fn [db]
+    (::spec/theme-session-ready? db)))
+
+
+(reg-sub
   ::open-modal
   (fn [db]
     (::spec/open-modal db)))

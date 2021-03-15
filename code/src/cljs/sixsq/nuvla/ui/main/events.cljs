@@ -260,8 +260,7 @@
   (fn [{db :db} [_ {:keys [stripe] :as result}]]
     (log/info "Config file loaded")
     (cond-> {:db (assoc db ::spec/config result)}
-            ;stripe (assoc :dispatch [::load-stripe])
-            )))
+            stripe (assoc :dispatch [::load-stripe]))))
 
 
 (reg-event-db
@@ -299,19 +298,23 @@
         (assoc ::spec/theme theme)
         (assoc ::spec/theme-hostname-ready? true))))
 
+
 (reg-event-db
   ::set-theme-hostname-ready?
   (fn [db [_ ready?]]
     (assoc db ::spec/theme-hostname-ready? ready?)))
 
-(reg-event-db
+
+(reg-event-fx
   ::set-theme-session
-  (fn [db [_ theme]]
+  (fn [{db :db} [_ theme]]
     (log/info "Setting session theme: " theme)
-    (-> db
-        (assoc ::spec/theme-session theme)
-        (assoc ::spec/theme-root (->theme-root theme))
-        (assoc ::spec/theme theme))))
+    {:db       (-> db
+                   (assoc ::spec/theme-session theme)
+                   (assoc ::spec/theme-root (->theme-root theme))
+                   (assoc ::spec/theme theme)
+                   (assoc ::spec/theme-session-ready? true))
+     :dispatch [::get-ui-config]}))
 
 
 (reg-event-db

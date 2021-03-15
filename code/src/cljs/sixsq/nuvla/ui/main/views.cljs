@@ -28,6 +28,7 @@
     [sixsq.nuvla.ui.intercom.views :as intercom]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as events]
+    [sixsq.nuvla.ui.main.spec :as spec]
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.main.views-sidebar :as sidebar]
     [sixsq.nuvla.ui.messages.views :as messages]
@@ -268,11 +269,23 @@
       (dispatch-sync [::events/set-theme-hostname-ready? true]))))
 
 
+(defn set-theme-session
+  []
+  (let [session (subscribe [::session-subs/session])]
+    (when @session
+      (let [theme "kontron"]                                ;FIXME: extract theme from session
+        (dispatch [::events/set-theme-session theme])
+        (dispatch [::i18n-events/get-theme-dictionary true])
+        (dispatch [::events/get-ui-config])
+        (dispatch [::events/render-head])
+        (dispatch [::i18n-events/set-locale])))))
+
+
 (defn initialize-theme
   []
   (dispatch-sync [::i18n-events/get-locale-from-local-storage])
   (set-theme-hostname)
-  ;;(SetThemeSession)
+  (set-theme-session)
   (dispatch-sync [::i18n-events/get-theme-dictionary])
   (dispatch-sync [::events/get-ui-config])
   (dispatch-sync [::events/render-head])
@@ -289,7 +302,8 @@
         resource-path         (subscribe [::subs/nav-path])
         session-loading?      (subscribe [::session-subs/session-loading?])
         theme-ready?          (subscribe [::subs/theme-ready?])
-        theme-hostname-ready? (subscribe [::subs/theme-hostname-ready?])]
+        theme-hostname-ready? (subscribe [::subs/theme-hostname-ready?])
+        theme-session-ready?  (subscribe [::subs/theme-session-ready?])]
     (if (and @cep (not @session-loading?) @theme-ready? @theme-hostname-ready?)
       [:div {:id "nuvla-ui-main"}
        (case (first @resource-path)
@@ -317,3 +331,10 @@
          )]
       [ui/Container
        [ui/Loader {:active true :size "massive"}]])))
+
+
+(defn AppWrapper
+  []
+  [:<>
+   (set-theme-session)
+   [App]])

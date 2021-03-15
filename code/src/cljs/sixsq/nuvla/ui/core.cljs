@@ -31,7 +31,7 @@
 
 (defn mount-root []
   (clear-subscription-cache!)
-  (render-component-when-present "app" main-views/App))
+  (render-component-when-present "app" main-views/AppWrapper))
 
 
 (defn visibility-watcher []

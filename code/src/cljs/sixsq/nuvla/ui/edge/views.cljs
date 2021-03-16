@@ -338,8 +338,14 @@
         nb-releases                (subscribe [::subs/nuvlabox-releases])
         ssh-credentials            (subscribe [::subs/ssh-keys-available])
         nb-releases-by-id          (group-by :id @nb-releases)
-        default-data               {:refresh-interval 30}
         first-nb-release           (first @nb-releases)
+        default-data               {:refresh-interval 30
+                                    :version (-> (->> (:id first-nb-release)
+                                                   (get nb-releases-by-id)
+                                                   first)
+                                               :release
+                                               utils/get-major-version
+                                               general-utils/str->int)}
         creation-data              (r/atom default-data)
         default-release-data       {:nb-rel      (:id first-nb-release)
                                     :nb-selected first-nb-release
@@ -441,6 +447,7 @@
       (when (and (= (count @vpn-infra-opts) 1)
                  (nil? (:vpn-server-id @creation-data)))
         (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
+      (js/console.warn @creation-data)
       [ui/Modal {:open       @visible?
                  :close-icon true
                  :on-close   on-close-fn}

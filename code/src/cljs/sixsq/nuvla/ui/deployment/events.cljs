@@ -102,6 +102,21 @@
 
 
 (reg-event-fx
+  ::set-deployments-summary-all
+  (fn [{:keys [db]} [_ deployments]]
+    (let [states (get-in deployments [:aggregations :terms:state :buckets])]
+      {:db (assoc db ::spec/loading? false
+                     ::spec/deployments-summary-all deployments)})))
+
+
+(reg-event-fx
+  ::get-deployments-summary-all
+  (fn [_]
+    {::cimi-api-fx/search [:deployment (utils/get-query-params-summary nil)
+                           #(dispatch [::set-deployments-summary-all %])]}))
+
+
+(reg-event-fx
   ::set-page
   (fn [{{:keys [::spec/full-text-search
                 ::spec/page

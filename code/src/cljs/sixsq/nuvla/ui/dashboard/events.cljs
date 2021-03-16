@@ -33,7 +33,7 @@
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-nuvlaboxes-summary-id
                        :frequency 20000
-                       :event     [::edge-events/get-nuvlaboxes-summary]}]]
+                       :event     [::edge-events/get-nuvlaboxes-summary-all]}]]
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-nuvlaboxes-id
                        :frequency 20000
@@ -45,5 +45,4 @@
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-credentials-id
                        :frequency 20000
-                       :event     [::credentials-events/get-credentials-summary]}]]
-          ]}))
+                       :event     [::credentials-events/get-credentials-summary]}]]]}))

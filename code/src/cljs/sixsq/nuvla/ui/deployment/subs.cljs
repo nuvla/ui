@@ -24,6 +24,12 @@
 
 
 (reg-sub
+  ::deployments-summary-all
+  (fn [db]
+    (::spec/deployments-summary-all db)))
+
+
+(reg-sub
   ::elements-per-page
   (fn [db]
     (::spec/elements-per-page db)))

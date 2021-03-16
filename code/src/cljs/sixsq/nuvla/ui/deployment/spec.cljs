@@ -14,6 +14,8 @@
 
 (s/def ::deployments-summary any?)
 
+(s/def ::deployments-summary-all any?)
+
 (s/def ::page int?)
 
 (s/def ::elements-per-page int?)
@@ -37,6 +39,7 @@
 (s/def ::db (s/keys :req [::loading?
                           ::deployments
                           ::deployments-summary
+                          ::deployments-summary-all
                           ::deployments-params-map
                           ::page
                           ::elements-per-page
@@ -47,15 +50,16 @@
                           ::view
                           ::state-selector]))
 
-(def defaults {::loading?               false
-               ::page                   1
-               ::elements-per-page      8
-               ::full-text-search       nil
-               ::active-only?           true
-               ::nuvlabox               nil
-               ::deployments            nil
-               ::deployments-summary    nil
-               ::deployments-params-map nil
-               ::creds-name-map         {}
-               ::view                   "cards"
-               ::state-selector         "all"})
+(def defaults {::loading?                false
+               ::page                    1
+               ::elements-per-page       8
+               ::full-text-search        nil
+               ::active-only?            true
+               ::nuvlabox                nil
+               ::deployments             nil
+               ::deployments-summary     nil
+               ::deployments-summary-all nil
+               ::deployments-params-map  nil
+               ::creds-name-map          {}
+               ::view                    "cards"
+               ::state-selector          "all"})

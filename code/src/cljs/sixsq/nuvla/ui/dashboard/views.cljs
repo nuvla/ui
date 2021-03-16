@@ -183,9 +183,9 @@
   []
   (let [apps              (subscribe [::apps-store-subs/modules])
         no-of-apps        (:count @apps)
-        nuvlaboxes        (subscribe [::edge-subs/nuvlaboxes])
+        nuvlaboxes        (subscribe [::edge-subs/nuvlaboxes-summary-all])
         no-of-nb          (:count @nuvlaboxes)
-        deployments       (subscribe [::deployment-subs/deployments-summary])
+        deployments       (subscribe [::deployment-subs/deployments-summary-all])
         no-of-deployments (:count @deployments)
         credentials       (subscribe [::credentials-subs/credentials-summary])
         no-of-creds       (:count @credentials)]

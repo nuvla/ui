@@ -33,13 +33,13 @@
 (defn StatisticStates
   ([] [StatisticStates true])
   ([clickable?]
-   (let [tr         (subscribe [::i18n-subs/tr])
-         summary    (subscribe [::subs/nuvlaboxes-summary])
-         status     (subscribe [::subs/nuvlaboxes-online-status])
-         open-popup (r/atom true)]
-     ;(time/sleep 5000 #(reset! open-popup false))
+   (let [tr          (subscribe [::i18n-subs/tr])
+         summary     (subscribe [::subs/nuvlaboxes-summary])
+         summary-all (subscribe [::subs/nuvlaboxes-summary-all])
+         open-popup  (r/atom true)]
      (fn [clickable?]
-       (let [terms           (general-utils/aggregate-to-map (get-in @summary [:aggregations :terms:state :buckets]))
+       (let [summary         (if clickable? summary summary-all) ; select all without filter
+             terms           (general-utils/aggregate-to-map (get-in @summary [:aggregations :terms:state :buckets]))
              new             (:NEW terms 0)
              activated       (:ACTIVATED terms 0)
              commissioned    (:COMMISSIONED terms 0)

@@ -13,13 +13,11 @@
 
 (s/def ::nuvlaboxes-summary any?)
 
+(s/def ::nuvlaboxes-summary-all any?)
+
 (s/def ::nuvlabox-releases any?)
 
 (s/def ::state-nuvlaboxes any?)
-
-(s/def ::status-nuvlaboxes any?)
-
-(s/def ::nuvlaboxes-online-status any?)
 
 (s/def ::open-modal (s/nilable keyword?))
 
@@ -47,10 +45,9 @@
 (s/def ::db (s/keys :req [::loading?
                           ::nuvlaboxes
                           ::nuvlaboxes-summary
+                          ::nuvlaboxes-summary-all
                           ::nuvlabox-releases
                           ::state-nuvlaboxes
-                          ::status-nuvlaboxes
-                          ::nuvlaboxes-online-status
                           ::page
                           ::elements-per-page
                           ::total-elements
@@ -68,10 +65,9 @@
 (def defaults {::loading?                 false
                ::nuvlaboxes               nil
                ::nuvlaboxes-summary       nil
+               ::nuvlaboxes-summary-all   nil
                ::nuvlabox-releases        nil
                ::state-nuvlaboxes         nil
-               ::status-nuvlaboxes        nil
-               ::nuvlaboxes-online-status nil
                ::page                     1
                ::elements-per-page        8
                ::total-elements           0

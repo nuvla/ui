@@ -138,12 +138,13 @@
 (defn StatisticStates
   ([] [StatisticStates true])
   ([clickable?]
-   (let [tr         (subscribe [::i18n-subs/tr])
-         summary    (subscribe [::subs/deployments-summary])
-         open-popup (r/atom true)]
-     ;(time/sleep 5000 #(reset! open-popup false))
+   (let [tr          (subscribe [::i18n-subs/tr])
+         summary     (subscribe [::subs/deployments-summary])
+         summary-all (subscribe [::subs/deployments-summary-all])
+         open-popup  (r/atom true)]
      (fn [clickable?]
-       (let [terms         (utils-general/aggregate-to-map (get-in @summary [:aggregations :terms:state :buckets]))
+       (let [summary       (if clickable? summary summary-all)
+             terms         (utils-general/aggregate-to-map (get-in @summary [:aggregations :terms:state :buckets]))
              started       (:STARTED terms 0)
              starting      (:STARTIN terms 0)
              created       (:CREATED terms 0)

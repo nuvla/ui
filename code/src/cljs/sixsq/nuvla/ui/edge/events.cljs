@@ -82,9 +82,22 @@
     {:db                   (assoc db ::spec/loading? true)
      ::cimi-api-fx/search  [:nuvlabox
                             (utils/get-query-aggregation-params full-text-search "terms:online,terms:state")
-                            #(dispatch [::set-nuvlaboxes-summary %])]
-     ;::fx/state-nuvlaboxes [#(dispatch [::set-state-nuvlaboxes %])]
-     }))
+                            #(dispatch [::set-nuvlaboxes-summary %])]}))
+
+
+(reg-event-fx
+  ::set-nuvlaboxes-summary-all
+  (fn [{db :db} [_ nuvlaboxes-summary]]
+    {:db (assoc db ::spec/nuvlaboxes-summary-all nuvlaboxes-summary)}))
+
+
+(reg-event-fx
+  ::get-nuvlaboxes-summary-all
+  (fn [{db :db} _]
+    {:db                   (assoc db ::spec/loading? true)
+     ::cimi-api-fx/search  [:nuvlabox
+                            (utils/get-query-aggregation-params nil "terms:online,terms:state")
+                            #(dispatch [::set-nuvlaboxes-summary-all %])]}))
 
 
 (reg-event-fx

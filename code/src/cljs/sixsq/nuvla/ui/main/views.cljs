@@ -302,8 +302,7 @@
         resource-path         (subscribe [::subs/nav-path])
         session-loading?      (subscribe [::session-subs/session-loading?])
         theme-ready?          (subscribe [::subs/theme-ready?])
-        theme-hostname-ready? (subscribe [::subs/theme-hostname-ready?])
-        theme-session-ready?  (subscribe [::subs/theme-session-ready?])]
+        theme-hostname-ready? (subscribe [::subs/theme-hostname-ready?])]
     (if (and @cep (not @session-loading?) @theme-ready? @theme-hostname-ready?)
       [:div {:id "nuvla-ui-main"}
        (case (first @resource-path)

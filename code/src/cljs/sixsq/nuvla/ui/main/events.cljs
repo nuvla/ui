@@ -372,12 +372,3 @@
     (let [head-element (.getElementById js/document "customer-style")]
       (set! (.-href head-element) (str theme-root "/css/" theme "-ui.css"))
       nil)))
-
-
-(reg-event-fx
-  ::initialize-theme
-  (fn [{{:keys [::spec/theme
-                ::spec/theme-root]} :db} [_]]
-    (let []
-      {:dispatch-n [[::render-head]
-                    []]})))

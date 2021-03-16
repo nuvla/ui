@@ -305,16 +305,16 @@
     (assoc db ::spec/theme-hostname-ready? ready?)))
 
 
-(reg-event-fx
-  ::set-theme-session
-  (fn [{db :db} [_ theme]]
-    (log/info "Setting session theme: " theme)
-    {:db       (-> db
-                   (assoc ::spec/theme-session theme)
-                   (assoc ::spec/theme-root (->theme-root theme))
-                   (assoc ::spec/theme theme)
-                   (assoc ::spec/theme-session-ready? true))
-     :dispatch [::get-ui-config]}))
+;(reg-event-fx
+;  ::set-theme-session
+;  (fn [{db :db} [_ theme]]
+;    (log/info "Setting session theme: " theme)
+;    {:db       (-> db
+;                   (assoc ::spec/theme-session theme)
+;                   (assoc ::spec/theme-root (->theme-root theme))
+;                   (assoc ::spec/theme theme)
+;                   (assoc ::spec/theme-session-ready? true))
+;     :dispatch [::get-ui-config]}))
 
 
 (reg-event-db
@@ -369,6 +369,7 @@
   ::render-head
   (fn [{{:keys [::spec/theme
                 ::spec/theme-root]} :db} [_]]
-    (let [head-element (.getElementById js/document "customer-style")]
-      (set! (.-href head-element) (str theme-root "/css/" theme "-ui.css"))
-      nil)))
+    (when theme
+      (let [head-element (.getElementById js/document "customer-style")]
+        (set! (.-href head-element) (str theme-root "/css/" theme "-ui.css"))
+        nil))))

@@ -50,8 +50,8 @@
 (s/def ::theme-hostname any?)
 (s/def ::theme-hostname-ready? boolean?)
 
-(s/def ::theme-session any?)
-(s/def ::theme-session-ready? boolean?)
+;(s/def ::theme-session any?)
+;(s/def ::theme-session-ready? boolean?)
 
 (s/def ::theme-ready? boolean?)
 
@@ -63,8 +63,8 @@
                           ::config
                           ::theme-hostname
                           ::theme-hostname-ready?
-                          ::theme-session
-                          ::theme-session-ready?
+                          ;::theme-session
+                          ;::theme-session-ready?
                           ::theme
                           ::theme-ready?
                           ::device
@@ -87,8 +87,8 @@
                ::theme                 nil
                ::theme-hostname        nil
                ::theme-hostname-ready? false
-               ::theme-session         nil
-               ::theme-session-ready?  false
+               ;::theme-session         nil
+               ;::theme-session-ready?  false
                ::theme-ready?          false
                ::theme-root            nil
                ::device                :computer

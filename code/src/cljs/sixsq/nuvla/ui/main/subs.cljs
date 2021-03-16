@@ -162,10 +162,10 @@
     (::spec/theme-hostname-ready? db)))
 
 
-(reg-sub
-  ::theme-session-ready?
-  (fn [db]
-    (::spec/theme-session-ready? db)))
+;(reg-sub
+;  ::theme-session-ready?
+;  (fn [db]
+;    (::spec/theme-session-ready? db)))
 
 
 (reg-sub

@@ -263,29 +263,30 @@
   []
   (let [url       (history-utils/hostname)
         url-parts (str/split url #"\.")
-        theme     (when (> (count url-parts) 0) (first url-parts))]
-    (if theme
+        theme     (first url-parts)]
+    (log/error "theme: " theme)
+    (if (and theme (not= "nuvla" theme))
       (dispatch-sync [::events/set-theme-hostname theme])
       (dispatch-sync [::events/set-theme-hostname-ready? true]))))
 
 
-(defn set-theme-session
-  []
-  (let [session (subscribe [::session-subs/session])]
-    (when @session
-      (let [theme "kontron"]                                ;FIXME: extract theme from session
-        (dispatch [::events/set-theme-session theme])
-        (dispatch [::i18n-events/get-theme-dictionary true])
-        (dispatch [::events/get-ui-config])
-        (dispatch [::events/render-head])
-        (dispatch [::i18n-events/set-locale])))))
+;(defn set-theme-session
+;  []
+;  (let [session (subscribe [::session-subs/session])]
+;    (when @session
+;      (let [theme "kontron"]                                ;FIXME: extract theme from session
+;        (dispatch [::events/set-theme-session theme])
+;        (dispatch [::i18n-events/get-theme-dictionary true])
+;        (dispatch [::events/get-ui-config])
+;        (dispatch [::events/render-head])
+;        (dispatch [::i18n-events/set-locale])))))
 
 
 (defn initialize-theme
   []
   (dispatch-sync [::i18n-events/get-locale-from-local-storage])
   (set-theme-hostname)
-  (set-theme-session)
+  ;(set-theme-session)
   (dispatch-sync [::i18n-events/get-theme-dictionary])
   (dispatch-sync [::events/get-ui-config])
   (dispatch-sync [::events/render-head])
@@ -335,5 +336,5 @@
 (defn AppWrapper
   []
   [:<>
-   (set-theme-session)
+   ;(set-theme-session)
    [App]])

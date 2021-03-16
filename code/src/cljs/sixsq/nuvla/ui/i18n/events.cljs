@@ -49,10 +49,12 @@
 
 (reg-event-fx
   ::get-theme-dictionary
-  (fn [{{:keys [::main-spec/theme-root] :as db} :db} _]
-    {:http-xhrio {:method          :get
-                  :uri             (str theme-root "dictionary.json")
-                  :timeout         8000
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [::get-theme-dictionary-good]
-                  :on-failure      [::get-theme-dictionary-bad]}}))
+  (fn [{{:keys [::main-spec/theme-root ::main-spec/theme] :as db} :db} _]
+    (if theme
+      {:http-xhrio {:method          :get
+                    :uri             (str theme-root "dictionary.json")
+                    :timeout         8000
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::get-theme-dictionary-good]
+                    :on-failure      [::get-theme-dictionary-bad]}}
+      {})))

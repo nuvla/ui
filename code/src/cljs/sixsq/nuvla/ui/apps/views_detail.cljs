@@ -108,10 +108,16 @@
               :on-click #(dispatch [::events/open-add-modal])}])
 
           (when (not= "project" subtype)
-            [uix/MenuItem
-             {:name     (@tr [:copy])
-              :icon     "copy"
-              :on-click #(dispatch [::events/copy])}])
+            [ui/Popup
+             {:trigger        (r/as-element [ui/MenuItem
+                                             {:name     (@tr [:copy])
+                                              :icon     "copy"
+                                              :on-click #(dispatch [::events/copy])}])
+              :content        (@tr [:module-copied])
+              :on             "click"
+              :position       "top center"
+              :wide           true
+              :hide-on-scroll true}])
 
           (when (= "project" subtype)
             [uix/MenuItem

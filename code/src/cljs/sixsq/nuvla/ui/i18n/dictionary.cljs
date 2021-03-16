@@ -281,6 +281,7 @@
         :methods                                       "methods"
         :module                                        "module"
         :module-change-logo                            "Change logo"
+        :module-copied                                 "Module copied"
         :module-data-type-help                         "..."
         :module-delete-warning                         "I understand that deleting this module is permanent and cannot be undone."
         :module-docker-command-message                 "You can test this component by running the following command locally:"

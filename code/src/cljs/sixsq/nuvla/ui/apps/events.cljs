@@ -597,7 +597,6 @@
 (reg-event-fx
   ::paste-module
   (fn [{{:keys [::spec/copy-module ::session-spec/user ::spec/module] :as db} :db} [_ new-module-name]]
-    ;(log/error "new-module-name: " new-module-name)
     (let [copy-module-name  (:name copy-module)
           copy-parent-path  (:parent-path copy-module)
           paste-parent-path (:path module)
@@ -610,8 +609,6 @@
 
       {::cimi-api-fx/add [:module paste-module
                           #(do
-                             (dispatch [::cimi-detail-events/get (:resource-id %)])
-                             ;                             (dispatch [::set-module paste-module]) ;Needed?
                              (dispatch [::main-events/changes-protection? false])
                              (dispatch [::history-events/navigate
                                         (str "apps/" (:path paste-module))]))
@@ -619,6 +616,5 @@
                                        (cimi-api-fx/default-add-on-error :module %)
                                        (when (= status 409)
                                          (dispatch [::name nil])
-                                         (dispatch [::validate-form])))]}
-      )))
+                                         (dispatch [::validate-form])))]})))
 

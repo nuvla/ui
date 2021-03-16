@@ -272,7 +272,6 @@
         module-name     (:name @copy-module)
         new-module-name (r/atom module-name)
         form-valid?     (r/atom true)]
-    @copy-module
     (fn []
       (let [paste-fn #(do (dispatch [::events/close-paste-modal])
                           (dispatch [::events/commit-message nil])
@@ -294,9 +293,9 @@
 
             [uix/TableRowField (@tr [:new-name]), :key "new-name", :editable? true,
              :spec ::spec/name, :validate-form? true, :required? true,
-             :default-value @new-module-name, :on-change #(do (log/error ">" % "<") (reset! new-module-name %)
-                                                              (reset! form-valid? (s/valid? ::spec/name %)))]
-            ]]]
+             :default-value @new-module-name,
+             :on-change #(do (reset! new-module-name %)
+                             (reset! form-valid? (s/valid? ::spec/name %)))]]]]
 
          [ui/ModalActions
           [forms/validation-error-msg (@tr [:paste-modal-validation-error]) (not @form-valid?)]

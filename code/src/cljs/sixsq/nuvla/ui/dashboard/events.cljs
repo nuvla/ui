@@ -29,7 +29,7 @@
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-id
                        :frequency 20000
-                       :event     [::deployment-events/get-deployments-summary]}]]
+                       :event     [::deployment-events/get-deployments-summary-all]}]]
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-nuvlaboxes-summary-id
                        :frequency 20000

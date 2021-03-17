@@ -102,6 +102,22 @@
         :selection   true}])))
 
 
+(defn NBManagersDropdown
+  [on-change-fn]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        managers (subscribe [::subs/nuvlabox-managers])]
+    (dispatch [::events/get-nuvlabox-managers])
+    (fn [on-change-fn]
+      [ui/FormDropdown
+       {:label       (@tr [:nuvlabox-available-managers])
+        :loading     (nil? @managers)
+        :on-change   (ui-callback/value on-change-fn)
+        :clearable   true
+        :placeholder (@tr [:nuvlabox-available-managers-select])
+        :options     (map (fn [{:keys [name status]}]
+                            {:key name, :text name, :value status}) @managers)
+        :selection   true}])))
+
 
 (defn DropdownReleases
   [opts]
@@ -109,6 +125,7 @@
     (fn [opts]
       (when (empty? @releases)
         (dispatch [::edge-events/get-nuvlabox-releases]))
+      (js/console.warn @releases)
       [ui/Dropdown
        (merge {:selection true
                :loading   (empty? @releases)
@@ -293,6 +310,81 @@
             :disabled (utils/form-update-data-incomplete? @form-data)
             :primary  true
             :on-click on-click-fn}]]]))))
+
+
+(defn ClusterButton
+  [{:keys [id] :as resource} operation show? title icon button-text]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        join-token    (subscribe [::subs/join-token])
+        close-fn      #(reset! show? false)
+        list-managers (r/atom true)
+        default-action  "join-worker"
+        form-data     (r/atom {:cluster-action default-action})
+        actions       [{:key 1 :text "Join as a worker" :value default-action}
+                       {:key 2 :text "Join as a manager" :value "join-manager"}
+                       {:key 3 :text "Leave" :value "leave"}
+                       {:key 4 :text "Force new cluster" :value "force-new-cluster"}]
+        on-change-fn  (fn [k v join-token-scope]
+                        (if (str/blank? v)
+                          (swap! form-data dissoc k)
+                          (do
+                            (js/console.warn k)
+                            (swap! form-data assoc k v)
+                            (when join-token-scope
+                              (dispatch [::events/get-join-token (:parent v) join-token-scope])))))
+        on-success-fn close-fn
+        on-error-fn   close-fn
+        on-click-fn   #(do
+                         (dispatch [::events/operation id operation @form-data
+                                    on-success-fn on-error-fn]))]
+    (fn [resource operation show? title icon button-text]
+      [ui/Modal
+       {:open       @show?
+        :close-icon true
+        :on-close   close-fn
+        :trigger    (r/as-element
+                      [ui/MenuItem {:on-click #(reset! show? true)}
+                       [ui/Icon {:name icon}]
+                       title])}
+       [uix/ModalHeader {:header title}]
+       [ui/ModalContent
+        [ui/Form
+           [ui/FormDropdown
+            {:label       "Action"
+             :on-change   (ui-callback/value
+                            (fn [value]
+                              (if (str/starts-with? value "join-")
+                                (reset! list-managers true)
+                                (reset! list-managers false))
+                              (on-change-fn :cluster-action value nil)))
+             :default-value default-action
+             :options     actions
+             :selection   true}]
+         (when @list-managers
+           [NBManagersDropdown (partial on-change-fn :nuvlabox-manager-id (str/upper-case
+                                                                            (last
+                                                                              (str/split
+                                                                                (:cluster-action @form-data)
+                                                                                #"-"))))])
+         (js/console.warn @join-token)
+         ]]
+       [ui/ModalActions
+        [uix/Button
+         {:text     (@tr [:cancel])
+          :on-click close-fn}]
+        [uix/Button
+         {:text     button-text
+          :primary  true
+          :on-click on-click-fn}]]])))
+
+
+(defmethod cimi-detail-views/other-button ["nuvlabox" "cluster-nuvlabox"]
+  [resource operation]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        show? (r/atom false)]
+    (fn [resource operation]
+      ^{:key (str "cluster-nuvlabox" @show?)}
+      [ClusterButton resource operation show? "Cluster NuvlaBox" "linkify" "cluster"])))
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "add-ssh-key"]
@@ -905,11 +997,11 @@
         [ui/TableCell "Cluster Managers"]
         [ui/TableCell
          [ui/LabelGroup {:size  "tiny"
-                         :basic true
                          :style {:margin-top 10, :max-height 150, :overflow "auto"}}
           (for [manager cluster-managers]
             ^{:key (str manager)}
-            [ui/Label {:style {:max-width     "15ch"
+            [ui/Label {:basic true
+                       :style {:max-width     "15ch"
                                :overflow      "hidden"
                                :text-overflow "ellipsis"
                                :white-space   "nowrap"}}
@@ -919,11 +1011,11 @@
         [ui/TableCell "Cluster Nodes"]
         [ui/TableCell
          [ui/LabelGroup {:size  "tiny"
-                         :basic true
                          :style {:margin-top 10, :max-height 150, :overflow "auto"}}
           (for [node cluster-nodes]
             ^{:key (str node)}
-            [ui/Label {:style {:max-width     "15ch"
+            [ui/Label {:basic true
+                       :style {:max-width     "15ch"
                                :overflow      "hidden"
                                :text-overflow "ellipsis"
                                :white-space   "nowrap"}}

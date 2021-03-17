@@ -39,6 +39,16 @@
 
 
 (reg-sub
+  ::nuvlabox-managers
+  (fn [db]
+    (::spec/nuvlabox-managers db)))
+
+(reg-sub
+  ::join-token
+  (fn [db]
+    (::spec/join-token db)))
+
+(reg-sub
   ::nuvlabox-peripherals
   (fn [db]
     (::spec/nuvlabox-peripherals db)))

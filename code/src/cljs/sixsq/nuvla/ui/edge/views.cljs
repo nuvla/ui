@@ -447,7 +447,6 @@
       (when (and (= (count @vpn-infra-opts) 1)
                  (nil? (:vpn-server-id @creation-data)))
         (swap! creation-data assoc :vpn-server-id (-> @vpn-infra-opts first :value)))
-      (js/console.warn @creation-data)
       [ui/Modal {:open       @visible?
                  :close-icon true
                  :on-close   on-close-fn}

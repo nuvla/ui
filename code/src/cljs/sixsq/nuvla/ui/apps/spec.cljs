@@ -101,7 +101,6 @@
                                              ::license-url]
                                     :opt-un [::license-description])))
 
-
 (s/def ::module-common (s/keys :req [::name
                                      ::parent-path
                                      ; needed by the server, but not the ui
@@ -158,6 +157,10 @@
 
 (s/def ::compare-module-right any?)
 
+(s/def ::copy-module any?)
+
+(s/def ::paste-modal-visible? boolean?)
+
 (s/def ::db (s/keys :req [::active-input
                           ::form-spec
                           ::form-valid?
@@ -173,7 +176,9 @@
                           ::registries-credentials
                           ::validate-docker-compose
                           ::compare-module-left
-                          ::compare-module-right]))
+                          ::compare-module-right
+                          ::copy-module
+                          ::paste-modal-visible?]))
 
 (def defaults {::active-input            nil
                ::form-spec               nil
@@ -191,4 +196,6 @@
                ::registries-credentials  nil
                ::validate-docker-compose nil
                ::compare-module-left     nil
-               ::compare-module-right    nil})
+               ::compare-module-right    nil
+               ::copy-module             nil
+               ::paste-modal-visible?    false})

@@ -13,15 +13,13 @@
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.session.spec :as session-spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 ;; Validation
@@ -536,7 +534,6 @@
       (if (nil? id)
         {::cimi-api-fx/add [:module sanitized-module
                             #(do
-                               (dispatch [::cimi-detail-events/get (:resource-id %)])
                                (dispatch [::set-module sanitized-module]) ;Needed?
                                (when (= subtype "application")
                                  (dispatch [::validate-docker-compose (:resource-id %)]))
@@ -558,8 +555,7 @@
                                                                status (str " (" status ")"))
                                               :content message
                                               :type    :error}]))
-                                (do (dispatch [::cimi-detail-events/get (:id %)])
-                                    (dispatch [::get-module])
+                                (do (dispatch [::get-module])
                                     (when (= subtype "application")
                                       (dispatch [::validate-docker-compose %]))
                                     (dispatch [::main-events/changes-protection? false])))]}))))
@@ -597,11 +593,7 @@
 (reg-event-fx
   ::paste-module
   (fn [{{:keys [::spec/copy-module ::session-spec/user ::spec/module] :as db} :db} [_ new-module-name]]
-    (let [copy-module-name  (:name copy-module)
-          copy-parent-path  (:parent-path copy-module)
-          paste-parent-path (:path module)
-          commit-map        {:author user
-                             :commit (str "Copy/paste module from " copy-parent-path "/" copy-module-name)}
+    (let [paste-parent-path (:path module)
           paste-module      (-> copy-module
                                 (assoc :name new-module-name)
                                 (assoc :parent-path paste-parent-path)

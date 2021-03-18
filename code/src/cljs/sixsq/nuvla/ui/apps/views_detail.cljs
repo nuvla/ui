@@ -26,7 +26,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 
 (defn edit-button-disabled?
@@ -72,7 +73,8 @@
         page-changed? (subscribe [::main-subs/changes-protection?])
         form-valid?   (subscribe [::subs/form-valid?])
         editable?     (subscribe [::subs/editable?])
-        module-id     (subscribe [::subs/module-id-version])]
+        module-id     (subscribe [::subs/module-id-version])
+        copy-module   (subscribe [::subs/copy-module])]
     (fn []
       (let [subtype          (:subtype @module)
             launchable?      (and subtype (not= "project" subtype))
@@ -104,6 +106,25 @@
               :icon     "add"
               :disabled add-disabled?
               :on-click #(dispatch [::events/open-add-modal])}])
+
+          (when (not= "project" subtype)
+            [ui/Popup
+             {:trigger        (r/as-element [ui/MenuItem
+                                             {:name     (@tr [:copy])
+                                              :icon     "copy"
+                                              :on-click #(dispatch [::events/copy])}])
+              :content        (@tr [:module-copied])
+              :on             "click"
+              :position       "top center"
+              :wide           true
+              :hide-on-scroll true}])
+
+          (when (= "project" subtype)
+            [uix/MenuItem
+             {:name     (@tr [:paste])
+              :icon     "paste"
+              :disabled (when (nil? @copy-module) true)
+              :on-click #(dispatch [::events/open-paste-modal])}])
 
           (when (general-utils/can-delete? @module)
             [DeleteButton @module])
@@ -247,6 +268,48 @@
                        :size  :massive
                        :color (when-not parent :grey)}]]]
            ]]]))))
+
+
+(defn paste-modal
+  []
+  (let [tr              (subscribe [::i18n-subs/tr])
+        visible?        (subscribe [::subs/paste-modal-visible?])
+        copy-module     (subscribe [::subs/copy-module])
+        module-name     (:name @copy-module)
+        new-module-name (r/atom module-name)
+        form-valid?     (r/atom true)]
+    (fn []
+      (let [paste-fn #(do (dispatch [::events/close-paste-modal])
+                          (dispatch [::events/commit-message nil])
+                          (dispatch [::events/paste-module @new-module-name])
+                          (reset! new-module-name module-name))]
+        [ui/Modal {:open       @visible?
+                   :close-icon true
+                   :on-close   #(dispatch [::events/close-paste-modal])}
+
+         [uix/ModalHeader {:header (str (@tr [:paste-modal-header]))
+                           :icon   "paste"}]
+
+         [ui/ModalContent
+          [:div (@tr [:paste-modal-content])]
+          [:h5 {:style {:margin-top "10px"}} (:parent-path @copy-module) "/" (:name @copy-module)]
+          [ui/Table {:compact    true
+                     :definition true}
+           [ui/TableBody
+
+            [uix/TableRowField (@tr [:new-name]), :key "new-name", :editable? true,
+             :spec ::spec/name, :validate-form? true, :required? true,
+             :default-value @new-module-name,
+             :on-change #(do (reset! new-module-name %)
+                             (reset! form-valid? (s/valid? ::spec/name %)))]]]]
+
+         [ui/ModalActions
+          [forms/validation-error-msg (@tr [:paste-modal-validation-error]) (not @form-valid?)]
+          [uix/Button {:text     (@tr [:paste])
+                       :positive true
+                       :active   true
+                       :disabled (not @form-valid?)
+                       :on-click paste-fn}]]]))))
 
 
 (defn version-warning []

@@ -13,11 +13,11 @@
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.session.spec :as session-spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -534,7 +534,6 @@
       (if (nil? id)
         {::cimi-api-fx/add [:module sanitized-module
                             #(do
-                               (dispatch [::cimi-detail-events/get (:resource-id %)])
                                (dispatch [::set-module sanitized-module]) ;Needed?
                                (when (= subtype "application")
                                  (dispatch [::validate-docker-compose (:resource-id %)]))
@@ -556,8 +555,7 @@
                                                                status (str " (" status ")"))
                                               :content message
                                               :type    :error}]))
-                                (do (dispatch [::cimi-detail-events/get (:id %)])
-                                    (dispatch [::get-module])
+                                (do (dispatch [::get-module])
                                     (when (= subtype "application")
                                       (dispatch [::validate-docker-compose %]))
                                     (dispatch [::main-events/changes-protection? false])))]}))))
@@ -572,3 +570,43 @@
      ::cimi-api-fx/delete [id #(do
                                  (dispatch [::main-events/changes-protection? false])
                                  (dispatch [::history-events/navigate "apps/"]))]}))
+
+
+(reg-event-db
+  ::copy
+  (fn [db [_]]
+    (assoc db ::spec/copy-module (::spec/module db))))
+
+
+(reg-event-db
+  ::open-paste-modal
+  (fn [db _]
+    (assoc db ::spec/paste-modal-visible? true)))
+
+
+(reg-event-db
+  ::close-paste-modal
+  (fn [db _]
+    (assoc db ::spec/paste-modal-visible? false)))
+
+
+(reg-event-fx
+  ::paste-module
+  (fn [{{:keys [::spec/copy-module ::session-spec/user ::spec/module] :as db} :db} [_ new-module-name]]
+    (let [paste-parent-path (:path module)
+          paste-module      (-> copy-module
+                                (assoc :name new-module-name)
+                                (assoc :parent-path paste-parent-path)
+                                (assoc :path (utils/contruct-path paste-parent-path new-module-name)))]
+
+      {::cimi-api-fx/add [:module paste-module
+                          #(do
+                             (dispatch [::main-events/changes-protection? false])
+                             (dispatch [::history-events/navigate
+                                        (str "apps/" (:path paste-module))]))
+                          :on-error #(let [{:keys [status]} (response/parse-ex-info %)]
+                                       (cimi-api-fx/default-add-on-error :module %)
+                                       (when (= status 409)
+                                         (dispatch [::name nil])
+                                         (dispatch [::validate-form])))]})))
+

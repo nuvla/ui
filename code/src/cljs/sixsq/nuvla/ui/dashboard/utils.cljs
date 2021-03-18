@@ -9,7 +9,7 @@
 (def type-nbs "NUVLABOXES")
 (def type-creds "CREDENTIALS")
 
-(def target-apps {:resource "apps", :tab-index 1, :tab-index-event ::apps-store-events/set-active-tab-index})
+(def target-apps {:resource "apps", :tab-index 0, :tab-index-event ::apps-store-events/set-active-tab-index})
 (def target-deployments {:resource "apps", :tab-index 2, :tab-index-event ::apps-store-events/set-active-tab-index})
 (def target-nbs {:resource "edge"})
 (def target-creds {:resource "credentials"})

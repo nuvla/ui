@@ -74,6 +74,15 @@
     nil))
 
 
+(defn map-online->color
+  [status]
+  (case status
+    true (map-status->color :online)
+    false (map-status->color :offline)
+    nil (map-status->color :unknown)
+    (map-status->color nil)))
+
+
 (defn state-filter
   "Build a filter according to selected state. The default case condition corresponds
    to the commissioning state, while the first three correspond to the online state."

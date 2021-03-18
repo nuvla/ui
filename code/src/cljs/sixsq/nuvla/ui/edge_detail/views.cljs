@@ -493,13 +493,9 @@
 
 
 (defn OnlineStatusIcon
-  [status & {:keys [corner] :or {corner "bottom center"} :as position}]
-  [ui/Popup
-   {:position corner
-    :content  status
-    :trigger  (r/as-element
-                [ui/Icon {:name  "power"
-                          :color (utils/status->color status)}])}])
+  [online & {:keys [corner] :or {corner "bottom center"} :as position}]
+  [ui/Icon {:name  "power"
+            :color (utils/status->color online)}])
 
 
 (defn Heartbeat

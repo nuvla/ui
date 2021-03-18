@@ -77,7 +77,9 @@
                              [ui/Icon {:name (if @show-state-statistics "angle double up" "angle double down")}]]])
                :open     @open-popup
                :position "right center"
-               :offset   [0 20]}
+               :offset   [0 20]
+               :style    {:z-index "auto"}                  ;to avoid pop up floating above modals
+               }
               [ui/PopupContent
                [:span [ui/Icon {:name "arrow left"}] (@tr [:statistics-select-info])]]])]
           (when clickable?
@@ -699,18 +701,39 @@
     ^{:key (count @nb-release)}
     [AddModal]))
 
+
+(defn format-tags
+  [tags id]
+  [ui/LabelGroup {:size  "tiny"
+                  :color "teal"
+                  :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+   (for [tag tags]
+     ^{:key (str id "-" tag)}
+     [ui/Label {:style {:max-width     "15ch"
+                        :overflow      "hidden"
+                        :text-overflow "ellipsis"
+                        :white-space   "nowrap"}}
+      [ui/Icon {:name "tag"}] tag])])
+
+
+(defn format-created
+  [created]
+  (-> created time/parse-iso8601 time/ago))
+
 (defn NuvlaboxRow
-  [{:keys [id state name] :as nuvlabox}]
-  (let [status   (subscribe [::subs/nuvlabox-online-status id])
-        uuid     (general-utils/id->uuid id)
-        on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
-    [ui/TableRow {:on-click on-click
+  [{:keys [id name description created state tags online] :as nuvlabox}]
+  (let [uuid     (general-utils/id->uuid id)]
+    (log/error "NuvlaboxRow: " online)
+    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
-      [edge-detail/OnlineStatusIcon @status]]
+      [edge-detail/OnlineStatusIcon online]]
      [ui/TableCell {:collapsing true}
       [ui/Icon {:name (utils/state->icon state)}]]
-     [ui/TableCell (or name uuid)]]))
+     [ui/TableCell (or name uuid)]
+     [ui/TableCell description]
+     [ui/TableCell (format-created created)]
+     [ui/TableCell (format-tags tags id)]]))
 
 
 (defn Pagination
@@ -737,7 +760,10 @@
        [ui/TableRow
         [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
         [ui/TableHeaderCell "state"]
-        [ui/TableHeaderCell "name"]]]
+        [ui/TableHeaderCell "name"]
+        [ui/TableHeaderCell "description"]
+        [ui/TableHeaderCell "created"]
+        [ui/TableHeaderCell "tags"]]]
 
       [ui/TableBody
        (doall
@@ -747,13 +773,12 @@
 
 
 (defn NuvlaboxMapPoint
-  [{:keys [id name location] :as nuvlabox}]
-  (let [status   (subscribe [::subs/nuvlabox-online-status id])
-        uuid     (general-utils/id->uuid id)
+  [{:keys [id name location online] :as nuvlabox}]
+  (let [uuid     (general-utils/id->uuid id)
         on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
     [map/CircleMarker {:on-click on-click
                        :center   (map/longlat->latlong location)
-                       :color    (utils/map-status->color @status)
+                       :color    (utils/map-online->color online)
                        :opacity  0.5
                        :weight   2}
      [map/Tooltip (or name id)]]))
@@ -774,24 +799,14 @@
          [ui/Icon {:name "box"}]
          (or name id)]
 
-        [ui/CardMeta (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))]
+        [ui/CardMeta (str (@tr [:created]) " " (format-created created))]
 
         [:p {:align "right"} state]
 
         (when-not (str/blank? description)
           [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description])
 
-        [ui/LabelGroup {:size  "tiny"
-                        :color "teal"
-                        :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-         (for [tag tags]
-           ^{:key (str id "-" tag)}
-           [ui/Label {:style {:max-width     "15ch"
-                              :overflow      "hidden"
-                              :text-overflow "ellipsis"
-                              :white-space   "nowrap"}}
-            [ui/Icon {:name "tag"}] tag
-            ])]]])))
+        (format-tags tags id)]])))
 
 
 (defn NuvlaboxCards

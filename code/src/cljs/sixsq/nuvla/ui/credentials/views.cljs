@@ -597,7 +597,6 @@
             validation-item  (get infrastructure-service-validation-map subtype)
             validation-spec  (:validation-spec validation-item)
             modal-content    (:modal-content validation-item)]
-        (log/error subtype)
         (if (empty? subtype)
           [:div]
           [ui/Modal {:open       @visible?

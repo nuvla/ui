@@ -11,7 +11,6 @@
 
 (def nbsp "\u00a0")
 
-
 (defn help-popup [description & {:keys [on] :or {on "hover"}}]
   (when description
     (let [icon [ui/Icon {:name "help circle"}]]
@@ -62,7 +61,7 @@
 (defmethod form-field :integer
   [update-fn form-id {:keys [name display-name help hidden value-scope
                              required editable] :as attribute}]
-  (let [label (or display-name name)
+  (let [label         (or display-name name)
         default-value (or (:value value-scope) (:default value-scope))]
     (when default-value
       (update-fn form-id name default-value))
@@ -111,7 +110,7 @@
 (defmethod form-field :boolean
   [update-fn form-id {:keys [name display-name help hidden value-scope
                              required editable] :as attribute}]
-  (let [label (or display-name name)
+  (let [label         (or display-name name)
         default-value (or (:value value-scope) (:default value-scope) false)]
     (update-fn form-id name default-value)
     (fn [update-fn form-id {:keys [name display-name help hidden value-scope

@@ -86,7 +86,7 @@
                  :content  "Show me"
                  :on-click #((when (and tab-index tab-index-event)
                                (dispatch [tab-index-event tab-index]))
-                              (dispatch [::history-events/navigate resource]))}]]))
+                             (dispatch [::history-events/navigate resource]))}]]))
 
 
 (defn TabOverviewNuvlaBox
@@ -108,9 +108,9 @@
                  :color    :green
                  :style    {:align-self "start"}
                  :content  "Show me"
-                 :on-click #((when (and tab-index tab-index-event)
-                               (dispatch [tab-index-event tab-index]))
-                              (dispatch [::history-events/navigate resource]))}]]))
+                 :on-click #(do (when (and tab-index tab-index-event)
+                                  (dispatch [tab-index-event tab-index]))
+                                (dispatch [::history-events/navigate resource]))}]]))
 
 
 (defn TabOverviewDeployments
@@ -134,9 +134,9 @@
                  :icon     icon
                  :style    {:align-self "start"}
                  :content  "Show me"
-                 :on-click #((when (and tab-index tab-index-event)
-                               (dispatch [tab-index-event tab-index]))
-                              (dispatch [::history-events/navigate resource]))}]]))
+                 :on-click #(do (when (and tab-index tab-index-event)
+                                  (dispatch [tab-index-event tab-index]))
+                                (dispatch [::history-events/navigate resource]))}]]))
 
 
 (defn TabOverviewCredentials
@@ -170,8 +170,9 @@
     [ui/Statistic {:style    {:cursor "pointer"}
                    :color    color
                    :class    "slight-up"
-                   :on-click #((when (and tab-index tab-index-event)
-                                 (dispatch [tab-index-event tab-index]))
+                   :on-click #(do
+                                (when (and tab-index tab-index-event)
+                                  (dispatch [tab-index-event tab-index]))
                                 (dispatch [::history-events/navigate resource]))}
      [ui/StatisticValue (or value "-")
       "\u2002"

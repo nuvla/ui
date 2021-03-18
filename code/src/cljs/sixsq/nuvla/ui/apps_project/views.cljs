@@ -14,7 +14,8 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]))
+    [sixsq.nuvla.ui.utils.style :as style]
+    [taoensso.timbre :as log]))
 
 (defn summary []
   [apps-views-detail/summary])
@@ -74,15 +75,17 @@
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
         (dispatch [::apps-events/set-form-spec ::spec/module-project])
-        [ui/Container {:fluid true}
-         [uix/PageHeader "folder" (str parent (when (not-empty parent) "/") name) :inline true]
-         ^{:key (:id @module)}
-         [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)
-                         :on-change     #(do
-                                           (dispatch [::apps-events/acl %])
-                                           (dispatch [::main-events/changes-protection? true]))
-                         :read-only     (not @editable?)}]
-         [apps-views-detail/MenuBar]
-         [summary]
-         [modules-view]
-         [apps-views-detail/logo-url-modal]]))))
+        [:<>
+         [apps-views-detail/paste-modal]
+         [ui/Container {:fluid true}
+          [uix/PageHeader "folder" (str parent (when (not-empty parent) "/") name) :inline true]
+          ^{:key (:id @module)}
+          [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)
+                          :on-change     #(do
+                                            (dispatch [::apps-events/acl %])
+                                            (dispatch [::main-events/changes-protection? true]))
+                          :read-only     (not @editable?)}]
+          [apps-views-detail/MenuBar]
+          [summary]
+          [modules-view]
+          [apps-views-detail/logo-url-modal]]]))))

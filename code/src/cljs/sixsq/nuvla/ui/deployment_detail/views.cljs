@@ -66,7 +66,7 @@
   ([url-name url-pattern primary?]
    (let [url (subscribe [::subs/url url-pattern])]
      (when @url
-       [ui/Button {:color    (if primary? "green" "light-grey")
+       [ui/Button {:color    (if primary? "green" "grey")
                    :icon     "external"
                    :content  url-name
                    :href     @url

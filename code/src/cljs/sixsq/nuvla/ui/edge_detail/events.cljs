@@ -61,7 +61,6 @@
 (reg-event-db
   ::set-join-token
   (fn [db [_ token]]
-    (js/console.warn token)
     (assoc db ::spec/join-token token)))
 
 
@@ -126,7 +125,7 @@
     {::cimi-api-fx/search
      [:nuvlabox-status
       {:filter "cluster-node-role='manager'"
-       :select "id, parent, cluster-join-address"
+       :select "id, parent, cluster-id, cluster-join-address"
        :last   100}
       #(dispatch [::get-nuvlabox-manager-by-status (:resources %)])]}))
 

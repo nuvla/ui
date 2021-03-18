@@ -317,18 +317,17 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         join-token    (subscribe [::subs/join-token])
         close-fn      #(reset! show? false)
-        list-managers (r/atom true)
         default-action  "join-worker"
         form-data     (r/atom {:cluster-action default-action})
         actions       [{:key 1 :text "Join as a worker" :value default-action}
                        {:key 2 :text "Join as a manager" :value "join-manager"}
                        {:key 3 :text "Leave" :value "leave"}
                        {:key 4 :text "Force new cluster" :value "force-new-cluster"}]
-        on-change-fn  (fn [k v join-token-scope]
+        on-change-fn  (fn [k join-token-scope v]
                         (if (str/blank? v)
                           (swap! form-data dissoc k)
                           (do
-                            (js/console.warn k)
+                            (swap! form-data dissoc :token)
                             (swap! form-data assoc k v)
                             (when join-token-scope
                               (dispatch [::events/get-join-token (:parent v) join-token-scope])))))
@@ -353,21 +352,29 @@
             {:label       "Action"
              :on-change   (ui-callback/value
                             (fn [value]
-                              (if (str/starts-with? value "join-")
-                                (reset! list-managers true)
-                                (reset! list-managers false))
-                              (on-change-fn :cluster-action value nil)))
+                              (do
+                                (on-change-fn :cluster-action nil value)
+                                (swap! form-data dissoc :nuvlabox-manager-status)
+                                (swap! form-data dissoc :token))))
              :default-value default-action
              :options     actions
              :selection   true}]
-         (when @list-managers
-           [NBManagersDropdown (partial on-change-fn :nuvlabox-manager-id (str/upper-case
-                                                                            (last
-                                                                              (str/split
-                                                                                (:cluster-action @form-data)
-                                                                                #"-"))))])
-         (js/console.warn @join-token)
-         ]]
+         (when (= (:cluster-action @form-data) "join-worker")
+           [NBManagersDropdown (partial on-change-fn :nuvlabox-manager-status "WORKER")])
+
+         (when (= (:cluster-action @form-data) "join-manager")
+           [NBManagersDropdown (partial on-change-fn :nuvlabox-manager-status "MANAGER")])
+
+         (when (and (:token @join-token) (:nuvlabox-manager-status @form-data))
+           (do
+             (swap! form-data assoc :token (:token @join-token))
+             [ui/Message
+              (@tr [:nuvlabox-joining])
+              [:span {:style {:font-weight "bold"}} (:cluster-id (:nuvlabox-manager-status @form-data))]
+              (@tr [:nuvlabox-joining-on-manager-address])
+              [:span {:style {:font-weight "bold"}} (:cluster-join-address (:nuvlabox-manager-status @form-data))]
+              (@tr [:nuvlabox-joining-with-token])
+              [:p {:style {:font-weight "bold"}} (:token @join-token)]]))]]
        [ui/ModalActions
         [uix/Button
          {:text     (@tr [:cancel])

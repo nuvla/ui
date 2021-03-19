@@ -121,10 +121,10 @@
 
 (reg-event-fx
   ::get-nuvlabox-managers
-  (fn [_ [_]]
+  (fn [_ [_ self-id]]
     {::cimi-api-fx/search
      [:nuvlabox-status
-      {:filter "cluster-node-role='manager'"
+      {:filter (str "cluster-node-role='manager' and parent!='" self-id "'")
        :select "id, parent, cluster-id, cluster-join-address"
        :last   100}
       #(dispatch [::get-nuvlabox-manager-by-status (:resources %)])]}))

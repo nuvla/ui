@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+  - Edge page - cluster view
+
 ### Changed
 
 ## [2.16.0] - 2021-03-08

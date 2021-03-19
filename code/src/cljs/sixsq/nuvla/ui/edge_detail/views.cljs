@@ -103,11 +103,11 @@
 
 
 (defn NBManagersDropdown
-  [on-change-fn]
+  [nuvlabox-id on-change-fn]
   (let [tr       (subscribe [::i18n-subs/tr])
         managers (subscribe [::subs/nuvlabox-managers])]
-    (dispatch [::events/get-nuvlabox-managers])
-    (fn [on-change-fn]
+    (dispatch [::events/get-nuvlabox-managers nuvlabox-id])
+    (fn [nuvlabox-id on-change-fn]
       [ui/FormDropdown
        {:label       (@tr [:nuvlabox-available-managers])
         :loading     (nil? @managers)
@@ -152,7 +152,7 @@
         on-error-fn   close-fn
         on-click-fn   #(do
                          (reset! loading? true)
-                         (dispatch [::events/operation id operation @form-data
+                         (dispatch [::events/operation id operation (general-utils/edn->json @form-data)
                                     on-success-fn on-error-fn]))]
     (fn [resource operation show? title icon button-text]
       [ui/Modal
@@ -334,6 +334,10 @@
         on-success-fn close-fn
         on-error-fn   close-fn
         on-click-fn   #(do
+                         (dispatch [::events/set-join-token nil])
+                         (when-not (empty? (:nuvlabox-manager-status @form-data))
+                           (swap! form-data assoc :nuvlabox-manager-status (general-utils/edn->json
+                                                                             (:nuvlabox-manager-status @form-data))))
                          (dispatch [::events/operation id operation @form-data
                                     on-success-fn on-error-fn]))]
     (fn [resource operation show? title icon button-text]
@@ -360,10 +364,10 @@
              :options     actions
              :selection   true}]
          (when (= (:cluster-action @form-data) "join-worker")
-           [NBManagersDropdown (partial on-change-fn :nuvlabox-manager-status "WORKER")])
+           [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-status "WORKER")])
 
          (when (= (:cluster-action @form-data) "join-manager")
-           [NBManagersDropdown (partial on-change-fn :nuvlabox-manager-status "MANAGER")])
+           [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-status "MANAGER")])
 
          (when (and (:token @join-token) (:nuvlabox-manager-status @form-data))
            (do

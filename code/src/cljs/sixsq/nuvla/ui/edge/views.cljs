@@ -36,8 +36,7 @@
   ([clickable?]
    (let [tr          (subscribe [::i18n-subs/tr])
          summary     (subscribe [::subs/nuvlaboxes-summary])
-         summary-all (subscribe [::subs/nuvlaboxes-summary-all])
-         open-popup  (r/atom true)]
+         summary-all (subscribe [::subs/nuvlaboxes-summary-all])]
      (fn [clickable?]
        (let [summary         (if clickable? summary summary-all) ; select all without filter
              terms           (general-utils/aggregate-to-map (get-in @summary [:aggregations :terms:state :buckets]))
@@ -65,24 +64,16 @@
            [main-components/StatisticState unknown [(utils/status->icon utils/status-unknown)]
             utils/status-unknown clickable? "yellow" ::events/set-state-selector ::subs/state-selector]
            (when clickable?
-             [ui/Popup
-              {:trigger  (r/as-element
-                           [ui/Statistic
-                            {:size     "tiny"
-                             :class    "slight-up"
-                             :style    {:cursor "pointer"}
-                             :on-click #(when clickable? (do (reset! show-state-statistics (not @show-state-statistics))
-                                                             (when-not @show-state-statistics
-                                                               (dispatch [::events/set-state-selector nil]))))}
-                            [ui/StatisticValue {:style {:margin "0 10px"}}
-                             [ui/Icon {:name (if @show-state-statistics "angle double up" "angle double down")}]]])
-               :open     @open-popup
-               :position "right center"
-               :offset   [0 20]
-               :style    {:z-index "auto"}                  ;to avoid pop up floating above modals
-               }
-              [ui/PopupContent
-               [:span [ui/Icon {:name "arrow left"}] (@tr [:statistics-select-info])]]])]
+             [ui/Statistic
+              {:size     "tiny"
+               :class    "slight-up"
+               :style    {:cursor "pointer"}
+               :on-click #(when clickable? (do (reset! show-state-statistics (not @show-state-statistics))
+                                               (when-not @show-state-statistics
+                                                 (dispatch [::events/set-state-selector nil]))))}
+              [ui/StatisticValue {:style {:margin "0 10px"}}
+               [ui/Icon {:name (if @show-state-statistics "angle double up" "angle double down")}]]]
+             [main-components/ClickMeStaticPopup])]
           (when clickable?
             [ui/Segment (assoc-in (merge {:style {:margin     "0px auto 20px auto"
                                                   :padding    "1em 1.5em 0 0"

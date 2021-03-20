@@ -126,6 +126,20 @@
       [ui/StatisticLabel label]])))
 
 
+(defn ClickMeStaticPopup
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Popup
+     {:trigger  (r/as-element [:span])
+      :open     true
+      :position "right center"
+      :offset   [0 20]
+      :style    {:z-index "auto"}                           ;to avoid pop up floating above modals
+      }
+     [ui/PopupContent
+      [:span [ui/Icon {:name "arrow left"}] (@tr [:statistics-select-info])]]]))
+
+
 (defn InfoPopup
   [message]
   [ui/Popup {:content message

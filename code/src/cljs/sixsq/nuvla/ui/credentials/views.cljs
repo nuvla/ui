@@ -533,9 +533,7 @@
   ([] [StatisticStates true])
   ([clickable?]
    (let [tr         (subscribe [::i18n-subs/tr])
-         summary    (subscribe [::subs/credentials-summary])
-         open-popup (r/atom true)]
-     ;(time/sleep 5000 #(reset! open-popup false))
+         summary    (subscribe [::subs/credentials-summary])]
      (fn [clickable?]
        (let [terms      (utils-general/aggregate-to-map (get-in @summary [:aggregations :terms:subtype :buckets]))
              coe        (extract-metrics terms coe-subtypes)
@@ -564,18 +562,10 @@
             ::events/set-state-selector ::subs/state-selector]
            [main-components/StatisticState registry ["docker"] "REGISTRY" clickable?
             ::events/set-state-selector ::subs/state-selector]
+           [main-components/StatisticState api-key ["key"] "API KEYS" clickable?
+            ::events/set-state-selector ::subs/state-selector]
            (if clickable?
-             [ui/Popup {:trigger  (r/as-element
-                                    [main-components/StatisticState api-key ["key"] "API KEYS" clickable?
-                                     ::events/set-state-selector ::subs/state-selector])
-                        :open     @open-popup
-                        :position "right center"
-                        :offset   [0 20]}
-              [ui/PopupContent
-               [:span [ui/Icon {:name "arrow left"}] (@tr [:statistics-select-info])]]]
-             [main-components/StatisticState api-key ["key"] "API KEYS" clickable?
-              ::events/set-state-selector ::subs/state-selector])
-           ]])))))
+             [main-components/ClickMeStaticPopup])]])))))
 
 
 (defn credential-modal

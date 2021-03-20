@@ -152,8 +152,7 @@
              error         (:ERROR terms 0)
              queued        (:QUEUED terms 0)
              starting-plus (+ starting created queued)
-             total         (:count @summary)
-             ]
+             total         (:count @summary)]
          [:div {:style {:margin     "10px auto 10px auto"
                         :text-align "center"
                         :width      "100%"}}
@@ -171,19 +170,10 @@
            [main-components/StatisticState stopped [(utils/status->icon utils/status-stopped)] utils/status-stopped
             clickable? "yellow"
             ::events/set-state-selector ::subs/state-selector]
+           [main-components/StatisticState error [(utils/status->icon utils/status-error)] utils/status-error
+            clickable? "red" ::events/set-state-selector ::subs/state-selector]
            (if clickable?
-             [ui/Popup {:trigger  (r/as-element
-                                    [main-components/StatisticState error [(utils/status->icon utils/status-error)]
-                                     utils/status-error clickable? "red"
-                                     ::events/set-state-selector ::subs/state-selector])
-                        :open     @open-popup
-                        :position "right center"
-                        :offset   [0 20]}
-              [ui/PopupContent
-               [:span [ui/Icon {:name "arrow left"}] (@tr [:statistics-select-info])]]]
-             [main-components/StatisticState error [(utils/status->icon utils/status-error)] utils/status-error
-              clickable? "red" ::events/set-state-selector ::subs/state-selector])
-           ]])))))
+             [main-components/ClickMeStaticPopup])]])))))
 
 
 (defn deployments-main-content

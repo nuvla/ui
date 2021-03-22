@@ -4,6 +4,11 @@
 
 ### Changed
 
+  - Sidebar - Improve order of pages
+  - Deployment - Summary all for deployments
+  - Edge page - Improved statistics usage for NuvlaBoxes
+  - Dashboard - Deployments and NuvlaBox summary
+
 ## [2.16.0] - 2021-03-08
 
 ### Changed

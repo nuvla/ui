@@ -2,13 +2,14 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.apps-store.subs :as apps-store-subs]
     [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
+    [sixsq.nuvla.ui.apps-store.subs :as apps-store-subs]
     [sixsq.nuvla.ui.credentials.events :as credentials-events]
     [sixsq.nuvla.ui.credentials.subs :as credentials-subs]
     [sixsq.nuvla.ui.credentials.views :as credentials-views]
     [sixsq.nuvla.ui.dashboard.events :as events]
     [sixsq.nuvla.ui.dashboard.subs :as subs]
+    [sixsq.nuvla.ui.dashboard.utils :as utils]
     [sixsq.nuvla.ui.deployment.events :as deployment-events]
     [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
     [sixsq.nuvla.ui.deployment.views :as deployment-views]
@@ -22,8 +23,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as utils-style]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.dashboard.utils :as utils]))
+    [taoensso.timbre :as log]))
 
 
 (defn refresh

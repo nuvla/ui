@@ -71,12 +71,12 @@
         running    (sum-running-replicas @parameters)
         desired    (sum-desired-replicas @parameters)]
     (when (and (= state "STARTED") running desired (not= running desired))
-      [ui/Progress {:label      "deployment: started"
-                    :total      desired
-                    :value      running
-                    :progress   "ratio"
-                    :size       "small"
-                    :class      ["green"]}])))
+      [ui/Progress {:label    "deployment: started"
+                    :total    desired
+                    :value    running
+                    :progress "ratio"
+                    :size     "small"
+                    :class    ["green"]}])))
 
 
 (defn ProgressBars
@@ -117,7 +117,7 @@
                                (.preventDefault event))
                    :target   "_blank"
                    :rel      "noreferrer"
-                   :style {:margin 2}}]))))
+                   :style    {:margin 2}}]))))
 
 
 (defn urls-section
@@ -165,7 +165,7 @@
                         [:<>
                          [ProgressBars]
                          [ui/TabPane
-                              [views-versions/versions-table @module-versions @module-content-id]]]))}))
+                          [views-versions/versions-table @module-versions @module-content-id]]]))}))
 
 
 (defn item-to-row
@@ -789,7 +789,8 @@
         credential-id (:parent @deployment)
         {module-content :content} module
         cred-info     (get @creds-name credential-id credential-id)
-        urls          (:urls module-content)]
+        urls          (:urls module-content)
+        nuvlabox      (:nuvlabox @deployment)]
 
     [ui/SegmentGroup {:style  {:display    "flex", :justify-content "space-between",
                                :background "#f3f4f5"}
@@ -845,6 +846,11 @@
          [ui/TableCell
           (when-not (str/blank? cred-info)
             [:div [ui/Icon {:name "key"}] cred-info])]]
+        (when nuvlabox
+          [ui/TableRow
+           [ui/TableCell "NuvlaBox"]
+           [ui/TableCell
+            [:div [ui/Icon {:name "box"}] [values/as-link (subs nuvlabox 9) :page "edge"]]]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
          [ui/TableCell @version " " (up-to-date? @version @versions)]]]]]
@@ -898,7 +904,7 @@
   []
   (let [deployment (subscribe [::subs/deployment])
         read-only? (subscribe [::subs/is-read-only?])
-        state       (:state @deployment)]
+        state      (:state @deployment)]
     [(overview)
      (urls-section)
      (module-version-section)

@@ -250,7 +250,7 @@
   (fn [_ [_ {:keys [id] :as deployment}]]
     {::cimi-api-fx/operation [id "check-dct" #(dispatch [::check-dct-later (:location %)])]}))
 
-
+; What's the difference with the same event in deployment
 (reg-event-fx
   ::get-deployment
   (fn [{:keys [db]} [_ id]]

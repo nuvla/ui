@@ -66,7 +66,7 @@
   ([url-name url-pattern primary?]
    (let [url (subscribe [::subs/url url-pattern])]
      (when @url
-       [ui/Button {:color    (if primary? "green" "grey")
+       [ui/Button {:color    (if primary? "green" nil)
                    :icon     "external"
                    :content  url-name
                    :href     @url
@@ -75,7 +75,8 @@
                                (.stopPropagation event)
                                (.preventDefault event))
                    :target   "_blank"
-                   :rel      "noreferrer"}]))))
+                   :rel      "noreferrer"
+                   :style {:margin 2}}]))))
 
 
 (defn urls-section
@@ -706,8 +707,7 @@
                             :overflow      "hidden"
                             :text-overflow "ellipsis"
                             :white-space   "nowrap"}}
-          [ui/Icon {:name "tag"}] tag
-          ])]]
+          [ui/Icon {:name "tag"}] tag])]]
 
      (when (and started? @primary-url)
        [ui/Button {:color    "green"
@@ -750,7 +750,7 @@
                              :padding    "20px"
                              :object-fit "contain"}}]]
 
-      [:h4 {:style {:margin-top 0}} "Summary"]
+      [:h4 {:style {:margin-top 0}} (@tr [:summary])]
 
       [ui/Table {:basic "very" :style {:display "inline", :floated "left"}}
        [ui/TableBody
@@ -766,7 +766,8 @@
                [ui/Label {:style {:max-width     "15ch"
                                   :overflow      "hidden"
                                   :text-overflow "ellipsis"
-                                  :white-space   "nowrap"}}
+                                  :white-space   "nowrap"
+                                  :margin        "20px"}}
                 [ui/Icon {:name "tag"}] tag
                 ])]]])
         [ui/TableRow
@@ -824,8 +825,7 @@
         running    (sum-running-replicas @parameters)
         desired    (sum-desired-replicas @parameters)]
     (when (and running desired (not= running desired))
-      [ui/Progress {:indicating true
-                    :label      "deployment: started"
+      [ui/Progress {:label      "deployment: started"
                     :total      desired
                     :value      running
                     :progress   "ratio"

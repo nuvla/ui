@@ -26,7 +26,8 @@
   [label-kw url icon protected?]
   (let [tr       (subscribe [::i18n-subs/tr])
         is-user? (subscribe [::session-subs/is-user?])
-        active?  (subscribe [::subs/nav-url-active? url])]
+        active?  (subscribe [::subs/nav-url-active? url])
+        auth-needed? (and protected? (not @is-user?))]
 
     ^{:key (name label-kw)}
     [uix/MenuItem
@@ -35,9 +36,12 @@
       :style    {:min-width  sidebar-width
                  :overflow-x "hidden"}
       :active   @active?
-      :on-click (if (and protected? (not @is-user?))
-                  #(dispatch [::history-events/navigate "sign-in"])
-                  #(navigate url))}]))
+      :href     (if auth-needed? "sign-in" url)
+      :on-click (fn [event]
+                  (if auth-needed?
+                    (dispatch [::history-events/navigate "sign-in"])
+                    (navigate url))
+                  (.preventDefault event))}]))
 
 
 (defn logo-item

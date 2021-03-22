@@ -9,8 +9,8 @@
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.job.events :as job-events]
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-db
@@ -88,7 +88,7 @@
                                         (dispatch [::set-nuvlabox-status %])
                                         (dispatch [::set-nuvlabox-vulns (:vulnerabilities %)])
                                         (dispatch [::get-matching-vulns-from-db (map :vulnerability-id
-                                                                                  (:items (:vulnerabilities %)))]))
+                                                                                     (:items (:vulnerabilities %)))]))
                         :on-error #(do
                                      (dispatch [::set-nuvlabox-status nil])
                                      (dispatch [::set-nuvlabox-vulns nil]))]}))
@@ -131,8 +131,8 @@
       {::cimi-api-fx/search
        [:vulnerability
         {:filter (->> vuln-ids
-                   (map #(str "name='" % "'"))
-                   (apply general-utils/join-or))
+                      (map #(str "name='" % "'"))
+                      (apply general-utils/join-or))
          :last   110}
         #(dispatch [::set-matching-vulns-from-db (:resources %)])]})))
 
@@ -239,45 +239,38 @@
 
 
 (reg-event-fx
-  ::check-custom-job-state
-  (fn [_ [_ periph-id operation {:keys [id return-code progress status-message] :as job}]]
-    (let [job-completed? (= progress 100)]
-      (if job-completed?
-        {:dispatch [::messages-events/add
-                    {:header  (str (str/capitalize operation) " on " periph-id
-                                   (if (= return-code 0) " completed." " failed!"))
-                     :content status-message
-                     :type    (if (= return-code 0) :success :error)}]}
-        {:dispatch-later [{:ms 5000 :dispatch [::check-custom-action-job
-                                               periph-id operation id]}]}))))
-
-
-(reg-event-fx
-  ::check-custom-action-job
-  (fn [_ [_ periph-id operation job-id]]
-    {::cimi-api-fx/get [job-id #(dispatch [::check-custom-job-state periph-id operation %])]}))
-
-
-(reg-event-fx
   ::custom-action
   (fn [_ [_ resource-id operation success-msg]]
-    {::cimi-api-fx/operation [resource-id operation
-                              #(if (instance? js/Error %)
-                                 (let [{:keys [status message]} (response/parse-ex-info %)]
-                                   (dispatch [::messages-events/add
-                                              {:header  (cond-> (str "error on operation " operation " for " resource-id)
-                                                                status (str " (" status ")"))
-                                               :content message
-                                               :type    :error}]))
+    {::cimi-api-fx/operation
+     [resource-id operation
+      #(if (instance? js/Error %)
+         (let [{:keys [status message]} (response/parse-ex-info %)]
+           (dispatch [::messages-events/add
+                      {:header  (cond-> (str "error on operation " operation " for " resource-id)
+                                        status (str " (" status ")"))
+                       :content message
+                       :type    :error}]))
 
-                                 (when success-msg
-                                   (dispatch [::messages-events/add
-                                              {:header  success-msg
-                                               :content success-msg
-                                               :type    :success}])
-                                   (dispatch [::check-custom-action-job
-                                              resource-id operation (:location %)])
-                                   ))]}))
+         (when success-msg
+           (dispatch [::messages-events/add
+                      {:header  success-msg
+                       :content success-msg
+                       :type    :success}])
+           (dispatch
+             [::job-events/wait-job-to-complete
+              {:job-id              (:location %)
+               :on-complete         (fn [{:keys [status-message return-code]}]
+                                      (dispatch [::messages-events/add
+                                                 {:header  (str (str/capitalize operation)
+                                                                " on " resource-id
+                                                                (if (= return-code 0)
+                                                                  " completed."
+                                                                  " failed!"))
+                                                  :content status-message
+                                                  :type    (if (= return-code 0)
+                                                             :success
+                                                             :error)}]))
+               :refresh-interval-ms 5000}])))]}))
 
 
 (reg-event-db

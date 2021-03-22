@@ -62,6 +62,9 @@
   [resource-type response]
   (default-error-message response (str "error bulk delete on " resource-type)))
 
+(defn default-operation-bulk-on-error
+  [resource-type response]
+  (default-error-message response (str "error bulk operation on " resource-type)))
 
 (defn api-call-error-check
   [api-call on-success on-error]
@@ -167,3 +170,11 @@
   (fn [[callback]]
     (go
       (callback (<! (get-current-session))))))
+
+(reg-fx
+  ::operation-bulk
+  (fn [[resource-type on-success operation filter data & {:keys [on-error]}]]
+    (when resource-type
+      (let [api-call #(api/operation-bulk @CLIENT resource-type operation filter data)
+            on-error (or on-error (partial default-operation-bulk-on-error resource-type))]
+        (api-call-error-check api-call on-success on-error)))))

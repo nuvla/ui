@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-module-version
   (:require
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
     [sixsq.nuvla.ui.deployment-dialog.utils :as utils]

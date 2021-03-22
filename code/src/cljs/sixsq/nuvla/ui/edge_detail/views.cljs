@@ -858,24 +858,26 @@
       (let [{:keys [id tags ssh-keys]} @nuvlabox]
         (when (not= (count ssh-keys) (count @ssh-creds))
           (dispatch [::events/get-nuvlabox-associated-ssh-keys ssh-keys]))
-        [ui/TabPane
-         [ui/Grid {:columns   2,
-                   :stackable true
-                   :padded    true}
-          [ui/GridRow
-           [ui/GridColumn {:stretched true}
-            [TabOverviewNuvlaBox @nuvlabox @nb-status locale edit old-nb-name close-fn]]
+        [:<>
+         [job-views/ProgressJobAction]
+         [ui/TabPane
+          [ui/Grid {:columns   2,
+                    :stackable true
+                    :padded    true}
+           [ui/GridRow
+            [ui/GridColumn {:stretched true}
+             [TabOverviewNuvlaBox @nuvlabox @nb-status locale edit old-nb-name close-fn]]
 
-           [ui/GridColumn {:stretched true}
-            [TabOverviewHost @nb-status ssh-creds tr]]]
+            [ui/GridColumn {:stretched true}
+             [TabOverviewHost @nb-status ssh-creds tr]]]
 
-          [ui/GridRow
-           [ui/GridColumn
-            [TabOverviewStatus @nb-status id @online-status tr]]
+           [ui/GridRow
+            [ui/GridColumn
+             [TabOverviewStatus @nb-status id @online-status tr]]
 
-           (when (> (count tags) 0)
-             [ui/GridColumn
-              [TabOverviewTags @nuvlabox]])]]]))))
+            (when (> (count tags) 0)
+              [ui/GridColumn
+               [TabOverviewTags @nuvlabox]])]]]]))))
 
 
 (defn TabLocationMap

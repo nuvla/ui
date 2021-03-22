@@ -72,3 +72,18 @@
                 :icon    "clipboard list"}
      :render   (fn [] (r/as-element [JobsTable @jobs]))}))
 
+
+(defn ProgressJobAction
+  []
+  (let [jobs     (subscribe [::subs/jobs])
+        last-job (first (:resources @jobs))
+        {:keys [action progress state]} last-job
+        message  (str/replace (str/lower-case (str action ": " state)) #"_" " ")]
+    (when (and last-job (< progress 100))
+      [ui/Progress {:active   true
+                    :label    message
+                    :percent  progress
+                    :progress true
+                    :size     "small"
+                    :error    (= "FAILED" state)
+                    :class    ["green"]}])))

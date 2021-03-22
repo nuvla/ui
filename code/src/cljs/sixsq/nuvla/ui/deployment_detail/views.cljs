@@ -799,18 +799,55 @@
         ^{:key url-name}
         [url-to-button url-name url-pattern (= i 0)])]]))
 
+
+(defn sum-replicas
+  [parameters ends-with]
+  (->> (vals parameters)
+       (filter #(str/ends-with? (:name %) ends-with))
+       (map #(js/parseInt (:value %)))
+       (reduce +)))
+
+
+(defn sum-running-replicas
+  [parameters]
+  (sum-replicas parameters "replicas.running"))
+
+
+(defn sum-desired-replicas
+  [parameters]
+  (sum-replicas parameters "replicas.desired"))
+
+
+(defn ProgressJobDeployment
+  []
+  (let [parameters (subscribe [::subs/deployment-parameters])
+        running    (sum-running-replicas @parameters)
+        desired    (sum-desired-replicas @parameters)]
+    (when (and running desired (not= running desired))
+      [ui/Progress {:indicating true
+                    :label      "deployment: started"
+                    :total      desired
+                    :value      running
+                    :progress   "ratio"
+                    :size       "small"
+                    :class      ["green"]}])))
+
+
 (defn overview-pane
   []
   (let []
-    [ui/TabPane
-     [ui/Grid {:columns   2,
-               :stackable true
-               :padded    true}
-      [ui/GridRow
-       [ui/GridColumn {:stretched true}
-        [TabOverviewSummary]]
-       [ui/GridColumn {:stretched true}
-        [TabOverviewModule]]]]]))
+    [:<>
+     [job-views/ProgressJobAction]
+     [ProgressJobDeployment]
+     [ui/TabPane
+      [ui/Grid {:columns   2,
+                :stackable true
+                :padded    true}
+       [ui/GridRow
+        [ui/GridColumn {:stretched true}
+         [TabOverviewSummary]]
+        [ui/GridColumn {:stretched true}
+         [TabOverviewModule]]]]]]))
 
 
 (defn overview

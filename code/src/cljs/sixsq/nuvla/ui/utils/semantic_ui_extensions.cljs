@@ -87,7 +87,8 @@
    interfere with React DOM attributes."
   [options]
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Grid {:vertical-align "middle"}
+    [ui/Grid {:vertical-align "middle"
+              :style {:margin-top "20px"}}
      (when (:totalitems options)
        [ui/GridColumn {:floated "left", :width 3}
         [ui/Label {:size :medium}

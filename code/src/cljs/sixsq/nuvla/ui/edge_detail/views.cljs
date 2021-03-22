@@ -6,9 +6,9 @@
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
     [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.dashboard.events :as dashboard-events]
-    [sixsq.nuvla.ui.dashboard.subs :as dashboard-subs]
-    [sixsq.nuvla.ui.dashboard.views :as dashboard-views]
+    [sixsq.nuvla.ui.deployment.events :as deployment-events]
+    [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
+    [sixsq.nuvla.ui.deployment.views :as deployment-views]
     [sixsq.nuvla.ui.edge-detail.events :as events]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]
     [sixsq.nuvla.ui.edge.events :as edge-events]
@@ -504,14 +504,10 @@
 
 
 
-(defn StatusIcon
-  [status & {:keys [corner] :or {corner "bottom center"} :as position}]
-  [ui/Popup
-   {:position corner
-    :content  status
-    :trigger  (r/as-element
-                [ui/Icon {:name  "power"
-                          :color (utils/status->color status)}])}])
+(defn OnlineStatusIcon
+  [online & {:keys [corner] :or {corner "bottom center"} :as position}]
+  [ui/Icon {:name  "power"
+            :color (utils/status->color online)}])
 
 
 (defn Heartbeat
@@ -1003,11 +999,12 @@
 
 (defn TabDeployments
   [uuid]
-  (let [elements          (subscribe [::dashboard-subs/deployments])
-        elements-per-page (subscribe [::dashboard-subs/elements-per-page])
-        page              (subscribe [::dashboard-subs/page])
-        loading?          (subscribe [::dashboard-subs/loading?])]
-    (dashboard-views/refresh :init? true :nuvlabox (str "nuvlabox/" uuid))
+  (let [elements          (subscribe [::deployment-subs/deployments])
+        elements-per-page (subscribe [::deployment-subs/elements-per-page])
+        page              (subscribe [::deployment-subs/page])
+        loading?          (subscribe [::deployment-subs/loading?])]
+    (dispatch [::deployment-events/set-nuvlabox (str "nuvlabox/" uuid)])
+    (deployment-views/refresh :init? true)
     (fn [uuid]
       (let [total-elements (:count @elements)
             total-pages    (general-utils/total-pages total-elements @elements-per-page)
@@ -1016,14 +1013,14 @@
          (if @loading?
            [ui/Loader {:active true
                        :inline "centered"}]
-           [dashboard-views/vertical-data-table deployments])
+           [deployment-views/vertical-data-table deployments])
 
          (when (pos? (:count @elements))
            [uix/Pagination {:totalPages   total-pages
                             :activePage   @page
                             :onPageChange (ui-callback/callback
                                             :activePage
-                                            #(dispatch [::dashboard-events/set-page %]))}])]))))
+                                            #(dispatch [::deployment-events/set-page %]))}])]))))
 
 
 ; there's a similar function in edge.views which can maybe be generalized
@@ -1275,15 +1272,12 @@
 (defn PageHeader
   []
   (let [tr       (subscribe [::i18n-subs/tr])
-        nuvlabox (subscribe [::subs/nuvlabox])
-        status   (subscribe [::subs/nuvlabox-online-status])]
+        nuvlabox (subscribe [::subs/nuvlabox])]
     (fn []
-      (let [id    (:id @nuvlabox)
-            name  (:name @nuvlabox)
-            state (:state @nuvlabox)]
+      (let [{:keys [id name state online]} @nuvlabox]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
-          [StatusIcon @status :corner "left center"]
+          [OnlineStatusIcon online :corner "left center"]
           (or name id)]
          [:p {:style {:margin "0.5em 0 1em 0"}}
           [:span {:style {:font-weight "bold"}}
@@ -1298,24 +1292,6 @@
           state]]))))
 
 
-(def errors-dissmissed (r/atom #{}))
-
-(defn Error
-  []
-  (let [jobs (subscribe [::job-subs/jobs])]
-    (fn []
-      (let [{:keys [id action state status-message] :as last-job} (some-> @jobs :resources first)]
-        (when (and (not (@errors-dissmissed id))
-                   (= state "FAILED"))
-          [ui/Message {:error      true
-                       :on-dismiss #(swap! errors-dissmissed conj id)}
-           [ui/MessageHeader
-            {:style    {:cursor "pointer"}
-             :on-click #(dispatch [::events/set-active-tab-index 7])}
-            (str "Job " action " failed")]
-           [ui/MessageContent (last (str/split-lines (or status-message "")))]])))))
-
-
 (defn EdgeDetails
   [uuid]
   (refresh uuid)
@@ -1324,5 +1300,5 @@
     [ui/Container {:fluid true}
      [PageHeader]
      [MenuBar uuid]
-     [Error]
+     [main-components/ErrorJobsMessage ::subs/nuvlabox ::job-subs/jobs ::events/set-active-tab-index 7]
      [TabsNuvlaBox uuid]]))

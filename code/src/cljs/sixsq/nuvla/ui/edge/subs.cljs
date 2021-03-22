@@ -30,6 +30,18 @@
 
 
 (reg-sub
+  ::nuvlaboxes-summary
+  (fn [db]
+    (::spec/nuvlaboxes-summary db)))
+
+
+(reg-sub
+  ::nuvlaboxes-summary-all
+  (fn [db]
+    (::spec/nuvlaboxes-summary-all db)))
+
+
+(reg-sub
   ::state-selector
   (fn [db]
     (::spec/state-selector db)))
@@ -51,22 +63,6 @@
   ::state-nuvlaboxes
   (fn [db]
     (::spec/state-nuvlaboxes db)))
-
-
-(reg-sub
-  ::nuvlaboxes-online-status
-  (fn [db]
-    (::spec/nuvlaboxes-online-status db)))
-
-
-(reg-sub
-  ::nuvlabox-online-status
-  :<- [::nuvlaboxes-online-status]
-  (fn [resources [_ nuvlabox-id]]
-    (let [online (-> resources
-                     (get nuvlabox-id {})
-                     :online)]
-      (utils/status->keyword online))))
 
 
 (reg-sub

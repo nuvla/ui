@@ -52,6 +52,12 @@
 
 
 (reg-sub
+  ::credentials-summary
+  (fn [db]
+    (::spec/credentials-summary db)))
+
+
+(reg-sub
   ::credential-password
   (fn [db]
     (::spec/credential-password db)))
@@ -145,3 +151,9 @@
   ::active-tab-index
   (fn [db]
     (get-in db [::spec/active-tab-index])))
+
+
+(reg-sub
+  ::state-selector
+  (fn [db]
+    (::spec/state-selector db)))

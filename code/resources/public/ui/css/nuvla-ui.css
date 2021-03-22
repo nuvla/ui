@@ -179,3 +179,7 @@ tr.active td {
 .hide {
   display: none !important;
 }
+
+.slight-up:hover {
+  transform: translateX(0px) translateY(-3px);
+}

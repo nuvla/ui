@@ -9,16 +9,21 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
+(def refresh-summary-id :nuvlabox-get-nuvlaboxes-summary)
 
 (reg-event-fx
   ::refresh
   (fn [_ _]
-    {:dispatch [::main-events/action-interval-start {:id        refresh-id
-                                                     :frequency 10000
-                                                     :event     [::get-nuvlaboxes]}]}))
+    {:fx [[:dispatch [::main-events/action-interval-start {:id        refresh-id
+                                                           :frequency 10000
+                                                           :event     [::get-nuvlaboxes]}]]
+          [:dispatch [::main-events/action-interval-start {:id        refresh-summary-id
+                                                           :frequency 10000
+                                                           :event     [::get-nuvlaboxes-summary]}]]]}))
 
 
 (reg-event-fx
@@ -46,8 +51,7 @@
      ::cimi-api-fx/search  [:nuvlabox
                             (utils/get-query-params full-text-search page elements-per-page
                                                     state-selector)
-                            #(dispatch [::set-nuvlaboxes %])]
-     ::fx/state-nuvlaboxes [#(dispatch [::set-state-nuvlaboxes %])]}))
+                            #(dispatch [::set-nuvlaboxes %])]}))
 
 
 (reg-event-fx
@@ -63,45 +67,45 @@
       (cond->
         {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
                        ::spec/loading? false)}
-        (not-empty resources) (assoc ::cimi-api-fx/search
-                                     [:nuvlabox-status
-                                      {:filter (->> resources
-                                                    (map :nuvlabox-status)
-                                                    (remove nil?)
-                                                    (map #(str "id='" % "'"))
-                                                    (apply general-utils/join-or))
-                                       :select "id, parent, online"
-                                       :last   10000}
-                                      #(dispatch [::set-nuvlaboxes-online-status
-                                                  (:resources %)])])))))
+        ))))
 
 
-(reg-event-db
-  ::set-state-nuvlaboxes
-  (fn [db [_ state-nuvlaboxes]]
-    (assoc db ::spec/state-nuvlaboxes state-nuvlaboxes)))
+(reg-event-fx
+  ::set-nuvlaboxes-summary
+  (fn [{db :db} [_ nuvlaboxes-summary]]
+    {:db (assoc db ::spec/nuvlaboxes-summary nuvlaboxes-summary)}))
 
 
-(reg-event-db
-  ::set-status-nuvlaboxes
-  (fn [db [_ status-nuvlaboxes]]
-    (assoc db ::spec/status-nuvlaboxes status-nuvlaboxes)))
+(reg-event-fx
+  ::get-nuvlaboxes-summary
+  (fn [{{:keys [::spec/full-text-search] :as db} :db} _]
+    {:db                   (assoc db ::spec/loading? true)
+     ::cimi-api-fx/search  [:nuvlabox
+                            (utils/get-query-aggregation-params full-text-search "terms:online,terms:state")
+                            #(dispatch [::set-nuvlaboxes-summary %])]}))
 
 
-(reg-event-db
-  ::set-nuvlaboxes-online-status
-  (fn [db [_ resources]]
-    (assoc db ::spec/nuvlaboxes-online-status (->> resources
-                                                   (map (juxt :parent  identity))
-                                                   (into {})))))
+(reg-event-fx
+  ::set-nuvlaboxes-summary-all
+  (fn [{db :db} [_ nuvlaboxes-summary]]
+    {:db (assoc db ::spec/nuvlaboxes-summary-all nuvlaboxes-summary)}))
+
+
+(reg-event-fx
+  ::get-nuvlaboxes-summary-all
+  (fn [{db :db} _]
+    {:db                   (assoc db ::spec/loading? true)
+     ::cimi-api-fx/search  [:nuvlabox
+                            (utils/get-query-aggregation-params nil "terms:online,terms:state")
+                            #(dispatch [::set-nuvlaboxes-summary-all %])]}))
 
 
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
-    (dispatch [::get-nuvlaboxes])
     {:db (assoc db ::spec/state-selector state-selector
-                   ::spec/page 1)}))
+                   ::spec/page 1)
+     :dispatch [::get-nuvlaboxes]}))
 
 
 (reg-event-db

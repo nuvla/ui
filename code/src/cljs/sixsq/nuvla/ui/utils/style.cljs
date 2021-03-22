@@ -36,10 +36,15 @@
 
 
 (def center-block
-  {:style {:margin     "25px auto"
+  {:style {:margin     "10px auto 10px auto"
            :display    "block"
            :text-align "center"
            :width      "100%"}})
+
+
+(def center-items
+  {:style {:max-width "1200px"
+           :margin    "auto"}})
 
 
 ;;

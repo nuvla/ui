@@ -298,6 +298,18 @@
           "'"))))
 
 
+(defn owner-like-query-string
+  [owner]
+  (when-not (str/blank? owner)
+    (str "acl/owners=='" owner "'")))
+
+
+(defn by-tag-query-string
+  [tag]
+  (when-not (str/blank? tag)
+    (str "tags=='" tag "'")))
+
+
 ;; Math
 
 (defn round-up
@@ -321,3 +333,9 @@
 (defn format
   [fmt v]
   (gstring/format fmt v))
+
+
+(defn aggregate-to-map
+  "convert the aggregate structure returned by Nuvla into a terms/value map"
+  [aggregate]
+  (into {} (for [a aggregate] {(keyword (str (:key a))) (:doc_count a)})))

@@ -74,7 +74,7 @@
      [ui/CardContent
       [ui/CardHeader {:style {:word-wrap "break-word"}}
        [:div {:style {:float "right"}}
-        [edge-detail/StatusIcon status :corner "top right"]]
+        [edge-detail/OnlineStatusIcon status :corner "top right"]]
        (if (str/starts-with? icon-or-image "/")
          [ui/Image {:src   icon-or-image
                     :style {:overflow       "hidden"

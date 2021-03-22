@@ -46,6 +46,47 @@
               :event     [::events/get-deployment resource-id]}]))
 
 
+(defn sum-replicas
+  [parameters ends-with]
+  (->> (vals parameters)
+       (filter #(str/ends-with? (:name %) ends-with))
+       (map #(js/parseInt (:value %)))
+       (reduce +)))
+
+
+(defn sum-running-replicas
+  [parameters]
+  (sum-replicas parameters "replicas.running"))
+
+
+(defn sum-desired-replicas
+  [parameters]
+  (sum-replicas parameters "replicas.desired"))
+
+
+(defn ProgressDeployment
+  []
+  (let [{:keys [state]} @(subscribe [::subs/deployment])
+        parameters (subscribe [::subs/deployment-parameters])
+        running    (sum-running-replicas @parameters)
+        desired    (sum-desired-replicas @parameters)]
+    (when (and (= state "STARTED") running desired (not= running desired))
+      [ui/Progress {:label      "deployment: started"
+                    :total      desired
+                    :value      running
+                    :progress   "ratio"
+                    :size       "small"
+                    :class      ["green"]}])))
+
+
+(defn ProgressBars
+  []
+  (let [{:keys [state]} @(subscribe [::subs/deployment])]
+    [:<>
+     [job-views/ProgressJobAction state]
+     [ProgressDeployment]]))
+
+
 (defn url-to-row
   [url-name url-pattern]
   (let [tr  (subscribe [::i18n-subs/tr])
@@ -95,19 +136,21 @@
                 :icon    "linkify"}
      :render   (fn []
                  (r/as-element
-                   (if (empty? urls)
-                     [uix/WarningMsgNoElements (@tr [:no-urls])]
-                     [ui/TabPane
-                      [ui/Table {:basic   "very"
-                                 :columns 2}
-                       [ui/TableHeader
-                        [ui/TableRow
-                         [ui/TableHeaderCell [:span (@tr [:name])]]
-                         [ui/TableHeaderCell [:span (@tr [:url])]]]]
-                       [ui/TableBody
-                        (for [[url-name url-pattern] urls]
-                          ^{:key url-name}
-                          [url-to-row url-name url-pattern])]]])))}))
+                   [:<>
+                    [ProgressBars]
+                    (if (empty? urls)
+                      [uix/WarningMsgNoElements (@tr [:no-urls])]
+                      [ui/TabPane
+                       [ui/Table {:basic   "very"
+                                  :columns 2}
+                        [ui/TableHeader
+                         [ui/TableRow
+                          [ui/TableHeaderCell [:span (@tr [:name])]]
+                          [ui/TableHeaderCell [:span (@tr [:url])]]]]
+                        [ui/TableBody
+                         (for [[url-name url-pattern] urls]
+                           ^{:key url-name}
+                           [url-to-row url-name url-pattern])]]])]))}))
 
 
 (defn module-version-section
@@ -118,8 +161,11 @@
     {:menuItem {:content (r/as-element [:span (@tr [:module-version])])
                 :key     "versions"
                 :icon    "linkify"}
-     :render   (fn [] (r/as-element [ui/TabPane
-                                     [views-versions/versions-table @module-versions @module-content-id]]))}))
+     :render   (fn [] (r/as-element
+                        [:<>
+                         [ProgressBars]
+                         [ui/TabPane
+                              [views-versions/versions-table @module-versions @module-content-id]]]))}))
 
 
 (defn item-to-row
@@ -157,6 +203,7 @@
      :render   (fn []
                  (r/as-element
                    [:<>
+                    [ProgressBars]
                     (if (empty? items)
                       [uix/WarningMsgNoElements]
                       [ui/TabPane
@@ -242,7 +289,10 @@
                                                                  event-count])])
                 :key     "events"
                 :icon    "bolt"}
-     :render   (fn [] (r/as-element [events-table events-info]))}))
+     :render   (fn [] (r/as-element
+                        [:<>
+                         [ProgressBars]
+                         [events-table events-info]]))}))
 
 
 (defn job-map-to-row
@@ -273,33 +323,35 @@
                   :icon    "eur"}
        :render   (fn []
                    (r/as-element
-                     [ui/Segment
-                      [ui/Table {:collapsing true
-                                 :basic      "very"
-                                 :padded     false}
-                       [ui/TableBody
-                        [ui/TableRow
-                         [ui/TableCell
-                          [:b (str/capitalize (@tr [:details])) ": "]]
-                         [ui/TableCell
-                          description]]
-                        [ui/TableRow
-                         [ui/TableCell
-                          [:b (str/capitalize (@tr [:period])) ": "]]
-                         [ui/TableCell
-                          (some-> period :start (time/time->format "LL" @locale))
-                          " - "
-                          (some-> period :end (time/time->format "LL" @locale))]]
-                        [ui/TableRow
-                         [ui/TableCell
-                          [:b (str/capitalize (@tr [:coupon])) ": "]]
-                         [ui/TableCell
-                          (or (:name coupon) "-")]]
-                        [ui/TableRow
-                         [ui/TableCell
-                          [:b (str/capitalize (@tr [:total])) ": "]]
-                         [ui/TableCell
-                          (or total "-") " " currency]]]]]))})))
+                     [:<>
+                      [ProgressBars]
+                      [ui/Segment
+                       [ui/Table {:collapsing true
+                                  :basic      "very"
+                                  :padded     false}
+                        [ui/TableBody
+                         [ui/TableRow
+                          [ui/TableCell
+                           [:b (str/capitalize (@tr [:details])) ": "]]
+                          [ui/TableCell
+                           description]]
+                         [ui/TableRow
+                          [ui/TableCell
+                           [:b (str/capitalize (@tr [:period])) ": "]]
+                          [ui/TableCell
+                           (some-> period :start (time/time->format "LL" @locale))
+                           " - "
+                           (some-> period :end (time/time->format "LL" @locale))]]
+                         [ui/TableRow
+                          [ui/TableCell
+                           [:b (str/capitalize (@tr [:coupon])) ": "]]
+                          [ui/TableCell
+                           (or (:name coupon) "-")]]
+                         [ui/TableRow
+                          [ui/TableCell
+                           [:b (str/capitalize (@tr [:total])) ": "]]
+                          [ui/TableCell
+                           (or total "-") " " currency]]]]]]))})))
 
 
 (defn log-controller
@@ -415,7 +467,10 @@
     {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:logs]))])
                 :key     "logs"
                 :icon    "file code"}
-     :render   (fn [] (r/as-element [logs-viewer-wrapper]))}))
+     :render   (fn [] (r/as-element
+                        [:<>
+                         [ProgressBars]
+                         [logs-viewer-wrapper]]))}))
 
 
 
@@ -766,8 +821,7 @@
                [ui/Label {:style {:max-width     "15ch"
                                   :overflow      "hidden"
                                   :text-overflow "ellipsis"
-                                  :white-space   "nowrap"
-                                  :margin        "20px"}}
+                                  :white-space   "nowrap"}}
                 [ui/Icon {:name "tag"}] tag
                 ])]]])
         [ui/TableRow
@@ -801,44 +855,11 @@
         [url-to-button url-name url-pattern (= i 0)])]]))
 
 
-(defn sum-replicas
-  [parameters ends-with]
-  (->> (vals parameters)
-       (filter #(str/ends-with? (:name %) ends-with))
-       (map #(js/parseInt (:value %)))
-       (reduce +)))
-
-
-(defn sum-running-replicas
-  [parameters]
-  (sum-replicas parameters "replicas.running"))
-
-
-(defn sum-desired-replicas
-  [parameters]
-  (sum-replicas parameters "replicas.desired"))
-
-
-(defn ProgressJobDeployment
-  []
-  (let [parameters (subscribe [::subs/deployment-parameters])
-        running    (sum-running-replicas @parameters)
-        desired    (sum-desired-replicas @parameters)]
-    (when (and running desired (not= running desired))
-      [ui/Progress {:label      "deployment: started"
-                    :total      desired
-                    :value      running
-                    :progress   "ratio"
-                    :size       "small"
-                    :class      ["green"]}])))
-
-
 (defn overview-pane
   []
   (let []
     [:<>
-     [job-views/ProgressJobAction]
-     [ProgressJobDeployment]
+     [ProgressBars]
      [ui/TabPane
       [ui/Grid {:columns   2,
                 :stackable true
@@ -876,7 +897,8 @@
 (defn deployment-detail-panes
   []
   (let [deployment (subscribe [::subs/deployment])
-        read-only? (subscribe [::subs/is-read-only?])]
+        read-only? (subscribe [::subs/is-read-only?])
+        state       (:state @deployment)]
     [(overview)
      (urls-section)
      (module-version-section)
@@ -885,8 +907,8 @@
      (parameters-section)
      (env-vars-section)
      (billing-section)
-     (job-views/jobs-section)
-     (acl/TabAcls deployment (not @read-only?) ::events/edit)]))
+     (job-views/jobs-section ProgressBars state)
+     (acl/TabAcls deployment (not @read-only?) ::events/edit ProgressBars state)]))
 
 
 (defn depl-state->status

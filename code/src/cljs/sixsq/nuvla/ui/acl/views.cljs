@@ -341,8 +341,8 @@
 
 
 (defn TabAcls
-  ([e can-edit? edit-event] (TabAcls e can-edit? edit-event nil))
-  ([e can-edit? edit-event error]
+  ([e can-edit? edit-event progress-bar status] (TabAcls e can-edit? edit-event progress-bar status nil))
+  ([e can-edit? edit-event progress-bar status error]
    (let [tr            (subscribe [::i18n-subs/tr])
          default-value (:acl @e)
          acl           (or default-value
@@ -357,6 +357,7 @@
                   (r/as-element
                     [:<>
                      (when (some? error) error)
+                     [progress-bar status]
                      (when default-value
                        ^{:key (:updated @e)}
                        [AclWidget {:default-value default-value

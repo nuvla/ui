@@ -27,8 +27,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -859,7 +858,7 @@
         (when (not= (count ssh-keys) (count @ssh-creds))
           (dispatch [::events/get-nuvlabox-associated-ssh-keys ssh-keys]))
         [:<>
-         [job-views/ProgressJobAction]
+         [job-views/ProgressJobAction @nb-status]
          [ui/TabPane
           [ui/Grid {:columns   2,
                     :stackable true
@@ -1206,7 +1205,8 @@
 (defn tabs
   [uuid count-peripherals tr]
   (let [nuvlabox  (subscribe [::subs/nuvlabox])
-        can-edit? (subscribe [::subs/can-edit?])]
+        can-edit? (subscribe [::subs/can-edit?])
+        nuvlabox-status (subscribe [::subs/nuvlabox-status])]
     [{:menuItem {:content "Overview"
                  :key     "overview"
                  :icon    "info"}
@@ -1248,8 +1248,8 @@
                  :key     "vuln"
                  :icon    "shield"}
       :render   (fn [] (r/as-element [TabVulnerabilities]))}
-     (job-views/jobs-section)
-     (acl/TabAcls nuvlabox @can-edit? ::events/edit)]))
+     (job-views/jobs-section job-views/ProgressJobAction @nuvlabox-status)
+     (acl/TabAcls nuvlabox @can-edit? ::events/edit job-views/ProgressJobAction @nuvlabox-status)]))
 
 
 (defn TabsNuvlaBox

@@ -5,7 +5,6 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.deployment.utils :as utils]
-    [sixsq.nuvla.ui.edge.events :as edge-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]
@@ -19,10 +18,10 @@
 
 (reg-event-fx
   ::refresh
-  (fn [{db :db} [_ {:keys [init?]}]]
-
+  (fn [{db :db} [_ {:keys [init? nuvlabox]}]]
     {:db (cond-> db
-                 init? (assoc :db (merge db spec/defaults)))
+                 init? (merge spec/defaults)
+                 nuvlabox (assoc ::spec/nuvlabox nuvlabox))
      :fx [[:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-summary-id
                        :frequency 20000
@@ -120,36 +119,19 @@
   ::set-page
   (fn [{{:keys [::spec/full-text-search
                 ::spec/page
-                ::spec/active-only?
                 ::spec/elements-per-page] :as db} :db} [_ page]]
     {:db       (assoc db ::spec/page page)
      :dispatch [::refresh]}))
 
 
 (reg-event-fx
-  ::set-active-only?
-  (fn [{{:keys [::spec/full-text-search
-                ::spec/page
-                ::spec/elements-per-page] :as db} :db} [_ active-only?]]
-    {:db       (-> db
-                   (assoc ::spec/active-only? active-only?)
-                   (assoc ::spec/page 1))
-     :dispatch [::refresh]}))
-
-(reg-event-fx
   ::set-full-text-search
   (fn [{{:keys [::spec/page
-                ::spec/active-only?
                 ::spec/elements-per-page] :as db} :db} [_ full-text-search]]
     {:db       (-> db
                    (assoc ::spec/full-text-search full-text-search)
                    (assoc ::spec/page 1))
      :dispatch [::refresh]}))
-
-(reg-event-db
-  ::set-nuvlabox
-  (fn [db [_ nuvlabox]]
-    (assoc db ::spec/nuvlabox nuvlabox)))
 
 
 (reg-event-db

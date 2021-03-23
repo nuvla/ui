@@ -1,8 +1,6 @@
 (ns sixsq.nuvla.ui.dashboard.utils
   (:require
-    [clojure.string :as str]
-    [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.apps-store.events :as apps-store-events]))
 
 (def type-apps "APPS")
 (def type-deployments "DEPLOYMENTS")

@@ -1,8 +1,6 @@
 (ns sixsq.nuvla.ui.deployment.views
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
     [sixsq.nuvla.ui.deployment-detail.views :as deployment-detail-views]
     [sixsq.nuvla.ui.deployment.events :as events]
     [sixsq.nuvla.ui.deployment.subs :as subs]
@@ -26,9 +24,7 @@
 
 
 (defn control-bar []
-  (let [tr           (subscribe [::i18n-subs/tr])
-        active-only? (subscribe [::subs/active-only?])
-        full-text    (subscribe [::subs/full-text-search])]
+  (let [full-text    (subscribe [::subs/full-text-search])]
     [:span                                                  ;{:style {:display "inline"}}
 
      [main-components/SearchInput
@@ -138,10 +134,8 @@
 (defn StatisticStates
   ([] [StatisticStates true])
   ([clickable?]
-   (let [tr          (subscribe [::i18n-subs/tr])
-         summary     (subscribe [::subs/deployments-summary])
-         summary-all (subscribe [::subs/deployments-summary-all])
-         open-popup  (r/atom true)]
+   (let [summary     (subscribe [::subs/deployments-summary])
+         summary-all (subscribe [::subs/deployments-summary-all])]
      (fn [clickable?]
        (let [summary       (if clickable? summary summary-all)
              terms         (utils-general/aggregate-to-map (get-in @summary [:aggregations :terms:state :buckets]))
@@ -181,23 +175,24 @@
   (let
     [elements-per-page (subscribe [::subs/elements-per-page])
      page              (subscribe [::subs/page])
-     deployments       (subscribe [::subs/deployments])
-     total-deployments (:count @deployments)
-     total-pages       (utils-general/total-pages
-                         (get @deployments :count 0) @elements-per-page)
-     deployments-list  (get @deployments :resources [])]
+     deployments       (subscribe [::subs/deployments])]
     (refresh :init? true)
-    [:<>
-     [MenuBar]
-     [ui/Segment style/basic
-      [:div {:style {:display "flex"}}
-       [control-bar]
-       [StatisticStates true]
-       [ui/Input {:style {:visibility "hidden"}
-                  :icon  "search"}]]
-      [deployments-display deployments-list]]
-     [uix/Pagination
-      {:totalitems   total-deployments
-       :totalPages   total-pages
-       :activePage   @page
-       :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]))
+    (fn []
+      (let [total-deployments (:count @deployments)
+            total-pages       (utils-general/total-pages
+                                (get @deployments :count 0) @elements-per-page)
+            deployments-list  (get @deployments :resources [])]
+        [:<>
+         [MenuBar]
+         [ui/Segment style/basic
+          [:div {:style {:display "flex"}}
+           [control-bar]
+           [StatisticStates true]
+           [ui/Input {:style {:visibility "hidden"}
+                      :icon  "search"}]]
+          [deployments-display deployments-list]]
+         [uix/Pagination
+          {:totalitems   total-deployments
+           :totalPages   total-pages
+           :activePage   @page
+           :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]))))

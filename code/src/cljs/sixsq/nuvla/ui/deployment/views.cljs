@@ -181,23 +181,24 @@
   (let
     [elements-per-page (subscribe [::subs/elements-per-page])
      page              (subscribe [::subs/page])
-     deployments       (subscribe [::subs/deployments])
-     total-deployments (:count @deployments)
-     total-pages       (utils-general/total-pages
-                         (get @deployments :count 0) @elements-per-page)
-     deployments-list  (get @deployments :resources [])]
+     deployments       (subscribe [::subs/deployments])]
     (refresh :init? true)
-    [:<>
-     [MenuBar]
-     [ui/Segment style/basic
-      [:div {:style {:display "flex"}}
-       [control-bar]
-       [StatisticStates true]
-       [ui/Input {:style {:visibility "hidden"}
-                  :icon  "search"}]]
-      [deployments-display deployments-list]]
-     [uix/Pagination
-      {:totalitems   total-deployments
-       :totalPages   total-pages
-       :activePage   @page
-       :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]))
+    (fn []
+      (let [total-deployments (:count @deployments)
+            total-pages       (utils-general/total-pages
+                                (get @deployments :count 0) @elements-per-page)
+            deployments-list  (get @deployments :resources [])]
+        [:<>
+         [MenuBar]
+         [ui/Segment style/basic
+          [:div {:style {:display "flex"}}
+           [control-bar]
+           [StatisticStates true]
+           [ui/Input {:style {:visibility "hidden"}
+                      :icon  "search"}]]
+          [deployments-display deployments-list]]
+         [uix/Pagination
+          {:totalitems   total-deployments
+           :totalPages   total-pages
+           :activePage   @page
+           :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]))))

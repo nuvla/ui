@@ -5,7 +5,6 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.deployment.utils :as utils]
-    [sixsq.nuvla.ui.edge.events :as edge-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]
@@ -20,9 +19,8 @@
 (reg-event-fx
   ::refresh
   (fn [{db :db} [_ {:keys [init?]}]]
-
     {:db (cond-> db
-                 init? (assoc :db (merge db spec/defaults)))
+                 init? (merge db spec/defaults))
      :fx [[:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-summary-id
                        :frequency 20000

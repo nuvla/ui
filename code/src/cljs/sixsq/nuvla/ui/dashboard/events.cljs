@@ -1,17 +1,11 @@
 (ns sixsq.nuvla.ui.dashboard.events
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.credentials.events :as credentials-events]
-    [sixsq.nuvla.ui.dashboard.spec :as spec]
-    [sixsq.nuvla.ui.dashboard.utils :as utils]
     [sixsq.nuvla.ui.deployment.events :as deployment-events]
     [sixsq.nuvla.ui.edge.events :as edge-events]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]
     [taoensso.timbre :as log]))
 
 

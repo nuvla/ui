@@ -1003,8 +1003,8 @@
         elements-per-page (subscribe [::deployment-subs/elements-per-page])
         page              (subscribe [::deployment-subs/page])
         loading?          (subscribe [::deployment-subs/loading?])]
-    (deployment-views/refresh :init? true)
-    (dispatch [::deployment-events/set-nuvlabox (str "nuvlabox/" uuid)])
+    (deployment-views/refresh :init? true
+                              :nuvlabox (str "nuvlabox/" uuid))
     (fn [uuid]
       (let [total-elements (:count @elements)
             total-pages    (general-utils/total-pages total-elements @elements-per-page)

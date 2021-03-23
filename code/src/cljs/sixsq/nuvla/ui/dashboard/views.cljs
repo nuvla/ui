@@ -2,18 +2,14 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
     [sixsq.nuvla.ui.apps-store.subs :as apps-store-subs]
-    [sixsq.nuvla.ui.credentials.events :as credentials-events]
     [sixsq.nuvla.ui.credentials.subs :as credentials-subs]
     [sixsq.nuvla.ui.credentials.views :as credentials-views]
     [sixsq.nuvla.ui.dashboard.events :as events]
     [sixsq.nuvla.ui.dashboard.subs :as subs]
     [sixsq.nuvla.ui.dashboard.utils :as utils]
-    [sixsq.nuvla.ui.deployment.events :as deployment-events]
     [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
     [sixsq.nuvla.ui.deployment.views :as deployment-views]
-    [sixsq.nuvla.ui.edge.events :as edge-events]
     [sixsq.nuvla.ui.edge.subs :as edge-subs]
     [sixsq.nuvla.ui.edge.views :as edge-views]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -203,27 +199,24 @@
 
 (defn dashboard-main
   []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::subs/loading?])]
+  (let [tr       (subscribe [::i18n-subs/tr])]
     (refresh)
     (fn []
-      (let []
-        [:<>
-         [:div {:style {:display "flex" :justify-content "space-between"}}
-          [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard]))]
-          [MenuRefresh]
-          ]
-         [Statistics]
-         [:div utils-style/center-items
-          [ui/Grid {:columns   2,
-                    :stackable true
-                    :padded    true}
-           [ui/GridRow
-            [ui/GridColumn {:stretched true}
-             [TabOverviewDeployments]]
-            [ui/GridColumn {:stretched true}
-             [TabOverviewNuvlaBox]]]
-           ]]]))))
+      [:<>
+       [:div {:style {:display "flex" :justify-content "space-between"}}
+        [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard]))]
+        [MenuRefresh]]
+       [Statistics]
+       [:div utils-style/center-items
+        [ui/Grid {:columns   2,
+                  :stackable true
+                  :padded    true}
+         [ui/GridRow
+          [ui/GridColumn {:stretched true}
+           [TabOverviewDeployments]]
+          [ui/GridColumn {:stretched true}
+           [TabOverviewNuvlaBox]]]
+         ]]])))
 
 
 (defmethod panel/render :dashboard

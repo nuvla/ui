@@ -18,9 +18,10 @@
 
 (reg-event-fx
   ::refresh
-  (fn [{db :db} [_ {:keys [init?]}]]
+  (fn [{db :db} [_ {:keys [init? nuvlabox]}]]
     {:db (cond-> db
-                 init? (merge db spec/defaults))
+                 init? (merge spec/defaults)
+                 nuvlabox (assoc ::spec/nuvlabox nuvlabox))
      :fx [[:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-summary-id
                        :frequency 20000
@@ -143,11 +144,6 @@
                    (assoc ::spec/full-text-search full-text-search)
                    (assoc ::spec/page 1))
      :dispatch [::refresh]}))
-
-(reg-event-db
-  ::set-nuvlabox
-  (fn [db [_ nuvlabox]]
-    (assoc db ::spec/nuvlabox nuvlabox)))
 
 
 (reg-event-db

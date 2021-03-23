@@ -119,26 +119,14 @@
   ::set-page
   (fn [{{:keys [::spec/full-text-search
                 ::spec/page
-                ::spec/active-only?
                 ::spec/elements-per-page] :as db} :db} [_ page]]
     {:db       (assoc db ::spec/page page)
      :dispatch [::refresh]}))
 
 
 (reg-event-fx
-  ::set-active-only?
-  (fn [{{:keys [::spec/full-text-search
-                ::spec/page
-                ::spec/elements-per-page] :as db} :db} [_ active-only?]]
-    {:db       (-> db
-                   (assoc ::spec/active-only? active-only?)
-                   (assoc ::spec/page 1))
-     :dispatch [::refresh]}))
-
-(reg-event-fx
   ::set-full-text-search
   (fn [{{:keys [::spec/page
-                ::spec/active-only?
                 ::spec/elements-per-page] :as db} :db} [_ full-text-search]]
     {:db       (-> db
                    (assoc ::spec/full-text-search full-text-search)

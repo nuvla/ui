@@ -42,12 +42,6 @@
 
 
 (reg-sub
-  ::active-only?
-  (fn [db]
-    (::spec/active-only? db)))
-
-
-(reg-sub
   ::full-text-search
   (fn [db]
     (::spec/full-text-search db)))

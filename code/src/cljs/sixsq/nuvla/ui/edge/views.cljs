@@ -712,7 +712,7 @@
 
 (defn NuvlaboxRow
   [{:keys [id name description created state tags online] :as nuvlabox}]
-  (let [uuid     (general-utils/id->uuid id)]
+  (let [uuid (general-utils/id->uuid id)]
     [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
@@ -777,25 +777,20 @@
   [nuvlabox]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [{:keys [id name description created state tags online] :as nuvlabox}]
-      ^{:key id}
-      [ui/Card {:on-click #(dispatch [::history-events/navigate
-                                      (str "edge/" (general-utils/id->uuid id))])}
-       [ui/CardContent
-
-        [ui/CardHeader {:style {:word-wrap "break-word"}}
-         [:div {:style {:float "right"}}
-          [edge-detail/OnlineStatusIcon online :corner "top right"]]
-         [ui/Icon {:name "box"}]
-         (or name id)]
-
-        [ui/CardMeta (str (@tr [:created]) " " (format-created created))]
-
-        [:p {:align "right"} state]
-
-        (when-not (str/blank? description)
-          [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description])
-
-        (format-tags tags id)]])))
+      (let [href (str "edge/" (general-utils/id->uuid id))]
+        ^{:key id}
+        [uix/Card
+         {:on-click    #(dispatch [::history-events/navigate href])
+          :href        href
+          :header      [:<>
+                        [:div {:style {:float "right"}}
+                         [edge-detail/OnlineStatusIcon online :corner "top right"]]
+                        [ui/Icon {:name "box"}]
+                        (or name id)]
+          :meta        (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))
+          :state       state
+          :description (when-not (str/blank? description) description)
+          :tags        tags}]))))
 
 
 (defn NuvlaboxCards

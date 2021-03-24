@@ -183,3 +183,7 @@ tr.active td {
 .slight-up:hover {
   transform: translateX(0px) translateY(-3px);
 }
+
+.ui.fixed.top.sticky {
+  z-index: 1001;
+}

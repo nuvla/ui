@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.credentials.spec :as spec]
+    [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.credentials.utils :as utils]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -85,10 +86,10 @@
   (fn [{:keys [db]} [_]]
     {:db                  (assoc db ::spec/completed? false)
      ::cimi-api-fx/search [:credential
-                           {:orderby "name:asc, id:asc"
+                           {:orderby     "name:asc, id:asc"
                             :aggregation "terms:subtype"
-                            :first 0
-                            :last 0}
+                            :first       0
+                            :last        0}
                            #(dispatch [::set-credentials-summary %])]}))
 
 
@@ -211,30 +212,13 @@
 
 
 (reg-event-fx
-  ::set-job-check-cred
-  (fn [{db :db} [_ {:keys [id target-resource return-code progress status-message] :as job}]]
-    (let [job-completed? (= progress 100)]
-      (if job-completed?
-        (cond->
-          {::cimi-api-fx/get [(:href target-resource)
-                              #(dispatch [::set-credential-after-check %])]}
-          (not= return-code 0) (assoc :db (assoc-in db [::spec/credential-check-table
-                                                        (:href target-resource) :error-msg]
-                                                    status-message)))
-        {:dispatch [::set-check-cred-job-id id]}))))
-
-
-(reg-event-fx
-  ::get-job-check-cred
-  (fn [_ [_ job-id callback]]
-    {::cimi-api-fx/get [job-id callback]}))
-
-
-(reg-event-fx
-  ::set-check-cred-job-id
-  (fn [_ [_ job-id]]
-    {:dispatch-later
-     [{:ms 3000 :dispatch [::get-job-check-cred job-id #(dispatch [::set-job-check-cred %])]}]}))
+  ::check-credential-complete
+  (fn [{db :db} [_ {:keys [target-resource status-message return-code] :as job}]]
+    (let [id (:href target-resource)]
+      (cond->
+        {::cimi-api-fx/get [id #(dispatch [::set-credential-after-check %])]}
+        (not= return-code 0) (assoc :db (assoc-in db [::spec/credential-check-table id :error-msg]
+                                                  status-message))))))
 
 
 (reg-event-fx
@@ -246,15 +230,19 @@
                               last-check (assoc :last-check last-check)
                               status (assoc :status status))
           need-check? (utils/credential-need-check? cred delta-minutes-outdated)]
-      (cond->
-        {:db (assoc-in db [::spec/credential-check-table id]
-                       {:check-in-progress? need-check?
-                        :error-msg          nil
-                        :status             (:status cred)
-                        :last-check         (:last-check cred)})}
-        need-check? (assoc ::cimi-api-fx/operation
-                           [id "check" #(dispatch [::set-check-cred-job-id (:location %)])])
-        ))))
+      (cond-> {:db (assoc-in db [::spec/credential-check-table id]
+                             {:check-in-progress? need-check?
+                              :error-msg          nil
+                              :status             (:status cred)
+                              :last-check         (:last-check cred)})}
+              need-check? (assoc ::cimi-api-fx/operation
+                                 [id "check"
+                                  (fn [response]
+                                    (dispatch
+                                      [::job-events/wait-job-to-complete
+                                       {:job-id      (:location response)
+                                        :on-complete #(dispatch [::check-credential-complete %])}])
+                                    )])))))
 
 
 (reg-event-db

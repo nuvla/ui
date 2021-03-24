@@ -40,9 +40,23 @@
                              #(dispatch [::set-jobs %])]})))
 
 
+(reg-event-fx
+  ::check-job
+  (fn [_ [_
+          {:keys [progress] :as job}
+          {:keys [on-complete on-refresh refresh-interval-ms]
+           :or   {on-complete #(), on-refresh #(), refresh-interval-ms 5000} :as opts}]]
+    (let [job-completed? (= progress 100)]
+      (if job-completed?
+        (do (on-complete job)
+            {})
+        (do
+          (on-refresh job)
+          {:dispatch-later [{:ms       refresh-interval-ms
+                             :dispatch [::wait-job-to-complete opts]}]})))))
 
 
-
-
-
-
+(reg-event-fx
+  ::wait-job-to-complete
+  (fn [_ [_ {:keys [job-id] :as opts}]]
+    {::cimi-api-fx/get [job-id #(dispatch [::check-job % opts])]}))

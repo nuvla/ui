@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Dependency - nuvla-api-version v2.0.9
   - Sidebar item has an href
   - Deployment page - Use card component
   - Infrastructure page - Use card component

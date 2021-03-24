@@ -143,7 +143,7 @@
         modules           (subscribe [::subs/modules])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])]
-    (dispatch [::events/set-full-text-search nil])
+    (dispatch [::events/get-modules])
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]

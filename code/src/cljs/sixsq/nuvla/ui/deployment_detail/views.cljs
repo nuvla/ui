@@ -669,6 +669,13 @@
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
+     [ui/Segment (merge style/basic {:floated "right"})
+      [ui/Image {:src      (or logo-url "")
+                 :bordered true
+                 :style    {:width      "auto"
+                            :height     "100px"
+                            :padding    "20px"
+                            :object-fit "contain"}}]]
      [:h4 "Module"]
      [ui/Table {:basic  "very"
                 :padded false}
@@ -798,13 +805,6 @@
      [ui/Segment {:secondary true
                   :color     "green"
                   :raised    true}
-      [ui/Segment (merge style/basic {:floated "right"})
-       [ui/Image {:src      (or logo-url "")
-                  :bordered true
-                  :style    {:width      "auto"
-                             :height     "100px"
-                             :padding    "20px"
-                             :object-fit "contain"}}]]
 
       [:h4 {:style {:margin-top 0}} (@tr [:summary])]
 

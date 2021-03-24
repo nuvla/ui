@@ -56,7 +56,7 @@
       [ui/CardHeader {:style     {:word-wrap "break-word"}}
        [ui/Icon {:name (apps-utils/subtype-icon subtype)}]
        (or name id)]
-      [ui/CardMeta {:style {:word-wrap "break-word"}} parent-path]
+      ;      [ui/CardMeta {:style {:word-wrap "break-word"}} parent-path]
       [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} (general-utils/truncate description 125)]
       (when compatibility
         [ui/Label {:color "grey", :corner "right"}

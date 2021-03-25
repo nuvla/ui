@@ -1,10 +1,12 @@
 (ns sixsq.nuvla.ui.deployment.views
   (:require
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.deployment-detail.views :as deployment-detail-views]
     [sixsq.nuvla.ui.deployment.events :as events]
     [sixsq.nuvla.ui.deployment.subs :as subs]
     [sixsq.nuvla.ui.deployment.utils :as utils]
+    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.utils.general :as utils-general]
@@ -24,13 +26,27 @@
 
 
 (defn control-bar []
-  (let [full-text    (subscribe [::subs/full-text-search])]
-    [:span                                                  ;{:style {:display "inline"}}
-
-     [main-components/SearchInput
-      {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))
-       :default-value @full-text}]
-     ]))
+  (let [full-text         (subscribe [::subs/full-text-search])
+        additional-filter (subscribe [::subs/additional-filter])
+        filter-open?      (r/atom false)]
+    (fn []
+      [ui/GridColumn
+       [main-components/SearchInput
+        {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))
+         :default-value @full-text}]
+       [ui/Popup
+        {:content           "Additional filter"
+         :mouse-enter-delay 500
+         :on                "hover"
+         :trigger           (r/as-element
+                              [:span {:style {:margin-left 10}}
+                               ^{:key (random-uuid)}
+                               [filter-comp/ButtonFilter
+                                {:resource-name  "deployment"
+                                 :default-filter @additional-filter
+                                 :open?          filter-open?
+                                 :on-done        #(dispatch [::events/set-additional-filter %])}]]
+                              )}]])))
 
 
 (defn MenuBar
@@ -138,18 +154,18 @@
          summary-all (subscribe [::subs/deployments-summary-all])]
      (fn [clickable?]
        (let [summary       (if clickable? summary summary-all)
-             terms         (utils-general/aggregate-to-map (get-in @summary [:aggregations :terms:state :buckets]))
+             terms         (utils-general/aggregate-to-map
+                             (get-in @summary [:aggregations :terms:state :buckets]))
              started       (:STARTED terms 0)
-             starting      (:STARTIN terms 0)
+             starting      (:STARTING terms 0)
              created       (:CREATED terms 0)
              stopped       (:STOPPED terms 0)
              error         (:ERROR terms 0)
-             queued        (:QUEUED terms 0)
-             starting-plus (+ starting created queued)
+             pending       (:PENDING terms 0)
+             starting-plus (+ starting created pending)
              total         (:count @summary)]
-         [:div {:style {:margin     "10px auto 10px auto"
-                        :text-align "center"
-                        :width      "100%"}}
+         [ui/GridColumn {:width      6
+                         :text-align "center"}
           [ui/StatisticGroup (merge {:widths (if clickable? nil 5) :size "tiny"}
                                     {:style {:margin-right "0px"
                                              :display      "block"}})
@@ -185,11 +201,12 @@
         [:<>
          [MenuBar]
          [ui/Segment style/basic
-          [:div {:style {:display "flex"}}
+          [ui/Grid {:columns   "equal"
+                    :stackable true
+                    :reversed  "mobile"}
            [control-bar]
            [StatisticStates true]
-           [ui/Input {:style {:visibility "hidden"}
-                      :icon  "search"}]]
+           [ui/GridColumn]]
           [deployments-display deployments-list]]
          [uix/Pagination
           {:totalitems   total-deployments

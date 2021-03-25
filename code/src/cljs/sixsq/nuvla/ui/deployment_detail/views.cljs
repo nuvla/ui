@@ -904,7 +904,7 @@
         [:<>
          [PageHeader]
          [MenuBar @deployment]
-         [main-components/ErrorJobsMessage ::subs/deployment ::job-subs/jobs ::events/set-active-tab-index 8]
+         [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 8]
          [vpn-info]
          [ui/Tab
           {:menu        {:secondary true

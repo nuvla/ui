@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.edge.subs
   (:require
     [re-frame.core :refer [dispatch reg-sub subscribe]]
-    [sixsq.nuvla.ui.edge.spec :as spec]
-    [sixsq.nuvla.ui.edge.utils :as utils]))
+    [sixsq.nuvla.ui.edge.spec :as spec]))
 
 
 (reg-sub

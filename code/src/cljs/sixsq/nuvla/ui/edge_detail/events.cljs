@@ -9,7 +9,6 @@
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 

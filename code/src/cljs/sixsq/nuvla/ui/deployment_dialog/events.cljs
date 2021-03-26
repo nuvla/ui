@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.credentials.events :as creds-events]
     [sixsq.nuvla.ui.data.spec :as data-spec]
+    [sixsq.nuvla.ui.deployment-detail.events :as deployment-detail-events]
     [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
     [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -250,7 +251,7 @@
   (fn [_ [_ {:keys [id] :as deployment}]]
     {::cimi-api-fx/operation [id "check-dct" #(dispatch [::check-dct-later (:location %)])]}))
 
-
+; What's the difference with the same event in deployment
 (reg-event-fx
   ::get-deployment
   (fn [{:keys [db]} [_ id]]
@@ -393,7 +394,7 @@
                                           :type    :success}]
                          (dispatch [::reset])
                          (dispatch [::messages-events/add success-msg])
-                         (dispatch [:sixsq.nuvla.ui.deployment.events/get-deployment id])
+                         (dispatch [::deployment-detail-events/get-deployment id])
                          (dispatch [::history-events/navigate
                                     (str "deployment/" (general-utils/id->uuid id))]))))]
       {::cimi-api-fx/operation [id operation callback]})))

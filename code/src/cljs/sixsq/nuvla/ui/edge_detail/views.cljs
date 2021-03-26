@@ -27,8 +27,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -1286,10 +1285,12 @@
 (defn EdgeDetails
   [uuid]
   (refresh uuid)
-  (fn [uuid]
-    ^{:key uuid}
-    [ui/Container {:fluid true}
-     [PageHeader]
-     [MenuBar uuid]
-     [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
-     [TabsNuvlaBox uuid]]))
+  (let [nb-status (subscribe [::subs/nuvlabox-status])]
+    (fn [uuid]
+     ^{:key uuid}
+     [ui/Container {:fluid true}
+      [PageHeader]
+      [MenuBar uuid]
+      [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
+      [job-views/ProgressJobAction @nb-status]
+      [TabsNuvlaBox uuid]])))

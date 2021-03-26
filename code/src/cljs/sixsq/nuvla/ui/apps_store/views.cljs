@@ -40,47 +40,40 @@
 
 
 (defn module-card
-  [{:keys [id name description path parent-path subtype compatibility logo-url price] :as module}]
+  [{:keys [id name description path subtype compatibility logo-url price] :as module}]
   (let [tr          (subscribe [::i18n-subs/tr])
-        detail-href (str "apps/" path)]
-    [ui/Card
-     (when logo-url
-       [ui/Image {:src   logo-url
-                  :style {:height     "100px"
-                          :object-fit "contain"}
-                  :fluid true}])
-     [ui/CardContent {:href     detail-href
-                      :on-click (fn [event]
-                                  (dispatch [::history-events/navigate detail-href])
-                                  (.preventDefault event))}
-      [ui/CardHeader {:style     {:word-wrap "break-word"}}
-       [ui/Icon {:name (apps-utils/subtype-icon subtype)}]
-       (or name id)]
-      ;      [ui/CardMeta {:style {:word-wrap "break-word"}} parent-path]
-      [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} (general-utils/truncate description 125)]
-      (when compatibility
-        [ui/Label {:color "grey", :corner "right"}
-         [ui/Popup
-          {:position "top center"
-           :content  (str "COMPATIBILITY: " compatibility)
-           :size     "small"
-           :trigger  (r/as-element [ui/Icon {:name "info"}])}]])]
-     (if price
-       [ui/Button {:fluid    true
-                   :primary  true
-                   :icon     :cart
-                   :content  (str (@tr [:launch-for])
-                                  (/ (:cent-amount-daily price) 100) "€/" (@tr [:day]))
-                   :on-click #(dispatch [::main-events/subscription-required-dispatch
-                                         [::deployment-dialog-events/create-deployment
-                                          (:id module) :infra-services]])}]
-       [ui/Button {:fluid    true
-                   :primary  true
-                   :icon     :rocket
-                   :content  (@tr [:launch])
-                   :on-click #(dispatch [::main-events/subscription-required-dispatch
-                                         [::deployment-dialog-events/create-deployment
-                                          (:id module) :infra-services]])}])]))
+        detail-href (str "apps/" path)
+        button-ops  {:fluid    true
+                     :primary  true
+                     :icon     :rocket
+                     :content  (@tr [:launch])
+                     :on-click (fn [event]
+                                 (dispatch [::main-events/subscription-required-dispatch
+                                            [::deployment-dialog-events/create-deployment
+                                             (:id module) :infra-services]])
+                                 (.preventDefault event)
+                                 (.stopPropagation event))}]
+    [uix/Card
+     {:image       logo-url
+      :header      [:<>
+                    [ui/Icon {:name (apps-utils/subtype-icon subtype)}]
+                    (or name id)]
+      :description description
+      :href        detail-href
+      :on-click    #(dispatch [::history-events/navigate detail-href])
+      :content     (when compatibility
+                     [ui/Label {:color "grey", :corner "right"}
+                      [ui/Popup
+                       {:position "top center"
+                        :content  (str "COMPATIBILITY: " compatibility)
+                        :size     "small"
+                        :trigger  (r/as-element [ui/Icon {:name "info"}])}]])
+      :button      [ui/Button
+                    (cond-> button-ops
+                            price (assoc :icon :cart
+                                         :content (str (@tr [:launch-for])
+                                                       (/ (:cent-amount-daily price) 100) "€/"
+                                                       (@tr [:day]))))]}]))
 
 
 (defn modules-cards-group
@@ -143,7 +136,7 @@
         modules           (subscribe [::subs/modules])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])]
-    (dispatch [::events/set-full-text-search nil])
+    (dispatch [::events/get-modules])
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]

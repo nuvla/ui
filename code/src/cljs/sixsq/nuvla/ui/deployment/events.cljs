@@ -72,15 +72,13 @@
 (reg-event-fx
   ::get-deployments
   (fn [{{:keys [::spec/full-text-search
-                ;::spec/active-only?
                 ::spec/state-selector
                 ::spec/nuvlabox
-                ;::spec/state
                 ::spec/page
                 ::spec/elements-per-page]} :db} _]
     (let [state (if (= "all" state-selector) nil state-selector)]
-      {::cimi-api-fx/search [:deployment (utils/get-query-params full-text-search state ;active-only?
-                                                                 nuvlabox page elements-per-page)
+      {::cimi-api-fx/search [:deployment (utils/get-query-params
+                                           full-text-search state nuvlabox page elements-per-page)
                              #(dispatch [::set-deployments %])]
        })))
 
@@ -88,9 +86,8 @@
 (reg-event-fx
   ::set-deployments-summary
   (fn [{:keys [db]} [_ deployments]]
-    (let [states (get-in deployments [:aggregations :terms:state :buckets])]
-      {:db (assoc db ::spec/loading? false
-                     ::spec/deployments-summary deployments)})))
+    {:db (assoc db ::spec/loading? false
+                   ::spec/deployments-summary deployments)}))
 
 
 (reg-event-fx
@@ -103,9 +100,8 @@
 (reg-event-fx
   ::set-deployments-summary-all
   (fn [{:keys [db]} [_ deployments]]
-    (let [states (get-in deployments [:aggregations :terms:state :buckets])]
-      {:db (assoc db ::spec/loading? false
-                     ::spec/deployments-summary-all deployments)})))
+    {:db (assoc db ::spec/loading? false
+                   ::spec/deployments-summary-all deployments)}))
 
 
 (reg-event-fx

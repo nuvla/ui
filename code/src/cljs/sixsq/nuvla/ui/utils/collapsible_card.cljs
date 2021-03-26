@@ -3,9 +3,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
@@ -78,33 +76,6 @@
          [more-or-less more?])
        (when @more?
          [table/definition-table rows])])))
-
-
-(defn title-card
-  [title & children]
-  [ui/Card {:fluid true}
-   [ui/CardContent {:extra true}
-    [ui/CardHeader
-     [:h1 title]]]
-   (when children
-     [ui/CardContent
-      (vec (concat [ui/CardDescription] children))])])
-
-
-(defn collapsible-card
-  [title & children]
-  (let [visible? (r/atom true)]
-    (fn [title & children]
-      [ui/Card {:fluid true}
-       [ui/CardContent
-        [ui/Label {:as       :a
-                   :corner   "right"
-                   :size     "mini"
-                   :icon     (if @visible? "chevron down" "chevron up")
-                   :on-click #(reset! visible? (not @visible?))}]
-        [ui/CardHeader title]
-        (when @visible?
-          (vec (concat [ui/CardDescription] children)))]])))
 
 
 (defn collapsible-segment

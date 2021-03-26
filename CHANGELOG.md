@@ -4,6 +4,14 @@
 
 ### Changed
 
+  - Dependency - nuvla-api-version v2.0.9
+  - Sidebar item has an href
+  - Deployment page - Use card component
+  - Infrastructure page - Use card component
+  - Edge page - Use card component
+  - Edge detail page - Use tags component
+  - UIX - Reusable tags component
+  - UIX - Reusable card component
   - Sidebar - Improve order of pages
   - Deployment - Summary all for deployments
   - Edge page - Improved statistics usage for NuvlaBoxes

@@ -823,21 +823,12 @@
 
 
 (defn TabOverviewTags
-  [{:keys [id tags] :as nuvlabox}]
+  [{:keys [tags] :as nuvlabox}]
   [ui/Segment {:secondary true
                :color     "teal"
                :raised    true}
    [:h4 "Tags"]
-   [ui/LabelGroup {:size  "tiny"
-                   :color "teal"
-                   :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-    (for [tag tags]
-      ^{:key (str id "-" tag)}
-      [ui/Label {:style {:max-width     "15ch"
-                         :overflow      "hidden"
-                         :text-overflow "ellipsis"
-                         :white-space   "nowrap"}}
-       [ui/Icon {:name "tag"}] tag])]])
+   [uix/Tags {:tags tags}]])
 
 
 (defn TabOverview

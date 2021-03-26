@@ -71,7 +71,7 @@
         running    (sum-running-replicas @parameters)
         desired    (sum-desired-replicas @parameters)]
     (when (and (= state "STARTED") running desired (not= running desired))
-      [ui/Progress {:label    "deployment: started"
+      [ui/Progress {:label    "deployment: started (replicas: running/required)"
                     :total    desired
                     :value    running
                     :progress "ratio"
@@ -674,7 +674,7 @@
                  :bordered true
                  :style    {:width      "auto"
                             :height     "100px"
-                            :padding    "20px"
+                            ;:padding    "20px"
                             :object-fit "contain"}}]]
      [:h4 "Module"]
      [ui/Table {:basic  "very"

@@ -72,13 +72,15 @@
 (reg-event-fx
   ::get-deployments
   (fn [{{:keys [::spec/full-text-search
+                ::spec/additional-filter
                 ::spec/state-selector
                 ::spec/nuvlabox
                 ::spec/page
                 ::spec/elements-per-page]} :db} _]
     (let [state (if (= "all" state-selector) nil state-selector)]
       {::cimi-api-fx/search [:deployment (utils/get-query-params
-                                           full-text-search state nuvlabox page elements-per-page)
+                                           full-text-search additional-filter state
+                                           nuvlabox page elements-per-page)
                              #(dispatch [::set-deployments %])]
        })))
 
@@ -92,8 +94,10 @@
 
 (reg-event-fx
   ::get-deployments-summary
-  (fn [{{:keys [::spec/full-text-search]} :db} _]
-    {::cimi-api-fx/search [:deployment (utils/get-query-params-summary full-text-search)
+  (fn [{{:keys [::spec/full-text-search
+                ::spec/additional-filter]} :db} _]
+    {::cimi-api-fx/search [:deployment (utils/get-query-params-summary
+                                         full-text-search additional-filter)
                            #(dispatch [::set-deployments-summary %])]}))
 
 
@@ -107,7 +111,7 @@
 (reg-event-fx
   ::get-deployments-summary-all
   (fn [_]
-    {::cimi-api-fx/search [:deployment (utils/get-query-params-summary nil)
+    {::cimi-api-fx/search [:deployment (utils/get-query-params-summary nil nil)
                            #(dispatch [::set-deployments-summary-all %])]}))
 
 
@@ -126,6 +130,16 @@
                 ::spec/elements-per-page] :as db} :db} [_ full-text-search]]
     {:db       (-> db
                    (assoc ::spec/full-text-search full-text-search)
+                   (assoc ::spec/page 1))
+     :dispatch [::refresh]}))
+
+
+(reg-event-fx
+  ::set-additional-filter
+  (fn [{{:keys [::spec/page
+                ::spec/elements-per-page] :as db} :db} [_ additional-filter]]
+    {:db       (-> db
+                   (assoc ::spec/additional-filter additional-filter)
                    (assoc ::spec/page 1))
      :dispatch [::refresh]}))
 
@@ -154,6 +168,6 @@
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
-    (dispatch [::get-deployments])
-    {:db (assoc db ::spec/state-selector state-selector
-                   ::spec/page 1)}))
+    {:dispatch [::get-deployments]
+     :db       (assoc db ::spec/state-selector state-selector
+                         ::spec/page 1)}))

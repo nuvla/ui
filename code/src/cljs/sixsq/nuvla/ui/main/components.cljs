@@ -6,6 +6,7 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as subs]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
@@ -74,18 +75,16 @@
 
 
 (defn ErrorJobsMessage
-  [resource-subs job-subs set-active-tab-index-event job-tab-index]
+  [job-subs set-active-tab-index-event job-tab-index]
   (let [errors-dissmissed (r/atom #{})]
-    (fn [resource-subscription]
-      (let [{:keys [state]} @(subscribe [resource-subscription])
-            jobs            (subscribe [job-subs])
+    (fn [job-subs set-active-tab-index-event job-tab-index]
+      (let [jobs            (subscribe [job-subs])
             last-failed-job (some #(when (= (:state %) "FAILED") %) (:resources @jobs))
             action          (:action last-failed-job)
             id              (:id last-failed-job)
             last-line       (last (str/split-lines (get last-failed-job :status-message "")))]
         (when (and
                 (not (@errors-dissmissed id))
-                ;(= state "ERROR")
                 (some? last-failed-job))
           [ui/Message {:error      true
                        :on-dismiss #(swap! errors-dissmissed conj id)}
@@ -104,7 +103,7 @@
          selected?      (or
                           (= label @state-selector)
                           (and (= label "TOTAL")
-                               (= @state-selector nil)))
+                               (nil? @state-selector)))
          color          (if (pos? value) positive-color "grey")]
      [ui/Statistic {:style    (when clickable? {:cursor "pointer"})
                     :color    color
@@ -126,16 +125,18 @@
 
 (defn ClickMeStaticPopup
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Popup
-     {:trigger  (r/as-element [:span])
-      :open     true
-      :position "right center"
-      :offset   [0 20]
-      :style    {:z-index "auto"}                           ;to avoid pop up floating above modals
-      }
-     [ui/PopupContent
-      [:span [ui/Icon {:name "arrow left"}] (@tr [:statistics-select-info])]]]))
+  (let [tr               (subscribe [::i18n-subs/tr])
+        is-small-device? (subscribe [::main-subs/is-small-device?])]
+    (when-not @is-small-device?
+      [ui/Popup
+       {:trigger  (r/as-element [:span])
+        :open     true
+        :position "right center"
+        :offset   [0 20]
+        :style    {:z-index "auto"}                         ;to avoid pop up floating above modals
+        }
+       [ui/PopupContent
+        [:span [ui/Icon {:name "arrow left"}] (@tr [:statistics-select-info])]]])))
 
 
 (defn InfoPopup

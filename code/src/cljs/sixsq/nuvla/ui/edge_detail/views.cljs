@@ -1293,5 +1293,5 @@
     [ui/Container {:fluid true}
      [PageHeader]
      [MenuBar uuid]
-     [main-components/ErrorJobsMessage ::subs/nuvlabox ::job-subs/jobs ::events/set-active-tab-index 7]
+     [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
      [TabsNuvlaBox uuid]]))

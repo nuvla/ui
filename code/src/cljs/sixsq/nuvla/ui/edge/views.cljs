@@ -39,7 +39,8 @@
          summary-all (subscribe [::subs/nuvlaboxes-summary-all])]
      (fn [clickable?]
        (let [summary         (if clickable? summary summary-all) ; select all without filter
-             terms           (general-utils/aggregate-to-map (get-in @summary [:aggregations :terms:state :buckets]))
+             terms           (general-utils/aggregate-to-map
+                               (get-in @summary [:aggregations :terms:state :buckets]))
              new             (:NEW terms 0)
              activated       (:ACTIVATED terms 0)
              commissioned    (:COMMISSIONED terms 0)
@@ -47,7 +48,8 @@
              decommissioned  (:DECOMMISSIONED terms 0)
              error           (:ERROR terms 0)
              total           (:count @summary)
-             online-statuses (general-utils/aggregate-to-map (get-in @summary [:aggregations :terms:online :buckets]))
+             online-statuses (general-utils/aggregate-to-map
+                               (get-in @summary [:aggregations :terms:online :buckets]))
              online          (:1 online-statuses)
              offline         (:0 online-statuses)
              unknown         (- total (+ online offline))]

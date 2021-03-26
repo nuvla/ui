@@ -20,6 +20,8 @@
 
 (s/def ::full-text-search (s/nilable string?))
 
+(s/def ::additional-filter (s/nilable string?))
+
 (s/def ::creds-name-map any?)
 
 (s/def ::view #{"cards" "table"})
@@ -42,6 +44,7 @@
                           ::page
                           ::elements-per-page
                           ::full-text-search
+                          ::additional-filter
                           ::nuvlabox
                           ::creds-name-map
                           ::view
@@ -51,6 +54,7 @@
                ::page                    1
                ::elements-per-page       8
                ::full-text-search        nil
+               ::additional-filter       nil
                ::nuvlabox                nil
                ::deployments             nil
                ::deployments-summary     nil

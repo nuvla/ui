@@ -220,7 +220,7 @@
 (defn join-filters
   [op filters]
   (->> filters
-       (remove nil?)
+       (remove str/blank?)
        (map #(str "(" % ")"))
        (str/join (str " " op " "))))
 

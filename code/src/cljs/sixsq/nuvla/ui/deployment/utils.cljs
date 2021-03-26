@@ -94,14 +94,23 @@
   (str "deployment/" (general-utils/id->uuid id)))
 
 
+(defn state-filter
+  [state]
+  (case state
+    "STARTING" "state='RUNNING' or state='PENDING' or state='CREATED'"
+    (str "state='" state "'")))
+
+
 (defn get-query-params
-  [full-text-search state nuvlabox page elements-per-page]
-  (let [filter-state     (when state (str "state='" state "'"))
+  [full-text-search additional-filter state-selector nuvlabox page elements-per-page]
+  (let [filter-state     (when state-selector (state-filter state-selector))
         filter-nuvlabox  (when nuvlabox (str "nuvlabox='" nuvlabox "'"))
         full-text-search (general-utils/fulltext-query-string full-text-search)
-        filter           (str/join " and " (remove nil? [filter-state
-                                                         filter-nuvlabox
-                                                         full-text-search]))]
+        filter           (general-utils/join-and
+                           filter-state
+                           filter-nuvlabox
+                           full-text-search
+                           additional-filter)]
     (cond-> {:first       (inc (* (dec page) elements-per-page))
              :last        (* page elements-per-page)
              :aggregation "terms:state"
@@ -110,9 +119,9 @@
 
 
 (defn get-query-params-summary
-  [full-text-search]
+  [full-text-search additional-filter]
   (let [full-text-search (general-utils/fulltext-query-string full-text-search)
-        filter           full-text-search
+        filter           (general-utils/join-and full-text-search additional-filter)
         aggregate        "terms:state"]
     (cond-> {:orderby     "created:desc"
              :aggregation aggregate

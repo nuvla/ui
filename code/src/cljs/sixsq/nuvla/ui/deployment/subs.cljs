@@ -48,6 +48,12 @@
 
 
 (reg-sub
+  ::additional-filter
+  (fn [db]
+    (::spec/additional-filter db)))
+
+
+(reg-sub
   ::creds-name-map
   (fn [db]
     (::spec/creds-name-map db)))

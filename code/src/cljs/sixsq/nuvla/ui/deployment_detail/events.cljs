@@ -158,7 +158,9 @@
                 ::spec/deployment-log-service
                 ::spec/deployment-log-since] :as db} :db} _]
     {::cimi-api-fx/operation [(:id deployment) "create-log"
-                              #(dispatch [::set-deployment-log-id (:resource-id %)])
+                              #(if (instance? js/Error %)
+                                 (cimi-api-fx/default-error-message % "Create log action failed!")
+                                 (dispatch [::set-deployment-log-id (:resource-id %)]))
                               {:service deployment-log-service
                                :since   (time/time->utc-str deployment-log-since)}]}))
 

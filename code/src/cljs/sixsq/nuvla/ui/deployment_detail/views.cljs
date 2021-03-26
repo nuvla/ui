@@ -71,12 +71,13 @@
         running    (sum-running-replicas @parameters)
         desired    (sum-desired-replicas @parameters)]
     (when (and (= state "STARTED") running desired (not= running desired))
-      [ui/Progress {:label    "deployment: started (replicas: running/required)"
-                    :total    desired
-                    :value    running
-                    :progress "ratio"
-                    :size     "small"
-                    :class    ["green"]}])))
+      [ui/Segment
+       [ui/Progress {:label    "deployment: started (replicas: running/required)"
+                     :total    desired
+                     :value    running
+                     :progress "ratio"
+                     :size     "small"
+                     :class    ["green"]}]])))
 
 
 (defn ProgressBars
@@ -136,21 +137,19 @@
                 :icon    "linkify"}
      :render   (fn []
                  (r/as-element
-                   [:<>
-                    [ProgressBars]
-                    (if (empty? urls)
-                      [uix/WarningMsgNoElements (@tr [:no-urls])]
-                      [ui/TabPane
-                       [ui/Table {:basic   "very"
-                                  :columns 2}
-                        [ui/TableHeader
-                         [ui/TableRow
-                          [ui/TableHeaderCell [:span (@tr [:name])]]
-                          [ui/TableHeaderCell [:span (@tr [:url])]]]]
-                        [ui/TableBody
-                         (for [[url-name url-pattern] urls]
-                           ^{:key url-name}
-                           [url-to-row url-name url-pattern])]]])]))}))
+                   (if (empty? urls)
+                     [uix/WarningMsgNoElements (@tr [:no-urls])]
+                     [ui/TabPane
+                      [ui/Table {:basic   "very"
+                                 :columns 2}
+                       [ui/TableHeader
+                        [ui/TableRow
+                         [ui/TableHeaderCell [:span (@tr [:name])]]
+                         [ui/TableHeaderCell [:span (@tr [:url])]]]]
+                       [ui/TableBody
+                        (for [[url-name url-pattern] urls]
+                          ^{:key url-name}
+                          [url-to-row url-name url-pattern])]]])))}))
 
 
 (defn module-version-section
@@ -162,10 +161,8 @@
                 :key     "versions"
                 :icon    "linkify"}
      :render   (fn [] (r/as-element
-                        [:<>
-                         [ProgressBars]
-                         [ui/TabPane
-                          [views-versions/versions-table @module-versions @module-content-id]]]))}))
+                        [ui/TabPane
+                         [views-versions/versions-table @module-versions @module-content-id]]))}))
 
 
 (defn item-to-row
@@ -202,22 +199,20 @@
                 :icon    "list ol"}
      :render   (fn []
                  (r/as-element
-                   [:<>
-                    [ProgressBars]
-                    (if (empty? items)
-                      [uix/WarningMsgNoElements]
-                      [ui/TabPane
-                       [ui/Table {:basic   "very"
-                                  :columns 2}
-                        [ui/TableHeader
-                         [ui/TableRow
-                          [ui/TableHeaderCell [:span (@tr [:name])]]
-                          [ui/TableHeaderCell [:span (@tr [:value])]]]]
-                        (when-not (empty? items)
-                          [ui/TableBody
-                           (for [{name :name :as item} items]
-                             ^{:key name}
-                             [item-to-row item])])]])]))}))
+                   (if (empty? items)
+                     [uix/WarningMsgNoElements]
+                     [ui/TabPane
+                      [ui/Table {:basic   "very"
+                                 :columns 2}
+                       [ui/TableHeader
+                        [ui/TableRow
+                         [ui/TableHeaderCell [:span (@tr [:name])]]
+                         [ui/TableHeaderCell [:span (@tr [:value])]]]]
+                       (when-not (empty? items)
+                         [ui/TableBody
+                          (for [{name :name :as item} items]
+                            ^{:key name}
+                            [item-to-row item])])]])))}))
 
 
 (defn parameters-section
@@ -290,9 +285,7 @@
                 :key     "events"
                 :icon    "bolt"}
      :render   (fn [] (r/as-element
-                        [:<>
-                         [ProgressBars]
-                         [events-table events-info]]))}))
+                        [events-table events-info]))}))
 
 
 (defn job-map-to-row
@@ -323,35 +316,33 @@
                   :icon    "eur"}
        :render   (fn []
                    (r/as-element
-                     [:<>
-                      [ProgressBars]
-                      [ui/Segment
-                       [ui/Table {:collapsing true
-                                  :basic      "very"
-                                  :padded     false}
-                        [ui/TableBody
-                         [ui/TableRow
-                          [ui/TableCell
-                           [:b (str/capitalize (@tr [:details])) ": "]]
-                          [ui/TableCell
-                           description]]
-                         [ui/TableRow
-                          [ui/TableCell
-                           [:b (str/capitalize (@tr [:period])) ": "]]
-                          [ui/TableCell
-                           (some-> period :start (time/time->format "LL" @locale))
-                           " - "
-                           (some-> period :end (time/time->format "LL" @locale))]]
-                         [ui/TableRow
-                          [ui/TableCell
-                           [:b (str/capitalize (@tr [:coupon])) ": "]]
-                          [ui/TableCell
-                           (or (:name coupon) "-")]]
-                         [ui/TableRow
-                          [ui/TableCell
-                           [:b (str/capitalize (@tr [:total])) ": "]]
-                          [ui/TableCell
-                           (or total "-") " " currency]]]]]]))})))
+                     [ui/Segment
+                      [ui/Table {:collapsing true
+                                 :basic      "very"
+                                 :padded     false}
+                       [ui/TableBody
+                        [ui/TableRow
+                         [ui/TableCell
+                          [:b (str/capitalize (@tr [:details])) ": "]]
+                         [ui/TableCell
+                          description]]
+                        [ui/TableRow
+                         [ui/TableCell
+                          [:b (str/capitalize (@tr [:period])) ": "]]
+                         [ui/TableCell
+                          (some-> period :start (time/time->format "LL" @locale))
+                          " - "
+                          (some-> period :end (time/time->format "LL" @locale))]]
+                        [ui/TableRow
+                         [ui/TableCell
+                          [:b (str/capitalize (@tr [:coupon])) ": "]]
+                         [ui/TableCell
+                          (or (:name coupon) "-")]]
+                        [ui/TableRow
+                         [ui/TableCell
+                          [:b (str/capitalize (@tr [:total])) ": "]]
+                         [ui/TableCell
+                          (or total "-") " " currency]]]]]))})))
 
 
 (defn log-controller
@@ -468,9 +459,7 @@
                 :key     "logs"
                 :icon    "file code"}
      :render   (fn [] (r/as-element
-                        [:<>
-                         [ProgressBars]
-                         [logs-viewer-wrapper]]))}))
+                        [logs-viewer-wrapper]))}))
 
 
 
@@ -863,18 +852,15 @@
 
 (defn overview-pane
   []
-  (let []
-    [:<>
-     [ProgressBars]
-     [ui/TabPane
-      [ui/Grid {:columns   2,
-                :stackable true
-                :padded    true}
-       [ui/GridRow
-        [ui/GridColumn {:stretched true}
-         [TabOverviewSummary]]
-        [ui/GridColumn {:stretched true}
-         [TabOverviewModule]]]]]]))
+  [ui/TabPane
+   [ui/Grid {:columns   2,
+             :stackable true
+             :padded    true}
+    [ui/GridRow
+     [ui/GridColumn {:stretched true}
+      [TabOverviewSummary]]
+     [ui/GridColumn {:stretched true}
+      [TabOverviewModule]]]]])
 
 
 (defn overview
@@ -913,8 +899,8 @@
      (parameters-section)
      (env-vars-section)
      (billing-section)
-     (job-views/jobs-section ProgressBars state)
-     (acl/TabAcls deployment (not @read-only?) ::events/edit ProgressBars state)]))
+     (job-views/jobs-section)
+     (acl/TabAcls deployment (not @read-only?) ::events/edit)]))
 
 
 (defn depl-state->status
@@ -970,6 +956,7 @@
          [PageHeader]
          [MenuBar @deployment]
          [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 8]
+         [ProgressBars]
          [vpn-info]
          [ui/Tab
           {:menu        {:secondary true

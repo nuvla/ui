@@ -58,7 +58,7 @@
 
 
 (defn jobs-section
-  [progress-bar status]
+  []
   (let [tr        (subscribe [::i18n-subs/tr])
         jobs      (subscribe [::subs/jobs])
         {:keys [resources]} @jobs
@@ -71,9 +71,7 @@
                 :key     "job-section"
                 :icon    "clipboard list"}
      :render   (fn [] (r/as-element
-                        [:<>
-                         [progress-bar status]
-                         [JobsTable @jobs]]))}))
+                        [JobsTable @jobs]))}))
 
 
 (def filtered-actions #{"dct_check"})
@@ -94,10 +92,11 @@
         message  (str/replace (str/lower-case (str action ": " state)) #"_" " ")
         error    (or (= "FAILED" state) (= "ERROR" resource-state))]
     (when (and last-job (< progress 100))
-      [ui/Progress {:active   true
-                    :label    message
-                    :percent  progress
-                    :progress true
-                    :size     "small"
-                    :error    error
-                    :class    ["green"]}])))
+      [ui/Segment
+       [ui/Progress {:active   true
+                     :label    message
+                     :percent  progress
+                     :progress true
+                     :size     "small"
+                     :error    error
+                     :class    ["green"]}]])))

@@ -848,26 +848,24 @@
       (let [{:keys [id tags ssh-keys]} @nuvlabox]
         (when (not= (count ssh-keys) (count @ssh-creds))
           (dispatch [::events/get-nuvlabox-associated-ssh-keys ssh-keys]))
-        [:<>
-         [job-views/ProgressJobAction @nb-status]
-         [ui/TabPane
-          [ui/Grid {:columns   2,
-                    :stackable true
-                    :padded    true}
-           [ui/GridRow
-            [ui/GridColumn {:stretched true}
-             [TabOverviewNuvlaBox @nuvlabox @nb-status locale edit old-nb-name close-fn]]
+        [ui/TabPane
+         [ui/Grid {:columns   2,
+                   :stackable true
+                   :padded    true}
+          [ui/GridRow
+           [ui/GridColumn {:stretched true}
+            [TabOverviewNuvlaBox @nuvlabox @nb-status locale edit old-nb-name close-fn]]
 
-            [ui/GridColumn {:stretched true}
-             [TabOverviewHost @nb-status ssh-creds tr]]]
+           [ui/GridColumn {:stretched true}
+            [TabOverviewHost @nb-status ssh-creds tr]]]
 
-           [ui/GridRow
-            [ui/GridColumn
-             [TabOverviewStatus @nb-status id @online-status tr]]
+          [ui/GridRow
+           [ui/GridColumn
+            [TabOverviewStatus @nb-status id @online-status tr]]
 
-            (when (> (count tags) 0)
-              [ui/GridColumn
-               [TabOverviewTags @nuvlabox]])]]]]))))
+           (when (> (count tags) 0)
+             [ui/GridColumn
+              [TabOverviewTags @nuvlabox]])]]]))))
 
 
 (defn TabLocationMap
@@ -1196,8 +1194,7 @@
 (defn tabs
   [uuid count-peripherals tr]
   (let [nuvlabox  (subscribe [::subs/nuvlabox])
-        can-edit? (subscribe [::subs/can-edit?])
-        nuvlabox-status (subscribe [::subs/nuvlabox-status])]
+        can-edit? (subscribe [::subs/can-edit?])]
     [{:menuItem {:content "Overview"
                  :key     "overview"
                  :icon    "info"}
@@ -1239,8 +1236,8 @@
                  :key     "vuln"
                  :icon    "shield"}
       :render   (fn [] (r/as-element [TabVulnerabilities]))}
-     (job-views/jobs-section job-views/ProgressJobAction @nuvlabox-status)
-     (acl/TabAcls nuvlabox @can-edit? ::events/edit job-views/ProgressJobAction @nuvlabox-status)]))
+     (job-views/jobs-section)
+     (acl/TabAcls nuvlabox @can-edit? ::events/edit)]))
 
 
 (defn TabsNuvlaBox
@@ -1288,10 +1285,12 @@
 (defn EdgeDetails
   [uuid]
   (refresh uuid)
-  (fn [uuid]
-    ^{:key uuid}
-    [ui/Container {:fluid true}
-     [PageHeader]
-     [MenuBar uuid]
-     [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
-     [TabsNuvlaBox uuid]]))
+  (let [nb-status (subscribe [::subs/nuvlabox-status])]
+    (fn [uuid]
+     ^{:key uuid}
+     [ui/Container {:fluid true}
+      [PageHeader]
+      [MenuBar uuid]
+      [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
+      [job-views/ProgressJobAction @nb-status]
+      [TabsNuvlaBox uuid]])))

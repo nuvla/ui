@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Deployment - Bugfix start logging create an infinite request loop when
+    action not available
   - Deployment - Additional filter
   - Dependency - nuvla-api-version v2.0.9
   - Sidebar item has an href

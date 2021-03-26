@@ -46,6 +46,48 @@
               :event     [::events/get-deployment resource-id]}]))
 
 
+(defn sum-replicas
+  [parameters ends-with]
+  (->> (vals parameters)
+       (filter #(str/ends-with? (:name %) ends-with))
+       (map #(js/parseInt (:value %)))
+       (reduce +)))
+
+
+(defn sum-running-replicas
+  [parameters]
+  (sum-replicas parameters "replicas.running"))
+
+
+(defn sum-desired-replicas
+  [parameters]
+  (sum-replicas parameters "replicas.desired"))
+
+
+(defn ProgressDeployment
+  []
+  (let [{:keys [state]} @(subscribe [::subs/deployment])
+        parameters (subscribe [::subs/deployment-parameters])
+        running    (sum-running-replicas @parameters)
+        desired    (sum-desired-replicas @parameters)]
+    (when (and (= state "STARTED") running desired (not= running desired))
+      [ui/Segment
+       [ui/Progress {:label    "deployment: started (replicas: running/required)"
+                     :total    desired
+                     :value    running
+                     :progress "ratio"
+                     :size     "small"
+                     :class    ["green"]}]])))
+
+
+(defn ProgressBars
+  []
+  (let [{:keys [state]} @(subscribe [::subs/deployment])]
+    [:<>
+     [job-views/ProgressJobAction state]
+     [ProgressDeployment]]))
+
+
 (defn url-to-row
   [url-name url-pattern]
   (let [tr  (subscribe [::i18n-subs/tr])
@@ -66,7 +108,7 @@
   ([url-name url-pattern primary?]
    (let [url (subscribe [::subs/url url-pattern])]
      (when @url
-       [ui/Button {:color    (if primary? "green" "grey")
+       [ui/Button {:color    (if primary? "green" nil)
                    :icon     "external"
                    :content  url-name
                    :href     @url
@@ -75,7 +117,8 @@
                                (.stopPropagation event)
                                (.preventDefault event))
                    :target   "_blank"
-                   :rel      "noreferrer"}]))))
+                   :rel      "noreferrer"
+                   :style    {:margin 2}}]))))
 
 
 (defn urls-section
@@ -117,8 +160,9 @@
     {:menuItem {:content (r/as-element [:span (@tr [:module-version])])
                 :key     "versions"
                 :icon    "linkify"}
-     :render   (fn [] (r/as-element [ui/TabPane
-                                     [views-versions/versions-table @module-versions @module-content-id]]))}))
+     :render   (fn [] (r/as-element
+                        [ui/TabPane
+                         [views-versions/versions-table @module-versions @module-content-id]]))}))
 
 
 (defn item-to-row
@@ -155,21 +199,20 @@
                 :icon    "list ol"}
      :render   (fn []
                  (r/as-element
-                   [:<>
-                    (if (empty? items)
-                      [uix/WarningMsgNoElements]
-                      [ui/TabPane
-                       [ui/Table {:basic   "very"
-                                  :columns 2}
-                        [ui/TableHeader
-                         [ui/TableRow
-                          [ui/TableHeaderCell [:span (@tr [:name])]]
-                          [ui/TableHeaderCell [:span (@tr [:value])]]]]
-                        (when-not (empty? items)
-                          [ui/TableBody
-                           (for [{name :name :as item} items]
-                             ^{:key name}
-                             [item-to-row item])])]])]))}))
+                   (if (empty? items)
+                     [uix/WarningMsgNoElements]
+                     [ui/TabPane
+                      [ui/Table {:basic   "very"
+                                 :columns 2}
+                       [ui/TableHeader
+                        [ui/TableRow
+                         [ui/TableHeaderCell [:span (@tr [:name])]]
+                         [ui/TableHeaderCell [:span (@tr [:value])]]]]
+                       (when-not (empty? items)
+                         [ui/TableBody
+                          (for [{name :name :as item} items]
+                            ^{:key name}
+                            [item-to-row item])])]])))}))
 
 
 (defn parameters-section
@@ -241,7 +284,8 @@
                                                                  event-count])])
                 :key     "events"
                 :icon    "bolt"}
-     :render   (fn [] (r/as-element [events-table events-info]))}))
+     :render   (fn [] (r/as-element
+                        [events-table events-info]))}))
 
 
 (defn job-map-to-row
@@ -414,7 +458,8 @@
     {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:logs]))])
                 :key     "logs"
                 :icon    "file code"}
-     :render   (fn [] (r/as-element [logs-viewer-wrapper]))}))
+     :render   (fn [] (r/as-element
+                        [logs-viewer-wrapper]))}))
 
 
 
@@ -613,6 +658,13 @@
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
+     [ui/Segment (merge style/basic {:floated "right"})
+      [ui/Image {:src      (or logo-url "")
+                 :bordered true
+                 :style    {:width      "auto"
+                            :height     "100px"
+                            ;:padding    "20px"
+                            :object-fit "contain"}}]]
      [:h4 "Module"]
      [ui/Table {:basic  "very"
                 :padded false}
@@ -640,6 +692,86 @@
         [ui/TableCell [values/as-link id :label (subs id 11)]]]]]]))
 
 
+(defn DeploymentCard
+  [{:keys [id state module tags] :as deployment} & {:keys [clickable?]
+                                                    :or   {clickable? true}}]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        creds-name    (subscribe [::deployment-subs/creds-name-map])
+        credential-id (:parent deployment)
+        {module-logo-url :logo-url
+         module-name     :name
+         module-path     :path
+         module-content  :content} module
+        cred-info     (get @creds-name credential-id credential-id)
+        [primary-url-name
+         primary-url-pattern] (-> module-content (get :urls []) first)
+        primary-url   (if clickable?
+                        (subscribe [::deployment-subs/deployment-url id primary-url-pattern])
+                        (subscribe [::subs/url primary-url-pattern]))
+        started?      (utils/is-started? state)]
+
+    ^{:key id}
+    [ui/Card (when clickable?
+               {:as       :div
+                :link     true
+                :on-click (fn [event]
+                            (dispatch [::history-events/navigate (utils/deployment-href id)])
+                            (.preventDefault event))})
+     [ui/Image {:src      (or module-logo-url "")
+                :bordered true
+                :style    {:width      "auto"
+                           :height     "100px"
+                           :padding    "20px"
+                           :object-fit "contain"}}]
+
+     (when clickable?
+       (cond
+         (general-utils/can-operation? "stop" deployment) [ShutdownButton deployment :label? true]
+         (general-utils/can-delete? deployment) [DeleteButton deployment :label? true]))
+
+     [ui/CardContent
+
+      [ui/Segment (merge style/basic {:floated "right"})
+       [:p {:style {:color "initial"}} state]
+       [ui/Loader {:active        (utils/deployment-in-transition? state)
+                   :indeterminate true}]]
+
+      [ui/CardHeader (if clickable?
+                       [:span [:p {:style {:overflow      "hidden",
+                                           :text-overflow "ellipsis",
+                                           :max-width     "20ch"}} module-name]]
+                       [history-views/link (str "apps/" module-path) module-name])]
+
+      [ui/CardMeta (str (@tr [:created]) " " (-> deployment :created time/parse-iso8601 time/ago))]
+
+      [ui/CardDescription
+
+       (when-not (str/blank? cred-info)
+         [:div [ui/Icon {:name "key"}] cred-info])]
+
+      [ui/LabelGroup {:size  "tiny"
+                      :color "teal"
+                      :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+       (for [tag tags]
+         ^{:key (str id "-" tag)}
+         [ui/Label {:style {:max-width     "15ch"
+                            :overflow      "hidden"
+                            :text-overflow "ellipsis"
+                            :white-space   "nowrap"}}
+          [ui/Icon {:name "tag"}] tag])]]
+
+     (when (and started? @primary-url)
+       [ui/Button {:color    "green"
+                   :icon     "external"
+                   :content  primary-url-name
+                   :fluid    true
+                   :href     @primary-url
+                   :on-click (fn [event]
+                               (.stopPropagation event))
+                   :target   "_blank"
+                   :rel      "noreferrer"}])]))
+
+
 (defn TabOverviewSummary
   []
   (let [tr            (subscribe [::i18n-subs/tr])
@@ -654,7 +786,8 @@
         credential-id (:parent @deployment)
         {module-content :content} module
         cred-info     (get @creds-name credential-id credential-id)
-        urls          (:urls module-content)]
+        urls          (:urls module-content)
+        nuvlabox      (:nuvlabox @deployment)]
 
     [ui/SegmentGroup {:style  {:display    "flex", :justify-content "space-between",
                                :background "#f3f4f5"}
@@ -662,15 +795,8 @@
      [ui/Segment {:secondary true
                   :color     "green"
                   :raised    true}
-      [ui/Segment (merge style/basic {:floated "right"})
-       [ui/Image {:src      (or logo-url "")
-                  :bordered true
-                  :style    {:width      "auto"
-                             :height     "100px"
-                             :padding    "20px"
-                             :object-fit "contain"}}]]
 
-      [:h4 {:style {:margin-top 0}} "Summary"]
+      [:h4 {:style {:margin-top 0}} (@tr [:summary])]
 
       [ui/Table {:basic "very" :style {:display "inline", :floated "left"}}
        [ui/TableBody
@@ -710,6 +836,11 @@
          [ui/TableCell
           (when-not (str/blank? cred-info)
             [:div [ui/Icon {:name "key"}] cred-info])]]
+        (when nuvlabox
+          [ui/TableRow
+           [ui/TableCell "NuvlaBox"]
+           [ui/TableCell
+            [:div [ui/Icon {:name "box"}] [values/as-link (subs nuvlabox 9) :page "edge"]]]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
          [ui/TableCell @version " " (up-to-date? @version @versions)]]]]]
@@ -719,18 +850,18 @@
         ^{:key url-name}
         [url-to-button url-name url-pattern (= i 0)])]]))
 
+
 (defn overview-pane
   []
-  (let []
-    [ui/TabPane
-     [ui/Grid {:columns   2,
-               :stackable true
-               :padded    true}
-      [ui/GridRow
-       [ui/GridColumn {:stretched true}
-        [TabOverviewSummary]]
-       [ui/GridColumn {:stretched true}
-        [TabOverviewModule]]]]]))
+  [ui/TabPane
+   [ui/Grid {:columns   2,
+             :stackable true
+             :padded    true}
+    [ui/GridRow
+     [ui/GridColumn {:stretched true}
+      [TabOverviewSummary]]
+     [ui/GridColumn {:stretched true}
+      [TabOverviewModule]]]]])
 
 
 (defn overview
@@ -825,6 +956,7 @@
          [PageHeader]
          [MenuBar @deployment]
          [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 8]
+         [ProgressBars]
          [vpn-info]
          [ui/Tab
           {:menu        {:secondary true

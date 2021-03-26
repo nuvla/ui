@@ -979,7 +979,7 @@
         :nuvlabox-datagateway-popup                    "Abonnez vos applications au MQTT data-gateway pour accéder aux attributes 'nuvlabox-status'"
         :nuvlabox-decommission-warning                 "Je comprends que la mise hors service de cette NuvlaBox est permanente et ne peut pas être annulée."
         :nuvlabox-delete-warning                       "Je comprends que la suppression de cette NuvlaBox est permanente et ne peut pas être annulée."
-        :nuvlabox-detail-ssh-enabled                   " accés SSH activé "
+        :nuvlabox-detail-ssh-enabled                   " accès SSH activé "
         :nuvlabox-documentation                        "Documentation complète: "
         :nuvlabox-modal-add-existing-ssh-key           "Sélectionner clés..."
         :nuvlabox-modal-add-new-ssh-key                "Créer nouvelle"

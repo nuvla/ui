@@ -889,8 +889,7 @@
 (defn deployment-detail-panes
   []
   (let [deployment (subscribe [::subs/deployment])
-        read-only? (subscribe [::subs/is-read-only?])
-        state      (:state @deployment)]
+        read-only? (subscribe [::subs/is-read-only?])]
     [(overview)
      (urls-section)
      (module-version-section)

@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - Filter comp - Fix bug in date-time field
+  - Deployment - Bulk update
+  - CIMI API - Bulk operation support
   - Deployment - Additional filter
   - Dependency - nuvla-api-version v2.0.9
   - Sidebar item has an href

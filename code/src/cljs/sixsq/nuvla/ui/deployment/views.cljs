@@ -1,15 +1,22 @@
 (ns sixsq.nuvla.ui.deployment.views
   (:require
+    [clojure.set :as set]
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.deployment-detail.subs :as deployment-detail-subs]
     [sixsq.nuvla.ui.deployment-detail.views :as deployment-detail-views]
+    [sixsq.nuvla.ui.deployment-dialog.views-module-version :as dep-diag-versions]
     [sixsq.nuvla.ui.deployment.events :as events]
     [sixsq.nuvla.ui.deployment.subs :as subs]
     [sixsq.nuvla.ui.deployment.utils :as utils]
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.general :as utils-general]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
@@ -49,10 +56,63 @@
                               )}]])))
 
 
+(defn BulkUpdateModal
+  []
+  (let [info            (subscribe [::subs/bulk-update-modal])
+        versions        (subscribe [::deployment-detail-subs/module-versions])
+        selected-module (r/atom nil)]
+    (fn []
+      (let [options     (map (fn [[idx {:keys [href commit]}]]
+                               {:key   idx,
+                                :value href
+                                :text  (str "v" idx " | " commit)}) @versions)
+            module-href (:module-href @info)]
+        [ui/Modal {:open       (some? @info)
+                   :close-icon true
+                   :on-close   #(dispatch [::events/close-modal-bulk-update])}
+         [uix/ModalHeader {:header "Bulk update"}]
+
+         [ui/ModalContent
+          [ui/Form
+           (when-not module-href
+             [ui/Message {:visible true
+                          :warning true
+                          :header  "Deployments not based on same module"
+                          :content (str "Module selection is disabled because selected deployments "
+                                        "are not based on the same module. You can still call this "
+                                        "action to update container images if they are base on "
+                                        "tags like latest.")}])
+           [ui/FormDropdown
+            {:scrolling   true
+             :upward      false
+             :selection   true
+             :label       "Module version"
+             :placeholder "Select a module version"
+             :disabled    (nil? module-href)
+             :on-change   (ui-callback/value
+                            #(reset! selected-module
+                                     (->> %
+                                          (dep-diag-versions/get-version-id @versions)
+                                          (str module-href "_"))))
+             :fluid       true
+             :options     options}]]]
+         [ui/ModalActions
+          [uix/Button {:text     "Launch"
+                       :positive true
+                       :active   true
+                       :on-click #(dispatch [::events/bulk-update-operation @selected-module])}]]
+         ]))))
+
+
 (defn MenuBar
   []
-  (let [view     (subscribe [::subs/view])
-        loading? (subscribe [::subs/loading?])]
+  (let [view                  (subscribe [::subs/view])
+        loading?              (subscribe [::subs/loading?])
+        selected-set          (subscribe [::subs/selected-set])
+        select-all?           (subscribe [::subs/select-all?])
+        dep-count             (subscribe [::subs/deployments-count])
+        selected-count        (subscribe [::subs/selected-count])
+        is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
     (fn []
       [:<>
        [main-components/StickyBar
@@ -64,20 +124,51 @@
                        :active   (= @view "table")
                        :on-click #(dispatch [::events/set-view "table"])}]
 
+         [ui/MenuItem {:on-click #(dispatch [::events/select-all])
+                       :active   @select-all?}
+          "Select all"]
+         [ui/MenuItem {:active   @is-all-page-selected?
+                       :on-click #(dispatch [::events/select-all-page])}
+          "Select all in this page"]
+         [ui/MenuItem {:disabled true}
+          "Selected"
+          [ui/Label
+           (when (pos? @selected-count) {:color "teal"})
+           (str @selected-count "/" @dep-count)]]
+         [ui/MenuMenu
+          [ui/Dropdown {:item     true :text "Actions"
+                        :icon     "ellipsis vertical"
+                        :disabled (not (pos? @selected-count))}
+           [ui/DropdownMenu
+            #_[ui/DropdownItem "Start"]
+            #_[ui/DropdownItem "Stop"]
+            [ui/DropdownItem
+             {:on-click #(dispatch [::events/bulk-update @selected-set])}
+             "Update"]]]]
+
          [main-components/RefreshMenu
           {:action-id  events/refresh-action-deployments-id
            :loading?   @loading?
-           :on-refresh refresh}]]]])))
+           :on-refresh refresh}]]]
+       [BulkUpdateModal]])))
 
 
 (defn row-fn
-  [{:keys [id state module] :as deployment}]
-  (let [credential-id (:parent deployment)
+  [{:keys [id state module parent] :as deployment}]
+  (let [credential-id parent
         creds-name    (subscribe [::subs/creds-name-map])
         [primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
-        url           @(subscribe [::subs/deployment-url id primary-url-pattern])]
+        url           @(subscribe [::subs/deployment-url id primary-url-pattern])
+        select-all?   (subscribe [::subs/select-all?])
+        selected?     (subscribe [::subs/is-selected? id])]
     [ui/TableRow
+     (when-not @select-all?
+       [ui/TableCell
+        [ui/Checkbox {:checked  @selected?
+                      :on-click (fn [event]
+                                  (dispatch [::events/select-id id])
+                                  (.stopPropagation event))}]])
      [ui/TableCell [values/as-link (utils-general/id->uuid id)
                     :page "dashboard" :label (utils-general/id->short-uuid id)]]
      [ui/TableCell {:style {:overflow      "hidden",
@@ -103,7 +194,9 @@
 
 (defn vertical-data-table
   [deployments-list]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr                    (subscribe [::i18n-subs/tr])
+        select-all?           (subscribe [::subs/select-all?])
+        is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
     (fn [deployments-list]
       (if (empty? deployments-list)
         [uix/WarningMsgNoElements]
@@ -111,6 +204,11 @@
          (merge style/single-line {:stackable true})
          [ui/TableHeader
           [ui/TableRow
+           (when-not @select-all?
+             [ui/TableHeaderCell
+              [ui/Checkbox
+               {:checked  @is-all-page-selected?
+                :on-click #(dispatch [::events/select-all-page])}]])
            [ui/TableHeaderCell (@tr [:id])]
            [ui/TableHeaderCell (@tr [:module])]
            [ui/TableHeaderCell (@tr [:status])]
@@ -124,6 +222,64 @@
             [row-fn deployment])]]))))
 
 
+(defn DeploymentCard
+  [{:keys [id state module tags] :as deployment}]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        creds-name    (subscribe [::subs/creds-name-map])
+        credential-id (:parent deployment)
+        {module-logo-url :logo-url
+         module-name     :name
+         module-content  :content} module
+        cred-info     (get @creds-name credential-id credential-id)
+        [primary-url-name
+         primary-url-pattern] (-> module-content (get :urls []) first)
+        primary-url   (subscribe [::subs/deployment-url id primary-url-pattern])
+        started?      (utils/is-started? state)
+        dep-href      (utils/deployment-href id)
+        select-all?   (subscribe [::subs/select-all?])
+        is-selected?  (subscribe [::subs/is-selected? id])]
+
+    ^{:key id}
+    [uix/Card
+     (cond-> {:header        [:span [:p {:style {:overflow      "hidden",
+                                                 :text-overflow "ellipsis",
+                                                 :max-width     "20ch"}} module-name]]
+              :meta          (str (@tr [:created]) " " (-> deployment :created
+                                                           time/parse-iso8601 time/ago))
+              :description   (when-not (str/blank? cred-info)
+                               [:div [ui/Icon {:name "key"}] cred-info])
+              :tags          tags
+              :button        (when (and started? @primary-url)
+                               [ui/Button {:color    "green"
+                                           :icon     "external"
+                                           :content  primary-url-name
+                                           :fluid    true
+                                           :on-click (fn [event]
+                                                       (dispatch [::main-events/open-link
+                                                                  @primary-url])
+                                                       (.preventDefault event)
+                                                       (.stopPropagation event))
+                                           :target   "_blank"
+                                           :rel      "noreferrer"}])
+              :on-click      (fn [event]
+                               (dispatch [::history-events/navigate (utils/deployment-href id)])
+                               (.preventDefault event))
+              :href          dep-href
+              :image         (or module-logo-url "")
+              :corner-button (cond
+                               (general-utils/can-operation? "stop" deployment)
+                               [deployment-detail-views/ShutdownButton deployment :label? true]
+
+                               (general-utils/can-delete? deployment)
+                               [deployment-detail-views/DeleteButton deployment :label? true])
+              :state         state
+              :loading?      (utils/deployment-in-transition? state)}
+
+             (not @select-all?)
+             (assoc :on-select #(dispatch [::events/select-id id])
+                    :selected? @is-selected?))]))
+
+
 (defn cards-data-table
   [deployments-list]
   [:div utils-style/center-items
@@ -132,19 +288,21 @@
                   :stackable   true}
     (for [{:keys [id] :as deployment} deployments-list]
       ^{:key id}
-      [deployment-detail-views/DeploymentCard deployment])]])
+      [DeploymentCard deployment])]])
 
 
 (defn deployments-display
-  [deployments-list]
-  (let [loading? (subscribe [::subs/loading?])
-        view     (subscribe [::subs/view])]
-    (fn [deployments-list]
-      [ui/Segment (merge style/basic
-                         {:loading @loading?})
-       (if (= @view "cards")
-         [cards-data-table deployments-list]
-         [vertical-data-table deployments-list])])))
+  []
+  (let [loading?    (subscribe [::subs/loading?])
+        view        (subscribe [::subs/view])
+        deployments (subscribe [::subs/deployments])]
+    (fn []
+      (let [deployments-list (get @deployments :resources [])]
+        [ui/Segment (merge style/basic
+                           {:loading @loading?})
+         (if (= @view "cards")
+           [cards-data-table deployments-list]
+           [vertical-data-table deployments-list])]))))
 
 
 (defn StatisticStates
@@ -191,13 +349,12 @@
   (let
     [elements-per-page (subscribe [::subs/elements-per-page])
      page              (subscribe [::subs/page])
-     deployments       (subscribe [::subs/deployments])]
+     dep-count         (subscribe [::subs/deployments-count])]
     (refresh :init? true)
     (fn []
-      (let [total-deployments (:count @deployments)
+      (let [total-deployments @dep-count
             total-pages       (utils-general/total-pages
-                                (get @deployments :count 0) @elements-per-page)
-            deployments-list  (get @deployments :resources [])]
+                                @dep-count @elements-per-page)]
         [:<>
          [MenuBar]
          [ui/Segment style/basic
@@ -207,7 +364,7 @@
            [control-bar]
            [StatisticStates true]
            [ui/GridColumn]]
-          [deployments-display deployments-list]]
+          [deployments-display]]
          [uix/Pagination
           {:totalitems   total-deployments
            :totalPages   total-pages

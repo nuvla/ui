@@ -34,7 +34,13 @@
                           "created"
                           "stopped"
                           "error"
-                          "queued"})
+                          "pending"})
+
+(s/def ::bulk-update-modal any?)
+
+(s/def ::selected-set set?)
+
+(s/def ::select-all? boolean?)
 
 (s/def ::db (s/keys :req [::loading?
                           ::deployments
@@ -48,7 +54,11 @@
                           ::nuvlabox
                           ::creds-name-map
                           ::view
-                          ::state-selector]))
+                          ::state-selector
+                          ::bulk-update-modal
+                          ::selected-set
+                          ::select-all?
+                          ]))
 
 (def defaults {::loading?                false
                ::page                    1
@@ -62,4 +72,8 @@
                ::deployments-params-map  nil
                ::creds-name-map          {}
                ::view                    "cards"
-               ::state-selector          "all"})
+               ::state-selector          "all"
+               ::bulk-update-modal       nil
+               ::selected-set            #{}
+               ::select-all?             false
+               })

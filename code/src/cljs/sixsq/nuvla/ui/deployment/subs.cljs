@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.deployment.subs
   (:require
+    [clojure.set :as set]
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.deployment.utils :as utils]))
@@ -84,3 +85,53 @@
   ::state-selector
   (fn [db]
     (::spec/state-selector db)))
+
+(reg-sub
+  ::visible-deployments-ids-set
+  :<- [::deployments]
+  (fn [deployments]
+    (utils/visible-deployment-ids deployments)))
+
+(reg-sub
+  ::bulk-update-modal
+  (fn [db]
+    (::spec/bulk-update-modal db)))
+
+(reg-sub
+  ::selected-set
+  (fn [db]
+    (::spec/selected-set db)))
+
+(reg-sub
+  ::select-all?
+  (fn [db]
+    (::spec/select-all? db)))
+
+(reg-sub
+  ::deployments-count
+  :<- [::deployments]
+  (fn [deployments]
+    (get deployments :count 0)))
+
+(reg-sub
+  ::selected-count
+  :<- [::deployments-count]
+  :<- [::selected-set]
+  :<- [::select-all?]
+  (fn [[deps-count selected-set select-all?]]
+    (if select-all?
+      deps-count
+      (count selected-set))))
+
+(reg-sub
+  ::is-all-page-selected?
+  :<- [::selected-set]
+  :<- [::visible-deployments-ids-set]
+  (fn [[selected-set visible-deps-ids-set]]
+    (utils/all-page-selected? selected-set visible-deps-ids-set)))
+
+(reg-sub
+  ::is-selected?
+  :<- [::selected-set]
+  (fn [selected-set [_ id]]
+    (utils/is-selected? selected-set id)))

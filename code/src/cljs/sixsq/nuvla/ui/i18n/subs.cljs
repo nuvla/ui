@@ -15,4 +15,4 @@
   ::tr
   (fn [db]
     (or (::spec/tr db)
-        (utils/create-tr-fn "en"))))
+        (utils/create-tr-fn (or (::spec/locale db) "en")))))

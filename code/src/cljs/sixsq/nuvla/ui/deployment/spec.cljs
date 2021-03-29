@@ -42,6 +42,8 @@
 
 (s/def ::select-all? boolean?)
 
+(s/def ::bulk-jobs-monitored any?)
+
 (s/def ::db (s/keys :req [::loading?
                           ::deployments
                           ::deployments-summary
@@ -58,6 +60,7 @@
                           ::bulk-update-modal
                           ::selected-set
                           ::select-all?
+                          ::bulk-jobs-monitored
                           ]))
 
 (def defaults {::loading?                false
@@ -76,4 +79,5 @@
                ::bulk-update-modal       nil
                ::selected-set            #{}
                ::select-all?             false
+               ::bulk-jobs-monitored     (sorted-map)
                })

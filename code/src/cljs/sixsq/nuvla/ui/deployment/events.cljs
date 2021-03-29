@@ -188,7 +188,7 @@
                           ::cimi-api-fx/get
                           [module-href
                            #(dispatch
-                              [:sixsq.nuvla.ui.deployment.events/set-module-versions %])]))))
+                              [:sixsq.nuvla.ui.deployment-detail.events/set-module-versions %])]))))
 
 
 (reg-event-db
@@ -231,8 +231,8 @@
                   (fn [response]
                     (dispatch [::job-events/wait-job-to-complete
                                {:job-id              (:location response)
-                                :on-complete         #(js/console.log "COMPLETED: " %)
-                                :on-refresh          #(js/console.log "REFRESH: " %)
+                                :on-complete         #(dispatch [::add-bulk-job-monitored %])
+                                :on-refresh          #(dispatch [::add-bulk-job-monitored %])
                                 :refresh-interval-ms 10000}]))
                   "bulk-update" filter-str {:module-href selected-module}]
        :dispatch [::close-modal-bulk-update]})))
@@ -263,3 +263,15 @@
     (-> db
         (update ::spec/select-all? not)
         (assoc ::spec/selected-set #{}))))
+
+
+(reg-event-db
+  ::add-bulk-job-monitored
+  (fn [{:keys [::spec/bulk-jobs-monitored] :as db} [_ {:keys [id] :as job}]]
+    (update db ::spec/bulk-jobs-monitored assoc id job)))
+
+
+(reg-event-db
+  ::dissmiss-bulk-job-monitored
+  (fn [{:keys [::spec/bulk-jobs-monitored] :as db} [_ job-id]]
+    (update db ::spec/bulk-jobs-monitored dissoc job-id)))

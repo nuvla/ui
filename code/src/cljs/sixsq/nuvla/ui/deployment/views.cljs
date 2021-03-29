@@ -347,9 +347,10 @@
 (defn deployments-main-content
   []
   (let
-    [elements-per-page (subscribe [::subs/elements-per-page])
-     page              (subscribe [::subs/page])
-     dep-count         (subscribe [::subs/deployments-count])]
+    [elements-per-page   (subscribe [::subs/elements-per-page])
+     page                (subscribe [::subs/page])
+     dep-count           (subscribe [::subs/deployments-count])
+     bulk-jobs-monitored (subscribe [::subs/bulk-jobs-monitored])]
     (refresh :init? true)
     (fn []
       (let [total-deployments @dep-count
@@ -364,6 +365,12 @@
            [control-bar]
            [StatisticStates true]
            [ui/GridColumn]]
+          (for [[job-id job] @bulk-jobs-monitored]
+            ^{:key job-id}
+            [main-components/BulkActionProgress
+             {:header      "Bulk update in progress"
+              :job         job
+              :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
           [deployments-display]]
          [uix/Pagination
           {:totalitems   total-deployments

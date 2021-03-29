@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Sticky bar - Bug fix z-index collision with open modal
+  - Main comp - Bulk modal progress
   - Filter comp - Fix bug in date-time field
   - Deployment - Bulk update
   - CIMI API - Bulk operation support

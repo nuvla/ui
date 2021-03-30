@@ -185,5 +185,5 @@ tr.active td {
 }
 
 .ui.fixed.top.sticky {
-  z-index: 1001;
+  z-index: 999;
 }

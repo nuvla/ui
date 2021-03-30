@@ -4,9 +4,12 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
@@ -93,6 +96,71 @@
              :on-click #(dispatch [set-active-tab-index-event job-tab-index])}
             (str "Job " action " failed")]
            [ui/MessageContent last-line]])))))
+
+
+(defn BulkActionProgress
+  [{:keys [job on-dissmiss header]}]
+  (let [open? (r/atom false)]
+    (fn [{:keys [job on-dissmiss header]}]
+      (let [{:keys [FAILED SUCCESS] :as status-message} (general-utils/json->edn (:status-message job))
+            some-fail?    (pos? (count FAILED))
+            some-success? (pos? (count SUCCESS))
+            completed?    (= (:progress job) 100)
+            state-failed? (= (:state job) "FAILED")
+            color         (cond
+                            (and some-fail? some-success?) "yellow"
+                            (or state-failed? some-fail?) "red"
+                            :else "green")
+            progress-bar  (fn [label]
+                            [ui/Progress (cond->
+                                           {:active   (not completed?)
+                                            :on-click #(reset! open? true)
+                                            :percent  (:progress job)
+                                            :progress true
+                                            :color    color
+                                            :size     "small"}
+                                           label (assoc :label label
+                                                        :style {:cursor "pointer"}))])]
+        [ui/Message (when completed? {:on-dismiss on-dissmiss})
+         [ui/MessageHeader header]
+         [ui/MessageContent
+          [:br]
+          [ui/Modal {:trigger    (r/as-element (progress-bar "Click for more details"))
+                     :close-icon true}
+           [ui/ModalHeader header]
+           [ui/ModalContent
+            [:h3 "Progress:"]
+            (progress-bar nil)
+            (when state-failed?
+              [:p status-message])
+            (when (seq FAILED)
+              [:<>
+               [:h3 "Failed:"]
+               [ui/ListSA
+                (for [failed-id FAILED]
+                  ^{:key failed-id}
+                  [ui/ListItem
+                   [ui/ListContent
+                    [ui/ListHeader
+                     {:as       :a
+                      :href     failed-id
+                      :target   "_blank"
+                      :on-click (fn [event]
+                                  (dispatch [::history-events/navigate failed-id])
+                                  (.preventDefault event))} failed-id]
+                    [ui/ListDescription (get-in status-message
+                                                [:bootstrap-exceptions (keyword failed-id)])]]])]])
+            (when (seq SUCCESS)
+              [:<>
+               [:h3 "Success:"]
+               [ui/ListSA
+                (for [success-id SUCCESS]
+                  ^{:key success-id}
+                  [ui/ListItem
+                   [ui/ListContent
+                    [ui/ListHeader [history-views/link success-id success-id]]]]
+                  )]])
+            ]]]]))))
 
 
 (defn StatisticState

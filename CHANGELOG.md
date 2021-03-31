@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - i18n - Load locale from storage
+  - Deps - re-frame-storage-fx
   - Deployment - Bugfix start logging create an infinite request loop when
     action not available
   - Deployment - Additional filter

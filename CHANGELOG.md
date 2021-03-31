@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - i18n - Load locale from storage
+  - Deps - re-frame-storage-fx
   - Sticky bar - Bug fix z-index collision with open modal
   - Main comp - Bulk modal progress
   - Filter comp - Fix bug in date-time field

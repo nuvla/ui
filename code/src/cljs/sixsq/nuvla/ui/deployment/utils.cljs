@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.deployment.utils
   (:require
+    [clojure.set :as set]
     [clojure.string :as str]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.time :as time]
@@ -16,7 +17,7 @@
   [status]
   (let [icons-map {status-started  "fas fa-play"
                    status-starting "fas fa-spinner"
-                   status-stopped "fas fa-stop"
+                   status-stopped  "fas fa-stop"
                    status-error    "fas fa-exclamation"}]
     (get icons-map status)))
 
@@ -101,30 +102,54 @@
     (str "state='" state "'")))
 
 
-(defn get-query-params
-  [full-text-search additional-filter state-selector nuvlabox page elements-per-page]
+(defn get-filter-param
+  [full-text-search additional-filter state-selector nuvlabox]
   (let [filter-state     (when state-selector (state-filter state-selector))
         filter-nuvlabox  (when nuvlabox (str "nuvlabox='" nuvlabox "'"))
-        full-text-search (general-utils/fulltext-query-string full-text-search)
-        filter           (general-utils/join-and
-                           filter-state
-                           filter-nuvlabox
-                           full-text-search
-                           additional-filter)]
+        full-text-search (general-utils/fulltext-query-string full-text-search)]
+    (general-utils/join-and
+      filter-state
+      filter-nuvlabox
+      full-text-search
+      additional-filter)))
+
+
+(defn get-query-params
+  [full-text-search additional-filter state-selector nuvlabox page elements-per-page]
+  (let [filter-str (get-filter-param full-text-search additional-filter
+                                     state-selector nuvlabox)]
     (cond-> {:first       (inc (* (dec page) elements-per-page))
              :last        (* page elements-per-page)
              :aggregation "terms:state"
              :orderby     "created:desc"}
-            (not (str/blank? filter)) (assoc :filter filter))))
+            (not (str/blank? filter-str)) (assoc :filter filter-str))))
 
 
 (defn get-query-params-summary
   [full-text-search additional-filter]
   (let [full-text-search (general-utils/fulltext-query-string full-text-search)
-        filter           (general-utils/join-and full-text-search additional-filter)
+        filter-str       (general-utils/join-and full-text-search additional-filter)
         aggregate        "terms:state"]
     (cond-> {:orderby     "created:desc"
              :aggregation aggregate
              :first       0
              :last        0}
-            (not (str/blank? filter)) (assoc :filter filter))))
+            (not (str/blank? filter-str)) (assoc :filter filter-str))))
+
+
+(defn is-selected?
+  [selected-set id]
+  (contains? selected-set id))
+
+
+(defn visible-deployment-ids
+  [deployments]
+  (->> deployments
+       :resources
+       (map :id)
+       set))
+
+
+(defn all-page-selected?
+  [selected-set visible-deps-ids-set]
+  (set/superset? selected-set visible-deps-ids-set))

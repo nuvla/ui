@@ -771,6 +771,7 @@
                    :target   "_blank"
                    :rel      "noreferrer"}])]))
 
+
 (defn TabOverviewSummary
   []
   (let [tr            (subscribe [::i18n-subs/tr])

@@ -118,7 +118,11 @@
 
 
 (defn json->edn [json & {:keys [keywordize-keys] :or {keywordize-keys true}}]
-  (js->clj (.parse js/JSON json) :keywordize-keys keywordize-keys))
+  (try
+    (js->clj (.parse js/JSON json) :keywordize-keys keywordize-keys)
+    (catch js/Error e
+      (js/console.error "Parsing json failed: " e json)
+      false)))
 
 
 (defn yaml->obj

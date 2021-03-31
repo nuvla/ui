@@ -6,6 +6,11 @@
 
   - i18n - Load locale from storage
   - Deps - re-frame-storage-fx
+  - Sticky bar - Bug fix z-index collision with open modal
+  - Main comp - Bulk modal progress
+  - Filter comp - Fix bug in date-time field
+  - Deployment - Bulk update
+  - CIMI API - Bulk operation support
   - Deployment - Bugfix start logging create an infinite request loop when
     action not available
   - Deployment - Additional filter

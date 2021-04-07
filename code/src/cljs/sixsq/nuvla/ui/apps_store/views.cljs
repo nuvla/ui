@@ -22,24 +22,33 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as utils-style]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [clojure.string :as str]
+    [sixsq.nuvla.ui.utils.general :as utils-general]))
 
 
-(defn refresh-menu
+(def tab-discover 0)
+(def tab-app-store 1)
+(def tab-all-apps 2)
+(def tab-my-apps 3)
+(def tab-navigator 4)
+(def tab-deployments 5)
+
+
+(defn RefreshMenu
   []
   [main-components/RefreshMenu
-   {:on-refresh #(do (dispatch [::events/get-modules])
-                     (dispatch [::apps-events/get-module]))}])
+   {:on-refresh #(do (dispatch [::events/get-modules]))}])
 
 
-(defn refresh-my-apps-menu
+(defn RefreshMyAppsMenu
   []
   (let [owner (subscribe [::session-subs/user-id])]
     [main-components/RefreshMenu
-     {:on-refresh #(do (dispatch [::events/get-my-modules owner]))}]))
+     {:on-refresh #(dispatch [::events/get-my-modules owner])}]))
 
 
-(defn module-card
+(defn ModuleCard
   [{:keys [id name description path subtype compatibility logo-url price] :as module}]
   (let [tr          (subscribe [::i18n-subs/tr])
         detail-href (str "apps/" path)
@@ -76,7 +85,7 @@
                                                        (@tr [:day]))))]}]))
 
 
-(defn modules-cards-group
+(defn ModulesCardsGroup
   [modules-list]
   [ui/Segment utils-style/basic
    [ui/CardGroup {:centered    true
@@ -84,10 +93,10 @@
                   :stackable   true}
     (for [{:keys [id] :as module} modules-list]
       ^{:key id}
-      [module-card module])]])
+      [ModuleCard module])]])
 
 
-(defn control-bar
+(defn AppStoreControlBar
   []
   (let [full-text (subscribe [::subs/full-text-search])]
     [ui/Menu {:secondary true}
@@ -95,26 +104,31 @@
       [main-components/SearchInput
        {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))
         :default-value @full-text}]]
-     [refresh-menu]]))
+     [RefreshMenu]]))
 
 
-(defn my-apps-control-bar
+(defn MyAppsControlBar
   []
-  [ui/Menu {:secondary true}
-   [refresh-my-apps-menu]])
+  (let [full-text (subscribe [::subs/full-text-search-my])]
+    [ui/Menu {:secondary true}
+     [ui/MenuMenu {:position "left"}
+      [main-components/SearchInput
+       {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search-my %]))
+        :default-value @full-text}]]
+     [RefreshMyAppsMenu]]))
 
 
-(defn control-bar-projects []
+(defn ControlBarProjects []
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Menu {:borderless true}
      [uix/MenuItem
       {:name     (@tr [:add])
        :icon     "add"
        :on-click #(dispatch [::apps-events/open-add-modal])}]
-     [refresh-menu]]))
+     [RefreshMenu]]))
 
 
-(defn root-projects []
+(defn RootProjects []
   (let [tr     (subscribe [::i18n-subs/tr])
         module (subscribe [::apps-subs/module])]
     (dispatch [::apps-events/get-module])
@@ -124,13 +138,13 @@
          [apps-views-detail/add-modal]
          [apps-views-detail/format-error @module]
          [:<>
-          [control-bar-projects]
+          [ControlBarProjects]
           (when (and @module (not (instance? js/Error @module)))
             (let [{:keys [children]} @module]
               [apps-project-views/format-module-children children]))]]))))
 
 
-(defn appstore
+(defn AppStore
   []
   (let [tr                (subscribe [::i18n-subs/tr])
         modules           (subscribe [::subs/modules])
@@ -141,9 +155,9 @@
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
         [:<>
-         [control-bar]
+         [AppStoreControlBar]
          [:div utils-style/center-items
-          [modules-cards-group (get @modules :resources [])]]
+          [ModulesCardsGroup (get @modules :resources [])]]
          [uix/Pagination
           {:totalitems   total-modules
            :totalPages   total-pages
@@ -155,7 +169,7 @@
 (defn TabMyApps
   []
   (let [tr                (subscribe [::i18n-subs/tr])
-        modules           (subscribe [::subs/modules])
+        modules           (subscribe [::subs/my-modules])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])]
     (dispatch [::events/get-my-modules])
@@ -163,8 +177,8 @@
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
         [ui/Segment
-         [my-apps-control-bar]
-         [modules-cards-group (get @modules :resources [])]
+         [MyAppsControlBar]
+         [ModulesCardsGroup (get @modules :resources [])]
          [uix/Pagination
           {:totalitems   total-modules
            :totalPages   total-pages
@@ -179,13 +193,13 @@
         modules           (subscribe [::subs/modules])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])]
-    (dispatch [::events/get-getting-started-modules])
+    ;    (dispatch [::events/get-getting-started-modules])
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
         [ui/Segment
          [:div "Here's a good place to start."]
-         [modules-cards-group (get @modules :resources [])]
+         [ModulesCardsGroup (get @modules :resources [])]
          [uix/Pagination
           {:totalitems   total-modules
            :totalPages   total-pages
@@ -194,78 +208,130 @@
                            :activePage #(dispatch [::events/set-page %]))}]]))))
 
 
-(defn TabAllApps
+(defn TabAppStore
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn []
-      [ui/TabPane
-       [appstore]])))
+  (fn []
+    [ui/TabPane
+     [AppStore]]))
 
 
 (defn TabNavigator
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn []
-      [ui/TabPane
-       [root-projects]])))
+  (fn []
+    [ui/TabPane
+     [RootProjects]]))
 
 
 (defn TabDeployments
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn []
-      [ui/TabPane
-       [deployment-views/deployments-main-content]])))
+  (fn []
+    [ui/TabPane
+     [deployment-views/deployments-main-content]]))
 
 
-(defn tabs
+(defn TabDiscover
   []
-  [
-   ;{:menuItem {:content "Getting Started"
-   ;            :key     "getting-started"
-   ;            :icon    "certificate"}
-   ; :render   (fn [] (r/as-element [TabGettingStarted]))}
-   {:menuItem {:content "All Apps"
-               :key     "overview"
-               :icon    "grid layout"}
-    :render   (fn [] (r/as-element [TabAllApps]))}
-   {:menuItem {:content "Navigate Apps"
-               :key     "navigate"
-               :icon    "folder open"}
-    :render   (fn [] (r/as-element [TabNavigator]))}
-   ;{:menuItem {:content "My Apps"
-   ;            :key     "my-apps"
-   ;            :icon    "user"}
-   ; :render   (fn [] (r/as-element [TabMyApps]))}
-   {:menuItem {:content "Deployments"
-               :key     "deployments"
-               :icon    "rocket"}
-    :render   (fn [] (r/as-element [TabDeployments]))}])
+  (let [tr             (subscribe [::i18n-subs/tr])
+        modules        (subscribe [::subs/modules])
+        all-my-modules (subscribe [::subs/my-modules])]
+    (dispatch [::events/get-modules ""])
+    (dispatch [::events/get-my-modules ""])
+    (fn []
+      (let []
+        [:<>
+         [ui/Segment
+          [:h2 {:style {:display "inline" :margin-left "10px"}}
+           [ui/Icon {:className "fas fa-store"}]
+           (utils-general/capitalize-words (@tr [:appstore]))
+           [ui/Label {:circular true
+                      :size     "mini"}
+            (:count @modules)]]
+          [ui/Button {:floated  "right"
+                      :primary  true
+                      :on-click #(dispatch [::events/set-active-tab-index tab-app-store])} "See more"]
+          [ModulesCardsGroup (take 4 (get @modules :resources []))]]
+         [ui/Segment
+          [:h2 {:style {:display "inline" :margin-left "10px"}}
+           [ui/Icon {:className "fa-th"}]
+           (utils-general/capitalize-words (@tr [:all-apps]))
+           [ui/Label {:circular true
+                      :size     "mini"}
+            (:count @modules)]]
+          [ui/Button {:floated  "right"
+                      :primary  true
+                      :on-click #(dispatch [::events/set-active-tab-index tab-all-apps])} "See more"]
+          [ModulesCardsGroup (take 4 (get @modules :resources []))]]
+         [ui/Segment
+          [:h2 {:style {:display "inline" :margin-left "10px"}}
+           [ui/Icon {:className "user"}]
+           (utils-general/capitalize-words (@tr [:my-apps]))
+           [ui/Label {:circular true
+                      :size     "mini"}
+            (:count @all-my-modules)]]
+          [ui/Button {:floated  "right"
+                      :primary  true
+                      :on-click #(dispatch [::events/set-active-tab-index tab-my-apps])} "See more"]
+          [ModulesCardsGroup (take 4 (get @all-my-modules :resources []))]]]))))
 
 
-(defn TabsAppStore
+(defn Tabs
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [
+     {:menuItem {:content "Discover"
+                 :key     "discover"
+                 :icon    "play"}
+      :render   (fn [] (r/as-element [TabDiscover]))}
+     {:menuItem (r/as-element
+                  [ui/MenuItem
+                   {:key "appstore"}
+                   [ui/Icon {:className "fas fa-store"}]
+                   (utils-general/capitalize-words (@tr [:appstore]))])
+      :render   (fn [] (r/as-element [TabAppStore]))}
+     {:menuItem (r/as-element
+                  [ui/MenuItem
+                   {:key "allapps"}
+                   [ui/Icon {:className "grid layout"}]
+                   (utils-general/capitalize-words (@tr [:all-apps]))])
+      :render   (fn [] (r/as-element [TabAppStore]))}
+     {:menuItem (r/as-element
+                  [ui/MenuItem
+                   {:key "myapps"}
+                   [ui/Icon {:className "user"}]
+                   (utils-general/capitalize-words (@tr [:my-apps]))])
+      :render   (fn [] (r/as-element [TabMyApps]))}
+     {:menuItem {:content "Navigate Apps"
+                 :key     "navigate"
+                 :icon    "folder open"}
+      :render   (fn [] (r/as-element [TabNavigator]))}
+     {:menuItem {:content "Deployments"
+                 :key     "deployments"
+                 :icon    "rocket"}
+      :render   (fn [] (r/as-element [TabDeployments]))}]))
+
+
+(defn TabsApps
   []
   (fn []
-    (let [tr           (subscribe [::i18n-subs/tr])
-          active-index (subscribe [::subs/active-tab-index])]
+    (let [active-index (subscribe [::subs/active-tab-index])]
       [ui/Tab
        {:menu        {:secondary true
                       :pointing  true
                       :style     {:display        "flex"
                                   :flex-direction "row"
                                   :flex-wrap      "wrap"}}
-        :panes       (tabs)
+        :panes       (Tabs)
         :activeIndex @active-index
         :onTabChange (fn [_ data]
                        (let [active-index (. data -activeIndex)]
                          (dispatch [::events/set-active-tab-index active-index])))}])))
 
 
-(defn root-view
+(defn RootView
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Container {:fluid true}
      [:<>
-      [uix/PageHeader "fas fa-store" (general-utils/capitalize-first-letter (@tr [:appstore]))]
-      [TabsAppStore]
+      [uix/PageHeader "fas fa-store" (general-utils/capitalize-first-letter (@tr [:apps]))]
+      [TabsApps]
       [deployment-dialog-views/deploy-modal]]]))

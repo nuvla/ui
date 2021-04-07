@@ -30,21 +30,47 @@
         (getting-started-modules-cofx elements-per-page page))))
 
 
+;; My modules
+
+(reg-event-db
+  ::set-my-modules
+  (fn [db [_ modules]]
+    (assoc db ::spec/my-modules modules)))
+
+
 (defn my-modules-cofx
-  [cofx owner elements-per-page page]
+  [cofx owner full-text-search elements-per-page page]
   (assoc cofx ::cimi-api-fx/search
-              [:module (utils/get-my-modules-query-params owner page elements-per-page)
-               #(dispatch [::set-modules %])]))
+              [:module (utils/get-my-modules-query-params owner full-text-search page elements-per-page)
+               #(dispatch [::set-my-modules %])]))
 
 
 (reg-event-fx
   ::get-my-modules
   (fn [{{:keys [::session-spec/session
+                ::spec/full-text-search-my
                 ::spec/page
-                ::spec/elements-per-page] :as db} :db} _]
-    (let [user-id (:user session)]
-      (-> {:db (assoc db ::spec/modules nil)}
-          (my-modules-cofx user-id elements-per-page page)))))
+                ::spec/elements-per-page] :as db} :db} [_ full-text-search]]
+    (let [user-id (:user session)
+          search (or full-text-search full-text-search-my)]
+      (-> {:db (assoc db ::spec/my-modules nil)}
+          (my-modules-cofx user-id search elements-per-page page)))))
+
+
+(reg-event-fx
+  ::set-full-text-search-my
+  (fn [{{:keys [::spec/elements-per-page] :as db} :db} [_ full-text-search]]
+    (let [new-page 1]
+      {:db (assoc db ::spec/full-text-search-my full-text-search
+                        ::spec/page new-page)
+       :dispatch [::get-my-modules]})))
+
+
+;(defn search-my-modules-cofx
+;  [cofx full-text-search elements-per-page page]
+;  (assoc cofx ::cimi-api-fx/search
+;              [:module (utils/get-query-params full-text-search page elements-per-page)
+;               #(dispatch [::set-my-modules %])]))
 
 
 (defn search-modules-cofx
@@ -58,9 +84,10 @@
   ::get-modules
   (fn [{{:keys [::spec/full-text-search
                 ::spec/page
-                ::spec/elements-per-page] :as db} :db} _]
-    (-> {:db (assoc db ::spec/modules nil)}
-        (search-modules-cofx full-text-search elements-per-page page))))
+                ::spec/elements-per-page] :as db} :db} [_ full-text]]
+    (let [search (or full-text full-text-search )]
+      (-> {:db (assoc db ::spec/modules nil)}
+          (search-modules-cofx search elements-per-page page)))))
 
 
 (defn summary-modules-cofx

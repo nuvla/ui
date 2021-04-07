@@ -54,7 +54,7 @@
             is-new?     (not (empty? new-subtype))]
         (dispatch [::events/is-new? (not (empty? new-subtype))])
         (if is-root?
-          [apps-store-views/root-view]
+          [apps-store-views/RootView]
           (do
             (if is-new?
               (new-module new-subtype)

@@ -10,6 +10,17 @@
 
 
 (reg-sub
+  ::my-modules
+  ::spec/my-modules)
+
+
+; just the first few (no filter)
+(reg-sub
+  ::all-my-modules
+  ::spec/all-my-modules)
+
+
+(reg-sub
   ::elements-per-page
   ::spec/elements-per-page)
 
@@ -23,6 +34,12 @@
   ::full-text-search
   (fn [db]
     (::spec/full-text-search db)))
+
+
+(reg-sub
+  ::full-text-search-my
+  (fn [db]
+    (::spec/full-text-search-my db)))
 
 
 (reg-sub

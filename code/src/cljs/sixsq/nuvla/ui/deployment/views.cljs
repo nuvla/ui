@@ -351,7 +351,7 @@
      page                (subscribe [::subs/page])
      dep-count           (subscribe [::subs/deployments-count])
      bulk-jobs-monitored (subscribe [::subs/bulk-jobs-monitored])]
-    (refresh :init? true)
+    (refresh)
     (fn []
       (let [total-deployments @dep-count
             total-pages       (utils-general/total-pages

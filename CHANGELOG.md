@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.17.0] - 2021-04-09
+
 ### Changed
 
   - i18n - Load locale from storage

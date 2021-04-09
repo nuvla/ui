@@ -32,8 +32,7 @@
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-id
                        :frequency 20000
-                       :event     [::get-deployments]}]]
-          ]}))
+                       :event     [::get-deployments]}]]]}))
 
 
 (reg-event-fx
@@ -68,8 +67,20 @@
 (reg-event-fx
   ::set-deployments
   (fn [{:keys [db]} [_ {:keys [resources] :as deployments}]]
-    {:db (assoc db ::spec/loading? false
-                   ::spec/deployments deployments)}))
+    (let [deployments-resource-ids (map :id resources)
+          filter-deps-ids          (str/join " or " (map #(str "parent='" % "'")
+                                                         deployments-resource-ids))
+          query-params             {:filter (str "(" filter-deps-ids ") and value!=null")
+                                    :select "parent, id, deployment, name, value"
+                                    :last   10000}
+          callback                 (fn [response]
+                                     (when-not (instance? js/Error response)
+                                       (dispatch [::set-deployments-params-map response])))]
+      (cond-> {:db (assoc db ::spec/loading? false
+                             ::spec/deployments deployments)}
+              (not-empty deployments-resource-ids) (assoc ::cimi-api-fx/search
+                                                          [:deployment-parameter
+                                                           query-params callback])))))
 
 
 (reg-event-fx

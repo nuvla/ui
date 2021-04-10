@@ -2,6 +2,14 @@
   (:require [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
+(def tab-discover 0)
+(def tab-app-store 1)
+(def tab-all-apps 2)
+(def tab-my-apps 3)
+(def tab-navigator 4)
+(def tab-deployments 5)
+
+
 (defn get-query-params
   [full-text-search page elements-per-page]
   {:first   (inc (* (dec page) elements-per-page))

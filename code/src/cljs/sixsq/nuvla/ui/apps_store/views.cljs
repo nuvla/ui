@@ -24,15 +24,8 @@
     [sixsq.nuvla.ui.utils.style :as utils-style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.general :as utils-general]))
-
-
-(def tab-discover 0)
-(def tab-app-store 1)
-(def tab-all-apps 2)
-(def tab-my-apps 3)
-(def tab-navigator 4)
-(def tab-deployments 5)
+    [sixsq.nuvla.ui.utils.general :as utils-general]
+    [sixsq.nuvla.ui.apps-store.utils :as utils]))
 
 
 (defn RefreshMenu
@@ -87,7 +80,8 @@
 
 (defn ModulesCardsGroup
   [modules-list]
-  [ui/Segment utils-style/basic
+  ;  style={{overflow: 'auto', maxHeight: 200 }}
+  [:div utils-style/center-items
    [ui/CardGroup {:centered    true
                   :itemsPerRow 4
                   :stackable   true}
@@ -154,10 +148,9 @@
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
-        [:<>
+        [ui/Segment
          [AppStoreControlBar]
-         [:div utils-style/center-items
-          [ModulesCardsGroup (get @modules :resources [])]]
+         [ModulesCardsGroup (get @modules :resources [])]
          [uix/Pagination
           {:totalitems   total-modules
            :totalPages   total-pages
@@ -229,6 +222,34 @@
      [deployment-views/deployments-main-content]]))
 
 
+(defn TabDiscoverSection
+  [icon-name section-key modules dispatch-list]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Segment
+     [ui/Grid {:columns   "equal"
+               :stackable true}
+      [ui/GridRow
+       [ui/GridColumn {:floated "left"}
+        [:div {:style {:padding-bottom 10}}
+         [:h2
+          [ui/Icon {:className icon-name}]
+          (utils-general/capitalize-words (@tr [section-key]))
+          [ui/Label {:circular true
+                     :size     "mini"}
+           (:count modules)]]]]
+       [ui/GridColumn {:only    "computer tablet"
+                       :floated "left"}
+        [ui/Button {:floated  "right"
+                    :primary  true
+                    :on-click #(dispatch dispatch-list)} "See more"]]]
+      [ui/GridRow
+       [ModulesCardsGroup (take 4 (get modules :resources []))]]
+      [ui/GridRow {:only "mobile"}
+       [ui/GridColumn {:textAlign "center"}
+        [ui/Button {:primary  true
+                    :on-click #(dispatch dispatch-list)} "See more"]]]]]))
+
+
 (defn TabDiscover
   []
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -239,39 +260,9 @@
     (fn []
       (let []
         [:<>
-         [ui/Segment
-          [:h2 {:style {:display "inline" :margin-left "10px"}}
-           [ui/Icon {:className "fas fa-store"}]
-           (utils-general/capitalize-words (@tr [:appstore]))
-           [ui/Label {:circular true
-                      :size     "mini"}
-            (:count @modules)]]
-          [ui/Button {:floated  "right"
-                      :primary  true
-                      :on-click #(dispatch [::events/set-active-tab-index tab-app-store])} "See more"]
-          [ModulesCardsGroup (take 4 (get @modules :resources []))]]
-         [ui/Segment
-          [:h2 {:style {:display "inline" :margin-left "10px"}}
-           [ui/Icon {:className "fa-th"}]
-           (utils-general/capitalize-words (@tr [:all-apps]))
-           [ui/Label {:circular true
-                      :size     "mini"}
-            (:count @modules)]]
-          [ui/Button {:floated  "right"
-                      :primary  true
-                      :on-click #(dispatch [::events/set-active-tab-index tab-all-apps])} "See more"]
-          [ModulesCardsGroup (take 4 (get @modules :resources []))]]
-         [ui/Segment
-          [:h2 {:style {:display "inline" :margin-left "10px"}}
-           [ui/Icon {:className "user"}]
-           (utils-general/capitalize-words (@tr [:my-apps]))
-           [ui/Label {:circular true
-                      :size     "mini"}
-            (:count @all-my-modules)]]
-          [ui/Button {:floated  "right"
-                      :primary  true
-                      :on-click #(dispatch [::events/set-active-tab-index tab-my-apps])} "See more"]
-          [ModulesCardsGroup (take 4 (get @all-my-modules :resources []))]]]))))
+         [TabDiscoverSection "fas fa-store" :appstore @modules [::events/set-active-tab-index utils/tab-app-store]]
+         [TabDiscoverSection "fas fa-th" :all-apps @modules [::events/set-active-tab-index utils/tab-all-apps]]
+         [TabDiscoverSection "user" :my-apps @all-my-modules [::events/set-active-tab-index utils/tab-my-apps]]]))))
 
 
 (defn Tabs

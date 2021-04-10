@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.dashboard.utils
   (:require
     [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
-    [sixsq.nuvla.ui.apps-store.views :as apps-store-views]))
+    [sixsq.nuvla.ui.apps-store.utils :as apps-store-utils]))
 
 (def type-apps "APPS")
 (def type-deployments "DEPLOYMENTS")
@@ -9,10 +9,10 @@
 (def type-creds "CREDENTIALS")
 
 (def target-apps {:resource        "apps"
-                  :tab-index       apps-store-views/tab-discover
+                  :tab-index       apps-store-utils/tab-discover
                   :tab-index-event ::apps-store-events/set-active-tab-index})
 (def target-deployments {:resource        "apps"
-                         :tab-index       apps-store-views/tab-deployments
+                         :tab-index       apps-store-utils/tab-deployments
                          :tab-index-event ::apps-store-events/set-active-tab-index})
 (def target-nbs {:resource "edge"})
 (def target-creds {:resource "credentials"})

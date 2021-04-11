@@ -152,9 +152,7 @@
   ::get-module
   (fn [{{:keys [::main-spec/nav-path] :as db} :db} [_ version]]
     (let [path (utils/nav-path->module-path nav-path)]
-      {:db                  (assoc db ::spec/completed? false
-                                      ::spec/module nil
-                                      ::spec/module-immutable nil)
+      {:db                  (assoc db ::spec/completed? false)
        ::apps-fx/get-module [path version #(dispatch [::set-module %])]})))
 
 

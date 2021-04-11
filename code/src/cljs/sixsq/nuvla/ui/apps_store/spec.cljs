@@ -9,7 +9,7 @@
 (s/def ::all-my-modules any?)
 
 
-(s/def ::full-text-search (s/nilable string?))
+(s/def ::full-text-search-all-apps (s/nilable string?))
 (s/def ::full-text-search-published (s/nilable string?))
 (s/def ::full-text-search-my (s/nilable string?))
 
@@ -37,19 +37,23 @@
                           ::published-modules
                           ::my-modules
                           ::all-my-modules
-                          ::full-text-search
+                          ::full-text-search-all-apps
+                          ::full-text-search-published
+                          ::full-text-search-my
                           ::page
                           ::elements-per-page
                           ::active-tab-index
                           ::state-selector]))
 
 
-(def defaults {::modules           nil
-               ::published-modules nil
-               ::my-modules        nil
-               ::all-my-modules    nil
-               ::full-text-search  nil
-               ::page              1
-               ::elements-per-page 8
-               ::active-tab-index  0
-               ::state-selector    "all"})
+(def defaults {::modules                    nil
+               ::published-modules          nil
+               ::my-modules                 nil
+               ::all-my-modules             nil
+               ::full-text-search-all-apps  nil
+               ::full-text-search-published nil
+               ::full-text-search-my        nil
+               ::page                       1
+               ::elements-per-page          8
+               ::active-tab-index           0
+               ::state-selector             "all"})

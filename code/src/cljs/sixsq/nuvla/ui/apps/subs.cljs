@@ -158,6 +158,11 @@
 
 
 (reg-sub
+  ::published?
+  ::spec/published?)
+
+
+(reg-sub
   ::default-logo-url
   ::spec/default-logo-url)
 

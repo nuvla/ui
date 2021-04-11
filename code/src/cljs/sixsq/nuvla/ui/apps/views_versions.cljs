@@ -90,11 +90,12 @@
    [ui/TableHeader
     [ui/TableRow
      [ui/TableHeaderCell {:width "1"} "Version"]
+     [ui/TableHeaderCell {:width "1"} "Published?"]
      [ui/TableHeaderCell {:width "1"} "Author"]
-     [ui/TableHeaderCell {:width "14"} "Commit message"]]]
+     [ui/TableHeaderCell {:width "13"} "Commit message"]]]
    [ui/TableBody
     (for [[i v] versions]
-      (let [{:keys [href commit author]} v
+      (let [{:keys [href commit author published?]} v
             is-current? (= current-version href)]
         ^{:key (str "version" i)}
         [ui/TableRow (when is-current? {:active true})
@@ -105,6 +106,7 @@
              (str "v" i)]
             (str "v" i))
           (when is-current? " <<")]
+         [ui/TableCell (when published?) [ui/Icon {:name "check" :color "green"}]]
          [ui/TableCell author]
          [ui/TableCell commit]]))]])
 

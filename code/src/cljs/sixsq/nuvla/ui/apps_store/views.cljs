@@ -80,7 +80,6 @@
 
 (defn ModulesCardsGroup
   [modules-list]
-  ;  style={{overflow: 'auto', maxHeight: 200 }}
   [:div utils-style/center-items
    [ui/CardGroup {:centered    true
                   :itemsPerRow 4
@@ -92,11 +91,22 @@
 
 (defn AppStoreControlBar
   []
-  (let [full-text (subscribe [::subs/full-text-search])]
+  (let [full-text (subscribe [::subs/full-text-search-published])]
     [ui/Menu {:secondary true}
      [ui/MenuMenu {:position "left"}
       [main-components/SearchInput
-       {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))
+       {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search-published %]))
+        :default-value @full-text}]]
+     [RefreshMenu]]))
+
+
+(defn AllAppsControlBar
+  []
+  (let [full-text (subscribe [::subs/full-text-search-all-apps])]
+    [ui/Menu {:secondary true}
+     [ui/MenuMenu {:position "left"}
+      [main-components/SearchInput
+       {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search-all-apps %]))
         :default-value @full-text}]]
      [RefreshMenu]]))
 
@@ -122,7 +132,7 @@
      [RefreshMenu]]))
 
 
-(defn RootProjects []
+(defn TabNavigator []
   (let [tr     (subscribe [::i18n-subs/tr])
         module (subscribe [::apps-subs/module])]
     (dispatch [::apps-events/get-module])
@@ -131,24 +141,43 @@
         [:<>
          [apps-views-detail/add-modal]
          [apps-views-detail/format-error @module]
-         [:<>
+         [ui/TabPane
           [ControlBarProjects]
           (when (and @module (not (instance? js/Error @module)))
             (let [{:keys [children]} @module]
               [apps-project-views/format-module-children children]))]]))))
 
 
-(defn AppStore
+(defn TabAppStore
   []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        modules           (subscribe [::subs/modules])
+  (let [modules           (subscribe [::subs/published-modules])
+        elements-per-page (subscribe [::subs/elements-per-page])
+        page              (subscribe [::subs/page])]
+    (dispatch [::events/get-published-modules])
+    (fn []
+      (let [total-modules (get @modules :count 0)
+            total-pages   (general-utils/total-pages total-modules @elements-per-page)]
+        [ui/Segment
+         [AppStoreControlBar]
+         [ModulesCardsGroup (get @modules :resources [])]
+         [uix/Pagination
+          {:totalitems   total-modules
+           :totalPages   total-pages
+           :activePage   @page
+           :onPageChange (ui-callback/callback
+                           :activePage #(dispatch [::events/set-page %]))}]]))))
+
+
+(defn TabAllApps
+  []
+  (let [modules           (subscribe [::subs/modules])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])]
     (dispatch [::events/get-modules])
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
-        [ui/Segment
+        [ui/TabPane
          [AppStoreControlBar]
          [ModulesCardsGroup (get @modules :resources [])]
          [uix/Pagination
@@ -169,7 +198,7 @@
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
-        [ui/Segment
+        [ui/TabPane
          [MyAppsControlBar]
          [ModulesCardsGroup (get @modules :resources [])]
          [uix/Pagination
@@ -180,41 +209,6 @@
                            :activePage #(dispatch [::events/set-page %]))}]]))))
 
 
-(defn TabGettingStarted
-  []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        modules           (subscribe [::subs/modules])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])]
-    ;    (dispatch [::events/get-getting-started-modules])
-    (fn []
-      (let [total-modules (get @modules :count 0)
-            total-pages   (general-utils/total-pages total-modules @elements-per-page)]
-        [ui/Segment
-         [:div "Here's a good place to start."]
-         [ModulesCardsGroup (get @modules :resources [])]
-         [uix/Pagination
-          {:totalitems   total-modules
-           :totalPages   total-pages
-           :activePage   @page
-           :onPageChange (ui-callback/callback
-                           :activePage #(dispatch [::events/set-page %]))}]]))))
-
-
-(defn TabAppStore
-  []
-  (fn []
-    [ui/TabPane
-     [AppStore]]))
-
-
-(defn TabNavigator
-  []
-  (fn []
-    [ui/TabPane
-     [RootProjects]]))
-
-
 (defn TabDeployments
   []
   (fn []
@@ -223,7 +217,7 @@
 
 
 (defn TabDiscoverSection
-  [icon-name section-key modules dispatch-list]
+  [icon-name section-key modules dispatch-list section-message]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment
      [ui/Grid {:columns   "equal"
@@ -237,13 +231,16 @@
           [ui/Label {:circular true
                      :size     "mini"}
            (:count modules)]]]]
+       [ui/GridColumn
+        [ui/Message {:info true} (@tr [section-message])]]
        [ui/GridColumn {:only    "computer tablet"
                        :floated "left"}
         [ui/Button {:floated  "right"
                     :primary  true
                     :on-click #(dispatch dispatch-list)} "See more"]]]
       [ui/GridRow
-       [ModulesCardsGroup (take 4 (get modules :resources []))]]
+       [ui/GridColumn
+        [ModulesCardsGroup (take 4 (get modules :resources []))]]]
       [ui/GridRow {:only "mobile"}
        [ui/GridColumn {:textAlign "center"}
         [ui/Button {:primary  true
@@ -252,17 +249,21 @@
 
 (defn TabDiscover
   []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        modules        (subscribe [::subs/modules])
-        all-my-modules (subscribe [::subs/my-modules])]
+  (let [published-modules (subscribe [::subs/published-modules])
+        modules           (subscribe [::subs/modules])
+        all-my-modules    (subscribe [::subs/my-modules])]
     (dispatch [::events/get-modules ""])
+    (dispatch [::events/get-published-modules ""])
     (dispatch [::events/get-my-modules ""])
     (fn []
       (let []
         [:<>
-         [TabDiscoverSection "fas fa-store" :appstore @modules [::events/set-active-tab-index utils/tab-app-store]]
-         [TabDiscoverSection "fas fa-th" :all-apps @modules [::events/set-active-tab-index utils/tab-all-apps]]
-         [TabDiscoverSection "user" :my-apps @all-my-modules [::events/set-active-tab-index utils/tab-my-apps]]]))))
+         [TabDiscoverSection "fas fa-store", :appstore, @published-modules,
+          [::events/set-active-tab-index utils/tab-app-store], :discover-published-apps-message]
+         [TabDiscoverSection "fas fa-th", :all-apps, @modules,
+          [::events/set-active-tab-index utils/tab-all-apps], :discover-all-apps-message]
+         [TabDiscoverSection "user" :my-apps, @all-my-modules,
+          [::events/set-active-tab-index utils/tab-my-apps], :discover-my-apps-message]]))))
 
 
 (defn Tabs
@@ -284,7 +285,7 @@
                    {:key "allapps"}
                    [ui/Icon {:className "grid layout"}]
                    (utils-general/capitalize-words (@tr [:all-apps]))])
-      :render   (fn [] (r/as-element [TabAppStore]))}
+      :render   (fn [] (r/as-element [TabAllApps]))}
      {:menuItem (r/as-element
                   [ui/MenuItem
                    {:key "myapps"}

@@ -10,6 +10,11 @@
 
 
 (reg-sub
+  ::published-modules
+  ::spec/published-modules)
+
+
+(reg-sub
   ::my-modules
   ::spec/my-modules)
 
@@ -31,9 +36,15 @@
 
 
 (reg-sub
-  ::full-text-search
+  ::full-text-search-published
   (fn [db]
-    (::spec/full-text-search db)))
+    (::spec/full-text-search-published db)))
+
+
+(reg-sub
+  ::full-text-search-all-apps
+  (fn [db]
+    (::spec/full-text-search-all-apps db)))
 
 
 (reg-sub

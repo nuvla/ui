@@ -302,6 +302,11 @@
           "'"))))
 
 
+(defn published-query-string
+  []
+  "published=true")
+
+
 (defn owner-like-query-string
   [owner]
   (when-not (str/blank? owner)

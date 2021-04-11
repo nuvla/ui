@@ -57,9 +57,9 @@
   [{:keys [id name description path subtype logo-url swarm-enabled online] :as service}]
   (let [icon-or-image (get service-icons (keyword subtype) "question circle")
         status        (cond
-                        (true? online) :online
-                        (false? online) :offline
-                        :else :unknown)
+                        (true? online) true
+                        (false? online) false
+                        :else nil)
         href          (str "infrastructures/" (general-utils/id->uuid id))]
     [uix/Card
      {:on-click    #(dispatch [::history-events/navigate href])

@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.deployment.views
   (:require
-    [clojure.set :as set]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
@@ -23,8 +22,7 @@
     [sixsq.nuvla.ui.utils.style :as utils-style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (defn refresh
@@ -41,18 +39,18 @@
        [main-components/SearchInput
         {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))
          :default-value @full-text}]
+       " "
        [ui/Popup
         {:content           "Additional filter"
          :mouse-enter-delay 500
          :on                "hover"
          :trigger           (r/as-element
-                              [:span {:style {:margin-left 10}}
-                               ^{:key (random-uuid)}
-                               [filter-comp/ButtonFilter
-                                {:resource-name  "deployment"
-                                 :default-filter @additional-filter
-                                 :open?          filter-open?
-                                 :on-done        #(dispatch [::events/set-additional-filter %])}]]
+                              ^{:key (random-uuid)}
+                              [filter-comp/ButtonFilter
+                               {:resource-name  "deployment"
+                                :default-filter @additional-filter
+                                :open?          filter-open?
+                                :on-done        #(dispatch [::events/set-additional-filter %])}]
                               )}]])))
 
 
@@ -238,7 +236,6 @@
         dep-href      (utils/deployment-href id)
         select-all?   (subscribe [::subs/select-all?])
         is-selected?  (subscribe [::subs/is-selected? id])]
-
     ^{:key id}
     [uix/Card
      (cond-> {:header        [:span [:p {:style {:overflow      "hidden",
@@ -322,7 +319,7 @@
              pending       (:PENDING terms 0)
              starting-plus (+ starting created pending)
              total         (:count @summary)]
-         [ui/GridColumn {:width      6
+         [ui/GridColumn {:width      8
                          :text-align "center"}
           [ui/StatisticGroup (merge {:widths (if clickable? nil 5) :size "tiny"}
                                     {:style {:margin-right "0px"

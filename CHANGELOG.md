@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+  - Acl widget - Bugfix default acl take into account active-claim
+  - Session - enhancement
+
 ## [2.17.0] - 2021-04-09
 
 ### Changed

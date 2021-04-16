@@ -1,12 +1,15 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-module-version
   (:require
     [re-frame.core :refer [dispatch subscribe]]
+    [sixsq.nuvla.ui.apps.subs :as apps-subs]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.deployment-dialog.events :as events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
     [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (defn get-version-id
   [module-versions version]
@@ -16,11 +19,10 @@
 (defn summary-row
   []
   (let [tr              (subscribe [::i18n-subs/tr])
-        on-click-fn     #(dispatch [::events/set-active-step :module-version])
         versions        (subscribe [::subs/module-versions])
         current-version (subscribe [::subs/current-module-content-id])]
     [ui/TableRow {:active   false
-                  :on-click on-click-fn}
+                  :on-click #(dispatch [::events/set-active-step :module-version])}
      [ui/TableCell {:collapsing true}
       [ui/Icon {:name "list ol", :size "large"}]]
      [ui/TableCell {:collapsing true} (@tr [:module-version])]
@@ -29,16 +31,22 @@
 
 (defmethod utils/step-content :module-version
   []
-  (let [tr                 (subscribe [::i18n-subs/tr])
-        versions           (subscribe [::subs/module-versions])
-        module-id          (subscribe [::subs/module-id])
-        selected-version   (subscribe [::subs/selected-version])
-        version-completed? (subscribe [::subs/version-completed?])]
+  (let [tr                (subscribe [::i18n-subs/tr])
+        versions          (subscribe [::subs/module-versions])
+        module-id         (subscribe [::subs/module-id])
+        version-id        (subscribe [::subs/version-id])
+        selected-version  (subscribe [::subs/selected-version])
+        module-published? (subscribe [::apps-subs/is-module-published?])]
     (fn []
-      (let [options (map (fn [[idx {:keys [href commit]}]]
-                           {:key   idx,
+      (let [options (map (fn [[idx {:keys [href commit published]}]]
+                           {:key   idx
                             :value href
-                            :text  (str "v" idx " | " commit)}) @versions)]
+                            :text  (str "v" idx " | " (general-utils/truncate commit 70)
+                                        (when (true? published) (str " | " (@tr [:published]))))
+                            :icon  (when published apps-utils/publish-icon)})
+                         @versions)
+            is-latest-published? (apps-utils/latest-published? @version-id @versions)
+            ]
         [ui/Segment {:clearing true}
          [ui/Form
           [ui/Message {:info    true
@@ -49,15 +57,10 @@
                             :upward    false
                             :selection true
                             :on-change (ui-callback/value
-                                         #(dispatch [::events/set-selected-version %]))
+                                         #(do (dispatch [::events/set-selected-version %])
+                                              (dispatch [::events/fetch-module
+                                                         (->> %
+                                                              (get-version-id @versions)
+                                                              (str @module-id "_"))])))
                             :fluid     true
-                            :options   options}]
-          [ui/Button {:disabled @version-completed?
-                      :floated  "right"
-                      :content  (@tr [:change-version])
-                      :primary  true
-                      :on-click #(dispatch [::events/fetch-module
-                                            (->> @selected-version
-                                                 (get-version-id @versions)
-                                                 (str @module-id "_"))])}]]]))))
-
+                            :options   options}]]]))))

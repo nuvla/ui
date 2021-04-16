@@ -4,7 +4,8 @@
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.apps.utils :as utils]))
 
 
 (reg-sub
@@ -158,11 +159,6 @@
 
 
 (reg-sub
-  ::published?
-  ::spec/published?)
-
-
-(reg-sub
   ::default-logo-url
   ::spec/default-logo-url)
 
@@ -202,7 +198,14 @@
   ::versions
   :<- [::module]
   (fn [{:keys [versions]}]
-    (reverse (map-indexed vector versions))))
+    (utils/map-versions-index versions)))
+
+
+(reg-sub
+  ::is-module-published?
+  :<- [::module]
+  (fn [module]
+    (-> module :published true?)))
 
 
 (reg-sub
@@ -236,6 +239,20 @@
 
 (reg-sub
   ::module-id-version
+  :<- [::module]
+  :<- [::versions]
+  :<- [::is-latest-version?]
+  :<- [::module-content-id]
+  (fn [[module versions is-latest? current]]
+    (let [id (:id module)]
+      (if is-latest?
+        id
+        (str id "_" (some (fn [[i {:keys [href]}]] (when (= current href) i)) versions))
+        ))))
+
+
+(reg-sub
+  ::version
   :<- [::module]
   :<- [::versions]
   :<- [::is-latest-version?]

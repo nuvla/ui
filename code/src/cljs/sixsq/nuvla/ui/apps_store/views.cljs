@@ -23,9 +23,10 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as utils-style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [clojure.string :as str]
     [sixsq.nuvla.ui.utils.general :as utils-general]
-    [sixsq.nuvla.ui.apps-store.utils :as utils]))
+    [sixsq.nuvla.ui.apps-store.utils :as utils]
+    [sixsq.nuvla.ui.dashboard.utils :as dashboard-utils]
+    [taoensso.timbre :as log]))
 
 
 (defn RefreshMenu
@@ -42,19 +43,25 @@
 
 
 (defn ModuleCard
-  [{:keys [id name description path subtype compatibility logo-url price] :as module}]
-  (let [tr          (subscribe [::i18n-subs/tr])
-        detail-href (str "apps/" path)
-        button-ops  {:fluid    true
-                     :primary  true
-                     :icon     :rocket
-                     :content  (@tr [:launch])
-                     :on-click (fn [event]
-                                 (dispatch [::main-events/subscription-required-dispatch
-                                            [::deployment-dialog-events/create-deployment
-                                             (:id module) :infra-services]])
-                                 (.preventDefault event)
-                                 (.stopPropagation event))}]
+  [{:keys [id name description path subtype logo-url price published versions] :as module}]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        map-versions (apps-utils/map-versions-index versions)
+        module-id    (if (true? published) (apps-utils/latest-published-module-with-index id map-versions) id)
+        module-index (apps-utils/latest-published-index map-versions)
+        detail-href  (str "apps/" path (when (true? published) (str "?version=" module-index)))
+        button-ops   {:fluid    true
+                      :primary  true
+                      :icon     :rocket
+                      :content  (@tr [:launch])
+                      :on-click (fn [event]
+                                  (dispatch [::main-events/subscription-required-dispatch
+                                             [::deployment-dialog-events/create-deployment
+                                              module-id :infra-services]])
+                                  (.preventDefault event)
+                                  (.stopPropagation event))}]
+    (log/error "id: " id)
+    (log/error "map-versions: " map-versions)
+    (log/error "module-id: " module-id)
     [uix/Card
      {:image       logo-url
       :header      [:<>
@@ -63,13 +70,6 @@
       :description description
       :href        detail-href
       :on-click    #(dispatch [::history-events/navigate detail-href])
-      :content     (when compatibility
-                     [ui/Label {:color "grey", :corner "right"}
-                      [ui/Popup
-                       {:position "top center"
-                        :content  (str "COMPATIBILITY: " compatibility)
-                        :size     "small"
-                        :trigger  (r/as-element [ui/Icon {:name "info"}])}]])
       :button      [ui/Button
                     (cond-> button-ops
                             price (assoc :icon :cart
@@ -193,20 +193,33 @@
   (let [tr                (subscribe [::i18n-subs/tr])
         modules           (subscribe [::subs/my-modules])
         elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])]
+        page              (subscribe [::subs/page])
+        {:keys [resource tab-index tab-index-event]} dashboard-utils/target-navigator]
     (dispatch [::events/get-my-modules])
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
         [ui/TabPane
-         [MyAppsControlBar]
-         [ModulesCardsGroup (get @modules :resources [])]
-         [uix/Pagination
-          {:totalitems   total-modules
-           :totalPages   total-pages
-           :activePage   @page
-           :onPageChange (ui-callback/callback
-                           :activePage #(dispatch [::events/set-page %]))}]]))))
+         (if (pos? total-modules)
+           [:<>
+            [MyAppsControlBar]
+            [ModulesCardsGroup (get @modules :resources [])]
+            [uix/Pagination
+             {:totalitems   total-modules
+              :totalPages   total-pages
+              :activePage   @page
+              :onPageChange (ui-callback/callback
+                              :activePage #(dispatch [::events/set-page %]))}]]
+           [:<>
+            [uix/WarningMsgNoElements "You do not have any apps."]
+            [ui/Container {:textAlign "center"}
+             [ui/Icon {:name     "plus"
+                       :size     "huge"
+                       :style    {:cursor "pointer"}
+                       :on-click #(do
+                                    (when (and tab-index tab-index-event)
+                                      (dispatch [tab-index-event tab-index]))
+                                    (dispatch [::history-events/navigate resource]))}]]])]))))
 
 
 (defn TabDeployments
@@ -252,7 +265,7 @@
   (let [published-modules (subscribe [::subs/published-modules])
         modules           (subscribe [::subs/modules])
         all-my-modules    (subscribe [::subs/my-modules])]
-    (dispatch [::events/get-modules ""])
+    ;    (dispatch [::events/get-modules ""])
     (dispatch [::events/get-published-modules ""])
     (dispatch [::events/get-my-modules ""])
     (fn []
@@ -260,20 +273,21 @@
         [:<>
          [TabDiscoverSection "fas fa-store", :appstore, @published-modules,
           [::events/set-active-tab-index utils/tab-app-store], :discover-published-apps-message]
-         [TabDiscoverSection "fas fa-th", :all-apps, @modules,
-          [::events/set-active-tab-index utils/tab-all-apps], :discover-all-apps-message]
-         [TabDiscoverSection "user" :my-apps, @all-my-modules,
-          [::events/set-active-tab-index utils/tab-my-apps], :discover-my-apps-message]]))))
+         ;[TabDiscoverSection "fas fa-th", :all-apps, @modules,
+         ; [::events/set-active-tab-index utils/tab-all-apps], :discover-all-apps-message]
+         (when (pos? (:count @all-my-modules 0))
+           [TabDiscoverSection "user" :my-apps, @all-my-modules,
+            [::events/set-active-tab-index utils/tab-my-apps], :discover-my-apps-message])]))))
 
 
 (defn Tabs
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [
-     {:menuItem {:content "Discover"
-                 :key     "discover"
-                 :icon    "play"}
-      :render   (fn [] (r/as-element [TabDiscover]))}
+     ;{:menuItem {:content "Discover"
+     ;            :key     "discover"
+     ;            :icon    "play"}
+     ; :render   (fn [] (r/as-element [TabDiscover]))}
      {:menuItem (r/as-element
                   [ui/MenuItem
                    {:key "appstore"}

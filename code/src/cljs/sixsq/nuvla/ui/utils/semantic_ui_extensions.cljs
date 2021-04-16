@@ -11,18 +11,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
-
-
-(defn Button
-  "This button requires a single options map that contains the :text key. The
-   value of the :text key is used to define the button text as well as the
-   accessibility label :aria-label. The button may not specify children."
-  [{:keys [text] :as options}]
-  (let [final-opts (-> options
-                       (dissoc :text)
-                       (assoc :aria-label text))]
-    [ui/Button final-opts text]))
+    [taoensso.timbre :as log]
+    [clojure.string :as str]))
 
 
 (defn Icon
@@ -31,6 +21,17 @@
                    (or (str/starts-with? name "fad ")
                        (str/starts-with? name "fas ")) (-> (dissoc :name)
                                                            (assoc :className name)))])
+
+(defn Button
+  "This button requires a single options map that contains the :text key. The
+   value of the :text key is used to define the button text as well as the
+   accessibility label :aria-label. The button may not specify children."
+  [{:keys [text icon] :as options}]
+  (let [final-opts (-> options
+                       (dissoc :text)
+                       (assoc :aria-label text))]
+    [ui/Button final-opts (when icon [ui/Icon {:name icon}]) text]))
+
 
 (defn MenuItem
   "Provides a menu item that reuses the name for the :name property and as the
@@ -88,7 +89,7 @@
   [options]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Grid {:vertical-align "middle"
-              :style {:margin-top "20px"}}
+              :style          {:margin-top "20px"}}
      (when (:totalitems options)
        [ui/GridColumn {:floated "left", :width 3}
         [ui/Label {:size :medium}
@@ -264,11 +265,45 @@
 
        [ui/ModalActions
         (when modal-action modal-action)
-        [Button {:text     (str/capitalize button-text)
+        [Button {:text     (str/lower-case button-text)
                  :negative true
                  :disabled (or (not @confirmed?) @clicked?)
                  :loading  @clicked?
                  :active   true
+                 :on-click #(do (reset! clicked? true)
+                                (on-confirm))}]]])))
+
+
+(defn ModalFromButton
+  "Defines a standard modal, triggered by a button."
+  [{:keys [button-text on-confirm header icon content trigger open on-close modal-action]}]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        clicked? (r/atom false)]
+    (fn [{:keys [button-text on-confirm header icon content trigger open on-close modal-action]}]
+      [ui/Modal (cond->
+                  {:on-click   (fn [event]
+                                 (.stopPropagation event)
+                                 (.preventDefault event))
+                   :close-icon true
+                   :trigger    trigger
+                   :on-close   (fn [& args]
+                                 (when on-close
+                                   (apply on-close args))
+                                 (reset! clicked? false))}
+                  (some? open) (assoc :open open))
+
+       (when header [ui/ModalHeader (when icon [Icon {:name icon}]) (str/capitalize header)])
+
+       [ui/ModalContent {:scrolling false}
+        (when content content)]
+
+       [ui/ModalActions
+        (when modal-action modal-action)
+        [Button {:text     (str/lower-case button-text)
+                 :primary  true
+                 :loading  @clicked?
+                 :active   true
+                 :icon     icon
                  :on-click #(do (reset! clicked? true)
                                 (on-confirm))}]]])))
 
@@ -303,6 +338,7 @@
        [ui/Icon {:name "warning sign"}]
        (or message (@tr [:no-items-to-show]))])))
 
+
 (defn Tags
   [{:keys [tags]}]
   (let [uuid (random-uuid)]
@@ -332,7 +368,7 @@
                     :top      "-7px"
                     :left     "-7px"}}
       [ui/Checkbox {:style    {:z-index 1}
-                    :checked selected?
+                    :checked  selected?
                     :on-click #(do
                                  (on-select (not selected?))
                                  (.preventDefault %)
@@ -343,8 +379,8 @@
       {:src      image
        :bordered true
        :style    {:width      "auto"
-                  :height     "100px"
-                  :object-fit "contain"}}])
+                  :height     "200px"
+                  :object-fit "cover"}}])
 
    (when corner-button corner-button)
 

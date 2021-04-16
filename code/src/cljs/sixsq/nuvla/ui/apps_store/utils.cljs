@@ -2,12 +2,12 @@
   (:require [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
-(def tab-discover 0)
-(def tab-app-store 1)
-(def tab-all-apps 2)
-(def tab-my-apps 3)
-(def tab-navigator 4)
-(def tab-deployments 5)
+(def tab-discover -1)
+(def tab-app-store 0)
+(def tab-all-apps 1)
+(def tab-my-apps 2)
+(def tab-navigator 3)
+(def tab-deployments 4)
 
 
 (defn get-query-params

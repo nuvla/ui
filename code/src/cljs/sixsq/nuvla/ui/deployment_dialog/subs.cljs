@@ -295,6 +295,13 @@
 
 
 (reg-sub
+  ::price
+  :<- [::module]
+  (fn [module]
+    (:price module)))
+
+
+(reg-sub
   ::credentials-loading?
   ::spec/credentials-loading?)
 

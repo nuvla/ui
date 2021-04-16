@@ -6,7 +6,8 @@
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [taoensso.timbre :as log]))
 
 
 (defn show-versions [show-versions?]
@@ -22,33 +23,33 @@
 (defn version-comparison-modal
   [left right version-left version-right]
   (if (and left right)
-    [ui/ModalContent {:scrolling  true}
-     [ui/DiffViewer {:old-value    (general-utils/edn->json left)
-                     :new-value    (general-utils/edn->json right)
-                     :split-view   true
-                     :left-title   (str "v" version-left)
-                     :right-title  (str "v" version-right)}]]
+    [ui/ModalContent {:scrolling true}
+     [ui/DiffViewer {:old-value   (general-utils/edn->json left)
+                     :new-value   (general-utils/edn->json right)
+                     :split-view  true
+                     :left-title  (str "v" version-left)
+                     :right-title (str "v" version-right)}]]
     [ui/Container
-     [ui/Loader {:active true
+     [ui/Loader {:active   true
                  :inverted true}]]))
 
 
 (defn versions-compare [versions]
-  (let [versions-opt  (map (fn [version] {:key (first version)
-                                          :value (first version)
-                                          :text (str "v" (first version))})
-                        versions)
-        tr            (subscribe [::i18n-subs/tr])
-        compare-one   (reagent/atom nil)
-        compare-two   (reagent/atom nil)
-        compare?      (reagent/atom false)
-        module        (subscribe [::subs/module])
-        module-compare-left   (subscribe [::subs/compare-module-left])
-        module-compare-right  (subscribe [::subs/compare-module-right])
-        on-close-fn   #(do
-                         (reset! compare? false))]
+  (let [versions-opt         (map (fn [version] {:key   (first version)
+                                                 :value (first version)
+                                                 :text  (str "v" (first version))})
+                                  versions)
+        tr                   (subscribe [::i18n-subs/tr])
+        compare-one          (reagent/atom nil)
+        compare-two          (reagent/atom nil)
+        compare?             (reagent/atom false)
+        module               (subscribe [::subs/module])
+        module-compare-left  (subscribe [::subs/compare-module-left])
+        module-compare-right (subscribe [::subs/compare-module-right])
+        on-close-fn          #(do
+                                (reset! compare? false))]
     (fn []
-      (let [module-id   (:id @module)]
+      (let [module-id (:id @module)]
         (when module-id
           [:span (@tr [:compare-version]) " "
            [ui/Dropdown {:selection   true
@@ -77,10 +78,10 @@
                                             (reset! compare? true))))
                          :options     versions-opt}]
 
-           [ui/Modal {:open       @compare?
-                      :dimmer     "blurring"
-                      :on-close   on-close-fn
-                      :size       "large"}
+           [ui/Modal {:open     @compare?
+                      :dimmer   "blurring"
+                      :on-close on-close-fn
+                      :size     "large"}
             [version-comparison-modal @module-compare-left @module-compare-right @compare-one @compare-two]]])))))
 
 
@@ -95,7 +96,7 @@
      [ui/TableHeaderCell {:width "13"} "Commit message"]]]
    [ui/TableBody
     (for [[i v] versions]
-      (let [{:keys [href commit author published?]} v
+      (let [{:keys [href commit author published]} v
             is-current? (= current-version href)]
         ^{:key (str "version" i)}
         [ui/TableRow (when is-current? {:active true})
@@ -106,7 +107,7 @@
              (str "v" i)]
             (str "v" i))
           (when is-current? " <<")]
-         [ui/TableCell (when published?) [ui/Icon {:name "check" :color "green"}]]
+         [ui/TableCell (when (true? published) [ui/Icon {:name "check" :color "teal"}])]
          [ui/TableCell author]
          [ui/TableCell commit]]))]])
 

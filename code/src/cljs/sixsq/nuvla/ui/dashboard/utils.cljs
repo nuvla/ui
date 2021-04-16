@@ -14,6 +14,9 @@
 (def target-deployments {:resource        "apps"
                          :tab-index       apps-store-utils/tab-deployments
                          :tab-index-event ::apps-store-events/set-active-tab-index})
+(def target-navigator {:resource        "apps"
+                       :tab-index       apps-store-utils/tab-navigator
+                       :tab-index-event ::apps-store-events/set-active-tab-index})
 (def target-nbs {:resource "edge"})
 (def target-creds {:resource "credentials"})
 

@@ -4,7 +4,69 @@
     [clojure.string :as str]
     [re-frame.core :refer [subscribe]]
     [sixsq.nuvla.ui.apps.spec :as spec]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [taoensso.timbre :as log]
+    [clojure.string :as str]))
+
+
+(def publish-icon
+  "check circle outline")
+
+
+(def un-publish-icon
+  "times circle outline")
+
+
+(defn extract-version
+  "Return the index or nil if it is the most recent version"
+  [module-id]
+  (-> module-id (str/split #"/") last (str/split #"_") second))
+
+
+(defn published?
+  "Check if the module version is published"
+  [module module-id]
+  (let [versions (:versions module)
+        index    (extract-version module-id)
+        version  (if (nil? index) (dec (count versions)) (js/parseInt index))]
+    (-> versions (nth version) :published true?)))
+
+
+(defn filter-published-versions
+  [map-versions]
+  (filter #(true? (-> % second :published true?)) map-versions))
+
+
+(defn compose-module-id
+  [module-version]
+  (str (-> module-version second :href) "_" (first module-version)))
+
+
+(defn latest-published-index
+  "Return the latest published index. This can be used to append to a module id to fetch a specific
+  module version"
+  [map-versions]
+    (ffirst (filter-published-versions map-versions)))
+
+
+(defn latest-published-version
+  "Return the latest published version id"
+  [map-versions]
+  (-> map-versions filter-published-versions second :href))
+
+
+(defn latest-published-module-with-index
+  "Return the latest published module id (with the version appended: <module-id>_<version-index>)."
+  [module-id map-versions]
+  (let [index (-> map-versions filter-published-versions ffirst)]
+    (str module-id "_" index)))
+
+
+(defn latest-published?
+  "Check if the module version corresponds to the latest published version."
+  [version-id map-versions]
+  (let [lastest (latest-published-version map-versions)]
+    (= (:href lastest) version-id)))
 
 
 (defn nav-path->module-path
@@ -254,3 +316,9 @@
 (defn sorted-map-new-idx
   [sorted-map-elemts]
   (or (some-> sorted-map-elemts last first inc) 0))
+
+
+(defn map-versions-index
+  "Create a list of tuples with [index version], where index starts at 0"
+  [versions]
+  (reverse (map-indexed vector versions)))

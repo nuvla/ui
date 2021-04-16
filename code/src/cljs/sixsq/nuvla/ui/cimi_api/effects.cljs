@@ -14,7 +14,8 @@
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.defines :as defines]              ;; used namespace even if grey
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 
 (def NUVLA_URL (delay (if (str/blank? defines/HOST_URL) (utils/host-url) defines/HOST_URL)))

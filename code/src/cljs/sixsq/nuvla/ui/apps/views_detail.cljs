@@ -27,7 +27,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]))
 
 
 (defn edit-button-disabled?
@@ -66,6 +67,40 @@
       :button-text (@tr [:delete])}]))
 
 
+(defn PublishButton
+  [module]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        {:keys [id name description]} module
+        content    (str (or name id) (when description " - ") description)
+        version-id (:id content)]
+    [uix/ModalFromButton
+     {:on-confirm  #(dispatch [::events/publish])
+      :trigger     (r/as-element [ui/MenuItem
+                                  [ui/Icon {:name apps-utils/publish-icon}]
+                                  (str/capitalize (@tr [:publish]))])
+      :content     [:p "Are you sure you want to publish this version of the module?"]
+      :header      (@tr [:publish-module])
+      :icon        apps-utils/publish-icon
+      :button-text (@tr [:publish])}]))
+
+
+(defn UnPublishButton
+  [module]
+  (let [tr (subscribe [::i18n-subs/tr])
+        {:keys [id name description]} module
+        ;        content (str (or name id) (when description " - ") description)
+        ]
+    [uix/ModalFromButton
+     {:on-confirm  #(dispatch [::events/un-publish id])
+      :trigger     (r/as-element [ui/MenuItem
+                                  [ui/Icon {:name apps-utils/un-publish-icon}]
+                                  (str/capitalize (@tr [:un-publish]))])
+      :content     [:p "Are you sure you want to un-publish this version of the module?"]
+      :header      (@tr [:un-publish-module])
+      :icon        apps-utils/un-publish-icon
+      :button-text (@tr [:un-publish])}]))
+
+
 (defn MenuBar []
   (let [tr            (subscribe [::i18n-subs/tr])
         module        (subscribe [::subs/module])
@@ -80,7 +115,8 @@
             launchable?      (and subtype (not= "project" subtype))
             launch-disabled? (or @is-new? @page-changed?)
             add?             (= "project" (:subtype @module))
-            add-disabled?    (or @is-new? @page-changed?)]
+            add-disabled?    (or @is-new? @page-changed?)
+            published?       (utils/published? @module @module-id)]
 
         [main-components/StickyBar
          [ui/Menu {:borderless true}
@@ -128,6 +164,10 @@
 
           (when (general-utils/can-delete? @module)
             [DeleteButton @module])
+
+          (if published?
+            [UnPublishButton @module]
+            [PublishButton @module])
 
           [main-components/RefreshMenu
            {:refresh-disabled? @is-new?
@@ -312,17 +352,22 @@
                        :on-click paste-fn}]]]))))
 
 
-(defn version-warning []
-  (let [latest? (subscribe [::subs/is-latest-version?])]
+(defn VersionWarning
+  []
+  (let [tr      (subscribe [::i18n-subs/tr])
+        latest? (subscribe [::subs/is-latest-version?])
+        published? (subscribe [::subs/is-module-published?])
+        ;latest-published? (subscribe [::subs/published?])
+        ]
     (fn []
       (let []
         [ui/Message {:hidden  @latest?
                      :warning true}
-         [ui/MessageHeader "Warning!"]
-         [ui/MessageContent "This is not the latest version. Click or tap "
+         [ui/MessageHeader (@tr [:warning])]
+         [ui/MessageContent (@tr [:warning-not-latest-version-1])
           [:a {:on-click #(dispatch [::events/get-module])
-               :style    {:cursor :pointer}} "here"]
-          " to load the latest."]]))))
+               :style    {:cursor :pointer}} (@tr [:here])]
+          (@tr [:warning-not-latest-version-2])]]))))
 
 
 (defn tuple-to-row [[v1 v2]]

@@ -68,7 +68,7 @@
     (timbre/set-level! :info)
     [:div
      [utils-validation/validation-error-message ::subs/form-valid?]
-     [views-detail/version-warning]
+     [views-detail/VersionWarning]
      [views-detail/add-modal]
      [views-detail/save-modal]
      [views-detail/logo-url-modal]

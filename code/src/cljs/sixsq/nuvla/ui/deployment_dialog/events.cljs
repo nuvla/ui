@@ -13,7 +13,8 @@
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-fx
@@ -271,8 +272,7 @@
                                 (dispatch [::get-infra-registries registry-ids
                                            (or
                                              (:registries-credentials %)
-                                             (:registries-credentials content))]))
-                              )]}))
+                                             (:registries-credentials content))])))]}))
 
 
 (reg-event-fx
@@ -285,6 +285,7 @@
                               {:deployment {:href id}})
           old-deployment-id (:id deployment)
           on-success        #(dispatch [::get-deployment (:resource-id %)])]
+      (log/error "ID: " id)
       (cond->
         {:db               (assoc db ::spec/deployment nil
                                      ::spec/selected-credential-id nil

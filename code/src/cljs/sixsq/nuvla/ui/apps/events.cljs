@@ -20,7 +20,8 @@
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.session.spec :as session-spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 
 ;; Validation
@@ -606,3 +607,41 @@
                                          (dispatch [::name nil])
                                          (dispatch [::validate-form])))]})))
 
+
+(defn version-id->index
+  [{:keys [versions id] :as module}]
+  (let [version-id   (-> module :content :id)
+        map-versions (utils/map-versions-index versions)
+        index        (ffirst (filter #(-> % second :href (= version-id)) map-versions))]
+    (ffirst (filter #(-> % second :href (= version-id)) map-versions))))
+
+
+(defn publish-unpublish
+  [module publish?]
+  (let [id            (:id module)
+        version-index (version-id->index module)]
+    {::cimi-api-fx/operation [(str id "_" version-index)
+                              (if publish? "publish" "unpublish")
+                              #(do (dispatch [::messages-events/add
+                                              {:header  (if publish?
+                                                          "Publication successful"
+                                                          "Un-publication successful")
+                                               :content (str "Module version: "
+                                                             version-index
+                                                             (if publish?
+                                                               " is now published."
+                                                               " is not published anymore."))
+                                               :type    :success}])
+                                   (dispatch [::get-module version-index]))]}))
+
+
+(reg-event-fx
+  ::publish
+  (fn [{{:keys [::spec/module] :as db} :db} _]
+    (publish-unpublish module true)))
+
+
+(reg-event-fx
+  ::un-publish
+  (fn [{{:keys [::spec/module] :as db} :db} _]
+    (publish-unpublish module false)))

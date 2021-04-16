@@ -161,8 +161,6 @@
 
 (s/def ::paste-modal-visible? boolean?)
 
-(s/def ::published? boolean?)
-
 (s/def ::db (s/keys :req [::active-input
                           ::form-spec
                           ::form-valid?
@@ -180,8 +178,7 @@
                           ::compare-module-left
                           ::compare-module-right
                           ::copy-module
-                          ::paste-modal-visible?
-                          ::published?]))
+                          ::paste-modal-visible?]))
 
 (def defaults {::active-input            nil
                ::form-spec               nil
@@ -201,5 +198,4 @@
                ::compare-module-left     nil
                ::compare-module-right    nil
                ::copy-module             nil
-               ::paste-modal-visible?    false
-               ::published?              false})
+               ::paste-modal-visible?    false})

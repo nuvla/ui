@@ -9,5 +9,4 @@
 
 (s/def ::db (s/keys :req [::locale ::tr]))
 
-(def defaults {::locale "en"
-               ::tr     nil})
+(def defaults {::locale "en"})

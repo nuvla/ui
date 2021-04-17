@@ -10,6 +10,8 @@
 
 ;; Module
 
+(s/def ::module any?)
+
 (s/def ::name nonblank-string)
 
 (s/def ::description nonblank-string)
@@ -177,6 +179,7 @@
                           ::validate-docker-compose
                           ::compare-module-left
                           ::compare-module-right
+                          ::module
                           ::copy-module
                           ::paste-modal-visible?]))
 
@@ -197,5 +200,6 @@
                ::validate-docker-compose nil
                ::compare-module-left     nil
                ::compare-module-right    nil
+               ::module                  nil
                ::copy-module             nil
                ::paste-modal-visible?    false})

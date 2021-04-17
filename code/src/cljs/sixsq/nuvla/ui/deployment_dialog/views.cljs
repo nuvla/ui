@@ -3,6 +3,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.credentials.utils :as creds-utils]
@@ -21,7 +22,8 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]))
+    [sixsq.nuvla.ui.utils.style :as style]
+    [taoensso.timbre :as log]))
 
 
 (defmulti StepIcon :step-id)
@@ -51,16 +53,19 @@
 
 (defmethod StepIcon :module-version
   [step-state]
-  (let [tr         (subscribe [::i18n-subs/tr])
-        is-latest? (subscribe [::subs/is-latest-version?])
-        completed? (subscribe [::subs/version-completed?])]
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        is-latest?           (subscribe [::subs/is-latest-version?])
+        is-latest-published? (subscribe [::subs/is-latest-published-version?])
+        is-module-published? (subscribe [::subs/is-module-published?])
+        completed?           (subscribe [::subs/version-completed?])
+        is-ok?               (if @is-module-published? @is-latest-published? @is-latest?)]
     (if @completed?
       [ui/Popup {:trigger  (r/as-element
-                             [ui/Icon {:name  (if @is-latest? "check" "info circle")
-                                       :color (if @is-latest? "green" "blue")}])
+                             [ui/Icon {:name  (if is-ok? "check" "info circle")
+                                       :color (if is-ok? "green" "blue")}])
                  :content  (@tr [:new-version-exist])
                  :wide     "very"
-                 :disabled @is-latest?
+                 :disabled is-ok?
                  :position "top center"}]
       [step-icon step-state])))
 

@@ -59,9 +59,6 @@
                                               module-id :infra-services]])
                                   (.preventDefault event)
                                   (.stopPropagation event))}]
-    (log/error "id: " id)
-    (log/error "map-versions: " map-versions)
-    (log/error "module-id: " module-id)
     [uix/Card
      {:image       logo-url
       :header      [:<>

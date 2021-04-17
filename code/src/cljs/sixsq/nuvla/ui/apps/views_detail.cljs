@@ -354,20 +354,28 @@
 
 (defn VersionWarning
   []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        latest? (subscribe [::subs/is-latest-version?])
-        published? (subscribe [::subs/is-module-published?])
-        ;latest-published? (subscribe [::subs/published?])
-        ]
+  (let [tr                     (subscribe [::i18n-subs/tr])
+        is-latest?             (subscribe [::subs/is-latest-version?])
+        is-latest-published?   (subscribe [::subs/is-latest-published-version?])
+        is-module-published?   (subscribe [::subs/is-module-published?])
+        latest-published-index (subscribe [::subs/latest-published-index])]
     (fn []
       (let []
-        [ui/Message {:hidden  @latest?
-                     :warning true}
-         [ui/MessageHeader (@tr [:warning])]
-         [ui/MessageContent (@tr [:warning-not-latest-version-1])
-          [:a {:on-click #(dispatch [::events/get-module])
-               :style    {:cursor :pointer}} (@tr [:here])]
-          (@tr [:warning-not-latest-version-2])]]))))
+        [:<>
+         (when (and @is-module-published? (not @is-latest-published?))
+           [ui/Message {:warning true
+                        :header  (@tr [:warning])}
+            [ui/MessageContent (@tr [:warning-draft-version-1])
+             [:a {:on-click #(dispatch [::events/get-module @latest-published-index])
+                  :style    {:cursor :pointer}} (@tr [:here])]
+             (@tr [:warning-draft-version-2])]])
+         (when (and (not @is-module-published?) (not @is-latest?))
+           [ui/Message {:warning true
+                        :header  (@tr [:warning])}
+            [ui/MessageContent (@tr [:warning-not-latest-version-1])
+             [:a {:on-click #(dispatch [::events/get-module])
+                  :style    {:cursor :pointer}} (@tr [:here])]
+             (@tr [:warning-not-latest-version-2])]])]))))
 
 
 (defn tuple-to-row [[v1 v2]]

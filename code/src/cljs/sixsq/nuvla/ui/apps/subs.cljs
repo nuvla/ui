@@ -5,7 +5,8 @@
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.apps.utils :as utils]))
+    [sixsq.nuvla.ui.apps.utils :as utils]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]))
 
 
 (reg-sub
@@ -202,13 +203,6 @@
 
 
 (reg-sub
-  ::is-module-published?
-  :<- [::module]
-  (fn [module]
-    (-> module :published true?)))
-
-
-(reg-sub
   ::module-content-id
   :<- [::module]
   (fn [{{:keys [id]} :content}]
@@ -238,6 +232,37 @@
 
 
 (reg-sub
+  ::latest-published-version
+  :<- [::versions]
+  (fn [versions]
+    (-> versions apps-utils/latest-published-version)))
+
+
+(reg-sub
+  ::latest-published-index
+  :<- [::versions]
+  (fn [versions]
+    (-> versions apps-utils/latest-published-index)))
+
+
+(reg-sub
+  ::is-latest-published-version?
+  :<- [::latest-published-version]
+  :<- [::module-content-id]
+  (fn [[latest-published-version module-content-id]]
+    (if (and latest-published-version (= latest-published-version module-content-id))
+      true
+      false)))
+
+
+(reg-sub
+  ::is-module-published?
+  :<- [::module]
+  (fn [module]
+    (-> module :published true?)))
+
+
+(reg-sub
   ::module-id-version
   :<- [::module]
   :<- [::versions]
@@ -247,8 +272,7 @@
     (let [id (:id module)]
       (if is-latest?
         id
-        (str id "_" (some (fn [[i {:keys [href]}]] (when (= current href) i)) versions))
-        ))))
+        (str id "_" (some (fn [[i {:keys [href]}]] (when (= current href) i)) versions))))))
 
 
 (reg-sub
@@ -261,8 +285,7 @@
     (let [id (:id module)]
       (if is-latest?
         id
-        (str id "_" (some (fn [[i {:keys [href]}]] (when (= current href) i)) versions))
-        ))))
+        (str id "_" (some (fn [[i {:keys [href]}]] (when (= current href) i)) versions))))))
 
 
 (reg-sub

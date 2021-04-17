@@ -285,7 +285,6 @@
                               {:deployment {:href id}})
           old-deployment-id (:id deployment)
           on-success        #(dispatch [::get-deployment (:resource-id %)])]
-      (log/error "ID: " id)
       (cond->
         {:db               (assoc db ::spec/deployment nil
                                      ::spec/selected-credential-id nil

@@ -52,7 +52,7 @@
 (defn latest-published-version
   "Return the latest published version id"
   [map-versions]
-  (-> map-versions filter-published-versions second :href))
+  (-> map-versions filter-published-versions first second :href))
 
 
 (defn latest-published-module-with-index

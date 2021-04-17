@@ -5,7 +5,8 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.credentials.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 
 (defn CredentialCheckPopup
@@ -18,16 +19,16 @@
         status    (subscribe [::subs/credential-check-status cred-id])]
     (when (and @status (or @loading? (not @valid?)))
       [ui/Popup {:trigger  (r/as-element
-                             [ui/Icon {:name    (cond
-                                                  @loading? "circle notched"
-                                                  (not @valid?) (if @invalid? "fas fa-times-octagon" "warning sign")
-                                                  :else "world")
-                                       :color   (cond
-                                                  @loading? "black"
-                                                  (not @valid?) (if @invalid? "red" "yellow")
-                                                  :else "green")
-                                       :loading @loading?
-                                       :size    "large"}])
+                             [uix/Icon {:name (cond
+                                                     @loading? "circle notched"
+                                                     (not @valid?) (if @invalid? "fas fa-times-octagon" "warning sign")
+                                                     :else "world")
+                                        :color     (cond
+                                                     @loading? "black"
+                                                     (not @valid?) (if @invalid? "red" "yellow")
+                                                     :else "green")
+                                        :loading   @loading?
+                                        :size      "large"}])
                  :header   (@tr [:connectivity-check])
                  :content  (cond
                              @loading? (@tr [:connectivity-check-in-progress])

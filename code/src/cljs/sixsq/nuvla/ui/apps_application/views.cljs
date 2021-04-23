@@ -4,15 +4,18 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [markdown-to-hiccup.core :as md]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps-application.events :as events]
     [sixsq.nuvla.ui.apps-application.spec :as spec]
     [sixsq.nuvla.ui.apps-application.subs :as subs]
+    [sixsq.nuvla.ui.apps-application.utils :as utils]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
+    [sixsq.nuvla.ui.apps.views-versions :as apps-views-versions]
     [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
-    [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
+    [sixsq.nuvla.ui.deployment.views :as deployment-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
@@ -21,7 +24,17 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.utils.time :as time]
+    [clojure.string :as str]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.forms :as utils-forms]))
+
+
+(def application-kubernetes "application_kubernetes")
 
 
 (defn clear-module
@@ -30,7 +43,7 @@
 
 
 (defn summary []
-  (let [editable?      (subscribe [::apps-subs/editable?])
+  (let [is-new?        (subscribe [::apps-subs/is-new?])
         module-subtype (subscribe [::apps-subs/module-subtype])]
     [apps-views-detail/summary
      [^{:key "module_subtype"}
@@ -38,16 +51,15 @@
        [ui/TableCell {:collapsing true
                       :style      {:padding-bottom 8}} "subtype"]
        [ui/TableCell
-        (if @editable?
-          [ui/Dropdown {:selection true,
-                        :fluid     true
-                        :value     @module-subtype
-                        :on-change (ui-callback/value
-                                     #(dispatch [::apps-events/subtype %]))
-                        :options   [{:key "application", :text "Docker", :value "application"}
-                                    {:key   "application_kubernetes", :text "Kubernetes",
-                                     :value "application_kubernetes"}]}]
-          @module-subtype)]]]]))
+        [ui/Dropdown {:disabled  (-> @is-new? true? not)
+                      :selection true
+                      :fluid     true
+                      :value     @module-subtype
+                      :on-change (ui-callback/value
+                                   #(dispatch [::apps-events/subtype %]))
+                      :options   [{:key "application", :text "Docker", :value "application"}
+                                  {:key   application-kubernetes, :text "Kubernetes",
+                                   :value application-kubernetes}]}]]]]]))
 
 
 (defn single-file [{:keys [id ::spec/file-name ::spec/file-content]}]
@@ -115,11 +127,11 @@
              [apps-views-detail/plus ::events/add-file]])]
          :label (@tr [:module-files])
          :count (count @files)
-         :default-open false]))))
+         :default-open true]))))
 
 
 (defn DockerComposeValidationPopup
-  [{:keys [loading? valid? error-msg] :as validate-dc}]
+  [{:keys [loading? valid? error-msg]}]
   [ui/Popup
    {:trigger        (r/as-element [ui/Icon {:name    (cond
                                                        loading? "circle notched"
@@ -171,11 +183,12 @@
         form-valid?     (subscribe [::apps-subs/form-valid?])
         editable?       (subscribe [::apps-subs/editable?])
         module-subtype  (subscribe [::apps-subs/module-subtype])
-        validate-dc     (subscribe [::apps-subs/validate-docker-compose])
         local-validate? (r/atom false)
         default-value   @docker-compose]
     (fn []
-      (let [validate? (or @local-validate? (not @form-valid?))]
+      (log/error "docker-compose-section")
+      (let [validate-dc (subscribe [::apps-subs/validate-docker-compose])
+            validate?   (or @local-validate? (not @form-valid?))]
         [uix/Accordion
          [:<>
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
@@ -193,17 +206,14 @@
                                         (dispatch [::events/update-docker-compose nil value])
                                         (dispatch [::main-events/changes-protection? true])
                                         (dispatch [::apps-events/validate-form])
-                                        (reset! local-validate? true))}]
+                                        (reset! local-validate? true))
+                          :style      {:height "auto !important"}}]
           (when (and validate? (not (s/valid? ::spec/docker-compose @docker-compose)))
             (let [error-msg (-> @docker-compose general-utils/check-yaml second)]
               [ui/Label {:pointing "above", :basic true, :color "red"}
                (if (str/blank? error-msg)
                  (@tr [:module-docker-compose-error])
-                 error-msg)]))
-          [:div [@tr [:apps-more-info]]
-           [:a {:href   "https://docs.nuvla.io/nuvla/add-apps#enabling-fast--dedicated-monitoring-for-application-deployments"
-                :target "_black"}
-            "Nuvla docs"]]]
+                 error-msg)]))]
          :label (if (= @module-subtype "application")
                   [:span "Docker compose" ff/nbsp
                    (when @validate-dc
@@ -212,35 +222,313 @@
          :default-open true]))))
 
 
-(defn view-edit
+(defn LicensePane
+  []
+  (let []
+    (log/error "LicensePane")
+    [apps-views-detail/LicenseSection]))
+
+
+(defn PricingPane
+  []
+  (let [tr     (subscribe [::i18n-subs/tr])
+        stripe (subscribe [::main-subs/stripe])
+        vendor (subscribe [::profile-subs/vendor])]
+    (if (and @stripe @vendor)
+      [apps-views-detail/price-section]
+      [ui/Message {:info true} (@tr [:no-pricing-free-app])])))
+
+
+(defn DockerPane
+  []
+  (let []
+    [:<>
+     [apps-views-detail/registries-section]
+     [docker-compose-section]]))
+
+
+(defn ConfigurationPane
+  []
+  (let []
+    [:<>
+     [apps-views-detail/env-variables-section]
+     [files-section]
+     [apps-views-detail/urls-section]
+     [apps-views-detail/output-parameters-section]
+     [apps-views-detail/data-types-section]]))
+
+
+(defn DeploymentsPane
+  []
+  (let []
+    [deployment-views/DeploymentTable {:no-actions     true
+                                       :no-selection   true
+                                       :no-module-name true}]))
+
+
+(defn VersionsPane
+  []
+  [apps-views-versions/Versions])
+
+
+(defn DetailsPane
+  []
+  [summary])
+
+
+(defn up-to-date?
+  [v versions published?]
+  (when v
+    (let [tr                     (subscribe [::i18n-subs/tr])
+          last-version           (ffirst versions)
+          last-published-version (apps-utils/latest-published-index versions)]
+      (if published?
+        (if (= v last-published-version)
+          [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-published]) ")"]
+          [:span [ui/Icon {:name "warning", :color "orange"}]
+           (str (@tr [:not-up-to-date-published]))])
+        (if (= v last-version)
+          [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
+          [:span [ui/Icon {:name "warning", :color "orange"}]
+           (str " (" (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]) ")")])))))
+
+
+(defn OverviewModuleSummary
+  "Fixme: add license and price"
+  []
+  (let [tr                     (subscribe [::i18n-subs/tr])
+        locale                 (subscribe [::i18n-subs/locale])
+        module                 (subscribe [::apps-subs/module])
+        versions-map           (subscribe [::apps-subs/versions])
+        module-content-id      (subscribe [::apps-subs/module-content-id])
+        version-index          (apps-utils/find-current-version @versions-map @module-content-id)
+        is-latest?             (subscribe [::apps-subs/is-latest-version?])
+        is-latest-published?   (subscribe [::apps-subs/is-latest-published-version?])
+        is-module-published?   (subscribe [::apps-subs/is-module-published?])
+        latest-published-index (subscribe [::apps-subs/latest-published-index])
+        {:keys [id created updated name acl description parent-path path logo-url versions]} @module]
+    [ui/Segment {:secondary true
+                 :color     "blue"
+                 :raised    true}
+     [:h4 (str/capitalize (@tr [:module]))]
+     [ui/Grid {:columns 2}
+      [ui/GridColumn
+       [ui/Table {:basic  "very"
+                  :padded false}
+        [ui/TableBody
+         (when name
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:name]))]
+            [ui/TableCell [values/as-link path :label name :page "apps"]]])
+         (when parent-path
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:project]))]
+            [ui/TableCell [values/as-link parent-path :label parent-path :page "apps"]]])
+         [ui/TableRow
+          [ui/TableCell (str/capitalize (@tr [:created]))]
+          [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
+         [ui/TableRow
+          [ui/TableCell (str/capitalize (@tr [:updated]))]
+          [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]
+         (when id
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:id]))]
+            [ui/TableCell [values/as-link id :label (subs id 11)]]])
+         [ui/TableRow
+          [ui/TableCell (str/capitalize (@tr [:version-number]))]
+          [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]]]]
+      [ui/GridColumn
+       [ui/Segment (merge style/basic {:floated "right"})
+        [ui/Image {:src      (or logo-url "")
+                   :bordered true
+                   :style    {:object-fit "contain"}}]]]]]))
+
+
+(defn OverviewPane
+  []
+  [ui/Grid {:columns   2,
+            :stackable true
+            :padded    true
+            :centered  true}
+   [ui/GridRow {:centered true}
+    [ui/GridColumn
+     [OverviewModuleSummary]]]
+   [ui/GridRow
+    [ui/GridColumn
+     [apps-views-detail/OverviewDescription utils/tab-details]]]
+   [ui/GridRow
+    [ui/GridColumn
+     [apps-views-detail/OverviewVendorSummary]]]])
+
+
+(defn TabMenuDeployments
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:span
+     (str/capitalize (@tr [:deployments]))]))
+
+
+(defn deployments
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    {:menuItem {:content (r/as-element [TabMenuDeployments])
+                :key     "deployments"
+                :icon    "rocket"}
+     :pane     {:key "deplyment-pane" :content (r/as-element [DeploymentsPane])}}))
+
+
+(defn TabMenuVersions
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:span
+     (str/capitalize (@tr [:versions]))]))
+
+
+(defn versions
+  []
+  (let []
+    {:menuItem {:content (r/as-element [TabMenuVersions])
+                :key     "versions"
+                :icon    "tag"}
+     :pane     {:key "versions-pane" :content (r/as-element [VersionsPane])}}))
+
+
+(defn TabMenuConfiguration
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:span
+     (str/capitalize (@tr [:configuration]))]))
+
+
+(defn configuration
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    {:menuItem {:content (r/as-element [TabMenuConfiguration])
+                :key     "configuration"
+                :icon    "cog"}
+     :pane     {:key "configuration-pane" :content (r/as-element [ConfigurationPane])}}))
+
+
+(defn TabMenuLicense
+  []
+  (let [tr     (subscribe [::i18n-subs/tr])
+        error? (subscribe [::subs/license-error?])]
+    [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
+     [uix/Icon {:name "drivers license"}]
+     (str/capitalize (@tr [:license]))]))
+
+
+(defn license
+  []
+  {:menuItem {:content (r/as-element [TabMenuLicense])
+              :key     "license"}
+   :pane     {:key "license-pane" :content (r/as-element [LicensePane])}})
+
+
+(defn TabMenuPricing
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:span
+     (str/capitalize (@tr [:pricing]))]))
+
+
+(defn pricing
+  []
+  (let []
+    {:menuItem {:content (r/as-element [TabMenuPricing])
+                :key     "pricing"
+                :icon    "euro"}
+     :pane     {:key "pricing-pane" :content (r/as-element [PricingPane])}}))
+
+
+(defn TabMenuDocker
+  []
+  (let [module-subtype (subscribe [::apps-subs/module-subtype])
+        tab-name       (if (= application-kubernetes @module-subtype) "Kubernetes" "Docker")]
+    [:span tab-name]))
+
+
+(defn docker
+  []
+  {:menuItem {:content (r/as-element [TabMenuDocker])
+              :key     "docker"
+              :icon    "docker"}
+   :pane     {:key "docker-pane" :content (r/as-element [DockerPane])}})
+
+
+(defn TabMenuDetails
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:span
+     (str/capitalize (@tr [:details]))]))
+
+
+(defn details
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    {:menuItem {:content (r/as-element [TabMenuDetails])
+                :key     "details"
+                :icon    "info"}
+     :pane     {:key "detals-pane" :content (r/as-element [DetailsPane])}}))
+
+
+(defn TabMenuOverview
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:span (str/capitalize (@tr [:overview]))]))
+
+
+(defn overview
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    {:menuItem {:content (r/as-element [TabMenuOverview])
+                :key     "overview"
+                :icon    "info"}
+     :pane     {:key "overview-pane" :content (r/as-element [OverviewPane])}}))
+
+
+(defn module-detail-panes
+  []
+  (let [module    (subscribe [::apps-subs/module])
+        editable? (subscribe [::apps-subs/editable?])
+        is-new?   (subscribe [::apps-subs/is-new?])]
+    [(overview)
+     (license)
+     (pricing)
+     (deployments)
+     (versions)
+     (details)
+     (docker)
+     (configuration)
+     (acl/TabAcls module editable? #(do (dispatch [::apps-events/acl %])
+                                        (dispatch [::main-events/changes-protection? true])))]))
+
+
+(defn ViewEdit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        editable?     (subscribe [::apps-subs/editable?])
-        stripe        (subscribe [::main-subs/stripe])
-        vendor        (subscribe [::profile-subs/vendor])]
+        active-index  (subscribe [::apps-subs/active-tab-index])
+        is-new?       (subscribe [::apps-subs/is-new?])]
+    (dispatch [::apps-events/set-active-tab-index 0])
+    (dispatch [::apps-events/reset-version])
+    (when (true? @is-new?) (dispatch [::apps-events/set-active-tab-index utils/tab-details]))
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
             parent (get @module-common ::apps-spec/parent-path)]
         (dispatch [::apps-events/set-form-spec ::spec/module-application])
         [ui/Container {:fluid true}
          [uix/PageHeader "cubes" (str parent (when (not-empty parent) "/") name) :inline true]
-         [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)
-                         :on-change     #(do (dispatch [::apps-events/acl %])
-                                             (dispatch [::main-events/changes-protection? true]))
-                         :read-only     (not @editable?)}]
+         [apps-views-detail/VersionWarning]
          [apps-views-detail/MenuBar]
-         [summary]
-         [apps-views-detail/registries-section]
-         (when (and @stripe @vendor)
-           [apps-views-detail/price-section])
-         [apps-views-detail/license-section]
-         [apps-views-detail/env-variables-section]
-         [files-section]
-         [docker-compose-section]
-         [apps-views-detail/urls-section]
-         [apps-views-detail/output-parameters-section]
-         [apps-views-detail/data-types-section]
-         [apps-views-detail/add-modal]
-         [apps-views-detail/save-modal]
-         [apps-views-detail/logo-url-modal]
-         [deployment-dialog-views/deploy-modal]]))))
+         [ui/Tab
+          {:menu             {:secondary true
+                              :pointing  true
+                              :style     {:display        "flex"
+                                          :flex-direction "row"
+                                          :flex-wrap      "wrap"}}
+           :panes            (module-detail-panes)
+           :activeIndex      @active-index
+           :renderActiveOnly false
+           :onTabChange      (fn [_ data]
+                               (let [active-index (. data -activeIndex)]
+                                 (dispatch [::apps-events/set-active-tab-index active-index])))}]]))))

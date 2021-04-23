@@ -20,3 +20,15 @@
   ::module-application
   (fn [db]
     (get-in db [::spec/module-application])))
+
+
+(reg-sub
+  ::active-tab-index
+  (fn [db]
+    (get-in db [::spec/active-tab-index])))
+
+
+(reg-sub
+  ::license-error?
+  (fn [db]
+    (not (empty? (get-in db [::spec/license-errors])))))

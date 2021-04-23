@@ -9,27 +9,31 @@
     [sixsq.nuvla.ui.apps.subs :as subs]
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.views-detail :as views-detail]
+    [sixsq.nuvla.ui.deployment.events :as deployment-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
-    [taoensso.timbre :as timbre]))
+    [taoensso.timbre :as timbre]
+    [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]))
 
 
-(defn module-details
+(defn ModuleDetails
   [new-subtype]
   (let [module (subscribe [::subs/module])]
     (dispatch [::main-events/changes-protection? false])
     (dispatch [::events/form-valid true])
     (dispatch [::events/set-validate-form? false])
     (fn [new-subtype]
+      (dispatch [::deployment-events/get-module-deployments])
+      [views-detail/VersionWarning]
       (let [subtype (or (:subtype @module) new-subtype)]
         (case subtype
           "component" [apps-component-views/view-edit]
-          "application" [apps-application-views/view-edit]
-          "application_kubernetes" [apps-application-views/view-edit]
-          [apps-project-views/view-edit])))))
+          "application" [apps-application-views/ViewEdit]
+          "application_kubernetes" [apps-application-views/ViewEdit]
+          [apps-project-views/ViewEdit])))))
 
 
 (defn new-module
@@ -42,7 +46,7 @@
     (apps-application-views/clear-module)))
 
 
-(defn apps
+(defn Apps
   []
   (let [nav-path         (subscribe [::main-subs/nav-path])
         nav-query-params (subscribe [::main-subs/nav-query-params])]
@@ -59,7 +63,7 @@
             (if is-new?
               (new-module new-subtype)
               (dispatch [::events/get-module version]))
-            [module-details new-subtype]))))))
+            [ModuleDetails new-subtype]))))))
 
 
 (defmethod panel/render :apps
@@ -68,8 +72,8 @@
     (timbre/set-level! :info)
     [:div
      [utils-validation/validation-error-message ::subs/form-valid?]
-     [views-detail/VersionWarning]
      [views-detail/add-modal]
      [views-detail/save-modal]
      [views-detail/logo-url-modal]
-     [apps]]))
+     [deployment-dialog-views/deploy-modal]
+     [Apps]]))

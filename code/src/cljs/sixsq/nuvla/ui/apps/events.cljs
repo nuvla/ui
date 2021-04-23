@@ -13,6 +13,8 @@
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [sixsq.nuvla.ui.deployment.events :as deployment-events]
+    [sixsq.nuvla.ui.deployment.spec :as deployment-spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -22,6 +24,27 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
     [taoensso.timbre :as log]))
+
+
+(def refresh-action-get-module :apps-get-module)
+(def refresh-action-get-deployment :apps-get-deployment)
+
+
+(reg-event-fx
+  ::refresh
+  (fn [{{:keys [::spec/version] :as db} :db} [_ page-changed?]]
+    (let [get-module-fn ::get-module
+          dispatch-fn   (if page-changed? [::main-events/ignore-changes-modal get-module-fn]
+                                          [get-module-fn version])]
+      {:db db
+       :fx [[:dispatch [::main-events/action-interval-start
+                        {:id        refresh-action-get-module
+                         :frequency 20000
+                         :event     dispatch-fn}]]
+            [:dispatch [::main-events/action-interval-start
+                        {:id        refresh-action-get-deployment
+                         :frequency 20000
+                         :event     [::deployment-events/get-module-deployments]}]]]})))
 
 
 ;; Validation
@@ -102,10 +125,9 @@
                             ::spec/module-path (:path module)
                             ::spec/module (if (nil? module) {} module)
                             ::spec/module-immutable module
-                            ::spec/validate-docker-compose
-                            (if (= id (:module-id validate-docker-compose))
-                              validate-docker-compose
-                              nil))
+                            ::spec/validate-docker-compose (if (= id (:module-id validate-docker-compose))
+                                                             validate-docker-compose
+                                                             nil))
           subtype (:subtype module)]
       (case subtype
         "component" (apps-component-utils/module->db db module)
@@ -151,10 +173,13 @@
 
 (reg-event-fx
   ::get-module
-  (fn [{{:keys [::main-spec/nav-path] :as db} :db} [_ version]]
-    (let [path (utils/nav-path->module-path nav-path)]
-      {:db                  (assoc db ::spec/completed? false)
-       ::apps-fx/get-module [path version #(dispatch [::set-module %])]})))
+  (fn [{{:keys [::main-spec/nav-path ::spec/version] :as db} :db} [_ requested-version]]
+    (let [path (utils/nav-path->module-path nav-path)
+          v    (if (nil? requested-version) version requested-version)]
+      {:db                  (cond-> db
+                                    true (assoc ::spec/completed? false)
+                                    requested-version (assoc ::spec/version requested-version))
+       ::apps-fx/get-module [path v #(dispatch [::set-module %])]})))
 
 
 (reg-event-db
@@ -197,6 +222,16 @@
   ::acl
   (fn [db [_ acl]]
     (assoc-in db [::spec/module-common ::spec/acl] acl)))
+
+
+(reg-event-db
+  ::update-acl
+  (fn [db [_ id module success-msg]]
+    (let [acl (:acl module)]
+      (-> db
+          ;(assoc-in [::spec/module :acl] acl)
+          (assoc-in [::spec/module-common ::spec/acl] acl)
+          (assoc-in [::main-events/changes-protection?] true)))))
 
 
 (reg-event-db
@@ -616,6 +651,12 @@
     (ffirst (filter #(-> % second :href (= version-id)) map-versions))))
 
 
+(reg-event-db
+  ::reset-version
+  (fn [db _]
+    (assoc db ::spec/version nil)))
+
+
 (defn publish-unpublish
   [module publish?]
   (let [id            (:id module)
@@ -645,3 +686,9 @@
   ::un-publish
   (fn [{{:keys [::spec/module] :as db} :db} _]
     (publish-unpublish module false)))
+
+
+(reg-event-db
+  ::set-active-tab-index
+  (fn [db [_ active-tab-index]]
+    (assoc db ::spec/active-tab-index active-tab-index)))

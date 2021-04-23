@@ -3,6 +3,7 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.deployment.utils :as utils]
@@ -84,7 +85,27 @@
 
 
 (reg-event-fx
-  ::get-deployments
+  ::get-module-deployments
+  (fn [{{:keys [::spec/full-text-search
+                ::spec/additional-filter
+                ::spec/state-selector
+                ::apps-spec/module
+                ::spec/page
+                ::spec/elements-per-page]} :db} _]
+    (let [state     (if (= "all" state-selector) nil state-selector)
+          module-id (:id module)]
+      {::cimi-api-fx/search [:deployment (utils/get-query-params
+                                           {:full-text-search  full-text-search
+                                            :additional-filter additional-filter
+                                            :state-selector    state
+                                            :module-id         module-id
+                                            :page              page
+                                            :elements-per-page elements-per-page})
+                             #(dispatch [::set-deployments %])]})))
+
+
+(reg-event-fx
+  ::get-nuvlabox-deployments
   (fn [{{:keys [::spec/full-text-search
                 ::spec/additional-filter
                 ::spec/state-selector
@@ -93,10 +114,30 @@
                 ::spec/elements-per-page]} :db} _]
     (let [state (if (= "all" state-selector) nil state-selector)]
       {::cimi-api-fx/search [:deployment (utils/get-query-params
-                                           full-text-search additional-filter state
-                                           nuvlabox page elements-per-page)
-                             #(dispatch [::set-deployments %])]
-       })))
+                                           {:full-text-search  full-text-search
+                                            :additional-filter additional-filter
+                                            :state-selector    state
+                                            :nuvlabox          nuvlabox
+                                            :page              page
+                                            :elements-per-page elements-per-page})
+                             #(dispatch [::set-deployments %])]})))
+
+
+(reg-event-fx
+  ::get-deployments
+  (fn [{{:keys [::spec/full-text-search
+                ::spec/additional-filter
+                ::spec/state-selector
+                ::spec/page
+                ::spec/elements-per-page]} :db} _]
+    (let [state (if (= "all" state-selector) nil state-selector)]
+      {::cimi-api-fx/search [:deployment (utils/get-query-params
+                                           {:full-text-search  full-text-search
+                                            :additional-filter additional-filter
+                                            :state-selector    state
+                                            :page              page
+                                            :elements-per-page elements-per-page})
+                             #(dispatch [::set-deployments %])]})))
 
 
 (reg-event-fx
@@ -218,7 +259,12 @@
                 ::spec/nuvlabox]} :db}]
     (let [state      (if (= "all" state-selector) nil state-selector)
           filter-str (if select-all?
-                       (utils/get-filter-param full-text-search additional-filter state nuvlabox)
+                       (utils/get-filter-param
+                         {:full-text-search  full-text-search
+                          :additional-filter additional-filter
+                          :state-selector    state
+                          :nuvlabox          nuvlabox
+                          :module-id         nil})
                        (->> selected-set
                             (map #(str "id='" % "'"))
                             (apply general-utils/join-or)))]

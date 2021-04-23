@@ -3,7 +3,9 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (def status-started "STARTED")
@@ -102,21 +104,27 @@
 
 
 (defn get-filter-param
-  [full-text-search additional-filter state-selector nuvlabox]
+  [{:keys [full-text-search additional-filter state-selector nuvlabox module-id] :as args}]
   (let [filter-state     (when state-selector (state-filter state-selector))
         filter-nuvlabox  (when nuvlabox (str "nuvlabox='" nuvlabox "'"))
+        filter-module-id (when module-id (str "module/href='" module-id "'"))
         full-text-search (general-utils/fulltext-query-string full-text-search)]
     (general-utils/join-and
       filter-state
       filter-nuvlabox
+      filter-module-id
       full-text-search
       additional-filter)))
 
 
 (defn get-query-params
-  [full-text-search additional-filter state-selector nuvlabox page elements-per-page]
-  (let [filter-str (get-filter-param full-text-search additional-filter
-                                     state-selector nuvlabox)]
+  [{:keys [full-text-search additional-filter state-selector nuvlabox module-id page elements-per-page]}]
+  (let [filter-str (get-filter-param
+                     {:full-text-search  full-text-search
+                      :additional-filter additional-filter
+                      :state-selector    state-selector
+                      :nuvlabox          nuvlabox
+                      :module-id         module-id})]
     (cond-> {:first       (inc (* (dec page) elements-per-page))
              :last        (* page elements-per-page)
              :aggregation "terms:state"
@@ -152,3 +160,8 @@
 (defn all-page-selected?
   [selected-set visible-deps-ids-set]
   (set/superset? selected-set visible-deps-ids-set))
+
+
+(defn format-nuvlabox-value
+  [nuvlabox]
+  [:div [ui/Icon {:name "box"}] [values/as-link (subs nuvlabox 9) :page "edge"]])

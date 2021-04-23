@@ -9,7 +9,7 @@
 (def type-creds "CREDENTIALS")
 
 (def target-apps {:resource        "apps"
-                  :tab-index       apps-store-utils/tab-discover
+                  :tab-index       apps-store-utils/tab-app-store
                   :tab-index-event ::apps-store-events/set-active-tab-index})
 (def target-deployments {:resource        "apps"
                          :tab-index       apps-store-utils/tab-deployments

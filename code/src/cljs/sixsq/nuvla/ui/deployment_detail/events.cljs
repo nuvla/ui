@@ -92,7 +92,7 @@
                                                :type    :error}]))
                                  (do
                                    (dispatch [::get-deployment href])
-                                   (dispatch [::deployment-events/get-deployments])))]}))
+                                   (dispatch [::deployment-events/get-nuvlabox-deployments])))]}))
 
 
 (reg-event-db
@@ -230,7 +230,7 @@
                                                            status (str " (" status ")"))
                                           :content message
                                           :type    :success}])
-                              (dispatch [::deployment-events/get-deployments])
+                              (dispatch [::deployment-events/get-nuvlabox-deployments])
                               (dispatch [::history-events/navigate "deployment"]))]}))
 
 

@@ -16,6 +16,13 @@
 
 
 (reg-sub
+  ::description
+  :<- [::module-common]
+  (fn [module-common]
+    (::spec/description module-common)))
+
+
+(reg-sub
   ::module-subtype
   :<- [::module-common]
   (fn [module-common _]
@@ -298,3 +305,8 @@
   ::paste-modal-visible?
   (fn [db]
     (::spec/paste-modal-visible? db)))
+
+(reg-sub
+  ::active-tab-index
+  (fn [db]
+    (get-in db [::spec/active-tab-index])))

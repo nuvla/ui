@@ -5,8 +5,9 @@
             [sixsq.nuvla.ui.utils.spec :as spec-utils]))
 
 
-; create an initial entry for new application
-(def defaults {::module-application {::docker-compose nil}})
+; Validation
+
+(s/def ::license-errors set?)
 
 ; Docker-compose
 
@@ -32,3 +33,11 @@
 
 (s/def ::module-application (s/keys :req [::docker-compose]
                                     :opt [::files]))
+
+
+; create an initial entry for new application
+
+(def defaults {::module-application {::docker-compose nil}
+               ::license-errors     #{}})
+
+

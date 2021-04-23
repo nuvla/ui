@@ -25,7 +25,7 @@
                                  :description "cloud applications at your service"})
             {:keys [subtype id]} project-metadata
             path-with-version (str id (when
-                                        (not (nil? version))
+                                        (not (or (nil? version) (neg? version)))
                                         (str "_" version)))
             module            (if (not= "project" subtype)
                                 (when id (<! (api/get @CLIENT path-with-version)))

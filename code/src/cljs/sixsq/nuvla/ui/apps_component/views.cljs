@@ -364,7 +364,7 @@
          [apps-views-detail/registries-section]
          (when @stripe
            [apps-views-detail/price-section])
-         [apps-views-detail/license-section]
+         [apps-views-detail/LicenseSection]
          [ports-section]
          [apps-views-detail/env-variables-section]
          [mounts-section]

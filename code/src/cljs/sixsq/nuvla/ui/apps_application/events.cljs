@@ -2,7 +2,8 @@
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.apps-application.spec :as spec]
-    [sixsq.nuvla.ui.apps.utils :as utils]))
+    [sixsq.nuvla.ui.apps.utils :as utils]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db
@@ -49,3 +50,16 @@
   (fn [db [_ id docker-compose]]
     (assoc-in db [::spec/module-application ::spec/docker-compose] docker-compose)))
 
+
+; Validation errors
+
+(reg-event-db
+  ::set-license-error
+  (fn [db [_ key error?]]
+    (let [errors  (::spec/license-errors db)
+          is-set? (contains? errors key)
+          reset?  (and (not error?) is-set?)
+          set?    (and error? (not is-set?))]
+      (cond-> db
+              reset? (update ::spec/license-errors #(disj % key))
+              set? (update ::spec/license-errors #(conj % key))))))

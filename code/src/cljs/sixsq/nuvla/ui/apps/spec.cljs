@@ -12,6 +12,8 @@
 
 (s/def ::module any?)
 
+(s/def ::version number?)
+
 (s/def ::name nonblank-string)
 
 (s/def ::description nonblank-string)
@@ -55,7 +57,6 @@
                                   ::url]))
 
 (s/def ::urls (s/map-of any? (s/merge ::single-url)))
-
 
 ; Output parameters
 
@@ -105,6 +106,7 @@
 
 (s/def ::module-common (s/keys :req [::name
                                      ::parent-path
+                                     ::license
                                      ; needed by the server, but not the ui
                                      ; (this is handled before contacting the server)
                                      ;::path
@@ -116,8 +118,7 @@
                                      ::urls
                                      ::output-parameters
                                      ::data-types
-                                     ::price
-                                     ::license]))
+                                     ::price]))
 
 
 ;; Validation
@@ -163,6 +164,8 @@
 
 (s/def ::paste-modal-visible? boolean?)
 
+(s/def ::active-tab-index number?)
+
 (s/def ::db (s/keys :req [::active-input
                           ::form-spec
                           ::form-valid?
@@ -180,8 +183,10 @@
                           ::compare-module-left
                           ::compare-module-right
                           ::module
+                          ::version
                           ::copy-module
-                          ::paste-modal-visible?]))
+                          ::paste-modal-visible?
+                          ::active-tab-index]))
 
 (def defaults {::active-input            nil
                ::form-spec               nil
@@ -201,5 +206,7 @@
                ::compare-module-left     nil
                ::compare-module-right    nil
                ::module                  nil
+               ::version                 nil
                ::copy-module             nil
-               ::paste-modal-visible?    false})
+               ::paste-modal-visible?    false
+               ::active-tab-index        0})

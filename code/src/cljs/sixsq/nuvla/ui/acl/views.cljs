@@ -14,7 +14,8 @@
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 
 (defn is-advanced-mode?
@@ -352,16 +353,16 @@
     {:menuItem {:content "Share"
                 :key     "share"
                 :icon    "users"}
-     :render   (fn []
-                 (r/as-element
-                   (when default-value
-                     ^{:key (:updated @e)}
-                     [AclWidget {:default-value default-value
-                                 :read-only     (not can-edit?)
-                                 :on-change     #(dispatch [edit-event
-                                                            (:id @e) (assoc @e :acl %)
-                                                            (@tr [:acl-updated])])}
-                      ui-acl])))}))
+     :pane     {:key     "share-pane"
+                :content (r/as-element
+                           (when default-value
+                             ^{:key (:updated @e)}
+                             [AclWidget {:default-value default-value
+                                         :read-only     (not can-edit?)
+                                         :on-change     #(dispatch [edit-event
+                                                                    (:id @e) (assoc @e :acl %)
+                                                                    (@tr [:acl-updated])])}
+                              ui-acl]))}}))
 
 
 (defn AclButton

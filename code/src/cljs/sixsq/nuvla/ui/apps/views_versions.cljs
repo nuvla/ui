@@ -1,10 +1,12 @@
 (ns sixsq.nuvla.ui.apps.views-versions
-  (:require [re-frame.core :refer [dispatch subscribe]]
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as reagent]
             [sixsq.nuvla.ui.apps.events :as events]
             [sixsq.nuvla.ui.apps.subs :as subs]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [taoensso.timbre :as log]))
@@ -112,17 +114,21 @@
          [ui/TableCell commit]]))]])
 
 
-(defn versions []
-  (let [show-versions?  (reagent/atom false)
+(defn Versions []
+  (let [tr              (subscribe [::i18n-subs/tr])
         versions        (subscribe [::subs/versions])
         current-version (subscribe [::subs/module-content-id])]
     (fn []
-      (when (seq @versions)
-        [:div
-         [show-versions show-versions?]
-         (when (and (> (count @versions) 1) @show-versions?)
-           [:div
-            [versions-compare @versions]])
-         (when @show-versions?
-           [versions-table @versions @current-version
-            :on-click #(dispatch [::events/get-module %])])]))))
+      (log/error "Versions")
+      (if (seq @versions)
+        [uix/Accordion
+         [:<>
+          (when (> (count @versions) 1)
+            [:div
+             [versions-compare @versions]])
+          [versions-table @versions @current-version
+           :on-click #(dispatch [::events/get-module %])]]
+         :label (str/capitalize (@tr [:versions]))
+         :count (count @versions)
+         :default-open true]
+        [ui/Message {:info true} (@tr [:no-versions])]))))

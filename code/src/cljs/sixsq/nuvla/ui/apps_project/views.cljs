@@ -2,8 +2,10 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps-project.spec :as spec]
+    [sixsq.nuvla.ui.apps-project.utils :as utils]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
@@ -15,7 +17,10 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.utils.time :as time]
     [taoensso.timbre :as log]))
+
 
 (defn summary []
   [apps-views-detail/summary])
@@ -25,7 +30,8 @@
   [{:keys [subtype name path description] :as module}]
   (when module
     (let [on-click  #(dispatch [::history-events/navigate (str "apps/" path)])
-          icon-name (apps-utils/subtype-icon subtype)]
+          icon-name (apps-utils/subtype-icon subtype)
+          summary   (values/markdown->summary description)]
       [ui/ListItem {:on-click on-click}
        [ui/ListIcon {:name           icon-name
                      :size           "large"
@@ -33,7 +39,7 @@
        [ui/ListContent
         [ui/ListHeader [:a {:on-click on-click} name]]
         [ui/ListDescription
-         [uix/SpanBlockJustified description]]]])))
+         [uix/SpanBlockJustified summary]]]])))
 
 
 (defn format-module-children
@@ -53,39 +59,131 @@
         module (subscribe [::apps-subs/module])]
     (fn []
       (let [children (:children @module)]
-        (if (empty? children)
-          [ui/Message {:warning true}
-           [ui/Icon {:name "warning sign"}]
-           (@tr [:no-children-modules])]
-
-          [uix/Accordion
-           [format-module-children children]
-           :label (str/capitalize (@tr [:apps-sub-modules]))])))))
-
-
-(defn clear-module [])
+        [ui/Segment {:secondary true
+                     :color     "blue"
+                     :raised    true}
+         [:h4 (str/capitalize (@tr [:apps-sub-modules]))]
+         (if (empty? children)
+           [ui/Message {:warning true}
+            [ui/Icon {:name "warning sign"}]
+            (@tr [:no-children-modules])]
+           [format-module-children children])]))))
 
 
-(defn view-edit
+(defn OverviewModuleSummary
+  []
+  (let [tr     (subscribe [::i18n-subs/tr])
+        locale (subscribe [::i18n-subs/locale])
+        module (subscribe [::apps-subs/module])
+        {:keys [id created updated name acl description parent-path path logo-url versions]} @module]
+    [ui/Segment {:secondary true
+                 :color     "blue"
+                 :raised    true}
+     [:h4 (str/capitalize (@tr [:module]))]
+     [ui/Grid {:columns 2}
+      [ui/GridColumn
+       [ui/Table {:basic  "very"
+                  :padded false}
+        [ui/TableBody
+         (when name
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:name]))]
+            [ui/TableCell [values/as-link path :label name :page "apps"]]])
+         (when parent-path
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:project]))]
+            [ui/TableCell [values/as-link parent-path :label parent-path :page "apps"]]])
+         [ui/TableRow
+          [ui/TableCell (str/capitalize (@tr [:created]))]
+          [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
+         [ui/TableRow
+          [ui/TableCell (str/capitalize (@tr [:updated]))]
+          [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]
+         (when id
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:id]))]
+            [ui/TableCell [values/as-link id :label (subs id 11)]]])]]]
+      [ui/GridColumn
+       [ui/Segment (merge style/basic {:floated "right"})
+        [ui/Image {:src      (or logo-url "")
+                   :bordered true
+                   :style    {:object-fit "contain"}}]]]]]))
+
+
+(defn DetailsPane
+  []
+  (let []
+    [summary]))
+
+
+(defn OverviewPane
+  []
+  [ui/TabPane
+   [ui/Grid {:columns   2,
+             :stackable true
+             :padded    true
+             :centered  true}
+    [ui/GridRow {:centered true}
+     [ui/GridColumn {:stretched true}
+      [OverviewModuleSummary]]
+     [ui/GridColumn {:stretched true}
+      [apps-views-detail/OverviewVendorSummary]]
+     ]
+    [ui/GridRow
+     [ui/GridColumn {:stretched true}
+      [apps-views-detail/OverviewDescription]]
+     [ui/GridColumn {:stretched true}
+      [modules-view]]]]])
+
+
+(defn overview
+  []
+  {:menuItem {:content (r/as-element [:span "Overview"])
+              :key     "overview"
+              :icon    "info"}
+   :render   (fn [] (r/as-element [OverviewPane]))})
+
+
+(defn details
+  []
+  {:menuItem {:content (r/as-element [:span "Details"])
+              :key     "details"
+              :icon    "info"}
+   :render   (fn [] (r/as-element [DetailsPane]))})
+
+
+(defn module-detail-panes
+  []
+  (let [module    (subscribe [::apps-subs/module])
+        editable? (subscribe [::apps-subs/editable?])]
+    [(overview)
+     (details)
+     (acl/TabAcls module editable? ::apps-events/update-acl)]))
+
+
+(defn ViewEdit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        module        (subscribe [::apps-subs/module])
-        editable?     (subscribe [::apps-subs/editable?])]
+        active-index  (subscribe [::apps-subs/active-tab-index])
+        is-new?       (subscribe [::apps-subs/is-new?])]
     (fn []
-      (let [name   (get @module-common ::apps-spec/name)
-            parent (get @module-common ::apps-spec/parent-path)]
+      (let [tab-index (if @is-new? utils/tab-details 0)
+            name      (get @module-common ::apps-spec/name)
+            parent    (get @module-common ::apps-spec/parent-path)]
+        (dispatch [::apps-events/set-active-tab-index tab-index])
         (dispatch [::apps-events/set-form-spec ::spec/module-project])
-        [:<>
+        [ui/Container {:fluid true}
+         [uix/PageHeader "folder" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/paste-modal]
-         [ui/Container {:fluid true}
-          [uix/PageHeader "folder" (str parent (when (not-empty parent) "/") name) :inline true]
-          ^{:key (:id @module)}
-          [acl/AclButton {:default-value (get @module-common ::apps-spec/acl)
-                          :on-change     #(do
-                                            (dispatch [::apps-events/acl %])
-                                            (dispatch [::main-events/changes-protection? true]))
-                          :read-only     (not @editable?)}]
-          [apps-views-detail/MenuBar]
-          [summary]
-          [modules-view]
-          [apps-views-detail/logo-url-modal]]]))))
+         [apps-views-detail/MenuBar]
+         [ui/Tab
+          {:menu        {:secondary true
+                         :pointing  true
+                         :style     {:display        "flex"
+                                     :flex-direction "row"
+                                     :flex-wrap      "wrap"}}
+           :panes       (module-detail-panes)
+           :activeIndex @active-index
+           :onTabChange (fn [_ data]
+                          (let [active-index (. data -activeIndex)]
+                            (dispatch [::apps-events/set-active-tab-index active-index])))}]]))))

@@ -187,3 +187,7 @@ tr.active td {
 .ui.fixed.top.sticky {
   z-index: 999;
 }
+
+.CodeMirror {
+  height: auto !important;
+}

@@ -22,7 +22,9 @@
     [sixsq.nuvla.ui.utils.style :as utils-style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.deployment.utils :as deployment-utils]))
 
 
 (defn refresh
@@ -151,17 +153,23 @@
        [BulkUpdateModal]])))
 
 
+(defn show-options
+  [select-all? no-actions]
+  (not (or select-all? (true? no-actions))))
+
+
 (defn row-fn
-  [{:keys [id state module parent] :as deployment}]
+  [{:keys [id state module parent nuvlabox infrastructure-service] :as deployment}
+   {:keys [no-actions no-selection no-module-name select-all] :as options}]
   (let [credential-id parent
         creds-name    (subscribe [::subs/creds-name-map])
         [primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
         url           @(subscribe [::subs/deployment-url id primary-url-pattern])
-        select-all?   (subscribe [::subs/select-all?])
-        selected?     (subscribe [::subs/is-selected? id])]
+        selected?     (subscribe [::subs/is-selected? id])
+        show-options? (show-options select-all no-actions)]
     [ui/TableRow
-     (when-not @select-all?
+     (when show-options?
        [ui/TableCell
         [ui/Checkbox {:checked  @selected?
                       :on-click (fn [event]
@@ -169,9 +177,10 @@
                                   (.stopPropagation event))}]])
      [ui/TableCell [values/as-link (utils-general/id->uuid id)
                     :page "dashboard" :label (utils-general/id->short-uuid id)]]
-     [ui/TableCell {:style {:overflow      "hidden",
-                            :text-overflow "ellipsis",
-                            :max-width     "20ch"}} (:name module)]
+     (when (not no-module-name)
+       [ui/TableCell {:style {:overflow      "hidden",
+                              :text-overflow "ellipsis",
+                              :max-width     "20ch"}} (:name module)])
      [ui/TableCell state]
      [ui/TableCell (when url
                      [:a {:href url, :target "_blank", :rel "noreferrer"}
@@ -180,44 +189,49 @@
      [ui/TableCell (-> deployment :created time/parse-iso8601 time/ago)]
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
-                            :max-width     "20ch"}} (get @creds-name credential-id credential-id)]
-     [ui/TableCell
-      (cond
-        (utils-general/can-operation? "stop" deployment)
-        [deployment-detail-views/ShutdownButton deployment]
+                            :max-width     "20ch"}}
+      (if nuvlabox
+        (deployment-utils/format-nuvlabox-value nuvlabox)
+        (get @creds-name credential-id credential-id))]
+     (when show-options?
+       [ui/TableCell
+        (cond
+          (utils-general/can-operation? "stop" deployment)
+          [deployment-detail-views/ShutdownButton deployment]
 
-        (utils-general/can-delete? deployment)
-        [deployment-detail-views/DeleteButton deployment])]]))
+          (utils-general/can-delete? deployment)
+          [deployment-detail-views/DeleteButton deployment])])]))
 
 
 (defn vertical-data-table
-  [deployments-list]
+  [deployments-list options]
   (let [tr                    (subscribe [::i18n-subs/tr])
-        select-all?           (subscribe [::subs/select-all?])
         is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
-    (fn [deployments-list]
-      (if (empty? deployments-list)
-        [uix/WarningMsgNoElements]
-        [ui/Table
-         (merge style/single-line {:stackable true})
-         [ui/TableHeader
-          [ui/TableRow
-           (when-not @select-all?
-             [ui/TableHeaderCell
-              [ui/Checkbox
-               {:checked  @is-all-page-selected?
-                :on-click #(dispatch [::events/select-all-page])}]])
-           [ui/TableHeaderCell (@tr [:id])]
-           [ui/TableHeaderCell (@tr [:module])]
-           [ui/TableHeaderCell (@tr [:status])]
-           [ui/TableHeaderCell (@tr [:url])]
-           [ui/TableHeaderCell (@tr [:created])]
-           [ui/TableHeaderCell (@tr [:infrastructure])]
-           [ui/TableHeaderCell (@tr [:actions])]]]
-         [ui/TableBody
-          (for [{:keys [id] :as deployment} deployments-list]
-            ^{:key id}
-            [row-fn deployment])]]))))
+    (fn [deployments-list {:keys [no-actions no-selection no-module-name select-all] :as options}]
+      (let [show-options? (show-options select-all no-actions)]
+        (if (empty? deployments-list)
+          [uix/WarningMsgNoElements]
+          [ui/Table
+           (merge style/single-line {:stackable true})
+           [ui/TableHeader
+            [ui/TableRow
+             (when show-options?
+               [ui/TableHeaderCell
+                [ui/Checkbox
+                 {:checked  @is-all-page-selected?
+                  :on-click #(dispatch [::events/select-all-page])}]])
+             [ui/TableHeaderCell (@tr [:id])]
+             (when (not no-module-name)
+               [ui/TableHeaderCell (@tr [:module])])
+             [ui/TableHeaderCell (@tr [:status])]
+             [ui/TableHeaderCell (@tr [:url])]
+             [ui/TableHeaderCell (@tr [:created])]
+             [ui/TableHeaderCell (@tr [:infrastructure])]
+             (when show-options? [ui/TableHeaderCell (@tr [:actions])])]]
+           [ui/TableBody
+            (for [{:keys [id] :as deployment} deployments-list]
+              ^{:key id}
+              [row-fn deployment options])]])))))
 
 
 (defn DeploymentCard
@@ -292,14 +306,15 @@
   []
   (let [loading?    (subscribe [::subs/loading?])
         view        (subscribe [::subs/view])
-        deployments (subscribe [::subs/deployments])]
+        deployments (subscribe [::subs/deployments])
+        select-all? (subscribe [::subs/select-all?])]
     (fn []
       (let [deployments-list (get @deployments :resources [])]
         [ui/Segment (merge style/basic
                            {:loading @loading?})
          (if (= @view "cards")
            [cards-data-table deployments-list]
-           [vertical-data-table deployments-list])]))))
+           [vertical-data-table deployments-list {:select-all @select-all?}])]))))
 
 
 (defn StatisticStates
@@ -339,6 +354,32 @@
             clickable? "red" ::events/set-state-selector ::subs/state-selector]
            (if clickable?
              [main-components/ClickMeStaticPopup])]])))))
+
+
+(defn DeploymentTable
+  [options]
+  (let [elements          (subscribe [::subs/deployments])
+        elements-per-page (subscribe [::subs/elements-per-page])
+        page              (subscribe [::subs/page])
+        loading?          (subscribe [::subs/loading?])
+        select-all?       (subscribe [::subs/select-all?])]
+    (fn []
+      (let [total-elements (:count @elements)
+            total-pages    (general-utils/total-pages total-elements @elements-per-page)
+            deployments    (:resources @elements)]
+        [ui/TabPane
+         (if @loading?
+           [ui/Loader {:active true
+                       :inline "centered"}]
+           [vertical-data-table deployments (assoc options :select-all @select-all?)])
+
+         (when (pos? (:count @elements))
+           [uix/Pagination {:totalitems   total-elements
+                            :totalPages   total-pages
+                            :activePage   @page
+                            :onPageChange (ui-callback/callback
+                                            :activePage
+                                            #(dispatch [::events/set-page %]))}])]))))
 
 
 (defn deployments-main-content

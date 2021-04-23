@@ -32,7 +32,8 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.deployment.utils :as deployment-utils]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -643,7 +644,7 @@
     (let [tr           (subscribe [::i18n-subs/tr])
           last-version (ffirst versions)]
       (if (= v last-version)
-        [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date]) ")"]
+        [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
         [:span [ui/Icon {:name "warning", :color "orange"}]
          (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))]))))
 
@@ -841,7 +842,7 @@
           [ui/TableRow
            [ui/TableCell "NuvlaBox"]
            [ui/TableCell
-            [:div [ui/Icon {:name "box"}] [values/as-link (subs nuvlabox 9) :page "edge"]]]])
+            (deployment-utils/format-nuvlabox-value nuvlabox)]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
          [ui/TableCell @version " " (up-to-date? @version @versions)]]]]]

@@ -160,11 +160,7 @@
   :<- [::module-versions]
   :<- [::current-module-content-id]
   (fn [[module-versions id]]
-    (when id
-      (some
-        (fn [[idx item]]
-          (when (= (:href item) id) idx))
-        module-versions))))
+    (apps-utils/find-current-version module-versions id)))
 
 
 (reg-sub

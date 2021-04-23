@@ -3,6 +3,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
+    [markdown-to-hiccup.core :as md]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
     [sixsq.nuvla.ui.apps-store.events :as events]
     [sixsq.nuvla.ui.apps-store.subs :as subs]
@@ -24,6 +25,7 @@
     [sixsq.nuvla.ui.utils.style :as utils-style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.general :as utils-general]
+    [sixsq.nuvla.ui.utils.values :as utils-values]
     [sixsq.nuvla.ui.apps-store.utils :as utils]
     [sixsq.nuvla.ui.dashboard.utils :as dashboard-utils]
     [taoensso.timbre :as log]))
@@ -58,13 +60,14 @@
                                              [::deployment-dialog-events/create-deployment
                                               module-id :infra-services]])
                                   (.preventDefault event)
-                                  (.stopPropagation event))}]
+                                  (.stopPropagation event))}
+        desc-summary (utils-values/markdown->summary description)]
     [uix/Card
      {:image       logo-url
       :header      [:<>
                     [ui/Icon {:name (apps-utils/subtype-icon subtype)}]
                     (or name id)]
-      :description description
+      :description (utils-general/truncate desc-summary 180)
       :href        detail-href
       :on-click    #(dispatch [::history-events/navigate detail-href])
       :button      [ui/Button
@@ -175,7 +178,7 @@
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
         [ui/TabPane
-         [AppStoreControlBar]
+         [AllAppsControlBar]
          [ModulesCardsGroup (get @modules :resources [])]
          [uix/Pagination
           {:totalitems   total-modules
@@ -191,13 +194,14 @@
         modules           (subscribe [::subs/my-modules])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])
+        search            (subscribe [::subs/full-text-search-my])
         {:keys [resource tab-index tab-index-event]} dashboard-utils/target-navigator]
     (dispatch [::events/get-my-modules])
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
         [ui/TabPane
-         (if (pos? total-modules)
+         (if (or (pos? total-modules) (not (empty? @search)))
            [:<>
             [MyAppsControlBar]
             [ModulesCardsGroup (get @modules :resources [])]
@@ -208,7 +212,7 @@
               :onPageChange (ui-callback/callback
                               :activePage #(dispatch [::events/set-page %]))}]]
            [:<>
-            [uix/WarningMsgNoElements "You do not have any apps."]
+            [uix/WarningMsgNoElements (@tr [:no-apps-available])]
             [ui/Container {:textAlign "center"}
              [ui/Icon {:name     "plus"
                        :size     "huge"
@@ -281,10 +285,6 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [
-     ;{:menuItem {:content "Discover"
-     ;            :key     "discover"
-     ;            :icon    "play"}
-     ; :render   (fn [] (r/as-element [TabDiscover]))}
      {:menuItem (r/as-element
                   [ui/MenuItem
                    {:key "appstore"}
@@ -333,8 +333,9 @@
 (defn RootView
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Container {:fluid true}
-     [:<>
-      [uix/PageHeader "fas fa-store" (general-utils/capitalize-first-letter (@tr [:apps]))]
-      [TabsApps]
-      [deployment-dialog-views/deploy-modal]]]))
+    (dispatch [::apps-events/reset-version])
+    (fn []
+      [ui/Container {:fluid true}
+       [:<>
+        [uix/PageHeader "fas fa-store" (general-utils/capitalize-first-letter (@tr [:apps]))]
+        [TabsApps]]])))

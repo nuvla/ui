@@ -987,32 +987,6 @@
                                                          (refresh (:id @nuvlabox))))}]]))))
 
 
-(defn TabDeployments
-  [uuid]
-  (let [elements          (subscribe [::deployment-subs/deployments])
-        elements-per-page (subscribe [::deployment-subs/elements-per-page])
-        page              (subscribe [::deployment-subs/page])
-        loading?          (subscribe [::deployment-subs/loading?])]
-    (deployment-views/refresh :init? true
-                              :nuvlabox (str "nuvlabox/" uuid))
-    (fn [uuid]
-      (let [total-elements (:count @elements)
-            total-pages    (general-utils/total-pages total-elements @elements-per-page)
-            deployments    (:resources @elements)]
-        [ui/TabPane
-         (if @loading?
-           [ui/Loader {:active true
-                       :inline "centered"}]
-           [deployment-views/vertical-data-table deployments])
-
-         (when (pos? (:count @elements))
-           [uix/Pagination {:totalPages   total-pages
-                            :activePage   @page
-                            :onPageChange (ui-callback/callback
-                                            :activePage
-                                            #(dispatch [::deployment-events/set-page %]))}])]))))
-
-
 ; there's a similar function in edge.views which can maybe be generalized
 (defn VulnStatisticState
   [value label label-popup color state-selector]
@@ -1231,7 +1205,7 @@
      {:menuItem {:content "Deployments"
                  :key     "deployments"
                  :icon    "sitemap"}
-      :render   (fn [] (r/as-element [TabDeployments uuid]))}
+      :render   (fn [] (r/as-element [deployment-views/DeploymentTable]))}
      {:menuItem {:content "Vulnerabilities"
                  :key     "vuln"
                  :icon    "shield"}

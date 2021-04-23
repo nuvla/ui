@@ -2,6 +2,10 @@
   (:require [sixsq.nuvla.ui.apps-application.spec :as spec]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]))
 
+
+(def tab-details 5)
+
+
 ;; Deserialization functions: module->db
 
 (defn files->db

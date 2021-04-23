@@ -17,6 +17,15 @@
   "times circle outline")
 
 
+(defn find-current-version
+  [module-versions module-id]
+  (when module-id
+    (some
+      (fn [[idx item]]
+        (when (= (:href item) module-id) idx))
+      module-versions)))
+
+
 (defn extract-version
   "Return the index or nil if it is the most recent version"
   [module-id]
@@ -322,3 +331,13 @@
   "Create a list of tuples with [index version], where index starts at 0"
   [versions]
   (reverse (map-indexed vector versions)))
+
+
+(defn is-vendor?
+  [user]
+  (str/starts-with? user "group/"))
+
+
+(defn vendor-name
+  [user]
+  (drop 6 user))

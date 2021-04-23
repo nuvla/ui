@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.apps-store.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.apps-store.spec :as spec]
     [sixsq.nuvla.ui.apps-store.utils :as utils]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
@@ -107,7 +108,8 @@
                 ::spec/page
                 ::spec/elements-per-page] :as db} :db} [_ full-text]]
     (let [search (or full-text full-text-search-all-apps)]
-      (search-modules-cofx {:db db} search elements-per-page page))))
+      (-> {:db (assoc db ::apps-spec/module nil)}
+          (search-modules-cofx search elements-per-page page)))))
 
 
 (defn summary-modules-cofx

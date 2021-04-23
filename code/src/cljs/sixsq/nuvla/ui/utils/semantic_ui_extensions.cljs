@@ -2,7 +2,7 @@
   (:require
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
-    [re-frame.core :refer [subscribe]]
+    [re-frame.core :refer [subscribe dispatch]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
@@ -22,6 +22,7 @@
                        (str/starts-with? name "fas ")) (-> (dissoc :name)
                                                            (assoc :className name)))])
 
+
 (defn Button
   "This button requires a single options map that contains the :text key. The
    value of the :text key is used to define the button text as well as the
@@ -29,6 +30,7 @@
   [{:keys [text icon] :as options}]
   (let [final-opts (-> options
                        (dissoc :text)
+                       (dissoc :icon)
                        (assoc :aria-label text))]
     [ui/Button final-opts (when icon [ui/Icon {:name icon}]) text]))
 
@@ -109,16 +111,38 @@
   [text]
   (let [default-text @text]
     (fn [text]
-      [ui/CodeMirror {:value     default-text
-                      :options   {:mode                "application/json"
-                                  :line-numbers        true
-                                  :match-brackets      true
-                                  :auto-close-brackets true
-                                  :style-active-line   true
-                                  :fold-gutter         true
-                                  :gutters             ["CodeMirror-foldgutter"]}
-                      :on-change (fn [editor data value]
-                                   (reset! text value))}])))
+      (log/error "EditorJson: " @text)
+      [ui/CodeMirror {:value      @text
+                      :autoCursor true
+                      :options    {:mode                "application/json"
+                                   :line-numbers        true
+                                   :match-brackets      true
+                                   :auto-close-brackets true
+                                   :style-active-line   true
+                                   :fold-gutter         true
+                                   :gutters             ["CodeMirror-foldgutter"]}
+                      :on-change  (fn [editor data value]
+                                    (reset! text value))}])))
+
+
+(defn EditorMarkdown
+  "A convenience function to setup the CodeMirror editor component for Markdown."
+  [text on-change-fn editable?]
+  (let []
+    (fn [text on-change-fn editable?]
+      (let [options {:value        text
+                     :autoCursor   true
+                     :options      {:mode                 "text/x-markdown"
+                                    :lineWrapping         true
+                                    :match-brackets       true
+                                    :auto-close-brackets  true
+                                    :style-active-line    true
+                                    :fold-gutter          true
+                                    :gutters              ["CodeMirror-foldgutter"]}
+                     :on-change    on-change-fn}]
+        (if editable?
+          [ui/CodeMirror options]
+          [ui/CodeMirrorControlled options])))))
 
 
 (defn Accordion
@@ -185,12 +209,12 @@
 
 
 (defn TableRowField
-  [name & {:keys [key placeholder default-value spec on-change
+  [name & {:keys [key placeholder default-value spec on-change on-validation
                   required? editable? validate-form? type input-help-msg]}]
   (let [local-validate? (r/atom false)
         active-input?   (r/atom false)]
-    (fn [name & {:keys [key placeholder default-value spec on-change required?
-                        editable? validate-form? type input-help-msg]
+    (fn [name & {:keys [key placeholder default-value spec on-change on-validation
+                        required? editable? validate-form? type input-help-msg]
                  :or   {editable? true, spec any?, type :input}}]
       (let [name-label  (cond-> name
                                 (and editable? required?) (general-utils/mandatory-name))
@@ -205,6 +229,8 @@
                                           #(let [text (when-not (str/blank? %) %)]
                                              (reset! local-validate? true)
                                              (on-change text)))}]
+        (when on-validation
+          (dispatch [on-validation key error?]))
         [ui/TableRow
          [ui/TableCell {:collapsing true} name-label]
          ^{:key (or key name)}

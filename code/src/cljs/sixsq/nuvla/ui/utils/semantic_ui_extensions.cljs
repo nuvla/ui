@@ -87,7 +87,8 @@
    interfere with React DOM attributes."
   [options]
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Grid {:vertical-align "middle"}
+    [ui/Grid {:vertical-align "middle"
+              :style {:margin-top "20px"}}
      (when (:totalitems options)
        [ui/GridColumn {:floated "left", :width 3}
         [ui/Label {:size :medium}
@@ -301,3 +302,79 @@
       [ui/Message {:warning true}
        [ui/Icon {:name "warning sign"}]
        (or message (@tr [:no-items-to-show]))])))
+
+(defn Tags
+  [{:keys [tags]}]
+  (let [uuid (random-uuid)]
+    (fn [{:keys [tags]}]
+      [ui/LabelGroup {:size  "tiny"
+                      :color "teal"
+                      :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+       (for [tag tags]
+         ^{:key (str uuid "_" tag)}
+         [ui/Label {:style {:max-width     "15ch"
+                            :overflow      "hidden"
+                            :text-overflow "ellipsis"
+                            :white-space   "nowrap"}}
+          [ui/Icon {:name "tag"}] tag])])))
+
+
+(defn Card
+  [{:keys [header description meta image on-click href
+           button tags content corner-button state loading? on-select selected?]}]
+  [ui/Card (when on-click
+             (cond-> {:on-click (fn [event]
+                                  (on-click event)
+                                  (.preventDefault event))}
+                     href (assoc :href href)))
+   (when on-select
+     [:div {:style {:position "absolute"
+                    :top      "-7px"
+                    :left     "-7px"}}
+      [ui/Checkbox {:style    {:z-index 1}
+                    :checked selected?
+                    :on-click #(do
+                                 (on-select (not selected?))
+                                 (.preventDefault %)
+                                 (.stopPropagation %))}]])
+
+   (when image
+     [ui/Image
+      {:src      image
+       :bordered true
+       :style    {:width      "auto"
+                  :height     "100px"
+                  :object-fit "contain"}}])
+
+   (when corner-button corner-button)
+
+   [ui/CardContent
+
+    (when header [ui/CardHeader
+                  {:style {:word-wrap "break-word"}}
+                  header])
+
+    (when meta [ui/CardMeta meta])
+
+    (when state
+      [ui/Segment {:basic  true
+                   :padded false
+                   :style  {:padding    0
+                            :text-align "right"
+                            :margin     "0px 5px 10px"}}
+       [:div
+        [:p {:style {:color "initial"}} state]
+        [ui/Loader {:active        loading?
+                    :indeterminate true}]]])
+
+    (when description
+      [ui/CardDescription
+       {:style {:overflow "hidden" :max-height "100px"}}
+       description])
+
+    (when content content)
+
+    (when (seq tags)
+      [Tags {:tags tags}])]
+
+   (when button button)])

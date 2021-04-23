@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.db.events :as db-events]
     [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.i18n.events :as i18n-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.views :as main-views]
     [sixsq.nuvla.ui.routes :as routes]
@@ -67,6 +68,7 @@
   (patch-process)
   (dev-setup)
   (dispatch-sync [::db-events/initialize-db])
+  (dispatch-sync [::i18n-events/get-locale-from-local-storage])
   (dispatch-sync [::api-events/get-cloud-entry-point])
   (dispatch-sync [::main-events/get-ui-config])
   (dispatch-sync [::session-events/initialize])

@@ -1,63 +1,83 @@
 (ns sixsq.nuvla.ui.deployment.spec
+  (:require-macros [sixsq.nuvla.ui.utils.spec :refer [only-keys]])
   (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [clojure.spec.alpha :as s]))
+
 
 (s/def ::loading? boolean?)
 
-(s/def ::deployment any?)
+(s/def ::nuvlabox (s/nilable string?))
 
-(s/def ::module-versions any?)
+(s/def ::deployments any?)
 
-(s/def ::deployment-parameters any?)
+(s/def ::deployments-summary any?)
 
-(s/def ::events any?)
+(s/def ::deployments-summary-all any?)
 
-(s/def ::node-parameters any?)
+(s/def ::page int?)
 
-(s/def ::deployment-log-id (s/nilable string?))
+(s/def ::elements-per-page int?)
 
-(s/def ::deployment-log-service (s/nilable string?))
+(s/def ::full-text-search (s/nilable string?))
 
-(s/def ::deployment-log-since (s/nilable string?))
+(s/def ::additional-filter (s/nilable string?))
 
-(s/def ::deployment-log-play? boolean?)
+(s/def ::creds-name-map any?)
 
-(s/def ::deployment-log any?)
+(s/def ::view #{"cards" "table"})
 
-(s/def ::upcoming-invoice any?)
+(s/def ::deployments-params-map {})
 
-(s/def ::active-tab-index number?)
+(s/def ::state-selector #{"all"
+                          "started"
+                          "starting"
+                          "created"
+                          "stopped"
+                          "error"
+                          "pending"})
 
+(s/def ::bulk-update-modal any?)
+
+(s/def ::selected-set set?)
+
+(s/def ::select-all? boolean?)
+
+(s/def ::bulk-jobs-monitored any?)
 
 (s/def ::db (s/keys :req [::loading?
-                          ::deployment
-                          ::deployment-parameters
-                          ::events
-                          ::node-parameters
-                          ::deployment-log-id
-                          ::deployment-log-service
-                          ::deployment-log-since
-                          ::deployment-log-play?
-                          ::deployment-log
-                          ::upcoming-invoice
-                          ::active-tab-index]))
+                          ::deployments
+                          ::deployments-summary
+                          ::deployments-summary-all
+                          ::deployments-params-map
+                          ::page
+                          ::elements-per-page
+                          ::full-text-search
+                          ::additional-filter
+                          ::nuvlabox
+                          ::creds-name-map
+                          ::view
+                          ::state-selector
+                          ::bulk-update-modal
+                          ::selected-set
+                          ::select-all?
+                          ::bulk-jobs-monitored
+                          ]))
 
-
-(defn default-since []
-  (-> (time/now) (.seconds 0)))
-
-(def defaults {::loading?                  true
-               ::deployment                nil
-               ::deployment-parameters     nil
-               ::module-versions           nil
-               ::events                    nil
-               ::node-parameters           nil
-               ::deployment-log-controller nil
-               ::deployment-log-id         nil
-               ::deployment-log-service    nil
-               ::deployment-log-since      (default-since)
-               ::deployment-log-play?      false
-               ::deployment-log            nil
-               ::upcoming-invoice          nil
-               ::active-tab-index          0})
+(def defaults {::loading?                false
+               ::page                    1
+               ::elements-per-page       8
+               ::full-text-search        nil
+               ::additional-filter       nil
+               ::nuvlabox                nil
+               ::deployments             nil
+               ::deployments-summary     nil
+               ::deployments-summary-all nil
+               ::deployments-params-map  nil
+               ::creds-name-map          {}
+               ::view                    "cards"
+               ::state-selector          "all"
+               ::bulk-update-modal       nil
+               ::selected-set            #{}
+               ::select-all?             false
+               ::bulk-jobs-monitored     (sorted-map)
+               })

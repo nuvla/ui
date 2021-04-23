@@ -8,6 +8,8 @@
 
 (s/def ::credentials any?)
 
+(s/def ::credentials-summary any?)
+
 (s/def ::credential-password string?)
 
 (s/def ::add-credential-modal-visible? boolean?)
@@ -134,6 +136,10 @@
                                             ::client-secret
                                             ::refresh-token]))
 
+(s/def ::hashed-password any?)
+
+(s/def ::state-selector any?)
+
 (s/def ::infrastructure-services-available any?)
 
 (s/def ::active-tab-index number?)
@@ -143,12 +149,14 @@
                           ::generated-credential-modal
                           ::credential
                           ::credentials
+                          ::credentials-summary
                           ::active-input
                           ::form-spec
                           ::form-valid?
                           ::validate-form?
                           ::credential-password
                           ::error-message
+                          ::state-selector
                           ::infrastructure-services-available
                           ::active-tab-index
                           ::credential-check-table]))
@@ -158,6 +166,7 @@
                ::credential-modal-visible?         false
                ::generated-credential-modal        nil
                ::credentials                       []
+               ::credentials-summary               []
                ::credential                        {}
                ::active-input                      nil
                ::form-spec                         nil
@@ -165,6 +174,7 @@
                ::validate-form?                    false
                ::credential-password               nil
                ::error-message                     nil
+               ::state-selector                    nil
                ::infrastructure-services-available nil
                ::credential-check-table            nil
                ::active-tab-index                  1})

@@ -70,5 +70,33 @@
                                                                job-count])])
                 :key     "job-section"
                 :icon    "clipboard list"}
-     :render   (fn [] (r/as-element [JobsTable @jobs]))}))
+     :render   (fn [] (r/as-element
+                        [JobsTable @jobs]))}))
 
+
+(def filtered-actions #{"dct_check"})
+
+
+(defn filter-actions
+  "Filter out actions included in filtered-actions"
+  [action]
+  (not (boolean (some (set [action]) filtered-actions))))
+
+
+(defn ProgressJobAction
+  [resource-state]
+  (let [jobs     (subscribe [::subs/jobs])
+        filtered (filter #(filter-actions (:action %)) (:resources @jobs))
+        last-job (first filtered)
+        {:keys [action progress state]} last-job
+        message  (str/replace (str/lower-case (str action ": " state)) #"_" " ")
+        error    (or (= "FAILED" state) (= "ERROR" resource-state))]
+    (when (and last-job (< progress 100))
+      [ui/Segment
+       [ui/Progress {:active   true
+                     :label    message
+                     :percent  progress
+                     :progress true
+                     :size     "small"
+                     :error    error
+                     :class    ["green"]}]])))

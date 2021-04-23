@@ -95,12 +95,12 @@
 
 (reg-sub
   ::user
-  :<- [::session]
-  (fn [{:keys [identifier active-claim]}]
+  :<- [::active-claim]
+  :<- [::identifier]
+  :<- [::active-claim-is-group?]
+  (fn [[active-claim identifier is-group?]]
     (or
-      (when (and (string? active-claim)
-                 (str/starts-with? active-claim "group/"))
-        active-claim)
+      (when is-group? active-claim)
       identifier)))
 
 
@@ -112,10 +112,10 @@
 
 
 (reg-sub
-  ::user-id
+  ::logged-in?
   :<- [::session]
   (fn [session]
-    (:user session)))
+    (some? session)))
 
 
 (reg-sub

@@ -17,10 +17,10 @@
     ["codemirror/mode/javascript/javascript"]
     ["codemirror/mode/shell/shell"]
     ["codemirror/mode/yaml/yaml"]
-    ["react-diff-viewer" :as react-diff-viewer]
     ["react-codemirror2" :as code-mirror]
     ["react-copy-to-clipboard" :as copy-to-clipboard]
     ["react-datepicker" :as date-picker]
+    ["react-diff-viewer" :as react-diff-viewer]
     ["react-markdown" :as react-markdown]
     ["semantic-ui-react" :as semantic]
     [reagent.core :as r]))

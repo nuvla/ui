@@ -207,7 +207,7 @@
   [attribute-info resource-name data i]
   (let [{:keys [value operation]} (nth @data i)
         value-is-null?        (utils/value-is-null? value)
-        value-now-expression? (boolean (re-find #"now" value))]
+        value-now-expression? (boolean (when (string? value) (re-find #"now" value)))]
     [:<>
      [ui/Dropdown {:placeholder "operation"
                    :search      true

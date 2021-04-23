@@ -5,8 +5,6 @@
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
-    [sixsq.nuvla.ui.apps.events :as apps-events]
-    [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.credentials.views :as cred-views]
     [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -18,7 +16,6 @@
     [sixsq.nuvla.ui.infrastructures.utils :as utils]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.components :as main-components]
-    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -58,46 +55,41 @@
 
 (defn ServiceCard
   [{:keys [id name description path subtype logo-url swarm-enabled online] :as service}]
-  [ui/Card {:on-click #(dispatch [::history-events/navigate
-                                  (str "infrastructures/" (general-utils/id->uuid id))])}
-   (when logo-url
-     [ui/Image {:src   logo-url
-                :style {:width      "auto"
-                        :height     "100px"
-                        :object-fit "contain"}}])
-
-   (let [icon-or-image (get service-icons (keyword subtype) "question circle")
-         status        (cond
-                         (true? online) :online
-                         (false? online) :offline
-                         :else :unknown)]
-     [ui/CardContent
-      [ui/CardHeader {:style {:word-wrap "break-word"}}
-       [:div {:style {:float "right"}}
-        [edge-detail/StatusIcon status :corner "top right"]]
-       (if (str/starts-with? icon-or-image "/")
-         [ui/Image {:src   icon-or-image
-                    :style {:overflow       "hidden"
-                            :display        "inline-block"
-                            :height         28
-                            :margin-right   4
-                            :padding-bottom 7
-                            }}]
-         [ui/Icon {:name icon-or-image}])
-       (or name id)]
-
-      [ui/CardMeta {:style {:word-wrap "break-word"}} path]
-      [ui/CardDescription {:style {:overflow "hidden" :max-height "100px"}} description]
-      (when (true? swarm-enabled)
-        [ui/Label {:image    true
-                   :color    "blue"
-                   :circular true
-                   :basic    true
-                   :style    {:left   "0"
-                              :margin "0.7em 0 0 0"}}
-         [ui/Image {:bordered true}
-          [ui/Icon {:name icon-or-image}]]
-         "Swarm enabled"])])])
+  (let [icon-or-image (get service-icons (keyword subtype) "question circle")
+        status        (cond
+                        (true? online) :online
+                        (false? online) :offline
+                        :else :unknown)
+        href          (str "infrastructures/" (general-utils/id->uuid id))]
+    [uix/Card
+     {:on-click    #(dispatch [::history-events/navigate href])
+      :href        href
+      :image       logo-url
+      :header      [:<>
+                    [:div {:style {:float "right"}}
+                     [edge-detail/OnlineStatusIcon status :corner "top right"]]
+                    (if (str/starts-with? icon-or-image "/")
+                      [ui/Image {:src   icon-or-image
+                                 :style {:overflow       "hidden"
+                                         :display        "inline-block"
+                                         :height         28
+                                         :margin-right   4
+                                         :padding-bottom 7
+                                         }}]
+                      [ui/Icon {:name icon-or-image}])
+                    (or name id)]
+      :meta        path
+      :description description
+      :content     (when (true? swarm-enabled)
+                     [ui/Label {:image    true
+                                :color    "blue"
+                                :circular true
+                                :basic    true
+                                :style    {:left   "0"
+                                           :margin "0.7em 0 0 0"}}
+                      [ui/Image {:bordered true}
+                       [ui/Icon {:name icon-or-image}]]
+                      "Swarm enabled"])}]))
 
 
 (defn ServiceGroupCard

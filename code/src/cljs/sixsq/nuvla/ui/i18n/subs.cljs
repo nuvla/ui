@@ -13,6 +13,6 @@
 
 (reg-sub
   ::tr
-  (fn [db]
-    (or (::spec/tr db)
-        (utils/create-tr-fn "en"))))
+  :<- [::locale]
+  (fn [locale]
+    (utils/create-tr-fn (or locale "en"))))

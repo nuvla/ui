@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.edge.subs
   (:require
     [re-frame.core :refer [dispatch reg-sub subscribe]]
-    [sixsq.nuvla.ui.edge.spec :as spec]
-    [sixsq.nuvla.ui.edge.utils :as utils]))
+    [sixsq.nuvla.ui.edge.spec :as spec]))
 
 
 (reg-sub
@@ -27,6 +26,18 @@
   ::nuvlaboxes
   (fn [db]
     (::spec/nuvlaboxes db)))
+
+
+(reg-sub
+  ::nuvlaboxes-summary
+  (fn [db]
+    (::spec/nuvlaboxes-summary db)))
+
+
+(reg-sub
+  ::nuvlaboxes-summary-all
+  (fn [db]
+    (::spec/nuvlaboxes-summary-all db)))
 
 
 (reg-sub

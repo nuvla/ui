@@ -98,32 +98,32 @@
                                                           :icon       "fas fa-store"
                                                           :protected? true
                                                           :order      2}
-                                       "data"            {:url             "data"
-                                                          :label-kw        :data
-                                                          :icon            "database"
-                                                          :protected?      true
-                                                          :iframe-visible? true
-                                                          :order           3}
-                                       "infrastructures" {:url        "infrastructures"
-                                                          :label-kw   :infra-service-short
-                                                          :icon       "cloud"
-                                                          :protected? true
-                                                          :order      4}
-                                       "credentials"     {:url        "credentials"
-                                                          :label-kw   :credentials
-                                                          :icon       "key"
-                                                          :protected? true
-                                                          :order      5}
                                        "edge"            {:url        "edge"
                                                           :label-kw   :nuvlabox
                                                           :name       "NuvlaBox"
                                                           :icon       "box"
                                                           :protected? true
-                                                          :order      6}
+                                                          :order      3}
+                                       "credentials"     {:url        "credentials"
+                                                          :label-kw   :credentials
+                                                          :icon       "key"
+                                                          :protected? true
+                                                          :order      4}
                                        "notifications"   {:url        "notifications"
                                                           :label-kw   :notifications
                                                           :icon       "bell"
                                                           :protected? false
+                                                          :order      5}
+                                       "data"            {:url             "data"
+                                                          :label-kw        :data
+                                                          :icon            "database"
+                                                          :protected?      true
+                                                          :iframe-visible? true
+                                                          :order           6}
+                                       "infrastructures" {:url        "infrastructures"
+                                                          :label-kw   :infra-service-short
+                                                          :icon       "cloud"
+                                                          :protected? true
                                                           :order      7}
                                        "api"             {:url        "api"
                                                           :label-kw   :api

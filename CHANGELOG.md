@@ -8,6 +8,41 @@
 
 ### Changed
 
+## [2.17.1] - 2021-04-16
+
+### Changed
+
+  - I18n - Bugfix prevent loop in setting tr function
+  - Acl widget - Bugfix default acl take into account active-claim
+  - Session - enhancement
+
+## [2.17.0] - 2021-04-09
+
+### Changed
+
+  - i18n - Load locale from storage
+  - Deps - re-frame-storage-fx
+  - Sticky bar - Bug fix z-index collision with open modal
+  - Main comp - Bulk modal progress
+  - Filter comp - Fix bug in date-time field
+  - Deployment - Bulk update
+  - CIMI API - Bulk operation support
+  - Deployment - Bugfix start logging create an infinite request loop when
+    action not available
+  - Deployment - Additional filter
+  - Dependency - nuvla-api-version v2.0.9
+  - Sidebar item has an href
+  - Deployment page - Use card component
+  - Infrastructure page - Use card component
+  - Edge page - Use card component
+  - Edge detail page - Use tags component
+  - UIX - Reusable tags component
+  - UIX - Reusable card component
+  - Sidebar - Improve order of pages
+  - Deployment - Summary all for deployments
+  - Edge page - Improved statistics usage for NuvlaBoxes
+  - Dashboard - Deployments and NuvlaBox summary
+
 ## [2.16.0] - 2021-03-08
 
 ### Changed

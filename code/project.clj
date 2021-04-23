@@ -1,8 +1,8 @@
 (def parent-version "6.7.4")
-(def sixsq-nuvla-api-version "2.0.8")
-(def version "2.16.1-SNAPSHOT")
+(def sixsq-nuvla-api-version "2.0.9")
+(def version "2.17.2-SNAPSHOT")
 
-(defproject sixsq.nuvla.ui/code "2.16.1-SNAPSHOT"
+(defproject sixsq.nuvla.ui/code "2.17.2-SNAPSHOT"
 
   :description "Web Browser User Interface for Nuvla"
 
@@ -88,7 +88,8 @@
                  [com.taoensso/tempura "1.2.1" :scope "provided"]
                  [com.cemerick/url :scope "provided"]
                  [kwladyka/form-validator-cljs "1.2.1"]
-                 [instaparse]]
+                 [instaparse]
+                 [com.degel/re-frame-storage-fx "0.1.1"]]
 
   :source-paths ["src/clj" "src/cljs"]
 

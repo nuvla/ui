@@ -14,6 +14,7 @@
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -483,25 +484,17 @@
      [module-id-version #(dispatch [::set-module-to-compare which-one %])]}))
 
 
-(reg-event-fx
-  ::check-validate-docker-compose-job
-  (fn [{{:keys [::spec/module] :as db} :db}
-       [_ module-id operation {:keys [id return-code progress status-message] :as job}]]
-    (when (= module-id (:id module))
-      (let [job-completed? (= progress 100)]
-        (if job-completed?
-          {:db (assoc db ::spec/validate-docker-compose {:valid?    (= return-code 0)
-                                                         :loading?  false
-                                                         :error-msg status-message})}
-          {:dispatch-later [{:ms 5000 :dispatch [::get-validate-docker-compose-job
-                                                 module-id operation id]}]})))))
+(reg-event-db
+  ::docker-compose-validation-complete
+  (fn [{:keys [::spec/module] :as db}
+       [_ {:keys [return-code target-resource status-message] :as job}]]
+    (cond-> db
+            (= (:href target-resource)
+               (:id module)) (assoc ::spec/validate-docker-compose
+                                    {:valid?    (= return-code 0)
+                                     :loading?  false
+                                     :error-msg status-message}))))
 
-
-(reg-event-fx
-  ::get-validate-docker-compose-job
-  (fn [_ [_ module-id operation job-id]]
-    {::cimi-api-fx/get [job-id #(dispatch [::check-validate-docker-compose-job
-                                           module-id operation %])]}))
 
 (reg-event-fx
   ::validate-docker-compose
@@ -511,19 +504,24 @@
       (when (or
               (string? module-or-id)
               (general-utils/can-operation? validate-op module-or-id))
-        {:db                     (assoc db ::spec/validate-docker-compose {:loading?  true
-                                                                           :module-id id})
-         ::cimi-api-fx/operation [id validate-op
-                                  #(if (instance? js/Error %)
-                                     (let [{:keys [status message]} (response/parse-ex-info %)]
-                                       (dispatch [::messages-events/add
-                                                  {:header  (cond-> (str "error on operation "
-                                                                         validate-op " for " id)
-                                                                    status (str " (" status ")"))
-                                                   :content message
-                                                   :type    :error}]))
-                                     (dispatch [::get-validate-docker-compose-job id
-                                                validate-op (:location %)]))]}))))
+        {:db (assoc db ::spec/validate-docker-compose {:loading?  true
+                                                       :module-id id})
+         ::cimi-api-fx/operation
+             [id validate-op
+              (fn [response]
+                (if (instance? js/Error response)
+                  (let [{:keys [status message]} (response/parse-ex-info response)]
+                    (dispatch [::messages-events/add
+                               {:header  (cond-> (str "error on operation "
+                                                      validate-op " for " id)
+                                                 status (str " (" status ")"))
+                                :content message
+                                :type    :error}]))
+                  (dispatch [::job-events/wait-job-to-complete
+                             {:job-id              (:location response)
+                              :on-complete         #(dispatch
+                                                      [::docker-compose-validation-complete %])
+                              :refresh-interval-ms 5000}])))]}))))
 
 
 (reg-event-fx

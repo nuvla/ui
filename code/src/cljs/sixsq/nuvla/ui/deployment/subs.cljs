@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.deployment.subs
   (:require
+    [clojure.set :as set]
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.dashboard.utils :as dashboard-utils]
     [sixsq.nuvla.ui.deployment.spec :as spec]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.deployment.utils :as utils]))
 
 
 (reg-sub
@@ -13,165 +13,131 @@
 
 
 (reg-sub
-  ::deployment
-  ::spec/deployment)
-
-
-(reg-sub
-  ::deployment-acl
-  :<- [::deployment]
-  (fn [deployment]
-    (:acl deployment)))
-
-
-(reg-sub
-  ::deployment-module
-  :<- [::deployment]
-  (fn [deployment]
-    (:module deployment)))
-
-
-(reg-sub
-  ::deployment-module-content
-  :<- [::deployment-module]
-  (fn [module]
-    (:content module)))
-
-
-(reg-sub
-  ::is-deployment-application?
-  :<- [::deployment-module]
-  (fn [module]
-    (= (:subtype module) "application")))
-
-
-(reg-sub
-  ::is-deployment-application-kubernetes?
-  :<- [::deployment-module]
-  (fn [module]
-    (= (:subtype module) "application_kubernetes")))
-
-
-(defn parse-application-yaml
-  [docker-compose]
-  (when-let [yaml (try
-                    (general-utils/yaml->obj docker-compose)
-                    (catch :default _))]
-    (js->clj yaml)))
-
-
-(reg-sub
-  ::deployment-services-list
-  :<- [::is-deployment-application?]
-  :<- [::is-deployment-application-kubernetes?]
-  :<- [::deployment-module-content]
-  (fn [[is-application? is-application-kubernetes? {:keys [docker-compose]}]]
-    (cond
-      is-application? (some-> docker-compose
-                              parse-application-yaml
-                              first
-                              (get "services" {})
-                              keys
-                              sort)
-      is-application-kubernetes? (some->> docker-compose
-                                          parse-application-yaml
-                                          (map #(let [kind      (get % "kind")
-                                                      meta-name (get-in % ["metadata" "name"])]
-                                                  (str kind "/" meta-name)))
-                                          sort)
-      :else ["machine"])))
-
-
-(reg-sub
-  ::is-read-only?
-  :<- [::deployment]
-  (fn [deployment]
-    (not (general-utils/can-edit? deployment))))
-
-
-(reg-sub
-  ::events
+  ::deployments
   (fn [db]
-    (::spec/events db)))
+    (::spec/deployments db)))
 
 
 (reg-sub
-  ::deployment-parameters
+  ::deployments-summary
   (fn [db]
-    (->> db
-         ::spec/deployment-parameters
-         (into (sorted-map)))))
+    (::spec/deployments-summary db)))
 
 
 (reg-sub
-  ::url
-  :<- [::deployment-parameters]
-  (fn [deployment-parameters [_ url-pattern]]
-    (when (dashboard-utils/running-replicas? deployment-parameters)
-      (dashboard-utils/resolve-url-pattern url-pattern deployment-parameters))))
-
-
-(reg-sub
-  ::deployment-log
+  ::deployments-summary-all
   (fn [db]
-    (::spec/deployment-log db)))
+    (::spec/deployments-summary-all db)))
 
 
 (reg-sub
-  ::deployment-log-id
+  ::elements-per-page
   (fn [db]
-    (::spec/deployment-log-id db)))
+    (::spec/elements-per-page db)))
 
 
 (reg-sub
-  ::deployment-log-service
+  ::page
   (fn [db]
-    (::spec/deployment-log-service db)))
+    (::spec/page db)))
 
 
 (reg-sub
-  ::deployment-log-since
+  ::full-text-search
   (fn [db]
-    (::spec/deployment-log-since db)))
+    (::spec/full-text-search db)))
 
 
 (reg-sub
-  ::deployment-log-play?
+  ::additional-filter
   (fn [db]
-    (::spec/deployment-log-play? db)))
+    (::spec/additional-filter db)))
 
 
 (reg-sub
-  ::module-versions
+  ::creds-name-map
   (fn [db]
-    (reverse (map-indexed vector (::spec/module-versions db)))))
+    (::spec/creds-name-map db)))
 
 
 (reg-sub
-  ::current-module-content-id
-  :<- [::deployment-module-content]
-  (fn [deployment-module-content]
-    (:id deployment-module-content)))
-
-(reg-sub
-  ::current-module-version
-  :<- [::module-versions]
-  :<- [::current-module-content-id]
-  (fn [[module-versions id]]
-    (when id
-      (some
-        (fn [[idx item]]
-          (when (= (:href item) id) idx))
-        module-versions))))
-
-
-(reg-sub
-  ::upcoming-invoice
+  ::view
   (fn [db]
-    (::spec/upcoming-invoice db)))
+    (::spec/view db)))
 
 
 (reg-sub
-  ::active-tab-index
+  ::deployments-params-map
   (fn [db]
-    (get-in db [::spec/active-tab-index])))
+    (::spec/deployments-params-map db)))
+
+(reg-sub
+  ::deployment-url
+  :<- [::deployments-params-map]
+  (fn [deployments-params-map [_ id url-pattern]]
+    (let [deployment-params-by-name (->> (get deployments-params-map id)
+                                         (map (juxt :name identity))
+                                         (into {}))]
+      (when (utils/running-replicas? deployment-params-by-name)
+        (utils/resolve-url-pattern url-pattern deployment-params-by-name)))))
+
+(reg-sub
+  ::state-selector
+  (fn [db]
+    (::spec/state-selector db)))
+
+(reg-sub
+  ::visible-deployments-ids-set
+  :<- [::deployments]
+  (fn [deployments]
+    (utils/visible-deployment-ids deployments)))
+
+(reg-sub
+  ::bulk-update-modal
+  (fn [db]
+    (::spec/bulk-update-modal db)))
+
+(reg-sub
+  ::selected-set
+  (fn [db]
+    (::spec/selected-set db)))
+
+(reg-sub
+  ::select-all?
+  (fn [db]
+    (::spec/select-all? db)))
+
+(reg-sub
+  ::deployments-count
+  :<- [::deployments]
+  (fn [deployments]
+    (get deployments :count 0)))
+
+(reg-sub
+  ::selected-count
+  :<- [::deployments-count]
+  :<- [::selected-set]
+  :<- [::select-all?]
+  (fn [[deps-count selected-set select-all?]]
+    (if select-all?
+      deps-count
+      (count selected-set))))
+
+(reg-sub
+  ::is-all-page-selected?
+  :<- [::selected-set]
+  :<- [::visible-deployments-ids-set]
+  (fn [[selected-set visible-deps-ids-set]]
+    (utils/all-page-selected? selected-set visible-deps-ids-set)))
+
+(reg-sub
+  ::is-selected?
+  :<- [::selected-set]
+  (fn [selected-set [_ id]]
+    (utils/is-selected? selected-set id)))
+
+
+(reg-sub
+  ::bulk-jobs-monitored
+  (fn [db]
+    (::spec/bulk-jobs-monitored db)))

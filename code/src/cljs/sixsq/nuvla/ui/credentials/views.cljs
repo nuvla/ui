@@ -13,12 +13,13 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.validation :as utils-validation]))
+    [sixsq.nuvla.ui.utils.validation :as utils-validation]
+    [taoensso.timbre :as log]))
 
 
 (defn in?
@@ -41,7 +42,7 @@
             valid?    (s/valid? value-spec value)]
         [ui/TableRow
          [ui/TableCell {:collapsing true}
-          (general-utils/mandatory-name (@tr [:infrastructure]))]
+          (utils-general/mandatory-name (@tr [:infrastructure]))]
          [ui/TableCell {:error (and validate? (not valid?))}
           (if (pos-int? (count @infra-services))
             ^{:key value}
@@ -72,7 +73,7 @@
                          (dispatch [::events/update-credential name-kw value])
                          (dispatch [::events/validate-credential-form ::spec/coe-credential]))]
     (fn []
-      (let [editable? (general-utils/editable? @credential @is-new?)
+      (let [editable? (utils-general/editable? @credential @is-new?)
             {:keys [name description ca cert key]} @credential]
 
         [:<>
@@ -112,7 +113,7 @@
                          (dispatch [::events/update-credential name-kw value])
                          (dispatch [::events/validate-credential-form ::spec/ssh-credential]))]
     (fn []
-      (let [editable? (general-utils/editable? @credential @is-new?)
+      (let [editable? (utils-general/editable? @credential @is-new?)
             {:keys [name description public-key private-key]} @credential]
 
         [:<>
@@ -152,7 +153,7 @@
                          (dispatch [::events/update-credential name-kw value])
                          (dispatch [::events/validate-credential-form ::spec/minio-credential]))]
     (fn []
-      (let [editable? (general-utils/editable? @credential @is-new?)
+      (let [editable? (utils-general/editable? @credential @is-new?)
             {:keys [name description access-key secret-key]} @credential]
 
         [:<>
@@ -188,7 +189,7 @@
                          (dispatch [::events/update-credential name-kw value])
                          (dispatch [::events/validate-credential-form ::spec/registry-credential]))]
     (fn []
-      (let [editable? (general-utils/editable? @credential @is-new?)
+      (let [editable? (utils-general/editable? @credential @is-new?)
             {:keys [name description username password]} @credential]
 
         [:<>
@@ -227,7 +228,7 @@
         user               (subscribe [::session-subs/user])
         update-description (atom true)]
     (fn []
-      (let [editable?              (general-utils/editable? @credential @is-new?)
+      (let [editable?              (utils-general/editable? @credential @is-new?)
             infra-id               (:parent @credential)
             infra-service-selected (->> @infra-services
                                         (filter #(= (:id %) infra-id))
@@ -263,7 +264,7 @@
                          (dispatch [::events/update-credential name-kw value])
                          (dispatch [::events/validate-credential-form ::spec/exoscale-credential]))]
     (fn []
-      (let [editable? (general-utils/editable? @credential @is-new?)
+      (let [editable? (utils-general/editable? @credential @is-new?)
             {:keys [name description exoscale-api-key exoscale-api-secret-key]} @credential]
         [:<>
          [ui/Table style/definition
@@ -296,7 +297,7 @@
                          (dispatch [::events/update-credential name-kw value])
                          (dispatch [::events/validate-credential-form ::spec/amazonec2-credential]))]
     (fn []
-      (let [editable? (general-utils/editable? @credential @is-new?)
+      (let [editable? (utils-general/editable? @credential @is-new?)
             {:keys [name description amazonec2-access-key amazonec2-secret-key]} @credential]
         [:<>
          [ui/Table style/definition
@@ -329,7 +330,7 @@
                          (dispatch [::events/update-credential name-kw value])
                          (dispatch [::events/validate-credential-form ::spec/azure-credential]))]
     (fn []
-      (let [editable? (general-utils/editable? @credential @is-new?)
+      (let [editable? (utils-general/editable? @credential @is-new?)
             {:keys [name description azure-subscription-id azure-client-id azure-client-secret]} @credential]
         [:<>
          [ui/Table style/definition
@@ -365,7 +366,7 @@
                          (dispatch [::events/update-credential name-kw value])
                          (dispatch [::events/validate-credential-form ::spec/google-credential]))]
     (fn []
-      (let [editable? (general-utils/editable? @credential @is-new?)
+      (let [editable? (utils-general/editable? @credential @is-new?)
             {:keys [name description google-username client-id client-secret refresh-token]} @credential]
         [:<>
          [ui/Table style/definition
@@ -444,7 +445,7 @@
     :modal-content   credential-coe}})
 
 
-(def coe-service-subtypes
+(def coe-subtypes
   (keys infrastructure-service-coe-validation-map))
 
 
@@ -458,6 +459,16 @@
   (keys infrastructure-service-registry-validation-map))
 
 
+(def api-key-validation-map
+  {"api-key"
+   {:validation-spec ::spec/registry-credential
+    :modal-content   credential-registy}})
+
+
+(def api-key-subtypes
+  (keys api-key-validation-map))
+
+
 (def infrastructure-service-access-keys-validation-map
   {"infrastructure-service-vpn"
    {:validation-spec ::spec/vpn-credential
@@ -467,6 +478,9 @@
     :modal-content   credential-ssh}
    "generate-ssh-key"
    {:validation-spec ::spec/ssh-credential
+    :modal-content   credential-ssh}
+   "hashed-password"
+   {:validation-spec ::spec/hashed-password
     :modal-content   credential-ssh}})
 
 
@@ -479,7 +493,8 @@
          infrastructure-service-storage-validation-map
          infrastructure-service-coe-validation-map
          infrastructure-service-access-keys-validation-map
-         infrastructure-service-registry-validation-map))
+         infrastructure-service-registry-validation-map
+         api-key-validation-map))
 
 
 (def tab-indices
@@ -487,7 +502,8 @@
    :cloud-services    1
    :access-services   2
    :storage-services  3
-   :registry-services 4})
+   :registry-services 4
+   :api-keys          5})
 
 
 (defn subtype->info
@@ -504,8 +520,52 @@
     "infrastructure-service-exoscale" {:tab-index (:cloud-services tab-indices), :icon "cloud", :name "Exoscale"}
     "infrastructure-service-vpn" {:tab-index (:access-services tab-indices), :icon "key", :name "VPN"}
     "ssh-key" {:tab-index (:access-services tab-indices), :icon "key", :name "SSH keys"}
+    "api-key" {:tab-index (:api-keys tab-indices), :icon "key", :name "API keys"}
     "generate-ssh-key" {:tab-index (:access-services tab-indices), :icon "key", :name "SSH keys"}
     {:tab-index 0, :icon "cloud", :name ""}))
+
+
+(defn extract-metrics
+  [terms subtypes]
+  (apply + (-> terms (select-keys (map keyword subtypes)) vals)))
+
+(defn StatisticStates
+  ([] [StatisticStates true])
+  ([clickable?]
+   (let [tr         (subscribe [::i18n-subs/tr])
+         summary    (subscribe [::subs/credentials-summary])]
+     (fn [clickable?]
+       (let [terms      (utils-general/aggregate-to-map (get-in @summary [:aggregations :terms:subtype :buckets]))
+             coe        (extract-metrics terms coe-subtypes)
+             csp        (extract-metrics terms infrastructure-service-csp-subtypes)
+             access-key (extract-metrics terms access-keys-subtypes)
+             storage    (extract-metrics terms infrastructure-service-storage-subtypes)
+             registry   (extract-metrics terms registry-service-subtypes)
+             api-key    (extract-metrics terms api-key-subtypes)
+             total      (:count @summary)
+             ]
+         [:div {:style {:margin     "10px auto 10px auto"
+                        :text-align "center"
+                        :width      "100%"}}
+          [ui/StatisticGroup (merge {:widths (if clickable? nil 5) :size "tiny"}
+                                    {:style {:margin-right "0px"
+                                             :display      "block"}})
+           [main-components/StatisticState total ["key"] "TOTAL" clickable?
+            ::events/set-state-selector ::subs/state-selector]
+           [main-components/StatisticState coe ["docker"] "DOCKER/K8S" clickable?
+            ::events/set-state-selector ::subs/state-selector]
+           [main-components/StatisticState csp ["cloud"] "CLOUDS" clickable?
+            ::events/set-state-selector ::subs/state-selector]
+           [main-components/StatisticState access-key ["key"] "REMOTE ACCESS" clickable?
+            ::events/set-state-selector ::subs/state-selector]
+           [main-components/StatisticState storage ["disk"] "STORAGE" clickable?
+            ::events/set-state-selector ::subs/state-selector]
+           [main-components/StatisticState registry ["docker"] "REGISTRY" clickable?
+            ::events/set-state-selector ::subs/state-selector]
+           [main-components/StatisticState api-key ["key"] "API KEYS" clickable?
+            ::events/set-state-selector ::subs/state-selector]
+           (if clickable?
+             [main-components/ClickMeStaticPopup])]])))))
 
 
 (defn credential-modal
@@ -522,8 +582,8 @@
             name             (:name (subtype->info subtype))
             header           (str (str/capitalize (str (if @is-new?
                                                          (@tr [:new])
-                                                         (@tr [:update])))
-                                                  ) " " name " " (@tr [:credential]))
+                                                         (@tr [:update]))))
+                                  " " name " " (@tr [:credential]))
             validation-item  (get infrastructure-service-validation-map subtype)
             validation-spec  (:validation-spec validation-item)
             modal-content    (:modal-content validation-item)]
@@ -531,10 +591,7 @@
           [:div]
           [ui/Modal {:open       @visible?
                      :close-icon true
-                     :on-close   #(do (dispatch [::events/close-credential-modal])
-                                      ;(dispatch [::events/set-active-tab-index
-                                      ;           active-tab-index])
-                                      )}
+                     :on-close   #(do (dispatch [::events/close-credential-modal]))}
 
            [uix/ModalHeader {:header header :icon icon}]
 
@@ -791,10 +848,10 @@
                   :align   :right
                   :style   {}}
 
-    (when (general-utils/can-delete? credential)
+    (when (utils-general/can-delete? credential)
       [DeleteButton credential])
 
-    (when (general-utils/can-edit? credential)
+    (when (utils-general/can-edit? credential)
       [ui/Icon {:name     :cog
                 :color    :blue
                 :style    {:cursor :pointer}
@@ -839,7 +896,7 @@
 (defn credentials
   []
   (let [credentials            (subscribe [::subs/credentials])
-        coe-service-creds      (filter #(in? coe-service-subtypes (:subtype %))
+        coe-service-creds      (filter #(in? coe-subtypes (:subtype %))
                                        @credentials)
         cloud-service-creds    (filter #(in? infrastructure-service-csp-subtypes (:subtype %))
                                        @credentials)
@@ -848,12 +905,15 @@
         storage-service-creds  (filter #(in? infrastructure-service-storage-subtypes (:subtype %))
                                        @credentials)
         register-service-creds (filter #(in? registry-service-subtypes (:subtype %))
+                                       @credentials)
+        api-key-creds          (filter #(in? api-key-subtypes (:subtype %))
                                        @credentials)]
     [(credential coe-service-creds :coe-services :credential-coe-service-section-sub-text "docker")
      (credential cloud-service-creds :cloud-services :credential-cloud-service-section-sub-text "cloud")
      (credential access-key-creds :access-keys :credential-ssh-keys-section-sub-text "key")
      (credential storage-service-creds :storage-services :credential-storage-service-section-sub-text "disk")
-     (credential register-service-creds :registry-services :credential-registry-service-section-sub-text "docker")]))
+     (credential register-service-creds :registry-services :credential-registry-service-section-sub-text "docker")
+     (credential api-key-creds :api-keys :api-keys-section-sub-text "key")]))
 
 
 (defn TabsCredentials

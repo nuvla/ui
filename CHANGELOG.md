@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed
+
+  - Sign-in - Make reset password link position absolute
+  - Sign-in - Support geant provider
+  - Sign-up - Support geant provider
+
 ## [2.17.1] - 2021-04-16
 
 ### Changed

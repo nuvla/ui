@@ -53,6 +53,8 @@
         callback-msg-on-validation (js/encodeURI "signup-validation-success")
         github-template?           (subscribe [::subs/user-template-exist?
                                                "user-template/nuvla"])
+        geant-template?            (subscribe [::subs/user-template-exist?
+                                               "user-template/geant"])
         stripe                     (subscribe [::main-subs/stripe])
         pricing-catalogue          (subscribe [::profile-subs/pricing-catalogue])
         pricing-url                (subscribe [::main-subs/config :pricing-url])
@@ -107,7 +109,7 @@
                                                          #(reset! create-customer %))}]
                           (when @pricing-url
                             [:span "(" (@tr [:see]) " " [:a {:href @pricing-url, :target "_blank"}
-                                                        (@tr [:pricing])] ")"])])
+                                                         (@tr [:pricing])] ")"])])
                        (when @create-customer
                          [profile-views/CustomerFormFields form-customer])]
         :submit-text  (@tr [:sign-up])
@@ -135,22 +137,37 @@
                                             data-cust opts]))
                                (dispatch [::events/submit
                                           utils/user-tmpl-email-password data opts])))))
-        :ExtraContent (when @github-template?
-                        [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/user")
+        :ExtraContent [:div {:style {:margin-top 100}}
+                       (@tr [:sign-up-with])
+                       [:span
+                        (when @github-template?
+                          [:form {:action (str @cimi-fx/NUVLA_URL "/api/user")
                                   :method "post"
-                                  :style  {:margin-top 70
-                                           :color      "grey"}}
-                         (@tr [:or-use-github-accout])
-                         [:input {:hidden        true
-                                  :name          "href"
-                                  :default-value "user-template/nuvla"}]
-                         [:input {:hidden        true
-                                  :name          "redirect-url"
-                                  :default-value @server-redirect-uri}]
-                         [ui/Button {:style    {:margin-left 10}
-                                     :circular true
-                                     :basic    true
-                                     :type     "submit"
-                                     :class    "icon"}
-                          [ui/Icon {:name "github"
-                                    :size "large"}]]])}])))
+                                  :style  {:display "inline"}}
+                           [:input {:hidden        true
+                                    :name          "href"
+                                    :default-value "user-template/nuvla"}]
+                           [:input {:hidden        true
+                                    :name          "redirect-url"
+                                    :default-value @server-redirect-uri}]
+                           [ui/Button {:style    {:margin-left 10}
+                                       :circular true
+                                       :basic    true
+                                       :type     "submit"
+                                       :class    "icon"}
+                            [ui/Icon {:name "github"
+                                      :size "large"}]]])
+                        (when @geant-template?
+                          [:form {:action (str @cimi-fx/NUVLA_URL "/api/user")
+                                  :method "post"
+                                  :style  {:display "inline"}}
+                           [:input {:hidden        true
+                                    :name          "href"
+                                    :default-value "user-template/geant"}]
+                           [ui/Button {:style    {:margin-left 10}
+                                       :circular true
+                                       :basic    true
+                                       :type     "submit"
+                                       :class    "icon"}
+                            [ui/Icon {:name "student"
+                                      :size "large"}]]])]]}])))

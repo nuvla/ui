@@ -325,7 +325,7 @@
                    (r/atom
                      (let [acl (or default-value
                                    (when-not read-only
-                                     {:owners #{@(subscribe [::session-subs/user-id])}}))]
+                                     {:owners #{@(subscribe [::session-subs/active-claim])}}))]
                        (utils/acl->ui-acl-format acl))))]
     (fn [{:keys [on-change read-only] :as opts}]
       (let [opts (assoc opts :mode mode
@@ -347,7 +347,7 @@
         default-value (:acl @e)
         acl           (or default-value
                           (when-let [user-id (and can-edit?
-                                                  @(subscribe [::session-subs/user-id]))]
+                                                  @(subscribe [::session-subs/active-claim]))]
                             {:owners [user-id]}))
         ui-acl        (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
     {:menuItem {:content "Share"
@@ -371,7 +371,7 @@
         active? (r/atom default-active?)
         acl     (or default-value
                     (when-let [user-id (and (not read-only)
-                                            @(subscribe [::session-subs/user-id]))]
+                                            @(subscribe [::session-subs/active-claim]))]
                       {:owners [user-id]}))
         ui-acl  (when acl (r/atom (utils/acl->ui-acl-format acl)))]
     (fn [opts]

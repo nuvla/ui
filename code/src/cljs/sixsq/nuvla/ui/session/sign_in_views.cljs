@@ -34,7 +34,9 @@
                              ::password (@tr [:should-not-be-empty])}
         server-redirect-uri (subscribe [::subs/server-redirect-uri])
         github-template?    (subscribe [::subs/session-template-exist?
-                                        "session-template/github-nuvla"])]
+                                        "session-template/github-nuvla"])
+        geant-template?     (subscribe [::subs/session-template-exist?
+                                        "session-template/oidc-geant"])]
     (fn []
       [comp/RightPanel
        {:title        (@tr [:login-to])
@@ -54,28 +56,43 @@
                                       :on-change     (partial fv/event->names->value! form)
                                       :on-blur       (partial fv/event->show-message form)
                                       :error         (fv/?show-message form :password spec->msg)}]
-                       [ui/FormField
+                       [ui/FormField {:style {:position "absolute"}}
                         [history-views/link "reset-password" (@tr [:forgot-password])]]]
         :submit-text  (@tr [:sign-in])
         :submit-fn    #(when (fv/validate-form-and-show? form)
                          (dispatch [::events/submit utils/session-tmpl-password
                                     (:names->value @form)]))
-        :ExtraContent (when @github-template?
-                        [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/session")
-                                  :method "post"
-                                  :style  {:margin-top 70
-                                           :color      "grey"}}
-                         (@tr [:or-use-github-accout])
-                         [:input {:hidden        true
-                                  :name          "href"
-                                  :default-value "session-template/github-nuvla"}]
-                         [:input {:hidden        true
-                                  :name          "redirect-url"
-                                  :default-value @server-redirect-uri}]
-                         [ui/Button {:style    {:margin-left 10}
-                                     :circular true
-                                     :basic    true
-                                     :type     "submit"
-                                     :class    "icon"}
-                          [ui/Icon {:name "github"
-                                    :size "large"}]]])}])))
+        :ExtraContent [:div {:style {:margin-top 100}}
+                       (@tr [:sign-in-with])
+                       (when @github-template?
+                         [:form {:action (str @cimi-fx/NUVLA_URL "/api/session")
+                                 :method "post"
+                                 :style  {:display "inline"}}
+                          [:input {:hidden        true
+                                   :name          "href"
+                                   :default-value "session-template/github-nuvla"}]
+                          [:input {:hidden        true
+                                   :name          "redirect-url"
+                                   :default-value @server-redirect-uri}]
+                          [ui/Button {:style    {:margin-left 10}
+                                      :circular true
+                                      :basic    true
+                                      :type     "submit"
+                                      :class    "icon"}
+                           [ui/Icon {:name "github"
+                                     :size "large"}]]])
+                       (when @geant-template?
+                         [:form {:action (str @cimi-fx/NUVLA_URL "/api/session")
+                                 :method "post"
+                                 :style  {:display "inline"}}
+                          [:input {:hidden        true
+                                   :name          "href"
+                                   :default-value "session-template/oidc-geant"}]
+                          [ui/Button {:style    {:margin-left 10}
+                                      :circular true
+                                      :basic    true
+                                      :type     "submit"
+                                      :class    "icon"}
+                           [ui/Icon {:name "student"
+                                     :size "large"}]]])
+                       ]}])))

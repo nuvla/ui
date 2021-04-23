@@ -47,7 +47,7 @@
                                       {:success-msg  :invitation-email-success-msg
                                        :close-modal  false
                                        :redirect-url (str @config/path-prefix
-                                                          "/set-password" )}])))]
+                                                          "/set-password")}])))]
         [ui/Modal
          {:id        "modal-create-user"
           :size      :tiny
@@ -160,7 +160,9 @@
   (let [tr               (subscribe [::i18n-subs/tr])
         user             (subscribe [::subs/user])
         profile-fn       #(dispatch [::history-events/navigate "profile"])
-        logged-in?       (boolean @user)
+        logged-in?       (subscribe [::subs/logged-in?])
+        is-group?        (subscribe [::subs/active-claim-is-group?])
+
         signup-template? (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
         dropdown-menu    [ui/Dropdown {:inline    true
                                        :button    true
@@ -168,10 +170,10 @@
                                        :className "icon"}
                           (authn-dropdown-menu)]]
     [:<>
-     (if logged-in?
+     (if @logged-in?
        [ui/ButtonGroup {:primary true}
         [ui/Button {:id "nuvla-username-button" :on-click profile-fn}
-         [ui/Icon {:name (if (-> @user (or "") (str/starts-with? "group/")) "group" "user")}]
+         [ui/Icon {:name (if @is-group? "group" "user")}]
          [:span {:id "nuvla-username"} (general-utils/truncate @user)]]
         dropdown-menu]
        [:div

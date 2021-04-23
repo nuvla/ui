@@ -39,7 +39,7 @@
 
 (defn RefreshMyAppsMenu
   []
-  (let [owner (subscribe [::session-subs/user-id])]
+  (let [owner (subscribe [::session-subs/active-claim])]
     [main-components/RefreshMenu
      {:on-refresh #(dispatch [::events/get-my-modules owner])}]))
 

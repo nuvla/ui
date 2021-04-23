@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Changed
+
+  - Sign-in - Make reset password link position absolute
+  - Sign-in - Support geant provider
+  - Sign-up - Support geant provider
+
+## [2.17.1] - 2021-04-16
+
+### Changed
+
+  - I18n - Bugfix prevent loop in setting tr function
+  - Acl widget - Bugfix default acl take into account active-claim
+  - Session - enhancement
+
 ## [2.17.0] - 2021-04-09
 
 ### Changed

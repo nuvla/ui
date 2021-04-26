@@ -2,7 +2,6 @@
   "Utility from Alistair Roche on the clojure mailing list for creating a
    closed map definition."
   (:require
-    [clojure.set :as set]
     [clojure.spec.alpha :as s]))
 
 

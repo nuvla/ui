@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+  - Support for apps to ask for a credential with user permissions
+
 ### Changed
 
   - Sign-in - Make reset password link position absolute

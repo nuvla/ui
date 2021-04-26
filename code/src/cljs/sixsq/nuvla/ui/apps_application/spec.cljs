@@ -6,7 +6,10 @@
 
 
 ; create an initial entry for new application
-(def defaults {::module-application {::docker-compose nil}})
+(def defaults {::module-application {::docker-compose nil
+                                     ::requires-user-rights false}})
+
+(s/def ::requires-user-rights boolean?)
 
 ; Docker-compose
 
@@ -31,4 +34,5 @@
 ; Module
 
 (s/def ::module-application (s/keys :req [::docker-compose]
-                                    :opt [::files]))
+                                    :opt [::files
+                                          ::requires-user-rights]))

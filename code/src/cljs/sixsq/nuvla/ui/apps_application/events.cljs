@@ -49,3 +49,12 @@
   (fn [db [_ id docker-compose]]
     (assoc-in db [::spec/module-application ::spec/docker-compose] docker-compose)))
 
+
+; Requires user rights
+
+(reg-event-db
+  ::update-requires-user-rights
+  (fn [db [_ value]]
+    (assoc-in db [::spec/module-application ::spec/requires-user-rights] value)))
+
+

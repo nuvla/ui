@@ -68,11 +68,12 @@
 (defn DeleteButton
   [module]
   (let [tr      (subscribe [::i18n-subs/tr])
+        is-new? (subscribe [::subs/is-new?])
         {:keys [id name description]} module
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete-module id])
-      :trigger     (r/as-element [ui/MenuItem
+      :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
                                   [ui/Icon {:name "trash"}]
                                   (str/capitalize (@tr [:delete]))])
       :content     [:h3 content]
@@ -83,16 +84,16 @@
 
 (defn PublishButton
   [module]
-  (let [tr         (subscribe [::i18n-subs/tr])
+  (let [tr      (subscribe [::i18n-subs/tr])
+        is-new? (subscribe [::subs/is-new?])
         {:keys [id name description]} module
-        content    (str (or name id) (when description " - ") description)
-        version-id (:id content)]
+        content (str (or name id) (when description " - ") description)]
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/publish])
-      :trigger     (r/as-element [ui/MenuItem
+      :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
                                   [ui/Icon {:name apps-utils/publish-icon}]
                                   (str/capitalize (@tr [:publish]))])
-      :content     [:p "Are you sure you want to publish this version of the module?"]
+      :content     [:p (@tr [:publish-confirmation-message])]
       :header      (@tr [:publish-module])
       :icon        apps-utils/publish-icon
       :button-text (@tr [:publish])}]))
@@ -101,15 +102,13 @@
 (defn UnPublishButton
   [module]
   (let [tr (subscribe [::i18n-subs/tr])
-        {:keys [id name description]} module
-        ;        content (str (or name id) (when description " - ") description)
-        ]
+        {:keys [id name description]} module]
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/un-publish id])
       :trigger     (r/as-element [ui/MenuItem
                                   [ui/Icon {:name apps-utils/un-publish-icon}]
                                   (str/capitalize (@tr [:un-publish]))])
-      :content     [:p "Are you sure you want to un-publish this version of the module?"]
+      :content     [:p (@tr [:un-publish-confirmation-message])]
       :header      (@tr [:un-publish-module])
       :icon        apps-utils/un-publish-icon
       :button-text (@tr [:un-publish])}]))
@@ -118,6 +117,7 @@
 (defn MenuBar []
   (let [tr            (subscribe [::i18n-subs/tr])
         module        (subscribe [::subs/module])
+        module-common (subscribe [::subs/module-common])
         is-new?       (subscribe [::subs/is-new?])
         page-changed? (subscribe [::main-subs/changes-protection?])
         form-valid?   (subscribe [::subs/form-valid?])
@@ -125,10 +125,10 @@
         module-id     (subscribe [::subs/module-id-version])
         copy-module   (subscribe [::subs/copy-module])]
     (fn []
-      (let [subtype          (:subtype @module)
+      (let [subtype          (::spec/subtype @module-common)
             launchable?      (and subtype (not= "project" subtype))
             launch-disabled? (or @is-new? @page-changed?)
-            add?             (= "project" (:subtype @module))
+            add?             (= "project" subtype)
             add-disabled?    (or @is-new? @page-changed?)
             published?       (utils/published? @module @module-id)]
 
@@ -156,12 +156,13 @@
               :icon     "add"
               :disabled add-disabled?
               :on-click #(dispatch [::events/open-add-modal])}])
-
+          (log/error "subtype: " subtype)
           (when (not= "project" subtype)
             [ui/Popup
              {:trigger        (r/as-element [ui/MenuItem
                                              {:name     (@tr [:copy])
                                               :icon     "copy"
+                                              :disabled @is-new?
                                               :on-click #(dispatch [::events/copy])}])
               :content        (@tr [:module-copied])
               :on             "click"

@@ -42,6 +42,7 @@
          summary-all (subscribe [::subs/nuvlaboxes-summary-all])
          clusters    (subscribe [::subs/nuvlabox-clusters])]
      (fn [clickable?]
+       (js/console.warn @summary)
        (let [summary         (if clickable? summary summary-all) ; select all without filter
              terms           (general-utils/aggregate-to-map
                                (get-in @summary [:aggregations :terms:state :buckets]))

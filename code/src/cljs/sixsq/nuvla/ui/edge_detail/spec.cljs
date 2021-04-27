@@ -15,6 +15,9 @@
 (s/def ::page int?)
 (s/def ::nuvlabox-vulns (s/nilable any?))
 (s/def ::active-tab-index number?)
+(s/def ::nuvlabox-managers (s/nilable any?))
+(s/def ::join-token (s/nilable any?))
+(s/def ::nuvlabox-cluster (s/nilable any?))
 
 
 (s/def ::db (s/keys :req [::loading?
@@ -28,7 +31,10 @@
                           ::elements-per-page
                           ::page
                           ::nuvlabox-vulns
-                          ::active-tab-index]))
+                          ::active-tab-index
+                          ::nuvlabox-managers
+                          ::join-token
+                          ::nuvlabox-cluster]))
 
 
 (def defaults {::loading?                     true
@@ -42,4 +48,7 @@
                ::elements-per-page            15
                ::page                         1
                ::nuvlabox-vulns               nil
-               ::active-tab-index             0})
+               ::active-tab-index             0
+               ::nuvlabox-managers            nil
+               ::join-token                   nil
+               ::nuvlabox-cluster             nil})

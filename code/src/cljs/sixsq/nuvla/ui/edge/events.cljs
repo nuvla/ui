@@ -267,19 +267,18 @@
                            #(dispatch [::set-nuvlabox-releases %])]}))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-nuvlabox-cluster
-  (fn [db [_ nuvlabox-cluster]]
-    (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster)))
+  (fn [{:keys [db]} [_ nuvlabox-cluster]]
+    {:db        (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster)
+     :dispatch  [::refresh]}))
 
 
 (reg-event-fx
   ::get-nuvlabox-cluster
   (fn [{:keys [db]} [_ cluster-id]]
-    {::cimi-api-fx/get [cluster-id #(do
-                                      (dispatch [::set-nuvlabox-cluster %]))
-                        :on-error #(dispatch [::set-nuvlabox-cluster nil])]
-     :fx      [[:dispatch [::refresh]]]}))
+    {::cimi-api-fx/get [cluster-id #(dispatch [::set-nuvlabox-cluster %])
+                        :on-error #(dispatch [::set-nuvlabox-cluster nil])]}))
 
 
 (reg-event-db

@@ -59,11 +59,10 @@
         {:keys [subtype]} (get @re-frame.db/app-db ::spec/module)
         new-subtype (:subtype @(subscribe [::main-subs/nav-query-params]))]
     (when form-valid?
-      (do
-        (dispatch [::events/set-validate-form? false])
-        (if (= (or subtype new-subtype) "project")
-          (dispatch [::events/edit-module nil])
-          (dispatch [::events/open-save-modal]))))))
+      (dispatch [::events/set-validate-form? false])
+      (if (= (or subtype new-subtype) "project")
+        (dispatch [::events/open-save-modal])
+        (dispatch [::events/open-save-modal])))))
 
 
 (defn DeleteButton
@@ -196,7 +195,8 @@
         visible?       (subscribe [::subs/save-modal-visible?])
         username       (subscribe [::session-subs/user])
         commit-message (subscribe [::subs/commit-message])
-        need-commit?   (subscribe [::subs/module-content-updated?])]
+        need-commit?   (subscribe [::subs/module-content-updated?])
+        subtype        (subscribe [::subs/module-subtype])]
     (fn []
       (let [commit-map {:author @username
                         :commit @commit-message}
@@ -212,7 +212,7 @@
          [uix/ModalHeader {:header (str (@tr [:save]) " " (@tr [:component]))}]
 
          [ui/ModalContent
-          (if @need-commit?
+          (if (and @need-commit? (not= @subtype "project"))
             [ui/Input {:placeholder   (@tr [:commit-placeholder])
                        :fluid         true
                        :default-value @commit-message
@@ -319,8 +319,7 @@
              [:div]
              [ui/Icon {:name  "cubes"
                        :size  :massive
-                       :color (when-not parent :grey)}]]]
-           ]]]))))
+                       :color (when-not parent :grey)}]]]]]]))))
 
 
 (defn paste-modal
@@ -449,7 +448,7 @@
           [ui/Grid {:centered true
                     :columns  2}
            [ui/GridColumn
-            [:h4 "Markdown"]
+            [:h4 "Markdown" [general-utils/mandatory-icon]]
             [ui/Segment
              [uix/EditorMarkdown
               default-value
@@ -500,30 +499,31 @@
                            path        nil}} @module-common]
          [:<>
           [ui/Grid {:stackable true, :reversed :mobile}
-           [ui/GridColumn {:width 13}
-            [ui/Table {:compact    true
-                       :definition true}
-             [ui/TableBody
+           [ui/GridRow
+            [ui/GridColumn {:width 13}
+             [ui/Table {:compact    true
+                        :definition true}
+              [ui/TableBody
 
-              [uix/TableRowField (@tr [:name]), :key (str parent "-name"), :editable? @editable?,
-               :spec ::spec/name, :validate-form? @validate-form?, :required? true,
-               :default-value name, :on-change (partial on-change ::events/name)
-               :on-validation]
-
-              (when (not-empty parent)
-                (let [label (if (= "project" subtype) "parent project" "project")]
-                  [ui/TableRow
-                   [ui/TableCell {:collapsing true
-                                  :style      {:padding-bottom 8}} label]
-                   [ui/TableCell {:style {:padding-left (when @editable? 24)}} parent]]))
-              (for [x extras]
-                x)]]]
-           [ui/GridColumn {:width 3 :floated "right"}
-            [ui/Image {:src (or logo-url @default-logo-url)}]
-            (when @editable?
-              [ui/Button {:fluid    true
-                          :on-click #(dispatch [::events/open-logo-url-modal])}
-               (@tr [:module-change-logo])])]]
+               [uix/TableRowField (@tr [:name]), :key (str parent "-name"), :editable? @editable?,
+                :spec ::spec/name, :validate-form? @validate-form?, :required? true,
+                :default-value name, :on-change (partial on-change ::events/name)
+                :on-validation]
+               (when (not-empty parent)
+                 (let [label (if (= "project" subtype) "parent project" "project")]
+                   [ui/TableRow
+                    [ui/TableCell {:collapsing true
+                                   :style      {:padding-bottom 8}} label]
+                    [ui/TableCell {:style {:padding-left (when @editable? 24)}} parent]]))
+               (for [x extras]
+                 x)]]
+             [details-section]]
+            [ui/GridColumn {:width 3 :floated "right"}
+             [ui/Image {:src (or logo-url @default-logo-url)}]
+             (when @editable?
+               [ui/Button {:fluid    true
+                           :on-click #(dispatch [::events/open-logo-url-modal])}
+                (@tr [:module-change-logo])])]]]
           ;^{:key (random-uuid)}
           [Description validation-event]])))))
 
@@ -1083,7 +1083,6 @@
      [ui/Grid
       [ui/GridColumn {:floated "left"} [:h4 (str/capitalize (@tr [:description]))]]
       [ui/GridColumn {:floated "right"}
-       (log/error "@editable? " @editable?)
        (when @editable?
          [ui/Button {:icon     "pencil"
                      :compact  true

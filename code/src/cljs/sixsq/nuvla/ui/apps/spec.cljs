@@ -107,7 +107,7 @@
 (s/def ::module-common (s/keys :req [::name
                                      ::description
                                      ::parent-path
-                                     ::license
+                                     ;::license
                                      ; needed by the server, but not the ui
                                      ; (this is handled before contacting the server)
                                      ;::path

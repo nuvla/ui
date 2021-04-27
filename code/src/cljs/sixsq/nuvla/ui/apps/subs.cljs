@@ -203,8 +203,8 @@
     (not= (-> module
               (utils-detail/db->module nil db)
               :content
-              (dissoc :commit :author))
-          (-> module-immutable :content (dissoc :commit :author)))))
+              (dissoc :commit :author :children))
+          (-> module-immutable :content (dissoc :commit :author :children)))))
 
 
 (reg-sub

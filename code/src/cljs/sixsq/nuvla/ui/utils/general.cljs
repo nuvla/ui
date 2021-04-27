@@ -279,11 +279,17 @@
   (or is-new? (can-edit? data)))
 
 
+(defn mandatory-icon
+  []
+  [:sup " "
+   [ui/Icon {:name  :asterisk
+             :size  :tiny
+             :color :red}]])
+
+
 (defn mandatory-name
   [name]
-  [:span name [:sup " " [ui/Icon {:name  :asterisk
-                                  :size  :tiny
-                                  :color :red}]]])
+  [:span name [mandatory-icon]])
 
 
 (defn fulltext-query-string

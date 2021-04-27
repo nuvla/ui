@@ -156,7 +156,8 @@
         editable? (subscribe [::apps-subs/editable?])]
     [(overview)
      (details)
-     (acl/TabAcls module editable? ::apps-events/update-acl)]))
+     (apps-views-detail/TabAcls module @editable? #(do (dispatch [::apps-events/acl %])
+                                                       (dispatch [::main-events/changes-protection? true])))]))
 
 
 (defn ViewEdit

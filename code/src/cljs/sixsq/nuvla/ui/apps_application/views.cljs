@@ -156,39 +156,6 @@
 
 
 (defn KubernetesSection []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        docker-compose  (subscribe [::subs/docker-compose])
-        module-app      (subscribe [::apps-subs/module])
-        form-valid?     (subscribe [::apps-subs/form-valid?])
-        editable?       (subscribe [::apps-subs/editable?])
-        local-validate? (r/atom false)
-        default-value   @docker-compose]
-    (fn []
-      (let [validate-dc (subscribe [::apps-subs/validate-docker-compose])
-            validate?   (or @local-validate? (not @form-valid?))]
-        [uix/Accordion
-         [:<>
-          [:div {:style {:margin-bottom "10px"}} "Env substitution"
-           [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]]
-          [uix/EditorYaml
-           default-value
-           (fn [editor data value]
-             (dispatch [::events/update-docker-compose value])
-             (dispatch [::main-events/changes-protection? true])
-             (dispatch [::apps-events/validate-form])
-             (reset! local-validate? true))
-           @editable?]
-          (when (and validate? (not (s/valid? ::spec/docker-compose @docker-compose)))
-            (let [error-msg (-> @docker-compose general-utils/check-yaml second)]
-              [ui/Label {:pointing "above", :basic true, :color "red"}
-               (if (str/blank? error-msg)
-                 (@tr [:module-docker-compose-error])
-                 error-msg)]))]
-         :label "Manifest"
-         :default-open true]))))
-
-
-(defn DockerComposeSection []
   (let [tr             (subscribe [::i18n-subs/tr])
         docker-compose (subscribe [::subs/docker-compose])
         module-app     (subscribe [::apps-subs/module])
@@ -196,11 +163,10 @@
         compatibility  (:compatibility @module-app)
         validate-form? (subscribe [::apps-subs/validate-form?])
         editable?      (subscribe [::apps-subs/editable?])
-        ;local-validate? (r/atom false)
         default-value  @docker-compose]
     (fn []
       (let [validate-dc (subscribe [::apps-subs/validate-docker-compose])
-            validate?   @validate-form?                     ;(or @local-validate? (not @form-valid?))
+            validate?   @validate-form?
             valid?      (s/valid? ::spec/docker-compose @docker-compose)]
         [uix/Accordion
          [:<>
@@ -212,9 +178,44 @@
            (fn [editor data value]
              (dispatch [::events/update-docker-compose value])
              (dispatch [::main-events/changes-protection? true])
-             (dispatch [::apps-events/validate-form])
-             ;(reset! local-validate? true)
-             )
+             (dispatch [::apps-events/validate-form]))
+           @editable?]
+          (when validate?
+            (dispatch [::events/set-docker-validation-error application-kubernetes-subtype (not valid?)])
+            (when (not valid?)
+              (let [error-msg (-> @docker-compose general-utils/check-yaml second)]
+                [ui/Label {:pointing "above", :basic true, :color "red"}
+                 (if (str/blank? error-msg)
+                   (@tr [:module-k8s-manifest-error])
+                   error-msg)])))]
+         :label "Manifes"
+         :default-open true]))))
+
+
+(defn DockerComposeSection []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        docker-compose (subscribe [::subs/docker-compose])
+        module-app     (subscribe [::apps-subs/module])
+        unsupp-opts    (:unsupported-options (:content @module-app))
+        compatibility  (:compatibility @module-app)
+        validate-form? (subscribe [::apps-subs/validate-form?])
+        editable?      (subscribe [::apps-subs/editable?])
+        default-value  @docker-compose]
+    (fn []
+      (let [validate-dc (subscribe [::apps-subs/validate-docker-compose])
+            validate?   @validate-form?
+            valid?      (s/valid? ::spec/docker-compose @docker-compose)]
+        [uix/Accordion
+         [:<>
+          [:div {:style {:margin-bottom "10px"}} "Env substitution"
+           [:span ff/nbsp (ff/help-popup (@tr [:module-docker-compose-help]))]
+           [DockerComposeCompatibility compatibility unsupp-opts]]
+          [uix/EditorYaml
+           default-value
+           (fn [editor data value]
+             (dispatch [::events/update-docker-compose value])
+             (dispatch [::main-events/changes-protection? true])
+             (dispatch [::apps-events/validate-form]))
            @editable?]
           (when validate?
             (dispatch [::events/set-docker-validation-error docker-compose-subtype (not valid?)])
@@ -304,10 +305,12 @@
 
 (defn DeploymentsPane
   []
-  (let []
-    [deployment-views/DeploymentTable {:no-actions     true
-                                       :no-selection   true
-                                       :no-module-name true}]))
+  (let [is-new? (subscribe [::apps-subs/is-new?])]
+    (if @is-new?
+      [uix/WarningMsgNoElements]
+      [deployment-views/DeploymentTable {:no-actions     true
+                                         :no-selection   true
+                                         :no-module-name true}])))
 
 
 (defn deployments
@@ -475,7 +478,8 @@
                       :fluid     true
                       :value     @module-subtype
                       :on-change (ui-callback/value
-                                   #(dispatch [::apps-events/subtype %]))
+                                   #(do (dispatch [::apps-events/subtype %])
+                                        (dispatch [::main-events/changes-protection? true])))
                       :options   [{:key docker-compose-subtype, :text "Docker", :value docker-compose-subtype}
                                   {:key   application-kubernetes-subtype, :text "Kubernetes",
                                    :value application-kubernetes-subtype}]}]]]]

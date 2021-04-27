@@ -375,8 +375,7 @@
   [message]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [message]
-      [ui/Message {:warning true}
-       [ui/Icon {:name "warning sign"}]
+      [ui/Message {:info true}
        (or message (@tr [:no-items-to-show]))])))
 
 

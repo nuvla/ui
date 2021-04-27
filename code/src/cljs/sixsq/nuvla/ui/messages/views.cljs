@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.messages.views
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
@@ -162,8 +161,8 @@
                    :on-close #(dispatch [::events/close-popup])
                    :trigger  (r/as-element
                                [ui/MenuItem {:disabled disabled?}
-                                [ui/Button {:aria-label "notifications",
-                                            :primary    true,
+                                [ui/Button {:aria-label "notifications"
+                                            :primary    true
                                             :disabled   disabled?}
                                  [ui/Icon {:name (if disabled? "bell slash" "bell")}]
                                  (str n)]])}

@@ -19,16 +19,16 @@
         status    (subscribe [::subs/credential-check-status cred-id])]
     (when (and @status (or @loading? (not @valid?)))
       [ui/Popup {:trigger  (r/as-element
-                             [uix/Icon {:name (cond
-                                                     @loading? "circle notched"
-                                                     (not @valid?) (if @invalid? "fas fa-times-octagon" "warning sign")
-                                                     :else "world")
-                                        :color     (cond
-                                                     @loading? "black"
-                                                     (not @valid?) (if @invalid? "red" "yellow")
-                                                     :else "green")
-                                        :loading   @loading?
-                                        :size      "large"}])
+                             [ui/Icon {:name    (cond
+                                                  @loading? "circle notched"
+                                                  (not @valid?) (if @invalid? "window close" "warning sign")
+                                                  :else "world")
+                                       :color   (cond
+                                                  @loading? "black"
+                                                  (not @valid?) (if @invalid? "red" "yellow")
+                                                  :else "green")
+                                       :loading @loading?
+                                       :size    "large"}])
                  :header   (@tr [:connectivity-check])
                  :content  (cond
                              @loading? (@tr [:connectivity-check-in-progress])

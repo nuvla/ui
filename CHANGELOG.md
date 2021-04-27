@@ -2,8 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+  - Support for apps to ask for a credential with user permissions
+
 ### Changed
 
+  - Deployment modal - Bugfix icon credential check
+  - Deployment - Display credential name when available in deployment
   - Sign-in - Make reset password link position absolute
   - Sign-in - Support geant provider
   - Sign-up - Support geant provider

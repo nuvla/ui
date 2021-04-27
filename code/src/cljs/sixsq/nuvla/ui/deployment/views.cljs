@@ -198,7 +198,6 @@
         (cond
           (utils-general/can-operation? "stop" deployment)
           [deployment-detail-views/ShutdownButton deployment]
-
           (utils-general/can-delete? deployment)
           [deployment-detail-views/DeleteButton deployment])])]))
 
@@ -235,21 +234,20 @@
 
 
 (defn DeploymentCard
-  [{:keys [id state module tags] :as deployment}]
+  [{:keys [id state module tags parent credential-name] :as deployment}]
   (let [tr            (subscribe [::i18n-subs/tr])
-        creds-name    (subscribe [::subs/creds-name-map])
         credential-id (:parent deployment)
         {module-logo-url :logo-url
          module-name     :name
          module-content  :content} module
-        cred-info     (get @creds-name credential-id credential-id)
         [primary-url-name
          primary-url-pattern] (-> module-content (get :urls []) first)
         primary-url   (subscribe [::subs/deployment-url id primary-url-pattern])
         started?      (utils/is-started? state)
         dep-href      (utils/deployment-href id)
         select-all?   (subscribe [::subs/select-all?])
-        is-selected?  (subscribe [::subs/is-selected? id])]
+        is-selected?  (subscribe [::subs/is-selected? id])
+        cred          (or credential-name parent)]
     ^{:key id}
     [uix/Card
      (cond-> {:header        [:span [:p {:style {:overflow      "hidden",
@@ -257,8 +255,8 @@
                                                  :max-width     "20ch"}} module-name]]
               :meta          (str (@tr [:created]) " " (-> deployment :created
                                                            time/parse-iso8601 time/ago))
-              :description   (when-not (str/blank? cred-info)
-                               [:div [ui/Icon {:name "key"}] cred-info])
+              :description   (when cred
+                               [:div [ui/Icon {:name "key"}] cred])
               :tags          tags
               :button        (when (and started? @primary-url)
                                [ui/Button {:color    "green"
@@ -286,9 +284,8 @@
               :state         state
               :loading?      (utils/deployment-in-transition? state)}
 
-             (not @select-all?)
-             (assoc :on-select #(dispatch [::events/select-id id])
-                    :selected? @is-selected?))]))
+             (not @select-all?) (assoc :on-select #(dispatch [::events/select-id id])
+                                       :selected? @is-selected?))]))
 
 
 (defn cards-data-table

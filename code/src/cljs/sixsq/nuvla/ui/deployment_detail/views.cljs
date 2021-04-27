@@ -695,22 +695,21 @@
 
 
 (defn DeploymentCard
-  [{:keys [id state module tags] :as deployment} & {:keys [clickable?]
-                                                    :or   {clickable? true}}]
+  [{:keys [id state module tags parent credential-name] :as deployment} & {:keys [clickable?]
+                                                                           :or   {clickable? true}}]
   (let [tr            (subscribe [::i18n-subs/tr])
-        creds-name    (subscribe [::deployment-subs/creds-name-map])
         credential-id (:parent deployment)
         {module-logo-url :logo-url
          module-name     :name
          module-path     :path
          module-content  :content} module
-        cred-info     (get @creds-name credential-id credential-id)
         [primary-url-name
          primary-url-pattern] (-> module-content (get :urls []) first)
         primary-url   (if clickable?
                         (subscribe [::deployment-subs/deployment-url id primary-url-pattern])
                         (subscribe [::subs/url primary-url-pattern]))
-        started?      (utils/is-started? state)]
+        started?      (utils/is-started? state)
+        cred          (or credential-name parent)]
 
     ^{:key id}
     [ui/Card (when clickable?
@@ -748,8 +747,8 @@
 
       [ui/CardDescription
 
-       (when-not (str/blank? cred-info)
-         [:div [ui/Icon {:name "key"}] cred-info])]
+       (when cred
+         [:div [ui/Icon {:name "key"}] cred])]
 
       [ui/LabelGroup {:size  "tiny"
                       :color "teal"
@@ -776,20 +775,16 @@
 
 (defn TabOverviewSummary
   []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        deployment    (subscribe [::subs/deployment])
-        version       (subscribe [::subs/current-module-version])
-        versions      (subscribe [::subs/module-versions])
-        module        (:module @deployment)
-        {:keys [logo-url]} module
-        {:keys [id state module tags acl]} @deployment
-        owners        (:owners acl)
-        creds-name    (subscribe [::deployment-subs/creds-name-map])
-        credential-id (:parent @deployment)
+  (let [tr         (subscribe [::i18n-subs/tr])
+        deployment (subscribe [::subs/deployment])
+        version    (subscribe [::subs/current-module-version])
+        versions   (subscribe [::subs/module-versions])
+        {:keys [id state module tags acl credential-name parent]} @deployment
+        owners     (:owners acl)
+        cred       (or credential-name parent)
         {module-content :content} module
-        cred-info     (get @creds-name credential-id credential-id)
-        urls          (:urls module-content)
-        nuvlabox      (:nuvlabox @deployment)]
+        urls       (:urls module-content)
+        nuvlabox   (:nuvlabox @deployment)]
 
     [ui/SegmentGroup {:style  {:display    "flex", :justify-content "space-between",
                                :background "#f3f4f5"}
@@ -836,8 +831,8 @@
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:credential]))]
          [ui/TableCell
-          (when-not (str/blank? cred-info)
-            [:div [ui/Icon {:name "key"}] cred-info])]]
+          (when cred
+            [:div [ui/Icon {:name "key"}] cred])]]
         (when nuvlabox
           [ui/TableRow
            [ui/TableCell "NuvlaBox"]

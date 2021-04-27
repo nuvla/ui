@@ -33,3 +33,9 @@
   ::docker-compose-validation-error?
   (fn [db]
     (not (empty? (::spec/docker-compose-validation-errors db)))))
+
+
+(reg-sub
+  ::module-requires-user-rights
+  (fn [db]
+    (get-in db [::spec/module-application ::spec/requires-user-rights])))

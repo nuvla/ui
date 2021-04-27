@@ -452,6 +452,22 @@
    :pane     {:key "docker-pane" :content (r/as-element [DockerPane])}})
 
 
+(defn requires-user-rights-checkbox []
+  (let [editable?   (subscribe [::apps-subs/editable?])
+        tr          (subscribe [::i18n-subs/tr])
+        user-rights (subscribe [::subs/module-requires-user-rights])]
+    [:div
+     [ui/Checkbox {:name      (@tr [:module-requires-user-rights])
+                   :slider    true
+                   :checked   @user-rights
+                   :disabled  (not @editable?)
+                   :on-change (ui-callback/checked
+                                #(do (dispatch [::main-events/changes-protection? true])
+                                     (dispatch [::events/update-requires-user-rights %])))
+                   :align     :middle}]
+     [:span ff/nbsp (@tr [:module-requires-user-rights])]]))
+
+
 (defn TabMenuDetails
   []
   (let [tr     (subscribe [::i18n-subs/tr])
@@ -468,6 +484,7 @@
     @active-index
     ^{:key (random-uuid)}
     [apps-views-detail/Details
+     [requires-user-rights-checkbox]
      [^{:key "module_subtype"}
       [ui/TableRow
        [ui/TableCell {:collapsing true

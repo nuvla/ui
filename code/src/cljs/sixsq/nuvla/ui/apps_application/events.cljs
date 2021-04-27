@@ -62,3 +62,11 @@
   ::set-docker-validation-error
   (fn [db [_ key error?]]
     (utils/set-reset-error db key error? ::spec/docker-compose-validation-errors)))
+
+
+; Requires user rights
+
+(reg-event-db
+  ::update-requires-user-rights
+  (fn [db [_ value]]
+    (assoc-in db [::spec/module-application ::spec/requires-user-rights] value)))

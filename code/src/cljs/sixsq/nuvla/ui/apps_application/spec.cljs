@@ -10,6 +10,10 @@
 (s/def ::license-validation-errors set?)
 (s/def ::docker-compose-validation-errors set?)
 
+
+(s/def ::requires-user-rights boolean?)
+
+
 ; Docker-compose
 
 (s/def ::docker-compose (s/and spec-utils/nonblank-string
@@ -33,7 +37,8 @@
 ; Module
 
 (s/def ::module-application (s/keys :req [::docker-compose]
-                                    :opt [::files]))
+                                    :opt [::files
+                                          ::requires-user-rights]))
 
 
 ; create an initial entry for new application

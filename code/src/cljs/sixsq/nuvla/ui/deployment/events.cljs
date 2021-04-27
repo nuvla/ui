@@ -11,8 +11,7 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
@@ -34,28 +33,6 @@
                       {:id        refresh-action-deployments-id
                        :frequency 20000
                        :event     [::get-deployments]}]]]}))
-
-
-(reg-event-fx
-  ::set-creds-ids
-  (fn [_ [_ credentials-ids]]
-    (when (not-empty credentials-ids)
-      (let [filter-creds-ids (str/join " or " (map #(str "id='" % "'") credentials-ids))
-            query-params     {:filter (str/join " and " [filter-creds-ids "name!=null"])
-                              :select "id, name"}
-            callback         (fn [response]
-                               (when-not (instance? js/Error response)
-                                 (dispatch [::set-creds-name-map (->> response
-                                                                      :resources
-                                                                      (map (juxt :id :name))
-                                                                      (into {}))])))]
-        {::cimi-api-fx/search [:credential query-params callback]}))))
-
-
-(reg-event-db
-  ::set-creds-name-map
-  (fn [db [_ creds-name-map]]
-    (assoc db ::spec/creds-name-map creds-name-map)))
 
 
 (reg-event-db

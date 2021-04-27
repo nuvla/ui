@@ -14,6 +14,7 @@
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-summary-id :nuvlabox-get-nuvlaboxes-summary)
+(def refresh-id-clusters :nuvlabox-get-nuvlabox-clusters)
 
 (reg-event-fx
   ::refresh
@@ -23,7 +24,10 @@
                                                            :event     [::get-nuvlaboxes]}]]
           [:dispatch [::main-events/action-interval-start {:id        refresh-summary-id
                                                            :frequency 10000
-                                                           :event     [::get-nuvlaboxes-summary]}]]]}))
+                                                           :event     [::get-nuvlaboxes-summary]}]]
+          [:dispatch [::main-events/action-interval-start {:id        refresh-id-clusters
+                                                           :frequency 10000
+                                                           :event     [::get-nuvlabox-clusters]}]]]}))
 
 
 (reg-event-fx
@@ -78,11 +82,46 @@
 
 (reg-event-fx
   ::get-nuvlaboxes-summary
-  (fn [{{:keys [::spec/full-text-search] :as db} :db} _]
+  (fn [{{:keys [::spec/full-text-search
+                ::spec/nuvlabox-cluster] :as db} :db} _]
     {:db                   (assoc db ::spec/loading? true)
      ::cimi-api-fx/search  [:nuvlabox
-                            (utils/get-query-aggregation-params full-text-search "terms:online,terms:state")
+                            (utils/get-query-aggregation-params
+                              full-text-search
+                              "terms:online,terms:state"
+                              (if nuvlabox-cluster
+                                (->> (concat (:nuvlabox-managers nuvlabox-cluster) (:nuvlabox-workers nuvlabox-cluster))
+                                  (map #(str "id='" % "'"))
+                                  (apply general-utils/join-or))
+                                nil))
                             #(dispatch [::set-nuvlaboxes-summary %])]}))
+
+
+(reg-event-fx
+  ::set-nuvlabox-clusters
+  (fn [{:keys [db]} [_ {:keys [resources] :as nuvlabox-clusters}]]
+    (if (instance? js/Error nuvlabox-clusters)
+      (dispatch [::messages-events/add
+                 (let [{:keys [status message]} (response/parse-ex-info nuvlabox-clusters)]
+                   {:header  (cond-> (str "failure getting nuvlabox clusters")
+                               status (str " (" status ")"))
+                    :content message
+                    :type    :error})])
+      (cond->
+        {:db (assoc db ::spec/nuvlabox-clusters nuvlabox-clusters
+                       ::spec/loading? false)}
+        ))))
+
+
+(reg-event-fx
+  ::get-nuvlabox-clusters
+  (fn [{{:keys [::spec/page
+                ::spec/elements-per-page
+                ::spec/full-text-search] :as db} :db} _]
+    {:db                   (assoc db ::spec/loading? true)
+     ::cimi-api-fx/search  [:nuvlabox-cluster
+                            (utils/get-query-params full-text-search page elements-per-page nil)
+                            #(dispatch [::set-nuvlabox-clusters %])]}))
 
 
 (reg-event-fx
@@ -96,7 +135,7 @@
   (fn [{db :db} _]
     {:db                   (assoc db ::spec/loading? true)
      ::cimi-api-fx/search  [:nuvlabox
-                            (utils/get-query-aggregation-params nil "terms:online,terms:state")
+                            (utils/get-query-aggregation-params nil "terms:online,terms:state" nil)
                             #(dispatch [::set-nuvlaboxes-summary-all %])]}))
 
 
@@ -226,6 +265,21 @@
                             :orderby "release-date:desc"
                             :last    10000}
                            #(dispatch [::set-nuvlabox-releases %])]}))
+
+
+(reg-event-db
+  ::set-nuvlabox-cluster
+  (fn [db [_ nuvlabox-cluster]]
+    (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster)))
+
+
+(reg-event-fx
+  ::get-nuvlabox-cluster
+  (fn [{:keys [db]} [_ cluster-id]]
+    {::cimi-api-fx/get [cluster-id #(do
+                                      (dispatch [::set-nuvlabox-cluster %]))
+                        :on-error #(dispatch [::set-nuvlabox-cluster nil])]
+     :fx      [[:dispatch [::refresh]]]}))
 
 
 (reg-event-db

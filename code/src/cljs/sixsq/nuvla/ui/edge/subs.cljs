@@ -116,3 +116,15 @@
   ::ssh-keys-available
   (fn [db]
     (::spec/ssh-keys-available db)))
+
+
+(reg-sub
+  ::nuvlabox-clusters
+  (fn [db]
+    (::spec/nuvlabox-clusters db)))
+
+
+(reg-sub
+  ::nuvlabox-cluster
+  (fn [db]
+    (::spec/nuvlabox-cluster db)))

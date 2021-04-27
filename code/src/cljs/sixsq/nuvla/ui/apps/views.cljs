@@ -43,7 +43,8 @@
         new-name   (utils/nav-path->module-name @nav-path)]
     (dispatch [::events/clear-module new-name new-parent new-subtype])
     (apps-component-views/clear-module)
-    (apps-application-views/clear-module)))
+    (apps-application-views/clear-module)
+    (apps-project-views/clear-module)))
 
 
 (defn Apps
@@ -68,12 +69,11 @@
 
 (defmethod panel/render :apps
   [path]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (timbre/set-level! :info)
-    [:div
-     [utils-validation/validation-error-message ::subs/form-valid?]
-     [views-detail/add-modal]
-     [views-detail/save-modal]
-     [views-detail/logo-url-modal]
-     [deployment-dialog-views/deploy-modal]
-     [Apps]]))
+  (timbre/set-level! :info)
+  [:div
+   [utils-validation/validation-error-message ::subs/form-valid?]
+   [views-detail/add-modal]
+   [views-detail/save-modal]
+   [views-detail/logo-url-modal]
+   [deployment-dialog-views/deploy-modal]
+   [Apps]])

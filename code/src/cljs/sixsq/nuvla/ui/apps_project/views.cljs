@@ -4,6 +4,7 @@
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.apps-project.events :as events]
     [sixsq.nuvla.ui.apps-project.spec :as spec]
     [sixsq.nuvla.ui.apps-project.utils :as utils]
     [sixsq.nuvla.ui.apps.events :as apps-events]
@@ -20,6 +21,11 @@
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.utils.time :as time]
     [taoensso.timbre :as log]))
+
+
+(defn clear-module
+  []
+  (dispatch [::events/clear-module]))
 
 
 (defn format-module
@@ -111,8 +117,9 @@
   (let [active-index (subscribe [::apps-subs/active-tab-index])]
     @active-index
     ^{:key (random-uuid)}
-    [apps-views-detail/Details nil
-     ::apps-events/set-details-validation-error]))
+    [apps-views-detail/Details
+     {:validation-event
+      ::apps-events/set-details-validation-error}]))
 
 
 (defn OverviewPane

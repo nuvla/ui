@@ -31,7 +31,8 @@
     [clojure.string :as str]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.utils.forms :as utils-forms]))
+    [sixsq.nuvla.ui.utils.forms :as utils-forms]
+    [sixsq.nuvla.ui.main.components :as main-components]))
 
 
 (def application-kubernetes-subtype "application_kubernetes")
@@ -251,13 +252,13 @@
 (defn OverviewModuleSummary
   "Fixme: add license and price"
   []
-  (let [tr                     (subscribe [::i18n-subs/tr])
-        locale                 (subscribe [::i18n-subs/locale])
-        module                 (subscribe [::apps-subs/module])
-        versions-map           (subscribe [::apps-subs/versions])
-        module-content-id      (subscribe [::apps-subs/module-content-id])
-        version-index          (apps-utils/find-current-version @versions-map @module-content-id)
-        is-module-published?   (subscribe [::apps-subs/is-module-published?])
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        locale               (subscribe [::i18n-subs/locale])
+        module               (subscribe [::apps-subs/module])
+        versions-map         (subscribe [::apps-subs/versions])
+        module-content-id    (subscribe [::apps-subs/module-content-id])
+        version-index        (apps-utils/find-current-version @versions-map @module-content-id)
+        is-module-published? (subscribe [::apps-subs/is-module-published?])
         {:keys [id created updated name parent-path path logo-url]} @module]
     [ui/Segment {:secondary true
                  :color     "blue"
@@ -452,20 +453,22 @@
    :pane     {:key "docker-pane" :content (r/as-element [DockerPane])}})
 
 
-(defn requires-user-rights-checkbox []
+(defn RequiresUserRightsCheckbox
+  []
   (let [editable?   (subscribe [::apps-subs/editable?])
         tr          (subscribe [::i18n-subs/tr])
-        user-rights (subscribe [::subs/module-requires-user-rights])]
-    [:div
-     [ui/Checkbox {:name      (@tr [:module-requires-user-rights])
-                   :slider    true
-                   :checked   @user-rights
-                   :disabled  (not @editable?)
-                   :on-change (ui-callback/checked
-                                #(do (dispatch [::main-events/changes-protection? true])
-                                     (dispatch [::events/update-requires-user-rights %])))
-                   :align     :middle}]
-     [:span ff/nbsp (@tr [:module-requires-user-rights])]]))
+        user-rights (subscribe [::subs/module-requires-user-rights])
+        default     @user-rights]
+    (fn []
+      [:div
+       [ui/Checkbox {:name           (@tr [:module-requires-user-rights])
+                     :toggle         true
+                     :defaultChecked default
+                     :disabled       (not @editable?)
+                     :on-change      (ui-callback/checked
+                                       #(do (dispatch [::main-events/changes-protection? true])
+                                            (dispatch [::events/update-requires-user-rights %])))
+                     :align          :middle}]])))
 
 
 (defn TabMenuDetails
@@ -478,29 +481,36 @@
 
 
 (defn DetailsPane []
-  (let [is-new?        (subscribe [::apps-subs/is-new?])
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::apps-subs/is-new?])
         module-subtype (subscribe [::apps-subs/module-subtype])
         active-index   (subscribe [::apps-subs/active-tab-index])]
     @active-index
     ^{:key (random-uuid)}
     [apps-views-detail/Details
-     [requires-user-rights-checkbox]
-     [^{:key "module_subtype"}
-      [ui/TableRow
-       [ui/TableCell {:collapsing true
-                      :style      {:padding-bottom 8}} "subtype"]
-       [ui/TableCell
-        [ui/Dropdown {:disabled  (-> @is-new? true? not)
-                      :selection true
-                      :fluid     true
-                      :value     @module-subtype
-                      :on-change (ui-callback/value
-                                   #(do (dispatch [::apps-events/subtype %])
-                                        (dispatch [::main-events/changes-protection? true])))
-                      :options   [{:key docker-compose-subtype, :text "Docker", :value docker-compose-subtype}
-                                  {:key   application-kubernetes-subtype, :text "Kubernetes",
-                                   :value application-kubernetes-subtype}]}]]]]
-     ::apps-events/set-details-validation-error]))
+     {:extras           [^{:key "module_subtype"}
+                         [ui/TableRow
+                          [ui/TableCell {:collapsing true
+                                         :style      {:padding-bottom 8}} "subtype"]
+                          [ui/TableCell
+                           [ui/Dropdown {:disabled  (-> @is-new? true? not)
+                                         :selection true
+                                         :fluid     true
+                                         :value     @module-subtype
+                                         :on-change (ui-callback/value
+                                                      #(do (dispatch [::apps-events/subtype %])
+                                                           (dispatch [::main-events/changes-protection? true])))
+                                         :options   [{:key docker-compose-subtype, :text "Docker", :value docker-compose-subtype}
+                                                     {:key   application-kubernetes-subtype, :text "Kubernetes",
+                                                      :value application-kubernetes-subtype}]}]]]
+                         ^{:key "data-access"}
+                         [ui/TableRow
+                          [ui/TableCell {:collapsing true
+                                         :style      {:padding-bottom 8}}
+                           "data access" ff/nbsp
+                           [main-components/InfoPopup (@tr [:module-requires-user-rights])]]
+                          [ui/TableCell [RequiresUserRightsCheckbox]]]]
+      :validation-event ::apps-events/set-details-validation-error}]))
 
 
 (defn details
@@ -556,7 +566,7 @@
      (docker)
      (configuration)
      (apps-views-detail/TabAcls module @editable? #(do (dispatch [::apps-events/acl %])
-                                                      (dispatch [::main-events/changes-protection? true])))]))
+                                                       (dispatch [::main-events/changes-protection? true])))]))
 
 
 (defn ViewEdit

@@ -111,10 +111,11 @@
 (defn Details []
   (let []
     [apps-views-detail/Details
-     [^{:key "summary-docker-image"}
-      [docker-image]
-      ^{:key "summary-architectures"}
-      [architectures]]]))
+     {:extras
+      [^{:key "summary-docker-image"}
+       [docker-image]
+       ^{:key "summary-architectures"}
+       [architectures]]}]))
 
 
 (defn single-port

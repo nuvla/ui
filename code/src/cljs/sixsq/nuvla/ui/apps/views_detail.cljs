@@ -472,60 +472,57 @@
 
 
 (defn Details
-  ([] [Details nil nil])
-  ([extras] [Details extras nil])
-  ([extras validation-event]
-   (let [tr               (subscribe [::i18n-subs/tr])
-         default-logo-url (subscribe [::subs/default-logo-url])
-         module-common    (subscribe [::subs/module-common])
-         editable?        (subscribe [::subs/editable?])
-         validate-form?   (subscribe [::subs/validate-form?])
-         on-change        (fn [update-event-kw value]
-                            (dispatch [update-event-kw value])
-                            (dispatch [::main-events/changes-protection? true])
-                            (dispatch [::events/validate-form]))]
-     (fn [extras validation-event]
-       (let [{name        ::spec/name
-              parent      ::spec/parent-path
-              description ::spec/description
-              logo-url    ::spec/logo-url
-              subtype     ::spec/subtype
-              path        ::spec/path
-              :or         {name        ""
-                           parent      ""
-                           description ""
-                           logo-url    @default-logo-url
-                           subtype     "project"
-                           path        nil}} @module-common]
-         [:<>
-          [ui/Grid {:stackable true, :reversed :mobile}
-           [ui/GridRow
-            [ui/GridColumn {:width 13}
-             [ui/Table {:compact    true
-                        :definition true}
-              [ui/TableBody
-
-               [uix/TableRowField (@tr [:name]), :key (str parent "-name"), :editable? @editable?,
-                :spec ::spec/name, :validate-form? @validate-form?, :required? true,
-                :default-value name, :on-change (partial on-change ::events/name)
-                :on-validation]
-               (when (not-empty parent)
-                 (let [label (if (= "project" subtype) "parent project" "project")]
-                   [ui/TableRow
-                    [ui/TableCell {:collapsing true
-                                   :style      {:padding-bottom 8}} label]
-                    [ui/TableCell {:style {:padding-left (when @editable? 24)}} parent]]))
-               (for [x extras]
-                 x)]]
-             [details-section]]
-            [ui/GridColumn {:width 3 :floated "right"}
-             [ui/Image {:src (or logo-url @default-logo-url)}]
-             (when @editable?
-               [ui/Button {:fluid    true
-                           :on-click #(dispatch [::events/open-logo-url-modal])}
-                (@tr [:module-change-logo])])]]]
-          ;^{:key (random-uuid)}
-          [Description validation-event]])))))
+  [{:keys [extras validation-event]}]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        default-logo-url (subscribe [::subs/default-logo-url])
+        module-common    (subscribe [::subs/module-common])
+        editable?        (subscribe [::subs/editable?])
+        validate-form?   (subscribe [::subs/validate-form?])
+        on-change        (fn [update-event-kw value]
+                           (dispatch [update-event-kw value])
+                           (dispatch [::main-events/changes-protection? true])
+                           (dispatch [::events/validate-form]))]
+    (fn [{:keys [extras validation-event]}]
+      (let [{name        ::spec/name
+             parent      ::spec/parent-path
+             description ::spec/description
+             logo-url    ::spec/logo-url
+             subtype     ::spec/subtype
+             path        ::spec/path
+             :or         {name        ""
+                          parent      ""
+                          description ""
+                          logo-url    @default-logo-url
+                          subtype     "project"
+                          path        nil}} @module-common]
+        [:<>
+         [ui/Grid {:stackable true, :reversed :mobile}
+          [ui/GridRow
+           [ui/GridColumn {:width 13}
+            [ui/Table {:compact    true
+                       :definition true}
+             [ui/TableBody
+              [uix/TableRowField (@tr [:name]), :key (str parent "-name"), :editable? @editable?,
+               :spec ::spec/name, :validate-form? @validate-form?, :required? true,
+               :default-value name, :on-change (partial on-change ::events/name)
+               :on-validation]
+              (when (not-empty parent)
+                (let [label (if (= "project" subtype) "parent project" "project")]
+                  [ui/TableRow
+                   [ui/TableCell {:collapsing true
+                                  :style      {:padding-bottom 8}} label]
+                   [ui/TableCell {:style {:padding-left (when @editable? 24)}} parent]]))
+              (for [x extras]
+                x)]]
+            [details-section]]
+           [ui/GridColumn {:width 3 :floated "right"}
+            [ui/Image {:src (or logo-url @default-logo-url)}]
+            (when @editable?
+              [ui/Button {:fluid    true
+                          :on-click #(dispatch [::events/open-logo-url-modal])}
+               (@tr [:module-change-logo])])]]]
+         ;^{:key (random-uuid)}
+         [Description validation-event]]))))
 
 
 (defn input
@@ -1103,9 +1100,8 @@
                 :icon    "users"}
      :pane     {:key     "share-pane"
                 :content (r/as-element
-                           (when default-value
-                             ^{:key (:updated @e)}
-                             [acl-views/AclWidget {:default-value default-value
-                                                   :read-only     (not can-edit?)
-                                                   :on-change     edit-event}
-                              ui-acl]))}}))
+                           ^{:key (:updated @e)}
+                           [acl-views/AclWidget {:default-value default-value
+                                                 :read-only     (not can-edit?)
+                                                 :on-change     edit-event}
+                            ui-acl])}}))

@@ -129,9 +129,6 @@
   (fn [text on-change-fn editable?]
     [ui/CodeMirror {:value      text
                     :autoCursor true
-                    :autofocus  true
-                    :autoFocus  true
-                    :auto-focus true
                     :options    {:mode              "text/x-yaml"
                                  :read-only         (not editable?)
                                  :line-numbers      true
@@ -146,9 +143,6 @@
   (fn [text on-change-fn editable?]
     [ui/CodeMirror {:value      text
                     :autoCursor true
-                    :autofocus  true
-                    :autoFocus  true
-                    :auto-focus true
                     :options    {:mode                "text/x-markdown"
                                  :read-only           (not editable?)
                                  :lineWrapping        true

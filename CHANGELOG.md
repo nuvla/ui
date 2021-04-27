@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Deployment modal - Bugfix icon credential check
   - Deployment - Display credential name when available in deployment
   - Sign-in - Make reset password link position absolute
   - Sign-in - Support geant provider

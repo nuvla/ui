@@ -195,6 +195,7 @@
         :deployments                                   "deployments"
         :describe                                      "describe"
         :description                                   "description"
+        :description-cannot-be-empty                   "Description cannot be empty."
         :destination                                   "destination"
         :details                                       "details"
         :discover-published-apps-message               "Discover published apps, either public or shared with you. Their authors state that they are production ready. Remember most published apps are not public. Therefore, get in touch if you are looking for anything specific, and we will get you in touch with the right app vendors."

@@ -105,14 +105,14 @@
                                     :opt-un [::license-description])))
 
 (s/def ::module-common (s/keys :req [::name
+                                     ::description
                                      ::parent-path
                                      ::license
                                      ; needed by the server, but not the ui
                                      ; (this is handled before contacting the server)
                                      ;::path
                                      ]
-                               :opt [::description
-                                     ::logo-url
+                               :opt [::logo-url
                                      ::acl
                                      ::env-variables
                                      ::urls
@@ -131,6 +131,8 @@
 
 ; Spec to use when validating form
 (s/def ::form-spec any?)
+
+(s/def ::details-validation-errors set?)
 
 ;; Page
 
@@ -188,25 +190,26 @@
                           ::paste-modal-visible?
                           ::active-tab-index]))
 
-(def defaults {::active-input            nil
-               ::form-spec               nil
-               ::form-valid?             true
-               ::validate-form?          false
-               ::is-new?                 false
-               ::completed?              true
-               ::add-modal-visible?      false
-               ::logo-url-modal-visible? false
-               ::save-modal-visible?     false
-               ::default-logo-url        "/ui/images/noimage.png"
-               ::commit-message          ""
-               ::registries              nil
-               ::registries-infra        nil
-               ::registries-credentials  nil
-               ::validate-docker-compose nil
-               ::compare-module-left     nil
-               ::compare-module-right    nil
-               ::module                  nil
-               ::version                 nil
-               ::copy-module             nil
-               ::paste-modal-visible?    false
-               ::active-tab-index        0})
+(def defaults {::active-input              nil
+               ::form-spec                 nil
+               ::form-valid?               true
+               ::validate-form?            false
+               ::is-new?                   false
+               ::completed?                true
+               ::add-modal-visible?        false
+               ::logo-url-modal-visible?   false
+               ::save-modal-visible?       false
+               ::default-logo-url          "/ui/images/noimage.png"
+               ::commit-message            ""
+               ::registries                nil
+               ::registries-infra          nil
+               ::registries-credentials    nil
+               ::validate-docker-compose   nil
+               ::compare-module-left       nil
+               ::compare-module-right      nil
+               ::module                    nil
+               ::version                   nil
+               ::copy-module               nil
+               ::paste-modal-visible?      false
+               ::active-tab-index          0
+               ::details-validation-errors #{}})

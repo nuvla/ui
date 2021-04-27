@@ -22,10 +22,6 @@
     [taoensso.timbre :as log]))
 
 
-(defn summary []
-  [apps-views-detail/summary])
-
-
 (defn format-module
   [{:keys [subtype name path description] :as module}]
   (when module
@@ -95,10 +91,10 @@
             [ui/TableCell [values/as-link parent-path :label parent-path :page "apps"]]])
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:created]))]
-          [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
+          [ui/TableCell (if created (time/ago (time/parse-iso8601 created) @locale) (@tr [:soon]))]]
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:updated]))]
-          [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]
+          [ui/TableCell (if updated (time/ago (time/parse-iso8601 updated) @locale) (@tr [:soon]))]]
          (when id
            [ui/TableRow
             [ui/TableCell (str/capitalize (@tr [:id]))]
@@ -112,8 +108,11 @@
 
 (defn DetailsPane
   []
-  (let []
-    [summary]))
+  (let [active-index (subscribe [::apps-subs/active-tab-index])]
+    @active-index
+    ^{:key (random-uuid)}
+    [apps-views-detail/Details nil
+     ::apps-events/set-details-validation-error]))
 
 
 (defn OverviewPane
@@ -125,15 +124,14 @@
              :centered  true}
     [ui/GridRow {:centered true}
      [ui/GridColumn {:stretched true}
-      [OverviewModuleSummary]]
+      [modules-view]]
      [ui/GridColumn {:stretched true}
-      [apps-views-detail/OverviewVendorSummary]]
-     ]
+      [OverviewModuleSummary]]]
     [ui/GridRow
      [ui/GridColumn {:stretched true}
-      [apps-views-detail/OverviewDescription]]
+      [apps-views-detail/OverviewDescription utils/tab-details]]
      [ui/GridColumn {:stretched true}
-      [modules-view]]]]])
+      [apps-views-detail/OverviewVendorSummary]]]]])
 
 
 (defn overview
@@ -141,15 +139,15 @@
   {:menuItem {:content (r/as-element [:span "Overview"])
               :key     "overview"
               :icon    "info"}
-   :render   (fn [] (r/as-element [OverviewPane]))})
+   :pane     {:key "overview" :content (r/as-element [OverviewPane])}})
 
 
 (defn details
   []
-  {:menuItem {:content (r/as-element [:span "Details"])
-              :key     "details"
-              :icon    "info"}
-   :render   (fn [] (r/as-element [DetailsPane]))})
+  (let []
+    {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
+                :key     "details"}
+     :pane     {:key "details-pane" :content (r/as-element [DetailsPane])}}))
 
 
 (defn module-detail-panes
@@ -166,24 +164,25 @@
   (let [module-common (subscribe [::apps-subs/module-common])
         active-index  (subscribe [::apps-subs/active-tab-index])
         is-new?       (subscribe [::apps-subs/is-new?])]
+    (if (true? @is-new?) (dispatch [::apps-events/set-active-tab-index utils/tab-details])
+                         (dispatch [::apps-events/set-active-tab-index 0]))
+    (dispatch [::apps-events/set-form-spec ::spec/module-project])
     (fn []
-      (let [tab-index (if @is-new? utils/tab-details 0)
-            name      (get @module-common ::apps-spec/name)
-            parent    (get @module-common ::apps-spec/parent-path)]
-        (dispatch [::apps-events/set-active-tab-index tab-index])
-        (dispatch [::apps-events/set-form-spec ::spec/module-project])
+      (let [name   (get @module-common ::apps-spec/name)
+            parent (get @module-common ::apps-spec/parent-path)]
         [ui/Container {:fluid true}
          [uix/PageHeader "folder" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/paste-modal]
          [apps-views-detail/MenuBar]
          [ui/Tab
-          {:menu        {:secondary true
-                         :pointing  true
-                         :style     {:display        "flex"
-                                     :flex-direction "row"
-                                     :flex-wrap      "wrap"}}
-           :panes       (module-detail-panes)
-           :activeIndex @active-index
-           :onTabChange (fn [_ data]
-                          (let [active-index (. data -activeIndex)]
-                            (dispatch [::apps-events/set-active-tab-index active-index])))}]]))))
+          {:menu             {:secondary true
+                              :pointing  true
+                              :style     {:display        "flex"
+                                          :flex-direction "row"
+                                          :flex-wrap      "wrap"}}
+           :panes            (module-detail-panes)
+           :activeIndex      @active-index
+           :renderActiveOnly false
+           :onTabChange      (fn [_ data]
+                               (let [active-index (. data -activeIndex)]
+                                 (dispatch [::apps-events/set-active-tab-index active-index])))}]]))))

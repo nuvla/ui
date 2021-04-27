@@ -108,9 +108,9 @@
             [:span (str/join ", " @architectures)])]]))))
 
 
-(defn summary []
+(defn Details []
   (let []
-    [apps-views-detail/summary
+    [apps-views-detail/Details
      [^{:key "summary-docker-image"}
       [docker-image]
       ^{:key "summary-architectures"}
@@ -360,7 +360,7 @@
                          :read-only     (not @editable?)}]
          [uix/PageHeader "grid layout" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
-         [summary]
+         [Details]
          [apps-views-detail/registries-section]
          (when @stripe
            [apps-views-detail/price-section])

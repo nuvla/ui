@@ -341,3 +341,14 @@
 (defn vendor-name
   [user]
   (drop 6 user))
+
+
+(defn set-reset-error
+  [db key error? error-spec]
+  (let [errors  (error-spec db)
+        is-set? (contains? errors key)
+        reset?  (and (not error?) is-set?)
+        set?    (and error? (not is-set?))]
+    (cond-> db
+            reset? (update error-spec #(disj % key))
+            set? (update error-spec #(conj % key)))))

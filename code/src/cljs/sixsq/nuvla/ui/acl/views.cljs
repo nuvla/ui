@@ -353,16 +353,15 @@
     {:menuItem {:content "Share"
                 :key     "share"
                 :icon    "users"}
-     :pane     {:key     "share-pane"
-                :content (r/as-element
-                           (when default-value
-                             ^{:key (:updated @e)}
-                             [AclWidget {:default-value default-value
-                                         :read-only     (not can-edit?)
-                                         :on-change     #(dispatch [edit-event
-                                                                    (:id @e) (assoc @e :acl %)
-                                                                    (@tr [:acl-updated])])}
-                              ui-acl]))}}))
+     :render   (fn [] (r/as-element
+                        (when default-value
+                          ^{:key (:updated @e)}
+                          [AclWidget {:default-value default-value
+                                      :read-only     (not can-edit?)
+                                      :on-change     #(dispatch [edit-event
+                                                                 (:id @e) (assoc @e :acl %)
+                                                                 (@tr [:acl-updated])])}
+                           ui-acl])))}))
 
 
 (defn AclButton

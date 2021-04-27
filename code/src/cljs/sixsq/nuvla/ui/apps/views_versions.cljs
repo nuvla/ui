@@ -119,7 +119,6 @@
         versions        (subscribe [::subs/versions])
         current-version (subscribe [::subs/module-content-id])]
     (fn []
-      (log/error "Versions")
       (if (seq @versions)
         [uix/Accordion
          [:<>

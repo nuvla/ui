@@ -6,8 +6,9 @@
 
 (reg-sub
   ::docker-compose
-  (fn [db]
-    (get-in db [::spec/module-application ::spec/docker-compose])))
+  :<- [::module-application]
+  (fn [module]
+    (::spec/docker-compose module)))
 
 
 (reg-sub
@@ -19,16 +20,16 @@
 (reg-sub
   ::module-application
   (fn [db]
-    (get-in db [::spec/module-application])))
-
-
-(reg-sub
-  ::active-tab-index
-  (fn [db]
-    (get-in db [::spec/active-tab-index])))
+    (::spec/module-application db)))
 
 
 (reg-sub
   ::license-error?
   (fn [db]
-    (not (empty? (get-in db [::spec/license-errors])))))
+    (not (empty? (::spec/license-validation-errors db)))))
+
+
+(reg-sub
+  ::docker-compose-validation-error?
+  (fn [db]
+    (not (empty? (::spec/docker-compose-validation-errors db)))))

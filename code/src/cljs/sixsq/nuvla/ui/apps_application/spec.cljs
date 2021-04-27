@@ -7,7 +7,8 @@
 
 ; Validation
 
-(s/def ::license-errors set?)
+(s/def ::license-validation-errors set?)
+(s/def ::docker-compose-validation-errors set?)
 
 ; Docker-compose
 
@@ -37,7 +38,6 @@
 
 ; create an initial entry for new application
 
-(def defaults {::module-application {::docker-compose nil}
-               ::license-errors     #{}})
-
-
+(def defaults {::module-application               {::docker-compose nil}
+               ::license-validation-errors        #{}
+               ::docker-compose-validation-errors #{}})

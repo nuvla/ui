@@ -4,6 +4,7 @@
 
 
 (def tab-details 5)
+(def tab-docker 6)
 
 
 ;; Deserialization functions: module->db

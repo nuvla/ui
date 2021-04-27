@@ -31,7 +31,19 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [taoensso.timbre :as log]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [clojure.string :as str]))
+    [clojure.string :as str]
+    [sixsq.nuvla.ui.utils.forms :as utils-forms]
+    [sixsq.nuvla.ui.acl.utils :as acl-utils]
+    [sixsq.nuvla.ui.acl.views :as acl-views]))
+
+
+(defn TabMenuDetails
+  []
+  (let [tr     (subscribe [::i18n-subs/tr])
+        error? (subscribe [::subs/details-validation-error?])]
+    [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
+     [uix/Icon {:name "info"}]
+     (str/capitalize (@tr [:details]))]))
 
 
 (defn edit-button-disabled?
@@ -422,86 +434,98 @@
 
 
 (defn Description
-  []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        description   (subscribe [::subs/description])
-        editable?     (subscribe [::subs/editable?])
-        default-value @description]
+  [validation-event]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        description    (subscribe [::subs/description])
+        editable?      (subscribe [::subs/editable?])
+        validate-form? (subscribe [::subs/validate-form?])
+        form-valid?    (subscribe [::subs/form-valid?])
+        default-value  @description]
     (fn []
-      [uix/Accordion
-       [ui/Grid {:centered true
-                 :columns  2}
-        [ui/GridColumn
-         [:h4 "Markdown"]
-         [ui/Segment
-          [uix/EditorMarkdown
-           default-value
-           (fn [editor data value]
-             (dispatch [::events/description value])
-             (dispatch [::main-events/changes-protection? true]))
-           @editable?]]]
-        [ui/GridColumn
-         [:h4 "Preview"]
-         [ui/Segment [ui/ReactMarkdown @description]]]]
-       :label (str/capitalize (@tr [:description]))
-       :default-open true])))
+      (let [valid?    (s/valid? ::spec/description @description)
+            validate? @validate-form?]
+        [uix/Accordion
+         [:<>
+          [ui/Grid {:centered true
+                    :columns  2}
+           [ui/GridColumn
+            [:h4 "Markdown"]
+            [ui/Segment
+             [uix/EditorMarkdown
+              default-value
+              (fn [editor data value]
+                (dispatch [::events/description value])
+                (dispatch [::main-events/changes-protection? true])
+                (dispatch [::events/validate-form]))
+              @editable?]
+             (when validate?
+               (when validation-event
+                 (dispatch [validation-event "description" (not valid?)]))
+               (when (not valid?)
+                 [:<>
+                  [ui/Label {:pointing "above", :basic true, :color "red"}
+                   (@tr [:description-cannot-be-empty])]]))]]
+           [ui/GridColumn
+            [:h4 "Preview"]
+            [ui/Segment [ui/ReactMarkdown @description]]]]]
+         :label (str/capitalize (@tr [:description]))
+         :default-open true]))))
 
 
-(defn summary
-  [extras]
-  (let [tr               (subscribe [::i18n-subs/tr])
-        default-logo-url (subscribe [::subs/default-logo-url])
-        is-new?          (subscribe [::subs/is-new?])
-        module-common    (subscribe [::subs/module-common])
-        editable?        (subscribe [::subs/editable?])
-        validate-form?   (subscribe [::subs/validate-form?])
-        on-change        (fn [update-event-kw value]
-                           (dispatch [update-event-kw value])
-                           (dispatch [::main-events/changes-protection? true])
-                           (dispatch [::events/validate-form]))]
-    (fn [extras]
-      (let [{name        ::spec/name
-             parent      ::spec/parent-path
-             description ::spec/description
-             logo-url    ::spec/logo-url
-             subtype     ::spec/subtype
-             path        ::spec/path
-             :or         {name        ""
-                          parent      ""
-                          description ""
-                          logo-url    @default-logo-url
-                          subtype     "project"
-                          path        nil}} @module-common]
-        [:<>
-         [ui/Grid {:stackable true, :reversed :mobile}
-          [ui/GridColumn {:width 13}
-           [ui/Table {:compact    true
-                      :definition true}
-            [ui/TableBody
+(defn Details
+  ([] [Details nil nil])
+  ([extras] [Details extras nil])
+  ([extras validation-event]
+   (let [tr               (subscribe [::i18n-subs/tr])
+         default-logo-url (subscribe [::subs/default-logo-url])
+         module-common    (subscribe [::subs/module-common])
+         editable?        (subscribe [::subs/editable?])
+         validate-form?   (subscribe [::subs/validate-form?])
+         on-change        (fn [update-event-kw value]
+                            (dispatch [update-event-kw value])
+                            (dispatch [::main-events/changes-protection? true])
+                            (dispatch [::events/validate-form]))]
+     (fn [extras validation-event]
+       (let [{name        ::spec/name
+              parent      ::spec/parent-path
+              description ::spec/description
+              logo-url    ::spec/logo-url
+              subtype     ::spec/subtype
+              path        ::spec/path
+              :or         {name        ""
+                           parent      ""
+                           description ""
+                           logo-url    @default-logo-url
+                           subtype     "project"
+                           path        nil}} @module-common]
+         [:<>
+          [ui/Grid {:stackable true, :reversed :mobile}
+           [ui/GridColumn {:width 13}
+            [ui/Table {:compact    true
+                       :definition true}
+             [ui/TableBody
 
-             [uix/TableRowField (@tr [:name]), :key (str parent "-name"), :editable? @editable?,
-              :spec ::spec/name, :validate-form? @validate-form?, :required? true,
-              :default-value name, :on-change (partial on-change ::events/name)
-              :on-validation ]
+              [uix/TableRowField (@tr [:name]), :key (str parent "-name"), :editable? @editable?,
+               :spec ::spec/name, :validate-form? @validate-form?, :required? true,
+               :default-value name, :on-change (partial on-change ::events/name)
+               :on-validation]
 
-             (when (not-empty parent)
-               (let [label (if (= "project" subtype) "parent project" "project")]
-                 [ui/TableRow
-                  [ui/TableCell {:collapsing true
-                                 :style      {:padding-bottom 8}} label]
-                  [ui/TableCell {:style {:padding-left (when @editable? 24)}} parent]]))
-             (for [x extras]
-               x)
-             ;(when (not @is-new?)
-             ;  [details-section])
-             ]]]
-          [ui/GridColumn {:width 3 :floated "right"}
-           [ui/Image {:src (or logo-url @default-logo-url)}]
-           (when @editable?
-             [ui/Button {:fluid    true
-                         :on-click #(dispatch [::events/open-logo-url-modal])}
-              (@tr [:module-change-logo])])]]
-         [Description]]))))
+              (when (not-empty parent)
+                (let [label (if (= "project" subtype) "parent project" "project")]
+                  [ui/TableRow
+                   [ui/TableCell {:collapsing true
+                                  :style      {:padding-bottom 8}} label]
+                   [ui/TableCell {:style {:padding-left (when @editable? 24)}} parent]]))
+              (for [x extras]
+                x)]]]
+           [ui/GridColumn {:width 3 :floated "right"}
+            [ui/Image {:src (or logo-url @default-logo-url)}]
+            (when @editable?
+              [ui/Button {:fluid    true
+                          :on-click #(dispatch [::events/open-logo-url-modal])}
+               (@tr [:module-change-logo])])]]
+          ;^{:key (random-uuid)}
+          [Description validation-event]])))))
 
 
 (defn input
@@ -966,7 +990,6 @@
                         :license-description "Apache License, Version 2.0, January 2004"
                         :license-url         "https://www.apache.org/licenses/LICENSE-2.0"}]
     (fn []
-      (log/error "license-section")
       (let [sixsq-selected? (= (:license-name @license)
                                (:license-name sixsq-license))
             is-editable?    (and @editable? (not sixsq-selected?))]
@@ -999,7 +1022,7 @@
                 :spec ::spec/license-name, :validate-form? @validate-form?,
                 :required? true, :default-value (:license-name @license),
                 :on-change (partial on-change ::events/license-name)
-                :on-validation ::apps-application-events/set-license-error]
+                :on-validation ::apps-application-events/set-license-validation-error]
                [uix/TableRowField (@tr [:description]), :key "license-description",
                 :editable? is-editable?, :spec ::spec/license-description, :validate-form? @validate-form?,
                 :required? false, :default-value (:license-description @license),
@@ -1008,7 +1031,7 @@
                 :editable? is-editable?, :spec ::spec/license-url, :validate-form? @validate-form?,
                 :required? true, :default-value (:license-url @license),
                 :on-change (partial on-change ::events/license-url)
-                :on-validation ::apps-application-events/set-license-error]]]]]
+                :on-validation ::apps-application-events/set-license-validation-error]]]]]
            :label (str/capitalize (@tr [:license]))
            :count (:license-name @license)
            :default-open true])))))
@@ -1016,13 +1039,13 @@
 
 (defn OverviewVendorSummary
   []
-  (let [tr     (subscribe [::i18n-subs/tr])
-        module (subscribe [::subs/module])
-        locale (subscribe [::i18n-subs/locale])
-        user   (subscribe [::session-subs/user])
+  (let [tr         (subscribe [::i18n-subs/tr])
+        module     (subscribe [::subs/module])
+        locale     (subscribe [::i18n-subs/locale])
+        user       (subscribe [::session-subs/user])
         {:keys [acl]} @module
         is-vendor? (utils/is-vendor? @user)
-        title (if is-vendor? (@tr [:vendor]) (@tr [:author]))]
+        title      (if is-vendor? (@tr [:vendor]) (@tr [:author]))]
     [ui/Segment {:secondary true
                  :color     "green"
                  :raised    true}
@@ -1060,8 +1083,30 @@
      [ui/Grid
       [ui/GridColumn {:floated "left"} [:h4 (str/capitalize (@tr [:description]))]]
       [ui/GridColumn {:floated "right"}
+       (log/error "@editable? " @editable?)
        (when @editable?
          [ui/Button {:icon     "pencil"
                      :compact  true
                      :on-click #(dispatch [::events/set-active-tab-index details-tab-index])}])]]
      [ui/ReactMarkdown @description]]))
+
+
+(defn TabAcls
+  [e can-edit? edit-event]
+  (let [default-value (:acl @e)
+        acl           (or default-value
+                          (when-let [user-id (and can-edit?
+                                                  @(subscribe [::session-subs/active-claim]))]
+                            {:owners [user-id]}))
+        ui-acl        (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
+    {:menuItem {:content "Share"
+                :key     "share"
+                :icon    "users"}
+     :pane     {:key     "share-pane"
+                :content (r/as-element
+                           (when default-value
+                             ^{:key (:updated @e)}
+                             [acl-views/AclWidget {:default-value default-value
+                                                   :read-only     (not can-edit?)
+                                                   :on-change     edit-event}
+                              ui-acl]))}}))

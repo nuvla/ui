@@ -108,11 +108,10 @@
 
 (defn EditorJson
   "A convenience function to setup the CodeMirror editor component for JSON."
-  [text]
-  (let [default-text @text]
-    (fn [text]
-      (log/error "EditorJson: " @text)
-      [ui/CodeMirror {:value      @text
+  [text on-change-fn editable?]
+  (let [default-text text]
+    (fn [text on-change-fn editable?]
+      [ui/CodeMirror {:value      text
                       :autoCursor true
                       :options    {:mode                "application/json"
                                    :line-numbers        true
@@ -120,29 +119,45 @@
                                    :auto-close-brackets true
                                    :style-active-line   true
                                    :fold-gutter         true
-                                   :gutters             ["CodeMirror-foldgutter"]}
+                                   :gutters             ["CodeMirror-linenumbers"]}
                       :on-change  (fn [editor data value]
                                     (reset! text value))}])))
+
+
+(defn EditorYaml
+  [text on-change-fn editable?]
+  (fn [text on-change-fn editable?]
+    [ui/CodeMirror {:value      text
+                    :autoCursor true
+                    :autofocus  true
+                    :autoFocus  true
+                    :auto-focus true
+                    :options    {:mode              "text/x-yaml"
+                                 :read-only         (not editable?)
+                                 :line-numbers      true
+                                 :style-active-line true}
+                    :on-change  on-change-fn
+                    :style      {:height "auto !important"}}]))
 
 
 (defn EditorMarkdown
   "A convenience function to setup the CodeMirror editor component for Markdown."
   [text on-change-fn editable?]
-  (let []
-    (fn [text on-change-fn editable?]
-      (let [options {:value        text
-                     :autoCursor   true
-                     :options      {:mode                 "text/x-markdown"
-                                    :lineWrapping         true
-                                    :match-brackets       true
-                                    :auto-close-brackets  true
-                                    :style-active-line    true
-                                    :fold-gutter          true
-                                    :gutters              ["CodeMirror-foldgutter"]}
-                     :on-change    on-change-fn}]
-        (if editable?
-          [ui/CodeMirror options]
-          [ui/CodeMirrorControlled options])))))
+  (fn [text on-change-fn editable?]
+    [ui/CodeMirror {:value      text
+                    :autoCursor true
+                    :autofocus  true
+                    :autoFocus  true
+                    :auto-focus true
+                    :options    {:mode                "text/x-markdown"
+                                 :read-only           (not editable?)
+                                 :lineWrapping        true
+                                 :match-brackets      true
+                                 :auto-close-brackets true
+                                 :style-active-line   true
+                                 :fold-gutter         true
+                                 :gutters             ["CodeMirror-foldgutter"]}
+                    :on-change  on-change-fn}]))
 
 
 (defn Accordion

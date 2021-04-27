@@ -89,7 +89,7 @@
                              (or (nil? form-spec) (s/valid? form-spec module)))
                            true)]
       (s/explain ::spec/module-common module-common)
-      (s/explain form-spec module)
+      (log/error (s/explain form-spec module))
       (assoc db ::spec/form-valid? valid?))))
 
 
@@ -189,9 +189,9 @@
 
 
 (reg-event-db
-  ::set-active-tab
-  (fn [db [_ active-tab]]
-    (assoc db ::spec/active-tab active-tab)))
+  ::set-active-tab-index
+  (fn [db [_ active-tab-index]]
+    (assoc db ::spec/active-tab-index active-tab-index)))
 
 
 (reg-event-db
@@ -689,6 +689,6 @@
 
 
 (reg-event-db
-  ::set-active-tab-index
-  (fn [db [_ active-tab-index]]
-    (assoc db ::spec/active-tab-index active-tab-index)))
+  ::set-details-validation-error
+  (fn [db [_ key error?]]
+    (utils/set-reset-error db key error? ::spec/details-validation-errors)))

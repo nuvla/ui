@@ -25,18 +25,23 @@
 (reg-sub
   ::module-subtype
   :<- [::module-common]
-  (fn [module-common _]
+  (fn [module-common]
     (::spec/subtype module-common)))
 
 
 (reg-sub
   ::module-license
   :<- [::module-common]
-  (fn [module-common _]
+  (fn [module-common]
     (::spec/license module-common)))
 
 
 ;; Validation
+
+(reg-sub
+  ::details-validation-error?
+  (fn [db]
+    (not (empty? (::spec/details-validation-errors db)))))
 
 ; Is the form valid?
 

@@ -35,13 +35,13 @@
    :kubernetes "/ui/images/kubernetes.svg"})
 
 (defn StatisticStates
-  ([] [StatisticStates true])
-  ([clickable?]
+  ([] [StatisticStates true false])
+  ([clickable? hide-cluster-stats]
    (let [tr          (subscribe [::i18n-subs/tr])
          summary     (subscribe [::subs/nuvlaboxes-summary])
          summary-all (subscribe [::subs/nuvlaboxes-summary-all])
          clusters    (subscribe [::subs/nuvlabox-clusters])]
-     (fn [clickable?]
+     (fn [clickable? hide-cluster-stats]
        (js/console.warn @summary)
        (let [summary         (if clickable? summary summary-all) ; select all without filter
              terms           (general-utils/aggregate-to-map
@@ -62,7 +62,7 @@
                         :text-align "center"
                         :width      "100%"}}
           [ui/StatisticGroup (merge {:widths (if clickable? nil 4) :size "tiny"} style/center-block)
-           (if (= @view-type :cluster)
+           (if (and (= @view-type :cluster) (not hide-cluster-stats))
              [main-components/StatisticState (:count @clusters) ["fas fa-chart-network"] "TOTAL"
               false ::events/set-state-selector ::subs/state-selector]
              [:<>
@@ -883,16 +883,17 @@
       (let [href        (str "edge/nuvlabox-cluster/" (general-utils/id->uuid id))
             orch-icon   (get orchestration-icons (keyword orchestrator) "question circle")
             cluster-nodes (+ (count managers) (count workers))
-            nb-per-id   (group-by :id (:resources nuvlaboxes))]
+            nb-per-id   (group-by :id (:resources nuvlaboxes))
+            name        (or name cluster-id)]
         ^{:key id}
         [uix/Card
          {:on-click    #(dispatch [::history-events/navigate href])
           :href        href
           :header      [:<>
                         [ui/Icon {:className "fas fa-chart-network"}]
-                        (or name (if (> (count cluster-id) 22)
-                                   (str (apply str (take 21 cluster-id)) "...")
-                                   cluster-id))]
+                        (if (> (count name) 21)
+                          (str (apply str (take 20 name)) "...")
+                          name)]
           :meta        [:<>
                         (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))
                         [:br]

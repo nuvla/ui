@@ -100,7 +100,6 @@
         :selection   true}])))
 
 
-
 (defn DropdownReleases
   [opts]
   (let [releases (subscribe [::edge-subs/nuvlabox-releases-options])]
@@ -315,6 +314,7 @@
 (defn ClusterButton
   [{:keys [id] :as resource} operation show? title icon button-text]
   (let [tr            (subscribe [::i18n-subs/tr])
+        deployments   (subscribe [::deployment-subs/deployments])
         join-token    (subscribe [::subs/join-token])
         nuvlabox-cluster    (subscribe [::subs/nuvlabox-cluster])
         close-fn      #(reset! show? false)
@@ -344,54 +344,61 @@
                          (dispatch [::events/operation id operation @form-data
                                     on-success-fn on-error-fn]))]
     (fn [resource operation show? title icon button-text]
-      [ui/Modal
-       {:open       @show?
-        :close-icon true
-        :on-close   close-fn
-        :trigger    (r/as-element
-                      [ui/MenuItem {:on-click #(reset! show? true)}
-                       [ui/Icon {:name icon}]
-                       title])}
-       [uix/ModalHeader {:header title}]
-       [ui/ModalContent
-        [ui/Form
-         [ui/FormDropdown
-          {:label       "Action"
-           :on-change   (ui-callback/value
-                          (fn [value]
-                            (do
-                              (on-change-fn :cluster-action nil value)
-                              (swap! form-data dissoc :nuvlabox-manager-status)
-                              (swap! form-data dissoc :token))))
-           :default-value default-action
-           :options     actions
-           :selection   true}]
-         (when (= (:cluster-action @form-data) "join-worker")
-           [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-status "WORKER")])
+      (let [has-active-dp (if (> (count (:resources @deployments)) 0)
+                            true
+                            false)]
+        [ui/Modal
+         {:open       @show?
+          :close-icon true
+          :on-close   close-fn
+          :trigger    (r/as-element
+                        [ui/MenuItem {:on-click #(reset! show? true)}
+                         [ui/Icon {:name icon}]
+                         title])}
+         [uix/ModalHeader {:header title}]
+         [ui/ModalContent
+          (if has-active-dp
+            [ui/Message {:negative true}
+             (@tr [:nuvlabox-cant-cluster-with-dpls])]
+            [ui/Form
+             [ui/FormDropdown
+              {:label       "Action"
+               :on-change   (ui-callback/value
+                              (fn [value]
+                                (do
+                                  (on-change-fn :cluster-action nil value)
+                                  (swap! form-data dissoc :nuvlabox-manager-status)
+                                  (swap! form-data dissoc :token))))
+               :default-value default-action
+               :options     actions
+               :selection   true}]
+             (when (= (:cluster-action @form-data) "join-worker")
+               [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-status "WORKER")])
 
-         (when (= (:cluster-action @form-data) "join-manager")
-           [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-status "MANAGER")])
+             (when (= (:cluster-action @form-data) "join-manager")
+               [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-status "MANAGER")])
 
-         (when (and (:token @join-token) (:nuvlabox-manager-status @form-data))
-           (do
-             (swap! form-data assoc :token (:token @join-token))
-             [ui/Message
-              (@tr [:nuvlabox-joining])
-              [:span {:style {:font-weight "bold"}} (if (:name @nuvlabox-cluster)
-                                                      (str (:name @nuvlabox-cluster) " (" (:cluster-id @nuvlabox-cluster) ")")
-                                                      (:cluster-id @nuvlabox-cluster))]
-              (@tr [:nuvlabox-joining-on-manager-address])
-              [:span {:style {:font-weight "bold"}} (:cluster-join-address (:nuvlabox-manager-status @form-data))]
-              (@tr [:nuvlabox-joining-with-token])
-              [:p {:style {:font-weight "bold"}} (:token @join-token)]]))]]
-       [ui/ModalActions
-        [uix/Button
-         {:text     (@tr [:cancel])
-          :on-click close-fn}]
-        [uix/Button
-         {:text     button-text
-          :primary  true
-          :on-click on-click-fn}]]])))
+             (when (and (:token @join-token) (:nuvlabox-manager-status @form-data))
+               (do
+                 (swap! form-data assoc :token (:token @join-token))
+                 [ui/Message
+                  (@tr [:nuvlabox-joining])
+                  [:span {:style {:font-weight "bold"}} (if (:name @nuvlabox-cluster)
+                                                          (str (:name @nuvlabox-cluster) " (" (:cluster-id @nuvlabox-cluster) ")")
+                                                          (:cluster-id @nuvlabox-cluster))]
+                  (@tr [:nuvlabox-joining-on-manager-address])
+                  [:span {:style {:font-weight "bold"}} (:cluster-join-address (:nuvlabox-manager-status @form-data))]
+                  (@tr [:nuvlabox-joining-with-token])
+                  [:p {:style {:font-weight "bold"}} (:token @join-token)]]))])]
+         [ui/ModalActions
+          [uix/Button
+           {:text     (@tr [:cancel])
+            :on-click close-fn}]
+          [uix/Button
+           {:text     button-text
+            :primary  true
+            :disabled has-active-dp
+            :on-click on-click-fn}]]]))))
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "cluster-nuvlabox"]
@@ -615,7 +622,6 @@
                    "gpu" "microchip"
                    nil)
                  nil)]))))
-
 
 
 (defn OnlineStatusIcon

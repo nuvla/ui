@@ -156,7 +156,6 @@
               :icon     "add"
               :disabled add-disabled?
               :on-click #(dispatch [::events/open-add-modal])}])
-          (log/error "subtype: " subtype)
           (when (not= "project" subtype)
             [ui/Popup
              {:trigger        (r/as-element [ui/MenuItem

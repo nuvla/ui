@@ -30,8 +30,10 @@
 
 
 (defn summary []
-  (let [editable?      (subscribe [::apps-subs/editable?])
-        module-subtype (subscribe [::apps-subs/module-subtype])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        editable?      (subscribe [::apps-subs/editable?])
+        module-subtype (subscribe [::apps-subs/module-subtype])
+        user-rights    (subscribe [::subs/module-requires-user-rights])]
     [apps-views-detail/summary
      [^{:key "module_subtype"}
       [ui/TableRow
@@ -212,6 +214,22 @@
          :default-open true]))))
 
 
+(defn requires-user-rights-checkbox []
+  (let [editable?   (subscribe [::apps-subs/editable?])
+        tr          (subscribe [::i18n-subs/tr])
+        user-rights (subscribe [::subs/module-requires-user-rights])]
+    [:div
+     [ui/Checkbox {:name      (@tr [:module-requires-user-rights])
+                   :slider    true
+                   :checked   @user-rights
+                   :disabled  (not @editable?)
+                   :on-change (ui-callback/checked
+                                #(do (dispatch [::main-events/changes-protection? true])
+                                     (dispatch [::events/update-requires-user-rights %])))
+                   :align     :middle}]
+     [:span ff/nbsp (@tr [:module-requires-user-rights])]]))
+
+
 (defn view-edit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
@@ -243,4 +261,5 @@
          [apps-views-detail/add-modal]
          [apps-views-detail/save-modal]
          [apps-views-detail/logo-url-modal]
-         [deployment-dialog-views/deploy-modal]]))))
+         [deployment-dialog-views/deploy-modal]
+         [requires-user-rights-checkbox]]))))

@@ -20,3 +20,9 @@
   ::module-application
   (fn [db]
     (get-in db [::spec/module-application])))
+
+(reg-sub
+  ::module-requires-user-rights
+  (fn [db]
+    (get-in db [::spec/module-application ::spec/requires-user-rights])))
+

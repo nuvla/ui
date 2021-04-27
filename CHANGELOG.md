@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+  - Support for apps to ask for a credential with user permissions
+
 ### Changed
 
   - Deployment modal - Bugfix icon credential check

@@ -812,7 +812,7 @@
 
 
 
-(defn DashboradVendor
+(defn DashboardVendor
   []
   (let [tr     (subscribe [::i18n-subs/tr])
         vendor (subscribe [::subs/vendor])]
@@ -858,7 +858,7 @@
           (@tr [:vendor-getting-paid])]
          [:br]
          (if @vendor
-           [DashboradVendor]
+           [DashboardVendor]
            [StripeConnect])
          ]]]
       )))

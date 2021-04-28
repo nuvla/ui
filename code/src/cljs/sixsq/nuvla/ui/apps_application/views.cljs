@@ -19,6 +19,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.profile.events :as profile-events]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -402,12 +403,18 @@
 
 (defn PricingPane
   []
-  (let [tr     (subscribe [::i18n-subs/tr])
-        stripe (subscribe [::main-subs/stripe])
-        vendor (subscribe [::profile-subs/vendor])]
-    (if (and @stripe @vendor)
-      [apps-views-detail/price-section]
-      [ui/Message {:info true} (@tr [:no-pricing-free-app])])))
+  (let [tr        (subscribe [::i18n-subs/tr])
+        editable? (subscribe [::apps-subs/editable?])
+        price     (subscribe [::apps-subs/price])
+        vendor    (subscribe [::profile-subs/vendor])]
+    (dispatch [::profile-events/search-existing-vendor])
+    (fn []
+      (if (or (and @editable? @vendor) (some? @price))
+        [apps-views-detail/Pricing]
+        [:<>
+         [ui/Message {:info true} (@tr [:no-pricing-free-app])]
+         (when editable?
+           [ui/Message {:info true} (@tr [:become-a-vendor])])]))))
 
 
 (defn pricing
@@ -554,10 +561,12 @@
 (defn module-detail-panes
   []
   (let [module    (subscribe [::apps-subs/module])
-        editable? (subscribe [::apps-subs/editable?])]
+        editable? (subscribe [::apps-subs/editable?])
+        stripe    (subscribe [::main-subs/stripe])]
     [(overview)
      (license)
-     (pricing)
+     (when @stripe
+       (pricing))
      (deployments)
      (versions)
      (details)

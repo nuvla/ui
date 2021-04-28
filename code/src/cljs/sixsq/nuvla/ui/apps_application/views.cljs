@@ -289,7 +289,8 @@
             [ui/TableCell [values/as-link id :label (subs id 11)]]])
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:version-number]))]
-          [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]]]]
+          [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]
+         [apps-views-detail/AuthorVendor]]]]
       [ui/GridColumn
        [ui/Segment (merge style/basic {:floated "right"})
         [ui/Image {:src      (or logo-url "")
@@ -503,11 +504,11 @@
                                          :options   [{:key docker-compose-subtype, :text "Docker", :value docker-compose-subtype}
                                                      {:key   application-kubernetes-subtype, :text "Kubernetes",
                                                       :value application-kubernetes-subtype}]}]]]
-                         ^{:key "data-access"}
+                         ^{:key "nuvla-access"}
                          [ui/TableRow
                           [ui/TableCell {:collapsing true
                                          :style      {:padding-bottom 8}}
-                           "data access" ff/nbsp
+                           (@tr [:grant-nuvla-access]) ff/nbsp
                            [main-components/InfoPopup (@tr [:module-requires-user-rights])]]
                           [ui/TableCell [RequiresUserRightsCheckbox]]]]
       :validation-event ::apps-events/set-details-validation-error}]))
@@ -538,10 +539,7 @@
      [OverviewModuleSummary]]]
    [ui/GridRow
     [ui/GridColumn
-     [apps-views-detail/OverviewDescription utils/tab-details]]]
-   [ui/GridRow
-    [ui/GridColumn
-     [apps-views-detail/OverviewVendorSummary]]]])
+     [apps-views-detail/OverviewDescription utils/tab-details]]]])
 
 
 (defn overview

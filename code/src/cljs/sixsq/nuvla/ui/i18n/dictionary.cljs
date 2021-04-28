@@ -235,6 +235,7 @@
         :full-name                                     "Full Name"
         :getting-started-docs                          "Getting started"
         :global-parameters                             "global parameters"
+        :grant-nuvla-access                            "grant Nuvla access"
         :groups                                        "groups"
         :here                                          "here"
         :hide-versions                                 "hide versions"

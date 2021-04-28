@@ -55,7 +55,7 @@
   "Return the latest published index. This can be used to append to a module id to fetch a specific
   module version"
   [map-versions]
-    (ffirst (filter-published-versions map-versions)))
+  (ffirst (filter-published-versions map-versions)))
 
 
 (defn latest-published-version
@@ -333,9 +333,23 @@
   (reverse (map-indexed vector versions)))
 
 
+(defn group->name
+  "Drop the 'group/' prefix"
+  [group]
+  (subs (:id group) 6))
+
+
+(defn module->groups
+  [module]
+  (let [owners  (-> module :acl :owners)
+        vendors (filter #(str/starts-with? % "group/") owners)]
+    vendors))
+
+
 (defn is-vendor?
-  [user]
-  (str/starts-with? user "group/"))
+  [module]
+  (let [vendors (module->groups module)]
+    (not (empty? vendors))))
 
 
 (defn vendor-name

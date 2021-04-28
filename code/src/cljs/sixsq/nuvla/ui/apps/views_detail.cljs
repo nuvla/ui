@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.acl.subs :as acl-subs]
     [sixsq.nuvla.ui.apps.events :as events]
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.subs :as subs]
@@ -1034,38 +1035,22 @@
            :default-open true])))))
 
 
-(defn OverviewVendorSummary
+(defn AuthorVendor
   []
   (let [tr         (subscribe [::i18n-subs/tr])
         module     (subscribe [::subs/module])
-        locale     (subscribe [::i18n-subs/locale])
         user       (subscribe [::session-subs/user])
-        {:keys [acl]} @module
-        is-vendor? (utils/is-vendor? @user)
-        title      (if is-vendor? (@tr [:vendor]) (@tr [:author]))]
-    [ui/Segment {:secondary true
-                 :color     "green"
-                 :raised    true}
-     ; check for user or group... author / vendor
-     ; number of visible apps for this/these author(s)? -> link to filtered apps?
-     ; email
-     ; registered since/for
-     [:h4 (str/capitalize title)]
-     [ui/Table {:basic  "very"
-                :padded false}
-      [ui/TableBody
-       (when name
-         [ui/TableRow
-          [ui/TableCell (str/capitalize (@tr [:name]))]
-          [ui/TableCell "Vendor name..."]])
-       ;(when description
-       ;  [ui/TableRow
-       ;   [ui/TableCell (str/capitalize (@tr [:description]))]
-       ;   [ui/TableCell "vendor description..."]])
-       [ui/TableRow
-        [ui/TableCell "Active since"]
-        [ui/TableCell "..."                                 ;(if created (time/ago (time/parse-iso8601 created) @locale) (@tr [:soon]))
-         ]]]]]))
+        groups     (subscribe [::acl-subs/groups-options])
+        is-vendor? (utils/is-vendor? @module)
+        title      (if is-vendor? (@tr [:vendor]) (@tr [:author]))
+        group      (when is-vendor? (first @groups))
+        group-name (when is-vendor? (utils/group->name group))
+        author     (if is-vendor? group-name @user)
+        details    (when is-vendor? (:name group))
+        full-author (if is-vendor? (str details " (" author ")") author)]
+    [ui/TableRow
+     [ui/TableCell (str/capitalize (if is-vendor? (@tr [:vendor]) (@tr [:author])))]
+     [ui/TableCell full-author]]))
 
 
 (defn OverviewDescription

@@ -105,7 +105,8 @@
          (when id
            [ui/TableRow
             [ui/TableCell (str/capitalize (@tr [:id]))]
-            [ui/TableCell [values/as-link id :label (subs id 11)]]])]]]
+            [ui/TableCell [values/as-link id :label (subs id 11)]]])
+         [apps-views-detail/AuthorVendor]]]]
       [ui/GridColumn
        [ui/Segment (merge style/basic {:floated "right"})
         [ui/Image {:src      (or logo-url "")
@@ -137,9 +138,7 @@
       [OverviewModuleSummary]]]
     [ui/GridRow
      [ui/GridColumn {:stretched true}
-      [apps-views-detail/OverviewDescription utils/tab-details]]
-     [ui/GridColumn {:stretched true}
-      [apps-views-detail/OverviewVendorSummary]]]]])
+      [apps-views-detail/OverviewDescription utils/tab-details]]]]])
 
 
 (defn overview

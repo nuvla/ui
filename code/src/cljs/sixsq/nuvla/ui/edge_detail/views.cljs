@@ -344,7 +344,11 @@
                          (dispatch [::events/operation id operation @form-data
                                     on-success-fn on-error-fn]))]
     (fn [resource operation show? title icon button-text]
-      (let [has-active-dp (if (> (count (:resources @deployments)) 0)
+      (let [dpls          (:resources @deployments)
+            active-dpls   (filter (fn [x]
+                                    (when (:state x)
+                                      (not= (:state x) "STOPPED"))) dpls)
+            has-active-dp (if (> (count active-dpls) 0)
                             true
                             false)]
         [ui/Modal

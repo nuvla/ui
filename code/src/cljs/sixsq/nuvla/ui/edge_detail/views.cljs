@@ -703,22 +703,16 @@
                         :image true}
               "Raw sample: "
               [ui/LabelDetail
-               (last (:data-gateway stat))]]]]
-           )
-
-
-         ; TODO: the data-gateway stats should be in a popup instead of raw text. But fails some unknown reason,
-         ;[ui/Popup
-         ; {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
-         ;  :content        "Let your NuvlaBox apps subscribe to the internal MQTT to access these values locally"
-         ;  :header         "data-gateway"
-         ;  :position       "right center"
-         ;  :inverted       true
-         ;  :wide           true
-         ;
-         ;  :on             "hover"
-         ;  :hide-on-scroll true}]
-         ])]
+              [ui/Popup
+                {:trigger        (r/as-element [ui/Icon {:name "eye"}])
+                 :content        (last (:data-gateway stat))
+                 :position       "right center"
+                 :inverted       true
+                 :wide           true
+                 :on             "hover"
+                 :size           "mini"
+                 :hoverable      true
+                 :hide-on-scroll true}]]]]])])]
      (when (pos? (count (:label net-stats)))
        [ui/GridRow {:centered true
                     :columns  2}

@@ -19,6 +19,7 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.profile.events :as profile-events]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
@@ -969,6 +970,7 @@
         editable? (subscribe [::subs/editable?])
         price     (subscribe [::subs/price])
         vendor    (subscribe [::profile-subs/vendor])]
+    (dispatch [::profile-events/search-existing-vendor])
     (fn []
       (let [amount (:cent-amount-daily @price)]
         (when (or (and @editable? @vendor) (some? @price))
@@ -1046,16 +1048,16 @@
 
 (defn AuthorVendor
   []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        module     (subscribe [::subs/module])
-        user       (subscribe [::session-subs/user])
-        groups     (subscribe [::acl-subs/groups-options])
-        is-vendor? (utils/is-vendor? @module)
-        title      (if is-vendor? (@tr [:vendor]) (@tr [:author]))
-        group      (when is-vendor? (first @groups))
-        group-name (when is-vendor? (utils/group->name group))
-        author     (if is-vendor? group-name @user)
-        details    (when is-vendor? (:name group))
+  (let [tr          (subscribe [::i18n-subs/tr])
+        module      (subscribe [::subs/module])
+        user        (subscribe [::session-subs/user])
+        groups      (subscribe [::acl-subs/groups-options])
+        is-vendor?  (utils/is-vendor? @module)
+        title       (if is-vendor? (@tr [:vendor]) (@tr [:author]))
+        group       (when is-vendor? (first @groups))
+        group-name  (when is-vendor? (utils/group->name group))
+        author      (if is-vendor? group-name @user)
+        details     (when is-vendor? (:name group))
         full-author (if is-vendor? (str details " (" author ")") author)]
     [ui/TableRow
      [ui/TableCell (str/capitalize (if is-vendor? (@tr [:vendor]) (@tr [:author])))]

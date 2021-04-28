@@ -47,13 +47,14 @@
 (defn format-module-children
   [module-children]
   (when (pos? (count module-children))
-    [ui/Segment style/basic
-     (vec (concat [ui/ListSA {:divided   true
-                              :relaxed   true
-                              :selection true}]
-                  (map (fn [{:keys [id] :as module}]
-                         ^{:key id}
-                         [format-module module]) module-children)))]))
+    (let [ordered-children (sort-by :name module-children)]
+      [ui/Segment style/basic
+       (vec (concat [ui/ListSA {:divided   true
+                                :relaxed   true
+                                :selection true}]
+                    (map (fn [{:keys [id] :as module}]
+                           ^{:key id}
+                           [format-module module]) ordered-children)))])))
 
 
 (defn modules-view []

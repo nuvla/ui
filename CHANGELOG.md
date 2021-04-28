@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.17.2] - 2021-04-28
+
 ### Added
 
   - Support for apps to ask for a credential with user permissions

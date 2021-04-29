@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Authn menu - Sort groups on the switch group list
   - Edge page - Creation of nuvlabox-installation-trigger-usb.nuvla
     doesn't set api-credentials ttl
   - Edge page - Creation of nuvlabox-installation-trigger-usb.nuvla

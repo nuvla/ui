@@ -38,6 +38,59 @@
     [sixsq.nuvla.ui.acl.views :as acl-views]))
 
 
+(def application-kubernetes-subtype "application_kubernetes")
+(def docker-compose-subtype "application")
+
+
+(defn LicenseTitle
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:<>
+     [uix/Icon {:name "drivers license"}]
+     (str/capitalize (@tr [:license]))]))
+
+
+(defn PricingTitle
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:<>
+     [uix/Icon {:name "euro"}]
+     (str/capitalize (@tr [:pricing]))]))
+
+
+(defn DeploymentsTitle
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:<>
+     [uix/Icon {:name "rocket"}]
+     (str/capitalize (@tr [:deployments]))]))
+
+
+(defn DetailsTitle
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:<>
+     [uix/Icon {:name "info"}]
+     (str/capitalize (@tr [:details]))]))
+
+
+(defn DockerTitle
+  []
+  (let [module-subtype (subscribe [::subs/module-subtype])
+        tab-name       (if (= application-kubernetes-subtype @module-subtype) "Kubernetes" "Docker")]
+    [:<>
+     [uix/Icon {:name "docker"}]
+     (str/capitalize tab-name)]))
+
+
+(defn ConfigurationTitle
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:<>
+     [uix/Icon {:name "cog"}]
+     (str/capitalize (@tr [:configuration]))]))
+
+
 (defn TabMenuDetails
   []
   (let [tr     (subscribe [::i18n-subs/tr])
@@ -497,6 +550,7 @@
                           subtype     "project"
                           path        nil}} @module-common]
         [:<>
+         [:h2 [DetailsTitle]]
          [ui/Grid {:stackable true, :reversed :mobile}
           [ui/GridRow
            [ui/GridColumn {:width 13}
@@ -938,8 +992,9 @@
     (fn []
       (let [amount (:cent-amount-daily @price)]
         [:<>
-         [:div (str/capitalize (@tr [:price]))
-          [:span ff/nbsp (ff/help-popup (@tr [:define-price]))]]
+         [PricingTitle]
+         [ui/Message {:info true}
+          (@tr [:define-price])]
          [ui/Input {:labelPosition "right", :type "text"
                     :placeholder   (str/capitalize (@tr [:amount]))
                     :error         (not (s/valid? ::spec/cent-amount-daily amount))}
@@ -972,15 +1027,8 @@
         vendor    (subscribe [::profile-subs/vendor])]
     (dispatch [::profile-events/search-existing-vendor])
     (fn []
-      (let [amount (:cent-amount-daily @price)]
-        (when (or (and @editable? @vendor) (some? @price))
-          [uix/Accordion
-           [Pricing]
-           :label (str/capitalize (@tr [:price]))
-           :count (if (>= amount 100)
-                    (str (float (/ amount 100)) "€/" (@tr [:day]))
-                    (str amount "ct€/" (@tr [:day])))
-           :default-open false])))))
+      (when (or (and @editable? @vendor) (some? @price))
+        [Pricing]))))
 
 
 (defn licenses->dropdown
@@ -993,39 +1041,39 @@
 
 
 (defn LicenseSection []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        editable?       (subscribe [::subs/editable?])
-        validate-form?  (subscribe [::subs/validate-form?])
-        license         (subscribe [::subs/module-license])
-        on-change       (fn [update-event-kw value]
-                          (dispatch [update-event-kw value])
-                          (dispatch [::main-events/changes-protection? true])
-                          (dispatch [::events/validate-form]))
-        licenses        (subscribe [::main-subs/config :licenses])
-        options         (licenses->dropdown @licenses)
-        is-custom?      (r/atom false)]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        editable?      (subscribe [::subs/editable?])
+        validate-form? (subscribe [::subs/validate-form?])
+        license        (subscribe [::subs/module-license])
+        on-change      (fn [update-event-kw value]
+                         (dispatch [update-event-kw value])
+                         (dispatch [::main-events/changes-protection? true])
+                         (dispatch [::events/validate-form]))
+        licenses       (subscribe [::main-subs/config :licenses])
+        options        (licenses->dropdown @licenses)
+        is-custom?     (r/atom false)]
     (fn []
       (let [is-editable? (and @editable? @is-custom?)
             {:keys [license-name license-description license-url]} @license]
         (when (or @editable? (some? @license))
-          [uix/Accordion
+          [:<>
+           [:h2 [LicenseTitle]]
            [ui/Form
             (when @editable?
               [:<>
-               [ui/Message {:info true
-                            :compact true}
+               [ui/Message {:info true}
                 "Choose a license to protect yourself and your users/customers. This is mandatory for published and paying apps."]
                [:div [:p {:style {:padding-bottom 10}} [:b "Choose a known open source license"]]]
-               [ui/Dropdown {:options   options
+               [ui/Dropdown {:options     options
                              :placeholder "Select a license"
                              :search      true
-                             :value     (if @is-custom? "" license-name)
-                             :selection true
-                             :on-change (ui-callback/value
-                                          (fn [value]
-                                            (dispatch [::main-events/changes-protection? true])
-                                            (dispatch [::events/set-license value @licenses])
-                                            (reset! is-custom? false)))}]
+                             :value       (if @is-custom? "" license-name)
+                             :selection   true
+                             :on-change   (ui-callback/value
+                                            (fn [value]
+                                              (dispatch [::main-events/changes-protection? true])
+                                              (dispatch [::events/set-license value @licenses])
+                                              (reset! is-custom? false)))}]
                [:div [:p {:style {:padding "10px 0"}} [:b "Or provide a custom license"]]]
                [ui/Checkbox {:label     (@tr [:custom-license])
                              :checked   @is-custom?
@@ -1033,7 +1081,11 @@
                                           (fn [_]
                                             (dispatch [::main-events/changes-protection? true])
                                             (reset! is-custom? (not @is-custom?))
-                                            ))}]])
+                                            ))}]
+               [ui/Message {:info true}
+                (@tr [:license-generator-details])
+                ": "
+                [:a {:href "https://www.eulatemplate.com/eula-generator/"} (@tr [:license-generator])]]])
             [ui/Table {:compact true, :definition true}
              [ui/TableBody
               [uix/TableRowField (@tr [:name]), :key "license-name", :editable? is-editable?,
@@ -1049,10 +1101,7 @@
                :editable? is-editable?, :spec ::spec/license-url, :validate-form? @validate-form?,
                :required? true, :default-value (:license-url @license),
                :on-change (partial on-change ::events/license-url)
-               :on-validation ::apps-application-events/set-license-validation-error]]]]
-           :label (str/capitalize (@tr [:license]))
-           :count (:license-name @license)
-           :default-open true])))))
+               :on-validation ::apps-application-events/set-license-validation-error]]]]])))))
 
 
 (defn AuthorVendor
@@ -1092,6 +1141,14 @@
      [ui/ReactMarkdown @description]]))
 
 
+(defn ShareTitle
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:<>
+     [uix/Icon {:name "users"}]
+     (str/capitalize (@tr [:share]))]))
+
+
 (defn TabAcls
   [e can-edit? edit-event]
   (let [default-value (:acl @e)
@@ -1100,13 +1157,14 @@
                                                   @(subscribe [::session-subs/active-claim]))]
                             {:owners [user-id]}))
         ui-acl        (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
-    {:menuItem {:content "Share"
-                :key     "share"
-                :icon    "users"}
+    {:menuItem {:content (r/as-element [ShareTitle])
+                :key     "share"}
      :pane     {:key     "share-pane"
                 :content (r/as-element
-                           ^{:key (:updated @e)}
-                           [acl-views/AclWidget {:default-value default-value
-                                                 :read-only     (not can-edit?)
-                                                 :on-change     edit-event}
-                            ui-acl])}}))
+                           [:<>
+                            [:h2 [ShareTitle]]
+                            ^{:key (:updated @e)}
+                            [acl-views/AclWidget {:default-value default-value
+                                                  :read-only     (not can-edit?)
+                                                  :on-change     edit-event}
+                             ui-acl]])}}))

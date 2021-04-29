@@ -12,6 +12,14 @@
             [taoensso.timbre :as log]))
 
 
+(defn VersionsTitle
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:<>
+     [uix/Icon {:name "tag"}]
+     (str/capitalize (@tr [:versions]))]))
+
+
 (defn show-versions [show-versions?]
   (let [tr        (subscribe [::i18n-subs/tr])
         label     (@tr (if @show-versions? [:hide-versions] [:show-versions]))
@@ -89,7 +97,7 @@
 
 (defn versions-table
   [versions current-version & {:keys [on-click]}]
-  [ui/Table {:basic "very"}
+  [ui/Table
    [ui/TableHeader
     [ui/TableRow
      [ui/TableHeaderCell {:width "1"} "Version"]
@@ -119,15 +127,13 @@
         versions        (subscribe [::subs/versions])
         current-version (subscribe [::subs/module-content-id])]
     (fn []
-      (if (seq @versions)
-        [uix/Accordion
+      [:<>
+       [:h2 [VersionsTitle]]
+       (if (seq @versions)
          [:<>
           (when (> (count @versions) 1)
             [:div
              [versions-compare @versions]])
           [versions-table @versions @current-version
            :on-click #(dispatch [::events/get-module %])]]
-         :label (str/capitalize (@tr [:versions]))
-         :count (count @versions)
-         :default-open true]
-        [ui/Message {:info true} (@tr [:no-versions])]))))
+         [ui/Message {:info true} (@tr [:no-versions])])])))

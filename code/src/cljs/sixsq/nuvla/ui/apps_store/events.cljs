@@ -49,6 +49,15 @@
        :dispatch [::get-published-modules]})))
 
 
+(reg-event-fx
+  ::set-page-published-modules
+  (fn [{{:keys [::spec/full-text-search
+                ::spec/page
+                ::spec/elements-per-page] :as db} :db} [_ page]]
+    (-> {:db (assoc db ::spec/page page)}
+        (published-modules-cofx full-text-search elements-per-page page))))
+
+
 ;; My modules
 
 (reg-event-db
@@ -76,21 +85,23 @@
 
 
 (reg-event-fx
-  ::set-full-text-search-all-apps
-  (fn [{{:keys [::spec/elements-per-page] :as db} :db} [_ full-text-search]]
-    (let [new-page 1]
-      {:db (assoc db ::spec/full-text-search-all-apps full-text-search
-                        ::spec/page new-page)
-       :dispatch [::get-modules]})))
-
-
-(reg-event-fx
   ::set-full-text-search-my
   (fn [{{:keys [::spec/elements-per-page] :as db} :db} [_ full-text-search]]
     (let [new-page 1]
       {:db (assoc db ::spec/full-text-search-my full-text-search
                      ::spec/page new-page)
        :dispatch [::get-my-modules]})))
+
+
+(reg-event-fx
+  ::set-page-my-modules
+  (fn [{{:keys [::spec/full-text-search
+                ::spec/page
+                ::session-spec/session
+                ::spec/elements-per-page] :as db} :db} [_ page]]
+    (let [user-id (:user session)]
+      (-> {:db (assoc db ::spec/page page)}
+          (my-modules-cofx user-id full-text-search elements-per-page page)))))
 
 
 ;; All modules
@@ -127,16 +138,16 @@
 
 
 (reg-event-fx
-  ::set-full-text-search
+  ::set-full-text-search-all-apps
   (fn [{{:keys [::spec/elements-per-page] :as db} :db} [_ full-text-search]]
     (let [new-page 1]
-      (-> {:db (assoc db ::spec/full-text-search full-text-search
-                         ::spec/page new-page)}
-          (search-modules-cofx full-text-search elements-per-page new-page)))))
+      {:db (assoc db ::spec/full-text-search-all-apps full-text-search
+                     ::spec/page new-page)
+       :dispatch [::get-modules]})))
 
 
 (reg-event-fx
-  ::set-page
+  ::set-page-all-modules
   (fn [{{:keys [::spec/full-text-search
                 ::spec/page
                 ::spec/elements-per-page] :as db} :db} [_ page]]
@@ -156,3 +167,9 @@
     (dispatch [::get-modules])
     {:db (assoc db ::spec/state-selector state-selector
                    ::spec/page 1)}))
+
+
+(reg-event-db
+  ::reset-page
+  (fn [db _]
+    (assoc db ::spec/page 1)))

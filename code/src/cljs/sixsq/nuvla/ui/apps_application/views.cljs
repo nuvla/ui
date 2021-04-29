@@ -36,10 +36,6 @@
     [sixsq.nuvla.ui.main.components :as main-components]))
 
 
-(def application-kubernetes-subtype "application_kubernetes")
-(def docker-compose-subtype "application")
-
-
 (defn clear-module
   []
   (dispatch [::events/clear-module]))
@@ -183,7 +179,8 @@
              (dispatch [::apps-events/validate-form]))
            @editable?]
           (when validate?
-            (dispatch [::events/set-docker-validation-error application-kubernetes-subtype (not valid?)])
+            (dispatch [::events/set-docker-validation-error
+                       apps-views-detail/application-kubernetes-subtype (not valid?)])
             (when (not valid?)
               (let [error-msg (-> @docker-compose general-utils/check-yaml second)]
                 [ui/Label {:pointing "above", :basic true, :color "red"}
@@ -220,7 +217,7 @@
              (dispatch [::apps-events/validate-form]))
            @editable?]
           (when validate?
-            (dispatch [::events/set-docker-validation-error docker-compose-subtype (not valid?)])
+            (dispatch [::events/set-docker-validation-error apps-views-detail/docker-compose-subtype (not valid?)])
             (when (not valid?)
               (let [error-msg (-> @docker-compose general-utils/check-yaml second)]
                 [ui/Label {:pointing "above", :basic true, :color "red"}
@@ -303,33 +300,33 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:span
-     (str/capitalize (@tr [:deployments]))]))
+     [apps-views-detail/DeploymentsTitle]]))
 
 
 (defn DeploymentsPane
   []
   (let [is-new? (subscribe [::apps-subs/is-new?])]
-    (if @is-new?
-      [uix/WarningMsgNoElements]
-      [deployment-views/DeploymentTable {:no-actions     true
-                                         :no-selection   true
-                                         :no-module-name true}])))
+    [:<>
+     [:h2 [apps-views-detail/DeploymentsTitle]]
+     (if @is-new?
+       [uix/WarningMsgNoElements]
+       [deployment-views/DeploymentTable {:no-actions     true
+                                          :no-selection   true
+                                          :no-module-name true}])]))
 
 
 (defn deployments
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     {:menuItem {:content (r/as-element [TabMenuDeployments])
-                :key     "deployments"
-                :icon    "rocket"}
+                :key     "deployments"}
      :pane     {:key "deplyment-pane" :content (r/as-element [DeploymentsPane])}}))
 
 
 (defn TabMenuVersions
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [:span
-     (str/capitalize (@tr [:versions]))]))
+  [:span
+   [apps-views-versions/VersionsTitle]])
 
 
 (defn VersionsPane
@@ -341,22 +338,21 @@
   []
   (let []
     {:menuItem {:content (r/as-element [TabMenuVersions])
-                :key     "versions"
-                :icon    "tag"}
+                :key     "versions"}
      :pane     {:key "versions-pane" :content (r/as-element [VersionsPane])}}))
 
 
 (defn TabMenuConfiguration
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [:span
-     (str/capitalize (@tr [:configuration]))]))
+  [:span
+   [apps-views-detail/ConfigurationTitle]])
 
 
 (defn ConfigurationPane
   []
   (let []
     [:<>
+     [:h2 [apps-views-detail/ConfigurationTitle]]
      [apps-views-detail/env-variables-section]
      [files-section]
      [apps-views-detail/urls-section]
@@ -368,8 +364,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     {:menuItem {:content (r/as-element [TabMenuConfiguration])
-                :key     "configuration"
-                :icon    "cog"}
+                :key     "configuration"}
      :pane     {:key "configuration-pane" :content (r/as-element [ConfigurationPane])}}))
 
 
@@ -378,8 +373,7 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         error? (subscribe [::subs/license-error?])]
     [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
-     [uix/Icon {:name "drivers license"}]
-     (str/capitalize (@tr [:license]))]))
+     [apps-views-detail/LicenseTitle]]))
 
 
 (defn LicensePane
@@ -398,7 +392,7 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:span
-     (str/capitalize (@tr [:pricing]))]))
+     [apps-views-detail/PricingTitle]]))
 
 
 (defn PricingPane
@@ -409,31 +403,29 @@
         vendor    (subscribe [::profile-subs/vendor])]
     (dispatch [::profile-events/search-existing-vendor])
     (fn []
-      (if (or (and @editable? @vendor) (some? @price))
-        [apps-views-detail/Pricing]
-        [:<>
-         [ui/Message {:info true} (@tr [:no-pricing-free-app])]
-         (when editable?
-           [ui/Message {:info true} (@tr [:become-a-vendor])])]))))
+      [:<>
+       [:h2 [apps-views-detail/PricingTitle]]
+       (if (or (and @editable? @vendor) (some? @price))
+         [apps-views-detail/Pricing]
+         [:<>
+          [ui/Message {:info true} (@tr [:no-pricing-free-app])]
+          (when editable?
+            [ui/Message {:info true} (@tr [:become-a-vendor])])])])))
 
 
 (defn pricing
   []
   (let []
     {:menuItem {:content (r/as-element [TabMenuPricing])
-                :key     "pricing"
-                :icon    "euro"}
+                :key     "pricing"}
      :pane     {:key "pricing-pane" :content (r/as-element [PricingPane])}}))
 
 
 (defn TabMenuDocker
   []
-  (let [module-subtype (subscribe [::apps-subs/module-subtype])
-        error?         (subscribe [::subs/docker-compose-validation-error?])
-        tab-name       (if (= application-kubernetes-subtype @module-subtype) "Kubernetes" "Docker")]
+  (let [error?         (subscribe [::subs/docker-compose-validation-error?])]
     [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
-     [uix/Icon {:name "docker"}]
-     tab-name]))
+     [apps-views-detail/DockerTitle]]))
 
 
 (defn DockerPane
@@ -446,12 +438,13 @@
         module-subtype (subscribe [::apps-subs/module-subtype])]
     @active-index
     [:<>
+     [:h2 [apps-views-detail/DockerTitle]]
      [apps-views-detail/registries-section]
      ^{:key (random-uuid)}
      [:div
       (cond
-        (= @module-subtype docker-compose-subtype) [DockerComposeSection]
-        (= @module-subtype application-kubernetes-subtype) [KubernetesSection])]]))
+        (= @module-subtype apps-views-detail/docker-compose-subtype) [DockerComposeSection]
+        (= @module-subtype apps-views-detail/application-kubernetes-subtype) [KubernetesSection])]]))
 
 
 (defn docker
@@ -484,8 +477,7 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         error? (subscribe [::subs/details-validation-error?])]
     [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
-     [uix/Icon {:name "info"}]
-     (str/capitalize (@tr [:details]))]))
+     [apps-views-detail/DeploymentsTitle]]))
 
 
 (defn DetailsPane []
@@ -508,9 +500,12 @@
                                          :on-change (ui-callback/value
                                                       #(do (dispatch [::apps-events/subtype %])
                                                            (dispatch [::main-events/changes-protection? true])))
-                                         :options   [{:key docker-compose-subtype, :text "Docker", :value docker-compose-subtype}
-                                                     {:key   application-kubernetes-subtype, :text "Kubernetes",
-                                                      :value application-kubernetes-subtype}]}]]]
+                                         :options   [{:key apps-views-detail/docker-compose-subtype,
+                                                      :text "Docker",
+                                                      :value apps-views-detail/docker-compose-subtype}
+                                                     {:key   apps-views-detail/application-kubernetes-subtype,
+                                                      :text "Kubernetes",
+                                                      :value apps-views-detail/application-kubernetes-subtype}]}]]]
                          ^{:key "nuvla-access"}
                          [ui/TableRow
                           [ui/TableCell {:collapsing true

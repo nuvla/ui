@@ -45,7 +45,7 @@
 
 
 (defn ModuleCard
-  [{:keys [id name description path subtype logo-url price published versions] :as module}]
+  [{:keys [id name description path subtype logo-url price published versions] :as module} show-published?]
   (let [tr           (subscribe [::i18n-subs/tr])
         map-versions (apps-utils/map-versions-index versions)
         module-id    (if (true? published) (apps-utils/latest-published-module-with-index id map-versions) id)
@@ -63,30 +63,32 @@
                                   (.stopPropagation event))}
         desc-summary (utils-values/markdown->summary description)]
     [uix/Card
-     {:image       logo-url
-      :header      [:<>
-                    [ui/Icon {:name (apps-utils/subtype-icon subtype)}]
-                    (or name id)]
-      :description (utils-general/truncate desc-summary 180)
-      :href        detail-href
-      :on-click    #(dispatch [::history-events/navigate detail-href])
-      :button      [ui/Button
-                    (cond-> button-ops
-                            price (assoc :icon :cart
-                                         :content (str (@tr [:launch-for])
-                                                       (/ (:cent-amount-daily price) 100) "€/"
-                                                       (@tr [:day]))))]}]))
+     {:image         logo-url
+      :header        [:<>
+                      [ui/Icon {:name (apps-utils/subtype-icon subtype)}]
+                      (or name id)]
+      :description   (utils-general/truncate desc-summary 180)
+      :corner-button (when (and published show-published?)
+                       [ui/Label {:corner true} [uix/Icon {:name apps-utils/publish-icon}]])
+      :href          detail-href
+      :on-click      #(dispatch [::history-events/navigate detail-href])
+      :button        [ui/Button
+                      (cond-> button-ops
+                              price (assoc :icon :cart
+                                           :content (str (@tr [:launch-for])
+                                                         (/ (:cent-amount-daily price) 100) "€/"
+                                                         (@tr [:day]))))]}]))
 
 
 (defn ModulesCardsGroup
-  [modules-list]
+  [modules-list show-published?]
   [:div utils-style/center-items
    [ui/CardGroup {:centered    true
                   :itemsPerRow 4
                   :stackable   true}
     (for [{:keys [id] :as module} modules-list]
       ^{:key id}
-      [ModuleCard module])]])
+      [ModuleCard module show-published?])]])
 
 
 (defn AppStoreControlBar
@@ -159,13 +161,13 @@
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
         [ui/Segment
          [AppStoreControlBar]
-         [ModulesCardsGroup (get @modules :resources [])]
+         [ModulesCardsGroup (get @modules :resources []) false]
          [uix/Pagination
           {:totalitems   total-modules
            :totalPages   total-pages
            :activePage   @page
            :onPageChange (ui-callback/callback
-                           :activePage #(dispatch [::events/set-page %]))}]]))))
+                           :activePage #(dispatch [::events/set-page-published-modules %]))}]]))))
 
 
 (defn TabAllApps
@@ -179,13 +181,13 @@
             total-pages   (general-utils/total-pages total-modules @elements-per-page)]
         [ui/TabPane
          [AllAppsControlBar]
-         [ModulesCardsGroup (get @modules :resources [])]
+         [ModulesCardsGroup (get @modules :resources []) true]
          [uix/Pagination
           {:totalitems   total-modules
            :totalPages   total-pages
            :activePage   @page
            :onPageChange (ui-callback/callback
-                           :activePage #(dispatch [::events/set-page %]))}]]))))
+                           :activePage #(dispatch [::events/set-page-all-modules %]))}]]))))
 
 
 (defn TabMyApps
@@ -204,13 +206,13 @@
          (if (or (pos? total-modules) (not (empty? @search)))
            [:<>
             [MyAppsControlBar]
-            [ModulesCardsGroup (get @modules :resources [])]
+            [ModulesCardsGroup (get @modules :resources []) true]
             [uix/Pagination
              {:totalitems   total-modules
               :totalPages   total-pages
               :activePage   @page
               :onPageChange (ui-callback/callback
-                              :activePage #(dispatch [::events/set-page %]))}]]
+                              :activePage #(dispatch [::events/set-page-my-modules %]))}]]
            [:<>
             [uix/WarningMsgNoElements (@tr [:no-apps-available])]
             [ui/Container {:textAlign "center"}
@@ -332,9 +334,12 @@
 
 (defn RootView
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])
+        active-tab-index (subscribe [::subs/active-tab-index])]
     (dispatch [::apps-events/reset-version])
     (fn []
+      @active-tab-index
+      (dispatch [::events/reset-page])
       [ui/Container {:fluid true}
        [:<>
         [uix/PageHeader "fas fa-store" (general-utils/capitalize-first-letter (@tr [:apps]))]

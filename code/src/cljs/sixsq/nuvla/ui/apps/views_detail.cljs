@@ -983,64 +983,73 @@
            :default-open false])))))
 
 
+(defn licenses->dropdown
+  [licenses]
+  (map
+    (fn [license]
+      (let [license-name (:license-name license)]
+        {:key license-name, :text license-name, :value license-name}))
+    licenses))
+
+
 (defn LicenseSection []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        editable?      (subscribe [::subs/editable?])
-        validate-form? (subscribe [::subs/validate-form?])
-        license        (subscribe [::subs/module-license])
-        on-change      (fn [update-event-kw value]
-                         (dispatch [update-event-kw value])
-                         (dispatch [::main-events/changes-protection? true])
-                         (dispatch [::events/validate-form]))
-        sixsq-license  {:license-name        "SixSq"
-                        :license-description "SixSq license"
-                        :license-url         "https://nuvla.io/terms/tos"}
-        apache-license {:license-name        "Apache 2.0"
-                        :license-description "Apache License, Version 2.0, January 2004"
-                        :license-url         "https://www.apache.org/licenses/LICENSE-2.0"}]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        editable?       (subscribe [::subs/editable?])
+        validate-form?  (subscribe [::subs/validate-form?])
+        license         (subscribe [::subs/module-license])
+        on-change       (fn [update-event-kw value]
+                          (dispatch [update-event-kw value])
+                          (dispatch [::main-events/changes-protection? true])
+                          (dispatch [::events/validate-form]))
+        licenses        (subscribe [::main-subs/config :licenses])
+        options         (licenses->dropdown @licenses)
+        is-custom?      (r/atom false)]
     (fn []
-      (let [sixsq-selected? (= (:license-name @license)
-                               (:license-name sixsq-license))
-            is-editable?    (and @editable? (not sixsq-selected?))]
+      (let [is-editable? (and @editable? @is-custom?)
+            {:keys [license-name license-description license-url]} @license]
         (when (or @editable? (some? @license))
           [uix/Accordion
            [ui/Form
             (when @editable?
               [:<>
-               [ui/FormField [:b (@tr [:select-license])]]
-               [ui/FormRadio {:label     (@tr [:sixsq-license])
-                              :checked   sixsq-selected?
-                              :on-change #(do
-                                            (on-change ::events/license-name
-                                                       (:license-name sixsq-license))
-                                            (on-change ::events/license-description
-                                                       (:license-description sixsq-license))
-                                            (on-change ::events/license-url
-                                                       (:license-url sixsq-license)))}]
-               [ui/FormRadio {:label     (@tr [:custom-license])
-                              :checked   (and (some? (:license-name @license))
-                                              (not= (:license-name @license)
-                                                    (:license-name sixsq-license)))
-                              :on-change #(do (on-change ::events/license-name "")
-                                              (on-change ::events/license-description "")
-                                              (on-change ::events/license-url ""))}]])
-            [ui/FormField
-             [ui/Table {:compact true, :definition true}
-              [ui/TableBody
-               [uix/TableRowField (@tr [:name]), :key "license-name", :editable? is-editable?,
-                :spec ::spec/license-name, :validate-form? @validate-form?,
-                :required? true, :default-value (:license-name @license),
-                :on-change (partial on-change ::events/license-name)
-                :on-validation ::apps-application-events/set-license-validation-error]
-               [uix/TableRowField (@tr [:description]), :key "license-description",
-                :editable? is-editable?, :spec ::spec/license-description, :validate-form? @validate-form?,
-                :required? false, :default-value (:license-description @license),
-                :on-change (partial on-change ::events/license-description)]
-               [uix/TableRowField (@tr [:url]), :key "license-url",
-                :editable? is-editable?, :spec ::spec/license-url, :validate-form? @validate-form?,
-                :required? true, :default-value (:license-url @license),
-                :on-change (partial on-change ::events/license-url)
-                :on-validation ::apps-application-events/set-license-validation-error]]]]]
+               [ui/Message {:info true
+                            :compact true}
+                "Choose a license to protect yourself and your users/customers. This is mandatory for published and paying apps."]
+               [:div [:p {:style {:padding-bottom 10}} [:b "Choose a known open source license"]]]
+               [ui/Dropdown {:options   options
+                             :placeholder "Select a license"
+                             :search      true
+                             :value     (if @is-custom? "" license-name)
+                             :selection true
+                             :on-change (ui-callback/value
+                                          (fn [value]
+                                            (dispatch [::main-events/changes-protection? true])
+                                            (dispatch [::events/set-license value @licenses])
+                                            (reset! is-custom? false)))}]
+               [:div [:p {:style {:padding "10px 0"}} [:b "Or provide a custom license"]]]
+               [ui/Checkbox {:label     (@tr [:custom-license])
+                             :checked   @is-custom?
+                             :on-change (ui-callback/value
+                                          (fn [_]
+                                            (dispatch [::main-events/changes-protection? true])
+                                            (reset! is-custom? (not @is-custom?))
+                                            ))}]])
+            [ui/Table {:compact true, :definition true}
+             [ui/TableBody
+              [uix/TableRowField (@tr [:name]), :key "license-name", :editable? is-editable?,
+               :spec ::spec/license-name, :validate-form? @validate-form?,
+               :required? true, :default-value (:license-name @license),
+               :on-change (partial on-change ::events/license-name)
+               :on-validation ::apps-application-events/set-license-validation-error]
+              [uix/TableRowField (@tr [:description]), :key "license-description",
+               :editable? is-editable?, :spec ::spec/license-description, :validate-form? @validate-form?,
+               :required? false, :default-value (:license-description @license),
+               :on-change (partial on-change ::events/license-description)]
+              [uix/TableRowField (@tr [:url]), :key "license-url",
+               :editable? is-editable?, :spec ::spec/license-url, :validate-form? @validate-form?,
+               :required? true, :default-value (:license-url @license),
+               :on-change (partial on-change ::events/license-url)
+               :on-validation ::apps-application-events/set-license-validation-error]]]]
            :label (str/capitalize (@tr [:license]))
            :count (:license-name @license)
            :default-open true])))))

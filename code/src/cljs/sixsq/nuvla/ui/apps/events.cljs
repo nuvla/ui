@@ -450,6 +450,23 @@
     (assoc-in db [::spec/module-common ::spec/price] {:cent-amount-daily amount
                                                       :currency          "EUR"})))
 
+
+(defn find-license
+  [license-name licenses]
+  (some #(when (= license-name (:license-name %)) %) licenses))
+
+
+(reg-event-db
+  ::set-license
+  (fn [db [_ license-name licenses]]
+    (let [license (find-license license-name licenses)
+          {:keys [license-name license-description license-url]} license]
+      (-> db
+          (assoc-in [::spec/module-common ::spec/license :license-name] license-name)
+          (assoc-in [::spec/module-common ::spec/license :license-description] license-description)
+          (assoc-in [::spec/module-common ::spec/license :license-url] license-url)))))
+
+
 (reg-event-db
   ::license-name
   (fn [db [_ name]]

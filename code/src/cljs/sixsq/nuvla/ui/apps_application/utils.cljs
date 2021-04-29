@@ -24,7 +24,7 @@
   (let [{:keys [docker-compose requires-user-rights]} content]
     (-> db
         (apps-utils/module->db module)
-        (assoc-in [::spec/module-application ::spec/requires-user-rights] requires-user-rights)
+        (assoc-in [::spec/module-application ::spec/requires-user-rights] (true? requires-user-rights))
         (assoc-in [::spec/module-application ::spec/docker-compose] docker-compose)
         (assoc-in [::spec/module-application ::spec/files]
                   (files->db (:files content))))))

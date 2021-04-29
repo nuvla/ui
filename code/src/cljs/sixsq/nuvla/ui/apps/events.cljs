@@ -88,7 +88,6 @@
                              (s/valid? ::spec/module-common module-common)
                              (or (nil? form-spec) (s/valid? form-spec module)))
                            true)]
-      (s/explain ::spec/module-common module-common)
       (assoc db ::spec/form-valid? valid?))))
 
 

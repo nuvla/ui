@@ -248,7 +248,6 @@
 
 
 (defn OverviewModuleSummary
-  "Fixme: add license and price"
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
         locale               (subscribe [::i18n-subs/locale])
@@ -261,7 +260,7 @@
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
-     [:h4 (str/capitalize (@tr [:module]))]
+     [:h4 (str/capitalize (@tr [:app]))]
      [ui/Grid {:columns 2}
       [ui/GridColumn
        [ui/Table {:basic  "very"

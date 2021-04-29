@@ -50,6 +50,7 @@
         :api-keys                                      "API keys"
         :api-keys-section-sub-text                     "Keys used to authenticate with the Nuvla API"
         :application                                   "Application"
+        :app                                           "app"
         :apps                                          "apps"
         :apps-header                                   "App Store & Workspace"
         :apps-more-info                                "Would you like to enable fast deployment monitoring? If so, please check the "

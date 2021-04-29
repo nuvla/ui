@@ -78,11 +78,11 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
         module (subscribe [::apps-subs/module])
-        {:keys [id created updated name acl description parent-path path logo-url versions]} @module]
+        {:keys [id created updated name parent-path path logo-url]} @module]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
-     [:h4 (str/capitalize (@tr [:module]))]
+     [:h4 (str/capitalize (@tr [:project]))]
      [ui/Grid {:columns 2}
       [ui/GridColumn
        [ui/Table {:basic  "very"
@@ -132,13 +132,14 @@
              :padded    true
              :centered  true}
     [ui/GridRow {:centered true}
-     [ui/GridColumn {:stretched true}
-      [modules-view]]
-     [ui/GridColumn {:stretched true}
-      [OverviewModuleSummary]]]
+     [ui/GridColumn
+      [apps-views-detail/OverviewDescription utils/tab-details]]]
     [ui/GridRow
-     [ui/GridColumn {:stretched true}
-      [apps-views-detail/OverviewDescription utils/tab-details]]]]])
+     [ui/GridColumn
+      [modules-view]]]
+    [ui/GridRow
+     [ui/GridColumn
+      [OverviewModuleSummary]]]]])
 
 
 (defn overview

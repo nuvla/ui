@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+  - Edge page - Creation of nuvlabox-installation-trigger-usb.nuvla
+    creation data content fix
+
 ## [2.17.2] - 2021-04-28
 
 ### Added

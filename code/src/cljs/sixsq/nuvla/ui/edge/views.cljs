@@ -468,8 +468,7 @@
                                                              (->> @creation-data
                                                                   (remove (fn [[_ v]]
                                                                             (str/blank? v)))
-                                                                  (into {}))])))
-                                              (reset! creation-data default-data)))]
+                                                                  (into {}))])))))]
 
     (dispatch [::events/get-ssh-keys-available ["ssh-key"] nil])
     (fn []

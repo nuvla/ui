@@ -1104,22 +1104,30 @@
                :on-validation ::apps-application-events/set-license-validation-error]]]]])))))
 
 
+(defn AuthorVendorRow
+  [author-or-vendor full-name]
+  [ui/TableRow
+   [ui/TableCell (str/capitalize author-or-vendor)]
+   [ui/TableCell full-name]])
+
+
 (defn AuthorVendor
+  "Check if the module belongs to a group. If so, search amongst the group "
   []
-  (let [tr          (subscribe [::i18n-subs/tr])
-        module      (subscribe [::subs/module])
-        user        (subscribe [::session-subs/user])
-        groups      (subscribe [::acl-subs/groups-options])
-        is-vendor?  (utils/is-vendor? @module)
-        title       (if is-vendor? (@tr [:vendor]) (@tr [:author]))
-        group       (when is-vendor? (first @groups))
-        group-name  (when is-vendor? (utils/group->name group))
-        author      (if is-vendor? group-name @user)
-        details     (when is-vendor? (:name group))
-        full-author (if is-vendor? (str details " (" author ")") author)]
-    [ui/TableRow
-     [ui/TableCell (str/capitalize (if is-vendor? (@tr [:vendor]) (@tr [:author])))]
-     [ui/TableCell full-author]]))
+  (let [tr         (subscribe [::i18n-subs/tr])
+        module     (subscribe [::subs/module])
+        user       (subscribe [::session-subs/user])
+        groups     (subscribe [::acl-subs/groups-options])
+        is-vendor? (utils/is-vendor? @module)]
+    (if is-vendor?
+      (let [groups-from-module (utils/module->groups @module)
+            group-id           (first groups-from-module)
+            group-definition   (acl-utils/find-group group-id @groups)
+            vendor             (if group-definition
+                                 (:name group-definition)
+                                 group-id)]
+        [AuthorVendorRow (@tr [:vendor]) vendor])
+      [AuthorVendorRow (@tr [:author]) @user])))
 
 
 (defn OverviewDescription

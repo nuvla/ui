@@ -184,3 +184,8 @@
 (defn acl-change-rights-for-row
   [ui-acl row-nubmer principal rights]
   (update ui-acl :principals assoc row-nubmer [principal rights]))
+
+
+(defn find-group
+  [id groups]
+  (some #(when (= id (:id %)) %) groups))

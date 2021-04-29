@@ -336,7 +336,7 @@
 (defn group->name
   "Drop the 'group/' prefix"
   [group]
-  (subs (:id group) 6))
+  (subs group 6))
 
 
 (defn module->groups

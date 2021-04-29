@@ -298,9 +298,8 @@
 
 (defn TabMenuDeployments
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [:span
-     [apps-views-detail/DeploymentsTitle]]))
+  [:span
+   [apps-views-detail/DeploymentsTitle]])
 
 
 (defn DeploymentsPane

@@ -5,13 +5,13 @@
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.subs :as acl-subs]
+    [sixsq.nuvla.ui.acl.utils :as acl-utils]
+    [sixsq.nuvla.ui.acl.views :as acl-views]
     [sixsq.nuvla.ui.apps.events :as events]
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.subs :as subs]
     [sixsq.nuvla.ui.apps.utils :as utils]
-    [sixsq.nuvla.ui.apps.views-versions :as views-versions]
     [sixsq.nuvla.ui.apps-application.events :as apps-application-events]
-    [sixsq.nuvla.ui.deployment.events :as deployment-events]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -30,12 +30,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [clojure.string :as str]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
-    [sixsq.nuvla.ui.acl.utils :as acl-utils]
-    [sixsq.nuvla.ui.acl.views :as acl-views]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]))
 
 
 (def application-kubernetes-subtype "application_kubernetes")
@@ -124,7 +120,7 @@
   (let [tr      (subscribe [::i18n-subs/tr])
         is-new? (subscribe [::subs/is-new?])
         {:keys [id name description]} module
-        content (str (or name id) (when description " - ") description)]
+        content (str (or name id) (when description " - ") (utils-values/markdown->summary description))]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete-module id])
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
@@ -141,30 +137,30 @@
   (let [tr      (subscribe [::i18n-subs/tr])
         is-new? (subscribe [::subs/is-new?])
         {:keys [id name description]} module
-        content (str (or name id) (when description " - ") description)]
+        content (str (or name id) (when description " - ") (utils-values/markdown->summary description))]
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/publish])
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
-                                  [ui/Icon {:name apps-utils/publish-icon}]
+                                  [ui/Icon {:name utils/publish-icon}]
                                   (str/capitalize (@tr [:publish]))])
       :content     [:p (@tr [:publish-confirmation-message])]
       :header      (@tr [:publish-module])
-      :icon        apps-utils/publish-icon
+      :icon        utils/publish-icon
       :button-text (@tr [:publish])}]))
 
 
 (defn UnPublishButton
   [module]
   (let [tr (subscribe [::i18n-subs/tr])
-        {:keys [id name description]} module]
+        {:keys [id]} module]
     [uix/ModalFromButton
      {:on-confirm  #(dispatch [::events/un-publish id])
       :trigger     (r/as-element [ui/MenuItem
-                                  [ui/Icon {:name apps-utils/un-publish-icon}]
+                                  [ui/Icon {:name utils/un-publish-icon}]
                                   (str/capitalize (@tr [:un-publish]))])
       :content     [:p (@tr [:un-publish-confirmation-message])]
       :header      (@tr [:un-publish-module])
-      :icon        apps-utils/un-publish-icon
+      :icon        utils/un-publish-icon
       :button-text (@tr [:un-publish])}]))
 
 
@@ -492,7 +488,6 @@
         description    (subscribe [::subs/description])
         editable?      (subscribe [::subs/editable?])
         validate-form? (subscribe [::subs/validate-form?])
-        form-valid?    (subscribe [::subs/form-valid?])
         default-value  @description]
     (fn []
       (let [valid?    (s/valid? ::spec/description @description)
@@ -1054,7 +1049,7 @@
         is-custom?     (r/atom false)]
     (fn []
       (let [is-editable? (and @editable? @is-custom?)
-            {:keys [license-name license-description license-url]} @license]
+            {:keys [license-name]} @license]
         [:<>
          [:h2 [LicenseTitle]]
          (if (or @editable? (some? @license))

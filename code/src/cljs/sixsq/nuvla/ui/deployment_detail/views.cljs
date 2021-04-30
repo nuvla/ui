@@ -665,9 +665,8 @@
                  :bordered true
                  :style    {:width      "auto"
                             :height     "100px"
-                            ;:padding    "20px"
                             :object-fit "contain"}}]]
-     [:h4 "Module"]
+     [:h4 {:style {:margin-top 0}} "Module"]
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody

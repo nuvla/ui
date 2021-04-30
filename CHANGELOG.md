@@ -4,6 +4,21 @@
 
 ### Changed
 
+  - Authn menu - Sort groups on the switch group list
+  - Edge page - Creation of nuvlabox-installation-trigger-usb.nuvla
+    doesn't set api-credentials ttl
+  - Edge page - Creation of nuvlabox-installation-trigger-usb.nuvla
+    creation data content fix
+
+## [2.17.2] - 2021-04-28
+
+### Added
+
+  - Support for apps to ask for a credential with user permissions
+
+### Changed
+
+  - Deployment modal - Bugfix icon credential check
   - Deployment - Display credential name when available in deployment
   - Sign-in - Make reset password link position absolute
   - Sign-in - Support geant provider

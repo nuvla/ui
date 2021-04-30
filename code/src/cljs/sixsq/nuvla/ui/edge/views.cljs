@@ -405,12 +405,6 @@
         ; default ttl for API key is 30 days
         default-ttl                30
         usb-trigger-key-ttl        (r/atom default-ttl)
-        new-api-key-data           {:description "Auto-generated for NuvlaBox self-registration USB trigger"
-                                    :name        "NuvlaBox self-registration USB trigger"
-                                    :template    {
-                                                  :method "generate-api-key"
-                                                  :ttl    (* @usb-trigger-key-ttl 24 60 60)
-                                                  :href   "credential-template/generate-api-key"}}
         ssh-toggle                 (r/atom false)
         ssh-existing-key           (r/atom false)
         ssh-chosen-keys            (r/atom [])
@@ -445,10 +439,7 @@
                                                                @ssh-chosen-keys
                                                                (if (= @install-strategy "usb")
                                                                  [::events/create-nuvlabox-usb-api-key
-                                                                  (->> new-api-key-data
-                                                                       (remove (fn [[_ v]]
-                                                                                 (str/blank? v)))
-                                                                       (into {}))]
+                                                                  @usb-trigger-key-ttl]
                                                                  [::events/create-nuvlabox
                                                                   (->> @creation-data
                                                                        (remove (fn [[_ v]]
@@ -462,10 +453,7 @@
                                                     (dispatch [::events/create-ssh-key ssh-tpl
                                                                (if (= @install-strategy "usb")
                                                                  [::events/create-nuvlabox-usb-api-key
-                                                                  (->> new-api-key-data
-                                                                       (remove (fn [[_ v]]
-                                                                                 (str/blank? v)))
-                                                                       (into {}))]
+                                                                  @usb-trigger-key-ttl]
                                                                  [::events/create-nuvlabox
                                                                   (->> @creation-data
                                                                        (remove (fn [[_ v]]
@@ -473,16 +461,12 @@
                                                                        (into {}))])])))
                                                 (if (= @install-strategy "usb")
                                                   (dispatch [::events/create-nuvlabox-usb-api-key
-                                                             (->> new-api-key-data
-                                                                  (remove (fn [[_ v]]
-                                                                            (str/blank? v)))
-                                                                  (into {}))])
+                                                             @usb-trigger-key-ttl])
                                                   (dispatch [::events/create-nuvlabox
                                                              (->> @creation-data
                                                                   (remove (fn [[_ v]]
                                                                             (str/blank? v)))
-                                                                  (into {}))])))
-                                              (reset! creation-data default-data)))]
+                                                                  (into {}))])))))]
 
     (dispatch [::events/get-ssh-keys-available ["ssh-key"] nil])
     (fn []

@@ -16,9 +16,10 @@
 
 (defn module->db
   [db {:keys [content] :as module}]
-  (let [{:keys [docker-compose]} content]
+  (let [{:keys [docker-compose requires-user-rights]} content]
     (-> db
         (apps-utils/module->db module)
+        (assoc-in [::spec/module-application ::spec/requires-user-rights] requires-user-rights)
         (assoc-in [::spec/module-application ::spec/docker-compose] docker-compose)
         (assoc-in [::spec/module-application ::spec/files]
                   (files->db (:files content))))))
@@ -40,12 +41,14 @@
 (defn db->module
   [module commit-map db]
   (let [{:keys [author commit]} commit-map
-        docker-compose (get-in db [::spec/module-application ::spec/docker-compose])
-        files          (files->module db)]
+        docker-compose       (get-in db [::spec/module-application ::spec/docker-compose])
+        files                (files->module db)
+        requires-user-rights (get-in db [::spec/module-application ::spec/requires-user-rights])]
     (as-> module m
           (assoc-in m [:content :author] author)
           (assoc-in m [:content :commit] (if (empty? commit) "no commit message" commit))
           (assoc-in m [:content :docker-compose] docker-compose)
+          (assoc-in m [:content :requires-user-rights] requires-user-rights)
           (if (empty? files)
             (update-in m [:content] dissoc :files)
             (assoc-in m [:content :files] files)))))

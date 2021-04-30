@@ -20,7 +20,7 @@
       [ui/Popup {:trigger  (r/as-element
                              [ui/Icon {:name    (cond
                                                   @loading? "circle notched"
-                                                  (not @valid?) (if @invalid? "fas fa-times-octagon" "warning sign")
+                                                  (not @valid?) (if @invalid? "window close" "warning sign")
                                                   :else "world")
                                        :color   (cond
                                                   @loading? "black"

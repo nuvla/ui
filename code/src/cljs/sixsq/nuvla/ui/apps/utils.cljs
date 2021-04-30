@@ -346,6 +346,15 @@
     vendors))
 
 
+(defn module->users
+  [module]
+  (let [owners  (-> module :acl :owners)
+        users (filter #(not (str/starts-with? % "group/")) owners)]
+    (log/error "users: " users)
+    (log/error "owners: " owners)
+    users))
+
+
 (defn is-vendor?
   [module]
   (let [vendors (module->groups module)]

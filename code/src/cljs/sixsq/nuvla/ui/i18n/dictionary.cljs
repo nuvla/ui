@@ -284,6 +284,7 @@
         :license                                       "license"
         :license-generator                             "License Generator"
         :license-generator-details                     "You can is this link to generate your own proprietary license"
+        :license-not-defined                           "There is no license defined for this app."
         :limit                                         "limit"
         :loading                                       "loading"
         :login                                         "login"

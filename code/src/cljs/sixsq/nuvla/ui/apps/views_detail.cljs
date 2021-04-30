@@ -1055,9 +1055,9 @@
     (fn []
       (let [is-editable? (and @editable? @is-custom?)
             {:keys [license-name license-description license-url]} @license]
-        (when (or @editable? (some? @license))
-          [:<>
-           [:h2 [LicenseTitle]]
+        [:<>
+         [:h2 [LicenseTitle]]
+         (if (or @editable? (some? @license))
            [ui/Form
             (when @editable?
               [:<>
@@ -1101,7 +1101,9 @@
                :editable? is-editable?, :spec ::spec/license-url, :validate-form? @validate-form?,
                :required? true, :default-value (:license-url @license),
                :on-change (partial on-change ::events/license-url)
-               :on-validation ::apps-application-events/set-license-validation-error]]]]])))))
+               :on-validation ::apps-application-events/set-license-validation-error]]]]
+           [ui/Message {:info true}
+            (@tr [:license-not-defined])])]))))
 
 
 (defn AuthorVendorRow
@@ -1116,7 +1118,6 @@
   []
   (let [tr         (subscribe [::i18n-subs/tr])
         module     (subscribe [::subs/module])
-        user       (subscribe [::session-subs/user])
         groups     (subscribe [::acl-subs/groups-options])
         is-vendor? (utils/is-vendor? @module)]
     (if is-vendor?
@@ -1127,7 +1128,9 @@
                                  (:name group-definition)
                                  group-id)]
         [AuthorVendorRow (@tr [:vendor]) vendor])
-      [AuthorVendorRow (@tr [:author]) @user])))
+      (let [users-from-module (utils/module->users @module)
+            user              (first users-from-module)]
+        [AuthorVendorRow (@tr [:author]) user]))))
 
 
 (defn OverviewDescription

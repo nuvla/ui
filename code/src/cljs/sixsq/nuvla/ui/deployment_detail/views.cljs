@@ -33,7 +33,8 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.deployment.utils :as deployment-utils]))
+    [sixsq.nuvla.ui.deployment.utils :as deployment-utils]
+    [taoensso.timbre :as log]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -423,19 +424,19 @@
                        :placeholder true
                        :style       {:padding 0
                                      :z-index 0
-                                     :height  300}}
-
+                                     :height  600}}
            (if @id
-             [ui/CodeMirror (cond-> {:value    (str/join "\n" log)
-                                     :scroll   {:x (:left @scroll-info)
-                                                :y (if @go-live?
-                                                     (.-MAX_VALUE js/Number)
-                                                     (:top @scroll-info))}
-                                     :onScroll #(reset! scroll-info
-                                                        (js->clj %2 :keywordize-keys true))
-                                     :options  {:mode     ""
-                                                :readOnly true
-                                                :theme    "logger"}})]
+             [ui/CodeMirror {:value    (str/join "\n" log)
+                             :scroll   {:x (:left @scroll-info)
+                                        :y (if @go-live?
+                                             (.-MAX_VALUE js/Number)
+                                             (:top @scroll-info))}
+                             :onScroll #(reset! scroll-info
+                                                (js->clj %2 :keywordize-keys true))
+                             :options  {:mode     ""
+                                        :readOnly true
+                                        :theme    "logger"}
+                             :class ["large-height"]}]
              [ui/Header {:icon true}
               [ui/Icon {:name "search"}]
               "Get service logs"]

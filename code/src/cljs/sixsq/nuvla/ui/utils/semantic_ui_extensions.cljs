@@ -106,24 +106,6 @@
               options)]]]))
 
 
-(defn EditorJson
-  "A convenience function to setup the CodeMirror editor component for JSON."
-  [text on-change-fn editable?]
-  (let [default-text text]
-    (fn [text on-change-fn editable?]
-      [ui/CodeMirror {:value      text
-                      :autoCursor true
-                      :options    {:mode                "application/json"
-                                   :line-numbers        true
-                                   :match-brackets      true
-                                   :auto-close-brackets true
-                                   :style-active-line   true
-                                   :fold-gutter         true
-                                   :gutters             ["CodeMirror-linenumbers"]}
-                      :on-change  (fn [editor data value]
-                                    (reset! text value))}])))
-
-
 (defn EditorYaml
   [text on-change-fn editable?]
   (fn [text on-change-fn editable?]
@@ -134,7 +116,7 @@
                                  :line-numbers      true
                                  :style-active-line true}
                     :on-change  on-change-fn
-                    :style      {:height "auto !important"}}]))
+                    :class      "full-height"}]))
 
 
 (defn EditorMarkdown
@@ -151,6 +133,7 @@
                                  :style-active-line   true
                                  :fold-gutter         true
                                  :gutters             ["CodeMirror-foldgutter"]}
+                    :class      "full-height"
                     :on-change  on-change-fn}]))
 
 

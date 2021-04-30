@@ -188,6 +188,10 @@ tr.active td {
   z-index: 999;
 }
 
-.CodeMirror {
+.full-height > .CodeMirror {
   height: auto !important;
+}
+
+.large-height > .CodeMirror {
+  height: 600px !important;
 }

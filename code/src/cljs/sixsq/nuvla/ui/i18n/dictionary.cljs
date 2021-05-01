@@ -50,6 +50,8 @@
         :api-keys                                      "API keys"
         :api-keys-section-sub-text                     "Keys used to authenticate with the Nuvla API"
         :application                                   "Application"
+        :application-docker                            "Docker Application"
+        :application-kubernetes                        "Kubernetes Application"
         :app                                           "app"
         :apps                                          "apps"
         :apps-header                                   "App Store & Workspace"

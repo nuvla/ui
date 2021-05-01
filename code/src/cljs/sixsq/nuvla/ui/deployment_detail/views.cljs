@@ -801,17 +801,7 @@
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:tags]))]
            [ui/TableCell
-            [ui/LabelGroup {:size  "tiny"
-                            :color "teal"
-                            :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-             (for [tag tags]
-               ^{:key (str id "-" tag)}
-               [ui/Label {:style {:max-width     "15ch"
-                                  :overflow      "hidden"
-                                  :text-overflow "ellipsis"
-                                  :white-space   "nowrap"}}
-                [ui/Icon {:name "tag"}] tag
-                ])]]])
+            [uix/Tags {:tags tags}]]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (str (@tr [:created])))]
          [ui/TableCell (-> @deployment :created time/parse-iso8601 time/ago)]]

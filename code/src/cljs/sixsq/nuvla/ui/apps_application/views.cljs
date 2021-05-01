@@ -414,7 +414,7 @@
 
 (defn TabMenuDocker
   []
-  (let [error?         (subscribe [::subs/docker-compose-validation-error?])]
+  (let [error? (subscribe [::subs/docker-compose-validation-error?])]
     [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
      [apps-views-detail/DockerTitle]]))
 
@@ -471,11 +471,19 @@
      [apps-views-detail/DeploymentsTitle]]))
 
 
+(defn subtype->pretty
+  [subtype]
+  (case subtype
+    "application" "Docker"
+    "application_kubernetes" "Kubernetes"))
+
+
 (defn DetailsPane []
   (let [tr             (subscribe [::i18n-subs/tr])
         is-new?        (subscribe [::apps-subs/is-new?])
         module-subtype (subscribe [::apps-subs/module-subtype])
-        active-index   (subscribe [::apps-subs/active-tab-index])]
+        active-index   (subscribe [::apps-subs/active-tab-index])
+        editable?      (subscribe [::apps-subs/editable?])]
     @active-index
     ^{:key (random-uuid)}
     [apps-views-detail/Details
@@ -483,20 +491,9 @@
                          [ui/TableRow
                           [ui/TableCell {:collapsing true
                                          :style      {:padding-bottom 8}} "subtype"]
-                          [ui/TableCell
-                           [ui/Dropdown {:disabled  (-> @is-new? true? not)
-                                         :selection true
-                                         :fluid     true
-                                         :value     @module-subtype
-                                         :on-change (ui-callback/value
-                                                      #(do (dispatch [::apps-events/subtype %])
-                                                           (dispatch [::main-events/changes-protection? true])))
-                                         :options   [{:key apps-views-detail/docker-compose-subtype,
-                                                      :text "Docker",
-                                                      :value apps-views-detail/docker-compose-subtype}
-                                                     {:key   apps-views-detail/application-kubernetes-subtype,
-                                                      :text "Kubernetes",
-                                                      :value apps-views-detail/application-kubernetes-subtype}]}]]]
+                          [ui/TableCell {:style
+                                         {:padding-left (when @editable? apps-views-detail/edit-cell-left-padding)}}
+                           (subtype->pretty @module-subtype)]]
                          ^{:key "nuvla-access"}
                          [ui/TableRow
                           [ui/TableCell {:collapsing true

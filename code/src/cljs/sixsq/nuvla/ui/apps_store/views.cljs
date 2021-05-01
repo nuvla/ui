@@ -45,7 +45,7 @@
 
 
 (defn ModuleCard
-  [{:keys [id name description path subtype logo-url price published versions] :as module} show-published?]
+  [{:keys [id name description path subtype logo-url price published versions tags] :as module} show-published?]
   (let [tr           (subscribe [::i18n-subs/tr])
         map-versions (apps-utils/map-versions-index versions)
         module-id    (if (true? published) (apps-utils/latest-published-module-with-index id map-versions) id)
@@ -68,6 +68,7 @@
                       [ui/Icon {:name (apps-utils/subtype-icon subtype)}]
                       (or name id)]
       :description   (utils-general/truncate desc-summary 180)
+      :content       [uix/Tags {:tags tags}]
       :corner-button (when (and published show-published?)
                        [ui/Label {:corner true} [uix/Icon {:name apps-utils/publish-icon}]])
       :href          detail-href
@@ -141,7 +142,7 @@
     (fn []
       (let []
         [:<>
-         [apps-views-detail/add-modal]
+         [apps-views-detail/AddModal]
          [apps-views-detail/format-error @module]
          [ui/TabPane
           [ControlBarProjects]
@@ -334,7 +335,7 @@
 
 (defn RootView
   []
-  (let [tr (subscribe [::i18n-subs/tr])
+  (let [tr               (subscribe [::i18n-subs/tr])
         active-tab-index (subscribe [::subs/active-tab-index])]
     (dispatch [::apps-events/reset-version])
     (fn []

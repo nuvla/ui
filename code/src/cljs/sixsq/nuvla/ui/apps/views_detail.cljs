@@ -38,6 +38,7 @@
 (def application-kubernetes-subtype "application_kubernetes")
 (def docker-compose-subtype "application")
 
+(def edit-cell-left-padding 24)
 
 (defn LicenseTitle
   []
@@ -312,7 +313,7 @@
                        :on-click #(dispatch [::events/save-logo-url @local-url])}]]]))))
 
 
-(defn add-modal
+(defn AddModal
   []
   (let [tr       (subscribe [::i18n-subs/tr])
         visible? (subscribe [::subs/add-modal-visible?])
@@ -326,7 +327,8 @@
          [uix/ModalHeader {:header (@tr [:add]) :icon "add"}]
 
          [ui/ModalContent {:scrolling false}
-          [ui/CardGroup {:centered true}
+          [ui/CardGroup {:centered    true
+                         :itemsPerRow 3}
 
            [ui/Card
             {:on-click #(do (dispatch [::events/close-add-modal])
@@ -348,13 +350,18 @@
                                        (str/join
                                          "/" (remove str/blank?
                                                      ["apps" parent
-                                                      "New Component?subtype=component"]))])))}
+                                                      "New Application?subtype=application"]))])))}
             [ui/CardContent {:text-align :center}
-             [ui/Header "Component"]
+             [ui/Header (@tr [:application-docker])]
              [:div]
-             [ui/Icon {:name  "grid layout"
-                       :size  :massive
-                       :color (when-not parent :grey)}]]]
+             [ui/IconGroup
+              [ui/Icon {:name  "cubes"
+                        :size :massive
+                        :color (when-not parent :grey)}]
+              [:div [ui/Icon {:name  "docker"
+                              :size :huge
+                              :color (when-not parent :grey)
+                              :style  {:padding-left "150px"}}]]]]]
 
            [ui/Card
             {:on-click (when parent
@@ -364,13 +371,16 @@
                                        (str/join
                                          "/" (remove str/blank?
                                                      ["apps" parent
-                                                      "New Application?subtype=application"]))])))}
+                                                      "New Application?subtype=application_kubernetes"]))])))}
             [ui/CardContent {:text-align :center}
-             [ui/Header "Application"]
+             [ui/Header (@tr [:application-kubernetes])]
              [:div]
-             [ui/Icon {:name  "cubes"
-                       :size  :massive
-                       :color (when-not parent :grey)}]]]]]]))))
+             [ui/IconGroup {:size :massive}
+              [ui/Icon {:name  "cubes"
+                        :color (when-not parent :grey)}]
+              [ui/Image {:src     (if parent "/ui/images/kubernetes.svg" "/ui/images/kubernetes-grey.svg")
+                         :floated "right"
+                         :style   {:width "50px"}}]]]]]]]))))
 
 
 (defn paste-modal
@@ -562,7 +572,7 @@
                   [ui/TableRow
                    [ui/TableCell {:collapsing true
                                   :style      {:padding-bottom 8}} label]
-                   [ui/TableCell {:style {:padding-left (when @editable? 24)}} parent]]))
+                   [ui/TableCell {:style {:padding-left (when @editable? edit-cell-left-padding)}} parent]]))
               (for [x extras]
                 x)]]
             [details-section]]

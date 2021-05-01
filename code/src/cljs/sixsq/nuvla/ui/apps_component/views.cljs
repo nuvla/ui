@@ -377,7 +377,6 @@
          [apps-views-detail/output-parameters-section]
          [apps-views-detail/data-types-section]
          [test-command]
-         [apps-views-detail/add-modal]
          [apps-views-detail/save-modal]
          [apps-views-detail/logo-url-modal]
          [deployment-dialog-views/deploy-modal]]))))

@@ -347,7 +347,8 @@
 
 (defn view-edit
   []
-  (let [module-common (subscribe [::apps-subs/module-common])
+  (let [tr            (subscribe [::i18n-subs/tr])
+        module-common (subscribe [::apps-subs/module-common])
         editable?     (subscribe [::apps-subs/editable?])
         stripe        (subscribe [::main-subs/stripe])]
     (fn []
@@ -365,7 +366,10 @@
          [apps-views-detail/registries-section]
          (when @stripe
            [apps-views-detail/price-section])
-         [apps-views-detail/LicenseSection]
+         [uix/Accordion
+          [apps-views-detail/LicenseSection]
+          :label (str/capitalize (@tr [:license]))
+          :default-open false]
          [ports-section]
          [apps-views-detail/env-variables-section]
          [mounts-section]

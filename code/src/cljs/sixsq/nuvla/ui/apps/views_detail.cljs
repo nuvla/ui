@@ -1047,12 +1047,14 @@
                          (dispatch [::events/validate-form]))
         licenses       (subscribe [::main-subs/config :licenses])
         options        (licenses->dropdown @licenses)
-        is-custom?     (r/atom false)]
+        is-custom?     (r/atom false)
+        {:keys [subtype]} @(subscribe [::subs/module])]
     (fn []
       (let [is-editable? (and @editable? @is-custom?)
             {:keys [license-name]} @license]
         [:<>
-         [:h2 [LicenseTitle]]
+         (when (not= "component" subtype)
+           [:h2 [LicenseTitle]])
          (if (or @editable? (some? @license))
            [ui/Form
             (when @editable?

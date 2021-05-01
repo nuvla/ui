@@ -31,7 +31,8 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
-    [sixsq.nuvla.ui.utils.values :as utils-values]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 
 (def application-kubernetes-subtype "application_kubernetes")
@@ -1132,19 +1133,29 @@
   [details-tab-index]
   (let [tr          (subscribe [::i18n-subs/tr])
         editable?   (subscribe [::subs/editable?])
-        description (subscribe [::subs/description])]
+        description (subscribe [::subs/description])
+        {:keys [logo-url]} @(subscribe [::subs/module])]
     [ui/Segment {:secondary true
                  :color     "purple"
                  :raised    true
                  :padded    true}
-     [ui/Grid
-      [ui/GridColumn {:floated "left"} [:h4 (str/capitalize (@tr [:description]))]]
-      [ui/GridColumn {:floated "right"}
-       (when @editable?
-         [ui/Button {:icon     "pencil"
-                     :compact  true
-                     :on-click #(dispatch [::events/set-active-tab-index details-tab-index])}])]]
-     [ui/ReactMarkdown @description]]))
+     [ui/Grid {:columns 2}
+      [ui/GridRow
+       [ui/GridColumn {:floated "left"}
+        [:h4 (str/capitalize (@tr [:description]))]]
+       [ui/GridColumn
+        [ui/GridColumn {:style {:text-align "right"}}
+         (when @editable?
+           [ui/Button {:icon     "pencil"
+                       :compact  true
+                       :on-click #(dispatch [::events/set-active-tab-index details-tab-index])}])]]]
+      [ui/GridRow
+       [ui/GridColumn
+        [ui/ReactMarkdown @description]]
+       [ui/GridColumn
+        [ui/Segment {:style {:margin 0, :padding 0}}
+         [ui/Image {:src   (or logo-url "")
+                    :style {:object-fit "contain"}}]]]]]]))
 
 
 (defn ShareTitle

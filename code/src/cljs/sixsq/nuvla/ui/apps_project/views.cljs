@@ -78,7 +78,7 @@
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])
         module (subscribe [::apps-subs/module])
-        {:keys [id created updated name parent-path path logo-url]} @module]
+        {:keys [id created updated name parent-path path]} @module]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
@@ -92,7 +92,7 @@
            [ui/TableRow
             [ui/TableCell (str/capitalize (@tr [:name]))]
             [ui/TableCell [values/as-link path :label name :page "apps"]]])
-         (when parent-path
+         (when (seq parent-path)
            [ui/TableRow
             [ui/TableCell (str/capitalize (@tr [:project]))]
             [ui/TableCell [values/as-link parent-path :label parent-path :page "apps"]]])
@@ -106,12 +106,7 @@
            [ui/TableRow
             [ui/TableCell (str/capitalize (@tr [:id]))]
             [ui/TableCell [values/as-link id :label (subs id 11)]]])
-         [apps-views-detail/AuthorVendor]]]]
-      [ui/GridColumn
-       [ui/Segment (merge style/basic {:floated "right"})
-        [ui/Image {:src      (or logo-url "")
-                   :bordered true
-                   :style    {:object-fit "contain"}}]]]]]))
+         [apps-views-detail/AuthorVendor]]]]]]))
 
 
 (defn DetailsPane

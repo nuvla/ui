@@ -283,7 +283,7 @@
         :less-details                                  "fewer details"
         :license                                       "license"
         :license-generator                             "License Generator"
-        :license-generator-details                     "You can is this link to generate your own proprietary license"
+        :license-generator-details                     "You can use this link to generate your own proprietary license"
         :license-not-defined                           "There is no license defined for this app."
         :limit                                         "limit"
         :loading                                       "loading"

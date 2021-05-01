@@ -261,38 +261,31 @@
                  :color     "blue"
                  :raised    true}
      [:h4 (str/capitalize (@tr [:app]))]
-     [ui/Grid {:columns 2}
-      [ui/GridColumn
-       [ui/Table {:basic  "very"
-                  :padded false}
-        [ui/TableBody
-         (when name
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:name]))]
-            [ui/TableCell [values/as-link path :label name :page "apps"]]])
-         (when parent-path
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:project]))]
-            [ui/TableCell [values/as-link parent-path :label parent-path :page "apps"]]])
+     [ui/Table {:basic  "very"
+                :padded false}
+      [ui/TableBody
+       (when name
          [ui/TableRow
-          [ui/TableCell (str/capitalize (@tr [:created]))]
-          [ui/TableCell (if created (time/ago (time/parse-iso8601 created) @locale) (@tr [:soon]))]]
+          [ui/TableCell (str/capitalize (@tr [:name]))]
+          [ui/TableCell [values/as-link path :label name :page "apps"]]])
+       (when parent-path
          [ui/TableRow
-          [ui/TableCell (str/capitalize (@tr [:updated]))]
-          [ui/TableCell (if updated (time/ago (time/parse-iso8601 updated) @locale) (@tr [:soon]))]]
-         (when id
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:id]))]
-            [ui/TableCell [values/as-link id :label (subs id 11)]]])
+          [ui/TableCell (str/capitalize (@tr [:project]))]
+          [ui/TableCell [values/as-link parent-path :label parent-path :page "apps"]]])
+       [ui/TableRow
+        [ui/TableCell (str/capitalize (@tr [:created]))]
+        [ui/TableCell (if created (time/ago (time/parse-iso8601 created) @locale) (@tr [:soon]))]]
+       [ui/TableRow
+        [ui/TableCell (str/capitalize (@tr [:updated]))]
+        [ui/TableCell (if updated (time/ago (time/parse-iso8601 updated) @locale) (@tr [:soon]))]]
+       (when id
          [ui/TableRow
-          [ui/TableCell (str/capitalize (@tr [:version-number]))]
-          [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]
-         [apps-views-detail/AuthorVendor]]]]
-      [ui/GridColumn
-       [ui/Segment (merge style/basic {:floated "right"})
-        [ui/Image {:src      (or logo-url "")
-                   :bordered true
-                   :style    {:object-fit "contain"}}]]]]]))
+          [ui/TableCell (str/capitalize (@tr [:id]))]
+          [ui/TableCell [values/as-link id :label (subs id 11)]]])
+       [ui/TableRow
+        [ui/TableCell (str/capitalize (@tr [:version-number]))]
+        [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]
+       [apps-views-detail/AuthorVendor]]]]))
 
 
 (defn TabMenuDeployments
@@ -536,10 +529,10 @@
             :centered  true}
    [ui/GridRow {:centered true}
     [ui/GridColumn
-     [OverviewModuleSummary]]]
+     [apps-views-detail/OverviewDescription utils/tab-details]]]
    [ui/GridRow
     [ui/GridColumn
-     [apps-views-detail/OverviewDescription utils/tab-details]]]])
+     [OverviewModuleSummary]]]])
 
 
 (defn overview

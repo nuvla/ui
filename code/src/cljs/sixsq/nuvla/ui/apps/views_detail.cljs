@@ -1165,9 +1165,8 @@
        [ui/GridColumn
         [ui/ReactMarkdown @description]]
        [ui/GridColumn
-        [ui/Segment {:style {:margin 0, :padding 0}}
-         [ui/Image {:src   (or logo-url "")
-                    :style {:object-fit "contain"}}]]]]]]))
+        [ui/Image {:src   (or logo-url "")
+                   :style {:object-fit "contain"}}]]]]]))
 
 
 (defn ShareTitle

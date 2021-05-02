@@ -40,14 +40,12 @@
         spec->msg       {::email (@tr [:email-invalid-format])}]
     (fn []
       (let [submit-fn #(when (fv/validate-form-and-show? form)
-                         (let [form-data     (:names->value @form)
-                               email-encoded (-> form-data :email js/encodeURI)]
-                           (dispatch [::events/submit utils/user-tmpl-email-invitation
-                                      (:names->value @form)
-                                      {:success-msg  :invitation-email-success-msg
-                                       :close-modal  false
-                                       :redirect-url (str @config/path-prefix
-                                                          "/set-password")}])))]
+                         (dispatch [::events/submit utils/user-tmpl-email-invitation
+                                    (:names->value @form)
+                                    {:success-msg  :invitation-email-success-msg
+                                     :close-modal  false
+                                     :redirect-url (str @config/path-prefix
+                                                        "/set-password")}]))]
         [ui/Modal
          {:id        "modal-create-user"
           :size      :tiny

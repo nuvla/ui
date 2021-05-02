@@ -224,16 +224,19 @@
 
 
 (defn credential-last-check-ago
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [last-check] :as credential} locale]
   (some-> last-check time/parse-iso8601 (time/ago locale)))
 
 
 (defn credential-status-valid
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [status] :as credential}]
   (some-> status (= "VALID")))
 
 
 (defn credential-is-outdated?
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [last-check] :as credential} delta-minutes]
   (boolean
     (or (nil? last-check)

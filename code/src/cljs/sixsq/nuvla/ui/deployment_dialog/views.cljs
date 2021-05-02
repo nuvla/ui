@@ -3,7 +3,6 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.credentials.utils :as creds-utils]
@@ -22,13 +21,13 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 
 (defmulti StepIcon :step-id)
 
 (defn step-icon
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [icon] :as step-state}]
   [ui/Icon {:name icon}])
 
@@ -128,6 +127,7 @@
 
 
 (defn deploy-modal
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [show-data?]
   (let [open?            (subscribe [::subs/deploy-modal-visible?])
         deployment       (subscribe [::subs/deployment])
@@ -184,4 +184,3 @@
                       :on-click submit-fn}
            [ui/Icon {:name @button-icon}]
            @button-text]]]))))
-

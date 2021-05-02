@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.notifications.events
   (:require
     [cljs.spec.alpha :as s]
-    [re-frame.core :refer [dispatch dispatch-sync reg-event-db reg-event-fx]]
+    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -233,7 +233,7 @@
 (reg-event-fx
   ::fetch-components-number
   (fn [_ [_ component]]
-    (if component
+    (when component
       {::cimi-api-fx/search [(keyword component) {:last 0}
                              #(dispatch [::set-components-number (:count %)])]})))
 

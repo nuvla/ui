@@ -91,6 +91,7 @@
 (defn get-principals
   [acl]
   (->> acl
+       #_ {:clj-kondo/ignore [:unused-binding]}
        (mapcat (fn [[right principal]] principal))
        (set)))
 
@@ -116,7 +117,7 @@
 
 
 (defn ui-acl-format->acl
-  [{:keys [owners principals] :as acl-in-ui-format}]
+  [{:keys [owners principals]}]
   (let [rights-principals (reduce (partial merge-with concat)
                                   (mapcat (fn [[principal rights]]
                                             (map (fn [right]
@@ -133,11 +134,13 @@
 
 
 (defn acl-get-owners-set
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [owners] :as ui-acl}]
   (set owners))
 
 
 (defn acl-get-principals-set
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [principals] :as ui-acl}]
   (set (map first principals)))
 
@@ -162,11 +165,13 @@
 
 
 (defn acl-get-all-used-rights-set
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [principals] :as ui-acl}]
   (set (mapcat second principals)))
 
 
 (defn acl-rights-empty?
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [principals] :as ui-acl}]
   (empty? principals))
 

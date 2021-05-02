@@ -16,12 +16,10 @@
     [sixsq.nuvla.ui.profile.events :as events]
     [sixsq.nuvla.ui.profile.subs :as subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.spec :as us]
-    [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]))
@@ -160,6 +158,7 @@
 
 
 (defn PaymentMethodInputInternal
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [type onChange options] :as props}]
   (case type
     "sepa_debit" [IbanElement
@@ -186,6 +185,7 @@
 (def PaymentMethodInputReactClass (r/adapt-react-class PaymentMethodInputWrapper))
 
 (defn PaymentMethodInput
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [props]
   (let [locale (subscribe [::i18n-subs/locale])
         stripe (subscribe [::main-subs/stripe])]
@@ -228,6 +228,7 @@
 
 
 (defn CustomerFormFields
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [form]
   (let [tr        (subscribe [::i18n-subs/tr])
         is-group? (subscribe [::session-subs/active-claim-is-group?])]
@@ -438,6 +439,7 @@
 
 
 (defn AddPaymentMethodButton
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [open?]
   (let [tr                        (subscribe [::i18n-subs/tr])
         stripe                    (subscribe [::main-subs/stripe])
@@ -688,6 +690,7 @@
               [ui/TableHeaderCell (str/capitalize (@tr [:total]))]
               [ui/TableHeaderCell "PDF"]]]
             [ui/TableBody
+             #_ {:clj-kondo/ignore [:unused-binding]}
              (for [{:keys [number created status due-date invoice-pdf currency total]} @invoices]
                ^{:key (str number)}
                [ui/TableRow
@@ -710,6 +713,7 @@
 
 
 (defn AddCouponButton
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [open?]
   (let [tr          (subscribe [::i18n-subs/tr])
         loading?    (subscribe [::subs/loading? :add-coupon])
@@ -937,6 +941,7 @@
                 [PaymentMethods]])])]]))))
 
 (defmethod panel/render :profile
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [path]
   [:div
    [Content]

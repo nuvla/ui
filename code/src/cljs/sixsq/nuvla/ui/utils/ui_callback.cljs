@@ -22,6 +22,7 @@
    the given keyword, and then calls the provided function with the reformatted
    data."
   [kw f]
+  #_ {:clj-kondo/ignore [:unused-binding]}
   (fn [evt data]
     (-> data
         (js->clj :keywordize-keys true)

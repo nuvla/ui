@@ -10,9 +10,7 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]
-    [clojure.string :as str]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn Icon
@@ -107,6 +105,7 @@
 
 
 (defn EditorYaml
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [text on-change-fn editable?]
   (fn [text on-change-fn editable?]
     [ui/CodeMirror {:value      text
@@ -121,6 +120,7 @@
 
 (defn EditorMarkdown
   "A convenience function to setup the CodeMirror editor component for Markdown."
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [text on-change-fn editable?]
   (fn [text on-change-fn editable?]
     [ui/CodeMirror {:value      text
@@ -138,11 +138,12 @@
 
 
 (defn Accordion
-  [content & {:keys [id label count icon default-open title-size on-open on-close !control-open? styled?]
+  #_ {:clj-kondo/ignore [:unused-binding]}
+  [content & {:keys [default-open title-size on-open on-close !control-open? styled?]
               :or   {default-open true, title-size :h3, on-open #(), on-close #(), styled? true}}]
   (let [active? (or !control-open? (r/atom default-open))]
-    (fn [content & {:keys [id label count icon default-open title-size]
-                    :or   {default-open true, title-size :h3, on-open #(), on-close #()}}]
+    (fn [content & {:keys [id label count on-open on-close icon title-size]
+                    :or   {title-size :h3, on-open #(), on-close #()}}]
       [ui/Accordion {:id        id
                      :fluid     true
                      :styled    styled?
@@ -172,20 +173,6 @@
                        content])])))
 
 
-(defn MoreAccordion
-  [content]
-  (let [tr    (subscribe [::i18n-subs/tr])
-        more? (r/atom false)]
-    (fn [content]
-      [ui/Accordion
-       [ui/AccordionTitle {:on-click #(swap! more? not)
-                           :active   @more?}
-        [ui/Icon {:name "dropdown"}]
-        (@tr [:more])]
-       [ui/AccordionContent {:active @more?}
-        content]])))
-
-
 (defn PageHeader
   [icon title & {:keys [inline]}]
   [:h2 (when inline {:style {:display    :inline
@@ -201,6 +188,7 @@
 
 
 (defn TableRowField
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [name & {:keys [key placeholder default-value spec on-change on-validation
                   required? editable? validate-form? type input-help-msg]}]
   (let [local-validate? (r/atom false)
@@ -250,6 +238,7 @@
 
 
 (defn ModalDanger
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [button-text on-confirm danger-msg header content trigger open on-close modal-action
            control-confirmed?]}]
   (let [tr         (subscribe [::i18n-subs/tr])
@@ -294,9 +283,9 @@
 
 (defn ModalFromButton
   "Defines a standard modal, triggered by a button."
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [button-text on-confirm header icon content trigger open on-close modal-action]}]
-  (let [tr       (subscribe [::i18n-subs/tr])
-        clicked? (r/atom false)]
+  (let [clicked? (r/atom false)]
     (fn [{:keys [button-text on-confirm header icon content trigger open on-close modal-action]}]
       [ui/Modal (cond->
                   {:on-click   (fn [event]
@@ -327,6 +316,7 @@
 
 
 (defn TimeAgo
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [time-str]
   (let [locale        (subscribe [::i18n-subs/locale])
         fn-update-ago #(time/parse-ago % @locale)
@@ -338,6 +328,7 @@
 
 
 (defn CountDown
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [futur-time]
   (let [refresh (r/atom 0)]
     (js/setInterval #(swap! refresh inc) 1000)
@@ -349,6 +340,7 @@
 
 
 (defn WarningMsgNoElements
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [message]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [message]
@@ -357,6 +349,7 @@
 
 
 (defn Tags
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [tags]}]
   (let [uuid (random-uuid)]
     (fn [{:keys [tags]}]

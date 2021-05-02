@@ -16,7 +16,6 @@
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
-    [sixsq.nuvla.ui.deployment.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -33,8 +32,7 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.deployment.utils :as deployment-utils]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.deployment.utils :as deployment-utils]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -238,14 +236,14 @@
 (defn events-table-info
   [events]
   (when-let [start (-> events last :timestamp)]
-    (let [dt-fn (partial utils/assoc-delta-time start)]
+    (let [dt-fn (partial deployment-utils/assoc-delta-time start)]
       (->> events
            (map #(select-keys % event-fields))
            (map dt-fn)))))
 
 
 (defn event-map-to-row
-  [{:keys [id content timestamp category delta-time] :as evt}]
+  [{:keys [id content timestamp category delta-time]}]
   [ui/TableRow
    [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
    [ui/TableCell timestamp]
@@ -255,10 +253,10 @@
 
 
 (defn events-table
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [events]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [events]
-      ;style/autoscroll-x
       [ui/TabPane
        [ui/Table {:basic "very"}
         [ui/TableHeader
@@ -292,7 +290,7 @@
 
 
 (defn job-map-to-row
-  [{:keys [id action time-of-status-change state progress return-code status-message] :as job}]
+  [{:keys [id action time-of-status-change state progress return-code status-message]}]
   [ui/TableRow
    [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
    [ui/TableCell action]
@@ -349,6 +347,7 @@
 
 
 (defn log-controller
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [go-live?]
   (let [locale        (subscribe [::i18n-subs/locale])
         services-list (subscribe [::subs/deployment-services-list])
@@ -496,6 +495,7 @@
 
 
 (defn ShutdownButton
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
@@ -543,6 +543,7 @@
 
 
 (defn DeleteButton
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
@@ -578,6 +579,7 @@
 
 
 (defn CloneButton
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [id data module] :as deployment}]
   (let [tr         (subscribe [::i18n-subs/tr])
         first-step (if data :data :infra-services)
@@ -625,7 +627,7 @@
         tr          (subscribe [::i18n-subs/tr])
         primary-url (subscribe [::subs/url url])
         parameters  (subscribe [::subs/deployment-parameters])
-        started?    (utils/is-started? state)
+        started?    (deployment-utils/is-started? state)
         hostname    (or (get-in @parameters ["hostname" :value]) "")]
     (when (and started? @primary-url (spec-utils/private-ipv4? hostname))
       [ui/Message {:info true}
@@ -657,7 +659,7 @@
         locale     (subscribe [::i18n-subs/locale])
         module     (:module @deployment)
         id         (:id module "")
-        {:keys [created updated name acl description parent-path path logo-url]} module]
+        {:keys [created updated name description parent-path path logo-url]} module]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
@@ -698,7 +700,6 @@
   [{:keys [id state module tags parent credential-name] :as deployment} & {:keys [clickable?]
                                                                            :or   {clickable? true}}]
   (let [tr            (subscribe [::i18n-subs/tr])
-        credential-id (:parent deployment)
         {module-logo-url :logo-url
          module-name     :name
          module-path     :path
@@ -708,7 +709,7 @@
         primary-url   (if clickable?
                         (subscribe [::deployment-subs/deployment-url id primary-url-pattern])
                         (subscribe [::subs/url primary-url-pattern]))
-        started?      (utils/is-started? state)
+        started?      (deployment-utils/is-started? state)
         cred          (or credential-name parent)]
 
     ^{:key id}
@@ -716,7 +717,7 @@
                {:as       :div
                 :link     true
                 :on-click (fn [event]
-                            (dispatch [::history-events/navigate (utils/deployment-href id)])
+                            (dispatch [::history-events/navigate (deployment-utils/deployment-href id)])
                             (.preventDefault event))})
      [ui/Image {:src      (or module-logo-url "")
                 :bordered true
@@ -734,7 +735,7 @@
 
       [ui/Segment (merge style/basic {:floated "right"})
        [:p {:style {:color "initial"}} state]
-       [ui/Loader {:active        (utils/deployment-in-transition? state)
+       [ui/Loader {:active        (deployment-utils/deployment-in-transition? state)
                    :indeterminate true}]]
 
       [ui/CardHeader (if clickable?
@@ -816,7 +817,7 @@
          [ui/TableCell (str/capitalize (@tr [:status]))]
          [ui/TableCell state
           " "
-          (when (utils/deployment-in-transition? state)
+          (when (deployment-utils/deployment-in-transition? state)
             [ui/Icon {:loading true :name "circle notch" :color "grey"}])]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:credential]))]
@@ -898,6 +899,7 @@
 
 
 (defn StatusIcon
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [status & {:keys [corner] :or {corner "bottom center"} :as position}]
   [ui/Popup
    {:position corner
@@ -937,7 +939,7 @@
   (let [deployment  (subscribe [::subs/deployment])
         resource-id (str "deployment/" uuid)]
     (refresh resource-id)
-    (fn [uuid]
+    (fn [_]
       (let [active-index (subscribe [::subs/active-tab-index])]
         [:<>
          [PageHeader]

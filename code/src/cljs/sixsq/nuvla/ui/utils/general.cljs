@@ -199,6 +199,7 @@
 
 
 (defn create-template
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [resource-type form-data]
   (let [[common-map template-map] (split-form-data form-data)]
     (assoc common-map :template template-map)))

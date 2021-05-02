@@ -8,7 +8,6 @@
     [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as subs]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
@@ -78,6 +77,7 @@
 
 
 (defn ErrorJobsMessage
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [job-subs set-active-tab-index-event job-tab-index]
   (let [errors-dissmissed (r/atom #{})]
     (fn [job-subs set-active-tab-index-event job-tab-index]
@@ -99,6 +99,7 @@
 
 
 (defn BulkActionProgress
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [job on-dissmiss header]}]
   (let [open? (r/atom false)]
     (fn [{:keys [job on-dissmiss header]}]
@@ -186,7 +187,7 @@
         (for [i icons]
           [ui/Icon {:key       (str "icon-" (str/join "-" i) "-id")
                     :size      (when (and clickable? selected?) "large")
-                    :loading   (and (pos? value) (when (= "spinner" i)) true)
+                    :loading   (and (pos? value) (= "spinner" i))
                     :className i}])]]
       [ui/StatisticLabel label]])))
 
@@ -194,7 +195,7 @@
 (defn ClickMeStaticPopup
   []
   (let [tr               (subscribe [::i18n-subs/tr])
-        is-small-device? (subscribe [::main-subs/is-small-device?])]
+        is-small-device? (subscribe [::subs/is-small-device?])]
     (when-not @is-small-device?
       [ui/Popup
        {:trigger  (r/as-element [:span])

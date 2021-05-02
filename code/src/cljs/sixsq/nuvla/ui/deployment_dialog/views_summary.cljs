@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.deployment-dialog.views-summary
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :refer [subscribe]]
     [sixsq.nuvla.ui.deployment-dialog.subs :as subs]
     [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.deployment-dialog.views-data :as data-step]

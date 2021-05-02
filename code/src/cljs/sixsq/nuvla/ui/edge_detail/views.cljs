@@ -6,8 +6,6 @@
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
     [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.deployment.events :as deployment-events]
-    [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
     [sixsq.nuvla.ui.deployment.views :as deployment-views]
     [sixsq.nuvla.ui.edge-detail.events :as events]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]
@@ -73,6 +71,7 @@
 
 
 (defn SshKeysDropdown
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [operation on-change-fn]
   (let [tr       (subscribe [::i18n-subs/tr])
         is-add?  (= operation "add-ssh-key")
@@ -81,6 +80,7 @@
                    (subscribe [::subs/nuvlabox-associated-ssh-keys]))]
     (when is-add?
       (dispatch [::events/get-ssh-keys-not-associated #(reset! ssh-keys %)]))
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (fn [operation on-change-fn]
       [ui/FormDropdown
        {:label       "SSH key"
@@ -97,6 +97,7 @@
 
 
 (defn DropdownReleases
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [opts]
   (let [releases (subscribe [::edge-subs/nuvlabox-releases-options])]
     (fn [opts]
@@ -110,6 +111,7 @@
 
 
 (defn AddRevokeSSHButton
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [id] :as resource} operation show? title icon button-text]
   (let [tr            (subscribe [::i18n-subs/tr])
         close-fn      #(reset! show? false)
@@ -130,6 +132,7 @@
                          (reset! loading? true)
                          (dispatch [::events/operation id operation @form-data
                                     on-success-fn on-error-fn]))]
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (fn [resource operation show? title icon button-text]
       [ui/Modal
        {:open       @show?
@@ -184,7 +187,8 @@
                (< (second p) 14))))))
 
 (defn UpdateButton
-  [{:keys [id] :as resource} operation show? title icon button-text]
+  #_ {:clj-kondo/ignore [:unused-binding]}
+  [{:keys [id] :as resource} operation show?]
   (let [tr            (subscribe [::i18n-subs/tr])
         status        (subscribe [::subs/nuvlabox-status])
         close-fn      #(reset! show? false)
@@ -205,8 +209,9 @@
     (swap! form-data assoc :config-files (str/join "\n" config-files))
     (swap! form-data assoc :environment (str/join "\n" environment))
 
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (fn [{:keys [id] :as resource} operation show? title icon button-text]
-      (when (not= (:parent @status))
+      (when (not= (:parent @status))                        ; FIXME: what was intent here?!!
         (dispatch [::events/get-nuvlabox id]))
       (let [correct-nb? (= (:parent @status) id)
             nb-version  (get @status :nuvlabox-engine-version "")]
@@ -289,6 +294,7 @@
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "add-ssh-key"]
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [resource operation]
   (let [tr    (subscribe [::i18n-subs/tr])
         show? (r/atom false)]
@@ -298,6 +304,7 @@
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "revoke-ssh-key"]
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [resource operation]
   (let [show? (r/atom false)]
     (fn [resource operation]
@@ -306,6 +313,7 @@
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "update-nuvlabox"]
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [resource operation]
   (let [tr    (subscribe [::i18n-subs/tr])
         show? (r/atom false)]
@@ -348,6 +356,7 @@
         last-updated (r/atom "1970-01-01T00:00:00Z")
         button-load? (r/atom false)
         peripheral   (subscribe [::subs/nuvlabox-peripheral id])]
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (fn [id]
       (let [{p-id                :id
              p-ops               :operations
@@ -504,7 +513,8 @@
 
 
 (defn OnlineStatusIcon
-  [online & {:keys [corner] :or {corner "bottom center"} :as position}]
+  #_ {:clj-kondo/ignore [:unused-binding]}
+  [online & position]                                       ;FIXME: remove calling position
   [ui/Icon {:name  "power"
             :color (utils/status->color online)}])
 
@@ -516,11 +526,11 @@
         next-heartbeat-moment    (subscribe [::subs/next-heartbeat-moment])
         next-heartbeat-times-ago (time/ago @next-heartbeat-moment)
 
-        last-heartbeat-msg       (if updated
+        last-heartbeat-msg       (when updated
                                    (str "Last heartbeat was " (time/ago updated-moment))
                                    "Heartbeat unavailable")
 
-        next-heartbeat-msg       (if @next-heartbeat-moment
+        next-heartbeat-msg       (when @next-heartbeat-moment
                                    (if (= @status :online)
                                      (str "Next heartbeat is expected " next-heartbeat-times-ago)
                                      (str "Next heartbeat was expected " next-heartbeat-times-ago)))]
@@ -670,8 +680,8 @@
 
 (defn TabOverviewNuvlaBox
   [{:keys [id name description created updated
-           version refresh-interval owner] :as nuvlabox}
-   {:keys [nuvlabox-api-endpoint nuvlabox-engine-version] :as nb-status}
+           version refresh-interval owner]}
+   {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}
    locale edit old-nb-name close-fn]
   [ui/Segment {:secondary true
                :color     "blue"
@@ -800,6 +810,7 @@
 
 
 (defn TabOverviewStatus
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [updated status] :as nb-status} nb-id online-status tr]
   [ui/Segment {:secondary true
                :color     (utils/status->color online-status)
@@ -823,7 +834,7 @@
 
 
 (defn TabOverviewTags
-  [{:keys [tags] :as nuvlabox}]
+  [{:keys [tags]}]
   [ui/Segment {:secondary true
                :color     "teal"
                :raised    true}
@@ -869,6 +880,7 @@
 
 
 (defn TabLocationMap
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [id location] :as nuvlabox}]
   (let [tr           (subscribe [::i18n-subs/tr])
         zoom         (atom 3)
@@ -929,6 +941,7 @@
   []
   (let [peripherals-per-id (subscribe [::subs/nuvlabox-peripherals])]
     (fn []
+      #_ {:clj-kondo/ignore [:unused-binding]}
       (let [peripheral-resources (into [] (map (fn [[id res]] res) @peripherals-per-id))
             per-interface        (group-by :interface peripheral-resources)]
         [ui/TabPane
@@ -970,7 +983,7 @@
               [ui/TableHeaderCell [:span (@tr [:category])]]
               [ui/TableHeaderCell [:span (@tr [:state])]]]]
             [ui/TableBody
-             (for [{:keys [id content timestamp category] :as event} events]
+             (for [{:keys [id content timestamp category]} events]
                ^{:key id}
                [ui/TableRow
                 [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
@@ -1154,11 +1167,11 @@
 
                [ui/TableBody
                 (if @state-selector
-                  (for [{:keys [vulnerability-id product vulnerability-score color] :as selected-severity}
+                  (for [{:keys [vulnerability-id product vulnerability-score color]}
                         (get items-severity (str/upper-case @state-selector))]
                     ^{:key vulnerability-id}
                     [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color (get vulns-in-db vulnerability-id)])
-                  (for [{:keys [vulnerability-id product vulnerability-score color] :as item} items-extended]
+                  (for [{:keys [vulnerability-id product vulnerability-score color]} items-extended]
                     ^{:key vulnerability-id}
                     [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color (get vulns-in-db vulnerability-id)]))]]]]]
 
@@ -1166,7 +1179,7 @@
 
 
 (defn tabs
-  [uuid count-peripherals tr]
+  [count-peripherals tr]
   (let [nuvlabox  (subscribe [::subs/nuvlabox])
         can-edit? (subscribe [::subs/can-edit?])]
     [{:menuItem {:content "Overview"
@@ -1215,8 +1228,8 @@
 
 
 (defn TabsNuvlaBox
-  [uuid]
-  (fn [uuid]
+  []
+  (fn []
     (let [count-peripherals (subscribe [::subs/nuvlabox-peripherals-ids])
           tr                (subscribe [::i18n-subs/tr])
           active-index      (subscribe [::subs/active-tab-index])]
@@ -1226,7 +1239,7 @@
                       :style     {:display        "flex"
                                   :flex-direction "row"
                                   :flex-wrap      "wrap"}}
-        :panes       (tabs uuid (count @count-peripherals) @tr)
+        :panes       (tabs (count @count-peripherals) @tr)
         :activeIndex @active-index
         :onTabChange (fn [_ data]
                        (let [active-index (. data -activeIndex)]
@@ -1267,4 +1280,4 @@
       [MenuBar uuid]
       [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
       [job-views/ProgressJobAction @nb-status]
-      [TabsNuvlaBox uuid]])))
+      [TabsNuvlaBox]])))

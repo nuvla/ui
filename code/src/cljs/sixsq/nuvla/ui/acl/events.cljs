@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.acl.events
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.acl.spec :as spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]

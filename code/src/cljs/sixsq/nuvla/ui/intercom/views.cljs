@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.intercom.views
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :refer [subscribe]]
     [sixsq.nuvla.ui.intercom.subs :as subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]

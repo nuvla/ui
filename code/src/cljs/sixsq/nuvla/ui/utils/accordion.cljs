@@ -1,5 +1,5 @@
 (ns sixsq.nuvla.ui.utils.accordion
-  (:require [re-frame.core :refer [dispatch dispatch-sync]]
+  (:require [re-frame.core :refer [dispatch]]
             [sixsq.nuvla.ui.main.events :as main-events]
             [sixsq.nuvla.ui.utils.form-fields :as form-fields]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))

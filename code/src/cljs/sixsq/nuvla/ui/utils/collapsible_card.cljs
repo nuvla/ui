@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.utils.collapsible-card
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :refer [subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -15,6 +15,7 @@
   [state-atom]
   (let [tr    (subscribe [::i18n-subs/tr])
         more? state-atom]
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (fn [state-atom]
       (let [label     (@tr (if @more? [:less-details] [:more-details]))
             icon-name (if @more? "caret down" "caret right")]
@@ -44,8 +45,10 @@
 
 
 (defn metadata
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [title subtitle description logo icon updated properties] :as meta} rows]
   (let [more? (r/atom false)]
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (fn [{:keys [title subtitle description logo icon updated properties] :as meta} rows]
       [ui/Card {:fluid true}
        [ui/CardContent
@@ -67,18 +70,20 @@
 
 
 (defn metadata-simple
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [rows]
   (let [more? (r/atom false)]
     (fn [rows]
       [:div {:style {:padding-top    5
                      :padding-bottom 5}}
-       (when (or (seq rows))
+       (when (seq rows)
          [more-or-less more?])
        (when @more?
          [table/definition-table rows])])))
 
 
 (defn collapsible-segment
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [title & children]
   (let [visible? (r/atom true)]
     (fn [title & children]

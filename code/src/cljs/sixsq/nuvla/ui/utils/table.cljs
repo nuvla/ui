@@ -22,7 +22,7 @@
   ([rows]
    (definition-table nil nil rows))
   ([title rows]
-   (definition-table nil nil rows))
+   (definition-table nil title rows))
   ([icon title rows]
    (when rows
      (wrapped-table icon

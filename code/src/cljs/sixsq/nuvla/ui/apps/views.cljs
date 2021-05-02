@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.apps.views
   (:require
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.apps-application.views :as apps-application-views]
     [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
@@ -10,7 +10,6 @@
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.views-detail :as views-detail]
     [sixsq.nuvla.ui.deployment.events :as deployment-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
@@ -20,6 +19,7 @@
 
 
 (defn ModuleDetails
+  #_{:clj-kondo/ignore [:unused-binding]}
   [new-subtype]
   (let [module (subscribe [::subs/module])]
     (dispatch [::main-events/changes-protection? false])
@@ -57,8 +57,8 @@
             new-subtype (:subtype @nav-query-params)
             version     (:version @nav-query-params nil)
             is-root?    (empty? module-name)
-            is-new?     (not (empty? new-subtype))]
-        (dispatch [::events/is-new? (not (empty? new-subtype))])
+            is-new?     (boolean (seq new-subtype))]
+        (dispatch [::events/is-new? is-new?])
         (if is-root?
           [apps-store-views/RootView]
           (do
@@ -69,6 +69,7 @@
 
 
 (defmethod panel/render :apps
+  #_{:clj-kondo/ignore [:unused-binding]}
   [path]
   (timbre/set-level! :info)
   [:div

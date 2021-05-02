@@ -107,6 +107,7 @@
 
 
 (defn ram-stats
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [capacity used topic raw-sample] :as ram}]
   (let [percent         (-> (general-utils/percentage used capacity)
                             (general-utils/round-up :n-decimal 0))

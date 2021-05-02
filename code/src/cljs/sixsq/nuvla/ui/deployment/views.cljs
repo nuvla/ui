@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.deployment.views
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.deployment-detail.subs :as deployment-detail-subs]
@@ -15,16 +14,12 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.general :as utils-general]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.style :as utils-style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as log]
-    [sixsq.nuvla.ui.deployment.utils :as deployment-utils]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (defn refresh
@@ -159,8 +154,9 @@
 
 
 (defn row-fn
-  [{:keys [id state module parent nuvlabox infrastructure-service] :as deployment}
-   {:keys [no-actions no-selection no-module-name select-all] :as options}]
+  [{:keys [id state module parent nuvlabox] :as deployment}
+   #_ {:clj-kondo/ignore [:unused-binding]}
+   {:keys [no-actions no-module-name select-all] :as options}]
   (let [credential-id parent
         creds-name    (subscribe [::subs/creds-name-map])
         [primary-url-name
@@ -191,7 +187,7 @@
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}}
       (if nuvlabox
-        (deployment-utils/format-nuvlabox-value nuvlabox)
+        (utils/format-nuvlabox-value nuvlabox)
         (get @creds-name credential-id credential-id))]
      (when show-options?
        [ui/TableCell
@@ -203,10 +199,11 @@
 
 
 (defn vertical-data-table
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [deployments-list options]
   (let [tr                    (subscribe [::i18n-subs/tr])
         is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
-    (fn [deployments-list {:keys [no-actions no-selection no-module-name select-all] :as options}]
+    (fn [deployments-list {:keys [no-actions no-module-name select-all] :as options}]
       (let [show-options? (show-options select-all no-actions)]
         (if (empty? deployments-list)
           [uix/WarningMsgNoElements]
@@ -236,7 +233,6 @@
 (defn DeploymentCard
   [{:keys [id state module tags parent credential-name] :as deployment}]
   (let [tr            (subscribe [::i18n-subs/tr])
-        credential-id (:parent deployment)
         {module-logo-url :logo-url
          module-name     :name
          module-content  :content} module
@@ -276,10 +272,10 @@
               :href          dep-href
               :image         (or module-logo-url "")
               :corner-button (cond
-                               (general-utils/can-operation? "stop" deployment)
+                               (utils-general/can-operation? "stop" deployment)
                                [deployment-detail-views/ShutdownButton deployment :label? true]
 
-                               (general-utils/can-delete? deployment)
+                               (utils-general/can-delete? deployment)
                                [deployment-detail-views/DeleteButton deployment :label? true])
               :state         state
               :loading?      (utils/deployment-in-transition? state)}
@@ -290,7 +286,7 @@
 
 (defn cards-data-table
   [deployments-list]
-  [:div utils-style/center-items
+  [:div style/center-items
    [ui/CardGroup {:centered    true
                   :itemsPerRow 4
                   :stackable   true}
@@ -316,7 +312,8 @@
 
 (defn StatisticStates
   ([] [StatisticStates true])
-  ([clickable?]
+  (#_ {:clj-kondo/ignore [:unused-binding]}
+   [clickable?]
    (let [summary     (subscribe [::subs/deployments-summary])
          summary-all (subscribe [::subs/deployments-summary-all])]
      (fn [clickable?]
@@ -349,7 +346,7 @@
             ::events/set-state-selector ::subs/state-selector]
            [main-components/StatisticState error [(utils/status->icon utils/status-error)] utils/status-error
             clickable? "red" ::events/set-state-selector ::subs/state-selector]
-           (if clickable?
+           (when clickable?
              [main-components/ClickMeStaticPopup])]])))))
 
 
@@ -362,7 +359,7 @@
         select-all?       (subscribe [::subs/select-all?])]
     (fn []
       (let [total-elements (:count @elements)
-            total-pages    (general-utils/total-pages total-elements @elements-per-page)
+            total-pages    (utils-general/total-pages total-elements @elements-per-page)
             deployments    (:resources @elements)]
         [ui/TabPane
          (if @loading?

@@ -11,6 +11,7 @@
 
 
 (defn metadata-section
+  #_{:clj-kondo/ignore [:unused-binding]}
   [{:keys [id name] :as document}]
   [cc/metadata
    {:title    name
@@ -19,6 +20,7 @@
 
 
 (defn description-section
+  #_{:clj-kondo/ignore [:unused-binding]}
   [document]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [{:keys [description]}]
@@ -26,9 +28,11 @@
        [ui/ReactMarkdown {:source description}]])))
 
 
-(defn row-attribute-fn [{:keys [name description type required template-mutable editable help group
-                                display-name order hidden sensitive value-scope] :as entry
-                         :or {template-mutable false}}]
+(defn row-attribute-fn
+  #_ {:clj-kondo/ignore [:unused-binding]}
+  [{:keys [name description type required template-mutable editable help group
+           display-name order hidden sensitive value-scope] :as entry
+    :or {template-mutable false}}]
   (let [characteristics [["display-name" display-name]
                          ["help" help]
                          ["order" order]
@@ -52,6 +56,7 @@
 
 
 (defn attributes-table
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [attributes] :as document}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment (merge style/basic
@@ -67,13 +72,14 @@
         [ui/TableHeaderCell (@tr [:name])]
         [ui/TableHeaderCell (@tr [:description])]
         [ui/TableHeaderCell (@tr [:characteristics-name])]
-        [ui/TableHeaderCell (@tr [:characteristics-value])]
-        ]]
+        [ui/TableHeaderCell (@tr [:characteristics-value])]]]
       (vec (concat [ui/TableBody]
                    (mapcat row-attribute-fn (sort-by :name attributes))))]]))
 
 
-(defn row-action-fn [{:keys [name description uri method inputMessage outputMessage] :as entry}]
+(defn row-action-fn
+  #_ {:clj-kondo/ignore [:unused-binding]}
+  [{:keys [name description uri method inputMessage outputMessage] :as entry}]
   [ui/TableRow
    [ui/TableCell {:collapsing true} name]
    [ui/TableCell {:style {:max-width     "150px"
@@ -110,6 +116,7 @@
 
 
 (defn attributes-section
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [document]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [document]
@@ -118,6 +125,7 @@
 
 
 (defn actions-section
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [document]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [document]
@@ -126,6 +134,7 @@
 
 
 (defn preview-section
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [document]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [document]
@@ -136,6 +145,7 @@
 
 
 (defn docs-detail
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [resource-id]
   (let [documents (subscribe [::docs-subs/documents])]
     (fn [resource-id]

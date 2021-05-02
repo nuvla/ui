@@ -126,6 +126,7 @@
 
 
 (defmethod utils/step-content :infra-services
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [step-id]
   (let [tr             (subscribe [::i18n-subs/tr])
         infra-services (subscribe [::subs/visible-infra-services])

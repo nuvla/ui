@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.data.views
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.apps.utils :as application-utils]
@@ -103,16 +102,17 @@
 
 
 (defn application-list-item
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [id name description subtype created] :as application}]
-  (let [selected-application-id (subscribe [::subs/selected-application-id])]
-    (let [on-click-fn #(dispatch [::events/set-selected-application-id id])]
-      ^{:key id}
-      [ui/ListItem {:active   (and @selected-application-id (= id @selected-application-id))
-                    :on-click on-click-fn}
-       [ui/ListIcon {:name (application-utils/subtype-icon subtype), :size "large"}]
-       [ui/ListContent
-        [ui/ListHeader (str (or name id) " (" (time/ago (time/parse-iso8601 created)) ")")]
-        (or description "")]])))
+  (let [selected-application-id (subscribe [::subs/selected-application-id])
+        on-click-fn #(dispatch [::events/set-selected-application-id id])]
+    ^{:key id}
+    [ui/ListItem {:active   (and @selected-application-id (= id @selected-application-id))
+                  :on-click on-click-fn}
+     [ui/ListIcon {:name (application-utils/subtype-icon subtype), :size "large"}]
+     [ui/ListContent
+      [ui/ListHeader (str (or name id) " (" (time/ago (time/parse-iso8601 created)) ")")]
+      (or description "")]]))
 
 
 (defn application-list
@@ -235,6 +235,7 @@
 
 
 (defn format-data-set-title
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [id name] :as data-set}]
   (let [data-sets (subscribe [::subs/selected-data-set-ids])
         selected? (@data-sets id)]
@@ -312,6 +313,7 @@
 
 
 (defmethod panel/render :data
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [path]
   ;; FIXME: find a better way to initialize credentials and data-sets
   (refresh-credentials)

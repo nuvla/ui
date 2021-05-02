@@ -4,7 +4,7 @@
   (:require
     [cljs.core.async :refer [<!]]
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch reg-fx]]
+    [re-frame.core :refer [reg-fx]]
     [sixsq.nuvla.client.api :as api]
     [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]))
 

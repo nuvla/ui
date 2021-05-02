@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.utils.time
   (:require
     ["moment" :as moment]
-    ["moment/locale/fr"]
-    [clojure.string :as str]))
+    ["moment/locale/fr"]))
 
 
 (def ^:const default-locale "en")

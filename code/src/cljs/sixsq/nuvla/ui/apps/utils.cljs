@@ -2,11 +2,8 @@
   sixsq.nuvla.ui.apps.utils
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [subscribe]]
     [sixsq.nuvla.ui.apps.spec :as spec]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [taoensso.timbre :as log]
-    [clojure.string :as str]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
 (def publish-icon
@@ -140,6 +137,7 @@
   [db]
   (into
     []
+    #_{:clj-kondo/ignore [:unused-binding]}
     (for [[id m] (get-in db [::spec/module-common ::spec/env-variables])]
       (let [{:keys [::spec/env-name ::spec/env-description ::spec/env-value ::spec/env-required]
              :or   {env-required false}} m]
@@ -161,6 +159,7 @@
   [db]
   (into
     []
+    #_{:clj-kondo/ignore [:unused-binding]}
     (for [[id u] (get-in db [::spec/module-common ::spec/urls])]
       [(::spec/url-name u) (::spec/url u)])))
 
@@ -169,6 +168,7 @@
   [db]
   (into
     []
+    #_{:clj-kondo/ignore [:unused-binding]}
     (for [[id op] (get-in db [::spec/module-common ::spec/output-parameters])]
       (let [{:keys [::spec/output-parameter-name ::spec/output-parameter-description]} op]
         (conj
@@ -180,12 +180,14 @@
   [db]
   (into
     []
+    #_{:clj-kondo/ignore [:unused-binding]}
     (for [[id binding] (get-in db [::spec/module-common ::spec/data-types])]
       (let [{:keys [::spec/data-type]} binding]
         (conj data-type)))))
 
 
 (defn db->module
+  #_{:clj-kondo/ignore [:unused-binding]}
   [module commit-map db]
   (let [name              (get-in db [::spec/module-common ::spec/name])
         description       (get-in db [::spec/module-common ::spec/description])
@@ -287,6 +289,7 @@
 
 
 (defn module->db
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [db {:keys [name description parent-path content data-accept-content-types
               path logo-url subtype acl price license] :as module}]
   (-> db
@@ -348,14 +351,15 @@
 
 (defn module->users
   [module]
-  (let [owners  (-> module :acl :owners)
-        users (filter #(not (str/starts-with? % "group/")) owners)]
+  (let [owners (-> module :acl :owners)
+        users  (filter #(not (str/starts-with? % "group/")) owners)]
     users))
 
 
 (defn is-vendor?
   [module]
   (let [vendors (module->groups module)]
+    #_:clj-kondo/ignore
     (not (empty? vendors))))
 
 

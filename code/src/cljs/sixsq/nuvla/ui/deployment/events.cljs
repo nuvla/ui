@@ -149,17 +149,14 @@
 
 (reg-event-fx
   ::set-page
-  (fn [{{:keys [::spec/full-text-search
-                ::spec/page
-                ::spec/elements-per-page] :as db} :db} [_ page]]
+  (fn [{db :db} [_ page]]
     {:db       (assoc db ::spec/page page)
      :dispatch [::refresh]}))
 
 
 (reg-event-fx
   ::set-full-text-search
-  (fn [{{:keys [::spec/page
-                ::spec/elements-per-page] :as db} :db} [_ full-text-search]]
+  (fn [{db :db} [_ full-text-search]]
     {:db       (-> db
                    (assoc ::spec/full-text-search full-text-search)
                    (assoc ::spec/page 1)
@@ -169,8 +166,7 @@
 
 (reg-event-fx
   ::set-additional-filter
-  (fn [{{:keys [::spec/page
-                ::spec/elements-per-page] :as db} :db} [_ additional-filter]]
+  (fn [{db :db} [_ additional-filter]]
     {:db       (assoc db ::spec/additional-filter additional-filter
                          ::spec/page 1
                          ::spec/selected-set #{})
@@ -209,8 +205,7 @@
 
 (reg-event-fx
   ::open-modal-bulk-update
-  (fn [{{:keys [::spec/select-all?
-                ::spec/selected-set] :as db} :db} [_ filter-str module-href]]
+  (fn [{db :db} [_ filter-str module-href]]
     (cond-> {:db (assoc db ::spec/bulk-update-modal {:filter-str  filter-str
                                                      :module-href module-href})}
             module-href (assoc
@@ -257,8 +252,7 @@
 
 (reg-event-fx
   ::bulk-update-operation
-  (fn [{{:keys [::spec/bulk-update-modal
-                ::spec/select-all?]} :db} [_ selected-module]]
+  (fn [{{:keys [::spec/bulk-update-modal]} :db} [_ selected-module]]
     (let [filter-str (:filter-str bulk-update-modal)]
       {::cimi-api-fx/operation-bulk
                  [:deployment
@@ -301,11 +295,11 @@
 
 (reg-event-db
   ::add-bulk-job-monitored
-  (fn [{:keys [::spec/bulk-jobs-monitored] :as db} [_ {:keys [id] :as job}]]
+  (fn [db [_ {:keys [id] :as job}]]
     (update db ::spec/bulk-jobs-monitored assoc id job)))
 
 
 (reg-event-db
   ::dissmiss-bulk-job-monitored
-  (fn [{:keys [::spec/bulk-jobs-monitored] :as db} [_ job-id]]
+  (fn [db [_ job-id]]
     (update db ::spec/bulk-jobs-monitored dissoc job-id)))

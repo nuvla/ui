@@ -3,6 +3,7 @@
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [re-frame.db]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.subs :as acl-subs]
     [sixsq.nuvla.ui.acl.utils :as acl-utils]
@@ -24,15 +25,13 @@
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
-    [sixsq.nuvla.ui.utils.values :as utils-values]
-    [sixsq.nuvla.ui.utils.style :as style]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]))
 
 
 (def application-kubernetes-subtype "application_kubernetes")
@@ -138,10 +137,9 @@
   [module]
   (let [tr      (subscribe [::i18n-subs/tr])
         is-new? (subscribe [::subs/is-new?])
-        {:keys [id name description]} module
-        content (str (or name id) (when description " - ") (utils-values/markdown->summary description))]
+        {:keys [id]} module]
     [uix/ModalFromButton
-     {:on-confirm  #(dispatch [::events/publish])
+     {:on-confirm  #(dispatch [::events/publish id])
       :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
                                   [ui/Icon {:name utils/publish-icon}]
                                   (str/capitalize (@tr [:publish]))])
@@ -178,7 +176,7 @@
         copy-module   (subscribe [::subs/copy-module])]
     (fn []
       (let [subtype          (::spec/subtype @module-common)
-            launchable?      (and subtype (not= "project" subtype))
+            launchable?      (not= "project" subtype)
             launch-disabled? (or @is-new? @page-changed?)
             add?             (= "project" subtype)
             add-disabled?    (or @is-new? @page-changed?)
@@ -272,7 +270,7 @@
                        :focus         true
                        :on-change     (ui-callback/input-callback
                                         #(dispatch [::events/commit-message %]))
-                       :on-key-press  (partial forms/on-return-key save-fn)}]
+                       :on-key-press  (partial utils-forms/on-return-key save-fn)}]
             (@tr [:are-you-sure?]))]
 
          [ui/ModalActions
@@ -289,28 +287,27 @@
         visible?  (subscribe [::subs/logo-url-modal-visible?])
         module    (subscribe [::subs/module])]
     (fn []
-      (let []
-        [ui/Modal {:open       @visible?
-                   :close-icon true
-                   :on-close   #(dispatch [::events/close-logo-url-modal])}
+      [ui/Modal {:open       @visible?
+                 :close-icon true
+                 :on-close   #(dispatch [::events/close-logo-url-modal])}
 
-         [uix/ModalHeader {:header (@tr [:select-logo-url])}]
+       [uix/ModalHeader {:header (@tr [:select-logo-url])}]
 
-         [ui/ModalContent
-          [ui/Input {:default-value (or (:logo-url @module) "")
-                     :placeholder   (@tr [:logo-url-placeholder])
-                     :fluid         true
-                     :auto-focus    true
-                     :on-change     (ui-callback/input-callback #(reset! local-url %))
-                     :on-key-press  (partial forms/on-return-key
-                                             #(dispatch [::events/save-logo-url @local-url]))}]]
+       [ui/ModalContent
+        [ui/Input {:default-value (or (:logo-url @module) "")
+                   :placeholder   (@tr [:logo-url-placeholder])
+                   :fluid         true
+                   :auto-focus    true
+                   :on-change     (ui-callback/input-callback #(reset! local-url %))
+                   :on-key-press  (partial utils-forms/on-return-key
+                                           #(dispatch [::events/save-logo-url @local-url]))}]]
 
-         [ui/ModalActions
-          [uix/Button {:text     "Ok"
-                       :positive true
-                       :disabled (empty? @local-url)
-                       :active   true
-                       :on-click #(dispatch [::events/save-logo-url @local-url])}]]]))))
+       [ui/ModalActions
+        [uix/Button {:text     "Ok"
+                     :positive true
+                     :disabled (empty? @local-url)
+                     :active   true
+                     :on-click #(dispatch [::events/save-logo-url @local-url])}]]])))
 
 
 (defn AddModal
@@ -356,12 +353,12 @@
              [:div]
              [ui/IconGroup
               [ui/Icon {:name  "cubes"
-                        :size :massive
+                        :size  :massive
                         :color (when-not parent :grey)}]
               [:div [ui/Icon {:name  "docker"
-                              :size :huge
+                              :size  :huge
                               :color (when-not parent :grey)
-                              :style  {:padding-left "150px"}}]]]]]
+                              :style {:padding-left "150px"}}]]]]]
 
            [ui/Card
             {:on-click (when parent
@@ -417,7 +414,7 @@
                              (reset! form-valid? (s/valid? ::spec/name %)))]]]]
 
          [ui/ModalActions
-          [forms/validation-error-msg (@tr [:paste-modal-validation-error]) (not @form-valid?)]
+          [utils-forms/validation-error-msg (@tr [:paste-modal-validation-error]) (not @form-valid?)]
           [uix/Button {:text     (@tr [:paste])
                        :positive true
                        :active   true
@@ -433,22 +430,21 @@
         is-module-published?   (subscribe [::subs/is-module-published?])
         latest-published-index (subscribe [::subs/latest-published-index])]
     (fn []
-      (let []
-        [:<>
-         (when (and @is-module-published? (not @is-latest-published?))
-           [ui/Message {:warning true}
-            [ui/MessageHeader (@tr [:warning])]
-            [ui/MessageContent (@tr [:warning-draft-version-1])
-             [:a {:on-click #(dispatch [::events/get-module @latest-published-index])
-                  :style    {:cursor :pointer}} (@tr [:here])]
-             (@tr [:warning-draft-version-2])]])
-         (when (and (not @is-module-published?) (not @is-latest?))
-           [ui/Message {:warning true}
-            [ui/MessageHeader (@tr [:warning])]
-            [ui/MessageContent (@tr [:warning-not-latest-version-1])
-             [:a {:on-click #(dispatch [::events/get-module -1])
-                  :style    {:cursor :pointer}} (@tr [:here])]
-             (@tr [:warning-not-latest-version-2])]])]))))
+      [:<>
+       (when (and @is-module-published? (not @is-latest-published?))
+         [ui/Message {:warning true}
+          [ui/MessageHeader (@tr [:warning])]
+          [ui/MessageContent (@tr [:warning-draft-version-1])
+           [:a {:on-click #(dispatch [::events/get-module @latest-published-index])
+                :style    {:cursor :pointer}} (@tr [:here])]
+           (@tr [:warning-draft-version-2])]])
+       (when (and (not @is-module-published?) (not @is-latest?))
+         [ui/Message {:warning true}
+          [ui/MessageHeader (@tr [:warning])]
+          [ui/MessageContent (@tr [:warning-not-latest-version-1])
+           [:a {:on-click #(dispatch [::events/get-module -1])
+                :style    {:cursor :pointer}} (@tr [:here])]
+           (@tr [:warning-not-latest-version-2])]])])))
 
 
 (defn tuple-to-row [[v1 v2]]
@@ -483,6 +479,7 @@
 
 
 (defn format-error
+  #_{:clj-kondo/ignore [:unused-binding]}
   [error]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [error]
@@ -512,6 +509,7 @@
             [ui/Segment
              [uix/EditorMarkdown
               default-value
+              #_{:clj-kondo/ignore [:unused-binding]}
               (fn [editor data value]
                 (dispatch [::events/description value])
                 (dispatch [::main-events/changes-protection? true])
@@ -532,6 +530,7 @@
 
 
 (defn Details
+  #_{:clj-kondo/ignore [:unused-binding]}
   [{:keys [extras validation-event]}]
   (let [tr               (subscribe [::i18n-subs/tr])
         default-logo-url (subscribe [::subs/default-logo-url])
@@ -543,18 +542,14 @@
                            (dispatch [::main-events/changes-protection? true])
                            (dispatch [::events/validate-form]))]
     (fn [{:keys [extras validation-event]}]
-      (let [{name        ::spec/name
-             parent      ::spec/parent-path
-             description ::spec/description
-             logo-url    ::spec/logo-url
-             subtype     ::spec/subtype
-             path        ::spec/path
-             :or         {name        ""
-                          parent      ""
-                          description ""
-                          logo-url    @default-logo-url
-                          subtype     "project"
-                          path        nil}} @module-common]
+      (let [{name     ::spec/name
+             parent   ::spec/parent-path
+             logo-url ::spec/logo-url
+             subtype  ::spec/subtype
+             :or      {name     ""
+                       parent   ""
+                       logo-url @default-logo-url
+                       subtype  "project"}} @module-common]
         [:<>
          [:h2 [DetailsTitle]]
          [ui/Grid {:stackable true, :reversed :mobile}
@@ -587,6 +582,7 @@
 
 
 (defn input
+  #_{:clj-kondo/ignore [:unused-binding]}
   [id name value placeholder update-event value-spec fluid?]
   (let [local-validate? (r/atom false)
         form-valid?     (subscribe [::subs/form-valid?])]
@@ -857,7 +853,9 @@
   (swap! data-type-options conj {:key option :value option :text option}))
 
 
-(defn single-data-type [dt]
+(defn single-data-type
+  #_{:clj-kondo/ignore [:unused-binding]}
+  [dt]
   (let [editable? (subscribe [::subs/editable?])]
     (fn [dt]
       (let [{:keys [id ::spec/data-type]} dt]
@@ -1027,8 +1025,7 @@
 
 (defn price-section
   []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        editable? (subscribe [::subs/editable?])
+  (let [editable? (subscribe [::subs/editable?])
         price     (subscribe [::subs/price])
         vendor    (subscribe [::profile-subs/vendor])]
     (dispatch [::profile-events/search-existing-vendor])

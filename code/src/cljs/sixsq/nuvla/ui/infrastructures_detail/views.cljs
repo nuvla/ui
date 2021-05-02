@@ -174,7 +174,7 @@
             :required? true, :default-value endpoint,
             :on-change (partial on-change :endpoint)]
 
-           (if (-> @infra-service :cluster-params :coe-manager-endpoint)
+           (when (-> @infra-service :cluster-params :coe-manager-endpoint)
              [uix/TableRowField "COE manager", :key (str id "-subtype"),
               :editable? false, :spec ::spec/endpoint, :validate-form? @validate-form?,
               :required? true, :default-value [:a {:href   (-> @infra-service :cluster-params :coe-manager-endpoint)

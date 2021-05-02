@@ -14,6 +14,7 @@
 
 
 (defn job-map-to-row
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [id action time-of-status-change state progress return-code status-message] :as job}]
   [ui/TableRow
    [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
@@ -26,6 +27,7 @@
 
 
 (defn JobsTable
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [jobs]
   (let [tr                (subscribe [::i18n-subs/tr])
         elements-per-page (subscribe [::subs/jobs-per-page])

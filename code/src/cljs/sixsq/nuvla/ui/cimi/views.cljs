@@ -18,7 +18,6 @@
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.response :as response]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -510,7 +509,7 @@
         path         (subscribe [::main-subs/nav-path])
         query-params (subscribe [::main-subs/nav-query-params])]
     (fn []
-      (let [[_ resource-type resource-id] @path]
+      (let [[_ resource-type _] @path]
         (dispatch [::events/set-collection-name resource-type])
         (when @query-params
           (dispatch [::events/set-query-params @query-params])))
@@ -524,10 +523,11 @@
                        3 [cimi-detail-views/cimi-detail]
                        [menu-bar])]
         [ui/Segment style/basic
-         [uix/PageHeader "code" (utils/capitalize-first-letter (@tr [:api])) :inline inline]
+         [uix/PageHeader "code" (general-utils/capitalize-first-letter (@tr [:api])) :inline inline]
          children]))))
 
 
 (defmethod panel/render :api
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [path]
   [cimi-resource])

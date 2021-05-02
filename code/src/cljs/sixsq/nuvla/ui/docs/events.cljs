@@ -17,6 +17,7 @@
 
 (reg-event-db
   ::set-documents
+  #_ {:clj-kondo/ignore [:unused-binding]}
   (fn [db [_ {:keys [resources] :as docs}]]
     (assoc db ::spec/loading? false
               ::spec/documents (->> resources

@@ -177,8 +177,7 @@
 
 (reg-event-fx
   ::get-templates
-  (fn [{{:keys [::spec/cloud-entry-point
-                ::spec/collections-templates-cache]} :db}
+  (fn [{{:keys [::spec/cloud-entry-point]} :db}
        [_ template-href]]
     (let [resource-type (-> cloud-entry-point
                             :collection-key

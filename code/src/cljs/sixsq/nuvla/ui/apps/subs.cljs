@@ -5,8 +5,7 @@
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.apps.utils :as utils]
-    [sixsq.nuvla.ui.apps.utils :as apps-utils]))
+    [sixsq.nuvla.ui.apps.utils :as utils]))
 
 
 (reg-sub
@@ -41,6 +40,7 @@
 (reg-sub
   ::details-validation-error?
   (fn [db]
+    #_:clj-kondo/ignore
     (not (empty? (::spec/details-validation-errors db)))))
 
 ; Is the form valid?
@@ -113,11 +113,7 @@
                                        (remove nil?)
                                        set)
           registries-infra-set    (set (map :id registries-infra))
-          not-existing-registries (set/difference private-registries-set registries-infra-set)
-          res                     (map (fn [{:keys [id name]}]
-                                         {:key id, :value id, :text (or name id)})
-                                       (concat registries-infra
-                                               (map (fn [id] {:id id}) not-existing-registries)))]
+          not-existing-registries (set/difference private-registries-set registries-infra-set)]
       (map (fn [{:keys [id name]}]
              {:key id, :value id, :text (or name id)})
            (concat registries-infra
@@ -247,14 +243,14 @@
   ::latest-published-version
   :<- [::versions]
   (fn [versions]
-    (-> versions apps-utils/latest-published-version)))
+    (-> versions utils/latest-published-version)))
 
 
 (reg-sub
   ::latest-published-index
   :<- [::versions]
   (fn [versions]
-    (-> versions apps-utils/latest-published-index)))
+    (-> versions utils/latest-published-index)))
 
 
 (reg-sub

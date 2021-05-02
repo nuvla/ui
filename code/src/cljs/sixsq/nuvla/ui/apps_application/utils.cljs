@@ -36,6 +36,7 @@
   [db]
   (into
     []
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (for [[id file] (get-in db [::spec/module-application ::spec/files])]
       (let [{:keys [::spec/file-name ::spec/file-content]} file]
         (conj

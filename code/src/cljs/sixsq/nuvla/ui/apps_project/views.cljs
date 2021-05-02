@@ -1,9 +1,8 @@
 (ns sixsq.nuvla.ui.apps-project.views
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps-project.events :as events]
     [sixsq.nuvla.ui.apps-project.spec :as spec]
     [sixsq.nuvla.ui.apps-project.utils :as utils]
@@ -19,8 +18,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (defn clear-module
@@ -147,10 +145,9 @@
 
 (defn details
   []
-  (let []
-    {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
-                :key     "details"}
-     :pane     {:key "details-pane" :content (r/as-element [DetailsPane])}}))
+  {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
+              :key     "details"}
+   :pane     {:key "details-pane" :content (r/as-element [DetailsPane])}})
 
 
 (defn module-detail-panes

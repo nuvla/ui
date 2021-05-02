@@ -14,16 +14,13 @@
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployment.events :as deployment-events]
-    [sixsq.nuvla.ui.deployment.spec :as deployment-spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.session.spec :as session-spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (def refresh-action-get-module :apps-get-module)
@@ -181,12 +178,6 @@
 
 
 (reg-event-db
-  ::update-add-data
-  (fn [{:keys [::spec/add-data] :as db} [_ path value]]
-    (assoc-in db (concat [::spec/add-data] path) value)))
-
-
-(reg-event-db
   ::set-active-tab-index
   (fn [db [_ active-tab-index]]
     (assoc db ::spec/active-tab-index active-tab-index)))
@@ -220,16 +211,6 @@
   ::acl
   (fn [db [_ acl]]
     (assoc-in db [::spec/module-common ::spec/acl] acl)))
-
-
-(reg-event-db
-  ::update-acl
-  (fn [db [_ id module success-msg]]
-    (let [acl (:acl module)]
-      (-> db
-          ;(assoc-in [::spec/module :acl] acl)
-          (assoc-in [::spec/module-common ::spec/acl] acl)
-          (assoc-in [::main-events/changes-protection?] true)))))
 
 
 (reg-event-db
@@ -536,6 +517,7 @@
 (reg-event-db
   ::docker-compose-validation-complete
   (fn [{:keys [::spec/module] :as db}
+       #_ {:clj-kondo/ignore [:unused-binding]}
        [_ {:keys [return-code target-resource status-message] :as job}]]
     (cond-> db
             (= (:href target-resource)
@@ -639,7 +621,7 @@
 
 (reg-event-fx
   ::paste-module
-  (fn [{{:keys [::spec/copy-module ::session-spec/user ::spec/module] :as db} :db} [_ new-module-name]]
+  (fn [{{:keys [::spec/copy-module ::spec/module]} :db} [_ new-module-name]]
     (let [paste-parent-path (:path module)
           paste-module      (-> copy-module
                                 (assoc :name new-module-name)
@@ -659,10 +641,9 @@
 
 
 (defn version-id->index
-  [{:keys [versions id] :as module}]
+  [{:keys [versions] :as module}]
   (let [version-id   (-> module :content :id)
-        map-versions (utils/map-versions-index versions)
-        index        (ffirst (filter #(-> % second :href (= version-id)) map-versions))]
+        map-versions (utils/map-versions-index versions)]
     (ffirst (filter #(-> % second :href (= version-id)) map-versions))))
 
 
@@ -673,8 +654,8 @@
 
 
 (defn publish-unpublish
-  [module publish?]
-  (let [id            (:id module)
+  [module id publish?]
+  (let [id            (if id id (:id module))
         version-index (version-id->index module)]
     {::cimi-api-fx/operation [(str id "_" version-index)
                               (if publish? "publish" "unpublish")
@@ -693,14 +674,14 @@
 
 (reg-event-fx
   ::publish
-  (fn [{{:keys [::spec/module] :as db} :db} _]
-    (publish-unpublish module true)))
+  (fn [{{:keys [::spec/module]} :db} [_ id]]
+    (publish-unpublish module id true)))
 
 
 (reg-event-fx
   ::un-publish
-  (fn [{{:keys [::spec/module] :as db} :db} _]
-    (publish-unpublish module false)))
+  (fn [{{:keys [::spec/module]} :db} [_ id]]
+    (publish-unpublish module id false)))
 
 
 (reg-event-db

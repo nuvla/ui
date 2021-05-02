@@ -8,6 +8,7 @@
 
 (reg-fx
   ::automatic-logout-at-session-expiry
+  #_ {:clj-kondo/ignore [:unused-binding]}
   (fn [[{:keys [expiry] :as session}]]
     (let [logout-callback       #(dispatch [:sixsq.nuvla.ui.session.events/logout])
           remaining-time-millis (->> expiry (time/delta-milliseconds (time/now)) int)]

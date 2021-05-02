@@ -29,13 +29,17 @@
 
 
 (defn docker-image-view
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [::spec/image-name ::spec/registry ::spec/repository ::spec/tag] :as image}]
   [:span
+   #_ :clj-kondo/ignore
    (when (not (empty? registry))
      [:span registry "/"])
+   #_ :clj-kondo/ignore
    (when (not (empty? repository))
      [:span repository "/"])
    [:span image-name]
+   #_ :clj-kondo/ignore
    (when (not (empty? tag))
      [:span ":" tag])])
 
@@ -48,7 +52,7 @@
         editable? (subscribe [::apps-subs/editable?])]
     (fn []
       (let [{:keys [::spec/image-name ::spec/registry ::spec/repository ::spec/tag]
-             :or   {registry "" repository "" image "" tag ""}} @image
+             :or   {registry "" repository "" image-name "" tag ""}} @image
             label (@tr [:module-docker-image-label])]
         [ui/TableRow
          [ui/TableCell {:collapsing true} (if @editable? (apps-utils/mandatory-name label) label)]
@@ -109,13 +113,12 @@
 
 
 (defn Details []
-  (let []
-    [apps-views-detail/Details
-     {:extras
-      [^{:key "summary-docker-image"}
-       [docker-image]
-       ^{:key "summary-architectures"}
-       [architectures]]}]))
+  [apps-views-detail/Details
+   {:extras
+    [^{:key "summary-docker-image"}
+     [docker-image]
+     ^{:key "summary-architectures"}
+     [architectures]]}])
 
 
 (defn single-port
@@ -153,6 +156,7 @@
                                    #(do (dispatch [::main-events/changes-protection? true])
                                         (dispatch [::events/update-port-protocol id %])
                                         (dispatch [::apps-events/validate-form])))}]
+        #_ :clj-kondo/ignore
         (when (and (not (empty? protocol)) (not= "tcp" protocol))
           [:b protocol]))]
 
@@ -283,11 +287,13 @@
 (defn generate-ports-args
   [ports]
   (let [ports-args
+        #_{:clj-kondo/ignore [:unused-binding]}
         (for [[id port] ports]
           (let [{:keys [::spec/published-port ::spec/target-port ::spec/protocol]} port]
             (str "-p " published-port ":" target-port (when
                                                         (and
                                                           (not= "tcp" protocol)
+                                                          #_ :clj-kondo/ignore
                                                           (not (empty? protocol)))
                                                         (str "/" protocol)))))]
     (str/join " " ports-args)))
@@ -296,24 +302,28 @@
 (defn generate-mounts-args
   [mounts]
   (let [mounts-commands
+        #_{:clj-kondo/ignore [:unused-binding]}
         (for [[id {:keys [::spec/mount-type ::spec/mount-source
                           ::spec/mount-target ::spec/mount-read-only]}] mounts]
-          (conj (str
-                  "--mount type=" mount-type
-                  ",src=" mount-source
-                  ",dst=" mount-target
-                  (when mount-read-only ",readonly"))))]
+          (str
+            "--mount type=" mount-type
+            ",src=" mount-source
+            ",dst=" mount-target
+            (when mount-read-only ",readonly")))]
     (str/join " " mounts-commands)))
 
 
 (defn generate-image-arg
   [{:keys [::spec/registry ::spec/repository ::spec/image-name ::spec/tag]}]
   (str
+    #_ :clj-kondo/ignore
     (when (not (empty? registry))
       (str registry "/"))
+    #_ :clj-kondo/ignore
     (when (not (empty? repository))
       (str repository "/"))
     image-name
+    #_ :clj-kondo/ignore
     (when (not (empty? tag))
       (str ":" tag))))
 

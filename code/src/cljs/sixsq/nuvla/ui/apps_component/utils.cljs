@@ -62,6 +62,7 @@
   [db]
   (into
     []
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (for [[id p] (get-in db [::spec/module-component ::spec/ports])]
       (let [{:keys [::spec/target-port ::spec/published-port ::spec/protocol]
              :or   {target-port nil published-port nil protocol "tcp"}} p]
@@ -75,6 +76,7 @@
   [db]
   (into
     []
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (for [[id m] (get-in db [::spec/module-component ::spec/mounts])]
       (let [{:keys [::spec/mount-source ::spec/mount-target
                     ::spec/mount-read-only ::spec/mount-type]

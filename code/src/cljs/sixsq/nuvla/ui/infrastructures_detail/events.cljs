@@ -26,7 +26,7 @@
 
 (reg-event-fx
   ::edit-infrastructure-service
-  (fn [{{:keys [::spec/infrastructure-service] :as db} :db} _]
+  (fn [{{:keys [::spec/infrastructure-service]} :db} _]
     (let [resource-id (:id infrastructure-service)]
       {::cimi-api-fx/edit [resource-id infrastructure-service
                            #(if (instance? js/Error %)

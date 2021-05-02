@@ -22,11 +22,13 @@
 
 
 (defmulti form-field
+          #_ {:clj-kondo/ignore [:unused-binding]}
           (fn [update-fn form-id {:keys [type] :as param}]
             (keyword type)))
 
 
 (defmethod form-field :default
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [update-fn form-id {:keys [name display-name help hidden sensitive value-scope
                              required editable] :as attribute}]
   (let [{:keys [values value default]} value-scope
@@ -36,6 +38,7 @@
         on-change-fn  (ui-callback/value #(update-fn form-id name %))]
     (when default-value
       (update-fn form-id name default-value))
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (fn [update-fn form-id {:keys [name display-name help hidden sensitive value-scope
                                    required editable] :as attribute}]
       ^{:key name}
@@ -59,12 +62,14 @@
 
 
 (defmethod form-field :integer
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [update-fn form-id {:keys [name display-name help hidden value-scope
                              required editable] :as attribute}]
   (let [label         (or display-name name)
         default-value (or (:value value-scope) (:default value-scope))]
     (when default-value
       (update-fn form-id name default-value))
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (fn [update-fn form-id {:keys [name display-name help hidden value-scope
                                    required editable] :as attribute}]
       ^{:key name}
@@ -79,11 +84,13 @@
                 hidden (assoc :style {:display "none"}))]])))
 
 (defn date-time-form
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [update-fn form-id {:keys [value-scope] :as attribute}]
   (let [locale        (subscribe [::i18n-subs/locale])
         {:keys [value default]} value-scope
         default-value (or value default)
         date-atom     (reagent/atom (when default-value (time/parse-iso8601 default-value)))]
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (fn [update-fn form-id {:keys [name display-name help hidden required editable] :as attribute}]
       (let [label     (or display-name name)
             read-only (not editable)]
@@ -108,11 +115,13 @@
 
 
 (defmethod form-field :boolean
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [update-fn form-id {:keys [name display-name help hidden value-scope
                              required editable] :as attribute}]
   (let [label         (or display-name name)
         default-value (or (:value value-scope) (:default value-scope) false)]
     (update-fn form-id name default-value)
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (fn [update-fn form-id {:keys [name display-name help hidden value-scope
                                    required editable] :as attribute}]
       ^{:key name}
@@ -127,6 +136,7 @@
 
 
 (defmethod form-field :resource-id
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [update-fn form-id {:keys [name display-name help hidden value-scope
                              required editable] :as attribute}]
   (let [label (or display-name name)]

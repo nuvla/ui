@@ -4,7 +4,7 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [day8.re-frame.http-fx]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
+    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
     [sixsq.nuvla.ui.main.effects :as fx]
     [sixsq.nuvla.ui.main.spec :as spec]
@@ -31,6 +31,7 @@
 
 (reg-event-db
   ::set-device
+  #_ {:clj-kondo/ignore [:unused-binding]}
   (fn [{:keys [::spec/device] :as db} [_ new-device]]
     (let [width      (.-innerWidth js/window)
           new-device (cond
@@ -103,6 +104,7 @@
 
 (reg-event-db
   ::action-interval-pause
+  #_ {:clj-kondo/ignore [:unused-binding]}
   (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id] :as action-opts}]]
     (log/info "Pause action-interval:" id)
     (let [{existing-timer :timer :as existing-action} (get actions-interval id)]
@@ -114,6 +116,7 @@
 
 (reg-event-db
   ::action-interval-delete
+  #_ {:clj-kondo/ignore [:unused-binding]}
   (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id] :as action-opts}]]
     (log/info "Delete action-interval: " id)
     (let [{existing-timer :timer} (get actions-interval id)]
@@ -196,7 +199,7 @@
 
 (reg-event-fx
   ::set-notifications
-  (fn [{{:keys [::messages-spec/messages] :as db} :db} [_ {:keys [resources]}]]
+  (fn [{{:keys [::messages-spec/messages]} :db} [_ {:keys [resources]}]]
     (let [existing-notifs  (->> messages
                                 (filter (fn [{message-type :type}] (= message-type :notif)))
                                 (map :uuid)
@@ -261,6 +264,7 @@
 
 (reg-event-db
   ::get-ui-config-bad
+  #_ {:clj-kondo/ignore [:unused-binding]}
   (fn [db [_ response]]
     (log/info "Failed to load UI configuration file")
     db))

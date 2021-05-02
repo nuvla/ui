@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.deployment-dialog.events
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch inject-cofx reg-event-db reg-event-fx]]
+    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.credentials.events :as creds-events]
     [sixsq.nuvla.ui.data.spec :as data-spec]
@@ -13,8 +13,7 @@
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (reg-event-fx
@@ -54,7 +53,7 @@
                 ::data-spec/time-period
                 ::data-spec/full-text-search
                 ::spec/cloud-filter
-                ::data-spec/content-type-filter] :as db} :db} _]
+                ::data-spec/content-type-filter]} :db} _]
     (let [filter       (general-utils/join-and cloud-filter
                                                content-type-filter
                                                full-text-search)
@@ -212,6 +211,7 @@
 
 (reg-event-db
   ::set-check-dct-result
+  #_ {:clj-kondo/ignore [:unused-binding]}
   (fn [{:keys [::spec/deployment] :as db} [_ {:keys [target-resource status-message] :as job}]]
     (if (= (:href target-resource) (:id deployment))
       (let [result (try
@@ -249,6 +249,7 @@
 
 (reg-event-fx
   ::check-dct
+  #_ {:clj-kondo/ignore [:unused-binding]}
   (fn [_ [_ {:keys [id] :as deployment}]]
     {::cimi-api-fx/operation [id "check-dct" #(dispatch [::check-dct-later (:location %)])]}))
 
@@ -322,6 +323,7 @@
 
 (reg-event-fx
   ::open-deployment-modal
+  #_ {:clj-kondo/ignore [:unused-binding]}
   (fn [{db :db} [_ first-step {:keys [parent id] :as deployment}]]
     (when (= :data first-step)
       (dispatch [::get-data-records]))

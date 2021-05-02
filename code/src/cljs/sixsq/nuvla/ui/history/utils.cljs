@@ -2,11 +2,9 @@
   (:require
     [clojure.string :as str]
     [goog.events :as events]
-    [re-frame.core :refer [dispatch]]
     [secretary.core :as secretary]
     [taoensso.timbre :as log])
   (:import
-    [goog History]
     [goog.history EventType Html5History]
     [goog.history.Html5History TokenTransformer]))
 
@@ -36,6 +34,7 @@
           (fn [path-prefix location]
             (get-token path-prefix location)))
     (set! (.. transformer -createUrl)
+          #_ {:clj-kondo/ignore [:unused-binding]}
           (fn [token path-prefix location]
             (str path-prefix token)))
     transformer))
@@ -85,7 +84,7 @@
 (defn host-url
   "Extracts the host URL from the javascript window.location object."
   []
-  (if-let [location (.-location js/window)]
+  (when-let [location (.-location js/window)]
     (let [protocol   (.-protocol location)
           host       (.-hostname location)
           port       (.-port location)

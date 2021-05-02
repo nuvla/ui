@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.apps-application.subs
   (:require
-    [re-frame.core :refer [reg-sub subscribe]]
+    [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.apps-application.spec :as spec]))
 
 
@@ -26,12 +26,14 @@
 (reg-sub
   ::license-error?
   (fn [db]
+    #_ :clj-kondo/ignore
     (not (empty? (::spec/license-validation-errors db)))))
 
 
 (reg-sub
   ::docker-compose-validation-error?
   (fn [db]
+    #_ :clj-kondo/ignore
     (not (empty? (::spec/docker-compose-validation-errors db)))))
 
 

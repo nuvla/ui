@@ -6,8 +6,7 @@
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
     [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]))
 
 
 (reg-sub

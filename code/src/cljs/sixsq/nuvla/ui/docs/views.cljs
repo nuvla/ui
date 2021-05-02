@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.docs.views
   (:require
-    [cljs.core.async :refer [<!]]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.docs-detail.views :as docs-details-view]
     [sixsq.nuvla.ui.docs.events :as events]

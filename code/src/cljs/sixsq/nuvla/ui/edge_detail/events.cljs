@@ -171,7 +171,7 @@
 (reg-event-fx
   ::get-nuvlabox-events
   (fn [{{:keys [::spec/page
-                ::spec/elements-per-page] :as db} :db} [_ href]]
+                ::spec/elements-per-page]} :db} [_ href]]
     (let [filter-str   (str "content/resource/href='" href "'")
           order-by-str "created:desc"
           select-str   "id, content, severity, timestamp, category"

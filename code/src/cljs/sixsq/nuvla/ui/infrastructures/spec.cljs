@@ -1,5 +1,4 @@
 (ns sixsq.nuvla.ui.infrastructures.spec
-  (:require-macros [sixsq.nuvla.ui.utils.spec :refer [only-keys]])
   (:require
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.utils.spec :as utils-spec]))

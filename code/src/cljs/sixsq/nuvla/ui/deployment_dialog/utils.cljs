@@ -69,5 +69,6 @@
 
 
 (defn infra-support-pull?
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [capabilities] :as infrastructure-service}]
   (contains? (set capabilities) "NUVLA_JOB_PULL"))

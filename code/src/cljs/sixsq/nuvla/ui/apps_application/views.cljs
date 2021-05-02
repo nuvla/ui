@@ -4,8 +4,6 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [markdown-to-hiccup.core :as md]
-    [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps-application.events :as events]
     [sixsq.nuvla.ui.apps-application.spec :as spec]
     [sixsq.nuvla.ui.apps-application.subs :as subs]
@@ -26,12 +24,9 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.utils.time :as time]
-    [clojure.string :as str]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [taoensso.timbre :as log]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.main.components :as main-components]))
 
@@ -41,7 +36,9 @@
   (dispatch [::events/clear-module]))
 
 
-(defn single-file [{:keys [id ::spec/file-name ::spec/file-content]}]
+(defn single-file
+  #_{:clj-kondo/ignore [:unused-binding]}
+  [{:keys [id ::spec/file-name ::spec/file-content]}]
   (let [form-valid?     (subscribe [::apps-subs/form-valid?])
         editable?       (subscribe [::apps-subs/editable?])
         local-validate? (r/atom false)]
@@ -163,9 +160,8 @@
         editable?      (subscribe [::apps-subs/editable?])
         default-value  @docker-compose]
     (fn []
-      (let [validate-dc (subscribe [::apps-subs/validate-docker-compose])
-            validate?   @validate-form?
-            valid?      (s/valid? ::spec/docker-compose @docker-compose)]
+      (let [validate? @validate-form?
+            valid?    (s/valid? ::spec/docker-compose @docker-compose)]
         [uix/Accordion
          [:<>
           [:div {:style {:margin-bottom "10px"}} "Env substitution"
@@ -173,6 +169,7 @@
            [DockerComposeCompatibility compatibility unsupp-opts]]
           [uix/EditorYaml
            default-value
+           #_{:clj-kondo/ignore [:unused-binding]}
            (fn [editor data value]
              (dispatch [::events/update-docker-compose value])
              (dispatch [::main-events/changes-protection? true])
@@ -187,7 +184,7 @@
                  (if (str/blank? error-msg)
                    (@tr [:module-k8s-manifest-error])
                    error-msg)])))]
-         :label "Manifes"
+         :label "Manifest"
          :default-open true]))))
 
 
@@ -211,6 +208,7 @@
            [DockerComposeCompatibility compatibility unsupp-opts]]
           [uix/EditorYaml
            default-value
+           #_ {:clj-kondo/ignore [:unused-binding]}
            (fn [editor data value]
              (dispatch [::events/update-docker-compose value])
              (dispatch [::main-events/changes-protection? true])
@@ -256,7 +254,7 @@
         module-content-id    (subscribe [::apps-subs/module-content-id])
         version-index        (apps-utils/find-current-version @versions-map @module-content-id)
         is-module-published? (subscribe [::apps-subs/is-module-published?])
-        {:keys [id created updated name parent-path path logo-url]} @module]
+        {:keys [id created updated name parent-path path]} @module]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
@@ -308,10 +306,9 @@
 
 (defn deployments
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    {:menuItem {:content (r/as-element [TabMenuDeployments])
-                :key     "deployments"}
-     :pane     {:key "deplyment-pane" :content (r/as-element [DeploymentsPane])}}))
+  {:menuItem {:content (r/as-element [TabMenuDeployments])
+              :key     "deployments"}
+   :pane     {:key "deplyment-pane" :content (r/as-element [DeploymentsPane])}})
 
 
 (defn TabMenuVersions
@@ -327,10 +324,9 @@
 
 (defn versions
   []
-  (let []
-    {:menuItem {:content (r/as-element [TabMenuVersions])
-                :key     "versions"}
-     :pane     {:key "versions-pane" :content (r/as-element [VersionsPane])}}))
+  {:menuItem {:content (r/as-element [TabMenuVersions])
+              :key     "versions"}
+   :pane     {:key "versions-pane" :content (r/as-element [VersionsPane])}})
 
 
 (defn TabMenuConfiguration
@@ -341,28 +337,25 @@
 
 (defn ConfigurationPane
   []
-  (let []
-    [:<>
-     [:h2 [apps-views-detail/ConfigurationTitle]]
-     [apps-views-detail/env-variables-section]
-     [files-section]
-     [apps-views-detail/urls-section]
-     [apps-views-detail/output-parameters-section]
-     [apps-views-detail/data-types-section]]))
+  [:<>
+   [:h2 [apps-views-detail/ConfigurationTitle]]
+   [apps-views-detail/env-variables-section]
+   [files-section]
+   [apps-views-detail/urls-section]
+   [apps-views-detail/output-parameters-section]
+   [apps-views-detail/data-types-section]])
 
 
 (defn configuration
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    {:menuItem {:content (r/as-element [TabMenuConfiguration])
-                :key     "configuration"}
-     :pane     {:key "configuration-pane" :content (r/as-element [ConfigurationPane])}}))
+  {:menuItem {:content (r/as-element [TabMenuConfiguration])
+              :key     "configuration"}
+   :pane     {:key "configuration-pane" :content (r/as-element [ConfigurationPane])}})
 
 
 (defn TabMenuLicense
   []
-  (let [tr     (subscribe [::i18n-subs/tr])
-        error? (subscribe [::subs/license-error?])]
+  (let [error? (subscribe [::subs/license-error?])]
     [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
      [apps-views-detail/LicenseTitle]]))
 
@@ -381,9 +374,8 @@
 
 (defn TabMenuPricing
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [:span
-     [apps-views-detail/PricingTitle]]))
+  [:span
+   [apps-views-detail/PricingTitle]])
 
 
 (defn PricingPane
@@ -406,10 +398,9 @@
 
 (defn pricing
   []
-  (let []
-    {:menuItem {:content (r/as-element [TabMenuPricing])
-                :key     "pricing"}
-     :pane     {:key "pricing-pane" :content (r/as-element [PricingPane])}}))
+  {:menuItem {:content (r/as-element [TabMenuPricing])
+              :key     "pricing"}
+   :pane     {:key "pricing-pane" :content (r/as-element [PricingPane])}})
 
 
 (defn TabMenuDocker
@@ -465,8 +456,7 @@
 
 (defn TabMenuDetails
   []
-  (let [tr     (subscribe [::i18n-subs/tr])
-        error? (subscribe [::subs/details-validation-error?])]
+  (let [error? (subscribe [::subs/details-validation-error?])]
     [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
      [apps-views-detail/DeploymentsTitle]]))
 
@@ -480,7 +470,6 @@
 
 (defn DetailsPane []
   (let [tr             (subscribe [::i18n-subs/tr])
-        is-new?        (subscribe [::apps-subs/is-new?])
         module-subtype (subscribe [::apps-subs/module-subtype])
         active-index   (subscribe [::apps-subs/active-tab-index])
         editable?      (subscribe [::apps-subs/editable?])]
@@ -506,10 +495,9 @@
 
 (defn details
   []
-  (let []
-    {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
-                :key     "details"}
-     :pane     {:key "details-pane" :content (r/as-element [DetailsPane])}}))
+  {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
+              :key     "details"}
+   :pane     {:key "details-pane" :content (r/as-element [DetailsPane])}})
 
 
 (defn TabMenuOverview
@@ -534,11 +522,10 @@
 
 (defn overview
   []
-  (let []
-    {:menuItem {:content (r/as-element [TabMenuOverview])
-                :key     "overview"
-                :icon    "info"}
-     :pane     {:key "overview-pane" :content (r/as-element [OverviewPane])}}))
+  {:menuItem {:content (r/as-element [TabMenuOverview])
+              :key     "overview"
+              :icon    "info"}
+   :pane     {:key "overview-pane" :content (r/as-element [OverviewPane])}})
 
 
 (defn module-detail-panes

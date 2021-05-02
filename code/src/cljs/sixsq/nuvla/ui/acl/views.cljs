@@ -7,15 +7,13 @@
     [sixsq.nuvla.ui.acl.events :as events]
     [sixsq.nuvla.ui.acl.subs :as subs]
     [sixsq.nuvla.ui.acl.utils :as utils]
-    [sixsq.nuvla.ui.acl.utils :as acl-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn is-advanced-mode?
@@ -40,6 +38,7 @@
 
 
 (defn AclTableHeaders
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [mode] :as opts}]
   (let [tr                (subscribe [::i18n-subs/tr])
         border-left-style {:style {:border-left "1px solid rgba(34,36,38,.1)"}}]
@@ -113,11 +112,13 @@
 
 
 (defn RightCheckbox
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [on-change read-only mode] :as opts} ui-acl row-number principal rights right-kw]
   (let [checked?       (contains? rights right-kw)
         indeterminate? (and
                          (= @mode :simple)
                          (not checked?)
+                         #_:clj-kondo/ignore
                          (not (empty? (set/intersection rights (set (utils/same-base-right right-kw))))))]
     [ui/Checkbox {:checked       checked?
                   :indeterminate indeterminate?
@@ -164,6 +165,7 @@
 
 
 (defn DropdownPrincipals
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [opts ui-acl]
   (let [open   (r/atom false)
         users  (subscribe [::subs/users-options])
@@ -222,6 +224,7 @@
 
 
 (defn AddRight
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [on-change mode] :as opts} ui-acl]
   (let [empty-permission {:principal nil
                           :right     nil}
@@ -232,6 +235,7 @@
                               (swap! ui-acl utils/acl-add-principal-with-right principal right)
                               (on-change (utils/ui-acl-format->acl @ui-acl))
                               (reset! new-permission empty-permission)))]
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (fn [{:keys [mode] :as opts} ui-acl]
 
       [ui/TableRow
@@ -256,6 +260,7 @@
 
 
 (defn AclOwners
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [opts ui-acl]
   (let [mobile? (subscribe [::main-subs/is-device? :mobile])
         tr      (subscribe [::i18n-subs/tr])]
@@ -319,6 +324,7 @@
 
 
 (defn AclWidget
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [default-value read-only mode] :as opts} & [ui-acl]]
   (let [mode   (r/atom (or mode :simple))
         ui-acl (or ui-acl
@@ -349,7 +355,7 @@
                           (when-let [user-id (and can-edit?
                                                   @(subscribe [::session-subs/active-claim]))]
                             {:owners [user-id]}))
-        ui-acl        (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
+        ui-acl        (when acl (r/atom (utils/acl->ui-acl-format acl)))]
     {:menuItem {:content "Share"
                 :key     "share"
                 :icon    "users"}
@@ -365,6 +371,7 @@
 
 
 (defn AclButton
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [default-value read-only default-active?] :as opts}]
   (let [tr      (subscribe [::i18n-subs/tr])
         active? (r/atom default-active?)

@@ -3,6 +3,7 @@
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [re-frame.db]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.credentials.views :as cred-views]
@@ -54,6 +55,7 @@
 
 
 (defn ServiceCard
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [id name description path subtype logo-url swarm-enabled online] :as service}]
   (let [icon-or-image (get service-icons (keyword subtype) "question circle")
         status        (cond
@@ -161,6 +163,7 @@
   (get utils/cloud-params-defaults (utils/mgmt-cred-subtype-by-id db cred-id)))
 
 (defn row-csp-credential-selector
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [subtypes additional-filter disabled? value-spec on-change]
   (let [tr              (subscribe [::i18n-subs/tr])
         mgmt-creds      (subscribe [::subs/management-credentials-available])
@@ -168,6 +171,7 @@
         local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
     (dispatch [::events/fetch-coe-management-credentials-available subtypes additional-filter])
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (fn [subtypes additional-filter disabled? value-spec on-change]
       (let [value           (:management-credential @service)
             validate?       (or @local-validate? @validate-form?)
@@ -203,6 +207,7 @@
 
 
 (defn ssh-keys-selector
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [disabled?]
   (let [ssh-keys         (subscribe [::subs/ssh-keys])
         ssh-keys-options (subscribe [::subs/ssh-keys-options])
@@ -240,7 +245,9 @@
   [:span ff/nbsp
    (ff/help-popup (r/as-element
                     [:span [:p text]
-                     (if cred-subtype [:a {:href (utils/cloud-param-default-value cred-subtype :cloud-doc-link) :target "_blank"} "See this link."])])
+                     (when cred-subtype
+                       [:a {:href (utils/cloud-param-default-value cred-subtype :cloud-doc-link)
+                            :target "_blank"} "See this link."])])
                   :on (if cred-subtype "focus" "hover"))])
 
 
@@ -345,12 +352,12 @@
             :default-value cloud-vm-size, :spec ::spec/cloud-vm-size, :on-change (partial on-change :cloud-vm-size),
             :validate-form? @validate-form?]
 
-           (if (or (nil? @mgmt-cred-subtype) (get-in utils/cloud-params-defaults [@mgmt-cred-subtype :cloud-vm-disk-size]))
+           (when (or (nil? @mgmt-cred-subtype) (get-in utils/cloud-params-defaults [@mgmt-cred-subtype :cloud-vm-disk-size]))
              [uix/TableRowField [:div "VM Disk Size (GB)" (cloud-help-popup "Cloud specific VM disk size definition." @mgmt-cred-subtype)],
               :placeholder "", :editable? @mgmt-cred-set?, :required? false, :default-value cloud-vm-disk-size,
               :spec ::spec/cloud-vm-disk-size, :on-change (partial on-change :cloud-vm-disk-size), :validate-form? @validate-form?])
 
-           (if (= utils/infra-service-subtype-google @mgmt-cred-subtype)
+           (when (= utils/infra-service-subtype-google @mgmt-cred-subtype)
              [uix/TableRowField [:div "Project ID" (cloud-help-popup "GCP Project ID." @mgmt-cred-subtype)],
               :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-project,
               :spec ::spec/cloud-project, :on-change (partial on-change :cloud-project), :validate-form? @validate-form?])
@@ -364,13 +371,11 @@
             :placeholder "", :editable? @mgmt-cred-set?, :required? false, :default-value cloud-vm-image,
             :spec ::spec/cloud-vm-image, :on-change (partial on-change :cloud-vm-image), :validate-form? @validate-form?]
 
-           (if (= utils/infra-service-subtype-exoscale @mgmt-cred-subtype)
+           (when (= utils/infra-service-subtype-exoscale @mgmt-cred-subtype)
              [uix/TableRowField [:div "Security Group" (cloud-help-popup "Cloud specific security group." @mgmt-cred-subtype)],
               :editable? @mgmt-cred-set?, :required? true, :placeholder "", :default-value cloud-security-group,
               :spec ::spec/cloud-security-group, :on-change (partial on-change :cloud-security-group),
-              :validate-form? @validate-form?])
-
-           ]]]))))
+              :validate-form? @validate-form?])]]]))))
 
 
 (defn service-registry
@@ -451,10 +456,9 @@
   (dispatch-sync [form-validation-event])
   (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)]
     (when form-valid?
-      (do
-        (dispatch [::events/set-validate-form? false])
-        (dispatch [::events/edit-infra-service])
-        (dispatch [::intercom-events/set-event "Last create Infrastructure Service" (time/timestamp)])))))
+      (dispatch [::events/set-validate-form? false])
+      (dispatch [::events/edit-infra-service])
+      (dispatch [::intercom-events/set-event "Last create Infrastructure Service" (time/timestamp)]))))
 
 
 (defn ServiceModal

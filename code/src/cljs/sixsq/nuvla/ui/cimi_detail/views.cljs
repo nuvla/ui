@@ -41,6 +41,7 @@
 
 
 (defn action-button-icon
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [menu-item-label button-confirm-label icon title-text body on-confirm on-cancel & [scrolling? position]]
   (let [tr    (subscribe [::i18n-subs/tr])
         show? (r/atom false)]
@@ -73,6 +74,7 @@
 (defn edit-button
   "Creates an edit that will bring up an edit dialog and will save the
    modified resource when saved."
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [data action-fn]
   (let [tr   (subscribe [::i18n-subs/tr])
         text (atom (general-utils/edn->json data))]
@@ -96,6 +98,7 @@
 (defn delete-button
   "Creates a button that will bring up a delete dialog and will execute the
    delete when confirmed."
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [data action-fn]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [data action-fn]
@@ -109,16 +112,20 @@
        (constantly nil)])))
 
 
-(defmulti other-button (fn [{:keys [resource-type] :as resource} operation]
+(defmulti other-button
+          #_ {:clj-kondo/ignore [:unused-binding]}
+          (fn [{:keys [resource-type] :as resource} operation]
                          [resource-type operation]))
 
 
 (defmethod other-button :default
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [{:keys [resource-type] :as resource} operation]
   (let [tr         (subscribe [::i18n-subs/tr])
         params     (subscribe [::cimi-subs/resource-metadata-input-parameters resource-type operation])
         form-data  (atom {})
         op-display (general-utils/name->display-name operation)]
+    #_ {:clj-kondo/ignore [:unused-binding]}
     (fn [{:keys [id] :as resource} operation]
       [action-button-icon
        op-display

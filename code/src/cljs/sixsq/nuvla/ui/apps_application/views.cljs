@@ -28,8 +28,7 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
-    [sixsq.nuvla.ui.main.components :as main-components]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.main.components :as main-components]))
 
 
 (defn clear-module
@@ -464,7 +463,6 @@
 
 (defn subtype->pretty
   [subtype]
-  (log/error "subtype:" subtype)
   (case subtype
     "application" "Docker"
     "application_kubernetes" "Kubernetes"

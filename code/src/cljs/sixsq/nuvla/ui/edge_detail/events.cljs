@@ -3,6 +3,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [sixsq.nuvla.ui.deployment.events :as deployment-events]
     [sixsq.nuvla.ui.edge-detail.spec :as spec]
     [sixsq.nuvla.ui.edge.utils :as edge-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -198,8 +199,9 @@
                                     :last    10000
                                     :orderby "id"}
                                    #(dispatch [::set-nuvlabox-peripherals %])]
-             :dispatch-n          [[::get-nuvlabox-events id]
-                                   [::job-events/get-jobs id]]}
+             :fx                  [[:dispatch [::get-nuvlabox-events id]]
+                                   [:dispatch [::job-events/get-jobs id]]
+                                   [:dispatch [::deployment-events/get-nuvlabox-deployments id]]]}
             (not= (:id nuvlabox) id) (assoc :db (merge db spec/defaults)))))
 
 

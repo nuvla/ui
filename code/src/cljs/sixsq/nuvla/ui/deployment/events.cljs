@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.deployment.utils :as utils]
+    [sixsq.nuvla.ui.edge-detail.spec :as edge-detail-spec]
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -86,15 +87,16 @@
   (fn [{{:keys [::spec/full-text-search
                 ::spec/additional-filter
                 ::spec/state-selector
-                ::spec/nuvlabox
+                ::edge-detail-spec/nuvlabox
                 ::spec/page
                 ::spec/elements-per-page]} :db} _]
-    (let [state (if (= "all" state-selector) nil state-selector)]
+    (let [state (if (= "all" state-selector) nil state-selector)
+          nb-id (:id nuvlabox)]
       {::cimi-api-fx/search [:deployment (utils/get-query-params
                                            {:full-text-search  full-text-search
                                             :additional-filter additional-filter
                                             :state-selector    state
-                                            :nuvlabox          nuvlabox
+                                            :nuvlabox          nb-id
                                             :page              page
                                             :elements-per-page elements-per-page})
                              #(dispatch [::set-deployments %])]})))

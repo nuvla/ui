@@ -275,8 +275,7 @@
 
                                (utils-general/can-delete? deployment)
                                [deployment-detail-views/DeleteButton deployment :label? true])
-              :state         state
-              :loading?      (utils/deployment-in-transition? state)}
+              :state         state}
 
              (not @select-all?) (assoc :on-select #(dispatch [::events/select-id id])
                                        :selected? @is-selected?))]))

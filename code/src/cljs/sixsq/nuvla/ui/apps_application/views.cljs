@@ -37,8 +37,7 @@
 
 
 (defn single-file
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [{:keys [id ::spec/file-name ::spec/file-content]}]
+  [{:keys [_id ::spec/file-name ::spec/file-content]}]
   (let [form-valid?     (subscribe [::apps-subs/form-valid?])
         editable?       (subscribe [::apps-subs/editable?])
         local-validate? (r/atom false)]
@@ -169,8 +168,7 @@
            [DockerComposeCompatibility compatibility unsupp-opts]]
           [uix/EditorYaml
            default-value
-           #_{:clj-kondo/ignore [:unused-binding]}
-           (fn [editor data value]
+           (fn [_editor _data value]
              (dispatch [::events/update-docker-compose value])
              (dispatch [::main-events/changes-protection? true])
              (dispatch [::apps-events/validate-form]))
@@ -208,8 +206,7 @@
            [DockerComposeCompatibility compatibility unsupp-opts]]
           [uix/EditorYaml
            default-value
-           #_ {:clj-kondo/ignore [:unused-binding]}
-           (fn [editor data value]
+           (fn [_editor _data value]
              (dispatch [::events/update-docker-compose value])
              (dispatch [::main-events/changes-protection? true])
              (dispatch [::apps-events/validate-form]))

@@ -479,8 +479,7 @@
 
 
 (defn format-error
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [error]
+  [_error]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [error]
       (when (instance? js/Error error)
@@ -509,8 +508,7 @@
             [ui/Segment
              [uix/EditorMarkdown
               default-value
-              #_{:clj-kondo/ignore [:unused-binding]}
-              (fn [editor data value]
+              (fn [_editor _data value]
                 (dispatch [::events/description value])
                 (dispatch [::main-events/changes-protection? true])
                 (dispatch [::events/validate-form]))
@@ -530,8 +528,7 @@
 
 
 (defn Details
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [{:keys [extras validation-event]}]
+  [{:keys [_extras _validation-event]}]
   (let [tr               (subscribe [::i18n-subs/tr])
         default-logo-url (subscribe [::subs/default-logo-url])
         module-common    (subscribe [::subs/module-common])
@@ -582,8 +579,7 @@
 
 
 (defn input
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [id name value placeholder update-event value-spec fluid?]
+  [_id _name _value _placeholder _update-event _value-spec _fluid?]
   (let [local-validate? (r/atom false)
         form-valid?     (subscribe [::subs/form-valid?])]
     (fn [id name value placeholder update-event value-spec fluid?]
@@ -854,8 +850,7 @@
 
 
 (defn single-data-type
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [dt]
+  [_dt]
   (let [editable? (subscribe [::subs/editable?])]
     (fn [dt]
       (let [{:keys [id ::spec/data-type]} dt]

@@ -31,8 +31,7 @@
 
 (reg-event-db
   ::set-device
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  (fn [{:keys [::spec/device] :as db} [_ new-device]]
+  (fn [{:keys [::spec/device] :as db}]
     (let [width      (.-innerWidth js/window)
           new-device (cond
                        (< width 768) :mobile
@@ -104,8 +103,7 @@
 
 (reg-event-db
   ::action-interval-pause
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id] :as action-opts}]]
+  (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id] :as _action-opts}]]
     (log/info "Pause action-interval:" id)
     (let [{existing-timer :timer :as existing-action} (get actions-interval id)]
       (when existing-timer
@@ -116,8 +114,7 @@
 
 (reg-event-db
   ::action-interval-delete
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id] :as action-opts}]]
+  (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id] :as _action-opts}]]
     (log/info "Delete action-interval: " id)
     (let [{existing-timer :timer} (get actions-interval id)]
       (when existing-timer
@@ -264,8 +261,7 @@
 
 (reg-event-db
   ::get-ui-config-bad
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  (fn [db [_ response]]
+  (fn [db [_ _response]]
     (log/info "Failed to load UI configuration file")
     db))
 

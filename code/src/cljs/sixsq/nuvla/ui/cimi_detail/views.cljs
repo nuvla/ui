@@ -41,8 +41,7 @@
 
 
 (defn action-button-icon
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [menu-item-label button-confirm-label icon title-text body on-confirm on-cancel & [scrolling? position]]
+  [_menu-item-label _button-confirm-label _icon _title-text _body _on-confirm _on-cancel & [_scrolling? _position]]
   (let [tr    (subscribe [::i18n-subs/tr])
         show? (r/atom false)]
     (fn [menu-item-label button-confirm-label icon title-text body on-confirm on-cancel & [scrolling? position]]
@@ -74,8 +73,7 @@
 (defn edit-button
   "Creates an edit that will bring up an edit dialog and will save the
    modified resource when saved."
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [data action-fn]
+  [data _action-fn]
   (let [tr   (subscribe [::i18n-subs/tr])
         text (atom (general-utils/edn->json data))]
     (fn [{:keys [id] :as data} action-fn]
@@ -98,8 +96,7 @@
 (defn delete-button
   "Creates a button that will bring up a delete dialog and will execute the
    delete when confirmed."
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [data action-fn]
+  [_data _action-fn]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [data action-fn]
       [action-button-icon
@@ -113,20 +110,17 @@
 
 
 (defmulti other-button
-          #_ {:clj-kondo/ignore [:unused-binding]}
-          (fn [{:keys [resource-type] :as resource} operation]
+          (fn [{:keys [resource-type] :as _resource} operation]
                          [resource-type operation]))
 
 
 (defmethod other-button :default
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [resource-type] :as resource} operation]
+  [{:keys [resource-type] :as _resource} operation]
   (let [tr         (subscribe [::i18n-subs/tr])
         params     (subscribe [::cimi-subs/resource-metadata-input-parameters resource-type operation])
         form-data  (atom {})
         op-display (general-utils/name->display-name operation)]
-    #_ {:clj-kondo/ignore [:unused-binding]}
-    (fn [{:keys [id] :as resource} operation]
+    (fn [{:keys [id] :as _resource} operation]
       [action-button-icon
        op-display
        op-display

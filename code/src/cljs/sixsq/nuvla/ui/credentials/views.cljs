@@ -29,16 +29,14 @@
 
 
 (defn row-infrastructure-services-selector
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [subtypes additional-filter editable? value-spec on-change]
+  [subtypes additional-filter _editable? _value-spec _on-change]
   (let [tr              (subscribe [::i18n-subs/tr])
         infra-services  (subscribe [::subs/infrastructure-services-available])
         credential      (subscribe [::subs/credential])
         local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
     (dispatch [::events/fetch-infrastructure-services-available subtypes additional-filter])
-    #_{:clj-kondo/ignore [:unused-binding]}
-    (fn [subtypes additional-filter editable? value-spec on-change]
+    (fn [subtypes _additional-filter _editable? value-spec on-change]
       (let [value     (:parent @credential)
             validate? (or @local-validate? @validate-form?)
             valid?    (s/valid? value-spec value)]
@@ -532,8 +530,7 @@
 
 (defn StatisticStates
   ([] [StatisticStates true])
-  (#_ {:clj-kondo/ignore [:unused-binding]}
-   [clickable?]
+  ([_clickable?]
    (let [summary (subscribe [::subs/credentials-summary])]
      (fn [clickable?]
        (let [terms      (utils-general/aggregate-to-map (get-in @summary [:aggregations :terms:subtype :buckets]))
@@ -935,8 +932,7 @@
 
 
 (defmethod panel/render :credentials
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [path]
+  [_path]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment style/basic
      [uix/PageHeader "key" (@tr [:credentials])]

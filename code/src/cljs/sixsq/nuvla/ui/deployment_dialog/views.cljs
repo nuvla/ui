@@ -27,8 +27,7 @@
 (defmulti StepIcon :step-id)
 
 (defn step-icon
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [icon] :as step-state}]
+  [{:keys [icon] :as _step-state}]
   [ui/Icon {:name icon}])
 
 (defmethod StepIcon :default
@@ -127,8 +126,7 @@
 
 
 (defn deploy-modal
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [show-data?]
+  [_show-data?]
   (let [open?            (subscribe [::subs/deploy-modal-visible?])
         deployment       (subscribe [::subs/deployment])
         loading?         (subscribe [::subs/loading-deployment?])

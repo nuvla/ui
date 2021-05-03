@@ -34,8 +34,7 @@
           (fn [path-prefix location]
             (get-token path-prefix location)))
     (set! (.. transformer -createUrl)
-          #_ {:clj-kondo/ignore [:unused-binding]}
-          (fn [token path-prefix location]
+          (fn [token path-prefix _location]
             (str path-prefix token)))
     transformer))
 

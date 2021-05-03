@@ -158,8 +158,7 @@
 
 
 (defn PaymentMethodInputInternal
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [type onChange options] :as props}]
+  [{:keys [type onChange options] :as _props}]
   (case type
     "sepa_debit" [IbanElement
                   {:className "stripe-input"
@@ -185,8 +184,7 @@
 (def PaymentMethodInputReactClass (r/adapt-react-class PaymentMethodInputWrapper))
 
 (defn PaymentMethodInput
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [props]
+  [_props]
   (let [locale (subscribe [::i18n-subs/locale])
         stripe (subscribe [::main-subs/stripe])]
     (fn [props]
@@ -228,8 +226,7 @@
 
 
 (defn CustomerFormFields
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [form]
+  [_form]
   (let [tr        (subscribe [::i18n-subs/tr])
         is-group? (subscribe [::session-subs/active-claim-is-group?])]
     (fn [form]
@@ -439,8 +436,7 @@
 
 
 (defn AddPaymentMethodButton
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [open?]
+  [_open?]
   (let [tr                        (subscribe [::i18n-subs/tr])
         stripe                    (subscribe [::main-subs/stripe])
         loading-setup-intent?     (subscribe [::subs/loading? :create-setup-intent])
@@ -690,7 +686,6 @@
               [ui/TableHeaderCell (str/capitalize (@tr [:total]))]
               [ui/TableHeaderCell "PDF"]]]
             [ui/TableBody
-             #_ {:clj-kondo/ignore [:unused-binding]}
              (for [{:keys [number created status due-date invoice-pdf currency total]} @invoices]
                ^{:key (str number)}
                [ui/TableRow
@@ -713,8 +708,7 @@
 
 
 (defn AddCouponButton
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [open?]
+  [_open?]
   (let [tr          (subscribe [::i18n-subs/tr])
         loading?    (subscribe [::subs/loading? :add-coupon])
         error       (subscribe [::subs/error-message])
@@ -941,8 +935,7 @@
                 [PaymentMethods]])])]]))))
 
 (defmethod panel/render :profile
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [path]
+  [_path]
   [:div
    [Content]
    [modal-change-password]])

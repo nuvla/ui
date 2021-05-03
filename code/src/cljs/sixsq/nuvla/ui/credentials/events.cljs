@@ -203,8 +203,7 @@
 (reg-event-db
   ::set-credential-after-check
   (fn [{:keys [::spec/credential-check-table] :as db}
-       #_ {:clj-kondo/ignore [:unused-binding]}
-       [_ {:keys [id last-check status] :as credential}]]
+       [_ {:keys [id last-check status] :as _credential}]]
     (assoc-in db [::spec/credential-check-table id]
               (assoc (get credential-check-table id)
                 :last-check last-check
@@ -214,8 +213,7 @@
 
 (reg-event-fx
   ::check-credential-complete
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  (fn [{db :db} [_ {:keys [target-resource status-message return-code] :as job}]]
+  (fn [{db :db} [_ {:keys [target-resource status-message return-code] :as _job}]]
     (let [id (:href target-resource)]
       (cond->
         {::cimi-api-fx/get [id #(dispatch [::set-credential-after-check %])]}

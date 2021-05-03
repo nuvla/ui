@@ -77,8 +77,7 @@
 
 
 (defn ErrorJobsMessage
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [job-subs set-active-tab-index-event job-tab-index]
+  [_job-subs _set-active-tab-index-event _job-tab-index]
   (let [errors-dissmissed (r/atom #{})]
     (fn [job-subs set-active-tab-index-event job-tab-index]
       (let [jobs            (subscribe [job-subs])
@@ -99,8 +98,7 @@
 
 
 (defn BulkActionProgress
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [job on-dissmiss header]}]
+  [_opts]
   (let [open? (r/atom false)]
     (fn [{:keys [job on-dissmiss header]}]
       (let [{:keys [FAILED SUCCESS] :as status-message} (general-utils/json->edn (:status-message job))

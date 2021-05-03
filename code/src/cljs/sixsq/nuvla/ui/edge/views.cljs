@@ -31,8 +31,7 @@
 
 (defn StatisticStates
   ([] [StatisticStates true])
-  (#_{:clj-kondo/ignore [:unused-binding]}
-   [clickable?]
+  ([_clickable?]
    (let [tr          (subscribe [::i18n-subs/tr])
          summary     (subscribe [::subs/nuvlaboxes-summary])
          summary-all (subscribe [::subs/nuvlaboxes-summary-all])]
@@ -180,8 +179,7 @@
     (@tr [:nuvlabox-modal-private-ssh-key-info])]])
 
 (defn CreatedNuvlaBox
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [nuvlabox-id creation-data nuvlabox-release-data nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
+  [nuvlabox-id _creation-data nuvlabox-release-data nuvlabox-ssh-keys _new-private-ssh-key _on-close-fn]
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
         private-ssh-key-file (str (general-utils/id->short-uuid nuvlabox-id) ".ssh.private")
@@ -197,8 +195,7 @@
     (zip/create download-files #(reset! zip-url %))
     (when @nuvlabox-ssh-keys
       (dispatch [::events/assign-ssh-keys @nuvlabox-ssh-keys nuvlabox-id]))
-    #_{:clj-kondo/ignore [:unused-binding]}
-    (fn [nuvlabox-id creation-data nuvlabox-release-data nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
+    (fn [nuvlabox-id creation-data _nuvlabox-release-data _nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
       (let [tr                  (subscribe [::i18n-subs/tr])
             nuvlabox-name-or-id (str "NuvlaBox " (or (:name creation-data)
                                                      (general-utils/id->short-uuid nuvlabox-id)))
@@ -257,17 +254,14 @@
 
 
 (defn CreatedNuvlaBoxUSBTrigger
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [creation-data nuvlabox-release-data new-api-key nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
+  [_creation-data nuvlabox-release-data _new-api-key _nuvlabox-ssh-keys _new-private-ssh-key _on-close-fn]
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
         private-ssh-key-file "nuvlabox.ssh.private"
         download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals
                                                           [#"placeholder" "placeholder"])
         download-files-names (map :name download-files)]
-
-    #_{:clj-kondo/ignore [:unused-binding]}
-    (fn [creation-data nuvlabox-release-data new-api-key nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
+    (fn [creation-data _nuvlabox-release-data new-api-key nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
       (let [tr                    (subscribe [::i18n-subs/tr])
             apikey                (:resource-id new-api-key)
             apisecret             (:secret-key new-api-key)
@@ -781,8 +775,7 @@
 
 
 (defn NuvlaboxCard
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [nuvlabox]
+  [_nuvlabox]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [{:keys [id name description created state tags online]}]
       (let [href (str "edge/" (general-utils/id->uuid id))]

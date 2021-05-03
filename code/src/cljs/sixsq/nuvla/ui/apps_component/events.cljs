@@ -116,8 +116,7 @@
 
 (reg-event-db
   ::update-docker-image
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  (fn [db [_ id repo_image]]
+  (fn [db [_ _id repo_image]]
     (let [temp       (if (string? repo_image) (str/split repo_image "/") nil)
           two_parts? (= (count temp) 2)
           repository (if two_parts? (first temp) nil)
@@ -129,13 +128,11 @@
 
 (reg-event-db
   ::update-docker-registry
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  (fn [db [_ id registry]]
+  (fn [db [_ _id registry]]
     (assoc-in db [::spec/module-component ::spec/image ::spec/registry] registry)))
 
 
 (reg-event-db
   ::update-docker-tag
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  (fn [db [_ id tag]]
+  (fn [db [_ _id tag]]
     (assoc-in db [::spec/module-component ::spec/image ::spec/tag] tag)))

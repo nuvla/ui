@@ -53,8 +53,7 @@
 
 (reg-event-fx
   ::set-nuvlaboxes
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  (fn [{:keys [db]} [_ {:keys [resources] :as nuvlaboxes}]]
+  (fn [{:keys [db]} [_ nuvlaboxes]]
     (if (instance? js/Error nuvlaboxes)
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]

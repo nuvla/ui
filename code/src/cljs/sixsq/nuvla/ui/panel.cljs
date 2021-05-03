@@ -12,8 +12,7 @@
 
 
 (defmethod render :default
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [path query-parameters]
+  [_path _query-parameters]
   (let [nav-path    (subscribe [::main-subs/nav-path])
         reason-text (str "Unknown resource: " @nav-path)]
     [ui/Container {:textAlign "center"}

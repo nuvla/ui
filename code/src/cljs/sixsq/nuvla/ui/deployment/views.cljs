@@ -155,8 +155,7 @@
 
 (defn row-fn
   [{:keys [id state module parent nuvlabox] :as deployment}
-   #_ {:clj-kondo/ignore [:unused-binding]}
-   {:keys [no-actions no-module-name select-all] :as options}]
+   {:keys [no-actions no-module-name select-all] :as _options}]
   (let [credential-id parent
         creds-name    (subscribe [::subs/creds-name-map])
         [primary-url-name
@@ -199,8 +198,7 @@
 
 
 (defn vertical-data-table
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [deployments-list options]
+  [_deployments-list _options]
   (let [tr                    (subscribe [::i18n-subs/tr])
         is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
     (fn [deployments-list {:keys [no-actions no-module-name select-all] :as options}]
@@ -312,8 +310,7 @@
 
 (defn StatisticStates
   ([] [StatisticStates true])
-  (#_ {:clj-kondo/ignore [:unused-binding]}
-   [clickable?]
+  ([_clickable?]
    (let [summary     (subscribe [::subs/deployments-summary])
          summary-all (subscribe [::subs/deployments-summary-all])]
      (fn [clickable?]

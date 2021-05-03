@@ -517,8 +517,7 @@
 (reg-event-db
   ::docker-compose-validation-complete
   (fn [{:keys [::spec/module] :as db}
-       #_ {:clj-kondo/ignore [:unused-binding]}
-       [_ {:keys [return-code target-resource status-message] :as job}]]
+       [_ {:keys [return-code target-resource status-message] :as _job}]]
     (cond-> db
             (= (:href target-resource)
                (:id module)) (assoc ::spec/validate-docker-compose

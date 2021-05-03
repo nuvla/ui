@@ -66,8 +66,7 @@
 
 (defn resolvable?
   [spec]
-  #_{:clj-kondo/ignore [:unused-binding]}
   (try
     (s/describe spec) true
-    (catch :default e
+    (catch :default _
       false)))

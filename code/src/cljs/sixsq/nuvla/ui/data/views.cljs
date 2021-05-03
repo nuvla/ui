@@ -102,8 +102,7 @@
 
 
 (defn application-list-item
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [id name description subtype created] :as application}]
+  [{:keys [id name description subtype created] :as _application}]
   (let [selected-application-id (subscribe [::subs/selected-application-id])
         on-click-fn #(dispatch [::events/set-selected-application-id id])]
     ^{:key id}
@@ -235,8 +234,7 @@
 
 
 (defn format-data-set-title
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [id name] :as data-set}]
+  [{:keys [id name] :as _data-set}]
   (let [data-sets (subscribe [::subs/selected-data-set-ids])
         selected? (@data-sets id)]
     [ui/CardHeader {:style {:word-wrap "break-word"}}
@@ -313,8 +311,7 @@
 
 
 (defmethod panel/render :data
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [path]
+  [_path]
   ;; FIXME: find a better way to initialize credentials and data-sets
   (refresh-credentials)
   (refresh-data-sets)

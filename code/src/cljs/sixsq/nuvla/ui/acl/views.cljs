@@ -38,8 +38,7 @@
 
 
 (defn AclTableHeaders
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [mode] :as opts}]
+  [{:keys [mode] :as _opts}]
   (let [tr                (subscribe [::i18n-subs/tr])
         border-left-style {:style {:border-left "1px solid rgba(34,36,38,.1)"}}]
     (if (is-advanced-mode? @mode)
@@ -112,8 +111,7 @@
 
 
 (defn RightCheckbox
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [on-change read-only mode] :as opts} ui-acl row-number principal rights right-kw]
+  [{:keys [on-change read-only mode] :as _opts} ui-acl row-number principal rights right-kw]
   (let [checked?       (contains? rights right-kw)
         indeterminate? (and
                          (= @mode :simple)
@@ -165,8 +163,7 @@
 
 
 (defn DropdownPrincipals
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [opts ui-acl]
+  [_opts _ui-acl]
   (let [open   (r/atom false)
         users  (subscribe [::subs/users-options])
         groups (subscribe [::subs/groups-options])
@@ -224,8 +221,7 @@
 
 
 (defn AddRight
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [on-change mode] :as opts} ui-acl]
+  [{:keys [on-change mode] :as _opts} ui-acl]
   (let [empty-permission {:principal nil
                           :right     nil}
         new-permission   (r/atom empty-permission)
@@ -235,8 +231,7 @@
                               (swap! ui-acl utils/acl-add-principal-with-right principal right)
                               (on-change (utils/ui-acl-format->acl @ui-acl))
                               (reset! new-permission empty-permission)))]
-    #_ {:clj-kondo/ignore [:unused-binding]}
-    (fn [{:keys [mode] :as opts} ui-acl]
+    (fn [{:keys [mode] :as _opts} ui-acl]
 
       [ui/TableRow
 
@@ -260,8 +255,7 @@
 
 
 (defn AclOwners
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [opts ui-acl]
+  [_opts _ui-acl]
   (let [mobile? (subscribe [::main-subs/is-device? :mobile])
         tr      (subscribe [::i18n-subs/tr])]
     (fn [{:keys [read-only on-change mode] :as opts} ui-acl]
@@ -324,8 +318,7 @@
 
 
 (defn AclWidget
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [default-value read-only mode] :as opts} & [ui-acl]]
+  [{:keys [default-value read-only mode] :as _opts} & [ui-acl]]
   (let [mode   (r/atom (or mode :simple))
         ui-acl (or ui-acl
                    (r/atom
@@ -371,8 +364,7 @@
 
 
 (defn AclButton
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [default-value read-only default-active?] :as opts}]
+  [{:keys [default-value read-only default-active?] :as _opts}]
   (let [tr      (subscribe [::i18n-subs/tr])
         active? (r/atom default-active?)
         acl     (or default-value

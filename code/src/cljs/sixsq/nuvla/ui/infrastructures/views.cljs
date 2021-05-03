@@ -55,8 +55,7 @@
 
 
 (defn ServiceCard
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [id name description path subtype logo-url swarm-enabled online] :as service}]
+  [{:keys [id name description path subtype logo-url swarm-enabled online] :as _service}]
   (let [icon-or-image (get service-icons (keyword subtype) "question circle")
         status        (cond
                         (true? online) true
@@ -163,16 +162,14 @@
   (get utils/cloud-params-defaults (utils/mgmt-cred-subtype-by-id db cred-id)))
 
 (defn row-csp-credential-selector
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [subtypes additional-filter disabled? value-spec on-change]
+  [subtypes additional-filter _disabled? _value-spec _on-change]
   (let [tr              (subscribe [::i18n-subs/tr])
         mgmt-creds      (subscribe [::subs/management-credentials-available])
         service         (subscribe [::subs/infra-service])
         local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
     (dispatch [::events/fetch-coe-management-credentials-available subtypes additional-filter])
-    #_ {:clj-kondo/ignore [:unused-binding]}
-    (fn [subtypes additional-filter disabled? value-spec on-change]
+    (fn [_subtypes _additional-filter disabled? value-spec on-change]
       (let [value           (:management-credential @service)
             validate?       (or @local-validate? @validate-form?)
             valid?          (s/valid? value-spec value)
@@ -207,8 +204,7 @@
 
 
 (defn ssh-keys-selector
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [disabled?]
+  [_disabled?]
   (let [ssh-keys         (subscribe [::subs/ssh-keys])
         ssh-keys-options (subscribe [::subs/ssh-keys-options])
         form-valid?      (subscribe [::subs/form-valid?])

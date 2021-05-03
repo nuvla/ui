@@ -19,8 +19,7 @@
 
 
 (defn ModuleDetails
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [new-subtype]
+  [_new-subtype]
   (let [module (subscribe [::subs/module])]
     (dispatch [::main-events/changes-protection? false])
     (dispatch [::events/form-valid true])
@@ -69,8 +68,7 @@
 
 
 (defmethod panel/render :apps
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [path]
+  [_path]
   (timbre/set-level! :info)
   [:div
    [utils-validation/validation-error-message ::subs/form-valid?]

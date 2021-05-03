@@ -253,7 +253,6 @@
 
 
 (defn events-table
-  #_ {:clj-kondo/ignore [:unused-binding]}
   [events]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [events]
@@ -347,8 +346,7 @@
 
 
 (defn log-controller
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [go-live?]
+  [_go-live?]
   (let [locale        (subscribe [::i18n-subs/locale])
         services-list (subscribe [::subs/deployment-services-list])
         since         (subscribe [::subs/deployment-log-since])
@@ -495,8 +493,7 @@
 
 
 (defn ShutdownButton
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
+  [_deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
         checked?  (r/atom false)
@@ -543,8 +540,7 @@
 
 
 (defn DeleteButton
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
+  [_deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
         icon-name "trash"]
@@ -579,8 +575,7 @@
 
 
 (defn CloneButton
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [id data module] :as deployment}]
+  [{:keys [id data module] :as _deployment}]
   (let [tr         (subscribe [::i18n-subs/tr])
         first-step (if data :data :infra-services)
         button     (action-button
@@ -899,8 +894,7 @@
 
 
 (defn StatusIcon
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [status & {:keys [corner] :or {corner "bottom center"} :as position}]
+  [status & {:keys [corner] :or {corner "bottom center"} :as _position}]
   [ui/Popup
    {:position corner
     :content  status

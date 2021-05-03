@@ -15,8 +15,7 @@
   [state-atom]
   (let [tr    (subscribe [::i18n-subs/tr])
         more? state-atom]
-    #_ {:clj-kondo/ignore [:unused-binding]}
-    (fn [state-atom]
+    (fn [_state-atom]
       (let [label     (@tr (if @more? [:less-details] [:more-details]))
             icon-name (if @more? "caret down" "caret right")]
         [:a {:style    {:cursor "pointer"}
@@ -45,11 +44,9 @@
 
 
 (defn metadata
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [title subtitle description logo icon updated properties] :as meta} rows]
+  [_meta _rows]
   (let [more? (r/atom false)]
-    #_ {:clj-kondo/ignore [:unused-binding]}
-    (fn [{:keys [title subtitle description logo icon updated properties] :as meta} rows]
+    (fn [{:keys [title subtitle description logo icon updated properties] :as _meta} rows]
       [ui/Card {:fluid true}
        [ui/CardContent
         (when logo
@@ -70,8 +67,7 @@
 
 
 (defn metadata-simple
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [rows]
+  [_rows]
   (let [more? (r/atom false)]
     (fn [rows]
       [:div {:style {:padding-top    5
@@ -83,8 +79,7 @@
 
 
 (defn collapsible-segment
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [title & children]
+  [_title & _children]
   (let [visible? (r/atom true)]
     (fn [title & children]
       [ui/Segment style/basic

@@ -105,8 +105,7 @@
 
 
 (defn EditorYaml
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [text on-change-fn editable?]
+  [_text _on-change-fn _editable?]
   (fn [text on-change-fn editable?]
     [ui/CodeMirror {:value      text
                     :autoCursor true
@@ -120,8 +119,7 @@
 
 (defn EditorMarkdown
   "A convenience function to setup the CodeMirror editor component for Markdown."
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [text on-change-fn editable?]
+  [_text _on-change-fn _editable?]
   (fn [text on-change-fn editable?]
     [ui/CodeMirror {:value      text
                     :autoCursor true
@@ -138,8 +136,7 @@
 
 
 (defn Accordion
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [content & {:keys [default-open title-size on-open on-close !control-open? styled?]
+  [_content & {:keys [default-open title-size on-open on-close !control-open? styled?]
               :or   {default-open true, title-size :h3, on-open #(), on-close #(), styled? true}}]
   (let [active? (or !control-open? (r/atom default-open))]
     (fn [content & {:keys [id label count on-open on-close icon title-size]
@@ -188,9 +185,8 @@
 
 
 (defn TableRowField
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [name & {:keys [key placeholder default-value spec on-change on-validation
-                  required? editable? validate-form? type input-help-msg]}]
+  [name & {:keys [_key _placeholder _default-value _spec _on-change _on-validation
+                  _required? _editable? _validate-form? _type _input-help-msg]}]
   (let [local-validate? (r/atom false)
         active-input?   (r/atom false)]
     (fn [name & {:keys [key placeholder default-value spec on-change on-validation
@@ -238,8 +234,7 @@
 
 
 (defn ModalDanger
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [button-text on-confirm danger-msg header content trigger open on-close modal-action
+  [{:keys [_button-text _on-confirm danger-msg _header _content _trigger _open _on-close _modal-action
            control-confirmed?]}]
   (let [tr         (subscribe [::i18n-subs/tr])
         confirmed? (or control-confirmed? (r/atom (nil? danger-msg)))
@@ -283,8 +278,7 @@
 
 (defn ModalFromButton
   "Defines a standard modal, triggered by a button."
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [button-text on-confirm header icon content trigger open on-close modal-action]}]
+  [{:keys [_button-text _on-confirm _header _icon _content _trigger _open _on-close _modal-action]}]
   (let [clicked? (r/atom false)]
     (fn [{:keys [button-text on-confirm header icon content trigger open on-close modal-action]}]
       [ui/Modal (cond->
@@ -316,8 +310,7 @@
 
 
 (defn TimeAgo
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [time-str]
+  [_time-str]
   (let [locale        (subscribe [::i18n-subs/locale])
         fn-update-ago #(time/parse-ago % @locale)
         refresh       (r/atom 0)]
@@ -328,8 +321,7 @@
 
 
 (defn CountDown
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [futur-time]
+  [_futur-moment]
   (let [refresh (r/atom 0)]
     (js/setInterval #(swap! refresh inc) 1000)
     (fn [futur-moment]
@@ -340,8 +332,7 @@
 
 
 (defn WarningMsgNoElements
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [message]
+  [_message]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [message]
       [ui/Message {:info true}
@@ -349,8 +340,7 @@
 
 
 (defn Tags
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [tags]}]
+  [_resource]
   (let [uuid (random-uuid)]
     (fn [{:keys [tags]}]
       [ui/LabelGroup {:size  "tiny"

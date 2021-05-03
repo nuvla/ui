@@ -528,6 +528,5 @@
 
 
 (defmethod panel/render :api
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [path]
+  [_path]
   [cimi-resource])

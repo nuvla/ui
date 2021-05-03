@@ -23,8 +23,7 @@
 
 
 (defn DropdownInput
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [props]
+  [_props]
   (let [additional-opts (r/atom nil)]
     (fn [props]
       [ui/Dropdown
@@ -40,8 +39,7 @@
 
 
 (defn CellEmpty
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [resource-name data i]
+  [_resource-name data i]
   [ui/Dropdown
    {:trigger              (r/as-element [:span])
     :value                nil
@@ -68,8 +66,7 @@
 
 
 (defn CellLogic
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [resource-name data i]
+  [_resource-name data i]
   (let [{:keys [value]} (nth @data i)]
     [ui/Label
      {:style {:cursor "pointer"}
@@ -91,8 +88,7 @@
         values      (r/atom (or enum-values []))]
     (when-not (or enum-values sensitive)
       (dispatch [::events/terms-attribute resource-name attribute values]))
-    #_ {:clj-kondo/ignore [:unused-binding]}
-    (fn [attribute-info resource-name data i]
+    (fn [_attribute-info _resource-name data i]
       (let [{:keys [operation value] :as s} (nth @data i)]
         [DropdownInput
          (cond-> {:placeholder "value"
@@ -115,8 +111,7 @@
 
 
 (defn dispatch-value-attribute
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{attr-type :type} resource-name data i]
+  [{attr-type :type} _resource-name _data _i]
   (cond
     (#{"string" "uri" "resource-id"} attr-type) :string
     (#{"number" "double" "integer" "long"} attr-type) :number
@@ -145,8 +140,7 @@
      [DropdownStringValue attribute-info resource-name data i]]))
 
 (defmethod ValueAttribute :number
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{attr-type :type :as attribue-info} resource-name data i]
+  [{attr-type :type :as _attribue-info} _resource-name data i]
   (let [{:keys [value operation]} (nth @data i)
         value-is-null? (utils/value-is-null? value)]
     [:<>
@@ -183,8 +177,7 @@
 
 
 (defmethod ValueAttribute :boolean
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [attribute-info resource-name data i]
+  [_attribute-info _resource-name data i]
   (let [{:keys [value operation]} (nth @data i)]
     [:<>
      [ui/Dropdown {:placeholder "operation"
@@ -211,8 +204,7 @@
 
 
 (defmethod ValueAttribute :date-time
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [attribute-info resource-name data i]
+  [_attribute-info _resource-name data i]
   (let [{:keys [value operation]} (nth @data i)
         value-is-null?        (utils/value-is-null? value)
         value-now-expression? (boolean (when (string? value) (re-find #"now" value)))]
@@ -250,8 +242,7 @@
 
 
 (defn CellAttribute
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [resource-name data i]
+  [resource-name _data _i]
   (let [attribute-options (subscribe [::cimi-subs/resource-metadata-attributes-options resource-name])
         attributes        (subscribe [::cimi-subs/resource-metadata-attributes resource-name])]
     (fn [resource-name data i]
@@ -299,8 +290,7 @@
 
 
 (defn ButtonFilter
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [resource-name open? default-filter on-done]}]
+  [{:keys [resource-name open? default-filter _on-done]}]
   (let [show-error? (r/atom false)
         init-data   (or (when-not (str/blank? default-filter)
                           (utils/filter-str->data default-filter))
@@ -311,8 +301,7 @@
                        (reset! data init-data))
         open-fn     #(reset! open? true)]
     (when resource-name (dispatch [::cimi-events/get-resource-metadata resource-name]))
-    #_ {:clj-kondo/ignore [:unused-binding]}
-    (fn [{:keys [resource-name open? default-filter on-done]}]
+    (fn [{:keys [resource-name open? _default-filter on-done]}]
       (let [filter-string (utils/data->filter-str @data)
             error         (when (and @show-error? (not (str/blank? filter-string)))
                             (utils/filter-syntax-error filter-string))]

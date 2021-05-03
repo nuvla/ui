@@ -211,8 +211,7 @@
 
 (reg-event-db
   ::set-check-dct-result
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  (fn [{:keys [::spec/deployment] :as db} [_ {:keys [target-resource status-message] :as job}]]
+  (fn [{:keys [::spec/deployment] :as db} [_ {:keys [target-resource status-message] :as _job}]]
     (if (= (:href target-resource) (:id deployment))
       (let [result (try
                      {:dct (general-utils/json->edn status-message :keywordize-keys false)}
@@ -249,8 +248,7 @@
 
 (reg-event-fx
   ::check-dct
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  (fn [_ [_ {:keys [id] :as deployment}]]
+  (fn [_ [_ {:keys [id] :as _deployment}]]
     {::cimi-api-fx/operation [id "check-dct" #(dispatch [::check-dct-later (:location %)])]}))
 
 ; What's the difference with the same event in deployment
@@ -323,8 +321,7 @@
 
 (reg-event-fx
   ::open-deployment-modal
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  (fn [{db :db} [_ first-step {:keys [parent id] :as deployment}]]
+  (fn [{db :db} [_ first-step {:keys [parent id] :as _deployment}]]
     (when (= :data first-step)
       (dispatch [::get-data-records]))
     (cond-> {:db       (assoc db ::spec/deployment nil

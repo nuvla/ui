@@ -71,8 +71,7 @@
 
 
 (defn SshKeysDropdown
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [operation on-change-fn]
+  [operation _on-change-fn]
   (let [tr       (subscribe [::i18n-subs/tr])
         is-add?  (= operation "add-ssh-key")
         ssh-keys (if is-add?
@@ -80,8 +79,7 @@
                    (subscribe [::subs/nuvlabox-associated-ssh-keys]))]
     (when is-add?
       (dispatch [::events/get-ssh-keys-not-associated #(reset! ssh-keys %)]))
-    #_ {:clj-kondo/ignore [:unused-binding]}
-    (fn [operation on-change-fn]
+    (fn [_operation on-change-fn]
       [ui/FormDropdown
        {:label       "SSH key"
         :loading     (nil? @ssh-keys)
@@ -97,8 +95,7 @@
 
 
 (defn DropdownReleases
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [opts]
+  [_opts]
   (let [releases (subscribe [::edge-subs/nuvlabox-releases-options])]
     (fn [opts]
       (when (empty? @releases)
@@ -111,8 +108,7 @@
 
 
 (defn AddRevokeSSHButton
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [id] :as resource} operation show? title icon button-text]
+  [{:keys [id] :as _resource} operation show? _title _icon _button-text]
   (let [tr            (subscribe [::i18n-subs/tr])
         close-fn      #(reset! show? false)
         form-data     (r/atom {:execution-mode "push"})
@@ -132,8 +128,7 @@
                          (reset! loading? true)
                          (dispatch [::events/operation id operation @form-data
                                     on-success-fn on-error-fn]))]
-    #_ {:clj-kondo/ignore [:unused-binding]}
-    (fn [resource operation show? title icon button-text]
+    (fn [_resource operation show? title icon button-text]
       [ui/Modal
        {:open       @show?
         :close-icon true
@@ -187,8 +182,7 @@
                (< (second p) 14))))))
 
 (defn UpdateButton
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [id] :as resource} operation show?]
+  [{:keys [id] :as _resource} operation show?]
   (let [tr            (subscribe [::i18n-subs/tr])
         status        (subscribe [::subs/nuvlabox-status])
         close-fn      #(reset! show? false)
@@ -208,9 +202,7 @@
     (swap! form-data assoc :working-dir working-dir)
     (swap! form-data assoc :config-files (str/join "\n" config-files))
     (swap! form-data assoc :environment (str/join "\n" environment))
-
-    #_ {:clj-kondo/ignore [:unused-binding]}
-    (fn [{:keys [id] :as resource} operation show? title icon button-text]
+    (fn [{:keys [id] :as _resource} _operation show? title icon button-text]
       (when (not= (:parent @status))                        ; FIXME: what was intent here?!!
         (dispatch [::events/get-nuvlabox id]))
       (let [correct-nb? (= (:parent @status) id)
@@ -294,8 +286,7 @@
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "add-ssh-key"]
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [resource operation]
+  [_resource _operation]
   (let [tr    (subscribe [::i18n-subs/tr])
         show? (r/atom false)]
     (fn [resource operation]
@@ -304,8 +295,7 @@
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "revoke-ssh-key"]
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [resource operation]
+  [_resource _operation]
   (let [show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "revoke-ssh-button" @show?)}
@@ -313,8 +303,7 @@
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "update-nuvlabox"]
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [resource operation]
+  [_resource _operation]
   (let [tr    (subscribe [::i18n-subs/tr])
         show? (r/atom false)]
     (fn [resource operation]
@@ -356,8 +345,7 @@
         last-updated (r/atom "1970-01-01T00:00:00Z")
         button-load? (r/atom false)
         peripheral   (subscribe [::subs/nuvlabox-peripheral id])]
-    #_ {:clj-kondo/ignore [:unused-binding]}
-    (fn [id]
+    (fn [_id]
       (let [{p-id                :id
              p-ops               :operations
              p-name              :name
@@ -513,8 +501,7 @@
 
 
 (defn OnlineStatusIcon
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [online & position]                                       ;FIXME: remove calling position
+  [online & _position]                                       ;FIXME: remove calling position
   [ui/Icon {:name  "power"
             :color (utils/status->color online)}])
 
@@ -810,8 +797,7 @@
 
 
 (defn TabOverviewStatus
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [updated status] :as nb-status} nb-id online-status tr]
+  [{:keys [updated status] :as _nb-status} nb-id online-status tr]
   [ui/Segment {:secondary true
                :color     (utils/status->color online-status)
                :raised    true}
@@ -880,8 +866,7 @@
 
 
 (defn TabLocationMap
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [id location] :as nuvlabox}]
+  [_nuvlabox]
   (let [tr           (subscribe [::i18n-subs/tr])
         zoom         (atom 3)
         new-location (r/atom nil)]
@@ -941,8 +926,7 @@
   []
   (let [peripherals-per-id (subscribe [::subs/nuvlabox-peripherals])]
     (fn []
-      #_ {:clj-kondo/ignore [:unused-binding]}
-      (let [peripheral-resources (into [] (map (fn [[id res]] res) @peripherals-per-id))
+      (let [peripheral-resources (into [] (map (fn [[_id res]] res) @peripherals-per-id))
             per-interface        (group-by :interface peripheral-resources)]
         [ui/TabPane
          (if (empty? peripheral-resources)

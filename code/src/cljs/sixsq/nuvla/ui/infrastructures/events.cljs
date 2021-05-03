@@ -174,8 +174,7 @@
 
 (reg-event-db
   ::close-service-modal
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  (fn [db [_ service is-new?]]
+  (fn [db [_ _service _is-new?]]
     (-> db
         (assoc ::spec/service-modal-visible? false))))
 
@@ -269,8 +268,7 @@
 
 (reg-event-db
  ::ssh-keys
- #_ {:clj-kondo/ignore [:unused-binding]}
- (fn [db [event-type ssh-keys]]
+ (fn [db [_event-type ssh-keys]]
    (assoc-in db [::spec/infra-service :ssh-keys] ssh-keys)))
 
 

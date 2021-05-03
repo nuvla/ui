@@ -123,8 +123,7 @@
 
 
 (defn subs-notif-method-select-or-add
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [current-method notif-methods save?]
+  [_current-method _notif-methods save?]
   (fn [current-method notif-methods]
     [:<>
      [subs-notif-method-dropdown current-method notif-methods save? nil]
@@ -627,8 +626,7 @@
         ))))
 
 (defn notif-method-select-dropdown
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [method on-change]
+  [_method _on-change]
   (let [tr              (subscribe [::i18n-subs/tr])
         local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
@@ -962,8 +960,7 @@
 
 
 (defmethod panel/render :notifications
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [path]
+  [_path]
   (timbre/set-level! :info)
   [:<>
    [TabsAll]

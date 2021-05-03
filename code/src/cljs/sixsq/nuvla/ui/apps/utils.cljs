@@ -137,8 +137,7 @@
   [db]
   (into
     []
-    #_{:clj-kondo/ignore [:unused-binding]}
-    (for [[id m] (get-in db [::spec/module-common ::spec/env-variables])]
+    (for [[_id m] (get-in db [::spec/module-common ::spec/env-variables])]
       (let [{:keys [::spec/env-name ::spec/env-description ::spec/env-value ::spec/env-required]
              :or   {env-required false}} m]
         (cond-> {:name     env-name
@@ -159,8 +158,7 @@
   [db]
   (into
     []
-    #_{:clj-kondo/ignore [:unused-binding]}
-    (for [[id u] (get-in db [::spec/module-common ::spec/urls])]
+    (for [[_id u] (get-in db [::spec/module-common ::spec/urls])]
       [(::spec/url-name u) (::spec/url u)])))
 
 
@@ -168,8 +166,7 @@
   [db]
   (into
     []
-    #_{:clj-kondo/ignore [:unused-binding]}
-    (for [[id op] (get-in db [::spec/module-common ::spec/output-parameters])]
+    (for [[_id op] (get-in db [::spec/module-common ::spec/output-parameters])]
       (let [{:keys [::spec/output-parameter-name ::spec/output-parameter-description]} op]
         (conj
           {:name output-parameter-name}
@@ -180,15 +177,13 @@
   [db]
   (into
     []
-    #_{:clj-kondo/ignore [:unused-binding]}
-    (for [[id binding] (get-in db [::spec/module-common ::spec/data-types])]
+    (for [[_id binding] (get-in db [::spec/module-common ::spec/data-types])]
       (let [{:keys [::spec/data-type]} binding]
         (conj data-type)))))
 
 
 (defn db->module
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [module commit-map db]
+  [module _commit-map db]
   (let [name              (get-in db [::spec/module-common ::spec/name])
         description       (get-in db [::spec/module-common ::spec/description])
         parent-path       (get-in db [::spec/module-common ::spec/parent-path])
@@ -289,9 +284,8 @@
 
 
 (defn module->db
-  #_ {:clj-kondo/ignore [:unused-binding]}
   [db {:keys [name description parent-path content data-accept-content-types
-              path logo-url subtype acl price license] :as module}]
+              path logo-url subtype acl price license] :as _module}]
   (-> db
       (assoc-in [::spec/module-common ::spec/name] name)
       (assoc-in [::spec/module-common ::spec/description] description)

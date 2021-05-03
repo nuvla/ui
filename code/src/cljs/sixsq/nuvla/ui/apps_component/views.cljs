@@ -29,10 +29,8 @@
 
 
 (defn docker-image-view
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [::spec/image-name ::spec/registry ::spec/repository ::spec/tag] :as image}]
+  [{:keys [::spec/image-name ::spec/registry ::spec/repository ::spec/tag] :as _image}]
   [:span
-   #_ :clj-kondo/ignore
    (when (not (empty? registry))
      [:span registry "/"])
    #_ :clj-kondo/ignore
@@ -287,8 +285,7 @@
 (defn generate-ports-args
   [ports]
   (let [ports-args
-        #_{:clj-kondo/ignore [:unused-binding]}
-        (for [[id port] ports]
+        (for [[_id port] ports]
           (let [{:keys [::spec/published-port ::spec/target-port ::spec/protocol]} port]
             (str "-p " published-port ":" target-port (when
                                                         (and
@@ -302,8 +299,7 @@
 (defn generate-mounts-args
   [mounts]
   (let [mounts-commands
-        #_{:clj-kondo/ignore [:unused-binding]}
-        (for [[id {:keys [::spec/mount-type ::spec/mount-source
+        (for [[_id {:keys [::spec/mount-type ::spec/mount-source
                           ::spec/mount-target ::spec/mount-read-only]}] mounts]
           (str
             "--mount type=" mount-type

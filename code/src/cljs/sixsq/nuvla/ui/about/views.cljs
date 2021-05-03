@@ -7,8 +7,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defmethod panel/render :about
-  #_{:clj-kondo/ignore [:unused-binding]}
-  [path]
+  [_path]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Container
      [ui/Header {:as        "h1"

@@ -18,8 +18,7 @@
 
 
 (defn resolve-metadata-id
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [id resource-metadata resource-url] :as resource}]
+  [{:keys [id resource-metadata resource-url] :as _resource}]
   (cond
     resource-metadata resource-metadata
     (re-find #"-template/" (str id)) (str "resource-metadata/" (str/replace id #"/" "-"))

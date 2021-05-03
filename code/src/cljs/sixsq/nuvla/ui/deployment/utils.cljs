@@ -104,8 +104,7 @@
 
 
 (defn get-filter-param
-  #_ {:clj-kondo/ignore [:unused-binding]}
-  [{:keys [full-text-search additional-filter state-selector nuvlabox module-id] :as args}]
+  [{:keys [full-text-search additional-filter state-selector nuvlabox module-id] :as _args}]
   (let [filter-state     (when state-selector (state-filter state-selector))
         filter-nuvlabox  (when nuvlabox (str "nuvlabox='" nuvlabox "'"))
         filter-module-id (when module-id (str "module/href='" module-id "'"))

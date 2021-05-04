@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.apps.views
   (:require
     [re-frame.core :refer [dispatch subscribe]]
+    [taoensso.timbre :as timbre]
     [sixsq.nuvla.ui.apps-application.views :as apps-application-views]
     [sixsq.nuvla.ui.apps-component.views :as apps-component-views]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
@@ -9,13 +10,12 @@
     [sixsq.nuvla.ui.apps.subs :as subs]
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.views-detail :as views-detail]
+    [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.deployment.events :as deployment-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.validation :as utils-validation]
-    [taoensso.timbre :as timbre]
-    [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]))
+    [sixsq.nuvla.ui.utils.validation :as utils-validation]))
 
 
 (defn ModuleDetails

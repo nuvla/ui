@@ -44,11 +44,11 @@
                 ::spec/page
                 ::spec/elements-per-page
                 ::spec/full-text-search] :as db} :db} _]
-    {:db                   (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search  [:nuvlabox
-                            (utils/get-query-params full-text-search page elements-per-page
-                                                    state-selector)
-                            #(dispatch [::set-nuvlaboxes %])]}))
+    {:db                  (assoc db ::spec/loading? true)
+     ::cimi-api-fx/search [:nuvlabox
+                           (utils/get-query-params full-text-search page elements-per-page
+                                                   state-selector)
+                           #(dispatch [::set-nuvlaboxes %])]}))
 
 
 (reg-event-fx
@@ -75,10 +75,10 @@
 (reg-event-fx
   ::get-nuvlaboxes-summary
   (fn [{{:keys [::spec/full-text-search] :as db} :db} _]
-    {:db                   (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search  [:nuvlabox
-                            (utils/get-query-aggregation-params full-text-search "terms:online,terms:state")
-                            #(dispatch [::set-nuvlaboxes-summary %])]}))
+    {:db                  (assoc db ::spec/loading? true)
+     ::cimi-api-fx/search [:nuvlabox
+                           (utils/get-query-aggregation-params full-text-search "terms:online,terms:state")
+                           #(dispatch [::set-nuvlaboxes-summary %])]}))
 
 
 (reg-event-fx
@@ -90,17 +90,17 @@
 (reg-event-fx
   ::get-nuvlaboxes-summary-all
   (fn [{db :db} _]
-    {:db                   (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search  [:nuvlabox
-                            (utils/get-query-aggregation-params nil "terms:online,terms:state")
-                            #(dispatch [::set-nuvlaboxes-summary-all %])]}))
+    {:db                  (assoc db ::spec/loading? true)
+     ::cimi-api-fx/search [:nuvlabox
+                           (utils/get-query-aggregation-params nil "terms:online,terms:state")
+                           #(dispatch [::set-nuvlaboxes-summary-all %])]}))
 
 
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
-    {:db (assoc db ::spec/state-selector state-selector
-                   ::spec/page 1)
+    {:db       (assoc db ::spec/state-selector state-selector
+                         ::spec/page 1)
      :dispatch [::get-nuvlaboxes]}))
 
 
@@ -178,10 +178,15 @@
 
 (reg-event-fx
   ::create-nuvlabox-usb-api-key
-  (fn [_ [_ creation-data]]
-    {::cimi-api-fx/add [:credential creation-data
-                        #(dispatch [::set-nuvlabox-usb-api-key {:resource-id (:resource-id %)
-                                                                :secret-key  (:secret-key %)}])]}))
+  (fn [_ [_ ttl-days]]
+    (let [creation-data {:description "Auto-generated for NuvlaBox self-registration USB trigger"
+                         :name        "NuvlaBox self-registration USB trigger"
+                         :template    {:method "generate-api-key"
+                                       :ttl    (* ttl-days 24 60 60)
+                                       :href   "credential-template/generate-api-key"}}]
+      {::cimi-api-fx/add [:credential creation-data
+                          #(dispatch [::set-nuvlabox-usb-api-key {:resource-id (:resource-id %)
+                                                                  :secret-key  (:secret-key %)}])]})))
 
 
 (reg-event-db

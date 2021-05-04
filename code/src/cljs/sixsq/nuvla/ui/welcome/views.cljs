@@ -175,7 +175,7 @@
                :verticalAlign :middle
                :reversed      "mobile"}
       [ui/GridColumn {:width 9}
-       [ui/HeaderSubheader {:as "h2"}
+       [ui/HeaderSubheader {:as "h2", :id "deploy-app"}
         (@tr [:welcome-how-to-launch-header])]
        [ui/HeaderSubheader {:as "h4"}
         (@tr [:welcome-how-to-launch-subheader]) " " [:a {:href "https://docs.nuvla.io/nuvla/launch-app"} (@tr [:here])] "."]

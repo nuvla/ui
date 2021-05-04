@@ -13,11 +13,15 @@
       (assoc-in db [::spec/users-and-groups id] principal-name))))
 
 
+;; Swallow the error, since acl can contain groups for which the user has no access.
+;; This will leave the group in the acl as the id instead of its name.
 (reg-event-fx
   ::get-principal
   (fn [_ [_ principal]]
     (when principal
-      {::cimi-api-fx/get [principal #(dispatch [::set-principal principal (:name %)])]})))
+      {::cimi-api-fx/get [principal
+                          #(dispatch [::set-principal principal (:name %)])
+                          :on-error #()]})))
 
 
 (reg-event-db

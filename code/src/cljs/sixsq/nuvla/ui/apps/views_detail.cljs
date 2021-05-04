@@ -990,8 +990,9 @@
     (fn []
       (let [amount (:cent-amount-daily @price)]
         [:<>
-         [ui/Message {:info true}
-          (@tr [:define-price])]
+         (when @editable?
+           [ui/Message {:info true}
+            (@tr [:define-price])])
          [ui/Input {:labelPosition "right", :type "text"
                     :placeholder   (str/capitalize (@tr [:amount]))
                     :error         (not (s/valid? ::spec/cent-amount-daily amount))}

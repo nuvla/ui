@@ -221,7 +221,7 @@
 
 
 (defn AddRight
-  [{:keys [on-change mode] :as _opts} ui-acl]
+  [{:keys [on-change _mode] :as _opts} ui-acl]
   (let [empty-permission {:principal nil
                           :right     nil}
         new-permission   (r/atom empty-permission)
@@ -231,7 +231,7 @@
                               (swap! ui-acl utils/acl-add-principal-with-right principal right)
                               (on-change (utils/ui-acl-format->acl @ui-acl))
                               (reset! new-permission empty-permission)))]
-    (fn [{:keys [mode] :as _opts} ui-acl]
+    (fn [{:keys [_on-change mode] :as _opts} ui-acl]
 
       [ui/TableRow
 

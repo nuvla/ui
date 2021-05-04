@@ -17,7 +17,6 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.profile.events :as profile-events]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -37,7 +36,8 @@
 
 
 (defn single-file
-  [{:keys [_id ::spec/file-name ::spec/file-content]}]
+  #_ {:clj-kondo/ignore [:unused-binding]}
+  [{:keys [id ::spec/file-name ::spec/file-content]}]
   (let [form-valid?     (subscribe [::apps-subs/form-valid?])
         editable?       (subscribe [::apps-subs/editable?])
         local-validate? (r/atom false)]

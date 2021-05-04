@@ -136,11 +136,11 @@
 
 
 (defn Accordion
-  [_content & {:keys [default-open title-size on-open on-close !control-open? styled?]
-              :or   {default-open true, title-size :h3, on-open #(), on-close #(), styled? true}}]
+  [_content & {:keys [_id _label _count default-open _title-size _on-open _on-close !control-open? _icon _styled?]
+               :or   {default-open true}}]
   (let [active? (or !control-open? (r/atom default-open))]
-    (fn [content & {:keys [id label count on-open on-close icon title-size]
-                    :or   {title-size :h3, on-open #(), on-close #()}}]
+    (fn [content & {:keys [id label count _default-open title-size on-open on-close _!control-open? icon styled?]
+                    :or   {title-size :h3, on-open #(), on-close #(), styled? true}}]
       [ui/Accordion {:id        id
                      :fluid     true
                      :styled    styled?
@@ -185,7 +185,7 @@
 
 
 (defn TableRowField
-  [name & {:keys [_key _placeholder _default-value _spec _on-change _on-validation
+  [_name & {:keys [_key _placeholder _default-value _spec _on-change _on-validation
                   _required? _editable? _validate-form? _type _input-help-msg]}]
   (let [local-validate? (r/atom false)
         active-input?   (r/atom false)]

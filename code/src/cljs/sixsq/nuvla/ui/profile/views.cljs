@@ -687,17 +687,18 @@
               [ui/TableHeaderCell "PDF"]]]
             [ui/TableBody
              (for [{:keys [number created status due-date invoice-pdf currency total]} @invoices]
-               ^{:key (str number)}
-               [ui/TableRow
-                [ui/TableCell (some-> created (time/time->format "LL" locale))]
-                [ui/TableCell (str/capitalize status)]
-                [ui/TableCell (if due-date (some-> due-date (time/time->format "LL" locale)) "-")]
-                [ui/TableCell (format-currency currency total)]
-                [ui/TableCell
-                 (when invoice-pdf
-                   [ui/Button {:basic true
-                               :icon  "download"
-                               :href  invoice-pdf}])]])]]
+               (let [no number]                             ;number trips kondo
+                 ^{:key (str no)}
+                 [ui/TableRow
+                  [ui/TableCell (some-> created (time/time->format "LL" locale))]
+                  [ui/TableCell (str/capitalize status)]
+                  [ui/TableCell (if due-date (some-> due-date (time/time->format "LL" locale)) "-")]
+                  [ui/TableCell (format-currency currency total)]
+                  [ui/TableCell
+                   (when invoice-pdf
+                     [ui/Button {:basic true
+                                 :icon  "download"
+                                 :href  invoice-pdf}])]]))]]
            [ui/Grid {:text-align     "center"
                      :vertical-align "middle"
                      :style          {:height "100%"}}

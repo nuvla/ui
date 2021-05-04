@@ -31,6 +31,7 @@
 (defn docker-image-view
   [{:keys [::spec/image-name ::spec/registry ::spec/repository ::spec/tag] :as _image}]
   [:span
+   #_ :clj-kondo/ignore
    (when (not (empty? registry))
      [:span registry "/"])
    #_ :clj-kondo/ignore

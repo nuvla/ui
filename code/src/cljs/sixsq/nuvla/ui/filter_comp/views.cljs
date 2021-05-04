@@ -89,7 +89,7 @@
     (when-not (or enum-values sensitive)
       (dispatch [::events/terms-attribute resource-name attribute values]))
     (fn [_attribute-info _resource-name data i]
-      (let [{:keys [operation value] :as s} (nth @data i)]
+      (let [{:keys [operation value]} (nth @data i)]
         [DropdownInput
          (cond-> {:placeholder "value"
                   :value       value

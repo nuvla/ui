@@ -27,9 +27,8 @@
 
 
 (defn row-attribute-fn
-  [{:keys [name description type required template-mutable editable help group
-           display-name order hidden sensitive value-scope] :as _entry
-    :or {template-mutable false}}]
+  [{:keys [name description type required editable help group
+           display-name order hidden sensitive value-scope] :as _entry}]
   (let [characteristics [["display-name" display-name]
                          ["help" help]
                          ["order" order]

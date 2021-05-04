@@ -253,7 +253,7 @@
 
 
 (defn events-table
-  [events]
+  [_events]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [events]
       [ui/TabPane
@@ -493,7 +493,8 @@
 
 
 (defn ShutdownButton
-  [_deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
+  #_ {:clj-kondo/ignore [:unused-binding]}
+  [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
         checked?  (r/atom false)
@@ -540,7 +541,8 @@
 
 
 (defn DeleteButton
-  [_deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
+  #_ {:clj-kondo/ignore [:unused-binding]}
+  [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
         icon-name "trash"]

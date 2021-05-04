@@ -20,7 +20,6 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.profile.events :as profile-events]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
@@ -991,7 +990,6 @@
     (fn []
       (let [amount (:cent-amount-daily @price)]
         [:<>
-         [PricingTitle]
          [ui/Message {:info true}
           (@tr [:define-price])]
          [ui/Input {:labelPosition "right", :type "text"
@@ -1010,7 +1008,8 @@
                                        (dispatch [::main-events/changes-protection? true])
                                        (dispatch [::events/validate-form])))}]
           [ui/Label "ct€/" (@tr [:day])]]
-         [:p (@tr [:price-per-month])
+         [:p {:style {:padding-top 10}}
+          (@tr [:price-per-month])
           [:b (str
                 (if (pos-int? amount)
                   (general-utils/format "%.2f" (* amount 0.3))
@@ -1023,7 +1022,6 @@
   (let [editable? (subscribe [::subs/editable?])
         price     (subscribe [::subs/price])
         vendor    (subscribe [::profile-subs/vendor])]
-    (dispatch [::profile-events/search-existing-vendor])
     (fn []
       (when (or (and @editable? @vendor) (some? @price))
         [Pricing]))))

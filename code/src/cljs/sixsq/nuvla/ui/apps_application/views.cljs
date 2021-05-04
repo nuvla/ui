@@ -381,7 +381,6 @@
         editable? (subscribe [::apps-subs/editable?])
         price     (subscribe [::apps-subs/price])
         vendor    (subscribe [::profile-subs/vendor])]
-    (dispatch [::profile-events/search-existing-vendor])
     (fn []
       [:<>
        [:h2 [apps-views-detail/PricingTitle]]

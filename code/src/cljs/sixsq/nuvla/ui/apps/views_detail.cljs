@@ -1112,18 +1112,19 @@
 
 
 (defn AuthorVendor
-  "Check if the module belongs to a group. If so, search amongst the group "
+  "Check if the module belongs to a group. If so, search amongst the group. Warning vendor here is a group,
+  not a Stripe vendor."
   []
   (let [tr         (subscribe [::i18n-subs/tr])
         module     (subscribe [::subs/module])
-        groups     (subscribe [::acl-subs/groups-options])
+        groups     (subscribe [::acl-subs/users-and-groups])
         is-vendor? (utils/is-vendor? @module)]
     (if is-vendor?
       (let [groups-from-module (utils/module->groups @module)
             group-id           (first groups-from-module)
             group-definition   (acl-utils/find-group group-id @groups)
             vendor             (if group-definition
-                                 (:name group-definition)
+                                 (second group-definition)
                                  group-id)]
         [AuthorVendorRow (@tr [:vendor]) vendor])
       (let [users-from-module (utils/module->users @module)

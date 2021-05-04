@@ -188,4 +188,4 @@
 
 (defn find-group
   [id groups]
-  (some #(when (= id (:id %)) %) groups))
+  (some #(when (= (first %) id) %) groups))

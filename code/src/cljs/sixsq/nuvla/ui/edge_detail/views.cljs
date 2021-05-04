@@ -499,26 +499,27 @@
 
 
 (defn OnlineStatusIcon
-  [online & _position]                                       ;FIXME: remove calling position
+  [online & _position]                                      ;FIXME: remove calling position
   [ui/Icon {:name  "power"
             :color (utils/status->color online)}])
 
 
 (defn Heartbeat
   [updated]
-  (let [updated-moment           (time/parse-iso8601 updated)
+  (let [tr                       (subscribe [::i18n-subs/tr])
+        updated-moment           (time/parse-iso8601 updated)
         status                   (subscribe [::subs/nuvlabox-online-status])
         next-heartbeat-moment    (subscribe [::subs/next-heartbeat-moment])
         next-heartbeat-times-ago (time/ago @next-heartbeat-moment)
 
-        last-heartbeat-msg       (when updated
-                                   (str "Last heartbeat was " (time/ago updated-moment))
-                                   "Heartbeat unavailable")
+        last-heartbeat-msg       (if updated
+                                   (str (@tr [:heartbeat-last-was]) " " (time/ago updated-moment))
+                                   (@tr [:heartbeat-unavailable]))
 
         next-heartbeat-msg       (when @next-heartbeat-moment
                                    (if (= @status :online)
-                                     (str "Next heartbeat is expected " next-heartbeat-times-ago)
-                                     (str "Next heartbeat was expected " next-heartbeat-times-ago)))]
+                                     (str (@tr [:heartbeat-next-is-expected]) " " next-heartbeat-times-ago)
+                                     (str (@tr [:heartbeat-next-was-expected]) " " next-heartbeat-times-ago)))]
 
     [ui/Message {:icon    "heartbeat"
                  :content (str last-heartbeat-msg ". " next-heartbeat-msg)}]))
@@ -1256,10 +1257,10 @@
   (refresh uuid)
   (let [nb-status (subscribe [::subs/nuvlabox-status])]
     (fn [uuid]
-     ^{:key uuid}
-     [ui/Container {:fluid true}
-      [PageHeader]
-      [MenuBar uuid]
-      [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
-      [job-views/ProgressJobAction @nb-status]
-      [TabsNuvlaBox]])))
+      ^{:key uuid}
+      [ui/Container {:fluid true}
+       [PageHeader]
+       [MenuBar uuid]
+       [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
+       [job-views/ProgressJobAction @nb-status]
+       [TabsNuvlaBox]])))

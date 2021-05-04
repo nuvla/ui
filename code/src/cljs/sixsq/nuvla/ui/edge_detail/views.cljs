@@ -203,8 +203,6 @@
     (swap! form-data assoc :config-files (str/join "\n" config-files))
     (swap! form-data assoc :environment (str/join "\n" environment))
     (fn [{:keys [id] :as _resource} _operation show? title icon button-text]
-      (when (not= (:parent @status))                        ; FIXME: what was intent here?!!
-        (dispatch [::events/get-nuvlabox id]))
       (let [correct-nb? (= (:parent @status) id)
             nb-version  (get @status :nuvlabox-engine-version "")]
         (when-not correct-nb?

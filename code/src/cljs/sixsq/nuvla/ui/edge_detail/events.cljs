@@ -192,17 +192,17 @@
 (reg-event-fx
   ::get-nuvlabox
   (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ id]]
-    (cond-> {::cimi-api-fx/get    [id #(dispatch [::set-nuvlabox %])
-                                   :on-error #(dispatch [::set-nuvlabox nil])]
-             ::cimi-api-fx/search [:nuvlabox-peripheral
-                                   {:filter  (str "parent='" id "'")
-                                    :last    10000
-                                    :orderby "id"}
-                                   #(dispatch [::set-nuvlabox-peripherals %])]
-             :fx                  [[:dispatch [::get-nuvlabox-events id]]
-                                   [:dispatch [::job-events/get-jobs id]]
-                                   [:dispatch [::deployment-events/get-nuvlabox-deployments id]]]}
-            (not= (:id nuvlabox) id) (assoc :db (merge db spec/defaults)))))
+    {:db                  (if (= (:id nuvlabox) id) db (merge db spec/defaults))
+     ::cimi-api-fx/get    [id #(dispatch [::set-nuvlabox %])
+                           :on-error #(dispatch [::set-nuvlabox nil])]
+     ::cimi-api-fx/search [:nuvlabox-peripheral
+                           {:filter  (str "parent='" id "'")
+                            :last    10000
+                            :orderby "id"}
+                           #(dispatch [::set-nuvlabox-peripherals %])]
+     :fx                  [[:dispatch [::get-nuvlabox-events id]]
+                           [:dispatch [::job-events/get-jobs id]]
+                           [:dispatch [::deployment-events/get-nuvlabox-deployments id]]]}))
 
 
 (reg-event-fx

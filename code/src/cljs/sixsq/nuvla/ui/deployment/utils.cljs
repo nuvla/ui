@@ -107,7 +107,7 @@
   [{:keys [full-text-search additional-filter state-selector nuvlabox module-id] :as _args}]
   (let [filter-state     (when state-selector (state-filter state-selector))
         filter-nuvlabox  (when nuvlabox (str "nuvlabox='" nuvlabox "'"))
-        filter-module-id (when module-id (str "module/href='" module-id "'"))
+        filter-module-id (when module-id (str "module/id='" module-id "'"))
         full-text-search (general-utils/fulltext-query-string full-text-search)]
     (general-utils/join-and
       filter-state

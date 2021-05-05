@@ -1138,27 +1138,34 @@
   (let [tr          (subscribe [::i18n-subs/tr])
         editable?   (subscribe [::subs/editable?])
         description (subscribe [::subs/description])
-        {:keys [logo-url]} @(subscribe [::subs/module])]
+        {:keys [logo-url]} @(subscribe [::subs/module])
+        image       [ui/Image {:src      (or logo-url "")
+                               :centered true
+                               :style    {:object-fit "contain"
+                                          :max-height "30em"}}]]
     [ui/Segment {:secondary true
                  :color     "purple"
                  :raised    true
                  :padded    true}
-     [ui/Grid {:columns 2}
+     [ui/Grid {:columns   2
+               :stackable true}
       [ui/GridRow
        [ui/GridColumn {:floated "left"}
         [:h4 (str/capitalize (@tr [:description]))]]
-       [ui/GridColumn
-        [ui/GridColumn {:style {:text-align "right"}}
-         (when @editable?
-           [ui/Button {:icon     "pencil"
-                       :compact  true
-                       :on-click #(dispatch [::events/set-active-tab-index details-tab-index])}])]]]
+       (when @editable?
+         [ui/GridColumn {:style {:text-align "right"}}
+          [ui/Button {:icon     "pencil"
+                      :compact  true
+                      :on-click #(dispatch [::events/set-active-tab-index details-tab-index])}]])]
       [ui/GridRow
+       [ui/GridColumn {:textAlign "center"
+                       :only      "mobile"}                 ;should be working with reversed, but doesn't
+        image]
        [ui/GridColumn
         [ui/ReactMarkdown @description]]
-       [ui/GridColumn
-        [ui/Image {:src   (or logo-url "")
-                   :style {:object-fit "contain"}}]]]]]))
+       [ui/GridColumn {:textAlign "center"
+                       :only      "computer tablet"}        ;should be working with reversed, but doesn't
+        image]]]]))
 
 
 (defn ShareTitle

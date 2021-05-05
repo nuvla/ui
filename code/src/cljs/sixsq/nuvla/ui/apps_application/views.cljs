@@ -36,7 +36,7 @@
 
 
 (defn single-file
-  #_ {:clj-kondo/ignore [:unused-binding]}
+  #_{:clj-kondo/ignore [:unused-binding]}
   [{:keys [id ::spec/file-name ::spec/file-content]}]
   (let [form-valid?     (subscribe [::apps-subs/form-valid?])
         editable?       (subscribe [::apps-subs/editable?])
@@ -530,17 +530,20 @@
   (let [module    (subscribe [::apps-subs/module])
         editable? (subscribe [::apps-subs/editable?])
         stripe    (subscribe [::main-subs/stripe])]
-    [(overview)
-     (license)
-     (when @stripe
-       (pricing))
-     (deployments)
-     (versions)
-     (details)
-     (docker)
-     (configuration)
-     (apps-views-detail/TabAcls module @editable? #(do (dispatch [::apps-events/acl %])
-                                                       (dispatch [::main-events/changes-protection? true])))]))
+    (remove nil? [(overview)
+                  (license)
+                  (when @stripe
+                    (pricing))
+                  (deployments)
+                  (versions)
+                  (details)
+                  (docker)
+                  (configuration)
+                  (apps-views-detail/TabAcls
+                    module
+                    @editable?
+                    #(do (dispatch [::apps-events/acl %])
+                         (dispatch [::main-events/changes-protection? true])))])))
 
 
 (defn ViewEdit

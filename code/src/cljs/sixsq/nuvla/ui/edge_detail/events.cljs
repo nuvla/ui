@@ -295,7 +295,7 @@
 (reg-event-fx
   ::get-join-token
   (fn [_ [_ nuvlabox-id scope]]
-    {::cimi-api-fx/get    [nuvlabox-id #(dispatch [::get-join-token-from-isg (:infrastructure-service-group %) scope])]}))
+    {::cimi-api-fx/get [nuvlabox-id #(dispatch [::get-join-token-from-isg (:infrastructure-service-group %) scope])]}))
 
 
 (reg-event-fx
@@ -337,31 +337,31 @@
     {::cimi-api-fx/search
      [:nuvlabox
       {:filter (->> (map :parent statuses)
-                 (map #(str "id='" % "'"))
-                 (apply general-utils/join-or))
+                    (map #(str "id='" % "'"))
+                    (apply general-utils/join-or))
        :select "id, name, nuvlabox-status"
        :last   100}
-      #(dispatch [::set-nuvlabox-managers (let [status-per-manager  (atom [])]
+      #(dispatch [::set-nuvlabox-managers (let [status-per-manager (atom [])]
                                             (doseq [status statuses]
                                               (swap! status-per-manager
-                                                conj
-                                                {
-                                                 :name
-                                                 (:name (first (get (group-by :id (:resources %)) (:parent status))))
-                                                 :status
-                                                 status
-                                                 }))
+                                                     conj
+                                                     {
+                                                      :name
+                                                      (:name (first (get (group-by :id (:resources %)) (:parent status))))
+                                                      :status
+                                                      status
+                                                      }))
                                             @status-per-manager)])]}))
 
 
 (reg-event-fx
   ::get-nuvlabox-cluster
   (fn [_ [_ nuvlabox-id]]
-    {::cimi-api-fx/search    [:nuvlabox-cluster
-                              {:filter (str "nuvlabox-managers='" nuvlabox-id "'")
-                               :select "id, cluster-id, managers, workers, orchestrator, name"
-                               :last   1}
-                              #(dispatch [::set-nuvlabox-cluster (first (:resources %))])]}))
+    {::cimi-api-fx/search [:nuvlabox-cluster
+                           {:filter (str "nuvlabox-managers='" nuvlabox-id "'")
+                            :select "id, cluster-id, managers, workers, orchestrator, name"
+                            :last   1}
+                           #(dispatch [::set-nuvlabox-cluster (first (:resources %))])]}))
 
 
 (reg-event-db

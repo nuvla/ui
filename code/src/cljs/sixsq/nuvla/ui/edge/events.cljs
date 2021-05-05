@@ -80,26 +80,26 @@
   ::get-nuvlaboxes-summary
   (fn [{{:keys [::spec/full-text-search
                 ::spec/nuvlabox-cluster] :as db} :db} _]
-    {:db                   (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search  [:nuvlabox
-                            (utils/get-query-aggregation-params
-                              full-text-search
-                              "terms:online,terms:state"
-                              (if nuvlabox-cluster
-                                (->> (concat (:nuvlabox-managers nuvlabox-cluster) (:nuvlabox-workers nuvlabox-cluster))
-                                  (map #(str "id='" % "'"))
-                                  (apply general-utils/join-or))
-                                nil))
-                            #(dispatch [::set-nuvlaboxes-summary %])]}))
+    {:db                  (assoc db ::spec/loading? true)
+     ::cimi-api-fx/search [:nuvlabox
+                           (utils/get-query-aggregation-params
+                             full-text-search
+                             "terms:online,terms:state"
+                             (if nuvlabox-cluster
+                               (->> (concat (:nuvlabox-managers nuvlabox-cluster) (:nuvlabox-workers nuvlabox-cluster))
+                                    (map #(str "id='" % "'"))
+                                    (apply general-utils/join-or))
+                               nil))
+                           #(dispatch [::set-nuvlaboxes-summary %])]}))
 
 (reg-event-fx
   ::set-nuvlabox-clusters
-  (fn [{:keys [db]} [_ {:keys [resources] :as nuvlabox-clusters}]]
+  (fn [{:keys [db]} [_ nuvlabox-clusters]]
     (if (instance? js/Error nuvlabox-clusters)
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlabox-clusters)]
                    {:header  (cond-> (str "failure getting nuvlabox clusters")
-                               status (str " (" status ")"))
+                                     status (str " (" status ")"))
                     :content message
                     :type    :error})])
       (cond->
@@ -113,10 +113,10 @@
   (fn [{{:keys [::spec/page
                 ::spec/elements-per-page
                 ::spec/full-text-search] :as db} :db} _]
-    {:db                   (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search  [:nuvlabox-cluster
-                            (utils/get-query-params full-text-search page elements-per-page nil)
-                            #(dispatch [::set-nuvlabox-clusters %])]}))
+    {:db                  (assoc db ::spec/loading? true)
+     ::cimi-api-fx/search [:nuvlabox-cluster
+                           (utils/get-query-params full-text-search page elements-per-page nil)
+                           #(dispatch [::set-nuvlabox-clusters %])]}))
 
 
 (reg-event-fx
@@ -128,10 +128,10 @@
 (reg-event-fx
   ::get-nuvlaboxes-summary-all
   (fn [{db :db} _]
-    {:db                   (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search  [:nuvlabox
-                            (utils/get-query-aggregation-params nil "terms:online,terms:state" nil)
-                            #(dispatch [::set-nuvlaboxes-summary-all %])]}))
+    {:db                  (assoc db ::spec/loading? true)
+     ::cimi-api-fx/search [:nuvlabox
+                           (utils/get-query-aggregation-params nil "terms:online,terms:state" nil)
+                           #(dispatch [::set-nuvlaboxes-summary-all %])]}))
 
 (reg-event-fx
   ::set-state-selector
@@ -269,13 +269,13 @@
 (reg-event-fx
   ::set-nuvlabox-cluster
   (fn [{:keys [db]} [_ nuvlabox-cluster]]
-    {:db        (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster)
-     :dispatch  [::refresh]}))
+    {:db       (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster)
+     :dispatch [::refresh]}))
 
 
 (reg-event-fx
   ::get-nuvlabox-cluster
-  (fn [{:keys [db]} [_ cluster-id]]
+  (fn [_ [_ cluster-id]]
     {::cimi-api-fx/get [cluster-id #(dispatch [::set-nuvlabox-cluster %])
                         :on-error #(dispatch [::set-nuvlabox-cluster nil])]}))
 

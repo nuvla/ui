@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
     [sixsq.nuvla.ui.config :as config]
+    [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
     [sixsq.nuvla.ui.deployment.views :as deployment-views]
     [sixsq.nuvla.ui.edge-detail.events :as events]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]
@@ -290,11 +291,11 @@
 
 
 (defn NBManagersDropdown
-  [nuvlabox-id on-change-fn]
+  [nuvlabox-id _on-change-fn]
   (let [tr       (subscribe [::i18n-subs/tr])
         managers (subscribe [::subs/nuvlabox-managers])]
     (dispatch [::events/get-nuvlabox-managers nuvlabox-id])
-    (fn [nuvlabox-id on-change-fn]
+    (fn [_nuvlabox-id on-change-fn]
       [ui/FormDropdown
        {:label       (@tr [:nuvlabox-available-managers])
         :loading     (nil? @managers)
@@ -307,38 +308,37 @@
 
 
 (defn ClusterButton
-  [{:keys [id] :as resource} operation show? title icon button-text]
-  (let [tr            (subscribe [::i18n-subs/tr])
-        deployments   (subscribe [::deployment-subs/deployments])
-        join-token    (subscribe [::subs/join-token])
-        nuvlabox-cluster    (subscribe [::subs/nuvlabox-cluster])
-        close-fn      #(reset! show? false)
-        default-action  "join-worker"
-        form-data     (r/atom {:cluster-action default-action})
-        actions       [{:key 1 :text "Join as a worker" :value default-action}
-                       {:key 2 :text "Join as a manager" :value "join-manager"}
-                       {:key 3 :text "Leave" :value "leave"}
-                       {:key 4 :text "Force new cluster" :value "force-new-cluster"}]
-        on-change-fn  (fn [k join-token-scope v]
-                        (if (str/blank? v)
-                          (swap! form-data dissoc k)
-                          (do
-                            (swap! form-data dissoc :token)
-                            (swap! form-data assoc k v)
-                            (when join-token-scope
-                              (do
-                                (dispatch [::events/get-join-token (:parent v) join-token-scope])
-                                (dispatch [::events/get-nuvlabox-cluster (:parent v)]))))))
-        on-success-fn close-fn
-        on-error-fn   close-fn
-        on-click-fn   #(do
-                         (dispatch [::events/set-join-token nil])
-                         (when-not (empty? (:nuvlabox-manager-status @form-data))
-                           (swap! form-data assoc :nuvlabox-manager-status (general-utils/edn->json
-                                                                             (:nuvlabox-manager-status @form-data))))
-                         (dispatch [::events/operation id operation @form-data
-                                    on-success-fn on-error-fn]))]
-    (fn [resource operation show? title icon button-text]
+  [{:keys [id] :as _resource} operation show? _title _icon _button-text]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        deployments      (subscribe [::deployment-subs/deployments])
+        join-token       (subscribe [::subs/join-token])
+        nuvlabox-cluster (subscribe [::subs/nuvlabox-cluster])
+        close-fn         #(reset! show? false)
+        default-action   "join-worker"
+        form-data        (r/atom {:cluster-action default-action})
+        actions          [{:key 1 :text "Join as a worker" :value default-action}
+                          {:key 2 :text "Join as a manager" :value "join-manager"}
+                          {:key 3 :text "Leave" :value "leave"}
+                          {:key 4 :text "Force new cluster" :value "force-new-cluster"}]
+        on-change-fn     (fn [k join-token-scope v]
+                           (if (str/blank? v)
+                             (swap! form-data dissoc k)
+                             (do
+                               (swap! form-data dissoc :token)
+                               (swap! form-data assoc k v)
+                               (when join-token-scope
+                                 (dispatch [::events/get-join-token (:parent v) join-token-scope])
+                                 (dispatch [::events/get-nuvlabox-cluster (:parent v)])))))
+        on-success-fn    close-fn
+        on-error-fn      close-fn
+        on-click-fn      #(do
+                            (dispatch [::events/set-join-token nil])
+                            (when-not (empty? (:nuvlabox-manager-status @form-data))
+                              (swap! form-data assoc :nuvlabox-manager-status (general-utils/edn->json
+                                                                                (:nuvlabox-manager-status @form-data))))
+                            (dispatch [::events/operation id operation @form-data
+                                       on-success-fn on-error-fn]))]
+    (fn [resource _operation show? title icon button-text]
       (let [dpls          (:resources @deployments)
             active-dpls   (filter (fn [x]
                                     (when (:state x)
@@ -361,16 +361,15 @@
              (@tr [:nuvlabox-cant-cluster-with-dpls])]
             [ui/Form
              [ui/FormDropdown
-              {:label       "Action"
-               :on-change   (ui-callback/value
-                              (fn [value]
-                                (do
+              {:label         "Action"
+               :on-change     (ui-callback/value
+                                (fn [value]
                                   (on-change-fn :cluster-action nil value)
                                   (swap! form-data dissoc :nuvlabox-manager-status)
-                                  (swap! form-data dissoc :token))))
+                                  (swap! form-data dissoc :token)))
                :default-value default-action
-               :options     actions
-               :selection   true}]
+               :options       actions
+               :selection     true}]
              (when (= (:cluster-action @form-data) "join-worker")
                [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-status "WORKER")])
 
@@ -378,17 +377,16 @@
                [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-status "MANAGER")])
 
              (when (and (:token @join-token) (:nuvlabox-manager-status @form-data))
-               (do
-                 (swap! form-data assoc :token (:token @join-token))
-                 [ui/Message
-                  (@tr [:nuvlabox-joining])
-                  [:span {:style {:font-weight "bold"}} (if (:name @nuvlabox-cluster)
-                                                          (str (:name @nuvlabox-cluster) " (" (:cluster-id @nuvlabox-cluster) ")")
-                                                          (:cluster-id @nuvlabox-cluster))]
-                  (@tr [:nuvlabox-joining-on-manager-address])
-                  [:span {:style {:font-weight "bold"}} (:cluster-join-address (:nuvlabox-manager-status @form-data))]
-                  (@tr [:nuvlabox-joining-with-token])
-                  [:p {:style {:font-weight "bold"}} (:token @join-token)]]))])]
+               (swap! form-data assoc :token (:token @join-token))
+               [ui/Message
+                (@tr [:nuvlabox-joining])
+                [:span {:style {:font-weight "bold"}} (if (:name @nuvlabox-cluster)
+                                                        (str (:name @nuvlabox-cluster) " (" (:cluster-id @nuvlabox-cluster) ")")
+                                                        (:cluster-id @nuvlabox-cluster))]
+                (@tr [:nuvlabox-joining-on-manager-address])
+                [:span {:style {:font-weight "bold"}} (:cluster-join-address (:nuvlabox-manager-status @form-data))]
+                (@tr [:nuvlabox-joining-with-token])
+                [:p {:style {:font-weight "bold"}} (:token @join-token)]])])]
          [ui/ModalActions
           [uix/Button
            {:text     (@tr [:cancel])
@@ -401,9 +399,8 @@
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "cluster-nuvlabox"]
-  [resource operation]
-  (let [tr    (subscribe [::i18n-subs/tr])
-        show? (r/atom false)]
+  [_resource _operation]
+  (let [show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "cluster-nuvlabox" @show?)}
       [ClusterButton resource operation show? "Cluster NuvlaBox" "linkify" "cluster"])))
@@ -699,7 +696,7 @@
                         :image true}
               "Raw sample: "
               [ui/LabelDetail
-              [ui/Popup
+               [ui/Popup
                 {:trigger        (r/as-element [ui/Icon {:name "eye"}])
                  :content        (last (:data-gateway stat))
                  :position       "right center"
@@ -938,7 +935,7 @@
         [ui/Message {:color "brown"
                      :size  "tiny"}
          [ui/MessageHeader
-          [ui/Icon {:name  "sticky note"}]
+          [ui/Icon {:name "sticky note"}]
           "Notes"]
          [ui/MessageList {:items status-notes}]])])
    [Heartbeat updated nb-id]])
@@ -955,19 +952,19 @@
 
 (defn TabOverviewCluster
   [{:keys [node-id cluster-id swarm-node-cert-expiry-date cluster-join-address
-           cluster-node-role cluster-managers cluster-nodes orchestrator] :as nuvlabox}]
+           cluster-node-role cluster-managers cluster-nodes orchestrator] :as _nuvlabox}]
   [ui/Segment {:secondary true
                :color     "black"
                :raised    true}
    [:h4 "Cluster Status "
     (when orchestrator
-      [ui/Label {:circular true
-                 :color    "blue"
-                 :size     "tiny"
-                 :basic    true
-                 :float    "right"
-                 :horizontal  true
-                 :style   {:float "right"}}
+      [ui/Label {:circular   true
+                 :color      "blue"
+                 :size       "tiny"
+                 :basic      true
+                 :float      "right"
+                 :horizontal true
+                 :style      {:float "right"}}
        [ui/Icon {:name (get orchestration-icons (keyword orchestrator) "question circle")}] orchestrator])]
    [ui/Table {:basic  "very"
               :padded false}
@@ -986,8 +983,8 @@
          [:<>
           (str " ")
           [ui/Icon {:className "fas fa-crown"
-                    :corner true
-                    :color  "blue"}]])]]
+                    :corner    true
+                    :color     "blue"}]])]]
      (when cluster-join-address
        [ui/TableRow
         [ui/TableCell "Cluster Join Address"]
@@ -1029,16 +1026,16 @@
 
 (defn TabOverview
   []
-  (let [nuvlabox      (subscribe [::subs/nuvlabox])
-        locale        (subscribe [::i18n-subs/locale])
-        nb-status     (subscribe [::subs/nuvlabox-status])
-        ssh-creds     (subscribe [::subs/nuvlabox-associated-ssh-keys])
-        tr            (subscribe [::i18n-subs/tr])
-        edit          (r/atom false)
-        old-nb-name   (r/atom (:name @nuvlabox))
-        close-fn      #(do
-                         (reset! edit false)
-                         (refresh (:id @nuvlabox)))]
+  (let [nuvlabox    (subscribe [::subs/nuvlabox])
+        locale      (subscribe [::i18n-subs/locale])
+        nb-status   (subscribe [::subs/nuvlabox-status])
+        ssh-creds   (subscribe [::subs/nuvlabox-associated-ssh-keys])
+        tr          (subscribe [::i18n-subs/tr])
+        edit        (r/atom false)
+        old-nb-name (r/atom (:name @nuvlabox))
+        close-fn    #(do
+                       (reset! edit false)
+                       (refresh (:id @nuvlabox)))]
     (fn []
       (let [{:keys [id tags ssh-keys]} @nuvlabox]
         (when (not= (count ssh-keys) (count @ssh-creds))

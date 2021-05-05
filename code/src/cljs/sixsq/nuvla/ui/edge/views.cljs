@@ -34,7 +34,7 @@
 
 (defn StatisticStates
   ([] [StatisticStates true false])
-  ([clickable? hide-cluster-stats]
+  ([_clickable? _hide-cluster-stats]
    (let [tr          (subscribe [::i18n-subs/tr])
          summary     (subscribe [::subs/nuvlaboxes-summary])
          summary-all (subscribe [::subs/nuvlaboxes-summary-all])
@@ -77,9 +77,10 @@
                  {:size     "tiny"
                   :class    "slight-up"
                   :style    {:cursor "pointer"}
-                  :on-click #(when clickable? (do (reset! show-state-statistics (not @show-state-statistics))
-                                                  (when-not @show-state-statistics
-                                                    (dispatch [::events/set-state-selector nil]))))}
+                  :on-click #(when clickable?
+                               (reset! show-state-statistics (not @show-state-statistics))
+                               (when-not @show-state-statistics
+                                 (dispatch [::events/set-state-selector nil])))}
                  [ui/StatisticValue {:style {:margin "0 10px"}}
                   [ui/Icon {:name (if @show-state-statistics "angle double up" "angle double down")}]]]
                 [main-components/ClickMeStaticPopup])])]
@@ -709,7 +710,7 @@
   (-> created time/parse-iso8601 time/ago))
 
 (defn NuvlaboxRow
-  [{:keys [id name description created state tags online] :as nuvlabox} managers]
+  [{:keys [id name description created state tags online] :as _nuvlabox} managers]
   (let [uuid (general-utils/id->uuid id)]
     [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])
                   :style    {:cursor "pointer"}}
@@ -760,7 +761,7 @@
                                                  (:nuvlabox-workers @current-cluster))]
                               (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
                             (:resources @nuvlaboxes))]
-    [:div utils-style/center-items
+    [:div style/center-items
      [ui/Table {:compact "very", :selectable true}
       [ui/TableHeader
        [ui/TableRow
@@ -792,7 +793,7 @@
 
 
 (defn NuvlaboxCard
-  [_nuvlabox managers]
+  [_nuvlabox _managers]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [{:keys [id name description created state tags online]} managers]
       (let [href (str "edge/" (general-utils/id->uuid id))]
@@ -829,7 +830,7 @@
                                                  (:nuvlabox-workers @current-cluster))]
                               (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
                             (:resources @nuvlaboxes))]
-    [:div utils-style/center-items
+    [:div style/center-items
      [ui/CardGroup {:centered    true
                     :itemsPerRow 4}
       (doall
@@ -859,10 +860,10 @@
 
 
 (defn NuvlaBoxClusterCard
-  [nuvlabox-cluster nuvlaboxes]
+  [_nuvlabox-cluster nuvlaboxes]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [{:keys [id cluster-id created managers workers nuvlabox-managers
-                 nuvlabox-workers name description orchestrator] :as nuvlabox-cluster}]
+                 nuvlabox-workers name description orchestrator] :as _nuvlabox-cluster}]
       (let [href        (str "edge/nuvlabox-cluster/" (general-utils/id->uuid id))
             orch-icon   (get orchestration-icons (keyword orchestrator) "question circle")
             cluster-nodes (+ (count managers) (count workers))
@@ -909,7 +910,7 @@
   []
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])]
-    [:div utils-style/center-items
+    [:div style/center-items
      [ui/CardGroup {:centered    true
                     :itemsPerRow 4}
       (doall

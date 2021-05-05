@@ -15,6 +15,7 @@
     ["codemirror/addon/search/searchcursor"]
     ["codemirror/addon/selection/active-line"]
     ["codemirror/mode/javascript/javascript"]
+    ["codemirror/mode/markdown/markdown"]
     ["codemirror/mode/shell/shell"]
     ["codemirror/mode/yaml/yaml"]
     ["codemirror/mode/markdown/markdown"]

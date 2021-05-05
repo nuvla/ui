@@ -16,6 +16,7 @@
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
+    [sixsq.nuvla.ui.deployment.utils :as deployment-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -31,8 +32,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.deployment.utils :as deployment-utils]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (def refresh-action-id :deployment-get-deployment)

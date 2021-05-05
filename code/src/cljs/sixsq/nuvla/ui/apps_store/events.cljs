@@ -4,6 +4,7 @@
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.apps-store.spec :as spec]
     [sixsq.nuvla.ui.apps-store.utils :as utils]
+    [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.session.spec :as session-spec]))
 

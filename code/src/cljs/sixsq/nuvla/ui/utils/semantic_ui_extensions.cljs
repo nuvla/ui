@@ -2,7 +2,7 @@
   (:require
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
-    [re-frame.core :refer [subscribe dispatch]]
+    [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]

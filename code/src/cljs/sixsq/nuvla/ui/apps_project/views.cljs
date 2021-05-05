@@ -14,6 +14,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
@@ -119,20 +120,21 @@
 
 (defn OverviewPane
   []
-  [ui/TabPane
-   [ui/Grid {:columns   2,
-             :stackable true
-             :padded    true
-             :centered  true}
-    [ui/GridRow {:centered true}
-     [ui/GridColumn
-      [apps-views-detail/OverviewDescription utils/tab-details]]]
-    [ui/GridRow
-     [ui/GridColumn
-      [modules-view]]]
-    [ui/GridRow
-     [ui/GridColumn
-      [OverviewModuleSummary]]]]])
+  (let [device (subscribe [::main-subs/device])]
+    [ui/TabPane
+     [ui/Grid {:columns   (if (contains? #{:wide-screen} @device) 2 1)
+               :stackable true
+               :padded    true
+               :centered  true}
+      [ui/GridRow {:centered true}
+       [ui/GridColumn
+        [apps-views-detail/OverviewDescription utils/tab-details]]]
+      [ui/GridRow
+       [ui/GridColumn
+        [modules-view]]]
+      [ui/GridRow
+       [ui/GridColumn
+        [OverviewModuleSummary]]]]]))
 
 
 (defn overview

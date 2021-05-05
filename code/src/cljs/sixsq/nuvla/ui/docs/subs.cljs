@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.docs.subs
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch reg-sub]]
+    [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.docs.spec :as spec]))
 
 
@@ -18,7 +18,7 @@
 
 
 (defn resolve-metadata-id
-  [{:keys [id resource-metadata resource-url] :as resource}]
+  [{:keys [id resource-metadata resource-url] :as _resource}]
   (cond
     resource-metadata resource-metadata
     (re-find #"-template/" (str id)) (str "resource-metadata/" (str/replace id #"/" "-"))

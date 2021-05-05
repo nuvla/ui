@@ -14,7 +14,7 @@
 
 
 (defn job-map-to-row
-  [{:keys [id action time-of-status-change state progress return-code status-message] :as job}]
+  [{:keys [id action time-of-status-change state progress return-code status-message] :as _job}]
   [ui/TableRow
    [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
    [ui/TableCell action]
@@ -26,7 +26,7 @@
 
 
 (defn JobsTable
-  [jobs]
+  [_jobs]
   (let [tr                (subscribe [::i18n-subs/tr])
         elements-per-page (subscribe [::subs/jobs-per-page])
         page              (subscribe [::subs/job-page])]

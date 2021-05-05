@@ -2,6 +2,7 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub subscribe]]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
     [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
@@ -189,6 +190,13 @@
 
 
 (reg-sub
+  ::version-id
+  :<- [::module-content]
+  (fn [content]
+    (:id content)))
+
+
+(reg-sub
   ::module-name
   :<- [::module]
   (fn [module]
@@ -261,10 +269,7 @@
   ::module-versions
   :<- [::module-info]
   (fn [module-info]
-    (->> module-info
-         :versions
-         (map-indexed vector)
-         reverse)))
+    (-> module-info :versions apps-utils/map-versions-index)))
 
 
 (reg-sub
@@ -275,11 +280,37 @@
 
 
 (reg-sub
+  ::latest-published-version
+  :<- [::module-versions]
+  (fn [module-versions]
+    (-> module-versions apps-utils/latest-published-version)))
+
+
+(reg-sub
   ::is-latest-version?
   :<- [::latest-version]
   :<- [::current-module-content-id]
   (fn [[latest-version current-version]]
-    (and latest-version (= latest-version current-version))))
+    (if (and latest-version (= latest-version current-version))
+      true
+      false)))
+
+
+(reg-sub
+  ::is-latest-published-version?
+  :<- [::latest-published-version]
+  :<- [::current-module-content-id]
+  (fn [[latest-published-version current-version]]
+    (if (and latest-published-version (= latest-published-version current-version))
+      true
+      false)))
+
+
+(reg-sub
+  ::is-module-published?
+  :<- [::module]
+  (fn [module]
+    (-> module :published true?)))
 
 
 (reg-sub
@@ -292,6 +323,13 @@
   ::original-module
   (fn [db]
     (::spec/original-module db)))
+
+
+(reg-sub
+  ::price
+  :<- [::module]
+  (fn [module]
+    (:price module)))
 
 
 (reg-sub

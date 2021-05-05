@@ -22,13 +22,13 @@
 
 
 (defmulti form-field
-          (fn [update-fn form-id {:keys [type] :as param}]
+          (fn [_update-fn _form-id {:keys [type] :as _param}]
             (keyword type)))
 
 
 (defmethod form-field :default
-  [update-fn form-id {:keys [name display-name help hidden sensitive value-scope
-                             required editable] :as attribute}]
+  [update-fn form-id {:keys [name display-name _help _hidden _sensitive value-scope
+                             _required editable] :as _attribute}]
   (let [{:keys [values value default]} value-scope
         label         (or display-name name)
         default-value (or value default "")
@@ -36,8 +36,8 @@
         on-change-fn  (ui-callback/value #(update-fn form-id name %))]
     (when default-value
       (update-fn form-id name default-value))
-    (fn [update-fn form-id {:keys [name display-name help hidden sensitive value-scope
-                                   required editable] :as attribute}]
+    (fn [_update-fn _form-id {:keys [name _display-name help hidden sensitive _value-scope
+                                   required _editable] :as _attribute}]
       ^{:key name}
       [ui/FormField {:required required}
        (when-not hidden [:label label nbsp (help-popup help)])
@@ -59,14 +59,14 @@
 
 
 (defmethod form-field :integer
-  [update-fn form-id {:keys [name display-name help hidden value-scope
-                             required editable] :as attribute}]
+  [update-fn form-id {:keys [name display-name _help _hidden value-scope
+                             _required _editable] :as _attribute}]
   (let [label         (or display-name name)
         default-value (or (:value value-scope) (:default value-scope))]
     (when default-value
       (update-fn form-id name default-value))
-    (fn [update-fn form-id {:keys [name display-name help hidden value-scope
-                                   required editable] :as attribute}]
+    (fn [update-fn form-id {:keys [name _display-name help hidden _value-scope
+                                   required editable] :as _attribute}]
       ^{:key name}
       [ui/FormField {:required required}
        (when-not hidden [:label label nbsp (help-popup help)])
@@ -79,12 +79,12 @@
                 hidden (assoc :style {:display "none"}))]])))
 
 (defn date-time-form
-  [update-fn form-id {:keys [value-scope] :as attribute}]
+  [_update-fn _form-id {:keys [value-scope] :as _attribute}]
   (let [locale        (subscribe [::i18n-subs/locale])
         {:keys [value default]} value-scope
         default-value (or value default)
         date-atom     (reagent/atom (when default-value (time/parse-iso8601 default-value)))]
-    (fn [update-fn form-id {:keys [name display-name help hidden required editable] :as attribute}]
+    (fn [update-fn form-id {:keys [name display-name help hidden required editable] :as _attribute}]
       (let [label     (or display-name name)
             read-only (not editable)]
         ^{:key name}
@@ -108,13 +108,13 @@
 
 
 (defmethod form-field :boolean
-  [update-fn form-id {:keys [name display-name help hidden value-scope
-                             required editable] :as attribute}]
+  [update-fn form-id {:keys [name display-name _help _hidden value-scope
+                             _required _editable] :as _attribute}]
   (let [label         (or display-name name)
         default-value (or (:value value-scope) (:default value-scope) false)]
     (update-fn form-id name default-value)
-    (fn [update-fn form-id {:keys [name display-name help hidden value-scope
-                                   required editable] :as attribute}]
+    (fn [update-fn form-id {:keys [name _display-name help hidden _value-scope
+                                   required editable] :as _attribute}]
       ^{:key name}
       [ui/FormField {:required required}
        (when-not hidden [:label label nbsp (help-popup help)])
@@ -128,7 +128,7 @@
 
 (defmethod form-field :resource-id
   [update-fn form-id {:keys [name display-name help hidden value-scope
-                             required editable] :as attribute}]
+                             required editable] :as _attribute}]
   (let [label (or display-name name)]
     ^{:key name}
     [ui/FormField {:required required}

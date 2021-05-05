@@ -259,8 +259,7 @@
 
 (reg-event-fx
   ::set-confirm-card-setup-result
-  (fn [{{:keys [::spec/loading
-                ::spec/customer] :as db} :db} [_ result]]
+  (fn [{db :db} [_ result]]
     (let [res            (-> result (js->clj :keywordize-keys true))
           error          (:error res)
           payment-method (get-in res [:setupIntent :payment_method])]
@@ -291,7 +290,7 @@
 
 (reg-event-fx
   ::detach-payment-method
-  (fn [{{:keys [::spec/customer] :as db} :db} [_ payment-method]]
+  (fn [{{:keys [::spec/customer]} :db} [_ payment-method]]
     {::cimi-api-fx/operation [(:id customer) "detach-payment-method"
                               #(dispatch [::list-payment-methods])
                               {:payment-method payment-method}]}))
@@ -299,7 +298,7 @@
 
 (reg-event-fx
   ::set-default-payment-method
-  (fn [{{:keys [::spec/customer] :as db} :db} [_ payment-method]]
+  (fn [{{:keys [::spec/customer]} :db} [_ payment-method]]
     {::cimi-api-fx/operation [(:id customer) "set-default-payment-method"
                               #(dispatch [::list-payment-methods])
                               {:payment-method payment-method}]}))

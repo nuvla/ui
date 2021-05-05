@@ -4,7 +4,8 @@
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.apps.utils :as utils]))
 
 
 (reg-sub
@@ -14,20 +15,33 @@
 
 
 (reg-sub
+  ::description
+  :<- [::module-common]
+  (fn [module-common]
+    (::spec/description module-common)))
+
+
+(reg-sub
   ::module-subtype
   :<- [::module-common]
-  (fn [module-common _]
+  (fn [module-common]
     (::spec/subtype module-common)))
 
 
 (reg-sub
   ::module-license
   :<- [::module-common]
-  (fn [module-common _]
+  (fn [module-common]
     (::spec/license module-common)))
 
 
 ;; Validation
+
+(reg-sub
+  ::details-validation-error?
+  (fn [db]
+    #_:clj-kondo/ignore
+    (not (empty? (::spec/details-validation-errors db)))))
 
 ; Is the form valid?
 
@@ -99,11 +113,7 @@
                                        (remove nil?)
                                        set)
           registries-infra-set    (set (map :id registries-infra))
-          not-existing-registries (set/difference private-registries-set registries-infra-set)
-          res                     (map (fn [{:keys [id name]}]
-                                         {:key id, :value id, :text (or name id)})
-                                       (concat registries-infra
-                                               (map (fn [id] {:id id}) not-existing-registries)))]
+          not-existing-registries (set/difference private-registries-set registries-infra-set)]
       (map (fn [{:keys [id name]}]
              {:key id, :value id, :text (or name id)})
            (concat registries-infra
@@ -189,15 +199,15 @@
     (not= (-> module
               (utils-detail/db->module nil db)
               :content
-              (dissoc :commit :author))
-          (-> module-immutable :content (dissoc :commit :author)))))
+              (dissoc :commit :author :children))
+          (-> module-immutable :content (dissoc :commit :author :children)))))
 
 
 (reg-sub
   ::versions
   :<- [::module]
   (fn [{:keys [versions]}]
-    (reverse (map-indexed vector versions))))
+    (utils/map-versions-index versions)))
 
 
 (reg-sub
@@ -230,6 +240,37 @@
 
 
 (reg-sub
+  ::latest-published-version
+  :<- [::versions]
+  (fn [versions]
+    (-> versions utils/latest-published-version)))
+
+
+(reg-sub
+  ::latest-published-index
+  :<- [::versions]
+  (fn [versions]
+    (-> versions utils/latest-published-index)))
+
+
+(reg-sub
+  ::is-latest-published-version?
+  :<- [::latest-published-version]
+  :<- [::module-content-id]
+  (fn [[latest-published-version module-content-id]]
+    (if (and latest-published-version (= latest-published-version module-content-id))
+      true
+      false)))
+
+
+(reg-sub
+  ::is-module-published?
+  :<- [::module]
+  (fn [module]
+    (-> module :published true?)))
+
+
+(reg-sub
   ::module-id-version
   :<- [::module]
   :<- [::versions]
@@ -239,8 +280,20 @@
     (let [id (:id module)]
       (if is-latest?
         id
-        (str id "_" (some (fn [[i {:keys [href]}]] (when (= current href) i)) versions))
-        ))))
+        (str id "_" (some (fn [[i {:keys [href]}]] (when (= current href) i)) versions))))))
+
+
+(reg-sub
+  ::version
+  :<- [::module]
+  :<- [::versions]
+  :<- [::is-latest-version?]
+  :<- [::module-content-id]
+  (fn [[module versions is-latest? current]]
+    (let [id (:id module)]
+      (if is-latest?
+        id
+        (str id "_" (some (fn [[i {:keys [href]}]] (when (= current href) i)) versions))))))
 
 
 (reg-sub
@@ -253,3 +306,8 @@
   ::paste-modal-visible?
   (fn [db]
     (::spec/paste-modal-visible? db)))
+
+(reg-sub
+  ::active-tab-index
+  (fn [db]
+    (get-in db [::spec/active-tab-index])))

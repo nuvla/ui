@@ -31,8 +31,10 @@
 
 
 (defn as-form-input
-  [index {env-name     :name env-description :description env-value :value
-          env-required :required :as env-variable}]
+  [index {env-name        :name
+          env-description :description
+          env-value       :value
+          env-required    :required}]
   (let [deployment (subscribe [::subs/deployment])]
     [ui/FormField {:required env-required}
      [:label env-name ff/nbsp (ff/help-popup env-description)]

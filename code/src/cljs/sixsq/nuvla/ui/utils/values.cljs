@@ -2,10 +2,10 @@
   "General functions for rendering values."
   (:require
     [clojure.pprint :refer [pprint]]
-    [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.history.views :as history]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [markdown-to-hiccup.core :as md]))
 
 
 (defn href?
@@ -95,3 +95,18 @@
                                          :name  "clipboard outline"
                                          :color "blue"
                                          :style {:color "black"}}])}]]]))
+
+
+(defn markdown->hiccup
+  [markdown]
+  (->> markdown (md/md->hiccup) (md/component)))
+
+
+(defn hiccup->first-p
+  [hiccup]
+  (some #(when (= :p (first %)) (nth % 2)) (drop 2 hiccup)))
+
+
+(defn markdown->summary
+  [markdown]
+  (-> markdown markdown->hiccup hiccup->first-p))

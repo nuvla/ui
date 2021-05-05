@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.notifications.subs
   (:require
-    [re-frame.core :refer [reg-sub subscribe]]
+    [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.notifications.spec :as spec]))
 
 

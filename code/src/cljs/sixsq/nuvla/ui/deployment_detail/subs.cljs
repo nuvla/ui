@@ -3,7 +3,8 @@
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.deployment-detail.spec :as spec]
     [sixsq.nuvla.ui.deployment.utils :as deployment-utils]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]))
 
 
 (reg-sub
@@ -144,7 +145,8 @@
 (reg-sub
   ::module-versions
   (fn [db]
-    (reverse (map-indexed vector (::spec/module-versions db)))))
+    (let [versions (::spec/module-versions db)]
+      (apps-utils/map-versions-index versions))))
 
 
 (reg-sub
@@ -158,11 +160,7 @@
   :<- [::module-versions]
   :<- [::current-module-content-id]
   (fn [[module-versions id]]
-    (when id
-      (some
-        (fn [[idx item]]
-          (when (= (:href item) id) idx))
-        module-versions))))
+    (apps-utils/find-current-version module-versions id)))
 
 
 (reg-sub

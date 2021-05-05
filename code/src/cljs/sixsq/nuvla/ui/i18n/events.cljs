@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.i18n.events
   (:require
+    #_:clj-kondo/ignore
     [com.degel.re-frame.storage :as storage]
-    [re-frame.core :refer [inject-cofx reg-event-db reg-event-fx]]
+    [re-frame.core :refer [inject-cofx reg-event-fx]]
     [sixsq.nuvla.ui.i18n.spec :as spec]))
 
 

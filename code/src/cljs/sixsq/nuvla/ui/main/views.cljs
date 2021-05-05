@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.main.views
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.about.views]
     [sixsq.nuvla.ui.apps-application.views]
@@ -11,7 +10,6 @@
     [sixsq.nuvla.ui.apps.views]
     [sixsq.nuvla.ui.cimi.subs :as api-subs]
     [sixsq.nuvla.ui.cimi.views]
-    [sixsq.nuvla.ui.credentials.events :as credential-events]
     [sixsq.nuvla.ui.credentials.views]
     [sixsq.nuvla.ui.dashboard.views]
     [sixsq.nuvla.ui.data.views]
@@ -22,7 +20,6 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
     [sixsq.nuvla.ui.infrastructures-detail.views]
-    [sixsq.nuvla.ui.infrastructures.events :as infra-service-events]
     [sixsq.nuvla.ui.infrastructures.views]
     [sixsq.nuvla.ui.intercom.views :as intercom]
     [sixsq.nuvla.ui.main.components :as main-components]
@@ -134,7 +131,8 @@
                    :positive true
                    :active   true
                    :on-click #(do (dispatch [::events/ignore-changes true])
-                                  (dispatch [::apps-events/form-valid]))}]]]))
+                                  (dispatch [::apps-events/form-valid])
+                                  (dispatch [::apps-events/set-active-tab-index 0]))}]]]))
 
 (defn subscription-required-modal
   []
@@ -158,42 +156,6 @@
         (@tr [:subscribe])]
        [:p]
        [:p [ui/Icon {:name "info circle"}] (@tr [:subscription-required-content-group])]]]]))
-
-
-#_(defmulti BootstrapMessage identity)
-
-#_(defmethod BootstrapMessage :no-swarm
-    [_]
-    (let [tr (subscribe [::i18n-subs/tr])]
-      [ui/Message
-       {:icon       "inbox"
-        :info       true
-        :on-dismiss #(dispatch [::events/set-bootsrap-message])
-        :header     (@tr [:message-no-swarm])
-        :content    (r/as-element
-                      [:p (@tr [:message-to-create-one])
-                       [:a
-                        {:style    {:cursor "pointer"}
-                         :on-click #(do (dispatch [::history-events/navigate "infrastructures"])
-                                        (dispatch [::infra-service-events/open-add-service-modal]))}
-                        (str " " (@tr [:click-here]))]])}]))
-
-
-#_(defmethod BootstrapMessage :no-credential
-    [_]
-    (let [tr (subscribe [::i18n-subs/tr])]
-      [ui/Message
-       {:icon       "inbox"
-        :info       true
-        :on-dismiss #(dispatch [::events/set-bootsrap-message])
-        :header     (@tr [:message-no-credential])
-        :content    (r/as-element
-                      [:p (@tr [:message-to-create-one])
-                       [:a
-                        {:style    {:cursor "pointer"}
-                         :on-click #(do (dispatch [::history-events/navigate "credentials"])
-                                        (dispatch [::credential-events/open-add-credential-modal]))}
-                        (str " " (@tr [:click-here]))]])}]))
 
 
 (defn Message

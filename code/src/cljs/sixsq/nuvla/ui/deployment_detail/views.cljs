@@ -5,6 +5,7 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
+    [sixsq.nuvla.ui.apps-store.utils :as apps-store-utils]
     [sixsq.nuvla.ui.apps.views-versions :as views-versions]
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
@@ -15,7 +16,6 @@
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
-    [sixsq.nuvla.ui.deployment.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -31,7 +31,8 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.deployment.utils :as deployment-utils]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -235,14 +236,14 @@
 (defn events-table-info
   [events]
   (when-let [start (-> events last :timestamp)]
-    (let [dt-fn (partial utils/assoc-delta-time start)]
+    (let [dt-fn (partial deployment-utils/assoc-delta-time start)]
       (->> events
            (map #(select-keys % event-fields))
            (map dt-fn)))))
 
 
 (defn event-map-to-row
-  [{:keys [id content timestamp category delta-time] :as evt}]
+  [{:keys [id content timestamp category delta-time]}]
   [ui/TableRow
    [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
    [ui/TableCell timestamp]
@@ -252,10 +253,9 @@
 
 
 (defn events-table
-  [events]
+  [_events]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [events]
-      ;style/autoscroll-x
       [ui/TabPane
        [ui/Table {:basic "very"}
         [ui/TableHeader
@@ -289,7 +289,7 @@
 
 
 (defn job-map-to-row
-  [{:keys [id action time-of-status-change state progress return-code status-message] :as job}]
+  [{:keys [id action time-of-status-change state progress return-code status-message]}]
   [ui/TableRow
    [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
    [ui/TableCell action]
@@ -346,7 +346,7 @@
 
 
 (defn log-controller
-  [go-live?]
+  [_go-live?]
   (let [locale        (subscribe [::i18n-subs/locale])
         services-list (subscribe [::subs/deployment-services-list])
         since         (subscribe [::subs/deployment-log-since])
@@ -421,19 +421,19 @@
                        :placeholder true
                        :style       {:padding 0
                                      :z-index 0
-                                     :height  300}}
-
+                                     :height  600}}
            (if @id
-             [ui/CodeMirror (cond-> {:value    (str/join "\n" log)
-                                     :scroll   {:x (:left @scroll-info)
-                                                :y (if @go-live?
-                                                     (.-MAX_VALUE js/Number)
-                                                     (:top @scroll-info))}
-                                     :onScroll #(reset! scroll-info
-                                                        (js->clj %2 :keywordize-keys true))
-                                     :options  {:mode     ""
-                                                :readOnly true
-                                                :theme    "logger"}})]
+             [ui/CodeMirror {:value    (str/join "\n" log)
+                             :scroll   {:x (:left @scroll-info)
+                                        :y (if @go-live?
+                                             (.-MAX_VALUE js/Number)
+                                             (:top @scroll-info))}
+                             :onScroll #(reset! scroll-info
+                                                (js->clj %2 :keywordize-keys true))
+                             :options  {:mode     ""
+                                        :readOnly true
+                                        :theme    "logger"}
+                             :class ["large-height"]}]
              [ui/Header {:icon true}
               [ui/Icon {:name "search"}]
               "Get service logs"]
@@ -493,6 +493,7 @@
 
 
 (defn ShutdownButton
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
@@ -540,6 +541,7 @@
 
 
 (defn DeleteButton
+  #_ {:clj-kondo/ignore [:unused-binding]}
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
@@ -575,7 +577,7 @@
 
 
 (defn CloneButton
-  [{:keys [id data module] :as deployment}]
+  [{:keys [id data module] :as _deployment}]
   (let [tr         (subscribe [::i18n-subs/tr])
         first-step (if data :data :infra-services)
         button     (action-button
@@ -622,7 +624,7 @@
         tr          (subscribe [::i18n-subs/tr])
         primary-url (subscribe [::subs/url url])
         parameters  (subscribe [::subs/deployment-parameters])
-        started?    (utils/is-started? state)
+        started?    (deployment-utils/is-started? state)
         hostname    (or (get-in @parameters ["hostname" :value]) "")]
     (when (and started? @primary-url (spec-utils/private-ipv4? hostname))
       [ui/Message {:info true}
@@ -642,7 +644,7 @@
     (let [tr           (subscribe [::i18n-subs/tr])
           last-version (ffirst versions)]
       (if (= v last-version)
-        [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date]) ")"]
+        [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
         [:span [ui/Icon {:name "warning", :color "orange"}]
          (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))]))))
 
@@ -654,7 +656,7 @@
         locale     (subscribe [::i18n-subs/locale])
         module     (:module @deployment)
         id         (:id module "")
-        {:keys [created updated name acl description parent-path path logo-url]} module]
+        {:keys [created updated name description parent-path path logo-url]} module]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
@@ -663,9 +665,8 @@
                  :bordered true
                  :style    {:width      "auto"
                             :height     "100px"
-                            ;:padding    "20px"
                             :object-fit "contain"}}]]
-     [:h4 "Module"]
+     [:h4 {:style {:margin-top 0}} "Module"]
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody
@@ -696,7 +697,6 @@
   [{:keys [id state module tags parent credential-name] :as deployment} & {:keys [clickable?]
                                                                            :or   {clickable? true}}]
   (let [tr            (subscribe [::i18n-subs/tr])
-        credential-id (:parent deployment)
         {module-logo-url :logo-url
          module-name     :name
          module-path     :path
@@ -706,7 +706,7 @@
         primary-url   (if clickable?
                         (subscribe [::deployment-subs/deployment-url id primary-url-pattern])
                         (subscribe [::subs/url primary-url-pattern]))
-        started?      (utils/is-started? state)
+        started?      (deployment-utils/is-started? state)
         cred          (or credential-name parent)]
 
     ^{:key id}
@@ -714,7 +714,7 @@
                {:as       :div
                 :link     true
                 :on-click (fn [event]
-                            (dispatch [::history-events/navigate (utils/deployment-href id)])
+                            (dispatch [::history-events/navigate (deployment-utils/deployment-href id)])
                             (.preventDefault event))})
      [ui/Image {:src      (or module-logo-url "")
                 :bordered true
@@ -732,7 +732,7 @@
 
       [ui/Segment (merge style/basic {:floated "right"})
        [:p {:style {:color "initial"}} state]
-       [ui/Loader {:active        (utils/deployment-in-transition? state)
+       [ui/Loader {:active        (deployment-utils/deployment-in-transition? state)
                    :indeterminate true}]]
 
       [ui/CardHeader (if clickable?
@@ -799,17 +799,7 @@
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:tags]))]
            [ui/TableCell
-            [ui/LabelGroup {:size  "tiny"
-                            :color "teal"
-                            :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-             (for [tag tags]
-               ^{:key (str id "-" tag)}
-               [ui/Label {:style {:max-width     "15ch"
-                                  :overflow      "hidden"
-                                  :text-overflow "ellipsis"
-                                  :white-space   "nowrap"}}
-                [ui/Icon {:name "tag"}] tag
-                ])]]])
+            [uix/Tags {:tags tags}]]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (str (@tr [:created])))]
          [ui/TableCell (-> @deployment :created time/parse-iso8601 time/ago)]]
@@ -824,7 +814,7 @@
          [ui/TableCell (str/capitalize (@tr [:status]))]
          [ui/TableCell state
           " "
-          (when (utils/deployment-in-transition? state)
+          (when (deployment-utils/deployment-in-transition? state)
             [ui/Icon {:loading true :name "circle notch" :color "grey"}])]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:credential]))]
@@ -835,7 +825,7 @@
           [ui/TableRow
            [ui/TableCell "NuvlaBox"]
            [ui/TableCell
-            [:div [ui/Icon {:name "box"}] [values/as-link (subs nuvlabox 9) :page "edge"]]]])
+            (deployment-utils/format-nuvlabox-value nuvlabox)]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
          [ui/TableCell @version " " (up-to-date? @version @versions)]]]]]
@@ -906,7 +896,7 @@
 
 
 (defn StatusIcon
-  [status & {:keys [corner] :or {corner "bottom center"} :as position}]
+  [status & {:keys [corner] :or {corner "bottom center"} :as _position}]
   [ui/Popup
    {:position corner
     :content  status
@@ -945,7 +935,7 @@
   (let [deployment  (subscribe [::subs/deployment])
         resource-id (str "deployment/" uuid)]
     (refresh resource-id)
-    (fn [uuid]
+    (fn [_]
       (let [active-index (subscribe [::subs/active-tab-index])]
         [:<>
          [PageHeader]
@@ -973,5 +963,5 @@
     (case n
       2 [TabsDeployment uuid]
       (do
-        (dispatch [::apps-store-events/set-active-tab-index 2])
+        (dispatch [::apps-store-events/set-active-tab-index apps-store-utils/tab-deployments])
         (dispatch [::history-events/navigate (str "apps")])))))

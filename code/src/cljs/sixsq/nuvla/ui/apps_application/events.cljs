@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.apps-application.events
   (:require
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [re-frame.core :refer [reg-event-db]]
     [sixsq.nuvla.ui.apps-application.spec :as spec]
     [sixsq.nuvla.ui.apps.utils :as utils]))
 
@@ -46,8 +46,22 @@
 
 (reg-event-db
   ::update-docker-compose
-  (fn [db [_ id docker-compose]]
+  (fn [db [_ docker-compose]]
     (assoc-in db [::spec/module-application ::spec/docker-compose] docker-compose)))
+
+
+; Validation errors
+
+(reg-event-db
+  ::set-license-validation-error
+  (fn [db [_ key error?]]
+    (utils/set-reset-error db key error? ::spec/license-validation-errors)))
+
+
+(reg-event-db
+  ::set-docker-validation-error
+  (fn [db [_ key error?]]
+    (utils/set-reset-error db key error? ::spec/docker-compose-validation-errors)))
 
 
 ; Requires user rights
@@ -56,5 +70,3 @@
   ::update-requires-user-rights
   (fn [db [_ value]]
     (assoc-in db [::spec/module-application ::spec/requires-user-rights] value)))
-
-

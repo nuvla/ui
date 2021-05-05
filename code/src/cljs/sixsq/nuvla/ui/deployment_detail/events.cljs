@@ -92,7 +92,7 @@
                                                :type    :error}]))
                                  (do
                                    (dispatch [::get-deployment href])
-                                   (dispatch [::deployment-events/get-deployments])))]}))
+                                   (dispatch [::deployment-events/get-nuvlabox-deployments])))]}))
 
 
 (reg-event-db
@@ -141,7 +141,7 @@
 
 (reg-event-db
   ::clear-deployment-log
-  (fn [{:keys [::spec/deployment-log] :as db} _]
+  (fn [{db :db} _]
     (assoc-in db [::spec/deployment-log :log] [])))
 
 
@@ -156,7 +156,7 @@
   ::create-log
   (fn [{{:keys [::spec/deployment
                 ::spec/deployment-log-service
-                ::spec/deployment-log-since] :as db} :db} _]
+                ::spec/deployment-log-since]} :db} _]
     {::cimi-api-fx/operation [(:id deployment) "create-log"
                               #(if (instance? js/Error %)
                                  (cimi-api-fx/default-error-message % "Create log action failed!")
@@ -230,7 +230,7 @@
                                                            status (str " (" status ")"))
                                           :content message
                                           :type    :success}])
-                              (dispatch [::deployment-events/get-deployments])
+                              (dispatch [::deployment-events/get-nuvlabox-deployments])
                               (dispatch [::history-events/navigate "deployment"]))]}))
 
 

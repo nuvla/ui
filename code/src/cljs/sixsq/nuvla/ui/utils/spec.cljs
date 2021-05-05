@@ -67,6 +67,6 @@
 (defn resolvable?
   [spec]
   (try
-    (do (s/describe spec) true)
-    (catch :default e
+    (s/describe spec) true
+    (catch :default _
       false)))

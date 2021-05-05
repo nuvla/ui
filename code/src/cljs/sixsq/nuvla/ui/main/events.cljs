@@ -4,7 +4,7 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [day8.re-frame.http-fx]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
+    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
     [sixsq.nuvla.ui.main.effects :as fx]
     [sixsq.nuvla.ui.main.spec :as spec]
@@ -31,7 +31,7 @@
 
 (reg-event-db
   ::set-device
-  (fn [{:keys [::spec/device] :as db} [_ new-device]]
+  (fn [{:keys [::spec/device] :as db}]
     (let [width      (.-innerWidth js/window)
           new-device (cond
                        (< width 768) :mobile
@@ -103,7 +103,7 @@
 
 (reg-event-db
   ::action-interval-pause
-  (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id] :as action-opts}]]
+  (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id] :as _action-opts}]]
     (log/info "Pause action-interval:" id)
     (let [{existing-timer :timer :as existing-action} (get actions-interval id)]
       (when existing-timer
@@ -114,7 +114,7 @@
 
 (reg-event-db
   ::action-interval-delete
-  (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id] :as action-opts}]]
+  (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id] :as _action-opts}]]
     (log/info "Delete action-interval: " id)
     (let [{existing-timer :timer} (get actions-interval id)]
       (when existing-timer
@@ -196,7 +196,7 @@
 
 (reg-event-fx
   ::set-notifications
-  (fn [{{:keys [::messages-spec/messages] :as db} :db} [_ {:keys [resources]}]]
+  (fn [{{:keys [::messages-spec/messages]} :db} [_ {:keys [resources]}]]
     (let [existing-notifs  (->> messages
                                 (filter (fn [{message-type :type}] (= message-type :notif)))
                                 (map :uuid)
@@ -261,7 +261,7 @@
 
 (reg-event-db
   ::get-ui-config-bad
-  (fn [db [_ response]]
+  (fn [db [_ _response]]
     (log/info "Failed to load UI configuration file")
     db))
 

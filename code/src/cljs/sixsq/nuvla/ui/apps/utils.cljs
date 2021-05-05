@@ -2,9 +2,77 @@
   sixsq.nuvla.ui.apps.utils
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [subscribe]]
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+
+
+(def publish-icon
+  "check circle outline")
+
+
+(def un-publish-icon
+  "times circle outline")
+
+
+(defn find-current-version
+  [module-versions module-id]
+  (when module-id
+    (some
+      (fn [[idx item]]
+        (when (= (:href item) module-id) idx))
+      module-versions)))
+
+
+(defn extract-version
+  "Return the index or nil if it is the most recent version"
+  [module-id]
+  (-> module-id (str/split #"/") last (str/split #"_") second))
+
+
+(defn published?
+  "Check if the module version is published"
+  [module module-id]
+  (let [versions (:versions module)
+        index    (extract-version module-id)
+        version  (if (nil? index) (dec (count versions)) (js/parseInt index))]
+    (-> versions (nth version) :published true?)))
+
+
+(defn filter-published-versions
+  [map-versions]
+  (filter #(true? (-> % second :published true?)) map-versions))
+
+
+(defn compose-module-id
+  [module-version]
+  (str (-> module-version second :href) "_" (first module-version)))
+
+
+(defn latest-published-index
+  "Return the latest published index. This can be used to append to a module id to fetch a specific
+  module version"
+  [map-versions]
+  (ffirst (filter-published-versions map-versions)))
+
+
+(defn latest-published-version
+  "Return the latest published version id"
+  [map-versions]
+  (-> map-versions filter-published-versions first second :href))
+
+
+(defn latest-published-module-with-index
+  "Return the latest published module id (with the version appended: <module-id>_<version-index>)."
+  [module-id map-versions]
+  (let [index (-> map-versions filter-published-versions ffirst)]
+    (str module-id "_" index)))
+
+
+(defn latest-published?
+  "Check if the module version corresponds to the latest published version."
+  [version-id map-versions]
+  (let [lastest (latest-published-version map-versions)]
+    (= (:href lastest) version-id)))
 
 
 (defn nav-path->module-path
@@ -69,7 +137,7 @@
   [db]
   (into
     []
-    (for [[id m] (get-in db [::spec/module-common ::spec/env-variables])]
+    (for [[_id m] (get-in db [::spec/module-common ::spec/env-variables])]
       (let [{:keys [::spec/env-name ::spec/env-description ::spec/env-value ::spec/env-required]
              :or   {env-required false}} m]
         (cond-> {:name     env-name
@@ -90,7 +158,7 @@
   [db]
   (into
     []
-    (for [[id u] (get-in db [::spec/module-common ::spec/urls])]
+    (for [[_id u] (get-in db [::spec/module-common ::spec/urls])]
       [(::spec/url-name u) (::spec/url u)])))
 
 
@@ -98,7 +166,7 @@
   [db]
   (into
     []
-    (for [[id op] (get-in db [::spec/module-common ::spec/output-parameters])]
+    (for [[_id op] (get-in db [::spec/module-common ::spec/output-parameters])]
       (let [{:keys [::spec/output-parameter-name ::spec/output-parameter-description]} op]
         (conj
           {:name output-parameter-name}
@@ -109,13 +177,13 @@
   [db]
   (into
     []
-    (for [[id binding] (get-in db [::spec/module-common ::spec/data-types])]
+    (for [[_id binding] (get-in db [::spec/module-common ::spec/data-types])]
       (let [{:keys [::spec/data-type]} binding]
         (conj data-type)))))
 
 
 (defn db->module
-  [module commit-map db]
+  [module _commit-map db]
   (let [name              (get-in db [::spec/module-common ::spec/name])
         description       (get-in db [::spec/module-common ::spec/description])
         parent-path       (get-in db [::spec/module-common ::spec/parent-path])
@@ -217,7 +285,7 @@
 
 (defn module->db
   [db {:keys [name description parent-path content data-accept-content-types
-              path logo-url subtype acl price license] :as module}]
+              path logo-url subtype acl price license] :as _module}]
   (-> db
       (assoc-in [::spec/module-common ::spec/name] name)
       (assoc-in [::spec/module-common ::spec/description] description)
@@ -254,3 +322,52 @@
 (defn sorted-map-new-idx
   [sorted-map-elemts]
   (or (some-> sorted-map-elemts last first inc) 0))
+
+
+(defn map-versions-index
+  "Create a list of tuples with [index version], where index starts at 0"
+  [versions]
+  (reverse (map-indexed vector versions)))
+
+
+(defn group->name
+  "Drop the 'group/' prefix"
+  [group]
+  (subs group 6))
+
+
+(defn module->groups
+  [module]
+  (let [owners  (-> module :acl :owners)
+        vendors (filter #(str/starts-with? % "group/") owners)]
+    vendors))
+
+
+(defn module->users
+  [module]
+  (let [owners (-> module :acl :owners)
+        users  (filter #(not (str/starts-with? % "group/")) owners)]
+    users))
+
+
+(defn is-vendor?
+  [module]
+  (let [vendors (module->groups module)]
+    #_:clj-kondo/ignore
+    (not (empty? vendors))))
+
+
+(defn vendor-name
+  [user]
+  (drop 6 user))
+
+
+(defn set-reset-error
+  [db key error? error-spec]
+  (let [errors  (error-spec db)
+        is-set? (contains? errors key)
+        reset?  (and (not error?) is-set?)
+        set?    (and error? (not is-set?))]
+    (cond-> db
+            reset? (update error-spec #(disj % key))
+            set? (update error-spec #(conj % key)))))

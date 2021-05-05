@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.infrastructures.events
   (:require
     [cljs.spec.alpha :as s]
-    [re-frame.core :refer [dispatch dispatch-sync reg-event-db reg-event-fx]]
+    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.infrastructures.spec :as spec]
@@ -174,7 +174,7 @@
 
 (reg-event-db
   ::close-service-modal
-  (fn [db [_ service is-new?]]
+  (fn [db [_ _service _is-new?]]
     (-> db
         (assoc ::spec/service-modal-visible? false))))
 
@@ -226,8 +226,7 @@
 
 (reg-event-fx
   ::set-page
-  (fn [{{:keys [::spec/page
-                ::spec/elements-per-page] :as db} :db} [_ page]]
+  (fn [{{:keys [::spec/elements-per-page] :as db} :db} [_ page]]
     {:db                  (assoc db ::spec/page page)
      ::cimi-api-fx/search [:infrastructure-service-group
                            (utils/get-query-params page elements-per-page)
@@ -269,7 +268,7 @@
 
 (reg-event-db
  ::ssh-keys
- (fn [db [event-type ssh-keys]]
+ (fn [db [_event-type ssh-keys]]
    (assoc-in db [::spec/infra-service :ssh-keys] ssh-keys)))
 
 

@@ -107,7 +107,7 @@
 
 
 (defn ram-stats
-  [{:keys [capacity used topic raw-sample] :as ram}]
+  [{:keys [capacity used topic raw-sample] :as _ram}]
   (let [percent         (-> (general-utils/percentage used capacity)
                             (general-utils/round-up :n-decimal 0))
         capacity-gbytes (-> (general-utils/mbytes->gbytes capacity)

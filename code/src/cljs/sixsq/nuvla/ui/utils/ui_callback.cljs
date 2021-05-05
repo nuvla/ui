@@ -22,7 +22,7 @@
    the given keyword, and then calls the provided function with the reformatted
    data."
   [kw f]
-  (fn [evt data]
+  (fn [_evt data]
     (-> data
         (js->clj :keywordize-keys true)
         kw

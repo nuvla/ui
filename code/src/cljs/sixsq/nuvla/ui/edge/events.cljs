@@ -1,16 +1,13 @@
 (ns sixsq.nuvla.ui.edge.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.edge.effects :as fx]
     [sixsq.nuvla.ui.edge.spec :as spec]
     [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-summary-id :nuvlabox-get-nuvlaboxes-summary)
@@ -35,7 +32,7 @@
 
 (reg-event-fx
   ::set-full-text-search
-  (fn [{{:keys [::spec/elements-per-page] :as db} :db} [_ full-text-search]]
+  (fn [{db :db} [_ full-text-search]]
     {:db       (assoc db ::spec/full-text-search full-text-search
                          ::spec/page 1)
      :dispatch [::refresh]}))
@@ -56,7 +53,7 @@
 
 (reg-event-fx
   ::set-nuvlaboxes
-  (fn [{:keys [db]} [_ {:keys [resources] :as nuvlaboxes}]]
+  (fn [{:keys [db]} [_ nuvlaboxes]]
     (if (instance? js/Error nuvlaboxes)
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
@@ -66,8 +63,7 @@
                     :type    :error})])
       (cond->
         {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-                       ::spec/loading? false)}
-        ))))
+                       ::spec/loading? false)}))))
 
 
 (reg-event-fx

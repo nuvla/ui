@@ -199,7 +199,7 @@
 
 
 (defn create-template
-  [resource-type form-data]
+  [_resource-type form-data]
   (let [[common-map template-map] (split-form-data form-data)]
     (assoc common-map :template template-map)))
 
@@ -279,11 +279,17 @@
   (or is-new? (can-edit? data)))
 
 
+(defn mandatory-icon
+  []
+  [:sup " "
+   [ui/Icon {:name  :asterisk
+             :size  :tiny
+             :color :red}]])
+
+
 (defn mandatory-name
   [name]
-  [:span name [:sup " " [ui/Icon {:name  :asterisk
-                                  :size  :tiny
-                                  :color :red}]]])
+  [:span name [mandatory-icon]])
 
 
 (defn fulltext-query-string
@@ -300,6 +306,11 @@
                    (map #(str % "*"))
                    (str/join " ")))
           "'"))))
+
+
+(defn published-query-string
+  []
+  "published=true")
 
 
 (defn owner-like-query-string

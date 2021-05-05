@@ -88,10 +88,10 @@
         group-id              (get-in db [::spec/infra-service :parent])
         subtype               (get-in db [::spec/infra-service :subtype])
         management-credential (let [mc (get-in db [::spec/infra-service :management-credential])]
-                                (if-not (str/blank? mc) mc))
+                                (when-not (str/blank? mc) mc))
         mgmt-cred-subtype     (mgmt-cred-subtype-by-id db management-credential)
         template-type         (if management-credential "coe" "generic")
-        endpoint              (if (= template-type "generic") (get-in db [::spec/infra-service :endpoint]))
+        endpoint              (when (= template-type "generic") (get-in db [::spec/infra-service :endpoint]))
         multiplicity          (when-not endpoint (get-in db [::spec/infra-service :multiplicity] 1))
         coe-manager-install   (when-not endpoint (get-in db [::spec/infra-service :coe-manager-install] false))
         ssh-keys              (when-not endpoint (get-in db [::spec/infra-service :ssh-keys]))

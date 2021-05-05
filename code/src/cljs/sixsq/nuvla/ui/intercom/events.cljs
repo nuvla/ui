@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.intercom.events
   (:require
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
+    [re-frame.core :refer [reg-event-db]]
     [sixsq.nuvla.ui.intercom.spec :as spec]))
 
 
@@ -12,5 +12,5 @@
 
 (reg-event-db
   ::clear-events
-  (fn [{:keys [::spec/events] :as db} _]
+  (fn [db _]
     (assoc-in db [::spec/events] {})))

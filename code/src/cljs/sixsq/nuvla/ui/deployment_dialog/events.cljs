@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.deployment-dialog.events
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch inject-cofx reg-event-db reg-event-fx]]
+    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.credentials.events :as creds-events]
     [sixsq.nuvla.ui.data.spec :as data-spec]
@@ -53,7 +53,7 @@
                 ::data-spec/time-period
                 ::data-spec/full-text-search
                 ::spec/cloud-filter
-                ::data-spec/content-type-filter] :as db} :db} _]
+                ::data-spec/content-type-filter]} :db} _]
     (let [filter       (general-utils/join-and cloud-filter
                                                content-type-filter
                                                full-text-search)
@@ -211,7 +211,7 @@
 
 (reg-event-db
   ::set-check-dct-result
-  (fn [{:keys [::spec/deployment] :as db} [_ {:keys [target-resource status-message] :as job}]]
+  (fn [{:keys [::spec/deployment] :as db} [_ {:keys [target-resource status-message] :as _job}]]
     (if (= (:href target-resource) (:id deployment))
       (let [result (try
                      {:dct (general-utils/json->edn status-message :keywordize-keys false)}
@@ -248,7 +248,7 @@
 
 (reg-event-fx
   ::check-dct
-  (fn [_ [_ {:keys [id] :as deployment}]]
+  (fn [_ [_ {:keys [id] :as _deployment}]]
     {::cimi-api-fx/operation [id "check-dct" #(dispatch [::check-dct-later (:location %)])]}))
 
 ; What's the difference with the same event in deployment
@@ -271,8 +271,7 @@
                                 (dispatch [::get-infra-registries registry-ids
                                            (or
                                              (:registries-credentials %)
-                                             (:registries-credentials content))]))
-                              )]}))
+                                             (:registries-credentials content))])))]}))
 
 
 (reg-event-fx
@@ -322,7 +321,7 @@
 
 (reg-event-fx
   ::open-deployment-modal
-  (fn [{db :db} [_ first-step {:keys [parent id] :as deployment}]]
+  (fn [{db :db} [_ first-step {:keys [parent id] :as _deployment}]]
     (when (= :data first-step)
       (dispatch [::get-data-records]))
     (cond-> {:db       (assoc db ::spec/deployment nil

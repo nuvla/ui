@@ -1,5 +1,4 @@
 (ns sixsq.nuvla.ui.deployment.spec
-  (:require-macros [sixsq.nuvla.ui.utils.spec :refer [only-keys]])
   (:require
     [clojure.spec.alpha :as s]))
 
@@ -60,8 +59,7 @@
                           ::bulk-update-modal
                           ::selected-set
                           ::select-all?
-                          ::bulk-jobs-monitored
-                          ]))
+                          ::bulk-jobs-monitored]))
 
 (def defaults {::loading?                false
                ::page                    1
@@ -79,5 +77,4 @@
                ::bulk-update-modal       nil
                ::selected-set            #{}
                ::select-all?             false
-               ::bulk-jobs-monitored     (sorted-map)
-               })
+               ::bulk-jobs-monitored     (sorted-map)})

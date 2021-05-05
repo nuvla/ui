@@ -8,7 +8,7 @@
 
 (reg-fx
   ::automatic-logout-at-session-expiry
-  (fn [[{:keys [expiry] :as session}]]
+  (fn [[{:keys [expiry] :as _session}]]
     (let [logout-callback       #(dispatch [:sixsq.nuvla.ui.session.events/logout])
           remaining-time-millis (->> expiry (time/delta-milliseconds (time/now)) int)]
       (if (pos-int? remaining-time-millis)

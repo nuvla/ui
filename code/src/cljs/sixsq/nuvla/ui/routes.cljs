@@ -9,11 +9,13 @@
 
 (defn routes []
 
+  #_ :clj-kondo/ignore
   (defroute "/*" {path :* query-params :query-params}
             (log/debug "routing /*:" path query-params)
             (when (not-empty path)
               (dispatch [::main-events/set-navigation-info path query-params])))
 
+  #_ :clj-kondo/ignore
   (defroute "*" {path :*}
             (log/debug "routing *:" path)
             (when (not-empty path)

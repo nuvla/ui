@@ -7,7 +7,6 @@
     [sixsq.nuvla.ui.acl.events :as events]
     [sixsq.nuvla.ui.acl.subs :as subs]
     [sixsq.nuvla.ui.acl.utils :as utils]
-    [sixsq.nuvla.ui.acl.utils :as acl-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -39,7 +38,7 @@
 
 
 (defn AclTableHeaders
-  [{:keys [mode] :as opts}]
+  [{:keys [mode] :as _opts}]
   (let [tr                (subscribe [::i18n-subs/tr])
         border-left-style {:style {:border-left "1px solid rgba(34,36,38,.1)"}}]
     (if (is-advanced-mode? @mode)
@@ -112,11 +111,12 @@
 
 
 (defn RightCheckbox
-  [{:keys [on-change read-only mode] :as opts} ui-acl row-number principal rights right-kw]
+  [{:keys [on-change read-only mode] :as _opts} ui-acl row-number principal rights right-kw]
   (let [checked?       (contains? rights right-kw)
         indeterminate? (and
                          (= @mode :simple)
                          (not checked?)
+                         #_:clj-kondo/ignore
                          (not (empty? (set/intersection rights (set (utils/same-base-right right-kw))))))]
     [ui/Checkbox {:checked       checked?
                   :indeterminate indeterminate?
@@ -163,7 +163,7 @@
 
 
 (defn DropdownPrincipals
-  [opts ui-acl]
+  [_opts _ui-acl]
   (let [open   (r/atom false)
         users  (subscribe [::subs/users-options])
         groups (subscribe [::subs/groups-options])
@@ -221,7 +221,7 @@
 
 
 (defn AddRight
-  [{:keys [on-change mode] :as opts} ui-acl]
+  [{:keys [on-change _mode] :as _opts} ui-acl]
   (let [empty-permission {:principal nil
                           :right     nil}
         new-permission   (r/atom empty-permission)
@@ -231,7 +231,7 @@
                               (swap! ui-acl utils/acl-add-principal-with-right principal right)
                               (on-change (utils/ui-acl-format->acl @ui-acl))
                               (reset! new-permission empty-permission)))]
-    (fn [{:keys [mode] :as opts} ui-acl]
+    (fn [{:keys [_on-change mode] :as _opts} ui-acl]
 
       [ui/TableRow
 
@@ -255,7 +255,7 @@
 
 
 (defn AclOwners
-  [opts ui-acl]
+  [_opts _ui-acl]
   (let [mobile? (subscribe [::main-subs/is-device? :mobile])
         tr      (subscribe [::i18n-subs/tr])]
     (fn [{:keys [read-only on-change mode] :as opts} ui-acl]
@@ -318,7 +318,7 @@
 
 
 (defn AclWidget
-  [{:keys [default-value read-only mode] :as opts} & [ui-acl]]
+  [{:keys [default-value read-only mode] :as _opts} & [ui-acl]]
   (let [mode   (r/atom (or mode :simple))
         ui-acl (or ui-acl
                    (r/atom
@@ -348,24 +348,23 @@
                           (when-let [user-id (and can-edit?
                                                   @(subscribe [::session-subs/active-claim]))]
                             {:owners [user-id]}))
-        ui-acl        (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
+        ui-acl        (when acl (r/atom (utils/acl->ui-acl-format acl)))]
     {:menuItem {:content "Share"
                 :key     "share"
                 :icon    "users"}
-     :render   (fn []
-                 (r/as-element
-                   (when default-value
-                     ^{:key (:updated @e)}
-                     [AclWidget {:default-value default-value
-                                 :read-only     (not can-edit?)
-                                 :on-change     #(dispatch [edit-event
-                                                            (:id @e) (assoc @e :acl %)
-                                                            (@tr [:acl-updated])])}
-                      ui-acl])))}))
+     :render   (fn [] (r/as-element
+                        (when default-value
+                          ^{:key (:updated @e)}
+                          [AclWidget {:default-value default-value
+                                      :read-only     (not can-edit?)
+                                      :on-change     #(dispatch [edit-event
+                                                                 (:id @e) (assoc @e :acl %)
+                                                                 (@tr [:acl-updated])])}
+                           ui-acl])))}))
 
 
 (defn AclButton
-  [{:keys [default-value read-only default-active?] :as opts}]
+  [{:keys [default-value read-only default-active?] :as _opts}]
   (let [tr      (subscribe [::i18n-subs/tr])
         active? (r/atom default-active?)
         acl     (or default-value

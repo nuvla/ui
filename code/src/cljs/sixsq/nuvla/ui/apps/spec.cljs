@@ -10,6 +10,10 @@
 
 ;; Module
 
+(s/def ::module any?)
+
+(s/def ::version number?)
+
 (s/def ::name nonblank-string)
 
 (s/def ::description nonblank-string)
@@ -53,7 +57,6 @@
                                   ::url]))
 
 (s/def ::urls (s/map-of any? (s/merge ::single-url)))
-
 
 ; Output parameters
 
@@ -102,20 +105,20 @@
                                     :opt-un [::license-description])))
 
 (s/def ::module-common (s/keys :req [::name
+                                     ::description
                                      ::parent-path
+                                     ;::license
                                      ; needed by the server, but not the ui
                                      ; (this is handled before contacting the server)
                                      ;::path
                                      ]
-                               :opt [::description
-                                     ::logo-url
+                               :opt [::logo-url
                                      ::acl
                                      ::env-variables
                                      ::urls
                                      ::output-parameters
                                      ::data-types
-                                     ::price
-                                     ::license]))
+                                     ::price]))
 
 
 ;; Validation
@@ -128,6 +131,8 @@
 
 ; Spec to use when validating form
 (s/def ::form-spec any?)
+
+(s/def ::details-validation-errors set?)
 
 ;; Page
 
@@ -161,6 +166,8 @@
 
 (s/def ::paste-modal-visible? boolean?)
 
+(s/def ::active-tab-index number?)
+
 (s/def ::db (s/keys :req [::active-input
                           ::form-spec
                           ::form-valid?
@@ -177,25 +184,32 @@
                           ::validate-docker-compose
                           ::compare-module-left
                           ::compare-module-right
+                          ::module
+                          ::version
                           ::copy-module
-                          ::paste-modal-visible?]))
+                          ::paste-modal-visible?
+                          ::active-tab-index]))
 
-(def defaults {::active-input            nil
-               ::form-spec               nil
-               ::form-valid?             true
-               ::validate-form?          false
-               ::is-new?                 false
-               ::completed?              true
-               ::add-modal-visible?      false
-               ::logo-url-modal-visible? false
-               ::save-modal-visible?     false
-               ::default-logo-url        "/ui/images/noimage.png"
-               ::commit-message          ""
-               ::registries              nil
-               ::registries-infra        nil
-               ::registries-credentials  nil
-               ::validate-docker-compose nil
-               ::compare-module-left     nil
-               ::compare-module-right    nil
-               ::copy-module             nil
-               ::paste-modal-visible?    false})
+(def defaults {::active-input              nil
+               ::form-spec                 nil
+               ::form-valid?               true
+               ::validate-form?            false
+               ::is-new?                   false
+               ::completed?                true
+               ::add-modal-visible?        false
+               ::logo-url-modal-visible?   false
+               ::save-modal-visible?       false
+               ::default-logo-url          "/ui/images/noimage.png"
+               ::commit-message            ""
+               ::registries                nil
+               ::registries-infra          nil
+               ::registries-credentials    nil
+               ::validate-docker-compose   nil
+               ::compare-module-left       nil
+               ::compare-module-right      nil
+               ::module                    nil
+               ::version                   nil
+               ::copy-module               nil
+               ::paste-modal-visible?      false
+               ::active-tab-index          0
+               ::details-validation-errors #{}})

@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.profile.effects
   (:require
-    [re-frame.core :refer [dispatch reg-fx]]))
+    [re-frame.core :refer [reg-fx]]))
 
 
 (reg-fx

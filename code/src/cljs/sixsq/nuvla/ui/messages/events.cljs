@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.messages.events
   (:require
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [re-frame.core :refer [reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.messages.spec :as spec]
     [sixsq.nuvla.ui.utils.time :as time]))
 
@@ -39,12 +39,12 @@
   ::add
   (fn [{{:keys [::spec/messages] :as db} :db} [_ message uuid]]
     (let [timestamped-message (assoc message :timestamp (time/now)
-                                             :uuid (or uuid (random-uuid)))]
-      (let [updated-messages (vec (cons timestamped-message messages))]
-        {:db             (assoc db ::spec/messages updated-messages
-                                   ::spec/alert-message timestamped-message
-                                   ::spec/alert-display :slider)
-         :dispatch-later [{:ms 5000 :dispatch [::close-slider]}]}))))
+                                             :uuid (or uuid (random-uuid)))
+          updated-messages    (vec (cons timestamped-message messages))]
+      {:db             (assoc db ::spec/messages updated-messages
+                                 ::spec/alert-message timestamped-message
+                                 ::spec/alert-display :slider)
+       :dispatch-later [{:ms 5000 :dispatch [::close-slider]}]})))
 
 
 (reg-event-db
@@ -58,7 +58,7 @@
 
 (reg-event-db
   ::show
-  (fn [{:keys [::spec/messages] :as db} [_ timestamped-message]]
+  (fn [db [_ timestamped-message]]
     (if timestamped-message
       (assoc db ::spec/alert-message timestamped-message
                 ::spec/alert-display :modal

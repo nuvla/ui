@@ -11,7 +11,7 @@
 
 
 (defn metadata-section
-  [{:keys [id name] :as document}]
+  [{:keys [id name] :as _document}]
   [cc/metadata
    {:title    name
     :subtitle id
@@ -19,16 +19,16 @@
 
 
 (defn description-section
-  [document]
+  [_document]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [{:keys [description]}]
       [cc/collapsible-segment (@tr [:description])
        [ui/ReactMarkdown {:source description}]])))
 
 
-(defn row-attribute-fn [{:keys [name description type required template-mutable editable help group
-                                display-name order hidden sensitive value-scope] :as entry
-                         :or {template-mutable false}}]
+(defn row-attribute-fn
+  [{:keys [name description type required editable help group
+           display-name order hidden sensitive value-scope] :as _entry}]
   (let [characteristics [["display-name" display-name]
                          ["help" help]
                          ["order" order]
@@ -52,7 +52,7 @@
 
 
 (defn attributes-table
-  [{:keys [attributes] :as document}]
+  [{:keys [attributes] :as _document}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment (merge style/basic
                        {:class-name "nuvla-ui-x-autoscroll"})
@@ -67,13 +67,13 @@
         [ui/TableHeaderCell (@tr [:name])]
         [ui/TableHeaderCell (@tr [:description])]
         [ui/TableHeaderCell (@tr [:characteristics-name])]
-        [ui/TableHeaderCell (@tr [:characteristics-value])]
-        ]]
+        [ui/TableHeaderCell (@tr [:characteristics-value])]]]
       (vec (concat [ui/TableBody]
                    (mapcat row-attribute-fn (sort-by :name attributes))))]]))
 
 
-(defn row-action-fn [{:keys [name description uri method inputMessage outputMessage] :as entry}]
+(defn row-action-fn
+  [{:keys [name description uri method inputMessage outputMessage] :as _entry}]
   [ui/TableRow
    [ui/TableCell {:collapsing true} name]
    [ui/TableCell {:style {:max-width     "150px"
@@ -110,7 +110,7 @@
 
 
 (defn attributes-section
-  [document]
+  [_document]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [document]
       [cc/collapsible-segment (@tr [:attributes])
@@ -118,7 +118,7 @@
 
 
 (defn actions-section
-  [document]
+  [_document]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [document]
       [cc/collapsible-segment (@tr [:actions])
@@ -126,7 +126,7 @@
 
 
 (defn preview-section
-  [document]
+  [_document]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [document]
       [cc/collapsible-segment (@tr [:preview])
@@ -136,7 +136,7 @@
 
 
 (defn docs-detail
-  [resource-id]
+  [_resource-id]
   (let [documents (subscribe [::docs-subs/documents])]
     (fn [resource-id]
       (when (nil? @documents)

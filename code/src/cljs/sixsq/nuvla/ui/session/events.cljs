@@ -30,8 +30,7 @@
 
 (reg-event-fx
   ::set-session
-  (fn [{{:keys [::spec/redirect-uri
-                ::spec/session
+  (fn [{{:keys [::spec/session
                 ::main-spec/nav-path
                 ::main-spec/pages] :as db} :db} [_ session-arg]]
     (let [no-session-protected-page? (and (nil? session-arg)

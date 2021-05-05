@@ -126,7 +126,7 @@
 
 
 (defmethod utils/step-content :infra-services
-  [step-id]
+  [_step-id]
   (let [tr             (subscribe [::i18n-subs/tr])
         infra-services (subscribe [::subs/visible-infra-services])
         loading?       (subscribe [::subs/infra-services-loading?])]

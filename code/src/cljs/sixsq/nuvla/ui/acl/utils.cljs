@@ -91,7 +91,7 @@
 (defn get-principals
   [acl]
   (->> acl
-       (mapcat (fn [[right principal]] principal))
+       (mapcat (fn [[_right principal]] principal))
        (set)))
 
 
@@ -116,7 +116,7 @@
 
 
 (defn ui-acl-format->acl
-  [{:keys [owners principals] :as acl-in-ui-format}]
+  [{:keys [owners principals]}]
   (let [rights-principals (reduce (partial merge-with concat)
                                   (mapcat (fn [[principal rights]]
                                             (map (fn [right]
@@ -133,12 +133,12 @@
 
 
 (defn acl-get-owners-set
-  [{:keys [owners] :as ui-acl}]
+  [{:keys [owners] :as _ui-acl}]
   (set owners))
 
 
 (defn acl-get-principals-set
-  [{:keys [principals] :as ui-acl}]
+  [{:keys [principals] :as _ui-acl}]
   (set (map first principals)))
 
 
@@ -162,12 +162,12 @@
 
 
 (defn acl-get-all-used-rights-set
-  [{:keys [principals] :as ui-acl}]
+  [{:keys [principals] :as _ui-acl}]
   (set (mapcat second principals)))
 
 
 (defn acl-rights-empty?
-  [{:keys [principals] :as ui-acl}]
+  [{:keys [principals] :as _ui-acl}]
   (empty? principals))
 
 
@@ -184,3 +184,8 @@
 (defn acl-change-rights-for-row
   [ui-acl row-nubmer principal rights]
   (update ui-acl :principals assoc row-nubmer [principal rights]))
+
+
+(defn find-group
+  [id groups]
+  (some #(when (= (first %) id) %) groups))

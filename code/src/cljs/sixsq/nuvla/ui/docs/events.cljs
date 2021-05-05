@@ -17,7 +17,7 @@
 
 (reg-event-db
   ::set-documents
-  (fn [db [_ {:keys [resources] :as docs}]]
+  (fn [db [_ {:keys [resources] :as _docs}]]
     (assoc db ::spec/loading? false
               ::spec/documents (->> resources
                                     (map (juxt :id identity))

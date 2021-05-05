@@ -1,5 +1,5 @@
 (ns sixsq.nuvla.ui.utils.validation
-  (:require [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+  (:require [re-frame.core :refer [subscribe]]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 

@@ -15,6 +15,7 @@
     ["codemirror/addon/search/searchcursor"]
     ["codemirror/addon/selection/active-line"]
     ["codemirror/mode/javascript/javascript"]
+    ["codemirror/mode/markdown/markdown"]
     ["codemirror/mode/shell/shell"]
     ["codemirror/mode/yaml/yaml"]
     ["react-codemirror2" :as code-mirror]
@@ -216,3 +217,4 @@
 ;; Diff viewer
 ;;
 (def DiffViewer (r/adapt-react-class react-diff-viewer/default))
+

@@ -2,7 +2,7 @@
   (:require
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
-    [re-frame.core :refer [subscribe]]
+    [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
@@ -10,19 +10,7 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
-
-
-(defn Button
-  "This button requires a single options map that contains the :text key. The
-   value of the :text key is used to define the button text as well as the
-   accessibility label :aria-label. The button may not specify children."
-  [{:keys [text] :as options}]
-  (let [final-opts (-> options
-                       (dissoc :text)
-                       (assoc :aria-label text))]
-    [ui/Button final-opts text]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn Icon
@@ -31,6 +19,19 @@
                    (or (str/starts-with? name "fad ")
                        (str/starts-with? name "fas ")) (-> (dissoc :name)
                                                            (assoc :className name)))])
+
+
+(defn Button
+  "This button requires a single options map that contains the :text key. The
+   value of the :text key is used to define the button text as well as the
+   accessibility label :aria-label. The button may not specify children."
+  [{:keys [text icon] :as options}]
+  (let [final-opts (-> options
+                       (dissoc :text)
+                       (dissoc :icon)
+                       (assoc :aria-label text))]
+    [ui/Button final-opts (when icon [ui/Icon {:name icon}]) text]))
+
 
 (defn MenuItem
   "Provides a menu item that reuses the name for the :name property and as the
@@ -88,7 +89,7 @@
   [options]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Grid {:vertical-align "middle"
-              :style {:margin-top "20px"}}
+              :style          {:margin-top "20px"}}
      (when (:totalitems options)
        [ui/GridColumn {:floated "left", :width 3}
         [ui/Label {:size :medium}
@@ -103,29 +104,43 @@
               options)]]]))
 
 
-(defn EditorJson
-  "A convenience function to setup the CodeMirror editor component for JSON."
-  [text]
-  (let [default-text @text]
-    (fn [text]
-      [ui/CodeMirror {:value     default-text
-                      :options   {:mode                "application/json"
-                                  :line-numbers        true
-                                  :match-brackets      true
-                                  :auto-close-brackets true
-                                  :style-active-line   true
-                                  :fold-gutter         true
-                                  :gutters             ["CodeMirror-foldgutter"]}
-                      :on-change (fn [editor data value]
-                                   (reset! text value))}])))
+(defn EditorYaml
+  [_text _on-change-fn _editable?]
+  (fn [text on-change-fn editable?]
+    [ui/CodeMirror {:value      text
+                    :autoCursor true
+                    :options    {:mode              "text/x-yaml"
+                                 :read-only         (not editable?)
+                                 :line-numbers      true
+                                 :style-active-line true}
+                    :on-change  on-change-fn
+                    :class      "full-height"}]))
+
+
+(defn EditorMarkdown
+  "A convenience function to setup the CodeMirror editor component for Markdown."
+  [_text _on-change-fn _editable?]
+  (fn [text on-change-fn editable?]
+    [ui/CodeMirror {:value      text
+                    :autoCursor true
+                    :options    {:mode                "text/x-markdown"
+                                 :read-only           (not editable?)
+                                 :lineWrapping        true
+                                 :match-brackets      true
+                                 :auto-close-brackets true
+                                 :style-active-line   true
+                                 :fold-gutter         true
+                                 :gutters             ["CodeMirror-foldgutter"]}
+                    :class      "full-height"
+                    :on-change  on-change-fn}]))
 
 
 (defn Accordion
-  [content & {:keys [id label count icon default-open title-size on-open on-close !control-open? styled?]
-              :or   {default-open true, title-size :h3, on-open #(), on-close #(), styled? true}}]
+  [_content & {:keys [_id _label _count default-open _title-size _on-open _on-close !control-open? _icon _styled?]
+               :or   {default-open true}}]
   (let [active? (or !control-open? (r/atom default-open))]
-    (fn [content & {:keys [id label count icon default-open title-size]
-                    :or   {default-open true, title-size :h3, on-open #(), on-close #()}}]
+    (fn [content & {:keys [id label count _default-open title-size on-open on-close _!control-open? icon styled?]
+                    :or   {title-size :h3, on-open #(), on-close #(), styled? true}}]
       [ui/Accordion {:id        id
                      :fluid     true
                      :styled    styled?
@@ -155,20 +170,6 @@
                        content])])))
 
 
-(defn MoreAccordion
-  [content]
-  (let [tr    (subscribe [::i18n-subs/tr])
-        more? (r/atom false)]
-    (fn [content]
-      [ui/Accordion
-       [ui/AccordionTitle {:on-click #(swap! more? not)
-                           :active   @more?}
-        [ui/Icon {:name "dropdown"}]
-        (@tr [:more])]
-       [ui/AccordionContent {:active @more?}
-        content]])))
-
-
 (defn PageHeader
   [icon title & {:keys [inline]}]
   [:h2 (when inline {:style {:display    :inline
@@ -184,12 +185,12 @@
 
 
 (defn TableRowField
-  [name & {:keys [key placeholder default-value spec on-change
-                  required? editable? validate-form? type input-help-msg]}]
+  [_name & {:keys [_key _placeholder _default-value _spec _on-change _on-validation
+                  _required? _editable? _validate-form? _type _input-help-msg]}]
   (let [local-validate? (r/atom false)
         active-input?   (r/atom false)]
-    (fn [name & {:keys [key placeholder default-value spec on-change required?
-                        editable? validate-form? type input-help-msg]
+    (fn [name & {:keys [key placeholder default-value spec on-change on-validation
+                        required? editable? validate-form? type input-help-msg]
                  :or   {editable? true, spec any?, type :input}}]
       (let [name-label  (cond-> name
                                 (and editable? required?) (general-utils/mandatory-name))
@@ -204,6 +205,8 @@
                                           #(let [text (when-not (str/blank? %) %)]
                                              (reset! local-validate? true)
                                              (on-change text)))}]
+        (when on-validation
+          (dispatch [on-validation key error?]))
         [ui/TableRow
          [ui/TableCell {:collapsing true} name-label]
          ^{:key (or key name)}
@@ -231,7 +234,7 @@
 
 
 (defn ModalDanger
-  [{:keys [button-text on-confirm danger-msg header content trigger open on-close modal-action
+  [{:keys [_button-text _on-confirm danger-msg _header _content _trigger _open _on-close _modal-action
            control-confirmed?]}]
   (let [tr         (subscribe [::i18n-subs/tr])
         confirmed? (or control-confirmed? (r/atom (nil? danger-msg)))
@@ -264,7 +267,7 @@
 
        [ui/ModalActions
         (when modal-action modal-action)
-        [Button {:text     (str/capitalize button-text)
+        [Button {:text     (str/lower-case button-text)
                  :negative true
                  :disabled (or (not @confirmed?) @clicked?)
                  :loading  @clicked?
@@ -273,8 +276,41 @@
                                 (on-confirm))}]]])))
 
 
+(defn ModalFromButton
+  "Defines a standard modal, triggered by a button."
+  [{:keys [_button-text _on-confirm _header _icon _content _trigger _open _on-close _modal-action]}]
+  (let [clicked? (r/atom false)]
+    (fn [{:keys [button-text on-confirm header icon content trigger open on-close modal-action]}]
+      [ui/Modal (cond->
+                  {:on-click   (fn [event]
+                                 (.stopPropagation event)
+                                 (.preventDefault event))
+                   :close-icon true
+                   :trigger    trigger
+                   :on-close   (fn [& args]
+                                 (when on-close
+                                   (apply on-close args))
+                                 (reset! clicked? false))}
+                  (some? open) (assoc :open open))
+
+       (when header [ui/ModalHeader (when icon [Icon {:name icon}]) (str/capitalize header)])
+
+       [ui/ModalContent {:scrolling false}
+        (when content content)]
+
+       [ui/ModalActions
+        (when modal-action modal-action)
+        [Button {:text     (str/lower-case button-text)
+                 :primary  true
+                 :loading  @clicked?
+                 :active   true
+                 :icon     icon
+                 :on-click #(do (reset! clicked? true)
+                                (on-confirm))}]]])))
+
+
 (defn TimeAgo
-  [time-str]
+  [_time-str]
   (let [locale        (subscribe [::i18n-subs/locale])
         fn-update-ago #(time/parse-ago % @locale)
         refresh       (r/atom 0)]
@@ -285,7 +321,7 @@
 
 
 (defn CountDown
-  [futur-time]
+  [_futur-moment]
   (let [refresh (r/atom 0)]
     (js/setInterval #(swap! refresh inc) 1000)
     (fn [futur-moment]
@@ -296,15 +332,15 @@
 
 
 (defn WarningMsgNoElements
-  [message]
+  [_message]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [message]
-      [ui/Message {:warning true}
-       [ui/Icon {:name "warning sign"}]
+      [ui/Message {:info true}
        (or message (@tr [:no-items-to-show]))])))
 
+
 (defn Tags
-  [{:keys [tags]}]
+  [_resource]
   (let [uuid (random-uuid)]
     (fn [{:keys [tags]}]
       [ui/LabelGroup {:size  "tiny"
@@ -332,7 +368,7 @@
                     :top      "-7px"
                     :left     "-7px"}}
       [ui/Checkbox {:style    {:z-index 1}
-                    :checked selected?
+                    :checked  selected?
                     :on-click #(do
                                  (on-select (not selected?))
                                  (.preventDefault %)
@@ -343,8 +379,8 @@
       {:src      image
        :bordered true
        :style    {:width      "auto"
-                  :height     "100px"
-                  :object-fit "contain"}}])
+                  :height     "200px"
+                  :object-fit "cover"}}])
 
    (when corner-button corner-button)
 

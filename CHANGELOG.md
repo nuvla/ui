@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - Clj-condo fix errors and warnings
+  - Module - Publish module
+  - Module - Refactor module page in tabs
   - Authn menu - Sort groups on the switch group list
   - Edge page - Creation of nuvlabox-installation-trigger-usb.nuvla
     doesn't set api-credentials ttl

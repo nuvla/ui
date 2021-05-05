@@ -3,7 +3,7 @@
     [cljs.core.async.macros :refer [go]])
   (:require
     [cljs.core.async :refer [<!]]
-    [re-frame.core :refer [dispatch reg-fx]]
+    [re-frame.core :refer [reg-fx]]
     [sixsq.nuvla.client.api :as api]
     [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]
     [sixsq.nuvla.ui.edge.utils :as utils]))

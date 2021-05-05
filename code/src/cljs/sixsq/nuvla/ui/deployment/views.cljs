@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.deployment.views
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.deployment-detail.subs :as deployment-detail-subs]
@@ -15,11 +14,9 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.general :as utils-general]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.style :as utils-style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]))
@@ -151,15 +148,23 @@
        [BulkUpdateModal]])))
 
 
+(defn show-options
+  [select-all? no-actions]
+  (not (or select-all? (true? no-actions))))
+
+
 (defn row-fn
-  [{:keys [id state module credential-name parent] :as deployment}]
-  (let [[primary-url-name
+  [{:keys [id state module parent nuvlabox] :as deployment}
+   {:keys [no-actions no-module-name select-all] :as _options}]
+  (let [credential-id parent
+        creds-name    (subscribe [::subs/creds-name-map])
+        [primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
-        url         @(subscribe [::subs/deployment-url id primary-url-pattern])
-        select-all? (subscribe [::subs/select-all?])
-        selected?   (subscribe [::subs/is-selected? id])]
+        url           @(subscribe [::subs/deployment-url id primary-url-pattern])
+        selected?     (subscribe [::subs/is-selected? id])
+        show-options? (show-options select-all no-actions)]
     [ui/TableRow
-     (when-not @select-all?
+     (when show-options?
        [ui/TableCell
         [ui/Checkbox {:checked  @selected?
                       :on-click (fn [event]
@@ -167,9 +172,10 @@
                                   (.stopPropagation event))}]])
      [ui/TableCell [values/as-link (utils-general/id->uuid id)
                     :page "dashboard" :label (utils-general/id->short-uuid id)]]
-     [ui/TableCell {:style {:overflow      "hidden",
-                            :text-overflow "ellipsis",
-                            :max-width     "20ch"}} (:name module)]
+     (when (not no-module-name)
+       [ui/TableCell {:style {:overflow      "hidden",
+                              :text-overflow "ellipsis",
+                              :max-width     "20ch"}} (:name module)])
      [ui/TableCell state]
      [ui/TableCell (when url
                      [:a {:href url, :target "_blank", :rel "noreferrer"}
@@ -178,50 +184,53 @@
      [ui/TableCell (-> deployment :created time/parse-iso8601 time/ago)]
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
-                            :max-width     "20ch"}} (or credential-name parent)]
-     [ui/TableCell
-      (cond
-        (utils-general/can-operation? "stop" deployment)
-        [deployment-detail-views/ShutdownButton deployment]
-
-        (utils-general/can-delete? deployment)
-        [deployment-detail-views/DeleteButton deployment])]]))
+                            :max-width     "20ch"}}
+      (if nuvlabox
+        (utils/format-nuvlabox-value nuvlabox)
+        (get @creds-name credential-id credential-id))]
+     (when show-options?
+       [ui/TableCell
+        (cond
+          (utils-general/can-operation? "stop" deployment)
+          [deployment-detail-views/ShutdownButton deployment]
+          (utils-general/can-delete? deployment)
+          [deployment-detail-views/DeleteButton deployment])])]))
 
 
 (defn vertical-data-table
-  [deployments-list]
+  [_deployments-list _options]
   (let [tr                    (subscribe [::i18n-subs/tr])
-        select-all?           (subscribe [::subs/select-all?])
         is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
-    (fn [deployments-list]
-      (if (empty? deployments-list)
-        [uix/WarningMsgNoElements]
-        [ui/Table
-         (merge style/single-line {:stackable true})
-         [ui/TableHeader
-          [ui/TableRow
-           (when-not @select-all?
-             [ui/TableHeaderCell
-              [ui/Checkbox
-               {:checked  @is-all-page-selected?
-                :on-click #(dispatch [::events/select-all-page])}]])
-           [ui/TableHeaderCell (@tr [:id])]
-           [ui/TableHeaderCell (@tr [:module])]
-           [ui/TableHeaderCell (@tr [:status])]
-           [ui/TableHeaderCell (@tr [:url])]
-           [ui/TableHeaderCell (@tr [:created])]
-           [ui/TableHeaderCell (@tr [:infrastructure])]
-           [ui/TableHeaderCell (@tr [:actions])]]]
-         [ui/TableBody
-          (for [{:keys [id] :as deployment} deployments-list]
-            ^{:key id}
-            [row-fn deployment])]]))))
+    (fn [deployments-list {:keys [no-actions no-module-name select-all] :as options}]
+      (let [show-options? (show-options select-all no-actions)]
+        (if (empty? deployments-list)
+          [uix/WarningMsgNoElements]
+          [ui/Table
+           (merge style/single-line {:stackable true})
+           [ui/TableHeader
+            [ui/TableRow
+             (when show-options?
+               [ui/TableHeaderCell
+                [ui/Checkbox
+                 {:checked  @is-all-page-selected?
+                  :on-click #(dispatch [::events/select-all-page])}]])
+             [ui/TableHeaderCell (@tr [:id])]
+             (when (not no-module-name)
+               [ui/TableHeaderCell (@tr [:module])])
+             [ui/TableHeaderCell (@tr [:status])]
+             [ui/TableHeaderCell (@tr [:url])]
+             [ui/TableHeaderCell (@tr [:created])]
+             [ui/TableHeaderCell (@tr [:infrastructure])]
+             (when show-options? [ui/TableHeaderCell (@tr [:actions])])]]
+           [ui/TableBody
+            (for [{:keys [id] :as deployment} deployments-list]
+              ^{:key id}
+              [row-fn deployment options])]])))))
 
 
 (defn DeploymentCard
   [{:keys [id state module tags parent credential-name] :as deployment}]
   (let [tr            (subscribe [::i18n-subs/tr])
-        credential-id (:parent deployment)
         {module-logo-url :logo-url
          module-name     :name
          module-content  :content} module
@@ -261,13 +270,12 @@
               :href          dep-href
               :image         (or module-logo-url "")
               :corner-button (cond
-                               (general-utils/can-operation? "stop" deployment)
+                               (utils-general/can-operation? "stop" deployment)
                                [deployment-detail-views/ShutdownButton deployment :label? true]
 
-                               (general-utils/can-delete? deployment)
+                               (utils-general/can-delete? deployment)
                                [deployment-detail-views/DeleteButton deployment :label? true])
-              :state         state
-              :loading?      (utils/deployment-in-transition? state)}
+              :state         state}
 
              (not @select-all?) (assoc :on-select #(dispatch [::events/select-id id])
                                        :selected? @is-selected?))]))
@@ -275,7 +283,7 @@
 
 (defn cards-data-table
   [deployments-list]
-  [:div utils-style/center-items
+  [:div style/center-items
    [ui/CardGroup {:centered    true
                   :itemsPerRow 4
                   :stackable   true}
@@ -288,19 +296,20 @@
   []
   (let [loading?    (subscribe [::subs/loading?])
         view        (subscribe [::subs/view])
-        deployments (subscribe [::subs/deployments])]
+        deployments (subscribe [::subs/deployments])
+        select-all? (subscribe [::subs/select-all?])]
     (fn []
       (let [deployments-list (get @deployments :resources [])]
         [ui/Segment (merge style/basic
                            {:loading @loading?})
          (if (= @view "cards")
            [cards-data-table deployments-list]
-           [vertical-data-table deployments-list])]))))
+           [vertical-data-table deployments-list {:select-all @select-all?}])]))))
 
 
 (defn StatisticStates
   ([] [StatisticStates true])
-  ([clickable?]
+  ([_clickable?]
    (let [summary     (subscribe [::subs/deployments-summary])
          summary-all (subscribe [::subs/deployments-summary-all])]
      (fn [clickable?]
@@ -333,8 +342,34 @@
             ::events/set-state-selector ::subs/state-selector]
            [main-components/StatisticState error [(utils/status->icon utils/status-error)] utils/status-error
             clickable? "red" ::events/set-state-selector ::subs/state-selector]
-           (if clickable?
+           (when clickable?
              [main-components/ClickMeStaticPopup])]])))))
+
+
+(defn DeploymentTable
+  [options]
+  (let [elements          (subscribe [::subs/deployments])
+        elements-per-page (subscribe [::subs/elements-per-page])
+        page              (subscribe [::subs/page])
+        loading?          (subscribe [::subs/loading?])
+        select-all?       (subscribe [::subs/select-all?])]
+    (fn []
+      (let [total-elements (:count @elements)
+            total-pages    (utils-general/total-pages total-elements @elements-per-page)
+            deployments    (:resources @elements)]
+        [ui/TabPane
+         (if @loading?
+           [ui/Loader {:active true
+                       :inline "centered"}]
+           [vertical-data-table deployments (assoc options :select-all @select-all?)])
+
+         (when (pos? (:count @elements))
+           [uix/Pagination {:totalitems   total-elements
+                            :totalPages   total-pages
+                            :activePage   @page
+                            :onPageChange (ui-callback/callback
+                                            :activePage
+                                            #(dispatch [::events/set-page %]))}])]))))
 
 
 (defn deployments-main-content
@@ -344,7 +379,7 @@
      page                (subscribe [::subs/page])
      dep-count           (subscribe [::subs/deployments-count])
      bulk-jobs-monitored (subscribe [::subs/bulk-jobs-monitored])]
-    (refresh :init? true)
+    (refresh)
     (fn []
       (let [total-deployments @dep-count
             total-pages       (utils-general/total-pages

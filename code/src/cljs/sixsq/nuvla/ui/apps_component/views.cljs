@@ -29,13 +29,16 @@
 
 
 (defn docker-image-view
-  [{:keys [::spec/image-name ::spec/registry ::spec/repository ::spec/tag] :as image}]
+  [{:keys [::spec/image-name ::spec/registry ::spec/repository ::spec/tag] :as _image}]
   [:span
+   #_ :clj-kondo/ignore
    (when (not (empty? registry))
      [:span registry "/"])
+   #_ :clj-kondo/ignore
    (when (not (empty? repository))
      [:span repository "/"])
    [:span image-name]
+   #_ :clj-kondo/ignore
    (when (not (empty? tag))
      [:span ":" tag])])
 
@@ -48,7 +51,7 @@
         editable? (subscribe [::apps-subs/editable?])]
     (fn []
       (let [{:keys [::spec/image-name ::spec/registry ::spec/repository ::spec/tag]
-             :or   {registry "" repository "" image "" tag ""}} @image
+             :or   {registry "" repository "" image-name "" tag ""}} @image
             label (@tr [:module-docker-image-label])]
         [ui/TableRow
          [ui/TableCell {:collapsing true} (if @editable? (apps-utils/mandatory-name label) label)]
@@ -108,13 +111,13 @@
             [:span (str/join ", " @architectures)])]]))))
 
 
-(defn summary []
-  (let []
-    [apps-views-detail/summary
-     [^{:key "summary-docker-image"}
-      [docker-image]
-      ^{:key "summary-architectures"}
-      [architectures]]]))
+(defn Details []
+  [apps-views-detail/Details
+   {:extras
+    [^{:key "summary-docker-image"}
+     [docker-image]
+     ^{:key "summary-architectures"}
+     [architectures]]}])
 
 
 (defn single-port
@@ -152,6 +155,7 @@
                                    #(do (dispatch [::main-events/changes-protection? true])
                                         (dispatch [::events/update-port-protocol id %])
                                         (dispatch [::apps-events/validate-form])))}]
+        #_ :clj-kondo/ignore
         (when (and (not (empty? protocol)) (not= "tcp" protocol))
           [:b protocol]))]
 
@@ -282,11 +286,12 @@
 (defn generate-ports-args
   [ports]
   (let [ports-args
-        (for [[id port] ports]
+        (for [[_id port] ports]
           (let [{:keys [::spec/published-port ::spec/target-port ::spec/protocol]} port]
             (str "-p " published-port ":" target-port (when
                                                         (and
                                                           (not= "tcp" protocol)
+                                                          #_ :clj-kondo/ignore
                                                           (not (empty? protocol)))
                                                         (str "/" protocol)))))]
     (str/join " " ports-args)))
@@ -295,24 +300,27 @@
 (defn generate-mounts-args
   [mounts]
   (let [mounts-commands
-        (for [[id {:keys [::spec/mount-type ::spec/mount-source
+        (for [[_id {:keys [::spec/mount-type ::spec/mount-source
                           ::spec/mount-target ::spec/mount-read-only]}] mounts]
-          (conj (str
-                  "--mount type=" mount-type
-                  ",src=" mount-source
-                  ",dst=" mount-target
-                  (when mount-read-only ",readonly"))))]
+          (str
+            "--mount type=" mount-type
+            ",src=" mount-source
+            ",dst=" mount-target
+            (when mount-read-only ",readonly")))]
     (str/join " " mounts-commands)))
 
 
 (defn generate-image-arg
   [{:keys [::spec/registry ::spec/repository ::spec/image-name ::spec/tag]}]
   (str
+    #_ :clj-kondo/ignore
     (when (not (empty? registry))
       (str registry "/"))
+    #_ :clj-kondo/ignore
     (when (not (empty? repository))
       (str repository "/"))
     image-name
+    #_ :clj-kondo/ignore
     (when (not (empty? tag))
       (str ":" tag))))
 
@@ -346,7 +354,8 @@
 
 (defn view-edit
   []
-  (let [module-common (subscribe [::apps-subs/module-common])
+  (let [tr            (subscribe [::i18n-subs/tr])
+        module-common (subscribe [::apps-subs/module-common])
         editable?     (subscribe [::apps-subs/editable?])
         stripe        (subscribe [::main-subs/stripe])]
     (fn []
@@ -360,11 +369,14 @@
                          :read-only     (not @editable?)}]
          [uix/PageHeader "grid layout" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
-         [summary]
+         [Details]
          [apps-views-detail/registries-section]
          (when @stripe
            [apps-views-detail/price-section])
-         [apps-views-detail/license-section]
+         [uix/Accordion
+          [apps-views-detail/LicenseSection]
+          :label (str/capitalize (@tr [:license]))
+          :default-open false]
          [ports-section]
          [apps-views-detail/env-variables-section]
          [mounts-section]
@@ -372,7 +384,6 @@
          [apps-views-detail/output-parameters-section]
          [apps-views-detail/data-types-section]
          [test-command]
-         [apps-views-detail/add-modal]
          [apps-views-detail/save-modal]
          [apps-views-detail/logo-url-modal]
          [deployment-dialog-views/deploy-modal]]))))

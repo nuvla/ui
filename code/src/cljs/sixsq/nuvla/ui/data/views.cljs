@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.data.views
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.apps.utils :as application-utils]
@@ -103,16 +102,16 @@
 
 
 (defn application-list-item
-  [{:keys [id name description subtype created] :as application}]
-  (let [selected-application-id (subscribe [::subs/selected-application-id])]
-    (let [on-click-fn #(dispatch [::events/set-selected-application-id id])]
-      ^{:key id}
-      [ui/ListItem {:active   (and @selected-application-id (= id @selected-application-id))
-                    :on-click on-click-fn}
-       [ui/ListIcon {:name (application-utils/subtype-icon subtype), :size "large"}]
-       [ui/ListContent
-        [ui/ListHeader (str (or name id) " (" (time/ago (time/parse-iso8601 created)) ")")]
-        (or description "")]])))
+  [{:keys [id name description subtype created] :as _application}]
+  (let [selected-application-id (subscribe [::subs/selected-application-id])
+        on-click-fn #(dispatch [::events/set-selected-application-id id])]
+    ^{:key id}
+    [ui/ListItem {:active   (and @selected-application-id (= id @selected-application-id))
+                  :on-click on-click-fn}
+     [ui/ListIcon {:name (application-utils/subtype-icon subtype), :size "large"}]
+     [ui/ListContent
+      [ui/ListHeader (str (or name id) " (" (time/ago (time/parse-iso8601 created)) ")")]
+      (or description "")]]))
 
 
 (defn application-list
@@ -235,7 +234,7 @@
 
 
 (defn format-data-set-title
-  [{:keys [id name] :as data-set}]
+  [{:keys [id name] :as _data-set}]
   (let [data-sets (subscribe [::subs/selected-data-set-ids])
         selected? (@data-sets id)]
     [ui/CardHeader {:style {:word-wrap "break-word"}}
@@ -312,7 +311,7 @@
 
 
 (defmethod panel/render :data
-  [path]
+  [_path]
   ;; FIXME: find a better way to initialize credentials and data-sets
   (refresh-credentials)
   (refresh-data-sets)

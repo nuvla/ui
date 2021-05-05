@@ -3,9 +3,11 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.deployment.utils :as utils]
+    [sixsq.nuvla.ui.edge-detail.spec :as edge-detail-spec]
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -61,19 +63,60 @@
 
 
 (reg-event-fx
+  ::get-module-deployments
+  (fn [{{:keys [::spec/full-text-search
+                ::spec/additional-filter
+                ::spec/state-selector
+                ::apps-spec/module
+                ::spec/page
+                ::spec/elements-per-page]} :db} _]
+    (let [state     (if (= "all" state-selector) nil state-selector)
+          module-id (:id module)]
+      {::cimi-api-fx/search [:deployment (utils/get-query-params
+                                           {:full-text-search  full-text-search
+                                            :additional-filter additional-filter
+                                            :state-selector    state
+                                            :module-id         module-id
+                                            :page              page
+                                            :elements-per-page elements-per-page})
+                             #(dispatch [::set-deployments %])]})))
+
+
+(reg-event-fx
+  ::get-nuvlabox-deployments
+  (fn [{{:keys [::spec/full-text-search
+                ::spec/additional-filter
+                ::spec/state-selector
+                ::edge-detail-spec/nuvlabox
+                ::spec/page
+                ::spec/elements-per-page]} :db} _]
+    (let [state (if (= "all" state-selector) nil state-selector)
+          nb-id (:id nuvlabox)]
+      {::cimi-api-fx/search [:deployment (utils/get-query-params
+                                           {:full-text-search  full-text-search
+                                            :additional-filter additional-filter
+                                            :state-selector    state
+                                            :nuvlabox          nb-id
+                                            :page              page
+                                            :elements-per-page elements-per-page})
+                             #(dispatch [::set-deployments %])]})))
+
+
+(reg-event-fx
   ::get-deployments
   (fn [{{:keys [::spec/full-text-search
                 ::spec/additional-filter
                 ::spec/state-selector
-                ::spec/nuvlabox
                 ::spec/page
                 ::spec/elements-per-page]} :db} _]
     (let [state (if (= "all" state-selector) nil state-selector)]
       {::cimi-api-fx/search [:deployment (utils/get-query-params
-                                           full-text-search additional-filter state
-                                           nuvlabox page elements-per-page)
-                             #(dispatch [::set-deployments %])]
-       })))
+                                           {:full-text-search  full-text-search
+                                            :additional-filter additional-filter
+                                            :state-selector    state
+                                            :page              page
+                                            :elements-per-page elements-per-page})
+                             #(dispatch [::set-deployments %])]})))
 
 
 (reg-event-fx
@@ -108,17 +151,14 @@
 
 (reg-event-fx
   ::set-page
-  (fn [{{:keys [::spec/full-text-search
-                ::spec/page
-                ::spec/elements-per-page] :as db} :db} [_ page]]
+  (fn [{db :db} [_ page]]
     {:db       (assoc db ::spec/page page)
      :dispatch [::refresh]}))
 
 
 (reg-event-fx
   ::set-full-text-search
-  (fn [{{:keys [::spec/page
-                ::spec/elements-per-page] :as db} :db} [_ full-text-search]]
+  (fn [{db :db} [_ full-text-search]]
     {:db       (-> db
                    (assoc ::spec/full-text-search full-text-search)
                    (assoc ::spec/page 1)
@@ -128,8 +168,7 @@
 
 (reg-event-fx
   ::set-additional-filter
-  (fn [{{:keys [::spec/page
-                ::spec/elements-per-page] :as db} :db} [_ additional-filter]]
+  (fn [{db :db} [_ additional-filter]]
     {:db       (assoc db ::spec/additional-filter additional-filter
                          ::spec/page 1
                          ::spec/selected-set #{})
@@ -168,8 +207,7 @@
 
 (reg-event-fx
   ::open-modal-bulk-update
-  (fn [{{:keys [::spec/select-all?
-                ::spec/selected-set] :as db} :db} [_ filter-str module-href]]
+  (fn [{db :db} [_ filter-str module-href]]
     (cond-> {:db (assoc db ::spec/bulk-update-modal {:filter-str  filter-str
                                                      :module-href module-href})}
             module-href (assoc
@@ -195,7 +233,12 @@
                 ::spec/nuvlabox]} :db}]
     (let [state      (if (= "all" state-selector) nil state-selector)
           filter-str (if select-all?
-                       (utils/get-filter-param full-text-search additional-filter state nuvlabox)
+                       (utils/get-filter-param
+                         {:full-text-search  full-text-search
+                          :additional-filter additional-filter
+                          :state-selector    state
+                          :nuvlabox          nuvlabox
+                          :module-id         nil})
                        (->> selected-set
                             (map #(str "id='" % "'"))
                             (apply general-utils/join-or)))]
@@ -211,8 +254,7 @@
 
 (reg-event-fx
   ::bulk-update-operation
-  (fn [{{:keys [::spec/bulk-update-modal
-                ::spec/select-all?]} :db} [_ selected-module]]
+  (fn [{{:keys [::spec/bulk-update-modal]} :db} [_ selected-module]]
     (let [filter-str (:filter-str bulk-update-modal)]
       {::cimi-api-fx/operation-bulk
                  [:deployment
@@ -255,11 +297,11 @@
 
 (reg-event-db
   ::add-bulk-job-monitored
-  (fn [{:keys [::spec/bulk-jobs-monitored] :as db} [_ {:keys [id] :as job}]]
+  (fn [db [_ {:keys [id] :as job}]]
     (update db ::spec/bulk-jobs-monitored assoc id job)))
 
 
 (reg-event-db
   ::dissmiss-bulk-job-monitored
-  (fn [{:keys [::spec/bulk-jobs-monitored] :as db} [_ job-id]]
+  (fn [db [_ job-id]]
     (update db ::spec/bulk-jobs-monitored dissoc job-id)))

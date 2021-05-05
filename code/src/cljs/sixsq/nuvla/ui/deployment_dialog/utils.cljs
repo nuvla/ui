@@ -69,5 +69,5 @@
 
 
 (defn infra-support-pull?
-  [{:keys [capabilities] :as infrastructure-service}]
+  [{:keys [capabilities] :as _infrastructure-service}]
   (contains? (set capabilities) "NUVLA_JOB_PULL"))

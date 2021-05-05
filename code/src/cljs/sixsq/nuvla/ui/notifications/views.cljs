@@ -3,6 +3,7 @@
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [re-frame.db]
     [reagent.core :as r]
     [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -111,9 +112,9 @@
       :on-change     (ui-callback/value
                        #(do
                           (dispatch-sync [::events/update-notification-subscription-config :method-ids %])
-                          (if collection
+                          (when collection
                             (dispatch-sync [::events/update-notification-subscription-config :collection collection]))
-                          (if (and (> (count %) 0) save?)
+                          (when (and (> (count %) 0) save?)
                             (dispatch [::events/set-notif-method-ids subs-conf-id %]))))
       :options       (doall
                        (map (fn [{id :id, method-name :name}]
@@ -122,7 +123,7 @@
 
 
 (defn subs-notif-method-select-or-add
-  [current-method notif-methods save?]
+  [_current-method _notif-methods save?]
   (fn [current-method notif-methods]
     [:<>
      [subs-notif-method-dropdown current-method notif-methods save? nil]
@@ -207,7 +208,7 @@
 
           [ui/Menu {:borderless true
                     :secondary  true}
-           (if (empty? (current-subs subs-config-id subscriptions))
+           (when (empty? (current-subs subs-config-id subscriptions))
              [uix/MenuItem
               {:name (@tr [:no-subscriptions-available])
                :fixed "right"
@@ -470,7 +471,7 @@
                                            #(on-change :criteria {:condition %}))}]]]
               (on-change :criteria {:condition "no"}))
 
-            (if-not (= :boolean (get-in criteria-condition-type [@collection (keyword @criteria-metric)]))
+            (when-not (= :boolean (get-in criteria-condition-type [@collection (keyword @criteria-metric)]))
               [ui/TableRow
                [ui/TableCell {:collapsing true
                               :style      {:padding-bottom 8}} "Value"]
@@ -479,8 +480,7 @@
                  {:type      "text"
                   :name      "Value"
                   :read-only false
-                  :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]]
-              )]]
+                  :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]])]]
           [ui/Header {:as "h3"} "Notification"]
           [ui/Form
            [ui/FormGroup
@@ -602,7 +602,7 @@
                                            #(on-change :criteria {:condition %}))}]]]
               (on-change :criteria {:condition "no"}))
 
-            (if-not (= :boolean (get-in criteria-condition-type [collection (keyword @criteria-metric)]))
+            (when-not (= :boolean (get-in criteria-condition-type [collection (keyword @criteria-metric)]))
               [ui/TableRow
                [ui/TableCell {:collapsing true
                               :style      {:padding-bottom 8}} "Value"]
@@ -612,8 +612,7 @@
                   :name      "Value"
                   :read-only false
                   :value     (:value criteria)
-                  :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]]
-              )]]
+                  :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]])]]
           [ui/Header {:as "h3"} "Notification"]
           [subs-notif-method-dropdown method-ids notif-methods false]
           [:span ff/nbsp ff/nbsp]
@@ -627,7 +626,7 @@
         ))))
 
 (defn notif-method-select-dropdown
-  [method on-change]
+  [_method _on-change]
   (let [tr              (subscribe [::i18n-subs/tr])
         local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
@@ -838,7 +837,7 @@
          (if (empty? @subscription-configs)
            [ui/Message (str/capitalize (@tr [:no-subscription-configs-defined]))]
            (doall (for [[idx resource-kind resource-subs-confs] (map-indexed (fn [i [k v]] [i k v]) subs-confs-all)]
-             (if-not (empty? resource-subs-confs)
+             (when-not (empty? resource-subs-confs)
                ^{:key resource-kind}
                [uix/Accordion
                 [ui/Table {:basic   "very"
@@ -867,7 +866,7 @@
                                                            (dispatch-sync [::events/set-notification-subscription-config subs-conf])
                                                            (on-change :collection (:resource-kind subs-conf))
                                                            (on-change :enabled %)
-                                                           (if (= 1 (count @notif-methods))
+                                                           (when (= 1 (count @notif-methods))
                                                              (on-change :method-id (-> @notif-methods
                                                                                        first
                                                                                        :id)))
@@ -961,7 +960,7 @@
 
 
 (defmethod panel/render :notifications
-  [path]
+  [_path]
   (timbre/set-level! :info)
   [:<>
    [TabsAll]

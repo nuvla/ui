@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.utils.forms
   (:require
-    [re-frame.core :refer [subscribe]]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
@@ -33,12 +32,13 @@
 
 
 (defn resource-editor
-  [form-id text]
+  [_form-id _text]
   (fn [form-id text]
     ^{:key form-id}
     [ui/Segment {:attached "bottom"}
      [ui/CodeMirror {:value     @text
-                     :on-change (fn [editor data value]
+                     :on-change (fn
+                                  [_editor _data value]
                                   (reset! text value))
                      :options   {:mode                "application/json"
                                  :line-numbers        true

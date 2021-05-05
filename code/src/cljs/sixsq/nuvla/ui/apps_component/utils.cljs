@@ -62,7 +62,7 @@
   [db]
   (into
     []
-    (for [[id p] (get-in db [::spec/module-component ::spec/ports])]
+    (for [[_id p] (get-in db [::spec/module-component ::spec/ports])]
       (let [{:keys [::spec/target-port ::spec/published-port ::spec/protocol]
              :or   {target-port nil published-port nil protocol "tcp"}} p]
         (conj {:target-port target-port}
@@ -75,7 +75,7 @@
   [db]
   (into
     []
-    (for [[id m] (get-in db [::spec/module-component ::spec/mounts])]
+    (for [[_id m] (get-in db [::spec/module-component ::spec/mounts])]
       (let [{:keys [::spec/mount-source ::spec/mount-target
                     ::spec/mount-read-only ::spec/mount-type]
              :or   {mount-read-only false}} m]

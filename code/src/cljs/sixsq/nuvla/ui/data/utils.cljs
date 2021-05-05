@@ -14,7 +14,7 @@
   (let [f       (partial matches-parameter-name? name)
         current (first (filter f parameters))               ;; FIXME: Use group-by instead?
         others  (remove f parameters)]
-    (if current
+    (when current
       (->> (assoc current :value value)
            (conj others)
            (sort-by :parameter)

@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.deployment.subs
   (:require
-    [clojure.set :as set]
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.deployment.utils :as utils]))

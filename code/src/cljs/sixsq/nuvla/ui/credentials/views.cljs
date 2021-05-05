@@ -3,6 +3,7 @@
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [re-frame.db]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.credentials.events :as events]
@@ -18,8 +19,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.validation :as utils-validation]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.validation :as utils-validation]))
 
 
 (defn in?
@@ -29,14 +29,14 @@
 
 
 (defn row-infrastructure-services-selector
-  [subtypes additional-filter editable? value-spec on-change]
+  [subtypes additional-filter _editable? _value-spec _on-change]
   (let [tr              (subscribe [::i18n-subs/tr])
         infra-services  (subscribe [::subs/infrastructure-services-available])
         credential      (subscribe [::subs/credential])
         local-validate? (r/atom false)
         validate-form?  (subscribe [::subs/validate-form?])]
     (dispatch [::events/fetch-infrastructure-services-available subtypes additional-filter])
-    (fn [subtypes additional-filter editable? value-spec on-change]
+    (fn [subtypes _additional-filter _editable? value-spec on-change]
       (let [value     (:parent @credential)
             validate? (or @local-validate? @validate-form?)
             valid?    (s/valid? value-spec value)]
@@ -402,9 +402,8 @@
   (dispatch-sync [::events/validate-credential-form form-validation-spec])
   (let [form-valid? (get @re-frame.db/app-db ::spec/form-valid?)]
     (when form-valid?
-      (do
-        (dispatch [::events/set-validate-form? false])
-        (dispatch [::events/edit-credential])))))
+      (dispatch [::events/set-validate-form? false])
+      (dispatch [::events/edit-credential]))))
 
 
 (def infrastructure-service-csp-validation-map
@@ -531,9 +530,8 @@
 
 (defn StatisticStates
   ([] [StatisticStates true])
-  ([clickable?]
-   (let [tr         (subscribe [::i18n-subs/tr])
-         summary    (subscribe [::subs/credentials-summary])]
+  ([_clickable?]
+   (let [summary (subscribe [::subs/credentials-summary])]
      (fn [clickable?]
        (let [terms      (utils-general/aggregate-to-map (get-in @summary [:aggregations :terms:subtype :buckets]))
              coe        (extract-metrics terms coe-subtypes)
@@ -564,7 +562,7 @@
             ::events/set-state-selector ::subs/state-selector]
            [main-components/StatisticState api-key ["key"] "API KEYS" clickable?
             ::events/set-state-selector ::subs/state-selector]
-           (if clickable?
+           (when clickable?
              [main-components/ClickMeStaticPopup])]])))))
 
 
@@ -614,144 +612,143 @@
         visible?  (subscribe [::subs/add-credential-modal-visible?])
         is-group? (subscribe [::session-subs/active-claim-is-group?])]
     (fn []
-      (let []
-        [ui/Modal {:open       @visible?
-                   :close-icon true
-                   :on-close   #(dispatch [::events/close-add-credential-modal])}
+      [ui/Modal {:open       @visible?
+                 :close-icon true
+                 :on-close   #(dispatch [::events/close-add-credential-modal])}
 
-         [uix/ModalHeader {:header (@tr [:add]) :icon "add"}]
+       [uix/ModalHeader {:header (@tr [:add]) :icon "add"}]
 
-         [ui/ModalContent {:scrolling false}
-          [:div {:style {:padding-bottom 20}} (@tr [:credential-choose-type])]
-          [ui/CardGroup {:centered true}
+       [ui/ModalContent {:scrolling false}
+        [:div {:style {:padding-bottom 20}} (@tr [:credential-choose-type])]
+        [ui/CardGroup {:centered true}
 
-           [ui/Card
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-credential-modal])
+                        (dispatch [::events/open-credential-modal
+                                   ;; FIXME: this is wrong, as it predefines the subtype of credential.
+                                   ;; However, the subtype of cred depends on the subtype of COE IS.
+                                   ;; We will overwrite this in utils/db->new-coe-credential depending
+                                   ;; on the subtype of the COE IS user selected.
+                                   ;; Not having subtype at this stage at all, doesn't render the modal.
+                                   ;; Setting it to something other than infrastructure-service-swarm or
+                                   ;; infrastructure-service-kubernetes doesn't work either. So, this is
+                                   ;; a temporary default until COE IS is selected and submit button is
+                                   ;; pressed.
+                                   {:subtype "infrastructure-service-swarm"} true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Swarm / Kubernetes"]
+           [ui/Icon {:name "docker"
+                     :size :massive}]
+           [ui/Image {:src   "/ui/images/kubernetes.svg"
+                      :style {:max-width 112}}]]]
+
+         [ui/Card
+          (when (not @is-group?)
             {:on-click #(do
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])
                           (dispatch [::events/close-add-credential-modal])
                           (dispatch [::events/open-credential-modal
-                                     ;; FIXME: this is wrong, as it predefines the subtype of credential.
-                                     ;; However, the subtype of cred depends on the subtype of COE IS.
-                                     ;; We will overwrite this in utils/db->new-coe-credential depending
-                                     ;; on the subtype of the COE IS user selected.
-                                     ;; Not having subtype at this stage at all, doesn't render the modal.
-                                     ;; Setting it to something other than infrastructure-service-swarm or
-                                     ;; infrastructure-service-kubernetes doesn't work either. So, this is
-                                     ;; a temporary default until COE IS is selected and submit button is
-                                     ;; pressed.
-                                     {:subtype "infrastructure-service-swarm"} true]))}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "Swarm / Kubernetes"]
-             [ui/Icon {:name "docker"
-                       :size :massive}]
-             [ui/Image {:src   "/ui/images/kubernetes.svg"
-                        :style {:max-width 112}}]]]
+                                     {:subtype "infrastructure-service-vpn"} true]))})
+          [ui/CardContent {:text-align :center}
+           [ui/Header "OpenVPN"]
+           [ui/Image {:src   "/ui/images/openvpn.png"
+                      :style {:max-width 112}}]
+           (when @is-group?
+             [:<>
+              [:br]
+              [:i (@tr [:credential-vpn-group-warning])]])]]
 
-           [ui/Card
-            (when (not @is-group?)
-              {:on-click #(do
-                            (dispatch [::events/set-validate-form? false])
-                            (dispatch [::events/form-valid])
-                            (dispatch [::events/close-add-credential-modal])
-                            (dispatch [::events/open-credential-modal
-                                       {:subtype "infrastructure-service-vpn"} true]))})
-            [ui/CardContent {:text-align :center}
-             [ui/Header "OpenVPN"]
-             [ui/Image {:src   "/ui/images/openvpn.png"
-                        :style {:max-width 112}}]
-             (when @is-group?
-               [:<>
-                [:br]
-                [:i (@tr [:credential-vpn-group-warning])]])]]
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-credential-modal])
+                        (dispatch [::events/open-credential-modal
+                                   {:subtype "infrastructure-service-registry"} true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Docker registry"]
+           [:div]
+           [ui/IconGroup {:size "massive"}
+            [ui/Icon {:name "docker"}]
+            [ui/Icon {:name "database", :corner "bottom right"}]]]]
 
-           [ui/Card
-            {:on-click #(do
-                          (dispatch [::events/set-validate-form? false])
-                          (dispatch [::events/form-valid])
-                          (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::events/open-credential-modal
-                                     {:subtype "infrastructure-service-registry"} true]))}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "Docker registry"]
-             [:div]
-             [ui/IconGroup {:size "massive"}
-              [ui/Icon {:name "docker"}]
-              [ui/Icon {:name "database", :corner "bottom right"}]]]]
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-credential-modal])
+                        (dispatch [::events/open-credential-modal
+                                   {:subtype "infrastructure-service-minio"} true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Object Store"]
+           [:div]
+           [ui/Image {:src   "/ui/images/s3.png"
+                      :style {:max-height 112}}]]]
 
-           [ui/Card
-            {:on-click #(do
-                          (dispatch [::events/set-validate-form? false])
-                          (dispatch [::events/form-valid])
-                          (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::events/open-credential-modal
-                                     {:subtype "infrastructure-service-minio"} true]))}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "Object Store"]
-             [:div]
-             [ui/Image {:src   "/ui/images/s3.png"
-                        :style {:max-height 112}}]]]
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-credential-modal])
+                        (dispatch [::events/open-credential-modal
+                                   {:subtype "generate-ssh-key"} true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "SSH Keypair"]
+           [:div]
+           [ui/Image {:src   "/ui/images/ssh.png"
+                      :style {:max-height 112}}]]]
 
-           [ui/Card
-            {:on-click #(do
-                          (dispatch [::events/set-validate-form? false])
-                          (dispatch [::events/form-valid])
-                          (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::events/open-credential-modal
-                                     {:subtype "generate-ssh-key"} true]))}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "SSH Keypair"]
-             [:div]
-             [ui/Image {:src   "/ui/images/ssh.png"
-                        :style {:max-height 112}}]]]
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-credential-modal])
+                        (dispatch [::events/open-credential-modal
+                                   {:subtype "infrastructure-service-exoscale"} true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Cloud Exoscale"]
+           [ui/Image {:src   "/ui/images/exoscale.png"
+                      :style {:max-width 112}}]]]
 
-           [ui/Card
-            {:on-click #(do
-                          (dispatch [::events/set-validate-form? false])
-                          (dispatch [::events/form-valid])
-                          (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::events/open-credential-modal
-                                     {:subtype "infrastructure-service-exoscale"} true]))}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "Cloud Exoscale"]
-             [ui/Image {:src   "/ui/images/exoscale.png"
-                        :style {:max-width 112}}]]]
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-credential-modal])
+                        (dispatch [::events/open-credential-modal
+                                   {:subtype "infrastructure-service-amazonec2"} true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Cloud Amazon"]
+           [ui/Image {:src   "/ui/images/aws.png"
+                      :style {:max-width 112}}]]]
 
-           [ui/Card
-            {:on-click #(do
-                          (dispatch [::events/set-validate-form? false])
-                          (dispatch [::events/form-valid])
-                          (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::events/open-credential-modal
-                                     {:subtype "infrastructure-service-amazonec2"} true]))}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "Cloud Amazon"]
-             [ui/Image {:src   "/ui/images/aws.png"
-                        :style {:max-width 112}}]]]
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-credential-modal])
+                        (dispatch [::events/open-credential-modal
+                                   {:subtype "infrastructure-service-azure"} true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Cloud Azure"]
+           [ui/Image {:src   "/ui/images/azure.png"
+                      :style {:max-width 112}}]]]
 
-           [ui/Card
-            {:on-click #(do
-                          (dispatch [::events/set-validate-form? false])
-                          (dispatch [::events/form-valid])
-                          (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::events/open-credential-modal
-                                     {:subtype "infrastructure-service-azure"} true]))}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "Cloud Azure"]
-             [ui/Image {:src   "/ui/images/azure.png"
-                        :style {:max-width 112}}]]]
-
-           [ui/Card
-            {:on-click #(do
-                          (dispatch [::events/set-validate-form? false])
-                          (dispatch [::events/form-valid])
-                          (dispatch [::events/close-add-credential-modal])
-                          (dispatch [::events/open-credential-modal
-                                     {:subtype "infrastructure-service-google"} true]))}
-            [ui/CardContent {:text-align :center}
-             [ui/Header "Cloud Google"]
-             [ui/Image {:src   "/ui/images/gce.png"
-                        :style {:max-width 112}}]]]]]]))))
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-credential-modal])
+                        (dispatch [::events/open-credential-modal
+                                   {:subtype "infrastructure-service-google"} true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Cloud Google"]
+           [ui/Image {:src   "/ui/images/gce.png"
+                      :style {:max-width 112}}]]]]]])))
 
 
 (defn generated-credential-modal
@@ -935,7 +932,7 @@
 
 
 (defmethod panel/render :credentials
-  [path]
+  [_path]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment style/basic
      [uix/PageHeader "key" (@tr [:credentials])]

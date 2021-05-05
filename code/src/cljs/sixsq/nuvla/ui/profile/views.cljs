@@ -16,12 +16,10 @@
     [sixsq.nuvla.ui.profile.events :as events]
     [sixsq.nuvla.ui.profile.subs :as subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.spec :as us]
-    [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]))
@@ -160,7 +158,7 @@
 
 
 (defn PaymentMethodInputInternal
-  [{:keys [type onChange options] :as props}]
+  [{:keys [type onChange options] :as _props}]
   (case type
     "sepa_debit" [IbanElement
                   {:className "stripe-input"
@@ -186,7 +184,7 @@
 (def PaymentMethodInputReactClass (r/adapt-react-class PaymentMethodInputWrapper))
 
 (defn PaymentMethodInput
-  [props]
+  [_props]
   (let [locale (subscribe [::i18n-subs/locale])
         stripe (subscribe [::main-subs/stripe])]
     (fn [props]
@@ -228,7 +226,7 @@
 
 
 (defn CustomerFormFields
-  [form]
+  [_form]
   (let [tr        (subscribe [::i18n-subs/tr])
         is-group? (subscribe [::session-subs/active-claim-is-group?])]
     (fn [form]
@@ -438,7 +436,7 @@
 
 
 (defn AddPaymentMethodButton
-  [open?]
+  [_open?]
   (let [tr                        (subscribe [::i18n-subs/tr])
         stripe                    (subscribe [::main-subs/stripe])
         loading-setup-intent?     (subscribe [::subs/loading? :create-setup-intent])
@@ -689,17 +687,18 @@
               [ui/TableHeaderCell "PDF"]]]
             [ui/TableBody
              (for [{:keys [number created status due-date invoice-pdf currency total]} @invoices]
-               ^{:key (str number)}
-               [ui/TableRow
-                [ui/TableCell (some-> created (time/time->format "LL" locale))]
-                [ui/TableCell (str/capitalize status)]
-                [ui/TableCell (if due-date (some-> due-date (time/time->format "LL" locale)) "-")]
-                [ui/TableCell (format-currency currency total)]
-                [ui/TableCell
-                 (when invoice-pdf
-                   [ui/Button {:basic true
-                               :icon  "download"
-                               :href  invoice-pdf}])]])]]
+               (let [no number]                             ;number trips kondo
+                 ^{:key (str no)}
+                 [ui/TableRow
+                  [ui/TableCell (some-> created (time/time->format "LL" locale))]
+                  [ui/TableCell (str/capitalize status)]
+                  [ui/TableCell (if due-date (some-> due-date (time/time->format "LL" locale)) "-")]
+                  [ui/TableCell (format-currency currency total)]
+                  [ui/TableCell
+                   (when invoice-pdf
+                     [ui/Button {:basic true
+                                 :icon  "download"
+                                 :href  invoice-pdf}])]]))]]
            [ui/Grid {:text-align     "center"
                      :vertical-align "middle"
                      :style          {:height "100%"}}
@@ -710,7 +709,7 @@
 
 
 (defn AddCouponButton
-  [open?]
+  [_open?]
   (let [tr          (subscribe [::i18n-subs/tr])
         loading?    (subscribe [::subs/loading? :add-coupon])
         error       (subscribe [::subs/error-message])
@@ -812,7 +811,7 @@
 
 
 
-(defn DashboradVendor
+(defn DashboardVendor
   []
   (let [tr     (subscribe [::i18n-subs/tr])
         vendor (subscribe [::subs/vendor])]
@@ -858,7 +857,7 @@
           (@tr [:vendor-getting-paid])]
          [:br]
          (if @vendor
-           [DashboradVendor]
+           [DashboardVendor]
            [StripeConnect])
          ]]]
       )))
@@ -937,7 +936,7 @@
                 [PaymentMethods]])])]]))))
 
 (defmethod panel/render :profile
-  [path]
+  [_path]
   [:div
    [Content]
    [modal-change-password]])

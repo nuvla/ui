@@ -27,7 +27,7 @@
 (defmulti StepIcon :step-id)
 
 (defn step-icon
-  [{:keys [icon] :as step-state}]
+  [{:keys [icon] :as _step-state}]
   [ui/Icon {:name icon}])
 
 (defmethod StepIcon :default
@@ -51,16 +51,19 @@
 
 (defmethod StepIcon :module-version
   [step-state]
-  (let [tr         (subscribe [::i18n-subs/tr])
-        is-latest? (subscribe [::subs/is-latest-version?])
-        completed? (subscribe [::subs/version-completed?])]
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        is-latest?           (subscribe [::subs/is-latest-version?])
+        is-latest-published? (subscribe [::subs/is-latest-published-version?])
+        is-module-published? (subscribe [::subs/is-module-published?])
+        completed?           (subscribe [::subs/version-completed?])
+        is-ok?               (if @is-module-published? @is-latest-published? @is-latest?)]
     (if @completed?
       [ui/Popup {:trigger  (r/as-element
-                             [ui/Icon {:name  (if @is-latest? "check" "info circle")
-                                       :color (if @is-latest? "green" "blue")}])
+                             [ui/Icon {:name  (if is-ok? "check" "info circle")
+                                       :color (if is-ok? "green" "blue")}])
                  :content  (@tr [:new-version-exist])
                  :wide     "very"
-                 :disabled @is-latest?
+                 :disabled is-ok?
                  :position "top center"}]
       [step-icon step-state])))
 
@@ -123,7 +126,7 @@
 
 
 (defn deploy-modal
-  [show-data?]
+  [_show-data?]
   (let [open?            (subscribe [::subs/deploy-modal-visible?])
         deployment       (subscribe [::subs/deployment])
         loading?         (subscribe [::subs/loading-deployment?])
@@ -179,4 +182,3 @@
                       :on-click submit-fn}
            [ui/Icon {:name @button-icon}]
            @button-text]]]))))
-

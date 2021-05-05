@@ -2,6 +2,14 @@
   (:require [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
+(def tab-discover -1)
+(def tab-app-store 0)
+(def tab-all-apps 1)
+(def tab-my-apps 2)
+(def tab-navigator 3)
+(def tab-deployments 4)
+
+
 (defn get-query-params
   [full-text-search page elements-per-page]
   {:first   (inc (* (dec page) elements-per-page))
@@ -15,8 +23,8 @@
               (general-utils/fulltext-query-string full-text-search))})
 
 
-(defn get-my-modules-query-params
-  [owner page elements-per-page]
+(defn get-published-modules-query-params
+  [full-text-search page elements-per-page]
   {:first   (inc (* (dec page) elements-per-page))
    :last    (* page elements-per-page)
    :orderby "created:desc"
@@ -25,7 +33,22 @@
                 "subtype='component'"
                 "subtype='application'"
                 "subtype='application_kubernetes'")
-              (general-utils/owner-like-query-string owner))})
+              (general-utils/published-query-string)
+              (general-utils/fulltext-query-string full-text-search))})
+
+
+(defn get-my-modules-query-params
+  [owner full-text-search page elements-per-page]
+  {:first   (inc (* (dec page) elements-per-page))
+   :last    (* page elements-per-page)
+   :orderby "created:desc"
+   :filter  (general-utils/join-and
+              (general-utils/join-or
+                "subtype='component'"
+                "subtype='application'"
+                "subtype='application_kubernetes'")
+              (general-utils/owner-like-query-string owner)
+              (general-utils/fulltext-query-string full-text-search))})
 
 
 (defn get-modules-by-tag-query-params

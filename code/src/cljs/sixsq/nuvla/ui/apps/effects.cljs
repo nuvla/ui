@@ -4,7 +4,7 @@
   (:require
     [cljs.core.async :refer [<!]]
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch reg-fx]]
+    [re-frame.core :refer [reg-fx]]
     [sixsq.nuvla.client.api :as api]
     [sixsq.nuvla.ui.cimi-api.effects :refer [CLIENT]]))
 
@@ -25,7 +25,7 @@
                                  :description "cloud applications at your service"})
             {:keys [subtype id]} project-metadata
             path-with-version (str id (when
-                                        (not (nil? version))
+                                        (not (or (nil? version) (neg? version)))
                                         (str "_" version)))
             module            (if (not= "project" subtype)
                                 (when id (<! (api/get @CLIENT path-with-version)))

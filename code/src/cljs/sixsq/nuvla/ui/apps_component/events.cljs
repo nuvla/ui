@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.apps-component.events
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [re-frame.core :refer [reg-event-db]]
     [sixsq.nuvla.ui.apps-component.spec :as spec]
     [sixsq.nuvla.ui.apps.utils :as utils]))
 
@@ -116,7 +116,7 @@
 
 (reg-event-db
   ::update-docker-image
-  (fn [db [_ id repo_image]]
+  (fn [db [_ _id repo_image]]
     (let [temp       (if (string? repo_image) (str/split repo_image "/") nil)
           two_parts? (= (count temp) 2)
           repository (if two_parts? (first temp) nil)
@@ -128,11 +128,11 @@
 
 (reg-event-db
   ::update-docker-registry
-  (fn [db [_ id registry]]
+  (fn [db [_ _id registry]]
     (assoc-in db [::spec/module-component ::spec/image ::spec/registry] registry)))
 
 
 (reg-event-db
   ::update-docker-tag
-  (fn [db [_ id tag]]
+  (fn [db [_ _id tag]]
     (assoc-in db [::spec/module-component ::spec/image ::spec/tag] tag)))

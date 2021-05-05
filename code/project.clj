@@ -89,7 +89,8 @@
                  [com.cemerick/url :scope "provided"]
                  [kwladyka/form-validator-cljs "1.2.1"]
                  [instaparse]
-                 [com.degel/re-frame-storage-fx "0.1.1"]]
+                 [com.degel/re-frame-storage-fx "0.1.1"]
+                 [markdown-to-hiccup "0.6.2"]]
 
   :source-paths ["src/clj" "src/cljs"]
 

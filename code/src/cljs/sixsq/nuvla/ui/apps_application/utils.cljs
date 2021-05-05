@@ -2,6 +2,11 @@
   (:require [sixsq.nuvla.ui.apps-application.spec :as spec]
             [sixsq.nuvla.ui.apps.utils :as apps-utils]))
 
+
+(def tab-details 5)
+(def tab-docker 6)
+
+
 ;; Deserialization functions: module->db
 
 (defn files->db
@@ -19,7 +24,7 @@
   (let [{:keys [docker-compose requires-user-rights]} content]
     (-> db
         (apps-utils/module->db module)
-        (assoc-in [::spec/module-application ::spec/requires-user-rights] requires-user-rights)
+        (assoc-in [::spec/module-application ::spec/requires-user-rights] (true? requires-user-rights))
         (assoc-in [::spec/module-application ::spec/docker-compose] docker-compose)
         (assoc-in [::spec/module-application ::spec/files]
                   (files->db (:files content))))))
@@ -31,7 +36,7 @@
   [db]
   (into
     []
-    (for [[id file] (get-in db [::spec/module-application ::spec/files])]
+    (for [[_id file] (get-in db [::spec/module-application ::spec/files])]
       (let [{:keys [::spec/file-name ::spec/file-content]} file]
         (conj
           {:file-name file-name}

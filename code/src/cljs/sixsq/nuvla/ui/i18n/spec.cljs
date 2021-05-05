@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.i18n.spec
   (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.i18n.utils :as utils]))
+    [clojure.spec.alpha :as s]))
 
 (s/def ::locale string?)
 

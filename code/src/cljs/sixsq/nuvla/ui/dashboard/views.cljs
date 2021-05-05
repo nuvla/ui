@@ -18,8 +18,7 @@
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as utils-style]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.style :as utils-style]))
 
 
 (defn refresh
@@ -140,7 +139,7 @@
   (let [tr    (subscribe [::i18n-subs/tr])
         icon  "key"
         color "brown"
-        {:keys [resource tab-index tab-index-event]} utils/target-creds]
+        {:keys [resource]} utils/target-creds]
     [ui/Segment {:secondary true
                  :color     color
                  :raised    true

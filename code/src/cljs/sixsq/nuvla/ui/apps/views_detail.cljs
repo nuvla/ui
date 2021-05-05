@@ -3,12 +3,16 @@
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [re-frame.db]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.acl.subs :as acl-subs]
+    [sixsq.nuvla.ui.acl.utils :as acl-utils]
+    [sixsq.nuvla.ui.acl.views :as acl-views]
+    [sixsq.nuvla.ui.apps-application.events :as apps-application-events]
     [sixsq.nuvla.ui.apps.events :as events]
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.subs :as subs]
     [sixsq.nuvla.ui.apps.utils :as utils]
-    [sixsq.nuvla.ui.apps.views-versions :as views-versions]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -16,18 +20,80 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.profile.events :as profile-events]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
-    [sixsq.nuvla.ui.utils.forms :as forms]
+    [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]))
+
+
+(def application-kubernetes-subtype "application_kubernetes")
+(def docker-compose-subtype "application")
+
+(def edit-cell-left-padding 24)
+
+(defn LicenseTitle
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:<>
+     [uix/Icon {:name "drivers license"}]
+     (str/capitalize (@tr [:license]))]))
+
+
+(defn PricingTitle
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:<>
+     [uix/Icon {:name "euro"}]
+     (str/capitalize (@tr [:pricing]))]))
+
+
+(defn DeploymentsTitle
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:<>
+     [uix/Icon {:name "rocket"}]
+     (str/capitalize (@tr [:deployments]))]))
+
+
+(defn DetailsTitle
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:<>
+     [uix/Icon {:name "info"}]
+     (str/capitalize (@tr [:details]))]))
+
+
+(defn DockerTitle
+  []
+  (let [module-subtype (subscribe [::subs/module-subtype])
+        tab-name       (if (= application-kubernetes-subtype @module-subtype) "Kubernetes" "Docker")]
+    [:<>
+     [uix/Icon {:name "docker"}]
+     (str/capitalize tab-name)]))
+
+
+(defn ConfigurationTitle
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:<>
+     [uix/Icon {:name "cog"}]
+     (str/capitalize (@tr [:configuration]))]))
+
+
+(defn TabMenuDetails
+  []
+  (let [tr     (subscribe [::i18n-subs/tr])
+        error? (subscribe [::subs/details-validation-error?])]
+    [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
+     [uix/Icon {:name "info"}]
+     (str/capitalize (@tr [:details]))]))
 
 
 (defn edit-button-disabled?
@@ -43,21 +109,21 @@
         {:keys [subtype]} (get @re-frame.db/app-db ::spec/module)
         new-subtype (:subtype @(subscribe [::main-subs/nav-query-params]))]
     (when form-valid?
-      (do
-        (dispatch [::events/set-validate-form? false])
-        (if (= (or subtype new-subtype) "project")
-          (dispatch [::events/edit-module nil])
-          (dispatch [::events/open-save-modal]))))))
+      (dispatch [::events/set-validate-form? false])
+      (if (= (or subtype new-subtype) "project")
+        (dispatch [::events/open-save-modal])
+        (dispatch [::events/open-save-modal])))))
 
 
 (defn DeleteButton
   [module]
   (let [tr      (subscribe [::i18n-subs/tr])
+        is-new? (subscribe [::subs/is-new?])
         {:keys [id name description]} module
-        content (str (or name id) (when description " - ") description)]
+        content (str (or name id) (when description " - ") (utils-values/markdown->summary description))]
     [uix/ModalDanger
      {:on-confirm  #(dispatch [::events/delete-module id])
-      :trigger     (r/as-element [ui/MenuItem
+      :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
                                   [ui/Icon {:name "trash"}]
                                   (str/capitalize (@tr [:delete]))])
       :content     [:h3 content]
@@ -66,9 +132,41 @@
       :button-text (@tr [:delete])}]))
 
 
+(defn PublishButton
+  [module]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        is-new? (subscribe [::subs/is-new?])
+        {:keys [id]} module]
+    [uix/ModalFromButton
+     {:on-confirm  #(dispatch [::events/publish id])
+      :trigger     (r/as-element [ui/MenuItem {:disabled @is-new?}
+                                  [ui/Icon {:name utils/publish-icon}]
+                                  (str/capitalize (@tr [:publish]))])
+      :content     [:p (@tr [:publish-confirmation-message])]
+      :header      (@tr [:publish-module])
+      :icon        utils/publish-icon
+      :button-text (@tr [:publish])}]))
+
+
+(defn UnPublishButton
+  [module]
+  (let [tr (subscribe [::i18n-subs/tr])
+        {:keys [id]} module]
+    [uix/ModalFromButton
+     {:on-confirm  #(dispatch [::events/un-publish id])
+      :trigger     (r/as-element [ui/MenuItem
+                                  [ui/Icon {:name utils/un-publish-icon}]
+                                  (str/capitalize (@tr [:un-publish]))])
+      :content     [:p (@tr [:un-publish-confirmation-message])]
+      :header      (@tr [:un-publish-module])
+      :icon        utils/un-publish-icon
+      :button-text (@tr [:un-publish])}]))
+
+
 (defn MenuBar []
   (let [tr            (subscribe [::i18n-subs/tr])
         module        (subscribe [::subs/module])
+        module-common (subscribe [::subs/module-common])
         is-new?       (subscribe [::subs/is-new?])
         page-changed? (subscribe [::main-subs/changes-protection?])
         form-valid?   (subscribe [::subs/form-valid?])
@@ -76,11 +174,12 @@
         module-id     (subscribe [::subs/module-id-version])
         copy-module   (subscribe [::subs/copy-module])]
     (fn []
-      (let [subtype          (:subtype @module)
-            launchable?      (and subtype (not= "project" subtype))
+      (let [subtype          (::spec/subtype @module-common)
+            launchable?      (not= "project" subtype)
             launch-disabled? (or @is-new? @page-changed?)
-            add?             (= "project" (:subtype @module))
-            add-disabled?    (or @is-new? @page-changed?)]
+            add?             (= "project" subtype)
+            add-disabled?    (or @is-new? @page-changed?)
+            published?       (utils/published? @module @module-id)]
 
         [main-components/StickyBar
          [ui/Menu {:borderless true}
@@ -106,12 +205,12 @@
               :icon     "add"
               :disabled add-disabled?
               :on-click #(dispatch [::events/open-add-modal])}])
-
           (when (not= "project" subtype)
             [ui/Popup
              {:trigger        (r/as-element [ui/MenuItem
                                              {:name     (@tr [:copy])
                                               :icon     "copy"
+                                              :disabled @is-new?
                                               :on-click #(dispatch [::events/copy])}])
               :content        (@tr [:module-copied])
               :on             "click"
@@ -129,12 +228,14 @@
           (when (general-utils/can-delete? @module)
             [DeleteButton @module])
 
+          (when (not= "project" subtype)
+            (if published?
+              [UnPublishButton @module]
+              [PublishButton @module]))
+
           [main-components/RefreshMenu
            {:refresh-disabled? @is-new?
-            :on-refresh        #(let [get-module-fn (fn [] (dispatch [::events/get-module]))]
-                                  (if @page-changed?
-                                    (dispatch [::main-events/ignore-changes-modal get-module-fn])
-                                    (get-module-fn)))}]]]))))
+            :on-refresh        #(dispatch [::events/refresh])}]]]))))
 
 
 (defn save-modal
@@ -143,7 +244,8 @@
         visible?       (subscribe [::subs/save-modal-visible?])
         username       (subscribe [::session-subs/user])
         commit-message (subscribe [::subs/commit-message])
-        need-commit?   (subscribe [::subs/module-content-updated?])]
+        need-commit?   (subscribe [::subs/module-content-updated?])
+        subtype        (subscribe [::subs/module-subtype])]
     (fn []
       (let [commit-map {:author @username
                         :commit @commit-message}
@@ -159,7 +261,7 @@
          [uix/ModalHeader {:header (str (@tr [:save]) " " (@tr [:component]))}]
 
          [ui/ModalContent
-          (if @need-commit?
+          (if (and @need-commit? (not= @subtype "project"))
             [ui/Input {:placeholder   (@tr [:commit-placeholder])
                        :fluid         true
                        :default-value @commit-message
@@ -167,7 +269,7 @@
                        :focus         true
                        :on-change     (ui-callback/input-callback
                                         #(dispatch [::events/commit-message %]))
-                       :on-key-press  (partial forms/on-return-key save-fn)}]
+                       :on-key-press  (partial utils-forms/on-return-key save-fn)}]
             (@tr [:are-you-sure?]))]
 
          [ui/ModalActions
@@ -184,31 +286,30 @@
         visible?  (subscribe [::subs/logo-url-modal-visible?])
         module    (subscribe [::subs/module])]
     (fn []
-      (let []
-        [ui/Modal {:open       @visible?
-                   :close-icon true
-                   :on-close   #(dispatch [::events/close-logo-url-modal])}
+      [ui/Modal {:open       @visible?
+                 :close-icon true
+                 :on-close   #(dispatch [::events/close-logo-url-modal])}
 
-         [uix/ModalHeader {:header (@tr [:select-logo-url])}]
+       [uix/ModalHeader {:header (@tr [:select-logo-url])}]
 
-         [ui/ModalContent
-          [ui/Input {:default-value (or (:logo-url @module) "")
-                     :placeholder   (@tr [:logo-url-placeholder])
-                     :fluid         true
-                     :auto-focus    true
-                     :on-change     (ui-callback/input-callback #(reset! local-url %))
-                     :on-key-press  (partial forms/on-return-key
-                                             #(dispatch [::events/save-logo-url @local-url]))}]]
+       [ui/ModalContent
+        [ui/Input {:default-value (or (:logo-url @module) "")
+                   :placeholder   (@tr [:logo-url-placeholder])
+                   :fluid         true
+                   :auto-focus    true
+                   :on-change     (ui-callback/input-callback #(reset! local-url %))
+                   :on-key-press  (partial utils-forms/on-return-key
+                                           #(dispatch [::events/save-logo-url @local-url]))}]]
 
-         [ui/ModalActions
-          [uix/Button {:text     "Ok"
-                       :positive true
-                       :disabled (empty? @local-url)
-                       :active   true
-                       :on-click #(dispatch [::events/save-logo-url @local-url])}]]]))))
+       [ui/ModalActions
+        [uix/Button {:text     "Ok"
+                     :positive true
+                     :disabled (empty? @local-url)
+                     :active   true
+                     :on-click #(dispatch [::events/save-logo-url @local-url])}]]])))
 
 
-(defn add-modal
+(defn AddModal
   []
   (let [tr       (subscribe [::i18n-subs/tr])
         visible? (subscribe [::subs/add-modal-visible?])
@@ -222,7 +323,8 @@
          [uix/ModalHeader {:header (@tr [:add]) :icon "add"}]
 
          [ui/ModalContent {:scrolling false}
-          [ui/CardGroup {:centered true}
+          [ui/CardGroup {:centered    true
+                         :itemsPerRow 3}
 
            [ui/Card
             {:on-click #(do (dispatch [::events/close-add-modal])
@@ -244,13 +346,18 @@
                                        (str/join
                                          "/" (remove str/blank?
                                                      ["apps" parent
-                                                      "New Component?subtype=component"]))])))}
+                                                      "New Application?subtype=application"]))])))}
             [ui/CardContent {:text-align :center}
-             [ui/Header "Component"]
+             [ui/Header (@tr [:application-docker])]
              [:div]
-             [ui/Icon {:name  "grid layout"
-                       :size  :massive
-                       :color (when-not parent :grey)}]]]
+             [ui/IconGroup
+              [ui/Icon {:name  "cubes"
+                        :size  :massive
+                        :color (when-not parent :grey)}]
+              [:div [ui/Icon {:name  "docker"
+                              :size  :huge
+                              :color (when-not parent :grey)
+                              :style {:padding-left "150px"}}]]]]]
 
            [ui/Card
             {:on-click (when parent
@@ -260,14 +367,16 @@
                                        (str/join
                                          "/" (remove str/blank?
                                                      ["apps" parent
-                                                      "New Application?subtype=application"]))])))}
+                                                      "New Application?subtype=application_kubernetes"]))])))}
             [ui/CardContent {:text-align :center}
-             [ui/Header "Application"]
+             [ui/Header (@tr [:application-kubernetes])]
              [:div]
-             [ui/Icon {:name  "cubes"
-                       :size  :massive
-                       :color (when-not parent :grey)}]]]
-           ]]]))))
+             [ui/IconGroup {:size :massive}
+              [ui/Icon {:name  "cubes"
+                        :color (when-not parent :grey)}]
+              [ui/Image {:src     (if parent "/ui/images/kubernetes.svg" "/ui/images/kubernetes-grey.svg")
+                         :floated "right"
+                         :style   {:width "50px"}}]]]]]]]))))
 
 
 (defn paste-modal
@@ -304,7 +413,7 @@
                              (reset! form-valid? (s/valid? ::spec/name %)))]]]]
 
          [ui/ModalActions
-          [forms/validation-error-msg (@tr [:paste-modal-validation-error]) (not @form-valid?)]
+          [utils-forms/validation-error-msg (@tr [:paste-modal-validation-error]) (not @form-valid?)]
           [uix/Button {:text     (@tr [:paste])
                        :positive true
                        :active   true
@@ -312,17 +421,29 @@
                        :on-click paste-fn}]]]))))
 
 
-(defn version-warning []
-  (let [latest? (subscribe [::subs/is-latest-version?])]
+(defn VersionWarning
+  []
+  (let [tr                     (subscribe [::i18n-subs/tr])
+        is-latest?             (subscribe [::subs/is-latest-version?])
+        is-latest-published?   (subscribe [::subs/is-latest-published-version?])
+        is-module-published?   (subscribe [::subs/is-module-published?])
+        latest-published-index (subscribe [::subs/latest-published-index])]
     (fn []
-      (let []
-        [ui/Message {:hidden  @latest?
-                     :warning true}
-         [ui/MessageHeader "Warning!"]
-         [ui/MessageContent "This is not the latest version. Click or tap "
-          [:a {:on-click #(dispatch [::events/get-module])
-               :style    {:cursor :pointer}} "here"]
-          " to load the latest."]]))))
+      [:<>
+       (when (and @is-module-published? (not @is-latest-published?))
+         [ui/Message {:warning true}
+          [ui/MessageHeader (@tr [:warning])]
+          [ui/MessageContent (@tr [:warning-draft-version-1])
+           [:a {:on-click #(dispatch [::events/get-module @latest-published-index])
+                :style    {:cursor :pointer}} (@tr [:here])]
+           (@tr [:warning-draft-version-2])]])
+       (when (and (not @is-module-published?) (not @is-latest?))
+         [ui/Message {:warning true}
+          [ui/MessageHeader (@tr [:warning])]
+          [ui/MessageContent (@tr [:warning-not-latest-version-1])
+           [:a {:on-click #(dispatch [::events/get-module -1])
+                :style    {:cursor :pointer}} (@tr [:here])]
+           (@tr [:warning-not-latest-version-2])]])])))
 
 
 (defn tuple-to-row [[v1 v2]]
@@ -357,7 +478,7 @@
 
 
 (defn format-error
-  [error]
+  [_error]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [error]
       (when (instance? js/Error error)
@@ -367,11 +488,48 @@
           (error-text tr error)]]))))
 
 
-(defn summary
-  [extras]
+(defn Description
+  [validation-event]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        description    (subscribe [::subs/description])
+        editable?      (subscribe [::subs/editable?])
+        validate-form? (subscribe [::subs/validate-form?])
+        default-value  @description]
+    (fn []
+      (let [valid?    (s/valid? ::spec/description @description)
+            validate? @validate-form?]
+        [uix/Accordion
+         [:<>
+          [ui/Grid {:centered true
+                    :columns  2}
+           [ui/GridColumn
+            [:h4 "Markdown" [general-utils/mandatory-icon]]
+            [ui/Segment
+             [uix/EditorMarkdown
+              default-value
+              (fn [_editor _data value]
+                (dispatch [::events/description value])
+                (dispatch [::main-events/changes-protection? true])
+                (dispatch [::events/validate-form]))
+              @editable?]
+             (when validate?
+               (when validation-event
+                 (dispatch [validation-event "description" (not valid?)]))
+               (when (not valid?)
+                 [:<>
+                  [ui/Label {:pointing "above", :basic true, :color "red"}
+                   (@tr [:description-cannot-be-empty])]]))]]
+           [ui/GridColumn
+            [:h4 "Preview"]
+            [ui/Segment [ui/ReactMarkdown @description]]]]]
+         :label (str/capitalize (@tr [:description]))
+         :default-open true]))))
+
+
+(defn Details
+  [{:keys [_extras _validation-event]}]
   (let [tr               (subscribe [::i18n-subs/tr])
         default-logo-url (subscribe [::subs/default-logo-url])
-        is-new?          (subscribe [::subs/is-new?])
         module-common    (subscribe [::subs/module-common])
         editable?        (subscribe [::subs/editable?])
         validate-form?   (subscribe [::subs/validate-form?])
@@ -379,56 +537,48 @@
                            (dispatch [update-event-kw value])
                            (dispatch [::main-events/changes-protection? true])
                            (dispatch [::events/validate-form]))]
-    (fn [extras]
-      (let [{name        ::spec/name
-             parent      ::spec/parent-path
-             description ::spec/description
-             logo-url    ::spec/logo-url
-             subtype     ::spec/subtype
-             path        ::spec/path
-             :or         {name        ""
-                          parent      ""
-                          description ""
-                          logo-url    @default-logo-url
-                          subtype     "project"
-                          path        nil}} @module-common]
-        [ui/Grid {:stackable true, :reversed :mobile}
-         [ui/GridColumn {:width 13}
-          [ui/Table {:compact    true
-                     :definition true}
-           [ui/TableBody
-
-            [uix/TableRowField (@tr [:name]), :key (str parent "-name"), :editable? @editable?,
-             :spec ::spec/name, :validate-form? @validate-form?, :required? true,
-             :default-value name, :on-change (partial on-change ::events/name)]
-
-            [uix/TableRowField (@tr [:description]), :key (str parent "-description"),
-             :editable? @editable?, :spec ::spec/description, :validate-form? @validate-form?,
-             :required? true, :default-value description,
-             :on-change (partial on-change ::events/description)]
-
-            (when (not-empty parent)
-              (let [label (if (= "project" subtype) "parent project" "project")]
-                [ui/TableRow
-                 [ui/TableCell {:collapsing true
-                                :style      {:padding-bottom 8}} label]
-                 [ui/TableCell {:style {:padding-left (when @editable? 24)}} parent]]))
-            (for [x extras]
-              x)]]
-
-          (when (not @is-new?)
-            [details-section])
-          [views-versions/versions]]
-         [ui/GridColumn {:width 3 :floated "right"}
-          [ui/Image {:src (or logo-url @default-logo-url)}]
-          (when @editable?
-            [ui/Button {:fluid    true
-                        :on-click #(dispatch [::events/open-logo-url-modal])}
-             (@tr [:module-change-logo])])]]))))
+    (fn [{:keys [extras validation-event]}]
+      (let [{name     ::spec/name
+             parent   ::spec/parent-path
+             logo-url ::spec/logo-url
+             subtype  ::spec/subtype
+             :or      {name     ""
+                       parent   ""
+                       logo-url @default-logo-url
+                       subtype  "project"}} @module-common]
+        [:<>
+         [:h2 [DetailsTitle]]
+         [ui/Grid {:stackable true, :reversed :mobile}
+          [ui/GridRow
+           [ui/GridColumn {:width 13}
+            [ui/Table {:compact    true
+                       :definition true}
+             [ui/TableBody
+              [uix/TableRowField (@tr [:name]), :key (str parent "-name"), :editable? @editable?,
+               :spec ::spec/name, :validate-form? @validate-form?, :required? true,
+               :default-value name, :on-change (partial on-change ::events/name)
+               :on-validation]
+              (when (not-empty parent)
+                (let [label (if (= "project" subtype) "parent project" "project")]
+                  [ui/TableRow
+                   [ui/TableCell {:collapsing true
+                                  :style      {:padding-bottom 8}} label]
+                   [ui/TableCell {:style {:padding-left (when @editable? edit-cell-left-padding)}} parent]]))
+              (for [x extras]
+                x)]]
+            [details-section]]
+           [ui/GridColumn {:width 3 :floated "right"}
+            [ui/Image {:src (or logo-url @default-logo-url)}]
+            (when @editable?
+              [ui/Button {:fluid    true
+                          :on-click #(dispatch [::events/open-logo-url-modal])}
+               (@tr [:module-change-logo])])]]]
+         ;^{:key (random-uuid)}
+         [Description validation-event]]))))
 
 
 (defn input
-  [id name value placeholder update-event value-spec fluid?]
+  [_id _name _value _placeholder _update-event _value-spec _fluid?]
   (let [local-validate? (r/atom false)
         form-valid?     (subscribe [::subs/form-valid?])]
     (fn [id name value placeholder update-event value-spec fluid?]
@@ -568,7 +718,7 @@
            [plus ::events/add-env-variable]])]
        :label (@tr [:module-env-variables])
        :count (count @env-variables)
-       :default-open false])))
+       :default-open true])))
 
 
 (defn single-url
@@ -625,7 +775,7 @@
            [plus ::events/add-url]])]
        :label (@tr [:urls])
        :count (count @urls)
-       :default-open false])))
+       :default-open true])))
 
 
 (defn single-output-parameter [param]
@@ -684,7 +834,7 @@
            [plus ::events/add-output-parameter]])]
        :label (@tr [:module-output-parameters])
        :count (count @output-parameters)
-       :default-open false])))
+       :default-open true])))
 
 
 (def data-type-options
@@ -698,7 +848,8 @@
   (swap! data-type-options conj {:key option :value option :text option}))
 
 
-(defn single-data-type [dt]
+(defn single-data-type
+  [_dt]
   (let [editable? (subscribe [::subs/editable?])]
     (fn [dt]
       (let [{:keys [id ::spec/data-type]} dt]
@@ -751,7 +902,7 @@
            [plus ::events/add-data-type]])]
        :label (@tr [:data-binding])
        :count (count @data-types)
-       :default-open false])))
+       :default-open true])))
 
 
 (defn single-registry
@@ -801,78 +952,92 @@
     (dispatch [::events/get-registries-infra])
     (dispatch [::events/get-registries-credentials])
     (fn []
-      [uix/Accordion
-       [:<>
-        [:div (@tr [:private-registries])
-         [:span ff/nbsp (ff/help-popup (@tr [:private-registries-help]))]]
-        (if (empty? @registries)
-          [ui/Message
-           (@tr [:private-registries-not-used])]
-          [:div
-           [ui/Table {:style {:margin-top 10}}
-            [ui/TableHeader
-             [ui/TableRow
-              [ui/TableHeaderCell
-               {:content (r/as-element [utils/mandatory-name (@tr [:private-registries])])}]
-              [ui/TableHeaderCell {:content (str/capitalize (@tr [:credential]))}]
-              [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}]]]
-            [ui/TableBody
-             (for [[id registry] @registries]
-               ^{:key (str "registry-" id)}
-               [single-registry registry])]]])
-        (when (and @editable? (or (not= @subtype "component")
-                                  (and (= @subtype "component")
-                                       (zero? (count @registries)))))
-          [:div {:style {:padding-top 10}}
-           [plus ::events/add-registry]])]
-       :label (@tr [:private-registries])
-       :count (count @registries)
-       :default-open false])))
+      (let [no-of-registries (count @registries)]
+        [uix/Accordion
+         [:<>
+          [:div (@tr [:private-registries])
+           [:span ff/nbsp (ff/help-popup (@tr [:private-registries-help]))]]
+          (if (empty? @registries)
+            [ui/Message
+             (@tr [:private-registries-not-used])]
+            [:div
+             [ui/Table {:style {:margin-top 10}}
+              [ui/TableHeader
+               [ui/TableRow
+                [ui/TableHeaderCell
+                 {:content (r/as-element [utils/mandatory-name (@tr [:private-registries])])}]
+                [ui/TableHeaderCell {:content (str/capitalize (@tr [:credential]))}]
+                [ui/TableHeaderCell {:content (str/capitalize (@tr [:action]))}]]]
+              [ui/TableBody
+               (for [[id registry] @registries]
+                 ^{:key (str "registry-" id)}
+                 [single-registry registry])]]])
+          (when (and @editable? (or (not= @subtype "component")
+                                    (and (= @subtype "component")
+                                         (zero? no-of-registries))))
+            [:div {:style {:padding-top 10}}
+             [plus ::events/add-registry]])]
+         :label (@tr [:private-registries])
+         :count no-of-registries
+         :default-open (pos? no-of-registries)]))))
 
 
-(defn price-section []
+(defn Pricing
+  []
   (let [tr        (subscribe [::i18n-subs/tr])
         editable? (subscribe [::subs/editable?])
-        price     (subscribe [::subs/price])
-        vendor    (subscribe [::profile-subs/vendor])]
-    (dispatch [::profile-events/search-existing-vendor])
+        price     (subscribe [::subs/price])]
     (fn []
       (let [amount (:cent-amount-daily @price)]
-        (when (or (and @editable? @vendor) (some? @price))
-          [uix/Accordion
-           [:<>
-            [:div (str/capitalize (@tr [:price]))
-             [:span ff/nbsp (ff/help-popup (@tr [:define-price]))]]
-            [ui/Input {:labelPosition "right", :type "text"
-                       :placeholder   (str/capitalize (@tr [:amount]))
-                       :error         (not (s/valid? ::spec/cent-amount-daily amount))}
-             [:input {:type          "number"
-                      :step          1
-                      :min           1
-                      :default-value amount
-                      :read-only     (not @editable?)
-                      :on-change     (ui-callback/input-callback
-                                       #(do
-                                          (dispatch [::events/cent-amount-daily
-                                                     (when-not (str/blank? %)
-                                                       (js/parseInt %))])
-                                          (dispatch [::main-events/changes-protection? true])
-                                          (dispatch [::events/validate-form])))}]
-             [ui/Label "ct€/" (@tr [:day])]]
-            [:p (@tr [:price-per-month])
-             [:b (str
-                   (if (pos-int? amount)
-                     (general-utils/format "%.2f" (* amount 0.3))
-                     "...")
-                   "€/" (str/capitalize (@tr [:month])))]]]
-           :label (str/capitalize (@tr [:price]))
-           :count (if (>= amount 100)
-                    (str (float (/ amount 100)) "€/" (@tr [:day]))
-                    (str amount "ct€/" (@tr [:day])))
-           :default-open false])))))
+        [:<>
+         (when @editable?
+           [ui/Message {:info true}
+            (@tr [:define-price])])
+         [ui/Input {:labelPosition "right", :type "text"
+                    :placeholder   (str/capitalize (@tr [:amount]))
+                    :error         (not (s/valid? ::spec/cent-amount-daily amount))}
+          [:input {:type          "number"
+                   :step          1
+                   :min           1
+                   :default-value amount
+                   :read-only     (not @editable?)
+                   :on-change     (ui-callback/input-callback
+                                    #(do
+                                       (dispatch [::events/cent-amount-daily
+                                                  (when-not (str/blank? %)
+                                                    (js/parseInt %))])
+                                       (dispatch [::main-events/changes-protection? true])
+                                       (dispatch [::events/validate-form])))}]
+          [ui/Label "ct€/" (@tr [:day])]]
+         [:p {:style {:padding-top 10}}
+          (@tr [:price-per-month])
+          [:b (str
+                (if (pos-int? amount)
+                  (general-utils/format "%.2f" (* amount 0.3))
+                  "...")
+                "€/" (str/capitalize (@tr [:month])))]]]))))
 
 
-(defn license-section []
+(defn price-section
+  []
+  (let [editable? (subscribe [::subs/editable?])
+        price     (subscribe [::subs/price])
+        vendor    (subscribe [::profile-subs/vendor])]
+    (fn []
+      (when (or (and @editable? @vendor) (some? @price))
+        [Pricing]))))
+
+
+(defn licenses->dropdown
+  [licenses]
+  (map
+    (fn [license]
+      (let [license-name (:license-name license)]
+        {:key license-name, :text license-name, :value license-name}))
+    licenses))
+
+
+(defn LicenseSection []
   (let [tr             (subscribe [::i18n-subs/tr])
         editable?      (subscribe [::subs/editable?])
         validate-form? (subscribe [::subs/validate-form?])
@@ -881,50 +1046,145 @@
                          (dispatch [update-event-kw value])
                          (dispatch [::main-events/changes-protection? true])
                          (dispatch [::events/validate-form]))
-        sixsq-license  {:license-name        "SixSq"
-                        :license-description "SixSq license"
-                        :license-url         "https://nuvla.io/terms/tos"}]
+        licenses       (subscribe [::main-subs/config :licenses])
+        options        (licenses->dropdown @licenses)
+        is-custom?     (r/atom false)
+        {:keys [subtype]} @(subscribe [::subs/module])]
     (fn []
-      (let [sixsq-selected? (= (:license-name @license)
-                               (:license-name sixsq-license))
-            is-editable?    (and @editable? (not sixsq-selected?))]
-        (when (or @editable? (some? @license))
-          [uix/Accordion
+      (let [is-editable? (and @editable? @is-custom?)
+            {:keys [license-name]} @license]
+        [:<>
+         (when (not= "component" subtype)
+           [:h2 [LicenseTitle]])
+         (if (or @editable? (some? @license))
            [ui/Form
             (when @editable?
               [:<>
-               [ui/FormField [:b (@tr [:select-license])]]
-               [ui/FormRadio {:label     (@tr [:sixsq-license])
-                              :checked   sixsq-selected?
-                              :on-change #(do
-                                            (on-change ::events/license-name
-                                                       (:license-name sixsq-license))
-                                            (on-change ::events/license-description
-                                                       (:license-description sixsq-license))
-                                            (on-change ::events/license-url
-                                                       (:license-url sixsq-license)))}]
-               [ui/FormRadio {:label     (@tr [:custom-license])
-                              :checked   (and (some? (:license-name @license))
-                                              (not= (:license-name @license)
-                                                    (:license-name sixsq-license)))
-                              :on-change #(do (on-change ::events/license-name "")
-                                              (on-change ::events/license-description "")
-                                              (on-change ::events/license-url ""))}]])
-            [ui/FormField
-             [ui/Table {:compact true, :definition true}
-              [ui/TableBody
-               [uix/TableRowField (@tr [:name]), :key "license-name", :editable? is-editable?,
-                :spec ::spec/license-name, :validate-form? @validate-form?,
-                :required? true, :default-value (:license-name @license),
-                :on-change (partial on-change ::events/license-name)]
-               [uix/TableRowField (@tr [:description]), :key "license-description",
-                :editable? is-editable?, :spec ::spec/license-description, :validate-form? @validate-form?,
-                :required? false, :default-value (:license-description @license),
-                :on-change (partial on-change ::events/license-description)]
-               [uix/TableRowField (@tr [:url]), :key "license-url",
-                :editable? is-editable?, :spec ::spec/license-url, :validate-form? @validate-form?,
-                :required? true, :default-value (:license-url @license),
-                :on-change (partial on-change ::events/license-url)]]]]]
-           :label (str/capitalize (@tr [:license]))
-           :count (:license-name @license)
-           :default-open false])))))
+               [ui/Message {:info true}
+                "Choose a license to protect yourself and your users/customers. This is mandatory for published and paying apps."]
+               [:div [:p {:style {:padding-bottom 10}} [:b "Choose a known open source license"]]]
+               [ui/Dropdown {:options     options
+                             :placeholder "Select a license"
+                             :search      true
+                             :value       (if @is-custom? "" license-name)
+                             :selection   true
+                             :on-change   (ui-callback/value
+                                            (fn [value]
+                                              (dispatch [::main-events/changes-protection? true])
+                                              (dispatch [::events/set-license value @licenses])
+                                              (reset! is-custom? false)))}]
+               [:div [:p {:style {:padding "10px 0"}} [:b "Or provide a custom license"]]]
+               [ui/Checkbox {:label     (@tr [:custom-license])
+                             :checked   @is-custom?
+                             :on-change (ui-callback/value
+                                          (fn [_]
+                                            (dispatch [::main-events/changes-protection? true])
+                                            (reset! is-custom? (not @is-custom?))
+                                            ))}]
+               [ui/Message {:info true}
+                (@tr [:license-generator-details])
+                ": "
+                [:a {:href "https://www.eulatemplate.com/eula-generator/"} (@tr [:license-generator])]]])
+            [ui/Table {:compact true, :definition true}
+             [ui/TableBody
+              [uix/TableRowField (@tr [:name]), :key "license-name", :editable? is-editable?,
+               :spec ::spec/license-name, :validate-form? @validate-form?,
+               :required? true, :default-value (:license-name @license),
+               :on-change (partial on-change ::events/license-name)
+               :on-validation ::apps-application-events/set-license-validation-error]
+              [uix/TableRowField (@tr [:description]), :key "license-description",
+               :editable? is-editable?, :spec ::spec/license-description, :validate-form? @validate-form?,
+               :required? false, :default-value (:license-description @license),
+               :on-change (partial on-change ::events/license-description)]
+              [uix/TableRowField (@tr [:url]), :key "license-url",
+               :editable? is-editable?, :spec ::spec/license-url, :validate-form? @validate-form?,
+               :required? true, :default-value (:license-url @license),
+               :on-change (partial on-change ::events/license-url)
+               :on-validation ::apps-application-events/set-license-validation-error]]]]
+           [ui/Message {:info true}
+            (@tr [:license-not-defined])])]))))
+
+
+(defn AuthorVendorRow
+  [author-or-vendor full-name]
+  [ui/TableRow
+   [ui/TableCell (str/capitalize author-or-vendor)]
+   [ui/TableCell full-name]])
+
+
+(defn AuthorVendor
+  "Check if the module belongs to a group. If so, search amongst the group. Warning vendor here is a group,
+  not a Stripe vendor."
+  []
+  (let [tr         (subscribe [::i18n-subs/tr])
+        module     (subscribe [::subs/module])
+        groups     (subscribe [::acl-subs/users-and-groups])
+        is-vendor? (utils/is-vendor? @module)]
+    (if is-vendor?
+      (let [groups-from-module (utils/module->groups @module)
+            group-id           (first groups-from-module)
+            group-definition   (acl-utils/find-group group-id @groups)
+            vendor             (if group-definition
+                                 (second group-definition)
+                                 group-id)]
+        [AuthorVendorRow (@tr [:vendor]) vendor])
+      (let [users-from-module (utils/module->users @module)
+            user              (first users-from-module)]
+        [AuthorVendorRow (@tr [:author]) user]))))
+
+
+(defn OverviewDescription
+  [details-tab-index]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        editable?   (subscribe [::subs/editable?])
+        description (subscribe [::subs/description])
+        {:keys [logo-url]} @(subscribe [::subs/module])]
+    [ui/Segment {:secondary true
+                 :color     "purple"
+                 :raised    true
+                 :padded    true}
+     [ui/Grid {:columns 2}
+      [ui/GridRow
+       [ui/GridColumn {:floated "left"}
+        [:h4 (str/capitalize (@tr [:description]))]]
+       [ui/GridColumn
+        [ui/GridColumn {:style {:text-align "right"}}
+         (when @editable?
+           [ui/Button {:icon     "pencil"
+                       :compact  true
+                       :on-click #(dispatch [::events/set-active-tab-index details-tab-index])}])]]]
+      [ui/GridRow
+       [ui/GridColumn
+        [ui/ReactMarkdown @description]]
+       [ui/GridColumn
+        [ui/Image {:src   (or logo-url "")
+                   :style {:object-fit "contain"}}]]]]]))
+
+
+(defn ShareTitle
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:<>
+     [uix/Icon {:name "users"}]
+     (str/capitalize (@tr [:share]))]))
+
+
+(defn TabAcls
+  [e can-edit? edit-event]
+  (let [default-value (:acl @e)
+        acl           (or default-value
+                          (when-let [user-id (and can-edit?
+                                                  @(subscribe [::session-subs/active-claim]))]
+                            {:owners [user-id]}))
+        ui-acl        (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
+    {:menuItem {:content (r/as-element [ShareTitle])
+                :key     "share"}
+     :pane     {:key     "share-pane"
+                :content (r/as-element
+                           [:<>
+                            [:h2 [ShareTitle]]
+                            ^{:key (:updated @e)}
+                            [acl-views/AclWidget {:default-value default-value
+                                                  :read-only     (not can-edit?)
+                                                  :on-change     edit-event}
+                             ui-acl]])}}))

@@ -35,7 +35,7 @@
   (fn [{{:keys [::spec/credentials
                 ::spec/data-sets
                 ::spec/full-text-search
-                ::spec/time-period-filter] :as db} :db} _]
+                ::spec/time-period-filter]} :db} _]
     (when (seq credentials)
       (let [data-sets-vals (vals data-sets)]
         {:dispatch-n (map (fn [data-set]
@@ -94,7 +94,7 @@
 
 (reg-event-db
   ::set-selected-application-id
-  (fn [{:keys [::dialog-spec/deployment] :as db} [_ application-id]]
+  (fn [{db :db} [_ application-id]]
     (dispatch [::dialog-events/create-deployment application-id :data true])
     (assoc db ::spec/selected-application-id application-id)))
 
@@ -103,7 +103,7 @@
   ::open-application-select-modal
   (fn [{{:keys [::spec/data-sets
                 ::spec/selected-data-set-ids] :as db} :db} _]
-    (let [selected-data-sets (vals (filter (fn [[k v]]
+    (let [selected-data-sets (vals (filter (fn [[k _]]
                                              (boolean (selected-data-set-ids k))) data-sets))
           query-application  (apply general-utils/join-and
                                     (conj (map :module-filter selected-data-sets)
@@ -120,14 +120,14 @@
 
 (reg-event-fx
   ::close-application-select-modal
-  (fn [{{:keys [::dialog-spec/deployment] :as db} :db} _]
+  (fn [{db :db} _]
     {:db (assoc db ::spec/applications nil
                    ::spec/application-select-visible? false)}))
 
 
 (reg-event-fx
   ::delete-deployment
-  (fn [{{:keys [::dialog-spec/deployment] :as db} :db} _]
+  (fn [{{:keys [::dialog-spec/deployment]} :db} _]
     {::cimi-api-fx/delete [(:id deployment) #(dispatch [::dialog-events/set-deployment nil])]}))
 
 

@@ -1,14 +1,15 @@
 (ns sixsq.nuvla.ui.acl.subs
   (:require
-    [re-frame.core :refer [dispatch reg-sub subscribe]]
+    [re-frame.core :refer [dispatch reg-sub]]
     [sixsq.nuvla.ui.acl.events :as events]
     [sixsq.nuvla.ui.acl.spec :as spec]))
 
 
 (reg-sub
   ::users-and-groups
-  (fn [{:keys [::spec/users-and-groups] :as db}]
+  (fn [{:keys [::spec/users-and-groups]}]
     users-and-groups))
+
 
 (reg-sub
   ::principal-name
@@ -21,11 +22,11 @@
 
 (reg-sub
   ::users-options
-  (fn [{:keys [::spec/users-options] :as db}]
+  (fn [{:keys [::spec/users-options]}]
     users-options))
 
 
 (reg-sub
   ::groups-options
-  (fn [{:keys [::spec/groups-options] :as db}]
+  (fn [{:keys [::spec/groups-options]}]
     groups-options))

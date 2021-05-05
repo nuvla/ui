@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.session.subs
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [reg-sub subscribe]]
+    [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.session.spec :as spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]))

@@ -19,12 +19,10 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.style :as utils-style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.utils.zip :as zip]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.zip :as zip]))
 
 
 (def view-type (r/atom :cards))
@@ -194,7 +192,7 @@
     (@tr [:nuvlabox-modal-private-ssh-key-info])]])
 
 (defn CreatedNuvlaBox
-  [nuvlabox-id creation-data nuvlabox-release-data nuvlabox-ssh-keys new-private-ssh-key on-close-fn tr]
+  [nuvlabox-id _creation-data nuvlabox-release-data nuvlabox-ssh-keys _new-private-ssh-key _on-close-fn]
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
         private-ssh-key-file (str (general-utils/id->short-uuid nuvlabox-id) ".ssh.private")
@@ -210,8 +208,9 @@
     (zip/create download-files #(reset! zip-url %))
     (when @nuvlabox-ssh-keys
       (dispatch [::events/assign-ssh-keys @nuvlabox-ssh-keys nuvlabox-id]))
-    (fn [nuvlabox-id creation-data nuvlabox-release-data nuvlabox-ssh-keys new-private-ssh-key on-close-fn tr]
-      (let [nuvlabox-name-or-id (str "NuvlaBox " (or (:name creation-data)
+    (fn [nuvlabox-id creation-data _nuvlabox-release-data _nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
+      (let [tr                  (subscribe [::i18n-subs/tr])
+            nuvlabox-name-or-id (str "NuvlaBox " (or (:name creation-data)
                                                      (general-utils/id->short-uuid nuvlabox-id)))
             execute-command     (str "docker-compose -p nuvlabox -f "
                                      (str/join " -f " (map :name download-files)) " up -d")]
@@ -268,16 +267,16 @@
 
 
 (defn CreatedNuvlaBoxUSBTrigger
-  [creation-data nuvlabox-release-data new-api-key nuvlabox-ssh-keys new-private-ssh-key on-close-fn tr]
+  [_creation-data nuvlabox-release-data _new-api-key _nuvlabox-ssh-keys _new-private-ssh-key _on-close-fn]
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
         private-ssh-key-file "nuvlabox.ssh.private"
         download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals
                                                           [#"placeholder" "placeholder"])
         download-files-names (map :name download-files)]
-
-    (fn [creation-data nuvlabox-release-data new-api-key nuvlabox-ssh-keys new-private-ssh-key on-close-fn tr]
-      (let [apikey                (:resource-id new-api-key)
+    (fn [creation-data _nuvlabox-release-data new-api-key nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
+      (let [tr                    (subscribe [::i18n-subs/tr])
+            apikey                (:resource-id new-api-key)
             apisecret             (:secret-key new-api-key)
             nb-trigger-file-base  {:assets      download-files-names
                                    :version     (:release nuvlabox-release)
@@ -478,9 +477,9 @@
                  :on-close   on-close-fn}
        (cond
          @nuvlabox-id [CreatedNuvlaBox @nuvlabox-id @creation-data @nuvlabox-release-data
-                       nuvlabox-ssh-keys new-private-ssh-key on-close-fn tr]
+                       nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
          @usb-api-key [CreatedNuvlaBoxUSBTrigger @creation-data @nuvlabox-release-data @usb-api-key
-                       nuvlabox-ssh-keys new-private-ssh-key on-close-fn tr]
+                       nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
          :else [:<>
                 [uix/ModalHeader {:header (str (@tr [:nuvlabox-modal-new-nuvlabox])
                                                " " (:name @creation-data))
@@ -781,7 +780,7 @@
 
 
 (defn NuvlaboxMapPoint
-  [{:keys [id name location online] :as nuvlabox}]
+  [{:keys [id name location online]}]
   (let [uuid     (general-utils/id->uuid id)
         on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
     [map/CircleMarker {:on-click on-click
@@ -793,9 +792,9 @@
 
 
 (defn NuvlaboxCard
-  [nuvlabox managers]
+  [_nuvlabox managers]
   (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [id name description created state tags online] :as nuvlabox} managers]
+    (fn [{:keys [id name description created state tags online]} managers]
       (let [href (str "edge/" (general-utils/id->uuid id))]
         ^{:key id}
         [uix/Card

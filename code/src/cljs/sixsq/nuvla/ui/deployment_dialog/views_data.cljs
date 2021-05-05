@@ -72,16 +72,14 @@
   [{:keys [key doc_count]}]
   (let [selected-cloud (subscribe [::subs/selected-cloud])
         connectors     (subscribe [::subs/cloud-infra-services])
-        {:keys [name description]} (get @connectors key)]
-
-    (let [options     {:key         key
-                       :active      (= key @selected-cloud)
-                       :header      (or name key)
-                       :description description
-                       :doc_count   doc_count}
-          on-click-fn #(dispatch [::events/set-infra-service-filter key])]
-
-      [cloud-list-item (assoc options :on-click-fn on-click-fn)])))
+        {:keys [name description]} (get @connectors key)
+        options        {:key         key
+                        :active      (= key @selected-cloud)
+                        :header      (or name key)
+                        :description description
+                        :doc_count   doc_count}
+        on-click-fn    #(dispatch [::events/set-infra-service-filter key])]
+    [cloud-list-item (assoc options :on-click-fn on-click-fn)]))
 
 
 (defmethod utils/step-content :data

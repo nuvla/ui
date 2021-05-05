@@ -6,8 +6,6 @@
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
     [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.deployment.events :as deployment-events]
-    [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
     [sixsq.nuvla.ui.deployment.views :as deployment-views]
     [sixsq.nuvla.ui.edge-detail.events :as events]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]
@@ -78,7 +76,7 @@
 
 
 (defn SshKeysDropdown
-  [operation on-change-fn]
+  [operation _on-change-fn]
   (let [tr       (subscribe [::i18n-subs/tr])
         is-add?  (= operation "add-ssh-key")
         ssh-keys (if is-add?
@@ -86,7 +84,7 @@
                    (subscribe [::subs/nuvlabox-associated-ssh-keys]))]
     (when is-add?
       (dispatch [::events/get-ssh-keys-not-associated #(reset! ssh-keys %)]))
-    (fn [operation on-change-fn]
+    (fn [_operation on-change-fn]
       [ui/FormDropdown
        {:label       "SSH key"
         :loading     (nil? @ssh-keys)
@@ -101,7 +99,7 @@
 
 
 (defn DropdownReleases
-  [opts]
+  [_opts]
   (let [releases (subscribe [::edge-subs/nuvlabox-releases-options])]
     (fn [opts]
       (when (empty? @releases)
@@ -114,7 +112,7 @@
 
 
 (defn AddRevokeSSHButton
-  [{:keys [id] :as resource} operation show? title icon button-text]
+  [{:keys [id] :as _resource} operation show? _title _icon _button-text]
   (let [tr            (subscribe [::i18n-subs/tr])
         close-fn      #(reset! show? false)
         form-data     (r/atom {:execution-mode "push"})
@@ -134,7 +132,7 @@
                          (reset! loading? true)
                          (dispatch [::events/operation id operation @form-data
                                     on-success-fn on-error-fn]))]
-    (fn [resource operation show? title icon button-text]
+    (fn [_resource operation show? title icon button-text]
       [ui/Modal
        {:open       @show?
         :close-icon true
@@ -190,7 +188,7 @@
 
 
 (defn UpdateButton
-  [{:keys [id] :as resource} operation show? title icon button-text]
+  [{:keys [id] :as _resource} operation show?]
   (let [tr            (subscribe [::i18n-subs/tr])
         status        (subscribe [::subs/nuvlabox-status])
         close-fn      #(reset! show? false)
@@ -210,10 +208,7 @@
     (swap! form-data assoc :working-dir working-dir)
     (swap! form-data assoc :config-files (str/join "\n" config-files))
     (swap! form-data assoc :environment (str/join "\n" environment))
-
-    (fn [{:keys [id] :as resource} operation show? title icon button-text]
-      (when (not= (:parent @status))
-        (dispatch [::events/get-nuvlabox id]))
+    (fn [{:keys [id] :as _resource} _operation show? title icon button-text]
       (let [correct-nb? (= (:parent @status) id)
             nb-version  (get @status :nuvlabox-engine-version "")]
         (when-not correct-nb?
@@ -415,7 +410,7 @@
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "add-ssh-key"]
-  [resource operation]
+  [_resource _operation]
   (let [tr    (subscribe [::i18n-subs/tr])
         show? (r/atom false)]
     (fn [resource operation]
@@ -424,7 +419,7 @@
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "revoke-ssh-key"]
-  [resource operation]
+  [_resource _operation]
   (let [show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "revoke-ssh-button" @show?)}
@@ -432,7 +427,7 @@
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "update-nuvlabox"]
-  [resource operation]
+  [_resource _operation]
   (let [tr    (subscribe [::i18n-subs/tr])
         show? (r/atom false)]
     (fn [resource operation]
@@ -474,7 +469,7 @@
         last-updated (r/atom "1970-01-01T00:00:00Z")
         button-load? (r/atom false)
         peripheral   (subscribe [::subs/nuvlabox-peripheral id])]
-    (fn [id]
+    (fn [_id]
       (let [{p-id                :id
              p-ops               :operations
              p-name              :name
@@ -629,26 +624,27 @@
 
 
 (defn OnlineStatusIcon
-  [online & {:keys [corner] :or {corner "bottom center"} :as position}]
+  [online & _position]                                      ;FIXME: remove calling position
   [ui/Icon {:name  "power"
             :color (utils/status->color online)}])
 
 
 (defn Heartbeat
   [updated]
-  (let [updated-moment           (time/parse-iso8601 updated)
+  (let [tr                       (subscribe [::i18n-subs/tr])
+        updated-moment           (time/parse-iso8601 updated)
         status                   (subscribe [::subs/nuvlabox-online-status])
         next-heartbeat-moment    (subscribe [::subs/next-heartbeat-moment])
         next-heartbeat-times-ago (time/ago @next-heartbeat-moment)
 
         last-heartbeat-msg       (if updated
-                                   (str "Last heartbeat was " (time/ago updated-moment))
-                                   "Heartbeat unavailable")
+                                   (str (@tr [:heartbeat-last-was]) " " (time/ago updated-moment))
+                                   (@tr [:heartbeat-unavailable]))
 
-        next-heartbeat-msg       (if @next-heartbeat-moment
+        next-heartbeat-msg       (when @next-heartbeat-moment
                                    (if (= @status :online)
-                                     (str "Next heartbeat is expected " next-heartbeat-times-ago)
-                                     (str "Next heartbeat was expected " next-heartbeat-times-ago)))]
+                                     (str (@tr [:heartbeat-next-is-expected]) " " next-heartbeat-times-ago)
+                                     (str (@tr [:heartbeat-next-was-expected]) " " next-heartbeat-times-ago)))]
 
     [ui/Message {:icon    "heartbeat"
                  :content (str last-heartbeat-msg ". " next-heartbeat-msg)}]))
@@ -789,8 +785,8 @@
 
 (defn TabOverviewNuvlaBox
   [{:keys [id name description created updated
-           version refresh-interval owner] :as nuvlabox}
-   {:keys [nuvlabox-api-endpoint nuvlabox-engine-version] :as nb-status}
+           version refresh-interval owner]}
+   {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}
    locale edit old-nb-name close-fn]
   [ui/Segment {:secondary true
                :color     "blue"
@@ -919,7 +915,7 @@
 
 
 (defn TabOverviewStatus
-  [{:keys [updated status status-notes] :as nb-status} nb-id online-status tr]
+  [{:keys [updated status status-notes] :as _nb-status} nb-id online-status tr]
   [ui/Segment {:secondary true
                :color     (utils/status->color online-status)
                :raised    true}
@@ -949,7 +945,7 @@
 
 
 (defn TabOverviewTags
-  [{:keys [tags] :as nuvlabox}]
+  [{:keys [tags]}]
   [ui/Segment {:secondary true
                :color     "teal"
                :raised    true}
@@ -1071,7 +1067,7 @@
 
 
 (defn TabLocationMap
-  [{:keys [id location] :as nuvlabox}]
+  [_nuvlabox]
   (let [tr           (subscribe [::i18n-subs/tr])
         zoom         (atom 3)
         new-location (r/atom nil)]
@@ -1131,7 +1127,7 @@
   []
   (let [peripherals-per-id (subscribe [::subs/nuvlabox-peripherals])]
     (fn []
-      (let [peripheral-resources (into [] (map (fn [[id res]] res) @peripherals-per-id))
+      (let [peripheral-resources (into [] (map (fn [[_id res]] res) @peripherals-per-id))
             per-interface        (group-by :interface peripheral-resources)]
         [ui/TabPane
          (if (empty? peripheral-resources)
@@ -1172,7 +1168,7 @@
               [ui/TableHeaderCell [:span (@tr [:category])]]
               [ui/TableHeaderCell [:span (@tr [:state])]]]]
             [ui/TableBody
-             (for [{:keys [id content timestamp category] :as event} events]
+             (for [{:keys [id content timestamp category]} events]
                ^{:key id}
                [ui/TableRow
                 [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
@@ -1187,32 +1183,6 @@
                                           :activePage #(do
                                                          (dispatch [::events/set-page %])
                                                          (refresh (:id @nuvlabox))))}]]))))
-
-
-(defn TabDeployments
-  [uuid]
-  (let [elements          (subscribe [::deployment-subs/deployments])
-        elements-per-page (subscribe [::deployment-subs/elements-per-page])
-        page              (subscribe [::deployment-subs/page])
-        loading?          (subscribe [::deployment-subs/loading?])]
-    (deployment-views/refresh :init? true
-                              :nuvlabox (str "nuvlabox/" uuid))
-    (fn [uuid]
-      (let [total-elements (:count @elements)
-            total-pages    (general-utils/total-pages total-elements @elements-per-page)
-            deployments    (:resources @elements)]
-        [ui/TabPane
-         (if @loading?
-           [ui/Loader {:active true
-                       :inline "centered"}]
-           [deployment-views/vertical-data-table deployments])
-
-         (when (pos? (:count @elements))
-           [uix/Pagination {:totalPages   total-pages
-                            :activePage   @page
-                            :onPageChange (ui-callback/callback
-                                            :activePage
-                                            #(dispatch [::deployment-events/set-page %]))}])]))))
 
 
 ; there's a similar function in edge.views which can maybe be generalized
@@ -1382,11 +1352,11 @@
 
                [ui/TableBody
                 (if @state-selector
-                  (for [{:keys [vulnerability-id product vulnerability-score color] :as selected-severity}
+                  (for [{:keys [vulnerability-id product vulnerability-score color]}
                         (get items-severity (str/upper-case @state-selector))]
                     ^{:key vulnerability-id}
                     [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color (get vulns-in-db vulnerability-id)])
-                  (for [{:keys [vulnerability-id product vulnerability-score color] :as item} items-extended]
+                  (for [{:keys [vulnerability-id product vulnerability-score color]} items-extended]
                     ^{:key vulnerability-id}
                     [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color (get vulns-in-db vulnerability-id)]))]]]]]
 
@@ -1394,7 +1364,7 @@
 
 
 (defn tabs
-  [uuid count-peripherals tr]
+  [count-peripherals tr]
   (let [nuvlabox  (subscribe [::subs/nuvlabox])
         can-edit? (subscribe [::subs/can-edit?])]
     [{:menuItem {:content "Overview"
@@ -1433,7 +1403,7 @@
      {:menuItem {:content "Deployments"
                  :key     "deployments"
                  :icon    "sitemap"}
-      :render   (fn [] (r/as-element [TabDeployments uuid]))}
+      :render   (fn [] (r/as-element [deployment-views/DeploymentTable]))}
      {:menuItem {:content "Vulnerabilities"
                  :key     "vuln"
                  :icon    "shield"}
@@ -1443,8 +1413,8 @@
 
 
 (defn TabsNuvlaBox
-  [uuid]
-  (fn [uuid]
+  []
+  (fn []
     (let [count-peripherals (subscribe [::subs/nuvlabox-peripherals-ids])
           tr                (subscribe [::i18n-subs/tr])
           active-index      (subscribe [::subs/active-tab-index])]
@@ -1454,7 +1424,7 @@
                       :style     {:display        "flex"
                                   :flex-direction "row"
                                   :flex-wrap      "wrap"}}
-        :panes       (tabs uuid (count @count-peripherals) @tr)
+        :panes       (tabs (count @count-peripherals) @tr)
         :activeIndex @active-index
         :onTabChange (fn [_ data]
                        (let [active-index (. data -activeIndex)]
@@ -1489,10 +1459,10 @@
   (refresh uuid)
   (let [nb-status (subscribe [::subs/nuvlabox-status])]
     (fn [uuid]
-     ^{:key uuid}
-     [ui/Container {:fluid true}
-      [PageHeader]
-      [MenuBar uuid]
-      [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
-      [job-views/ProgressJobAction @nb-status]
-      [TabsNuvlaBox uuid]])))
+      ^{:key uuid}
+      [ui/Container {:fluid true}
+       [PageHeader]
+       [MenuBar uuid]
+       [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
+       [job-views/ProgressJobAction @nb-status]
+       [TabsNuvlaBox]])))

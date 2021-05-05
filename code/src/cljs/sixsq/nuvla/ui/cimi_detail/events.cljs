@@ -24,8 +24,7 @@
 
 (reg-event-db
   ::set-resource
-  (fn [{:keys [::cimi-spec/collection-name
-               ::cimi-spec/cloud-entry-point] :as db} [_ {:keys [id] :as resource}]]
+  (fn [db [_ {:keys [id] :as resource}]]
     (assoc db ::cimi-detail-spec/loading? false
               ::cimi-detail-spec/resource-id id
               ::cimi-detail-spec/resource resource)))

@@ -13,7 +13,6 @@
     [sixsq.nuvla.ui.main.views :as main-views]
     [sixsq.nuvla.ui.routes :as routes]
     [sixsq.nuvla.ui.session.events :as session-events]
-    [sixsq.nuvla.ui.utils.defines :as defines]
     [taoensso.timbre :as log]))
 
 

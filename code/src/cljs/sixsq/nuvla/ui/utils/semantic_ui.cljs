@@ -18,7 +18,6 @@
     ["codemirror/mode/markdown/markdown"]
     ["codemirror/mode/shell/shell"]
     ["codemirror/mode/yaml/yaml"]
-    ["codemirror/mode/markdown/markdown"]
     ["react-codemirror2" :as code-mirror]
     ["react-copy-to-clipboard" :as copy-to-clipboard]
     ["react-datepicker" :as date-picker]

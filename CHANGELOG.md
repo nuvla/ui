@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.18.0] - 2021-05-06
+
 ### Changed
 
   - Sign-in / Sign-up - Hide text when no external templates configured

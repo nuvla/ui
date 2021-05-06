@@ -773,10 +773,10 @@
         [ui/TableHeaderCell "manager"]]]
 
       [ui/TableBody
-       (doall
-         (for [{:keys [id] :as nuvlabox} selected-nbs]
+       (for [{:keys [id] :as nuvlabox} selected-nbs]
+         (when id
            ^{:key id}
-           (when id [NuvlaboxRow nuvlabox managers])))]]]))
+           [NuvlaboxRow nuvlabox managers]))]]]))
 
 
 (defn NuvlaboxMapPoint

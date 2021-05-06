@@ -40,7 +40,6 @@
          summary-all (subscribe [::subs/nuvlaboxes-summary-all])
          clusters    (subscribe [::subs/nuvlabox-clusters])]
      (fn [clickable? hide-cluster-stats]
-       (js/console.warn @summary)
        (let [summary         (if clickable? summary summary-all) ; select all without filter
              terms           (general-utils/aggregate-to-map
                                (get-in @summary [:aggregations :terms:state :buckets]))
@@ -774,10 +773,10 @@
         [ui/TableHeaderCell "manager"]]]
 
       [ui/TableBody
-       (doall
-         (for [{:keys [id] :as nuvlabox} selected-nbs]
+       (for [{:keys [id] :as nuvlabox} selected-nbs]
+         (when id
            ^{:key id}
-           (when id [NuvlaboxRow nuvlabox managers])))]]]))
+           [NuvlaboxRow nuvlabox managers]))]]]))
 
 
 (defn NuvlaboxMapPoint
@@ -833,10 +832,10 @@
     [:div style/center-items
      [ui/CardGroup {:centered    true
                     :itemsPerRow 4}
-      (doall
-        (for [{:keys [id] :as nuvlabox} selected-nbs]
+      (for [{:keys [id] :as nuvlabox} selected-nbs]
+        (when id
           ^{:key id}
-          (when id [NuvlaboxCard nuvlabox managers])))]]))
+          [NuvlaboxCard nuvlabox managers]))]]))
 
 
 (defn NuvlaboxMap
@@ -992,7 +991,8 @@
                     root)]
     (dispatch [::events/get-vpn-infra])
     (dispatch [::events/get-nuvlabox-releases])
-    (dispatch [::events/get-nuvlabox-cluster (str "nuvlabox-cluster/" nuvlabox-cluster-uuid)])
+    (when nuvlabox-cluster-uuid
+      (dispatch [::events/get-nuvlabox-cluster (str "nuvlabox-cluster/" nuvlabox-cluster-uuid)]))
     (if (and (= uuid "nuvlabox-cluster") (not nuvlabox-cluster-uuid))
       (dispatch [::history-events/navigate "edge/"])
       [ui/Segment style/basic

@@ -121,3 +121,21 @@
   ::active-tab-index
   (fn [db]
     (get-in db [::spec/active-tab-index])))
+
+
+(reg-sub
+  ::nuvlabox-managers
+  (fn [db]
+    (::spec/nuvlabox-managers db)))
+
+
+(reg-sub
+  ::join-token
+  (fn [db]
+    (::spec/join-token db)))
+
+
+(reg-sub
+  ::nuvlabox-cluster
+  (fn [db]
+    (::spec/nuvlabox-cluster db)))

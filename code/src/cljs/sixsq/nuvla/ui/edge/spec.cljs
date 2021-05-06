@@ -42,6 +42,10 @@
 ; ssh key association
 (s/def ::ssh-keys-available any?)
 
+(s/def ::nuvlabox-clusters any?)
+
+(s/def ::nuvlabox-cluster any?)
+
 (s/def ::db (s/keys :req [::loading?
                           ::nuvlaboxes
                           ::nuvlaboxes-summary
@@ -59,7 +63,9 @@
                           ::nuvlabox-ssh-key
                           ::nuvlabox-private-ssh-key
                           ::vpn-infra
-                          ::ssh-keys-available]))
+                          ::ssh-keys-available
+                          ::nuvlabox-clusters
+                          ::nuvlabox-cluster]))
 
 
 (def defaults {::loading?                 false
@@ -79,4 +85,6 @@
                ::nuvlabox-ssh-key         nil
                ::nuvlabox-private-ssh-key nil
                ::vpn-infra                nil
-               ::ssh-keys-available       nil})
+               ::ssh-keys-available       nil
+               ::nuvlabox-clusters        nil
+               ::nuvlabox-cluster         nil})

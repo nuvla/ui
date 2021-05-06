@@ -156,11 +156,13 @@
 
 
 (defn get-query-aggregation-params
-  [full-text-search aggregation]
+  [full-text-search aggregation extra]
   {:first       0
    :last        0
    :aggregation aggregation
-   :filter      (general-utils/fulltext-query-string full-text-search)})
+   :filter      (general-utils/join-and
+                  (general-utils/fulltext-query-string full-text-search)
+                  (when extra extra))})
 
 
 (defn prepare-compose-files

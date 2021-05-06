@@ -357,7 +357,7 @@
 
 (defn Card
   [{:keys [header description meta image on-click href
-           button tags content corner-button state loading? on-select selected?]}]
+           button tags content corner-button state loading? on-select selected? extra]}]
   [ui/Card (when on-click
              (cond-> {:on-click (fn [event]
                                   (on-click event)
@@ -413,4 +413,7 @@
     (when (seq tags)
       [Tags {:tags tags}])]
 
-   (when button button)])
+   (when button button)
+
+   (when extra [ui/CardContent {:extra true}
+                extra])])

@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Sign-in / Sign-up - Hide text when no external templates configured
   - Edge page - Clustering
   - Clj-condo fix errors and warnings
   - Module - Publish module

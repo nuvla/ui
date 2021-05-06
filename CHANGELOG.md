@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Edge page - Clustering
   - Clj-condo fix errors and warnings
   - Module - Publish module
   - Module - Refactor module page in tabs

@@ -380,7 +380,7 @@
        :bordered true
        :style    {:width      "auto"
                   :height     "200px"
-                  :object-fit "cover"}}])
+                  :object-fit "scale-down"}}])
 
    (when corner-button corner-button)
 

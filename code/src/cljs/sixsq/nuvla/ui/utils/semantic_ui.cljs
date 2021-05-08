@@ -147,6 +147,7 @@
 (def Popup (r/adapt-react-class semantic/Popup))
 (def PopupHeader (r/adapt-react-class semantic/PopupHeader))
 (def PopupContent (r/adapt-react-class semantic/PopupContent))
+(def Portal (r/adapt-react-class semantic/Portal))
 (def Progress (r/adapt-react-class semantic/Progress))
 
 ;;(def Rail (r/adapt-react-class semantic/Rail))

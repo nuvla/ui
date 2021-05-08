@@ -168,6 +168,8 @@
 
 (s/def ::active-tab-index number?)
 
+(s/def ::module-not-found? boolean?)
+
 (s/def ::db (s/keys :req [::active-input
                           ::form-spec
                           ::form-valid?
@@ -188,7 +190,8 @@
                           ::version
                           ::copy-module
                           ::paste-modal-visible?
-                          ::active-tab-index]))
+                          ::active-tab-index
+                          ::module-not-found?]))
 
 (def defaults {::active-input              nil
                ::form-spec                 nil
@@ -212,4 +215,5 @@
                ::copy-module               nil
                ::paste-modal-visible?      false
                ::active-tab-index          0
+               ::module-not-found?         false
                ::details-validation-errors #{}})

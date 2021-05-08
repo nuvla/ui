@@ -378,6 +378,8 @@
         :no-infra-services                             "no infrastructure service found"
         :no-items-to-show                              "There are no items to show."
         :no-messages                                   "no messages"
+        :no-module-message-header                      "Oops can't find module"
+        :no-module-message-content                     "Module does not exist or you do not have sufficient access rights."
         :no-mounts                                     "no volumes or mounts for this applications"
         :no-notification-method-defined                "no notification method defined"
         :no-output-parameters                          "no output parameters defined for the application"

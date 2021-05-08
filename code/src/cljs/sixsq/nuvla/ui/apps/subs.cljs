@@ -311,3 +311,9 @@
   ::active-tab-index
   (fn [db]
     (get-in db [::spec/active-tab-index])))
+
+
+(reg-sub
+  ::module-not-found?
+  (fn [db]
+    (get-in db [::spec/module-not-found?])))

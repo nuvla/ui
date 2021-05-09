@@ -382,6 +382,8 @@
         :no-module-message-content                     "Module does not exist or you do not have sufficient access rights."
         :no-mounts                                     "no volumes or mounts for this applications"
         :no-notification-method-defined                "no notification method defined"
+        :no-nuvlabox-message-header                    "Oops can't find NuvlaBox"
+        :no-nuvlabox-message-content                   "NuvlaBox does not exist or you do not have sufficient access rights."
         :no-output-parameters                          "no output parameters defined for the application"
         :no-ports                                      "no port mapping defined for this application"
         :no-pricing-free-app                           "There is no pricing defined for this app.  It is therefore free."

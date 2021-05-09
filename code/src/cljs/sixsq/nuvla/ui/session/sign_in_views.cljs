@@ -63,7 +63,9 @@
                          (dispatch [::events/submit utils/session-tmpl-password
                                     (:names->value @form)]))
         :ExtraContent [:div {:style {:margin-top 100}}
-                       (@tr [:sign-in-with])
+                       (when (or @github-template?
+                                 @geant-template?)
+                         (@tr [:sign-in-with]))
                        (when @github-template?
                          [:form {:action (str @cimi-fx/NUVLA_URL "/api/session")
                                  :method "post"

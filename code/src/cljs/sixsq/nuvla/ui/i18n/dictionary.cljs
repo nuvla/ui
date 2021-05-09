@@ -375,6 +375,8 @@
         :no-env-variables-parameters                   "no environment variables defined for this module"
         :no-files                                      "no files defined for this application"
         :no-infra-service-of-subtype                   "no available infrastructure of subtype"
+        :no-infra-service-message-header               "Oops can't find infrastructure service"
+        :no-infra-service-message-content              "Infrastructure service does not exist or you do not have sufficient access rights."
         :no-infra-services                             "no infrastructure service found"
         :no-items-to-show                              "There are no items to show."
         :no-messages                                   "no messages"

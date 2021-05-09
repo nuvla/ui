@@ -45,22 +45,6 @@
               :event     [::events/get-nuvlabox (str "nuvlabox/" uuid)]}]))
 
 
-(defn NotFoundNuvlaBoxPortal
-  []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        not-found? (subscribe [::subs/nuvlabox-not-found?])]
-    [ui/Dimmer {:active   @not-found?
-                :inverted true}
-     [ui/Segment {:textAlign "center"
-                  :raised    true
-                  :style     {:top    "20%"
-                              :zIndex 1000}}
-      [ui/Message {:warning true
-                   :icon    "warning circle"
-                   :header  (@tr [:no-nuvlabox-message-header])
-                   :content (@tr [:no-nuvlabox-message-content])}]]]))
-
-
 (defn DecommissionButton
   [nuvlabox]
   (let [tr      (subscribe [::i18n-subs/tr])
@@ -1474,7 +1458,10 @@
     (fn [uuid]
       ^{:key uuid}
       [ui/DimmerDimmable {:dimmed true}
-       [NotFoundNuvlaBoxPortal]
+       [main-components/NotFoundPortal
+        ::subs/nuvlabox-not-found?
+        :no-nuvlabox-message-header
+        :no-nuvlabox-message-content]
        [ui/Container {:fluid true}
         [PageHeader]
         [MenuBar uuid]

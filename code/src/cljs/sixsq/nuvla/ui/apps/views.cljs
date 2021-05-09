@@ -11,29 +11,13 @@
     [sixsq.nuvla.ui.apps.views-detail :as views-detail]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.deployment.events :as deployment-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [taoensso.timbre :as timbre]))
-
-
-(defn NotFoundModulePortal
-  []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        not-found? (subscribe [::subs/module-not-found?])]
-    [ui/Dimmer {:active   @not-found?
-                :inverted true}
-     [ui/Segment {:textAlign "center"
-                  :raised true
-                  :style     {:top    "20%"
-                              :zIndex 1000}}
-      [ui/Message {:warning true
-                   :icon    "warning circle"
-                   :header  (@tr [:no-module-message-header])
-                   :content (@tr [:no-module-message-content])}]]]))
 
 
 (defn ModuleDetails
@@ -94,5 +78,8 @@
    [views-detail/save-modal]
    [views-detail/logo-url-modal]
    [deployment-dialog-views/deploy-modal]
-   [NotFoundModulePortal]
+   [main-components/NotFoundPortal
+    ::subs/module-not-found?
+    :no-module-message-header
+    :no-module-message-content]
    [Apps]])

@@ -138,7 +138,9 @@
                                (dispatch [::events/submit
                                           utils/user-tmpl-email-password data opts])))))
         :ExtraContent [:div {:style {:margin-top 100}}
-                       (@tr [:sign-up-with])
+                       (when (or @github-template?
+                                 @geant-template?)
+                         (@tr [:sign-up-with]))
                        [:span
                         (when @github-template?
                           [:form {:action (str @cimi-fx/NUVLA_URL "/api/user")

@@ -13,6 +13,7 @@
     doesn't set api-credentials ttl
   - Edge page - Creation of nuvlabox-installation-trigger-usb.nuvla
     creation data content fix
+  - Edge detail page - add container monitoring stats
 
 ## [2.17.2] - 2021-04-28
 

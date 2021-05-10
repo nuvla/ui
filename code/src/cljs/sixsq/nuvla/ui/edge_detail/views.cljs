@@ -651,6 +651,7 @@
   [resources]
   (let [load-stats      (utils/load-statistics resources)
         net-stats       (utils/load-net-stats (:net-stats resources))
+        container-stats (:container-stats resources)
         number-of-stats (count load-stats)]
     ; TODO: if the number-of-stats grows if should split into a new row
     [ui/Grid {:columns   number-of-stats,
@@ -730,7 +731,40 @@
                                         :position "bottom"}
                                :scales {:yAxes [{:type       "logarithmic"
                                                  :scaleLabel {:labelString "megabytes"
-                                                              :display     true}}]}}}]]]])]))
+                                                              :display     true}}]}}}]]]])
+     (when container-stats
+       [ui/GridRow {:centered true
+                    :columns  1}
+        [ui/GridColumn
+         [ui/Table {:compact "very", :selectable true, :basic "very"}
+          [ui/TableHeader
+           [ui/TableRow
+            [ui/TableHeaderCell "ID"]
+            [ui/TableHeaderCell "Container Name"]
+            [ui/TableHeaderCell "CPU %"]
+            [ui/TableHeaderCell "Mem Usage/Limit"]
+            [ui/TableHeaderCell "Mem %"]
+            [ui/TableHeaderCell "Net I/O"]
+            [ui/TableHeaderCell "Block I/O"]
+            [ui/TableHeaderCell "Status"]
+            [ui/TableHeaderCell "Restart Count"]]]
+
+          [ui/TableBody
+           (for [{:keys [id name cpu-percent mem-usage-limit
+                         mem-percent net-in-out blk-in-out
+                         container-status restart-count] :as cstat} container-stats]
+             (when id
+               ^{:key id}
+               [ui/TableRow
+                [ui/TableCell (apply str (take 8 id))]
+                [ui/TableCell (apply str (take 25 name))]
+                [ui/TableCell cpu-percent]
+                [ui/TableCell mem-usage-limit]
+                [ui/TableCell mem-percent]
+                [ui/TableCell net-in-out]
+                [ui/TableCell blk-in-out]
+                [ui/TableCell container-status]
+                [ui/TableCell restart-count]]))]]]])]))
 
 
 (defn ActionsMenu

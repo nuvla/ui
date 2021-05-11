@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+  - Edge detail page - add container monitoring stats
+
 ### Changed
 
   - Deployment dialog - Remove duplicated definition of price subscription

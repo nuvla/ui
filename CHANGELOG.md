@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- Show an error message when an element does not exist or is not accessible
+  (modules, NuvlaBoxes and infrastructure services)
+
 ## [2.18.0] - 2021-05-06
 
 ### Changed

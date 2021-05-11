@@ -51,3 +51,9 @@
   :<- [::infrastructure-service]
   (fn [infrastructure-service _]
     (general-utils/can-start? infrastructure-service)))
+
+
+(reg-sub
+  ::infra-service-not-found?
+  (fn [db]
+    (::spec/infra-service-not-found? db)))

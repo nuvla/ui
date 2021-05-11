@@ -4,6 +4,8 @@
 
 ### Added
 
+  - Show an error message when an element does not exist or is not accessible
+    (modules, NuvlaBoxes and infrastructure services)
   - Edge detail page - add container monitoring stats
 
 ### Changed

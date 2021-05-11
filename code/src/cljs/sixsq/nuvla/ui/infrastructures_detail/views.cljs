@@ -197,9 +197,14 @@
   (let [infra-service (subscribe [::subs/infrastructure-service])]
     (refresh uuid)
     (fn [uuid]
-      ^{:key uuid}
-      [ui/Container {:fluid true}
-       [MenuBar uuid]
-       [cimi-detail-views/detail-header @infra-service]
+      [ui/DimmerDimmable {:dimmed true}
+       [main-components/NotFoundPortal
+        ::subs/infra-service-not-found?
+        :no-infra-service-message-header
+        :no-infra-service-message-content]
        ^{:key uuid}
-       [InfraService]])))
+       [ui/Container {:fluid true}
+        [MenuBar uuid]
+        [cimi-detail-views/detail-header @infra-service]
+        ^{:key uuid}
+        [InfraService]]])))

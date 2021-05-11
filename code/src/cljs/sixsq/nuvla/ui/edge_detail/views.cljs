@@ -1491,9 +1491,14 @@
   (let [nb-status (subscribe [::subs/nuvlabox-status])]
     (fn [uuid]
       ^{:key uuid}
-      [ui/Container {:fluid true}
-       [PageHeader]
-       [MenuBar uuid]
-       [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
-       [job-views/ProgressJobAction @nb-status]
-       [TabsNuvlaBox]])))
+      [ui/DimmerDimmable {:dimmed true}
+       [main-components/NotFoundPortal
+        ::subs/nuvlabox-not-found?
+        :no-nuvlabox-message-header
+        :no-nuvlabox-message-content]
+       [ui/Container {:fluid true}
+        [PageHeader]
+        [MenuBar uuid]
+        [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
+        [job-views/ProgressJobAction @nb-status]
+        [TabsNuvlaBox]]])))

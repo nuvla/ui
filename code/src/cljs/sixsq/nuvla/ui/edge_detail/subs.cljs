@@ -139,3 +139,9 @@
   ::nuvlabox-cluster
   (fn [db]
     (::spec/nuvlabox-cluster db)))
+
+
+(reg-sub
+  ::nuvlabox-not-found?
+  (fn [db]
+    (::spec/nuvlabox-not-found? db)))

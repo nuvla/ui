@@ -752,12 +752,12 @@
           [ui/TableBody
            (for [{:keys [id name cpu-percent mem-usage-limit
                          mem-percent net-in-out blk-in-out
-                         container-status restart-count] :as cstat} container-stats]
+                         container-status restart-count]} container-stats]
              (when id
                ^{:key id}
                [ui/TableRow
-                [ui/TableCell (apply str (take 8 id))]
-                [ui/TableCell (apply str (take 25 name))]
+                [ui/TableCell (some-> id (subs 0 8))]
+                [ui/TableCell (some-> name (subs 0 25))]
                 [ui/TableCell cpu-percent]
                 [ui/TableCell mem-usage-limit]
                 [ui/TableCell mem-percent]

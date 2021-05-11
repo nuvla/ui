@@ -433,7 +433,7 @@
                              :options  {:mode     ""
                                         :readOnly true
                                         :theme    "logger"}
-                             :class ["large-height"]}]
+                             :class    ["large-height"]}]
              [ui/Header {:icon true}
               [ui/Icon {:name "search"}]
               "Get service logs"]
@@ -493,7 +493,7 @@
 
 
 (defn ShutdownButton
-  #_ {:clj-kondo/ignore [:unused-binding]}
+  #_{:clj-kondo/ignore [:unused-binding]}
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
@@ -541,7 +541,7 @@
 
 
 (defn DeleteButton
-  #_ {:clj-kondo/ignore [:unused-binding]}
+  #_{:clj-kondo/ignore [:unused-binding]}
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
@@ -638,17 +638,6 @@
         [:a {:href "https://docs.nuvla.io/nuvla/vpn" :target "_blank"} (@tr [:connect-vpn])] "."]])))
 
 
-(defn up-to-date?
-  [v versions]
-  (when v
-    (let [tr           (subscribe [::i18n-subs/tr])
-          last-version (ffirst versions)]
-      (if (= v last-version)
-        [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
-        [:span [ui/Icon {:name "warning", :color "orange"}]
-         (str (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]))]))))
-
-
 (defn TabOverviewModule
   []
   (let [tr         (subscribe [::i18n-subs/tr])
@@ -697,18 +686,18 @@
 (defn DeploymentCard
   [{:keys [id state module tags parent credential-name] :as deployment} & {:keys [clickable?]
                                                                            :or   {clickable? true}}]
-  (let [tr            (subscribe [::i18n-subs/tr])
+  (let [tr          (subscribe [::i18n-subs/tr])
         {module-logo-url :logo-url
          module-name     :name
          module-path     :path
          module-content  :content} module
         [primary-url-name
          primary-url-pattern] (-> module-content (get :urls []) first)
-        primary-url   (if clickable?
-                        (subscribe [::deployment-subs/deployment-url id primary-url-pattern])
-                        (subscribe [::subs/url primary-url-pattern]))
-        started?      (deployment-utils/is-started? state)
-        cred          (or credential-name parent)]
+        primary-url (if clickable?
+                      (subscribe [::deployment-subs/deployment-url id primary-url-pattern])
+                      (subscribe [::subs/url primary-url-pattern]))
+        started?    (deployment-utils/is-started? state)
+        cred        (or credential-name parent)]
 
     ^{:key id}
     [ui/Card (when clickable?
@@ -774,16 +763,17 @@
 
 (defn TabOverviewSummary
   []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        deployment (subscribe [::subs/deployment])
-        version    (subscribe [::subs/current-module-version])
-        versions   (subscribe [::subs/module-versions])
+  (let [tr                   (subscribe [::i18n-subs/tr])
+        deployment           (subscribe [::subs/deployment])
+        version              (subscribe [::subs/current-module-version])
+        versions             (subscribe [::subs/module-versions])
         {:keys [id state module tags acl credential-name parent]} @deployment
-        owners     (:owners acl)
-        cred       (or credential-name parent)
+        owners               (:owners acl)
+        cred                 (or credential-name parent)
         {module-content :content} module
-        urls       (:urls module-content)
-        nuvlabox   (:nuvlabox @deployment)]
+        is-module-published? (:published module)
+        urls                 (:urls module-content)
+        nuvlabox             (:nuvlabox @deployment)]
 
     [ui/SegmentGroup {:style  {:display    "flex", :justify-content "space-between",
                                :background "#f3f4f5"}
@@ -829,7 +819,7 @@
             (deployment-utils/format-nuvlabox-value nuvlabox)]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
-         [ui/TableCell @version " " (up-to-date? @version @versions)]]]]]
+         [ui/TableCell @version " " [views-versions/UpToDate? @version @versions is-module-published?]]]]]]
      [ui/Segment {:attached  false
                   :secondary true}
       (for [[i [url-name url-pattern]] (map-indexed list urls)]

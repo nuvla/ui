@@ -225,23 +225,6 @@
          :default-open true]))))
 
 
-(defn up-to-date?
-  [v versions published?]
-  (when v
-    (let [tr                     (subscribe [::i18n-subs/tr])
-          last-version           (ffirst versions)
-          last-published-version (apps-utils/latest-published-index versions)]
-      (if published?
-        (if (= v last-published-version)
-          [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-published]) ")"]
-          [:span [ui/Icon {:name "warning", :color "orange"}]
-           (str (@tr [:not-up-to-date-published]))])
-        (if (= v last-version)
-          [:span [ui/Icon {:name "check", :color "green"}] " (" (@tr [:up-to-date-latest]) ")"]
-          [:span [ui/Icon {:name "warning", :color "orange"}]
-           (str " (" (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]) ")")])))))
-
-
 (defn OverviewModuleSummary
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
@@ -279,7 +262,7 @@
           [ui/TableCell [values/as-link id :label (subs id 11)]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:version-number]))]
-        [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]
+        [ui/TableCell version-index " " [apps-views-versions/UpToDate? version-index @versions-map @is-module-published?]]]
        [apps-views-detail/AuthorVendor]]]]))
 
 

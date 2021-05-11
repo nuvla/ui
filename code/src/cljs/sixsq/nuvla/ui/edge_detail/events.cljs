@@ -193,10 +193,8 @@
 (reg-event-db
   ::nuvlabox-not-found?
   (fn [db [_ e]]
-    (if (instance? js/Error e)
-      (let [{:keys [_status _message]} (response/parse-ex-info e)]
-        (assoc db ::spec/nuvlabox-not-found? true))
-      (assoc db ::spec/nuvlabox-not-found? false))))
+    (let [{:keys [_status _message]} (response/parse-ex-info e)]
+      (assoc db ::spec/nuvlabox-not-found? (instance? js/Error e)))))
 
 
 (reg-event-fx

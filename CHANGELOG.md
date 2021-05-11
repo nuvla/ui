@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+  - Deployment detail - Markdownified module description
+
 ## [2.18.0] - 2021-05-06
 
 ### Changed

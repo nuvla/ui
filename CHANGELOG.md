@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Deployment dialog - Remove duplicated definition of price subscription
   - Deployment detail - Markdownified module description
 
 ## [2.18.0] - 2021-05-06

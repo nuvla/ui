@@ -25,7 +25,7 @@
     "@stripe/react-stripe-js": "^1.1.2",
     "@stripe/stripe-js": "^1.9.0",
     "bluebird": "^3.7.2",
-    "chart.js": "^2.9.3",
+    "chart.js": "^2.9.4",
     "codemirror": "^5.58.1",
     "diff": "^5.0.0",
     "highlight.js": "9.18.1",

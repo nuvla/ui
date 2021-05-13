@@ -12,6 +12,7 @@
 
   - Deployment dialog - Remove duplicated definition of price subscription
   - Deployment detail - Markdownified module description
+  - Credentials - Improve layout of logos for cloud providers
 
 ## [2.18.0] - 2021-05-06
 

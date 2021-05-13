@@ -210,3 +210,19 @@
   [message]
   [ui/Popup {:content message
              :trigger (r/as-element [ui/Icon {:name "info circle"}])}])
+
+
+(defn NotFoundPortal
+  [subs message-header message-content]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        not-found? (subscribe [subs])]
+    [ui/Dimmer {:active   @not-found?
+                :inverted true}
+     [ui/Segment {:textAlign "center"
+                  :raised true
+                  :style     {:top    "20%"
+                              :zIndex 1000}}
+      [ui/Message {:warning true
+                   :icon    "warning circle"
+                   :header  (@tr [message-header])
+                   :content (@tr [message-content])}]]]))

@@ -18,7 +18,7 @@
 (s/def ::nuvlabox-managers (s/nilable any?))
 (s/def ::join-token (s/nilable any?))
 (s/def ::nuvlabox-cluster (s/nilable any?))
-
+(s/def ::nuvlabox-not-found? boolean?)
 
 (s/def ::db (s/keys :req [::loading?
                           ::nuvlabox
@@ -34,7 +34,8 @@
                           ::active-tab-index
                           ::nuvlabox-managers
                           ::join-token
-                          ::nuvlabox-cluster]))
+                          ::nuvlabox-cluster
+                          ::nuvlabox-not-found?]))
 
 
 (def defaults {::loading?                     true
@@ -51,4 +52,5 @@
                ::active-tab-index             0
                ::nuvlabox-managers            nil
                ::join-token                   nil
-               ::nuvlabox-cluster             nil})
+               ::nuvlabox-cluster             nil
+               ::nuvlabox-not-found?          false})

@@ -12,7 +12,8 @@
 (reg-event-db
   ::set-infrastructure-service
   (fn [db [_ infrastructure-service]]
-    (assoc db ::spec/infrastructure-service infrastructure-service
+    (assoc db ::spec/infra-service-not-found? (nil? infrastructure-service)
+              ::spec/infrastructure-service infrastructure-service
               ::spec/loading? false)))
 
 

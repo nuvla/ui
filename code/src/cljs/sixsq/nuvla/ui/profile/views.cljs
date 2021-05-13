@@ -6,8 +6,12 @@
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.acl.events :as acl-events]
+    [sixsq.nuvla.ui.acl.subs :as acl-subs]
+    [sixsq.nuvla.ui.acl.views :as acl-views]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.config :as config]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
@@ -127,7 +131,7 @@
         user-id (:user @session)]
     (dispatch [::intercom-events/set-event "nuvla-user-id" user-id])
     [ui/Segment {:padded true, :color "teal", :style {:height "100%"}}
-     [ui/Header {:as :h2 :dividing true} "Session"]
+     [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:session-title]))]
      (if @session
        [ui/Table {:basic "very"}
         [ui/TableBody
@@ -889,6 +893,103 @@
          ]))))
 
 
+
+(defn DropdownPrincipals
+  [_opts _members]
+  (let [open  (r/atom false)
+        users (subscribe [::acl-subs/users-options])
+        tr    (subscribe [::i18n-subs/tr])]
+    (dispatch [::acl-events/search-users ""])
+    (fn [{:keys [on-change fluid value placeholder]
+          :or   {on-change   #()
+                 fluid       false
+                 value       nil
+                 placeholder ""}}
+         members]
+      (let [used-principals members]
+        [ui/Dropdown {:text        (or (when value @(subscribe [::acl-subs/principal-name value]))
+                                       value)
+                      :placeholder placeholder
+                      :fluid       fluid
+                      :style       {:width "250px"}
+                      :on-open     #(reset! open true)
+                      :open        @open
+                      :upward      false
+                      :className   "selection"
+                      :on-blur     #(reset! open false)
+                      :on-close    #()}
+
+         [ui/DropdownMenu {:style {:overflow-x "auto"
+                                   :min-height "250px"}}
+
+          [ui/DropdownHeader {:icon "user", :content (str/capitalize (@tr [:users]))}]
+
+          [ui/Input {:icon          "search"
+                     :icon-position "left"
+                     :name          "search"
+                     :auto-complete "off"
+                     :on-click      #(reset! open true)
+                     :on-change     (ui-callback/input ::acl-events/search-users)}]
+
+          (doall
+            (for [{user-id :id user-name :name} (remove #(contains? used-principals (:id %)) @users)]
+              ^{:key user-id}
+              [ui/DropdownItem {:text     (or user-name user-id)
+                                :on-click (fn []
+                                            (on-change user-id)
+                                            (reset! open false))}]))]]))))
+
+
+(defn GroupMember
+  [principal]
+  (let [principal-name @(subscribe [::acl-subs/principal-name principal])]
+    [ui/ListItem                                            ;{:style {:vertical-align "middle"}}
+     [ui/ListContent
+      [ui/ListHeader
+       [acl-views/PrincipalIcon principal]
+       ff/nbsp
+       (or principal-name principal)
+       ff/nbsp
+       (when true                                           ;removable?
+         [ui/Icon {:name     "close"
+                   :link     true
+                   :size     "small"
+                   :color    "red"
+                   :on-click #(dispatch [::events/remove-group-member principal])}])]]]))
+
+
+(defn GroupMembers
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        group          (subscribe [::subs/group])
+        new-members    (r/atom nil)
+        disabled?      false
+        update-members #(dispatch [::events/add-group-member %])]
+    (fn []
+      (let [members (:users @group)]
+        [ui/Segment {:padded true, :color "blue", :style {:height "100%"}}
+         [ui/Header {:as :h2 :dividing true} (@tr [:group-members])]
+         [ui/Table
+          [ui/TableBody
+           [ui/TableRow
+            [ui/TableCell
+             [ui/ListSA
+              (for [m members]
+                ^{:key m}
+                [GroupMember m])]]]
+           [ui/TableRow
+            [ui/TableCell
+             [DropdownPrincipals {:placeholder (@tr [:add-group-members])
+                                  :on-change   #(do
+                                                  (swap! new-members conj %)
+                                                  (update-members %))
+                                  :fluid       true} members]]
+            [ui/TableCell {:textAlign "right"}
+             [uix/Button {:primary true
+                          :text    (@tr [:save])
+                          :icon    "save"}]]]]]]))))
+
+
 (defn Content
   []
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -896,7 +997,8 @@
         stripe    (subscribe [::main-subs/stripe])
         session   (subscribe [::session-subs/session])
         is-admin? (subscribe [::session-subs/is-admin?])
-        customer  (subscribe [::subs/customer])]
+        customer  (subscribe [::subs/customer])
+        is-group? (subscribe [::session-subs/active-claim-is-group?])]
     (dispatch [::events/init])
     (fn []
       (let [show-subscription      (and @stripe @session (not @is-admin?))
@@ -933,7 +1035,12 @@
               [Vendor]]
              (when show-customer-sections
                [ui/GridColumn
-                [PaymentMethods]])])]]))))
+                [PaymentMethods]])])
+          (when @is-group?
+            [ui/GridRow {:columns 2}
+             [ui/GridColumn
+              [GroupMembers]]])]]))))
+
 
 (defmethod panel/render :profile
   [_path]

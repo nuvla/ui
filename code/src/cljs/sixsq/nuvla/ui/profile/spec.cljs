@@ -31,6 +31,8 @@
 
 (s/def ::vendor any?)
 
+(s/def ::group any?)
+
 
 (s/def ::db (s/keys :req [::user
                           ::customer
@@ -44,7 +46,8 @@
                           ::error-message
                           ::loading
                           ::setup-intent
-                          ::vendor]))
+                          ::vendor
+                          ::group]))
 
 
 (def defaults {::user              nil
@@ -59,4 +62,5 @@
                ::open-modal        nil
                ::error-message     nil
                ::loading           #{}
-               ::vendor            nil})
+               ::vendor            nil
+               ::group            nil})

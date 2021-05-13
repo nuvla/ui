@@ -13,7 +13,8 @@
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 
 (defn is-advanced-mode?
@@ -263,7 +264,7 @@
             owners       (utils/acl-get-owners-set @ui-acl)]
         [ui/Table {:unstackable true
                    :attached    "top"}
-
+(log/error "owners: " owners)
          [ui/TableHeader
           [ui/TableRow
            [ui/TableHeaderCell

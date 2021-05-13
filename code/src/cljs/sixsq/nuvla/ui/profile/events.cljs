@@ -11,6 +11,7 @@
     [sixsq.nuvla.ui.profile.effects :as fx]
     [sixsq.nuvla.ui.profile.spec :as spec]
     [sixsq.nuvla.ui.session.spec :as session-spec]
+    [sixsq.nuvla.ui.session.utils :as session-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 ;; TODO when customer exist but not valid subscription
@@ -24,6 +25,20 @@
 
 
 (reg-event-db
+  ::add-group-member
+  (fn [{:keys [::spec/group] :as db} [_ member]]
+    (let [users (:users group)]
+      (update-in db [::spec/group :users] #(conj users member)))))
+
+
+(reg-event-db
+  ::remove-group-member
+  (fn [{:keys [::spec/group] :as db} [_ member]]
+    (let [users (:users group)]
+      (update-in db [::spec/group :users] #(vec (disj (set users) member))))))
+
+
+(reg-event-db
   ::set-user
   (fn [{:keys [::spec/loading] :as db} [_ user]]
     (assoc db ::spec/user user
@@ -34,8 +49,26 @@
   ::get-user
   (fn [{{:keys [::session-spec/session] :as db} :db} _]
     (when-let [user (:user session)]
-      {:db               (update db ::spec/loading conj :user)
-       ::cimi-api-fx/get [user #(dispatch [::set-user %])]})))
+      (let [active-claim (:active-claim session)]
+        {:db               (update db ::spec/loading conj :user)
+         ::cimi-api-fx/get [user #(do (dispatch [::set-user %])
+                                      (when (session-utils/is-group? active-claim)
+                                        (dispatch [::get-group])))]}))))
+
+
+(reg-event-db
+  ::set-group
+  (fn [{:keys [::spec/loading] :as db} [_ group]]
+    (assoc db ::spec/group group
+              ::spec/loading (disj loading :group))))
+
+
+(reg-event-fx
+  ::get-group
+  (fn [{{:keys [::session-spec/session] :as db} :db} _]
+    (when-let [group (:active-claim session)]
+      {:db               (update db ::spec/loading conj :group)
+       ::cimi-api-fx/get [group #(dispatch [::set-group %])]})))
 
 
 (reg-event-fx

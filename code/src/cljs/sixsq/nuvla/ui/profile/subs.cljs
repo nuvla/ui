@@ -137,3 +137,9 @@
   ::vendor
   (fn [db]
     (::spec/vendor db)))
+
+
+(reg-sub
+  ::group
+  (fn [db]
+    (::spec/group db)))

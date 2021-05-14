@@ -10,6 +10,7 @@
 
 ### Changed
 
+  - Main - Detect unpaid subscription to show a more coherent message
   - Deployment detail - Clear log bugfix
   - Deployment dialog - Remove duplicated definition of price subscription
   - Deployment detail - Markdownified module description

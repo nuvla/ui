@@ -5,7 +5,8 @@
 
 
 (def dictionary
-  {:en {:about                                         "about"
+  {:en {
+        :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
         :accept-costs                                  "I accept the costs"
@@ -374,18 +375,18 @@
         :no-datasets                                   "no data bindings defined for this application"
         :no-env-variables-parameters                   "no environment variables defined for this module"
         :no-files                                      "no files defined for this application"
-        :no-infra-service-of-subtype                   "no available infrastructure of subtype"
-        :no-infra-service-message-header               "Oops can't find infrastructure service"
         :no-infra-service-message-content              "Infrastructure service does not exist or you do not have sufficient access rights."
+        :no-infra-service-message-header               "Oops can't find infrastructure service"
+        :no-infra-service-of-subtype                   "no available infrastructure of subtype"
         :no-infra-services                             "no infrastructure service found"
         :no-items-to-show                              "There are no items to show."
         :no-messages                                   "no messages"
-        :no-module-message-header                      "Oops can't find module"
         :no-module-message-content                     "Module does not exist or you do not have sufficient access rights."
+        :no-module-message-header                      "Oops can't find module"
         :no-mounts                                     "no volumes or mounts for this applications"
         :no-notification-method-defined                "no notification method defined"
-        :no-nuvlabox-message-header                    "Oops can't find NuvlaBox"
         :no-nuvlabox-message-content                   "NuvlaBox does not exist or you do not have sufficient access rights."
+        :no-nuvlabox-message-header                    "Oops can't find NuvlaBox"
         :no-output-parameters                          "no output parameters defined for the application"
         :no-ports                                      "no port mapping defined for this application"
         :no-pricing-free-app                           "There is no pricing defined for this app.  It is therefore free."
@@ -509,6 +510,7 @@
         :process                                       "process"
         :product-info                                  "product information"
         :profile                                       "profile"
+        :profile-page                                  "Profile page"
         :progress                                      "progress"
         :project                                       "project"
         :public-key                                    "ssh public key"
@@ -602,6 +604,7 @@
         :subscription-required                         "Subscription required"
         :subscription-required-content                 "You need a subscription to be able to perform this action."
         :subscription-required-content-group           "Groups can also have subscriptions. You can try switching to a group you are a member of (top right down arrow)."
+        :subscription-unpaid-content                   "You have an unpaid bill. Please go to profile page to fix the issue."
         :subscriptions                                 "Subscriptions"
         :subscriptions-manage                          "Manage subscriptions"
         :subscriptions-manage-help                     "Edit and update subscriptions individually."
@@ -724,9 +727,11 @@
         :welcome-video-subheader-pre                   "Access our"
         :working-directory                             "Working directory"
         :yes                                           "yes"
-        :yesterday                                     "yesterday"}
+        :yesterday                                     "yesterday"
+        }
 
-   :fr {:about                                         "à propos"
+   :fr {
+        :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"
         :accept-costs                                  "J'accepte les coûts"
@@ -1136,6 +1141,7 @@
         :process                                       "traiter"
         :product-info                                  "information produit"
         :profile                                       "profil utilisateur"
+        :profile-page                                  "Page profile"
         :progress                                      "progression"
         :project                                       "projet"
         :public-key                                    "clé ssh publique"
@@ -1214,6 +1220,7 @@
         :subscription-required                         "Souscription requise"
         :subscription-required-content                 "Vous avez besoin d'une souscription pour pouvoir utiliser cette action."
         :subscription-required-content-group           "Les groupes peuvent également avoir des souscriptions. Vous pouvez essayer de basculer sur un groupe dont vous êtes membre (en haut à droite, flèche vers le bas)."
+        :subscription-unpaid-content                   "Vous avez une facture impayés. Merci de résoudre le problème sur la page profile."
         :subscriptions                                 "Souscriptions"
         :subscriptions-manage                          "Gérez les souscriptions."
         :subscriptions-manage-help                     "Modifiez et mettez à jour les souscriptions individuellement."
@@ -1319,4 +1326,5 @@
         :welcome-video-subheader-pre                   "Accèder à notre"
         :working-directory                             "Dossier de travail"
         :yes                                           "oui"
-        :yesterday                                     "hier"}})
+        :yesterday                                     "hier"
+        }})

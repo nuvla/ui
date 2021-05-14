@@ -10,6 +10,7 @@
 
 ### Changed
 
+  - Deployment detail - Clear log bugfix
   - Deployment dialog - Remove duplicated definition of price subscription
   - Deployment detail - Markdownified module description
 

@@ -141,7 +141,7 @@
 
 (reg-event-db
   ::clear-deployment-log
-  (fn [{db :db} _]
+  (fn [db]
     (assoc-in db [::spec/deployment-log :log] [])))
 
 

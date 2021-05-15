@@ -63,4 +63,4 @@
                ::error-message     nil
                ::loading           #{}
                ::vendor            nil
-               ::group            nil})
+               ::group             nil})

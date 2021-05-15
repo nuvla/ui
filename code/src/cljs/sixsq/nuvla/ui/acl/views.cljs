@@ -264,7 +264,6 @@
             owners       (utils/acl-get-owners-set @ui-acl)]
         [ui/Table {:unstackable true
                    :attached    "top"}
-(log/error "owners: " owners)
          [ui/TableHeader
           [ui/TableRow
            [ui/TableHeaderCell

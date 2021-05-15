@@ -72,6 +72,16 @@
 
 
 (reg-event-fx
+  ::edit-group
+  (fn [{_db :db} [_ group]]
+    (let [id (:id group)]
+      {::cimi-api-fx/edit [id group #(dispatch [::messages-events/add
+                                                {:header  "Group updated"
+                                                 :content "Group updated successfully."
+                                                 :type    :info}])]})))
+
+
+(reg-event-fx
   ::get-customer
   (fn [{db :db} [_ id]]
     {:db               (-> db

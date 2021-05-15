@@ -941,54 +941,98 @@
 
 
 (defn GroupMember
-  [principal]
+  [principal members editable? changed?]
   (let [principal-name @(subscribe [::acl-subs/principal-name principal])]
-    [ui/ListItem                                            ;{:style {:vertical-align "middle"}}
+    [ui/ListItem
      [ui/ListContent
       [ui/ListHeader
        [acl-views/PrincipalIcon principal]
        ff/nbsp
        (or principal-name principal)
        ff/nbsp
-       (when true                                           ;removable?
+       (when editable?
          [ui/Icon {:name     "close"
                    :link     true
                    :size     "small"
                    :color    "red"
-                   :on-click #(dispatch [::events/remove-group-member principal])}])]]]))
+                   :on-click (fn [_] (swap! members #(vec (disj (set @members) principal)))
+                               (reset! changed? true))}])]]]))
 
 
 (defn GroupMembers
-  []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        group          (subscribe [::subs/group])
-        new-members    (r/atom nil)
-        disabled?      false
-        update-members #(dispatch [::events/add-group-member %])]
+  [group]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        editable? (general-utils/editable? group false)
+        users     (:users group)
+        members   (r/atom users)
+        changed?  (r/atom false)]
     (fn []
-      (let [members (:users @group)]
-        [ui/Segment {:padded true, :color "blue", :style {:height "100%"}}
-         [ui/Header {:as :h2 :dividing true} (@tr [:group-members])]
-         [ui/Table
-          [ui/TableBody
-           [ui/TableRow
-            [ui/TableCell
-             [ui/ListSA
-              (for [m members]
+      [:<>
+       [ui/HeaderSubheader {:as :h3}
+        (:name group) " (" (:id group) ")"]
+       [ui/Table
+        [ui/TableBody
+         [ui/TableRow
+          [ui/TableCell
+           [ui/ListSA
+            (if (empty? users)
+              [ui/Message {:info true}
+               (if editable?
+                 (@tr [:empty-group-message])
+                 (@tr [:empty-group-or-no-access-message]))]
+              (for [m @members]
                 ^{:key m}
-                [GroupMember m])]]]
+                [GroupMember m members editable? changed?]))]]]
+         (when editable?
            [ui/TableRow
             [ui/TableCell
              [DropdownPrincipals {:placeholder (@tr [:add-group-members])
-                                  :on-change   #(do
-                                                  (swap! new-members conj %)
-                                                  (update-members %))
-                                  :fluid       true} members]]
+                                  :on-change   (fn [m]
+                                                 (swap! members #(conj @members m))
+                                                 (reset! changed? true))
+                                  :fluid       true} @members]]
             [ui/TableCell {:textAlign "right"}
-             [uix/Button {:primary true
-                          :text    (@tr [:save])
-                          :icon    "save"}]]]]]]))))
+             [uix/Button {:primary  true
+                          :text     (@tr [:save])
+                          :icon     "save"
+                          :disabled (not @changed?)
+                          :on-click #(do (dispatch [::events/edit-group (assoc group :users @members)])
+                                         (reset! changed? false))}]]])]]])))
 
+
+(defn GroupMembersSegment
+  []
+  (let [tr    (subscribe [::i18n-subs/tr])
+        group (subscribe [::subs/group])]
+    [ui/Segment {:padded true, :color "blue", :style {:height "100%"}}
+     [ui/Header {:as :h2 :dividing true} (@tr [:group-members])]
+     ^{:key (random-uuid)}
+     [GroupMembers @group]]))
+
+
+(defn Group
+  [group-id]
+  (let [group (subscribe [::subs/group-detail group-id])]
+    [ui/Segment {:padded true, :color "blue", :style {:height "100%"}}
+     [GroupMembers @group]]))
+
+
+(defn Groups
+  []
+  (let [tr     (subscribe [::i18n-subs/tr])
+        groups (subscribe [::acl-subs/groups-options])]
+    (dispatch [::acl-events/search-groups])
+    (fn []
+      [ui/Segment {:padded true, :color "blue", :style {:height "100%"}}
+       [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:groups]))]
+       [ui/Table
+        [ui/TableBody
+         [ui/TableRow
+          [ui/TableCell
+           [ui/ListSA
+            (for [group @groups]
+              ^{:key (str "group-" group)}
+              [GroupMembers group])]]]]]])))
 
 (defn Content
   []
@@ -1036,10 +1080,12 @@
              (when show-customer-sections
                [ui/GridColumn
                 [PaymentMethods]])])
-          (when @is-group?
-            [ui/GridRow {:columns 2}
+          [ui/GridRow {:columns 2}
+           (when @is-group?
              [ui/GridColumn
-              [GroupMembers]]])]]))))
+              [GroupMembersSegment]])
+           [ui/GridColumn
+            [Groups]]]]]))))
 
 
 (defmethod panel/render :profile

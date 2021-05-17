@@ -328,6 +328,7 @@
   (let [tr               (subscribe [::i18n-subs/tr])
         active-tab-index (subscribe [::subs/active-tab-index])]
     (dispatch [::apps-events/reset-version])
+    (dispatch [::apps-events/module-not-found false])
     (fn []
       @active-tab-index
       (dispatch [::events/reset-page])

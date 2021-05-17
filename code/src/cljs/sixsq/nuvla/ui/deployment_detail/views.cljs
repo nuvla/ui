@@ -656,7 +656,8 @@
         locale     (subscribe [::i18n-subs/locale])
         module     (:module @deployment)
         id         (:id module "")
-        {:keys [created updated name description parent-path path logo-url]} module]
+        {:keys [created updated name description parent-path path logo-url]} module
+        desc-short (values/markdown->summary description)]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
@@ -674,10 +675,10 @@
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:name]))]
           [ui/TableCell [values/as-link path :label name :page "apps"]]])
-       (when description
+       (when desc-short
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:description]))]
-          [ui/TableCell description]])
+          [ui/TableCell desc-short]])
        (when parent-path
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:project]))]

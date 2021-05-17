@@ -16,6 +16,8 @@
 
 (s/def ::endpoint spec-utils/nonblank-string)
 
+(s/def ::infra-service-not-found? boolean?)
+
 (s/def ::infrastructure-service (s/nilable (s/keys :req-un [::name
                                                             ::parent
                                                             ::subtype
@@ -24,8 +26,10 @@
 
 
 (s/def ::db (s/keys :req [::loading?
-                          ::infrastructure-service]))
+                          ::infrastructure-service
+                          ::infra-service-not-found?]))
 
 
-(def defaults {::loading?               true
-               ::infrastructure-service nil})
+(def defaults {::loading?                 true
+               ::infrastructure-service   nil
+               ::infra-service-not-found? false})

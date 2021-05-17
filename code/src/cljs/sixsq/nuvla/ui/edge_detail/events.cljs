@@ -82,7 +82,8 @@
 (reg-event-fx
   ::set-nuvlabox
   (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status :as nuvlabox}]]
-    {:db               (assoc db ::spec/nuvlabox nuvlabox
+    {:db               (assoc db ::spec/nuvlabox-not-found? (nil? nuvlabox)
+                                 ::spec/nuvlabox nuvlabox
                                  ::spec/loading? false)
      ::cimi-api-fx/get [nb-status-id #(do
                                         (dispatch [::set-nuvlabox-status %])
@@ -187,6 +188,13 @@
                              (general-utils/prepare-params query-params)
                              #(dispatch [::set-nuvlabox-events %])
                              ]})))
+
+
+(reg-event-db
+  ::nuvlabox-not-found?
+  (fn [db [_ e]]
+    (let [{:keys [_status _message]} (response/parse-ex-info e)]
+      (assoc db ::spec/nuvlabox-not-found? (instance? js/Error e)))))
 
 
 (reg-event-fx

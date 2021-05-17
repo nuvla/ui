@@ -2,8 +2,23 @@
 
 ## Unreleased
 
+### Added
+
+  - Show an error message when an element does not exist or is not accessible
+    (modules, NuvlaBoxes and infrastructure services)
+  - Edge detail page - add container monitoring stats
+
 ### Changed
 
+  - Deployment detail - Clear log bugfix
+  - Deployment dialog - Remove duplicated definition of price subscription
+  - Deployment detail - Markdownified module description
+
+## [2.18.0] - 2021-05-06
+
+### Changed
+
+  - Sign-in / Sign-up - Hide text when no external templates configured
   - Edge page - Clustering
   - Clj-condo fix errors and warnings
   - Module - Publish module

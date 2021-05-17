@@ -126,9 +126,11 @@
 
 (defn Session
   []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        session (subscribe [::session-subs/session])
-        user-id (:user @session)]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        session   (subscribe [::session-subs/session])
+        user-id   (:user @session)
+        is-group? (subscribe [::session-subs/active-claim-is-group?])
+        identifier (:identifier @session)]
     (dispatch [::intercom-events/set-event "nuvla-user-id" user-id])
     [ui/Segment {:padded true, :color "teal", :style {:height "100%"}}
      [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:session-title]))]
@@ -137,7 +139,10 @@
         [ui/TableBody
          [ui/TableRow
           [ui/TableCell {:width 5} [:b "Identifier"]]
-          [ui/TableCell {:width 11} (:identifier @session)]]
+          [ui/TableCell {:width 11} identifier]]
+         [ui/TableRow
+          [ui/TableCell {:width 5} [:b "Logged-in as"]]
+          [ui/TableCell {:width 11} (if @is-group? (:active-claim @session) identifier)]]
          [ui/TableRow
           [ui/TableCell [:b (str/capitalize (@tr [:session-expires]))]]
           [ui/TableCell (-> @session :expiry time/parse-iso8601 time/ago)]]

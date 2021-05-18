@@ -33,6 +33,10 @@
 
 (s/def ::group any?)
 
+(s/def ::group-name (s/nilable string?))
+
+(s/def ::active-tab-index number?)
+
 
 (s/def ::db (s/keys :req [::user
                           ::customer
@@ -47,7 +51,8 @@
                           ::loading
                           ::setup-intent
                           ::vendor
-                          ::group]))
+                          ::group
+                          ::active-tab-index]))
 
 
 (def defaults {::user              nil
@@ -63,4 +68,5 @@
                ::error-message     nil
                ::loading           #{}
                ::vendor            nil
-               ::group             nil})
+               ::group             nil
+               ::active-tab-index  0})

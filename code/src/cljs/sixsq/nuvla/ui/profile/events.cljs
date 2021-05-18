@@ -56,6 +56,16 @@
                                         (dispatch [::get-group])))]}))))
 
 
+(reg-event-fx
+  ::add-group
+  (fn [{_db :db} [_ id name description loading?]]
+    (let [user {:template {:href "group-template/generic"
+                           :group-identifier id}
+                :name name
+                :description description}]
+      {::cimi-api-fx/add ["group" user #(do (reset! loading? false))]})))
+
+
 (reg-event-db
   ::set-group
   (fn [{:keys [::spec/loading] :as db} [_ group]]
@@ -406,3 +416,9 @@
                            #(if-let [id (-> % :resources first :id)]
                               (dispatch [::get-vendor id])
                               (dispatch [::set-vendor nil]))]}))
+
+
+(reg-event-db
+  ::set-active-tab-index
+  (fn [db [_ active-tab-index]]
+    (assoc db ::spec/active-tab-index active-tab-index)))

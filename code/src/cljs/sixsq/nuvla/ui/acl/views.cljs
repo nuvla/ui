@@ -13,8 +13,7 @@
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn is-advanced-mode?
@@ -396,11 +395,11 @@
                        :on-click #(accordion-utils/toggle active?)}
             [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-principals}])
                        :position "bottom center"
-                       :content  (@tr [:principals-icon])}]
+                       :content  (@tr [:access-rights])}]
             (when icon-right
               [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-right}])
                          :position "bottom center"
-                         :content  (@tr [:rights-icon])}])
+                         :content  (@tr [:access-rights])}])
             [ui/Icon {:name (if @active? "caret down" "caret left")}]]
            (when @active?
              [AclWidget opts ui-acl])])))))

@@ -143,3 +143,9 @@
   ::group
   (fn [db]
     (::spec/group db)))
+
+
+(reg-sub
+  ::active-tab-index
+  (fn [db]
+    (get-in db [::spec/active-tab-index])))

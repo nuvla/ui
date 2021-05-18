@@ -333,9 +333,6 @@
         on-error-fn      close-fn
         on-click-fn      #(do
                             (dispatch [::events/set-join-token nil])
-                            (when-not (empty? (:nuvlabox-manager-status @form-data))
-                              (swap! form-data assoc :nuvlabox-manager-status (general-utils/edn->json
-                                                                                (:nuvlabox-manager-status @form-data))))
                             (dispatch [::events/operation id operation @form-data
                                        on-success-fn on-error-fn]))]
     (fn [resource _operation show? title icon button-text]

@@ -51,6 +51,14 @@
 (defn grid-columns
   [device]
   (case device
+    :wide-screen 2
+    :large-screen 1
+    1))
+
+
+(defn grid-columns-dense
+  [device]
+  (case device
     :wide-screen 3
     :large-screen 2
     1))
@@ -64,7 +72,7 @@
         group-desc           (r/atom "")
         validate?            (r/atom false)
         loading?             (r/atom false)
-        create-root-project? (r/atom false)
+        ;create-root-project? (r/atom false)
         close-fn             #(reset! show? false)
         is-admin?            (subscribe [::session-subs/is-admin?])]
     (fn []
@@ -101,12 +109,13 @@
                                       #(do
                                          (reset! validate? true)
                                          (reset! group-desc %)))}]
-            [:br]
-            [ui/Checkbox {:checked   @create-root-project?
-                          :toggle    true
-                          :label     "Create root project with the same name?"
-                          :on-change (ui-callback/checked
-                                       #(reset! create-root-project? (not @create-root-project?)))}]]
+            ;[:br]
+            ;[ui/Checkbox {:checked   @create-root-project?
+            ;              :toggle    true
+            ;              :label     "Create root project with the same name?"
+            ;              :on-change (ui-callback/checked
+            ;                           #(reset! create-root-project? (not @create-root-project?)))}]
+            ]
            [ui/ModalActions
             [uix/Button
              {:text     (@tr [:create])
@@ -200,9 +209,10 @@
         user-id    (:user @session)
         is-group?  (subscribe [::session-subs/active-claim-is-group?])
         identifier (:identifier @session)
-        user       (subscribe [::subs/user])
-        acl        (:acl @user)
-        ui-acl     (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
+        ;user       (subscribe [::subs/user])
+        ;acl        (:acl @user)
+        ;ui-acl     (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))
+        ]
     (dispatch [::intercom-events/set-event "nuvla-user-id" user-id])
     [:<>
      [ui/Segment {:padded true, :color "teal"}
@@ -232,9 +242,10 @@
           [ui/Header {:as :h3, :icon true, :disabled true, :text-align "center"}
            [ui/Icon {:className "fad fa-sign-in-alt"}]
            (@tr [:no-session])]]])]
-     [ui/Segment {:padded true :color "blue"}
-      [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:access-rights]))]
-      [acl-views/AclWidget {:default-value acl, :read-only false} ui-acl]]]))
+     ;[ui/Segment {:padded true :color "blue"}
+     ; [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:access-rights]))]
+     ; [acl-views/AclWidget {:default-value acl, :read-only false} ui-acl]]
+     ]))
 
 
 (def Elements (r/adapt-react-class react-stripe/Elements))
@@ -516,8 +527,7 @@
               [ui/Icon {:className "fad fa-money-check-edit"}]
               (@tr [:not-subscribed-yet])]
              [:br]
-             [SubscribeButton]]
-            ])]))))
+             [SubscribeButton]]])]))))
 
 
 (defn AddPaymentMethodButton
@@ -1137,7 +1147,8 @@
 
 (defn SubscriptionAndBilling
   []
-  (let [stripe    (subscribe [::main-subs/stripe])
+  (let [tr        (subscribe [::i18n-subs/tr])
+        stripe    (subscribe [::main-subs/stripe])
         session   (subscribe [::session-subs/session])
         is-admin? (subscribe [::session-subs/is-admin?])
         customer  (subscribe [::subs/customer])
@@ -1157,12 +1168,15 @@
                                                               [(when show-customer-sections
                                                                  PaymentMethods)
                                                                Vendor])])))]
-        [ui/Grid {:stackable true
-                  :centered  true}
-         [ui/GridRow {:columns (grid-columns @device)}
-          (for [s sub-sections]
-            ^{:key (random-uuid)}
-            [ui/GridColumn {:style {:padding-bottom "20px"}} [s]])]]))))
+        (if (not (seq sub-sections))
+          [ui/Message {:info true}
+           (@tr [:no-subscription-information])]
+          [ui/Grid {:stackable true
+                    :centered  true}
+           [ui/GridRow {:columns (grid-columns-dense @device)}
+            (for [s sub-sections]
+              ^{:key (random-uuid)}
+              [ui/GridColumn {:style {:padding-bottom "20px"}} [s]])]])))))
 
 
 (defn TabMenuSubscription
@@ -1197,7 +1211,7 @@
               :stackable true
               :padded    true
               :centered  true}
-     [ui/GridRow {:centered true}
+     [ui/GridRow {:columns (grid-columns @device)}
       [ui/GridColumn
        [Groups]]]]))
 

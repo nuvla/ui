@@ -316,15 +316,25 @@
         [AddRight opts ui-acl])]]))
 
 
+(defn ->acl
+  [default-value can-edit?]
+  (or default-value
+      (when-let [user-id (and can-edit?
+                              @(subscribe [::session-subs/active-claim]))]
+        {:owners [user-id]})))
+
+
+(defn ->ui-acl
+  [default-value can-edit?]
+  (let [acl (->acl default-value can-edit?)]
+    (when acl (r/atom (utils/acl->ui-acl-format acl)))))
+
+
 (defn AclWidget
   [{:keys [default-value read-only mode] :as _opts} & [ui-acl]]
   (let [mode   (r/atom (or mode :simple))
         ui-acl (or ui-acl
-                   (r/atom
-                     (let [acl (or default-value
-                                   (when-not read-only
-                                     {:owners #{@(subscribe [::session-subs/active-claim])}}))]
-                       (utils/acl->ui-acl-format acl))))]
+                   (->ui-acl default-value (not read-only)))]
     (fn [{:keys [on-change read-only] :as opts}]
       (let [opts (assoc opts :mode mode
                              :read-only (or (nil? read-only) read-only)
@@ -343,11 +353,7 @@
   [e can-edit? edit-event]
   (let [tr            (subscribe [::i18n-subs/tr])
         default-value (:acl @e)
-        acl           (or default-value
-                          (when-let [user-id (and can-edit?
-                                                  @(subscribe [::session-subs/active-claim]))]
-                            {:owners [user-id]}))
-        ui-acl        (when acl (r/atom (utils/acl->ui-acl-format acl)))]
+        ui-acl           (->ui-acl default-value can-edit?)]
     {:menuItem {:content "Share"
                 :key     "share"
                 :icon    "users"}
@@ -362,16 +368,11 @@
                            ui-acl])))}))
 
 
-(defn AclButton
-  [{:keys [default-value read-only default-active?] :as _opts}]
-  (let [tr      (subscribe [::i18n-subs/tr])
-        active? (r/atom default-active?)
-        acl     (or default-value
-                    (when-let [user-id (and (not read-only)
-                                            @(subscribe [::session-subs/active-claim]))]
-                      {:owners [user-id]}))
-        ui-acl  (when acl (r/atom (utils/acl->ui-acl-format acl)))]
-    (fn [opts]
+(defn AclButtonOnly
+  [{:keys [default-value read-only active?] :as _opts}]
+  (let [tr     (subscribe [::i18n-subs/tr])
+        ui-acl (->ui-acl default-value (not read-only))]
+    (fn [_opts]
       (when ui-acl
         (let [owners          (utils/acl-get-owners-set @ui-acl)
               principals-set  (utils/acl-get-all-principals-set @ui-acl)
@@ -400,6 +401,24 @@
               [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-right}])
                          :position "bottom center"
                          :content  (@tr [:access-rights])}])
-            [ui/Icon {:name (if @active? "caret down" "caret left")}]]
-           (when @active?
-             [AclWidget opts ui-acl])])))))
+            [ui/Icon {:name (if @active? "caret down" "caret left")}]]])))))
+
+
+(defn AclSection
+  [{:keys [default-value read-only active?] :as _opts}]
+  (let [ui-acl (->ui-acl default-value (not read-only))]
+    (fn [opts]
+      (when (and ui-acl @active?)
+        [AclWidget opts ui-acl]))))
+
+
+(defn AclButton
+  [{:keys [default-value read-only default-active?] :as _opts}]
+  (let [active? (r/atom default-active?)
+        ui-acl  (->ui-acl default-value (not read-only))]
+    (fn [opts]
+      (when ui-acl
+        [:<>
+         [AclButtonOnly (assoc opts :active? active?)]
+         (when @active?
+           [AclWidget opts ui-acl])]))))

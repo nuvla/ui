@@ -397,6 +397,7 @@
         :no-ports                                      "no port mapping defined for this application"
         :no-pricing-free-app                           "There is no pricing defined for this app.  It is therefore free."
         :no-session                                    "No session"
+        :no-subscription-information                   "no subscription or billing information available for this account"
         :no-subscription-configs-defined               "no subscription configurations defined"
         :no-subscriptions-available                    "no subscriptions following the criteria are available or they are being created - click refresh to update."
         :no-urls                                       "no URLs for this application"

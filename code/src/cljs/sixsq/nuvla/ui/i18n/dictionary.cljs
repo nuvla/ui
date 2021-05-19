@@ -5,7 +5,17 @@
 
 
 (def dictionary
-  {:en {:about                                         "about"
+  {:en {
+        :additional-filter "Additional-filter"
+        :select-all                                    "Select all"
+        :select-all-page                               "Select all in this page"
+        :selected                                      "Selected"
+        :bulk-action                                   "Bulk action"
+        :bulk-update                                   "Bulk update"
+        :bulk-stop                                     "Bulk stop"
+        :deployment-based-different-module             "Deployments based on different modules"
+        :deployment-based-different-module-details     "Module selection is disabled because selected deployments are based on different modules. You can still call this action to update container images if they are base on tags like 'latest'."
+        :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
         :accept-costs                                  "I accept the costs"
@@ -724,9 +734,16 @@
         :welcome-video-subheader-pre                   "Access our"
         :working-directory                             "Working directory"
         :yes                                           "yes"
-        :yesterday                                     "yesterday"}
+        :yesterday                                     "yesterday"
+        }
 
-   :fr {:about                                         "à propos"
+   :fr {
+        :bulk-action                                   "Action groupée"
+        :bulk-update                                   "Bulk update"
+        :bulk-stop                                     "Bulk stop"
+        :deployment-based-different-module             "Déploiements basés sur différents modules"
+        :deployment-based-different-module-details     "La sélection de module est désactivée car les déploiements sélectionnés sont basés sur différents modules. Vous pouvez toujours appeler cette action pour mettre à jour les images de conteneur si elles sont basées sur des balises telles que 'latest'."
+        :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"
         :accept-costs                                  "J'accepte les coûts"
@@ -1319,4 +1336,5 @@
         :welcome-video-subheader-pre                   "Accèder à notre"
         :working-directory                             "Dossier de travail"
         :yes                                           "oui"
-        :yesterday                                     "hier"}})
+        :yesterday                                     "hier"
+        }})

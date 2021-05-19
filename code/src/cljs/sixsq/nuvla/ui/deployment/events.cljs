@@ -224,48 +224,32 @@
 
 
 (reg-event-fx
-  ::bulk-update
-  (fn [{{:keys [::spec/select-all?
-                ::spec/selected-set
-                ::spec/full-text-search
-                ::spec/additional-filter
-                ::spec/state-selector
-                ::spec/nuvlabox]} :db}]
-    (let [state      (if (= "all" state-selector) nil state-selector)
-          filter-str (if select-all?
-                       (utils/get-filter-param
-                         {:full-text-search  full-text-search
-                          :additional-filter additional-filter
-                          :state-selector    state
-                          :nuvlabox          nuvlabox
-                          :module-id         nil})
-                       (->> selected-set
-                            (map #(str "id='" % "'"))
-                            (apply general-utils/join-or)))]
+  ::bulk-update-params
+  (fn [{db :db}]
+    (let [filter-str (utils/build-bulk-filter db)]
       {::cimi-api-fx/search
-       [:deployment (cond-> {:last        0
-                             :aggregation "terms:module/id"}
-                            (not (str/blank? filter-str)) (assoc :filter filter-str))
-        #(let [buckets      (get-in % [:aggregations :terms:module/id :buckets])
-               same-module? (= (count buckets) 1)
-               module-href  (when same-module? (-> buckets first :key))]
-           (dispatch [::open-modal-bulk-update filter-str module-href]))]})))
+           [:deployment (cond-> {:last        0
+                                 :aggregation "terms:module/id"}
+                                (not (str/blank? filter-str)) (assoc :filter filter-str))
+            #(let [buckets      (get-in % [:aggregations :terms:module/id :buckets])
+                   same-module? (= (count buckets) 1)
+                   module-href  (when same-module? (-> buckets first :key))]
+               (dispatch [::open-modal-bulk-update filter-str module-href]))]})))
 
 
 (reg-event-fx
-  ::bulk-update-operation
-  (fn [{{:keys [::spec/bulk-update-modal]} :db} [_ selected-module]]
-    (let [filter-str (:filter-str bulk-update-modal)]
-      {::cimi-api-fx/operation-bulk
-                 [:deployment
-                  (fn [response]
-                    (dispatch [::job-events/wait-job-to-complete
-                               {:job-id              (:location response)
-                                :on-complete         #(dispatch [::add-bulk-job-monitored %])
-                                :on-refresh          #(dispatch [::add-bulk-job-monitored %])
-                                :refresh-interval-ms 10000}]))
-                  "bulk-update" filter-str {:module-href selected-module}]
-       :dispatch [::close-modal-bulk-update]})))
+  ::bulk-operation
+  (fn [{db :db} [_ bulk-action data dispatch-vec]]
+    (cond-> {::cimi-api-fx/operation-bulk
+             [:deployment
+              (fn [response]
+                (dispatch [::job-events/wait-job-to-complete
+                           {:job-id              (:location response)
+                            :on-complete         #(dispatch [::add-bulk-job-monitored %])
+                            :on-refresh          #(dispatch [::add-bulk-job-monitored %])
+                            :refresh-interval-ms 10000}]))
+              bulk-action (utils/build-bulk-filter db) data]}
+            dispatch-vec (assoc :dispatch dispatch-vec))))
 
 
 (reg-event-db

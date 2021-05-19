@@ -521,7 +521,7 @@
                    (@tr [:description-cannot-be-empty])]]))]]
            [ui/GridColumn
             [:h4 "Preview"]
-            [ui/Segment [ui/ReactMarkdown @description]]]]]
+            [ui/Segment [ui/ReactMarkdown {:class ["markdown"]} @description]]]]]
          :label (str/capitalize (@tr [:description]))
          :default-open true]))))
 
@@ -1138,18 +1138,15 @@
   (let [tr          (subscribe [::i18n-subs/tr])
         editable?   (subscribe [::subs/editable?])
         description (subscribe [::subs/description])
-        {:keys [logo-url]} @(subscribe [::subs/module])
-        image       [ui/Image {:src      (or logo-url "")
-                               :centered true
-                               :style    {:object-fit "contain"
-                                          :max-height "30em"}}]]
+        device      (subscribe [::main-subs/device])
+        {:keys [logo-url]} @(subscribe [::subs/module])]
     [ui/Segment {:secondary true
                  :color     "purple"
                  :raised    true
                  :padded    true}
-     [ui/Grid {:columns   2
+     [ui/Grid {:columns   1
                :stackable true}
-      [ui/GridRow
+      [ui/GridRow {:columns 2}
        [ui/GridColumn {:floated "left"}
         [:h4 (str/capitalize (@tr [:description]))]]
        (when @editable?
@@ -1159,13 +1156,15 @@
                       :on-click #(dispatch [::events/set-active-tab-index details-tab-index])}]])]
       [ui/GridRow
        [ui/GridColumn {:textAlign "center"
-                       :only      "mobile"}                 ;should be working with reversed, but doesn't
-        image]
-       [ui/GridColumn
-        [ui/ReactMarkdown @description]]
-       [ui/GridColumn {:textAlign "center"
-                       :only      "computer tablet"}        ;should be working with reversed, but doesn't
-        image]]]]))
+                       :only      "mobile"}
+        [ui/Image {:src   (or logo-url "")
+                   :style {:max-width "100%"}}]]
+       [ui/GridColumn {:class ["markdown"]}
+        [ui/Image {:floated "right"
+                   :src     (or logo-url "")
+                   :hidden  (when (= :mobile @device) true)
+                   :style   {:max-width "25%"}}]
+        [ui/ReactMarkdown @description]]]]]))
 
 
 (defn ShareTitle

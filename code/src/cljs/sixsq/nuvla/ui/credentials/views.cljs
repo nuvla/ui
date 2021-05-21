@@ -712,7 +712,7 @@
           [ui/CardContent {:text-align :center}
            [ui/Header "Cloud Exoscale"]
            [ui/Image {:src   "/ui/images/exoscale.png"
-                      :style {:max-width 112}}]]]
+                      :style {:max-width 220}}]]]
 
          [ui/Card
           {:on-click #(do
@@ -736,7 +736,7 @@
           [ui/CardContent {:text-align :center}
            [ui/Header "Cloud Azure"]
            [ui/Image {:src   "/ui/images/azure.png"
-                      :style {:max-width 112}}]]]
+                      :style {:max-width 150}}]]]
 
          [ui/Card
           {:on-click #(do
@@ -748,7 +748,7 @@
           [ui/CardContent {:text-align :center}
            [ui/Header "Cloud Google"]
            [ui/Image {:src   "/ui/images/gce.png"
-                      :style {:max-width 112}}]]]]]])))
+                      :style {:max-width 130}}]]]]]])))
 
 
 (defn generated-credential-modal

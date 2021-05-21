@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.18.1] - 2021-05-19
+
 ### Added
 
   - Show an error message when an element does not exist or is not accessible
@@ -10,6 +12,8 @@
 
 ### Changed
 
+  - Edge detail - Nuvlabox cluster action bugfix
+  - Deployment detail - Clear log bugfix
   - Deployment dialog - Remove duplicated definition of price subscription
   - Deployment detail - Markdownified module description
   - Credentials - Improve layout of logos for cloud providers

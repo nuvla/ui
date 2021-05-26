@@ -144,8 +144,7 @@
                                :help (:description param))])]
          [:p (@tr [:execute-action-msg] [operation])])
        #(dispatch [::events/operation id operation @form-data])
-       (constantly nil)]
-      )))
+       (constantly nil)])))
 
 
 ;; Explicit keys have been added to the operation buttons to avoid react

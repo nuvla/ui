@@ -52,3 +52,8 @@
               v      (/ bytes (js/Math.pow scale exp))]
           (str (general-utils/round-up v :n-decimal 1) prefix))))
     "..."))
+
+
+(defn data-record-href
+  [id]
+  (str "data/" (general-utils/id->uuid id)))

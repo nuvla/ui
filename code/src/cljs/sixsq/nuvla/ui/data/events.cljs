@@ -38,12 +38,12 @@
                 ::spec/time-period-filter]} :db} _]
     (when (seq credentials)
       (let [data-sets-vals (vals data-sets)]
-        {:dispatch-n (map (fn [data-set]
-                            [::fetch-dataset-stats
-                             (:id data-set)
-                             (general-utils/join-and
-                               time-period-filter full-text-search (:data-record-filter data-set))])
-                          data-sets-vals)}))))
+        {:fx (map (fn [data-set]
+                    [:dispatch [::fetch-dataset-stats
+                                (:id data-set)
+                                (general-utils/join-and
+                                  time-period-filter full-text-search (:data-record-filter data-set))]])
+                  data-sets-vals)}))))
 
 
 (reg-event-fx

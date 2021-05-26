@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+  - Credentials - Improve layout of logos for cloud providers
+
 ## [2.18.1] - 2021-05-19
 
 ### Added

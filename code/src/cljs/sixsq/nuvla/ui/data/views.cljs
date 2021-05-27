@@ -267,10 +267,7 @@
   (let [tr        (subscribe [::i18n-subs/tr])
         data-sets (subscribe [::subs/data-sets])]
     [ui/Segment style/basic
-     (if (seq @data-sets)
-       [ui/Message {:info true}
-        [ui/Icon {:name "hand pointer"}]
-        (@tr [:select-datasets])]
+     (if (not (seq @data-sets))
        [ui/Message {:warning true}
         [ui/Icon {:name "warning sign"}]
         (@tr [:no-datasets])])

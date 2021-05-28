@@ -7,7 +7,7 @@
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.main.subs :as main-subs]))
 
-(def Map (reagent/adapt-react-class leaflet/Map))
+(def Map (reagent/adapt-react-class leaflet/MapContainer))
 
 (def Marker (reagent/adapt-react-class leaflet/Marker))
 
@@ -63,7 +63,7 @@
 
 
 (defn convert-latlong-map
-  [latlong]
+  [^js latlong]
   [(.-lng latlong) (.-lat latlong)])
 
 

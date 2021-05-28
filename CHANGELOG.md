@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Changed
+
+  - Fix visible console errors after update 
+  - React-chart-2 - Fix broken changes
+  - React-leaflet - Fix broken changes
+  - NPM dependencies - Major update
+  - Dependencies - sixsq.nuvla/parent 6.7.5
+  - Credentials - Improve layout of logos for cloud providers
+
 ## [2.18.1] - 2021-05-19
 
 ### Added

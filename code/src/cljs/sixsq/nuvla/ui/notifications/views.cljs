@@ -5,6 +5,8 @@
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [re-frame.db]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.cimi.events :as cimi-events]
+    [sixsq.nuvla.ui.filter-comp.events :as fc-events]
     [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
@@ -88,7 +90,7 @@
       (dispatch [::events/close-edit-subscription-config-modal]))))
 
 
-(defn subs-notif-method-create-button
+(defn SubsNotifMethodCreateButton
   []
   [ui/FormField
    [uix/Button {:text     "create new"
@@ -97,18 +99,18 @@
                 :on-click #(dispatch [::events/open-add-update-notification-method-modal {} true])}]])
 
 
-(defn subs-notif-method-dropdown
+(defn SubsNotifMethodDropdown
   [current-value notif-methods save? collection subs-conf-id]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        validate-form? (subscribe [::subs/validate-form?])]
     ^{:key current-value}
     [ui/FormDropdown
      {:selection     true
       :multiple      true
       :placeholder   (@tr [:notification-methods])
       :fluid         false
-      :default-value (if (not (nil? current-value))
-                       current-value
-                       (-> @notif-methods first :id))
+      :error         (and @validate-form? (not (seq current-value)))
+      :default-value current-value
       :on-change     (ui-callback/value
                        #(do
                           (dispatch-sync [::events/update-notification-subscription-config :method-ids %])
@@ -122,12 +124,12 @@
                             @notif-methods))}]))
 
 
-(defn subs-notif-method-select-or-add
+(defn SubsNotifMethodSelectOrAdd
   [_current-method _notif-methods save?]
   (fn [current-method notif-methods]
     [:<>
-     [subs-notif-method-dropdown current-method notif-methods save? nil]
-     [subs-notif-method-create-button]]))
+     [SubsNotifMethodDropdown current-method notif-methods save? nil]
+     [SubsNotifMethodCreateButton]]))
 
 
 (defn DeleteButtonSubscriptions
@@ -146,7 +148,7 @@
       :button-text (@tr [:delete])}]))
 
 
-(defn single-notification-subscription
+(defn SingleNotificationSubscription
   [{:keys [enabled resource-id method-ids] :as notif-subs} notif-methods]
   (let [method-names (str/join ", " (for [method-id method-ids]
                                       (-> (filter #(= method-id (:id %)) @notif-methods)
@@ -173,17 +175,17 @@
                   :on-click #(dispatch [::events/open-edit-subscription-modal notif-subs false])}])]]))
 
 
-(defn manage-subscriptions-modal
+(defn ManageSubscriptionsModal
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        notif-methods (subscribe [::subs/notification-methods])
-        subscriptions (subscribe [::subs/subscriptions-for-parent])
+  (let [tr             (subscribe [::i18n-subs/tr])
+        notif-methods  (subscribe [::subs/notification-methods])
+        subscriptions  (subscribe [::subs/subscriptions-for-parent])
         subs-config-id (subscribe [::subs/notification-subscription-config-id])
-        visible? (subscribe [::subs/notification-subscriptions-modal-visible?])]
+        visible?       (subscribe [::subs/notification-subscriptions-modal-visible?])]
     (dispatch [::events/get-notification-methods])
     (dispatch [::events/get-notification-subscriptions @subs-config-id])
     (fn []
-      (let [header (@tr [:subscriptions-manage])
+      (let [header       (@tr [:subscriptions-manage])
             current-subs (fn [sc-id ss]
                            (filter #(= @sc-id (:parent %)) @ss))]
         [ui/Modal {:open       @visible?
@@ -204,15 +206,15 @@
             (doall
               (for [sub (current-subs subs-config-id subscriptions)]
                 ^{:key (:id sub)}
-                [single-notification-subscription sub notif-methods]))]]
+                [SingleNotificationSubscription sub notif-methods]))]]
 
           [ui/Menu {:borderless true
                     :secondary  true}
            (when (empty? (current-subs subs-config-id subscriptions))
              [uix/MenuItem
-              {:name (@tr [:no-subscriptions-available])
+              {:name  (@tr [:no-subscriptions-available])
                :fixed "right"
-               :text true}])
+               :text  true}])
            [main-components/RefreshMenu
             {:on-refresh #(dispatch [::events/get-notification-subscriptions @subs-config-id])}]]
 
@@ -250,7 +252,7 @@
     :options       (map (fn [v] {:key v, :value v, :text v}) ["enabled" "disabled"])}])
 
 
-(defn edit-subscription-modal
+(defn EditSubscriptionModal
   []
   (let [tr             (subscribe [::i18n-subs/tr])
         notif-methods  (subscribe [::subs/notification-methods])
@@ -301,6 +303,7 @@
                        :active   true
                        :on-click #(save-callback-subscription ::spec/subscription)}]]]))))
 
+
 (defn select-resources
   []
   (let [component-type (subscribe [::subs/collection])]
@@ -313,45 +316,56 @@
                      :fluid     true
                      :value     @component-type
                      :on-change (ui-callback/value #(dispatch [::events/set-collection %]))
-                     :options   [{:key "nuvlabox-status", :text "NuvlaBox Telemetry", :value "nuvlabox-status"}
-                                 {:key "infrastructure-service", :text "Infrastructure Service", :value "infrastructure-service"}]}]
-       ]]]))
+                     :options   [{:key   "nuvlabox-status"
+                                  :text  "NuvlaBox Telemetry"
+                                  :value "nuvlabox-status"}
+                                 {:key   "infrastructure-service"
+                                  :text  "Infrastructure Service"
+                                  :value "infrastructure-service"}]}]]]]))
+
 
 (def criteria-metric-options
   {"nuvlabox"               [{:key "cpu load" :text "CPU load %" :value "load"}
                              {:key "ram usage" :text "RAM usage %" :value "ram"}
                              {:key "disk usage" :text "Disk usage %" :value "disk"}
                              {:key "state" :text "NB online" :value "state"}]
-   "infrastructure-service" [{:key "status" :text "status" :value "status"}]})
+   "infrastructure-service" [{:key "status" :text "status" :value "status"}]
+   "data-record"            [{:key "content-type" :text "content-type" :value "content-type"}]})
+
 
 (def criteria-conditions
   {:numeric (map (fn [x] {:key x :value x :text x}) [">" "<" "=" "!="])
    :boolean (map (fn [x] {:key x :value x :text x}) ["yes" "no"])
-   :set     (map (fn [x] {:key x :value x :text x}) ["not equal" "equal" "in" "not in"])})
+   :set     (map (fn [x] {:key x :value x :text x}) ["not equal" "equal" "in" "not in"])
+   :string  (map (fn [x] {:key x :value x :text x}) ["is"])})
+
 
 (def criteria-condition-type
   {"nuvlabox"               {:load  :numeric
                              :ram   :numeric
                              :disk  :numeric
                              :state :boolean}
-   "infrastructure-service" {:status :set}})
+   "infrastructure-service" {:status :set}
+   "data-record"            {:content-type :string}})
+
 
 (def criteria-condition-options
   {"nuvlabox"               {:load  (map (fn [x] {:key x :value x :text x}) [">" "<"])
                              :ram   (map (fn [x] {:key x :value x :text x}) [">" "<"])
                              :disk  (map (fn [x] {:key x :value x :text x}) [">" "<"])
-                             :state ((get-in criteria-condition-type ["nuvlabox" :state]) criteria-conditions)}
-   "infrastructure-service" {:status ((get-in criteria-condition-type ["infrastructure-service" :status]) criteria-conditions)}})
+                             :state ((get-in criteria-condition-type ["nuvlabox" :state])
+                                     criteria-conditions)}
+   "infrastructure-service" {:status ((get-in criteria-condition-type ["infrastructure-service" :status])
+                                      criteria-conditions)}
+   "data-record"            {:content-type ((get-in criteria-condition-type ["data-record" :content-type])
+                                            criteria-conditions)}})
 
-(defn get-criteria-condition-options
-  []
-  (let [component (subscribe [::subs/collection])
-        metric    (subscribe [::subs/criteria-metric])]
-    ((keyword @metric) (get criteria-condition-options @component))))
 
 (def component-options
   [{:key "nuvlabox", :text "NuvlaBox Telemetry", :value "nuvlabox"}
-   {:key "infrastructure-service", :text "Infrastructure Service", :value "infrastructure-service"}])
+   {:key "infrastructure-service", :text "Infrastructure Service", :value "infrastructure-service"}
+   {:key "data-record", :text "Data Record", :value "data-record"}])
+
 
 (defn resource-tag-options
   []
@@ -362,34 +376,60 @@
                        :text  (str (:key v) " :: " (:doc_count v))}))
          vec)))
 
+
 (defn criteria-metric-kind
   [component metric-name]
   (->> [component (keyword metric-name)]
        (get-in criteria-condition-type)
        name))
 
-(defn add-subscription-config-modal
+
+(defn ResourceDropdown
+  [resource attribute attribute-options _validate-form? _on-change]
+  (dispatch [::fc-events/terms-attribute resource attribute attribute-options])
+  (fn [_resource _attribute attribute-options validate-form? on-change]
+    (let [options (map (fn [v] {:key v :text v :value v}) @attribute-options)]
+      [ui/Dropdown {:selection      true
+                    :defaultValue   attribute
+                    :error          (and validate-form? (not (seq @attribute-options)))
+                    :search         true
+                    :name           "resource-attribute"
+                    :allowAdditions true
+                    :clearable      true
+                    :on-change      on-change
+                    :options        options}])))
+
+
+(defn AddSubscriptionConfigModal
   []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        visible?          (subscribe [::subs/subscription-config-modal-visible?])
-        validate-form?    (subscribe [::subs/validate-form?])
-        form-valid?       (subscribe [::subs/form-valid?])
-        on-change         (fn [name-kw value]
-                            (dispatch [::events/update-notification-subscription-config name-kw value])
-                            (dispatch [::events/validate-notification-subscription-config-form]))
-        notif-methods     (subscribe [::subs/notification-methods])
-        collection        (subscribe [::subs/collection])
-        criteria-metric   (subscribe [::subs/criteria-metric])
-        components-number (subscribe [::subs/components-number])
-        metric-name (r/atom "")
-        component-option (r/atom "")]
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        visible?            (subscribe [::subs/subscription-config-modal-visible?])
+        validate-form?      (subscribe [::subs/validate-form?])
+        form-valid?         (subscribe [::subs/form-valid?])
+        on-change           (fn [name-kw value]
+                              (dispatch [::events/update-notification-subscription-config name-kw value])
+                              (dispatch [::events/validate-notification-subscription-config-form]))
+        notif-methods       (subscribe [::subs/notification-methods])
+        collection          (subscribe [::subs/collection])
+        criteria-metric     (subscribe [::subs/criteria-metric])
+        components-number   (subscribe [::subs/components-number])
+        metric-name         (r/atom "")
+        component-option    (r/atom "")
+        attribute-options   (r/atom "")
+        subscription-config (subscribe [::subs/notification-subscription-config])]
+
     (dispatch [::events/get-notification-methods])
     (dispatch [::events/reset-subscription-config-all])
+
     (fn []
-      (let [header (str/capitalize (str (@tr [:add]) " " (@tr [:subscription])))]
+      (let [header          (str/capitalize (str (@tr [:add]) " " (@tr [:subscription])))
+            criteria-metric (get-in criteria-condition-type [@collection (keyword @criteria-metric)])
+            {:keys [name description criteria method-ids]} @subscription-config
+            {:keys [_metric _kind condition value]} criteria]
+
+        (when (seq @component-option) (dispatch [::cimi-events/get-resource-metadata @component-option]))
         (dispatch [::events/update-notification-subscription-config :enabled true])
         (dispatch [::events/update-notification-subscription-config :category "notification"])
-        [:div]
         [ui/Modal {:open       @visible?
                    :close-icon true
                    :on-close   #(do
@@ -400,16 +440,18 @@
 
          [ui/ModalContent {:scrolling false}
           [utils-validation/validation-error-message ::subs/form-valid?]
+
           [ui/Header {:as "h3"} "General"]
+
           [ui/Table style/definition
            [ui/TableBody
             [uix/TableRowField (@tr [:name]), :editable? true, :default-value name,
              :required? true, :spec ::spec/name, :on-change (partial on-change :name),
              :validate-form? @validate-form?]
-            [uix/TableRowField (@tr [:description]), :editable? true, :default-value name,
-             :spec ::spec/description, :on-change (partial on-change :description),
-             :validate-form? false]
-            ]]
+            [uix/TableRowField (@tr [:description]), :editable? true, :default-value description,
+             :required? true, :spec ::spec/description, :on-change (partial on-change :description),
+             :validate-form? @validate-form?]]]
+
           [ui/Header {:as "h3"} "Components"
            [:span ff/nbsp ff/nbsp [ui/Label {:circular true} @components-number]]]
 
@@ -420,6 +462,7 @@
                             :style      {:padding-bottom 8}} "Component"]
              [ui/TableCell
               [ui/Dropdown {:selection true
+                            :error     (and @validate-form? (not (seq @component-option)))
                             :on-change (ui-callback/value
                                          #(do
                                             (reset! component-option %)
@@ -451,41 +494,83 @@
              [ui/TableCell
               [ui/Dropdown {:selection true
                             :options   (get criteria-metric-options @collection)
+                            :error     (and @validate-form? (not (seq @metric-name)))
                             :on-change (ui-callback/value
                                          #(do
                                             (reset! metric-name %)
                                             (on-change
-                                            :criteria {:metric %
-                                                       :kind   (criteria-metric-kind @collection %)})))}]]]
+                                              :criteria {:metric %
+                                                         :kind   (criteria-metric-kind @collection %)})))}]]]
 
-            (if-not (and (= @component-option "nuvlabox") (= @metric-name "state"))
-              [ui/TableRow
-               [ui/TableCell {:collapsing true
-                              :style      {:padding-bottom 8}} "Condition"]
-               [ui/TableCell
-                [ui/Dropdown {:selection true
-                              :options   (if (nil? (keyword @criteria-metric))
-                                           []
-                                           ((keyword @criteria-metric) (get criteria-condition-options @collection)))
-                              :on-change (ui-callback/value
-                                           #(on-change :criteria {:condition %}))}]]]
-              (on-change :criteria {:condition "no"}))
+            (case criteria-metric
+              :string [ui/TableRow
+                       [ui/TableCell {:collapsing true
+                                      :style      {:padding-bottom 8}} "Value"]
+                       [ui/TableCell
 
-            (when-not (= :boolean (get-in criteria-condition-type [@collection (keyword @criteria-metric)]))
-              [ui/TableRow
-               [ui/TableCell {:collapsing true
-                              :style      {:padding-bottom 8}} "Value"]
-               [ui/TableCell
-                [ui/Input
-                 {:type      "text"
-                  :name      "Value"
-                  :read-only false
-                  :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]])]]
+                        (when (and (seq @component-option) (seq @metric-name))
+                          [ResourceDropdown
+                           @component-option
+                           @metric-name
+                           attribute-options
+                           @validate-form?
+                           (ui-callback/value
+                             #(do (on-change :criteria {:value %})
+                                  (on-change :criteria {:condition (-> criteria-conditions :string first)})))])]]
+              :set [:<>
+                    [ui/TableRow
+                     [ui/TableCell {:collapsing true
+                                    :style      {:padding-bottom 8}} "Condition"]
+                     [ui/TableCell
+                      [ui/Dropdown {:selection true
+                                    :options   (vec
+                                                 (:status
+                                                   (get criteria-condition-options @collection)))
+                                    :error     (and @validate-form? (not (seq condition)))
+                                    :on-change (ui-callback/value
+                                                 #(on-change :criteria {:condition %}))}]]]
+                    [ui/TableRow
+                     [ui/TableCell {:collapsing true
+                                    :style      {:padding-bottom 8}} "Value"]
+                     [ui/TableCell
+                      [ui/Input
+                       {:type      "text"
+                        :name      "Value"
+                        :error     (and @validate-form? (not (seq value)))
+                        :read-only false
+                        :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]]]
+              :numeric [:<>
+                        [ui/TableRow
+                         [ui/TableCell {:collapsing true
+                                        :style      {:padding-bottom 8}} "Condition"]
+                         [ui/TableCell
+                          [ui/Dropdown {:selection true
+                                        :options   (vec
+                                                     ((keyword @metric-name)
+                                                      (get criteria-condition-options @collection)))
+                                        :error     (and @validate-form? (not (seq condition)))
+                                        :on-change (ui-callback/value
+                                                     #(on-change :criteria {:condition %}))}]]]
+                        [ui/TableRow
+                         [ui/TableCell {:collapsing true
+                                        :style      {:padding-bottom 8}} "Value"]
+                         [ui/TableCell
+                          [ui/Input
+                           {:type        "text"
+                            :name        "Value"
+                            :error       (and @validate-form? (js/isNaN (js/parseInt value)))
+                            :placeholder (@tr [:number])
+                            :read-only   false
+                            :on-change   (ui-callback/value #(on-change :criteria {:value %}))}]]]]
+              :boolean nil
+              nil)]]
+
           [ui/Header {:as "h3"} "Notification"]
           [ui/Form
            [ui/FormGroup
-            [subs-notif-method-dropdown "" notif-methods false]
-            [subs-notif-method-create-button]]]]
+            [SubsNotifMethodDropdown method-ids notif-methods false]
+            [SubsNotifMethodCreateButton]]]]
+
          [ui/ModalActions
           [uix/Button {:text     (@tr [:create])
                        :positive true
@@ -494,7 +579,7 @@
                        :on-click #(save-callback-add-subscription-config ::spec/notification-subscription-config)}]]]))))
 
 
-(defn edit-subscription-config-modal
+(defn EditSubscriptionConfigModal
   []
   (let [tr                  (subscribe [::i18n-subs/tr])
         visible?            (subscribe [::subs/edit-subscription-config-modal-visible?])
@@ -614,16 +699,18 @@
                   :value     (:value criteria)
                   :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]])]]
           [ui/Header {:as "h3"} "Notification"]
-          [subs-notif-method-dropdown method-ids notif-methods false]
-          [:span ff/nbsp ff/nbsp]
-          [subs-notif-method-create-button]]
+          [ui/Form
+           [ui/FormGroup
+            [SubsNotifMethodDropdown method-ids notif-methods false]
+            [SubsNotifMethodCreateButton]]]]
          [ui/ModalActions
           [uix/Button {:text     (@tr [:save])
                        :positive true
                        :disabled (when-not @form-valid? true)
                        :active   true
-                       :on-click #(save-callback-edit-subscription-config ::spec/notification-subscription-config)}]]]
-        ))))
+                       :on-click #(save-callback-edit-subscription-config
+                                    ::spec/notification-subscription-config)}]]]))))
+
 
 (defn notif-method-select-dropdown
   [_method _on-change]
@@ -649,7 +736,8 @@
                         :options   [{:key "slack", :text "Slack", :value "slack"}
                                     {:key "email", :text "Email", :value "email"}]}]]]))))
 
-(defn add-notification-method-modal
+
+(defn AddNotificationMethodModal
   []
   (let [tr             (subscribe [::i18n-subs/tr])
         visible?       (subscribe [::subs/notification-method-modal-visible?])
@@ -710,7 +798,7 @@
       [main-components/RefreshMenu
        {:on-refresh #(do
                        (dispatch-sync [::events/get-notification-subscriptions])
-                       (dispatch [::events/get-notification-subscription-configs]))}] ]]))
+                       (dispatch [::events/get-notification-subscription-configs]))}]]]))
 
 
 (defn MenuBarNotificationMethod
@@ -806,6 +894,7 @@
   {"infrastructure-service" "Infrastructure Service"
    "nuvlabox"               "NuvlaBox"})
 
+
 (defn criteria-popup
   [subs-conf]
   (let [{:keys [metric condition kind value]} (:criteria subs-conf)]
@@ -814,16 +903,17 @@
        [:span {:style {:font-weight "bold"}} condition]
        (when-not (= "boolean" kind) (str " " value))])))
 
+
 (defn TabSubscriptions
   []
-  (let [tr                   (subscribe [::i18n-subs/tr])
-        subscription-configs (subscribe [::subs/notification-subscription-configs])
-        notif-methods        (subscribe [::subs/notification-methods])
-        subs-by-parent       (subscribe [::subs/subscriptions-by-parent])
-        subs-by-parent-counts       (subscribe [::subs/subscriptions-by-parent-counts])
-        on-change            (fn [name-kw value]
-                               (dispatch-sync [::events/update-notification-subscription-config name-kw value])
-                               (dispatch [::events/validate-notification-subscription-config-form]))]
+  (let [tr                    (subscribe [::i18n-subs/tr])
+        subscription-configs  (subscribe [::subs/notification-subscription-configs])
+        notif-methods         (subscribe [::subs/notification-methods])
+        subs-by-parent        (subscribe [::subs/subscriptions-by-parent])
+        subs-by-parent-counts (subscribe [::subs/subscriptions-by-parent-counts])
+        on-change             (fn [name-kw value]
+                                (dispatch-sync [::events/update-notification-subscription-config name-kw value])
+                                (dispatch [::events/validate-notification-subscription-config-form]))]
     (dispatch [::events/get-notification-subscription-configs])
     (dispatch-sync [::events/get-notification-subscriptions])
     (dispatch [::events/get-notification-methods])
@@ -837,77 +927,76 @@
          (if (empty? @subscription-configs)
            [ui/Message (str/capitalize (@tr [:no-subscription-configs-defined]))]
            (doall (for [[idx resource-kind resource-subs-confs] (map-indexed (fn [i [k v]] [i k v]) subs-confs-all)]
-             (when-not (empty? resource-subs-confs)
-               ^{:key resource-kind}
-               [uix/Accordion
-                [ui/Table {:basic   "very"
-                           :compact true
-                           :style   {:margin-top 10}}
+                    (when-not (empty? resource-subs-confs)
+                      ^{:key resource-kind}
+                      [uix/Accordion
+                       [ui/Table {:basic   "very"
+                                  :compact true
+                                  :style   {:margin-top 10}}
 
-                 [subscription-configs-table-header tr]
+                        [subscription-configs-table-header tr]
 
-                 [ui/TableBody
-                  (doall (for [subs-conf resource-subs-confs]
-                    ^{:key subs-conf}
-                    [ui/TableRow
-                     [ui/TableCell {:floated :left
-                                    :width   2}
-                      [:span (:name subs-conf)]
-                      [:span ff/nbsp (ff/help-popup (criteria-popup subs-conf))]]
-                     [ui/TableCell {:floated :left
-                                    :width   2}
-                      [:span
-                       [ui/Checkbox {:key             "enable-new"
-                                     :disabled        (empty? @notif-methods)
-                                     :default-checked (:enabled subs-conf)
-                                     :style           {:margin "1em"}
-                                     :on-change       (ui-callback/checked
-                                                        #(do
-                                                           (dispatch-sync [::events/set-notification-subscription-config subs-conf])
-                                                           (on-change :collection (:resource-kind subs-conf))
-                                                           (on-change :enabled %)
-                                                           (when (= 1 (count @notif-methods))
-                                                             (on-change :method-id (-> @notif-methods
-                                                                                       first
-                                                                                       :id)))
-                                                           (dispatch [::events/toggle-enabled (:id subs-conf) %])))}]]]
-                     [ui/TableCell {:floated :left
-                                    :width   4}
-                      [subs-notif-method-dropdown
-                       (:method-ids subs-conf) notif-methods true (:resource-kind subs-conf) (:id subs-conf)]]
+                        [ui/TableBody
+                         (doall (for [subs-conf resource-subs-confs]
+                                  ^{:key subs-conf}
+                                  [ui/TableRow
+                                   [ui/TableCell {:floated :left
+                                                  :width   2}
+                                    [:span (:name subs-conf)]
+                                    [:span ff/nbsp (ff/help-popup (criteria-popup subs-conf))]]
+                                   [ui/TableCell {:floated :left
+                                                  :width   2}
+                                    [:span
+                                     [ui/Checkbox {:key             "enable-new"
+                                                   :disabled        (empty? @notif-methods)
+                                                   :default-checked (:enabled subs-conf)
+                                                   :style           {:margin "1em"}
+                                                   :on-change       (ui-callback/checked
+                                                                      #(do
+                                                                         (dispatch-sync [::events/set-notification-subscription-config subs-conf])
+                                                                         (on-change :collection (:resource-kind subs-conf))
+                                                                         (on-change :enabled %)
+                                                                         (when (= 1 (count @notif-methods))
+                                                                           (on-change :method-id (-> @notif-methods
+                                                                                                     first
+                                                                                                     :id)))
+                                                                         (dispatch [::events/toggle-enabled (:id subs-conf) %])))}]]]
+                                   [ui/TableCell {:floated :left
+                                                  :width   4}
+                                    [SubsNotifMethodDropdown
+                                     (:method-ids subs-conf) notif-methods true (:resource-kind subs-conf) (:id subs-conf)]]
 
-                     (let [subs-conf-id (:id subs-conf)]
-                       [ui/TableCell {:floated :left
-                                    :width   2
-                                    :align   :right}
-                        [uix/Button {:text     (@tr [:manage])
-                                     :positive true
-                                     :size     "small"
-                                     :active   true
-                                     :on-click #(do
-                                                  (dispatch [::events/set-notification-subscription-config-id subs-conf-id])
-                                                  (dispatch [::events/get-notification-subscriptions subs-conf-id])
-                                                  (dispatch [::events/open-notification-subscription-modal (get @subs-by-parent subs-conf-id)]))}]
+                                   (let [subs-conf-id (:id subs-conf)]
+                                     [ui/TableCell {:floated :left
+                                                    :width   2
+                                                    :align   :right}
+                                      [uix/Button {:text     (@tr [:manage])
+                                                   :positive true
+                                                   :size     "small"
+                                                   :active   true
+                                                   :on-click #(do
+                                                                (dispatch [::events/set-notification-subscription-config-id subs-conf-id])
+                                                                (dispatch [::events/get-notification-subscriptions subs-conf-id])
+                                                                (dispatch [::events/open-notification-subscription-modal (get @subs-by-parent subs-conf-id)]))}]
 
-                      [:span ff/nbsp ff/nbsp [ui/Label {:circular true} (get @subs-by-parent-counts subs-conf-id 0)]]])
+                                      [:span ff/nbsp ff/nbsp [ui/Label {:circular true} (get @subs-by-parent-counts subs-conf-id 0)]]])
 
-                     [ui/TableCell {:floated :right
-                                    :width   1
-                                    :align   :right}
-                      (when (general-utils/can-delete? subs-conf)
-                        [DeleteButtonSubscriptionConfig subs-conf])
-                      (when (general-utils/can-edit? subs-conf)
-                        [ui/Icon {:name     :cog
-                                  :color    :blue
-                                  :style    {:cursor :pointer}
-                                  :on-click #(dispatch [::events/open-edit-subscription-config-modal subs-conf])}])]]))
-                  ]]
-                :title-size :h4
-                :default-open (= 0 idx)
-                :count (count resource-subs-confs)
-                :label (get resource-to-collection-names resource-kind)]
-               ))))
-         ]))))
+                                   [ui/TableCell {:floated :right
+                                                  :width   1
+                                                  :align   :right}
+                                    (when (general-utils/can-delete? subs-conf)
+                                      [DeleteButtonSubscriptionConfig subs-conf])
+                                    (when (general-utils/can-edit? subs-conf)
+                                      [ui/Icon {:name     :cog
+                                                :color    :blue
+                                                :style    {:cursor :pointer}
+                                                :on-click #(dispatch [::events/open-edit-subscription-config-modal subs-conf])}])]]))
+                         ]]
+                       :title-size :h4
+                       :default-open (= 0 idx)
+                       :count (count resource-subs-confs)
+                       :label (get resource-to-collection-names resource-kind)]
+                      ))))]))))
 
 
 (defn TabMethods
@@ -964,8 +1053,8 @@
   (timbre/set-level! :info)
   [:<>
    [TabsAll]
-   [edit-subscription-modal]
-   [add-notification-method-modal]
-   [add-subscription-config-modal]
-   [edit-subscription-config-modal]
-   [manage-subscriptions-modal]])
+   [EditSubscriptionModal]
+   [AddNotificationMethodModal]
+   [AddSubscriptionConfigModal]
+   [EditSubscriptionConfigModal]
+   [ManageSubscriptionsModal]])

@@ -11,7 +11,6 @@
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 
@@ -108,7 +107,7 @@
                 ::spec/additional-filter
                 ::spec/state-selector
                 ::spec/page
-                ::spec/elements-per-page]} :db} _]
+                ::spec/elements-per-page]} :db}]
     (let [state (if (= "all" state-selector) nil state-selector)]
       {::cimi-api-fx/search [:deployment (utils/get-query-params
                                            {:full-text-search  full-text-search
@@ -245,7 +244,9 @@
               (fn [response]
                 (dispatch [::job-events/wait-job-to-complete
                            {:job-id              (:location response)
-                            :on-complete         #(dispatch [::add-bulk-job-monitored %])
+                            :on-complete         #(do
+                                                    (dispatch [::add-bulk-job-monitored %])
+                                                    (dispatch [::reset-selected-set]))
                             :on-refresh          #(dispatch [::add-bulk-job-monitored %])
                             :refresh-interval-ms 10000}]))
               bulk-action (utils/build-bulk-filter db) data]}
@@ -277,6 +278,12 @@
     (-> db
         (update ::spec/select-all? not)
         (assoc ::spec/selected-set #{}))))
+
+
+(reg-event-db
+  ::reset-selected-set
+  (fn [db]
+    (assoc db ::spec/selected-set #{})))
 
 
 (reg-event-db

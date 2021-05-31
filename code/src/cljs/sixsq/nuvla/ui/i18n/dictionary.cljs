@@ -6,13 +6,15 @@
 
 (def dictionary
   {:en {
-        :additional-filter "Additional-filter"
+        :additional-filter                             "Additional-filter"
         :select-all                                    "Select all"
         :select-all-page                               "Select all in this page"
         :selected                                      "Selected"
         :bulk-action                                   "Bulk action"
-        :bulk-update                                   "Bulk update"
-        :bulk-stop                                     "Bulk stop"
+        :bulk-deployment-update                        "Bulk update"
+        :bulk-deployment-stop                          "Bulk stop"
+        :bulk-deployment-force-delete                  "Bulk force delete"
+        :force-delete                                  "force delete"
         :deployment-based-different-module             "Deployments based on different modules"
         :deployment-based-different-module-details     "Module selection is disabled because selected deployments are based on different modules. You can still call this action to update container images if they are base on tags like 'latest'."
         :about                                         "about"
@@ -171,6 +173,7 @@
         :custom                                        "custom"
         :custom-license                                "Custom license"
         :danger-action-cannot-be-undone                "Danger - this action cannot be undone!"
+        :danger-action-deployment-force-delete         "Danger - this action cannot be undone and will not even try to stop deployments on your infrastructure!"
         :dashboard                                     "dashboard"
         :data                                          "data"
         :data-binding                                  "Data Binding"
@@ -739,8 +742,10 @@
 
    :fr {
         :bulk-action                                   "Action groupée"
-        :bulk-update                                   "Bulk update"
-        :bulk-stop                                     "Bulk stop"
+        :bulk-deployment-update                        "Mise à jour groupée"
+        :bulk-deployment-stop                          "Arrêt groupée"
+        :bulk-deployment-force-delete                  "Suppression forcée groupée"
+        :force-delete                                  "suppression forcée"
         :deployment-based-different-module             "Déploiements basés sur différents modules"
         :deployment-based-different-module-details     "La sélection de module est désactivée car les déploiements sélectionnés sont basés sur différents modules. Vous pouvez toujours appeler cette action pour mettre à jour les images de conteneur si elles sont basées sur des balises telles que 'latest'."
         :about                                         "à propos"
@@ -857,6 +862,7 @@
         :custom                                        "personnalisé"
         :custom-license                                "Licence personnalisée"
         :danger-action-cannot-be-undone                "Danger - cette action ne peut être annulée!"
+        :danger-action-deployment-force-delete         "Danger - cette action ne peut être annulée et ne s'essayera même pas d'arréter les déploiements sur votre infrastructure!"
         :dashboard                                     "tableau de bord"
         :data                                          "données"
         :data-binding                                  "Couplage de Données"

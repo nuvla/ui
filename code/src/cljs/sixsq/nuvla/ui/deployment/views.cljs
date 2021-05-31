@@ -68,7 +68,7 @@
         [ui/Modal {:open       (some? @info)
                    :close-icon true
                    :on-close   #(dispatch [::events/close-modal-bulk-update])}
-         [uix/ModalHeader {:header (@tr [:bulk-update])}]
+         [uix/ModalHeader {:header (@tr [:bulk-deployment-update])}]
 
          [ui/ModalContent
           [ui/Form
@@ -92,7 +92,7 @@
              :fluid       true
              :options     options}]]]
          [ui/ModalActions
-          [uix/Button {:text     (str/capitalize (@tr [:bulk-update]))
+          [uix/Button {:text     (str/capitalize (@tr [:bulk-deployment-update]))
                        :positive true
                        :active   true
                        :on-click #(dispatch [::events/bulk-operation
@@ -111,7 +111,8 @@
         dep-count             (subscribe [::subs/deployments-count])
         selected-count        (subscribe [::subs/selected-count])
         is-all-page-selected? (subscribe [::subs/is-all-page-selected?])
-        modal-stop-key        (r/atom (random-uuid))]
+        modal-stop-key        (r/atom (random-uuid))
+        modal-bulk-delete-key (r/atom (random-uuid))]
     (fn []
       [:<>
        [main-components/StickyBar
@@ -140,17 +141,26 @@
                         :disabled (not (pos? @selected-count))}
            [ui/DropdownMenu
             #_[ui/DropdownItem "Start"]
+            [ui/DropdownItem
+             {:on-click #(dispatch [::events/bulk-update-params])} (str/capitalize (@tr [:update]))]
             ^{:key @modal-stop-key}
             [uix/ModalDanger
              {:on-confirm  #(do
                               (dispatch [::events/bulk-operation "bulk-stop"])
                               (swap! modal-stop-key random-uuid))
               :trigger     (r/as-element [ui/DropdownItem (str/capitalize (@tr [:stop]))])
-              :header      (@tr [:bulk-stop])
+              :header      (@tr [:bulk-deployment-stop])
               :danger-msg  (@tr [:danger-action-cannot-be-undone])
-              :button-text (str/capitalize (@tr [:bulk-stop]))}]
-            [ui/DropdownItem
-             {:on-click #(dispatch [::events/bulk-update-params])} (str/capitalize (@tr [:update]))]]]]
+              :button-text (str/capitalize (@tr [:bulk-deployment-stop]))}]
+            ^{:key @modal-bulk-delete-key}
+            [uix/ModalDanger
+             {:on-confirm  #(do
+                              (dispatch [::events/bulk-operation "bulk-force-delete"])
+                              (swap! modal-bulk-delete-key random-uuid))
+              :trigger     (r/as-element [ui/DropdownItem (str/capitalize (@tr [:force-delete]))])
+              :header      (@tr [:bulk-deployment-force-delete])
+              :danger-msg  (@tr [:danger-action-deployment-force-delete])
+              :button-text (str/capitalize (@tr [:bulk-deployment-force-delete]))}]]]]
 
          [main-components/RefreshMenu
           {:action-id  events/refresh-action-deployments-id

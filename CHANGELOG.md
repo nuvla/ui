@@ -3,7 +3,8 @@
 ## Unreleased
 
 ### Changed
-
+  - Deployment - Bulk force delete support
+  - Deployment - Bulk stop support
   - Fix visible console errors after update 
   - React-chart-2 - Fix broken changes
   - React-leaflet - Fix broken changes

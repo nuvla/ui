@@ -489,7 +489,7 @@
           (reset! button-load? false)
           (reset! last-updated p-updated))
         [uix/Accordion
-         [ui/Segment {:basic "very"}
+         [ui/Segment {:basic true}
           [ui/Table {:basic  "very"
                      :padded false}
            [ui/TableBody

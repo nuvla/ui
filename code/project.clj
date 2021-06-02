@@ -96,7 +96,7 @@
 
   :profiles
   {:dev   {:dependencies [[org.clojure/clojure "1.10.3"]
-                          [org.clojure/clojurescript "1.10.866"
+                          [org.clojure/clojurescript "1.10.773"
                            :exclusions
                            [com.google.javascript/closure-compiler-unshaded
                             org.clojure/google-closure-library

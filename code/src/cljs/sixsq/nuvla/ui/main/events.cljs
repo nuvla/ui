@@ -310,11 +310,16 @@
   ::subscription-required-dispatch
   (fn [{{:keys [::spec/stripe
                 :sixsq.nuvla.ui.profile.spec/subscription]} :db} [_ dispatch-vector]]
-    (let [active? (boolean
+    (let [subs-status (:status subscription)
+          active? (boolean
                     (or (and (some? stripe)
-                             (#{"trialing" "active" "past_due"} (:status subscription)))
-                        (nil? stripe)))]
+                             (#{"trialing" "active" "past_due"} subs-status))
+                        (nil? stripe)))
+          unpaid? (and (some? stripe)
+                       (= subs-status "unpaid"))]
       {:dispatch (if active?
                    dispatch-vector
-                   [::open-modal :subscription-required])})))
+                   (if unpaid?
+                     [::open-modal :subscription-unpaid]
+                     [::open-modal :subscription-required]))})))
 

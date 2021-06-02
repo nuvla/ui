@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Changed
+
+  - Main - Detect unpaid subscription to show a more coherent message
   - Deployment - Bulk force delete support
   - Deployment - Bulk stop support
   - Fix visible console errors after update 

@@ -1,8 +1,8 @@
-(def parent-version "6.7.4")
-(def sixsq-nuvla-api-version "2.0.9")
-(def version "2.18.1-SNAPSHOT")
+(def parent-version "6.7.5")
+(def sixsq-nuvla-api-version "2.0.10")
+(def version "2.18.2-SNAPSHOT")
 
-(defproject sixsq.nuvla.ui/code "2.18.1-SNAPSHOT"
+(defproject sixsq.nuvla.ui/code "2.18.2-SNAPSHOT"
 
   :description "Web Browser User Interface for Nuvla"
 
@@ -75,15 +75,15 @@
 
   ;; mark all dependencies as provided to avoid having transitive
   ;; dependencies pulled in by those that depend on this
-  :dependencies [[reagent "0.10.0" :scope "provided"
+  :dependencies [[reagent "1.0.0" :scope "provided"
                   :exclusions [cljsjs/react
                                cljsjs/react-dom]]
-                 [re-frame "1.1.1" :scope "provided"]
-                 [day8.re-frame/http-fx "0.2.1" :scope "provided"]
-                 [cljs-ajax "0.8.1" :scope "provided"]
+                 [re-frame "1.2.0" :scope "provided"]
+                 [day8.re-frame/http-fx "0.2.3" :scope "provided"]
+                 [cljs-ajax "0.8.3" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
-                 [com.taoensso/timbre "5.1.0" :scope "provided"]
+                 [com.taoensso/timbre "5.1.2" :scope "provided"]
                  [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]
                  [com.taoensso/tempura "1.2.1" :scope "provided"]
                  [com.cemerick/url :scope "provided"]
@@ -95,19 +95,19 @@
   :source-paths ["src/clj" "src/cljs"]
 
   :profiles
-  {:dev   {:dependencies [[org.clojure/clojure "1.10.1"]
-                          [org.clojure/clojurescript "1.10.773"
+  {:dev   {:dependencies [[org.clojure/clojure "1.10.3"]
+                          [org.clojure/clojurescript "1.10.866"
                            :exclusions
                            [com.google.javascript/closure-compiler-unshaded
                             org.clojure/google-closure-library
                             org.clojure/google-closure-library-third-party]]
-                          [binaryage/devtools "1.0.2" :scope "test"]
-                          [day8.re-frame/re-frame-10x "0.7.0"]]}
+                          [binaryage/devtools "1.0.3" :scope "test"]
+                          [day8.re-frame/re-frame-10x "1.0.2"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.11.5"]   ;; WARNING: also in package.json
-                          [org.clojure/google-closure-library "0.0-20191016-6ae1f72f"]
-                          [org.clojure/google-closure-library-third-party "0.0-20191016-6ae1f72f"]
-                          [com.google.javascript/closure-compiler-unshaded "v20200830"]]}}
+   :scljs {:dependencies [[thheller/shadow-cljs "2.14.1"]   ;; WARNING: also in package.json
+                          [org.clojure/google-closure-library "0.0-20201211-3e6c510d"]
+                          [org.clojure/google-closure-library-third-party "0.0-20201211-3e6c510d"]
+                          [com.google.javascript/closure-compiler-unshaded "v20210505"]]}}
 
 
 

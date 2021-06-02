@@ -101,7 +101,8 @@
   [_opts]
   (let [open? (r/atom false)]
     (fn [{:keys [job on-dissmiss header]}]
-      (let [{:keys [FAILED SUCCESS] :as status-message} (general-utils/json->edn (:status-message job))
+      (let [{:keys [FAILED SUCCESS] :as status-message} (when (not= (:state job) "FAILED")
+                                                          (general-utils/json->edn (:status-message job)))
             some-fail?    (pos? (count FAILED))
             some-success? (pos? (count SUCCESS))
             completed?    (= (:progress job) 100)

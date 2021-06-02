@@ -19,7 +19,8 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [clojure.string :as str]))
 
 
 (defn refresh
@@ -28,7 +29,8 @@
 
 
 (defn control-bar []
-  (let [full-text         (subscribe [::subs/full-text-search])
+  (let [tr                (subscribe [::i18n-subs/tr])
+        full-text         (subscribe [::subs/full-text-search])
         additional-filter (subscribe [::subs/additional-filter])
         filter-open?      (r/atom false)]
     (fn []
@@ -38,7 +40,7 @@
          :default-value @full-text}]
        " "
        [ui/Popup
-        {:content           "Additional filter"
+        {:content           (@tr [:additional-filter])
          :mouse-enter-delay 500
          :on                "hover"
          :trigger           (r/as-element
@@ -53,7 +55,8 @@
 
 (defn BulkUpdateModal
   []
-  (let [info            (subscribe [::subs/bulk-update-modal])
+  (let [tr              (subscribe [::i18n-subs/tr])
+        info            (subscribe [::subs/bulk-update-modal])
         versions        (subscribe [::deployment-detail-subs/module-versions])
         selected-module (r/atom nil)]
     (fn []
@@ -65,24 +68,21 @@
         [ui/Modal {:open       (some? @info)
                    :close-icon true
                    :on-close   #(dispatch [::events/close-modal-bulk-update])}
-         [uix/ModalHeader {:header "Bulk update"}]
+         [uix/ModalHeader {:header (@tr [:bulk-deployment-update])}]
 
          [ui/ModalContent
           [ui/Form
            (when-not module-href
              [ui/Message {:visible true
                           :warning true
-                          :header  "Deployments not based on same module"
-                          :content (str "Module selection is disabled because selected deployments "
-                                        "are not based on the same module. You can still call this "
-                                        "action to update container images if they are base on "
-                                        "tags like latest.")}])
+                          :header  (@tr [:deployment-based-different-module])
+                          :content (@tr [:deployment-based-different-module-details])}])
            [ui/FormDropdown
             {:scrolling   true
              :upward      false
              :selection   true
-             :label       "Module version"
-             :placeholder "Select a module version"
+             :label       (@tr [:module-version])
+             :placeholder (@tr [:select-version])
              :disabled    (nil? module-href)
              :on-change   (ui-callback/value
                             #(reset! selected-module
@@ -92,22 +92,27 @@
              :fluid       true
              :options     options}]]]
          [ui/ModalActions
-          [uix/Button {:text     "Launch"
+          [uix/Button {:text     (str/capitalize (@tr [:bulk-deployment-update]))
                        :positive true
                        :active   true
-                       :on-click #(dispatch [::events/bulk-update-operation @selected-module])}]]
+                       :on-click #(dispatch [::events/bulk-operation
+                                             "bulk-update"
+                                             {:module-href @selected-module}
+                                             [::events/close-modal-bulk-update]])}]]
          ]))))
 
 
 (defn MenuBar
   []
-  (let [view                  (subscribe [::subs/view])
+  (let [tr                    (subscribe [::i18n-subs/tr])
+        view                  (subscribe [::subs/view])
         loading?              (subscribe [::subs/loading?])
-        selected-set          (subscribe [::subs/selected-set])
         select-all?           (subscribe [::subs/select-all?])
         dep-count             (subscribe [::subs/deployments-count])
         selected-count        (subscribe [::subs/selected-count])
-        is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
+        is-all-page-selected? (subscribe [::subs/is-all-page-selected?])
+        modal-stop-key        (r/atom (random-uuid))
+        modal-bulk-delete-key (r/atom (random-uuid))]
     (fn []
       [:<>
        [main-components/StickyBar
@@ -121,25 +126,41 @@
 
          [ui/MenuItem {:on-click #(dispatch [::events/select-all])
                        :active   @select-all?}
-          "Select all"]
+          (@tr [:select-all])]
          [ui/MenuItem {:active   @is-all-page-selected?
                        :on-click #(dispatch [::events/select-all-page])}
-          "Select all in this page"]
+          (@tr [:select-all-page])]
          [ui/MenuItem {:disabled true}
-          "Selected"
+          (@tr [:selected])
           [ui/Label
            (when (pos? @selected-count) {:color "teal"})
            (str @selected-count "/" @dep-count)]]
          [ui/MenuMenu
-          [ui/Dropdown {:item     true :text "Actions"
+          [ui/Dropdown {:item     true :text (@tr [:bulk-action])
                         :icon     "ellipsis vertical"
                         :disabled (not (pos? @selected-count))}
            [ui/DropdownMenu
             #_[ui/DropdownItem "Start"]
-            #_[ui/DropdownItem "Stop"]
             [ui/DropdownItem
-             {:on-click #(dispatch [::events/bulk-update @selected-set])}
-             "Update"]]]]
+             {:on-click #(dispatch [::events/bulk-update-params])} (str/capitalize (@tr [:update]))]
+            ^{:key @modal-stop-key}
+            [uix/ModalDanger
+             {:on-confirm  #(do
+                              (dispatch [::events/bulk-operation "bulk-stop"])
+                              (swap! modal-stop-key random-uuid))
+              :trigger     (r/as-element [ui/DropdownItem (str/capitalize (@tr [:stop]))])
+              :header      (@tr [:bulk-deployment-stop])
+              :danger-msg  (@tr [:danger-action-cannot-be-undone])
+              :button-text (str/capitalize (@tr [:bulk-deployment-stop]))}]
+            ^{:key @modal-bulk-delete-key}
+            [uix/ModalDanger
+             {:on-confirm  #(do
+                              (dispatch [::events/bulk-operation "bulk-force-delete"])
+                              (swap! modal-bulk-delete-key random-uuid))
+              :trigger     (r/as-element [ui/DropdownItem (str/capitalize (@tr [:force-delete]))])
+              :header      (@tr [:bulk-deployment-force-delete])
+              :danger-msg  (@tr [:danger-action-deployment-force-delete])
+              :button-text (str/capitalize (@tr [:bulk-deployment-force-delete]))}]]]]
 
          [main-components/RefreshMenu
           {:action-id  events/refresh-action-deployments-id
@@ -230,18 +251,18 @@
 
 (defn DeploymentCard
   [{:keys [id state module tags parent credential-name] :as deployment}]
-  (let [tr            (subscribe [::i18n-subs/tr])
+  (let [tr           (subscribe [::i18n-subs/tr])
         {module-logo-url :logo-url
          module-name     :name
          module-content  :content} module
         [primary-url-name
          primary-url-pattern] (-> module-content (get :urls []) first)
-        primary-url   (subscribe [::subs/deployment-url id primary-url-pattern])
-        started?      (utils/is-started? state)
-        dep-href      (utils/deployment-href id)
-        select-all?   (subscribe [::subs/select-all?])
-        is-selected?  (subscribe [::subs/is-selected? id])
-        cred          (or credential-name parent)]
+        primary-url  (subscribe [::subs/deployment-url id primary-url-pattern])
+        started?     (utils/is-started? state)
+        dep-href     (utils/deployment-href id)
+        select-all?  (subscribe [::subs/select-all?])
+        is-selected? (subscribe [::subs/is-selected? id])
+        cred         (or credential-name parent)]
     ^{:key id}
     [uix/Card
      (cond-> {:header        [:span [:p {:style {:overflow      "hidden",

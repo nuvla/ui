@@ -333,9 +333,6 @@
         on-error-fn      close-fn
         on-click-fn      #(do
                             (dispatch [::events/set-join-token nil])
-                            (when-not (empty? (:nuvlabox-manager-status @form-data))
-                              (swap! form-data assoc :nuvlabox-manager-status (general-utils/edn->json
-                                                                                (:nuvlabox-manager-status @form-data))))
                             (dispatch [::events/operation id operation @form-data
                                        on-success-fn on-error-fn]))]
     (fn [resource _operation show? title icon button-text]
@@ -492,7 +489,7 @@
           (reset! button-load? false)
           (reset! last-updated p-updated))
         [uix/Accordion
-         [ui/Segment {:basic "very"}
+         [ui/Segment {:basic true}
           [ui/Table {:basic  "very"
                      :padded false}
            [ui/TableBody
@@ -752,12 +749,12 @@
           [ui/TableBody
            (for [{:keys [id name cpu-percent mem-usage-limit
                          mem-percent net-in-out blk-in-out
-                         container-status restart-count]} container-stats]
+                         container-status restart-count] :as cstat} container-stats]
              (when id
                ^{:key id}
                [ui/TableRow
-                [ui/TableCell (some-> id (subs 0 8))]
-                [ui/TableCell (some-> name (subs 0 25))]
+                [ui/TableCell (apply str (take 8 id))]
+                [ui/TableCell (apply str (take 25 name))]
                 [ui/TableCell cpu-percent]
                 [ui/TableCell mem-usage-limit]
                 [ui/TableCell mem-percent]
@@ -1491,14 +1488,9 @@
   (let [nb-status (subscribe [::subs/nuvlabox-status])]
     (fn [uuid]
       ^{:key uuid}
-      [ui/DimmerDimmable {:dimmed true}
-       [main-components/NotFoundPortal
-        ::subs/nuvlabox-not-found?
-        :no-nuvlabox-message-header
-        :no-nuvlabox-message-content]
-       [ui/Container {:fluid true}
-        [PageHeader]
-        [MenuBar uuid]
-        [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
-        [job-views/ProgressJobAction @nb-status]
-        [TabsNuvlaBox]]])))
+      [ui/Container {:fluid true}
+       [PageHeader]
+       [MenuBar uuid]
+       [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
+       [job-views/ProgressJobAction @nb-status]
+       [TabsNuvlaBox]])))

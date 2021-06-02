@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Changed
+
+  - Main - Detect unpaid subscription to show a more coherent message
+  - Deployment - Bulk force delete support
+  - Deployment - Bulk stop support
+  - Fix visible console errors after update 
+  - React-chart-2 - Fix broken changes
+  - React-leaflet - Fix broken changes
+  - NPM dependencies - Major update
+  - Dependencies - sixsq.nuvla/parent 6.7.5
+  - Credentials - Improve layout of logos for cloud providers
+
+## [2.18.1] - 2021-05-19
+
 ### Added
 
   - Show an error message when an element does not exist or is not accessible
@@ -10,7 +24,7 @@
 
 ### Changed
 
-  - Main - Detect unpaid subscription to show a more coherent message
+  - Edge detail - Nuvlabox cluster action bugfix
   - Deployment detail - Clear log bugfix
   - Deployment dialog - Remove duplicated definition of price subscription
   - Deployment detail - Markdownified module description

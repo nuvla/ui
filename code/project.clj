@@ -75,7 +75,7 @@
 
   ;; mark all dependencies as provided to avoid having transitive
   ;; dependencies pulled in by those that depend on this
-  :dependencies [[reagent "1.0.0" :scope "provided"
+  :dependencies [[reagent "0.10.0" :scope "provided"
                   :exclusions [cljsjs/react
                                cljsjs/react-dom]]
                  [re-frame "1.2.0" :scope "provided"]
@@ -102,7 +102,7 @@
                             org.clojure/google-closure-library
                             org.clojure/google-closure-library-third-party]]
                           [binaryage/devtools "1.0.3" :scope "test"]
-                          [day8.re-frame/re-frame-10x "1.0.2"]]}
+                          [day8.re-frame/re-frame-10x "0.7.0"]]}
 
    :scljs {:dependencies [[thheller/shadow-cljs "2.11.26"]   ;; WARNING: also in package.json
                           [org.clojure/google-closure-library "0.0-20191016-6ae1f72f"]

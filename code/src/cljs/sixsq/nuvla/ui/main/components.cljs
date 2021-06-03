@@ -78,23 +78,32 @@
 
 (defn ErrorJobsMessage
   [_job-subs _set-active-tab-index-event _job-tab-index]
-  (let [errors-dissmissed (r/atom #{})]
+  (let [tr                (subscribe [::i18n-subs/tr])
+        errors-dissmissed (r/atom #{})]
     (fn [job-subs set-active-tab-index-event job-tab-index]
-      (let [jobs            (subscribe [job-subs])
-            last-failed-job (some #(when (= (:state %) "FAILED") %) (:resources @jobs))
-            action          (:action last-failed-job)
-            id              (:id last-failed-job)
-            last-line       (last (str/split-lines (get last-failed-job :status-message "")))]
-        (when (and
-                (not (@errors-dissmissed id))
-                (some? last-failed-job))
-          [ui/Message {:error      true
-                       :on-dismiss #(swap! errors-dissmissed conj id)}
-           [ui/MessageHeader
-            {:style    {:cursor "pointer"}
-             :on-click #(dispatch [set-active-tab-index-event job-tab-index])}
-            (str "Job " action " failed")]
-           [ui/MessageContent last-line]])))))
+      (let [all-jobs             (subscribe [job-subs])
+            grouped-jobs         (group-by :action (-> @all-jobs :resources))
+            contains-failed-jobs (into {}
+                                       (map (fn [[action jobs]]
+                                              (when (some #(when (= (:state %) "FAILED") jobs) jobs) {action jobs}))
+                                            grouped-jobs))]
+        [:<>
+         (for [[action jobs] contains-failed-jobs]
+           (let [last-job  (-> jobs first)
+                 {:keys [state id]} last-job
+                 last-line (last (str/split-lines (get last-job :status-message "")))]
+             (when
+               (and
+                 (not (@errors-dissmissed id))
+                 (= state "FAILED"))
+               ^{:key action}
+               [ui/Message {:error      true
+                            :on-dismiss #(swap! errors-dissmissed conj id)}
+                [ui/MessageHeader
+                 {:style    {:cursor "pointer"}
+                  :on-click #(dispatch [set-active-tab-index-event job-tab-index])}
+                 (str (str/capitalize (@tr [:job])) " " action " " (@tr [:failed]))]
+                [ui/MessageContent last-line]])))]))))
 
 
 (defn BulkActionProgress
@@ -220,7 +229,7 @@
     [ui/Dimmer {:active   @not-found?
                 :inverted true}
      [ui/Segment {:textAlign "center"
-                  :raised true
+                  :raised    true
                   :style     {:top    "20%"
                               :zIndex 1000}}
       [ui/Message {:warning true

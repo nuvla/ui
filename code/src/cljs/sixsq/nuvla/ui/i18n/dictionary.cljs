@@ -235,6 +235,7 @@
         :event                                         "event"
         :events                                        "events"
         :execute-action-msg                            "Execute action %1?"
+        :failed                                        "failed"
         :fetch                                         "fetch"
         :fields                                        "fields"
         :filename                                      "filename"

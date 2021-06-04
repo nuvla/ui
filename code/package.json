@@ -21,7 +21,7 @@
     "source-map-support": "^0.5.19"
   },
   "dependencies": {
-    "@popperjs/core": "^2.5.3",
+    "react-popper": "2.2.5",
     "@stripe/react-stripe-js": "^1.4.1",
     "@stripe/stripe-js": "^1.15.0",
     "bluebird": "^3.7.2",

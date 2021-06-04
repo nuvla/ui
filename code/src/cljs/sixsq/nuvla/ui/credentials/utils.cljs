@@ -187,7 +187,8 @@
       "infrastructure-service-azure" (db->new-azure-credential db)
       "infrastructure-service-google" (db->new-google-credential db)
       "infrastructure-service-registry" (db->new-registry-credential db)
-      "generate-ssh-key" (db->new-ssh-credential db))))
+      "generate-ssh-key" (db->new-ssh-credential db)
+      "gpg-key" (db->new-ssh-credential db))))
 
 
 (defn vpn-config

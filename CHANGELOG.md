@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.19.0] - 2021-06-04
+
 ### Changed
 
   - Main comp - Show job errors per action when some

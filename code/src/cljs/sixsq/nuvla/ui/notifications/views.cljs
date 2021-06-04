@@ -337,7 +337,7 @@
   {:numeric (map (fn [x] {:key x :value x :text x}) [">" "<" "=" "!="])
    :boolean (map (fn [x] {:key x :value x :text x}) ["yes" "no"])
    :set     (map (fn [x] {:key x :value x :text x}) ["not equal" "equal" "in" "not in"])
-   :string  (map (fn [x] {:key x :value x :text x}) ["is"])})
+   :string  (map (fn [x] {:key x :value x :text x}) ["is" "is not" "starts with" "contains" "ends with"])})
 
 
 (def criteria-condition-type
@@ -385,19 +385,36 @@
 
 
 (defn ResourceDropdown
-  [resource attribute attribute-options _validate-form? _on-change]
-  (dispatch [::fc-events/terms-attribute resource attribute attribute-options])
-  (fn [_resource _attribute attribute-options validate-form? on-change]
-    (let [options (map (fn [v] {:key v :text v :value v}) @attribute-options)]
+  [resource metric-name _value value-options _validate-form? _on-change]
+  (dispatch [::fc-events/terms-attribute resource metric-name value-options])
+  (fn [_resource _metric-name value value-options validate-form? on-change]
+    (let [options (map (fn [v] {:key v :text v :value v}) @value-options)]
       [ui/Dropdown {:selection      true
-                    :defaultValue   attribute
-                    :error          (and validate-form? (not (seq @attribute-options)))
+                    :value          value
+                    :error          (and validate-form? (not (seq @value-options)))
                     :search         true
                     :name           "resource-attribute"
                     :allowAdditions true
                     :clearable      true
                     :on-change      on-change
+                    :on-add-item    (ui-callback/value
+                                      (fn [value] (swap! value-options #(conj @value-options value))))
                     :options        options}])))
+
+
+(defn ConditionRow
+  [metric-name condition collection on-change validate-form?]
+  [ui/TableRow
+   [ui/TableCell {:collapsing true
+                  :style      {:padding-bottom 8}} "Condition"]
+   [ui/TableCell
+    [ui/Dropdown {:selection true
+                  :options   (vec
+                               ((keyword metric-name)
+                                (get criteria-condition-options collection)))
+                  :error     (and validate-form? (not (seq condition)))
+                  :on-change (ui-callback/value
+                               #(on-change :criteria {:condition %}))}]]])
 
 
 (defn AddSubscriptionConfigModal
@@ -415,7 +432,7 @@
         components-number   (subscribe [::subs/components-number])
         metric-name         (r/atom "")
         component-option    (r/atom "")
-        attribute-options   (r/atom "")
+        value-options       (r/atom "")
         subscription-config (subscribe [::subs/notification-subscription-config])]
 
     (dispatch [::events/get-notification-methods])
@@ -503,32 +520,22 @@
                                                          :kind   (criteria-metric-kind @collection %)})))}]]]
 
             (case criteria-metric
-              :string [ui/TableRow
-                       [ui/TableCell {:collapsing true
-                                      :style      {:padding-bottom 8}} "Value"]
-                       [ui/TableCell
-
-                        (when (and (seq @component-option) (seq @metric-name))
-                          [ResourceDropdown
-                           @component-option
-                           @metric-name
-                           attribute-options
-                           @validate-form?
-                           (ui-callback/value
-                             #(do (on-change :criteria {:value %})
-                                  (on-change :criteria {:condition (-> criteria-conditions :string first)})))])]]
+              :string [:<>
+                       [ConditionRow @metric-name condition @collection on-change @validate-form?]
+                       [ui/TableRow
+                        [ui/TableCell {:collapsing true
+                                       :style      {:padding-bottom 8}} "Value"]
+                        [ui/TableCell
+                         (when (and (seq @component-option) (seq @metric-name))
+                           [ResourceDropdown
+                            @component-option
+                            @metric-name
+                            value
+                            value-options
+                            @validate-form?
+                            (ui-callback/value #(on-change :criteria {:value %}))])]]]
               :set [:<>
-                    [ui/TableRow
-                     [ui/TableCell {:collapsing true
-                                    :style      {:padding-bottom 8}} "Condition"]
-                     [ui/TableCell
-                      [ui/Dropdown {:selection true
-                                    :options   (vec
-                                                 (:status
-                                                   (get criteria-condition-options @collection)))
-                                    :error     (and @validate-form? (not (seq condition)))
-                                    :on-change (ui-callback/value
-                                                 #(on-change :criteria {:condition %}))}]]]
+                    [ConditionRow @metric-name condition @collection on-change @validate-form?]
                     [ui/TableRow
                      [ui/TableCell {:collapsing true
                                     :style      {:padding-bottom 8}} "Value"]
@@ -540,17 +547,7 @@
                         :read-only false
                         :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]]]
               :numeric [:<>
-                        [ui/TableRow
-                         [ui/TableCell {:collapsing true
-                                        :style      {:padding-bottom 8}} "Condition"]
-                         [ui/TableCell
-                          [ui/Dropdown {:selection true
-                                        :options   (vec
-                                                     ((keyword @metric-name)
-                                                      (get criteria-condition-options @collection)))
-                                        :error     (and @validate-form? (not (seq condition)))
-                                        :on-change (ui-callback/value
-                                                     #(on-change :criteria {:condition %}))}]]]
+                        [ConditionRow @metric-name condition @collection on-change @validate-form?]
                         [ui/TableRow
                          [ui/TableCell {:collapsing true
                                         :style      {:padding-bottom 8}} "Value"]

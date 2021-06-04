@@ -52,16 +52,24 @@
                                          ::key
                                          ::parent]))
 
-; SSH
+; Keypair
 
 (s/def ::public-key utils-spec/nonblank-string)
 (s/def ::private-key string?)
+
+; SSH
 
 (s/def ::ssh-credential (s/keys :req-un [::name
                                          ::description]
                                 :opt-un [::public-key
                                          ::private-key]))
 
+; GPG
+
+(s/def ::gpg-credential (s/keys :req-un [::name
+                                         ::description
+                                         ::public-key]
+                                :opt-un [::private-key]))
 
 ; MinIO
 

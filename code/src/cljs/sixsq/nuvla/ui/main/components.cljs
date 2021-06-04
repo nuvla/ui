@@ -81,29 +81,28 @@
   (let [tr                (subscribe [::i18n-subs/tr])
         errors-dissmissed (r/atom #{})]
     (fn [job-subs set-active-tab-index-event job-tab-index]
-      (let [all-jobs             (subscribe [job-subs])
-            grouped-jobs         (group-by :action (-> @all-jobs :resources))
-            contains-failed-jobs (into {}
-                                       (map (fn [[action jobs]]
-                                              (when (some #(when (= (:state %) "FAILED") jobs) jobs) {action jobs}))
-                                            grouped-jobs))]
+      (let [fn-filter   (fn [coll _action jobs]
+                          (let [{:keys [id state] :as last-job} (first jobs)]
+                            (if (and (= state "FAILED") (not (@errors-dissmissed id)))
+                              (conj coll last-job)
+                              coll)))
+            failed-jobs (->> (subscribe [job-subs])
+                             deref
+                             :resources
+                             (group-by :action)
+                             (reduce-kv fn-filter [])
+                             (sort-by :updated >))]
         [:<>
-         (for [[action jobs] contains-failed-jobs]
-           (let [last-job  (-> jobs first)
-                 {:keys [state id]} last-job
-                 last-line (last (str/split-lines (get last-job :status-message "")))]
-             (when
-               (and
-                 (not (@errors-dissmissed id))
-                 (= state "FAILED"))
-               ^{:key action}
-               [ui/Message {:error      true
-                            :on-dismiss #(swap! errors-dissmissed conj id)}
-                [ui/MessageHeader
-                 {:style    {:cursor "pointer"}
-                  :on-click #(dispatch [set-active-tab-index-event job-tab-index])}
-                 (str (str/capitalize (@tr [:job])) " " action " " (@tr [:failed]))]
-                [ui/MessageContent last-line]])))]))))
+         (doall
+           (for [{:keys [id action status-message]} failed-jobs]
+             ^{:key id}
+             [ui/Message {:error      true
+                          :on-dismiss #(swap! errors-dissmissed conj id)}
+              [ui/MessageHeader
+               {:style    {:cursor "pointer"}
+                :on-click #(dispatch [set-active-tab-index-event job-tab-index])}
+               (str (str/capitalize (@tr [:job])) " " action " " (@tr [:failed]))]
+              [ui/MessageContent (last (str/split-lines (or status-message "")))]]))]))))
 
 
 (defn BulkActionProgress

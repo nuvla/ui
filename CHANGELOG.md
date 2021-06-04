@@ -4,6 +4,7 @@
 
 ### Changed
 
+  - Main comp - Show job errors per action when some
   - Credential - Support gpg key
   - Main - Detect unpaid subscription to show a more coherent message
   - Deployment - Bulk force delete support

@@ -7,7 +7,7 @@
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.main.subs :as main-subs]))
 
-(def Map (reagent/adapt-react-class leaflet/MapContainer))
+(def Map (reagent/adapt-react-class leaflet/Map))
 
 (def Marker (reagent/adapt-react-class leaflet/Marker))
 

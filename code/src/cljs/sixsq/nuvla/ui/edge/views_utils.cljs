@@ -85,28 +85,6 @@
           :tags        tags}]))))
 
 
-(defn NuvlaboxCards
-  []
-  (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
-        nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
-        managers          (distinct
-                            (apply concat
-                                   (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
-        current-cluster   (subscribe [::subs/nuvlabox-cluster])
-        selected-nbs      (if @current-cluster
-                            (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
-                                                       (:nuvlabox-workers @current-cluster))]
-                              (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
-                            (:resources @nuvlaboxes))]
-    [:div style/center-items
-     [ui/CardGroup {:centered    true
-                    :itemsPerRow 4}
-      (for [{:keys [id] :as nuvlabox} selected-nbs]
-        (when id
-          ^{:key id}
-          [NuvlaboxCard nuvlabox managers]))]]))
-
-
 (defn NuvlaboxTable
   []
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])

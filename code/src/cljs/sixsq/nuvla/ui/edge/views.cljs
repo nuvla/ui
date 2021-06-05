@@ -17,6 +17,7 @@
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
@@ -712,6 +713,85 @@
                                      :activePage #(dispatch [::events/set-page %]))}]))
 
 
+(defn NuvlaboxTable
+  []
+  (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
+        nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
+        managers          (distinct
+                            (apply concat
+                                   (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
+        current-cluster   (subscribe [::subs/nuvlabox-cluster])
+        selected-nbs      (if @current-cluster
+                            (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
+                                                       (:nuvlabox-workers @current-cluster))]
+                              (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
+                            (:resources @nuvlaboxes))]
+    [:div style/center-items
+     [ui/Table {:compact "very", :selectable true}
+      [ui/TableHeader
+       [ui/TableRow
+        [ui/TableHeaderCell [ui/Icon {:name "heartbeat"}]]
+        [ui/TableHeaderCell "state"]
+        [ui/TableHeaderCell "name"]
+        [ui/TableHeaderCell "description"]
+        [ui/TableHeaderCell "created"]
+        [ui/TableHeaderCell "tags"]
+        [ui/TableHeaderCell "manager"]]]
+
+      [ui/TableBody
+       (for [{:keys [id] :as nuvlabox} selected-nbs]
+         (when id
+           ^{:key id}
+           [NuvlaboxRow nuvlabox managers]))]]]))
+
+
+(defn NuvlaboxMapPoint
+  [{:keys [id name location online]}]
+  (let [uuid     (general-utils/id->uuid id)
+        on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
+    [map/CircleMarker {:on-click on-click
+                       :center   (map/longlat->latlong location)
+                       :color    (utils/map-online->color online)
+                       :opacity  0.5
+                       :weight   2}
+     [map/Tooltip (or name id)]]))
+
+
+
+
+
+(defn NuvlaboxCards
+  []
+  (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
+        nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
+        managers          (distinct
+                            (apply concat
+                                   (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
+        selected-nbs      (:resources @nuvlaboxes)]
+    [:div style/center-items
+     [ui/CardGroup {:centered    true
+                    :itemsPerRow 4}
+      (for [{:keys [id] :as nuvlabox} selected-nbs]
+        (when id
+          ^{:key id}
+          [views-utils/NuvlaboxCard nuvlabox managers]))]]))
+
+
+(defn NuvlaboxMap
+  []
+  (let [nuvlaboxes   (subscribe [::subs/nuvlaboxes])
+        selected-nbs (:resources @nuvlaboxes)]
+    [map/MapBox
+     {:style  {:height 500}
+      :center map/sixsq-latlng
+      :zoom   3}
+     (doall
+       (for [{:keys [id] :as nuvlabox} (->> selected-nbs
+                                            (filter #(:location %)))]
+         ^{:key id}
+         [NuvlaboxMapPoint nuvlabox]))]))
+
+
 (defn DetailedView
   [uuid]
   (if (= "nuvlabox-cluster" uuid)
@@ -737,9 +817,9 @@
       [ui/Input {:style {:visibility "hidden"}
                  :icon  "search"}]]
      (case @view-type
-       :cards [views-utils/NuvlaboxCards]
-       :table [views-utils/NuvlaboxTable]
-       :map [views-utils/NuvlaboxMap])
+       :cards [NuvlaboxCards]
+       :table [NuvlaboxTable]
+       :map [NuvlaboxMap])
      (when-not (= @view-type :map)
        [Pagination])]))
 

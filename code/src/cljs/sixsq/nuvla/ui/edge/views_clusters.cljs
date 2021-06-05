@@ -127,8 +127,8 @@
   (let [tr        (subscribe [::i18n-subs/tr])
         full-text (subscribe [::subs/full-text-clusters-search])]
     [:<>
-     [uix/PageHeader "box" (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
-                                (general-utils/capitalize-first-letter (@tr [:clusters])))]
+     [uix/PageHeader "fas fa-chart-network" (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
+                                                 (general-utils/capitalize-first-letter (@tr [:clusters])))]
      [MenuBar]
      [:div {:style {:display "flex"}}
       [main-components/SearchInput

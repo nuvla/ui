@@ -792,7 +792,7 @@
                   :color     "green"
                   :raised    true}
 
-      [:h4 {:style {:margin-top 0}} (@tr [:summary])]
+      [:h4 {:style {:margin-top 0}} (str/capitalize (@tr [:summary]))]
 
       [ui/Table {:basic "very" :style {:display "inline", :floated "left"}}
        [ui/TableBody

@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.edge.views-cluster
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.edge.events :as events]
@@ -13,7 +14,8 @@
     [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]))
+    [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (def view-type (r/atom :cards))
@@ -51,7 +53,7 @@
         nuvlabox-nodes   (+ (count (:nuvlabox-managers @nuvlabox-cluster)) (count (:nuvlabox-workers @nuvlabox-cluster)))]
     [ui/Header {:as        "h3"
                 :float     "left"
-                :icon      (r/as-element [ui/Icon {:className "fas fa-chart-network"}])
+                :icon      (r/as-element [uix/Icon {:name "fas fa-chart-network"}])
                 :content   (if name
                              (str name " (" cluster-id ")")
                              cluster-id)
@@ -61,7 +63,7 @@
                              all-nodes
                              " "
                              (if (> nuvlabox-nodes 1)
-                               (str (@tr [:they-are]) " NuvlaBox " (@tr [:node]) "s")
+                               (str (@tr [:they-are]) " NuvlaBox " (@tr [:nodes]))
                                (str (@tr [:it-is-a]) " NuvlaBox " (@tr [:node]))))}]))
 
 
@@ -153,24 +155,60 @@
 
 (defn DetailedClusterView
   []
-  [ui/SegmentGroup {:stacked true
-                    :color   "black"}
-   [ui/Segment
-    [ClusterViewHeader]]
-   [ui/Segment
-    (case @view-type
-      :cards [NuvlaboxCards]
-      :table [NuvlaboxTable]
-      :map [NuvlaboxMap])]])
+  (let [tr      (subscribe [::i18n-subs/tr])
+        cluster (subscribe [::subs/nuvlabox-cluster])
+        {:keys [id name description owners tags created updated version]} @cluster]
+    [:<>
+     [ui/Segment {:secondary true
+                  :color     "blue"
+                  :raised    true}
+      [:h4 (str/capitalize (@tr [:cluster])) " " (@tr [:summary])]
+      [ClusterViewHeader]
+
+
+      [ui/Table {:basic "very" :style {:display "inline", :floated "left"}}
+       [ui/TableBody
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (str (@tr [:name])))]
+         [ui/TableCell name]]
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (str (@tr [:description])))]
+         [ui/TableCell description]]
+        [ui/TableRow
+         [ui/TableCell "Id"]
+         [ui/TableCell id]]
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (str (@tr [:created])))]
+         [ui/TableCell (-> created time/parse-iso8601 time/ago)]]
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (str (@tr [:updated])))]
+         [ui/TableCell (-> updated time/parse-iso8601 time/ago)]]
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (str (@tr [:version])))]
+         [ui/TableCell version]]
+        (when (not-empty owners)
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:owner]))]
+           [ui/TableCell (str/join ", " owners)]])
+        (when tags
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:tags]))]
+           [ui/TableCell
+            [uix/Tags {:tags tags}]]])]]]
+     [ui/Segment
+      (case @view-type
+        :cards [NuvlaboxCards]
+        :table [NuvlaboxTable]
+        :map [NuvlaboxMap])]]))
 
 
 (defn ClusterView
   [cluster-id]
-    (dispatch [::events/get-nuvlabox-cluster (str "nuvlabox-cluster/" cluster-id)])
-  (let [tr (subscribe [::i18n-subs/tr])
+  (dispatch [::events/get-nuvlabox-cluster (str "nuvlabox-cluster/" cluster-id)])
+  (let [tr      (subscribe [::i18n-subs/tr])
         cluster (subscribe [::subs/nuvlabox-cluster cluster-id])]
     [:<>
-     [uix/PageHeader "box" (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
-                                (:name @cluster))]
+     [uix/PageHeader "fas fa-chart-network" (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
+                                                 (:name @cluster))]
      [MenuBar]
      [DetailedClusterView]]))

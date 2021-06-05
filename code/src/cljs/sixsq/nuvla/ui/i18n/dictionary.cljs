@@ -91,6 +91,8 @@
         :close                                         "close"
         :cloud                                         "cloud"
         :cloud-services                                "Cloud services"
+        :cluster                                       "cluster"
+        :clusters                                      "clusters"
         :coe-cluster-size                              "cluster size"
         :coe-install-manager-portainer                 "Install COE cluster manager Portainer"
         :coe-install-manager-rancher                   "Install COE cluster manager Rancher"

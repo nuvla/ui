@@ -11,6 +11,8 @@
 
 (s/def ::nuvlaboxes any?)
 
+(s/def ::nuvlabox-cluster-summary any?)
+
 (s/def ::nuvlaboxes-summary any?)
 
 (s/def ::nuvlaboxes-summary-all any?)
@@ -33,6 +35,7 @@
 (s/def ::total-elements int?)
 
 (s/def ::full-text-search (s/nilable string?))
+(s/def ::full-text-clusters-search (s/nilable string?))
 
 (s/def ::state-selector #{"all" "new" "activated" "commissioned"
                           "decommissioning" "decommissioned" "error"})
@@ -49,6 +52,7 @@
 (s/def ::db (s/keys :req [::loading?
                           ::nuvlaboxes
                           ::nuvlaboxes-summary
+                          ::nuvlabox-cluster-summary
                           ::nuvlaboxes-summary-all
                           ::nuvlabox-releases
                           ::state-nuvlaboxes
@@ -56,6 +60,7 @@
                           ::elements-per-page
                           ::total-elements
                           ::full-text-search
+                          ::full-text-clusters-search
                           ::state-selector
                           ::open-modal
                           ::nuvlabox-created-id
@@ -71,6 +76,7 @@
 (def defaults {::loading?                 false
                ::nuvlaboxes               nil
                ::nuvlaboxes-summary       nil
+               ::nuvlabox-cluster-summary nil
                ::nuvlaboxes-summary-all   nil
                ::nuvlabox-releases        nil
                ::state-nuvlaboxes         nil
@@ -78,6 +84,7 @@
                ::elements-per-page        8
                ::total-elements           0
                ::full-text-search         nil
+               ::full-text-clusters-search nil
                ::state-selector           nil
                ::open-modal               nil
                ::nuvlabox-created-id      nil

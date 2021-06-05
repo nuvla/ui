@@ -97,7 +97,7 @@
 
      [:h4 [ui/Icon {:name icon}] (str/upper-case "NuvlaBoxes")]
 
-     [edge-views/StatisticStates false true]
+     [edge-views/StatisticStates false]
 
      [ui/Button {:icon     icon
                  :color    :green

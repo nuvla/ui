@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.edge.utils
   (:require
     [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 (def state-new "NEW")
 (def state-activated "ACTIVATED")
@@ -204,3 +205,8 @@
                                  boolean)]
     (or (str/blank? (:nuvlabox-release form-data))
         (and payload? payload-incomplete?))))
+
+
+(defn format-created
+  [created]
+  (-> created time/parse-iso8601 time/ago))

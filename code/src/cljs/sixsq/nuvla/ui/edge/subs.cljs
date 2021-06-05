@@ -23,6 +23,12 @@
 
 
 (reg-sub
+  ::full-text-clusters-search
+  (fn [db]
+    (::spec/full-text-clusters-search db)))
+
+
+(reg-sub
   ::nuvlaboxes
   (fn [db]
     (::spec/nuvlaboxes db)))

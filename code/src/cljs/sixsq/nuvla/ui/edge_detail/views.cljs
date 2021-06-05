@@ -749,7 +749,7 @@
           [ui/TableBody
            (for [{:keys [id name cpu-percent mem-usage-limit
                          mem-percent net-in-out blk-in-out
-                         container-status restart-count] :as cstat} container-stats]
+                         container-status restart-count] :as _cstat} container-stats]
              (when id
                ^{:key id}
                [ui/TableRow

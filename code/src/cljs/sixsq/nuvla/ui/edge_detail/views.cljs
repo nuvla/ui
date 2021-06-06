@@ -984,75 +984,76 @@
 (defn TabOverviewCluster
   [{:keys [node-id cluster-id swarm-node-cert-expiry-date cluster-join-address
            cluster-node-role cluster-managers cluster-nodes orchestrator] :as _nuvlabox}]
-  [ui/Segment {:secondary true
-               :color     "black"
-               :raised    true}
-   [:h4 "Cluster Status "
-    (when orchestrator
-      [ui/Label {:circular   true
-                 :color      "blue"
-                 :size       "tiny"
-                 :basic      true
-                 :float      "right"
-                 :horizontal true
-                 :style      {:float "right"}}
-       [ui/Icon {:name (get orchestration-icons (keyword orchestrator) "question circle")}] orchestrator])]
-   [ui/Table {:basic  "very"
-              :padded false}
-    [ui/TableBody
-     [ui/TableRow
-      [ui/TableCell "Node ID"]
-      [ui/TableCell node-id]]
-     (when cluster-id
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Segment {:secondary true
+                 :color     "black"
+                 :raised    true}
+     [:h4 (str/capitalize (@tr [:cluster])) " " (@tr [:status])
+      (when orchestrator
+        [ui/Label {:circular   true
+                   :color      "blue"
+                   :size       "tiny"
+                   :basic      true
+                   :float      "right"
+                   :horizontal true
+                   :style      {:float "right"}}
+         [ui/Icon {:name (get orchestration-icons (keyword orchestrator) "question circle")}] orchestrator])]
+     [ui/Table {:basic  "very"
+                :padded false}
+      [ui/TableBody
        [ui/TableRow
-        [ui/TableCell "Cluster ID"]
-        [ui/TableCell cluster-id]])
-     [ui/TableRow
-      [ui/TableCell "Node Role"]
-      [ui/TableCell cluster-node-role
-       (when (= cluster-node-role "manager")
-         [:<>
-          (str " ")
-          [ui/Icon {:className "fas fa-crown"
-                    :corner    true
-                    :color     "blue"}]])]]
-     (when cluster-join-address
+        [ui/TableCell "Node ID"]
+        [ui/TableCell node-id]]
+       (when cluster-id
+         [ui/TableRow
+          [ui/TableCell "Cluster ID"]
+          [ui/TableCell cluster-id]])
        [ui/TableRow
-        [ui/TableCell "Cluster Join Address"]
-        [ui/TableCell cluster-join-address]])
-     (when cluster-managers
-       [ui/TableRow
-        [ui/TableCell "Cluster Managers"]
-        [ui/TableCell
-         [ui/LabelGroup {:size  "tiny"
-                         :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-          (for [manager cluster-managers]
-            ^{:key (str manager)}
-            [ui/Label {:basic true
-                       :style {:max-width     "15ch"
-                               :overflow      "hidden"
-                               :text-overflow "ellipsis"
-                               :white-space   "nowrap"}}
-             manager])]]])
-     (when cluster-nodes
-       [ui/TableRow
-        [ui/TableCell "Cluster Nodes"]
-        [ui/TableCell
-         [ui/LabelGroup {:size  "tiny"
-                         :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-          (for [node cluster-nodes]
-            ^{:key (str node)}
-            [ui/Label {:basic true
-                       :style {:max-width     "15ch"
-                               :overflow      "hidden"
-                               :text-overflow "ellipsis"
-                               :white-space   "nowrap"}}
-             node])]]])
+        [ui/TableCell "Node Role"]
+        [ui/TableCell cluster-node-role
+         (when (= cluster-node-role "manager")
+           [:<>
+            (str " ")
+            [ui/Icon {:className "fas fa-crown"
+                      :corner    true
+                      :color     "blue"}]])]]
+       (when cluster-join-address
+         [ui/TableRow
+          [ui/TableCell "Cluster Join Address"]
+          [ui/TableCell cluster-join-address]])
+       (when cluster-managers
+         [ui/TableRow
+          [ui/TableCell "Cluster Managers"]
+          [ui/TableCell
+           [ui/LabelGroup {:size  "tiny"
+                           :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+            (for [manager cluster-managers]
+              ^{:key (str manager)}
+              [ui/Label {:basic true
+                         :style {:max-width     "15ch"
+                                 :overflow      "hidden"
+                                 :text-overflow "ellipsis"
+                                 :white-space   "nowrap"}}
+               manager])]]])
+       (when cluster-nodes
+         [ui/TableRow
+          [ui/TableCell "Cluster Nodes"]
+          [ui/TableCell
+           [ui/LabelGroup {:size  "tiny"
+                           :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+            (for [node cluster-nodes]
+              ^{:key (str node)}
+              [ui/Label {:basic true
+                         :style {:max-width     "15ch"
+                                 :overflow      "hidden"
+                                 :text-overflow "ellipsis"
+                                 :white-space   "nowrap"}}
+               node])]]])
 
-     (when swarm-node-cert-expiry-date
-       [ui/TableRow
-        [ui/TableCell "Swarm Certificate Expiry Date"]
-        [ui/TableCell swarm-node-cert-expiry-date]])]]])
+       (when swarm-node-cert-expiry-date
+         [ui/TableRow
+          [ui/TableCell "Swarm Certificate Expiry Date"]
+          [ui/TableCell swarm-node-cert-expiry-date]])]]]))
 
 
 (defn TabOverview
@@ -1493,4 +1494,8 @@
        [MenuBar uuid]
        [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
        [job-views/ProgressJobAction @nb-status]
-       [TabsNuvlaBox]])))
+       [TabsNuvlaBox]
+       [main-components/NotFoundPortal
+        ::subs/nuvlabox-not-found?
+        :no-nuvlabox-message-header
+        :no-nuvlabox-message-content]])))

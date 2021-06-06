@@ -142,3 +142,8 @@
                                             (filter #(:location %)))]
          ^{:key id}
          [NuvlaboxMapPoint nuvlabox]))]))
+
+
+(defn orchestrator-icon
+  [orchestrator]
+  [uix/Icon {:name (get utils/orchestration-icons (keyword orchestrator) "question circle")}])

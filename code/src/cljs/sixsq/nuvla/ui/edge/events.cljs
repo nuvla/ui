@@ -11,6 +11,7 @@
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-summary-id :nuvlabox-get-nuvlaboxes-summary)
+(def refresh-id-cluster :nuvlabox-get-nuvlabox-cluster)
 (def refresh-id-clusters :nuvlabox-get-nuvlabox-clusters)
 
 (reg-event-fx
@@ -41,9 +42,13 @@
 (reg-event-fx
   ::refresh-cluster
   (fn [_ [_ cluster-id]]
-    {:fx [[:dispatch [::main-events/action-interval-start {:id        refresh-id-clusters
+    {:fx [[:dispatch [::main-events/action-interval-start {:id        refresh-id
                                                            :frequency 10000
-                                                           :event     [::get-nuvlabox-cluster cluster-id]}]]]}))
+                                                           :event     [::get-nuvlaboxes]}]]
+          [:dispatch [::main-events/action-interval-start {:id        refresh-id-cluster
+                                                           :frequency 10000
+                                                           :event     [::get-nuvlabox-cluster
+                                                                       (str "nuvlabox-cluster/" cluster-id)]}]]]}))
 
 
 (reg-event-fx
@@ -139,16 +144,18 @@
 (reg-event-fx
   ::set-nuvlabox-clusters
   (fn [{:keys [db]} [_ nuvlabox-clusters]]
-    (if (instance? js/Error nuvlabox-clusters)
-      (dispatch [::messages-events/add
-                 (let [{:keys [status message]} (response/parse-ex-info nuvlabox-clusters)]
-                   {:header  (cond-> (str "failure getting nuvlabox clusters")
-                                     status (str " (" status ")"))
-                    :content message
-                    :type    :error})])
-      (cond->
-        {:db (assoc db ::spec/nuvlabox-clusters nuvlabox-clusters
-                       ::spec/loading? false)}))))
+    (let [found? (nil? nuvlabox-clusters)]
+      (if (instance? js/Error nuvlabox-clusters)
+        (dispatch [::messages-events/add
+                   (let [{:keys [status message]} (response/parse-ex-info nuvlabox-clusters)]
+                     {:header  (cond-> (str "failure getting nuvlabox clusters")
+                                       status (str " (" status ")"))
+                      :content message
+                      :type    :error})])
+        (cond->
+          {:db (assoc db ::spec/nuvlabox-clusters nuvlabox-clusters
+                         ::spec/loading? false)
+           :fx [[:dispatch [::nuvlabox-not-found found?]]]})))))
 
 
 (reg-event-fx
@@ -312,8 +319,9 @@
 (reg-event-fx
   ::set-nuvlabox-cluster
   (fn [{:keys [db]} [_ nuvlabox-cluster]]
-    {:db       (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster)
-     :dispatch [::refresh-cluster]}))
+    (let [found? (nil? nuvlabox-cluster)]
+      {:db (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster)
+       :fx [[:dispatch [::nuvlabox-not-found found?]]]})))
 
 
 (reg-event-fx
@@ -340,3 +348,15 @@
                                                                 additional-filter))
                             :last   10000}
                            #(dispatch [::set-ssh-keys-available %])]}))
+
+
+(reg-event-db
+  ::set-active-tab-index
+  (fn [db [_ active-tab-index]]
+    (assoc db ::spec/active-tab-index active-tab-index)))
+
+
+(reg-event-db
+  ::nuvlabox-not-found
+  (fn [db [_ found?]]
+    (assoc db ::spec/nuvlabox-not-found? found?)))

@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
     [sixsq.nuvla.ui.edge.events :as events]
     [sixsq.nuvla.ui.edge.subs :as subs]
+    [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.edge.views-utils :as views-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -19,10 +20,6 @@
 
 
 (def view-type (r/atom :cards))
-
-(def orchestration-icons
-  {:swarm      "docker"
-   :kubernetes "/ui/images/kubernetes.svg"})
 
 
 (defn MenuBar []
@@ -68,11 +65,9 @@
     (fn [{:keys [id cluster-id created managers workers nuvlabox-managers
                  nuvlabox-workers name description orchestrator] :as _nuvlabox-cluster}]
       (let [href          (str "edge/nuvlabox-cluster/" (general-utils/id->uuid id))
-            orch-icon     (get orchestration-icons (keyword orchestrator) "question circle")
             cluster-nodes (+ (count managers) (count workers))
             nb-per-id     (group-by :id (:resources nuvlaboxes))
             name          (or name cluster-id)]
-        ;^{:key id}
         [uix/Card
          {:on-click    #(dispatch [::history-events/navigate href])
           :href        href
@@ -84,8 +79,8 @@
           :meta        [:<>
                         (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))
                         [:br]
-                        (str "Orchestrator: " orchestrator " ")
-                        [ui/Icon {:name orch-icon}]]
+                        (str (str/capitalize (@tr [:orchestrator])) ": " orchestrator " ")
+                        [views-utils/orchestrator-icon orchestrator]]
           :description (when-not (str/blank? description) description)
           :content     [ui/ListSA {:divided        true
                                    :vertical-align "middle"}

@@ -10,20 +10,21 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.acl.views :as acl]))
 
 
 (def view-type (r/atom :cards))
 
 
-(defn MenuBar []
+(defn MenuBar [cluster-id]
   (let [loading? (subscribe [::subs/loading?])]
-    (dispatch [::events/refresh-cluster])
     (fn []
       [main-components/StickyBar
        [ui/Menu {:borderless true, :stackable true}
@@ -40,7 +41,7 @@
         [main-components/RefreshMenu
          {:action-id  events/refresh-id
           :loading?   @loading?
-          :on-refresh #(dispatch [::events/refresh-cluster])}]]])))
+          :on-refresh #(dispatch [::events/refresh-cluster cluster-id])}]]])))
 
 
 (defn ClusterViewHeader
@@ -157,7 +158,7 @@
   []
   (let [tr      (subscribe [::i18n-subs/tr])
         cluster (subscribe [::subs/nuvlabox-cluster])
-        {:keys [id name description owners tags created updated version]} @cluster]
+        {:keys [id name description owners tags created updated version orchestrator]} @cluster]
     [:<>
      [ui/Segment {:secondary true
                   :color     "blue"
@@ -186,6 +187,11 @@
         [ui/TableRow
          [ui/TableCell (str/capitalize (str (@tr [:version])))]
          [ui/TableCell version]]
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (@tr [:orchestrator]))]
+         [ui/TableCell
+          orchestrator " "
+          [views-utils/orchestrator-icon orchestrator]]]
         (when (not-empty owners)
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:owner]))]
@@ -202,13 +208,59 @@
         :map [NuvlaboxMap])]]))
 
 
+(defn TabOverview
+  []
+  (let [device (subscribe [::main-subs/device])]
+    (fn []
+      [ui/TabPane
+       [ui/Grid {:columns   (if (contains? #{:wide-screen} @device) 2 1)
+                 :stackable true
+                 :centered  true
+                 :padded    true}
+        [ui/GridRow
+         [ui/GridColumn {:stretched true}
+          [DetailedClusterView]]]]])))
+
+
+(defn tabs
+  []
+  (let [cluster   (subscribe [::subs/nuvlabox-cluster])
+        can-edit? (subscribe [::subs/can-edit-cluster?])]
+    [{:menuItem {:content "Overview"
+                 :key     "overview"
+                 :icon    "info"}
+      :render   (fn [] (r/as-element [TabOverview]))}
+     (acl/TabAcls cluster @can-edit? ::events/edit)]))
+
+
+(defn TabsCluster
+  []
+  (fn []
+    (let [active-index (subscribe [::subs/active-tab-index])]
+      [ui/Tab
+       {:menu        {:secondary true
+                      :pointing  true
+                      :style     {:display        "flex"
+                                  :flex-direction "row"
+                                  :flex-wrap      "wrap"}}
+        :panes       (tabs)
+        :activeIndex @active-index
+        :onTabChange (fn [_ data]
+                       (let [active-index (. data -activeIndex)]
+                         (dispatch [::events/set-active-tab-index active-index])))}])))
+
 (defn ClusterView
   [cluster-id]
-  (dispatch [::events/get-nuvlabox-cluster (str "nuvlabox-cluster/" cluster-id)])
   (let [tr      (subscribe [::i18n-subs/tr])
         cluster (subscribe [::subs/nuvlabox-cluster cluster-id])]
-    [:<>
-     [uix/PageHeader "fas fa-chart-network" (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
-                                                 (:name @cluster))]
-     [MenuBar]
-     [DetailedClusterView]]))
+    (dispatch [::events/refresh-cluster cluster-id])
+    (fn [cluster-id]
+      [:<>
+       [uix/PageHeader "fas fa-chart-network" (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
+                                                   (:name @cluster))]
+       [MenuBar cluster-id]
+       [TabsCluster]
+       [main-components/NotFoundPortal
+        ::subs/nuvlabox-not-found?
+        :no-nuvlabox-cluster-message-header
+        :no-nuvlabox-cluster-message-content]])))

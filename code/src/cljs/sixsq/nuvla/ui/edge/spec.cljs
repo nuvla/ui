@@ -34,6 +34,8 @@
 (s/def ::elements-per-page int?)
 (s/def ::total-elements int?)
 
+(s/def ::active-tab-index number?)
+
 (s/def ::full-text-search (s/nilable string?))
 (s/def ::full-text-clusters-search (s/nilable string?))
 
@@ -49,6 +51,10 @@
 
 (s/def ::nuvlabox-cluster any?)
 
+
+(s/def ::nuvlabox-not-found? boolean?)
+
+
 (s/def ::db (s/keys :req [::loading?
                           ::nuvlaboxes
                           ::nuvlaboxes-summary
@@ -59,6 +65,7 @@
                           ::page
                           ::elements-per-page
                           ::total-elements
+                          ::active-tab-index
                           ::full-text-search
                           ::full-text-clusters-search
                           ::state-selector
@@ -73,25 +80,26 @@
                           ::nuvlabox-cluster]))
 
 
-(def defaults {::loading?                 false
-               ::nuvlaboxes               nil
-               ::nuvlaboxes-summary       nil
-               ::nuvlabox-cluster-summary nil
-               ::nuvlaboxes-summary-all   nil
-               ::nuvlabox-releases        nil
-               ::state-nuvlaboxes         nil
-               ::page                     1
-               ::elements-per-page        8
-               ::total-elements           0
-               ::full-text-search         nil
+(def defaults {::loading?                  false
+               ::nuvlaboxes                nil
+               ::nuvlaboxes-summary        nil
+               ::nuvlabox-cluster-summary  nil
+               ::nuvlaboxes-summary-all    nil
+               ::nuvlabox-releases         nil
+               ::state-nuvlaboxes          nil
+               ::page                      1
+               ::elements-per-page         8
+               ::total-elements            0
+               ::active-tab-index          0
+               ::full-text-search          nil
                ::full-text-clusters-search nil
-               ::state-selector           nil
-               ::open-modal               nil
-               ::nuvlabox-created-id      nil
-               ::nuvlabox-usb-api-key     nil
-               ::nuvlabox-ssh-key         nil
-               ::nuvlabox-private-ssh-key nil
-               ::vpn-infra                nil
-               ::ssh-keys-available       nil
-               ::nuvlabox-clusters        nil
-               ::nuvlabox-cluster         nil})
+               ::state-selector            nil
+               ::open-modal                nil
+               ::nuvlabox-created-id       nil
+               ::nuvlabox-usb-api-key      nil
+               ::nuvlabox-ssh-key          nil
+               ::nuvlabox-private-ssh-key  nil
+               ::vpn-infra                 nil
+               ::ssh-keys-available        nil
+               ::nuvlabox-clusters         nil
+               ::nuvlabox-cluster          nil})

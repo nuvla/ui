@@ -2,6 +2,7 @@
   (:require
     [clojure.string :as str]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]))
 
 (def state-new "NEW")
@@ -20,6 +21,10 @@
 (def vuln-medium-color "#fbbc06")
 (def vuln-low-color "#21b802")
 (def vuln-unknown-color "#949494")
+
+(def orchestration-icons
+  {:swarm      "docker"
+   :kubernetes "/ui/images/kubernetes.svg"})
 
 (defn state->icon
   "Commissioning state"

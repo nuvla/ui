@@ -833,7 +833,7 @@
                    3 [views-cluster/ClusterView path2]
                    2 [DetailedView path1]
                    [NuvlaBoxes])]
-    [:<>
+    [ui/DimmerDimmable {:dimmed true}
      [ui/Segment style/basic
       children]
      [AddModalWrapper]]))

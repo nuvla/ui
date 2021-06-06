@@ -62,13 +62,13 @@
 
 (defn before-now?
   [iso8601]
-  (let [ts (parse-iso8601 iso8601)]
+  (let [^js ts (parse-iso8601 iso8601)]
     (boolean (.isBefore ts (now)))))
 
 
 (defn after-now?
   [iso8601]
-  (let [ts (parse-iso8601 iso8601)]
+  (let [^js ts (parse-iso8601 iso8601)]
     (boolean (.isAfter ts (now)))))
 
 
@@ -141,7 +141,7 @@
 
 (defn time->utc-str
   "Time to UTC string"
-  [moment]
+  [^js moment]
   (-> moment .clone .utc .format))
 
 

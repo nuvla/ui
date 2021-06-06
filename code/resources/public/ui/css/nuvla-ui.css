@@ -195,3 +195,12 @@ tr.active td {
 .large-height > .CodeMirror {
   height: 600px !important;
 }
+
+.markdown img {
+  max-width: 100%;
+}
+
+
+.leaflet-top, .leaflet-bottom {
+  z-index: 998 !important;
+}

@@ -112,11 +112,11 @@
 (reg-event-fx
   ::get-ssh-keys-not-associated
   (fn [{{{:keys [ssh-keys]} ::spec/nuvlabox} :db} [_ callback-fn]]
-    (if (empty? ssh-keys)
+    (let [keys (if (nil? ssh-keys) [] ssh-keys)]
       (callback-fn [])
       {::cimi-api-fx/search
        [:credential
-        {:filter (->> ssh-keys
+        {:filter (->> keys
                       (map #(str "id!='" % "'"))
                       (apply general-utils/join-and)
                       (general-utils/join-and "subtype=\"ssh-key\""))

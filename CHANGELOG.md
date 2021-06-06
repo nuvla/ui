@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## [2.19.0] - 2021-06-04
+
+### Changed
+
+  - Main comp - Show job errors per action when some
+  - Credential - Support gpg key
+  - Main - Detect unpaid subscription to show a more coherent message
+  - Deployment - Bulk force delete support
+  - Deployment - Bulk stop support
+  - Fix visible console errors after update 
+  - React-chart-2 - Fix broken changes
+  - React-leaflet - Fix broken changes
+  - NPM dependencies - Major update
+  - Dependencies - sixsq.nuvla/parent 6.7.5
+  - Credentials - Improve layout of logos for cloud providers
+
 ## [2.18.1] - 2021-05-19
 
 ### Added
@@ -16,6 +32,7 @@
   - Deployment detail - Clear log bugfix
   - Deployment dialog - Remove duplicated definition of price subscription
   - Deployment detail - Markdownified module description
+  - Improved responsive display of module overview
 
 ## [2.18.0] - 2021-05-06
 

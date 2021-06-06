@@ -63,7 +63,7 @@
 
 
 (defn convert-latlong-map
-  [latlong]
+  [^js latlong]
   [(.-lng latlong) (.-lat latlong)])
 
 

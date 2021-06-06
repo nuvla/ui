@@ -134,11 +134,44 @@
                                              {:position "right center"
                                               :content  (@tr [:public-key-info])
                                               :trigger  (r/as-element
-                                                          [:span "public key " [ui/Icon {:name "info circle"}]])}]),
+                                                          [:span (@tr [:public-key]) [ui/Icon {:name "info circle"}]])}]),
             :placeholder (@tr [:public-key]), :editable? editable?, :required? false,
             :default-value public-key, :spec ::spec/public-key, :type :textarea,
             :on-change (partial on-change :public-key)]
-           [uix/TableRowField "private key", :placeholder (@tr [:private-key]), :editable? editable?,
+           [uix/TableRowField (@tr [:private-key]), :placeholder (@tr [:private-key]), :editable? editable?,
+            :required? false, :default-value private-key, :spec ::spec/private-key, :type :textarea,
+            :on-change (partial on-change :private-key)]]]]))))
+
+
+(defn credential-gpg
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        credential     (subscribe [::subs/credential])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-credential name-kw value])
+                         (dispatch [::events/validate-credential-form ::spec/gpg-credential]))]
+    (fn []
+      (let [editable? (utils-general/editable? @credential @is-new?)
+            {:keys [name description public-key private-key]} @credential]
+
+        [:<>
+         [acl/AclButton {:default-value (:acl @credential)
+                         :read-only     (not editable?)
+                         :on-change     #(dispatch [::events/update-credential :acl %])}]
+         [ui/Table style/definition
+          [ui/TableBody
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :validate-form? @validate-form?, :default-value name, :spec ::spec/name,
+            :on-change (partial on-change :name)]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
+            :on-change (partial on-change :description)]
+           [uix/TableRowField (@tr [:public-key]), :placeholder (@tr [:public-key]), :editable? editable?, :required? true,
+            :default-value public-key, :spec ::spec/public-key, :type :textarea,
+            :on-change (partial on-change :public-key)]
+           [uix/TableRowField (@tr [:private-key]), :placeholder (@tr [:private-key]), :editable? editable?,
             :required? false, :default-value private-key, :spec ::spec/private-key, :type :textarea,
             :on-change (partial on-change :private-key)]]]]))))
 
@@ -472,6 +505,9 @@
   {"infrastructure-service-vpn"
    {:validation-spec ::spec/vpn-credential
     :modal-content   credential-vpn}
+   "gpg-key"
+   {:validation-spec ::spec/gpg-credential
+    :modal-content   credential-gpg}
    "ssh-key"
    {:validation-spec ::spec/ssh-credential
     :modal-content   credential-ssh}
@@ -518,6 +554,7 @@
     "infrastructure-service-amazonec2" {:tab-index (:cloud-services tab-indices), :icon "cloud", :name "AWS EC2"}
     "infrastructure-service-exoscale" {:tab-index (:cloud-services tab-indices), :icon "cloud", :name "Exoscale"}
     "infrastructure-service-vpn" {:tab-index (:access-services tab-indices), :icon "key", :name "VPN"}
+    "gpg-key" {:tab-index (:access-services tab-indices), :icon "key", :name "GPG keys"}
     "ssh-key" {:tab-index (:access-services tab-indices), :icon "key", :name "SSH keys"}
     "api-key" {:tab-index (:api-keys tab-indices), :icon "key", :name "API keys"}
     "generate-ssh-key" {:tab-index (:access-services tab-indices), :icon "key", :name "SSH keys"}
@@ -708,11 +745,24 @@
                         (dispatch [::events/form-valid])
                         (dispatch [::events/close-add-credential-modal])
                         (dispatch [::events/open-credential-modal
+                                   {:subtype "gpg-key"} true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "GPG Keypair"]
+           [:div]
+           [ui/Image {:src   "/ui/images/gpg.png"
+                      :style {:max-height 112}}]]]
+
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-credential-modal])
+                        (dispatch [::events/open-credential-modal
                                    {:subtype "infrastructure-service-exoscale"} true]))}
           [ui/CardContent {:text-align :center}
            [ui/Header "Cloud Exoscale"]
            [ui/Image {:src   "/ui/images/exoscale.png"
-                      :style {:max-width 112}}]]]
+                      :style {:max-width 220}}]]]
 
          [ui/Card
           {:on-click #(do
@@ -736,7 +786,7 @@
           [ui/CardContent {:text-align :center}
            [ui/Header "Cloud Azure"]
            [ui/Image {:src   "/ui/images/azure.png"
-                      :style {:max-width 112}}]]]
+                      :style {:max-width 150}}]]]
 
          [ui/Card
           {:on-click #(do
@@ -748,7 +798,7 @@
           [ui/CardContent {:text-align :center}
            [ui/Header "Cloud Google"]
            [ui/Image {:src   "/ui/images/gce.png"
-                      :style {:max-width 112}}]]]]]])))
+                      :style {:max-width 130}}]]]]]])))
 
 
 (defn generated-credential-modal

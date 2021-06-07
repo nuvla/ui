@@ -176,13 +176,13 @@
     {:db                  (assoc db ::spec/completed? false)
      ::cimi-api-fx/search [:subscription-config
                            {:orderby "name:asc, id:asc"}
-                           #(dispatch [::set-notification-subscription-configs (:resources %)])]}))
+                           #(dispatch [::set-notification-subscription-configs (map utils/model->view (:resources %))])]}))
 
 (reg-event-fx
   ::edit-subscription-config
   (fn [{{:keys [::spec/notification-subscription-config] :as db} :db} [_]]
     (let [id             (:id notification-subscription-config)
-          new-subs-config (utils/db->new-subscription-config db)]
+          new-subs-config (utils/view->model (utils/db->new-subscription-config db))]
       (if (nil? id)
         {:db               db
          ::cimi-api-fx/add [:subscription-config new-subs-config

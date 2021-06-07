@@ -492,6 +492,7 @@
                             :style      {:padding-bottom 8}} "Tag"]
              [ui/TableCell
               [ui/Dropdown {:selection true
+                            :disabled  (= "data-record" @component-option)
                             :name      "tag"
                             :clearable true
                             :on-change (ui-callback/value

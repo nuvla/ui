@@ -521,7 +521,7 @@
                    (@tr [:description-cannot-be-empty])]]))]]
            [ui/GridColumn
             [:h4 "Preview"]
-            [ui/Segment [ui/ReactMarkdown @description]]]]]
+            [ui/Segment [ui/ReactMarkdown {:class ["markdown"]} @description]]]]]
          :label (str/capitalize (@tr [:description]))
          :default-open true]))))
 
@@ -1138,27 +1138,33 @@
   (let [tr          (subscribe [::i18n-subs/tr])
         editable?   (subscribe [::subs/editable?])
         description (subscribe [::subs/description])
+        device      (subscribe [::main-subs/device])
         {:keys [logo-url]} @(subscribe [::subs/module])]
     [ui/Segment {:secondary true
                  :color     "purple"
                  :raised    true
                  :padded    true}
-     [ui/Grid {:columns 2}
-      [ui/GridRow
+     [ui/Grid {:columns   1
+               :stackable true}
+      [ui/GridRow {:columns 2}
        [ui/GridColumn {:floated "left"}
         [:h4 (str/capitalize (@tr [:description]))]]
-       [ui/GridColumn
-        [ui/GridColumn {:style {:text-align "right"}}
-         (when @editable?
-           [ui/Button {:icon     "pencil"
-                       :compact  true
-                       :on-click #(dispatch [::events/set-active-tab-index details-tab-index])}])]]]
+       (when @editable?
+         [ui/GridColumn {:style {:text-align "right"}}
+          [ui/Button {:icon     "pencil"
+                      :compact  true
+                      :on-click #(dispatch [::events/set-active-tab-index details-tab-index])}]])]
       [ui/GridRow
-       [ui/GridColumn
-        [ui/ReactMarkdown @description]]
-       [ui/GridColumn
+       [ui/GridColumn {:textAlign "center"
+                       :only      "mobile"}
         [ui/Image {:src   (or logo-url "")
-                   :style {:object-fit "contain"}}]]]]]))
+                   :style {:max-width "100%"}}]]
+       [ui/GridColumn {:class ["markdown"]}
+        [ui/Image {:floated "right"
+                   :src     (or logo-url "")
+                   :hidden  (when (= :mobile @device) true)
+                   :style   {:max-width "25%"}}]
+        [ui/ReactMarkdown @description]]]]]))
 
 
 (defn ShareTitle

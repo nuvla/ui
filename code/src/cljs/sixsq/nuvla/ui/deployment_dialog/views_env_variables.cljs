@@ -54,8 +54,8 @@
 
 
 (def cred-env-var-map
-  {"S3_CRED"        "infrastructure-service-minio"
-   "GPG_PUBLIC_KEY" "gpg-key"})
+  {"S3_CRED"  "infrastructure-service-minio"
+   "GPG_CRED" "gpg-key"})
 
 
 (defn is-cred-env-var?
@@ -66,7 +66,7 @@
 (defn filter-creds
   [env-name creds]
   (when (is-cred-env-var? env-name)
-    (filter #(when (= (get cred-env-var-map env-name ) (:subtype %)) %) creds)))
+    (filter #(when (= (get cred-env-var-map env-name) (:subtype %)) %) creds)))
 
 
 (defn AsFormInput

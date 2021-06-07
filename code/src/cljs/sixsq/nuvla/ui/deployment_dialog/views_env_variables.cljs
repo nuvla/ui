@@ -9,11 +9,10 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [clojure.string :as str]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
-(defn summary-row
+(defn SummaryRow
   []
   (let [tr            (subscribe [::i18n-subs/tr])
         env-variables (subscribe [::subs/env-variables])
@@ -35,7 +34,7 @@
 
 (defn CredentialsDropdown
   [_env-value _index _deployment _credentials]
-  (let [tr   (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (fn [env-value index deployment credentials]
       [ui/Dropdown
        {:clearable   true
@@ -45,33 +44,43 @@
         :placeholder (@tr [:credentials-select-related-infra])
         :on-change   (ui-callback/value
                        #(dispatch [::events/set-deployment (assoc-in
-                                                            @deployment
-                                                            [:module :content
-                                                             :environmental-variables
-                                                             index :value] %)]))
+                                                             @deployment
+                                                             [:module :content
+                                                              :environmental-variables
+                                                              index :value] %)]))
         :options     (map (fn [{id :id, name :name}]
                             {:key id, :value id, :text name})
                           credentials)}])))
 
 
-(defn filter-s3-creds
-  [creds]
-  (filter #(when (= "infrastructure-service-minio" (:subtype %)) %) creds))
+(def cred-env-var-map
+  {"S3_CRED"        "infrastructure-service-minio"
+   "GPG_PUBLIC_KEY" "gpg-key"})
 
 
-(defn as-form-input
+(defn is-cred-env-var?
+  [env-var-name]
+  (contains? (set (keys cred-env-var-map)) env-var-name))
+
+
+(defn filter-creds
+  [env-name creds]
+  (when (is-cred-env-var? env-name)
+    (filter #(when (= (get cred-env-var-map env-name ) (:subtype %)) %) creds)))
+
+
+(defn AsFormInput
   [index {env-name        :name
           env-description :description
           env-value       :value
           env-required    :required}]
-  (let [deployment (subscribe [::subs/deployment])
-        is-cred?   (str/starts-with? env-name "S3_CRED")
-        creds      (when is-cred? (subscribe [::creds-subs/credentials]))
-        s3-creds   (when creds (filter-s3-creds @creds))]
+  (let [deployment     (subscribe [::subs/deployment])
+        creds          (subscribe [::creds-subs/credentials])
+        selected-creds (filter-creds env-name @creds)]
     [ui/FormField {:required env-required}
      [:label env-name ff/nbsp (ff/help-popup env-description)]
-     (if s3-creds
-       [CredentialsDropdown env-value index deployment s3-creds]
+     (if selected-creds
+       [CredentialsDropdown env-value index deployment selected-creds]
        [ui/Input
         {:type          "text"
          :name          env-name
@@ -95,5 +104,5 @@
       (map-indexed
         (fn [i env-variable]
           ^{:key (str (:name env-variable) "_" i)}
-          [as-form-input i env-variable])
+          [AsFormInput i env-variable])
         @env-variables)]]))

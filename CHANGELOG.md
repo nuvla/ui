@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+  - Improve contrast for selected item in sidebar menu.
+
+
 ## [2.19.0] - 2021-06-04
 
 ### Changed

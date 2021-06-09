@@ -749,7 +749,7 @@
           [ui/TableBody
            (for [{:keys [id name cpu-percent mem-usage-limit
                          mem-percent net-in-out blk-in-out
-                         container-status restart-count] :as cstat} container-stats]
+                         container-status restart-count] :as _cstat} container-stats]
              (when id
                ^{:key id}
                [ui/TableRow
@@ -1488,9 +1488,14 @@
   (let [nb-status (subscribe [::subs/nuvlabox-status])]
     (fn [uuid]
       ^{:key uuid}
-      [ui/Container {:fluid true}
-       [PageHeader]
-       [MenuBar uuid]
-       [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
-       [job-views/ProgressJobAction @nb-status]
-       [TabsNuvlaBox]])))
+      [ui/DimmerDimmable
+       [main-components/NotFoundPortal
+        ::subs/nuvlabox-not-found?
+        :no-nuvlabox-message-header
+        :no-nuvlabox-message-content]
+       [ui/Container {:fluid true}
+        [PageHeader]
+        [MenuBar uuid]
+        [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
+        [job-views/ProgressJobAction @nb-status]
+        [TabsNuvlaBox]]])))

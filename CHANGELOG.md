@@ -5,6 +5,7 @@
 ### Changed
 
   - Improve contrast for selected item in sidebar menu.
+  - Show not found message for NuvlaBox
 
 
 ## [2.19.0] - 2021-06-04

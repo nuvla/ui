@@ -1095,13 +1095,17 @@
 
 
 (defn TabLocationMap
-  [_nuvlabox]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        zoom         (atom 3)
-        new-location (r/atom nil)]
-    (fn [{:keys [id location] :as nuvlabox}]
+  []
+  (let [tr                (subscribe [::i18n-subs/tr])
+        nuvlabox          (subscribe [::subs/nuvlabox])
+        nuvlabox-status   (subscribe [::subs/nuvlabox-status])
+        zoom              (atom 3)
+        new-location      (r/atom nil)
+        {:keys [id location]} nuvlabox
+        inferred-location (:inferred-location @nuvlabox-status)]
+    (fn []
       (let [update-new-location #(reset! new-location %)
-            position            (some-> (or @new-location location) map/longlat->latlong)]
+            position            (some-> (or @new-location location inferred-location) map/longlat->latlong)]
         [:div
          (if position (@tr [:map-drag-to-update-nb-location])
                       (@tr [:map-click-to-set-nb-location]))
@@ -1132,9 +1136,8 @@
 
 (defn TabLocation
   []
-  (let [nuvlabox (subscribe [::subs/nuvlabox])]
-    [ui/TabPane
-     [TabLocationMap @nuvlabox]]))
+  [ui/TabPane
+   [TabLocationMap]])
 
 
 (defn TabLoad

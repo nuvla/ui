@@ -19,6 +19,7 @@
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.profile.events :as events]
+    [sixsq.nuvla.ui.profile.spec :as spec]
     [sixsq.nuvla.ui.profile.subs :as subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as utils-general]
@@ -66,63 +67,59 @@
 
 (defn AddGroupButton
   []
-  (let [tr                   (subscribe [::i18n-subs/tr])
-        show?                (r/atom false)
-        group-name           (r/atom "")
-        group-desc           (r/atom "")
-        validate?            (r/atom false)
-        loading?             (r/atom false)
-        ;create-root-project? (r/atom false)
-        close-fn             #(reset! show? false)
-        is-admin?            (subscribe [::session-subs/is-admin?])]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        show?      (r/atom false)
+        group-name (r/atom "")
+        group-desc (r/atom "")
+        validate?  (r/atom false)
+        loading?   (r/atom false)
+        close-fn   #(reset! show? false)]
     (fn []
-      (when @is-admin?
-        (let [group-identifier (utils-general/sanitize-name @group-name)]
-          [ui/Modal
-           {:open       @show?
-            :close-icon true
-            :on-close   close-fn
-            :trigger    (r/as-element
-                          [ui/MenuItem {:on-click #(reset! show? true)}
-                           [ui/Icon {:name "users"}]
-                           (str/capitalize (@tr [:add-group]))])}
-           [uix/ModalHeader {:header (str/capitalize (@tr [:add-group]))}]
-           [ui/ModalContent
-            [ui/Input {:name        "name"
-                       :placeholder (@tr [:name])
-                       :type        :text
-                       ;:error       (when (and @validate?
-                       ;                        (not (s/valid? ::spec/group-name group-name))) true)
-                       :fluid       true
-                       :on-change   (ui-callback/input-callback
-                                      #(do
-                                         (reset! validate? true)
-                                         (reset! group-name %)))}]
-            [:br]
-            [ui/Input {:name        "description"
-                       :placeholder (@tr [:description])
-                       :type        :text
-                       ;:error       (when (and @validate?
-                       ;                        (not (s/valid? ::spec/group-name group-name))) true)
-                       :fluid       true
-                       :on-change   (ui-callback/input-callback
-                                      #(do
-                                         (reset! validate? true)
-                                         (reset! group-desc %)))}]
-            ;[:br]
-            ;[ui/Checkbox {:checked   @create-root-project?
-            ;              :toggle    true
-            ;              :label     "Create root project with the same name?"
-            ;              :on-change (ui-callback/checked
-            ;                           #(reset! create-root-project? (not @create-root-project?)))}]
-            ]
-           [ui/ModalActions
-            [uix/Button
-             {:text     (@tr [:create])
-              :primary  true
-              :icon     "plus"
-              :loading  (true? @loading?)
-              :on-click #(dispatch [::events/add-group group-identifier @group-name @group-desc loading?])}]]])))))
+      (let [group-identifier (utils-general/sanitize-name @group-name)
+            form-valid?      (and (s/valid? ::spec/group-name @group-name)
+                                  (s/valid? ::spec/group-description @group-desc))]
+        [ui/Modal
+         {:open       @show?
+          :close-icon true
+          :on-close   close-fn
+          :trigger    (r/as-element
+                        [ui/MenuItem {:on-click #(reset! show? true)}
+                         [ui/Icon {:name "users"}]
+                         (str/capitalize (@tr [:add-group]))])}
+         [uix/ModalHeader {:header (str/capitalize (@tr [:add-group]))}]
+         [ui/ModalContent
+          [ui/Message {:hidden (not (and @validate? (not form-valid?)))
+                       :error  true}
+           [ui/MessageHeader (@tr [:validation-error])]
+           [ui/MessageContent (@tr [:validation-error-message])]]
+          [ui/Input {:name        "name"
+                     :placeholder (@tr [:name])
+                     :type        :text
+                     :error       (when (and @validate?
+                                             (not (s/valid? ::spec/group-name @group-name))) true)
+                     :fluid       true
+                     :on-change   (ui-callback/input-callback
+                                    #(reset! group-name %))}]
+          [:br]
+          [ui/Input {:name        "description"
+                     :placeholder (@tr [:description])
+                     :type        :text
+                     :error       (when (and @validate?
+                                             (not (s/valid? ::spec/group-description @group-desc))) true)
+                     :fluid       true
+                     :on-change   (ui-callback/input-callback
+                                    #(reset! group-desc %))}]]
+         [ui/ModalActions
+          [uix/Button
+           {:text     (@tr [:create])
+            :primary  true
+            :disabled (and @validate? (not form-valid?))
+            :icon     "plus"
+            :loading  (true? @loading?)
+            :on-click #(if (not form-valid?)
+                         (reset! validate? true)
+                         (dispatch
+                           [::events/add-group group-identifier @group-name @group-desc loading?]))}]]]))))
 
 
 (defn ModalChangePassword []
@@ -1062,10 +1059,10 @@
         ui-acl    (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
     (fn [group]
       (let [{:keys [id name description acl]} group]
-        [ui/Table
-         [ui/TableHeader
+        [ui/Table {:columns 4}
+         [ui/TableHeader {:fullWidth true}
           [ui/TableRow
-           [ui/TableHeaderCell
+           [ui/TableHeaderCell                              ;{:colSpan 4}
             [ui/HeaderSubheader {:as :h3}
              name " (" id ")"]
             (when description [:p description])]
@@ -1076,7 +1073,7 @@
                                         :active?       show-acl?} ui-acl]])]
           (when @show-acl?
             [ui/TableRow
-             [ui/TableCell {:colSpan 2}
+             [ui/TableCell {:colSpan 4}
               [acl-views/AclSection {:default-value acl
                                      :read-only     (not editable?)
                                      :active?       show-acl?}]]])]
@@ -1095,11 +1092,16 @@
           (when editable?
             [ui/TableRow
              [ui/TableCell
-              [DropdownPrincipals {:placeholder (@tr [:add-group-members])
-                                   :on-change   (fn [m]
-                                                  (swap! members #(conj @members m))
-                                                  (reset! changed? true))
-                                   :fluid       true} @members]]
+              [:div {:style {:display "flex"}}
+               [DropdownPrincipals {:placeholder (@tr [:add-group-members])
+                                    :on-change   (fn [m]
+                                                   (swap! members #(conj @members m))
+                                                   (reset! changed? true))
+                                    :fluid       true} @members]
+               [:span ff/nbsp]
+               [uix/Button {:text     (@tr [:invite])
+                            :icon     "plus"
+                            :on-click #()}]]]
              [ui/TableCell {:textAlign "right"}
               [uix/Button {:primary  true
                            :text     (@tr [:save])
@@ -1278,8 +1280,7 @@
 (defmethod panel/render :profile
   [_path]
   (let [tr        (subscribe [::i18n-subs/tr])
-        is-group? (subscribe [::session-subs/active-claim-is-group?])
-        is-admin? (subscribe [::session-subs/is-admin?])]
+        is-group? (subscribe [::session-subs/active-claim-is-group?])]
     (dispatch [::acl-events/search-groups])
     [ui/Container {:fluid true}
      [uix/PageHeader "user" (str/capitalize (@tr [:profile]))]
@@ -1288,7 +1289,6 @@
                     :icon     "user secret"
                     :content  (str/capitalize (@tr [:change-password]))
                     :on-click #(dispatch [::events/open-modal :change-password])}]
-      (when @is-admin?
-        [AddGroupButton])]
-     [ModalChangePassword]
+      [AddGroupButton]
+      [ModalChangePassword]]
      [Tabs]]))

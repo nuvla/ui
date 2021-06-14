@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.profile.spec
   (:require
-    [clojure.spec.alpha :as s]))
+    [clojure.spec.alpha :as s]
+    [sixsq.nuvla.ui.utils.spec :as us]))
 
 
 (s/def ::user any?)
@@ -33,7 +34,13 @@
 
 (s/def ::group any?)
 
-(s/def ::group-name (s/nilable string?))
+(s/def ::group-name us/nonblank-string)
+
+(s/def ::group-description us/nonblank-string)
+
+(s/def ::group-form (s/keys :req [::group-name
+                                  ::group-description]))
+
 
 (s/def ::active-tab-index number?)
 

@@ -69,7 +69,7 @@
   ::groups
   :<- [::session]
   (fn [session]
-    (set (some-> session :groups (str/split #"\s+") sort))))
+    (into (sorted-set) (some-> session :groups (str/split #"\s+")))))
 
 
 (reg-sub

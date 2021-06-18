@@ -5,7 +5,9 @@
 
 
 (def dictionary
-  {:en {:about                                         "about"
+  {:en {:join-group-accepted                           "You've been added to the group successfully."
+        :invite-by-email                               "Invite by email"
+        :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
         :accept-costs                                  "I accept the costs"

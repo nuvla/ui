@@ -115,7 +115,7 @@
             :primary  true
             :disabled (and @validate? (not form-valid?))
             :icon     "plus"
-            :loading  (true? @loading?)
+            :loading  @loading?
             :on-click #(if (not form-valid?)
                          (reset! validate? true)
                          (dispatch
@@ -983,49 +983,26 @@
 
 
 (defn DropdownPrincipals
-  [_opts _members]
-  (let [open  (r/atom false)
-        users (subscribe [::acl-subs/users-options])
-        tr    (subscribe [::i18n-subs/tr])]
-    (dispatch [::acl-events/search-users ""])
-    (fn [{:keys [on-change fluid value placeholder]
-          :or   {on-change   #()
-                 fluid       false
-                 value       nil
-                 placeholder ""}}
-         members]
-      (let [used-principals members]
-        [ui/Dropdown {:text        (or (when value @(subscribe [::acl-subs/principal-name value]))
-                                       value)
-                      :placeholder placeholder
-                      :fluid       fluid
-                      :style       {:width "250px"}
-                      :on-open     #(reset! open true)
-                      :open        @open
-                      :upward      false
-                      :className   "selection"
-                      :on-blur     #(reset! open false)
-                      :on-close    #()}
-
-         [ui/DropdownMenu {:style {:overflow-x "auto"
-                                   :min-height "250px"}}
-
-          [ui/DropdownHeader {:icon "user", :content (str/capitalize (@tr [:users]))}]
-
-          [ui/Input {:icon          "search"
-                     :icon-position "left"
-                     :name          "search"
-                     :auto-complete "off"
-                     :on-click      #(reset! open true)
-                     :on-change     (ui-callback/input ::acl-events/search-users)}]
-
-          (doall
-            (for [{user-id :id user-name :name} (remove #(contains? used-principals (:id %)) @users)]
-              ^{:key user-id}
-              [ui/DropdownItem {:text     (or user-name user-id)
-                                :on-click (fn []
-                                            (on-change user-id)
-                                            (reset! open false))}]))]]))))
+  [_add-user _opts _members]
+  (dispatch [::acl-events/search-users ""])
+  (fn [add-user {:keys [fluid placeholder]
+                 :or   {fluid       false
+                        placeholder ""}}
+       members]
+    (let [used-principals (set members)]
+      [ui/Dropdown {:placeholder placeholder
+                    :fluid       fluid
+                    :search      true
+                    :value       @add-user
+                    :on-change   (ui-callback/value #(reset! add-user %))
+                    :options     (remove
+                                   #(used-principals (:key %))
+                                   [{:key "user/4f3fe714-8c6d-4c9a-b156-333ee6195e49", :value "user/4f3fe714-8c6d-4c9a-b156-333ee6195e49", :text "user/4f3fe714-8c6d-4c9a-b156-333ee6195e49"}
+                                    {:key "user/4f3fe714-8c6d-4c9a-b156-333ee6195e4a", :value "user/4f3fe714-8c6d-4c9a-b156-333ee6195e4a", :text "user/4f3fe714-8c6d-4c9a-b156-333ee6195e4a"}
+                                    {:key "user/a", :value "user/a", :text "user/a"}])
+                    :selection   true
+                    :style       {:width "250px"}
+                    :upward      false}])))
 
 
 (defn GroupMember
@@ -1049,34 +1026,38 @@
 
 (defn GroupMembers
   [group]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        editable? (utils-general/editable? group false)
-        users     (:users group)
-        members   (r/atom users)
-        changed?  (r/atom false)
-        acl       (:acl group)
-        show-acl? (r/atom false)
-        ui-acl    (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        editable?   (utils-general/editable? group false)
+        users       (:users group)
+        members     (r/atom users)
+        acl         (r/atom (:acl group))
+        changed?    (r/atom false)
+        show-acl?   (r/atom false)
+        invite-user (r/atom nil)
+        add-user    (r/atom nil)]
     (fn [group]
-      (let [{:keys [id name description acl]} group]
+      (let [{:keys [id name description]} group]
         [ui/Table {:columns 4}
          [ui/TableHeader {:fullWidth true}
           [ui/TableRow
-           [ui/TableHeaderCell                              ;{:colSpan 4}
+           [ui/TableHeaderCell
             [ui/HeaderSubheader {:as :h3}
              name " (" id ")"]
             (when description [:p description])]
-           (when (and acl editable?)
+           (when (and @acl editable?)
              [ui/TableHeaderCell
-              [acl-views/AclButtonOnly {:default-value acl
+              [acl-views/AclButtonOnly {:default-value @acl
                                         :read-only     (not editable?)
-                                        :active?       show-acl?} ui-acl]])]
+                                        :active?       show-acl?}]])]
           (when @show-acl?
             [ui/TableRow
              [ui/TableCell {:colSpan 4}
-              [acl-views/AclSection {:default-value acl
+              [acl-views/AclSection {:default-value @acl
                                      :read-only     (not editable?)
-                                     :active?       show-acl?}]]])]
+                                     :active?       show-acl?
+                                     :on-change     #(do
+                                                       (reset! acl %)
+                                                       (reset! changed? true))}]]])]
          [ui/TableBody
           [ui/TableRow
            [ui/TableCell
@@ -1093,21 +1074,38 @@
             [ui/TableRow
              [ui/TableCell
               [:div {:style {:display "flex"}}
-               [DropdownPrincipals {:placeholder (@tr [:add-group-members])
-                                    :on-change   (fn [m]
-                                                   (swap! members #(conj @members m))
-                                                   (reset! changed? true))
-                                    :fluid       true} @members]
+               [DropdownPrincipals
+                add-user
+                {:placeholder (@tr [:add-group-members])
+                 :fluid       true} @members]
                [:span ff/nbsp]
-               [uix/Button {:text     (@tr [:invite])
-                            :icon     "plus"
-                            :on-click #()}]]]
+               [uix/Button {:text     (@tr [:add])
+                            :icon     "add user"
+                            :disabled (str/blank? @add-user)
+                            :on-click #(do
+                                         (swap! members conj @add-user)
+                                         (reset! add-user nil)
+                                         (reset! changed? true))}]
+               [:span ff/nbsp]
+               [:span ff/nbsp]
+               [ui/Input {:placeholder (@tr [:invite-by-email])
+                          :style       {:width "250px"}
+                          :value       (or @invite-user "")
+                          :on-change   (ui-callback/value #(reset! invite-user %))}]
+               [:span ff/nbsp]
+               [uix/Button {:text     "send"
+                            :icon     "send"
+                            :disabled (str/blank? @invite-user)
+                            :on-click #(do
+                                         (dispatch [::events/invite-to-group id @invite-user])
+                                         (reset! invite-user nil))}]]]
              [ui/TableCell {:textAlign "right"}
               [uix/Button {:primary  true
                            :text     (@tr [:save])
                            :icon     "save"
                            :disabled (not @changed?)
-                           :on-click #(do (dispatch [::events/edit-group (assoc group :users @members)])
+                           :on-click #(do (dispatch [::events/edit-group (assoc group :users @members
+                                                                                      :acl @acl)])
                                           (reset! changed? false))}]]])]]))))
 
 
@@ -1129,22 +1127,22 @@
 
 (defn Groups
   []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        groups          (subscribe [::acl-subs/groups-options])
-        is-group?       (subscribe [::session-subs/active-claim-is-group?])
-        remove-groups   #{"group/nuvla-nuvlabox" "group/nuvla-anon" "group/nuvla-user"}
-        filtered-groups (filter #(not (contains? remove-groups (:id %))) @groups)
-        sorted-groups   (sort-by :id filtered-groups)]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        groups    (subscribe [::acl-subs/groups-options])
+        is-group? (subscribe [::session-subs/active-claim-is-group?])]
     (fn []
-      [:<>
-       (when @is-group?
-         [ui/GridColumn
-          [GroupMembersSegment]])
-       [ui/Segment {:padded true, :color "blue"}
-        [ui/Header {:as :h2} (str/capitalize (@tr [:groups]))]
-        (for [group sorted-groups]
-          ^{:key (str "group-" group)}
-          [GroupMembers group])]])))
+      (let [remove-groups   #{"group/nuvla-nuvlabox" "group/nuvla-anon" "group/nuvla-user"}
+            filtered-groups (filter #(not (contains? remove-groups (:id %))) @groups)
+            sorted-groups   (sort-by :id filtered-groups)]
+        [:<>
+         (when @is-group?
+           [ui/GridColumn
+            [GroupMembersSegment]])
+         [ui/Segment {:padded true, :color "blue"}
+          [ui/Header {:as :h2} (str/capitalize (@tr [:groups]))]
+          (for [group sorted-groups]
+            ^{:key (str "group-" group)}
+            [GroupMembers group])]]))))
 
 
 (defn SubscriptionAndBilling

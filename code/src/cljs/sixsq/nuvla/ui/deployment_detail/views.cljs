@@ -89,7 +89,7 @@
      [ProgressDeployment]]))
 
 
-(defn url-to-row
+(defn UrlToRow
   [url-name url-pattern]
   (let [tr  (subscribe [::i18n-subs/tr])
         url (subscribe [::subs/url url-pattern])]
@@ -104,8 +104,8 @@
         url-pattern)]]))
 
 
-(defn url-to-button
-  ([url-name url-pattern] (url-to-button url-name url-pattern false))
+(defn UrlToButton
+  ([url-name url-pattern] (UrlToButton url-name url-pattern false))
   ([url-name url-pattern primary?]
    (let [url (subscribe [::subs/url url-pattern])]
      (when @url
@@ -150,7 +150,7 @@
                        [ui/TableBody
                         (for [[url-name url-pattern] urls]
                           ^{:key url-name}
-                          [url-to-row url-name url-pattern])]]])))}))
+                          [UrlToRow url-name url-pattern])]]])))}))
 
 
 (defn module-version-section
@@ -166,7 +166,7 @@
                          [views-versions/versions-table @module-versions @module-content-id]]))}))
 
 
-(defn item-to-row
+(defn ItemToRow
   [{name :name value :value description :description}]
   (let [tr        (subscribe [::i18n-subs/tr])
         table-row [ui/TableRow
@@ -213,7 +213,7 @@
                          [ui/TableBody
                           (for [{name :name :as item} items]
                             ^{:key name}
-                            [item-to-row item])])]])))}))
+                            [ItemToRow item])])]])))}))
 
 
 (defn parameters-section
@@ -242,7 +242,7 @@
            (map dt-fn)))))
 
 
-(defn event-map-to-row
+(defn EventMapToRow
   [{:keys [id content timestamp category delta-time]}]
   [ui/TableRow
    [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
@@ -252,7 +252,7 @@
    [ui/TableCell (:state content)]])
 
 
-(defn events-table
+(defn EventsTable
   [_events]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [events]
@@ -268,7 +268,7 @@
         [ui/TableBody
          (for [{:keys [id] :as event} events]
            ^{:key id}
-           [event-map-to-row event])]]])))
+           [EventMapToRow event])]]])))
 
 
 (defn events-section                                        ;FIXME: add paging
@@ -285,10 +285,10 @@
                 :key     "events"
                 :icon    "bolt"}
      :render   (fn [] (r/as-element
-                        [events-table events-info]))}))
+                        [EventsTable events-info]))}))
 
 
-(defn job-map-to-row
+(defn JobMapToRow
   [{:keys [id action time-of-status-change state progress return-code status-message]}]
   [ui/TableRow
    [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
@@ -300,7 +300,7 @@
    [ui/TableCell {:style {:white-space "pre"}} status-message]])
 
 
-(defn billing-section
+(defn BillingSection
   []
   (let [tr               (subscribe [::i18n-subs/tr])
         upcoming-invoice (subscribe [::subs/upcoming-invoice])
@@ -345,7 +345,7 @@
                           (or total "-") " " currency]]]]]))})))
 
 
-(defn log-controller
+(defn LogController
   [_go-live?]
   (let [locale        (subscribe [::i18n-subs/locale])
         services-list (subscribe [::subs/deployment-services-list])
@@ -402,7 +402,7 @@
          "Clear"]]])))
 
 
-(defn logs-viewer
+(defn LogsViewer
   []
   (let [deployment-log (subscribe [::subs/deployment-log])
         id             (subscribe [::subs/deployment-log-id])
@@ -412,7 +412,7 @@
     (fn []
       (let [log (:log @deployment-log)]
         [:div
-         [log-controller go-live?]
+         [LogController go-live?]
          [:<>
           ^{:key (str "logger" @go-live?)}
           [ui/Segment {:attached    "bottom"
@@ -442,14 +442,14 @@
            [ui/LabelDetail (count log)]]]]))))
 
 
-(defn logs-viewer-wrapper
+(defn LogsViewerWrapper
   []
   (r/create-class
     {:component-will-unmount #(do
                                 (dispatch [::events/delete-deployment-log])
                                 (dispatch [::events/set-deployment-log-since (spec/default-since)])
                                 (dispatch [::events/set-deployment-log-service nil]))
-     :reagent-render         logs-viewer}))
+     :reagent-render         LogsViewer}))
 
 
 (defn logs-section
@@ -459,11 +459,11 @@
                 :key     "logs"
                 :icon    "file code"}
      :render   (fn [] (r/as-element
-                        [logs-viewer-wrapper]))}))
+                        [LogsViewerWrapper]))}))
 
 
 
-(defn action-button
+(defn ActionButton
   [{:keys [label? menu-item? icon-name button-text on-click disabled? popup-text]
     :or   {disabled? false on-click identity}}]
   (let [button (cond
@@ -506,7 +506,7 @@
             cred-check-status (creds-utils/credential-check-status @cred-loading? @cred-invalid?)
             text1             (str (or name id) (when description " - ") description)
             text2             (str (@tr [:created-from-module]) (or (:name module) (:id module)))
-            button            (action-button
+            button            (ActionButton
                                 {:label?      label?
                                  :menu-item?  menu-item?
                                  :on-click    (fn [event]
@@ -550,7 +550,7 @@
       (let [{:keys [id name description module]} deployment
             text-1 (str (or name id) (when description " - ") description)
             text-2 (str (@tr [:created-from-module]) (or (:name module) (:id module)))
-            button (action-button
+            button (ActionButton
                      {:on-click    (fn [event]
                                      (reset! open? true)
                                      (.stopPropagation event)
@@ -580,7 +580,7 @@
   [{:keys [id data module] :as _deployment}]
   (let [tr         (subscribe [::i18n-subs/tr])
         first-step (if data :data :infra-services)
-        button     (action-button
+        button     (ActionButton
                      {:menu-item?  true
                       :button-text (@tr [:clone])
                       :icon-name   "code branch"
@@ -598,7 +598,7 @@
   (let [tr         (subscribe [::i18n-subs/tr])
         start      (#{"CREATED" "STOPPED"} state)
         first-step (if data :data :infra-services)
-        button     (action-button
+        button     (ActionButton
                      {:button-text (if start
                                      (@tr [:start])
                                      (@tr [:update]))
@@ -616,7 +616,7 @@
      button]))
 
 
-(defn vpn-info
+(defn VpnInfo
   []
   (let [{:keys [state module]} @(subscribe [::subs/deployment])
         {module-content :content} module
@@ -638,7 +638,7 @@
         [:a {:href "https://docs.nuvla.io/nuvla/vpn" :target "_blank"} (@tr [:connect-vpn])] "."]])))
 
 
-(defn up-to-date?
+(defn UpToDate?
   [v versions]
   (when v
     (let [tr           (subscribe [::i18n-subs/tr])
@@ -829,15 +829,15 @@
             (deployment-utils/format-nuvlabox-value nuvlabox)]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
-         [ui/TableCell @version " " (up-to-date? @version @versions)]]]]]
+         [ui/TableCell @version " " (UpToDate? @version @versions)]]]]]
      [ui/Segment {:attached  false
                   :secondary true}
       (for [[i [url-name url-pattern]] (map-indexed list urls)]
         ^{:key url-name}
-        [url-to-button url-name url-pattern (= i 0)])]]))
+        [UrlToButton url-name url-pattern (= i 0)])]]))
 
 
-(defn overview-pane
+(defn OverviewPane
   []
   [ui/TabPane
    [ui/Grid {:columns   2,
@@ -855,7 +855,7 @@
   {:menuItem {:content (r/as-element [:span "Overview"])
               :key     "overview"
               :icon    "info"}
-   :render   (fn [] (r/as-element [overview-pane]))})
+   :render   (fn [] (r/as-element [OverviewPane]))})
 
 
 (defn MenuBar
@@ -884,7 +884,7 @@
      (events-section)
      (parameters-section)
      (env-vars-section)
-     (billing-section)
+     (BillingSection)
      (job-views/jobs-section)
      (acl/TabAcls deployment (not @read-only?) ::events/edit)]))
 
@@ -943,7 +943,7 @@
          [MenuBar @deployment]
          [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 8]
          [ProgressBars]
-         [vpn-info]
+         [VpnInfo]
          [ui/Tab
           {:menu        {:secondary true
                          :pointing  true

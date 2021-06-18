@@ -3,8 +3,8 @@
             [sixsq.nuvla.ui.apps.utils :as apps-utils]))
 
 
-(def tab-details 5)
-(def tab-docker 6)
+(def tab-details 4)
+(def tab-docker 5)
 
 
 ;; Deserialization functions: module->db

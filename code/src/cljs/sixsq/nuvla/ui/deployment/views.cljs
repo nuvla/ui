@@ -28,7 +28,7 @@
   (dispatch [::events/refresh opts]))
 
 
-(defn control-bar []
+(defn ControlBar []
   (let [tr                (subscribe [::i18n-subs/tr])
         full-text         (subscribe [::subs/full-text-search])
         additional-filter (subscribe [::subs/additional-filter])
@@ -98,8 +98,7 @@
                        :on-click #(dispatch [::events/bulk-operation
                                              "bulk-update"
                                              {:module-href @selected-module}
-                                             [::events/close-modal-bulk-update]])}]]
-         ]))))
+                                             [::events/close-modal-bulk-update]])}]]]))))
 
 
 (defn MenuBar
@@ -174,7 +173,7 @@
   (not (or select-all? (true? no-actions))))
 
 
-(defn row-fn
+(defn RowFn
   [{:keys [id state module parent nuvlabox] :as deployment}
    {:keys [no-actions no-module-name select-all] :as _options}]
   (let [credential-id parent
@@ -218,7 +217,7 @@
           [deployment-detail-views/DeleteButton deployment])])]))
 
 
-(defn vertical-data-table
+(defn VerticalDataTable
   [_deployments-list _options]
   (let [tr                    (subscribe [::i18n-subs/tr])
         is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
@@ -246,7 +245,7 @@
            [ui/TableBody
             (for [{:keys [id] :as deployment} deployments-list]
               ^{:key id}
-              [row-fn deployment options])]])))))
+              [RowFn deployment options])]])))))
 
 
 (defn DeploymentCard
@@ -302,7 +301,7 @@
                                        :selected? @is-selected?))]))
 
 
-(defn cards-data-table
+(defn CardsDataTable
   [deployments-list]
   [:div style/center-items
    [ui/CardGroup {:centered    true
@@ -313,7 +312,7 @@
       [DeploymentCard deployment])]])
 
 
-(defn deployments-display
+(defn DeploymentsDisplay
   []
   (let [loading?    (subscribe [::subs/loading?])
         view        (subscribe [::subs/view])
@@ -324,8 +323,8 @@
         [ui/Segment (merge style/basic
                            {:loading @loading?})
          (if (= @view "cards")
-           [cards-data-table deployments-list]
-           [vertical-data-table deployments-list {:select-all @select-all?}])]))))
+           [CardsDataTable deployments-list]
+           [VerticalDataTable deployments-list {:select-all @select-all?}])]))))
 
 
 (defn StatisticStates
@@ -382,7 +381,7 @@
          (if @loading?
            [ui/Loader {:active true
                        :inline "centered"}]
-           [vertical-data-table deployments (assoc options :select-all @select-all?)])
+           [VerticalDataTable deployments (assoc options :select-all @select-all?)])
 
          (when (pos? (:count @elements))
            [uix/Pagination {:totalitems   total-elements
@@ -393,7 +392,7 @@
                                             #(dispatch [::events/set-page %]))}])]))))
 
 
-(defn deployments-main-content
+(defn DeploymentsMainContent
   []
   (let
     [elements-per-page   (subscribe [::subs/elements-per-page])
@@ -411,7 +410,7 @@
           [ui/Grid {:columns   "equal"
                     :stackable true
                     :reversed  "mobile"}
-           [control-bar]
+           [ControlBar]
            [StatisticStates true]
            [ui/GridColumn]]
           (for [[job-id job] @bulk-jobs-monitored]
@@ -420,7 +419,7 @@
              {:header      "Bulk update in progress"
               :job         job
               :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
-          [deployments-display]]
+          [DeploymentsDisplay]]
          [uix/Pagination
           {:totalitems   total-deployments
            :totalPages   total-pages

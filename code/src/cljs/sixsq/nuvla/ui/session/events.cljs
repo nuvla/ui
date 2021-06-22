@@ -212,7 +212,7 @@
 (reg-event-fx
   ::search-groups
   (fn [_ _]
-    {::cimi-api-fx/search [:group {:select "id, name, acl, users, description"
-                                   :last   10000
-                                   :order  "name:asc, id:asc"}
+    {::cimi-api-fx/search [:group {:select  "id, name, acl, users, description"
+                                   :last    10000
+                                   :orderby "name:asc,id:asc"}
                            #(dispatch [::set-groups %])]}))

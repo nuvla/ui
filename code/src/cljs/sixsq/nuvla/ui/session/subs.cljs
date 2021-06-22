@@ -44,10 +44,10 @@
 (reg-sub
   ::switch-group-options
   :<- [::session]
-  :<- [::groups]
-  (fn [[{:keys [identifier active-claim] :as session} groups]]
+  :<- [::claims-groups]
+  (fn [[{:keys [identifier active-claim] :as session} claims-groups]]
     (when (general-utils/can-operation? "switch-group" session)
-      (cond-> (remove #(= active-claim %) groups)
+      (cond-> (remove #(= active-claim %) claims-groups)
               (and (string? active-claim)
                    (str/starts-with? active-claim "group/")) (conj identifier)))))
 
@@ -66,7 +66,7 @@
 
 
 (reg-sub
-  ::groups
+  ::claims-groups
   :<- [::session]
   (fn [session]
     (set (some-> session :groups (str/split #"\s+") sort))))
@@ -182,7 +182,7 @@
 
 
 (reg-sub
-  ::resolve-username
+  ::resolve-user
   :<- [::user-id]
   :<- [::identifier]
   :<- [::peers]
@@ -190,3 +190,33 @@
     (if (= user-id current-user-id)
       identifier
       (get peers user-id user-id))))
+
+
+(reg-sub
+  ::groups
+  (fn [{:keys [::spec/groups]}]
+    groups))
+
+
+(reg-sub
+  ::groups-mapping
+  :<- [::groups]
+  (fn [groups]
+    (->> groups
+         (map (juxt :id :name))
+         (into {}))))
+
+
+(reg-sub
+  ::resolve-principal
+  :<- [::user-id]
+  :<- [::identifier]
+  :<- [::peers]
+  :<- [::groups-mapping]
+  (fn [[current-user-id identifier peers groups] [_ id]]
+    (if (string? id)
+     (cond
+       (str/starts-with? id "group/") (get groups id id)
+       (= id current-user-id) identifier
+       :else (get peers id id))
+     id)))

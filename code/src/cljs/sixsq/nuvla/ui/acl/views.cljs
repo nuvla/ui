@@ -4,17 +4,15 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.events :as events]
-    [sixsq.nuvla.ui.acl.subs :as subs]
     [sixsq.nuvla.ui.acl.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (defn is-advanced-mode?
@@ -93,7 +91,7 @@
 
 (defn OwnerItem
   [{:keys [on-change]} ui-acl removable? principal]
-  (let [principal-name (subscribe [::session-subs/resolve-username principal])]
+  (let [principal-name (subscribe [::session-subs/resolve-principal principal])]
     [ui/ListItem {:style {:vertical-align "middle"}}
      [ui/ListContent
       [ui/ListHeader
@@ -137,7 +135,7 @@
 (defn RightRow
   [{:keys [on-change read-only mode] :as opts} ui-acl row-number principal rights]
 
-  (let [principal-name (subscribe [::session-subs/resolve-username principal])]
+  (let [principal-name (subscribe [::session-subs/resolve-principal principal])]
     [ui/TableRow
 
      [ui/TableCell {:text-align "left"}
@@ -168,16 +166,15 @@
   (let [open       (r/atom false)
         peers      (subscribe [::session-subs/peers-options])
         peers-opts (r/atom @peers)
-        groups     (subscribe [::subs/groups])
+        groups     (subscribe [::session-subs/groups])
         tr         (subscribe [::i18n-subs/tr])]
-    (dispatch [::events/search-groups])
     (fn [{:keys [on-change fluid value]
           :or   {on-change #()
                  fluid     false
                  value     nil}}
          ui-acl]
       (let [used-principals (utils/acl-get-all-principals-set @ui-acl)]
-        [ui/Dropdown {:text      @(subscribe [::session-subs/resolve-username value])
+        [ui/Dropdown {:text      @(subscribe [::session-subs/resolve-principal value])
                       :fluid     fluid
                       :style     {:width "250px"}
                       :on-open   #(reset! open true)
@@ -209,7 +206,10 @@
                                         ))}]
 
           (doall
-            (for [{:keys [value text]} (remove #(contains? used-principals (:value %)) @peers-opts)]
+            (for [{:keys [value text]} (->>
+                                         @peers-opts
+                                         (take 10)
+                                         (remove #(contains? used-principals (:value %))))]
               ^{:key value}
               [ui/DropdownItem {:text     (or text value)
                                 :on-click (fn []

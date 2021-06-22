@@ -10,7 +10,6 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.profile.events :as profile-events]
     [sixsq.nuvla.ui.session.effects :as fx]
     [sixsq.nuvla.ui.session.spec :as spec]
     [sixsq.nuvla.ui.utils.response :as response]))
@@ -25,22 +24,22 @@
                               (when session
                                 #_(dispatch [:sixsq.nuvla.ui.main.events/check-bootstrap-message])
                                 (dispatch [:sixsq.nuvla.ui.main.events/notifications-polling])
-                                (dispatch [::profile-events/search-existing-customer])))]}))
+                                (dispatch [:sixsq.nuvla.ui.profile.events/search-existing-customer])
+                                (dispatch [::search-groups])
+                                (dispatch [::get-peers])))]}))
 
 
 (reg-event-fx
   ::set-session
   (fn [{{:keys [::spec/session
                 ::main-spec/nav-path
-                ::main-spec/pages
-                ::spec/peers] :as db} :db} [_ session-arg]]
+                ::main-spec/pages] :as db} :db} [_ session-arg]]
     (let [no-session-protected-page? (and (nil? session-arg)
                                           (->> nav-path first (get pages) :protected?))]
       (cond-> {:db (assoc db ::spec/session session-arg
                              ::spec/session-loading? false
                              :dispatch-n [])}
               session-arg (assoc ::fx/automatic-logout-at-session-expiry [session-arg])
-              (nil? peers) (update :dispatch-n conj [::get-peers])
               no-session-protected-page? (update :dispatch-n conj [::history-events/navigate "sign-in"])
               ;; force refresh templates collection cache when not the same user (different session)
               (not= session session-arg) (update :dispatch-n conj
@@ -201,3 +200,17 @@
   ::get-peers
   (fn [{{:keys [::spec/session]} :db}]
     {::cimi-api-fx/operation [(:id session) "get-peers" #(dispatch [::set-peers %])]}))
+
+
+(reg-event-db
+  ::set-groups
+  (fn [db [_ {:keys [resources]}]]
+    (when resources
+      (assoc db ::spec/groups resources))))
+
+
+(reg-event-fx
+  ::search-groups
+  (fn [_ _]
+    {::cimi-api-fx/search [:group {:select "id, name, acl, users, description"}
+                           #(dispatch [::set-groups %])]}))

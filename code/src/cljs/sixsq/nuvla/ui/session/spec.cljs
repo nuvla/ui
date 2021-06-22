@@ -21,6 +21,8 @@
 
 (s/def ::peers any?)
 
+(s/def ::groups any?)
+
 
 (s/def ::db (s/keys :req [::session-loading?
                           ::open-modal
@@ -30,7 +32,8 @@
                           ::redirect-uri
                           ::server-redirect-uri
                           ::loading?
-                          ::peers]))
+                          ::peers
+                          ::groups]))
 
 
 (def defaults
@@ -42,4 +45,5 @@
    ::redirect-uri        nil
    ::server-redirect-uri (str @config/path-prefix "/sign-in")
    ::loading?            false
-   ::peers               nil})
+   ::peers               nil
+   ::groups              nil})

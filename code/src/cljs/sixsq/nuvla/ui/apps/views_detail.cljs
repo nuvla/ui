@@ -5,7 +5,6 @@
     [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [re-frame.db]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.subs :as acl-subs]
     [sixsq.nuvla.ui.acl.utils :as acl-utils]
     [sixsq.nuvla.ui.acl.views :as acl-views]
     [sixsq.nuvla.ui.apps-application.events :as apps-application-events]
@@ -1118,7 +1117,7 @@
   []
   (let [tr         (subscribe [::i18n-subs/tr])
         module     (subscribe [::subs/module])
-        groups     (subscribe [::acl-subs/groups])
+        groups     (subscribe [::session-subs/groups])
         is-vendor? (utils/is-vendor? @module)]
     (if is-vendor?
       (let [groups-from-module (utils/module->groups @module)

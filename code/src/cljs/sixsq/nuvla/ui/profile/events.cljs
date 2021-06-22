@@ -4,17 +4,17 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
     [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.acl.events :as acl-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.profile.effects :as fx]
     [sixsq.nuvla.ui.profile.spec :as spec]
+    [sixsq.nuvla.ui.session.events :as session-events]
     [sixsq.nuvla.ui.session.spec :as session-spec]
     [sixsq.nuvla.ui.session.utils :as session-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.config :as config]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 ;; TODO when customer exist but not valid subscription
 
@@ -66,7 +66,7 @@
                 :name        name
                 :description description}]
       {::cimi-api-fx/add ["group" user #(let [{:keys [status message resource-id]} (response/parse %)]
-                                          (dispatch [::acl-events/search-groups])
+                                          (dispatch [::session-events/search-groups])
                                           (dispatch [::messages-events/add
                                                      {:header  (cond-> (str "added " resource-id)
                                                                        status (str " (" status ")"))

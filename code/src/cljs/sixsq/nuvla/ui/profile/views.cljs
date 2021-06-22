@@ -6,13 +6,9 @@
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.events :as acl-events]
-    [sixsq.nuvla.ui.acl.subs :as acl-subs]
     [sixsq.nuvla.ui.acl.views :as acl-views]
-    [sixsq.nuvla.ui.acl.utils :as acl-utils]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
@@ -22,6 +18,7 @@
     [sixsq.nuvla.ui.profile.spec :as spec]
     [sixsq.nuvla.ui.profile.subs :as subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -1009,7 +1006,7 @@
 
 (defn GroupMember
   [principal members editable? changed?]
-  (let [principal-name (subscribe [::session-subs/resolve-username principal])]
+  (let [principal-name (subscribe [::session-subs/resolve-principal principal])]
     [ui/ListItem
      [ui/ListContent
       [ui/ListHeader
@@ -1129,12 +1126,15 @@
 (defn Groups
   []
   (let [tr        (subscribe [::i18n-subs/tr])
-        groups    (subscribe [::acl-subs/groups])
-        is-group? (subscribe [::session-subs/active-claim-is-group?])]
+        groups    (subscribe [::session-subs/groups])
+        is-group? (subscribe [::session-subs/active-claim-is-group?])
+        is-admin? (subscribe [::session-subs/is-admin?])]
     (fn []
-      (let [remove-groups   #{"group/nuvla-nuvlabox" "group/nuvla-anon" "group/nuvla-user"}
-            filtered-groups (filter #(not (contains? remove-groups (:id %))) @groups)
-            sorted-groups   (sort-by :id filtered-groups)]
+      (let [remove-groups #{"group/nuvla-nuvlabox" "group/nuvla-anon" "group/nuvla-user"
+                            (when-not @is-admin? "group/nuvla-admin")}
+            sorted-groups (->> @groups
+                               (remove (comp remove-groups :id))
+                               (sort-by :id))]
         [:<>
          (when @is-group?
            [ui/GridColumn
@@ -1280,7 +1280,6 @@
   [_path]
   (let [tr        (subscribe [::i18n-subs/tr])
         is-group? (subscribe [::session-subs/active-claim-is-group?])]
-    (dispatch [::acl-events/search-groups])
     [ui/Container {:fluid true}
      [uix/PageHeader "user" (str/capitalize (@tr [:profile]))]
      [ui/Menu {:borderless true}

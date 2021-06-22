@@ -119,7 +119,7 @@
                        :content message
                        :type    :error}]))
          (dispatch [::messages-events/add
-                    {:header  "User successfully invited"
+                    {:header  "Invitation successfully sent to user"
                      :content (str "User will appear in " group-id
                                    " when he accept the invitation sent to his email address.")
                      :type    :info}]))

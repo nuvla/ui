@@ -32,16 +32,20 @@
   ::set-session
   (fn [{{:keys [::spec/session
                 ::main-spec/nav-path
-                ::main-spec/pages] :as db} :db} [_ session-arg]]
+                ::main-spec/pages
+                ::spec/peers] :as db} :db} [_ session-arg]]
     (let [no-session-protected-page? (and (nil? session-arg)
                                           (->> nav-path first (get pages) :protected?))]
       (cond-> {:db (assoc db ::spec/session session-arg
-                             ::spec/session-loading? false)}
-              no-session-protected-page? (assoc :dispatch [::history-events/navigate "sign-in"])
+                             ::spec/session-loading? false
+                             :dispatch-n [])}
               session-arg (assoc ::fx/automatic-logout-at-session-expiry [session-arg])
+              (nil? peers) (update :dispatch-n conj [::get-peers])
+              no-session-protected-page? (update :dispatch-n conj [::history-events/navigate "sign-in"])
               ;; force refresh templates collection cache when not the same user (different session)
-              (not= session session-arg) (assoc :dispatch-n [[::cimi-events/get-cloud-entry-point]
-                                                             [:sixsq.nuvla.ui.main.events/force-refresh-content]])))))
+              (not= session session-arg) (update :dispatch-n conj
+                                                 [::cimi-events/get-cloud-entry-point]
+                                                 [:sixsq.nuvla.ui.main.events/force-refresh-content])))))
 
 
 (reg-event-fx
@@ -177,3 +181,23 @@
     (let [claim (if (= (:identifier session) claim) (:user session) claim)]
       {::cimi-api-fx/operation [(:id session) "switch-group" #(dispatch [::initialize])
                                 {:claim claim}]})))
+
+
+(reg-event-db
+  ::set-peers
+  (fn [db [_ response]]
+    (if (instance? js/Error response)
+      (let [{:keys [status message]} (response/parse-ex-info response)]
+        (js/console.error "Get peers failed ("status "): " message)
+        db)
+      (assoc db ::spec/peers
+                (->> response
+                     (map (fn [[k v]] [(str (namespace k) "/" (name k)) v]))
+                     (sort-by (juxt second first))
+                     (into {}))))))
+
+
+(reg-event-fx
+  ::get-peers
+  (fn [{{:keys [::spec/session]} :db}]
+    {::cimi-api-fx/operation [(:id session) "get-peers" #(dispatch [::set-peers %])]}))

@@ -103,6 +103,12 @@
       (when is-group? active-claim)
       identifier)))
 
+(reg-sub
+  ::user-id
+  :<- [::session]
+  (fn [session]
+    (:user session)))
+
 
 (reg-sub
   ::identifier
@@ -161,3 +167,26 @@
   (fn [session-templates [_ template-id]]
     (contains? session-templates template-id)))
 
+
+(reg-sub
+  ::peers
+  (fn [db]
+    (::spec/peers db)))
+
+
+(reg-sub
+  ::peers-options
+  :<- [::peers]
+  (fn [peers]
+    (map (fn [[k v]] {:key k, :value k, :text v}) peers)))
+
+
+(reg-sub
+  ::resolve-username
+  :<- [::user-id]
+  :<- [::identifier]
+  :<- [::peers]
+  (fn [[current-user-id identifier peers] [_ user-id]]
+    (if (= user-id current-user-id)
+      identifier
+      (get peers user-id user-id))))

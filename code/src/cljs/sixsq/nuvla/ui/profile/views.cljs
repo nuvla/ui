@@ -981,39 +981,41 @@
          ]))))
 
 
-
 (defn DropdownPrincipals
   [_add-user _opts _members]
-  (dispatch [::acl-events/search-users ""])
-  (fn [add-user {:keys [fluid placeholder]
-                 :or   {fluid       false
-                        placeholder ""}}
-       members]
-    (let [used-principals (set members)]
-      [ui/Dropdown {:placeholder placeholder
-                    :fluid       fluid
-                    :search      true
-                    :value       @add-user
-                    :on-change   (ui-callback/value #(reset! add-user %))
-                    :options     (remove
-                                   #(used-principals (:key %))
-                                   [{:key "user/4f3fe714-8c6d-4c9a-b156-333ee6195e49", :value "user/4f3fe714-8c6d-4c9a-b156-333ee6195e49", :text "user/4f3fe714-8c6d-4c9a-b156-333ee6195e49"}
-                                    {:key "user/4f3fe714-8c6d-4c9a-b156-333ee6195e4a", :value "user/4f3fe714-8c6d-4c9a-b156-333ee6195e4a", :text "user/4f3fe714-8c6d-4c9a-b156-333ee6195e4a"}
-                                    {:key "user/a", :value "user/a", :text "user/a"}])
-                    :selection   true
-                    :style       {:width "250px"}
-                    :upward      false}])))
+  (let [peers      (subscribe [::session-subs/peers-options])
+        peers-opts (r/atom @peers)]
+    (fn [add-user
+         {:keys [fluid placeholder]
+          :or   {fluid       false
+                 placeholder ""}}
+         members]
+      (let [used-principals (set members)]
+        [ui/Dropdown {:placeholder     placeholder
+                      :fluid           fluid
+                      :allow-additions true
+                      :on-add-item     (ui-callback/value
+                                         #(swap! peers-opts conj {:key %, :value %, :text %}))
+                      :search          true
+                      :value           @add-user
+                      :on-change       (ui-callback/value #(reset! add-user %))
+                      :options         (remove
+                                         #(used-principals (:key %))
+                                         @peers-opts)
+                      :selection       true
+                      :style           {:width "250px"}
+                      :upward          false}]))))
 
 
 (defn GroupMember
   [principal members editable? changed?]
-  (let [principal-name @(subscribe [::acl-subs/principal-name principal])]
+  (let [principal-name (subscribe [::session-subs/resolve-username principal])]
     [ui/ListItem
      [ui/ListContent
       [ui/ListHeader
        [acl-views/PrincipalIcon principal]
        ff/nbsp
-       (or principal-name principal)
+       @principal-name
        ff/nbsp
        (when editable?
          [ui/Icon {:name     "close"
@@ -1093,7 +1095,7 @@
                           :value       (or @invite-user "")
                           :on-change   (ui-callback/value #(reset! invite-user %))}]
                [:span ff/nbsp]
-               [uix/Button {:text     "send"
+               [uix/Button {:text     (@tr [:send])
                             :icon     "send"
                             :disabled (str/blank? @invite-user)
                             :on-click #(do
@@ -1104,8 +1106,7 @@
                            :text     (@tr [:save])
                            :icon     "save"
                            :disabled (not @changed?)
-                           :on-click #(do (dispatch [::events/edit-group (assoc group :users @members
-                                                                                      :acl @acl)])
+                           :on-click #(do (dispatch [::events/edit-group (assoc group :users @members, :acl @acl)])
                                           (reset! changed? false))}]]])]]))))
 
 
@@ -1128,7 +1129,7 @@
 (defn Groups
   []
   (let [tr        (subscribe [::i18n-subs/tr])
-        groups    (subscribe [::acl-subs/groups-options])
+        groups    (subscribe [::acl-subs/groups])
         is-group? (subscribe [::session-subs/active-claim-is-group?])]
     (fn []
       (let [remove-groups   #{"group/nuvla-nuvlabox" "group/nuvla-anon" "group/nuvla-user"}

@@ -13,7 +13,8 @@
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (defn is-advanced-mode?
@@ -92,13 +93,13 @@
 
 (defn OwnerItem
   [{:keys [on-change]} ui-acl removable? principal]
-  (let [principal-name @(subscribe [::subs/principal-name principal])]
+  (let [principal-name (subscribe [::session-subs/resolve-username principal])]
     [ui/ListItem {:style {:vertical-align "middle"}}
      [ui/ListContent
       [ui/ListHeader
        [PrincipalIcon principal]
        ff/nbsp
-       (or principal-name principal)
+       @principal-name
        ff/nbsp
        (when removable?
          [ui/Icon {:name     "close"
@@ -136,17 +137,17 @@
 (defn RightRow
   [{:keys [on-change read-only mode] :as opts} ui-acl row-number principal rights]
 
-  (let [principal-name @(subscribe [::subs/principal-name principal])]
+  (let [principal-name (subscribe [::session-subs/resolve-username principal])]
     [ui/TableRow
 
      [ui/TableCell {:text-align "left"}
       [PrincipalIcon principal]
       ff/nbsp
-      (if principal-name
+      (if @principal-name
         [ui/Popup {:content  principal
                    :position "right center"
-                   :trigger  (r/as-element [:span (or principal-name principal)])}]
-        [:span (or principal-name principal)])]
+                   :trigger  (r/as-element [:span @principal-name])}]
+        [:span @principal-name])]
 
      (for [right-kw (rights-for-mode @mode)]
        ^{:key (str principal right-kw)}
@@ -164,20 +165,19 @@
 
 (defn DropdownPrincipals
   [_opts _ui-acl]
-  (let [open   (r/atom false)
-        users  (subscribe [::subs/users-options])
-        groups (subscribe [::subs/groups-options])
-        tr     (subscribe [::i18n-subs/tr])]
+  (let [open       (r/atom false)
+        peers      (subscribe [::session-subs/peers-options])
+        peers-opts (r/atom @peers)
+        groups     (subscribe [::subs/groups])
+        tr         (subscribe [::i18n-subs/tr])]
     (dispatch [::events/search-groups])
-    (dispatch [::events/search-users ""])
     (fn [{:keys [on-change fluid value]
           :or   {on-change #()
                  fluid     false
                  value     nil}}
          ui-acl]
       (let [used-principals (utils/acl-get-all-principals-set @ui-acl)]
-        [ui/Dropdown {:text      (or (when value @(subscribe [::subs/principal-name value]))
-                                     value)
+        [ui/Dropdown {:text      @(subscribe [::session-subs/resolve-username value])
                       :fluid     fluid
                       :style     {:width "250px"}
                       :on-open   #(reset! open true)
@@ -197,14 +197,23 @@
                      :name          "search"
                      :auto-complete "off"
                      :on-click      #(reset! open true)
-                     :on-change     (ui-callback/input ::events/search-users)}]
+                     :on-change     (ui-callback/input-callback
+                                      (fn [value]
+                                        (reset!
+                                          peers-opts
+                                          (filter
+                                            #(re-matches
+                                               (re-pattern (str "(?i).*" (general-utils/regex-escape value) ".*"))
+                                               (str (:text %) (:value %)))
+                                            @peers))
+                                        ))}]
 
           (doall
-            (for [{user-id :id user-name :name} (remove #(contains? used-principals (:id %)) @users)]
-              ^{:key user-id}
-              [ui/DropdownItem {:text     (or user-name user-id)
+            (for [{:keys [value text]} (remove #(contains? used-principals (:value %)) @peers-opts)]
+              ^{:key value}
+              [ui/DropdownItem {:text     (or text value)
                                 :on-click (fn []
-                                            (on-change user-id)
+                                            (on-change value)
                                             (reset! open false))}]))
 
           [ui/DropdownDivider]
@@ -353,7 +362,7 @@
   [e can-edit? edit-event]
   (let [tr            (subscribe [::i18n-subs/tr])
         default-value (:acl @e)
-        ui-acl           (->ui-acl default-value can-edit?)]
+        ui-acl        (->ui-acl default-value can-edit?)]
     {:menuItem {:content "Share"
                 :key     "share"
                 :icon    "users"}

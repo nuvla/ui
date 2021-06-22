@@ -5,7 +5,8 @@
 
 
 (def dictionary
-  {:en {:join-group-accepted                           "You've been added to the group successfully."
+  {:en {:send                                          "send"
+        :join-group-accepted                           "You've been added to the group successfully."
         :invite-by-email                               "Invite by email"
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
@@ -737,7 +738,8 @@
         :yes                                           "yes"
         :yesterday                                     "yesterday"}
 
-   :fr {:about                                         "à propos"
+   :fr {:send                                          "envoyé"
+        :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"
         :accept-costs                                  "J'accepte les coûts"

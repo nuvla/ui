@@ -19,6 +19,8 @@
 
 (s/def ::loading? boolean?)
 
+(s/def ::peers any?)
+
 
 (s/def ::db (s/keys :req [::session-loading?
                           ::open-modal
@@ -27,7 +29,8 @@
                           ::success-message
                           ::redirect-uri
                           ::server-redirect-uri
-                          ::loading?]))
+                          ::loading?
+                          ::peers]))
 
 
 (def defaults
@@ -38,4 +41,5 @@
    ::success-message     nil
    ::redirect-uri        nil
    ::server-redirect-uri (str @config/path-prefix "/sign-in")
-   ::loading?            false})
+   ::loading?            false
+   ::peers               nil})

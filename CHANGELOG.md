@@ -4,12 +4,15 @@
 
 ### Added
 
+  - Profile - Group tab 
   - Show an error message when an element does not exist or is not accessible
     (modules, NuvlaBoxes and infrastructure services)
   - Edge detail page - add container monitoring stats
 
 ### Changed
 
+  - Acl widget - use peers instead of search user resource
+  - Session - get peers support
   - Deployment dialog - Remove duplicated definition of price subscription
   - Deployment detail - Markdownified module description
 

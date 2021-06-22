@@ -362,3 +362,12 @@
         (str/trim
           (str/join "" (re-seq #"[a-zA-Z0-9\ ]" name)))
         " " "-"))))
+
+(defn regex-escape
+  "Escapes regex special chars in the string s."
+  [s]
+  (str/escape
+    s
+    {\- "\\-", \[ "\\[", \] "\\]", \{ "\\{", \} "\\}",
+     \( "\\(", \) "\\)", \* "\\*", \+ "\\+", \? "\\?",
+     \. "\\.", \\ "\\\\", \^ "\\^", \$ "\\$", \| "\\|"}))

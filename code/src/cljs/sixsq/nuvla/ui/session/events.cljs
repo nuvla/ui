@@ -187,7 +187,7 @@
   (fn [db [_ response]]
     (if (instance? js/Error response)
       (let [{:keys [status message]} (response/parse-ex-info response)]
-        (js/console.error "Get peers failed ("status "): " message)
+        (js/console.error "Get peers failed (" status "): " message)
         db)
       (assoc db ::spec/peers
                 (->> response
@@ -212,5 +212,6 @@
 (reg-event-fx
   ::search-groups
   (fn [_ _]
-    {::cimi-api-fx/search [:group {:select "id, name, acl, users, description"}
+    {::cimi-api-fx/search [:group {:select "id, name, acl, users, description"
+                                   :last   10000}
                            #(dispatch [::set-groups %])]}))

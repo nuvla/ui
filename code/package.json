@@ -10,7 +10,7 @@
     "release": "./node_modules/.bin/shadow-cljs release webui",
     "clean": "rm -rf resources/public/js/* && rm -rf target"
   },
-  "author": "SixSq Sàrl",
+  "author": "SixSq SA",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/nuvla/ui/issues"

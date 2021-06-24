@@ -113,7 +113,7 @@
         [ui/DropdownHeader (@tr [:switch-group])]
         (for [account @switch-group-options]
           ^{:key account}
-          [ui/DropdownItem {:text     account
+          [ui/DropdownItem {:text     (utils/remove-group-prefix account)
                             :icon     (if (str/starts-with? account "group/") "group" "user")
                             :on-click #(dispatch [::events/switch-group account])}])
         [ui/DropdownDivider]])
@@ -172,7 +172,7 @@
        [ui/ButtonGroup {:primary true}
         [ui/Button {:id "nuvla-username-button" :on-click profile-fn}
          [ui/Icon {:name (if @is-group? "group" "user")}]
-         [:span {:id "nuvla-username"} (general-utils/truncate @user)]]
+         [:span {:id "nuvla-username"} (general-utils/truncate (utils/remove-group-prefix @user))]]
         dropdown-menu]
        [:div
         (when @signup-template?

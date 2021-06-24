@@ -78,30 +78,39 @@
 
 (defn ErrorJobsMessage
   [_job-subs _set-active-tab-index-event _job-tab-index]
-  (let [errors-dissmissed (r/atom #{})]
+  (let [tr                (subscribe [::i18n-subs/tr])
+        errors-dissmissed (r/atom #{})]
     (fn [job-subs set-active-tab-index-event job-tab-index]
-      (let [jobs            (subscribe [job-subs])
-            last-failed-job (some #(when (= (:state %) "FAILED") %) (:resources @jobs))
-            action          (:action last-failed-job)
-            id              (:id last-failed-job)
-            last-line       (last (str/split-lines (get last-failed-job :status-message "")))]
-        (when (and
-                (not (@errors-dissmissed id))
-                (some? last-failed-job))
-          [ui/Message {:error      true
-                       :on-dismiss #(swap! errors-dissmissed conj id)}
-           [ui/MessageHeader
-            {:style    {:cursor "pointer"}
-             :on-click #(dispatch [set-active-tab-index-event job-tab-index])}
-            (str "Job " action " failed")]
-           [ui/MessageContent last-line]])))))
+      (let [fn-filter   (fn [coll _action jobs]
+                          (let [{:keys [id state] :as last-job} (first jobs)]
+                            (if (and (= state "FAILED") (not (@errors-dissmissed id)))
+                              (conj coll last-job)
+                              coll)))
+            failed-jobs (->> (subscribe [job-subs])
+                             deref
+                             :resources
+                             (group-by :action)
+                             (reduce-kv fn-filter [])
+                             (sort-by :updated >))]
+        [:<>
+         (doall
+           (for [{:keys [id action status-message]} failed-jobs]
+             ^{:key id}
+             [ui/Message {:error      true
+                          :on-dismiss #(swap! errors-dissmissed conj id)}
+              [ui/MessageHeader
+               {:style    {:cursor "pointer"}
+                :on-click #(dispatch [set-active-tab-index-event job-tab-index])}
+               (str (str/capitalize (@tr [:job])) " " action " " (@tr [:failed]))]
+              [ui/MessageContent (last (str/split-lines (or status-message "")))]]))]))))
 
 
 (defn BulkActionProgress
   [_opts]
   (let [open? (r/atom false)]
     (fn [{:keys [job on-dissmiss header]}]
-      (let [{:keys [FAILED SUCCESS] :as status-message} (general-utils/json->edn (:status-message job))
+      (let [{:keys [FAILED SUCCESS] :as status-message} (when (not= (:state job) "FAILED")
+                                                          (general-utils/json->edn (:status-message job)))
             some-fail?    (pos? (count FAILED))
             some-success? (pos? (count SUCCESS))
             completed?    (= (:progress job) 100)
@@ -219,7 +228,7 @@
     [ui/Dimmer {:active   @not-found?
                 :inverted true}
      [ui/Segment {:textAlign "center"
-                  :raised true
+                  :raised    true
                   :style     {:top    "20%"
                               :zIndex 1000}}
       [ui/Message {:warning true

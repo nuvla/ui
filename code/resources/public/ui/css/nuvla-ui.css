@@ -20,6 +20,11 @@
     visibility: unset;
 }
 
+#nuvla-ui-sidebar .active {
+    color: black !important;
+    background-color: rgba(255, 255, 255, 0.65);
+}
+
 /*
   Allows the container to scroll with overview in the x-direction.  Usually
   put on a Container to take advantage of the automatic width calculation of
@@ -194,4 +199,13 @@ tr.active td {
 
 .large-height > .CodeMirror {
   height: 600px !important;
+}
+
+.markdown img {
+  max-width: 100%;
+}
+
+
+.leaflet-top, .leaflet-bottom {
+  z-index: 998 !important;
 }

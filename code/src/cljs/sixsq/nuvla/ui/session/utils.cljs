@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.session.utils
-  (:require [clojure.string :as str]))
+  (:require
+    [clojure.string :as str]))
 
 (def ^:const user-tmpl-email-password "user-template/email-password")
 (def ^:const user-tmpl-email-invitation "user-template/email-invitation")
@@ -10,3 +11,8 @@
   [active-claim]
   (when active-claim
     (str/starts-with? active-claim "group/")))
+
+(defn remove-group-prefix
+  [account]
+  (str/replace-first account #"^group/" ""))
+

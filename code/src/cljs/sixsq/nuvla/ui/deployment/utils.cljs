@@ -2,6 +2,7 @@
   (:require
     [clojure.set :as set]
     [clojure.string :as str]
+    [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
@@ -165,3 +166,22 @@
 (defn format-nuvlabox-value
   [nuvlabox]
   [:div [ui/Icon {:name "box"}] [values/as-link (subs nuvlabox 9) :page "edge"]])
+
+
+(defn build-bulk-filter
+  [{:keys [::spec/select-all?
+           ::spec/selected-set
+           ::spec/full-text-search
+           ::spec/additional-filter
+           ::spec/state-selector
+           ::spec/nuvlabox]}]
+  (if select-all?
+    (get-filter-param
+      {:full-text-search  full-text-search
+       :additional-filter additional-filter
+       :state-selector    (when-not (= "all" state-selector) state-selector)
+       :nuvlabox          nuvlabox
+       :module-id         nil})
+    (->> selected-set
+         (map #(str "id='" % "'"))
+         (apply general-utils/join-or))))

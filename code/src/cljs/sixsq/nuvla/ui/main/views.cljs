@@ -136,10 +136,12 @@
 
 (defn subscription-required-modal
   []
-  (let [tr    (subscribe [::i18n-subs/tr])
-        open? (subscribe [::subs/modal-open? :subscription-required])]
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        open-subs-required? (subscribe [::subs/modal-open? :subscription-required])
+        open-subs-unpaid?        (subscribe [::subs/modal-open? :subscription-unpaid])]
 
-    [ui/Modal {:open       @open?
+    [ui/Modal {:open       (or @open-subs-required?
+                               @open-subs-unpaid?)
                :close-icon true
                :size       "small"
                :on-close   #(dispatch [::events/close-modal])}
@@ -148,14 +150,19 @@
 
      [ui/ModalContent
       [:div
-       [:p (@tr [:subscription-required-content])]
+       [:p (if @open-subs-unpaid?
+             (@tr [:subscription-unpaid-content])
+             (@tr [:subscription-required-content]))]
        [ui/Button {:primary  true
                    :on-click #(do
                                 (dispatch [::history-events/navigate "profile"])
                                 (dispatch [::events/close-modal]))}
-        (@tr [:subscribe])]
+        (if @open-subs-unpaid?
+          (@tr [:profile-page])
+          (@tr [:subscribe]))]
        [:p]
-       [:p [ui/Icon {:name "info circle"}] (@tr [:subscription-required-content-group])]]]]))
+       (when @open-subs-required?
+         [:p [ui/Icon {:name "info circle"}] (@tr [:subscription-required-content-group])])]]]))
 
 
 (defn Message

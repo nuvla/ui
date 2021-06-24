@@ -235,11 +235,11 @@
     (if (and @cep (not @session-loading?))
       [:div {:id "nuvla-ui-main"}
        (case (first @resource-path)
-         "sign-in" [session-views/SessionPage]
-         "sign-up" [session-views/SessionPage]
-         "reset-password" [session-views/SessionPage]
-         "set-password" [session-views/SessionPage]
-         nil [session-views/SessionPage]
+         "sign-in" [session-views/SessionPage true]
+         "sign-up" [session-views/SessionPage true]
+         "reset-password" [session-views/SessionPage true]
+         "set-password" [session-views/SessionPage false]
+         nil [session-views/SessionPage true]
          [:<>
           [intercom/widget]
           [sidebar/menu]

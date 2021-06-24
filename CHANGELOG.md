@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+  - Updated SixSq legal status (Sàrl to SA)
+
 ## [2.19.1] - 2021-06-24
 
 ### Changed

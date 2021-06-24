@@ -2,10 +2,13 @@
 
 ## Unreleased
 
+## [2.19.1] - 2021-06-24
+
 ### Changed
 
-  - Session - Sort groups and remove prefix in authentication menu.
-  - Improve contrast for selected item in sidebar menu.
+  - Edge details - Bugfix docker plugins rendering causing blank page
+  - Session - Sort groups and remove prefix in authentication menu
+  - Improve contrast for selected item in sidebar menu
   - Show not found message for NuvlaBox
 
 ## [2.19.0] - 2021-06-04

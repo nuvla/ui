@@ -930,10 +930,10 @@
          [ui/TableRow
           [ui/TableCell "Docker Server Version"]
           [ui/TableCell docker-server-version]])
-       (when docker-plugins
+       (when (seq docker-plugins)
          [ui/TableRow
           [ui/TableCell "Docker Plugins"]
-          [ui/TableCell docker-plugins]])
+          [ui/TableCell (str/join ", " docker-plugins)]])
        (when last-boot
          [ui/TableRow
           [ui/TableCell "Last Boot"]

@@ -4,13 +4,16 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+    [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.profile.effects :as fx]
     [sixsq.nuvla.ui.profile.spec :as spec]
+    [sixsq.nuvla.ui.session.events :as session-events]
     [sixsq.nuvla.ui.session.spec :as session-spec]
+    [sixsq.nuvla.ui.session.utils :as session-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 ;; TODO when customer exist but not valid subscription
@@ -24,6 +27,20 @@
 
 
 (reg-event-db
+  ::add-group-member
+  (fn [{:keys [::spec/group] :as db} [_ member]]
+    (let [users (:users group)]
+      (update-in db [::spec/group :users] #(conj users member)))))
+
+
+(reg-event-db
+  ::remove-group-member
+  (fn [{:keys [::spec/group] :as db} [_ member]]
+    (let [users (:users group)]
+      (update-in db [::spec/group :users] #(vec (disj (set users) member))))))
+
+
+(reg-event-db
   ::set-user
   (fn [{:keys [::spec/loading] :as db} [_ user]]
     (assoc db ::spec/user user
@@ -34,8 +51,81 @@
   ::get-user
   (fn [{{:keys [::session-spec/session] :as db} :db} _]
     (when-let [user (:user session)]
-      {:db               (update db ::spec/loading conj :user)
-       ::cimi-api-fx/get [user #(dispatch [::set-user %])]})))
+      (let [active-claim (:active-claim session)]
+        {:db               (update db ::spec/loading conj :user)
+         ::cimi-api-fx/get [user #(do (dispatch [::set-user %])
+                                      (when (session-utils/is-group? active-claim)
+                                        (dispatch [::get-group])))]}))))
+
+
+(reg-event-fx
+  ::add-group
+  (fn [{_db :db} [_ id name description loading?]]
+    (let [user {:template    {:href             "group-template/generic"
+                              :group-identifier id}
+                :name        name
+                :description description}]
+      {::cimi-api-fx/add ["group" user #(let [{:keys [status message resource-id]} (response/parse %)]
+                                          (dispatch [::session-events/search-groups])
+                                          (dispatch [::messages-events/add
+                                                     {:header  (cond-> (str "added " resource-id)
+                                                                       status (str " (" status ")"))
+                                                      :content message
+                                                      :type    :success}])
+                                          (reset! loading? false))]})))
+
+
+(reg-event-db
+  ::set-group
+  (fn [{:keys [::spec/loading] :as db} [_ group]]
+    (assoc db ::spec/group group
+              ::spec/loading (disj loading :group))))
+
+
+(reg-event-fx
+  ::get-group
+  (fn [{{:keys [::session-spec/session] :as db} :db} _]
+    (when-let [group (:active-claim session)]
+      {:db               (update db ::spec/loading conj :group)
+       ::cimi-api-fx/get [group #(dispatch [::set-group %])]})))
+
+
+(reg-event-fx
+  ::edit-group
+  (fn [_ [_ group]]
+    (let [id (:id group)]
+      {::cimi-api-fx/edit [id group #(if (instance? js/Error %)
+                                       (let [{:keys [status message]} (response/parse-ex-info %)]
+                                         (dispatch [::messages-events/add
+                                                    {:header  (cond-> "Group update failed"
+                                                                      status (str " (" status ")"))
+                                                     :content message
+                                                     :type    :error}]))
+                                       (dispatch [::messages-events/add
+                                                  {:header  "Group updated"
+                                                   :content "Group updated successfully."
+                                                   :type    :info}]))]})))
+
+(reg-event-fx
+  ::invite-to-group
+  (fn [{db :db} [_ group-id username]]
+    {::cimi-api-fx/operation
+     [group-id "invite"
+      #(if (instance? js/Error %)
+         (let [{:keys [status message]} (response/parse-ex-info %)]
+           (dispatch [::messages-events/add
+                      {:header  (cond-> (str "Invitation to " group-id " for " username "failed!")
+                                        status (str " (" status ")"))
+                       :content message
+                       :type    :error}]))
+         (dispatch [::messages-events/add
+                    {:header  "Invitation successfully sent to user"
+                     :content (str "User will appear in " group-id
+                                   " when he accept the invitation sent to his email address.")
+                     :type    :info}]))
+      {:username         username
+       :redirect-url     (str (::session-spec/server-redirect-uri db) "?message=join-group-accepted")
+       :set-password-url (str @config/path-prefix "/set-password")}]}))
 
 
 (reg-event-fx
@@ -363,3 +453,9 @@
                            #(if-let [id (-> % :resources first :id)]
                               (dispatch [::get-vendor id])
                               (dispatch [::set-vendor nil]))]}))
+
+
+(reg-event-db
+  ::set-active-tab-index
+  (fn [db [_ active-tab-index]]
+    (assoc db ::spec/active-tab-index active-tab-index)))

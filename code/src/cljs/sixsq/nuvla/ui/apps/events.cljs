@@ -484,10 +484,10 @@
   (fn [_ _]
     {::cimi-api-fx/search
      [:infrastructure-service
-      {:filter "subtype='registry'"
-       :select "id, name"
-       :order  "name:asc, id:asc"
-       :last   10000} #(dispatch [::set-registries-infra %])]}))
+      {:filter  "subtype='registry'"
+       :select  "id, name"
+       :orderby "name:asc, id:asc"
+       :last    10000} #(dispatch [::set-registries-infra %])]}))
 
 
 (reg-event-db
@@ -501,10 +501,10 @@
   (fn [_ _]
     {::cimi-api-fx/search
      [:credential
-      {:filter "subtype='infrastructure-service-registry'"
-       :select "id, name, parent"
-       :order  "name:asc, id:asc"
-       :last   10000} #(dispatch [::set-registries-credentials %])]}))
+      {:filter  "subtype='infrastructure-service-registry'"
+       :select  "id, name, parent"
+       :orderby "name:asc, id:asc"
+       :last    10000} #(dispatch [::set-registries-credentials %])]}))
 
 
 (reg-event-db

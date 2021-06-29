@@ -7,6 +7,11 @@
 (def ^:const session-tmpl-password "session-template/password")
 (def ^:const session-tmpl-password-reset "session-template/password-reset")
 
+(defn is-group?
+  [active-claim]
+  (when active-claim
+    (str/starts-with? active-claim "group/")))
+
 (defn remove-group-prefix
   [account]
   (str/replace-first account #"^group/" ""))

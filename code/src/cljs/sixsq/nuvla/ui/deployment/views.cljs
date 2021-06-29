@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.deployment.views
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.deployment-detail.subs :as deployment-detail-subs]
@@ -19,8 +20,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [clojure.string :as str]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (defn refresh

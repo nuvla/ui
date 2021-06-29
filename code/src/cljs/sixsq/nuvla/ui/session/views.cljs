@@ -149,8 +149,7 @@
          {:key      "sign-out"
           :text     (@tr [:logout])
           :icon     "sign out"
-          :on-click sign-out-fn}]])
-     ]))
+          :on-click sign-out-fn}]])]))
 
 
 (defn authn-menu
@@ -287,13 +286,13 @@
 
 
 (defn SessionPage
-  []
+  [navigate?]
   (let [session      (subscribe [::subs/session])
         query-params (subscribe [::main-subs/nav-query-params])
         tr           (subscribe [::i18n-subs/tr])
         error        (some-> @query-params :error keyword)
         message      (some-> @query-params :message keyword)]
-    (when @session
+    (when (and navigate? @session)
       (dispatch [::history-events/navigate "welcome"]))
     (when error
       (dispatch [::events/set-error-message (or (@tr [(keyword error)]) error)]))

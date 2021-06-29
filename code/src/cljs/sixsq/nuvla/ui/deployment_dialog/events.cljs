@@ -107,9 +107,9 @@
     {:db                  (assoc db ::spec/infra-services-loading? true
                                     ::spec/infra-services nil)
      ::cimi-api-fx/search [:infrastructure-service
-                           {:filter filter,
-                            :select "id, name, description, subtype, capabilities"
-                            :order  "name:asc,id:asc"}
+                           {:filter  filter,
+                            :select  "id, name, description, subtype, capabilities"
+                            :orderby "name:asc,id:asc"}
                            #(dispatch [::set-infra-services %])]}))
 
 
@@ -158,13 +158,13 @@
             (seq infra-registries)
             (assoc ::cimi-api-fx/search
                    [:credential
-                    {:filter (general-utils/join-and
-                               "subtype='infrastructure-service-registry'"
-                               (apply general-utils/join-or
-                                      (map #(str "parent='" (:id %) "'")
-                                           infra-registries)))
-                     :select "id, parent, name, description, last-check, status, subtype"
-                     :order  "name:asc,id:asc"}
+                    {:filter  (general-utils/join-and
+                                "subtype='infrastructure-service-registry'"
+                                (apply general-utils/join-or
+                                       (map #(str "parent='" (:id %) "'")
+                                            infra-registries)))
+                     :select  "id, parent, name, description, last-check, status, subtype"
+                     :orderby "name:asc,id:asc"}
                     #(dispatch [::set-infra-registries-creds registry-ids
                                 reg-creds-ids infra-registries %])])
 
@@ -178,12 +178,12 @@
   (fn [{:keys [db]} [_ registry-ids reg-creds-ids]]
     {:db                  (assoc db ::spec/infra-registries-loading? true)
      ::cimi-api-fx/search [:infrastructure-service
-                           {:filter (general-utils/join-and
-                                      "subtype='registry'"
-                                      (apply general-utils/join-or
-                                             (map #(str "id='" % "'") registry-ids))),
-                            :select "id, name, description"
-                            :order  "name:asc,id:asc"}
+                           {:filter  (general-utils/join-and
+                                       "subtype='registry'"
+                                       (apply general-utils/join-or
+                                              (map #(str "id='" % "'") registry-ids))),
+                            :select  "id, name, description"
+                            :orderby "name:asc,id:asc"}
                            #(dispatch [::set-infra-registries registry-ids reg-creds-ids %])]}))
 
 
@@ -409,14 +409,14 @@
                           (if (instance? js/Error response)
                             (do
                               (dispatch [::set-error-message
-                                        "Error during edition of deployment"
-                                        (-> response response/parse-ex-info :message)])
+                                         "Error during edition of deployment"
+                                         (-> response response/parse-ex-info :message)])
                               (dispatch [::set-submit-loading? false]))
                             (do
                               (dispatch [::deployment-operation resource-id operation])
                               (dispatch [::intercom-events/set-event "Last app launch"
                                          (time/timestamp)]))))]
-      {:db (assoc db ::spec/submit-loading? true)
+      {:db                (assoc db ::spec/submit-loading? true)
        ::cimi-api-fx/edit [resource-id dep edit-callback]})))
 
 

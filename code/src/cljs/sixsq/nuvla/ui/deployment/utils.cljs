@@ -2,9 +2,9 @@
   (:require
     [clojure.set :as set]
     [clojure.string :as str]
+    [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.values :as values]))
 

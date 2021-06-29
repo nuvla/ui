@@ -2,9 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+  - Profile - Group tab
+
 ### Changed
 
   - Updated SixSq legal status (Sàrl to SA)
+  - Acl widget - use peers instead of search user resource
+  - Session - get peers support
 
 ## [2.19.1] - 2021-06-24
 

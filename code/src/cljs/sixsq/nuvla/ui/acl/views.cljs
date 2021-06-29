@@ -4,14 +4,13 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.acl.events :as events]
-    [sixsq.nuvla.ui.acl.subs :as subs]
     [sixsq.nuvla.ui.acl.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
@@ -92,13 +91,13 @@
 
 (defn OwnerItem
   [{:keys [on-change]} ui-acl removable? principal]
-  (let [principal-name @(subscribe [::subs/principal-name principal])]
+  (let [principal-name (subscribe [::session-subs/resolve-principal principal])]
     [ui/ListItem {:style {:vertical-align "middle"}}
      [ui/ListContent
       [ui/ListHeader
        [PrincipalIcon principal]
        ff/nbsp
-       (or principal-name principal)
+       @principal-name
        ff/nbsp
        (when removable?
          [ui/Icon {:name     "close"
@@ -136,17 +135,17 @@
 (defn RightRow
   [{:keys [on-change read-only mode] :as opts} ui-acl row-number principal rights]
 
-  (let [principal-name @(subscribe [::subs/principal-name principal])]
+  (let [principal-name (subscribe [::session-subs/resolve-principal principal])]
     [ui/TableRow
 
      [ui/TableCell {:text-align "left"}
       [PrincipalIcon principal]
       ff/nbsp
-      (if principal-name
+      (if @principal-name
         [ui/Popup {:content  principal
                    :position "right center"
-                   :trigger  (r/as-element [:span (or principal-name principal)])}]
-        [:span (or principal-name principal)])]
+                   :trigger  (r/as-element [:span @principal-name])}]
+        [:span @principal-name])]
 
      (for [right-kw (rights-for-mode @mode)]
        ^{:key (str principal right-kw)}
@@ -164,20 +163,18 @@
 
 (defn DropdownPrincipals
   [_opts _ui-acl]
-  (let [open   (r/atom false)
-        users  (subscribe [::subs/users-options])
-        groups (subscribe [::subs/groups-options])
-        tr     (subscribe [::i18n-subs/tr])]
-    (dispatch [::events/search-groups])
-    (dispatch [::events/search-users ""])
+  (let [open       (r/atom false)
+        peers      (subscribe [::session-subs/peers-options])
+        peers-opts (r/atom @peers)
+        groups     (subscribe [::session-subs/groups])
+        tr         (subscribe [::i18n-subs/tr])]
     (fn [{:keys [on-change fluid value]
           :or   {on-change #()
                  fluid     false
                  value     nil}}
          ui-acl]
       (let [used-principals (utils/acl-get-all-principals-set @ui-acl)]
-        [ui/Dropdown {:text      (or (when value @(subscribe [::subs/principal-name value]))
-                                     value)
+        [ui/Dropdown {:text      @(subscribe [::session-subs/resolve-principal value])
                       :fluid     fluid
                       :style     {:width "250px"}
                       :on-open   #(reset! open true)
@@ -197,14 +194,26 @@
                      :name          "search"
                      :auto-complete "off"
                      :on-click      #(reset! open true)
-                     :on-change     (ui-callback/input ::events/search-users)}]
+                     :on-change     (ui-callback/input-callback
+                                      (fn [value]
+                                        (reset!
+                                          peers-opts
+                                          (filter
+                                            #(re-matches
+                                               (re-pattern (str "(?i).*" (general-utils/regex-escape value) ".*"))
+                                               (str (:text %) (:value %)))
+                                            @peers))
+                                        ))}]
 
           (doall
-            (for [{user-id :id user-name :name} (remove #(contains? used-principals (:id %)) @users)]
-              ^{:key user-id}
-              [ui/DropdownItem {:text     (or user-name user-id)
+            (for [{:keys [value text]} (->>
+                                         @peers-opts
+                                         (take 10)
+                                         (remove #(contains? used-principals (:value %))))]
+              ^{:key value}
+              [ui/DropdownItem {:text     (or text value)
                                 :on-click (fn []
-                                            (on-change user-id)
+                                            (on-change value)
                                             (reset! open false))}]))
 
           [ui/DropdownDivider]
@@ -263,7 +272,6 @@
             owners       (utils/acl-get-owners-set @ui-acl)]
         [ui/Table {:unstackable true
                    :attached    "top"}
-
          [ui/TableHeader
           [ui/TableRow
            [ui/TableHeaderCell
@@ -317,15 +325,25 @@
         [AddRight opts ui-acl])]]))
 
 
+(defn ->acl
+  [default-value can-edit?]
+  (or default-value
+      (when-let [user-id (and can-edit?
+                              @(subscribe [::session-subs/active-claim]))]
+        {:owners [user-id]})))
+
+
+(defn ->ui-acl
+  [default-value can-edit?]
+  (let [acl (->acl default-value can-edit?)]
+    (when acl (r/atom (utils/acl->ui-acl-format acl)))))
+
+
 (defn AclWidget
   [{:keys [default-value read-only mode] :as _opts} & [ui-acl]]
   (let [mode   (r/atom (or mode :simple))
         ui-acl (or ui-acl
-                   (r/atom
-                     (let [acl (or default-value
-                                   (when-not read-only
-                                     {:owners #{@(subscribe [::session-subs/active-claim])}}))]
-                       (utils/acl->ui-acl-format acl))))]
+                   (->ui-acl default-value (not read-only)))]
     (fn [{:keys [on-change read-only] :as opts}]
       (let [opts (assoc opts :mode mode
                              :read-only (or (nil? read-only) read-only)
@@ -344,11 +362,7 @@
   [e can-edit? edit-event]
   (let [tr            (subscribe [::i18n-subs/tr])
         default-value (:acl @e)
-        acl           (or default-value
-                          (when-let [user-id (and can-edit?
-                                                  @(subscribe [::session-subs/active-claim]))]
-                            {:owners [user-id]}))
-        ui-acl        (when acl (r/atom (utils/acl->ui-acl-format acl)))]
+        ui-acl        (->ui-acl default-value can-edit?)]
     {:menuItem {:content "Share"
                 :key     "share"
                 :icon    "users"}
@@ -363,16 +377,11 @@
                            ui-acl])))}))
 
 
-(defn AclButton
-  [{:keys [default-value read-only default-active?] :as _opts}]
-  (let [tr      (subscribe [::i18n-subs/tr])
-        active? (r/atom default-active?)
-        acl     (or default-value
-                    (when-let [user-id (and (not read-only)
-                                            @(subscribe [::session-subs/active-claim]))]
-                      {:owners [user-id]}))
-        ui-acl  (when acl (r/atom (utils/acl->ui-acl-format acl)))]
-    (fn [opts]
+(defn AclButtonOnly
+  [{:keys [default-value read-only active?] :as _opts}]
+  (let [tr     (subscribe [::i18n-subs/tr])
+        ui-acl (->ui-acl default-value (not read-only))]
+    (fn [_opts]
       (when ui-acl
         (let [owners          (utils/acl-get-owners-set @ui-acl)
               principals-set  (utils/acl-get-all-principals-set @ui-acl)
@@ -396,11 +405,29 @@
                        :on-click #(accordion-utils/toggle active?)}
             [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-principals}])
                        :position "bottom center"
-                       :content  (@tr [:principals-icon])}]
+                       :content  (@tr [:access-rights])}]
             (when icon-right
               [ui/Popup {:trigger  (r/as-element [ui/Icon {:name icon-right}])
                          :position "bottom center"
-                         :content  (@tr [:rights-icon])}])
-            [ui/Icon {:name (if @active? "caret down" "caret left")}]]
-           (when @active?
-             [AclWidget opts ui-acl])])))))
+                         :content  (@tr [:access-rights])}])
+            [ui/Icon {:name (if @active? "caret down" "caret left")}]]])))))
+
+
+(defn AclSection
+  [{:keys [default-value read-only active?] :as _opts}]
+  (let [ui-acl (->ui-acl default-value (not read-only))]
+    (fn [opts]
+      (when (and ui-acl @active?)
+        [AclWidget opts ui-acl]))))
+
+
+(defn AclButton
+  [{:keys [default-value read-only default-active?] :as _opts}]
+  (let [active? (r/atom default-active?)
+        ui-acl  (->ui-acl default-value (not read-only))]
+    (fn [opts]
+      (when ui-acl
+        [:<>
+         [AclButtonOnly (assoc opts :active? active?)]
+         (when @active?
+           [AclWidget opts ui-acl])]))))

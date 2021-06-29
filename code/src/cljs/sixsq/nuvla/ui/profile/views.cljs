@@ -6,6 +6,7 @@
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.acl.views :as acl-views]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -14,9 +15,11 @@
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.profile.events :as events]
+    [sixsq.nuvla.ui.profile.spec :as spec]
     [sixsq.nuvla.ui.profile.subs :as subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
+    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.spec :as us]
@@ -43,7 +46,82 @@
       [:new-password-repeat :password-not-equal])))
 
 
-(defn modal-change-password []
+(defn grid-columns
+  [device]
+  (case device
+    :wide-screen 2
+    :large-screen 1
+    1))
+
+
+(defn grid-columns-dense
+  [device]
+  (case device
+    :wide-screen 3
+    :large-screen 2
+    1))
+
+
+(defn AddGroupButton
+  []
+  (let [tr         (subscribe [::i18n-subs/tr])
+        show?      (r/atom false)
+        group-name (r/atom "")
+        group-desc (r/atom "")
+        validate?  (r/atom false)
+        loading?   (r/atom false)
+        close-fn   #(reset! show? false)]
+    (fn []
+      (let [group-identifier (utils-general/sanitize-name @group-name)
+            form-valid?      (and (s/valid? ::spec/group-name @group-name)
+                                  (s/valid? ::spec/group-description @group-desc))]
+        [ui/Modal
+         {:open       @show?
+          :close-icon true
+          :on-close   close-fn
+          :trigger    (r/as-element
+                        [ui/MenuItem {:on-click #(reset! show? true)}
+                         [ui/Icon {:name "users"}]
+                         (str/capitalize (@tr [:add-group]))])}
+         [uix/ModalHeader {:header (str/capitalize (@tr [:add-group]))}]
+         [ui/ModalContent
+          [ui/Message {:hidden (not (and @validate? (not form-valid?)))
+                       :error  true}
+           [ui/MessageHeader (@tr [:validation-error])]
+           [ui/MessageContent (@tr [:validation-error-message])]]
+          [ui/Input {:name        "name"
+                     :placeholder (@tr [:name])
+                     :type        :text
+                     :error       (when (and @validate?
+                                             (not (s/valid? ::spec/group-name @group-name))) true)
+                     :fluid       true
+                     :on-change   (ui-callback/input-callback
+                                    #(reset! group-name %))}]
+          [:br]
+          [ui/Input {:name        "description"
+                     :placeholder (@tr [:description])
+                     :type        :text
+                     :error       (when (and @validate?
+                                             (not (s/valid? ::spec/group-description @group-desc))) true)
+                     :fluid       true
+                     :on-change   (ui-callback/input-callback
+                                    #(reset! group-desc %))}]]
+         [ui/ModalActions
+          [uix/Button
+           {:text     (@tr [:create])
+            :primary  true
+            :disabled (and @validate? (not form-valid?))
+            :icon     "plus"
+            :loading  @loading?
+            :on-click #(if (not form-valid?)
+                         (reset! validate? true)
+                         (do
+                           (reset! show? false)
+                           (dispatch
+                             [::events/add-group group-identifier @group-name @group-desc loading?])))}]]]))))
+
+
+(defn ModalChangePassword []
   (let [open?     (subscribe [::subs/modal-open? :change-password])
         error     (subscribe [::subs/error-message])
         tr        (subscribe [::i18n-subs/tr])
@@ -120,36 +198,50 @@
                                       (dissoc :new-password-repeat))]))}]]])))
 
 
-(defn Session
+(defn Details
   []
-  (let [tr      (subscribe [::i18n-subs/tr])
-        session (subscribe [::session-subs/session])
-        user-id (:user @session)]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        session    (subscribe [::session-subs/session])
+        user-id    (:user @session)
+        is-group?  (subscribe [::session-subs/active-claim-is-group?])
+        identifier (:identifier @session)
+        ;user       (subscribe [::subs/user])
+        ;acl        (:acl @user)
+        ;ui-acl     (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))
+        ]
     (dispatch [::intercom-events/set-event "nuvla-user-id" user-id])
-    [ui/Segment {:padded true, :color "teal", :style {:height "100%"}}
-     [ui/Header {:as :h2 :dividing true} "Session"]
-     (if @session
-       [ui/Table {:basic "very"}
-        [ui/TableBody
-         [ui/TableRow
-          [ui/TableCell {:width 5} [:b "Identifier"]]
-          [ui/TableCell {:width 11} (:identifier @session)]]
-         [ui/TableRow
-          [ui/TableCell [:b (str/capitalize (@tr [:session-expires]))]]
-          [ui/TableCell (-> @session :expiry time/parse-iso8601 time/ago)]]
-         [ui/TableRow
-          [ui/TableCell [:b "User id"]]
-          [ui/TableCell (values/as-href {:href user-id})]]
-         [ui/TableRow
-          [ui/TableCell [:b "Roles"]]
-          [ui/TableCell (values/format-collection (sort (str/split (:roles @session) #"\s+")))]]]]
-       [ui/Grid {:text-align     "center"
-                 :vertical-align "middle"
-                 :style          {:height "100%"}}
-        [ui/GridColumn
-         [ui/Header {:as :h3, :icon true, :disabled true, :text-align "center"}
-          [ui/Icon {:className "fad fa-sign-in-alt"}]
-          (@tr [:no-session])]]])]))
+    [:<>
+     [ui/Segment {:padded true, :color "teal"}
+      [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:session]))]
+      (if @session
+        [ui/Table {:basic "very"}
+         [ui/TableBody
+          [ui/TableRow
+           [ui/TableCell {:width 5} [:b "Identifier"]]
+           [ui/TableCell {:width 11} identifier]]
+          [ui/TableRow
+           [ui/TableCell {:width 5} [:b "Logged-in as"]]
+           [ui/TableCell {:width 11} (if @is-group? (:active-claim @session) identifier)]]
+          [ui/TableRow
+           [ui/TableCell [:b (str/capitalize (@tr [:session-expires]))]]
+           [ui/TableCell (-> @session :expiry time/parse-iso8601 time/ago)]]
+          [ui/TableRow
+           [ui/TableCell [:b "User id"]]
+           [ui/TableCell (values/as-href {:href user-id})]]
+          [ui/TableRow
+           [ui/TableCell [:b "Roles"]]
+           [ui/TableCell (values/format-collection (sort (str/split (:roles @session) #"\s+")))]]]]
+        [ui/Grid {:text-align     "center"
+                  :vertical-align "middle"
+                  :style          {:height "100%"}}
+         [ui/GridColumn
+          [ui/Header {:as :h3, :icon true, :disabled true, :text-align "center"}
+           [ui/Icon {:className "fad fa-sign-in-alt"}]
+           (@tr [:no-session])]]])]
+     ;[ui/Segment {:padded true :color "blue"}
+     ; [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:access-rights]))]
+     ; [acl-views/AclWidget {:default-value acl, :read-only false} ui-acl]]
+     ]))
 
 
 (def Elements (r/adapt-react-class react-stripe/Elements))
@@ -431,8 +523,7 @@
               [ui/Icon {:className "fad fa-money-check-edit"}]
               (@tr [:not-subscribed-yet])]
              [:br]
-             [SubscribeButton]]
-            ])]))))
+             [SubscribeButton]]])]))))
 
 
 (defn AddPaymentMethodButton
@@ -547,7 +638,7 @@
                      [ui/Label {:size :tiny :circular true :color "blue"} "default"])]
                   [ui/TableCell {:style {:color "grey"}}
                    (when (and exp-month exp-year)
-                     (str (general-utils/format "%02d" exp-month) "/" exp-year))]
+                     (str (utils-general/format "%02d" exp-month) "/" exp-year))]
                   [ui/TableCell
                    [ui/ButtonGroup {:basic true :size "small" :icon true :floated "right"}
                     (when-not is-default?
@@ -588,7 +679,7 @@
 (defn format-currency
   [currency amount]
   (str (if (= currency "eur") "€" currency)
-       " " (general-utils/format "%.2f" amount)))
+       " " (utils-general/format "%.2f" amount)))
 
 
 (defn CurrentConsumption
@@ -815,7 +906,7 @@
   []
   (let [tr     (subscribe [::i18n-subs/tr])
         vendor (subscribe [::subs/vendor])]
-    (when (general-utils/can-operation? "dashboard" @vendor)
+    (when (utils-general/can-operation? "dashboard" @vendor)
       [ui/Form {:action (str @cimi-fx/NUVLA_URL "/api/" (:id @vendor) "/dashboard")
                 :method "post"
                 :style  {:color "grey"}}
@@ -889,54 +980,315 @@
          ]))))
 
 
-(defn Content
+(defn DropdownPrincipals
+  [_add-user _opts _members]
+  (let [peers      (subscribe [::session-subs/peers-options])
+        peers-opts (r/atom @peers)]
+    (fn [add-user
+         {:keys [fluid placeholder]
+          :or   {fluid       false
+                 placeholder ""}}
+         members]
+      (let [used-principals (set members)]
+        [ui/Dropdown {:placeholder     placeholder
+                      :fluid           fluid
+                      :allow-additions true
+                      :on-add-item     (ui-callback/value
+                                         #(swap! peers-opts conj {:key %, :value %, :text %}))
+                      :search          true
+                      :value           @add-user
+                      :on-change       (ui-callback/value #(reset! add-user %))
+                      :options         (remove
+                                         #(used-principals (:key %))
+                                         @peers-opts)
+                      :selection       true
+                      :style           {:width "250px"}
+                      :upward          false}]))))
+
+
+(defn GroupMember
+  [principal members editable? changed?]
+  (let [principal-name (subscribe [::session-subs/resolve-principal principal])]
+    [ui/ListItem
+     [ui/ListContent
+      [ui/ListHeader
+       [acl-views/PrincipalIcon principal]
+       ff/nbsp
+       @principal-name
+       ff/nbsp
+       (when editable?
+         [ui/Icon {:name     "close"
+                   :link     true
+                   :size     "small"
+                   :color    "red"
+                   :on-click (fn [_] (swap! members #(vec (disj (set @members) principal)))
+                               (reset! changed? true))}])]]]))
+
+
+(defn GroupMembers
+  [group]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        editable?   (utils-general/editable? group false)
+        users       (:users group)
+        members     (r/atom users)
+        acl         (r/atom (:acl group))
+        changed?    (r/atom false)
+        show-acl?   (r/atom false)
+        invite-user (r/atom nil)
+        add-user    (r/atom nil)]
+    (fn [group]
+      (let [{:keys [id name description]} group]
+        [ui/Table {:columns 4}
+         [ui/TableHeader {:fullWidth true}
+          [ui/TableRow
+           [ui/TableHeaderCell
+            [ui/HeaderSubheader {:as :h3}
+             name " (" id ")"]
+            (when description [:p description])]
+           (when (and @acl editable?)
+             [ui/TableHeaderCell
+              [acl-views/AclButtonOnly {:default-value @acl
+                                        :read-only     (not editable?)
+                                        :active?       show-acl?}]])]
+          (when @show-acl?
+            [ui/TableRow
+             [ui/TableCell {:colSpan 4}
+              [acl-views/AclSection {:default-value @acl
+                                     :read-only     (not editable?)
+                                     :active?       show-acl?
+                                     :on-change     #(do
+                                                       (reset! acl %)
+                                                       (reset! changed? true))}]]])]
+         [ui/TableBody
+          [ui/TableRow
+           [ui/TableCell
+            (if (empty? @members)
+              [ui/Message {:info true}
+               (if editable?
+                 (@tr [:empty-group-message])
+                 (@tr [:empty-group-or-no-access-message]))]
+              [ui/ListSA
+               (for [m @members]
+                 ^{:key m}
+                 [GroupMember m members editable? changed?])])]]
+          (when editable?
+            [ui/TableRow
+             [ui/TableCell
+              [:div {:style {:display "flex"}}
+               [DropdownPrincipals
+                add-user
+                {:placeholder (@tr [:add-group-members])
+                 :fluid       true} @members]
+               [:span ff/nbsp]
+               [uix/Button {:text     (@tr [:add])
+                            :icon     "add user"
+                            :disabled (str/blank? @add-user)
+                            :on-click #(do
+                                         (swap! members conj @add-user)
+                                         (reset! add-user nil)
+                                         (reset! changed? true))}]
+               [:span ff/nbsp]
+               [:span ff/nbsp]
+               [ui/Input {:placeholder (@tr [:invite-by-email])
+                          :style       {:width "250px"}
+                          :value       (or @invite-user "")
+                          :on-change   (ui-callback/value #(reset! invite-user %))}]
+               [:span ff/nbsp]
+               [uix/Button {:text     (@tr [:send])
+                            :icon     "send"
+                            :disabled (str/blank? @invite-user)
+                            :on-click #(do
+                                         (dispatch [::events/invite-to-group id @invite-user])
+                                         (reset! invite-user nil))}]]]
+             [ui/TableCell {:textAlign "right"}
+              [uix/Button {:primary  true
+                           :text     (@tr [:save])
+                           :icon     "save"
+                           :disabled (not @changed?)
+                           :on-click #(do (dispatch [::events/edit-group (assoc group :users @members, :acl @acl)])
+                                          (reset! changed? false))}]]])]]))))
+
+
+(defn GroupMembersSegment
+  []
+  (let [tr       (subscribe [::i18n-subs/tr])
+        loading? (subscribe [::subs/loading? :group])
+        group    (subscribe [::subs/group])]
+    (dispatch [::events/get-group])
+    (fn []
+      [ui/Segment {:padded  true
+                   :color   "green"
+                   :loading @loading?
+                   :style   {:height "100%"}}
+       [ui/Header {:as :h2 :dividing true} (@tr [:group-members])]
+       ^{:key (random-uuid)}
+       [GroupMembers @group]])))
+
+
+(defn Groups
   []
   (let [tr        (subscribe [::i18n-subs/tr])
-        cred-pass (subscribe [::subs/credential-password])
+        groups    (subscribe [::session-subs/groups])
+        is-group? (subscribe [::session-subs/active-claim-is-group?])
+        is-admin? (subscribe [::session-subs/is-admin?])]
+    (fn []
+      (let [remove-groups #{"group/nuvla-nuvlabox" "group/nuvla-anon" "group/nuvla-user"
+                            (when-not @is-admin? "group/nuvla-admin")}
+            sorted-groups (->> @groups
+                               (remove (comp remove-groups :id))
+                               (sort-by :id))]
+        [:<>
+         (when @is-group?
+           [ui/GridColumn
+            [GroupMembersSegment]])
+         [ui/Segment {:padded true, :color "blue"}
+          [ui/Header {:as :h2} (str/capitalize (@tr [:groups]))]
+          (for [group sorted-groups]
+            ^{:key (str "group-" group)}
+            [GroupMembers group])]]))))
+
+
+(defn SubscriptionAndBilling
+  []
+  (let [tr        (subscribe [::i18n-subs/tr])
         stripe    (subscribe [::main-subs/stripe])
         session   (subscribe [::session-subs/session])
         is-admin? (subscribe [::session-subs/is-admin?])
-        customer  (subscribe [::subs/customer])]
-    (dispatch [::events/init])
+        customer  (subscribe [::subs/customer])
+        device    (subscribe [::main-subs/device])]
     (fn []
       (let [show-subscription      (and @stripe @session (not @is-admin?))
-            show-customer-sections (and show-subscription @customer)]
-        [:<>
-         [uix/PageHeader "user" (str/capitalize (@tr [:profile]))]
-         [ui/Menu {:borderless true}
-          [ui/MenuItem {:disabled (nil? @cred-pass)
-                        :content  (str/capitalize (@tr [:change-password]))
-                        :on-click #(dispatch [::events/open-modal :change-password])}]]
-         [ui/Grid {:stackable true}
+            show-customer-sections (and show-subscription @customer)
+            sub-sections           (remove nil? (flatten
+                                                  (conj [] [(when show-subscription
+                                                              [Subscription])
+                                                            (when show-customer-sections
+                                                              [Coupon
+                                                               BillingContact
+                                                               CurrentConsumption
+                                                               Invoices])
+                                                            (when show-subscription
+                                                              [(when show-customer-sections
+                                                                 PaymentMethods)
+                                                               Vendor])])))]
+        (if (not (seq sub-sections))
+          [ui/Message {:info true}
+           (@tr [:no-subscription-information])]
+          [ui/Grid {:stackable true
+                    :centered  true}
+           [ui/GridRow {:columns (grid-columns-dense @device)}
+            (for [s sub-sections]
+              ^{:key (random-uuid)}
+              [ui/GridColumn {:style {:padding-bottom "20px"}} [s]])]])))))
 
-          [ui/GridRow {:columns 2}
-           [ui/GridColumn
-            [Session]]
-           [ui/GridColumn
-            (when show-subscription
-              [Subscription])]]
-          (when show-customer-sections
-            [:<>
-             [ui/GridRow {:columns 2}
-              [ui/GridColumn
-               [CurrentConsumption]]
-              [ui/GridColumn
-               [Invoices]]]
-             [ui/GridRow {:columns 2}
-              [ui/GridColumn
-               [Coupon]]
-              [ui/GridColumn
-               [BillingContact]]]])
-          (when show-subscription
-            [ui/GridRow {:columns 2}
-             [ui/GridColumn
-              [Vendor]]
-             (when show-customer-sections
-               [ui/GridColumn
-                [PaymentMethods]])])]]))))
+
+(defn TabMenuSubscription
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:span (str/capitalize (@tr [:subscription]))]))
+
+
+(defn SubscriptionPane
+  []
+  [SubscriptionAndBilling])
+
+
+(defn subscription
+  []
+  {:menuItem {:content (r/as-element [TabMenuSubscription])
+              :key     "subscription"
+              :icon    "credit card"}
+   :render   (fn [] (r/as-element [SubscriptionPane]))})
+
+
+(defn TabMenuGroups
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:span (str/capitalize (@tr [:groups]))]))
+
+
+(defn GroupsPane
+  []
+  (let [device (subscribe [::main-subs/device])]
+    [ui/Grid {:columns   (grid-columns @device)
+              :stackable true
+              :padded    true
+              :centered  true}
+     [ui/GridRow {:columns (grid-columns @device)}
+      [ui/GridColumn
+       [Groups]]]]))
+
+
+(defn groups
+  []
+  {:menuItem {:content (r/as-element [TabMenuGroups])
+              :key     "groups"
+              :icon    "users"}
+   :render   (fn [] (r/as-element [GroupsPane]))})
+
+
+(defn TabMenuDetails
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:span (str/capitalize (@tr [:details]))]))
+
+
+(defn DetailsPane
+  []
+  (let [device (subscribe [::main-subs/device])]
+    [ui/Grid {:columns   (grid-columns @device)
+              :stackable true
+              :padded    true
+              :centered  true}
+     [ui/GridRow {:centered true}
+      [ui/GridColumn
+       [Details]]]]))
+
+
+(defn details
+  []
+  {:menuItem {:content (r/as-element [TabMenuDetails])
+              :key     "details"
+              :icon    "info"}
+   :render   (fn [] (r/as-element [DetailsPane]))})
+
+
+(defn profile-panes
+  []
+  [(subscription)
+   (groups)
+   (details)])
+
+
+(defn Tabs
+  []
+  (let [active-index (subscribe [::subs/active-tab-index])]
+    (dispatch [::events/init])
+    (fn []
+      [ui/Tab
+       {:menu        {:secondary true
+                      :pointing  true
+                      :style     {:display        "flex"
+                                  :flex-direction "row"
+                                  :flex-wrap      "wrap"}}
+        :panes       (profile-panes)
+        :activeIndex @active-index
+        :onTabChange (fn [_ data]
+                       (let [active-index (. data -activeIndex)]
+                         (dispatch [::events/set-active-tab-index active-index])))}])))
+
 
 (defmethod panel/render :profile
   [_path]
-  [:div
-   [Content]
-   [modal-change-password]])
+  (let [tr        (subscribe [::i18n-subs/tr])
+        is-group? (subscribe [::session-subs/active-claim-is-group?])]
+    [ui/Container {:fluid true}
+     [uix/PageHeader "user" (str/capitalize (@tr [:profile]))]
+     [ui/Menu {:borderless true}
+      [ui/MenuItem {:disabled @is-group?
+                    :icon     "user secret"
+                    :content  (str/capitalize (@tr [:change-password]))
+                    :on-click #(dispatch [::events/open-modal :change-password])}]
+      [AddGroupButton]
+      [ModalChangePassword]]
+     [Tabs]]))

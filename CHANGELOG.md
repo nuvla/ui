@@ -8,6 +8,7 @@
 
 ### Changed
 
+  - Updated SixSq legal status (Sàrl to SA)
   - Acl widget - use peers instead of search user resource
   - Session - get peers support
 

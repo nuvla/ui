@@ -115,8 +115,10 @@
             :loading  @loading?
             :on-click #(if (not form-valid?)
                          (reset! validate? true)
-                         (dispatch
-                           [::events/add-group group-identifier @group-name @group-desc loading?]))}]]]))))
+                         (do
+                           (reset! show? false)
+                           (dispatch
+                             [::events/add-group group-identifier @group-name @group-desc loading?])))}]]]))))
 
 
 (defn ModalChangePassword []

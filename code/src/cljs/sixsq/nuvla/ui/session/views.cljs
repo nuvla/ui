@@ -149,8 +149,7 @@
          {:key      "sign-out"
           :text     (@tr [:logout])
           :icon     "sign out"
-          :on-click sign-out-fn}]])
-     ]))
+          :on-click sign-out-fn}]])]))
 
 
 (defn authn-menu

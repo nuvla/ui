@@ -308,7 +308,7 @@
 
 
 (defn ClusterButton
-  [{:keys [id] :as _resource} operation show? _title _icon _button-text]
+  [{:keys [id] :as _resource} operation show?]
   (let [tr               (subscribe [::i18n-subs/tr])
         deployments      (subscribe [::deployment-subs/deployments])
         join-token       (subscribe [::subs/join-token])
@@ -335,21 +335,22 @@
                             (dispatch [::events/set-join-token nil])
                             (dispatch [::events/operation id operation @form-data
                                        on-success-fn on-error-fn]))]
-    (fn [resource _operation show? title icon button-text]
+    (fn [resource _operation show?]
       (let [dpls          (:resources @deployments)
             active-dpls   (filter (fn [x]
                                     (when (:state x)
                                       (not= (:state x) "STOPPED"))) dpls)
             has-active-dp (if (> (count active-dpls) 0)
                             true
-                            false)]
+                            false)
+            title         (@tr [:cluster-actions])]
         [ui/Modal
          {:open       @show?
           :close-icon true
           :on-close   close-fn
           :trigger    (r/as-element
                         [ui/MenuItem {:on-click #(reset! show? true)}
-                         [ui/Icon {:name icon}]
+                         [ui/Icon {:name "linkify"}]
                          title])}
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
@@ -386,10 +387,7 @@
                 [:p {:style {:font-weight "bold"}} (:token @join-token)]])])]
          [ui/ModalActions
           [uix/Button
-           {:text     (@tr [:cancel])
-            :on-click close-fn}]
-          [uix/Button
-           {:text     button-text
+           {:text     (@tr [:cluster])
             :primary  true
             :disabled has-active-dp
             :on-click on-click-fn}]]]))))
@@ -400,7 +398,7 @@
   (let [show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "cluster-nuvlabox" @show?)}
-      [ClusterButton resource operation show? "Cluster NuvlaBox" "linkify" "cluster"])))
+      [ClusterButton resource operation show?])))
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "add-ssh-key"]

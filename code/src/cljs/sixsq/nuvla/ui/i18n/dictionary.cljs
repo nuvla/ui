@@ -95,6 +95,7 @@
         :cloud                                         "cloud"
         :cloud-services                                "Cloud services"
         :cluster                                       "cluster"
+        :cluster-actions                               "Cluster actions"
         :clusters                                      "clusters"
         :coe-cluster-size                              "cluster size"
         :coe-install-manager-portainer                 "Install COE cluster manager Portainer"

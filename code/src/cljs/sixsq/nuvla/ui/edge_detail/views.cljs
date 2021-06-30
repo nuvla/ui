@@ -881,7 +881,7 @@
                :color     "grey"
                :raised    true}
    [:h4 "Host"]
-   (if nb-status
+   (if (not (seq nb-status))
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody

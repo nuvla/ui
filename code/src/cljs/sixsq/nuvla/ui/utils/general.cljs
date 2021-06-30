@@ -354,3 +354,20 @@
   "convert the aggregate structure returned by Nuvla into a terms/value map"
   [aggregate]
   (into {} (for [a aggregate] {(keyword (str (:key a))) (:doc_count a)})))
+
+(defn sanitize-name [name]
+  (when name
+    (str/lower-case
+      (str/replace
+        (str/trim
+          (str/join "" (re-seq #"[a-zA-Z0-9\ ]" name)))
+        " " "-"))))
+
+(defn regex-escape
+  "Escapes regex special chars in the string s."
+  [s]
+  (str/escape
+    s
+    {\- "\\-", \[ "\\[", \] "\\]", \{ "\\{", \} "\\}",
+     \( "\\(", \) "\\)", \* "\\*", \+ "\\+", \? "\\?",
+     \. "\\.", \\ "\\\\", \^ "\\^", \$ "\\$", \| "\\|"}))

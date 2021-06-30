@@ -930,10 +930,10 @@
          [ui/TableRow
           [ui/TableCell "Docker Server Version"]
           [ui/TableCell docker-server-version]])
-       (when docker-plugins
+       (when (seq docker-plugins)
          [ui/TableRow
           [ui/TableCell "Docker Plugins"]
-          [ui/TableCell docker-plugins]])
+          [ui/TableCell (str/join ", " docker-plugins)]])
        (when last-boot
          [ui/TableRow
           [ui/TableCell "Last Boot"]
@@ -1096,13 +1096,17 @@
 
 
 (defn TabLocationMap
-  [_nuvlabox]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        zoom         (atom 3)
-        new-location (r/atom nil)]
-    (fn [{:keys [id location] :as nuvlabox}]
+  []
+  (let [tr                (subscribe [::i18n-subs/tr])
+        nuvlabox          (subscribe [::subs/nuvlabox])
+        nuvlabox-status   (subscribe [::subs/nuvlabox-status])
+        zoom              (atom 3)
+        new-location      (r/atom nil)
+        {:keys [id location]} nuvlabox
+        inferred-location (:inferred-location @nuvlabox-status)]
+    (fn []
       (let [update-new-location #(reset! new-location %)
-            position            (some-> (or @new-location location) map/longlat->latlong)]
+            position            (some-> (or @new-location location inferred-location) map/longlat->latlong)]
         [:div
          (if position (@tr [:map-drag-to-update-nb-location])
                       (@tr [:map-click-to-set-nb-location]))
@@ -1133,9 +1137,8 @@
 
 (defn TabLocation
   []
-  (let [nuvlabox (subscribe [::subs/nuvlabox])]
-    [ui/TabPane
-     [TabLocationMap @nuvlabox]]))
+  [ui/TabPane
+   [TabLocationMap]])
 
 
 (defn TabLoad
@@ -1489,13 +1492,18 @@
   (let [nb-status (subscribe [::subs/nuvlabox-status])]
     (fn [uuid]
       ^{:key uuid}
-      [ui/Container {:fluid true}
-       [PageHeader]
-       [MenuBar uuid]
-       [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
-       [job-views/ProgressJobAction @nb-status]
-       [TabsNuvlaBox]
+      [ui/DimmerDimmable
        [main-components/NotFoundPortal
         ::subs/nuvlabox-not-found?
         :no-nuvlabox-message-header
-        :no-nuvlabox-message-content]])))
+        :no-nuvlabox-message-content]
+       [ui/Container {:fluid true}
+        [PageHeader]
+        [MenuBar uuid]
+        [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
+        [job-views/ProgressJobAction @nb-status]
+        [TabsNuvlaBox]
+        [main-components/NotFoundPortal
+         ::subs/nuvlabox-not-found?
+         :no-nuvlabox-message-header
+         :no-nuvlabox-message-content]]])))

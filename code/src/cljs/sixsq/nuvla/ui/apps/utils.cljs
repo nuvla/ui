@@ -3,6 +3,7 @@
   (:require
     [clojure.string :as str]
     [sixsq.nuvla.ui.apps.spec :as spec]
+    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
@@ -107,19 +108,8 @@
     (subtype-icon subtype)))
 
 
-;; Sanitize before serialization to server
-
-(defn sanitize-name [name]
-  (when name
-    (str/lower-case
-      (str/replace
-        (str/trim
-          (str/join "" (re-seq #"[a-zA-Z0-9\ ]" name)))
-        " " "-"))))
-
-
 (defn contruct-path [parent name]
-  (let [sanitized-name (sanitize-name name)]
+  (let [sanitized-name (utils-general/sanitize-name name)]
     (str/join "/"
               (remove str/blank?
                       [parent sanitized-name]))))

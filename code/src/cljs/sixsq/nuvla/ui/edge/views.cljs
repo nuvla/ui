@@ -954,8 +954,7 @@
                     [ui/GridColumn {:width 4}
                      [main-components/SearchInput
                       {:default-value @full-text
-                       :style         {:min-width "100%"
-                                       :max-width "100%"}
+                       :fluid         true
                        :on-change     (ui-callback/input-callback
                                         #(dispatch [::events/set-full-text-search %]))}]]
                     [ui/GridColumn {:width 12}

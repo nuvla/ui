@@ -391,6 +391,7 @@
                :selection     true}]
              (when is-join-action?
                [:<>
+                ^{:key join-type}
                 [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-id join-type)]
 
                 (when invalid-manager?

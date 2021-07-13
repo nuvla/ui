@@ -349,17 +349,14 @@
                     (apply general-utils/join-or))
        :select "id, name, nuvlabox-status"
        :last   100}
-      #(dispatch [::set-nuvlabox-managers (let [status-per-manager (atom [])]
-                                            (doseq [status statuses]
-                                              (swap! status-per-manager
-                                                     conj
-                                                     {
-                                                      :name
-                                                      (:name (first (get (group-by :id (:resources %)) (:parent status))))
-                                                      :status
-                                                      status
-                                                      }))
-                                            @status-per-manager)])]}))
+      #(dispatch [::set-nuvlabox-managers
+                  (into {}
+                        (for [status statuses]
+                          (let [id (:parent status)]
+                            {id
+                             {:id     id
+                              :name   (:name (first (get (group-by :id (:resources %)) (:parent status))))
+                              :status status}})))])]}))
 
 
 (reg-event-fx

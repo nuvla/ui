@@ -302,8 +302,11 @@
         :on-change   (ui-callback/value on-change-fn)
         :clearable   true
         :placeholder (@tr [:nuvlabox-available-managers-select])
-        :options     (map (fn [{:keys [name status]}]
-                            {:key name, :text name, :value status}) @managers)
+        :options     (map (fn [kv]
+                            (let [id     (key kv)
+                                  status (val kv)
+                                  name   (:name status)]
+                              {:key id, :text name, :value id})) @managers)
         :selection   true}])))
 
 
@@ -313,13 +316,14 @@
         deployments      (subscribe [::deployment-subs/deployments])
         join-token       (subscribe [::subs/join-token])
         nuvlabox-cluster (subscribe [::subs/nuvlabox-cluster])
+        managers         (subscribe [::subs/nuvlabox-managers])
         close-fn         #(reset! show? false)
         default-action   "join-worker"
         form-data        (r/atom {:cluster-action default-action})
-        actions          [{:key 1 :text "Join as a worker" :value default-action}
-                          {:key 2 :text "Join as a manager" :value "join-manager"}
-                          {:key 3 :text "Leave" :value "leave"}
-                          {:key 4 :text "Force new cluster" :value "force-new-cluster"}]
+        actions          [{:key 1 :text (@tr [:cluster-action-join-worker]) :value default-action}
+                          {:key 2 :text (@tr [:cluster-action-join-manager]) :value "join-manager"}
+                          {:key 3 :text (@tr [:cluster-action-leave]) :value "leave"}
+                          {:key 4 :text (@tr [:cluster-action-force-new-cluster]) :value "force-new-cluster"}]
         on-change-fn     (fn [k join-token-scope v]
                            (if (str/blank? v)
                              (swap! form-data dissoc k)
@@ -327,23 +331,40 @@
                                (swap! form-data dissoc :token)
                                (swap! form-data assoc k v)
                                (when join-token-scope
-                                 (dispatch [::events/get-join-token (:parent v) join-token-scope])
-                                 (dispatch [::events/get-nuvlabox-cluster (:parent v)])))))
+                                 (dispatch [::events/get-join-token v join-token-scope])
+                                 (dispatch [::events/get-nuvlabox-cluster v])))))
         on-success-fn    close-fn
         on-error-fn      close-fn
         on-click-fn      #(do
+                            (swap! form-data assoc :token (:token @join-token))
                             (dispatch [::events/set-join-token nil])
                             (dispatch [::events/operation id operation @form-data
                                        on-success-fn on-error-fn]))]
     (fn [resource _operation show?]
-      (let [dpls          (:resources @deployments)
-            active-dpls   (filter (fn [x]
-                                    (when (:state x)
-                                      (not= (:state x) "STOPPED"))) dpls)
-            has-active-dp (if (> (count active-dpls) 0)
-                            true
-                            false)
-            title         (@tr [:cluster-actions])]
+      (let [dpls                (:resources @deployments)
+            active-dpls         (filter (fn [x]
+                                          (when (:state x)
+                                            (not= (:state x) "STOPPED"))) dpls)
+            has-active-dp       (if (> (count active-dpls) 0)
+                                  true
+                                  false)
+            title               (@tr [:cluster-actions])
+            nuvlabox-manager-id (:nuvlabox-manager-id @form-data)
+            nuvlabox-status     (get-in @managers [nuvlabox-manager-id :status])
+            cluster-action      (:cluster-action @form-data)
+            is-join-manager?    (= cluster-action "join-manager")
+            is-join-worker?     (= cluster-action "join-worker")
+            is-leave-action?    (= cluster-action "leave")
+            is-join-action?     (or is-join-worker? is-join-manager?)
+            manager-selected?   (not (nil? nuvlabox-manager-id))
+            valid-manager?      (and
+                                  manager-selected?
+                                  (not (str/blank? (and (:token @join-token) (:nuvlabox-manager-id @form-data)))))
+            invalid-manager?    (and manager-selected? (not valid-manager?))
+            cluster-id          (:cluster-id @nuvlabox-cluster)
+            cluster-name        (:name @nuvlabox-cluster)
+            join-type           (if is-join-manager? "MANAGER" "WORKER")]
+
         [ui/Modal
          {:open       @show?
           :close-icon true
@@ -363,28 +384,33 @@
                :on-change     (ui-callback/value
                                 (fn [value]
                                   (on-change-fn :cluster-action nil value)
-                                  (swap! form-data dissoc :nuvlabox-manager-status)
+                                  (swap! form-data dissoc :nuvlabox-manager-id)
                                   (swap! form-data dissoc :token)))
                :default-value default-action
                :options       actions
                :selection     true}]
-             (when (= (:cluster-action @form-data) "join-worker")
-               [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-status "WORKER")])
+             (when is-join-action?
+               [:<>
+                [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-id join-type)]
 
-             (when (= (:cluster-action @form-data) "join-manager")
-               [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-status "MANAGER")])
+                (when invalid-manager?
+                  [ui/Message {:negative true
+                               :content  (@tr [:cluster-invalid-manager])}])
+                (when valid-manager?
+                  [:<>
+                   [ui/Message
+                    (@tr [:nuvlabox-joining])
+                    [:span {:style {:font-weight "bold"}} (if cluster-name
+                                                            (str cluster-name " (" cluster-id ")")
+                                                            cluster-id)]
+                    (@tr [:nuvlabox-joining-on-manager-address])
+                    [:span {:style {:font-weight "bold"}} (:cluster-join-address nuvlabox-status)]
+                    (@tr [:nuvlabox-joining-with-token])
+                    [:p {:style {:font-weight "bold"}} (:token @join-token)]]])])
+             (when is-leave-action?
+               [ui/Message {:negative true
+                            :content  (@tr [:cluster-action-leave-warning])}])])]
 
-             (when (and (:token @join-token) (:nuvlabox-manager-status @form-data))
-               (swap! form-data assoc :token (:token @join-token))
-               [ui/Message
-                (@tr [:nuvlabox-joining])
-                [:span {:style {:font-weight "bold"}} (if (:name @nuvlabox-cluster)
-                                                        (str (:name @nuvlabox-cluster) " (" (:cluster-id @nuvlabox-cluster) ")")
-                                                        (:cluster-id @nuvlabox-cluster))]
-                (@tr [:nuvlabox-joining-on-manager-address])
-                [:span {:style {:font-weight "bold"}} (:cluster-join-address (:nuvlabox-manager-status @form-data))]
-                (@tr [:nuvlabox-joining-with-token])
-                [:p {:style {:font-weight "bold"}} (:token @join-token)]])])]
          [ui/ModalActions
           [uix/Button
            {:text     (@tr [:cluster])

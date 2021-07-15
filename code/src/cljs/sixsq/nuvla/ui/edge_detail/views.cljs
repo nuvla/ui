@@ -302,10 +302,8 @@
         :on-change   (ui-callback/value on-change-fn)
         :clearable   true
         :placeholder (@tr [:nuvlabox-available-managers-select])
-        :options     (map (fn [kv]
-                            (let [id     (key kv)
-                                  status (val kv)
-                                  name   (:name status)]
+        :options     (map (fn [[id status]]
+                            (let [name   (:name status)]
                               {:key id, :text name, :value id})) @managers)
         :selection   true}])))
 
@@ -907,6 +905,7 @@
                :raised    true}
    [:h4 "Host"]
    (if (not (seq nb-status))
+     [ui/Message {:content (@tr [:nuvlabox-status-unavailable])}]
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody
@@ -962,9 +961,7 @@
        (when last-boot
          [ui/TableRow
           [ui/TableCell "Last Boot"]
-          [ui/TableCell (time/time->format last-boot)]])]]
-     ;else
-     [ui/Message {:content (@tr [:nuvlabox-status-unavailable])}])])
+          [ui/TableCell (time/time->format last-boot)]])]])])
 
 
 (defn TabOverviewStatus

@@ -348,7 +348,7 @@
                       :style {:margin-top 10, :max-height 150, :overflow "auto"}}
        (for [tag tags]
          ^{:key (str uuid "_" tag)}
-         [ui/Label {:style {:max-width     "15ch"
+         [ui/Label {:style {:max-width     "20ch"
                             :overflow      "hidden"
                             :text-overflow "ellipsis"
                             :white-space   "nowrap"}}

@@ -5,7 +5,8 @@
 ### Added
 
   - Profile - Group tab
-
+  - Edge Detail - Improve warning and error messages on NB update
+  
 ### Changed
 
   - Updated SixSq legal status (Sàrl to SA)

@@ -888,11 +888,6 @@
      [:span (str/capitalize "action")]]]])
 
 
-(def resource-to-collection-names
-  {"infrastructure-service" "Infrastructure Service"
-   "nuvlabox"               "NuvlaBox"})
-
-
 (defn criteria-popup
   [subs-conf]
   (let [{:keys [metric condition kind value]} (:criteria subs-conf)]
@@ -900,6 +895,14 @@
       [:span "criteria: " metric " "
        [:span {:style {:font-weight "bold"}} condition]
        (when-not (= "boolean" kind) (str " " value))])))
+
+
+(defn beautify-name
+  "Transform kebab names into spaced camel case, with special exceptions"
+  [name]
+  (case name
+    "nuvlabox" "NuvlaBox"
+    (str/join " " (map str/capitalize (str/split name #"-")))))
 
 
 (defn TabSubscriptions
@@ -916,15 +919,13 @@
     (dispatch-sync [::events/get-notification-subscriptions])
     (dispatch [::events/get-notification-methods])
     (fn []
-      (let [infra-service-subs-confs (filter #(= "infrastructure-service" (:resource-kind %)) @subscription-configs)
-            nuvlabox-subs-confs      (filter #(= "nuvlabox" (:resource-kind %)) @subscription-configs)
-            subs-confs-all           {"nuvlabox"               nuvlabox-subs-confs
-                                      "infrastructure-service" infra-service-subs-confs}]
+      (let [grouped-subscriptions (group-by :resource-kind @subscription-configs)]
         [ui/TabPane
          [MenuBarSubscription]
          (if (empty? @subscription-configs)
            [ui/Message (str/capitalize (@tr [:no-subscription-configs-defined]))]
-           (doall (for [[idx resource-kind resource-subs-confs] (map-indexed (fn [i [k v]] [i k v]) subs-confs-all)]
+           (doall (for [[idx resource-kind resource-subs-confs] (map-indexed
+                                                                  (fn [i [k v]] [i k v]) grouped-subscriptions)]
                     (when-not (empty? resource-subs-confs)
                       ^{:key resource-kind}
                       [uix/Accordion
@@ -988,13 +989,11 @@
                                       [ui/Icon {:name     :cog
                                                 :color    :blue
                                                 :style    {:cursor :pointer}
-                                                :on-click #(dispatch [::events/open-edit-subscription-config-modal subs-conf])}])]]))
-                         ]]
+                                                :on-click #(dispatch [::events/open-edit-subscription-config-modal subs-conf])}])]]))]]
                        :title-size :h4
                        :default-open (= 0 idx)
                        :count (count resource-subs-confs)
-                       :label (get resource-to-collection-names resource-kind)]
-                      ))))]))))
+                       :label (beautify-name resource-kind)]))))]))))
 
 
 (defn TabMethods

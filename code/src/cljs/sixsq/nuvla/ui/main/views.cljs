@@ -103,7 +103,7 @@
                             :text-align     "center"}}]
     [ui/Segment {:style {:border-radius 0}}
      [ui/Grid {:columns 3}
-      [ui/GridColumn grid-style "© 2021, SixSq Sàrl"]
+      [ui/GridColumn grid-style "© 2021, SixSq SA"]
       [ui/GridColumn grid-style
        [:a {:on-click #(dispatch [::history-events/navigate "about"])
             :style    {:cursor "pointer"}}
@@ -235,11 +235,11 @@
     (if (and @cep (not @session-loading?))
       [:div {:id "nuvla-ui-main"}
        (case (first @resource-path)
-         "sign-in" [session-views/SessionPage]
-         "sign-up" [session-views/SessionPage]
-         "reset-password" [session-views/SessionPage]
-         "set-password" [session-views/SessionPage]
-         nil [session-views/SessionPage]
+         "sign-in" [session-views/SessionPage true]
+         "sign-up" [session-views/SessionPage true]
+         "reset-password" [session-views/SessionPage true]
+         "set-password" [session-views/SessionPage false]
+         nil [session-views/SessionPage true]
          [:<>
           [intercom/widget]
           [sidebar/menu]

@@ -2,8 +2,31 @@
 
 ## Unreleased
 
+### Added
+
+  - Profile - Group tab
+
 ### Changed
 
+  - Updated SixSq legal status (Sàrl to SA)
+  - Acl widget - use peers instead of search user resource
+  - Session - get peers support
+
+## [2.19.1] - 2021-06-24
+
+### Changed
+
+  - Edge details - Bugfix docker plugins rendering causing blank page
+  - Session - Sort groups and remove prefix in authentication menu
+  - Improve contrast for selected item in sidebar menu
+  - Show not found message for NuvlaBox
+
+## [2.19.0] - 2021-06-04
+
+### Changed
+
+  - Main comp - Show job errors per action when some
+  - Credential - Support gpg key
   - Main - Detect unpaid subscription to show a more coherent message
   - Deployment - Bulk force delete support
   - Deployment - Bulk stop support

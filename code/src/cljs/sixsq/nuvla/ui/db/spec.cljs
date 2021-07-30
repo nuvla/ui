@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.db.spec
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.acl.spec :as acl]
     [sixsq.nuvla.ui.apps-application.spec :as apps-application]
     [sixsq.nuvla.ui.apps-component.spec :as apps-component]
     [sixsq.nuvla.ui.apps-store.spec :as apps-store]
@@ -28,8 +27,7 @@
     [sixsq.nuvla.ui.session.spec :as session]))
 
 
-(s/def ::db (s/merge ::acl/db
-                     ::apps/db
+(s/def ::db (s/merge ::apps/db
                      ::apps-store/db
                      ::api/db
                      ::api-detail/db
@@ -54,8 +52,7 @@
 
 
 (def default-db
-  (merge acl/defaults
-         apps/defaults
+  (merge apps/defaults
          apps-component/defaults
          apps-application/defaults
          apps-store/defaults

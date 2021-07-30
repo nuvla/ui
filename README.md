@@ -230,7 +230,7 @@ Release process instructions are available [here](RELEASE.md).
 
 ## Copyright
 
-Copyright &copy; 2019-2021, SixSq Sàrl
+Copyright &copy; 2019-2021, SixSq SA
 
 ## License
 

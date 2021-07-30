@@ -113,7 +113,7 @@
         [ui/DropdownHeader (@tr [:switch-group])]
         (for [account @switch-group-options]
           ^{:key account}
-          [ui/DropdownItem {:text     account
+          [ui/DropdownItem {:text     (utils/remove-group-prefix account)
                             :icon     (if (str/starts-with? account "group/") "group" "user")
                             :on-click #(dispatch [::events/switch-group account])}])
         [ui/DropdownDivider]])
@@ -149,8 +149,7 @@
          {:key      "sign-out"
           :text     (@tr [:logout])
           :icon     "sign out"
-          :on-click sign-out-fn}]])
-     ]))
+          :on-click sign-out-fn}]])]))
 
 
 (defn authn-menu
@@ -172,7 +171,7 @@
        [ui/ButtonGroup {:primary true}
         [ui/Button {:id "nuvla-username-button" :on-click profile-fn}
          [ui/Icon {:name (if @is-group? "group" "user")}]
-         [:span {:id "nuvla-username"} (general-utils/truncate @user)]]
+         [:span {:id "nuvla-username"} (general-utils/truncate (utils/remove-group-prefix @user))]]
         dropdown-menu]
        [:div
         (when @signup-template?
@@ -287,13 +286,13 @@
 
 
 (defn SessionPage
-  []
+  [navigate?]
   (let [session      (subscribe [::subs/session])
         query-params (subscribe [::main-subs/nav-query-params])
         tr           (subscribe [::i18n-subs/tr])
         error        (some-> @query-params :error keyword)
         message      (some-> @query-params :message keyword)]
-    (when @session
+    (when (and navigate? @session)
       (dispatch [::history-events/navigate "welcome"]))
     (when error
       (dispatch [::events/set-error-message (or (@tr [(keyword error)]) error)]))

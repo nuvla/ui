@@ -8,6 +8,7 @@
 
 (s/def ::license-validation-errors set?)
 (s/def ::docker-compose-validation-errors set?)
+(s/def ::configuration-validation-errors set?)
 
 
 (s/def ::requires-user-rights boolean?)
@@ -45,4 +46,5 @@
 (def defaults {::module-application               {::docker-compose       nil
                                                    ::requires-user-rights false}
                ::license-validation-errors        #{}
-               ::docker-compose-validation-errors #{}})
+               ::docker-compose-validation-errors #{}
+               ::configuration-validation-errors  #{}})

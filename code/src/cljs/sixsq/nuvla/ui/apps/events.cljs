@@ -395,8 +395,8 @@
   (fn [db [_ id dt]]
     (assoc-in db [::spec/module-common ::spec/data-types id] {:id id ::spec/data-type dt})))
 
-;; Private registries
 
+;; Private registries
 
 (reg-event-db
   ::add-registry

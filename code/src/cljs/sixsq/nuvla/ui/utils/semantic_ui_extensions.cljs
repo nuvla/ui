@@ -184,20 +184,18 @@
    text])
 
 
-(defn TableRowField
-  [_name & {:keys [_key _placeholder _default-value _spec _on-change _on-validation
-                  _required? _editable? _validate-form? _type _input-help-msg]}]
+(defn TableRowCell
+  [{:keys [_key _placeholder _default-value _spec _width _on-change _on-validation
+           _editable? _validate-form? _type _input-help-msg]}]
   (let [local-validate? (r/atom false)
         active-input?   (r/atom false)]
-    (fn [name & {:keys [key placeholder default-value spec on-change on-validation
-                        required? editable? validate-form? type input-help-msg]
-                 :or   {editable? true, spec any?, type :input}}]
-      (let [name-label  (cond-> name
-                                (and editable? required?) (general-utils/mandatory-name))
-            validate?   (boolean (or @local-validate? validate-form?))
+    (fn [{:keys [key placeholder default-value spec width on-change on-validation
+                 editable? validate-form? type input-help-msg]
+          :or   {editable? true, spec any?, type :input}}]
+      (let [validate?   (boolean (or @local-validate? validate-form?))
             error?      (and validate? (not (s/valid? spec default-value)))
             common-opts {:default-value default-value
-                         :placeholder   (or placeholder name)
+                         :placeholder   placeholder
                          :onMouseEnter  #(reset! active-input? true)
                          :onMouseLeave  #(reset! active-input? false)
                          :auto-complete "nope"
@@ -207,25 +205,44 @@
                                              (on-change text)))}]
         (when on-validation
           (dispatch [on-validation key error?]))
+
+        ^{:key (or key name)}
+        [ui/TableCell (when width {:width width})
+         input-help-msg
+         (if editable?
+           (if (#{:input :password} type)
+             [ui/Input (assoc common-opts
+                         :error error?
+                         :fluid true
+                         :type type
+                         :auto-complete "nope"
+                         :icon (when @active-input? :pencil))]
+             [ui/Form
+              [ui/FormField {:error error?}
+               [:div {:className "ui input icon"}
+                [ui/TextArea common-opts]
+                (when @active-input? [ui/Icon {:name "pencil"}])]]])
+           [SpanBlockJustified default-value])]))))
+
+
+(defn TableRowField
+  [_name & {:keys [_key _placeholder _default-value _spec _on-change _on-validation
+                   _required? _editable? _validate-form? _type _input-help-msg]}]
+  (let [local-validate? (r/atom false)]
+    (fn [name & {:keys [key _placeholder default-value spec _on-change on-validation
+                        required? editable? validate-form? _type _input-help-msg]
+                 :or   {editable? true, spec any?}
+                 :as options}]
+      (let [name-label  (cond-> name
+                                (and editable? required?) (general-utils/mandatory-name))
+            validate?   (boolean (or @local-validate? validate-form?))
+            error?      (and validate? (not (s/valid? spec default-value)))]
+        (when on-validation
+          (dispatch [on-validation key error?]))
         [ui/TableRow
          [ui/TableCell {:collapsing true} name-label]
          ^{:key (or key name)}
-         [ui/TableCell
-          input-help-msg
-          (if editable?
-            (if (#{:input :password} type)
-              [ui/Input (assoc common-opts
-                          :error error?
-                          :fluid true
-                          :type type
-                          :auto-complete "nope"
-                          :icon (when @active-input? :pencil))]
-              [ui/Form
-               [ui/FormField {:error error?}
-                [:div {:className "ui input icon"}
-                 [ui/TextArea common-opts]
-                 (when @active-input? [ui/Icon {:name "pencil"}])]]])
-            [SpanBlockJustified default-value])]]))))
+         [TableRowCell options]]))))
 
 
 (defn LinkIcon

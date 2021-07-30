@@ -556,7 +556,7 @@
               [uix/TableRowField (@tr [:name]), :key (str parent "-name"), :editable? @editable?,
                :spec ::spec/name, :validate-form? @validate-form?, :required? true,
                :default-value name, :on-change (partial on-change ::events/name)
-               :on-validation]
+               :on-validation ::events/set-details-validation-error]
               (when (not-empty parent)
                 (let [label (if (= "project" subtype) "parent project" "project")]
                   [ui/TableRow
@@ -572,7 +572,6 @@
               [ui/Button {:fluid    true
                           :on-click #(dispatch [::events/open-logo-url-modal])}
                (@tr [:module-change-logo])])]]]
-         ;^{:key (random-uuid)}
          [Description validation-event]]))))
 
 
@@ -618,40 +617,35 @@
                            (dispatch [::events/validate-form]))}])
 
 
-(defn single-env-variable
+(defn SingleEnvVariable
   [env-variable]
   (let [tr              (subscribe [::i18n-subs/tr])
-        form-valid?     (subscribe [::subs/form-valid?])
+        validate-form?  (subscribe [::subs/validate-form?])
         editable?       (subscribe [::subs/editable?])
         local-validate? (r/atom false)
         {:keys [id
                 ::spec/env-name
                 ::spec/env-description
                 ::spec/env-value
-                ::spec/env-required]} env-variable
-        validate?       (or @local-validate? (not @form-valid?))]
+                ::spec/env-required]} env-variable]
     [ui/TableRow {:key id}
-     [ui/TableCell {:floated :left
-                    :width   3}
-      (if @editable?
-        (let [input-name (str name "-" id)]
-          [ui/Input {:name          (str name "-" id)
-                     :placeholder   (@tr [:name])
-                     :type          :text
-                     :default-value (or env-name "")
-                     :error         (when (and validate?
-                                               (not (s/valid? ::spec/env-name env-name))) true)
-                     :fluid         true
-                     :onMouseEnter  #(dispatch [::events/active-input input-name])
-                     :onMouseLeave  #(dispatch [::events/active-input nil])
-                     :on-change     (ui-callback/input-callback
-                                      #(do
-                                         (reset! local-validate? true)
-                                         (dispatch [::events/update-env-name id %])
-                                         (dispatch [::main-events/changes-protection? true])
-                                         (dispatch [::events/validate-form])))}])
-
-        [:span env-name])]
+     (if @editable?
+       [uix/TableRowCell {:key            (str "env-var-name-" id)
+                          :placeholder    (@tr [:name])
+                          :editable?      editable?,
+                          :spec           ::spec/env-name
+                          :validate-form? @validate-form?
+                          :required?      true
+                          :default-value  (or env-name "")
+                          :on-change      #(do
+                                             (reset! local-validate? true)
+                                             (dispatch [::events/update-env-name id %])
+                                             (dispatch [::main-events/changes-protection? true])
+                                             (dispatch [::events/validate-form]))
+                          :on-validation  ::apps-application-events/set-configuration-validation-error}]
+       [ui/TableCell {:floated :left
+                      :width   3}
+        [:span env-name]])
 
      [ui/TableCell {:floated :left
                     :width   3}
@@ -687,7 +681,7 @@
         [trash id ::events/remove-env-variable]])]))
 
 
-(defn env-variables-section []
+(defn EnvVariablesSection []
   (let [tr            (subscribe [::i18n-subs/tr])
         env-variables (subscribe [::subs/env-variables])
         editable?     (subscribe [::subs/editable?])]
@@ -711,7 +705,7 @@
                  [ui/TableBody
                   (for [[id env-variable] @env-variables]
                     ^{:key (str "env_" id)}
-                    [single-env-variable env-variable])]]])
+                    [SingleEnvVariable env-variable])]]])
         (when @editable?
           [:div {:style {:padding-top 10}}
            [plus ::events/add-env-variable]])]
@@ -720,24 +714,47 @@
        :default-open true])))
 
 
-(defn single-url
+(defn SingleUrl
   [url-map]
-  (let [editable? (subscribe [::subs/editable?])
+  (let [tr              (subscribe [::i18n-subs/tr])
+        validate-form?  (subscribe [::subs/validate-form?])
+        editable?       (subscribe [::subs/editable?])
+        local-validate? (r/atom false)
         {:keys [id ::spec/url-name ::spec/url]} url-map]
     [ui/TableRow {:key id}
-     [ui/TableCell {:floated :left
-                    :width   2}
-      (if @editable?
-        [input id (str "url-name-" id) url-name
-         "name of this url" ::events/update-url-name ::spec/url-name false]
-        [:span url-name])]
-     [ui/TableCell {:floated :left
-                    :width   13}
-      (if @editable?
-        [input id (str "url-url-" id) url
-         "url - e.g. http://${hostname}:${tcp.8888}/?token=${jupyter-token}"
-         ::events/update-url-url ::spec/url true]
-        [:span url])]
+     (if @editable?
+       [uix/TableRowCell {:key            (str "url-name-" id)
+                          :placeholder    (@tr [:name-of-url])
+                          :editable?      editable?,
+                          :spec           ::spec/url-name
+                          :validate-form? @validate-form?
+                          :required?      true
+                          :default-value  (or url-name "")
+                          :width          3
+                          :on-change      #(do
+                                             (reset! local-validate? true)
+                                             (dispatch [::events/update-url-name id %])
+                                             (dispatch [::main-events/changes-protection? true])
+                                             (dispatch [::events/validate-form]))
+                          :on-validation  ::apps-application-events/set-configuration-validation-error}]
+       [ui/TableCell {:floated :left
+                      :width   3}
+        [:span url-name]])
+     (if @editable?
+       [uix/TableRowCell {:key            (str "url-url-" id)
+                          :placeholder    "url - e.g. http://${hostname}:${tcp.8888}/?token=${jupyter-token}"
+                          :editable?      editable?,
+                          :spec           ::spec/url
+                          :validate-form? @validate-form?
+                          :required?      true
+                          :default-value  (or url "")
+                          :on-change      #(do
+                                             (reset! local-validate? true)
+                                             (dispatch [::events/update-url-url id %])
+                                             (dispatch [::main-events/changes-protection? true])
+                                             (dispatch [::events/validate-form]))
+                          :on-validation  ::apps-application-events/set-configuration-validation-error}]
+       [:span url])
      (when @editable?
        [ui/TableCell {:floated :right
                       :width   1
@@ -746,7 +763,7 @@
         [trash id ::events/remove-url]])]))
 
 
-(defn urls-section []
+(defn UrlsSection []
   (let [tr        (subscribe [::i18n-subs/tr])
         urls      (subscribe [::subs/urls])
         editable? (subscribe [::subs/editable?])]
@@ -768,7 +785,7 @@
                  [ui/TableBody
                   (for [[id url-map] @urls]
                     ^{:key (str "url_" id)}
-                    [single-url url-map])]]])
+                    [SingleUrl url-map])]]])
         (when @editable?
           [:div {:style {:padding-top 10}}
            [plus ::events/add-url]])]
@@ -777,26 +794,44 @@
        :default-open true])))
 
 
-(defn single-output-parameter [param]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        editable? (subscribe [::subs/editable?])
+(defn SingleOutputParameter [param]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        validate-form?  (subscribe [::subs/validate-form?])
+        editable?       (subscribe [::subs/editable?])
+        local-validate? (r/atom false)
         {:keys [id ::spec/output-parameter-name ::spec/output-parameter-description]} param]
     [ui/TableRow {:key id}
-     [ui/TableCell {:floated :left
-                    :width   2}
-      (if @editable?
-        [input id (str "output-param-name-" id) output-parameter-name
-         (@tr [:name]) ::events/update-output-parameter-name
-         ::spec/output-parameter-name false]
-        [:span output-parameter-name])]
-     [ui/TableCell {:floated :left
-                    :width   13}
-      (if @editable?
-        [input id (str "output-param-description-" id)
-         output-parameter-description (@tr [:description])
-         ::events/update-output-parameter-description
-         ::spec/output-parameter-description true]
-        [:span output-parameter-description])]
+     (if @editable?
+       [uix/TableRowCell {:key            (str "output-parameter-name-" id)
+                          :placeholder    (@tr [:name])
+                          :editable?      editable?,
+                          :spec           ::spec/output-parameter-name
+                          :validate-form? @validate-form?
+                          :required?      true
+                          :default-value  (or output-parameter-name "")
+                          :width          3
+                          :on-change      #(do
+                                             (reset! local-validate? true)
+                                             (dispatch [::events/update-output-parameter-name id %])
+                                             (dispatch [::main-events/changes-protection? true])
+                                             (dispatch [::events/validate-form]))
+                          :on-validation  ::apps-application-events/set-configuration-validation-error}]
+       [:span output-parameter-name])
+     (if @editable?
+       [uix/TableRowCell {:key            (str "output-param-description-" id)
+                          :placeholder    (@tr [:description])
+                          :editable?      editable?,
+                          :spec           ::spec/output-parameter-description
+                          :validate-form? @validate-form?
+                          :required?      true
+                          :default-value  (or output-parameter-description "")
+                          :on-change      #(do
+                                             (reset! local-validate? true)
+                                             (dispatch [::events/update-output-parameter-description id %])
+                                             (dispatch [::main-events/changes-protection? true])
+                                             (dispatch [::events/validate-form]))
+                          :on-validation  ::apps-application-events/set-configuration-validation-error}]
+       [:span output-parameter-description])
      (when @editable?
        [ui/TableCell {:floated :right
                       :width   1
@@ -804,7 +839,7 @@
         [trash id ::events/remove-output-parameter]])]))
 
 
-(defn output-parameters-section []
+(defn OutputParametersSection []
   (let [tr                (subscribe [::i18n-subs/tr])
         output-parameters (subscribe [::subs/output-parameters])
         editable?         (subscribe [::subs/editable?])]
@@ -827,7 +862,7 @@
                  [ui/TableBody
                   (for [[id param] @output-parameters]
                     ^{:key (str "out-param_" id)}
-                    [single-output-parameter param])]]])
+                    [SingleOutputParameter param])]]])
         (when @editable?
           [:div {:style {:padding-top 10}}
            [plus ::events/add-output-parameter]])]

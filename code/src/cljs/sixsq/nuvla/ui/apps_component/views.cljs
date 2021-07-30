@@ -378,10 +378,10 @@
           :label (str/capitalize (@tr [:license]))
           :default-open false]
          [ports-section]
-         [apps-views-detail/env-variables-section]
+         [apps-views-detail/EnvVariablesSection]
          [mounts-section]
-         [apps-views-detail/urls-section]
-         [apps-views-detail/output-parameters-section]
+         [apps-views-detail/UrlsSection]
+         [apps-views-detail/OutputParametersSection]
          [apps-views-detail/data-types-section]
          [test-command]
          [apps-views-detail/save-modal]

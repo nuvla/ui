@@ -374,6 +374,7 @@
         :multiplicity                                  "multiplicity"
         :my-apps                                       "my apps"
         :name                                          "name"
+        :name-of-url                                   "name of this url"
         :new                                           "new"
         :new-component                                 "new component"
         :new-name                                      "new name"

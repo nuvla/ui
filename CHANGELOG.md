@@ -5,6 +5,8 @@
 ### Added
 
   - Profile - Group tab
+  - Apps with environment variables named "S3_CRED" or "GPG_CRED" automatically
+    show a dropdown of available credentials of that type in the launch modal.
 
 ### Changed
 

@@ -11,6 +11,7 @@
   - Updated SixSq legal status (Sàrl to SA)
   - Acl widget - use peers instead of search user resource
   - Session - get peers support
+  - Fixed local validation for creating new credentials (GPG and SSH)
 
 ## [2.19.1] - 2021-06-24
 

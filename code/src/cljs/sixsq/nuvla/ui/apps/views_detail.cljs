@@ -632,7 +632,7 @@
      (if @editable?
        [uix/TableRowCell {:key            (str "env-var-name-" id)
                           :placeholder    (@tr [:name])
-                          :editable?      editable?,
+                          :editable?      @editable?
                           :spec           ::spec/env-name
                           :validate-form? @validate-form?
                           :required?      true
@@ -725,7 +725,7 @@
      (if @editable?
        [uix/TableRowCell {:key            (str "url-name-" id)
                           :placeholder    (@tr [:name-of-url])
-                          :editable?      editable?,
+                          :editable?      @editable?
                           :spec           ::spec/url-name
                           :validate-form? @validate-form?
                           :required?      true
@@ -743,7 +743,7 @@
      (if @editable?
        [uix/TableRowCell {:key            (str "url-url-" id)
                           :placeholder    "url - e.g. http://${hostname}:${tcp.8888}/?token=${jupyter-token}"
-                          :editable?      editable?,
+                          :editable?      @editable?
                           :spec           ::spec/url
                           :validate-form? @validate-form?
                           :required?      true
@@ -804,7 +804,7 @@
      (if @editable?
        [uix/TableRowCell {:key            (str "output-parameter-name-" id)
                           :placeholder    (@tr [:name])
-                          :editable?      editable?,
+                          :editable?      @editable?
                           :spec           ::spec/output-parameter-name
                           :validate-form? @validate-form?
                           :required?      true
@@ -820,7 +820,7 @@
      (if @editable?
        [uix/TableRowCell {:key            (str "output-param-description-" id)
                           :placeholder    (@tr [:description])
-                          :editable?      editable?,
+                          :editable?      @editable?
                           :spec           ::spec/output-parameter-description
                           :validate-form? @validate-form?
                           :required?      true
@@ -882,9 +882,10 @@
   (swap! data-type-options conj {:key option :value option :text option}))
 
 
-(defn single-data-type
+(defn SingleDataType
   [_dt]
-  (let [editable? (subscribe [::subs/editable?])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        editable? (subscribe [::subs/editable?])]
     (fn [dt]
       (let [{:keys [id ::spec/data-type]} dt]
         [ui/GridRow {:key id}
@@ -896,10 +897,10 @@
                            :default-value  (or data-type "text/plain")
                            :allowAdditions true
                            :selection      true
-                           :additionLabel  "Additional data type: "
+                           :additionLabel  (str (@tr [:add-dropdown]) " ")
                            :search         true
                            :options        @data-type-options
-                           :on-add-item    #(add-data-type-options (-> % .-target .-value))
+                           :on-add-item    (ui-callback/value #(add-data-type-options %))
                            :on-change      (ui-callback/value
                                              #(do
                                                 (dispatch [::main-events/changes-protection? true])
@@ -914,14 +915,14 @@
             [trash id ::events/remove-data-type]])]))))
 
 
-(defn data-types-section []
+(defn DataTypesSection []
   (let [tr         (subscribe [::i18n-subs/tr])
         data-types (subscribe [::subs/data-types])
         editable?  (subscribe [::subs/editable?])]
     (fn []
       [uix/Accordion
        [:<>
-        [:div (@tr [:data-type])
+        [:div (@tr [:module-data-type])
          [:span ff/nbsp (ff/help-popup (@tr [:module-data-type-help]))]]
         (if (empty? @data-types)
           [ui/Message
@@ -930,7 +931,7 @@
                                   :margin-bottom 5}}
                  (for [[id dt] @data-types]
                    ^{:key (str "data-type_" id)}
-                   [single-data-type dt])]])
+                   [SingleDataType dt])]])
         (when @editable?
           [:div
            [plus ::events/add-data-type]])]

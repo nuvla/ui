@@ -382,7 +382,7 @@
          [mounts-section]
          [apps-views-detail/UrlsSection]
          [apps-views-detail/OutputParametersSection]
-         [apps-views-detail/data-types-section]
+         [apps-views-detail/DataTypesSection]
          [test-command]
          [apps-views-detail/save-modal]
          [apps-views-detail/logo-url-modal]

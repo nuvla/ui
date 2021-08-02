@@ -351,7 +351,7 @@
    [FilesSection]
    [apps-views-detail/UrlsSection]
    [apps-views-detail/OutputParametersSection]
-   [apps-views-detail/data-types-section]])
+   [apps-views-detail/DataTypesSection]])
 
 
 (defn configuration

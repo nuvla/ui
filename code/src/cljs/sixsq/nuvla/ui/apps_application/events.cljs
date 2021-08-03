@@ -64,6 +64,11 @@
     (utils/set-reset-error db key error? ::spec/docker-compose-validation-errors)))
 
 
+(reg-event-db
+  ::set-configuration-validation-error
+  (fn [db [_ key error?]]
+    (utils/set-reset-error db key error? ::spec/configuration-validation-errors)))
+
 ; Requires user rights
 
 (reg-event-db

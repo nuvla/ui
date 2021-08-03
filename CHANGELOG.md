@@ -11,13 +11,14 @@
 ### Changed
 
   - Fixed local validation for creating new credentials (GPG and SSH)
+  - Fix fields validation for apps during editing
   - Edge Detail - Improve warning and error messages on NB update
   - Edge - Search icon under input fix
   - Edge - Enhance responsiveness of statistics
   - Edge - Regression fix, double anchor to show additional filters
   - Updated SixSq legal status (Sàrl to SA)
   - Acl widget - use peers instead of search user resource
-  - Session - get peers support
+  - Session - get peers support 
 
 ## [2.19.1] - 2021-06-24
 

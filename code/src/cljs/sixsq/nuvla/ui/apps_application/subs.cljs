@@ -31,6 +31,13 @@
 
 
 (reg-sub
+  ::configuration-error?
+  (fn [db]
+    #_ :clj-kondo/ignore
+    (not (empty? (::spec/configuration-validation-errors db)))))
+
+
+(reg-sub
   ::docker-compose-validation-error?
   (fn [db]
     #_ :clj-kondo/ignore

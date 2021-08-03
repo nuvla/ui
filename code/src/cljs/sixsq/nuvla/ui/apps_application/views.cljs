@@ -35,22 +35,32 @@
   (dispatch [::events/clear-module]))
 
 
-(defn single-file
+(defn SingleFile
   #_{:clj-kondo/ignore [:unused-binding]}
   [{:keys [id ::spec/file-name ::spec/file-content]}]
-  (let [form-valid?     (subscribe [::apps-subs/form-valid?])
+  (let [tr              (subscribe [::i18n-subs/tr])
+        validate-form?  (subscribe [::apps-subs/validate-form?])
         editable?       (subscribe [::apps-subs/editable?])
+        form-valid?     (subscribe [::apps-subs/form-valid?])
         local-validate? (r/atom false)]
     (fn [{:keys [id ::spec/file-name ::spec/file-content]}]
       (let [validate? (or @local-validate? (not @form-valid?))]
         [ui/TableRow {:key id, :vertical-align "top"}
-         [ui/TableCell {:floated :left
-                        :width   3}
-          (if @editable?
-            [apps-views-detail/input id (str "file-name-" id) file-name
-             "file-name" ::events/update-file-name
-             ::spec/file-name true]
-            [:span file-name])]
+         (if @editable?
+           [uix/TableRowCell {:key            (str "file-name-" id)
+                              :placeholder    (@tr [:filename])
+                              :editable?      editable?,
+                              :spec           ::spec/file-name
+                              :validate-form? @validate-form?
+                              :required?      true
+                              :default-value  (or file-name "")
+                              :on-change      #(do
+                                                 (reset! local-validate? true)
+                                                 (dispatch [::events/update-file-name id %])
+                                                 (dispatch [::main-events/changes-protection? true])
+                                                 (dispatch [::apps-events/validate-form]))
+                              :on-validation  ::events/set-configuration-validation-error}]
+           [:span file-name])
          [ui/TableCell {:floated :left
                         :width   12
                         :error   (and validate? (not (s/valid? ::spec/file-content file-content)))}
@@ -71,7 +81,7 @@
             [apps-views-detail/trash id ::events/remove-file]])]))))
 
 
-(defn files-section []
+(defn FilesSection []
   (let [tr            (subscribe [::i18n-subs/tr])
         files         (subscribe [::subs/files])
         editable?     (subscribe [::apps-subs/editable?])
@@ -96,7 +106,7 @@
                    [ui/TableBody
                     (for [[id file] @files]
                       ^{:key (str "file_" id)}
-                      [single-file file])]]])
+                      [SingleFile file])]]])
           (when @editable?
             [:div {:style {:padding-top 10}}
              [apps-views-detail/plus ::events/add-file]])]
@@ -328,19 +338,20 @@
 
 (defn TabMenuConfiguration
   []
-  [:span
-   [apps-views-detail/ConfigurationTitle]])
+  (let [error? (subscribe [::subs/configuration-error?])]
+    [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
+     [apps-views-detail/ConfigurationTitle]]))
 
 
 (defn ConfigurationPane
   []
   [:<>
    [:h2 [apps-views-detail/ConfigurationTitle]]
-   [apps-views-detail/env-variables-section]
-   [files-section]
-   [apps-views-detail/urls-section]
-   [apps-views-detail/output-parameters-section]
-   [apps-views-detail/data-types-section]])
+   [apps-views-detail/EnvVariablesSection]
+   [FilesSection]
+   [apps-views-detail/UrlsSection]
+   [apps-views-detail/OutputParametersSection]
+   [apps-views-detail/DataTypesSection]])
 
 
 (defn configuration

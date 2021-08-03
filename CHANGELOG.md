@@ -4,12 +4,17 @@
 
 ### Added
 
-  - Profile - Group tab
   - Apps with environment variables named "S3_CRED" or "GPG_CRED" automatically
     show a dropdown of available credentials of that type in the launch modal.
+  - Profile - Group tab
 
 ### Changed
 
+  - Fixed local validation for creating new credentials (GPG and SSH)
+  - Edge Detail - Improve warning and error messages on NB update
+  - Edge - Search icon under input fix
+  - Edge - Enhance responsiveness of statistics
+  - Edge - Regression fix, double anchor to show additional filters
   - Updated SixSq legal status (Sàrl to SA)
   - Acl widget - use peers instead of search user resource
   - Session - get peers support

@@ -186,7 +186,7 @@
 
 (defn TableRowField
   [_name & {:keys [_key _placeholder _default-value _spec _on-change _on-validation
-                  _required? _editable? _validate-form? _type _input-help-msg]}]
+                   _required? _editable? _validate-form? _type _input-help-msg]}]
   (let [local-validate? (r/atom false)
         active-input?   (r/atom false)]
     (fn [name & {:keys [key placeholder default-value spec on-change on-validation

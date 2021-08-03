@@ -4,8 +4,10 @@
 
 ### Added
 
+  - Apps with environment variables named "S3_CRED" or "GPG_CRED" automatically
+    show a dropdown of available credentials of that type in the launch modal.
   - Profile - Group tab
-  
+
 ### Changed
 
   - Fixed local validation for creating new credentials (GPG and SSH)

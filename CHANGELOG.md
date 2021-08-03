@@ -8,6 +8,7 @@
   
 ### Changed
 
+  - Fixed local validation for creating new credentials (GPG and SSH)
   - Edge Detail - Improve warning and error messages on NB update
   - Edge - Search icon under input fix
   - Edge - Enhance responsiveness of statistics
@@ -15,7 +16,6 @@
   - Updated SixSq legal status (Sàrl to SA)
   - Acl widget - use peers instead of search user resource
   - Session - get peers support
-  - Fixed local validation for creating new credentials (GPG and SSH)
 
 ## [2.19.1] - 2021-06-24
 

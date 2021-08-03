@@ -211,9 +211,11 @@
     (swap! form-data assoc :config-files (str/join "\n" config-files))
     (swap! form-data assoc :environment (str/join "\n" environment))
     (fn [{:keys [id] :as _resource} _operation show? title icon button-text]
-      (let [correct-nb? (= (:parent @status) id)
-            nb-version  (get @status :nuvlabox-engine-version "")
-            target-version  (:key (get (zipmap (map :value @releases) @releases) (:nuvlabox-release @form-data)))]
+      (let [correct-nb?    (= (:parent @status) id)
+            nb-version     (get @status :nuvlabox-engine-version "")
+            target-version (->> @releases
+                                (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
+                                :key)]
         (when-not correct-nb?
           ;; needed to make modal work in cimi detail page
           (dispatch [::events/get-nuvlabox id]))
@@ -240,7 +242,7 @@
                                                "nuvlabox-engine/quickstart.html#from-nuvla")
                                   :target "_blank"}
                               (str/capitalize (@tr [:see-more]))]])}])
-             (when (and (not (nil? target-version)) (is-old-version? target-version))
+             (when (and (some? target-version) (is-old-version? target-version))
                [ui/Message
                 {:warning true
                  :icon    {:name "warning sign", :size "large"}

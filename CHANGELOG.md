@@ -8,6 +8,7 @@
   
 ### Changed
 
+  - Fixed local validation for creating new credentials (GPG and SSH)
   - Edge Detail - Improve warning and error messages on NB update
   - Edge - Search icon under input fix
   - Edge - Enhance responsiveness of statistics

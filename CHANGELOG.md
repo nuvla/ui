@@ -7,6 +7,10 @@
   - Apps with environment variables named "S3_CRED" or "GPG_CRED" automatically
     show a dropdown of available credentials of that type in the launch modal.
   - Profile - Group tab
+  - Support for notification of creation of data-record, used for the
+    new Blackbox application
+  - New layout of data-records and data-sets to better understand and view
+    data-records
 
 ### Changed
 

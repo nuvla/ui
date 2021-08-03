@@ -17,6 +17,30 @@
         (assoc :destination destination)
         (assoc :acl acl))))
 
+(defn data-record-content-type
+  [m]
+  (and (= "data-record" (:resource-kind m)) (= "content-type" (get-in m [:criteria :metric]))))
+
+(defn view->model
+  [v]
+  (cond
+    (data-record-content-type v) (-> v
+                                     (assoc :resource-kind "event")
+                                     (assoc-in [:criteria :metric] "tag")
+                                     (assoc :resource-filter (str "tag='" (get-in v [:criteria :value]) "'")))
+    :else v))
+
+(defn event-tag
+  [m]
+  (and (= "event" (:resource-kind m)) (= "tag" (get-in m [:criteria :metric]))))
+
+(defn model->view
+  [m]
+  (cond
+    (event-tag m) (-> m
+                      (assoc :resource-kind "data-record")
+                      (assoc-in [:criteria :metric] "content-type"))
+    :else m))
 
 (defn db->new-subscription-config
   [db]

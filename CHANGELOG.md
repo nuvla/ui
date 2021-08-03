@@ -5,10 +5,10 @@
 ### Added
 
   - Profile - Group tab
-  - Edge Detail - Improve warning and error messages on NB update
   
 ### Changed
 
+  - Edge Detail - Improve warning and error messages on NB update
   - Edge - Search icon under input fix
   - Edge - Enhance responsiveness of statistics
   - Edge - Regression fix, double anchor to show additional filters

@@ -185,13 +185,14 @@
                  (map js/parseInt))]
       (or (< (first p) 1)
           (and (= (first p) 1)
-               (< (second p) 14))))))
+               (< (second p) 16))))))
 
 
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
   (let [tr            (subscribe [::i18n-subs/tr])
         status        (subscribe [::subs/nuvlabox-status])
+        releases      (subscribe [::edge-subs/nuvlabox-releases-options])
         close-fn      #(reset! show? false)
         form-data     (r/atom nil)
         project       (-> @status :installation-parameters :project-name)
@@ -210,8 +211,11 @@
     (swap! form-data assoc :config-files (str/join "\n" config-files))
     (swap! form-data assoc :environment (str/join "\n" environment))
     (fn [{:keys [id] :as _resource} _operation show? title icon button-text]
-      (let [correct-nb? (= (:parent @status) id)
-            nb-version  (get @status :nuvlabox-engine-version "")]
+      (let [correct-nb?    (= (:parent @status) id)
+            nb-version     (get @status :nuvlabox-engine-version "")
+            target-version (->> @releases
+                                (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
+                                :key)]
         (when-not correct-nb?
           ;; needed to make modal work in cimi detail page
           (dispatch [::events/get-nuvlabox id]))
@@ -229,22 +233,30 @@
             [:<>
              (when (is-old-version? nb-version)
                [ui/Message
-                {:warning true
+                {:error   true
                  :icon    {:name "warning sign", :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
-                            [:span (str (@tr [:nuvlabox-update-warning-content])) " "
+                            [:span (str (@tr [:nuvlabox-update-error-content])) " "
                              [:a {:href   (str "https://docs.nuvla.io/nuvlabox/"
                                                "nuvlabox-engine/quickstart.html#from-nuvla")
                                   :target "_blank"}
                               (str/capitalize (@tr [:see-more]))]])}])
+             (when (and (some? target-version) (is-old-version? target-version))
+               [ui/Message
+                {:warning true
+                 :icon    {:name "warning sign", :size "large"}
+                 :header  (@tr [:nuvlabox-update-warning])
+                 :content (r/as-element
+                            [:span (@tr [:nuvlabox-update-warning-content])])}])
              [ui/Segment
               [:b (@tr [:current-version])]
               [:i nb-version]]])
           [ui/Segment
            [:b (@tr [:update-to])]
            [DropdownReleases {:placeholder (@tr [:select-version])
-                              :on-change   (ui-callback/value #(on-change-fn %))}]]
+                              :on-change   (ui-callback/value #(on-change-fn %))
+                              :disabled    (is-old-version? nb-version)} "release-date>='2021-02-10T09:51:40Z'"]]
           [uix/Accordion
            [:<>
             [ui/Form
@@ -285,7 +297,7 @@
             :on-click close-fn}]
           [uix/Button
            {:text     button-text
-            :disabled (utils/form-update-data-incomplete? @form-data)
+            :disabled (or (utils/form-update-data-incomplete? @form-data) (is-old-version? nb-version))
             :primary  true
             :on-click on-click-fn}]]]))))
 

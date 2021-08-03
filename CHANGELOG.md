@@ -8,6 +8,9 @@
 
 ### Changed
 
+  - Edge - Search icon under input fix
+  - Edge - Enhance responsiveness of statistics
+  - Edge - Regression fix, double anchor to show additional filters
   - Updated SixSq legal status (Sàrl to SA)
   - Acl widget - use peers instead of search user resource
   - Session - get peers support

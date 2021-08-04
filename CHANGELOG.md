@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+## [2.20.0] - 2021-08-04
+
 ### Added
 
   - Apps with environment variables named "S3_CRED" or "GPG_CRED" automatically

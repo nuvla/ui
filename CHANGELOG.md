@@ -14,6 +14,7 @@
 
 ### Changed
 
+  - Bulk stop - filter bugfix
   - Fixed local validation for creating new credentials (GPG and SSH)
   - Fix fields validation for apps during editing
   - Edge Detail - Improve warning and error messages on NB update

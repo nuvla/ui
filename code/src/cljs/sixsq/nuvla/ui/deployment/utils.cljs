@@ -111,6 +111,7 @@
         filter-module-id (when module-id (str "module/id='" module-id "'"))
         full-text-search (general-utils/fulltext-query-string full-text-search)]
     (general-utils/join-and
+      "id!=null"
       filter-state
       filter-nuvlabox
       filter-module-id
@@ -126,11 +127,11 @@
                       :state-selector    state-selector
                       :nuvlabox          nuvlabox
                       :module-id         module-id})]
-    (cond-> {:first       (inc (* (dec page) elements-per-page))
-             :last        (* page elements-per-page)
-             :aggregation "terms:state"
-             :orderby     "created:desc"}
-            (not (str/blank? filter-str)) (assoc :filter filter-str))))
+    {:first       (inc (* (dec page) elements-per-page))
+     :last        (* page elements-per-page)
+     :aggregation "terms:state"
+     :orderby     "created:desc"
+     :filter      filter-str}))
 
 
 (defn get-query-params-summary

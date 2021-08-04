@@ -56,7 +56,8 @@
              offline         (:0 online-statuses)
              unknown         (- total (+ online offline))]
          [:<>
-          [ui/StatisticGroup {:size "tiny"}
+          [ui/StatisticGroup {:size  "tiny"
+                              :style {:justify-content "center"}}
            (if (and (= @view-type :cluster) (not hide-cluster-stats))
              [main-components/StatisticState (:count @clusters) ["fas fa-chart-network"] "TOTAL"
               false ::events/set-state-selector ::subs/state-selector]
@@ -80,16 +81,12 @@
                                 (when-not @show-state-statistics
                                   (dispatch [::events/set-state-selector nil])))}
                   [ui/StatisticValue {:style {:margin "10px 10px"}}
-                   [ui/Icon {:name (if @show-state-statistics "angle double up" "angle double down")}]]]
-                 [:div {:style {:margin-left 10}}
-                  [main-components/ClickMeStaticPopup]]])
+                   [ui/Icon {:name (if @show-state-statistics "angle double up" "angle double down")}]]]])
               ])]
           (when clickable?
             [ui/Segment {:compact true
                          :width   "auto"
-                         :style   {:margin     "0px auto 20px auto"
-                                   :padding    "1em 1.5em 0 0"
-                                   :text-align "center"
+                         :style   {:text-align "center"
                                    :display    (if @show-state-statistics "table" "none")}}
              [:h4 (@tr [:commissionning-states])]
              [ui/StatisticGroup
@@ -950,15 +947,19 @@
                    [uix/PageHeader "box" (general-utils/capitalize-first-letter (@tr [:edge]))]
                    [MenuBar]
                    [ui/Grid {:stackable true
-                             :style     {:margin-top 10}}
+                             :style     {:margin-top 10}
+                             :reversed  "mobile"
+                             :columns   3}
                     [ui/GridColumn {:width 4}
                      [main-components/SearchInput
                       {:default-value @full-text
-                       :fluid         true
+                       :style         {:min-width 100}
                        :on-change     (ui-callback/input-callback
                                         #(dispatch [::events/set-full-text-search %]))}]]
-                    [ui/GridColumn {:width 12}
-                     [StatisticStates]]]
+                    [ui/GridColumn {:width 8}
+                     [StatisticStates]]
+                    [ui/GridColumn {:width 4}
+                     [main-components/ClickMeStaticPopup]]]
                    (if (= n 3)
                      (do
                        (when (= @view-type :cluster)

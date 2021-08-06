@@ -195,6 +195,7 @@
         releases      (subscribe [::edge-subs/nuvlabox-releases-options])
         close-fn      #(reset! show? false)
         form-data     (r/atom nil)
+        force-restart (r/atom false)
         project       (-> @status :installation-parameters :project-name)
         working-dir   (-> @status :installation-parameters :working-dir)
         config-files  (-> @status :installation-parameters :config-files)
@@ -210,6 +211,7 @@
     (swap! form-data assoc :working-dir working-dir)
     (swap! form-data assoc :config-files (str/join "\n" config-files))
     (swap! form-data assoc :environment (str/join "\n" environment))
+    (swap! form-data assoc :force-restart false)
     (fn [{:keys [id] :as _resource} _operation show? title icon button-text]
       (let [correct-nb?    (= (:parent @status) id)
             nb-version     (get @status :nuvlabox-engine-version "")
@@ -260,6 +262,18 @@
           [uix/Accordion
            [:<>
             [ui/Form
+             [ui/FormField
+              [:label
+               "Force Restart"]
+              [ui/Radio {:slider  true
+                         :checked @force-restart
+                         :label   (if (:force-restart @form-data)
+                                    (@tr [:nuvlabox-update-force-restart])
+                                    (@tr [:nuvlabox-update-no-force-restart]))
+                         :on-change #(do
+                                       (swap! force-restart not)
+                                       (swap! form-data assoc :force-restart @force-restart))}]]
+
              [ui/FormInput {:label         (str/capitalize (@tr [:project]))
                             :placeholder   "nuvlabox"
                             :required      true

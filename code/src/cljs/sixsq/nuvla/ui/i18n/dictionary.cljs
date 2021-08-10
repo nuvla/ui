@@ -484,7 +484,7 @@
         :nuvlabox-status-unavailable                   "NuvlaBox Status not available"
         :nuvlabox-total-vuln                           "Total vulnerabilities found:"
         :nuvlabox-unzip-execute                        "Unzip & Execute "
-        :nuvlabox-update-force-restart                 "The NuvlaBox Engine will be stopped for the operation, or even fully re-installed"
+        :nuvlabox-update-force-restart                 "The NuvlaBox Engine will be stopped for the operation, or even fully re-installed if necessary"
         :nuvlabox-update-no-force-restart              "The NuvlaBox Engine will be live updated"
         :nuvlabox-update-warning                       "NuvlaBox update warning"
         :nuvlabox-update-error-content                 "Your NuvlaBox version is older than v1.16. Remote updates are not supported."

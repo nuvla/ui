@@ -200,6 +200,7 @@
         working-dir   (-> @status :installation-parameters :working-dir)
         config-files  (-> @status :installation-parameters :config-files)
         environment   (-> @status :installation-parameters :environment)
+        nb-version    (get @status :nuvlabox-engine-version nil)
         on-change-fn  #(swap! form-data assoc :nuvlabox-release %)
         on-success-fn close-fn
         on-error-fn   close-fn
@@ -212,9 +213,10 @@
     (swap! form-data assoc :config-files (str/join "\n" config-files))
     (swap! form-data assoc :environment (str/join "\n" environment))
     (swap! form-data assoc :force-restart false)
+    (when nb-version
+      (swap! form-data assoc :current-version nb-version))
     (fn [{:keys [id] :as _resource} _operation show? title icon button-text]
       (let [correct-nb?    (= (:parent @status) id)
-            nb-version     (get @status :nuvlabox-engine-version "")
             target-version (->> @releases
                                 (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
                                 :key)]

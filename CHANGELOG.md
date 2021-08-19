@@ -2,16 +2,34 @@
 
 ## Unreleased
 
+### Changed
+
+## [2.20.0] - 2021-08-04
+
 ### Added
 
+  - Apps with environment variables named "S3_CRED" or "GPG_CRED" automatically
+    show a dropdown of available credentials of that type in the launch modal.
   - Profile - Group tab
+  - Support for notification of creation of data-record, used for the
+    new Blackbox application
+  - New layout of data-records and data-sets to better understand and view
+    data-records
 
 ### Changed
 
+  - Bulk stop - filter bugfix
+  - Fixed local validation for creating new credentials (GPG and SSH)
+  - Fix fields validation for apps during editing
+  - Edge Detail - Improve warning and error messages on NB update
+  - Edge - Search icon under input fix
+  - Edge - Enhance responsiveness of statistics
+  - Edge - Regression fix, double anchor to show additional filters
   - Updated SixSq legal status (Sàrl to SA)
   - Acl widget - use peers instead of search user resource
   - Session - get peers support
-  - Fix bug where dropdown in the share tab for modules, NuvlaBox and infrastructure services where trimmed
+  - Fix bug where dropdown in the share tab for modules, NuvlaBox and
+    infrastructure services where trimmed
 
 ## [2.19.1] - 2021-06-24
 

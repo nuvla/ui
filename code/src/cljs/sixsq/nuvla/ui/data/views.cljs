@@ -6,9 +6,11 @@
     [sixsq.nuvla.ui.data.events :as events]
     [sixsq.nuvla.ui.data.subs :as subs]
     [sixsq.nuvla.ui.data.utils :as utils]
+    [sixsq.nuvla.ui.data-record.views :as data-record]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as deployment-dialog-subs]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -28,7 +30,7 @@
   (dispatch [::events/get-data-sets]))
 
 
-(defn process-button
+(defn ProcessButton
   []
   (let [tr        (subscribe [::i18n-subs/tr])
         data-sets (subscribe [::subs/selected-data-set-ids])]
@@ -42,7 +44,7 @@
                               [::events/open-application-select-modal]])}])))
 
 
-(defn search-header []
+(defn SearchHeader []
   (let [tr          (subscribe [::i18n-subs/tr])
         time-period (subscribe [::subs/time-period])
         locale      (subscribe [::i18n-subs/locale])]
@@ -94,17 +96,17 @@
   [:div
    [main-components/StickyBar
     [ui/Menu {:attached "top", :borderless true}
-     [process-button]
+     [ProcessButton]
      [main-components/RefreshMenu
       {:on-refresh #(dispatch [::events/get-data-sets])}]]]
    [ui/Segment
-    [search-header]]])
+    [SearchHeader]]])
 
 
-(defn application-list-item
+(defn ApplicationListItem
   [{:keys [id name description subtype created] :as _application}]
   (let [selected-application-id (subscribe [::subs/selected-application-id])
-        on-click-fn #(dispatch [::events/set-selected-application-id id])]
+        on-click-fn             #(dispatch [::events/set-selected-application-id id])]
     ^{:key id}
     [ui/ListItem {:active   (and @selected-application-id (= id @selected-application-id))
                   :on-click on-click-fn}
@@ -114,7 +116,7 @@
       (or description "")]]))
 
 
-(defn application-list
+(defn ApplicationList
   []
   (let [tr           (subscribe [::i18n-subs/tr])
         applications (subscribe [::subs/applications])
@@ -125,11 +127,11 @@
        (vec (concat [ui/ListSA {:divided   true
                                 :relaxed   true
                                 :selection true}]
-                    (mapv application-list-item @applications)))
+                    (mapv ApplicationListItem @applications)))
        [ui/Message {:error true} (@tr [:no-apps])])]))
 
 
-(defn launch-button
+(defn LaunchButton
   []
   (let [tr                     (subscribe [::i18n-subs/tr])
         visible?               (subscribe [::subs/application-select-visible?])
@@ -166,7 +168,7 @@
 
          [ui/ModalContent {:scrolling true}
           [ui/ModalDescription
-           [application-list]]]
+           [ApplicationList]]]
          [ui/ModalActions
           [ui/Button {:disabled (nil? @selected-app-id)
                       :primary  true
@@ -182,7 +184,7 @@
            (@tr [:launch])]]]))))
 
 
-(defn application-select-modal
+(defn ApplicationSelectModal
   []
   (let [tr                     (subscribe [::i18n-subs/tr])
         visible?               (subscribe [::subs/application-select-visible?])
@@ -218,7 +220,7 @@
 
          [ui/ModalContent {:scrolling true}
           [ui/ModalDescription
-           [application-list]]]
+           [ApplicationList]]]
          [ui/ModalActions
           [ui/Button {:disabled (nil? @selected-app-id)
                       :primary  true
@@ -233,59 +235,50 @@
            (@tr [:launch])]]]))))
 
 
-(defn format-data-set-title
-  [{:keys [id name] :as _data-set}]
-  (let [data-sets (subscribe [::subs/selected-data-set-ids])
+(defn DataSetCard
+  [{:keys [id name description] :as _data-set}]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        counts    (subscribe [::subs/counts])
+        sizes     (subscribe [::subs/sizes])
+        data-sets (subscribe [::subs/selected-data-set-ids])
+        count     (get @counts id "...")
+        size      (get @sizes id "...")
         selected? (@data-sets id)]
-    [ui/CardHeader {:style {:word-wrap "break-word"}}
-     (or name id)
-     (when selected? [ui/Label {:corner true
-                                :icon   "pin"
-                                :color  "blue"
-                                :style  {:z-index 0}}])]))
-
-
-(defn format-data-set
-  [{:keys [id description] :as data-set}]
-  (let [tr     (subscribe [::i18n-subs/tr])
-        counts (subscribe [::subs/counts])
-        sizes  (subscribe [::subs/sizes])
-        count  (get @counts id "...")
-        size   (get @sizes id "...")]
     ^{:key id}
-    [ui/Card {:on-click #(dispatch [::events/toggle-data-set-id id])}
-     [ui/CardContent
-      [format-data-set-title data-set]
-      [ui/CardDescription description]]
-     [ui/CardContent {:extra true}
-      [ui/Label
-       [ui/Icon {:name "file"}]
-       [:span (str count " " (@tr [:objects]))]]
-      [ui/Label
-       [ui/Icon {:name "expand arrows alternate"}]
-       [:span (utils/format-bytes size)]]]]))
+    [uix/Card
+     {:header      name
+      :description description
+      :extra       [:<>
+                    [ui/Label
+                     [ui/Icon {:name "file"}]
+                     [:span (str count " " (@tr [:objects]))]]
+                    [ui/Label
+                     [ui/Icon {:name "expand arrows alternate"}]
+                     [:span (utils/format-bytes size)]]]
+      :on-select   #(dispatch [::events/toggle-data-set-id id])
+      :selected?   selected?
+      :on-click    (fn [event]
+                     (dispatch [::history-events/navigate (utils/data-record-href id)])
+                     (.preventDefault event))}]))
 
 
-(defn queries-cards-group
+(defn QueriesCardsGroup
   []
   (let [tr        (subscribe [::i18n-subs/tr])
         data-sets (subscribe [::subs/data-sets])]
     [ui/Segment style/basic
-     (if (seq @data-sets)
-       [ui/Message {:info true}
-        [ui/Icon {:name "pin"}]
-        (@tr [:select-datasets])]
+     (when (not (seq @data-sets))
        [ui/Message {:warning true}
         [ui/Icon {:name "warning sign"}]
         (@tr [:no-datasets])])
      (when (seq @data-sets)
        (vec (concat [ui/CardGroup {:centered true}]
                     (map (fn [data-set]
-                           [format-data-set data-set])
+                           [DataSetCard data-set])
                          (vals @data-sets)))))]))
 
 
-(defn main-action-button
+(defn MainActionButton
   []
   (let [tr        (subscribe [::i18n-subs/tr])
         data-sets (subscribe [::subs/selected-data-set-ids])]
@@ -298,21 +291,25 @@
                              [::events/open-application-select-modal]])}]]))
 
 
-(defn data-set-resources
+(defn DataSetResources
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment style/basic
      [uix/PageHeader "database" (@tr [:data-processing])]
      [MenuBar]
-     [application-select-modal]
+     [ApplicationSelectModal]
      [deployment-dialog-views/deploy-modal true]
-     [queries-cards-group]
-     [main-action-button]]))
+     [QueriesCardsGroup]
+     [MainActionButton]]))
 
 
 (defmethod panel/render :data
-  [_path]
+  [path]
   ;; FIXME: find a better way to initialize credentials and data-sets
   (refresh-credentials)
   (refresh-data-sets)
-  [data-set-resources])
+  (let [[_ uuid] path
+        n (count path)]
+    (case n
+      2 [data-record/DataRecords uuid]
+      [DataSetResources])))

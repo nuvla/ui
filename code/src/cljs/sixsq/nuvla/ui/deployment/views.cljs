@@ -29,28 +29,21 @@
 
 
 (defn control-bar []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        full-text         (subscribe [::subs/full-text-search])
+  (let [full-text         (subscribe [::subs/full-text-search])
         additional-filter (subscribe [::subs/additional-filter])
         filter-open?      (r/atom false)]
     (fn []
-      [ui/GridColumn
+      [ui/GridColumn {:width 4}
        [main-components/SearchInput
         {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))
          :default-value @full-text}]
        " "
-       [ui/Popup
-        {:content           (@tr [:additional-filter])
-         :mouse-enter-delay 500
-         :on                "hover"
-         :trigger           (r/as-element
-                              ^{:key (random-uuid)}
-                              [filter-comp/ButtonFilter
-                               {:resource-name  "deployment"
-                                :default-filter @additional-filter
-                                :open?          filter-open?
-                                :on-done        #(dispatch [::events/set-additional-filter %])}]
-                              )}]])))
+       ^{:key (random-uuid)}
+       [filter-comp/ButtonFilter
+        {:resource-name  "deployment"
+         :default-filter @additional-filter
+         :open?          filter-open?
+         :on-done        #(dispatch [::events/set-additional-filter %])}]])))
 
 
 (defn BulkUpdateModal
@@ -345,11 +338,9 @@
              pending       (:PENDING terms 0)
              starting-plus (+ starting created pending)
              total         (:count @summary)]
-         [ui/GridColumn {:width      8
-                         :text-align "center"}
-          [ui/StatisticGroup (merge {:widths (if clickable? nil 5) :size "tiny"}
-                                    {:style {:margin-right "0px"
-                                             :display      "block"}})
+         [ui/GridColumn {:width 8}
+          [ui/StatisticGroup {:size  "tiny"
+                              :style {:justify-content "center"}}
            [main-components/StatisticState total ["fas fa-rocket"] "TOTAL" clickable?
             ::events/set-state-selector ::subs/state-selector]
            [main-components/StatisticState started [(utils/status->icon utils/status-started)] utils/status-started
@@ -362,9 +353,7 @@
             clickable? "yellow"
             ::events/set-state-selector ::subs/state-selector]
            [main-components/StatisticState error [(utils/status->icon utils/status-error)] utils/status-error
-            clickable? "red" ::events/set-state-selector ::subs/state-selector]
-           (when clickable?
-             [main-components/ClickMeStaticPopup])]])))))
+            clickable? "red" ::events/set-state-selector ::subs/state-selector]]])))))
 
 
 (defn DeploymentTable
@@ -408,12 +397,13 @@
         [:<>
          [MenuBar]
          [ui/Segment style/basic
-          [ui/Grid {:columns   "equal"
+          [ui/Grid {:columns   3
                     :stackable true
                     :reversed  "mobile"}
            [control-bar]
            [StatisticStates true]
-           [ui/GridColumn]]
+           [ui/GridColumn {:width 4}
+            [main-components/ClickMeStaticPopup]]]
           (for [[job-id job] @bulk-jobs-monitored]
             ^{:key job-id}
             [main-components/BulkActionProgress

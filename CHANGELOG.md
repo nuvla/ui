@@ -8,7 +8,7 @@
     infrastructure services where trimmed
   - Fix bug where apps selected from datasets caused an error
   - Improved read only view of apps
-  - Fixed validation error for apps data types
+  - Fixed validation errors for apps
 
 ## [2.20.0] - 2021-08-04
 

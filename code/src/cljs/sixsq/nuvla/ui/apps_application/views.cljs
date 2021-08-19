@@ -341,7 +341,7 @@
 (defn TabMenuConfiguration
   []
   (let [error? (subscribe [::subs/configuration-error?])]
-    [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
+    [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
      [apps-views-detail/ConfigurationTitle]]))
 
 
@@ -366,7 +366,7 @@
 (defn TabMenuLicense
   []
   (let [error? (subscribe [::subs/license-error?])]
-    [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
+    [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
      [apps-views-detail/LicenseTitle]]))
 
 
@@ -415,7 +415,7 @@
 (defn TabMenuDocker
   []
   (let [error? (subscribe [::subs/docker-compose-validation-error?])]
-    [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
+    [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
      [apps-views-detail/DockerTitle]]))
 
 
@@ -466,7 +466,7 @@
 (defn TabMenuDetails
   []
   (let [error? (subscribe [::subs/details-validation-error?])]
-    [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
+    [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
      [apps-views-detail/DeploymentsTitle]]))
 
 

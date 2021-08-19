@@ -27,7 +27,7 @@
   ::license-error?
   (fn [db]
     #_:clj-kondo/ignore
-    (not (empty? (::spec/license-validation-errors db)))))
+    (seq (::spec/license-validation-errors db))))
 
 
 (reg-sub

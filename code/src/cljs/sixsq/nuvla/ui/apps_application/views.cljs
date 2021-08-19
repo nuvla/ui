@@ -267,7 +267,7 @@
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
-     [:h4 (str/capitalize (@tr [:app]))]
+     [:h4 (str/capitalize (@tr [:summary]))]
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody
@@ -295,29 +295,14 @@
        [apps-views-detail/AuthorVendor]]]]))
 
 
-(defn TabMenuDeployments
-  []
-  [:span
-   [apps-views-detail/DeploymentsTitle]])
-
-
-(defn DeploymentsPane
+(defn Deployments
   []
   (let [is-new? (subscribe [::apps-subs/is-new?])]
-    [:<>
-     [:h2 [apps-views-detail/DeploymentsTitle]]
-     (if @is-new?
-       [uix/WarningMsgNoElements]
-       [deployment-views/DeploymentTable {:no-actions     true
-                                          :no-selection   true
-                                          :no-module-name true}])]))
-
-
-(defn deployments
-  []
-  {:menuItem {:content (r/as-element [TabMenuDeployments])
-              :key     "deployments"}
-   :pane     {:key "deplyment-pane" :content (r/as-element [DeploymentsPane])}})
+    (when (not @is-new?)
+      [:<>
+       [:h2 [apps-views-detail/DeploymentsTitle]]
+       [deployment-views/DeploymentTable {:no-selection   true
+                                          :no-module-name true}]])))
 
 
 (defn TabMenuVersions
@@ -528,7 +513,10 @@
        [apps-views-detail/OverviewDescription utils/tab-details]]]
      [ui/GridRow
       [ui/GridColumn
-       [OverviewModuleSummary]]]]))
+       [OverviewModuleSummary]]]
+     [ui/GridRow
+      [ui/GridColumn
+       [Deployments]]]]))
 
 
 (defn overview
@@ -548,11 +536,10 @@
                   (license)
                   (when @stripe
                     (pricing))
-                  (deployments)
-                  (versions)
-                  (details)
                   (docker)
                   (configuration)
+                  (details)
+                  (versions)
                   (apps-views-detail/TabAcls
                     module
                     @editable?

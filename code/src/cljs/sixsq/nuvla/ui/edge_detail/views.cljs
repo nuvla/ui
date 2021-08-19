@@ -1445,7 +1445,7 @@
       :render   (fn [] (r/as-element [TabEvents]))}
      {:menuItem {:content "Deployments"
                  :key     "deployments"
-                 :icon    "sitemap"}
+                 :icon    "rocket"}
       :render   (fn [] (r/as-element [deployment-views/DeploymentTable]))}
      {:menuItem {:content "Vulnerabilities"
                  :key     "vuln"

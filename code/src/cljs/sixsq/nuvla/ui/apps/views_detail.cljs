@@ -30,7 +30,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as utils-values]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]
+    [taoensso.timbre :as log]))
 
 
 (def application-kubernetes-subtype "application_kubernetes")
@@ -1146,14 +1147,17 @@
    [ui/TableCell full-name]])
 
 
+
+
+
 (defn AuthorVendor
   "Check if the module belongs to a group. If so, search amongst the group. Warning vendor here is a group,
   not a Stripe vendor."
   []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        module     (subscribe [::subs/module])
-        groups     (subscribe [::session-subs/groups])
-        is-vendor? (utils/is-vendor? @module)]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        module        (subscribe [::subs/module])
+        groups        (subscribe [::session-subs/groups])
+        is-vendor?    (utils/is-vendor? @module)]
     (if is-vendor?
       (let [groups-from-module (utils/module->groups @module)
             group-id           (first groups-from-module)
@@ -1163,8 +1167,10 @@
                                  group-id)]
         [AuthorVendorRow (@tr [:vendor]) vendor])
       (let [users-from-module (utils/module->users @module)
-            user              (first users-from-module)]
-        [AuthorVendorRow (@tr [:author]) user]))))
+            user              (first users-from-module)
+            resolved-user (subscribe [::session-subs/resolve-user user])]
+        (log/error "user: " user " | resolved-user: " @resolved-user)
+        [AuthorVendorRow (@tr [:author]) (or @resolved-user user)]))))
 
 
 (defn OverviewDescription

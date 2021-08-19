@@ -292,7 +292,10 @@
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:version-number]))]
         [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]
-       [apps-views-detail/AuthorVendor]]]]))
+       [apps-views-detail/AuthorVendor]
+       [ui/TableRow
+        [ui/TableCell (str/capitalize (@tr [:tags]))]
+        [ui/TableCell [uix/Tags @module]]]]]]))
 
 
 (defn Deployments

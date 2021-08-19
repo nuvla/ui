@@ -1491,7 +1491,7 @@
   (let [nb-status (subscribe [::subs/nuvlabox-status])]
     (fn [uuid]
       ^{:key uuid}
-      [ui/DimmerDimmable
+      [ui/DimmerDimmable {:style {:overflow "visible"}}
        [main-components/NotFoundPortal
         ::subs/nuvlabox-not-found?
         :no-nuvlabox-message-header

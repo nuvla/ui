@@ -11,6 +11,7 @@
   - Updated SixSq legal status (Sàrl to SA)
   - Acl widget - use peers instead of search user resource
   - Session - get peers support
+  - Fix bug where dropdown in the share tab for modules, NuvlaBox and infrastructure services where trimmed
 
 ## [2.19.1] - 2021-06-24
 

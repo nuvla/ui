@@ -12,6 +12,7 @@
     [sixsq.nuvla.ui.apps.spec :as spec]
     [sixsq.nuvla.ui.apps.subs :as subs]
     [sixsq.nuvla.ui.apps.utils :as utils]
+    [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -816,7 +817,9 @@
                                              (dispatch [::main-events/changes-protection? true])
                                              (dispatch [::events/validate-form]))
                           :on-validation  ::apps-application-events/set-configuration-validation-error}]
-       [:span output-parameter-name])
+       [ui/TableCell {:floated :left
+                      :width   3}
+        [:span output-parameter-name]])
      (if @editable?
        [uix/TableRowCell {:key            (str "output-param-description-" id)
                           :placeholder    (@tr [:description])
@@ -831,7 +834,9 @@
                                              (dispatch [::main-events/changes-protection? true])
                                              (dispatch [::events/validate-form]))
                           :on-validation  ::apps-application-events/set-configuration-validation-error}]
-       [:span output-parameter-description])
+       [ui/TableCell {:floated :left
+                      :width   12}
+        [:span output-parameter-description]])
      (when @editable?
        [ui/TableCell {:floated :right
                       :width   1
@@ -871,15 +876,9 @@
        :default-open true])))
 
 
-(def data-type-options
-  (atom [{:key "application/x-hdr", :value "application/x-hdr", :text "application/x-hdr"}
-         {:key "application/x-clk", :value "application/x-clk", :text "application/x-clk"}
-         {:key "text/plain", :value "text/plain", :text "text/plain"}]))
-
-
 (defn add-data-type-options
   [option]
-  (swap! data-type-options conj {:key option :value option :text option}))
+  (swap! utils-detail/data-type-options conj {:key option :value option :text option}))
 
 
 (defn SingleDataType
@@ -899,7 +898,7 @@
                            :selection      true
                            :additionLabel  (str (@tr [:add-dropdown]) " ")
                            :search         true
-                           :options        @data-type-options
+                           :options        @utils-detail/data-type-options
                            :on-add-item    (ui-callback/value #(add-data-type-options %))
                            :on-change      (ui-callback/value
                                              #(do

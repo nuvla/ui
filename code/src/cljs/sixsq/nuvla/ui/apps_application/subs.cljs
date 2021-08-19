@@ -26,22 +26,22 @@
 (reg-sub
   ::license-error?
   (fn [db]
-    #_ :clj-kondo/ignore
+    #_:clj-kondo/ignore
     (not (empty? (::spec/license-validation-errors db)))))
 
 
 (reg-sub
   ::configuration-error?
   (fn [db]
-    #_ :clj-kondo/ignore
-    (not (empty? (::spec/configuration-validation-errors db)))))
+    #_:clj-kondo/ignore
+    (seq (::spec/configuration-validation-errors db))))
 
 
 (reg-sub
   ::docker-compose-validation-error?
   (fn [db]
-    #_ :clj-kondo/ignore
-    (not (empty? (::spec/docker-compose-validation-errors db)))))
+    #_:clj-kondo/ignore
+    (seq (::spec/docker-compose-validation-errors db))))
 
 
 (reg-sub

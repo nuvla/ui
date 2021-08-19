@@ -60,7 +60,9 @@
                                                  (dispatch [::main-events/changes-protection? true])
                                                  (dispatch [::apps-events/validate-form]))
                               :on-validation  ::events/set-configuration-validation-error}]
-           [:span file-name])
+           [ui/TableCell {:floated :left
+                          :width   3}
+            [:span file-name]])
          [ui/TableCell {:floated :left
                         :width   12
                         :error   (and validate? (not (s/valid? ::spec/file-content file-content)))}

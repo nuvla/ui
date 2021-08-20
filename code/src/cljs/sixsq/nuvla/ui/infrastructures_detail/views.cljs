@@ -6,6 +6,7 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
+    [sixsq.nuvla.ui.edge-detail.views :as edge-detail-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.infrastructures-detail.events :as events]
     [sixsq.nuvla.ui.infrastructures-detail.spec :as spec]
@@ -192,6 +193,30 @@
                                       (dispatch [::events/edit-infrastructure-service])))}])]))))
 
 
+(defn PageHeader
+  []
+  (let [tr            (subscribe [::i18n-subs/tr])
+        infra-service (subscribe [::subs/infrastructure-service])]
+    (fn []
+      (let [{:keys [state online name id]} @infra-service]
+        [:div
+         [:h2 {:style {:margin "0 0 0 0"}}
+          [ui/Icon {:name "cloud"}]
+          (or name id)]
+         [:p {:style {:margin "0.5em 0 1em 0"}}
+          [edge-detail-views/OnlineStatusIcon online]
+          [:span {:style {:font-weight "bold"}}
+           "State "
+           [ui/Popup
+            {:trigger        (r/as-element [ui/Icon {:name "question circle"}])
+             :content        (@tr [:nuvlabox-state])
+             :position       "bottom center"
+             :on             "hover"
+             :size           "tiny"
+             :hide-on-scroll true}] ": "]
+          state]]))))
+
+
 (defn InfrastructureDetails
   [uuid]
   (let [infra-service (subscribe [::subs/infrastructure-service])]
@@ -204,6 +229,7 @@
         :no-infra-service-message-content]
        ^{:key uuid}
        [ui/Container {:fluid true}
+        [PageHeader]
         [MenuBar uuid]
         [cimi-detail-views/detail-header @infra-service]
         ^{:key uuid}

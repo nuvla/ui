@@ -918,9 +918,10 @@
             uuid        (:id @deployment "")]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
-          [StatusIcon (depl-state->status state)]
+          [ui/Icon {:name "rocket"}]
           module-name " (" (general-utils/truncate (subs uuid 11)) ")"]
          [:p {:style {:margin "0.5em 0 1em 0"}}
+          [StatusIcon (depl-state->status state)]
           [:span {:style {:font-weight "bold"}}
            "State "
            [ui/Popup

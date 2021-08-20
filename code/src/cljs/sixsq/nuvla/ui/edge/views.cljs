@@ -796,7 +796,7 @@
           :href        href
           :header      [:<>
                         [:div {:style {:float "right"}}
-                         [edge-detail/OnlineStatusIcon online :corner "top right"]]
+                         [edge-detail/OnlineStatusIcon online]]
                         [ui/IconGroup
                          [ui/Icon {:name "box"}]
                          (when (some #{id} managers)
@@ -894,7 +894,7 @@
                                [ui/ListContent
                                 [ui/ListHeader name
                                  [:div {:style {:float "right"}}
-                                  [edge-detail/OnlineStatusIcon online :corner "top right"]]]
+                                  [edge-detail/OnlineStatusIcon online]]]
                                 [ui/ListDescription (str (@tr [:updated]) " " (-> updated time/parse-iso8601 time/ago))]]])))]
           :extra       (str (@tr [:nuvlabox-cluster-nodes]) cluster-nodes)}]))))
 

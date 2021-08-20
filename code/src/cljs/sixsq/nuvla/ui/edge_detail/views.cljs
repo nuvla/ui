@@ -631,7 +631,7 @@
 
 
 (defn OnlineStatusIcon
-  [online & _position]                                      ;FIXME: remove calling position
+  [online]
   [ui/Icon {:name  "power"
             :color (utils/status->color online)}])
 
@@ -1489,9 +1489,10 @@
       (let [{:keys [id name state online]} @nuvlabox]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
-          [OnlineStatusIcon online :corner "left center"]
+          [ui/Icon {:name "box"}]
           (or name id)]
          [:p {:style {:margin "0.5em 0 1em 0"}}
+          [OnlineStatusIcon online]
           [:span {:style {:font-weight "bold"}}
            "State "
            [ui/Popup

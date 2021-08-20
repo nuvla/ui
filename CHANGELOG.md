@@ -16,6 +16,8 @@
   - Add tags to apps overview tab
   - Improve layout of apps tabs and add deployment statistics to overview tab
   - Improve on hover pop-up behaviour for tags
+  - Improved loading pages
+  - Added editing of NuvlaBox description
 
 ## [2.20.0] - 2021-08-04
 

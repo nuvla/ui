@@ -101,6 +101,7 @@
         :coe-install-manager-rancher                   "Install COE cluster manager Rancher"
         :coe-provision-fmt                             "Provision new Container Orchestration Engine (COE) of type %s on Cloud Service Provider (CSP)"
         :coe-services                                  "Container Orchestration Engines"
+        :colon                                         ":"
         :columns                                       "columns"
         :coming-soon                                   "Coming soon"
         :commissionning-states                         "Commissioning States"

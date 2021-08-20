@@ -1510,14 +1510,9 @@
          [:p {:style {:margin "0.5em 0 1em 0"}}
           [OnlineStatusIcon online]
           [:span {:style {:font-weight "bold"}}
-           "State "
-           [ui/Popup
-            {:trigger        (r/as-element [ui/Icon {:name "question circle"}])
-             :content        (@tr [:nuvlabox-state])
-             :position       "bottom center"
-             :on             "hover"
-             :size           "tiny"
-             :hide-on-scroll true}] ": "]
+           (str/capitalize (@tr [:state]))
+           (@tr [:colon])
+           ff/nbsp]
           state]]))))
 
 

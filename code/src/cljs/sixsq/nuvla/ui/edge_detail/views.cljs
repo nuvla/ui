@@ -268,11 +268,11 @@
              [ui/FormField
               [:label
                "Force Restart"]
-              [ui/Radio {:slider  true
-                         :checked @force-restart
-                         :label   (if (:force-restart @form-data)
-                                    (@tr [:nuvlabox-update-force-restart])
-                                    (@tr [:nuvlabox-update-no-force-restart]))
+              [ui/Radio {:toggle    true
+                         :checked   @force-restart
+                         :label     (if (:force-restart @form-data)
+                                      (@tr [:nuvlabox-update-force-restart])
+                                      (@tr [:nuvlabox-update-no-force-restart]))
                          :on-change #(do
                                        (swap! force-restart not)
                                        (swap! form-data assoc :force-restart @force-restart))}]]

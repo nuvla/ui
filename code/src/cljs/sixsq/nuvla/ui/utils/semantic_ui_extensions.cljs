@@ -365,11 +365,14 @@
                       :style {:margin-top 10, :max-height 150, :overflow "auto"}}
        (for [tag tags]
          ^{:key (str uuid "_" tag)}
-         [ui/Label {:style {:max-width     "15ch"
-                            :overflow      "hidden"
-                            :text-overflow "ellipsis"
-                            :white-space   "nowrap"}}
-          [ui/Icon {:name "tag"}] tag])])))
+         [ui/Popup
+          {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
+                                          (general-utils/truncate tag 20)])
+           :content        tag
+           :position       "bottom center"
+           :on             "hover"
+           :size           "tiny"
+           :hide-on-scroll true}])])))
 
 
 (defn Card

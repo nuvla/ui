@@ -9,7 +9,12 @@
   - Fix bug where apps selected from datasets caused an error
   - Improved read only view of apps
   - Fixed validation errors for apps
-  - Improve layout of apps tabs and move content of deployment tab to overview 
+  - Added tags to apps summary segment
+  - Improve name resolution for authors in app, deployment and NuvlaBox pages
+  - Provide more specific empty list message for deployments in apps and NuvlaBox
+    pages
+  - Add tags to apps overview tab
+  - Improve layout of apps tabs and add deployment statistics to overview tab
 
 ## [2.20.0] - 2021-08-04
 

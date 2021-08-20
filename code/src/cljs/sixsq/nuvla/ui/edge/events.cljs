@@ -104,8 +104,7 @@
                     :type    :error})])
       (cond->
         {:db (assoc db ::spec/nuvlabox-clusters nuvlabox-clusters
-                       ::spec/loading? false)}
-        ))))
+                       ::spec/loading? false)}))))
 
 
 (reg-event-fx

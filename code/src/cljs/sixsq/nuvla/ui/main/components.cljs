@@ -166,9 +166,7 @@
                   ^{:key success-id}
                   [ui/ListItem
                    [ui/ListContent
-                    [ui/ListHeader [history-views/link success-id success-id]]]]
-                  )]])
-            ]]]]))))
+                    [ui/ListHeader [history-views/link success-id success-id]]]])]])]]]]))))
 
 
 (defn StatisticState

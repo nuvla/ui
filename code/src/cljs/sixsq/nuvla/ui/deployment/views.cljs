@@ -28,7 +28,7 @@
   (dispatch [::events/refresh opts]))
 
 
-(defn control-bar []
+(defn ControlBar []
   (let [full-text         (subscribe [::subs/full-text-search])
         additional-filter (subscribe [::subs/additional-filter])
         filter-open?      (r/atom false)]
@@ -91,8 +91,7 @@
                        :on-click #(dispatch [::events/bulk-operation
                                              "bulk-update"
                                              {:module-href @selected-module}
-                                             [::events/close-modal-bulk-update]])}]]
-         ]))))
+                                             [::events/close-modal-bulk-update]])}]]]))))
 
 
 (defn MenuBar
@@ -167,7 +166,7 @@
   (not (or select-all? (true? no-actions))))
 
 
-(defn row-fn
+(defn RowFn
   [{:keys [id state module parent nuvlabox] :as deployment}
    {:keys [no-actions no-module-name select-all] :as _options}]
   (let [credential-id parent
@@ -239,7 +238,7 @@
            [ui/TableBody
             (for [{:keys [id] :as deployment} deployments-list]
               ^{:key id}
-              [row-fn deployment options])]])))))
+              [RowFn deployment options])]])))))
 
 
 (defn DeploymentCard
@@ -295,7 +294,7 @@
                                        :selected? @is-selected?))]))
 
 
-(defn cards-data-table
+(defn CardsDataTable
   [deployments-list]
   [:div style/center-items
    [ui/CardGroup {:centered    true
@@ -306,7 +305,7 @@
       [DeploymentCard deployment])]])
 
 
-(defn deployments-display
+(defn DeploymentsDisplay
   []
   (let [loading?    (subscribe [::subs/loading?])
         view        (subscribe [::subs/view])
@@ -317,7 +316,7 @@
         [ui/Segment (merge style/basic
                            {:loading @loading?})
          (if (= @view "cards")
-           [cards-data-table deployments-list]
+           [CardsDataTable deployments-list]
            [VerticalDataTable deployments-list {:select-all @select-all?}])]))))
 
 
@@ -337,7 +336,9 @@
             total         (:count @summary)]
         [ui/GridColumn {:width 8}
          [ui/StatisticGroup {:size  "tiny"
-                             :style {:justify-content "center"}}
+                             :style {:justify-content "center"
+                                     :padding-top     "20px"
+                                     :padding-bottom  "20px"}}
           [main-components/StatisticState total ["fas fa-rocket"] "TOTAL" clickable?
            ::events/set-state-selector ::subs/state-selector]
           [main-components/StatisticState started [(utils/status->icon utils/status-started)] utils/status-started
@@ -420,7 +421,7 @@
           [ui/Grid {:columns   3
                     :stackable true
                     :reversed  "mobile"}
-           [control-bar]
+           [ControlBar]
            [StatisticStates true ::subs/deployments-summary]
            [ui/GridColumn {:width 4}
             [main-components/ClickMeStaticPopup]]]
@@ -430,7 +431,7 @@
              {:header      "Bulk update in progress"
               :job         job
               :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
-          [deployments-display]]
+          [DeploymentsDisplay]]
          [uix/Pagination
           {:totalitems   total-deployments
            :totalPages   total-pages

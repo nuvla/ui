@@ -68,7 +68,7 @@
                           ::nuvlabox-cluster]))
 
 
-(def defaults {::loading?                 false
+(def defaults {::loading?                 true
                ::nuvlaboxes               nil
                ::nuvlaboxes-summary       nil
                ::nuvlaboxes-summary-all   nil

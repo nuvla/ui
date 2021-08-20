@@ -839,7 +839,7 @@
         [url-to-button url-name url-pattern (= i 0)])]]))
 
 
-(defn overview-pane
+(defn OverviewPane
   []
   [ui/TabPane
    [ui/Grid {:columns   2,
@@ -857,7 +857,7 @@
   {:menuItem {:content (r/as-element [:span "Overview"])
               :key     "overview"
               :icon    "info"}
-   :render   (fn [] (r/as-element [overview-pane]))})
+   :render   (fn [] (r/as-element [OverviewPane]))})
 
 
 (defn MenuBar

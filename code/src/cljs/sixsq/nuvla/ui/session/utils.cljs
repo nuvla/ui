@@ -15,4 +15,3 @@
 (defn remove-group-prefix
   [account]
   (str/replace-first account #"^group/" ""))
-

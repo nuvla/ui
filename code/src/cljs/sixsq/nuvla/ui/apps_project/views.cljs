@@ -56,7 +56,7 @@
                            [format-module module]) ordered-children)))])))
 
 
-(defn modules-view []
+(defn ModulesView []
   (let [tr     (subscribe [::i18n-subs/tr])
         module (subscribe [::apps-subs/module])]
     (fn []
@@ -131,7 +131,7 @@
         [apps-views-detail/OverviewDescription utils/tab-details]]]
       [ui/GridRow
        [ui/GridColumn
-        [modules-view]]]
+        [ModulesView]]]
       [ui/GridRow
        [ui/GridColumn
         [OverviewModuleSummary]]]]]))

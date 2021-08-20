@@ -92,11 +92,11 @@
               ::spec/loading-applications? false)))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-selected-application-id
   (fn [{db :db} [_ application-id]]
     (dispatch [::dialog-events/create-deployment application-id :data true])
-    (assoc db ::spec/selected-application-id application-id)))
+    {:db (assoc db ::spec/selected-application-id application-id)}))
 
 
 (reg-event-fx

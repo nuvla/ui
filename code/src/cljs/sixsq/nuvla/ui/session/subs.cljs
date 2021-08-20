@@ -193,6 +193,17 @@
 
 
 (reg-sub
+  ::resolve-users
+  :<- [::user-id]
+  :<- [::identifier]
+  :<- [::peers]
+  (fn [[current-user-id identifier peers] [_ users]]
+    (into [] (map #(if (= % current-user-id)
+                     identifier
+                     (get peers % %)) users))))
+
+
+(reg-sub
   ::groups
   (fn [{:keys [::spec/groups]}]
     groups))

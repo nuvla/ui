@@ -30,6 +30,11 @@
   (dispatch [::events/get-data-sets]))
 
 
+(defn refresh []
+  (refresh-credentials)
+  (refresh-data-sets))
+
+
 (defn ProcessButton
   []
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -243,7 +248,7 @@
         data-sets (subscribe [::subs/selected-data-set-ids])
         count     (get @counts id "...")
         size      (get @sizes id "...")
-        selected? (@data-sets id)]
+        selected? (boolean (@data-sets id))]
     ^{:key id}
     [uix/Card
      {:header      name
@@ -305,9 +310,7 @@
 
 (defmethod panel/render :data
   [path]
-  ;; FIXME: find a better way to initialize credentials and data-sets
-  (refresh-credentials)
-  (refresh-data-sets)
+  (refresh)
   (let [[_ uuid] path
         n (count path)]
     (case n

@@ -211,14 +211,14 @@
           [deployment-detail-views/DeleteButton deployment])])]))
 
 
-(defn vertical-data-table
+(defn VerticalDataTable
   [_deployments-list _options]
   (let [tr                    (subscribe [::i18n-subs/tr])
         is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
-    (fn [deployments-list {:keys [no-actions no-module-name select-all] :as options}]
+    (fn [deployments-list {:keys [no-actions no-module-name select-all empty-msg] :as options}]
       (let [show-options? (show-options select-all no-actions)]
         (if (empty? deployments-list)
-          [uix/WarningMsgNoElements]
+          [uix/WarningMsgNoElements empty-msg]
           [ui/Table
            (merge style/single-line {:stackable true})
            [ui/TableHeader
@@ -318,42 +318,62 @@
                            {:loading @loading?})
          (if (= @view "cards")
            [cards-data-table deployments-list]
-           [vertical-data-table deployments-list {:select-all @select-all?}])]))))
+           [VerticalDataTable deployments-list {:select-all @select-all?}])]))))
 
 
 (defn StatisticStates
-  ([] [StatisticStates true])
-  ([_clickable?]
-   (let [summary     (subscribe [::subs/deployments-summary])
-         summary-all (subscribe [::subs/deployments-summary-all])]
-     (fn [clickable?]
-       (let [summary       (if clickable? summary summary-all)
-             terms         (utils-general/aggregate-to-map
-                             (get-in @summary [:aggregations :terms:state :buckets]))
-             started       (:STARTED terms 0)
-             starting      (:STARTING terms 0)
-             created       (:CREATED terms 0)
-             stopped       (:STOPPED terms 0)
-             error         (:ERROR terms 0)
-             pending       (:PENDING terms 0)
-             starting-plus (+ starting created pending)
-             total         (:count @summary)]
-         [ui/GridColumn {:width 8}
-          [ui/StatisticGroup {:size  "tiny"
-                              :style {:justify-content "center"}}
-           [main-components/StatisticState total ["fas fa-rocket"] "TOTAL" clickable?
-            ::events/set-state-selector ::subs/state-selector]
-           [main-components/StatisticState started [(utils/status->icon utils/status-started)] utils/status-started
-            clickable? "green"
-            ::events/set-state-selector ::subs/state-selector]
-           [main-components/StatisticState starting-plus [(utils/status->icon utils/status-starting)]
-            utils/status-starting clickable? "yellow"
-            ::events/set-state-selector ::subs/state-selector]
-           [main-components/StatisticState stopped [(utils/status->icon utils/status-stopped)] utils/status-stopped
-            clickable? "yellow"
-            ::events/set-state-selector ::subs/state-selector]
-           [main-components/StatisticState error [(utils/status->icon utils/status-error)] utils/status-error
-            clickable? "red" ::events/set-state-selector ::subs/state-selector]]])))))
+  [_clickable? summary-subs]
+  (let [summary (subscribe [summary-subs])]
+    (fn [clickable? _summary-subs]
+      (let [terms         (utils-general/aggregate-to-map
+                            (get-in @summary [:aggregations :terms:state :buckets]))
+            started       (:STARTED terms 0)
+            starting      (:STARTING terms 0)
+            created       (:CREATED terms 0)
+            stopped       (:STOPPED terms 0)
+            error         (:ERROR terms 0)
+            pending       (:PENDING terms 0)
+            starting-plus (+ starting created pending)
+            total         (:count @summary)]
+        [ui/GridColumn {:width 8}
+         [ui/StatisticGroup {:size  "tiny"
+                             :style {:justify-content "center"}}
+          [main-components/StatisticState total ["fas fa-rocket"] "TOTAL" clickable?
+           ::events/set-state-selector ::subs/state-selector]
+          [main-components/StatisticState started [(utils/status->icon utils/status-started)] utils/status-started
+           clickable? "green"
+           ::events/set-state-selector ::subs/state-selector]
+          [main-components/StatisticState starting-plus [(utils/status->icon utils/status-starting)]
+           utils/status-starting clickable? "yellow"
+           ::events/set-state-selector ::subs/state-selector]
+          [main-components/StatisticState stopped [(utils/status->icon utils/status-stopped)] utils/status-stopped
+           clickable? "yellow"
+           ::events/set-state-selector ::subs/state-selector]
+          [main-components/StatisticState error [(utils/status->icon utils/status-error)] utils/status-error
+           clickable? "red" ::events/set-state-selector ::subs/state-selector]]]))))
+
+
+(defn DeploymentsOverviewSegment
+  [deployment-subs set-active-tab-index-event deployment-tab-index]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        icon  "rocket"
+        color "blue"]
+    [ui/Segment {:secondary true
+                 :color     color
+                 :raised    true
+                 :style     {:display         "flex"
+                             :flex-direction  "column"
+                             :justify-content "space-between"}}
+
+     [:h4 [ui/Icon {:name icon}] (str/capitalize (@tr [:deployments]))]
+
+     [StatisticStates false deployment-subs]
+
+     [ui/Button {:color    color
+                 :icon     icon
+                 :style    {:align-self "start"}
+                 :content  "Show me"
+                 :on-click #(dispatch [set-active-tab-index-event deployment-tab-index])}]]))
 
 
 (defn DeploymentTable
@@ -371,7 +391,7 @@
          (if @loading?
            [ui/Loader {:active true
                        :inline "centered"}]
-           [vertical-data-table deployments (assoc options :select-all @select-all?)])
+           [VerticalDataTable deployments (assoc options :select-all @select-all?)])
 
          (when (pos? (:count @elements))
            [uix/Pagination {:totalitems   total-elements
@@ -382,7 +402,7 @@
                                             #(dispatch [::events/set-page %]))}])]))))
 
 
-(defn deployments-main-content
+(defn DeploymentsMainContent
   []
   (let
     [elements-per-page   (subscribe [::subs/elements-per-page])
@@ -401,7 +421,7 @@
                     :stackable true
                     :reversed  "mobile"}
            [control-bar]
-           [StatisticStates true]
+           [StatisticStates true ::subs/deployments-summary]
            [ui/GridColumn {:width 4}
             [main-components/ClickMeStaticPopup]]]
           (for [[job-id job] @bulk-jobs-monitored]

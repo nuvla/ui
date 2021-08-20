@@ -197,7 +197,7 @@
   (let [infra-service (subscribe [::subs/infrastructure-service])]
     (refresh uuid)
     (fn [uuid]
-      [ui/DimmerDimmable {:dimmed true}
+      [ui/DimmerDimmable {:style {:overflow "visible"}}
        [main-components/NotFoundPortal
         ::subs/infra-service-not-found?
         :no-infra-service-message-header

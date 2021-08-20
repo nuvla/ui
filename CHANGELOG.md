@@ -8,6 +8,17 @@
 
 ### Changed
 
+  - Fix bug where dropdown in the share tab for modules, NuvlaBox and
+    infrastructure services where trimmed
+  - Fix bug where apps selected from datasets caused an error
+  - Improved read only view of apps
+  - Fixed validation errors for apps
+  - Added tags to apps summary segment
+  - Improve name resolution for authors in app, deployment and NuvlaBox pages
+  - Provide more specific empty list message for deployments in apps and NuvlaBox
+    pages
+  - Add tags to apps overview tab
+  - Improve layout of apps tabs and add deployment statistics to overview tab
 
 ## [2.20.0] - 2021-08-04
 
@@ -32,7 +43,7 @@
   - Edge - Regression fix, double anchor to show additional filters
   - Updated SixSq legal status (Sàrl to SA)
   - Acl widget - use peers instead of search user resource
-  - Session - get peers support 
+  - Session - get peers support
 
 ## [2.19.1] - 2021-06-24
 

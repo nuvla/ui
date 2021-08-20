@@ -15,3 +15,9 @@
       "application_kubernetes" (apps-application-utils/db->module module commit db)
       "project" module
       module)))
+
+
+(def data-type-options
+  (atom [{:key "application/x-hdr", :value "application/x-hdr", :text "application/x-hdr"}
+         {:key "application/x-clk", :value "application/x-clk", :text "application/x-clk"}
+         {:key "text/plain", :value "text/plain", :text "text/plain"}]))

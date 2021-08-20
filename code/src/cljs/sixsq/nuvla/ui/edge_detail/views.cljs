@@ -18,6 +18,7 @@
     [sixsq.nuvla.ui.job.views :as job-views]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
@@ -30,7 +31,7 @@
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
-
+(def tab-deployment-index 5)
 
 (def orchestration-icons
   {:swarm      "docker"
@@ -844,61 +845,62 @@
            version refresh-interval owner]}
    {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}
    locale edit old-nb-name close-fn]
-  [ui/Segment {:secondary true
-               :color     "blue"
-               :raised    true}
-   [:h4 "NuvlaBox "
-    (when nuvlabox-engine-version
-      [ui/Label {:circular true
-                 :color    "blue"
-                 :size     "tiny"}
-       nuvlabox-engine-version])]
-   [ui/Table {:basic  "very"
-              :padded false}
-    [ui/TableBody
-     [ui/TableRow
-      [ui/TableCell "ID"]
-      [ui/TableCell [values/as-link id :label id]]]
-     (when name
+  (let [resolved-owner (subscribe [::session-subs/resolve-user owner])]
+    [ui/Segment {:secondary true
+                 :color     "blue"
+                 :raised    true}
+     [:h4 "NuvlaBox "
+      (when nuvlabox-engine-version
+        [ui/Label {:circular true
+                   :color    "blue"
+                   :size     "tiny"}
+         nuvlabox-engine-version])]
+     [ui/Table {:basic  "very"
+                :padded false}
+      [ui/TableBody
        [ui/TableRow
-        [ui/TableCell "Name"]
-        [ui/TableCell [ui/Icon {:name     "pencil"
-                                :on-click #(reset! edit true)
-                                :style    {:cursor "pointer"}}]
-         " "
-         (if @edit
-           [ui/Input {:default-value name
-                      :on-key-press  (partial forms/on-return-key
-                                              #(if (= @old-nb-name name id)
-                                                 (close-fn)
-                                                 (EditAction id {:name @old-nb-name} close-fn)))
-                      :on-change     (ui-callback/input-callback #(reset! old-nb-name %))
-                      :focus         true
-                      :size          "mini"}]
-           name)]])
-     (when description
+        [ui/TableCell "ID"]
+        [ui/TableCell [values/as-link id :label id]]]
+       (when name
+         [ui/TableRow
+          [ui/TableCell "Name"]
+          [ui/TableCell [ui/Icon {:name     "pencil"
+                                  :on-click #(reset! edit true)
+                                  :style    {:cursor "pointer"}}]
+           " "
+           (if @edit
+             [ui/Input {:default-value name
+                        :on-key-press  (partial forms/on-return-key
+                                                #(if (= @old-nb-name name id)
+                                                   (close-fn)
+                                                   (EditAction id {:name @old-nb-name} close-fn)))
+                        :on-change     (ui-callback/input-callback #(reset! old-nb-name %))
+                        :focus         true
+                        :size          "mini"}]
+             name)]])
+       (when description
+         [ui/TableRow
+          [ui/TableCell "Description"]
+          [ui/TableCell description]])
        [ui/TableRow
-        [ui/TableCell "Description"]
-        [ui/TableCell description]])
-     [ui/TableRow
-      [ui/TableCell "Owner"]
-      [ui/TableCell [values/as-link owner :label (general-utils/id->short-uuid owner)]]]
-     [ui/TableRow
-      [ui/TableCell "Telemetry Period"]
-      [ui/TableCell (str refresh-interval " seconds")]]
-     (when nuvlabox-api-endpoint
+        [ui/TableCell "Owner"]
+        [ui/TableCell @resolved-owner]]
        [ui/TableRow
-        [ui/TableCell "NuvlaBox API Endpoint"]
-        [ui/TableCell nuvlabox-api-endpoint]])
-     [ui/TableRow
-      [ui/TableCell "Created"]
-      [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
-     [ui/TableRow
-      [ui/TableCell "Updated"]
-      [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]
-     [ui/TableRow
-      [ui/TableCell "Version"]
-      [ui/TableCell version]]]]])
+        [ui/TableCell "Telemetry Period"]
+        [ui/TableCell (str refresh-interval " seconds")]]
+       (when nuvlabox-api-endpoint
+         [ui/TableRow
+          [ui/TableCell "NuvlaBox API Endpoint"]
+          [ui/TableCell nuvlabox-api-endpoint]])
+       [ui/TableRow
+        [ui/TableCell "Created"]
+        [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
+       [ui/TableRow
+        [ui/TableCell "Updated"]
+        [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]
+       [ui/TableRow
+        [ui/TableCell "Version"]
+        [ui/TableCell version]]]]]))
 
 
 (defn TabOverviewHost
@@ -1112,6 +1114,10 @@
 
           [ui/GridColumn {:stretched true}
            [TabOverviewStatus @nb-status id (:online @nuvlabox) tr]]
+
+          [ui/GridColumn {:stretched true}
+           [deployment-views/DeploymentsOverviewSegment
+            ::deployment-subs/deployments ::events/set-active-tab-index tab-deployment-index]]
 
           (when (:node-id @nb-status)
             [ui/GridColumn {:stretched true}
@@ -1423,8 +1429,9 @@
 
 
 (defn tabs
-  [count-peripherals tr]
-  (let [nuvlabox  (subscribe [::subs/nuvlabox])
+  [count-peripherals]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        nuvlabox  (subscribe [::subs/nuvlabox])
         can-edit? (subscribe [::subs/can-edit?])]
     [{:menuItem {:content "Overview"
                  :key     "overview"
@@ -1437,7 +1444,7 @@
      {:menuItem {:content (r/as-element
                             [ui/Popup
                              {:trigger        (r/as-element [:span "Resource Consumption"])
-                              :content        (tr [:nuvlabox-datagateway-popup])
+                              :content        (@tr [:nuvlabox-datagateway-popup])
                               :header         "data-gateway"
                               :position       "top center"
                               :wide           true
@@ -1461,8 +1468,9 @@
       :render   (fn [] (r/as-element [TabEvents]))}
      {:menuItem {:content "Deployments"
                  :key     "deployments"
-                 :icon    "sitemap"}
-      :render   (fn [] (r/as-element [deployment-views/DeploymentTable]))}
+                 :icon    "rocket"}
+      :render   (fn [] (r/as-element [deployment-views/DeploymentTable
+                                      {:empty-msg (@tr [:empty-deployment-nuvlabox-msg])}]))}
      {:menuItem {:content "Vulnerabilities"
                  :key     "vuln"
                  :icon    "shield"}
@@ -1475,7 +1483,6 @@
   []
   (fn []
     (let [count-peripherals (subscribe [::subs/nuvlabox-peripherals-ids])
-          tr                (subscribe [::i18n-subs/tr])
           active-index      (subscribe [::subs/active-tab-index])]
       [ui/Tab
        {:menu        {:secondary true
@@ -1483,7 +1490,7 @@
                       :style     {:display        "flex"
                                   :flex-direction "row"
                                   :flex-wrap      "wrap"}}
-        :panes       (tabs (count @count-peripherals) @tr)
+        :panes       (tabs (count @count-peripherals))
         :activeIndex @active-index
         :onTabChange (fn [_ data]
                        (let [active-index (. data -activeIndex)]
@@ -1519,7 +1526,7 @@
   (let [nb-status (subscribe [::subs/nuvlabox-status])]
     (fn [uuid]
       ^{:key uuid}
-      [ui/DimmerDimmable
+      [ui/DimmerDimmable {:style {:overflow "visible"}}
        [main-components/NotFoundPortal
         ::subs/nuvlabox-not-found?
         :no-nuvlabox-message-header

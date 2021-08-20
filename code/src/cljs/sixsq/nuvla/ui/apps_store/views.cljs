@@ -223,7 +223,7 @@
   []
   (fn []
     [ui/TabPane
-     [deployment-views/deployments-main-content]]))
+     [deployment-views/DeploymentsMainContent]]))
 
 
 (defn TabDiscoverSection

@@ -15,6 +15,7 @@
     [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
     [sixsq.nuvla.ui.apps.views-versions :as apps-views-versions]
     [sixsq.nuvla.ui.deployment.views :as deployment-views]
+    [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -60,7 +61,9 @@
                                                  (dispatch [::main-events/changes-protection? true])
                                                  (dispatch [::apps-events/validate-form]))
                               :on-validation  ::events/set-configuration-validation-error}]
-           [:span file-name])
+           [ui/TableCell {:floated :left
+                          :width   3}
+            [:span file-name]])
          [ui/TableCell {:floated :left
                         :width   12
                         :error   (and validate? (not (s/valid? ::spec/file-content file-content)))}
@@ -252,6 +255,16 @@
            (str " (" (@tr [:behind-version-1]) " " (- last-version v) " " (@tr [:behind-version-2]) ")")])))))
 
 
+(defn Tags
+  [module]
+  (let [tr   (subscribe [::i18n-subs/tr])
+        tags (:tags module)]
+    (when tags
+      [ui/TableRow
+       [ui/TableCell (str/capitalize (@tr [:tags]))]
+       [ui/TableCell [uix/Tags module]]])))
+
+
 (defn OverviewModuleSummary
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
@@ -261,18 +274,18 @@
         module-content-id    (subscribe [::apps-subs/module-content-id])
         version-index        (apps-utils/find-current-version @versions-map @module-content-id)
         is-module-published? (subscribe [::apps-subs/is-module-published?])
-        {:keys [id created updated name parent-path path]} @module]
+        {:keys [id created updated name parent-path]} @module]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
-     [:h4 (str/capitalize (@tr [:app]))]
+     [:h4 (str/capitalize (@tr [:summary]))]
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody
        (when name
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:name]))]
-          [ui/TableCell [values/as-link path :label name :page "apps"]]])
+          [ui/TableCell name]])
        (when parent-path
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:project]))]
@@ -290,7 +303,8 @@
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:version-number]))]
         [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]
-       [apps-views-detail/AuthorVendor]]]]))
+       [apps-views-detail/AuthorVendor]
+       [Tags @module]]]]))
 
 
 (defn TabMenuDeployments
@@ -301,14 +315,15 @@
 
 (defn DeploymentsPane
   []
-  (let [is-new? (subscribe [::apps-subs/is-new?])]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        is-new? (subscribe [::apps-subs/is-new?])]
     [:<>
      [:h2 [apps-views-detail/DeploymentsTitle]]
      (if @is-new?
        [uix/WarningMsgNoElements]
-       [deployment-views/DeploymentTable {:no-actions     true
-                                          :no-selection   true
-                                          :no-module-name true}])]))
+       [deployment-views/DeploymentTable {:no-selection   true
+                                          :no-module-name true
+                                          :empty-msg      (@tr [:empty-deployment-module-msg])}])]))
 
 
 (defn deployments
@@ -339,7 +354,7 @@
 (defn TabMenuConfiguration
   []
   (let [error? (subscribe [::subs/configuration-error?])]
-    [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
+    [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
      [apps-views-detail/ConfigurationTitle]]))
 
 
@@ -364,7 +379,7 @@
 (defn TabMenuLicense
   []
   (let [error? (subscribe [::subs/license-error?])]
-    [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
+    [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
      [apps-views-detail/LicenseTitle]]))
 
 
@@ -413,7 +428,7 @@
 (defn TabMenuDocker
   []
   (let [error? (subscribe [::subs/docker-compose-validation-error?])]
-    [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
+    [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
      [apps-views-detail/DockerTitle]]))
 
 
@@ -464,7 +479,7 @@
 (defn TabMenuDetails
   []
   (let [error? (subscribe [::subs/details-validation-error?])]
-    [:span {:style {:color (if (true? @error?) utils-forms/dark-red "black")}}
+    [:span {:style {:color (if @error? utils-forms/dark-red "black")}}
      [apps-views-detail/DeploymentsTitle]]))
 
 
@@ -523,7 +538,11 @@
               :centered  true}
      [ui/GridRow {:centered true}
       [ui/GridColumn
-       [apps-views-detail/OverviewDescription utils/tab-details]]]
+       [deployment-views/DeploymentsOverviewSegment
+        ::deployment-subs/deployments ::apps-events/set-active-tab-index utils/tab-deployments-index]]]
+     [ui/GridRow {:centered true}
+      [ui/GridColumn
+       [apps-views-detail/OverviewDescription utils/tab-details-index]]]
      [ui/GridRow
       [ui/GridColumn
        [OverviewModuleSummary]]]]))
@@ -543,10 +562,10 @@
         editable? (subscribe [::apps-subs/editable?])
         stripe    (subscribe [::main-subs/stripe])]
     (remove nil? [(overview)
+                  (deployments)
                   (license)
                   (when @stripe
                     (pricing))
-                  (deployments)
                   (versions)
                   (details)
                   (docker)
@@ -563,7 +582,7 @@
   (let [module-common (subscribe [::apps-subs/module-common])
         active-index  (subscribe [::apps-subs/active-tab-index])
         is-new?       (subscribe [::apps-subs/is-new?])]
-    (if (true? @is-new?) (dispatch [::apps-events/set-active-tab-index utils/tab-details])
+    (if (true? @is-new?) (dispatch [::apps-events/set-active-tab-index utils/tab-details-index])
                          (dispatch [::apps-events/set-active-tab-index 0]))
     (dispatch [::apps-events/reset-version])
     (dispatch [::apps-events/set-form-spec ::spec/module-application])

@@ -230,6 +230,8 @@
         :editing                                       "editing"
         :email                                         "email"
         :email-invalid-format                          "Typo? It doesn't look like a valid email."
+        :empty-deployment-module-msg                   "There are currently no deployments running for this app."
+        :empty-deployment-nuvlabox-msg                 "There are currently no running apps (aka deployments) in this NuvlaBox."
         :empty-group-message                           "This group has no members"
         :empty-group-or-no-access-message              "This group has no members or you do not have access to the list of members"
         :enable                                        "enable"

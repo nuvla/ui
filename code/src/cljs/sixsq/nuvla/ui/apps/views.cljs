@@ -72,7 +72,7 @@
 (defmethod panel/render :apps
   [_path]
   (timbre/set-level! :info)
-  [ui/DimmerDimmable {:dimmed true}
+  [ui/DimmerDimmable {:style {:overflow "visible"}}
    [utils-validation/validation-error-message ::subs/form-valid?]
    [views-detail/AddModal]
    [views-detail/save-modal]

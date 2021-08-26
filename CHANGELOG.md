@@ -18,6 +18,7 @@
   - Improve on hover pop-up behaviour for tags
   - Improved loading pages
   - Added editing of NuvlaBox description
+  - Improve cluster view
 
 ## [2.20.0] - 2021-08-04
 

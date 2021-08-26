@@ -108,6 +108,7 @@
                                 (dispatch [::history-events/navigate resource]))}]]))
 
 
+; TODO: reduce duplication with deployment-views/DeploymentsOverviewSegment
 (defn TabOverviewDeployments
   []
   (let [tr    (subscribe [::i18n-subs/tr])
@@ -123,7 +124,7 @@
 
      [:h4 [ui/Icon {:name icon}] (str/upper-case (@tr [:deployments]))]
 
-     [deployment-views/StatisticStates false]
+     [deployment-views/StatisticStates false ::deployment-subs/deployments-summary-all]
 
      [ui/Button {:color    color
                  :icon     icon
@@ -214,8 +215,7 @@
           [ui/GridColumn {:stretched true}
            [TabOverviewDeployments]]
           [ui/GridColumn {:stretched true}
-           [TabOverviewNuvlaBox]]]
-         ]]])))
+           [TabOverviewNuvlaBox]]]]]])))
 
 
 (defmethod panel/render :dashboard

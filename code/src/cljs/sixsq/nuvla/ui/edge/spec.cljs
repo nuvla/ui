@@ -82,8 +82,8 @@
 
 (def defaults {::loading?                  false
                ::nuvlaboxes                nil
-               ::nuvlaboxes-summary        nil
                ::nuvlabox-cluster-summary  nil
+               ::nuvlaboxes-summary        nil
                ::nuvlaboxes-summary-all    nil
                ::nuvlabox-releases         nil
                ::state-nuvlaboxes          nil

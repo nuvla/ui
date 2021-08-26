@@ -28,29 +28,22 @@
   (dispatch [::events/refresh opts]))
 
 
-(defn control-bar []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        full-text         (subscribe [::subs/full-text-search])
+(defn ControlBar []
+  (let [full-text         (subscribe [::subs/full-text-search])
         additional-filter (subscribe [::subs/additional-filter])
         filter-open?      (r/atom false)]
     (fn []
-      [ui/GridColumn
+      [ui/GridColumn {:width 4}
        [main-components/SearchInput
         {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))
          :default-value @full-text}]
        " "
-       [ui/Popup
-        {:content           (@tr [:additional-filter])
-         :mouse-enter-delay 500
-         :on                "hover"
-         :trigger           (r/as-element
-                              ^{:key (random-uuid)}
-                              [filter-comp/ButtonFilter
-                               {:resource-name  "deployment"
-                                :default-filter @additional-filter
-                                :open?          filter-open?
-                                :on-done        #(dispatch [::events/set-additional-filter %])}]
-                              )}]])))
+       ^{:key (random-uuid)}
+       [filter-comp/ButtonFilter
+        {:resource-name  "deployment"
+         :default-filter @additional-filter
+         :open?          filter-open?
+         :on-done        #(dispatch [::events/set-additional-filter %])}]])))
 
 
 (defn BulkUpdateModal
@@ -98,8 +91,7 @@
                        :on-click #(dispatch [::events/bulk-operation
                                              "bulk-update"
                                              {:module-href @selected-module}
-                                             [::events/close-modal-bulk-update]])}]]
-         ]))))
+                                             [::events/close-modal-bulk-update]])}]]]))))
 
 
 (defn MenuBar
@@ -174,7 +166,7 @@
   (not (or select-all? (true? no-actions))))
 
 
-(defn row-fn
+(defn RowFn
   [{:keys [id state module parent nuvlabox] :as deployment}
    {:keys [no-actions no-module-name select-all] :as _options}]
   (let [credential-id parent
@@ -218,14 +210,14 @@
           [deployment-detail-views/DeleteButton deployment])])]))
 
 
-(defn vertical-data-table
+(defn VerticalDataTable
   [_deployments-list _options]
   (let [tr                    (subscribe [::i18n-subs/tr])
         is-all-page-selected? (subscribe [::subs/is-all-page-selected?])]
-    (fn [deployments-list {:keys [no-actions no-module-name select-all] :as options}]
+    (fn [deployments-list {:keys [no-actions no-module-name select-all empty-msg] :as options}]
       (let [show-options? (show-options select-all no-actions)]
         (if (empty? deployments-list)
-          [uix/WarningMsgNoElements]
+          [uix/WarningMsgNoElements empty-msg]
           [ui/Table
            (merge style/single-line {:stackable true})
            [ui/TableHeader
@@ -246,7 +238,7 @@
            [ui/TableBody
             (for [{:keys [id] :as deployment} deployments-list]
               ^{:key id}
-              [row-fn deployment options])]])))))
+              [RowFn deployment options])]])))))
 
 
 (defn DeploymentCard
@@ -302,7 +294,7 @@
                                        :selected? @is-selected?))]))
 
 
-(defn cards-data-table
+(defn CardsDataTable
   [deployments-list]
   [:div style/center-items
    [ui/CardGroup {:centered    true
@@ -313,7 +305,7 @@
       [DeploymentCard deployment])]])
 
 
-(defn deployments-display
+(defn DeploymentsDisplay
   []
   (let [loading?    (subscribe [::subs/loading?])
         view        (subscribe [::subs/view])
@@ -324,47 +316,65 @@
         [ui/Segment (merge style/basic
                            {:loading @loading?})
          (if (= @view "cards")
-           [cards-data-table deployments-list]
-           [vertical-data-table deployments-list {:select-all @select-all?}])]))))
+           [CardsDataTable deployments-list]
+           [VerticalDataTable deployments-list {:select-all @select-all?}])]))))
 
 
 (defn StatisticStates
-  ([] [StatisticStates true])
-  ([_clickable?]
-   (let [summary     (subscribe [::subs/deployments-summary])
-         summary-all (subscribe [::subs/deployments-summary-all])]
-     (fn [clickable?]
-       (let [summary       (if clickable? summary summary-all)
-             terms         (utils-general/aggregate-to-map
-                             (get-in @summary [:aggregations :terms:state :buckets]))
-             started       (:STARTED terms 0)
-             starting      (:STARTING terms 0)
-             created       (:CREATED terms 0)
-             stopped       (:STOPPED terms 0)
-             error         (:ERROR terms 0)
-             pending       (:PENDING terms 0)
-             starting-plus (+ starting created pending)
-             total         (:count @summary)]
-         [ui/GridColumn {:width      8
-                         :text-align "center"}
-          [ui/StatisticGroup (merge {:widths (if clickable? nil 5) :size "tiny"}
-                                    {:style {:margin-right "0px"
-                                             :display      "block"}})
-           [main-components/StatisticState total ["fas fa-rocket"] "TOTAL" clickable?
-            ::events/set-state-selector ::subs/state-selector]
-           [main-components/StatisticState started [(utils/status->icon utils/status-started)] utils/status-started
-            clickable? "green"
-            ::events/set-state-selector ::subs/state-selector]
-           [main-components/StatisticState starting-plus [(utils/status->icon utils/status-starting)]
-            utils/status-starting clickable? "yellow"
-            ::events/set-state-selector ::subs/state-selector]
-           [main-components/StatisticState stopped [(utils/status->icon utils/status-stopped)] utils/status-stopped
-            clickable? "yellow"
-            ::events/set-state-selector ::subs/state-selector]
-           [main-components/StatisticState error [(utils/status->icon utils/status-error)] utils/status-error
-            clickable? "red" ::events/set-state-selector ::subs/state-selector]
-           (when clickable?
-             [main-components/ClickMeStaticPopup])]])))))
+  [_clickable? summary-subs]
+  (let [summary (subscribe [summary-subs])]
+    (fn [clickable? _summary-subs]
+      (let [terms         (utils-general/aggregate-to-map
+                            (get-in @summary [:aggregations :terms:state :buckets]))
+            started       (:STARTED terms 0)
+            starting      (:STARTING terms 0)
+            created       (:CREATED terms 0)
+            stopped       (:STOPPED terms 0)
+            error         (:ERROR terms 0)
+            pending       (:PENDING terms 0)
+            starting-plus (+ starting created pending)
+            total         (:count @summary)]
+        [ui/GridColumn {:width 8}
+         [ui/StatisticGroup {:size  "tiny"
+                             :style {:justify-content "center"
+                                     :padding-top     "20px"
+                                     :padding-bottom  "20px"}}
+          [main-components/StatisticState total ["fas fa-rocket"] "TOTAL" clickable?
+           ::events/set-state-selector ::subs/state-selector]
+          [main-components/StatisticState started [(utils/status->icon utils/status-started)] utils/status-started
+           clickable? "green"
+           ::events/set-state-selector ::subs/state-selector]
+          [main-components/StatisticState starting-plus [(utils/status->icon utils/status-starting)]
+           utils/status-starting clickable? "yellow"
+           ::events/set-state-selector ::subs/state-selector]
+          [main-components/StatisticState stopped [(utils/status->icon utils/status-stopped)] utils/status-stopped
+           clickable? "yellow"
+           ::events/set-state-selector ::subs/state-selector]
+          [main-components/StatisticState error [(utils/status->icon utils/status-error)] utils/status-error
+           clickable? "red" ::events/set-state-selector ::subs/state-selector]]]))))
+
+
+(defn DeploymentsOverviewSegment
+  [deployment-subs set-active-tab-index-event deployment-tab-index]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        icon  "rocket"
+        color "blue"]
+    [ui/Segment {:secondary true
+                 :color     color
+                 :raised    true
+                 :style     {:display         "flex"
+                             :flex-direction  "column"
+                             :justify-content "space-between"}}
+
+     [:h4 [ui/Icon {:name icon}] (str/capitalize (@tr [:deployments]))]
+
+     [StatisticStates false deployment-subs]
+
+     [ui/Button {:color    color
+                 :icon     icon
+                 :style    {:align-self "start"}
+                 :content  "Show me"
+                 :on-click #(dispatch [set-active-tab-index-event deployment-tab-index])}]]))
 
 
 (defn DeploymentTable
@@ -382,7 +392,7 @@
          (if @loading?
            [ui/Loader {:active true
                        :inline "centered"}]
-           [vertical-data-table deployments (assoc options :select-all @select-all?)])
+           [VerticalDataTable deployments (assoc options :select-all @select-all?)])
 
          (when (pos? (:count @elements))
            [uix/Pagination {:totalitems   total-elements
@@ -393,7 +403,7 @@
                                             #(dispatch [::events/set-page %]))}])]))))
 
 
-(defn deployments-main-content
+(defn DeploymentsMainContent
   []
   (let
     [elements-per-page   (subscribe [::subs/elements-per-page])
@@ -408,19 +418,20 @@
         [:<>
          [MenuBar]
          [ui/Segment style/basic
-          [ui/Grid {:columns   "equal"
+          [ui/Grid {:columns   3
                     :stackable true
                     :reversed  "mobile"}
-           [control-bar]
-           [StatisticStates true]
-           [ui/GridColumn]]
+           [ControlBar]
+           [StatisticStates true ::subs/deployments-summary]
+           [ui/GridColumn {:width 4}
+            [main-components/ClickMeStaticPopup]]]
           (for [[job-id job] @bulk-jobs-monitored]
             ^{:key job-id}
             [main-components/BulkActionProgress
              {:header      "Bulk update in progress"
               :job         job
               :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
-          [deployments-display]]
+          [DeploymentsDisplay]]
          [uix/Pagination
           {:totalitems   total-deployments
            :totalPages   total-pages

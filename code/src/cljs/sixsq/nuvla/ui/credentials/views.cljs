@@ -136,11 +136,11 @@
                                               :trigger  (r/as-element
                                                           [:span (@tr [:public-key]) [ui/Icon {:name "info circle"}]])}]),
             :placeholder (@tr [:public-key]), :editable? editable?, :required? false,
-            :default-value public-key, :spec ::spec/public-key, :type :textarea,
+            :default-value public-key, :spec ::spec/public-key-optional, :validate-form? @validate-form?, :type :textarea,
             :on-change (partial on-change :public-key)]
            [uix/TableRowField (@tr [:private-key]), :placeholder (@tr [:private-key]), :editable? editable?,
-            :required? false, :default-value private-key, :spec ::spec/private-key, :type :textarea,
-            :on-change (partial on-change :private-key)]]]]))))
+            :required? false, :default-value private-key, :spec ::spec/private-key-optional, :validate-form? @validate-form?,
+            :type :textarea, :on-change (partial on-change :private-key)]]]]))))
 
 
 (defn credential-gpg
@@ -168,11 +168,13 @@
            [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
             :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
             :on-change (partial on-change :description)]
-           [uix/TableRowField (@tr [:public-key]), :placeholder (@tr [:public-key]), :editable? editable?, :required? true,
-            :default-value public-key, :spec ::spec/public-key, :type :textarea,
+           [uix/TableRowField (@tr [:public-key]), :placeholder (@tr [:public-key]), :editable? editable?,
+            :required? true, :default-value public-key, :validate-form? @validate-form?,
+            :spec ::spec/public-key, :type :textarea,
             :on-change (partial on-change :public-key)]
            [uix/TableRowField (@tr [:private-key]), :placeholder (@tr [:private-key]), :editable? editable?,
-            :required? false, :default-value private-key, :spec ::spec/private-key, :type :textarea,
+            :required? false, :default-value private-key, :validate-form? @validate-form?,
+            :spec ::spec/private-key-optional, :type :textarea,
             :on-change (partial on-change :private-key)]]]]))))
 
 

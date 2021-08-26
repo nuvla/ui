@@ -38,12 +38,12 @@
                 ::spec/time-period-filter]} :db} _]
     (when (seq credentials)
       (let [data-sets-vals (vals data-sets)]
-        {:dispatch-n (map (fn [data-set]
-                            [::fetch-dataset-stats
-                             (:id data-set)
-                             (general-utils/join-and
-                               time-period-filter full-text-search (:data-record-filter data-set))])
-                          data-sets-vals)}))))
+        {:fx (map (fn [data-set]
+                    [:dispatch [::fetch-dataset-stats
+                                (:id data-set)
+                                (general-utils/join-and
+                                  time-period-filter full-text-search (:data-record-filter data-set))]])
+                  data-sets-vals)}))))
 
 
 (reg-event-fx
@@ -92,11 +92,11 @@
               ::spec/loading-applications? false)))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-selected-application-id
   (fn [{db :db} [_ application-id]]
     (dispatch [::dialog-events/create-deployment application-id :data true])
-    (assoc db ::spec/selected-application-id application-id)))
+    {:db (assoc db ::spec/selected-application-id application-id)}))
 
 
 (reg-event-fx

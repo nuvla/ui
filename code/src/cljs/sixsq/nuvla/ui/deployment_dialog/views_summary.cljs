@@ -77,7 +77,7 @@
       [infra-services-step/summary-row]
       [module-version-step/summary-row]
       (when @visible-files? [files-step/summary-row])
-      (when @visible-env? [env-variables-step/summary-row])
+      (when @visible-env? [env-variables-step/SummaryRow])
       (when @visible-registries? [registries-step/summary-row])
       [images-dct-row]
       (when @visible-license?

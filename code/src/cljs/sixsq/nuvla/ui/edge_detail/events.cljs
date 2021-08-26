@@ -20,6 +20,12 @@
 
 
 (reg-event-db
+  ::set-loading
+  (fn [db _]
+    (assoc db ::spec/loading? true)))
+
+
+(reg-event-db
   ::set-nuvlabox-vulns
   (fn [db [_ nuvlabox-vulns]]
     (assoc db ::spec/nuvlabox-vulns

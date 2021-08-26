@@ -68,7 +68,7 @@
       :image       logo-url
       :header      [:<>
                     [:div {:style {:float "right"}}
-                     [edge-detail/OnlineStatusIcon status :corner "top right"]]
+                     [edge-detail/OnlineStatusIcon status]]
                     (if (str/starts-with? icon-or-image "/")
                       [ui/Image {:src   icon-or-image
                                  :style {:overflow       "hidden"

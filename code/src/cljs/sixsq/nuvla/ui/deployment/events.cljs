@@ -227,13 +227,13 @@
   (fn [{db :db}]
     (let [filter-str (utils/build-bulk-filter db)]
       {::cimi-api-fx/search
-           [:deployment (cond-> {:last        0
-                                 :aggregation "terms:module/id"}
-                                (not (str/blank? filter-str)) (assoc :filter filter-str))
-            #(let [buckets      (get-in % [:aggregations :terms:module/id :buckets])
-                   same-module? (= (count buckets) 1)
-                   module-href  (when same-module? (-> buckets first :key))]
-               (dispatch [::open-modal-bulk-update filter-str module-href]))]})))
+       [:deployment {:last        0
+                     :aggregation "terms:module/id"
+                     :filter      (utils/build-bulk-filter db)}
+        #(let [buckets      (get-in % [:aggregations :terms:module/id :buckets])
+               same-module? (= (count buckets) 1)
+               module-href  (when same-module? (-> buckets first :key))]
+           (dispatch [::open-modal-bulk-update filter-str module-href]))]})))
 
 
 (reg-event-fx

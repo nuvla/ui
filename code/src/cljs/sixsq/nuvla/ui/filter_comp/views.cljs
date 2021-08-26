@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.filter-comp.events :as events]
     [sixsq.nuvla.ui.filter-comp.utils :as utils]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -106,8 +107,7 @@
                                                      (conj value)))
                                         (#{"=" "!="} operation) (conj {:key   utils/value-null
                                                                        :value utils/value-null
-                                                                       :text  "<NULL>"})))
-                 )]))))
+                                                                       :text  "<NULL>"}))))]))))
 
 
 (defn dispatch-value-attribute
@@ -175,7 +175,6 @@
                                                js/parseInt
                                                js/parseFloat) %)))))}]]]))
 
-
 (defmethod ValueAttribute :boolean
   [_attribute-info _resource-name data i]
   (let [{:keys [value operation]} (nth @data i)]
@@ -201,7 +200,6 @@
                                   #(reset! data
                                            (assoc-in @data [i :value] %)))
                    :style       {:background-color "aliceblue"}}]]))
-
 
 (defmethod ValueAttribute :date-time
   [_attribute-info _resource-name data i]
@@ -270,7 +268,7 @@
                                                ))}]]))))
 
 
-(defn FitlerFancy
+(defn FilterFancy
   [resource-name data]
   [:<>
    [:div {:style {:background-color "white"
@@ -291,7 +289,8 @@
 
 (defn ButtonFilter
   [{:keys [resource-name open? default-filter _on-done]}]
-  (let [show-error? (r/atom false)
+  (let [tr          (subscribe [::i18n-subs/tr])
+        show-error? (r/atom false)
         init-data   (or (when-not (str/blank? default-filter)
                           (utils/filter-str->data default-filter))
                         [{:el "empty"} {:el "attribute"} {:el "empty"}])
@@ -313,12 +312,12 @@
           :on-close   close-fn
           :close-icon true}
 
-         [uix/ModalHeader {:header "Filter composer"}]
+         [uix/ModalHeader {:header (@tr [:filter-composer])}]
 
          (when resource-name
            [:<>
             [ui/ModalContent
-             [FitlerFancy resource-name data]
+             [FilterFancy resource-name data]
              [ui/Message {:error (some? error)}
               [ui/MessageHeader {:style {:margin-bottom 10}}
                (str/capitalize "Result:")
@@ -337,5 +336,4 @@
                :on-click #(do
                             (on-done filter-string)
                             (close-fn))}
-              "Done"]]])])
-      )))
+              "Done"]]])]))))

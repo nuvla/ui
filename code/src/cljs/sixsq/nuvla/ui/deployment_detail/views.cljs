@@ -25,6 +25,7 @@
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -433,7 +434,7 @@
                              :options  {:mode     ""
                                         :readOnly true
                                         :theme    "logger"}
-                             :class ["large-height"]}]
+                             :class    ["large-height"]}]
              [ui/Header {:icon true}
               [ui/Icon {:name "search"}]
               "Get service logs"]
@@ -493,7 +494,7 @@
 
 
 (defn ShutdownButton
-  #_ {:clj-kondo/ignore [:unused-binding]}
+  #_{:clj-kondo/ignore [:unused-binding]}
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
@@ -541,7 +542,7 @@
 
 
 (defn DeleteButton
-  #_ {:clj-kondo/ignore [:unused-binding]}
+  #_{:clj-kondo/ignore [:unused-binding]}
   [deployment & {:keys [label?, menu-item?], :or {label? false, menu-item? false}}]
   (let [tr        (subscribe [::i18n-subs/tr])
         open?     (r/atom false)
@@ -697,18 +698,18 @@
 (defn DeploymentCard
   [{:keys [id state module tags parent credential-name] :as deployment} & {:keys [clickable?]
                                                                            :or   {clickable? true}}]
-  (let [tr            (subscribe [::i18n-subs/tr])
+  (let [tr          (subscribe [::i18n-subs/tr])
         {module-logo-url :logo-url
          module-name     :name
          module-path     :path
          module-content  :content} module
         [primary-url-name
          primary-url-pattern] (-> module-content (get :urls []) first)
-        primary-url   (if clickable?
-                        (subscribe [::deployment-subs/deployment-url id primary-url-pattern])
-                        (subscribe [::subs/url primary-url-pattern]))
-        started?      (deployment-utils/is-started? state)
-        cred          (or credential-name parent)]
+        primary-url (if clickable?
+                      (subscribe [::deployment-subs/deployment-url id primary-url-pattern])
+                      (subscribe [::subs/url primary-url-pattern]))
+        started?    (deployment-utils/is-started? state)
+        cred        (or credential-name parent)]
 
     ^{:key id}
     [ui/Card (when clickable?
@@ -774,16 +775,17 @@
 
 (defn TabOverviewSummary
   []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        deployment (subscribe [::subs/deployment])
-        version    (subscribe [::subs/current-module-version])
-        versions   (subscribe [::subs/module-versions])
+  (let [tr              (subscribe [::i18n-subs/tr])
+        deployment      (subscribe [::subs/deployment])
+        version         (subscribe [::subs/current-module-version])
+        versions        (subscribe [::subs/module-versions])
         {:keys [id state module tags acl credential-name parent]} @deployment
-        owners     (:owners acl)
-        cred       (or credential-name parent)
+        owners          (:owners acl)
+        resolved-owners (subscribe [::session-subs/resolve-users owners])
+        cred            (or credential-name parent)
         {module-content :content} module
-        urls       (:urls module-content)
-        nuvlabox   (:nuvlabox @deployment)]
+        urls            (:urls module-content)
+        nuvlabox        (:nuvlabox @deployment)]
 
     [ui/SegmentGroup {:style  {:display    "flex", :justify-content "space-between",
                                :background "#f3f4f5"}
@@ -794,7 +796,7 @@
 
       [:h4 {:style {:margin-top 0}} (str/capitalize (@tr [:summary]))]
 
-      [ui/Table {:basic "very" :style {:display "inline", :floated "left"}}
+      [ui/Table {:basic "very"}
        [ui/TableBody
         (when tags
           [ui/TableRow
@@ -806,11 +808,11 @@
          [ui/TableCell (-> @deployment :created time/parse-iso8601 time/ago)]]
         [ui/TableRow
          [ui/TableCell "Id"]
-         [ui/TableCell (when (some? id) (subs id 11))]]
+         [ui/TableCell (when (some? id) [values/as-link id :label (subs id 11)])]]
         (when (not-empty owners)
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:owner]))]
-           [ui/TableCell (str/join ", " owners)]])
+           [ui/TableCell (str/join ", " @resolved-owners)]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:status]))]
          [ui/TableCell state
@@ -837,7 +839,7 @@
         [url-to-button url-name url-pattern (= i 0)])]]))
 
 
-(defn overview-pane
+(defn OverviewPane
   []
   [ui/TabPane
    [ui/Grid {:columns   2,
@@ -855,7 +857,7 @@
   {:menuItem {:content (r/as-element [:span "Overview"])
               :key     "overview"
               :icon    "info"}
-   :render   (fn [] (r/as-element [overview-pane]))})
+   :render   (fn [] (r/as-element [OverviewPane]))})
 
 
 (defn MenuBar
@@ -916,9 +918,10 @@
             uuid        (:id @deployment "")]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
-          [StatusIcon (depl-state->status state)]
+          [ui/Icon {:name "rocket"}]
           module-name " (" (general-utils/truncate (subs uuid 11)) ")"]
          [:p {:style {:margin "0.5em 0 1em 0"}}
+          [StatusIcon (depl-state->status state)]
           [:span {:style {:font-weight "bold"}}
            "State "
            [ui/Popup

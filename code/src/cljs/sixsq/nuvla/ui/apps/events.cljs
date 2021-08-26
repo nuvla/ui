@@ -85,6 +85,11 @@
                              (s/valid? ::spec/module-common module-common)
                              (or (nil? form-spec) (s/valid? form-spec module)))
                            true)]
+      ; Helpful to debug validation issues
+      ;(log/error "module-common validate: "
+      ;           (s/explain-str ::spec/module-common module-common))
+      ;(log/error "optional form validate: "
+      ;           (s/explain-str form-spec module))
       (assoc db ::spec/form-valid? valid?))))
 
 
@@ -377,11 +382,14 @@
 
 (reg-event-db
   ::add-data-type
-  (fn [db [_ data-type]]
-    (let [id (-> db
-                 (get-in [::spec/module-common ::spec/data-types])
-                 utils/sorted-map-new-idx)]
-      (assoc-in db [::spec/module-common ::spec/data-types id] (assoc data-type :id id)))))
+  (fn [db [_ data-type-map]]
+    (let [id                (-> db
+                                (get-in [::spec/module-common ::spec/data-types])
+                                utils/sorted-map-new-idx)
+          default-data-type (:key (first @utils-detail/data-type-options))]
+      (assoc-in db
+                [::spec/module-common ::spec/data-types id]
+                (assoc data-type-map :id id, ::spec/data-type default-data-type)))))
 
 
 (reg-event-db
@@ -395,8 +403,8 @@
   (fn [db [_ id dt]]
     (assoc-in db [::spec/module-common ::spec/data-types id] {:id id ::spec/data-type dt})))
 
-;; Private registries
 
+;; Private registries
 
 (reg-event-db
   ::add-registry

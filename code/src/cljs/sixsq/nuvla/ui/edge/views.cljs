@@ -21,6 +21,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.utils.zip :as zip]))
@@ -52,6 +53,7 @@
              online          (:1 online-statuses)
              offline         (:0 online-statuses)
              unknown         (- total (+ online offline))]
+
          [:div {:style {:margin     "10px auto 10px auto"
                         :text-align "center"
                         :width      "100%"}}
@@ -77,26 +79,19 @@
                                 (dispatch [::events/set-state-selector nil])))}
                 [ui/StatisticValue {:style {:margin "0 10px"}}
                  [ui/Icon {:name (if @show-state-statistics "angle double up" "angle double down")}]]]
-               ;[main-components/ClickMeStaticPopup]
                ])]]
           (when clickable?
-            [ui/Segment (assoc-in (merge {:style {:margin     "0px auto 20px auto"
-                                                  :padding    "1em 1.5em 0 0"
-                                                  :text-align "center"
-                                                  ;:width      "100%"
-                                                  }}
-                                         {:id      "statistics-state"
-                                          :compact true
-                                          :width   "auto"})
-                                  [:style :display] (if @show-state-statistics "table" "none"))
+            [ui/Segment {:compact true
+                         :width   "auto"
+                         :style   {:text-align "center"
+                                   :display    (if @show-state-statistics "table" "none")}}
              [:h4 (@tr [:commissionning-states])]
              [ui/StatisticGroup
-              (merge {:style {:margin     "10px auto 10px auto"
-                              :display    "block"
-                              :text-align "center"
-                              :width      "100%"}}
-                     {:size "tiny"
-                      :id   "statistics-state"})
+              {:size  "tiny"
+               :style {:margin     "10px auto 10px auto"
+                       :display    "block"
+                       :text-align "center"
+                       :width      "100%"}}
               [main-components/StatisticState new [(utils/state->icon utils/state-new)]
                utils/state-new clickable? ::events/set-state-selector ::subs/state-selector]
               [main-components/StatisticState activated [(utils/state->icon utils/state-activated)]
@@ -757,7 +752,29 @@
      [map/Tooltip (or name id)]]))
 
 
-
+(defn NuvlaboxCard
+  [_nuvlabox _managers]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn [{:keys [id name description created state tags online]} managers]
+      (let [href (str "edge/" (general-utils/id->uuid id))]
+        ^{:key id}
+        [uix/Card
+         {:on-click    #(dispatch [::history-events/navigate href])
+          :href        href
+          :header      [:<>
+                        [:div {:style {:float "right"}}
+                         [edge-detail/OnlineStatusIcon online]]
+                        [ui/IconGroup
+                         [ui/Icon {:name "box"}]
+                         (when (some #{id} managers)
+                           [ui/Icon {:className "fas fa-crown"
+                                     :corner    true
+                                     :color     "blue"}])]
+                        (or name id)]
+          :meta        (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))
+          :state       state
+          :description (when-not (str/blank? description) description)
+          :tags        tags}]))))
 
 
 (defn NuvlaboxCards

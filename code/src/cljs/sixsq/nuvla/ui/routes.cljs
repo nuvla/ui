@@ -3,7 +3,6 @@
   (:require
     [re-frame.core :refer [dispatch]]
     [secretary.core :refer [defroute]]
-
     [sixsq.nuvla.ui.main.events :as main-events]
     [taoensso.timbre :as log]))
 

@@ -67,13 +67,14 @@
     (assoc db ::spec/data-records data-records)))
 
 
-(reg-event-fx
+(reg-event-db
   ::set-credentials
-  (fn [{db :db} [_ {credentials :resources}]]
-    {:db       (assoc db ::spec/credentials credentials
-                         ::spec/counts nil
-                         ::spec/sizes nil)
-     :dispatch [::fetch-all-datasets-stats]}))
+  (fn [db [_ {credentials :resources}]]
+    (assoc db ::spec/credentials credentials
+              ::spec/counts nil
+              ::spec/sizes nil)
+    ;:dispatch [::fetch-all-datasets-stats]
+    ))
 
 
 (reg-event-fx

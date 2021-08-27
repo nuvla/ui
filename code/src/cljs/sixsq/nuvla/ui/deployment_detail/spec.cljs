@@ -29,8 +29,11 @@
 
 (s/def ::active-tab-index number?)
 
+(s/def ::not-found? boolean?)
+
 
 (s/def ::db (s/keys :req [::loading?
+                          ::not-found?
                           ::deployment
                           ::deployment-parameters
                           ::events
@@ -48,6 +51,7 @@
   (-> (time/now) (.seconds 0)))
 
 (def defaults {::loading?                  true
+               ::not-found?                false
                ::deployment                nil
                ::deployment-parameters     nil
                ::module-versions           nil

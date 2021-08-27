@@ -9,6 +9,8 @@
 
 (s/def ::time-period-filter (s/nilable string?))
 
+(s/def ::data-set-id any?)
+
 (s/def ::data-set any?)
 
 (s/def ::data-record-filter any?)
@@ -27,6 +29,7 @@
 (s/def ::db (s/keys :req [::time-period
                           ::time-period-filter
                           ::data-set
+                          ::data-set-id
                           ::data-record-filter
                           ::data-records
                           ::data-objects
@@ -37,16 +40,17 @@
                           ::elements-per-page]))
 
 (def default-time-period [(time/days-before 30)
-                          (time/days-before 0)])
+                          (time/days-before -1)])
 
-(def defaults {::time-period                 default-time-period
-               ::time-period-filter          (utils/create-time-period-filter default-time-period)
-               ::data-set                    nil
-               ::data-record-filter          nil
-               ::data-records                nil
-               ::data-objects                {}
-               ::content-type-filter         nil
-               ::full-text-search            nil
-               ::selected-data-record-ids    #{}
-               ::page                        1
-               ::elements-per-page           8})
+(def defaults {::time-period              default-time-period
+               ::time-period-filter       (utils/create-time-period-filter default-time-period)
+               ::data-set-id              nil
+               ::data-set                 nil
+               ::data-record-filter       nil
+               ::data-records             nil
+               ::data-objects             {}
+               ::content-type-filter      nil
+               ::full-text-search         nil
+               ::selected-data-record-ids #{}
+               ::page                     1
+               ::elements-per-page        8})

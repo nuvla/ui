@@ -291,8 +291,7 @@
                                              #(swap! form-data assoc :environment %))}]]]]
            :label (@tr [:advanced])
            :title-size :h4
-           :default-open false]
-          ]
+           :default-open false]]
          [ui/ModalActions
           [uix/Button
            {:text     (@tr [:cancel])

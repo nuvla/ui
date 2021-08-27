@@ -1,13 +1,8 @@
 (ns sixsq.nuvla.ui.data.spec
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.data.utils :as utils]
     [sixsq.nuvla.ui.utils.time :as time]))
 
-
-(s/def ::time-period (s/tuple any? any?))
-
-(s/def ::time-period-filter (s/nilable string?))
 
 (s/def ::data-records any?)
 
@@ -25,6 +20,11 @@
 
 (s/def ::full-text-search (s/nilable string?))
 
+(s/def ::page int?)
+(s/def ::elements-per-page int?)
+
+(s/def ::total any?)
+
 (s/def ::counts any?)
 
 (s/def ::sizes any?)
@@ -33,33 +33,35 @@
 
 (s/def ::selected-data-set-ids (s/coll-of string? :kind set?))
 
-(s/def ::db (s/keys :req [::time-period
-                          ::time-period-filter
-                          ::data-records
+(s/def ::db (s/keys :req [::data-records
                           ::credentials
                           ::application-select-visible?
                           ::loading-applications?
                           ::applications
                           ::content-type-filter
                           ::full-text-search
+                          ::total
                           ::counts
                           ::sizes
                           ::data-sets
-                          ::selected-data-set-ids]))
+                          ::selected-data-set-ids
+                          ::page
+                          ::elements-per-page]))
 
 (def default-time-period [(time/days-before 30)
-                          (time/days-before 0)])
+                          (time/now)])
 
-(def defaults {::time-period                 default-time-period
-               ::time-period-filter          (utils/create-time-period-filter default-time-period)
-               ::data-records                nil
+(def defaults {::data-records                nil
                ::credentials                 nil
                ::application-select-visible? false
                ::loading-applications?       false
                ::applications                nil
                ::content-type-filter         nil
                ::full-text-search            nil
+               ::total                       0
                ::counts                      nil
                ::sizes                       nil
                ::data-sets                   {}
-               ::selected-data-set-ids       #{}})
+               ::selected-data-set-ids       #{}
+               ::page                        1
+               ::elements-per-page           8})

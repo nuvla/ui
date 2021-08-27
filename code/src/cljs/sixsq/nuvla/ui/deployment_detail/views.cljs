@@ -941,7 +941,11 @@
     (refresh resource-id)
     (fn [_]
       (let [active-index (subscribe [::subs/active-tab-index])]
-        [:<>
+        [ui/DimmerDimmable {:style {:overflow "visible"}}
+         [main-components/NotFoundPortal
+          ::subs/not-found?
+          :no-deployment-message-header
+          :no-deployment-message-content]
          [PageHeader]
          [MenuBar @deployment]
          [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 8]

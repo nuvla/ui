@@ -1,7 +1,7 @@
-(ns sixsq.nuvla.ui.data-record.subs
+(ns sixsq.nuvla.ui.data-set.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.data-record.spec :as spec]))
+    [sixsq.nuvla.ui.data-set.spec :as spec]))
 
 
 (reg-sub

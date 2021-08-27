@@ -1,16 +1,17 @@
-(ns sixsq.nuvla.ui.data-record.views
+(ns sixsq.nuvla.ui.data-set.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.data-record.events :as events]
-    [sixsq.nuvla.ui.data-record.subs :as subs]
+    [sixsq.nuvla.ui.data-set.events :as events]
+    [sixsq.nuvla.ui.data-set.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
@@ -83,8 +84,7 @@
    [main-components/StickyBar
     [ui/Menu {:attached "top", :borderless true}
      [main-components/RefreshMenu
-      {:on-refresh #(refresh)}]]]
-   [SearchHeader refresh ::events/set-full-text-search ::subs/full-text-search]])
+      {:on-refresh #(refresh)}]]]])
 
 
 (defn DataRecordCard
@@ -146,6 +146,62 @@
     1))
 
 
+(defn Summary
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        dataset        (subscribe [::subs/data-set])
+        device         (subscribe [::main-subs/device])
+        {:keys [id name description created created-by updated data-record-filter module-filter tags]} @dataset
+        resolved-owner (subscribe [::session-subs/resolve-user created-by])]
+    [ui/Grid {:columns   (if (contains? #{:wide-screen} @device) 2 1)
+              :stackable true
+              :padded    true
+              :centered  true}
+     [ui/GridRow {:centered true}
+      [ui/GridColumn
+
+       [ui/SegmentGroup {:style  {:display    "flex", :justify-content "space-between",
+                                  :background "#f3f4f5"}
+                         :raised true}
+        [ui/Segment {:secondary true
+                     :color     "green"
+                     :raised    true}
+
+         [:h4 {:style {:margin-top 0}} (str/capitalize (@tr [:summary]))]
+
+         [ui/Table {:basic "very"}
+          [ui/TableBody
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:name]))]
+            [ui/TableCell name]]
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:description]))]
+            [ui/TableCell description]]
+           (when tags
+             [ui/TableRow
+              [ui/TableCell (str/capitalize (@tr [:tags]))]
+              [ui/TableCell
+               [uix/Tags {:tags tags}]]])
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (str (@tr [:created])))]
+            [ui/TableCell (-> created time/parse-iso8601 time/ago)]]
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (str (@tr [:owner])))]
+            [ui/TableCell @resolved-owner]]
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (str (@tr [:updated])))]
+            [ui/TableCell (-> updated time/parse-iso8601 time/ago)]]
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:data-record-filter]))]
+            [ui/TableCell data-record-filter]]
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:module-filter]))]
+            [ui/TableCell module-filter]]
+           [ui/TableRow
+            [ui/TableCell "Id"]
+            [ui/TableCell (when (some? id) [values/as-link id :label (subs id 11)])]]]]]]]]]))
+
+
 (defn DataRecordCards
   []
   (let [data-records (subscribe [::subs/data-records])
@@ -154,6 +210,9 @@
               :stackable true
               :padded    true
               :centered  true}
+     [ui/GridRow {:centered true}
+      [ui/GridColumn
+       [SearchHeader refresh ::events/set-full-text-search ::subs/full-text-search]]]
      [ui/GridRow {:centered true}
       [ui/GridColumn
        [ui/Segment style/basic
@@ -179,14 +238,16 @@
                                      :activePage #(dispatch [::events/set-page %]))}]))
 
 
-(defn DataRecords
+(defn DataSet
   [dataset-id]
   (dispatch [::events/set-data-set-id dataset-id])
   (refresh)
-  (let [data-set (subscribe [::subs/data-set])
+  (let [tr       (subscribe [::i18n-subs/tr])
+        data-set (subscribe [::subs/data-set])
         name     (:name @data-set)]
     [ui/Segment style/basic
-     [uix/PageHeader "database" (str name " data records")]
+     [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
      [MenuBar dataset-id]
+     [Summary]
      [DataRecordCards]
      [Pagination]]))

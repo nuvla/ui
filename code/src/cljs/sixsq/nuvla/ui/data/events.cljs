@@ -4,7 +4,7 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.data.spec :as spec]
     [sixsq.nuvla.ui.data.utils :as utils]
-    [sixsq.nuvla.ui.data-record.spec :as data-record-spec]
+    [sixsq.nuvla.ui.data-set.spec :as data-set-spec]
     [sixsq.nuvla.ui.deployment-dialog.events :as dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.spec :as dialog-spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
@@ -44,7 +44,7 @@
   (fn [{{:keys [::spec/credentials
                 ::spec/data-sets
                 ::spec/full-text-search
-                ::data-record-spec/time-period-filter]} :db} _]
+                ::data-set-spec/time-period-filter]} :db} _]
     (when (seq credentials)
       (let [data-sets-vals  (vals data-sets)
             full-text-query (general-utils/fulltext-query-string full-text-search)]

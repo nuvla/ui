@@ -5,7 +5,7 @@
     [sixsq.nuvla.ui.data.events :as events]
     [sixsq.nuvla.ui.data.subs :as subs]
     [sixsq.nuvla.ui.data.utils :as utils]
-    [sixsq.nuvla.ui.data-record.views :as data-record-views]
+    [sixsq.nuvla.ui.data-set.views :as data-set-views]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as deployment-dialog-subs]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
@@ -41,14 +41,17 @@
 
 
 (defn MenuBar []
-  [:div
-   [main-components/StickyBar
-    [ui/Menu {:attached "top", :borderless true}
-     [ProcessButton]
-     [main-components/RefreshMenu
-      {:on-refresh refresh}]]]
-   [:div {:style {:padding "10px 0"}}
-    [data-record-views/SearchHeader refresh ::events/set-full-text-search ::subs/full-text-search]]])
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:div
+     [main-components/StickyBar
+      [ui/Menu {:attached "top", :borderless true}
+       [ProcessButton]
+       [main-components/RefreshMenu
+        {:on-refresh refresh}]]]
+     [:div {:style {:padding "10px 0"}}
+      [ui/Message {:info true}
+       (@tr [:data-set-search-message])]
+      [data-set-views/SearchHeader refresh ::events/set-full-text-search ::subs/full-text-search]]]))
 
 
 (defn ApplicationListItem
@@ -257,7 +260,7 @@
                              [::events/open-application-select-modal]])}]]))
 
 
-(defn DataSetResources
+(defn Data
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment style/basic
@@ -275,5 +278,5 @@
   (let [[_ uuid] path
         n (count path)]
     (case n
-      2 [data-record-views/DataRecords uuid]
-      [DataSetResources])))
+      2 [data-set-views/DataSet uuid]
+      [Data])))

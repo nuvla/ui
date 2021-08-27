@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.data-record.utils
+(ns sixsq.nuvla.ui.data-set.utils
   (:require
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.time :as time]))

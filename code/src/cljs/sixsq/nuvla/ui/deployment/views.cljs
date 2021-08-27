@@ -184,7 +184,7 @@
                                   (dispatch [::events/select-id id])
                                   (.stopPropagation event))}]])
      [ui/TableCell [values/as-link (utils-general/id->uuid id)
-                    :page "dashboard" :label (utils-general/id->short-uuid id)]]
+                    :page "deployment" :label (utils-general/id->short-uuid id)]]
      (when (not no-module-name)
        [ui/TableCell {:style {:overflow      "hidden",
                               :text-overflow "ellipsis",

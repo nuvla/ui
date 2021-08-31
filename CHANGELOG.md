@@ -68,7 +68,7 @@
   - Main - Detect unpaid subscription to show a more coherent message
   - Deployment - Bulk force delete support
   - Deployment - Bulk stop support
-  - Fix visible console errors after update 
+  - Fix visible console errors after update
   - React-chart-2 - Fix broken changes
   - React-leaflet - Fix broken changes
   - NPM dependencies - Major update
@@ -161,7 +161,7 @@
 
   - Edge page - Allow creation of Nuvlabox without VPN
   - Notifications page - open first accordion, added refresh buttons,
-    displaying number of actual subscriptions per configuration. Allow 
+    displaying number of actual subscriptions per configuration. Allow
     to define multiple notification methods per subscription configuraiton.
 
 ## [2.15.0] - 2021-02-22
@@ -221,7 +221,7 @@
 
   - UIX - Message warning no elements to show
   - Edge detail - New deployments tab
-  - Edge detail - New jobs tab and an error message is visible 
+  - Edge detail - New jobs tab and an error message is visible
     when last executed job is failed
   - Edge detail - Specific modals for add ssh key and for revoke
     ssh key
@@ -230,7 +230,7 @@
 
   - Acl - Vertical align owner and dropdown
   - Deployment - Overview tab, state transition loader moved
-  - Operation modal - When a specific modal exist show it 
+  - Operation modal - When a specific modal exist show it
     instead of generic modal
   - Cimi detail - operation support action operation body when
     metadata is defined

@@ -4,6 +4,10 @@
 
 ### Changed
 
+## [2.21.0] - 2021-08-31
+
+### Changed
+
   - Fix bug where dropdown in the share tab for modules, NuvlaBox and
     infrastructure services where trimmed
   - Fix bug where apps selected from datasets caused an error
@@ -19,6 +23,7 @@
   - Improved loading pages
   - Added editing of NuvlaBox description
   - Improve cluster view
+  - Improve data page
 
 ## [2.20.0] - 2021-08-04
 

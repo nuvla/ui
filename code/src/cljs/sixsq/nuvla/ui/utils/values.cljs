@@ -5,7 +5,8 @@
     [markdown-to-hiccup.core :as md]
     [reagent.core :as r]
     [sixsq.nuvla.ui.history.views :as history]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [clojure.string :as str]))
 
 
 (defn href?
@@ -110,3 +111,8 @@
 (defn markdown->summary
   [markdown]
   (-> markdown markdown->hiccup hiccup->first-p))
+
+
+(defn resource->id
+  [resource]
+  (last (str/split resource #"/")))

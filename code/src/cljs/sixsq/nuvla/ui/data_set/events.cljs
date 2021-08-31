@@ -1,9 +1,15 @@
-(ns sixsq.nuvla.ui.data-record.events
+(ns sixsq.nuvla.ui.data-set.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.data-record.spec :as spec]
-    [sixsq.nuvla.ui.data-record.utils :as utils]))
+    [sixsq.nuvla.ui.data-set.spec :as spec]
+    [sixsq.nuvla.ui.data-set.utils :as utils]))
+
+
+(reg-event-fx
+  ::refresh
+  (fn [_ _]
+    {:fx [[:dispatch [::get-data-set]]]}))
 
 
 (reg-event-fx
@@ -13,12 +19,11 @@
      :dispatch [::get-data-set nil]}))
 
 
-(reg-event-fx
+(reg-event-db
   ::set-time-period
-  (fn [{db :db} [_ time-period]]
-    {:db       (assoc db ::spec/time-period time-period
-                         ::spec/time-period-filter (utils/create-time-period-filter time-period))
-     :dispatch [::get-data-set nil]}))
+  (fn [db [_ time-period]]
+    (assoc db ::spec/time-period time-period
+              ::spec/time-period-filter (utils/create-time-period-filter time-period))))
 
 
 (reg-event-fx
@@ -53,6 +58,12 @@
 
 
 (reg-event-db
+  ::set-data-set-id
+  (fn [db [_ id]]
+    (assoc db ::spec/data-set-id id)))
+
+
+(reg-event-db
   ::set-data-set
   (fn [db [_ data-set]]
     (assoc db ::spec/data-set data-set)))
@@ -60,12 +71,10 @@
 
 (reg-event-fx
   ::get-data-set
-  (fn [{{:keys [::spec/data-set-id] :as db} :db} [_ dataset-id-arg]]
-    (let [id (if dataset-id-arg dataset-id-arg data-set-id)]
-      {:db               (assoc db ::spec/data-set-id id)
-       ::cimi-api-fx/get [(str "data-set/" id)
-                          #(do (dispatch [::set-data-set %])
-                               (dispatch [::get-data-records (:data-record-filter %)]))]})))
+  (fn [{{:keys [::spec/data-set-id]} :db} _]
+    {::cimi-api-fx/get [(str "data-set/" data-set-id)
+                        #(do (dispatch [::set-data-set %])
+                             (dispatch [::get-data-records (:data-record-filter %)]))]}))
 
 
 (reg-event-db
@@ -76,7 +85,6 @@
 
 (reg-event-fx
   ::get-data-object
-  (fn [{db :db} [_ data-object-id]]
-    {:db               db
-     ::cimi-api-fx/get [data-object-id
+  (fn [_ [_ data-object-id]]
+    {::cimi-api-fx/get [data-object-id
                         #(dispatch [::set-data-object %])]}))

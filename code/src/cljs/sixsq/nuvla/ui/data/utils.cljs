@@ -57,3 +57,11 @@
 (defn data-record-href
   [id]
   (str "data/" (general-utils/id->uuid id)))
+
+
+(defn get-query-params
+  [full-text-search page elements-per-page]
+  {:first   (inc (* (dec page) elements-per-page))
+   :last    (* page elements-per-page)
+   :orderby "created:desc"
+   :filter  (general-utils/fulltext-query-string full-text-search)})

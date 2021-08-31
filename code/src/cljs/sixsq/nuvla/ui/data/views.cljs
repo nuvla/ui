@@ -1,12 +1,11 @@
 (ns sixsq.nuvla.ui.data.views
   (:require
     [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
     [sixsq.nuvla.ui.apps.utils :as application-utils]
     [sixsq.nuvla.ui.data.events :as events]
     [sixsq.nuvla.ui.data.subs :as subs]
     [sixsq.nuvla.ui.data.utils :as utils]
-    [sixsq.nuvla.ui.data-record.views :as data-record]
+    [sixsq.nuvla.ui.data-set.views :as data-set-views]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as deployment-dialog-subs]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
@@ -19,20 +18,12 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
-(defn refresh-credentials []
-  (dispatch [::events/get-credentials]))
-
-
-(defn refresh-data-sets []
-  (dispatch [::events/get-data-sets]))
-
-
 (defn refresh []
-  (refresh-credentials)
-  (refresh-data-sets))
+  (dispatch [::events/refresh]))
 
 
 (defn ProcessButton
@@ -49,63 +40,18 @@
                               [::events/open-application-select-modal]])}])))
 
 
-(defn SearchHeader []
-  (let [tr          (subscribe [::i18n-subs/tr])
-        time-period (subscribe [::subs/time-period])
-        locale      (subscribe [::i18n-subs/locale])]
-    (fn []
-      (let [[time-start time-end] @time-period]
-        [ui/Form
-         [ui/FormGroup {:widths 3}
-          [ui/FormField
-           ;; FIXME: Find a better way to set the field width.
-           [ui/DatePicker {:custom-input     (r/as-element [ui/Input {:label (@tr [:from])
-                                                                      :style {:min-width "25em"}}])
-                           :selected         time-start
-                           :start-date       time-start
-                           :end-date         time-end
-                           :max-date         time-end
-                           :selects-start    true
-                           :show-time-select true
-                           :time-format      "HH:mm"
-                           :time-intervals   15
-                           :locale           @locale
-                           :fixed-height     true
-                           :date-format      "LLL"
-                           :on-change        #(dispatch [::events/set-time-period [% time-end]])}]]
-          ;; FIXME: Find a better way to set the field width.
-          [ui/FormField
-           [ui/DatePicker {:custom-input     (r/as-element [ui/Input {:label (@tr [:to])
-                                                                      :style {:min-width "25em"}}])
-                           :selected         time-end
-                           :start-date       time-start
-                           :end-date         time-end
-                           :min-date         time-start
-                           :max-date         (time/now)
-                           :selects-end      true
-                           :show-time-select true
-                           :time-format      "HH:mm"
-                           :time-intervals   15
-                           :locale           @locale
-                           :fixed-height     true
-                           :date-format      "LLL"
-                           :on-change        #(dispatch
-                                                [::events/set-time-period [time-start %]])}]]
-          [ui/FormField
-           [main-components/SearchInput
-            {:on-change (ui-callback/input-callback
-                          #(dispatch [::events/set-full-text-search %]))}]]]]))))
-
-
 (defn MenuBar []
-  [:div
-   [main-components/StickyBar
-    [ui/Menu {:attached "top", :borderless true}
-     [ProcessButton]
-     [main-components/RefreshMenu
-      {:on-refresh #(dispatch [::events/get-data-sets])}]]]
-   [ui/Segment
-    [SearchHeader]]])
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:div
+     [main-components/StickyBar
+      [ui/Menu {:attached "top", :borderless true}
+       [ProcessButton]
+       [main-components/RefreshMenu
+        {:on-refresh refresh}]]]
+     [:div {:style {:padding "10px 0"}}
+      [ui/Message {:info true}
+       (@tr [:data-set-search-message])]
+      [data-set-views/SearchHeader refresh ::events/set-full-text-search ::subs/full-text-search]]]))
 
 
 (defn ApplicationListItem
@@ -269,25 +215,43 @@
 
 (defn QueriesCardsGroup
   []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        data-sets (subscribe [::subs/data-sets])]
-    [ui/Segment style/basic
-     (when (not (seq @data-sets))
-       [ui/Message {:warning true}
-        [ui/Icon {:name "warning sign"}]
-        (@tr [:no-datasets])])
-     (when (seq @data-sets)
-       (vec (concat [ui/CardGroup {:centered true}]
-                    (map (fn [data-set]
-                           [DataSetCard data-set])
-                         (vals @data-sets)))))]))
+  (let [tr                (subscribe [::i18n-subs/tr])
+        data-sets         (subscribe [::subs/data-sets])
+        elements-per-page (subscribe [::subs/elements-per-page])
+        page              (subscribe [::subs/page])
+        loading?          (subscribe [::subs/loading?])
+        total             (subscribe [::subs/total])]
+    (fn []
+      (let [total-elements @total
+            total-pages    (utils-general/total-pages total-elements @elements-per-page)]
+        (if @loading?
+          [ui/Loader {:active true
+                      :inline "centered"}]
+          [:<>
+           [:div style/center-items
+            (if (not (seq @data-sets))
+              [ui/Message {:warning true}
+               [ui/Icon {:name "warning sign"}]
+               (@tr [:no-datasets])]
+              (vec (concat [ui/CardGroup {:centered    true
+                                          :itemsPerRow 4}]
+                           (map (fn [data-set]
+                                  [DataSetCard data-set])
+                                (vals @data-sets)))))]
+           [uix/Pagination {:totalitems   total-elements
+                            :totalPages   total-pages
+                            :activePage   @page
+                            :onPageChange (ui-callback/callback
+                                            :activePage
+                                            #(dispatch [::events/set-page %]))}]])))))
 
 
 (defn MainActionButton
   []
   (let [tr        (subscribe [::i18n-subs/tr])
         data-sets (subscribe [::subs/selected-data-set-ids])]
-    [ui/ButtonGroup {:primary true}
+    [ui/ButtonGroup {:primary true
+                     :style   {:padding-top 10}}
      [ui/Button
       {:content  (@tr [:process])
        :disabled (not (seq @data-sets))
@@ -296,7 +260,7 @@
                              [::events/open-application-select-modal]])}]]))
 
 
-(defn DataSetResources
+(defn Data
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment style/basic
@@ -314,5 +278,5 @@
   (let [[_ uuid] path
         n (count path)]
     (case n
-      2 [data-record/DataRecords uuid]
-      [DataSetResources])))
+      2 [data-set-views/DataSet uuid]
+      [Data])))

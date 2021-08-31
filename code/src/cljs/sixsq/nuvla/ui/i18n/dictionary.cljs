@@ -188,7 +188,7 @@
         :data                                          "data"
         :data-binding                                  "Data Binding"
         :data-record-filter                            "data record filter"
-        :data-set-search-message                       "From/To filters on data records (aka objects inside datasets), while search filters datasets themselves"
+        :data-set-search-message                       "From/To filters on data records (aka objects inside datasets), while Search filters datasets themselves"
         :data-processing                               "Data processing"
         :data-resource-type                            "resource type"
         :data-set                                      "dataset"

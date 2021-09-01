@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Fix bug where dropdown in the share tab for NuvlaBox where trimmed
+
 ## [2.21.0] - 2021-08-31
 
 ### Changed

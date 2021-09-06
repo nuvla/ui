@@ -489,7 +489,7 @@
                                                                  :vpn-server-id %))
                                    :options     @vpn-infra-opts}]]]]]
 
-                 [ui/Checkbox {:slider    true
+                 [ui/Checkbox {:toggle    true
                                :label     (@tr [:nuvlabox-modal-add-ssh-key])
                                :checked   @ssh-toggle
                                :on-change #(do

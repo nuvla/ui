@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.edge.views
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.edge.views-clusters :as views-clusters]
@@ -13,7 +13,7 @@
     [sixsq.nuvla.ui.edge.views-utils :as views-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -59,13 +59,13 @@
                         :width      "100%"}}
           [ui/StatisticGroup (merge {:widths (if clickable? nil 4) :size "tiny"} style/center-block)
            [:<>
-            [main-components/StatisticState total ["fas fa-box"] "TOTAL"
+            [components/StatisticState total ["fas fa-box"] "TOTAL"
              clickable? ::events/set-state-selector ::subs/state-selector]
-            [main-components/StatisticState online [(utils/status->icon utils/status-online)] utils/status-online
+            [components/StatisticState online [(utils/status->icon utils/status-online)] utils/status-online
              clickable? "green" ::events/set-state-selector ::subs/state-selector]
-            [main-components/StatisticState offline [(utils/status->icon utils/status-offline) "fas fa-slash"]
+            [components/StatisticState offline [(utils/status->icon utils/status-offline) "fas fa-slash"]
              utils/status-offline clickable? "red" ::events/set-state-selector ::subs/state-selector]
-            [main-components/StatisticState unknown [(utils/status->icon utils/status-unknown)]
+            [components/StatisticState unknown [(utils/status->icon utils/status-unknown)]
              utils/status-unknown clickable? "yellow" ::events/set-state-selector ::subs/state-selector]
             (when clickable?
               [:span
@@ -92,26 +92,24 @@
                        :display    "block"
                        :text-align "center"
                        :width      "100%"}}
-              [main-components/StatisticState new [(utils/state->icon utils/state-new)]
+              [components/StatisticState new [(utils/state->icon utils/state-new)]
                utils/state-new clickable? ::events/set-state-selector ::subs/state-selector]
-              [main-components/StatisticState activated [(utils/state->icon utils/state-activated)]
+              [components/StatisticState activated [(utils/state->icon utils/state-activated)]
                utils/state-activated clickable? ::events/set-state-selector ::subs/state-selector]
-              [main-components/StatisticState commissioned [(utils/state->icon utils/state-commissioned)]
+              [components/StatisticState commissioned [(utils/state->icon utils/state-commissioned)]
                utils/state-commissioned clickable? ::events/set-state-selector ::subs/state-selector]
-              [main-components/StatisticState decommissioning [(utils/state->icon utils/state-decommissioning)]
+              [components/StatisticState decommissioning [(utils/state->icon utils/state-decommissioning)]
                utils/state-decommissioning clickable? ::events/set-state-selector ::subs/state-selector]
-              [main-components/StatisticState decommissioned [(utils/state->icon utils/state-decommissioned)]
+              [components/StatisticState decommissioned [(utils/state->icon utils/state-decommissioned)]
                utils/state-decommissioned clickable? ::events/set-state-selector ::subs/state-selector]
-              [main-components/StatisticState error [(utils/state->icon utils/state-error)]
+              [components/StatisticState error [(utils/state->icon utils/state-error)]
                utils/state-error clickable? ::events/set-state-selector ::subs/state-selector]]])])))))
 
 
 (defn MenuBar []
-  (let [loading?      (subscribe [::subs/loading?])
-        refresh-event ::events/refresh-root]
-    (dispatch [refresh-event])
+  (let [loading?      (subscribe [::subs/loading?])]
     (fn []
-      [main-components/StickyBar
+      [components/StickyBar
        [ui/Menu {:borderless true, :stackable true}
         [views-utils/AddButton]
         [ui/MenuItem {:icon     "grid layout"
@@ -126,7 +124,7 @@
         [ui/MenuItem {:active   (= @view-type :cluster)
                       :on-click #(dispatch [::history-events/navigate "edge/nuvlabox-cluster"])}
          [ui/Icon {:className "fas fa-chart-network"}]]
-        [main-components/RefreshMenu
+        [components/RefreshMenu
          {:action-id  events/refresh-id
           :loading?   @loading?
           :on-refresh #(dispatch [::events/refresh-root])}]]])))
@@ -818,27 +816,33 @@
 
 (defn NuvlaBoxes
   []
+  (dispatch-sync [::events/set-loading? true])
+  (dispatch [::events/refresh-root])
   (let [tr        (subscribe [::i18n-subs/tr])
-        full-text (subscribe [::subs/full-text-search])]
-    [:<>
-     [uix/PageHeader "box" (general-utils/capitalize-first-letter (@tr [:edge]))]
-     [MenuBar]
-     [:div {:style {:display "flex"}}
-      [main-components/SearchInput
-       {:default-value @full-text
-        :on-change     (ui-callback/input-callback
-                         #(dispatch [::events/set-full-text-search %]))
-        :style         {:display    "inline-table"
-                        :margin-top "20px"}}]
-      [StatisticStates]
-      [ui/Input {:style {:visibility "hidden"}
-                 :icon  "search"}]]
-     (case @view-type
-       :cards [NuvlaboxCards]
-       :table [NuvlaboxTable]
-       :map [NuvlaboxMap])
-     (when-not (= @view-type :map)
-       [Pagination])]))
+        full-text (subscribe [::subs/full-text-search])
+        loading?  (subscribe [::subs/loading?])]
+    (fn []
+      [components/LoadingContent @loading?
+       [components/DimmableContent "nuvlaboxes"
+        [:<>
+         [uix/PageHeader "box" (general-utils/capitalize-first-letter (@tr [:edge]))]
+         [MenuBar]
+         [:div {:style {:display "flex"}}
+          [components/SearchInput
+           {:default-value @full-text
+            :on-change     (ui-callback/input-callback
+                             #(dispatch [::events/set-full-text-search %]))
+            :style         {:display    "inline-table"
+                            :margin-top "20px"}}]
+          [StatisticStates]
+          [ui/Input {:style {:visibility "hidden"}
+                     :icon  "search"}]]
+         (case @view-type
+           :cards [NuvlaboxCards]
+           :table [NuvlaboxTable]
+           :map [NuvlaboxMap])
+         (when-not (= @view-type :map)
+           [Pagination])]]])))
 
 
 (defmethod panel/render :edge
@@ -850,7 +854,7 @@
                    3 [views-cluster/ClusterView path2]
                    2 [DetailedView path1]
                    [NuvlaBoxes])]
-    [ui/DimmerDimmable {:style {:overflow "visible"}}
+    [:<>
      [ui/Segment style/basic
       children]
      [AddModalWrapper]]))

@@ -1,11 +1,10 @@
 (ns sixsq.nuvla.ui.apps-store.views
   (:require
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
     [sixsq.nuvla.ui.apps-store.events :as events]
     [sixsq.nuvla.ui.apps-store.subs :as subs]
-    [sixsq.nuvla.ui.apps-store.utils :as utils]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
@@ -15,7 +14,7 @@
     [sixsq.nuvla.ui.deployment.views :as deployment-views]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as utils-general]
@@ -28,14 +27,14 @@
 
 (defn RefreshMenu
   []
-  [main-components/RefreshMenu
+  [components/RefreshMenu
    {:on-refresh #(do (dispatch [::events/get-modules]))}])
 
 
 (defn RefreshMyAppsMenu
   []
   (let [owner (subscribe [::session-subs/active-claim])]
-    [main-components/RefreshMenu
+    [components/RefreshMenu
      {:on-refresh #(dispatch [::events/get-my-modules owner])}]))
 
 
@@ -92,7 +91,7 @@
   (let [full-text (subscribe [::subs/full-text-search-published])]
     [ui/Menu {:secondary true}
      [ui/MenuMenu {:position "left"}
-      [main-components/SearchInput
+      [components/SearchInput
        {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search-published %]))
         :default-value @full-text}]]
      [RefreshMenu]]))
@@ -103,7 +102,7 @@
   (let [full-text (subscribe [::subs/full-text-search-all-apps])]
     [ui/Menu {:secondary true}
      [ui/MenuMenu {:position "left"}
-      [main-components/SearchInput
+      [components/SearchInput
        {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search-all-apps %]))
         :default-value @full-text}]]
      [RefreshMenu]]))
@@ -114,7 +113,7 @@
   (let [full-text (subscribe [::subs/full-text-search-my])]
     [ui/Menu {:secondary true}
      [ui/MenuMenu {:position "left"}
-      [main-components/SearchInput
+      [components/SearchInput
        {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search-my %]))
         :default-value @full-text}]]
      [RefreshMyAppsMenu]]))
@@ -131,57 +130,69 @@
 
 
 (defn TabNavigator []
-  (let [module (subscribe [::apps-subs/module])]
+  (let [module   (subscribe [::apps-subs/module])
+        loading? (subscribe [::apps-subs/loading?])]
+    (dispatch-sync [::apps-events/set-loading? true])
     (dispatch [::apps-events/get-module])
     (fn []
-      [:<>
-       [apps-views-detail/AddModal]
-       [apps-views-detail/format-error @module]
-       [ui/TabPane
-        [ControlBarProjects]
-        (when (and @module (not (instance? js/Error @module)))
-          (let [{:keys [children]} @module]
-            [apps-project-views/format-module-children children]))]])))
+      [components/LoadingContent @loading?
+       [components/DimmableContent "navigator-tab"
+        [:<>
+         [apps-views-detail/AddModal]
+         [apps-views-detail/format-error @module]
+         [ui/TabPane
+          [ControlBarProjects]
+          (when (and @module (not (instance? js/Error @module)))
+            (let [{:keys [children]} @module]
+              [apps-project-views/format-module-children children]))]]]])))
 
 
 (defn TabAppStore
   []
   (let [modules           (subscribe [::subs/published-modules])
         elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])]
+        page              (subscribe [::subs/page])
+        loading?          (subscribe [::apps-subs/loading?])]
+    (dispatch-sync [::apps-events/set-loading? true])
     (dispatch [::events/get-published-modules])
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (utils-general/total-pages total-modules @elements-per-page)]
-        [ui/Segment
-         [AppStoreControlBar]
-         [ModulesCardsGroup (get @modules :resources []) false]
-         [uix/Pagination
-          {:totalitems   total-modules
-           :totalPages   total-pages
-           :activePage   @page
-           :onPageChange (ui-callback/callback
-                           :activePage #(dispatch [::events/set-page-published-modules %]))}]]))))
+        [components/LoadingContent @loading?
+         [components/DimmableContent "appstore-tab"
+          [ui/Segment
+           [AppStoreControlBar]
+           [ModulesCardsGroup (get @modules :resources []) false]
+           [uix/Pagination
+            {:totalitems   total-modules
+             :totalPages   total-pages
+             :activePage   @page
+             :onPageChange (ui-callback/callback
+                             :activePage #(dispatch [::events/set-page-published-modules %]))}]]]]))))
 
 
 (defn TabAllApps
   []
   (let [modules           (subscribe [::subs/modules])
         elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])]
+        page              (subscribe [::subs/page])
+        loading?          (subscribe [::apps-subs/loading?])]
+    (dispatch-sync [::apps-events/set-loading? true])
     (dispatch [::events/get-modules])
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (utils-general/total-pages total-modules @elements-per-page)]
-        [ui/TabPane
-         [AllAppsControlBar]
-         [ModulesCardsGroup (get @modules :resources []) true]
-         [uix/Pagination
-          {:totalitems   total-modules
-           :totalPages   total-pages
-           :activePage   @page
-           :onPageChange (ui-callback/callback
-                           :activePage #(dispatch [::events/set-page-all-modules %]))}]]))))
+        [components/LoadingContent @loading?
+         [components/DimmableContent "allapps-tab"
+          [ui/TabPane
+           [AllAppsControlBar]
+           [ModulesCardsGroup (get @modules :resources []) true]
+           [uix/Pagination
+            {:totalitems   total-modules
+             :totalPages   total-pages
+             :activePage   @page
+             :onPageChange (ui-callback/callback
+                             :activePage #(dispatch [::events/set-page-all-modules %]))}]]]]))))
 
 
 (defn TabMyApps
@@ -190,23 +201,27 @@
         modules           (subscribe [::subs/my-modules])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])
+        loading?          (subscribe [::apps-subs/loading?])
         search            (subscribe [::subs/full-text-search-my])
         {:keys [resource tab-index tab-index-event]} dashboard-utils/target-navigator]
+    (dispatch-sync [::apps-events/set-loading? true])
     (dispatch [::events/get-my-modules])
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (utils-general/total-pages total-modules @elements-per-page)]
         [ui/TabPane
          (if (or (pos? total-modules) (seq @search))
-           [:<>
-            [MyAppsControlBar]
-            [ModulesCardsGroup (get @modules :resources []) true]
-            [uix/Pagination
-             {:totalitems   total-modules
-              :totalPages   total-pages
-              :activePage   @page
-              :onPageChange (ui-callback/callback
-                              :activePage #(dispatch [::events/set-page-my-modules %]))}]]
+           [components/LoadingContent @loading?
+            [components/DimmableContent "myapps-tab"
+             [:<>
+              [MyAppsControlBar]
+              [ModulesCardsGroup (get @modules :resources []) true]
+              [uix/Pagination
+               {:totalitems   total-modules
+                :totalPages   total-pages
+                :activePage   @page
+                :onPageChange (ui-callback/callback
+                                :activePage #(dispatch [::events/set-page-my-modules %]))}]]]]
            [:<>
             [uix/WarningMsgNoElements (@tr [:no-apps-available])]
             [ui/Container {:textAlign "center"}
@@ -226,55 +241,7 @@
      [deployment-views/DeploymentsMainContent]]))
 
 
-(defn TabDiscoverSection
-  [icon-name section-key modules dispatch-list section-message]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment
-     [ui/Grid {:columns   "equal"
-               :stackable true}
-      [ui/GridRow
-       [ui/GridColumn {:floated "left"}
-        [:div {:style {:padding-bottom 10}}
-         [:h2
-          [ui/Icon {:className icon-name}]
-          (utils-general/capitalize-words (@tr [section-key]))
-          [ui/Label {:circular true
-                     :size     "mini"}
-           (:count modules)]]]]
-       [ui/GridColumn
-        [ui/Message {:info true} (@tr [section-message])]]
-       [ui/GridColumn {:only    "computer tablet"
-                       :floated "left"}
-        [ui/Button {:floated  "right"
-                    :primary  true
-                    :on-click #(dispatch dispatch-list)} "See more"]]]
-      [ui/GridRow
-       [ui/GridColumn
-        [ModulesCardsGroup (take 4 (get modules :resources []))]]]
-      [ui/GridRow {:only "mobile"}
-       [ui/GridColumn {:textAlign "center"}
-        [ui/Button {:primary  true
-                    :on-click #(dispatch dispatch-list)} "See more"]]]]]))
-
-
-(defn TabDiscover
-  []
-  (let [published-modules (subscribe [::subs/published-modules])
-        all-my-modules    (subscribe [::subs/my-modules])]
-    (dispatch [::events/get-published-modules ""])
-    (dispatch [::events/get-my-modules ""])
-    (fn []
-      [:<>
-       [TabDiscoverSection "fas fa-store", :appstore, @published-modules,
-        [::events/set-active-tab-index utils/tab-app-store], :discover-published-apps-message]
-       ;[TabDiscoverSection "fas fa-th", :all-apps, @modules,
-       ; [::events/set-active-tab-index utils/tab-all-apps], :discover-all-apps-message]
-       (when (pos? (:count @all-my-modules 0))
-         [TabDiscoverSection "user" :my-apps, @all-my-modules,
-          [::events/set-active-tab-index utils/tab-my-apps], :discover-my-apps-message])])))
-
-
-(defn Tabs
+(defn tabs
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [
@@ -316,7 +283,7 @@
                       :style     {:display        "flex"
                                   :flex-direction "row"
                                   :flex-wrap      "wrap"}}
-        :panes       (Tabs)
+        :panes       (tabs)
         :activeIndex @active-index
         :onTabChange (fn [_ data]
                        (let [active-index (. data -activeIndex)]

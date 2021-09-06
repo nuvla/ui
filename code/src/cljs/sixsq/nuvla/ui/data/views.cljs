@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.data.views
   (:require
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [sixsq.nuvla.ui.apps.utils :as application-utils]
     [sixsq.nuvla.ui.data.events :as events]
     [sixsq.nuvla.ui.data.subs :as subs]
@@ -262,19 +262,24 @@
 
 (defn Data
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment style/basic
-     [uix/PageHeader "database" (@tr [:data-processing])]
-     [MenuBar]
-     [ApplicationSelectModal]
-     [deployment-dialog-views/deploy-modal true]
-     [QueriesCardsGroup]
-     [MainActionButton]]))
+  (dispatch-sync [::events/set-loading? true])
+  (refresh)
+  (let [tr       (subscribe [::i18n-subs/tr])
+        loading? (subscribe [::subs/loading?])]
+    (fn []
+      [main-components/LoadingContent @loading?
+       [main-components/DimmableContent "data-root"
+        [ui/Segment style/basic
+         [uix/PageHeader "database" (@tr [:data-processing])]
+         [MenuBar]
+         [ApplicationSelectModal]
+         [deployment-dialog-views/deploy-modal true]
+         [QueriesCardsGroup]
+         [MainActionButton]]]])))
 
 
 (defmethod panel/render :data
   [path]
-  (refresh)
   (let [[_ uuid] path
         n (count path)]
     (case n

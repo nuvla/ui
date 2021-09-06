@@ -61,7 +61,7 @@
                           ::select-all?
                           ::bulk-jobs-monitored]))
 
-(def defaults {::loading?                false
+(def defaults {::loading?                true
                ::page                    1
                ::elements-per-page       8
                ::full-text-search        nil

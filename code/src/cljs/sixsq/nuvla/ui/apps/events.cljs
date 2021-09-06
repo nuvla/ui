@@ -27,6 +27,12 @@
 (def refresh-action-get-deployment :apps-get-deployment)
 
 
+(reg-event-db
+  ::set-loading?
+  (fn [db [_ loading?]]
+    (assoc db ::spec/loading? loading?)))
+
+
 (reg-event-fx
   ::refresh
   (fn [{{:keys [::spec/version] :as db} :db} [_ page-changed?]]
@@ -187,7 +193,8 @@
       {:db                  (cond-> db
                                     true (assoc ::spec/completed? false)
                                     requested-version (assoc ::spec/version requested-version))
-       ::apps-fx/get-module [path v #(dispatch [::set-module %])]})))
+       ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
+                                         (dispatch [::set-loading? false]))]})))
 
 
 (reg-event-db

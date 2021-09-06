@@ -226,3 +226,21 @@
                    :icon    "warning circle"
                    :header  (@tr [message-header])
                    :content (@tr [message-content])}]]]))
+
+
+(defn LoadingContent
+  [loading? content]
+  (if loading?
+    [ui/Loader {:active true :size "massive"
+                :style  {:position "fixed"
+                         :top      "50%"
+                         :left     "50%"}}]
+    content))
+
+
+(defn DimmableContent
+  [uuid content]
+  ^{:key uuid}
+  [ui/DimmerDimmable
+   {:style {:overflow "visible"}}
+   content])

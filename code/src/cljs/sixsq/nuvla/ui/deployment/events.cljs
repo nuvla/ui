@@ -19,13 +19,16 @@
 (def refresh-action-nuvlaboxes-id :dashboard-get-nuvlaboxes-summary)
 
 
+(reg-event-db
+  ::set-loading?
+  (fn [db [_ loading?]]
+    (assoc db ::spec/loading? loading?)))
+
+
 (reg-event-fx
   ::refresh
-  (fn [{db :db} [_ {:keys [init? nuvlabox]}]]
-    {:db (cond-> db
-                 init? (merge spec/defaults)
-                 nuvlabox (assoc ::spec/nuvlabox nuvlabox))
-     :fx [[:dispatch [::main-events/action-interval-start
+  (fn [{_db :db} [_]]
+    {:fx [[:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-summary-id
                        :frequency 20000
                        :event     [::get-deployments-summary]}]]

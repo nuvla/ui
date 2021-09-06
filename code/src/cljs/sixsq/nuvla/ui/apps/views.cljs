@@ -11,11 +11,10 @@
     [sixsq.nuvla.ui.apps.views-detail :as views-detail]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.deployment.events :as deployment-events]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [taoensso.timbre :as timbre]))
 
@@ -71,14 +70,15 @@
 
 (defmethod panel/render :apps
   [_path]
+  (dispatch [::events/set-loading? true])
   (timbre/set-level! :info)
-  [ui/DimmerDimmable {:style {:overflow "visible"}}
+  [:<>
    [utils-validation/validation-error-message ::subs/form-valid?]
    [views-detail/AddModal]
    [views-detail/save-modal]
    [views-detail/logo-url-modal]
    [deployment-dialog-views/deploy-modal]
-   [main-components/NotFoundPortal
+   [components/NotFoundPortal
     ::subs/module-not-found?
     :no-module-message-header
     :no-module-message-content]

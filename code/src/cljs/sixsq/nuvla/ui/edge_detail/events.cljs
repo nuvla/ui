@@ -20,9 +20,9 @@
 
 
 (reg-event-db
-  ::set-loading
-  (fn [db _]
-    (assoc db ::spec/loading? true)))
+  ::set-loading?
+  (fn [db loading?]
+    (assoc db ::spec/loading? loading?)))
 
 
 (reg-event-db

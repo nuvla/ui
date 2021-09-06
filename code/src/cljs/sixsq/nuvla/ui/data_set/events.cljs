@@ -6,6 +6,12 @@
     [sixsq.nuvla.ui.data-set.utils :as utils]))
 
 
+(reg-event-db
+  ::set-loading?
+  (fn [db [_ loading?]]
+    (assoc db ::spec/loading? loading?)))
+
+
 (reg-event-fx
   ::refresh
   (fn [_ _]

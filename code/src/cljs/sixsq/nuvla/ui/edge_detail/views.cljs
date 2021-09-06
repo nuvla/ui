@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.edge-detail.views
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
@@ -16,7 +16,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.job.subs :as job-subs]
     [sixsq.nuvla.ui.job.views :as job-views]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.forms :as forms]
@@ -277,14 +277,14 @@
              [ui/FormField
               [:label
                [general-utils/mandatory-name (@tr [:config-files])]
-               [main-components/InfoPopup (@tr [:config-file-info])]]
+               [components/InfoPopup (@tr [:config-file-info])]]
               [ui/TextArea {:placeholder   "docker-compose.yml\ndocker-compose.gpu.yml\n..."
                             :required      true
                             :default-value (:config-files @form-data)
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :config-files %))}]]
              [ui/FormField
-              [:label (@tr [:env-variables]) " " [main-components/InfoPopup (@tr [:env-variables-info])]]
+              [:label (@tr [:env-variables]) " " [components/InfoPopup (@tr [:env-variables-info])]]
               [ui/TextArea {:placeholder   "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
                             :default-value (:environment @form-data)
                             :on-change     (ui-callback/input-callback
@@ -471,7 +471,7 @@
         nuvlabox          (subscribe [::subs/nuvlabox])
         loading?          (subscribe [::subs/loading?])]
     (fn []
-      [main-components/StickyBar
+      [components/StickyBar
        [ui/Menu {:borderless true, :stackable true}
         (when @can-decommission?
           [DecommissionButton @nuvlabox])
@@ -481,7 +481,7 @@
         [cimi-detail-views/format-operations @nuvlabox #{"edit" "delete" "activate" "decommission"
                                                          "commission" "check-api"}]
 
-        [main-components/RefreshMenu
+        [components/RefreshMenu
          {:action-id  refresh-action-id
           :loading?   @loading?
           :on-refresh #(refresh uuid)}]]])))
@@ -1541,25 +1541,21 @@
 
 (defn EdgeDetails
   [uuid]
-  (dispatch [::events/set-loading])
+  (dispatch-sync [::events/set-loading? true])
   (refresh uuid)
   (let [nb-status (subscribe [::subs/nuvlabox-status])
         loading?  (subscribe [::subs/loading?])]
     (fn [uuid]
-      (if @loading?
-        [ui/Loader {:active true :size "massive"
-                    :style  {:position "fixed"
-                             :top      "50%"
-                             :left     "50%"}}]
-        ^{:key uuid}
-        [ui/DimmerDimmable {:style {:overflow "visible"}}
-         [main-components/NotFoundPortal
+      [components/LoadingContent @loading?
+       [components/DimmableContent uuid
+        [:<>
+         [components/NotFoundPortal
           ::subs/nuvlabox-not-found?
           :no-nuvlabox-message-header
           :no-nuvlabox-message-content]
          [ui/Container {:fluid true}
           [PageHeader]
           [MenuBar uuid]
-          [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
+          [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
           [job-views/ProgressJobAction @nb-status]
-          [TabsNuvlaBox]]]))))
+          [TabsNuvlaBox]]]]])))

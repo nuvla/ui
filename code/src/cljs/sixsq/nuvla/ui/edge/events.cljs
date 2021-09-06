@@ -14,6 +14,13 @@
 (def refresh-id-cluster :nuvlabox-get-nuvlabox-cluster)
 (def refresh-id-clusters :nuvlabox-get-nuvlabox-clusters)
 
+
+(reg-event-db
+  ::set-loading?
+  (fn [db loading?]
+    (assoc db ::spec/loading? loading?)))
+
+
 (reg-event-fx
   ::refresh-root
   (fn [_ _]
@@ -79,9 +86,8 @@
   (fn [{{:keys [::spec/state-selector
                 ::spec/page
                 ::spec/elements-per-page
-                ::spec/full-text-search] :as db} :db} _]
-    {:db                  (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search [:nuvlabox
+                ::spec/full-text-search] :as _db} :db} _]
+    {::cimi-api-fx/search [:nuvlabox
                            (utils/get-query-params full-text-search page elements-per-page
                                                    state-selector)
                            #(dispatch [::set-nuvlaboxes %])]}))
@@ -97,9 +103,8 @@
                                      status (str " (" status ")"))
                     :content message
                     :type    :error})])
-      (cond->
-        {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-                       ::spec/loading? false)}))))
+      {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
+                     ::spec/loading? false)})))
 
 
 (reg-event-fx
@@ -110,9 +115,8 @@
 
 (reg-event-fx
   ::get-nuvlaboxes-summary
-  (fn [{{:keys [::spec/full-text-search] :as db} :db} _]
-    {:db                  (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search [:nuvlabox
+  (fn [{{:keys [::spec/full-text-search] :as _db} :db} _]
+    {::cimi-api-fx/search [:nuvlabox
                            (utils/get-query-aggregation-params
                              full-text-search
                              "terms:online,terms:state"
@@ -129,9 +133,8 @@
 (reg-event-fx
   ::get-nuvlabox-cluster-summary
   (fn [{{:keys [::spec/full-text-search
-                ::spec/nuvlabox-cluster] :as db} :db} _]
-    {:db                  (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search [:nuvlabox
+                ::spec/nuvlabox-cluster] :as _db} :db} _]
+    {::cimi-api-fx/search [:nuvlabox
                            (utils/get-query-aggregation-params
                              full-text-search
                              "terms:online,terms:state"
@@ -162,9 +165,8 @@
   ::get-nuvlabox-clusters
   (fn [{{:keys [::spec/page
                 ::spec/elements-per-page
-                ::spec/full-text-clusters-search] :as db} :db} _]
-    {:db                  (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search [:nuvlabox-cluster
+                ::spec/full-text-clusters-search] :as _db} :db} _]
+    {::cimi-api-fx/search [:nuvlabox-cluster
                            (utils/get-query-params full-text-clusters-search page elements-per-page nil)
                            #(dispatch [::set-nuvlabox-clusters %])]}))
 
@@ -177,9 +179,8 @@
 
 (reg-event-fx
   ::get-nuvlaboxes-summary-all
-  (fn [{db :db} _]
-    {:db                  (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search [:nuvlabox
+  (fn [{_db :db} _]
+    {::cimi-api-fx/search [:nuvlabox
                            (utils/get-query-aggregation-params nil "terms:online,terms:state" nil)
                            #(dispatch [::set-nuvlaboxes-summary-all %])]}))
 

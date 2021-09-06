@@ -9,6 +9,12 @@
 
 
 (reg-sub
+  ::loading?
+  (fn [db]
+    (::spec/loading? db)))
+
+
+(reg-sub
   ::module-common
   (fn [db]
     (::spec/module-common db)))

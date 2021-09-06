@@ -10,6 +10,11 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
+(reg-event-db
+  ::set-loading?
+  (fn [db [_ loading?]]
+    (assoc db ::spec/loading? loading?)))
+
 
 (reg-event-fx
   ::refresh
@@ -155,7 +160,9 @@
   (fn [{{:keys [::spec/full-text-search
                 ::spec/page
                 ::spec/elements-per-page]} :db} _]
-    {::cimi-api-fx/search [:data-set (utils/get-query-params full-text-search page elements-per-page) #(dispatch [::set-data-sets %])]}))
+    {::cimi-api-fx/search [:data-set (utils/get-query-params full-text-search page elements-per-page)
+                           #(do (dispatch [::set-data-sets %])
+                                (dispatch [::set-loading? false]))]}))
 
 
 (reg-event-db

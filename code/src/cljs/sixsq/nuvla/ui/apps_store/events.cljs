@@ -1,11 +1,18 @@
 (ns sixsq.nuvla.ui.apps-store.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps-store.spec :as spec]
     [sixsq.nuvla.ui.apps-store.utils :as utils]
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.session.spec :as session-spec]))
+
+
+;(reg-event-db
+;  ::set-loading?
+;  (fn [db [_ loading?]]
+;    (assoc db ::apps-spec/loading? loading?)))
 
 
 (reg-event-db
@@ -26,7 +33,9 @@
   [cofx full-text-search elements-per-page page]
   (assoc cofx ::cimi-api-fx/search
               [:module (utils/get-published-modules-query-params full-text-search page elements-per-page)
-               #(dispatch [::set-published-modules %])]))
+               #(do
+                  (dispatch [::set-published-modules %])
+                  (dispatch [::apps-events/set-loading? false]))]))
 
 
 (reg-event-fx
@@ -35,15 +44,15 @@
                 ::spec/page
                 ::spec/elements-per-page] :as db} :db} [_ full-text-search]]
     (let [search (or full-text-search full-text-search-published)]
-      (published-modules-cofx {:db db} search elements-per-page page))))
+      (published-modules-cofx db search elements-per-page page))))
 
 
 (reg-event-fx
   ::set-full-text-search-published
   (fn [{db :db} [_ full-text-search]]
     (let [new-page 1]
-      {:db (assoc db ::spec/full-text-search-published full-text-search
-                     ::spec/page new-page)
+      {:db       (assoc db ::spec/full-text-search-published full-text-search
+                           ::spec/page new-page)
        :dispatch [::get-published-modules]})))
 
 
@@ -67,7 +76,8 @@
   [cofx owner full-text-search elements-per-page page]
   (assoc cofx ::cimi-api-fx/search
               [:module (utils/get-my-modules-query-params owner full-text-search page elements-per-page)
-               #(dispatch [::set-my-modules %])]))
+               #(do (dispatch [::set-my-modules %])
+                    (dispatch [::apps-events/set-loading? false]))]))
 
 
 (reg-event-fx
@@ -77,7 +87,7 @@
                 ::spec/page
                 ::spec/elements-per-page] :as db} :db} [_ full-text-search]]
     (let [user-id (:user session)
-          search (or full-text-search full-text-search-my)]
+          search  (or full-text-search full-text-search-my)]
       (my-modules-cofx {:db db} user-id search elements-per-page page))))
 
 
@@ -85,8 +95,8 @@
   ::set-full-text-search-my
   (fn [{db :db} [_ full-text-search]]
     (let [new-page 1]
-      {:db (assoc db ::spec/full-text-search-my full-text-search
-                     ::spec/page new-page)
+      {:db       (assoc db ::spec/full-text-search-my full-text-search
+                           ::spec/page new-page)
        :dispatch [::get-my-modules]})))
 
 
@@ -106,7 +116,8 @@
   [cofx full-text-search elements-per-page page]
   (assoc cofx ::cimi-api-fx/search
               [:module (utils/get-query-params full-text-search page elements-per-page)
-               #(dispatch [::set-modules %])]))
+               #(do (dispatch [::set-modules %])
+                    (dispatch [::apps-events/set-loading? false]))]))
 
 
 (reg-event-fx
@@ -137,8 +148,8 @@
   ::set-full-text-search-all-apps
   (fn [{db :db} [_ full-text-search]]
     (let [new-page 1]
-      {:db (assoc db ::spec/full-text-search-all-apps full-text-search
-                     ::spec/page new-page)
+      {:db       (assoc db ::spec/full-text-search-all-apps full-text-search
+                           ::spec/page new-page)
        :dispatch [::get-modules]})))
 
 

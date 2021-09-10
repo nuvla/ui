@@ -1,12 +1,12 @@
 (ns sixsq.nuvla.ui.data-set.views
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.data-set.events :as events]
     [sixsq.nuvla.ui.data-set.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -30,8 +30,7 @@
         locale      (subscribe [::i18n-subs/locale])
         full-text   (subscribe [full-text-search-subs])]
     (fn []
-      (let [;full-text2   (subscribe [full-text-search-subs])
-            [time-start time-end] @time-period
+      (let [[time-start time-end] @time-period
             date-format "MMMM DD, YYYY HH:mm"
             time-format "HH:mm"]
         [ui/Form
@@ -72,7 +71,7 @@
                            :on-change        #(do (dispatch [::events/set-time-period [time-start %]])
                                                   (refresh-fn))}]]
           [ui/FormField
-           [main-components/SearchInput
+           [components/SearchInput
             {:on-change     (ui-callback/input-callback
                               #(dispatch [full-search-event %]))
              :default-value @full-text}]]]]))))
@@ -81,9 +80,9 @@
 (defn MenuBar
   []
   [:div
-   [main-components/StickyBar
+   [components/StickyBar
     [ui/Menu {:attached "top", :borderless true}
-     [main-components/RefreshMenu
+     [components/RefreshMenu
       {:on-refresh #(refresh)}]]]])
 
 
@@ -240,14 +239,25 @@
 
 (defn DataSet
   [dataset-id]
+  (dispatch-sync [::events/set-loading? true])
   (dispatch [::events/set-data-set-id dataset-id])
   (refresh)
   (let [tr       (subscribe [::i18n-subs/tr])
         data-set (subscribe [::subs/data-set])
+        loading? (subscribe [::subs/loading?])
         name     (:name @data-set)]
-    [ui/Segment style/basic
-     [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
-     [MenuBar dataset-id]
-     [Summary]
-     [DataRecordCards]
-     [Pagination]]))
+    (fn [dataset-id]
+      [components/LoadingContent @loading?
+       [components/DimmableContent dataset-id
+        [:<>
+         [components/NotFoundPortal
+          ::subs/not-found?
+          :no-data-record-message-header
+          :no-data-record-message-content]
+         [ui/Segment style/basic
+          [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
+          [MenuBar dataset-id]
+          [Summary]
+          [DataRecordCards]
+          [Pagination]]]]])))
+

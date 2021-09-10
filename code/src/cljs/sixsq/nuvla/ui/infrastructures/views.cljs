@@ -16,7 +16,7 @@
     [sixsq.nuvla.ui.infrastructures.subs :as subs]
     [sixsq.nuvla.ui.infrastructures.utils :as utils]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -32,7 +32,7 @@
 
 (defn MenuBar []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [main-components/StickyBar
+    [components/StickyBar
      [ui/Menu {:borderless true}
       [ui/MenuMenu {:position "left"}
        [uix/MenuItem
@@ -43,7 +43,7 @@
                       (dispatch-sync [::events/reset-service-group])
                       (dispatch-sync [::events/reset-infra-service])
                       (dispatch [::events/open-add-service-modal]))}]]
-      [main-components/RefreshMenu
+      [components/RefreshMenu
        {:on-refresh #(dispatch [::events/get-infra-service-groups])}]]]))
 
 
@@ -242,7 +242,7 @@
    (ff/help-popup (r/as-element
                     [:span [:p text]
                      (when cred-subtype
-                       [:a {:href (utils/cloud-param-default-value cred-subtype :cloud-doc-link)
+                       [:a {:href   (utils/cloud-param-default-value cred-subtype :cloud-doc-link)
                             :target "_blank"} "See this link."])])
                   :on (if cred-subtype "focus" "hover"))])
 
@@ -558,16 +558,25 @@
                       :style {:max-width 112}}]]]]]])))
 
 
+(defn Infrastructures
+  []
+  (dispatch-sync [::events/set-loading? true])
+  (dispatch [::events/get-infra-service-groups])
+  (let [loading? (subscribe [::subs/loading?])]
+    (fn []
+      [components/LoadingContent @loading?
+       [:<>
+        [InfraServices]
+        [ServiceModal]
+        [AddServiceModal]]])))
+
+
 (defmethod panel/render :infrastructures
   [path]
   (timbre/set-level! :info)
-  (dispatch [::events/get-infra-service-groups])
   (let [[_ uuid] path
         n        (count path)
-        root     [:<>
-                  [InfraServices]
-                  [ServiceModal]
-                  [AddServiceModal]]
+        root     [Infrastructures]
         children (case n
                    1 root
                    2 [infra-detail/InfrastructureDetails uuid]

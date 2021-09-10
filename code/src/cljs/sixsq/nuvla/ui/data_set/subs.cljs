@@ -17,6 +17,18 @@
 
 
 (reg-sub
+  ::loading?
+  (fn [db]
+    (::spec/loading? db)))
+
+
+(reg-sub
+  ::not-found?
+  (fn [db]
+    (::spec/not-found? db)))
+
+
+(reg-sub
   ::data-records
   (fn [db]
     (::spec/data-records db)))

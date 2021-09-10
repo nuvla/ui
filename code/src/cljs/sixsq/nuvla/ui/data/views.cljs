@@ -11,7 +11,7 @@
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -35,24 +35,41 @@
        {:name     (@tr [:process])
         :disabled (not (seq @data-sets))
         :icon     "rocket"
-        :position "left"
         :on-click #(dispatch [::main-events/subscription-required-dispatch
                               [::events/open-application-select-modal]])}])))
 
 
-(defn MenuBar []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [:div
-     [main-components/StickyBar
-      [ui/Menu {:attached "top", :borderless true}
-       [ProcessButton]
-       [main-components/RefreshMenu
-        {:on-refresh refresh}]]]
-     [:div {:style {:padding "10px 0"}}
-      [ui/Message {:info true}
-       (@tr [:data-set-search-message])]
-      [data-set-views/SearchHeader refresh ::events/set-full-text-search ::subs/full-text-search]]]))
+(defn RefreshMenuItem
+  []
+  [components/RefreshMenu
+   {:on-refresh refresh}])
 
+
+(defn AddDataSet []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/MenuItem
+     {:name (@tr [:add])
+      :icon "add"
+      :on-click (fn [event]
+                  (dispatch [::history-events/navigate (utils/data-record-href "new")])
+                  (.preventDefault event))}]))
+
+
+(defn MenuBar
+  []
+  [ui/Menu {:borderless true}
+   [ProcessButton]
+   [AddDataSet]
+   [components/RefreshMenu
+    {:on-refresh refresh}]])
+
+
+(defn SearchBar []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [:div {:style {:padding "10px 0"}}
+     [ui/Message {:info true}
+      (@tr [:data-set-search-message])]
+     [data-set-views/SearchHeader refresh ::events/set-full-text-search ::subs/full-text-search]]))
 
 (defn ApplicationListItem
   [{:keys [id name description subtype created] :as _application}]
@@ -267,11 +284,12 @@
   (let [tr       (subscribe [::i18n-subs/tr])
         loading? (subscribe [::subs/loading?])]
     (fn []
-      [main-components/LoadingContent @loading?
-       [main-components/DimmableContent "data-root"
+      [components/LoadingContent @loading?
+       [components/DimmableContent "data-root"
         [ui/Segment style/basic
          [uix/PageHeader "database" (@tr [:data-processing])]
          [MenuBar]
+         [SearchBar]
          [ApplicationSelectModal]
          [deployment-dialog-views/deploy-modal true]
          [QueriesCardsGroup]

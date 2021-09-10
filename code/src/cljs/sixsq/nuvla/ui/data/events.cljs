@@ -7,7 +7,8 @@
     [sixsq.nuvla.ui.data-set.spec :as data-set-spec]
     [sixsq.nuvla.ui.deployment-dialog.events :as dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.spec :as dialog-spec]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db
@@ -19,7 +20,8 @@
 (reg-event-fx
   ::refresh
   (fn [_ _]
-    {:fx [[:dispatch [::get-credentials]]
+    {:fx [
+          ;[:dispatch [::get-credentials]]
           [:dispatch [::get-data-sets]]]}))
 
 
@@ -29,7 +31,7 @@
     (let [doc-count   (get-in response [:aggregations :value_count:id :value])
           total-bytes (get-in response [:aggregations :sum:bytes :value])]
       (-> db
-          (assoc-in [::spec/counts data-set-id] doc-count)
+          (assoc-in  [::spec/counts data-set-id] doc-count)
           (assoc-in [::spec/sizes data-set-id] total-bytes)))))
 
 
@@ -46,19 +48,18 @@
 
 (reg-event-fx
   ::fetch-all-datasets-stats
-  (fn [{{:keys [::spec/credentials
+  (fn [{{:keys [                                            ;::spec/credentials
                 ::spec/data-sets
                 ::spec/full-text-search
                 ::data-set-spec/time-period-filter]} :db} _]
-    (when (seq credentials)
-      (let [data-sets-vals  (vals data-sets)
-            full-text-query (general-utils/fulltext-query-string full-text-search)]
-        {:fx (map (fn [data-set]
-                    [:dispatch [::fetch-dataset-stats
-                                (:id data-set)
-                                (general-utils/join-and
-                                  time-period-filter full-text-query (:data-record-filter data-set))]])
-                  data-sets-vals)}))))
+    (let [data-sets-vals  (vals data-sets)
+          full-text-query (general-utils/fulltext-query-string full-text-search)]
+      {:fx (map (fn [data-set]
+                  [:dispatch [::fetch-dataset-stats
+                              (:id data-set)
+                              (general-utils/join-and
+                                time-period-filter full-text-query (:data-record-filter data-set))]])
+                data-sets-vals)})))
 
 
 (reg-event-fx
@@ -81,21 +82,21 @@
     (assoc db ::spec/data-records data-records)))
 
 
-(reg-event-db
-  ::set-credentials
-  (fn [db [_ {credentials :resources}]]
-    (assoc db ::spec/credentials credentials
-              ::spec/counts nil
-              ::spec/sizes nil)))
+;(reg-event-db
+;  ::set-credentials
+;  (fn [db [_ {credentials :resources}]]
+;    (assoc db ::spec/credentials credentials
+;              ::spec/counts nil
+;              ::spec/sizes nil)))
 
 
-(reg-event-fx
-  ::get-credentials
-  (fn [{:keys [db]} _]
-    {:db                  (assoc db ::spec/credentials nil)
-     ::cimi-api-fx/search [:credential {:filter "subtype^='infrastructure-service-swarm'"
-                                        :select "id, name, services"}
-                           #(dispatch [::set-credentials %])]}))
+;(reg-event-fx
+;  ::get-credentials
+;  (fn [{:keys [db]} _]
+;    {:db                  (assoc db ::spec/credentials nil)
+;     ::cimi-api-fx/search [:credential {:filter "subtype^='infrastructure-service-swarm'"
+;                                        :select "id, name, services"}
+;                           #(dispatch [::set-credentials %])]}))
 
 
 (reg-event-db

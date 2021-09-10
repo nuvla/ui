@@ -419,6 +419,8 @@
         :no-credentials                                "no credentials"
         :no-data                                       "no data"
         :no-data-location                              "no location with selected data"
+        :no-data-record-message-header                 "Oops can't find data record"
+        :no-data-record-message-content                "no data record available"
         :no-databindings                               "no data bindings defined for this application"
         :no-datasets                                   "no datasets defined"
         :no-deployment-message-content                 "Deployment does not exist or you do not have sufficient access rights."

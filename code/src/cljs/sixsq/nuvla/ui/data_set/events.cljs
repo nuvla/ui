@@ -22,7 +22,7 @@
   ::set-page
   (fn [{db :db} [_ page]]
     {:db       (assoc db ::spec/page page)
-     :dispatch [::get-data-set nil]}))
+     :dispatch [::get-data-set]}))
 
 
 (reg-event-db
@@ -36,7 +36,7 @@
   ::set-full-text-search
   (fn [{db :db} [_ full-text]]
     {:db       (assoc db ::spec/full-text-search full-text)
-     :dispatch [::get-data-set nil]}))
+     :dispatch [::get-data-set]}))
 
 
 (reg-event-fx
@@ -72,7 +72,9 @@
 (reg-event-db
   ::set-data-set
   (fn [db [_ data-set]]
-    (assoc db ::spec/data-set data-set)))
+    (assoc db ::spec/not-found? (nil? data-set)
+              ::spec/data-set data-set
+              ::spec/loading? false)))
 
 
 (reg-event-fx
@@ -80,7 +82,8 @@
   (fn [{{:keys [::spec/data-set-id]} :db} _]
     {::cimi-api-fx/get [(str "data-set/" data-set-id)
                         #(do (dispatch [::set-data-set %])
-                             (dispatch [::get-data-records (:data-record-filter %)]))]}))
+                             (dispatch [::get-data-records (:data-record-filter %)]))
+                        :on-error #(dispatch [::set-data-set nil])]}))
 
 
 (reg-event-db

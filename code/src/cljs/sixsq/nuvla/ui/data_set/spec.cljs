@@ -7,6 +7,8 @@
 
 (s/def ::loading? boolean?)
 
+(s/def ::not-found? boolean?)
+
 (s/def ::time-period (s/tuple any? any?))
 
 (s/def ::time-period-filter (s/nilable string?))
@@ -29,6 +31,7 @@
 (s/def ::elements-per-page int?)
 
 (s/def ::db (s/keys :req [::loading?
+                          ::not-found?
                           ::time-period
                           ::time-period-filter
                           ::data-set
@@ -46,6 +49,7 @@
                           (time/days-before -1)])
 
 (def defaults {::loading?                 true
+               ::not-found?               false
                ::time-period              default-time-period
                ::time-period-filter       (utils/create-time-period-filter default-time-period)
                ::data-set-id              nil

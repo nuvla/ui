@@ -196,13 +196,6 @@
                              ]})))
 
 
-(reg-event-db
-  ::nuvlabox-not-found?
-  (fn [db [_ e]]
-    (let [{:keys [_status _message]} (response/parse-ex-info e)]
-      (assoc db ::spec/nuvlabox-not-found? (instance? js/Error e)))))
-
-
 (reg-event-fx
   ::get-nuvlabox
   (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ id]]

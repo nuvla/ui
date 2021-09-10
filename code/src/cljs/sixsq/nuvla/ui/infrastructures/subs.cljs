@@ -8,6 +8,11 @@
 
 
 (reg-sub
+  ::loading?
+  ::spec/loading?)
+
+
+(reg-sub
   ::infra-service-groups
   ::spec/infra-service-groups)
 

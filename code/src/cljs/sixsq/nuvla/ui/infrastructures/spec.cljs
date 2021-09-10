@@ -3,6 +3,8 @@
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.utils.spec :as utils-spec]))
 
+(s/def ::loading? boolean?)
+
 (s/def ::infra-service-groups any?)
 
 (s/def ::infra-services any?)
@@ -100,14 +102,16 @@
 
 (s/def ::management-credentials-available any?)
 
-(s/def ::db (s/keys :req [::infra-service-groups
+(s/def ::db (s/keys :req [::loading?
+                          ::infra-service-groups
                           ::infra-services
                           ::page
                           ::management-credentials-available
                           ::elements-per-page]))
 
 (def defaults
-  {::infra-service-groups             nil
+  {::loading?                         true
+   ::infra-service-groups             nil
    ::infra-services                   {}
    ::service-modal-visible?           false
    ::add-service-modal-visible?       false

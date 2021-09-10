@@ -11,6 +11,12 @@
     [sixsq.nuvla.ui.utils.response :as response]))
 
 
+(reg-event-db
+  ::set-loading?
+  (fn [db [_ loading?]]
+    (assoc db ::spec/loading? loading?)))
+
+
 ; Perform form validation if validate-form? is true.
 
 (defn map-update-if-empty
@@ -75,7 +81,9 @@
   (fn [db [_ data]]
     (let [services (:resources data)
           groups   (group-by :parent services)]
-      (assoc-in db [::spec/infra-services :groups] groups))))
+      (-> db
+          (assoc-in [::spec/infra-services :groups] groups)
+          (assoc ::spec/loading? false)))))
 
 
 (reg-event-db
@@ -98,31 +106,31 @@
 
 
 (reg-event-db
- ::update-credential
- (fn [db [_ key value]]
-   (assoc-in db [::spec/management-credential key] value)))
+  ::update-credential
+  (fn [db [_ key value]]
+    (assoc-in db [::spec/management-credential key] value)))
 
 
 (reg-event-fx
- ::set-coe-management-credentials-available
- (fn [{db :db} [_ response]]
-   (let [mgmt-creds (:resources response)]
-     (cond-> {:db (assoc db ::spec/management-credentials-available mgmt-creds)}
-       (= (:count response) 1) (assoc :dispatch
-                                      [::update-credential :parent
-                                       (-> mgmt-creds first :id)])))))
+  ::set-coe-management-credentials-available
+  (fn [{db :db} [_ response]]
+    (let [mgmt-creds (:resources response)]
+      (cond-> {:db (assoc db ::spec/management-credentials-available mgmt-creds)}
+              (= (:count response) 1) (assoc :dispatch
+                                             [::update-credential :parent
+                                              (-> mgmt-creds first :id)])))))
 
 
 (reg-event-fx
- ::fetch-coe-management-credentials-available
- (fn [{:keys [db]} [_ subtypes additional-filter]]
-   {:db                  (assoc db ::spec/management-credentials-available nil)
-    ::cimi-api-fx/search [:credential
-                          {:filter (cond-> (apply general-utils/join-or
-                                                  (map #(str "subtype='" % "'") subtypes))
-                                     additional-filter (general-utils/join-and additional-filter))
-                           :last   10000}
-                          #(dispatch [::set-coe-management-credentials-available %])]}))
+  ::fetch-coe-management-credentials-available
+  (fn [{:keys [db]} [_ subtypes additional-filter]]
+    {:db                  (assoc db ::spec/management-credentials-available nil)
+     ::cimi-api-fx/search [:credential
+                           {:filter (cond-> (apply general-utils/join-or
+                                                   (map #(str "subtype='" % "'") subtypes))
+                                            additional-filter (general-utils/join-and additional-filter))
+                            :last   10000}
+                           #(dispatch [::set-coe-management-credentials-available %])]}))
 
 
 (reg-event-fx
@@ -267,24 +275,24 @@
 ;; SSH keys
 
 (reg-event-db
- ::ssh-keys
- (fn [db [_event-type ssh-keys]]
-   (assoc-in db [::spec/infra-service :ssh-keys] ssh-keys)))
+  ::ssh-keys
+  (fn [db [_event-type ssh-keys]]
+    (assoc-in db [::spec/infra-service :ssh-keys] ssh-keys)))
 
 
 (reg-event-db
- ::set-ssh-keys-infra
- (fn [db [_ {resources :resources}]]
-   (assoc db ::spec/ssh-keys-infra resources)))
+  ::set-ssh-keys-infra
+  (fn [db [_ {resources :resources}]]
+    (assoc db ::spec/ssh-keys-infra resources)))
 
 
 (reg-event-fx
- ::get-ssh-keys-infra
- (fn [_ _]
-   {::cimi-api-fx/search
-    [:credential
-     {:filter "subtype='ssh-key'"
-      :select "id, name"
-      :order  "name:asc, id:asc"
-      :last   10000} #(dispatch [::set-ssh-keys-infra %])]}))
+  ::get-ssh-keys-infra
+  (fn [_ _]
+    {::cimi-api-fx/search
+     [:credential
+      {:filter "subtype='ssh-key'"
+       :select "id, name"
+       :order  "name:asc, id:asc"
+       :last   10000} #(dispatch [::set-ssh-keys-infra %])]}))
 

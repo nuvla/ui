@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.data.views
   (:require
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.apps.utils :as application-utils]
     [sixsq.nuvla.ui.data.events :as events]
     [sixsq.nuvla.ui.data.subs :as subs]
@@ -60,7 +60,7 @@
   []
   [ui/Menu {:borderless true}
    [ProcessButton]
-   [AddDataSet]
+   ;[AddDataSet]
    [components/RefreshMenu
     {:on-refresh refresh}]])
 

@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.apps-store.views
   (:require
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
     [sixsq.nuvla.ui.apps-store.events :as events]
@@ -16,7 +16,6 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -33,9 +32,8 @@
 
 (defn RefreshMyAppsMenu
   []
-  (let [owner (subscribe [::session-subs/active-claim])]
-    [components/RefreshMenu
-     {:on-refresh #(dispatch [::events/get-my-modules owner])}]))
+  [components/RefreshMenu
+   {:on-refresh #(dispatch [::events/get-my-modules])}])
 
 
 (defn ModuleCard
@@ -130,69 +128,59 @@
 
 
 (defn TabNavigator []
-  (let [module   (subscribe [::apps-subs/module])
-        loading? (subscribe [::apps-subs/loading?])]
-    (dispatch-sync [::apps-events/set-loading? true])
+  (let [module   (subscribe [::apps-subs/module])]
     (dispatch [::apps-events/get-module])
     (fn []
-      [components/LoadingContent @loading?
-       [components/DimmableContent "navigator-tab"
-        [:<>
-         [apps-views-detail/AddModal]
-         [apps-views-detail/format-error @module]
-         [ui/TabPane
-          [ControlBarProjects]
-          (when (and @module (not (instance? js/Error @module)))
-            (let [{:keys [children]} @module]
-              [apps-project-views/format-module-children children]))]]]])))
+      [components/LoadingPage {}
+       [:<>
+        [apps-views-detail/AddModal]
+        [apps-views-detail/format-error @module]
+        [ui/TabPane
+         [ControlBarProjects]
+         (let [{:keys [children]} @module]
+           [apps-project-views/FormatModuleChildren children])]]])))
 
 
 (defn TabAppStore
   []
   (let [modules           (subscribe [::subs/published-modules])
         elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
-        loading?          (subscribe [::apps-subs/loading?])]
-    (dispatch-sync [::apps-events/set-loading? true])
+        page              (subscribe [::subs/page])]
     (dispatch [::events/get-published-modules])
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (utils-general/total-pages total-modules @elements-per-page)]
-        [components/LoadingContent @loading?
-         [components/DimmableContent "appstore-tab"
-          [ui/Segment
-           [AppStoreControlBar]
-           [ModulesCardsGroup (get @modules :resources []) false]
-           [uix/Pagination
-            {:totalitems   total-modules
-             :totalPages   total-pages
-             :activePage   @page
-             :onPageChange (ui-callback/callback
-                             :activePage #(dispatch [::events/set-page-published-modules %]))}]]]]))))
+        [components/LoadingPage {}
+         [ui/Segment
+          [AppStoreControlBar]
+          [ModulesCardsGroup (get @modules :resources []) false]
+          [uix/Pagination
+           {:totalitems   total-modules
+            :totalPages   total-pages
+            :activePage   @page
+            :onPageChange (ui-callback/callback
+                            :activePage #(dispatch [::events/set-page-published-modules %]))}]]]))))
 
 
 (defn TabAllApps
   []
   (let [modules           (subscribe [::subs/modules])
         elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
-        loading?          (subscribe [::apps-subs/loading?])]
-    (dispatch-sync [::apps-events/set-loading? true])
+        page              (subscribe [::subs/page])]
     (dispatch [::events/get-modules])
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (utils-general/total-pages total-modules @elements-per-page)]
-        [components/LoadingContent @loading?
-         [components/DimmableContent "allapps-tab"
-          [ui/TabPane
-           [AllAppsControlBar]
-           [ModulesCardsGroup (get @modules :resources []) true]
-           [uix/Pagination
-            {:totalitems   total-modules
-             :totalPages   total-pages
-             :activePage   @page
-             :onPageChange (ui-callback/callback
-                             :activePage #(dispatch [::events/set-page-all-modules %]))}]]]]))))
+        [components/LoadingPage {}
+         [ui/TabPane
+          [AllAppsControlBar]
+          [ModulesCardsGroup (get @modules :resources []) true]
+          [uix/Pagination
+           {:totalitems   total-modules
+            :totalPages   total-pages
+            :activePage   @page
+            :onPageChange (ui-callback/callback
+                            :activePage #(dispatch [::events/set-page-all-modules %]))}]]]))))
 
 
 (defn TabMyApps
@@ -201,30 +189,27 @@
         modules           (subscribe [::subs/my-modules])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])
-        loading?          (subscribe [::apps-subs/loading?])
         search            (subscribe [::subs/full-text-search-my])
         {:keys [resource tab-index tab-index-event]} dashboard-utils/target-navigator]
-    (dispatch-sync [::apps-events/set-loading? true])
     (dispatch [::events/get-my-modules])
     (fn []
       (let [total-modules (get @modules :count 0)
             total-pages   (utils-general/total-pages total-modules @elements-per-page)]
         [ui/TabPane
          (if (or (pos? total-modules) (seq @search))
-           [components/LoadingContent @loading?
-            [components/DimmableContent "myapps-tab"
-             [:<>
-              [MyAppsControlBar]
-              [ModulesCardsGroup (get @modules :resources []) true]
-              [uix/Pagination
-               {:totalitems   total-modules
-                :totalPages   total-pages
-                :activePage   @page
-                :onPageChange (ui-callback/callback
-                                :activePage #(dispatch [::events/set-page-my-modules %]))}]]]]
+           [components/LoadingPage {}
+            [:<>
+             [MyAppsControlBar]
+             [ModulesCardsGroup (get @modules :resources []) true]
+             [uix/Pagination
+              {:totalitems   total-modules
+               :totalPages   total-pages
+               :activePage   @page
+               :onPageChange (ui-callback/callback
+                               :activePage #(dispatch [::events/set-page-my-modules %]))}]]]
            [:<>
             [uix/WarningMsgNoElements (@tr [:no-apps-available])]
-            [ui/Container {:textAlign "center"}
+            [ui/Container
              [ui/Icon {:name     "plus"
                        :size     "huge"
                        :style    {:cursor "pointer"}

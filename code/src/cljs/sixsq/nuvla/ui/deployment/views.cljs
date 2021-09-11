@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.deployment.views
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.deployment-detail.subs :as deployment-detail-subs]
     [sixsq.nuvla.ui.deployment-detail.views :as deployment-detail-views]
@@ -409,33 +409,30 @@
     [elements-per-page   (subscribe [::subs/elements-per-page])
      page                (subscribe [::subs/page])
      dep-count           (subscribe [::subs/deployments-count])
-     bulk-jobs-monitored (subscribe [::subs/bulk-jobs-monitored])
-     loading?            (subscribe [::subs/loading?])]
-    (dispatch-sync [::events/set-loading? true])
+     bulk-jobs-monitored (subscribe [::subs/bulk-jobs-monitored])]
     (refresh)
     (fn []
       (let [total-deployments @dep-count
             total-pages       (utils-general/total-pages
                                 @dep-count @elements-per-page)]
-        [components/LoadingContent @loading?
-         [components/DimmableContent "deployments"
-          [:<>
-           [MenuBar]
-           [ui/Segment style/basic
-            [ui/Grid {:columns   3
-                      :stackable true
-                      :reversed  "mobile"}
-             [ControlBar]
-             [StatisticStates true ::subs/deployments-summary]]
-            (for [[job-id job] @bulk-jobs-monitored]
-              ^{:key job-id}
-              [components/BulkActionProgress
-               {:header      "Bulk update in progress"
-                :job         job
-                :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
-            [DeploymentsDisplay]]
-           [uix/Pagination
-            {:totalitems   total-deployments
-             :totalPages   total-pages
-             :activePage   @page
-             :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]]]))))
+        [components/LoadingPage {}
+         [:<>
+          [MenuBar]
+          [ui/Segment style/basic
+           [ui/Grid {:columns   3
+                     :stackable true
+                     :reversed  "mobile"}
+            [ControlBar]
+            [StatisticStates true ::subs/deployments-summary]]
+           (for [[job-id job] @bulk-jobs-monitored]
+             ^{:key job-id}
+             [components/BulkActionProgress
+              {:header      "Bulk update in progress"
+               :job         job
+               :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
+           [DeploymentsDisplay]]
+          [uix/Pagination
+           {:totalitems   total-deployments
+            :totalPages   total-pages
+            :activePage   @page
+            :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]]))))

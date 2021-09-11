@@ -17,12 +17,6 @@
 
 
 (reg-sub
-  ::loading?
-  (fn [db]
-    (::spec/loading? db)))
-
-
-(reg-sub
   ::not-found?
   (fn [db]
     (::spec/not-found? db)))

@@ -7,22 +7,14 @@
     [sixsq.nuvla.ui.data-set.spec :as data-set-spec]
     [sixsq.nuvla.ui.deployment-dialog.events :as dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.spec :as dialog-spec]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [taoensso.timbre :as log]))
-
-
-(reg-event-db
-  ::set-loading?
-  (fn [db [_ loading?]]
-    (assoc db ::spec/loading? loading?)))
+    [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-event-fx
   ::refresh
   (fn [_ _]
-    {:fx [
-          ;[:dispatch [::get-credentials]]
-          [:dispatch [::get-data-sets]]]}))
+    {:dispatch [::get-data-sets]}))
 
 
 (reg-event-db
@@ -48,8 +40,7 @@
 
 (reg-event-fx
   ::fetch-all-datasets-stats
-  (fn [{{:keys [                                            ;::spec/credentials
-                ::spec/data-sets
+  (fn [{{:keys [::spec/data-sets
                 ::spec/full-text-search
                 ::data-set-spec/time-period-filter]} :db} _]
     (let [data-sets-vals  (vals data-sets)
@@ -163,7 +154,7 @@
                 ::spec/elements-per-page]} :db} _]
     {::cimi-api-fx/search [:data-set (utils/get-query-params full-text-search page elements-per-page)
                            #(do (dispatch [::set-data-sets %])
-                                (dispatch [::set-loading? false]))]}))
+                                (dispatch [::main-events/set-loading? false]))]}))
 
 
 (reg-event-db

@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.edge.views
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.edge.views-clusters :as views-clusters]
@@ -816,33 +816,29 @@
 
 (defn NuvlaBoxes
   []
-  (dispatch-sync [::events/set-loading? true])
   (dispatch [::events/refresh-root])
   (let [tr        (subscribe [::i18n-subs/tr])
-        full-text (subscribe [::subs/full-text-search])
-        loading?  (subscribe [::subs/loading?])]
-    (fn []
-      [components/LoadingContent @loading?
-       [components/DimmableContent "nuvlaboxes"
-        [:<>
-         [uix/PageHeader "box" (general-utils/capitalize-first-letter (@tr [:edge]))]
-         [MenuBar]
-         [:div {:style {:display "flex"}}
-          [components/SearchInput
-           {:default-value @full-text
-            :on-change     (ui-callback/input-callback
-                             #(dispatch [::events/set-full-text-search %]))
-            :style         {:display    "inline-table"
-                            :margin-top "20px"}}]
-          [StatisticStates]
-          [ui/Input {:style {:visibility "hidden"}
-                     :icon  "search"}]]
-         (case @view-type
-           :cards [NuvlaboxCards]
-           :table [NuvlaboxTable]
-           :map [NuvlaboxMap])
-         (when-not (= @view-type :map)
-           [Pagination])]]])))
+        full-text (subscribe [::subs/full-text-search])]
+    [components/LoadingPage {}
+     [:<>
+      [uix/PageHeader "box" (general-utils/capitalize-first-letter (@tr [:edge]))]
+      [MenuBar]
+      [:div {:style {:display "flex"}}
+       [components/SearchInput
+        {:default-value @full-text
+         :on-change     (ui-callback/input-callback
+                          #(dispatch [::events/set-full-text-search %]))
+         :style         {:display    "inline-table"
+                         :margin-top "20px"}}]
+       [StatisticStates]
+       [ui/Input {:style {:visibility "hidden"}
+                  :icon  "search"}]]
+      (case @view-type
+        :cards [NuvlaboxCards]
+        :table [NuvlaboxTable]
+        :map [NuvlaboxMap])
+      (when-not (= @view-type :map)
+        [Pagination])]]))
 
 
 (defmethod panel/render :edge

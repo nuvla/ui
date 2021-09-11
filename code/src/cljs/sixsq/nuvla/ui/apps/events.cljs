@@ -194,7 +194,7 @@
                                     true (assoc ::spec/completed? false)
                                     requested-version (assoc ::spec/version requested-version))
        ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
-                                         (dispatch [::set-loading? false]))]})))
+                                         (dispatch [::main-events/set-loading? false]))]})))
 
 
 (reg-event-db

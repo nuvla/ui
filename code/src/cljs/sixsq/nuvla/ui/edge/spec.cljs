@@ -3,7 +3,7 @@
     [clojure.spec.alpha :as s]))
 
 
-(s/def ::loading? boolean?)
+;(s/def ::loading? boolean?)
 
 (s/def ::stale-count nat-int?)
 
@@ -55,8 +55,7 @@
 (s/def ::nuvlabox-not-found? boolean?)
 
 
-(s/def ::db (s/keys :req [::loading?
-                          ::nuvlaboxes
+(s/def ::db (s/keys :req [::nuvlaboxes
                           ::nuvlaboxes-summary
                           ::nuvlabox-cluster-summary
                           ::nuvlaboxes-summary-all
@@ -80,8 +79,7 @@
                           ::nuvlabox-cluster]))
 
 
-(def defaults {::loading?                  true
-               ::nuvlaboxes                nil
+(def defaults {::nuvlaboxes                nil
                ::nuvlabox-cluster-summary  nil
                ::nuvlaboxes-summary        nil
                ::nuvlaboxes-summary-all    nil

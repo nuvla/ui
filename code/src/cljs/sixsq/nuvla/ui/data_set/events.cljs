@@ -3,13 +3,8 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.data-set.spec :as spec]
-    [sixsq.nuvla.ui.data-set.utils :as utils]))
-
-
-(reg-event-db
-  ::set-loading?
-  (fn [db [_ loading?]]
-    (assoc db ::spec/loading? loading?)))
+    [sixsq.nuvla.ui.data-set.utils :as utils]
+    [sixsq.nuvla.ui.main.spec :as main-spec]))
 
 
 (reg-event-fx
@@ -74,7 +69,7 @@
   (fn [db [_ data-set]]
     (assoc db ::spec/not-found? (nil? data-set)
               ::spec/data-set data-set
-              ::spec/loading? false)))
+              ::main-spec/loading? false)))
 
 
 (reg-event-fx

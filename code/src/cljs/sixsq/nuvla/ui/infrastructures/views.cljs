@@ -560,15 +560,12 @@
 
 (defn Infrastructures
   []
-  (dispatch-sync [::events/set-loading? true])
   (dispatch [::events/get-infra-service-groups])
-  (let [loading? (subscribe [::subs/loading?])]
-    (fn []
-      [components/LoadingContent @loading?
-       [:<>
-        [InfraServices]
-        [ServiceModal]
-        [AddServiceModal]]])))
+  [components/LoadingPage {}
+   [:<>
+    [InfraServices]
+    [ServiceModal]
+    [AddServiceModal]]])
 
 
 (defmethod panel/render :infrastructures

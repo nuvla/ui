@@ -5,8 +5,6 @@
     [sixsq.nuvla.ui.utils.time :as time]))
 
 
-(s/def ::loading? boolean?)
-
 (s/def ::not-found? boolean?)
 
 (s/def ::time-period (s/tuple any? any?))
@@ -30,8 +28,7 @@
 (s/def ::page int?)
 (s/def ::elements-per-page int?)
 
-(s/def ::db (s/keys :req [::loading?
-                          ::not-found?
+(s/def ::db (s/keys :req [::not-found?
                           ::time-period
                           ::time-period-filter
                           ::data-set
@@ -48,8 +45,7 @@
 (def default-time-period [(time/days-before 30)
                           (time/days-before -1)])
 
-(def defaults {::loading?                 true
-               ::not-found?               false
+(def defaults {::not-found?               false
                ::time-period              default-time-period
                ::time-period-filter       (utils/create-time-period-filter default-time-period)
                ::data-set-id              nil

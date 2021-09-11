@@ -7,14 +7,9 @@
     [sixsq.nuvla.ui.infrastructures.spec :as spec]
     [sixsq.nuvla.ui.infrastructures.utils :as utils]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
-
-
-(reg-event-db
-  ::set-loading?
-  (fn [db [_ loading?]]
-    (assoc db ::spec/loading? loading?)))
 
 
 ; Perform form validation if validate-form? is true.
@@ -83,7 +78,7 @@
           groups   (group-by :parent services)]
       (-> db
           (assoc-in [::spec/infra-services :groups] groups)
-          (assoc ::spec/loading? false)))))
+          (assoc ::main-spec/loading? false)))))
 
 
 (reg-event-db

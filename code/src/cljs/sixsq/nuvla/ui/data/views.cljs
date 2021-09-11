@@ -13,6 +13,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -48,8 +49,8 @@
 (defn AddDataSet []
   (let [tr (subscribe [::i18n-subs/tr])]
     [uix/MenuItem
-     {:name (@tr [:add])
-      :icon "add"
+     {:name     (@tr [:add])
+      :icon     "add"
       :on-click (fn [event]
                   (dispatch [::history-events/navigate (utils/data-record-href "new")])
                   (.preventDefault event))}]))
@@ -236,7 +237,7 @@
         data-sets         (subscribe [::subs/data-sets])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])
-        loading?          (subscribe [::subs/loading?])
+        loading?          (subscribe [::main-subs/loading?])
         total             (subscribe [::subs/total])]
     (fn []
       (let [total-elements @total
@@ -279,21 +280,18 @@
 
 (defn Data
   []
-  (dispatch-sync [::events/set-loading? true])
   (refresh)
-  (let [tr       (subscribe [::i18n-subs/tr])
-        loading? (subscribe [::subs/loading?])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (fn []
-      [components/LoadingContent @loading?
-       [components/DimmableContent "data-root"
-        [ui/Segment style/basic
-         [uix/PageHeader "database" (@tr [:data-processing])]
-         [MenuBar]
-         [SearchBar]
-         [ApplicationSelectModal]
-         [deployment-dialog-views/deploy-modal true]
-         [QueriesCardsGroup]
-         [MainActionButton]]]])))
+      [components/LoadingPage {}
+       [ui/Segment style/basic
+        [uix/PageHeader "database" (@tr [:data-processing])]
+        [MenuBar]
+        [SearchBar]
+        [ApplicationSelectModal]
+        [deployment-dialog-views/deploy-modal true]
+        [QueriesCardsGroup]
+        [MainActionButton]]])))
 
 
 (defmethod panel/render :data

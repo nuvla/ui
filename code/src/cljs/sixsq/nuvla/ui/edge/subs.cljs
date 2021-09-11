@@ -159,4 +159,4 @@
 (reg-sub
   ::nuvlabox-not-found?
   (fn [db]
-    (get-in db [::spec/nuvlabox-not-found?])))
+    (::spec/nuvlabox-not-found? db)))

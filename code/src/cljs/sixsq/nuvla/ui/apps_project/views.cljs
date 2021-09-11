@@ -27,7 +27,7 @@
   (dispatch [::events/clear-module]))
 
 
-(defn format-module
+(defn FormatModule
   [{:keys [subtype name path description] :as module}]
   (when module
     (let [on-click  #(dispatch [::history-events/navigate (str "apps/" path)])
@@ -43,7 +43,7 @@
          [uix/SpanBlockJustified summary]]]])))
 
 
-(defn format-module-children
+(defn FormatModuleChildren
   [module-children]
   (when (pos? (count module-children))
     (let [ordered-children (sort-by :name module-children)]
@@ -53,7 +53,7 @@
                                 :selection true}]
                     (map (fn [{:keys [id] :as module}]
                            ^{:key id}
-                           [format-module module]) ordered-children)))])))
+                           [FormatModule module]) ordered-children)))])))
 
 
 (defn ModulesView []
@@ -69,7 +69,7 @@
            [ui/Message {:warning true}
             [ui/Icon {:name "warning sign"}]
             (@tr [:no-children-modules])]
-           [format-module-children children])]))))
+           [FormatModuleChildren children])]))))
 
 
 (defn OverviewModuleSummary

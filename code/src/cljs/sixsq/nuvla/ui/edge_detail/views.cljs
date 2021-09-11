@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.edge-detail.views
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
@@ -1541,21 +1541,17 @@
 
 (defn EdgeDetails
   [uuid]
-  (dispatch-sync [::events/set-loading? true])
   (refresh uuid)
-  (let [nb-status (subscribe [::subs/nuvlabox-status])
-        loading?  (subscribe [::subs/loading?])]
-    (fn [uuid]
-      [components/LoadingContent @loading?
-       [components/DimmableContent uuid
-        [:<>
-         [components/NotFoundPortal
-          ::subs/nuvlabox-not-found?
-          :no-nuvlabox-message-header
-          :no-nuvlabox-message-content]
-         [ui/Container {:fluid true}
-          [PageHeader]
-          [MenuBar uuid]
-          [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
-          [job-views/ProgressJobAction @nb-status]
-          [TabsNuvlaBox]]]]])))
+  (let [nb-status (subscribe [::subs/nuvlabox-status])]
+    [components/LoadingPage {:dimmable? true}
+     [:<>
+      [components/NotFoundPortal
+       ::subs/nuvlabox-not-found?
+       :no-nuvlabox-message-header
+       :no-nuvlabox-message-content]
+      [ui/Container {:fluid true}
+       [PageHeader]
+       [MenuBar uuid]
+       [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
+       [job-views/ProgressJobAction @nb-status]
+       [TabsNuvlaBox]]]]))

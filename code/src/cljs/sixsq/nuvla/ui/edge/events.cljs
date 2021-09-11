@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.edge.spec :as spec]
     [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
@@ -13,12 +14,6 @@
 (def refresh-summary-id :nuvlabox-get-nuvlaboxes-summary)
 (def refresh-id-cluster :nuvlabox-get-nuvlabox-cluster)
 (def refresh-id-clusters :nuvlabox-get-nuvlabox-clusters)
-
-
-(reg-event-db
-  ::set-loading?
-  (fn [db loading?]
-    (assoc db ::spec/loading? loading?)))
 
 
 (reg-event-fx
@@ -104,7 +99,7 @@
                     :content message
                     :type    :error})])
       {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-                     ::spec/loading? false)})))
+                     ::main-spec/loading? false)})))
 
 
 (reg-event-fx
@@ -157,8 +152,8 @@
                       :type    :error})])
         (cond->
           {:db (assoc db ::spec/nuvlabox-clusters nuvlabox-clusters
-                         ::spec/loading? false)
-           :fx [[:dispatch [::nuvlabox-not-found found?]]]})))))
+                         ::main-spec/loading? false
+                         ::spec/nuvlabox-not-found? found?)})))))
 
 
 (reg-event-fx
@@ -321,8 +316,8 @@
   ::set-nuvlabox-cluster
   (fn [{:keys [db]} [_ nuvlabox-cluster]]
     (let [found? (nil? nuvlabox-cluster)]
-      {:db (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster)
-       :fx [[:dispatch [::nuvlabox-not-found found?]]]})))
+      {:db (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster
+                     ::spec/nuvlabox-not-found? found?)})))
 
 
 (reg-event-fx
@@ -355,9 +350,3 @@
   ::set-active-tab-index
   (fn [db [_ active-tab-index]]
     (assoc db ::spec/active-tab-index active-tab-index)))
-
-
-(reg-event-db
-  ::nuvlabox-not-found
-  (fn [db [_ found?]]
-    (assoc db ::spec/nuvlabox-not-found? found?)))

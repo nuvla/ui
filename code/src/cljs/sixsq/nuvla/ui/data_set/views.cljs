@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.data-set.views
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
+    [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.data-set.events :as events]
     [sixsq.nuvla.ui.data-set.subs :as subs]
@@ -239,25 +239,21 @@
 
 (defn DataSet
   [dataset-id]
-  (dispatch-sync [::events/set-loading? true])
   (dispatch [::events/set-data-set-id dataset-id])
   (refresh)
   (let [tr       (subscribe [::i18n-subs/tr])
         data-set (subscribe [::subs/data-set])
-        loading? (subscribe [::subs/loading?])
         name     (:name @data-set)]
     (fn [dataset-id]
-      [components/LoadingContent @loading?
-       [components/DimmableContent dataset-id
-        [:<>
-         [components/NotFoundPortal
-          ::subs/not-found?
-          :no-data-record-message-header
-          :no-data-record-message-content]
-         [ui/Segment style/basic
-          [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
-          [MenuBar dataset-id]
-          [Summary]
-          [DataRecordCards]
-          [Pagination]]]]])))
-
+      [components/LoadingPage {:dimmable? true}
+       [:<>
+        [components/NotFoundPortal
+         ::subs/not-found?
+         :no-data-set-message-header
+         :no-data-set-message-content]
+        [ui/Segment style/basic
+         [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
+         [MenuBar dataset-id]
+         [Summary]
+         [DataRecordCards]
+         [Pagination]]]])))

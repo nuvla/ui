@@ -3,7 +3,6 @@
     [clojure.spec.alpha :as s]))
 
 
-(s/def ::loading? boolean?)
 (s/def ::nuvlabox (s/nilable string?))
 (s/def ::nuvlabox-status (s/nilable any?))
 (s/def ::nuvlabox-associated-ssh-keys (s/nilable any?))
@@ -20,8 +19,7 @@
 (s/def ::nuvlabox-cluster (s/nilable any?))
 (s/def ::nuvlabox-not-found? boolean?)
 
-(s/def ::db (s/keys :req [::loading?
-                          ::nuvlabox
+(s/def ::db (s/keys :req [::nuvlabox
                           ::nuvlabox-status
                           ::nuvlabox-associated-ssh-keys
                           ::nuvlabox-peripherals
@@ -38,8 +36,7 @@
                           ::nuvlabox-not-found?]))
 
 
-(def defaults {::loading?                     true
-               ::nuvlabox                     nil
+(def defaults {::nuvlabox                     nil
                ::nuvlabox-status              nil
                ::nuvlabox-associated-ssh-keys nil
                ::nuvlabox-peripherals         nil

@@ -8,21 +8,17 @@
     [sixsq.nuvla.ui.edge.utils :as edge-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db
   ::set-nuvlabox-status
   (fn [db [_ nuvlabox-status]]
     (assoc db ::spec/nuvlabox-status nuvlabox-status)))
-
-
-(reg-event-db
-  ::set-loading?
-  (fn [db loading?]
-    (assoc db ::spec/loading? loading?)))
 
 
 (reg-event-db
@@ -90,7 +86,7 @@
   (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status :as nuvlabox}]]
     {:db               (assoc db ::spec/nuvlabox-not-found? (nil? nuvlabox)
                                  ::spec/nuvlabox nuvlabox
-                                 ::spec/loading? false)
+                                 ::main-spec/loading? false)
      ::cimi-api-fx/get [nb-status-id #(do
                                         (dispatch [::set-nuvlabox-status %])
                                         (dispatch [::set-nuvlabox-vulns (:vulnerabilities %)])
@@ -192,8 +188,7 @@
                         :last    last}]
       {::cimi-api-fx/search [:event
                              (general-utils/prepare-params query-params)
-                             #(dispatch [::set-nuvlabox-events %])
-                             ]})))
+                             #(dispatch [::set-nuvlabox-events %])]})))
 
 
 (reg-event-fx

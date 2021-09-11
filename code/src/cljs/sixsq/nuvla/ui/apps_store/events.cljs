@@ -1,24 +1,20 @@
 (ns sixsq.nuvla.ui.apps-store.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps-store.spec :as spec]
     [sixsq.nuvla.ui.apps-store.utils :as utils]
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.session.spec :as session-spec]))
-
-
-;(reg-event-db
-;  ::set-loading?
-;  (fn [db [_ loading?]]
-;    (assoc db ::apps-spec/loading? loading?)))
+    [sixsq.nuvla.ui.main.spec :as main-spec]
+    [sixsq.nuvla.ui.session.spec :as session-spec]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-db
   ::set-modules
   (fn [db [_ modules]]
-    (assoc db ::spec/modules modules)))
+    (assoc db ::spec/modules modules
+              ::main-spec/loading? false)))
 
 
 ;; Published modules
@@ -26,25 +22,23 @@
 (reg-event-db
   ::set-published-modules
   (fn [db [_ modules]]
-    (assoc db ::spec/published-modules modules)))
+    (assoc db ::spec/published-modules modules
+              ::main-spec/loading? false)))
 
 
 (defn published-modules-cofx
   [cofx full-text-search elements-per-page page]
   (assoc cofx ::cimi-api-fx/search
               [:module (utils/get-published-modules-query-params full-text-search page elements-per-page)
-               #(do
-                  (dispatch [::set-published-modules %])
-                  (dispatch [::apps-events/set-loading? false]))]))
+               #(dispatch [::set-published-modules %])]))
 
 
 (reg-event-fx
   ::get-published-modules
   (fn [{{:keys [::spec/full-text-search-published
                 ::spec/page
-                ::spec/elements-per-page] :as db} :db} [_ full-text-search]]
-    (let [search (or full-text-search full-text-search-published)]
-      (published-modules-cofx db search elements-per-page page))))
+                ::spec/elements-per-page] :as db} :db} _]
+    (published-modules-cofx db full-text-search-published elements-per-page page)))
 
 
 (reg-event-fx
@@ -69,15 +63,15 @@
 (reg-event-db
   ::set-my-modules
   (fn [db [_ modules]]
-    (assoc db ::spec/my-modules modules)))
+    (assoc db ::spec/my-modules modules
+              ::main-spec/loading? false)))
 
 
 (defn my-modules-cofx
   [cofx owner full-text-search elements-per-page page]
   (assoc cofx ::cimi-api-fx/search
               [:module (utils/get-my-modules-query-params owner full-text-search page elements-per-page)
-               #(do (dispatch [::set-my-modules %])
-                    (dispatch [::apps-events/set-loading? false]))]))
+               #(dispatch [::set-my-modules %])]))
 
 
 (reg-event-fx
@@ -85,10 +79,9 @@
   (fn [{{:keys [::session-spec/session
                 ::spec/full-text-search-my
                 ::spec/page
-                ::spec/elements-per-page] :as db} :db} [_ full-text-search]]
-    (let [user-id (:user session)
-          search  (or full-text-search full-text-search-my)]
-      (my-modules-cofx {:db db} user-id search elements-per-page page))))
+                ::spec/elements-per-page] :as db} :db} _]
+    (let [user-id (:user session)]
+      (my-modules-cofx {:db db} user-id full-text-search-my elements-per-page page))))
 
 
 (reg-event-fx
@@ -116,18 +109,16 @@
   [cofx full-text-search elements-per-page page]
   (assoc cofx ::cimi-api-fx/search
               [:module (utils/get-query-params full-text-search page elements-per-page)
-               #(do (dispatch [::set-modules %])
-                    (dispatch [::apps-events/set-loading? false]))]))
+               #(dispatch [::set-modules %])]))
 
 
 (reg-event-fx
   ::get-modules
   (fn [{{:keys [::spec/full-text-search-all-apps
                 ::spec/page
-                ::spec/elements-per-page] :as db} :db} [_ full-text]]
-    (let [search (or full-text full-text-search-all-apps)]
-      (-> {:db (assoc db ::apps-spec/module nil)}
-          (search-modules-cofx search elements-per-page page)))))
+                ::spec/elements-per-page] :as db} :db} _]
+    (-> {:db (assoc db ::apps-spec/module nil)}
+        (search-modules-cofx full-text-search-all-apps elements-per-page page))))
 
 
 (defn summary-modules-cofx

@@ -256,11 +256,10 @@
    The content passed as argument is responsible for setting main-spec/loading? to false once the data is loaded.
    An optional DimmerContent component can also wrap the content. In this case, the content argument must include a
    NotFoundPortal component and a content event must set the corresponding spec attribute to true."
-  ([content] (LoadingPage {} content))
-  ([{:keys [_dimmable?]} _content]
-   (dispatch-sync [::events/set-loading? true])
-   (fn [{:keys [dimmable?]} content]
-     [LoadingContent
-      (if dimmable?
-        [DimmableContent content]
-        content)])))
+  [{:keys [_dimmable?]} _content]
+  (dispatch-sync [::events/set-loading? true])
+  (fn [{:keys [dimmable?]} content]
+    [LoadingContent
+     (if dimmable?
+       [DimmableContent content]
+       content)]))

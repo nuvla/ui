@@ -6,8 +6,7 @@
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.session.spec :as session-spec]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.session.spec :as session-spec]))
 
 
 (reg-event-db

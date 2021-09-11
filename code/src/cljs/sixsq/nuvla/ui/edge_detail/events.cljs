@@ -11,8 +11,7 @@
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-db

@@ -98,7 +98,6 @@
   []
   (let [tr                    (subscribe [::i18n-subs/tr])
         view                  (subscribe [::subs/view])
-        loading?              (subscribe [::subs/loading?])
         select-all?           (subscribe [::subs/select-all?])
         dep-count             (subscribe [::subs/deployments-count])
         selected-count        (subscribe [::subs/selected-count])
@@ -156,7 +155,6 @@
 
          [components/RefreshMenu
           {:action-id  events/refresh-action-deployments-id
-           :loading?   @loading?
            :on-refresh refresh}]]]
        [BulkUpdateModal]])))
 
@@ -307,14 +305,12 @@
 
 (defn DeploymentsDisplay
   []
-  (let [loading?    (subscribe [::subs/loading?])
-        view        (subscribe [::subs/view])
+  (let [view        (subscribe [::subs/view])
         deployments (subscribe [::subs/deployments])
         select-all? (subscribe [::subs/select-all?])]
     (fn []
       (let [deployments-list (get @deployments :resources [])]
-        [ui/Segment (merge style/basic
-                           {:loading @loading?})
+        [ui/Segment style/basic
          (if (= @view "cards")
            [CardsDataTable deployments-list]
            [VerticalDataTable deployments-list {:select-all @select-all?}])]))))

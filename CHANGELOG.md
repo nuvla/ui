@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+  - Introduced a spinner when loading content, providing a smoother user experience.
+
 ### Changed
 
 - Fix bug where dropdown in the share tab for NuvlaBox where trimmed

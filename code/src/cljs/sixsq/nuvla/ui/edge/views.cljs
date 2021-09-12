@@ -447,6 +447,7 @@
                                                                   (into {}))])))))]
 
     (dispatch [::events/get-ssh-keys-available ["ssh-key"] nil])
+    (dispatch [::events/get-vpn-infra])
     (fn []
       (when (and (= (count @vpn-infra-opts) 1)
                  (nil? (:vpn-server-id @creation-data)))

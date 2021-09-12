@@ -316,7 +316,7 @@
         :clearable   true
         :placeholder (@tr [:nuvlabox-available-managers-select])
         :options     (map (fn [[id status]]
-                            (let [name   (:name status)]
+                            (let [name (:name status)]
                               {:key id, :text name, :value id})) @managers)
         :selection   true}])))
 
@@ -335,15 +335,6 @@
                           {:key 2 :text (@tr [:cluster-action-join-manager]) :value "join-manager"}
                           {:key 3 :text (@tr [:cluster-action-leave]) :value "leave"}
                           {:key 4 :text (@tr [:cluster-action-force-new-cluster]) :value "force-new-cluster"}]
-        on-change-fn     (fn [k join-token-scope v]
-                           (if (str/blank? v)
-                             (swap! form-data dissoc k)
-                             (do
-                               (swap! form-data dissoc :token)
-                               (swap! form-data assoc k v)
-                               (when join-token-scope
-                                 (dispatch [::events/get-join-token v join-token-scope])
-                                 (dispatch [::events/get-nuvlabox-cluster v])))))
         on-success-fn    close-fn
         on-error-fn      close-fn
         on-click-fn      #(do
@@ -394,17 +385,29 @@
               {:label         "Action"
                :on-change     (ui-callback/value
                                 (fn [value]
-                                  (on-change-fn :cluster-action nil value)
-                                  (swap! form-data dissoc :nuvlabox-manager-id)
-                                  (swap! form-data dissoc :token)))
+                                  (if (str/blank? value)
+                                    (swap! form-data dissoc :cluster-action)
+                                    (do
+                                      (swap! form-data dissoc :token)
+                                      (swap! form-data assoc :cluster-action value)
+                                      ))
+                                  (swap! form-data dissoc :nuvlabox-manager-id)))
                :default-value default-action
                :options       actions
                :selection     true}]
              (when is-join-action?
                [:<>
                 ^{:key join-type}
-                [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-id join-type)]
-
+                [NBManagersDropdown (:id resource)
+                 (partial (fn [join-token-scope nuvlabox-manager-id]
+                            (if (str/blank? nuvlabox-manager-id)
+                              (swap! form-data dissoc :nuvlabox-manager-status)
+                              (do
+                                (swap! form-data dissoc :token)
+                                (swap! form-data assoc :nuvlabox-manager-status (get-in @managers [nuvlabox-manager-id :status]))
+                                (dispatch [::events/get-join-token nuvlabox-manager-id join-token-scope])
+                                (dispatch [::events/get-nuvlabox-cluster nuvlabox-manager-id]))))
+                          join-type)]
                 (when invalid-manager?
                   [ui/Message {:negative true
                                :content  (@tr [:cluster-invalid-manager])}])

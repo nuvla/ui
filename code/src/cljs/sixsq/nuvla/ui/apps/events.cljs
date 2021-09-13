@@ -120,21 +120,20 @@
 
 (reg-event-db
   ::module-not-found
-  (fn [db [_ found?]]
-    (assoc db ::spec/module-not-found? found?)))
+  (fn [db [_ not-found?]]
+    (assoc db ::spec/module-not-found? not-found?)))
 
 
 (reg-event-fx
   ::set-module
   (fn [{{:keys [::spec/validate-docker-compose] :as db} :db} [_ {:keys [id] :as module}]]
-    (let [found?  (nil? module)
-          db      (assoc db ::spec/module-path (:path module)
+    (let [db      (assoc db ::spec/module-path (:path module)
                             ::spec/module (if (nil? module) {} module)
                             ::spec/module-immutable module
                             ::spec/validate-docker-compose (if (= id (:module-id validate-docker-compose))
                                                              validate-docker-compose
                                                              nil)
-                            ::module-not-found found?
+                            ::spec/module-not-found? (nil? module)
                             ::main-spec/loading? false)
           subtype (:subtype module)]
       {:db (case subtype

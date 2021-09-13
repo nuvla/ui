@@ -142,7 +142,7 @@
 (reg-event-fx
   ::set-nuvlabox-clusters
   (fn [{:keys [db]} [_ nuvlabox-clusters]]
-    (let [found? (nil? nuvlabox-clusters)]
+    (let [not-found? (nil? nuvlabox-clusters)]
       (if (instance? js/Error nuvlabox-clusters)
         (dispatch [::messages-events/add
                    (let [{:keys [status message]} (response/parse-ex-info nuvlabox-clusters)]
@@ -153,7 +153,7 @@
         (cond->
           {:db (assoc db ::spec/nuvlabox-clusters nuvlabox-clusters
                          ::main-spec/loading? false
-                         ::spec/nuvlabox-not-found? found?)})))))
+                         ::spec/nuvlabox-not-found? not-found?)})))))
 
 
 (reg-event-fx
@@ -315,9 +315,8 @@
 (reg-event-fx
   ::set-nuvlabox-cluster
   (fn [{:keys [db]} [_ nuvlabox-cluster]]
-    (let [found? (nil? nuvlabox-cluster)]
-      {:db (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster
-                     ::spec/nuvlabox-not-found? found?)})))
+    {:db (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster
+                   ::spec/nuvlabox-not-found? (nil? nuvlabox-cluster))}))
 
 
 (reg-event-fx

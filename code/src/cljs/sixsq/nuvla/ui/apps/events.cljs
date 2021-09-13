@@ -133,15 +133,16 @@
                             ::spec/module-immutable module
                             ::spec/validate-docker-compose (if (= id (:module-id validate-docker-compose))
                                                              validate-docker-compose
-                                                             nil))
+                                                             nil)
+                            ::module-not-found found?
+                            ::main-spec/loading? false)
           subtype (:subtype module)]
       {:db (case subtype
              "component" (apps-component-utils/module->db db module)
              "project" (apps-project-utils/module->db db module)
              "application" (apps-application-utils/module->db db module)
              "application_kubernetes" (apps-application-utils/module->db db module)
-             db)
-       :fx [[:dispatch [::module-not-found found?]]]})))
+             db)})))
 
 
 (reg-event-db
@@ -185,8 +186,7 @@
           v    (if (nil? requested-version) version requested-version)]
       {:db                  (cond-> db
                                     requested-version (assoc ::spec/version requested-version))
-       ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
-                                         (dispatch [::main-events/set-loading? false]))]})))
+       ::apps-fx/get-module [path v #(dispatch [::set-module %])]})))
 
 
 (reg-event-db

@@ -378,17 +378,13 @@
   (let [elements          (subscribe [::subs/deployments])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])
-        loading?          (subscribe [::subs/loading?])
         select-all?       (subscribe [::subs/select-all?])]
     (fn []
       (let [total-elements (:count @elements)
             total-pages    (utils-general/total-pages total-elements @elements-per-page)
             deployments    (:resources @elements)]
         [ui/TabPane
-         (if @loading?
-           [ui/Loader {:active true
-                       :inline "centered"}]
-           [VerticalDataTable deployments (assoc options :select-all @select-all?)])
+         [VerticalDataTable deployments (assoc options :select-all @select-all?)]
 
          (when (pos? (:count @elements))
            [uix/Pagination {:totalitems   total-elements

@@ -11,6 +11,7 @@
     [sixsq.nuvla.ui.apps.views-detail :as views-detail]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.deployment.events :as deployment-events]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
@@ -25,14 +26,20 @@
     (dispatch [::events/set-validate-form? false])
     (fn [new-subtype]
       (dispatch [::deployment-events/get-module-deployments])
-      [views-detail/VersionWarning]
-      (let [subtype (or (:subtype @module) new-subtype)]
-        (case subtype
-          "component" [apps-component-views/view-edit]
-          "application" [apps-application-views/ViewEdit]
-          "application_kubernetes" [apps-application-views/ViewEdit]
-          ^{:key (random-uuid)}
-          [apps-project-views/ViewEdit])))))
+      [components/LoadingPage {:dimmable? true}
+       [:<>
+        [components/NotFoundPortal
+         ::subs/module-not-found?
+         :no-module-message-header
+         :no-module-message-content]
+        [views-detail/VersionWarning]
+        (let [subtype (or (:subtype @module) new-subtype)]
+          (case subtype
+            "component" [apps-component-views/view-edit]
+            "application" [apps-application-views/ViewEdit]
+            "application_kubernetes" [apps-application-views/ViewEdit]
+            ^{:key (random-uuid)}
+            [apps-project-views/ViewEdit]))]])))
 
 
 (defn new-module

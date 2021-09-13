@@ -3,15 +3,10 @@
     [clojure.spec.alpha :as s]))
 
 
-(s/def ::loading? boolean?)
-
-
 (s/def ::documents any?)
 
 
-(s/def ::db (s/keys :req [::loading?
-                          ::documents]))
+(s/def ::db (s/keys :req [::documents]))
 
 
-(def defaults {::loading?  true
-               ::documents nil})
+(def defaults {::documents nil})

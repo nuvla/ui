@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.cimi-detail.events :as cimi-detail-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.notifications.spec :as spec]
     [sixsq.nuvla.ui.notifications.utils :as utils]
     [sixsq.nuvla.ui.utils.response :as response]))
@@ -28,14 +29,14 @@
 (reg-event-db
   ::set-notification-methods
   (fn [db [_ notification-methods]]
-    (assoc db ::spec/notification-methods notification-methods)))
+    (assoc db ::spec/notification-methods notification-methods
+              ::main-spec/loading? false)))
 
 
 (reg-event-fx
   ::get-notification-methods
-  (fn [{:keys [db]} _]
-    {:db                  (assoc db ::spec/completed? false)
-     ::cimi-api-fx/search [:notification-method
+  (fn [_ _]
+    {::cimi-api-fx/search [:notification-method
                            {:orderby "name:asc, id:asc"}
                            #(dispatch [::set-notification-methods (:resources %)])]}))
 
@@ -172,9 +173,8 @@
 
 (reg-event-fx
   ::get-notification-subscription-configs
-  (fn [{:keys [db]} [_]]
-    {:db                  (assoc db ::spec/completed? false)
-     ::cimi-api-fx/search [:subscription-config
+  (fn [_ [_]]
+    {::cimi-api-fx/search [:subscription-config
                            {:orderby "name:asc, id:asc"}
                            #(dispatch [::set-notification-subscription-configs (map utils/model->view (:resources %))])]}))
 
@@ -337,7 +337,7 @@
 
 (reg-event-fx
   ::get-notification-subscriptions
-  (fn [{:keys [db]} [_ parent]]
+  (fn [_ [_ parent]]
     (let [flt (if parent
                 (str "category='notification' and parent='" parent "'")
                 "category='notification'")
@@ -353,8 +353,7 @@
                          (dispatch [::set-subscriptions-by-parent subs-by-parent])
                          (dispatch [::set-subscriptions-by-parent-counts counts])
                          (dispatch [::set-subscriptions resources]))))]
-      {:db                  (assoc db ::spec/completed? false)
-       ::cimi-api-fx/search [:subscription
+      {::cimi-api-fx/search [:subscription
                              {:filter flt :orderby "name:asc, id:asc"}
                              callback]})))
 

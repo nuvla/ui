@@ -4,8 +4,6 @@
     [sixsq.nuvla.ui.utils.time :as time]))
 
 
-(s/def ::loading? boolean?)
-
 (s/def ::data-records any?)
 
 (s/def ::credentials (s/nilable (s/coll-of any? :kind vector?)))
@@ -35,8 +33,7 @@
 
 (s/def ::selected-data-set-ids (s/coll-of string? :kind set?))
 
-(s/def ::db (s/keys :req [::loading?
-                          ::data-records
+(s/def ::db (s/keys :req [::data-records
                           ::credentials
                           ::application-select-visible?
                           ::loading-applications?
@@ -54,8 +51,7 @@
 (def default-time-period [(time/days-before 30)
                           (time/now)])
 
-(def defaults {::loading?                    true
-               ::data-records                nil
+(def defaults {::data-records                nil
                ::credentials                 nil
                ::application-select-visible? false
                ::loading-applications?       false

@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
@@ -33,7 +34,7 @@
        [_ {:keys [id module subscription-id] :as resource}]]
     (let [module-href (:href module)]
       (cond-> {:db (assoc db ::spec/not-found? (nil? resource)
-                             ::spec/loading? false
+                             ::main-spec/loading? false
                              ::spec/deployment resource)}
               (and (not module-versions)
                    module-href) (assoc ::cimi-api-fx/get

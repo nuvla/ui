@@ -27,12 +27,6 @@
 (def refresh-action-get-deployment :apps-get-deployment)
 
 
-(reg-event-db
-  ::set-loading?
-  (fn [db [_ loading?]]
-    (assoc db ::spec/loading? loading?)))
-
-
 (reg-event-fx
   ::refresh
   (fn [{{:keys [::spec/version] :as db} :db} [_ page-changed?]]
@@ -134,8 +128,7 @@
   ::set-module
   (fn [{{:keys [::spec/validate-docker-compose] :as db} :db} [_ {:keys [id] :as module}]]
     (let [found?  (nil? module)
-          db      (assoc db ::spec/completed? true
-                            ::spec/module-path (:path module)
+          db      (assoc db ::spec/module-path (:path module)
                             ::spec/module (if (nil? module) {} module)
                             ::spec/module-immutable module
                             ::spec/validate-docker-compose (if (= id (:module-id validate-docker-compose))
@@ -191,7 +184,6 @@
     (let [path (utils/nav-path->module-path nav-path)
           v    (if (nil? requested-version) version requested-version)]
       {:db                  (cond-> db
-                                    true (assoc ::spec/completed? false)
                                     requested-version (assoc ::spec/version requested-version))
        ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
                                          (dispatch [::main-events/set-loading? false]))]})))

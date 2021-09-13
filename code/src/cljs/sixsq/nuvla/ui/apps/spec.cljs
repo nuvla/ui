@@ -4,9 +4,6 @@
     [sixsq.nuvla.ui.utils.spec :as spec-utils]))
 
 
-(s/def ::loading? boolean?)
-
-
 ;; Utils
 
 (defn nonblank-string [s]
@@ -174,8 +171,7 @@
 
 (s/def ::module-not-found? boolean?)
 
-(s/def ::db (s/keys :req [::loading?
-                          ::active-input
+(s/def ::db (s/keys :req [::active-input
                           ::form-spec
                           ::form-valid?
                           ::validate-form?
@@ -198,8 +194,7 @@
                           ::active-tab-index
                           ::module-not-found?]))
 
-(def defaults {::loading?                  true
-               ::active-input              nil
+(def defaults {::active-input              nil
                ::form-spec                 nil
                ::form-valid?               true
                ::validate-form?            false

@@ -106,8 +106,7 @@
         can-terminate? (subscribe [::subs/can-terminate?])
         can-stop?      (subscribe [::subs/can-stop?])
         can-start?     (subscribe [::subs/can-start?])
-        infra-service  (subscribe [::subs/infrastructure-service])
-        loading?       (subscribe [::subs/loading?])]
+        infra-service  (subscribe [::subs/infrastructure-service])]
     [main-components/StickyBar
      [ui/Menu {:borderless true}
       (when @can-delete?
@@ -123,8 +122,7 @@
         [StartButton infra-service])
 
       [main-components/RefreshMenu
-       {:loading?   @loading?
-        :on-refresh #(refresh uuid)}]]]))
+       {:on-refresh #(refresh uuid)}]]]))
 
 
 (defn InfraService

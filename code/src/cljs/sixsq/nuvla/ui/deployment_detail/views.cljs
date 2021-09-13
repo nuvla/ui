@@ -22,7 +22,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.job.subs :as job-subs]
     [sixsq.nuvla.ui.job.views :as job-views]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -863,13 +863,13 @@
 (defn MenuBar
   [{:keys [id] :as deployment}]
   (let [loading? (subscribe [::subs/loading?])]
-    [main-components/StickyBar
+    [components/StickyBar
      [ui/Menu {:borderless true}
       [StartUpdateButton deployment]
       [ShutdownButton deployment :menu-item? true]
       [CloneButton deployment]
       [DeleteButton deployment :menu-item? true]
-      [main-components/RefreshMenu
+      [components/RefreshMenu
        {:action-id  refresh-action-id
         :loading?   @loading?
         :on-refresh #(refresh id)}]]]))
@@ -941,27 +941,28 @@
     (refresh resource-id)
     (fn [_]
       (let [active-index (subscribe [::subs/active-tab-index])]
-        [ui/DimmerDimmable {:style {:overflow "visible"}}
-         [main-components/NotFoundPortal
-          ::subs/not-found?
-          :no-deployment-message-header
-          :no-deployment-message-content]
-         [PageHeader]
-         [MenuBar @deployment]
-         [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 8]
-         [ProgressBars]
-         [vpn-info]
-         [ui/Tab
-          {:menu        {:secondary true
-                         :pointing  true
-                         :style     {:display        "flex"
-                                     :flex-direction "row"
-                                     :flex-wrap      "wrap"}}
-           :panes       (deployment-detail-panes)
-           :activeIndex @active-index
-           :onTabChange (fn [_ data]
-                          (let [active-index (. data -activeIndex)]
-                            (dispatch [::events/set-active-tab-index active-index])))}]]))))
+        [components/LoadingPage {:dimmable? true}
+         [:<>
+          [components/NotFoundPortal
+           ::subs/not-found?
+           :no-deployment-message-header
+           :no-deployment-message-content]
+          [PageHeader]
+          [MenuBar @deployment]
+          [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 8]
+          [ProgressBars]
+          [vpn-info]
+          [ui/Tab
+           {:menu        {:secondary true
+                          :pointing  true
+                          :style     {:display        "flex"
+                                      :flex-direction "row"
+                                      :flex-wrap      "wrap"}}
+            :panes       (deployment-detail-panes)
+            :activeIndex @active-index
+            :onTabChange (fn [_ data]
+                           (let [active-index (. data -activeIndex)]
+                             (dispatch [::events/set-active-tab-index active-index])))}]]]))))
 
 
 (defmethod panel/render :deployment

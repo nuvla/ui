@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.credentials.utils :as utils]
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -61,14 +62,14 @@
 (reg-event-db
   ::set-credentials
   (fn [db [_ credentials]]
-    (assoc db ::spec/credentials credentials)))
+    (assoc db ::spec/credentials credentials
+              ::main-spec/loading? false)))
 
 
 (reg-event-fx
   ::get-credentials
-  (fn [{:keys [db]} [_]]
-    {:db                  (assoc db ::spec/completed? false)
-     ::cimi-api-fx/search [:credential
+  (fn [_ _]
+    {::cimi-api-fx/search [:credential
                            {:orderby "name:asc, id:asc"}
                            #(dispatch [::set-credentials (:resources %)])]}))
 
@@ -83,9 +84,8 @@
   credentials. Filter first and aggregate second, and do this twice?"
 (reg-event-fx
   ::get-credentials-summary
-  (fn [{:keys [db]} [_]]
-    {:db                  (assoc db ::spec/completed? false)
-     ::cimi-api-fx/search [:credential
+  (fn [_ _]
+    {::cimi-api-fx/search [:credential
                            {:orderby     "name:asc, id:asc"
                             :aggregation "terms:subtype"
                             :first       0

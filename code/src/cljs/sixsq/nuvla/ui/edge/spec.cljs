@@ -3,8 +3,6 @@
     [clojure.spec.alpha :as s]))
 
 
-;(s/def ::loading? boolean?)
-
 (s/def ::stale-count nat-int?)
 
 (s/def ::active-count nat-int?)

@@ -69,11 +69,6 @@
 
 
 (reg-sub
-  ::completed?
-  ::spec/completed?)
-
-
-(reg-sub
   ::is-new?
   ::spec/is-new?)
 

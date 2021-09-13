@@ -11,7 +11,7 @@
     [sixsq.nuvla.ui.credentials.subs :as subs]
     [sixsq.nuvla.ui.credentials.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as utils-general]
@@ -587,22 +587,22 @@
           [ui/StatisticGroup (merge {:widths (if clickable? nil 5) :size "tiny"}
                                     {:style {:margin-right "0px"
                                              :display      "block"}})
-           [main-components/StatisticState total ["key"] "TOTAL" clickable?
+           [components/StatisticState total ["key"] "TOTAL" clickable?
             ::events/set-state-selector ::subs/state-selector]
-           [main-components/StatisticState coe ["docker"] "DOCKER/K8S" clickable?
+           [components/StatisticState coe ["docker"] "DOCKER/K8S" clickable?
             ::events/set-state-selector ::subs/state-selector]
-           [main-components/StatisticState csp ["cloud"] "CLOUDS" clickable?
+           [components/StatisticState csp ["cloud"] "CLOUDS" clickable?
             ::events/set-state-selector ::subs/state-selector]
-           [main-components/StatisticState access-key ["key"] "REMOTE ACCESS" clickable?
+           [components/StatisticState access-key ["key"] "REMOTE ACCESS" clickable?
             ::events/set-state-selector ::subs/state-selector]
-           [main-components/StatisticState storage ["disk"] "STORAGE" clickable?
+           [components/StatisticState storage ["disk"] "STORAGE" clickable?
             ::events/set-state-selector ::subs/state-selector]
-           [main-components/StatisticState registry ["docker"] "REGISTRY" clickable?
+           [components/StatisticState registry ["docker"] "REGISTRY" clickable?
             ::events/set-state-selector ::subs/state-selector]
-           [main-components/StatisticState api-key ["key"] "API KEYS" clickable?
+           [components/StatisticState api-key ["key"] "API KEYS" clickable?
             ::events/set-state-selector ::subs/state-selector]
            (when clickable?
-             [main-components/ClickMeStaticPopup])]])))))
+             [components/ClickMeStaticPopup])]])))))
 
 
 (defn credential-modal
@@ -854,13 +854,13 @@
 
 (defn MenuBar []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [main-components/StickyBar
+    [components/StickyBar
      [ui/Menu {:borderless true}
       [uix/MenuItem
        {:name     (@tr [:add])
         :icon     "add"
         :on-click #(dispatch [::events/open-add-credential-modal])}]
-      [main-components/RefreshMenu
+      [components/RefreshMenu
        {:on-refresh #(dispatch [::events/get-credentials])}]]]))
 
 
@@ -957,6 +957,7 @@
                                        @credentials)
         api-key-creds          (filter #(in? api-key-subtypes (:subtype %))
                                        @credentials)]
+
     [(credential coe-service-creds :coe-services :credential-coe-service-section-sub-text "docker")
      (credential cloud-service-creds :cloud-services :credential-cloud-service-section-sub-text "cloud")
      (credential access-key-creds :access-keys :credential-ssh-keys-section-sub-text "key")
@@ -970,17 +971,18 @@
   (dispatch [::events/get-credentials])
   (fn []
     (let [active-index (subscribe [::subs/active-tab-index])]
-      [ui/Tab
-       {:menu        {:secondary true
-                      :pointing  true
-                      :style     {:display        "flex"
-                                  :flex-direction "row"
-                                  :flex-wrap      "wrap"}}
-        :panes       (credentials)
-        :activeIndex @active-index
-        :onTabChange (fn [_ data]
-                       (let [active-index (. data -activeIndex)]
-                         (dispatch [::events/set-active-tab-index active-index])))}])))
+      [components/LoadingPage {}
+       [ui/Tab
+        {:menu        {:secondary true
+                       :pointing  true
+                       :style     {:display        "flex"
+                                   :flex-direction "row"
+                                   :flex-wrap      "wrap"}}
+         :panes       (credentials)
+         :activeIndex @active-index
+         :onTabChange (fn [_ data]
+                        (let [active-index (. data -activeIndex)]
+                          (dispatch [::events/set-active-tab-index active-index])))}]])))
 
 
 (defmethod panel/render :credentials

@@ -86,22 +86,38 @@
 (defn Pagination
   "Provide pagination element with more visible icons. Note: :totalitems is in lowercase not to
    interfere with React DOM attributes."
-  [options]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Grid {:vertical-align "middle"
-              :style          {:margin-top "20px"}}
-     (when (:totalitems options)
+  [_options]
+  (let [tr     (subscribe [::i18n-subs/tr])
+        small  8
+        medium 16
+        large  24]
+    (fn [{:keys [totalitems itemnames elementsperpage onElementsPerPageChange] :as options
+          :or   {itemnames       "items"
+                 elementsperpage small}}]
+      [ui/Grid {:vertical-align "middle"
+                :style          {:margin-top "20px"}}
        [ui/GridColumn {:floated "left", :width 3}
         [ui/Label {:size :medium}
-         (str (@tr [:total]) ": " (:totalitems options))]])
-     [ui/GridColumn {:floated "right", :width 13, :text-align "right"}
-      [ui/Pagination
-       (merge {:size      "tiny"
-               :firstItem {:content (r/as-element [ui/Icon {:name "angle double left"}]) :icon true}
-               :lastItem  {:content (r/as-element [ui/Icon {:name "angle double right"}]) :icon true}
-               :prevItem  {:content (r/as-element [ui/Icon {:name "angle left"}]) :icon true}
-               :nextItem  {:content (r/as-element [ui/Icon {:name "angle right"}]) :icon true}}
-              options)]]]))
+         (str (str/capitalize (@tr [:total])) " " itemnames ": " totalitems)]]
+       [ui/GridColumn {:floated "right", :width 10, :text-align "right"}
+        (when onElementsPerPageChange
+          [:<>
+           [:span "View "]
+           [ui/Dropdown {:default-value elementsperpage
+                         :selection     true
+                         :compact       true
+                         :options       [{:key small :value small :text small}
+                                         {:key medium :value medium :text medium}
+                                         {:key large :value large :text large}]
+                         :on-change     onElementsPerPageChange}]
+           [:span {:style {:padding-right 10}} " " itemnames " per page    "]])
+        [ui/Pagination
+         (merge {:size      "tiny"
+                 :firstItem {:content (r/as-element [ui/Icon {:name "angle double left"}]) :icon true}
+                 :lastItem  {:content (r/as-element [ui/Icon {:name "angle double right"}]) :icon true}
+                 :prevItem  {:content (r/as-element [ui/Icon {:name "angle left"}]) :icon true}
+                 :nextItem  {:content (r/as-element [ui/Icon {:name "angle right"}]) :icon true}}
+                (dissoc options :onElementsPerPageChange))]]])))
 
 
 (defn EditorYaml
@@ -232,11 +248,11 @@
     (fn [name & {:keys [key _placeholder default-value spec _on-change on-validation
                         required? editable? validate-form? _type _input-help-msg]
                  :or   {editable? true, spec any?}
-                 :as options}]
-      (let [name-label  (cond-> name
-                                (and editable? required?) (general-utils/mandatory-name))
-            validate?   (boolean (or @local-validate? validate-form?))
-            error?      (and validate? (not (s/valid? spec default-value)))]
+                 :as   options}]
+      (let [name-label (cond-> name
+                               (and editable? required?) (general-utils/mandatory-name))
+            validate?  (boolean (or @local-validate? validate-form?))
+            error?     (and validate? (not (s/valid? spec default-value)))]
         (when on-validation
           (dispatch [on-validation key error?]))
         [ui/TableRow

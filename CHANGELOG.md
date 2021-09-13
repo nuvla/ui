@@ -5,6 +5,7 @@
 ### Added
 
   - Introduced a spinner when loading content, providing a smoother user experience.
+  - Introduced on app store ability to change the number of items per page
 
 ### Changed
 

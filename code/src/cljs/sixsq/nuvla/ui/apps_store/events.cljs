@@ -169,3 +169,9 @@
   ::reset-page
   (fn [db _]
     (assoc db ::spec/page 1)))
+
+
+(reg-event-db
+  ::set-elements-per-page
+  (fn [db [_ elements-per-page]]
+    (assoc db ::spec/elements-per-page elements-per-page)))

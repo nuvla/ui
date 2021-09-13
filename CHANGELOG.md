@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.22.0] - 2021-09-14
+
 ### Added
 
   - Introduced a spinner when navigating through pages, providing a smoother user
@@ -10,7 +12,9 @@
 
 ### Changed
 
-- Fix bug where dropdown in the share tab for NuvlaBox where trimmed
+  - Fix bug where dropdown in the share tab for NuvlaBox where trimmed
+  - Fix bug where VPN dropdown on New NuvlaBox is empty
+  - Fix bug with "Cluster actions" on NuvlaBox.
 
 ## [2.21.0] - 2021-08-31
 

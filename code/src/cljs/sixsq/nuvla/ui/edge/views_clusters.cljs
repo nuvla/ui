@@ -9,7 +9,7 @@
     [sixsq.nuvla.ui.edge.views-utils :as views-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -22,28 +22,23 @@
 
 
 (defn MenuBar []
-  (let [loading?      (subscribe [::subs/loading?])
-        refresh-event ::events/refresh-clusters]
-    (dispatch [refresh-event])
-    (fn []
-      [main-components/StickyBar
-       [ui/Menu {:borderless true, :stackable true}
-        [views-utils/AddButton]
-        [ui/MenuItem {:icon     "grid layout"
-                      :active   (= @view-type :cards)
-                      :on-click #(reset! view-type :cards)}]
-        [ui/MenuItem {:icon     "table"
-                      :disabled true
-                      :active   (= @view-type :table)
-                      :on-click #(reset! view-type :table)}]
-        [ui/MenuItem {:icon     "map"
-                      :disabled true
-                      :active   (= @view-type :map)
-                      :on-click #(reset! view-type :map)}]
-        [main-components/RefreshMenu
-         {:action-id  events/refresh-id
-          :loading?   @loading?
-          :on-refresh #(dispatch [refresh-event])}]]])))
+  [components/StickyBar
+   [ui/Menu {:borderless true, :stackable true}
+    [views-utils/AddButton]
+    [ui/MenuItem {:icon     "grid layout"
+                  :active   (= @view-type :cards)
+                  :on-click #(reset! view-type :cards)}]
+    [ui/MenuItem {:icon     "table"
+                  :disabled true
+                  :active   (= @view-type :table)
+                  :on-click #(reset! view-type :table)}]
+    [ui/MenuItem {:icon     "map"
+                  :disabled true
+                  :active   (= @view-type :map)
+                  :on-click #(reset! view-type :map)}]
+    [components/RefreshMenu
+     {:action-id  events/refresh-id
+      :on-refresh #(dispatch [::events/refresh-clusters])}]]])
 
 
 (defn StatisticStates
@@ -54,7 +49,7 @@
                      :text-align "center"
                      :width      "100%"}}
        [ui/StatisticGroup (merge {:widths 4 :size "tiny"} style/center-block)
-        [main-components/StatisticState (:count @clusters) ["fas fa-chart-network"] "TOTAL"
+        [components/StatisticState (:count @clusters) ["fas fa-chart-network"] "TOTAL"
          false ::events/set-state-selector ::subs/state-selector]]])))
 
 
@@ -118,20 +113,22 @@
 
 (defn ClustersView
   []
+  (dispatch [::events/refresh-clusters])
   (let [tr        (subscribe [::i18n-subs/tr])
         full-text (subscribe [::subs/full-text-clusters-search])]
-    [:<>
-     [uix/PageHeader "fas fa-chart-network" (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
-                                                 (general-utils/capitalize-first-letter (@tr [:clusters])))]
-     [MenuBar]
-     [:div {:style {:display "flex"}}
-      [main-components/SearchInput
-       {:default-value @full-text
-        :on-change     (ui-callback/input-callback
-                         #(dispatch [::events/set-full-text-clusters-search %]))
-        :style         {:display    "inline-table"
-                        :margin-top "20px"}}]
-      [StatisticStates]
-      [ui/Input {:style {:visibility "hidden"}
-                 :icon  "search"}]]
-     [NuvlaboxClusters]]))
+    [components/LoadingPage {}
+     [:<>
+      [uix/PageHeader "fas fa-chart-network" (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
+                                                  (general-utils/capitalize-first-letter (@tr [:clusters])))]
+      [MenuBar]
+      [:div {:style {:display "flex"}}
+       [components/SearchInput
+        {:default-value @full-text
+         :on-change     (ui-callback/input-callback
+                          #(dispatch [::events/set-full-text-clusters-search %]))
+         :style         {:display    "inline-table"
+                         :margin-top "20px"}}]
+       [StatisticStates]
+       [ui/Input {:style {:visibility "hidden"}
+                  :icon  "search"}]]
+      [NuvlaboxClusters]]]))

@@ -9,7 +9,7 @@
     [sixsq.nuvla.ui.edge.views-utils :as views-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
@@ -26,7 +26,7 @@
 (defn MenuBar [cluster-id]
   (let [loading? (subscribe [::subs/loading?])]
     (fn []
-      [main-components/StickyBar
+      [components/StickyBar
        [ui/Menu {:borderless true, :stackable true}
         [views-utils/AddButton]
         [ui/MenuItem {:icon     "grid layout"
@@ -38,7 +38,7 @@
         [ui/MenuItem {:icon     "map"
                       :active   (= @view-type :map)
                       :on-click #(reset! view-type :map)}]
-        [main-components/RefreshMenu
+        [components/RefreshMenu
          {:action-id  events/refresh-id
           :loading?   @loading?
           :on-refresh #(dispatch [::events/refresh-cluster cluster-id])}]]])))
@@ -255,12 +255,13 @@
         cluster (subscribe [::subs/nuvlabox-cluster cluster-id])]
     (dispatch [::events/refresh-cluster cluster-id])
     (fn [cluster-id]
-      [:<>
-       [uix/PageHeader "fas fa-chart-network" (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
-                                                   (:name @cluster))]
-       [MenuBar cluster-id]
-       [TabsCluster]
-       [main-components/NotFoundPortal
-        ::subs/nuvlabox-not-found?
-        :no-nuvlabox-cluster-message-header
-        :no-nuvlabox-cluster-message-content]])))
+      [components/LoadingPage {:dimmable? true}
+       [:<>
+        [components/NotFoundPortal
+         ::subs/nuvlabox-not-found?
+         :no-nuvlabox-cluster-message-header
+         :no-nuvlabox-cluster-message-content]
+        [uix/PageHeader "fas fa-chart-network" (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
+                                                    (:name @cluster))]
+        [MenuBar cluster-id]
+        [TabsCluster]]])))

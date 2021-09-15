@@ -18,6 +18,12 @@
 
 
 (reg-event-db
+  ::set-modal-open?
+  (fn [db [_ modal-open?]]
+    (assoc db ::spec/modal-open? modal-open?)))
+
+
+(reg-event-db
   ::set-dataset-stats
   (fn [db [_ data-set-id response]]
     (let [doc-count   (get-in response [:aggregations :value_count:id :value])

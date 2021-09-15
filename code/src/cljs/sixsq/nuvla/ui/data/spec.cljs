@@ -33,7 +33,10 @@
 
 (s/def ::selected-data-set-ids (s/coll-of string? :kind set?))
 
-(s/def ::db (s/keys :req [::data-records
+(s/def ::modal-open? boolean?)
+
+(s/def ::db (s/keys :req [::modal-open?
+                          ::data-records
                           ::credentials
                           ::application-select-visible?
                           ::loading-applications?
@@ -51,7 +54,8 @@
 (def default-time-period [(time/days-before 30)
                           (time/now)])
 
-(def defaults {::data-records                nil
+(def defaults {::modal-open?                 false
+               ::data-records                nil
                ::credentials                 nil
                ::application-select-visible? false
                ::loading-applications?       false

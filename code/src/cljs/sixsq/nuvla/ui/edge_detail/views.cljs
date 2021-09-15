@@ -842,7 +842,7 @@
                                              (:content action)]]]])])}]])
 
 
-(defn EditAction
+(defn edit-action
   [uuid body close-fn]
   (let [tr (subscribe [::i18n-subs/tr])]
     (dispatch [::events/edit
@@ -851,36 +851,47 @@
     (close-fn)))
 
 
+(defn EditableInput
+  [attribute element _on-change-fn]
+  (let [new-value     (r/atom (get element attribute))
+        initial-value (r/atom new-value)
+        editing?      (r/atom false)
+        close-fn      #(reset! editing? false)]
+    (fn [_attribute _element on-change-fn]
+      [ui/TableCell
+       (if @editing?
+         [ui/Input {:default-value @new-value
+                    :on-key-press  (partial forms/on-return-key
+                                            #(do
+                                               (when (not= @new-value @initial-value)
+                                                 (on-change-fn @new-value)
+                                                 (reset! initial-value @new-value))
+                                               (close-fn)))
+                    :on-key-down   (partial forms/on-escape-key
+                                            #(close-fn))
+                    :on-change     (ui-callback/input-callback #(reset! new-value %))
+                    :focus         true
+                    :fluid         true}]
+         [:<>
+          @new-value
+          ff/nbsp
+          [ui/Icon {:name     "pencil"
+                    :on-click #(reset! editing? true)
+                    :style    {:cursor "pointer"}}]])])))
+
+
 (defn EditableCell
   [attribute]
-  (let [nuvlabox  (subscribe [::subs/nuvlabox])
-        can-edit? (subscribe [::subs/can-edit?])
-        new-value (r/atom (get @nuvlabox attribute))
-        editing?  (r/atom false)
-        close-fn  #(do
-                     (reset! editing? false)
-                     (refresh (:id @nuvlabox)))]
-    (fn [attribute _value _refresh-fn]
-      (let [initial-value (get @nuvlabox attribute)
-            id            (:id @nuvlabox)]
-        [ui/TableCell
-         (if @editing?
-           [ui/Input {:default-value initial-value
-                      :on-key-press  (partial forms/on-return-key
-                                              #(if (= @new-value initial-value)
-                                                 (close-fn)
-                                                 (EditAction id {attribute @new-value} close-fn)))
-                      :on-change     (ui-callback/input-callback #(reset! new-value %))
-                      :focus         true
-                      :fluid         true}]
-           initial-value)
-         (when (and @can-edit? (not @editing?))
-           [:<>
-            ff/nbsp
-            [ui/Icon {:name     "pencil"
-                      :on-click #(reset! editing? true)
-                      :style    {:cursor "pointer"}}]])]))))
-
+  (let [tr           (subscribe [::i18n-subs/tr])
+        nuvlabox     (subscribe [::subs/nuvlabox])
+        can-edit?    (subscribe [::subs/can-edit?])
+        id           (:id @nuvlabox)
+        on-change-fn (fn [value] (dispatch [::events/edit
+                                            id {attribute value}
+                                            (@tr [:nuvlabox-updated-successfully])]))]
+    (if @can-edit?
+      [EditableInput attribute @nuvlabox on-change-fn]
+      [ui/TableCell (get @nuvlabox attribute)])))
 
 
 (defn TabOverviewNuvlaBox

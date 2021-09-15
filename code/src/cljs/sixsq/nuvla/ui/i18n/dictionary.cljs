@@ -404,6 +404,7 @@
         :name-of-url                                   "name of this url"
         :new                                           "new"
         :new-component                                 "new component"
+        :new-dataset                                   "new dataset"
         :new-name                                      "new name"
         :new-password                                  "New password"
         :new-password-repeat                           "Repeat your password"

@@ -20,11 +20,94 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.general :as utils-general]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [clojure.string :as str]))
 
 
 (defn refresh []
   (dispatch [::events/refresh]))
+
+
+(defn NewDatasetModal []
+  (let [open?     (subscribe [::subs/modal-open?])
+        ;error     (subscribe [::subs/error-message])
+        tr        (subscribe [::i18n-subs/tr])
+        ;form-conf {:names->value      {:current-password    ""
+        ;                               :new-password        ""
+        ;                               :new-password-repeat ""}
+        ;           :form-spec         ::credential-change-password
+        ;           :names->validators {:new-password-repeat [password-repeat-check]}}
+        ;form      (fv/init-form form-conf)
+        ]
+    (fn []
+      (when @open?
+        [ui/Modal
+         {:size      :tiny
+          :open      @open?
+          :closeIcon true
+          :on-close  #(dispatch [::events/set-modal-open? false])
+          ; (do
+          ;(dispatch [::events/close-modal])
+          ;(reset! form (fv/init-form form-conf)))
+          }
+
+         [uix/ModalHeader {:header (@tr [:new-dataset])
+                           :icon "add"}]
+
+         [ui/ModalContent
+
+          ;(when @error
+          ;  [ui/Message {:negative  true
+          ;               :size      "tiny"
+          ;               :onDismiss #(dispatch [::events/clear-error-message])}
+          ;   [ui/MessageHeader (str/capitalize (@tr [:error]))]
+          ;   [:p @error]])
+
+          ;[ui/Form
+          ; [ui/FormInput
+          ;  {:name          :current-password
+          ;   :id            "current-password"
+          ;   :label         (str/capitalize (@tr [:current-password]))
+          ;   :required      true
+          ;   :icon          "key"
+          ;   :icon-position "left"
+          ;   :auto-focus    "on"
+          ;   :auto-complete "off"
+          ;   :type          "password"
+          ;   :on-change     (partial fv/event->names->value! form)
+          ;   :on-blur       (partial fv/event->show-message form)
+          ;   :error         (fv/?show-message form :current-password spec->msg)}]
+          ; [ui/FormGroup {:widths 2}
+          ;  [ui/FormInput {:name          :new-password
+          ;                 :icon          "key"
+          ;                 :icon-position "left"
+          ;                 :required      true
+          ;                 :auto-complete "new-password"
+          ;                 :label         (str/capitalize (@tr [:new-password]))
+          ;                 :type          "password"
+          ;                 :on-change     (partial fv/event->names->value! form)
+          ;                 :on-blur       (partial fv/event->show-message form)
+          ;                 :error         (fv/?show-message form :new-password spec->msg)}]
+          ;  [ui/FormInput {:name      :new-password-repeat
+          ;                 :required  true
+          ;                 :label     (str/capitalize (@tr [:new-password-repeat]))
+          ;                 :type      "password"
+          ;                 :on-change (partial fv/event->names->value! form)
+          ;                 :on-blur   (partial fv/event->show-message form)
+          ;                 :error     (fv/?show-message form :new-password-repeat spec->msg)}]]]
+          ]
+
+         [ui/ModalActions
+          [uix/Button
+           {:text     (str/capitalize (@tr [:create]))
+            :positive true
+            :on-click #()
+            ; (when (fv/validate-form-and-show? form)
+            ;(dispatch [::events/change-password
+            ;           (-> @form
+            ;               :names->value
+            ;               (dissoc :new-password-repeat))]))
+            }]]]))))
 
 
 (defn ProcessButton
@@ -51,16 +134,14 @@
     [uix/MenuItem
      {:name     (@tr [:add])
       :icon     "add"
-      :on-click (fn [event]
-                  (dispatch [::history-events/navigate (utils/data-record-href "new")])
-                  (.preventDefault event))}]))
+      :on-click #(dispatch [::events/set-modal-open? true])}]))
 
 
 (defn MenuBar
   []
   [ui/Menu {:borderless true}
    [ProcessButton]
-   ;[AddDataSet]
+   [AddDataSet]
    [components/RefreshMenu
     {:on-refresh refresh}]])
 
@@ -291,6 +372,7 @@
         [ApplicationSelectModal]
         [deployment-dialog-views/deploy-modal true]
         [QueriesCardsGroup]
+        [NewDatasetModal]
         [MainActionButton]]])))
 
 

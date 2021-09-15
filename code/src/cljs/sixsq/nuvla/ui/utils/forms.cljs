@@ -3,16 +3,38 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 
-(defn on-return-key
+(defn on-key
   "Will execute the given no-arg function when the value of k is the
-   value for the return key (13). Before executing the function it will
+   value for the trigger-key. Before executing the function it will
    blur the active element in the document, ignoring any errors."
-  [f k]
-  (when (and f (= (.-charCode k) 13))
+  [trigger-key f k]
+  (when (and f (= k trigger-key))
     (try
       (some-> js/document .-activeElement .blur)
       (catch :default _ nil))
     (f)))
+
+
+(defn on-key-code
+  "Useful with :on-key-down event"
+  [trigger-key f k]
+  (on-key trigger-key f (.-keyCode k)))
+
+
+(defn on-char-code
+  "Useful with :on-key-press event"
+  [trigger-key f k]
+  (on-key trigger-key f (.-charCode k)))
+
+
+(defn on-return-key
+  [f k]
+  (on-char-code 13 f k))
+
+
+(defn on-escape-key
+  [f k]
+  (on-key-code 27 f k))
 
 
 (defn descriptions->options [descriptions]

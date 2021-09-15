@@ -80,3 +80,8 @@
   ::full-text-search
   (fn [db]
     (::spec/full-text-search db)))
+
+
+(reg-sub
+  ::modal-open?
+  ::spec/modal-open?)

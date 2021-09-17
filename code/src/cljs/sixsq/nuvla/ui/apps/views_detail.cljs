@@ -738,9 +738,7 @@
                                              (dispatch [::main-events/changes-protection? true])
                                              (dispatch [::events/validate-form]))
                           :on-validation  ::apps-application-events/set-configuration-validation-error}]
-       [ui/TableCell {:floated :left
-                      :width   3}
-        [:span url-name]])
+       [ui/TableCell {:floated :left, :width 3} url-name])
      (if @editable?
        [uix/TableRowCell {:key            (str "url-url-" id)
                           :placeholder    "url - e.g. http://${hostname}:${tcp.8888}/?token=${jupyter-token}"
@@ -755,7 +753,7 @@
                                              (dispatch [::main-events/changes-protection? true])
                                              (dispatch [::events/validate-form]))
                           :on-validation  ::apps-application-events/set-configuration-validation-error}]
-       [:span url])
+       [ui/TableCell {:floated :left, :width 9} url])
      (when @editable?
        [ui/TableCell {:floated :right
                       :width   1
@@ -1151,10 +1149,10 @@
   "Check if the module belongs to a group. If so, search amongst the group. Note that vendor here is a group,
   not a Stripe vendor."
   []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        module        (subscribe [::subs/module])
-        groups        (subscribe [::session-subs/groups])
-        is-vendor?    (utils/is-vendor? @module)]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        module     (subscribe [::subs/module])
+        groups     (subscribe [::session-subs/groups])
+        is-vendor? (utils/is-vendor? @module)]
     (if is-vendor?
       (let [groups-from-module (utils/module->groups @module)
             group-id           (first groups-from-module)

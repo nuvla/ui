@@ -185,7 +185,8 @@
           v    (if (nil? requested-version) version requested-version)]
       {:db                  (cond-> db
                                     requested-version (assoc ::spec/version requested-version))
-       ::apps-fx/get-module [path v #(dispatch [::set-module %])]})))
+       ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
+                                         (dispatch [::deployment-events/get-module-deployments]))]})))
 
 
 (reg-event-db

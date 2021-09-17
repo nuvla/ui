@@ -15,33 +15,8 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.validation :as utils-validation]))
-
-
-(defn ModuleDetails
-  [_new-subtype]
-  (let [module (subscribe [::subs/module])]
-    (dispatch [::main-events/changes-protection? false])
-    (dispatch [::events/form-valid true])
-    (dispatch [::events/set-validate-form? false])
-    (fn [new-subtype]
-      (let [path (get @module :path "new-module")]
-        (dispatch [::deployment-events/get-module-deployments])
-        ^{:key path}
-        [components/LoadingPage {:dimmable? true}
-         [:<>
-          [components/NotFoundPortal
-           ::subs/module-not-found?
-           :no-module-message-header
-           :no-module-message-content]
-          [views-detail/VersionWarning]
-          (let [subtype (or (:subtype @module) new-subtype)]
-            (case subtype
-              "component" [apps-component-views/view-edit]
-              "application" [apps-application-views/ViewEdit]
-              "application_kubernetes" [apps-application-views/ViewEdit]
-              ^{:key (random-uuid)}
-              [apps-project-views/ViewEdit]))]]))))
+    [sixsq.nuvla.ui.utils.validation :as utils-validation]
+    [taoensso.timbre :as log]))
 
 
 (defn new-module
@@ -55,24 +30,53 @@
     (apps-project-views/clear-module)))
 
 
+(defn ModuleDetails
+  [nav-query-params]
+  (let [module      (subscribe [::subs/module])
+        new-subtype (:subtype @nav-query-params)]
+    (fn [_nav-query-params]
+      (let [subtype (or (:subtype @module) new-subtype)]
+        (case subtype
+          "component" [apps-component-views/view-edit]
+          "application" [apps-application-views/ViewEdit]
+          "application_kubernetes" [apps-application-views/ViewEdit]
+          ^{:key (random-uuid)}
+          [apps-project-views/ViewEdit])))))
+
+
+(defn Module
+  [nav-query-params]
+  (let [version     (:version @nav-query-params nil)
+        new-subtype (:subtype @nav-query-params)
+        is-new?     (boolean (seq new-subtype))]
+    (dispatch [::events/is-new? is-new?])
+    (dispatch [::main-events/changes-protection? false])
+    (dispatch [::events/form-valid true])
+    (dispatch [::events/set-validate-form? false])
+    (dispatch [::events/get-module version])
+    (fn [_nav-query-params]
+      (when is-new?
+        (new-module new-subtype))
+      [components/LoadingPage {:dimmable? true}
+       [:<>
+        [components/NotFoundPortal
+         ::subs/module-not-found?
+         :no-module-message-header
+         :no-module-message-content]
+        [views-detail/VersionWarning]
+        [ModuleDetails nav-query-params]]])))
+
+
 (defn Apps
   []
   (let [nav-path         (subscribe [::main-subs/nav-path])
         nav-query-params (subscribe [::main-subs/nav-query-params])]
     (fn []
       (let [module-name (utils/nav-path->module-name @nav-path)
-            new-subtype (:subtype @nav-query-params)
-            version     (:version @nav-query-params nil)
-            is-root?    (empty? module-name)
-            is-new?     (boolean (seq new-subtype))]
-        (dispatch [::events/is-new? is-new?])
+            is-root?    (empty? module-name)]
         (if is-root?
           [apps-store-views/RootView]
-          (do
-            (if is-new?
-              (new-module new-subtype)
-              (dispatch [::events/get-module version]))
-            [ModuleDetails new-subtype]))))))
+          [Module nav-query-params])))))
 
 
 (defmethod panel/render :apps

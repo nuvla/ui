@@ -19,7 +19,6 @@
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.forms :as forms]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
@@ -847,41 +846,8 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     (dispatch [::events/edit
                uuid body
-               (@tr [:nuvlabox-updated-successfully])])
+               (@tr [:updated-successfully])])
     (close-fn)))
-
-
-(defn EditableInput
-  [attribute element on-change-fn]
-  (let [new-value     (r/atom (get element attribute))
-        initial-value (r/atom @new-value)
-        editing?      (r/atom false)
-        close-fn      #(reset! editing? false)
-        save-fn       #(do
-                         (when (not= @new-value @initial-value)
-                           (on-change-fn @new-value)
-                           (reset! initial-value @new-value))
-                         (close-fn))]
-    (fn [_attribute _element _on-change-fn]
-      [ui/TableCell
-       (if @editing?
-         [ui/Input {:default-value @new-value
-                    :on-key-press  (partial forms/on-return-key
-                                            save-fn)
-                    :on-key-down   (partial forms/on-escape-key
-                                            #(do (reset! new-value @initial-value)
-                                                 (close-fn)))
-                    :on-change     (ui-callback/input-callback #(reset! new-value %))
-                    :focus         true
-                    :fluid         true
-                    :action        {:icon     "check"
-                                    :on-click save-fn}}]
-         [:<>
-          @new-value
-          ff/nbsp
-          [ui/Icon {:name     "pencil"
-                    :on-click #(reset! editing? true)
-                    :style    {:cursor "pointer"}}]])])))
 
 
 (defn EditableCell
@@ -890,11 +856,11 @@
         nuvlabox     (subscribe [::subs/nuvlabox])
         can-edit?    (subscribe [::subs/can-edit?])
         id           (:id @nuvlabox)
-        on-change-fn (fn [value] (dispatch [::events/edit
-                                            id {attribute value}
-                                            (@tr [:nuvlabox-updated-successfully])]))]
+        on-change-fn #(dispatch [::events/edit
+                                   id {attribute %}
+                                   (@tr [:updated-successfully])])]
     (if @can-edit?
-      [EditableInput attribute @nuvlabox on-change-fn]
+      [components/EditableInput attribute @nuvlabox on-change-fn]
       [ui/TableCell (get @nuvlabox attribute)])))
 
 
@@ -1050,12 +1016,14 @@
 
 
 (defn TabOverviewTags
-  [{:keys [tags]}]
-  [ui/Segment {:secondary true
-               :color     "teal"
-               :raised    true}
-   [:h4 "Tags"]
-   [uix/Tags {:tags tags}]])
+  [{:keys [id] :as nuvlabox}]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Segment {:secondary true
+                 :color     "teal"
+                 :raised    true}
+     [:h4 "Tags"]
+     [components/EditableTags nuvlabox #(dispatch [::events/edit id {:tags %}
+                                                   (@tr [:updated-successfully])])]]))
 
 
 (defn TabOverviewCluster

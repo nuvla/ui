@@ -200,7 +200,7 @@
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:tags]))]
            [ui/TableCell
-            [uix/Tags {:tags tags}]]])]]]
+            [uix/Tags tags]]])]]]
      [ui/Segment
       (case @view-type
         :cards [NuvlaboxCards]

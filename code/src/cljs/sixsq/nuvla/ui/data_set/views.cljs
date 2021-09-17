@@ -145,12 +145,25 @@
     1))
 
 
+(defn TableCell
+  [attribute {:keys [id] :as element}]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        editable?    (subscribe [::subs/editable?])
+        on-change-fn #(dispatch [::events/edit
+                                 id {attribute %}
+                                 (@tr [:updated-message])])]
+    (if @editable?
+      [components/EditableInput attribute element on-change-fn]
+      [ui/TableCell (get element attribute)])))
+
+
 (defn Summary
   []
   (let [tr             (subscribe [::i18n-subs/tr])
         dataset        (subscribe [::subs/data-set])
         device         (subscribe [::main-subs/device])
-        {:keys [id name description created created-by updated data-record-filter module-filter tags]} @dataset
+        editable?      (subscribe [::subs/editable?])
+        {:keys [id created created-by updated data-record-filter module-filter tags]} @dataset
         resolved-owner (subscribe [::session-subs/resolve-user created-by])]
     [ui/Grid {:columns   (if (contains? #{:wide-screen} @device) 2 1)
               :stackable true
@@ -172,15 +185,16 @@
           [ui/TableBody
            [ui/TableRow
             [ui/TableCell (str/capitalize (@tr [:name]))]
-            [ui/TableCell name]]
+            [TableCell :name @dataset]]
            [ui/TableRow
             [ui/TableCell (str/capitalize (@tr [:description]))]
-            [ui/TableCell description]]
-           (when tags
+            [TableCell :description @dataset]]
+           (when (or tags @editable?)
              [ui/TableRow
               [ui/TableCell (str/capitalize (@tr [:tags]))]
               [ui/TableCell
-               [uix/Tags {:tags tags}]]])
+               [components/EditableTags @dataset #(dispatch [::events/edit id {:tags %}
+                                                             (@tr [:updated-successfully])])]]])
            [ui/TableRow
             [ui/TableCell (str/capitalize (str (@tr [:created])))]
             [ui/TableCell (-> created time/parse-iso8601 time/ago)]]

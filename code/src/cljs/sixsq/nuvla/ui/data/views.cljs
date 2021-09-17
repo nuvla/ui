@@ -29,9 +29,9 @@
 
 
 (defn NewDatasetModal []
-  (let [open?     (subscribe [::subs/modal-open?])
+  (let [open? (subscribe [::subs/modal-open?])
         ;error     (subscribe [::subs/error-message])
-        tr        (subscribe [::i18n-subs/tr])
+        tr    (subscribe [::i18n-subs/tr])
         ;form-conf {:names->value      {:current-password    ""
         ;                               :new-password        ""
         ;                               :new-password-repeat ""}
@@ -52,7 +52,7 @@
           }
 
          [uix/ModalHeader {:header (@tr [:new-dataset])
-                           :icon "add"}]
+                           :icon   "add"}]
 
          [ui/ModalContent
 
@@ -286,7 +286,7 @@
 
 
 (defn DataSetCard
-  [{:keys [id name description] :as _data-set}]
+  [{:keys [id name description tags] :as _data-set}]
   (let [tr        (subscribe [::i18n-subs/tr])
         counts    (subscribe [::subs/counts])
         sizes     (subscribe [::subs/sizes])
@@ -298,6 +298,7 @@
     [uix/Card
      {:header      name
       :description description
+      :tags        tags
       :extra       [:<>
                     [ui/Label
                      [ui/Icon {:name "file"}]

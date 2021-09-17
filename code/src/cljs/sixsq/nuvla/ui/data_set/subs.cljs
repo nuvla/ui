@@ -1,52 +1,51 @@
 (ns sixsq.nuvla.ui.data-set.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.data-set.spec :as spec]))
+    [sixsq.nuvla.ui.data-set.spec :as spec]
+    [sixsq.nuvla.ui.utils.general :as utils-general]))
 
 
 (reg-sub
   ::time-period
-  (fn [db]
-    (::spec/time-period db)))
+  ::spec/time-period)
 
 
 (reg-sub
   ::data-set
-  (fn [db]
-    (::spec/data-set db)))
+  ::spec/data-set)
 
 
 (reg-sub
   ::not-found?
-  (fn [db]
-    (::spec/not-found? db)))
+  ::spec/not-found?)
 
 
 (reg-sub
   ::data-records
-  (fn [db]
-    (::spec/data-records db)))
+  ::spec/data-records)
 
 
 (reg-sub
   ::data-objects
-  (fn [db]
-    (::spec/data-objects db)))
+  ::spec/data-objects)
 
 
 (reg-sub
   ::elements-per-page
-  (fn [db]
-    (::spec/elements-per-page db)))
+  ::spec/elements-per-page)
 
 
 (reg-sub
   ::page
-  (fn [db]
-    (::spec/page db)))
+  ::spec/page)
 
 
 (reg-sub
   ::full-text-search
+  ::spec/full-text-search)
+
+
+(reg-sub
+  ::editable?
   (fn [db]
-    (::spec/full-text-search db)))
+    (utils-general/can-edit? (::spec/data-set db))))

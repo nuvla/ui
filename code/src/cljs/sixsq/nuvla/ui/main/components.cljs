@@ -9,9 +9,12 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as events]
     [sixsq.nuvla.ui.main.subs :as subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.forms :as forms]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.utils.general :as utils-general]))
 
 
 (def ref (react/createRef))
@@ -112,7 +115,7 @@
   (let [open? (r/atom false)]
     (fn [{:keys [job on-dissmiss header]}]
       (let [{:keys [FAILED SUCCESS] :as status-message} (when (not= (:state job) "FAILED")
-                                                          (general-utils/json->edn (:status-message job)))
+                                                          (utils-general/json->edn (:status-message job)))
             some-fail?    (pos? (count FAILED))
             some-success? (pos? (count SUCCESS))
             completed?    (= (:progress job) 100)
@@ -263,3 +266,105 @@
      (if dimmable?
        [DimmableContent content]
        content)]))
+
+
+(defn Pencil
+  [editing?]
+  [ui/Icon {:name     "pencil"
+            :on-click #(reset! editing? true)
+            :style    {:cursor "pointer"}}])
+
+
+(defn EditableInput
+  "Input component that provides editing behaviour:
+    - activate by clicking on pencil icon
+    - saves on enter key or button click
+    - cancel on escape key"
+  [attribute element on-change-fn]
+  (let [new-value     (r/atom (get element attribute))
+        initial-value (r/atom @new-value)
+        editing?      (r/atom false)
+        close-fn      #(reset! editing? false)
+        save-fn       #(do
+                         (when (not= @new-value @initial-value)
+                           (on-change-fn @new-value)
+                           (reset! initial-value @new-value))
+                         (close-fn))]
+    (fn [_attribute _element _on-change-fn]
+      [ui/TableCell
+       (if @editing?
+         [ui/Input {:default-value @new-value
+                    :on-key-press  (partial forms/on-return-key
+                                            save-fn)
+                    :on-key-down   (partial forms/on-escape-key
+                                            #(do (reset! new-value @initial-value)
+                                                 (close-fn)))
+                    :on-change     (ui-callback/input-callback #(reset! new-value %))
+                    :focus         true
+                    :fluid         true
+                    :action        {:icon     "check"
+                                    :on-click save-fn}}]
+         [:<>
+          @new-value
+          ff/nbsp
+          [Pencil editing?]])])))
+
+
+(defn EditableTags
+  "Editable tags component. Allows editing (add, remove) of tags if the element is editable by the user."
+  [{:keys [tags] :as element} _on-change-fn]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        value-options (r/atom tags)
+        new-tags      (r/atom tags)
+        editing?      (r/atom false)
+        uuid          (random-uuid)
+        editable?     (utils-general/can-edit? element)]
+    (fn [{:keys [tags] :as _element} on-change-fn]
+      (let [options (map (fn [v] {:key v :text v :value v}) @value-options)]
+        (if @editing?
+          [:div {:style {:display "flex"}}
+           [ui/Dropdown {:selection        true
+                         :placeholder      "Type to add tags"
+                         :default-value    @new-tags
+                         :name             "tag"
+                         :fluid            true
+                         :allowAdditions   true
+                         :additionLabel    (str (@tr [:add-dropdown]) " ")
+                         :search           true
+                         :noResultsMessage "Type to add a new tag"
+                         :multiple         true
+                         :on-change        (ui-callback/value #(do
+                                                                 (reset! new-tags %)
+                                                                 (on-change-fn %)))
+                         :on-add-item      (ui-callback/value
+                                             (fn [value] (swap! value-options #(conj @value-options value))))
+                         :options          options
+                         :renderLabel      (fn [label]
+                                             (r/as-element
+                                               [ui/Label {:icon    "tag"
+                                                          :size    "mini"
+                                                          :color   "teal"
+                                                          :content (.-value label)
+                                                          :style   {:margin-top 10
+                                                                    :max-height 150
+                                                                    :overflow   "auto"}}]))
+                         }]
+           [ui/Button {:icon     "check"
+                       :on-click #(reset! editing? false)}]]
+          [ui/LabelGroup {:size  "tiny"
+                          :color "teal"
+                          :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+           (for [tag tags]
+             ^{:key (str uuid "_" tag)}
+             [ui/Popup
+              {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
+                                              (utils-general/truncate tag 20)])
+               :content        tag
+               :position       "bottom center"
+               :on             "hover"
+               :size           "tiny"
+               :hide-on-scroll true}])
+           (when editable?
+             [:<>
+              ff/nbsp
+              [Pencil editing?]])])))))

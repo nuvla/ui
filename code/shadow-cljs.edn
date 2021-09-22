@@ -15,11 +15,12 @@
                                 :modules    {:nuvla-ui {:entries [sixsq.nuvla.ui.core]}}
 
                                 :devtools   {:after-load sixsq.nuvla.ui.core/mount-root
-                                             :preloads   [devtools.preload
-                                                          day8.re-frame-10x.preload]}
+                                             :preloads   [
+                                                          devtools.preload
+                                                          #_day8.re-frame-10x.preload]}
 
                                 :dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL
-                                                                "https://nuvla.io"
+                                                                "https://swarm.nuvla.io"
                                                                 #_"https://localhost"
                                                                 re_frame.trace.trace_enabled_QMARK_ true}
                                              :compiler-options {:infer-externs :auto}}

@@ -679,8 +679,8 @@
       [ui/Icon {:icon (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
-     [ui/TableCell (utils/format-created created)]
-     [ui/TableCell [views-utils/FormatTags tags id]]
+     [ui/TableCell (values/format-created created)]
+     [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)
         [ui/Icon {:name "check"}])]]))

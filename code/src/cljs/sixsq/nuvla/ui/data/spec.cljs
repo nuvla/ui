@@ -35,7 +35,10 @@
 
 (s/def ::modal-open? boolean?)
 
-(s/def ::db (s/keys :req [::modal-open?
+(s/def ::active-tab-index number?)
+
+(s/def ::db (s/keys :req [::active-tab-index
+                          ::modal-open?
                           ::data-records
                           ::credentials
                           ::application-select-visible?
@@ -54,7 +57,8 @@
 (def default-time-period [(time/days-before 30)
                           (time/now)])
 
-(def defaults {::modal-open?                 false
+(def defaults {::active-tab-index            0
+               ::modal-open?                 false
                ::data-records                nil
                ::credentials                 nil
                ::application-select-visible? false

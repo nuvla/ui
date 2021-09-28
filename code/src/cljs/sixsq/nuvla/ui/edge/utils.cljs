@@ -209,8 +209,3 @@
                                  boolean)]
     (or (str/blank? (:nuvlabox-release form-data))
         (and payload? payload-incomplete?))))
-
-
-(defn format-created
-  [created]
-  (-> created time/parse-iso8601 time/ago))

@@ -297,6 +297,7 @@
         :images-trust                                  "Images trust"
         :infra-service-give-endpoint-fmt               "Provide endpoint of existing %s cluster"
         :infra-service-short                           "infrastructures"
+        :infra-service                                 "Infrastructure Service"
         :infra-services                                "Infrastructure Services"
         :infrastructure                                "infrastructure"
         :infrastructure-delete-warning                 "I understand that deleting this infrastructure is permanent and cannot be undone."

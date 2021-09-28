@@ -69,7 +69,7 @@
   [opts]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Input (merge {:placeholder (@tr [:search])
-                      :icon        "search"}
+                      :icon        (when-not (:action opts) "search")}
                      opts)]))
 
 

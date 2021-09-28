@@ -168,3 +168,15 @@
   (fn [{:keys [::spec/selected-data-set-ids] :as db} [_ id]]
     (let [f (if (get selected-data-set-ids id) disj conj)]
       (assoc db ::spec/selected-data-set-ids (f selected-data-set-ids id)))))
+
+
+(reg-event-db
+  ::set-active-tab-index
+  (fn [db [_ active-tab-index]]
+    (assoc db ::spec/active-tab-index active-tab-index)))
+
+
+(reg-event-db
+  ::set-elements-per-page
+  (fn [db [_ elements-per-page]]
+    (assoc db ::spec/elements-per-page elements-per-page)))

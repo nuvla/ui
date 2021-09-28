@@ -85,3 +85,9 @@
 (reg-sub
   ::modal-open?
   ::spec/modal-open?)
+
+
+(reg-sub
+  ::active-tab-index
+  (fn [db]
+    (get-in db [::spec/active-tab-index])))

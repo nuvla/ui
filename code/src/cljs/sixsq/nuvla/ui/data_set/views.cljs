@@ -7,15 +7,17 @@
     [sixsq.nuvla.ui.data-set.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
+    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]))
 
 
 (defn refresh
@@ -25,10 +27,11 @@
 
 (defn SearchHeader
   [refresh-fn full-search-event full-text-search-subs]
-  (let [tr          (subscribe [::i18n-subs/tr])
-        time-period (subscribe [::subs/time-period])
-        locale      (subscribe [::i18n-subs/locale])
-        full-text   (subscribe [full-text-search-subs])]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        time-period  (subscribe [::subs/time-period])
+        locale       (subscribe [::i18n-subs/locale])
+        full-text    (subscribe [full-text-search-subs])
+        filter-open? (r/atom false)]
     (fn []
       (let [[time-start time-end] @time-period
             date-format "MMMM DD, YYYY HH:mm"
@@ -74,7 +77,25 @@
            [components/SearchInput
             {:on-change     (ui-callback/input-callback
                               #(dispatch [full-search-event %]))
-             :default-value @full-text}]]]]))))
+             :default-value @full-text
+             :action        (r/as-element [filter-comp/ButtonFilter
+                                           {:resource-name  "deployment"
+                                            :default-filter "" ;@additional-filter
+                                            :open?          filter-open?
+                                            :on-done        #(dispatch [::events/set-additional-filter %])}])}]]]]))))
+
+
+(defn ProcessButton
+  []
+  (let [tr        (subscribe [::i18n-subs/tr])
+        data-sets (subscribe [::subs/selected-data-set-ids])]
+    (fn []
+      [uix/MenuItem
+       {:name     (@tr [:process])
+        :disabled (not (seq @data-sets))
+        :icon     "rocket"
+        :on-click #(dispatch [::main-events/subscription-required-dispatch
+                              [::events/open-application-select-modal]])}])))
 
 
 (defn MenuBar
@@ -84,6 +105,72 @@
     [ui/Menu {:attached "top", :borderless true}
      [components/RefreshMenu
       {:on-refresh #(refresh)}]]]])
+
+
+(defn Pagination
+  []
+  (let [data-records      (subscribe [::subs/data-records])
+        elements-per-page (subscribe [::subs/elements-per-page])
+        page              (subscribe [::subs/page])
+        total-elements    (:count @data-records)
+        total-pages       (utils-general/total-pages total-elements @elements-per-page)]
+    [uix/Pagination {:totalitems              total-elements
+                     :totalPages              total-pages
+                     :activePage              @page
+                     :elementsperpage         @elements-per-page
+                     :onElementsPerPageChange (ui-callback/value
+                                                #(do (dispatch [::events/set-elements-per-page %])
+                                                     (dispatch [::events/set-page 1])
+                                                     (dispatch [::events/get-data-set])))
+                     :onPageChange            (ui-callback/callback
+                                                :activePage #(dispatch [::events/set-page %]))}]))
+
+
+(defn DataRecordRow
+  [{:keys [id name description tags created timestamp bucket content-type infrastructure-service
+           resource:deployment] :as _data-record}]
+  (fn [_data-record]
+    ^{:key id}
+    (let [uuid            (utils-general/id->uuid id)
+          deployment-uuid (utils-general/id->uuid resource:deployment)
+          is-uuid         (utils-general/id->uuid infrastructure-service)]
+      [ui/TableRow
+       [ui/TableCell name]
+       [ui/TableCell description]
+       [ui/TableCell (values/format-created created)]
+       [ui/TableCell timestamp]
+       [ui/TableCell bucket]
+       [ui/TableCell content-type]
+       [ui/TableCell [uix/Tags tags]]
+       [ui/TableCell (values/as-link infrastructure-service :label is-uuid :page "infrastructure-service")]
+       [ui/TableCell (values/as-link resource:deployment :label deployment-uuid)]
+       [ui/TableCell (values/as-link id :label uuid)]])))
+
+
+(defn DataRecordTable
+  []
+  (let [tr           (subscribe [::i18n-subs/tr])
+        data-records (subscribe [::subs/data-records])]
+    [:<>
+     [SearchHeader refresh ::events/set-full-text-search ::subs/full-text-search]
+     [ui/Table {:compact "very", :selectable true}
+      [ui/TableHeader
+       [ui/TableRow
+        [ui/TableHeaderCell (@tr [:name])]
+        [ui/TableHeaderCell (@tr [:description])]
+        [ui/TableHeaderCell (@tr [:created])]
+        [ui/TableHeaderCell (@tr [:timestamp])]
+        [ui/TableHeaderCell "bucket"]
+        [ui/TableHeaderCell "content-type"]
+        [ui/TableHeaderCell (@tr [:tags])]
+        [ui/TableHeaderCell (str/lower-case (@tr [:storage-service]))]
+        [ui/TableHeaderCell (@tr [:deployment])]
+        [ui/TableHeaderCell (@tr [:id])]]]
+      [ui/TableBody
+       (for [{:keys [id] :as dr} (:resources @data-records)]
+         ^{:key id}
+         [DataRecordRow dr])]]
+     [Pagination]]))
 
 
 (defn DataRecordCard
@@ -96,14 +183,13 @@
         filename                  object
         resource-deployment-id    (values/resource->id (:resource:deployment data-record))
         infrastructure-service-id (values/resource->id infrastructure-service)]
-    ()
     ^{:key id}
     [uix/Card
      {:header      [:span [:p {:style {:overflow      "hidden",
                                        :text-overflow "ellipsis",
                                        :max-width     "20ch"}} (or name timestamp)]]
       :meta        (str (@tr [:created]) " " (-> timestamp time/parse-iso8601 time/ago))
-      :description (general-utils/truncate description 60)
+      :description (utils-general/truncate description 60)
       :content     [:<>
                     (when resource-deployment-id
                       [:div {:style {:padding "10px 0 0 0"}}
@@ -219,36 +305,24 @@
   []
   (let [data-records (subscribe [::subs/data-records])
         device       (subscribe [::main-subs/device])]
-    [ui/Grid {:columns   (columns-per-device @device)
-              :stackable true
-              :padded    true
-              :centered  true}
-     [ui/GridRow {:centered true}
-      [ui/GridColumn
-       [SearchHeader refresh ::events/set-full-text-search ::subs/full-text-search]]]
-     [ui/GridRow {:centered true}
-      [ui/GridColumn
-       [ui/Segment style/basic
-        [ui/CardGroup {:centered    true
-                       :itemsPerRow (cards-per-device @device)
-                       :stackable   true}
-         (for [data-record (:resources @data-records)]
-           ^{:key (:id data-record)}
-           [DataRecordCard data-record])]]]]]))
-
-
-(defn Pagination
-  []
-  (let [data-records      (subscribe [::subs/data-records])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
-        total-elements    (:count @data-records)
-        total-pages       (general-utils/total-pages total-elements @elements-per-page)]
-    [uix/Pagination {:totalitems   total-elements
-                     :totalPages   total-pages
-                     :activePage   @page
-                     :onPageChange (ui-callback/callback
-                                     :activePage #(dispatch [::events/set-page %]))}]))
+    [:<>
+     [ui/Grid {:columns   (columns-per-device @device)
+               :stackable true
+               :padded    true
+               :centered  true}
+      [ui/GridRow {:centered true}
+       [ui/GridColumn
+        [SearchHeader refresh ::events/set-full-text-search ::subs/full-text-search]]]
+      [ui/GridRow {:centered true}
+       [ui/GridColumn
+        [ui/Segment style/basic
+         [ui/CardGroup {:centered    true
+                        :itemsPerRow (cards-per-device @device)
+                        :stackable   true}
+          (for [data-record (:resources @data-records)]
+            ^{:key (:id data-record)}
+            [DataRecordCard data-record])]]]]]
+     [Pagination]]))
 
 
 (defn DataSet
@@ -269,5 +343,4 @@
          [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
          [MenuBar dataset-id]
          [Summary]
-         [DataRecordCards]
-         [Pagination]]]])))
+         [DataRecordCards Pagination]]]])))

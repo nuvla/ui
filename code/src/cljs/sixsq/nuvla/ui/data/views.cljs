@@ -1,11 +1,14 @@
 (ns sixsq.nuvla.ui.data.views
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.apps.utils :as application-utils]
     [sixsq.nuvla.ui.data.events :as events]
+    [sixsq.nuvla.ui.data-set.events :as data-set-events]
+    [sixsq.nuvla.ui.data-set.views :as data-set-views]
     [sixsq.nuvla.ui.data.subs :as subs]
     [sixsq.nuvla.ui.data.utils :as utils]
-    [sixsq.nuvla.ui.data-set.views :as data-set-views]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.subs :as deployment-dialog-subs]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
@@ -15,13 +18,16 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [clojure.string :as str]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]))
+
+
+(def view-type (r/atom :cards))
 
 
 (defn refresh []
@@ -137,13 +143,34 @@
       :on-click #(dispatch [::events/set-modal-open? true])}]))
 
 
+(defn AddButton
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/MenuItem
+     {:name     (@tr [:add])
+      :icon     "add"
+      :on-click #(dispatch
+                   [::main-events/subscription-required-dispatch
+                    [::events/open-modal :add]])}]))
+
+
 (defn MenuBar
   []
-  [ui/Menu {:borderless true}
-   [ProcessButton]
-   [AddDataSet]
-   [components/RefreshMenu
-    {:on-refresh refresh}]])
+  [components/StickyBar
+   [ui/Menu {:borderless true, :stackable true}
+    [ProcessButton]
+    [AddButton]
+    [ui/MenuItem {:icon     "grid layout"
+                  :active   (= @view-type :cards)
+                  :on-click #(reset! view-type :cards)}]
+    [ui/MenuItem {:icon     "table"
+                  :active   (= @view-type :table)
+                  :on-click #(reset! view-type :table)}]
+    [ui/MenuItem {:icon     "map"
+                  :active   (= @view-type :map)
+                  :on-click #(reset! view-type :map)}]
+    [components/RefreshMenu
+     {:on-refresh refresh}]]])
 
 
 (defn SearchBar []
@@ -285,6 +312,62 @@
            (@tr [:launch])]]]))))
 
 
+(defn Pagination
+  []
+  (let [elements-per-page (subscribe [::subs/elements-per-page])
+        page              (subscribe [::subs/page])
+        total-elements    (subscribe [::subs/total])
+        total-pages       (utils-general/total-pages @total-elements @elements-per-page)]
+
+    [uix/Pagination {:totalitems              @total-elements
+                     :totalPages              total-pages
+                     :activePage              @page
+                     :elementsperpage         @elements-per-page
+                     :onElementsPerPageChange (ui-callback/value
+                                                #(do (dispatch [::events/set-elements-per-page %])
+                                                     (dispatch [::events/set-page 1])
+                                                     (dispatch [::events/get-data-sets])))
+                     :onPageChange            (ui-callback/callback
+                                                :activePage #(dispatch [::events/set-page %]))}]))
+
+
+(defn DataSetRow
+  [{:keys [id name description tags created module-filter data-record-filter] :as _data-set}]
+  (fn [_data-set]
+    ^{:key id}
+    (let [uuid (utils-general/id->uuid id)]
+      [ui/TableRow
+       [ui/TableCell name]
+       [ui/TableCell description]
+       [ui/TableCell (utils-values/format-created created)]
+       [ui/TableCell data-record-filter]
+       [ui/TableCell module-filter]
+       [ui/TableCell [uix/Tags tags]]
+       [ui/TableCell (utils-values/as-link id :label uuid)]])))
+
+
+(defn DataSetTable
+  []
+  (let [tr        (subscribe [::i18n-subs/tr])
+        data-sets (subscribe [::subs/data-sets])]
+    [:<>
+     [ui/Table {:compact "very", :selectable true}
+      [ui/TableHeader
+       [ui/TableRow
+        [ui/TableHeaderCell (@tr [:name])]
+        [ui/TableHeaderCell (@tr [:description])]
+        [ui/TableHeaderCell (@tr [:created])]
+        [ui/TableHeaderCell (@tr [:filter])]
+        [ui/TableHeaderCell (@tr [:module-filter])]
+        [ui/TableHeaderCell (@tr [:tags])]
+        [ui/TableHeaderCell (@tr [:id])]]]
+      [ui/TableBody
+       (for [[id ds] @data-sets]
+         ^{:key id}
+         [DataSetRow ds])]]
+     [Pagination]]))
+
+
 (defn DataSetCard
   [{:keys [id name description tags] :as _data-set}]
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -313,37 +396,27 @@
                      (.preventDefault event))}]))
 
 
-(defn QueriesCardsGroup
+(defn DataSetCards
   []
   (let [tr                (subscribe [::i18n-subs/tr])
         data-sets         (subscribe [::subs/data-sets])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
-        loading?          (subscribe [::main-subs/loading?])
-        total             (subscribe [::subs/total])]
+        loading?          (subscribe [::main-subs/loading?])]
     (fn []
-      (let [total-elements @total
-            total-pages    (utils-general/total-pages total-elements @elements-per-page)]
-        (if @loading?
-          [ui/Loader {:active true
-                      :inline "centered"}]
-          [:<>
-           [:div style/center-items
-            (if (not (seq @data-sets))
-              [ui/Message {:warning true}
-               [ui/Icon {:name "warning sign"}]
-               (@tr [:no-datasets])]
-              (vec (concat [ui/CardGroup {:centered    true
-                                          :itemsPerRow 4}]
-                           (map (fn [data-set]
-                                  [DataSetCard data-set])
-                                (vals @data-sets)))))]
-           [uix/Pagination {:totalitems   total-elements
-                            :totalPages   total-pages
-                            :activePage   @page
-                            :onPageChange (ui-callback/callback
-                                            :activePage
-                                            #(dispatch [::events/set-page %]))}]])))))
+      (if @loading?
+        [ui/Loader {:active true
+                    :inline "centered"}]
+        [:<>
+         [:div style/center-items
+          (if (not (seq @data-sets))
+            [ui/Message {:warning true}
+             [ui/Icon {:name "warning sign"}]
+             (@tr [:no-datasets])]
+            (vec (concat [ui/CardGroup {:centered    true
+                                        :itemsPerRow 4}]
+                         (map (fn [data-set]
+                                [DataSetCard data-set])
+                              (vals @data-sets)))))]
+         [Pagination]]))))
 
 
 (defn MainActionButton
@@ -360,21 +433,75 @@
                              [::events/open-application-select-modal]])}]]))
 
 
+(defn DataRecords
+  []
+  ;(dispatch [::data-set-events/set-data-set-id nil])
+  (dispatch [::data-set-events/get-all-data-records])
+  [:<>
+   [SearchBar]
+   (case @view-type
+     :cards [data-set-views/DataRecordCards]
+     :table [data-set-views/DataRecordTable])
+   [MainActionButton]])
+
+
+(defn DataSets
+  []
+  [:<>
+   [SearchBar]
+   [ApplicationSelectModal]
+   (case @view-type
+     :cards [DataSetCards]
+     :table [DataSetTable]
+     :map [DataSetCards])
+   [deployment-dialog-views/deploy-modal true]
+   [NewDatasetModal]
+   [MainActionButton]])
+
+
+(defn data-sets
+  []
+  {:menuItem {:content (r/as-element [:span "Datasets"])
+              :key     "data-sets"
+              :icon    "object group"}
+   :render   (fn [] (r/as-element [DataSets]))})
+
+
+(defn data-records
+  []
+  {:menuItem {:content (r/as-element [:span "Data records"])
+              :key     "data-records"
+              :icon    "file"}
+   :render   (fn [] (r/as-element [DataRecords]))})
+
+
+(defn data-panes
+  []
+  [(data-sets)
+   (data-records)])
+
+
 (defn Data
   []
   (refresh)
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        active-index (subscribe [::subs/active-tab-index])]
     (fn []
       [components/LoadingPage {}
        [ui/Segment style/basic
         [uix/PageHeader "database" (@tr [:data-processing])]
         [MenuBar]
-        [SearchBar]
-        [ApplicationSelectModal]
-        [deployment-dialog-views/deploy-modal true]
-        [QueriesCardsGroup]
-        [NewDatasetModal]
-        [MainActionButton]]])))
+        [ui/Tab
+         {:menu        {:secondary true
+                        :pointing  true
+                        :style     {:display        "flex"
+                                    :flex-direction "row"
+                                    :flex-wrap      "wrap"}}
+          :panes       (data-panes)
+          :activeIndex @active-index
+          :onTabChange (fn [_ data]
+                         (let [active-index (. data -activeIndex)]
+                           (dispatch [::events/set-active-tab-index active-index])))}]]])))
 
 
 (defmethod panel/render :data

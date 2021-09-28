@@ -60,6 +60,12 @@
                            #(dispatch [::set-data-records %])]}))
 
 
+(reg-event-fx
+  ::get-all-data-records
+  (fn [_ _]
+    {:fx [[:dispatch [::get-data-records nil]]]}))
+
+
 (reg-event-db
   ::set-data-set-id
   (fn [db [_ id]]
@@ -114,3 +120,9 @@
                                             :content success-msg
                                             :type    :success}]))
                               (dispatch [::set-data-set %])))]}))
+
+
+(reg-event-db
+  ::set-elements-per-page
+  (fn [db [_ elements-per-page]]
+    (assoc db ::spec/elements-per-page elements-per-page)))

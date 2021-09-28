@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.edge.events :as events]
     [sixsq.nuvla.ui.edge.subs :as subs]
     [sixsq.nuvla.ui.edge.utils :as utils]
+    [sixsq.nuvla.ui.utils.values :as utils-values]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -15,20 +16,6 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]))
-
-
-(defn FormatTags
-  [tags id]
-  [ui/LabelGroup {:size  "tiny"
-                  :color "teal"
-                  :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-   (for [tag tags]
-     ^{:key (str id "-" tag)}
-     [ui/Label {:style {:max-width     "15ch"
-                        :overflow      "hidden"
-                        :text-overflow "ellipsis"
-                        :white-space   "nowrap"}}
-      [ui/Icon {:name "tag"}] tag])])
 
 
 (defn NuvlaboxRow
@@ -42,8 +29,8 @@
       [ui/Icon {:icon (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
-     [ui/TableCell (utils/format-created created)]
-     [ui/TableCell [FormatTags tags id]]
+     [ui/TableCell (utils-values/format-created created)]
+     [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)
         [ui/Icon {:name "check"}])]]))

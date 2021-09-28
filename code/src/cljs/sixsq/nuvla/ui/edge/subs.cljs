@@ -34,6 +34,15 @@
   (fn [db]
     (::spec/nuvlaboxes db)))
 
+(reg-sub
+  ::nuvlabox-locations
+  (fn [db]
+    (::spec/nuvlabox-locations db)))
+
+(reg-sub
+  ::nuvlabox-inferred-locations
+  (fn [db]
+    (::spec/nuvlabox-inferred-locations db)))
 
 (reg-sub
   ::nuvlaboxes-summary

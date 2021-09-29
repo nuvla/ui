@@ -15,11 +15,10 @@
     {:fx [[:dispatch [::get-data-set]]]}))
 
 
-(reg-event-fx
+(reg-event-db
   ::set-page
-  (fn [{db :db} [_ page]]
-    {:db       (assoc db ::spec/page page)
-     :dispatch [::get-data-set]}))
+  (fn [db [_ page]]
+    (assoc db ::spec/page page)))
 
 
 (reg-event-db
@@ -39,7 +38,8 @@
 (reg-event-fx
   ::set-data-records
   (fn [{db :db} [_ data-records]]
-    {:db (assoc db ::spec/data-records data-records)
+    {:db (assoc db ::spec/data-records data-records
+                   ::main-spec/loading? false)
      :fx (into [] (for [data-record (:resources data-records)]
                     (when-let [data-object-id (:resource:object data-record)]
                       [:dispatch [::get-data-object data-object-id]])))}))
@@ -77,7 +77,8 @@
   (fn [db [_ data-set]]
     (assoc db ::spec/not-found? (nil? data-set)
               ::spec/data-set data-set
-              ::main-spec/loading? false)))
+              ;::main-spec/loading? false
+              )))
 
 
 (reg-event-fx

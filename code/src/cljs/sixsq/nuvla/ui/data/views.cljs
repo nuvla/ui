@@ -435,13 +435,11 @@
 
 (defn DataRecords
   []
-  ;(dispatch [::data-set-events/set-data-set-id nil])
   (dispatch [::data-set-events/get-all-data-records])
   [:<>
-   [SearchBar]
    (case @view-type
-     :cards [data-set-views/DataRecordCards]
-     :table [data-set-views/DataRecordTable])
+     :cards [data-set-views/DataRecordCards data-set-views/PaginationAllDataRecords]
+     :table [data-set-views/DataRecordTable data-set-views/PaginationAllDataRecords])
    [MainActionButton]])
 
 

@@ -123,7 +123,28 @@
                                                      (dispatch [::events/set-page 1])
                                                      (dispatch [::events/get-data-set])))
                      :onPageChange            (ui-callback/callback
-                                                :activePage #(dispatch [::events/set-page %]))}]))
+                                                :activePage #(do (dispatch [::events/set-page %])
+                                                                 (dispatch [::events/get-data-set])))}]))
+
+
+(defn PaginationAllDataRecords
+  []
+  (let [data-records      (subscribe [::subs/data-records])
+        elements-per-page (subscribe [::subs/elements-per-page])
+        page              (subscribe [::subs/page])
+        total-elements    (:count @data-records)
+        total-pages       (utils-general/total-pages total-elements @elements-per-page)]
+    [uix/Pagination {:totalitems              total-elements
+                     :totalPages              total-pages
+                     :activePage              @page
+                     :elementsperpage         @elements-per-page
+                     :onElementsPerPageChange (ui-callback/value
+                                                #(do (dispatch [::events/set-elements-per-page %])
+                                                     (dispatch [::events/set-page 1])
+                                                     (dispatch [::events/get-all-data-records])))
+                     :onPageChange            (ui-callback/callback
+                                                :activePage #(do (dispatch [::events/set-page %])
+                                                                 (dispatch [::events/get-all-data-records])))}]))
 
 
 (defn DataRecordRow
@@ -148,7 +169,7 @@
 
 
 (defn DataRecordTable
-  []
+  [pagination]
   (let [tr           (subscribe [::i18n-subs/tr])
         data-records (subscribe [::subs/data-records])]
     [:<>
@@ -170,7 +191,7 @@
        (for [{:keys [id] :as dr} (:resources @data-records)]
          ^{:key id}
          [DataRecordRow dr])]]
-     [Pagination]]))
+     [pagination]]))
 
 
 (defn DataRecordCard
@@ -302,7 +323,7 @@
 
 
 (defn DataRecordCards
-  []
+  [pagination]
   (let [data-records (subscribe [::subs/data-records])
         device       (subscribe [::main-subs/device])]
     [:<>
@@ -322,7 +343,7 @@
           (for [data-record (:resources @data-records)]
             ^{:key (:id data-record)}
             [DataRecordCard data-record])]]]]]
-     [Pagination]]))
+     [pagination]]))
 
 
 (defn DataSet

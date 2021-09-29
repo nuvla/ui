@@ -702,3 +702,9 @@
   ::set-details-validation-error
   (fn [db [_ key error?]]
     (utils/set-reset-error db key error? ::spec/details-validation-errors)))
+
+
+(reg-event-db
+  ::set-tags
+  (fn [db [_ tags]]
+    (assoc-in db [::spec/module :tags] tags)))

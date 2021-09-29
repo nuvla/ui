@@ -262,7 +262,7 @@
     (when tags
       [ui/TableRow
        [ui/TableCell (str/capitalize (@tr [:tags]))]
-       [ui/TableCell [components/EditableTags module]]])))
+       [ui/TableCell [apps-views-detail/Tags]]])))
 
 
 (defn OverviewModuleSummary

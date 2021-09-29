@@ -17,7 +17,6 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
-    [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
@@ -30,7 +29,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as utils-values]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]
+    [sixsq.nuvla.ui.main.components :as components]))
 
 
 (def application-kubernetes-subtype "application_kubernetes")
@@ -181,7 +181,7 @@
             add-disabled?    (or @is-new? @page-changed?)
             published?       (utils/published? @module @module-id)]
 
-        [main-components/StickyBar
+        [components/StickyBar
          [ui/Menu {:borderless true}
           (when @editable?
             [uix/MenuItem
@@ -233,7 +233,7 @@
               [UnPublishButton @module]
               [PublishButton @module]))
 
-          [main-components/RefreshMenu
+          [components/RefreshMenu
            {:refresh-disabled? @is-new?
             :on-refresh        #(dispatch [::events/refresh])}]]]))))
 
@@ -526,10 +526,20 @@
          :default-open true]))))
 
 
+(defn Tags
+  []
+  (let [module (subscribe [::subs/module])]
+    [components/EditableTags
+     @module
+     #(do (dispatch [::main-events/changes-protection? true])
+          (dispatch [::events/set-tags %]))]))
+
+
 (defn Details
   [{:keys [_extras _validation-event]}]
   (let [tr               (subscribe [::i18n-subs/tr])
         default-logo-url (subscribe [::subs/default-logo-url])
+        module           (subscribe [::subs/module])
         module-common    (subscribe [::subs/module-common])
         editable?        (subscribe [::subs/editable?])
         validate-form?   (subscribe [::subs/validate-form?])
@@ -564,6 +574,9 @@
                    [ui/TableCell {:collapsing true
                                   :style      {:padding-bottom 8}} label]
                    [ui/TableCell {:style {:padding-left (when @editable? edit-cell-left-padding)}} parent]]))
+              [ui/TableRow
+               [ui/TableCell (@tr [:tags])]
+               [ui/TableCell [Tags]]]
               (for [x extras]
                 x)]]
             [details-section]]

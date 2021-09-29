@@ -740,15 +740,16 @@
 
 
 (defn NuvlaboxMapPoint
-  [{:keys [id name location inferred-location online parent]}]
-  (let [uuid     (general-utils/id->uuid (or parent id))
+  [{:keys [id name location inferred-location online]}]
+  (let [uuid     (general-utils/id->uuid id)
         on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
     [map/CircleMarker {:on-click on-click
                        :center   (map/longlat->latlong (or location inferred-location))
                        :color    (utils/map-online->color online)
                        :opacity  0.5
-                       :weight   2}
-     [map/Tooltip (or name parent id)]]))
+                       :weight   1
+                       :radius   7}
+     [map/Tooltip (or name id)]]))
 
 
 (defn NuvlaboxCard
@@ -796,15 +797,13 @@
 (defn NuvlaboxMap
   []
   (let [nuvlabox-locations          (subscribe [::subs/nuvlabox-locations])
-        nuvlabox-inferred-locations (subscribe [::subs/nuvlabox-inferred-locations])
-        nbs-locations               (:resources @nuvlabox-locations)
-        nbs-inferred-locations      (:resources @nuvlabox-inferred-locations)]
+        nbs-locations               (:resources @nuvlabox-locations)]
     [map/MapBox
      {:style  {:height 500}
       :center map/sixsq-latlng
       :zoom   3}
      (doall
-       (for [{:keys [id] :as nuvlabox} (concat nbs-locations nbs-inferred-locations)]
+       (for [{:keys [id] :as nuvlabox} nbs-locations]
          ^{:key id}
          [NuvlaboxMapPoint nuvlabox]))]))
 

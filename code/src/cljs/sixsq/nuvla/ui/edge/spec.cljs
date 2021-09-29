@@ -11,8 +11,6 @@
 
 (s/def ::nuvlabox-locations any?)
 
-(s/def ::nuvlabox-inferred-locations any?)
-
 (s/def ::nuvlabox-cluster-summary any?)
 
 (s/def ::nuvlaboxes-summary any?)

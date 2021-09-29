@@ -27,9 +27,6 @@
           [:dispatch [::main-events/action-interval-start {:id        refresh-id-locations
                                                            :frequency 10000
                                                            :event     [::get-nuvlabox-locations]}]]
-          [:dispatch [::main-events/action-interval-start {:id        refresh-id-inferred-locations
-                                                           :frequency 10000
-                                                           :event     [::get-nuvlabox-inferred-locations]}]]
           [:dispatch [::main-events/action-interval-start {:id        refresh-summary-id
                                                            :frequency 10000
                                                            :event     [::get-nuvlaboxes-summary]}]]]}))
@@ -117,9 +114,9 @@
     {::cimi-api-fx/search [:nuvlabox
                            {:first  1
                             :last   10000
-                            :select "id,name,online,location"
+                            :select "id,name,online,location,inferred-location"
                             :filter (general-utils/join-and
-                                      "location!=null"
+                                      "(location!=null or inferred-location!=null)"
                                       (when state-selector (utils/state-filter state-selector))
                                       (general-utils/fulltext-query-string full-text-search))}
                            #(dispatch [::set-nuvlabox-locations %])]}))
@@ -136,35 +133,6 @@
                     :content message
                     :type    :error})])
       {:db (assoc db ::spec/nuvlabox-locations nuvlaboxes
-                     ::main-spec/loading? false)})))
-
-
-(reg-event-fx
-  ::get-nuvlabox-inferred-locations
-  (fn [{{:keys [::spec/state-selector
-                ::spec/full-text-search] :as _db} :db} _]
-    {::cimi-api-fx/search [:nuvlabox-status
-                           {:first  1
-                            :last   10000
-                            :select "id,name,online,inferred-location,parent"
-                            :filter (general-utils/join-and
-                                      "inferred-location!=null"
-                                      (when state-selector (utils/state-filter state-selector))
-                                      (general-utils/fulltext-query-string full-text-search))}
-                           #(dispatch [::set-nuvlabox-inferred-locations %])]}))
-
-
-(reg-event-fx
-  ::set-nuvlabox-inferred-locations
-  (fn [{:keys [db]} [_ nuvlaboxes]]
-    (if (instance? js/Error nuvlaboxes)
-      (dispatch [::messages-events/add
-                 (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
-                   {:header  (cond-> (str "failure getting nuvlabox locations")
-                                     status (str " (" status ")"))
-                    :content message
-                    :type    :error})])
-      {:db (assoc db ::spec/nuvlabox-inferred-locations nuvlaboxes
                      ::main-spec/loading? false)})))
 
 
@@ -250,7 +218,8 @@
   (fn [{db :db} [_ state-selector]]
     {:db       (assoc db ::spec/state-selector state-selector
                          ::spec/page 1)
-     :dispatch [::get-nuvlaboxes]}))
+     :dispatch-n [[::get-nuvlaboxes]
+                  [::get-nuvlabox-locations]]}))
 
 
 (reg-event-db

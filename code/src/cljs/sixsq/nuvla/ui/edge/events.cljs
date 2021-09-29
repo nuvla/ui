@@ -216,10 +216,10 @@
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
-    {:db       (assoc db ::spec/state-selector state-selector
-                         ::spec/page 1)
-     :dispatch-n [[::get-nuvlaboxes]
-                  [::get-nuvlabox-locations]]}))
+    {:db (assoc db ::spec/state-selector state-selector
+                   ::spec/page 1)
+     :fx [[:dispatch [::get-nuvlaboxes]]
+          [:dispatch [::get-nuvlabox-locations]]]}))
 
 
 (reg-event-db

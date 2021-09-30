@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+  - NuvlaBox map view now show all NuvlaBoxes, including NBs with inferred location
+
 ## [2.22.0] - 2021-09-14
 
 ### Added

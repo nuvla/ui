@@ -145,7 +145,7 @@
                                             ::client-secret
                                             ::refresh-token]))
 
-; Exoscale CSP
+; OpenStack CSP
 
 (s/def ::openstack-username utils-spec/nonblank-string)
 (s/def ::openstack-password utils-spec/nonblank-string)

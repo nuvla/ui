@@ -183,9 +183,9 @@
                                   (dispatch-sync [::events/update-infra-service-map
                                                   (cloud-params-default-by-cred-id @re-frame.db/app-db cred-id)])
                                   (on-change cred-id))))]
-        [ui/TableRow
-         [ui/TableCell {:collapsing false} (@tr [:credentials-cloud])]
-         [ui/TableCell {:error (and validate? (not valid?))}
+        [ui/TableRow {:columns 2}
+         [ui/TableCell {:collapsing false, :width 8} (@tr [:credentials-cloud])]
+         [ui/TableCell {:width 8, :error (and validate? (not valid?))}
           (if (pos-int? (count @mgmt-creds))
             ^{:key value}
             [ui/Dropdown {:clearable   true
@@ -297,27 +297,19 @@
       (let [editable?            (general-utils/editable? @service @is-new?)
             mgmt-cred-set?       (subscribe [::subs/mgmt-creds-set?])
             mgmt-cred-subtype    (subscribe [::subs/mgmt-cred-subtype])
+            cloud-param          (fn [k] (or (get @service k)
+                                               (utils/cloud-param-default-value @mgmt-cred-subtype k)))
             {:keys [name description endpoint]} @service
-            cloud-project        (or (:cloud-project @service)
-                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-project))
-            cloud-domain         (or (:cloud-domain @service)
-                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-domain))
-            cloud-api-endpoint   (or (:cloud-api-endpoint @service)
-                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-api-endpoint))
-            cloud-network        (or (:cloud-network @service)
-                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-network))
-            cloud-floating-ip    (or (:cloud-floating-ip @service)
-                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-floating-ip))
-            cloud-user           (or (:cloud-user @service)
-                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-user))
-            cloud-region         (or (:cloud-region @service)
-                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-region))
-            cloud-vm-size        (or (:cloud-vm-size @service)
-                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-size))
-            cloud-vm-image       (or (:cloud-vm-image @service)
-                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-image))
-            cloud-security-group (or (:cloud-security-group @service)
-                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-security-group))
+            cloud-project        (cloud-param :cloud-project)
+            cloud-domain         (cloud-param :cloud-domain)
+            cloud-api-endpoint   (cloud-param :cloud-api-endpoint)
+            cloud-network        (cloud-param :cloud-network)
+            cloud-floating-ip    (cloud-param :cloud-floating-ip)
+            cloud-user           (cloud-param :cloud-user)
+            cloud-region         (cloud-param :cloud-region)
+            cloud-vm-size        (cloud-param :cloud-vm-size)
+            cloud-vm-image       (cloud-param :cloud-vm-image)
+            cloud-security-group (cloud-param :cloud-security-group)
             cloud-vm-disk-size   (if-not @mgmt-cred-set?
                                    ""
                                    (utils/calc-disk-size

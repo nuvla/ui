@@ -161,7 +161,8 @@
   [db cred-id]
   (get utils/cloud-params-defaults (utils/mgmt-cred-subtype-by-id db cred-id)))
 
-(defn row-csp-credential-selector
+
+(defn RowCspCredentialSelector
   [subtypes additional-filter _disabled? _value-spec _on-change]
   (let [tr              (subscribe [::i18n-subs/tr])
         mgmt-creds      (subscribe [::subs/management-credentials-available])
@@ -183,7 +184,7 @@
                                                   (cloud-params-default-by-cred-id @re-frame.db/app-db cred-id)])
                                   (on-change cred-id))))]
         [ui/TableRow
-         [ui/TableCell {:collapsing false} (@tr [:credentials-cloud-short])]
+         [ui/TableCell {:collapsing false} (@tr [:credentials-cloud])]
          [ui/TableCell {:error (and validate? (not valid?))}
           (if (pos-int? (count @mgmt-creds))
             ^{:key value}
@@ -203,7 +204,7 @@
             [ui/Message {:content (@tr [:credentials-cloud-not-found])}])]]))))
 
 
-(defn ssh-keys-selector
+(defn SshKeysSelector
   [_disabled?]
   (let [ssh-keys         (subscribe [::subs/ssh-keys])
         ssh-keys-options (subscribe [::subs/ssh-keys-options])
@@ -236,7 +237,7 @@
             [:span (str/join ", " @ssh-keys)]]]]]))))
 
 
-(defn cloud-help-popup
+(defn CloudHelpPopup
   [text cred-subtype]
   [:span ff/nbsp
    (ff/help-popup (r/as-element
@@ -247,7 +248,39 @@
                   :on (if cred-subtype "focus" "hover"))])
 
 
-(defn service-coe
+(defn TableRowFieldProjectId
+  [cloud-project on-change required?]
+  (let [mgmt-cred-subtype (subscribe [::subs/mgmt-cred-subtype])
+        mgmt-cred-set?    (subscribe [::subs/mgmt-creds-set?])
+        validate-form?    (subscribe [::subs/validate-form?])]
+    [uix/TableRowField [:span "Project ID" [CloudHelpPopup "Cloud Project ID." @mgmt-cred-subtype]],
+     :placeholder "", :editable? @mgmt-cred-set?, :required? required?, :default-value cloud-project,
+     :spec ::spec/cloud-project, :on-change (partial on-change :cloud-project), :validate-form? @validate-form?]))
+
+
+(defn TableRowFieldSecurityGroup
+  [cloud-security-group on-change required?]
+  (let [mgmt-cred-subtype (subscribe [::subs/mgmt-cred-subtype])
+        mgmt-cred-set?    (subscribe [::subs/mgmt-creds-set?])
+        validate-form?    (subscribe [::subs/validate-form?])]
+    [uix/TableRowField [:span "Security Group" [CloudHelpPopup "Cloud specific security group." @mgmt-cred-subtype]],
+     :editable? @mgmt-cred-set?, :required? required?, :placeholder "", :default-value cloud-security-group,
+     :spec ::spec/cloud-security-group, :on-change (partial on-change :cloud-security-group),
+     :validate-form? @validate-form?]))
+
+
+(defn TableRowFieldRegion
+  [cloud-region on-change required?]
+  (let [mgmt-cred-subtype (subscribe [::subs/mgmt-cred-subtype])
+        mgmt-cred-set?    (subscribe [::subs/mgmt-creds-set?])
+        validate-form?    (subscribe [::subs/validate-form?])]
+    [uix/TableRowField [:span "Region" [CloudHelpPopup "Cloud specific region." @mgmt-cred-subtype]],
+     :placeholder "", :editable? @mgmt-cred-set?, :required? required?,
+     :default-value cloud-region, :spec ::spec/cloud-region, :on-change (partial on-change :cloud-region),
+     :validate-form? @validate-form?]))
+
+
+(defn ServiceCoe
   []
   (let [tr                   (subscribe [::i18n-subs/tr])
         is-new?              (subscribe [::subs/is-new?])
@@ -265,19 +298,33 @@
             mgmt-cred-set?       (subscribe [::subs/mgmt-creds-set?])
             mgmt-cred-subtype    (subscribe [::subs/mgmt-cred-subtype])
             {:keys [name description endpoint]} @service
-            cloud-project        (or (:cloud-project @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-project))
-            cloud-domain         (or (:cloud-domain @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-domain))
-            cloud-api-endpoint   (or (:cloud-api-endpoint @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-api-endpoint))
-            cloud-network        (or (:cloud-network @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-network))
-            cloud-floating-ip    (or (:cloud-floating-ip @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-floating-ip))
-            cloud-user           (or (:cloud-user @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-user))
-            cloud-region         (or (:cloud-region @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-region))
-            cloud-vm-size        (or (:cloud-vm-size @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-size))
-            cloud-vm-image       (or (:cloud-vm-image @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-image))
-            cloud-security-group (or (:cloud-security-group @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-security-group))
-            cloud-vm-disk-size   (if-not @mgmt-cred-set? "" (utils/calc-disk-size (:cloud-vm-disk-size @service) (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-disk-size)))]
-        [:<>
+            cloud-project        (or (:cloud-project @service)
+                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-project))
+            cloud-domain         (or (:cloud-domain @service)
+                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-domain))
+            cloud-api-endpoint   (or (:cloud-api-endpoint @service)
+                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-api-endpoint))
+            cloud-network        (or (:cloud-network @service)
+                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-network))
+            cloud-floating-ip    (or (:cloud-floating-ip @service)
+                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-floating-ip))
+            cloud-user           (or (:cloud-user @service)
+                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-user))
+            cloud-region         (or (:cloud-region @service)
+                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-region))
+            cloud-vm-size        (or (:cloud-vm-size @service)
+                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-size))
+            cloud-vm-image       (or (:cloud-vm-image @service)
+                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-image))
+            cloud-security-group (or (:cloud-security-group @service)
+                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-security-group))
+            cloud-vm-disk-size   (if-not @mgmt-cred-set?
+                                   ""
+                                   (utils/calc-disk-size
+                                     (:cloud-vm-disk-size @service)
+                                     (utils/cloud-param-default-value @mgmt-cred-subtype :cloud-vm-disk-size)))]
 
+        [:<>
          [acl/AclButton {:default-value (:acl @service)
                          :read-only     (not editable?)
                          :on-change     #(dispatch [::events/update-infra-service :acl %])}]
@@ -309,9 +356,14 @@
 
          [ui/Table style/definition
           [ui/TableBody
-           [row-csp-credential-selector cred-views/infrastructure-service-csp-subtypes nil
+           [RowCspCredentialSelector cred-views/infrastructure-service-csp-subtypes nil
             (boolean (:endpoint @service)) (if (:endpoint @service) any? ::spec/management-credential)
             (partial on-change :management-credential)]]]
+
+         (when @mgmt-cred-subtype
+           [:<>
+            [:h4 "Selected cloud type: " (get utils/infra-service-subtype-pretty-names @mgmt-cred-subtype)]])
+
          [ui/Container {:style {:margin "5px" :display "inline-block"}}
           [ui/Input {:label       (@tr [:coe-cluster-size])
                      :placeholder default-multiplicity
@@ -322,7 +374,8 @@
                      :on-change   (ui-callback/input-callback
                                     #(do
                                        (cond
-                                         (number? (general-utils/str->int %)) (reset! multiplicity (general-utils/str->int %))
+                                         (number? (general-utils/str->int %))
+                                         (reset! multiplicity (general-utils/str->int %))
                                          (empty? %) (reset! multiplicity 1))
                                        (on-change :multiplicity @multiplicity)))
                      :step        1
@@ -343,62 +396,75 @@
             [:a {:href "https://rancher.io" :target "_blank"} "https://rancher.io"])]
 
          ^{:key "ssh-keys-selector"}
-         [ssh-keys-selector (not @mgmt-cred-set?)]
+         [SshKeysSelector (not @mgmt-cred-set?)]
 
-         [ui/Table style/definition
-          [ui/TableBody
+         (when @mgmt-cred-subtype
+           [ui/Table style/definition
+            [ui/TableBody
 
-           [uix/TableRowField [:div "VM Size" (cloud-help-popup "Cloud specific VM size definition." @mgmt-cred-subtype)],
-            :placeholder "", :editable? @mgmt-cred-set?, :required? false,
-            :default-value cloud-vm-size, :spec ::spec/cloud-vm-size, :on-change (partial on-change :cloud-vm-size),
-            :validate-form? @validate-form?]
-
-           (when (or (nil? @mgmt-cred-subtype) (get-in utils/cloud-params-defaults [@mgmt-cred-subtype :cloud-vm-disk-size]))
-             [uix/TableRowField [:div "VM Disk Size (GB)" (cloud-help-popup "Cloud specific VM disk size definition." @mgmt-cred-subtype)],
-              :placeholder "", :editable? @mgmt-cred-set?, :required? false, :default-value cloud-vm-disk-size,
-              :spec ::spec/cloud-vm-disk-size, :on-change (partial on-change :cloud-vm-disk-size), :validate-form? @validate-form?])
-
-           (when (or (= utils/infra-service-subtype-google @mgmt-cred-subtype) (= utils/infra-service-subtype-openstack @mgmt-cred-subtype))
-             [uix/TableRowField [:div "Project ID" (cloud-help-popup "Cloud Project ID." @mgmt-cred-subtype)],
-              :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-project,
-              :spec ::spec/cloud-project, :on-change (partial on-change :cloud-project), :validate-form? @validate-form?])
-
-           (when (= utils/infra-service-subtype-openstack @mgmt-cred-subtype)
-             [:<>
-              [uix/TableRowField [:div "Project Domain" (cloud-help-popup "Cloud Project Domain." @mgmt-cred-subtype)],
-               :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-domain,
-               :spec ::spec/cloud-domain, :on-change (partial on-change :cloud-domain), :validate-form? @validate-form?]
-              [uix/TableRowField [:div "Authorization URL" (cloud-help-popup "OpenStack authorization URL." @mgmt-cred-subtype)],
-               :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-api-endpoint,
-               :spec ::spec/cloud-api-endpoint, :on-change (partial on-change :cloud-api-endpoint), :validate-form? @validate-form?]
-              [uix/TableRowField [:div "Network" (cloud-help-popup "OpenStack compute network name." @mgmt-cred-subtype)],
-               :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-network,
-               :spec ::spec/cloud-network, :on-change (partial on-change :cloud-network), :validate-form? @validate-form?]
-              [uix/TableRowField [:div "Floating IP Pool" (cloud-help-popup "OpenStack floating IP pool." @mgmt-cred-subtype)],
-               :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-floating-ip,
-               :spec ::spec/cloud-floating-ip, :on-change (partial on-change :cloud-floating-ip), :validate-form? @validate-form?]
-              [uix/TableRowField [:div "User" (cloud-help-popup "VM user for SSH." @mgmt-cred-subtype)],
-               :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-user,
-               :spec ::spec/cloud-user, :on-change (partial on-change :cloud-user), :validate-form? @validate-form?]])
-
-           (when (not  (= utils/infra-service-subtype-openstack @mgmt-cred-subtype))
-             [uix/TableRowField [:div "Region" (cloud-help-popup "Cloud specific region." @mgmt-cred-subtype)],
+             [uix/TableRowField [:span "VM Size"
+                                 [CloudHelpPopup "Cloud specific VM size definition." @mgmt-cred-subtype]],
               :placeholder "", :editable? @mgmt-cred-set?, :required? false,
-              :default-value cloud-region, :spec ::spec/cloud-region, :on-change (partial on-change :cloud-region),
-              :validate-form? @validate-form?])
+              :default-value cloud-vm-size, :spec ::spec/cloud-vm-size, :on-change (partial on-change :cloud-vm-size),
+              :validate-form? @validate-form?]
 
-           [uix/TableRowField [:div "Image" (cloud-help-popup "Cloud specific image." @mgmt-cred-subtype)],
-            :placeholder "", :editable? @mgmt-cred-set?, :required? false, :default-value cloud-vm-image,
-            :spec ::spec/cloud-vm-image, :on-change (partial on-change :cloud-vm-image), :validate-form? @validate-form?]
+             ; Common to all
+             (when (get-in utils/cloud-params-defaults [@mgmt-cred-subtype :cloud-vm-disk-size])
+               [uix/TableRowField [:span "VM Disk Size (GB)"
+                                   [CloudHelpPopup "Cloud specific VM disk size definition." @mgmt-cred-subtype]],
+                :placeholder "", :editable? @mgmt-cred-set?, :required? false, :default-value cloud-vm-disk-size,
+                :spec ::spec/cloud-vm-disk-size, :on-change (partial on-change :cloud-vm-disk-size),
+                :validate-form? @validate-form?])
 
-           (when (or (= utils/infra-service-subtype-google @mgmt-cred-subtype) (= utils/infra-service-subtype-openstack @mgmt-cred-subtype))
-             [uix/TableRowField [:div "Security Group" (cloud-help-popup "Cloud specific security group." @mgmt-cred-subtype)],
-              :editable? @mgmt-cred-set?, :required? true, :placeholder "", :default-value cloud-security-group,
-              :spec ::spec/cloud-security-group, :on-change (partial on-change :cloud-security-group),
-              :validate-form? @validate-form?])]]]))))
+             [TableRowFieldRegion cloud-region on-change false]
+
+             [uix/TableRowField [:span "Image" [CloudHelpPopup "Cloud specific image." @mgmt-cred-subtype]],
+              :placeholder "", :editable? @mgmt-cred-set?, :required? false, :default-value cloud-vm-image,
+              :spec ::spec/cloud-vm-image, :on-change (partial on-change :cloud-vm-image),
+              :validate-form? @validate-form?]
+
+             ; Azure
+
+             ; EC2
+
+             ; Exoscale
+
+             ; Google
+             (when (= utils/infra-service-subtype-google @mgmt-cred-subtype)
+               [TableRowFieldProjectId cloud-project on-change true]
+               [TableRowFieldSecurityGroup cloud-security-group on-change true])
+
+             ; Openstack
+             (when (= utils/infra-service-subtype-openstack @mgmt-cred-subtype)
+               [:<>
+                [TableRowFieldProjectId cloud-project on-change true]
+                [uix/TableRowField [:span "Project Domain"
+                                    [CloudHelpPopup "Cloud Project Domain." @mgmt-cred-subtype]],
+                 :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-domain,
+                 :spec ::spec/cloud-domain, :on-change (partial on-change :cloud-domain),
+                 :validate-form? @validate-form?]
+                [uix/TableRowField [:span "Authorization URL"
+                                    [CloudHelpPopup "OpenStack authorization URL." @mgmt-cred-subtype]],
+                 :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-api-endpoint,
+                 :spec ::spec/cloud-api-endpoint, :on-change (partial on-change :cloud-api-endpoint),
+                 :validate-form? @validate-form?]
+                [uix/TableRowField [:span "Network"
+                                    [CloudHelpPopup "OpenStack compute network name." @mgmt-cred-subtype]],
+                 :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-network,
+                 :spec ::spec/cloud-network, :on-change (partial on-change :cloud-network),
+                 :validate-form? @validate-form?]
+                [uix/TableRowField [:span "Floating IP Pool"
+                                    [CloudHelpPopup "OpenStack floating IP pool." @mgmt-cred-subtype]],
+                 :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-floating-ip,
+                 :spec ::spec/cloud-floating-ip, :on-change (partial on-change :cloud-floating-ip),
+                 :validate-form? @validate-form?]
+                [uix/TableRowField [:span "User" [CloudHelpPopup "VM user for SSH." @mgmt-cred-subtype]],
+                 :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-user,
+                 :spec ::spec/cloud-user, :on-change (partial on-change :cloud-user), :validate-form? @validate-form?]
+                [TableRowFieldSecurityGroup cloud-security-group on-change true]])]])]))))
 
 
-(defn service-registry
+(defn ServiceRegistry
   []
   (let [tr             (subscribe [::i18n-subs/tr])
         is-new?        (subscribe [::subs/is-new?])
@@ -429,7 +495,7 @@
             :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]]))))
 
 
-(defn service-object-store
+(defn ServiceObjectStore
   []
   (let [tr             (subscribe [::i18n-subs/tr])
         is-new?        (subscribe [::subs/is-new?])
@@ -461,13 +527,13 @@
 
 (def infrastructure-service-validation-map
   {"swarm"      {:validation-event ::events/validate-coe-service-form
-                 :modal-content    service-coe}
+                 :modal-content    ServiceCoe}
    "s3"         {:validation-event ::events/validate-minio-service-form
-                 :modal-content    service-object-store}
+                 :modal-content    ServiceObjectStore}
    "kubernetes" {:validation-event ::events/validate-coe-service-form
-                 :modal-content    service-coe}
+                 :modal-content    ServiceCoe}
    "registry"   {:validation-event ::events/validate-registry-service-form
-                 :modal-content    service-registry}})
+                 :modal-content    ServiceRegistry}})
 
 
 (defn save-callback

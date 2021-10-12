@@ -363,7 +363,9 @@
         ssh-credentials            (subscribe [::subs/ssh-keys-available])
         nb-releases-by-id          (group-by :id @nb-releases)
         default-data               {:refresh-interval 30}
-        first-nb-release           (first @nb-releases)
+        first-nb-release           (->> @nb-releases
+                                        (remove :pre-release)
+                                        first)
         creation-data              (r/atom default-data)
         default-release-data       {:nb-rel      (:id first-nb-release)
                                     :nb-selected first-nb-release

@@ -29,7 +29,10 @@
                                                            :event     [::get-nuvlabox-locations]}]]
           [:dispatch [::main-events/action-interval-start {:id        refresh-summary-id
                                                            :frequency 10000
-                                                           :event     [::get-nuvlaboxes-summary]}]]]}))
+                                                           :event     [::get-nuvlaboxes-summary]}]]
+          [:dispatch [::main-events/action-interval-start {:id        refresh-id-clusters
+                                                           :frequency 10000
+                                                           :event     [::get-nuvlabox-clusters]}]]]}))
 
 
 (reg-event-fx

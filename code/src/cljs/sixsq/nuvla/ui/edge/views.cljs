@@ -21,7 +21,6 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.utils.zip :as zip]))
@@ -750,31 +749,6 @@
                        :weight   1
                        :radius   7}
      [map/Tooltip (or name id)]]))
-
-
-(defn NuvlaboxCard
-  [_nuvlabox _managers]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [id name description created state tags online]} managers]
-      (let [href (str "edge/" (general-utils/id->uuid id))]
-        ^{:key id}
-        [uix/Card
-         {:on-click    #(dispatch [::history-events/navigate href])
-          :href        href
-          :header      [:<>
-                        [:div {:style {:float "right"}}
-                         [edge-detail/OnlineStatusIcon online]]
-                        [ui/IconGroup
-                         [ui/Icon {:name "box"}]
-                         (when (some #{id} managers)
-                           [ui/Icon {:className "fas fa-crown"
-                                     :corner    true
-                                     :color     "blue"}])]
-                        (or name id)]
-          :meta        (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))
-          :state       state
-          :description (when-not (str/blank? description) description)
-          :tags        tags}]))))
 
 
 (defn NuvlaboxCards

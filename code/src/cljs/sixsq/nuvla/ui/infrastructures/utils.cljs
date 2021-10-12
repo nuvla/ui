@@ -52,7 +52,7 @@
     :cloud-region       "us-east-1"
     :cloud-vm-image     "ami-927185ef"
     :cloud-doc-link     "https://docs.aws.amazon.com/ec2"}
-   "infrastructure-service-azure"
+   infra-service-subtype-azure
    {:cloud-vm-size  "Standard_A2"
     :cloud-region   "francecentral"
     :cloud-vm-image "canonical:UbuntuServer:16.04.0-LTS:latest"

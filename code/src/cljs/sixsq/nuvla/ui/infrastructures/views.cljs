@@ -404,14 +404,14 @@
              (when (get-in utils/cloud-params-defaults [@mgmt-cred-subtype :cloud-vm-disk-size])
                [uix/TableRowField [:span "VM Disk Size (GB)"
                                    [CloudHelpPopup "Cloud specific VM disk size definition." @mgmt-cred-subtype]],
-                :placeholder "", :editable? @mgmt-cred-set?, :required? false, :default-value cloud-vm-disk-size,
+                :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-vm-disk-size,
                 :spec ::spec/cloud-vm-disk-size, :on-change (partial on-change :cloud-vm-disk-size),
                 :validate-form? @validate-form?])
 
              [TableRowFieldRegion cloud-region on-change false]
 
              [uix/TableRowField [:span "Image" [CloudHelpPopup "Cloud specific image." @mgmt-cred-subtype]],
-              :placeholder "", :editable? @mgmt-cred-set?, :required? false, :default-value cloud-vm-image,
+              :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-vm-image,
               :spec ::spec/cloud-vm-image, :on-change (partial on-change :cloud-vm-image),
               :validate-form? @validate-form?]
 
@@ -420,6 +420,8 @@
              ; EC2
 
              ; Exoscale
+             (when (= utils/infra-service-subtype-exoscale @mgmt-cred-subtype)
+               [TableRowFieldSecurityGroup cloud-security-group on-change true])
 
              ; Google
              (when (= utils/infra-service-subtype-google @mgmt-cred-subtype)

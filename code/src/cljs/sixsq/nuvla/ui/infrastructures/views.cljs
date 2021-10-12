@@ -450,7 +450,7 @@
                  :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-floating-ip,
                  :spec ::spec/cloud-floating-ip, :on-change (partial on-change :cloud-floating-ip),
                  :validate-form? @validate-form?]
-                [uix/TableRowField [:span "User" [CloudHelpPopup "VM user for SSH." @mgmt-cred-subtype]],
+                [uix/TableRowField [:span "SSH User" [CloudHelpPopup "VM user for SSH." @mgmt-cred-subtype]],
                  :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-user,
                  :spec ::spec/cloud-user, :on-change (partial on-change :cloud-user), :validate-form? @validate-form?]
                 [TableRowFieldSecurityGroup cloud-security-group on-change true]])]])]))))

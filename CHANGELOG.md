@@ -4,10 +4,13 @@
 
 ### Changed
 
+## [2.23.0] - 2021-10-13
+
+### Changed
+
   - Nuvlabox add modal doesn't select pre-release versions
   - NuvlaBox map view now show all NuvlaBoxes, including NBs with inferred location
   - Fix refresh of cluster info on default NuvlaBox view
-
 
 ## [2.22.0] - 2021-09-14
 

@@ -16,10 +16,11 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.job.subs :as job-subs]
     [sixsq.nuvla.ui.job.views :as job-views]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.forms :as forms]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.plot :as plot]
@@ -292,22 +293,21 @@
              [ui/FormField
               [:label
                [general-utils/mandatory-name (@tr [:config-files])]
-               [main-components/InfoPopup (@tr [:config-file-info])]]
+               [components/InfoPopup (@tr [:config-file-info])]]
               [ui/TextArea {:placeholder   "docker-compose.yml\ndocker-compose.gpu.yml\n..."
                             :required      true
                             :default-value (:config-files @form-data)
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :config-files %))}]]
              [ui/FormField
-              [:label (@tr [:env-variables]) " " [main-components/InfoPopup (@tr [:env-variables-info])]]
+              [:label (@tr [:env-variables]) " " [components/InfoPopup (@tr [:env-variables-info])]]
               [ui/TextArea {:placeholder   "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
                             :default-value (:environment @form-data)
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :environment %))}]]]]
            :label (@tr [:advanced])
            :title-size :h4
-           :default-open false]
-          ]
+           :default-open false]]
          [ui/ModalActions
           [uix/Button
            {:text     (@tr [:cancel])
@@ -331,54 +331,65 @@
         :on-change   (ui-callback/value on-change-fn)
         :clearable   true
         :placeholder (@tr [:nuvlabox-available-managers-select])
-        :options     (map (fn [{:keys [name status]}]
-                            {:key name, :text name, :value status}) @managers)
+        :options     (map (fn [[id status]]
+                            (let [name (:name status)]
+                              {:key id, :text name, :value id})) @managers)
         :selection   true}])))
 
 
 (defn ClusterButton
-  [{:keys [id] :as _resource} operation show? _title _icon _button-text]
+  [{:keys [id] :as _resource} operation show?]
   (let [tr               (subscribe [::i18n-subs/tr])
         deployments      (subscribe [::deployment-subs/deployments])
         join-token       (subscribe [::subs/join-token])
         nuvlabox-cluster (subscribe [::subs/nuvlabox-cluster])
+        managers         (subscribe [::subs/nuvlabox-managers])
         close-fn         #(reset! show? false)
         default-action   "join-worker"
         form-data        (r/atom {:cluster-action default-action})
-        actions          [{:key 1 :text "Join as a worker" :value default-action}
-                          {:key 2 :text "Join as a manager" :value "join-manager"}
-                          {:key 3 :text "Leave" :value "leave"}
-                          {:key 4 :text "Force new cluster" :value "force-new-cluster"}]
-        on-change-fn     (fn [k join-token-scope v]
-                           (if (str/blank? v)
-                             (swap! form-data dissoc k)
-                             (do
-                               (swap! form-data dissoc :token)
-                               (swap! form-data assoc k v)
-                               (when join-token-scope
-                                 (dispatch [::events/get-join-token (:parent v) join-token-scope])
-                                 (dispatch [::events/get-nuvlabox-cluster (:parent v)])))))
+        actions          [{:key 1 :text (@tr [:cluster-action-join-worker]) :value default-action}
+                          {:key 2 :text (@tr [:cluster-action-join-manager]) :value "join-manager"}
+                          {:key 3 :text (@tr [:cluster-action-leave]) :value "leave"}
+                          {:key 4 :text (@tr [:cluster-action-force-new-cluster]) :value "force-new-cluster"}]
         on-success-fn    close-fn
         on-error-fn      close-fn
         on-click-fn      #(do
+                            (swap! form-data assoc :token (:token @join-token))
                             (dispatch [::events/set-join-token nil])
                             (dispatch [::events/operation id operation @form-data
                                        on-success-fn on-error-fn]))]
-    (fn [resource _operation show? title icon button-text]
-      (let [dpls          (:resources @deployments)
-            active-dpls   (filter (fn [x]
-                                    (when (:state x)
-                                      (not= (:state x) "STOPPED"))) dpls)
-            has-active-dp (if (> (count active-dpls) 0)
-                            true
-                            false)]
+    (fn [resource _operation show?]
+      (let [dpls                (:resources @deployments)
+            active-dpls         (filter (fn [x]
+                                          (when (:state x)
+                                            (not= (:state x) "STOPPED"))) dpls)
+            has-active-dp       (if (> (count active-dpls) 0)
+                                  true
+                                  false)
+            title               (@tr [:cluster-actions])
+            nuvlabox-manager-id (:nuvlabox-manager-id @form-data)
+            nuvlabox-status     (get-in @managers [nuvlabox-manager-id :status])
+            cluster-action      (:cluster-action @form-data)
+            is-join-manager?    (= cluster-action "join-manager")
+            is-join-worker?     (= cluster-action "join-worker")
+            is-leave-action?    (= cluster-action "leave")
+            is-join-action?     (or is-join-worker? is-join-manager?)
+            manager-selected?   (not (nil? nuvlabox-manager-id))
+            valid-manager?      (and
+                                  manager-selected?
+                                  (not (str/blank? (and (:token @join-token) (:nuvlabox-manager-id @form-data)))))
+            invalid-manager?    (and manager-selected? (not valid-manager?))
+            cluster-id          (:cluster-id @nuvlabox-cluster)
+            cluster-name        (:name @nuvlabox-cluster)
+            join-type           (if is-join-manager? "MANAGER" "WORKER")]
+
         [ui/Modal
          {:open       @show?
           :close-icon true
           :on-close   close-fn
           :trigger    (r/as-element
                         [ui/MenuItem {:on-click #(reset! show? true)}
-                         [ui/Icon {:name icon}]
+                         [ui/Icon {:name "linkify"}]
                          title])}
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
@@ -390,35 +401,50 @@
               {:label         "Action"
                :on-change     (ui-callback/value
                                 (fn [value]
-                                  (on-change-fn :cluster-action nil value)
-                                  (swap! form-data dissoc :nuvlabox-manager-status)
-                                  (swap! form-data dissoc :token)))
+                                  (if (str/blank? value)
+                                    (swap! form-data dissoc :cluster-action)
+                                    (do
+                                      (swap! form-data dissoc :token)
+                                      (swap! form-data assoc :cluster-action value)
+                                      ))
+                                  (swap! form-data dissoc :nuvlabox-manager-id)))
                :default-value default-action
                :options       actions
                :selection     true}]
-             (when (= (:cluster-action @form-data) "join-worker")
-               [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-status "WORKER")])
+             (when is-join-action?
+               [:<>
+                ^{:key join-type}
+                [NBManagersDropdown (:id resource)
+                 (partial (fn [join-token-scope nuvlabox-manager-id]
+                            (if (str/blank? nuvlabox-manager-id)
+                              (swap! form-data dissoc :nuvlabox-manager-status)
+                              (do
+                                (swap! form-data dissoc :token)
+                                (swap! form-data assoc :nuvlabox-manager-status (get-in @managers [nuvlabox-manager-id :status]))
+                                (dispatch [::events/get-join-token nuvlabox-manager-id join-token-scope])
+                                (dispatch [::events/get-nuvlabox-cluster nuvlabox-manager-id]))))
+                          join-type)]
+                (when invalid-manager?
+                  [ui/Message {:negative true
+                               :content  (@tr [:cluster-invalid-manager])}])
+                (when valid-manager?
+                  [:<>
+                   [ui/Message
+                    (@tr [:nuvlabox-joining])
+                    [:span {:style {:font-weight "bold"}} (if cluster-name
+                                                            (str cluster-name " (" cluster-id ")")
+                                                            cluster-id)]
+                    (@tr [:nuvlabox-joining-on-manager-address])
+                    [:span {:style {:font-weight "bold"}} (:cluster-join-address nuvlabox-status)]
+                    (@tr [:nuvlabox-joining-with-token])
+                    [:p {:style {:font-weight "bold"}} (:token @join-token)]]])])
+             (when is-leave-action?
+               [ui/Message {:negative true
+                            :content  (@tr [:cluster-action-leave-warning])}])])]
 
-             (when (= (:cluster-action @form-data) "join-manager")
-               [NBManagersDropdown (:id resource) (partial on-change-fn :nuvlabox-manager-status "MANAGER")])
-
-             (when (and (:token @join-token) (:nuvlabox-manager-status @form-data))
-               (swap! form-data assoc :token (:token @join-token))
-               [ui/Message
-                (@tr [:nuvlabox-joining])
-                [:span {:style {:font-weight "bold"}} (if (:name @nuvlabox-cluster)
-                                                        (str (:name @nuvlabox-cluster) " (" (:cluster-id @nuvlabox-cluster) ")")
-                                                        (:cluster-id @nuvlabox-cluster))]
-                (@tr [:nuvlabox-joining-on-manager-address])
-                [:span {:style {:font-weight "bold"}} (:cluster-join-address (:nuvlabox-manager-status @form-data))]
-                (@tr [:nuvlabox-joining-with-token])
-                [:p {:style {:font-weight "bold"}} (:token @join-token)]])])]
          [ui/ModalActions
           [uix/Button
-           {:text     (@tr [:cancel])
-            :on-click close-fn}]
-          [uix/Button
-           {:text     button-text
+           {:text     (@tr [:cluster])
             :primary  true
             :disabled has-active-dp
             :on-click on-click-fn}]]]))))
@@ -429,7 +455,7 @@
   (let [show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "cluster-nuvlabox" @show?)}
-      [ClusterButton resource operation show? "Cluster NuvlaBox" "linkify" "cluster"])))
+      [ClusterButton resource operation show?])))
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "add-ssh-key"]
@@ -464,7 +490,7 @@
         nuvlabox          (subscribe [::subs/nuvlabox])
         loading?          (subscribe [::subs/loading?])]
     (fn []
-      [main-components/StickyBar
+      [components/StickyBar
        [ui/Menu {:borderless true, :stackable true}
         (when @can-decommission?
           [DecommissionButton @nuvlabox])
@@ -474,7 +500,7 @@
         [cimi-detail-views/format-operations @nuvlabox #{"edit" "delete" "activate" "decommission"
                                                          "commission" "check-api"}]
 
-        [main-components/RefreshMenu
+        [components/RefreshMenu
          {:action-id  refresh-action-id
           :loading?   @loading?
           :on-refresh #(refresh uuid)}]]])))
@@ -647,7 +673,7 @@
 
 
 (defn OnlineStatusIcon
-  [online & _position]                                      ;FIXME: remove calling position
+  [online]
   [ui/Icon {:name  "power"
             :color (utils/status->color online)}])
 
@@ -834,18 +860,51 @@
 
 (defn EditAction
   [uuid body close-fn]
-  (dispatch [::events/edit
-             uuid body
-             "NuvlaBox updated successfully"])
-  (close-fn))
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (dispatch [::events/edit
+               uuid body
+               (@tr [:nuvlabox-updated-successfully])])
+    (close-fn)))
+
+
+(defn EditableCell
+  [attribute]
+  (let [nuvlabox  (subscribe [::subs/nuvlabox])
+        can-edit? (subscribe [::subs/can-edit?])
+        new-value (r/atom (get @nuvlabox attribute))
+        editing?  (r/atom false)
+        close-fn  #(do
+                     (reset! editing? false)
+                     (refresh (:id @nuvlabox)))]
+    (fn [attribute _value _refresh-fn]
+      (let [initial-value (get @nuvlabox attribute)
+            id            (:id @nuvlabox)]
+        [ui/TableCell
+         (if @editing?
+           [ui/Input {:default-value initial-value
+                      :on-key-press  (partial forms/on-return-key
+                                              #(if (= @new-value initial-value)
+                                                 (close-fn)
+                                                 (EditAction id {attribute @new-value} close-fn)))
+                      :on-change     (ui-callback/input-callback #(reset! new-value %))
+                      :focus         true
+                      :fluid         true}]
+           initial-value)
+         (when (and @can-edit? (not @editing?))
+           [:<>
+            ff/nbsp
+            [ui/Icon {:name     "pencil"
+                      :on-click #(reset! editing? true)
+                      :style    {:cursor "pointer"}}]])]))))
+
 
 
 (defn TabOverviewNuvlaBox
-  [{:keys [id name description created updated
-           version refresh-interval owner]}
-   {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}
-   locale edit old-nb-name close-fn]
-  (let [resolved-owner (subscribe [::session-subs/resolve-user owner])]
+  [{:keys [id created updated version refresh-interval owner]}
+   {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        resolved-owner (subscribe [::session-subs/resolve-user owner])
+        locale         (subscribe [::i18n-subs/locale])]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
@@ -859,147 +918,136 @@
                 :padded false}
       [ui/TableBody
        [ui/TableRow
-        [ui/TableCell "ID"]
-        [ui/TableCell [values/as-link id :label id]]]
-       (when name
-         [ui/TableRow
-          [ui/TableCell "Name"]
-          [ui/TableCell [ui/Icon {:name     "pencil"
-                                  :on-click #(reset! edit true)
-                                  :style    {:cursor "pointer"}}]
-           " "
-           (if @edit
-             [ui/Input {:default-value name
-                        :on-key-press  (partial forms/on-return-key
-                                                #(if (= @old-nb-name name id)
-                                                   (close-fn)
-                                                   (EditAction id {:name @old-nb-name} close-fn)))
-                        :on-change     (ui-callback/input-callback #(reset! old-nb-name %))
-                        :focus         true
-                        :size          "mini"}]
-             name)]])
-       (when description
-         [ui/TableRow
-          [ui/TableCell "Description"]
-          [ui/TableCell description]])
+        [ui/TableCell "Id"]
+        (when id
+          [ui/TableCell [values/as-link id :label (subs id 9)]])]
        [ui/TableRow
-        [ui/TableCell "Owner"]
+        [ui/TableCell (str/capitalize (@tr [:name]))]
+        [EditableCell :name]]
+       [ui/TableRow
+        [ui/TableCell (str/capitalize (@tr [:description]))]
+        [EditableCell :description]]
+       [ui/TableRow
+        [ui/TableCell (str/capitalize (@tr [:owner]))]
         [ui/TableCell @resolved-owner]]
        [ui/TableRow
-        [ui/TableCell "Telemetry Period"]
+        [ui/TableCell (str/capitalize (@tr [:telemetry-period]))]
         [ui/TableCell (str refresh-interval " seconds")]]
        (when nuvlabox-api-endpoint
          [ui/TableRow
-          [ui/TableCell "NuvlaBox API Endpoint"]
+          [ui/TableCell (str/capitalize (@tr [:nuvla-api-endpoint]))]
           [ui/TableCell nuvlabox-api-endpoint]])
        [ui/TableRow
-        [ui/TableCell "Created"]
+        [ui/TableCell (str/capitalize (@tr [:created]))]
         [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
        [ui/TableRow
-        [ui/TableCell "Updated"]
+        [ui/TableCell (str/capitalize (@tr [:updated]))]
         [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]
        [ui/TableRow
-        [ui/TableCell "Version"]
+        [ui/TableCell (str/capitalize (@tr [:version]))]
         [ui/TableCell version]]]]]))
 
 
 (defn TabOverviewHost
   [{:keys [hostname ip docker-server-version
            operating-system architecture last-boot docker-plugins] :as nb-status}
-   ssh-creds tr]
-  [ui/Segment {:secondary true
-               :color     "grey"
-               :raised    true}
-   [:h4 "Host"]
-   (if nb-status
-     [ui/Table {:basic  "very"
-                :padded false}
-      [ui/TableBody
-       (when hostname
-         [ui/TableRow
-          [ui/TableCell "Hostname"]
-          [ui/TableCell hostname]])
-       (when operating-system
-         [ui/TableRow
-          [ui/TableCell "OS"]
-          [ui/TableCell operating-system]])
-       (when architecture
-         [ui/TableRow
-          [ui/TableCell "Architecture"]
-          [ui/TableCell architecture]])
-       (when ip
-         [ui/TableRow
-          [ui/TableCell "IP"]
-          [ui/TableCell ip]])
-       (when (pos? (count @ssh-creds))
-         [ui/TableRow
-          [ui/TableCell "SSH Keys"]
-          [ui/TableCell [ui/Popup
-                         {:hoverable true
-                          :flowing   true
-                          :position  "bottom center"
-                          :content   (r/as-element [ui/ListSA {:divided true
-                                                               :relaxed true}
-                                                    (for [sshkey @ssh-creds]
-                                                      ^{:key (:id sshkey)}
-                                                      [ui/ListItem
-                                                       [ui/ListContent
-                                                        [ui/ListHeader
-                                                         [:a {:href   (str @config/path-prefix
-                                                                           "/api/" (:id sshkey))
-                                                              :target "_blank"}
-                                                          (or (:name sshkey) (:id sshkey))]]
-                                                        [ui/ListDescription
-                                                         (str (subs (:public-key sshkey) 0 55) " ...")]]])])
-                          :trigger   (r/as-element [ui/Icon {:name   "key"
-                                                             :fitted true}
-                                                    (@tr [:nuvlabox-detail-ssh-enabled])
-                                                    [ui/Icon {:name   "angle down"
-                                                              :fitted true}]])}]]])
-       (when docker-server-version
-         [ui/TableRow
-          [ui/TableCell "Docker Server Version"]
-          [ui/TableCell docker-server-version]])
-       (when (seq docker-plugins)
-         [ui/TableRow
-          [ui/TableCell "Docker Plugins"]
-          [ui/TableCell (str/join ", " docker-plugins)]])
-       (when last-boot
-         [ui/TableRow
-          [ui/TableCell "Last Boot"]
-          [ui/TableCell (time/time->format last-boot)]])]]
-     ;else
-     [ui/Message {:content (@tr [:nuvlabox-status-unavailable])}])])
+   ssh-creds]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Segment {:secondary true
+                 :color     "grey"
+                 :raised    true}
+     [:h4 "Host"]
+     (if nb-status
+       [ui/Table {:basic  "very"
+                  :padded false}
+        [ui/TableBody
+         (when hostname
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:hostname]))]
+            [ui/TableCell hostname]])
+         (when operating-system
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:operating-system]))]
+            [ui/TableCell operating-system]])
+         (when architecture
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:architecture]))]
+            [ui/TableCell architecture]])
+         (when ip
+           [ui/TableRow
+            [ui/TableCell "IP"]
+            [ui/TableCell (values/copy-value-to-clipboard
+                            ip ip (@tr [:copy-to-clipboard]) true)]])
+         (when (pos? (count @ssh-creds))
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
+            [ui/TableCell [ui/Popup
+                           {:hoverable true
+                            :flowing   true
+                            :position  "bottom center"
+                            :content   (r/as-element [ui/ListSA {:divided true
+                                                                 :relaxed true}
+                                                      (for [sshkey @ssh-creds]
+                                                        ^{:key (:id sshkey)}
+                                                        [ui/ListItem
+                                                         [ui/ListContent
+                                                          [ui/ListHeader
+                                                           [:a {:href   (str @config/path-prefix
+                                                                             "/api/" (:id sshkey))
+                                                                :target "_blank"}
+                                                            (or (:name sshkey) (:id sshkey))]]
+                                                          [ui/ListDescription
+                                                           (str (subs (:public-key sshkey) 0 55) " ...")]]])])
+                            :trigger   (r/as-element [ui/Icon {:name   "key"
+                                                               :fitted true}
+                                                      (@tr [:nuvlabox-detail-ssh-enabled])
+                                                      [ui/Icon {:name   "angle down"
+                                                                :fitted true}]])}]]])
+         (when docker-server-version
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:docker-server-version]))]
+            [ui/TableCell docker-server-version]])
+         (when (seq docker-plugins)
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:docker-plugins]))]
+            [ui/TableCell (str/join ", " docker-plugins)]])
+         (when last-boot
+           [ui/TableRow
+            [ui/TableCell (str/capitalize (@tr [:last-boot]))]
+            [ui/TableCell (time/time->format last-boot)]])]]
+       ;else
+       [ui/Message {:content (@tr [:nuvlabox-status-unavailable])}])]))
 
 
 (defn TabOverviewStatus
-  [{:keys [updated status status-notes] :as _nb-status} nb-id online-status tr]
-  [ui/Segment {:secondary true
-               :color     (utils/status->color online-status)
-               :raised    true}
-   [:h4 "Status "]
-   (when status
-     [:div {:style {:margin "0.5em 0 1em 0"}}
-      "Operational Status: "
-      [ui/Popup
-       {:trigger        (r/as-element [ui/Label {:circular   true
-                                                 :size       "small"
-                                                 :horizontal true
-                                                 :color      (utils/operational-status->color status)}
-                                       status])
-        :content        (@tr [:nuvlabox-operational-status-popup])
-        :position       "bottom center"
-        :on             "hover"
-        :size           "tiny"
-        :hide-on-scroll true}]
-      (when (not-empty status-notes)
-        [ui/Message {:color "brown"
-                     :size  "tiny"}
-         [ui/MessageHeader
-          [ui/Icon {:name "sticky note"}]
-          "Notes"]
-         [ui/MessageList {:items status-notes}]])])
-   [Heartbeat updated nb-id]])
+  [{:keys [updated status status-notes] :as _nb-status} nb-id online-status]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Segment {:secondary true
+                 :color     (utils/status->color online-status)
+                 :raised    true}
+     [:h4 "Status "]
+     (when status
+       [:div {:style {:margin "0.5em 0 1em 0"}}
+        "Operational Status: "
+        [ui/Popup
+         {:trigger        (r/as-element [ui/Label {:circular   true
+                                                   :size       "small"
+                                                   :horizontal true
+                                                   :color      (utils/operational-status->color status)}
+                                         status])
+          :content        (@tr [:nuvlabox-operational-status-popup])
+          :position       "bottom center"
+          :on             "hover"
+          :size           "tiny"
+          :hide-on-scroll true}]
+        (when (not-empty status-notes)
+          [ui/Message {:color "brown"
+                       :size  "tiny"}
+           [ui/MessageHeader
+            [ui/Icon {:name "sticky note"}]
+            "Notes"]
+           [ui/MessageList {:items status-notes}]])])
+     [Heartbeat updated nb-id]]))
 
 
 (defn TabOverviewTags
@@ -1014,89 +1062,83 @@
 (defn TabOverviewCluster
   [{:keys [node-id cluster-id swarm-node-cert-expiry-date cluster-join-address
            cluster-node-role cluster-managers cluster-nodes orchestrator] :as _nuvlabox}]
-  [ui/Segment {:secondary true
-               :color     "black"
-               :raised    true}
-   [:h4 "Cluster Status "
-    (when orchestrator
-      [ui/Label {:circular   true
-                 :color      "blue"
-                 :size       "tiny"
-                 :basic      true
-                 :float      "right"
-                 :horizontal true
-                 :style      {:float "right"}}
-       [ui/Icon {:name (get orchestration-icons (keyword orchestrator) "question circle")}] orchestrator])]
-   [ui/Table {:basic  "very"
-              :padded false}
-    [ui/TableBody
-     [ui/TableRow
-      [ui/TableCell "Node ID"]
-      [ui/TableCell node-id]]
-     (when cluster-id
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Segment {:secondary true
+                 :color     "black"
+                 :raised    true}
+     [:h4 (str/capitalize (@tr [:cluster])) " " (@tr [:status])
+      (when orchestrator
+        [ui/Label {:circular   true
+                   :color      "blue"
+                   :size       "tiny"
+                   :basic      true
+                   :float      "right"
+                   :horizontal true
+                   :style      {:float "right"}}
+         [ui/Icon {:name (get orchestration-icons (keyword orchestrator) "question circle")}] orchestrator])]
+     [ui/Table {:basic  "very"
+                :padded false}
+      [ui/TableBody
        [ui/TableRow
-        [ui/TableCell "Cluster ID"]
-        [ui/TableCell cluster-id]])
-     [ui/TableRow
-      [ui/TableCell "Node Role"]
-      [ui/TableCell cluster-node-role
-       (when (= cluster-node-role "manager")
-         [:<>
-          (str " ")
-          [ui/Icon {:className "fas fa-crown"
-                    :corner    true
-                    :color     "blue"}]])]]
-     (when cluster-join-address
+        [ui/TableCell "Node ID"]
+        [ui/TableCell node-id]]
+       (when cluster-id
+         [ui/TableRow
+          [ui/TableCell "Cluster ID"]
+          [ui/TableCell cluster-id]])
        [ui/TableRow
-        [ui/TableCell "Cluster Join Address"]
-        [ui/TableCell cluster-join-address]])
-     (when cluster-managers
-       [ui/TableRow
-        [ui/TableCell "Cluster Managers"]
-        [ui/TableCell
-         [ui/LabelGroup {:size  "tiny"
-                         :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-          (for [manager cluster-managers]
-            ^{:key (str manager)}
-            [ui/Label {:basic true
-                       :style {:max-width     "15ch"
-                               :overflow      "hidden"
-                               :text-overflow "ellipsis"
-                               :white-space   "nowrap"}}
-             manager])]]])
-     (when cluster-nodes
-       [ui/TableRow
-        [ui/TableCell "Cluster Nodes"]
-        [ui/TableCell
-         [ui/LabelGroup {:size  "tiny"
-                         :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-          (for [node cluster-nodes]
-            ^{:key (str node)}
-            [ui/Label {:basic true
-                       :style {:max-width     "15ch"
-                               :overflow      "hidden"
-                               :text-overflow "ellipsis"
-                               :white-space   "nowrap"}}
-             node])]]])
+        [ui/TableCell "Node Role"]
+        [ui/TableCell cluster-node-role
+         (when (= cluster-node-role "manager")
+           [:<>
+            (str " ")
+            [ui/Icon {:className "fas fa-crown"
+                      :corner    true
+                      :color     "blue"}]])]]
+       (when cluster-join-address
+         [ui/TableRow
+          [ui/TableCell "Cluster Join Address"]
+          [ui/TableCell cluster-join-address]])
+       (when cluster-managers
+         [ui/TableRow
+          [ui/TableCell "Cluster Managers"]
+          [ui/TableCell
+           [ui/LabelGroup {:size  "tiny"
+                           :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+            (for [manager cluster-managers]
+              ^{:key (str manager)}
+              [ui/Label {:basic true
+                         :style {:max-width     "15ch"
+                                 :overflow      "hidden"
+                                 :text-overflow "ellipsis"
+                                 :white-space   "nowrap"}}
+               manager])]]])
+       (when cluster-nodes
+         [ui/TableRow
+          [ui/TableCell "Cluster Nodes"]
+          [ui/TableCell
+           [ui/LabelGroup {:size  "tiny"
+                           :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+            (for [node cluster-nodes]
+              ^{:key (str node)}
+              [ui/Label {:basic true
+                         :style {:max-width     "15ch"
+                                 :overflow      "hidden"
+                                 :text-overflow "ellipsis"
+                                 :white-space   "nowrap"}}
+               node])]]])
 
-     (when swarm-node-cert-expiry-date
-       [ui/TableRow
-        [ui/TableCell "Swarm Certificate Expiry Date"]
-        [ui/TableCell swarm-node-cert-expiry-date]])]]])
+       (when swarm-node-cert-expiry-date
+         [ui/TableRow
+          [ui/TableCell "Swarm Certificate Expiry Date"]
+          [ui/TableCell swarm-node-cert-expiry-date]])]]]))
 
 
 (defn TabOverview
   []
-  (let [nuvlabox    (subscribe [::subs/nuvlabox])
-        locale      (subscribe [::i18n-subs/locale])
-        nb-status   (subscribe [::subs/nuvlabox-status])
-        ssh-creds   (subscribe [::subs/nuvlabox-associated-ssh-keys])
-        tr          (subscribe [::i18n-subs/tr])
-        edit        (r/atom false)
-        old-nb-name (r/atom (:name @nuvlabox))
-        close-fn    #(do
-                       (reset! edit false)
-                       (refresh (:id @nuvlabox)))]
+  (let [nuvlabox  (subscribe [::subs/nuvlabox])
+        nb-status (subscribe [::subs/nuvlabox-status])
+        ssh-creds (subscribe [::subs/nuvlabox-associated-ssh-keys])]
     (fn []
       (let [{:keys [id tags ssh-keys]} @nuvlabox]
         (when (not= (count ssh-keys) (count @ssh-creds))
@@ -1107,13 +1149,13 @@
                    :padded    true}
           [ui/GridRow
            [ui/GridColumn {:stretched true}
-            [TabOverviewNuvlaBox @nuvlabox @nb-status locale edit old-nb-name close-fn]]
+            [TabOverviewNuvlaBox @nuvlabox @nb-status]]
 
            [ui/GridColumn {:stretched true}
-            [TabOverviewHost @nb-status ssh-creds tr]]]
+            [TabOverviewHost @nb-status ssh-creds]]]
 
           [ui/GridColumn {:stretched true}
-           [TabOverviewStatus @nb-status id (:online @nuvlabox) tr]]
+           [TabOverviewStatus @nb-status id (:online @nuvlabox)]]
 
           [ui/GridColumn {:stretched true}
            [deployment-views/DeploymentsOverviewSegment
@@ -1505,18 +1547,14 @@
       (let [{:keys [id name state online]} @nuvlabox]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
-          [OnlineStatusIcon online :corner "left center"]
+          [ui/Icon {:name "box"}]
           (or name id)]
          [:p {:style {:margin "0.5em 0 1em 0"}}
+          [OnlineStatusIcon online]
           [:span {:style {:font-weight "bold"}}
-           "State "
-           [ui/Popup
-            {:trigger        (r/as-element [ui/Icon {:name "question circle"}])
-             :content        (@tr [:nuvlabox-state])
-             :position       "bottom center"
-             :on             "hover"
-             :size           "tiny"
-             :hide-on-scroll true}] ": "]
+           (str/capitalize (@tr [:state]))
+           (@tr [:colon])
+           ff/nbsp]
           state]]))))
 
 
@@ -1524,16 +1562,15 @@
   [uuid]
   (refresh uuid)
   (let [nb-status (subscribe [::subs/nuvlabox-status])]
-    (fn [uuid]
-      ^{:key uuid}
-      [ui/DimmerDimmable {:style {:overflow "visible"}}
-       [main-components/NotFoundPortal
-        ::subs/nuvlabox-not-found?
-        :no-nuvlabox-message-header
-        :no-nuvlabox-message-content]
-       [ui/Container {:fluid true}
-        [PageHeader]
-        [MenuBar uuid]
-        [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
-        [job-views/ProgressJobAction @nb-status]
-        [TabsNuvlaBox]]])))
+    [components/LoadingPage {:dimmable? true}
+     [:<>
+      [components/NotFoundPortal
+       ::subs/nuvlabox-not-found?
+       :no-nuvlabox-message-header
+       :no-nuvlabox-message-content]
+      [ui/Container {:fluid true}
+       [PageHeader]
+       [MenuBar uuid]
+       [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
+       [job-views/ProgressJobAction @nb-status]
+       [TabsNuvlaBox]]]]))

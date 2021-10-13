@@ -20,6 +20,18 @@
 
 
 (reg-event-db
+  ::set-loading?
+  (fn [db [_ loading?]]
+    (assoc db ::spec/loading? loading?)))
+
+
+(reg-event-db
+  ::not-found?
+  (fn [db [_ not-found?]]
+    (assoc db ::spec/not-found? not-found?)))
+
+
+(reg-event-db
   ::check-iframe
   (fn [db _]
     (let [location        (.-location js/window)

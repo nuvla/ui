@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.edge.utils
   (:require
     [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 (def state-new "NEW")
 (def state-activated "ACTIVATED")
@@ -19,6 +20,10 @@
 (def vuln-medium-color "#fbbc06")
 (def vuln-low-color "#21b802")
 (def vuln-unknown-color "#949494")
+
+(def orchestration-icons
+  {:swarm      "docker"
+   :kubernetes "/ui/images/kubernetes.svg"})
 
 (defn state->icon
   "Commissioning state"
@@ -205,3 +210,8 @@
                                  boolean)]
     (or (str/blank? (:nuvlabox-release form-data))
         (and payload? payload-incomplete?))))
+
+
+(defn format-created
+  [created]
+  (-> created time/parse-iso8601 time/ago))

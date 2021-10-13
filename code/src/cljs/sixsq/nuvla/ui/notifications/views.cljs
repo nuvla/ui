@@ -9,7 +9,7 @@
     [sixsq.nuvla.ui.filter-comp.events :as fc-events]
     [sixsq.nuvla.ui.history.views :as history]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.notifications.events :as events]
     [sixsq.nuvla.ui.notifications.spec :as spec]
     [sixsq.nuvla.ui.notifications.subs :as subs]
@@ -215,7 +215,7 @@
               {:name  (@tr [:no-subscriptions-available])
                :fixed "right"
                :text  true}])
-           [main-components/RefreshMenu
+           [components/RefreshMenu
             {:on-refresh #(dispatch [::events/get-notification-subscriptions @subs-config-id])}]]
 
 
@@ -787,13 +787,13 @@
 (defn MenuBarSubscription
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [main-components/StickyBar
+    [components/StickyBar
      [ui/Menu {:borderless true}
       [uix/MenuItem
        {:name     (@tr [:add])
         :icon     "add"
         :on-click #(dispatch [::events/open-add-subscription-config-modal {}])}]
-      [main-components/RefreshMenu
+      [components/RefreshMenu
        {:on-refresh #(do
                        (dispatch-sync [::events/get-notification-subscriptions])
                        (dispatch [::events/get-notification-subscription-configs]))}]]]))
@@ -802,13 +802,13 @@
 (defn MenuBarNotificationMethod
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [main-components/StickyBar
+    [components/StickyBar
      [ui/Menu {:borderless true}
       [uix/MenuItem
        {:name     (@tr [:add])
         :icon     "add"
         :on-click #(dispatch [::events/open-add-update-notification-method-modal {} true])}]
-      [main-components/RefreshMenu
+      [components/RefreshMenu
        {:on-refresh #(dispatch [::events/get-notification-methods])}]]]))
 
 
@@ -1000,7 +1000,6 @@
   []
   (let [tr          (subscribe [::i18n-subs/tr])
         all-methods (subscribe [::subs/notification-methods])]
-    (dispatch [::events/get-notification-methods])
     (fn []
       [ui/TabPane
        [MenuBarNotificationMethod]
@@ -1035,14 +1034,17 @@
 
 (defn TabsAll
   []
+  (dispatch [::events/get-notification-methods])
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Tab
-     {:menu  {:secondary true
-              :pointing  true
-              :style     {:display        "flex"
-                          :flex-direction "row"
-                          :flex-wrap      "wrap"}}
-      :panes (tabs tr)}]))
+    (fn []
+      [components/LoadingPage {}
+       [ui/Tab
+        {:menu  {:secondary true
+                 :pointing  true
+                 :style     {:display        "flex"
+                             :flex-direction "row"
+                             :flex-wrap      "wrap"}}
+         :panes (tabs tr)}]])))
 
 
 (defmethod panel/render :notifications

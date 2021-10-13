@@ -3,7 +3,6 @@
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.utils.time :as time]))
 
-(s/def ::loading? boolean?)
 
 (s/def ::deployment any?)
 
@@ -29,8 +28,10 @@
 
 (s/def ::active-tab-index number?)
 
+(s/def ::not-found? boolean?)
 
-(s/def ::db (s/keys :req [::loading?
+
+(s/def ::db (s/keys :req [::not-found?
                           ::deployment
                           ::deployment-parameters
                           ::events
@@ -47,7 +48,7 @@
 (defn default-since []
   (-> (time/now) (.seconds 0)))
 
-(def defaults {::loading?                  true
+(def defaults {::not-found?                false
                ::deployment                nil
                ::deployment-parameters     nil
                ::module-versions           nil

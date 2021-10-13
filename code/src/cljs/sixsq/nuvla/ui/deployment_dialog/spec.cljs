@@ -34,8 +34,6 @@
 
 (s/def ::active-step ::step-id)
 
-(s/def ::loading? boolean?)
-
 (s/def ::icon string?)
 
 (s/def ::status #{:loading :ok :warning})

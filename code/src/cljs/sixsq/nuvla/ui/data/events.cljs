@@ -4,9 +4,17 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.data.spec :as spec]
     [sixsq.nuvla.ui.data.utils :as utils]
+    [sixsq.nuvla.ui.data-set.spec :as data-set-spec]
     [sixsq.nuvla.ui.deployment-dialog.events :as dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.spec :as dialog-spec]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
+
+
+(reg-event-fx
+  ::refresh
+  (fn [_ _]
+    {:dispatch [::get-data-sets]}))
 
 
 (reg-event-db
@@ -15,7 +23,7 @@
     (let [doc-count   (get-in response [:aggregations :value_count:id :value])
           total-bytes (get-in response [:aggregations :sum:bytes :value])]
       (-> db
-          (assoc-in [::spec/counts data-set-id] doc-count)
+          (assoc-in  [::spec/counts data-set-id] doc-count)
           (assoc-in [::spec/sizes data-set-id] total-bytes)))))
 
 
@@ -32,33 +40,31 @@
 
 (reg-event-fx
   ::fetch-all-datasets-stats
-  (fn [{{:keys [::spec/credentials
-                ::spec/data-sets
+  (fn [{{:keys [::spec/data-sets
                 ::spec/full-text-search
-                ::spec/time-period-filter]} :db} _]
-    (when (seq credentials)
-      (let [data-sets-vals (vals data-sets)]
-        {:fx (map (fn [data-set]
-                    [:dispatch [::fetch-dataset-stats
-                                (:id data-set)
-                                (general-utils/join-and
-                                  time-period-filter full-text-search (:data-record-filter data-set))]])
-                  data-sets-vals)}))))
+                ::data-set-spec/time-period-filter]} :db} _]
+    (let [data-sets-vals  (vals data-sets)
+          full-text-query (general-utils/fulltext-query-string full-text-search)]
+      {:fx (map (fn [data-set]
+                  [:dispatch [::fetch-dataset-stats
+                              (:id data-set)
+                              (general-utils/join-and
+                                time-period-filter full-text-query (:data-record-filter data-set))]])
+                data-sets-vals)})))
 
 
 (reg-event-fx
-  ::set-time-period
-  (fn [{db :db} [_ time-period]]
-    {:db       (assoc db ::spec/time-period time-period
-                         ::spec/time-period-filter (utils/create-time-period-filter time-period))
-     :dispatch [::fetch-all-datasets-stats]}))
+  ::set-page
+  (fn [{db :db} [_ page]]
+    {:db       (assoc db ::spec/page page)
+     :dispatch [::refresh]}))
 
 
 (reg-event-fx
   ::set-full-text-search
   (fn [{db :db} [_ full-text]]
-    {:db       (assoc db ::spec/full-text-search (general-utils/fulltext-query-string full-text))
-     :dispatch [::fetch-all-datasets-stats]}))
+    {:db       (assoc db ::spec/full-text-search full-text)
+     :dispatch [::get-data-sets]}))
 
 
 (reg-event-db
@@ -67,22 +73,21 @@
     (assoc db ::spec/data-records data-records)))
 
 
-(reg-event-fx
-  ::set-credentials
-  (fn [{db :db} [_ {credentials :resources}]]
-    {:db       (assoc db ::spec/credentials credentials
-                         ::spec/counts nil
-                         ::spec/sizes nil)
-     :dispatch [::fetch-all-datasets-stats]}))
+;(reg-event-db
+;  ::set-credentials
+;  (fn [db [_ {credentials :resources}]]
+;    (assoc db ::spec/credentials credentials
+;              ::spec/counts nil
+;              ::spec/sizes nil)))
 
 
-(reg-event-fx
-  ::get-credentials
-  (fn [{:keys [db]} _]
-    {:db                  (assoc db ::spec/credentials nil)
-     ::cimi-api-fx/search [:credential {:filter "subtype^='infrastructure-service-swarm'"
-                                        :select "id, name, services"}
-                           #(dispatch [::set-credentials %])]}))
+;(reg-event-fx
+;  ::get-credentials
+;  (fn [{:keys [db]} _]
+;    {:db                  (assoc db ::spec/credentials nil)
+;     ::cimi-api-fx/search [:credential {:filter "subtype^='infrastructure-service-swarm'"
+;                                        :select "id, name, services"}
+;                           #(dispatch [::set-credentials %])]}))
 
 
 (reg-event-db
@@ -133,9 +138,10 @@
 
 (reg-event-fx
   ::set-data-sets
-  (fn [{db :db} [_ {:keys [resources]}]]
+  (fn [{db :db} [_ {:keys [resources count]}]]
     (let [data-sets (into {} (map (juxt :id identity) resources))]
-      {:db       (assoc db ::spec/counts nil
+      {:db       (assoc db ::spec/total count
+                           ::spec/counts nil
                            ::spec/sizes nil
                            ::spec/data-sets data-sets)
        :dispatch [::fetch-all-datasets-stats]})))
@@ -143,9 +149,12 @@
 
 (reg-event-fx
   ::get-data-sets
-  (fn [{:keys [db]} _]
-    {:db                  (merge db spec/defaults)
-     ::cimi-api-fx/search [:data-set {} #(dispatch [::set-data-sets %])]}))
+  (fn [{{:keys [::spec/full-text-search
+                ::spec/page
+                ::spec/elements-per-page]} :db} _]
+    {::cimi-api-fx/search [:data-set (utils/get-query-params full-text-search page elements-per-page)
+                           #(do (dispatch [::set-data-sets %])
+                                (dispatch [::main-events/set-loading? false]))]}))
 
 
 (reg-event-db

@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
@@ -32,7 +33,8 @@
                 ::spec/upcoming-invoice] :as db} :db}
        [_ {:keys [id module subscription-id] :as resource}]]
     (let [module-href (:href module)]
-      (cond-> {:db (assoc db ::spec/loading? false
+      (cond-> {:db (assoc db ::spec/not-found? (nil? resource)
+                             ::main-spec/loading? false
                              ::spec/deployment resource)}
               (and (not module-versions)
                    module-href) (assoc ::cimi-api-fx/get
@@ -67,7 +69,8 @@
       (cond-> {:dispatch-n       [[::get-deployment-parameters id]
                                   [::get-events id]
                                   [::job-events/get-jobs id]]
-               ::cimi-api-fx/get [id #(dispatch [::set-deployment %])]}
+               ::cimi-api-fx/get [id #(dispatch [::set-deployment %])
+                                  :on-error #(dispatch [::set-deployment nil])]}
               different-deployment? (assoc :db (merge db spec/defaults))))))
 
 
@@ -286,3 +289,10 @@
   ::set-active-tab-index
   (fn [db [_ active-tab-index]]
     (assoc db ::spec/active-tab-index active-tab-index)))
+
+
+(reg-event-db
+  ::not-found?
+  (fn [db [_ e]]
+    (let [{:keys [_status _message]} (response/parse-ex-info e)]
+      (assoc db ::spec/not-found? (instance? js/Error e)))))

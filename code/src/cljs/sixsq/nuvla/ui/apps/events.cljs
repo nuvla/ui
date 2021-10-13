@@ -120,29 +120,28 @@
 
 (reg-event-db
   ::module-not-found
-  (fn [db [_ found?]]
-    (assoc db ::spec/module-not-found? found?)))
+  (fn [db [_ not-found?]]
+    (assoc db ::spec/module-not-found? not-found?)))
 
 
 (reg-event-fx
   ::set-module
   (fn [{{:keys [::spec/validate-docker-compose] :as db} :db} [_ {:keys [id] :as module}]]
-    (let [found?  (nil? module)
-          db      (assoc db ::spec/completed? true
-                            ::spec/module-path (:path module)
+    (let [db      (assoc db ::spec/module-path (:path module)
                             ::spec/module (if (nil? module) {} module)
                             ::spec/module-immutable module
                             ::spec/validate-docker-compose (if (= id (:module-id validate-docker-compose))
                                                              validate-docker-compose
-                                                             nil))
+                                                             nil)
+                            ::spec/module-not-found? (nil? module)
+                            ::main-spec/loading? false)
           subtype (:subtype module)]
       {:db (case subtype
              "component" (apps-component-utils/module->db db module)
              "project" (apps-project-utils/module->db db module)
              "application" (apps-application-utils/module->db db module)
              "application_kubernetes" (apps-application-utils/module->db db module)
-             db)
-       :fx [[:dispatch [::module-not-found found?]]]})))
+             db)})))
 
 
 (reg-event-db
@@ -185,7 +184,6 @@
     (let [path (utils/nav-path->module-path nav-path)
           v    (if (nil? requested-version) version requested-version)]
       {:db                  (cond-> db
-                                    true (assoc ::spec/completed? false)
                                     requested-version (assoc ::spec/version requested-version))
        ::apps-fx/get-module [path v #(dispatch [::set-module %])]})))
 

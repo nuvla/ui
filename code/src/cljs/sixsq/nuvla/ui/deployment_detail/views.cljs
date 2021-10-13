@@ -22,7 +22,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.job.subs :as job-subs]
     [sixsq.nuvla.ui.job.views :as job-views]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.session.subs :as session-subs]
@@ -794,7 +794,7 @@
                   :color     "green"
                   :raised    true}
 
-      [:h4 {:style {:margin-top 0}} (@tr [:summary])]
+      [:h4 {:style {:margin-top 0}} (str/capitalize (@tr [:summary]))]
 
       [ui/Table {:basic "very"}
        [ui/TableBody
@@ -839,7 +839,7 @@
         [url-to-button url-name url-pattern (= i 0)])]]))
 
 
-(defn overview-pane
+(defn OverviewPane
   []
   [ui/TabPane
    [ui/Grid {:columns   2,
@@ -857,19 +857,19 @@
   {:menuItem {:content (r/as-element [:span "Overview"])
               :key     "overview"
               :icon    "info"}
-   :render   (fn [] (r/as-element [overview-pane]))})
+   :render   (fn [] (r/as-element [OverviewPane]))})
 
 
 (defn MenuBar
   [{:keys [id] :as deployment}]
   (let [loading? (subscribe [::subs/loading?])]
-    [main-components/StickyBar
+    [components/StickyBar
      [ui/Menu {:borderless true}
       [StartUpdateButton deployment]
       [ShutdownButton deployment :menu-item? true]
       [CloneButton deployment]
       [DeleteButton deployment :menu-item? true]
-      [main-components/RefreshMenu
+      [components/RefreshMenu
        {:action-id  refresh-action-id
         :loading?   @loading?
         :on-refresh #(refresh id)}]]]))
@@ -918,9 +918,10 @@
             uuid        (:id @deployment "")]
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
-          [StatusIcon (depl-state->status state)]
+          [ui/Icon {:name "rocket"}]
           module-name " (" (general-utils/truncate (subs uuid 11)) ")"]
          [:p {:style {:margin "0.5em 0 1em 0"}}
+          [StatusIcon (depl-state->status state)]
           [:span {:style {:font-weight "bold"}}
            "State "
            [ui/Popup
@@ -940,23 +941,28 @@
     (refresh resource-id)
     (fn [_]
       (let [active-index (subscribe [::subs/active-tab-index])]
-        [:<>
-         [PageHeader]
-         [MenuBar @deployment]
-         [main-components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 8]
-         [ProgressBars]
-         [vpn-info]
-         [ui/Tab
-          {:menu        {:secondary true
-                         :pointing  true
-                         :style     {:display        "flex"
-                                     :flex-direction "row"
-                                     :flex-wrap      "wrap"}}
-           :panes       (deployment-detail-panes)
-           :activeIndex @active-index
-           :onTabChange (fn [_ data]
-                          (let [active-index (. data -activeIndex)]
-                            (dispatch [::events/set-active-tab-index active-index])))}]]))))
+        [components/LoadingPage {:dimmable? true}
+         [:<>
+          [components/NotFoundPortal
+           ::subs/not-found?
+           :no-deployment-message-header
+           :no-deployment-message-content]
+          [PageHeader]
+          [MenuBar @deployment]
+          [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 8]
+          [ProgressBars]
+          [vpn-info]
+          [ui/Tab
+           {:menu        {:secondary true
+                          :pointing  true
+                          :style     {:display        "flex"
+                                      :flex-direction "row"
+                                      :flex-wrap      "wrap"}}
+            :panes       (deployment-detail-panes)
+            :activeIndex @active-index
+            :onTabChange (fn [_ data]
+                           (let [active-index (. data -activeIndex)]
+                             (dispatch [::events/set-active-tab-index active-index])))}]]]))))
 
 
 (defmethod panel/render :deployment

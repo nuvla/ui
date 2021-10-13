@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.edge.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.edge.spec :as spec]))
+    [sixsq.nuvla.ui.edge.spec :as spec]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-sub
@@ -23,9 +24,20 @@
 
 
 (reg-sub
+  ::full-text-clusters-search
+  (fn [db]
+    (::spec/full-text-clusters-search db)))
+
+
+(reg-sub
   ::nuvlaboxes
   (fn [db]
     (::spec/nuvlaboxes db)))
+
+
+(reg-sub
+  ::nuvlabox-locations
+  ::spec/nuvlabox-locations)
 
 
 (reg-sub
@@ -69,25 +81,30 @@
   (fn [db [_ modal-id]]
     (= modal-id (::spec/open-modal db))))
 
+
 (reg-sub
   ::nuvlabox-created-id
   (fn [db]
     (::spec/nuvlabox-created-id db)))
+
 
 (reg-sub
   ::nuvlabox-ssh-key
   (fn [db]
     (::spec/nuvlabox-ssh-key db)))
 
+
 (reg-sub
   ::nuvlabox-private-ssh-key
   (fn [db]
     (::spec/nuvlabox-private-ssh-key db)))
 
+
 (reg-sub
   ::nuvlabox-usb-api-key
   (fn [db]
     (::spec/nuvlabox-usb-api-key db)))
+
 
 (reg-sub
   ::vpn-infra-options
@@ -95,6 +112,7 @@
     (map
       (fn [{:keys [id name]}] {:key id, :text name, :value id})
       vpn-infra)))
+
 
 (reg-sub
   ::nuvlabox-releases
@@ -128,3 +146,22 @@
   ::nuvlabox-cluster
   (fn [db]
     (::spec/nuvlabox-cluster db)))
+
+
+(reg-sub
+  ::active-tab-index
+  (fn [db]
+    (get-in db [::spec/active-tab-index])))
+
+
+(reg-sub
+  ::can-edit-cluster?
+  :<- [::nuvlabox-cluster]
+  (fn [cluster _]
+    (general-utils/can-edit? cluster)))
+
+
+(reg-sub
+  ::nuvlabox-not-found?
+  (fn [db]
+    (::spec/nuvlabox-not-found? db)))

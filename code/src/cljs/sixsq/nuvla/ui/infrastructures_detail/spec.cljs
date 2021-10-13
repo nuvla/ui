@@ -4,8 +4,6 @@
     [sixsq.nuvla.ui.utils.spec :as spec-utils]))
 
 
-(s/def ::loading? boolean?)
-
 (s/def ::name spec-utils/nonblank-string)
 
 (s/def ::parent spec-utils/nonblank-string)
@@ -25,11 +23,9 @@
                                                    :opt-un [::description])))
 
 
-(s/def ::db (s/keys :req [::loading?
-                          ::infrastructure-service
+(s/def ::db (s/keys :req [::infrastructure-service
                           ::infra-service-not-found?]))
 
 
-(def defaults {::loading?                 true
-               ::infrastructure-service   nil
+(def defaults {::infrastructure-service   nil
                ::infra-service-not-found? false})

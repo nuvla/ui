@@ -3,13 +3,15 @@
     [clojure.spec.alpha :as s]))
 
 
-(s/def ::loading? boolean?)
-
 (s/def ::stale-count nat-int?)
 
 (s/def ::active-count nat-int?)
 
 (s/def ::nuvlaboxes any?)
+
+(s/def ::nuvlabox-locations any?)
+
+(s/def ::nuvlabox-cluster-summary any?)
 
 (s/def ::nuvlaboxes-summary any?)
 
@@ -32,7 +34,10 @@
 (s/def ::elements-per-page int?)
 (s/def ::total-elements int?)
 
+(s/def ::active-tab-index number?)
+
 (s/def ::full-text-search (s/nilable string?))
+(s/def ::full-text-clusters-search (s/nilable string?))
 
 (s/def ::state-selector #{"all" "new" "activated" "commissioned"
                           "decommissioning" "decommissioned" "error"})
@@ -46,16 +51,22 @@
 
 (s/def ::nuvlabox-cluster any?)
 
-(s/def ::db (s/keys :req [::loading?
-                          ::nuvlaboxes
+
+(s/def ::nuvlabox-not-found? boolean?)
+
+
+(s/def ::db (s/keys :req [::nuvlaboxes
                           ::nuvlaboxes-summary
+                          ::nuvlabox-cluster-summary
                           ::nuvlaboxes-summary-all
                           ::nuvlabox-releases
                           ::state-nuvlaboxes
                           ::page
                           ::elements-per-page
                           ::total-elements
+                          ::active-tab-index
                           ::full-text-search
+                          ::full-text-clusters-search
                           ::state-selector
                           ::open-modal
                           ::nuvlabox-created-id
@@ -68,23 +79,25 @@
                           ::nuvlabox-cluster]))
 
 
-(def defaults {::loading?                 false
-               ::nuvlaboxes               nil
-               ::nuvlaboxes-summary       nil
-               ::nuvlaboxes-summary-all   nil
-               ::nuvlabox-releases        nil
-               ::state-nuvlaboxes         nil
-               ::page                     1
-               ::elements-per-page        8
-               ::total-elements           0
-               ::full-text-search         nil
-               ::state-selector           nil
-               ::open-modal               nil
-               ::nuvlabox-created-id      nil
-               ::nuvlabox-usb-api-key     nil
-               ::nuvlabox-ssh-key         nil
-               ::nuvlabox-private-ssh-key nil
-               ::vpn-infra                nil
-               ::ssh-keys-available       nil
-               ::nuvlabox-clusters        nil
-               ::nuvlabox-cluster         nil})
+(def defaults {::nuvlaboxes                nil
+               ::nuvlabox-cluster-summary  nil
+               ::nuvlaboxes-summary        nil
+               ::nuvlaboxes-summary-all    nil
+               ::nuvlabox-releases         nil
+               ::state-nuvlaboxes          nil
+               ::page                      1
+               ::elements-per-page         8
+               ::total-elements            0
+               ::active-tab-index          0
+               ::full-text-search          nil
+               ::full-text-clusters-search nil
+               ::state-selector            nil
+               ::open-modal                nil
+               ::nuvlabox-created-id       nil
+               ::nuvlabox-usb-api-key      nil
+               ::nuvlabox-ssh-key          nil
+               ::nuvlabox-private-ssh-key  nil
+               ::vpn-infra                 nil
+               ::ssh-keys-available        nil
+               ::nuvlabox-clusters         nil
+               ::nuvlabox-cluster          nil})

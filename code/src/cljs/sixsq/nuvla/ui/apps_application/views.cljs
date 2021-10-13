@@ -531,15 +531,17 @@
 
 (defn OverviewPane
   []
-  (let [device (subscribe [::main-subs/device])]
+  (let [device  (subscribe [::main-subs/device])
+        is-new? (subscribe [::apps-subs/is-new?])]
     [ui/Grid {:columns   (if (contains? #{:wide-screen} @device) 2 1)
               :stackable true
               :padded    true
               :centered  true}
      [ui/GridRow {:centered true}
-      [ui/GridColumn
-       [deployment-views/DeploymentsOverviewSegment
-        ::deployment-subs/deployments ::apps-events/set-active-tab-index utils/tab-deployments-index]]]
+      (when (not @is-new?)
+        [ui/GridColumn
+         [deployment-views/DeploymentsOverviewSegment
+          ::deployment-subs/deployments ::apps-events/set-active-tab-index utils/tab-deployments-index]])]
      [ui/GridRow {:centered true}
       [ui/GridColumn
        [apps-views-detail/OverviewDescription utils/tab-details-index]]]

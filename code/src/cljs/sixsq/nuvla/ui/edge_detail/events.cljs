@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.edge.utils :as edge-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
@@ -84,7 +85,7 @@
   (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status :as nuvlabox}]]
     {:db               (assoc db ::spec/nuvlabox-not-found? (nil? nuvlabox)
                                  ::spec/nuvlabox nuvlabox
-                                 ::spec/loading? false)
+                                 ::main-spec/loading? false)
      ::cimi-api-fx/get [nb-status-id #(do
                                         (dispatch [::set-nuvlabox-status %])
                                         (dispatch [::set-nuvlabox-vulns (:vulnerabilities %)])
@@ -186,15 +187,7 @@
                         :last    last}]
       {::cimi-api-fx/search [:event
                              (general-utils/prepare-params query-params)
-                             #(dispatch [::set-nuvlabox-events %])
-                             ]})))
-
-
-(reg-event-db
-  ::nuvlabox-not-found?
-  (fn [db [_ e]]
-    (let [{:keys [_status _message]} (response/parse-ex-info e)]
-      (assoc db ::spec/nuvlabox-not-found? (instance? js/Error e)))))
+                             #(dispatch [::set-nuvlabox-events %])]})))
 
 
 (reg-event-fx
@@ -349,17 +342,14 @@
                     (apply general-utils/join-or))
        :select "id, name, nuvlabox-status"
        :last   100}
-      #(dispatch [::set-nuvlabox-managers (let [status-per-manager (atom [])]
-                                            (doseq [status statuses]
-                                              (swap! status-per-manager
-                                                     conj
-                                                     {
-                                                      :name
-                                                      (:name (first (get (group-by :id (:resources %)) (:parent status))))
-                                                      :status
-                                                      status
-                                                      }))
-                                            @status-per-manager)])]}))
+      #(dispatch [::set-nuvlabox-managers
+                  (into {}
+                        (for [status statuses]
+                          (let [id (:parent status)]
+                            {id
+                             {:id     id
+                              :name   (:name (first (get (group-by :id (:resources %)) (:parent status))))
+                              :status status}})))])]}))
 
 
 (reg-event-fx

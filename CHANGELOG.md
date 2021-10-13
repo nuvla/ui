@@ -8,6 +8,32 @@
 
 ### Changed
 
+## [2.23.0] - 2021-10-13
+
+### Changed
+
+  - Nuvlabox add modal doesn't select pre-release versions
+  - NuvlaBox map view now show all NuvlaBoxes, including NBs with inferred location
+  - Fix refresh of cluster info on default NuvlaBox view
+
+## [2.22.0] - 2021-09-14
+
+### Added
+
+  - Introduced a spinner when navigating through pages, providing a smoother user
+    experience.
+  - Introduced on app store ability to change the number of items per page
+
+### Changed
+
+  - Fix bug where dropdown in the share tab for NuvlaBox where trimmed
+  - Fix bug where VPN dropdown on New NuvlaBox is empty
+  - Fix bug with "Cluster actions" on NuvlaBox.
+
+## [2.21.0] - 2021-08-31
+
+### Changed
+
   - Fix bug where dropdown in the share tab for modules, NuvlaBox and
     infrastructure services where trimmed
   - Fix bug where apps selected from datasets caused an error
@@ -19,6 +45,11 @@
     pages
   - Add tags to apps overview tab
   - Improve layout of apps tabs and add deployment statistics to overview tab
+  - Improve on hover pop-up behaviour for tags
+  - Improved loading pages
+  - Added editing of NuvlaBox description
+  - Improve cluster view
+  - Improve data page
 
 ## [2.20.0] - 2021-08-04
 
@@ -63,7 +94,7 @@
   - Main - Detect unpaid subscription to show a more coherent message
   - Deployment - Bulk force delete support
   - Deployment - Bulk stop support
-  - Fix visible console errors after update 
+  - Fix visible console errors after update
   - React-chart-2 - Fix broken changes
   - React-leaflet - Fix broken changes
   - NPM dependencies - Major update
@@ -156,7 +187,7 @@
 
   - Edge page - Allow creation of Nuvlabox without VPN
   - Notifications page - open first accordion, added refresh buttons,
-    displaying number of actual subscriptions per configuration. Allow 
+    displaying number of actual subscriptions per configuration. Allow
     to define multiple notification methods per subscription configuraiton.
 
 ## [2.15.0] - 2021-02-22
@@ -216,7 +247,7 @@
 
   - UIX - Message warning no elements to show
   - Edge detail - New deployments tab
-  - Edge detail - New jobs tab and an error message is visible 
+  - Edge detail - New jobs tab and an error message is visible
     when last executed job is failed
   - Edge detail - Specific modals for add ssh key and for revoke
     ssh key
@@ -225,7 +256,7 @@
 
   - Acl - Vertical align owner and dropdown
   - Deployment - Overview tab, state transition loader moved
-  - Operation modal - When a specific modal exist show it 
+  - Operation modal - When a specific modal exist show it
     instead of generic modal
   - Cimi detail - operation support action operation body when
     metadata is defined

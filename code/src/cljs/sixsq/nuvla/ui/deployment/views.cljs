@@ -12,7 +12,7 @@
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -24,17 +24,17 @@
 
 
 (defn refresh
-  [& opts]
-  (dispatch [::events/refresh opts]))
+  []
+  (dispatch [::events/refresh]))
 
 
-(defn control-bar []
+(defn ControlBar []
   (let [full-text         (subscribe [::subs/full-text-search])
         additional-filter (subscribe [::subs/additional-filter])
         filter-open?      (r/atom false)]
     (fn []
       [ui/GridColumn {:width 4}
-       [main-components/SearchInput
+       [components/SearchInput
         {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))
          :default-value @full-text}]
        " "
@@ -91,15 +91,13 @@
                        :on-click #(dispatch [::events/bulk-operation
                                              "bulk-update"
                                              {:module-href @selected-module}
-                                             [::events/close-modal-bulk-update]])}]]
-         ]))))
+                                             [::events/close-modal-bulk-update]])}]]]))))
 
 
 (defn MenuBar
   []
   (let [tr                    (subscribe [::i18n-subs/tr])
         view                  (subscribe [::subs/view])
-        loading?              (subscribe [::subs/loading?])
         select-all?           (subscribe [::subs/select-all?])
         dep-count             (subscribe [::subs/deployments-count])
         selected-count        (subscribe [::subs/selected-count])
@@ -108,7 +106,7 @@
         modal-bulk-delete-key (r/atom (random-uuid))]
     (fn []
       [:<>
-       [main-components/StickyBar
+       [components/StickyBar
         [ui/Menu {:borderless true, :stackable true}
          [ui/MenuItem {:icon     "grid layout"
                        :active   (= @view "cards")
@@ -155,9 +153,8 @@
               :danger-msg  (@tr [:danger-action-deployment-force-delete])
               :button-text (str/capitalize (@tr [:bulk-deployment-force-delete]))}]]]]
 
-         [main-components/RefreshMenu
+         [components/RefreshMenu
           {:action-id  events/refresh-action-deployments-id
-           :loading?   @loading?
            :on-refresh refresh}]]]
        [BulkUpdateModal]])))
 
@@ -167,7 +164,7 @@
   (not (or select-all? (true? no-actions))))
 
 
-(defn row-fn
+(defn RowFn
   [{:keys [id state module parent nuvlabox] :as deployment}
    {:keys [no-actions no-module-name select-all] :as _options}]
   (let [credential-id parent
@@ -185,7 +182,7 @@
                                   (dispatch [::events/select-id id])
                                   (.stopPropagation event))}]])
      [ui/TableCell [values/as-link (utils-general/id->uuid id)
-                    :page "dashboard" :label (utils-general/id->short-uuid id)]]
+                    :page "deployment" :label (utils-general/id->short-uuid id)]]
      (when (not no-module-name)
        [ui/TableCell {:style {:overflow      "hidden",
                               :text-overflow "ellipsis",
@@ -239,7 +236,7 @@
            [ui/TableBody
             (for [{:keys [id] :as deployment} deployments-list]
               ^{:key id}
-              [row-fn deployment options])]])))))
+              [RowFn deployment options])]])))))
 
 
 (defn DeploymentCard
@@ -295,7 +292,7 @@
                                        :selected? @is-selected?))]))
 
 
-(defn cards-data-table
+(defn CardsDataTable
   [deployments-list]
   [:div style/center-items
    [ui/CardGroup {:centered    true
@@ -306,18 +303,16 @@
       [DeploymentCard deployment])]])
 
 
-(defn deployments-display
+(defn DeploymentsDisplay
   []
-  (let [loading?    (subscribe [::subs/loading?])
-        view        (subscribe [::subs/view])
+  (let [view        (subscribe [::subs/view])
         deployments (subscribe [::subs/deployments])
         select-all? (subscribe [::subs/select-all?])]
     (fn []
       (let [deployments-list (get @deployments :resources [])]
-        [ui/Segment (merge style/basic
-                           {:loading @loading?})
+        [ui/Segment style/basic
          (if (= @view "cards")
-           [cards-data-table deployments-list]
+           [CardsDataTable deployments-list]
            [VerticalDataTable deployments-list {:select-all @select-all?}])]))))
 
 
@@ -337,19 +332,21 @@
             total         (:count @summary)]
         [ui/GridColumn {:width 8}
          [ui/StatisticGroup {:size  "tiny"
-                             :style {:justify-content "center"}}
-          [main-components/StatisticState total ["fas fa-rocket"] "TOTAL" clickable?
+                             :style {:justify-content "center"
+                                     :padding-top     "20px"
+                                     :padding-bottom  "20px"}}
+          [components/StatisticState total ["fas fa-rocket"] "TOTAL" clickable?
            ::events/set-state-selector ::subs/state-selector]
-          [main-components/StatisticState started [(utils/status->icon utils/status-started)] utils/status-started
+          [components/StatisticState started [(utils/status->icon utils/status-started)] utils/status-started
            clickable? "green"
            ::events/set-state-selector ::subs/state-selector]
-          [main-components/StatisticState starting-plus [(utils/status->icon utils/status-starting)]
+          [components/StatisticState starting-plus [(utils/status->icon utils/status-starting)]
            utils/status-starting clickable? "yellow"
            ::events/set-state-selector ::subs/state-selector]
-          [main-components/StatisticState stopped [(utils/status->icon utils/status-stopped)] utils/status-stopped
+          [components/StatisticState stopped [(utils/status->icon utils/status-stopped)] utils/status-stopped
            clickable? "yellow"
            ::events/set-state-selector ::subs/state-selector]
-          [main-components/StatisticState error [(utils/status->icon utils/status-error)] utils/status-error
+          [components/StatisticState error [(utils/status->icon utils/status-error)] utils/status-error
            clickable? "red" ::events/set-state-selector ::subs/state-selector]]]))))
 
 
@@ -381,17 +378,13 @@
   (let [elements          (subscribe [::subs/deployments])
         elements-per-page (subscribe [::subs/elements-per-page])
         page              (subscribe [::subs/page])
-        loading?          (subscribe [::subs/loading?])
         select-all?       (subscribe [::subs/select-all?])]
     (fn []
       (let [total-elements (:count @elements)
             total-pages    (utils-general/total-pages total-elements @elements-per-page)
             deployments    (:resources @elements)]
         [ui/TabPane
-         (if @loading?
-           [ui/Loader {:active true
-                       :inline "centered"}]
-           [VerticalDataTable deployments (assoc options :select-all @select-all?)])
+         [VerticalDataTable deployments (assoc options :select-all @select-all?)]
 
          (when (pos? (:count @elements))
            [uix/Pagination {:totalitems   total-elements
@@ -414,25 +407,24 @@
       (let [total-deployments @dep-count
             total-pages       (utils-general/total-pages
                                 @dep-count @elements-per-page)]
-        [:<>
-         [MenuBar]
-         [ui/Segment style/basic
-          [ui/Grid {:columns   3
-                    :stackable true
-                    :reversed  "mobile"}
-           [control-bar]
-           [StatisticStates true ::subs/deployments-summary]
-           [ui/GridColumn {:width 4}
-            [main-components/ClickMeStaticPopup]]]
-          (for [[job-id job] @bulk-jobs-monitored]
-            ^{:key job-id}
-            [main-components/BulkActionProgress
-             {:header      "Bulk update in progress"
-              :job         job
-              :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
-          [deployments-display]]
-         [uix/Pagination
-          {:totalitems   total-deployments
-           :totalPages   total-pages
-           :activePage   @page
-           :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]))))
+        [components/LoadingPage {}
+         [:<>
+          [MenuBar]
+          [ui/Segment style/basic
+           [ui/Grid {:columns   3
+                     :stackable true
+                     :reversed  "mobile"}
+            [ControlBar]
+            [StatisticStates true ::subs/deployments-summary]]
+           (for [[job-id job] @bulk-jobs-monitored]
+             ^{:key job-id}
+             [components/BulkActionProgress
+              {:header      "Bulk update in progress"
+               :job         job
+               :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
+           [DeploymentsDisplay]]
+          [uix/Pagination
+           {:totalitems   total-deployments
+            :totalPages   total-pages
+            :activePage   @page
+            :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]]))))

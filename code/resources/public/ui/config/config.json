@@ -9,5 +9,78 @@
   "mapbox-access-token": null,
   "stripe": null,
   "pricing-url": null,
-  "nuvla-logo-url": null
+  "nuvla-logo-url": null,
+  "nuvla-api": null,
+  "licenses": [
+    {
+      "license-name": "Apache 2.0",
+      "license-description": "Apache License, Version 2.0, January 2004",
+      "license-url": "https://opensource.org/licenses/Apache-2.0"
+    },
+    {
+      "license-name": "BSD-2 Clause",
+      "license-description": "The 2-Clause BSD License",
+      "license-url": "https://opensource.org/licenses/BSD-2-Clause"
+    },
+    {
+      "license-name": "BSD-3 Clause",
+      "license-description": "The 3-Clause BSD License",
+      "license-url": "https://opensource.org/licenses/BSD-3-Clause"
+    },
+    {
+      "license-name": "GPL 2",
+      "license-description": "GNU General Public License version 2",
+      "license-url": "https://opensource.org/licenses/GPL-2.0"
+    },
+    {
+      "license-name": "GPL 3",
+      "license-description": "GNU General Public License version 3",
+      "license-url": "https://opensource.org/licenses/GPL-3.0"
+    },
+    {
+      "license-name": "LGPL 2.0",
+      "license-description": "GNU Library General Public License version 2",
+      "license-url": "https://opensource.org/licenses/LGPL-2.0"
+    },
+    {
+      "license-name": "LGPL 2.1",
+      "license-description": "GNU Library General Public License version 2.1",
+      "license-url": "https://opensource.org/licenses/LGPL-2.1"
+    },
+    {
+      "license-name": "LGPL 3.0",
+      "license-description": "GNU Library General Public License version 3.0",
+      "license-url": "https://opensource.org/licenses/LGPL-3.0"
+    },
+    {
+      "license-name": "MIT",
+      "license-description": "The MIT License",
+      "license-url": "https://opensource.org/licenses/MIT"
+    },
+    {
+      "license-name": "MPL 2.0",
+      "license-description": "Mozilla Public License 2.0",
+      "license-url": "https://opensource.org/licenses/MPL-2.0"
+    },
+    {
+      "license-name": "CCDL 1.0",
+      "license-description": "Common Development and Distribution License 1.0",
+      "license-url": "https://opensource.org/licenses/CDDL-1.0"
+    },
+    {
+      "license-name": "EPL 2.0",
+      "license-description": "Eclipse Public License version 2.0",
+      "license-url": "https://opensource.org/licenses/EPL-2.0"
+    },
+    {
+      "license-name": "Nuvla.io Apps 1.0",
+      "license-description": "Nuvla.io License for Apps 1.0",
+      "license-url": "https://nuvla.io/terms/app-license"
+    },
+    {
+      "license-name": "SixSq Apps 1.0",
+      "license-description": "SixSq License for Apps 1.0",
+      "license-url": "https://sixsq.com/terms/app-license"
+    }
+  ]
 }

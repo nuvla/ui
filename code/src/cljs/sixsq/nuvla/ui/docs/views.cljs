@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.style :as style]))
 
@@ -24,27 +25,26 @@
 (defn documents-table
   []
   (let [tr        (subscribe [::i18n-subs/tr])
-        loading?  (subscribe [::subs/loading?])
         documents (subscribe [::subs/documents])]
-    [ui/Segment (merge style/basic
-                       {:class-name "nuvla-ui-x-autoscroll"
-                        :loading    (or @loading? (nil? @documents))})
+    [components/LoadingPage {}
+     [ui/Segment (merge style/basic
+                        {:class-name "nuvla-ui-x-autoscroll"})
 
-     (when @documents
-       [:div
-        [ui/Table
-         {:style       {:cursor "pointer"}
-          :compact     "very"
-          :single-line true
-          :padded      false
-          :unstackable true
-          :selectable  true}
-         [ui/TableHeader
-          [ui/TableRow
-           [ui/TableHeaderCell (@tr [:name])]
-           [ui/TableHeaderCell (@tr [:description])]]]
-         (vec (concat [ui/TableBody]
-                      (map row-fn (sort-by :name (vals @documents)))))]])]))
+      (when @documents
+        [:div
+         [ui/Table
+          {:style       {:cursor "pointer"}
+           :compact     "very"
+           :single-line true
+           :padded      false
+           :unstackable true
+           :selectable  true}
+          [ui/TableHeader
+           [ui/TableRow
+            [ui/TableHeaderCell (@tr [:name])]
+            [ui/TableHeaderCell (@tr [:description])]]]
+          (vec (concat [ui/TableBody]
+                       (map row-fn (sort-by :name (vals @documents)))))]])]]))
 
 
 (defn documents-view

@@ -9,6 +9,12 @@
 
 
 (reg-sub
+  ::loading?
+  (fn [db]
+    (::spec/loading? db)))
+
+
+(reg-sub
   ::module-common
   (fn [db]
     (::spec/module-common db)))
@@ -60,11 +66,6 @@
 (reg-sub
   ::active-input
   ::spec/active-input)
-
-
-(reg-sub
-  ::completed?
-  ::spec/completed?)
 
 
 (reg-sub
@@ -298,22 +299,18 @@
 
 (reg-sub
   ::copy-module
-  (fn [db]
-    (::spec/copy-module db)))
+  ::spec/copy-module)
 
 
 (reg-sub
   ::paste-modal-visible?
-  (fn [db]
-    (::spec/paste-modal-visible? db)))
+  ::spec/paste-modal-visible?)
 
 (reg-sub
   ::active-tab-index
-  (fn [db]
-    (get-in db [::spec/active-tab-index])))
+  ::spec/active-tab-index)
 
 
 (reg-sub
   ::module-not-found?
-  (fn [db]
-    (get-in db [::spec/module-not-found?])))
+  ::spec/module-not-found?)

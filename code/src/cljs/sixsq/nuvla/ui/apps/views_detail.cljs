@@ -925,7 +925,7 @@
          [:span ff/nbsp (ff/help-popup (@tr [:module-data-type-help]))]]
         (if (empty? @data-types)
           [ui/Message
-           (str/capitalize (str (@tr [:no-datasets]) "."))]
+           (str/capitalize (str (@tr [:no-databindings]) "."))]
           [:div [ui/Grid {:style {:margin-top    5
                                   :margin-bottom 5}}
                  (for [[id dt] @data-types]

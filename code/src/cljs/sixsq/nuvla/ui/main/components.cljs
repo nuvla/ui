@@ -2,15 +2,17 @@
   (:require
     ["react" :as react]
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :refer [dispatch dispatch-sync subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+    [sixsq.nuvla.ui.main.events :as events]
     [sixsq.nuvla.ui.main.subs :as subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+
 
 (def ref (react/createRef))
 
@@ -166,9 +168,7 @@
                   ^{:key success-id}
                   [ui/ListItem
                    [ui/ListContent
-                    [ui/ListHeader [history-views/link success-id success-id]]]]
-                  )]])
-            ]]]]))))
+                    [ui/ListHeader [history-views/link success-id success-id]]]])]])]]]]))))
 
 
 (defn StatisticState
@@ -228,3 +228,38 @@
                    :icon    "warning circle"
                    :header  (@tr [message-header])
                    :content (@tr [message-content])}]]]))
+
+
+(defn LoadingContent
+  [content]
+  (let [loading? (subscribe [::subs/loading?])]
+    (if @loading?
+      [ui/Loader {:active true :size "massive"
+                  :style  {:position "fixed"
+                           :top      "50%"
+                           :left     "50%"}}]
+      content)))
+
+
+(defn DimmableContent
+  [content]
+  [ui/DimmerDimmable
+   {:style {:overflow "visible"}}
+   content])
+
+
+(defn LoadingPage
+  "This form-2 component wraps content with a LoadingContent component.
+   dispatch-sync is used at initialisation of the component to ensure a clean display of the spinner
+   right from the start, without any blinking from previous potential content.
+   This component should be used for large sections of content, such as tabs or containers.
+   The content passed as argument is responsible for setting main-spec/loading? to false once the data is loaded.
+   An optional DimmerContent component can also wrap the content. In this case, the content argument must include a
+   NotFoundPortal component and a content event must set the corresponding spec attribute to true."
+  [{:keys [_dimmable?]} _content]
+  (dispatch-sync [::events/set-loading? true])
+  (fn [{:keys [dimmable?]} content]
+    [LoadingContent
+     (if dimmable?
+       [DimmableContent content]
+       content)]))

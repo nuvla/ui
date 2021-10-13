@@ -3,8 +3,6 @@
     [clojure.spec.alpha :as s]))
 
 
-(s/def ::loading? boolean?)
-
 (s/def ::nuvlabox (s/nilable string?))
 
 (s/def ::deployments any?)
@@ -43,8 +41,7 @@
 
 (s/def ::bulk-jobs-monitored any?)
 
-(s/def ::db (s/keys :req [::loading?
-                          ::deployments
+(s/def ::db (s/keys :req [::deployments
                           ::deployments-summary
                           ::deployments-summary-all
                           ::deployments-params-map
@@ -61,8 +58,7 @@
                           ::select-all?
                           ::bulk-jobs-monitored]))
 
-(def defaults {::loading?                false
-               ::page                    1
+(def defaults {::page                    1
                ::elements-per-page       8
                ::full-text-search        nil
                ::additional-filter       nil

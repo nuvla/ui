@@ -5,6 +5,18 @@
 
 
 (reg-sub
+  ::loading?
+  (fn [db]
+    (::spec/loading? db)))
+
+
+(reg-sub
+  ::not-found?
+  (fn [db]
+    (::spec/not-found? db)))
+
+
+(reg-sub
   ::iframe?
   (fn [db]
     (::spec/iframe? db)))
@@ -136,6 +148,13 @@
   :<- [::config-map]
   (fn [config-map [_ key]]
     (get config-map key)))
+
+
+(reg-sub
+  ::nuvla-api
+  :<- [::config "nuvla-api"]
+  (fn [nuvla-api [_]]
+    (or nuvla-api "https://nuvla.io/api")))
 
 
 (reg-sub

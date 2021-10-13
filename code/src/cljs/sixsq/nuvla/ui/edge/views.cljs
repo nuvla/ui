@@ -4,14 +4,16 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
+    [sixsq.nuvla.ui.edge.views-clusters :as views-clusters]
+    [sixsq.nuvla.ui.edge.views-cluster :as views-cluster]
     [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
     [sixsq.nuvla.ui.edge.events :as events]
     [sixsq.nuvla.ui.edge.subs :as subs]
     [sixsq.nuvla.ui.edge.utils :as utils]
+    [sixsq.nuvla.ui.edge.views-utils :as views-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as main-components]
-    [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -19,7 +21,6 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.utils.zip :as zip]))
@@ -27,19 +28,15 @@
 
 (def view-type (r/atom :cards))
 (def show-state-statistics (r/atom false))
-(def hide-cluster-card (r/atom false))
-(def orchestration-icons
-  {:swarm      "docker"
-   :kubernetes "/ui/images/kubernetes.svg"})
+
 
 (defn StatisticStates
-  ([] [StatisticStates true false])
-  ([_clickable? _hide-cluster-stats]
+  ([] [StatisticStates true])
+  ([_clickable?]
    (let [tr          (subscribe [::i18n-subs/tr])
          summary     (subscribe [::subs/nuvlaboxes-summary])
-         summary-all (subscribe [::subs/nuvlaboxes-summary-all])
-         clusters    (subscribe [::subs/nuvlabox-clusters])]
-     (fn [clickable? hide-cluster-stats]
+         summary-all (subscribe [::subs/nuvlaboxes-summary-all])]
+     (fn [clickable?]
        (let [summary         (if clickable? summary summary-all) ; select all without filter
              terms           (general-utils/aggregate-to-map
                                (get-in @summary [:aggregations :terms:state :buckets]))
@@ -55,34 +52,33 @@
              online          (:1 online-statuses)
              offline         (:0 online-statuses)
              unknown         (- total (+ online offline))]
-         [:<>
-          [ui/StatisticGroup {:size  "tiny"
-                              :style {:justify-content "center"}}
-           (if (and (= @view-type :cluster) (not hide-cluster-stats))
-             [main-components/StatisticState (:count @clusters) ["fas fa-chart-network"] "TOTAL"
-              false ::events/set-state-selector ::subs/state-selector]
-             [:<>
-              [main-components/StatisticState total ["fas fa-box"] "TOTAL"
-               clickable? ::events/set-state-selector ::subs/state-selector]
-              [main-components/StatisticState online [(utils/status->icon utils/status-online)] utils/status-online
-               clickable? "green" ::events/set-state-selector ::subs/state-selector]
-              [main-components/StatisticState offline [(utils/status->icon utils/status-offline) "fas fa-slash"]
-               utils/status-offline clickable? "red" ::events/set-state-selector ::subs/state-selector]
-              [main-components/StatisticState unknown [(utils/status->icon utils/status-unknown)]
-               utils/status-unknown clickable? "yellow" ::events/set-state-selector ::subs/state-selector]
-              (when clickable?
-                [:<>
-                 [ui/Statistic
-                  {:size     "tiny"
-                   :class    "slight-up"
-                   :style    {:cursor "pointer"}
-                   :on-click #(do
-                                (reset! show-state-statistics (not @show-state-statistics))
-                                (when-not @show-state-statistics
-                                  (dispatch [::events/set-state-selector nil])))}
-                  [ui/StatisticValue {:style {:margin "10px 10px"}}
-                   [ui/Icon {:name (if @show-state-statistics "angle double up" "angle double down")}]]]])
-              ])]
+
+         [:div {:style {:margin     "10px auto 10px auto"
+                        :text-align "center"
+                        :width      "100%"}}
+          [ui/StatisticGroup (merge {:widths (if clickable? nil 4) :size "tiny"} style/center-block)
+           [:<>
+            [components/StatisticState total ["fas fa-box"] "TOTAL"
+             clickable? ::events/set-state-selector ::subs/state-selector]
+            [components/StatisticState online [(utils/status->icon utils/status-online)] utils/status-online
+             clickable? "green" ::events/set-state-selector ::subs/state-selector]
+            [components/StatisticState offline [(utils/status->icon utils/status-offline) "fas fa-slash"]
+             utils/status-offline clickable? "red" ::events/set-state-selector ::subs/state-selector]
+            [components/StatisticState unknown [(utils/status->icon utils/status-unknown)]
+             utils/status-unknown clickable? "yellow" ::events/set-state-selector ::subs/state-selector]
+            (when clickable?
+              [:span
+               [ui/Statistic
+                {:size     "tiny"
+                 :class    "slight-up"
+                 :style    {:cursor "pointer"}
+                 :on-click #(when clickable?
+                              (reset! show-state-statistics (not @show-state-statistics))
+                              (when-not @show-state-statistics
+                                (dispatch [::events/set-state-selector nil])))}
+                [ui/StatisticValue {:style {:margin "0 10px"}}
+                 [ui/Icon {:name (if @show-state-statistics "angle double up" "angle double down")}]]]
+               ])]]
           (when clickable?
             [ui/Segment {:compact true
                          :width   "auto"
@@ -95,56 +91,42 @@
                        :display    "block"
                        :text-align "center"
                        :width      "100%"}}
-              [main-components/StatisticState new [(utils/state->icon utils/state-new)]
+              [components/StatisticState new [(utils/state->icon utils/state-new)]
                utils/state-new clickable? ::events/set-state-selector ::subs/state-selector]
-              [main-components/StatisticState activated [(utils/state->icon utils/state-activated)]
+              [components/StatisticState activated [(utils/state->icon utils/state-activated)]
                utils/state-activated clickable? ::events/set-state-selector ::subs/state-selector]
-              [main-components/StatisticState commissioned [(utils/state->icon utils/state-commissioned)]
+              [components/StatisticState commissioned [(utils/state->icon utils/state-commissioned)]
                utils/state-commissioned clickable? ::events/set-state-selector ::subs/state-selector]
-              [main-components/StatisticState decommissioning [(utils/state->icon utils/state-decommissioning)]
+              [components/StatisticState decommissioning [(utils/state->icon utils/state-decommissioning)]
                utils/state-decommissioning clickable? ::events/set-state-selector ::subs/state-selector]
-              [main-components/StatisticState decommissioned [(utils/state->icon utils/state-decommissioned)]
+              [components/StatisticState decommissioned [(utils/state->icon utils/state-decommissioned)]
                utils/state-decommissioned clickable? ::events/set-state-selector ::subs/state-selector]
-              [main-components/StatisticState error [(utils/state->icon utils/state-error)]
-               utils/state-error clickable? ::events/set-state-selector ::subs/state-selector]]])
-          ])))))
-
-
-(defn AddButton
-  []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [uix/MenuItem
-     {:name     (@tr [:add])
-      :icon     "add"
-      :on-click #(dispatch
-                   [::main-events/subscription-required-dispatch
-                    [::events/open-modal :add]])}]))
+              [components/StatisticState error [(utils/state->icon utils/state-error)]
+               utils/state-error clickable? ::events/set-state-selector ::subs/state-selector]]])])))))
 
 
 (defn MenuBar []
-  (let [loading? (subscribe [::subs/loading?])]
-    (dispatch [::events/refresh])
+  (let [loading?      (subscribe [::subs/loading?])]
     (fn []
-      [main-components/StickyBar
+      [components/StickyBar
        [ui/Menu {:borderless true, :stackable true}
-        [AddButton]
+        [views-utils/AddButton]
         [ui/MenuItem {:icon     "grid layout"
                       :active   (= @view-type :cards)
                       :on-click #(reset! view-type :cards)}]
-        [ui/MenuItem {:disabled @hide-cluster-card
-                      :active   (= @view-type :cluster)
-                      :on-click #(reset! view-type :cluster)}
-         [ui/Icon {:className "fas fa-chart-network"}]]
         [ui/MenuItem {:icon     "table"
                       :active   (= @view-type :table)
                       :on-click #(reset! view-type :table)}]
         [ui/MenuItem {:icon     "map"
                       :active   (= @view-type :map)
                       :on-click #(reset! view-type :map)}]
-        [main-components/RefreshMenu
+        [ui/MenuItem {:active   (= @view-type :cluster)
+                      :on-click #(dispatch [::history-events/navigate "edge/nuvlabox-cluster"])}
+         [ui/Icon {:className "fas fa-chart-network"}]]
+        [components/RefreshMenu
          {:action-id  events/refresh-id
           :loading?   @loading?
-          :on-refresh #(dispatch [::events/refresh])}]]])))
+          :on-refresh #(dispatch [::events/refresh-root])}]]])))
 
 
 (defonce usb-doc-anchor "install-via-usb-stick")
@@ -380,7 +362,9 @@
         ssh-credentials            (subscribe [::subs/ssh-keys-available])
         nb-releases-by-id          (group-by :id @nb-releases)
         default-data               {:refresh-interval 30}
-        first-nb-release           (first @nb-releases)
+        first-nb-release           (->> @nb-releases
+                                        (remove :pre-release)
+                                        first)
         creation-data              (r/atom default-data)
         default-release-data       {:nb-rel      (:id first-nb-release)
                                     :nb-selected first-nb-release
@@ -462,6 +446,7 @@
                                                                   (into {}))])))))]
 
     (dispatch [::events/get-ssh-keys-available ["ssh-key"] nil])
+    (dispatch [::events/get-vpn-infra])
     (fn []
       (when (and (= (count @vpn-infra-opts) 1)
                  (nil? (:vpn-server-id @creation-data)))
@@ -684,24 +669,6 @@
     [AddModal]))
 
 
-(defn format-tags
-  [tags id]
-  [ui/LabelGroup {:size  "tiny"
-                  :color "teal"
-                  :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-   (for [tag tags]
-     ^{:key (str id "-" tag)}
-     [ui/Label {:style {:max-width     "15ch"
-                        :overflow      "hidden"
-                        :text-overflow "ellipsis"
-                        :white-space   "nowrap"}}
-      [ui/Icon {:name "tag"}] tag])])
-
-
-(defn format-created
-  [created]
-  (-> created time/parse-iso8601 time/ago))
-
 (defn NuvlaboxRow
   [{:keys [id name description created state tags online] :as _nuvlabox} managers]
   (let [uuid (general-utils/id->uuid id)]
@@ -713,8 +680,8 @@
       [ui/Icon {:icon (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
-     [ui/TableCell (format-created created)]
-     [ui/TableCell (format-tags tags id)]
+     [ui/TableCell (utils/format-created created)]
+     [ui/TableCell [views-utils/FormatTags tags id]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)
         [ui/Icon {:name "check"}])]]))
@@ -774,40 +741,16 @@
 
 
 (defn NuvlaboxMapPoint
-  [{:keys [id name location online]}]
+  [{:keys [id name location inferred-location online]}]
   (let [uuid     (general-utils/id->uuid id)
         on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
     [map/CircleMarker {:on-click on-click
-                       :center   (map/longlat->latlong location)
+                       :center   (map/longlat->latlong (or location inferred-location))
                        :color    (utils/map-online->color online)
                        :opacity  0.5
-                       :weight   2}
+                       :weight   1
+                       :radius   7}
      [map/Tooltip (or name id)]]))
-
-
-(defn NuvlaboxCard
-  [_nuvlabox _managers]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [id name description created state tags online]} managers]
-      (let [href (str "edge/" (general-utils/id->uuid id))]
-        ^{:key id}
-        [uix/Card
-         {:on-click    #(dispatch [::history-events/navigate href])
-          :href        href
-          :header      [:<>
-                        [:div {:style {:float "right"}}
-                         [edge-detail/OnlineStatusIcon online :corner "top right"]]
-                        [ui/IconGroup
-                         [ui/Icon {:name "box"}]
-                         (when (some #{id} managers)
-                           [ui/Icon {:className "fas fa-crown"
-                                     :corner    true
-                                     :color     "blue"}])]
-                        (or name id)]
-          :meta        (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))
-          :state       state
-          :description (when-not (str/blank? description) description)
-          :tags        tags}]))))
 
 
 (defn NuvlaboxCards
@@ -817,181 +760,74 @@
         managers          (distinct
                             (apply concat
                                    (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
-        current-cluster   (subscribe [::subs/nuvlabox-cluster])
-        selected-nbs      (if @current-cluster
-                            (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
-                                                       (:nuvlabox-workers @current-cluster))]
-                              (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
-                            (:resources @nuvlaboxes))]
+        selected-nbs      (:resources @nuvlaboxes)]
     [:div style/center-items
      [ui/CardGroup {:centered    true
                     :itemsPerRow 4}
       (for [{:keys [id] :as nuvlabox} selected-nbs]
         (when id
           ^{:key id}
-          [NuvlaboxCard nuvlabox managers]))]]))
+          [views-utils/NuvlaboxCard nuvlabox managers]))]]))
 
 
 (defn NuvlaboxMap
   []
-  (let [nuvlaboxes      (subscribe [::subs/nuvlaboxes])
-        current-cluster (subscribe [::subs/nuvlabox-cluster])
-        selected-nbs    (if @current-cluster
-                          (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
-                                                     (:nuvlabox-workers @current-cluster))]
-                            (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
-                          (:resources @nuvlaboxes))]
+  (let [nuvlabox-locations          (subscribe [::subs/nuvlabox-locations])
+        nbs-locations               (:resources @nuvlabox-locations)]
     [map/MapBox
      {:style  {:height 500}
       :center map/sixsq-latlng
       :zoom   3}
      (doall
-       (for [{:keys [id] :as nuvlabox} (->> selected-nbs
-                                            (filter #(:location %)))]
+       (for [{:keys [id] :as nuvlabox} nbs-locations]
          ^{:key id}
          [NuvlaboxMapPoint nuvlabox]))]))
 
 
-(defn NuvlaBoxClusterCard
-  [_nuvlabox-cluster nuvlaboxes]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [id cluster-id created managers workers nuvlabox-managers
-                 nuvlabox-workers name description orchestrator] :as _nuvlabox-cluster}]
-      (let [href          (str "edge/nuvlabox-cluster/" (general-utils/id->uuid id))
-            orch-icon     (get orchestration-icons (keyword orchestrator) "question circle")
-            cluster-nodes (+ (count managers) (count workers))
-            nb-per-id     (group-by :id (:resources nuvlaboxes))
-            name          (or name cluster-id)]
-        ^{:key id}
-        [uix/Card
-         {:on-click    #(dispatch [::history-events/navigate href])
-          :href        href
-          :header      [:<>
-                        [ui/Icon {:className "fas fa-chart-network"}]
-                        (if (> (count name) 21)
-                          (str (apply str (take 20 name)) "...")
-                          name)]
-          :meta        [:<>
-                        (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))
-                        [:br]
-                        (str "Orchestrator: " orchestrator " ")
-                        [ui/Icon {:name orch-icon}]]
-          :description (when-not (str/blank? description) description)
-          :content     [ui/ListSA {:divided        true
-                                   :vertical-align "middle"}
-                        (doall
-                          (for [nb-id (concat nuvlabox-managers nuvlabox-workers)]
-                            ^{:key (general-utils/id->uuid nb-id)}
-                            (let [nuvlabox (into {} (get nb-per-id nb-id))
-                                  name     (:name nuvlabox)
-                                  online   (:online nuvlabox)
-                                  updated  (:updated nuvlabox)]
-                              [ui/ListItem
-                               [ui/Image {:avatar true}
-                                [ui/Icon {:className (if (some #{nb-id} nuvlabox-managers)
-                                                       "fas fa-crown"
-                                                       "")}]]
-                               [ui/ListContent
-                                [ui/ListHeader name
-                                 [:div {:style {:float "right"}}
-                                  [edge-detail/OnlineStatusIcon online :corner "top right"]]]
-                                [ui/ListDescription (str (@tr [:updated]) " " (-> updated time/parse-iso8601 time/ago))]]])))]
-          :extra       (str (@tr [:nuvlabox-cluster-nodes]) cluster-nodes)}]))))
+(defn DetailedView
+  [uuid]
+  (if (= "nuvlabox-cluster" uuid)
+    [views-clusters/ClustersView]
+    [edge-detail/EdgeDetails uuid]))
 
 
-(defn NuvlaboxClusters
+(defn NuvlaBoxes
   []
-  (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
-        nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])]
-    [:div style/center-items
-     [ui/CardGroup {:centered    true
-                    :itemsPerRow 4}
-      (doall
-        (for [{:keys [id] :as cluster} (:resources @nuvlabox-clusters)]
-          ^{:key id}
-          [NuvlaBoxClusterCard cluster @nuvlaboxes]))]]))
-
-
-(defn ClusterViewHeader
-  []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        nuvlabox-cluster (subscribe [::subs/nuvlabox-cluster])
-        name             (:name @nuvlabox-cluster)
-        cluster-id       (:cluster-id @nuvlabox-cluster)
-        all-nodes        (+ (count (:managers @nuvlabox-cluster)) (count (:workers @nuvlabox-cluster)))
-        nuvlabox-nodes   (+ (count (:nuvlabox-managers @nuvlabox-cluster)) (count (:nuvlabox-workers @nuvlabox-cluster)))]
-    [ui/Header {:as        "h3"
-                :float     "left"
-                :icon      (r/as-element [ui/Icon {:className "fas fa-chart-network"}])
-                :content   (if name
-                             (str name " (" cluster-id ")")
-                             cluster-id)
-                :subheader (str
-                             nuvlabox-nodes
-                             (@tr [:out-of])
-                             all-nodes
-                             " "
-                             (if (> nuvlabox-nodes 1)
-                               (str (@tr [:they-are]) " NuvlaBox " (@tr [:node]) "s")
-                               (str (@tr [:it-is-a]) " NuvlaBox " (@tr [:node]))))}]))
+  (dispatch [::events/refresh-root])
+  (let [tr        (subscribe [::i18n-subs/tr])
+        full-text (subscribe [::subs/full-text-search])]
+    [components/LoadingPage {}
+     [:<>
+      [uix/PageHeader "box" (general-utils/capitalize-first-letter (@tr [:edge]))]
+      [MenuBar]
+      [:div {:style {:display "flex"}}
+       [components/SearchInput
+        {:default-value @full-text
+         :on-change     (ui-callback/input-callback
+                          #(dispatch [::events/set-full-text-search %]))
+         :style         {:display    "inline-table"
+                         :margin-top "20px"}}]
+       [StatisticStates]
+       [ui/Input {:style {:visibility "hidden"}
+                  :icon  "search"}]]
+      (case @view-type
+        :cards [NuvlaboxCards]
+        :table [NuvlaboxTable]
+        :map [NuvlaboxMap])
+      (when-not (= @view-type :map)
+        [Pagination])]]))
 
 
 (defmethod panel/render :edge
   [path]
-  (let [[_ uuid nuvlabox-cluster-uuid] path
-        n         (count path)
-        full-text (subscribe [::subs/full-text-search])
-        tr        (subscribe [::i18n-subs/tr])
-        root      [:<>
-                   (reset! hide-cluster-card false)
-                   [uix/PageHeader "box" (general-utils/capitalize-first-letter (@tr [:edge]))]
-                   [MenuBar]
-                   [ui/Grid {:stackable true
-                             :style     {:margin-top 10}
-                             :reversed  "mobile"
-                             :columns   3}
-                    [ui/GridColumn {:width 4}
-                     [main-components/SearchInput
-                      {:default-value @full-text
-                       :style         {:min-width 100}
-                       :on-change     (ui-callback/input-callback
-                                        #(dispatch [::events/set-full-text-search %]))}]]
-                    [ui/GridColumn {:width 8}
-                     [StatisticStates]]
-                    [ui/GridColumn {:width 4}
-                     [main-components/ClickMeStaticPopup]]]
-                   (if (= n 3)
-                     (do
-                       (when (= @view-type :cluster)
-                         (reset! view-type :cards))
-                       (reset! hide-cluster-card true)
-                       [ui/SegmentGroup {:stacked true
-                                         :color   "black"}
-                        [ui/Segment
-                         [ClusterViewHeader]]
-                        [ui/Segment
-                         (case @view-type
-                           :cards [NuvlaboxCards nuvlabox-cluster-uuid]
-                           :cluster nil
-                           :table [NuvlaboxTable nuvlabox-cluster-uuid]
-                           :map [NuvlaboxMap nuvlabox-cluster-uuid])]])
-
-                     (case @view-type
-                       :cards [NuvlaboxCards]
-                       :cluster [NuvlaboxClusters]
-                       :table [NuvlaboxTable]
-                       :map [NuvlaboxMap]))
-                   (when-not (= @view-type :map)
-                     [Pagination])
-                   [AddModalWrapper]]
-        children  (case n
-                    2 [edge-detail/EdgeDetails uuid]
-                    root)]
-    (dispatch [::events/get-vpn-infra])
-    (dispatch [::events/get-nuvlabox-releases])
-    (when nuvlabox-cluster-uuid
-      (dispatch [::events/get-nuvlabox-cluster (str "nuvlabox-cluster/" nuvlabox-cluster-uuid)]))
-    (if (and (= uuid "nuvlabox-cluster") (not nuvlabox-cluster-uuid))
-      (dispatch [::history-events/navigate "edge/"])
-      [ui/Segment style/basic
-       children])))
+  (dispatch [::events/get-nuvlabox-releases])
+  (let [[_ path1 path2] path
+        n        (count path)
+        children (case n
+                   3 [views-cluster/ClusterView path2]
+                   2 [DetailedView path1]
+                   [NuvlaBoxes])]
+    [:<>
+     [ui/Segment style/basic
+      children]
+     [AddModalWrapper]]))

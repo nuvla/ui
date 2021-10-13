@@ -14,7 +14,7 @@
     [sixsq.nuvla.ui.edge.views :as edge-views]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -30,7 +30,7 @@
   []
   (let [loading? (subscribe [::subs/loading?])]
     [:span {:style {:display "inline-flex"}}
-     [main-components/RefreshCompact
+     [components/RefreshCompact
       {:action-id  events/refresh-action-deployments-id
        :loading?   @loading?
        :on-refresh refresh}]]))
@@ -97,7 +97,7 @@
 
      [:h4 [ui/Icon {:name icon}] (str/upper-case "NuvlaBoxes")]
 
-     [edge-views/StatisticStates false true]
+     [edge-views/StatisticStates false]
 
      [ui/Button {:icon     icon
                  :color    :green
@@ -202,20 +202,21 @@
   (let [tr       (subscribe [::i18n-subs/tr])]
     (refresh)
     (fn []
-      [:<>
-       [:div {:style {:display "flex" :justify-content "space-between"}}
-        [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard]))]
-        [MenuRefresh]]
-       [Statistics]
-       [:div utils-style/center-items
-        [ui/Grid {:columns   2,
-                  :stackable true
-                  :padded    true}
-         [ui/GridRow
-          [ui/GridColumn {:stretched true}
-           [TabOverviewDeployments]]
-          [ui/GridColumn {:stretched true}
-           [TabOverviewNuvlaBox]]]]]])))
+      [components/LoadingPage {}
+       [:<>
+        [:div {:style {:display "flex" :justify-content "space-between"}}
+         [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard]))]
+         [MenuRefresh]]
+        [Statistics]
+        [:div utils-style/center-items
+         [ui/Grid {:columns   2,
+                   :stackable true
+                   :padded    true}
+          [ui/GridRow
+           [ui/GridColumn {:stretched true}
+            [TabOverviewDeployments]]
+           [ui/GridColumn {:stretched true}
+            [TabOverviewNuvlaBox]]]]]]])))
 
 
 (defmethod panel/render :dashboard

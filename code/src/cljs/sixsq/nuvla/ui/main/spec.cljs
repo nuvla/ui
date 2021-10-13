@@ -3,6 +3,12 @@
     [clojure.spec.alpha :as s]))
 
 
+(s/def ::loading? boolean?)
+
+
+(s/def ::not-found? boolean?)
+
+
 (s/def ::iframe? boolean?)
 
 
@@ -49,7 +55,9 @@
 (s/def ::stripe any?)
 
 
-(s/def ::db (s/keys :req [::iframe?
+(s/def ::db (s/keys :req [::loading?
+                          ::not-found?
+                          ::iframe?
                           ::device
                           ::sidebar-open?
                           ::visible?
@@ -65,7 +73,9 @@
                           ::stripe]))
 
 
-(def defaults {::iframe?              false
+(def defaults {::loading?             true
+               ::not-found?           false
+               ::iframe?              false
                ::config               {}
                ::device               :computer
                ::sidebar-open?        true

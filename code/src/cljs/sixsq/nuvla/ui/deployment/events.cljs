@@ -10,6 +10,7 @@
     [sixsq.nuvla.ui.edge-detail.spec :as edge-detail-spec]
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -21,11 +22,8 @@
 
 (reg-event-fx
   ::refresh
-  (fn [{db :db} [_ {:keys [init? nuvlabox]}]]
-    {:db (cond-> db
-                 init? (merge spec/defaults)
-                 nuvlabox (assoc ::spec/nuvlabox nuvlabox))
-     :fx [[:dispatch [::main-events/action-interval-start
+  (fn [{_db :db} [_]]
+    {:fx [[:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-summary-id
                        :frequency 20000
                        :event     [::get-deployments-summary]}]]
@@ -54,7 +52,7 @@
           callback                 (fn [response]
                                      (when-not (instance? js/Error response)
                                        (dispatch [::set-deployments-params-map response])))]
-      (cond-> {:db (assoc db ::spec/loading? false
+      (cond-> {:db (assoc db ::main-spec/loading? false
                              ::spec/deployments deployments)}
               (not-empty deployments-resource-ids) (assoc ::cimi-api-fx/search
                                                           [:deployment-parameter
@@ -121,7 +119,7 @@
 (reg-event-fx
   ::set-deployments-summary
   (fn [{:keys [db]} [_ deployments]]
-    {:db (assoc db ::spec/loading? false
+    {:db (assoc db ::main-spec/loading? false
                    ::spec/deployments-summary deployments)}))
 
 
@@ -137,7 +135,7 @@
 (reg-event-fx
   ::set-deployments-summary-all
   (fn [{:keys [db]} [_ deployments]]
-    {:db (assoc db ::spec/loading? false
+    {:db (assoc db ::main-spec/loading? false
                    ::spec/deployments-summary-all deployments)}))
 
 

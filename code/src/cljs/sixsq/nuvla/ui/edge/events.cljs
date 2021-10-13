@@ -5,16 +5,38 @@
     [sixsq.nuvla.ui.edge.spec :as spec]
     [sixsq.nuvla.ui.edge.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
+(def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
+(def refresh-id-inferred-locations :nuvlabox-get-nuvlabox-inferred-locations)
 (def refresh-summary-id :nuvlabox-get-nuvlaboxes-summary)
+(def refresh-id-cluster :nuvlabox-get-nuvlabox-cluster)
 (def refresh-id-clusters :nuvlabox-get-nuvlabox-clusters)
 
+
 (reg-event-fx
-  ::refresh
+  ::refresh-root
+  (fn [_ _]
+    {:fx [[:dispatch [::main-events/action-interval-start {:id        refresh-id
+                                                           :frequency 10000
+                                                           :event     [::get-nuvlaboxes]}]]
+          [:dispatch [::main-events/action-interval-start {:id        refresh-id-locations
+                                                           :frequency 10000
+                                                           :event     [::get-nuvlabox-locations]}]]
+          [:dispatch [::main-events/action-interval-start {:id        refresh-summary-id
+                                                           :frequency 10000
+                                                           :event     [::get-nuvlaboxes-summary]}]]
+          [:dispatch [::main-events/action-interval-start {:id        refresh-id-clusters
+                                                           :frequency 10000
+                                                           :event     [::get-nuvlabox-clusters]}]]]}))
+
+
+(reg-event-fx
+  ::refresh-clusters
   (fn [_ _]
     {:fx [[:dispatch [::main-events/action-interval-start {:id        refresh-id
                                                            :frequency 10000
@@ -28,10 +50,22 @@
 
 
 (reg-event-fx
+  ::refresh-cluster
+  (fn [_ [_ cluster-id]]
+    {:fx [[:dispatch [::main-events/action-interval-start {:id        refresh-id
+                                                           :frequency 10000
+                                                           :event     [::get-nuvlaboxes]}]]
+          [:dispatch [::main-events/action-interval-start {:id        refresh-id-cluster
+                                                           :frequency 10000
+                                                           :event     [::get-nuvlabox-cluster
+                                                                       (str "nuvlabox-cluster/" cluster-id)]}]]]}))
+
+
+(reg-event-fx
   ::set-page
   (fn [{db :db} [_ page]]
     {:db       (assoc db ::spec/page page)
-     :dispatch [::refresh]}))
+     :dispatch [::refresh-root]}))
 
 
 (reg-event-fx
@@ -39,7 +73,15 @@
   (fn [{db :db} [_ full-text-search]]
     {:db       (assoc db ::spec/full-text-search full-text-search
                          ::spec/page 1)
-     :dispatch [::refresh]}))
+     :dispatch [::refresh-root]}))
+
+
+(reg-event-fx
+  ::set-full-text-clusters-search
+  (fn [{db :db} [_ full-text-search]]
+    {:db       (assoc db ::spec/full-text-clusters-search full-text-search
+                         ::spec/page 1)
+     :dispatch [::refresh-clusters]}))
 
 
 (reg-event-fx
@@ -47,9 +89,8 @@
   (fn [{{:keys [::spec/state-selector
                 ::spec/page
                 ::spec/elements-per-page
-                ::spec/full-text-search] :as db} :db} _]
-    {:db                  (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search [:nuvlabox
+                ::spec/full-text-search] :as _db} :db} _]
+    {::cimi-api-fx/search [:nuvlabox
                            (utils/get-query-params full-text-search page elements-per-page
                                                    state-selector)
                            #(dispatch [::set-nuvlaboxes %])]}))
@@ -65,9 +106,37 @@
                                      status (str " (" status ")"))
                     :content message
                     :type    :error})])
-      (cond->
-        {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-                       ::spec/loading? false)}))))
+      {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
+                     ::main-spec/loading? false)})))
+
+
+(reg-event-fx
+  ::get-nuvlabox-locations
+  (fn [{{:keys [::spec/state-selector
+                ::spec/full-text-search] :as _db} :db} _]
+    {::cimi-api-fx/search [:nuvlabox
+                           {:first  1
+                            :last   10000
+                            :select "id,name,online,location,inferred-location"
+                            :filter (general-utils/join-and
+                                      "(location!=null or inferred-location!=null)"
+                                      (when state-selector (utils/state-filter state-selector))
+                                      (general-utils/fulltext-query-string full-text-search))}
+                           #(dispatch [::set-nuvlabox-locations %])]}))
+
+
+(reg-event-fx
+  ::set-nuvlabox-locations
+  (fn [{:keys [db]} [_ nuvlaboxes]]
+    (if (instance? js/Error nuvlaboxes)
+      (dispatch [::messages-events/add
+                 (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
+                   {:header  (cond-> (str "failure getting nuvlabox locations")
+                                     status (str " (" status ")"))
+                    :content message
+                    :type    :error})])
+      {:db (assoc db ::spec/nuvlabox-locations nuvlaboxes
+                     ::main-spec/loading? false)})))
 
 
 (reg-event-fx
@@ -78,44 +147,59 @@
 
 (reg-event-fx
   ::get-nuvlaboxes-summary
-  (fn [{{:keys [::spec/full-text-search
-                ::spec/nuvlabox-cluster] :as db} :db} _]
-    {:db                  (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search [:nuvlabox
+  (fn [{{:keys [::spec/full-text-search] :as _db} :db} _]
+    {::cimi-api-fx/search [:nuvlabox
                            (utils/get-query-aggregation-params
                              full-text-search
                              "terms:online,terms:state"
-                             (if nuvlabox-cluster
-                               (->> (concat (:nuvlabox-managers nuvlabox-cluster) (:nuvlabox-workers nuvlabox-cluster))
-                                    (map #(str "id='" % "'"))
-                                    (apply general-utils/join-or))
-                               nil))
+                             nil)
                            #(dispatch [::set-nuvlaboxes-summary %])]}))
+
+
+(reg-event-fx
+  ::set-nuvlabox-cluster-summary
+  (fn [{db :db} [_ nuvlaboxes-summary]]
+    {:db (assoc db ::spec/nuvlabox-cluster-summary nuvlaboxes-summary)}))
+
+
+(reg-event-fx
+  ::get-nuvlabox-cluster-summary
+  (fn [{{:keys [::spec/full-text-search
+                ::spec/nuvlabox-cluster] :as _db} :db} _]
+    {::cimi-api-fx/search [:nuvlabox
+                           (utils/get-query-aggregation-params
+                             full-text-search
+                             "terms:online,terms:state"
+                             (->> (concat (:nuvlabox-managers nuvlabox-cluster) (:nuvlabox-workers nuvlabox-cluster))
+                                  (map #(str "id='" % "'"))
+                                  (apply general-utils/join-or)))
+                           #(dispatch [::set-nuvlabox-cluster-summary %])]}))
+
 
 (reg-event-fx
   ::set-nuvlabox-clusters
   (fn [{:keys [db]} [_ nuvlabox-clusters]]
-    (if (instance? js/Error nuvlabox-clusters)
-      (dispatch [::messages-events/add
-                 (let [{:keys [status message]} (response/parse-ex-info nuvlabox-clusters)]
-                   {:header  (cond-> (str "failure getting nuvlabox clusters")
-                                     status (str " (" status ")"))
-                    :content message
-                    :type    :error})])
-      (cond->
-        {:db (assoc db ::spec/nuvlabox-clusters nuvlabox-clusters
-                       ::spec/loading? false)}
-        ))))
+    (let [not-found? (nil? nuvlabox-clusters)]
+      (if (instance? js/Error nuvlabox-clusters)
+        (dispatch [::messages-events/add
+                   (let [{:keys [status message]} (response/parse-ex-info nuvlabox-clusters)]
+                     {:header  (cond-> (str "failure getting nuvlabox clusters")
+                                       status (str " (" status ")"))
+                      :content message
+                      :type    :error})])
+        (cond->
+          {:db (assoc db ::spec/nuvlabox-clusters nuvlabox-clusters
+                         ::main-spec/loading? false
+                         ::spec/nuvlabox-not-found? not-found?)})))))
 
 
 (reg-event-fx
   ::get-nuvlabox-clusters
   (fn [{{:keys [::spec/page
                 ::spec/elements-per-page
-                ::spec/full-text-search] :as db} :db} _]
-    {:db                  (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search [:nuvlabox-cluster
-                           (utils/get-query-params full-text-search page elements-per-page nil)
+                ::spec/full-text-clusters-search] :as _db} :db} _]
+    {::cimi-api-fx/search [:nuvlabox-cluster
+                           (utils/get-query-params full-text-clusters-search page elements-per-page nil)
                            #(dispatch [::set-nuvlabox-clusters %])]}))
 
 
@@ -127,18 +211,18 @@
 
 (reg-event-fx
   ::get-nuvlaboxes-summary-all
-  (fn [{db :db} _]
-    {:db                  (assoc db ::spec/loading? true)
-     ::cimi-api-fx/search [:nuvlabox
+  (fn [{_db :db} _]
+    {::cimi-api-fx/search [:nuvlabox
                            (utils/get-query-aggregation-params nil "terms:online,terms:state" nil)
                            #(dispatch [::set-nuvlaboxes-summary-all %])]}))
 
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
-    {:db       (assoc db ::spec/state-selector state-selector
-                         ::spec/page 1)
-     :dispatch [::get-nuvlaboxes]}))
+    {:db (assoc db ::spec/state-selector state-selector
+                   ::spec/page 1)
+     :fx [[:dispatch [::get-nuvlaboxes]]
+          [:dispatch [::get-nuvlabox-locations]]]}))
 
 
 (reg-event-db
@@ -269,8 +353,8 @@
 (reg-event-fx
   ::set-nuvlabox-cluster
   (fn [{:keys [db]} [_ nuvlabox-cluster]]
-    {:db       (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster)
-     :dispatch [::refresh]}))
+    {:db (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster
+                   ::spec/nuvlabox-not-found? (nil? nuvlabox-cluster))}))
 
 
 (reg-event-fx
@@ -297,3 +381,9 @@
                                                                 additional-filter))
                             :last   10000}
                            #(dispatch [::set-ssh-keys-available %])]}))
+
+
+(reg-event-db
+  ::set-active-tab-index
+  (fn [db [_ active-tab-index]]
+    (assoc db ::spec/active-tab-index active-tab-index)))

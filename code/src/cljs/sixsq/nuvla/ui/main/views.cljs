@@ -255,7 +255,6 @@
             [contents]
             [ignore-changes-modal]
             [subscription-required-modal]
-            (when-not @iframe? [footer])]]]
-         )]
+            (when-not @iframe? [footer])]]])]
       [ui/Container
        [ui/Loader {:active true :size "massive"}]])))

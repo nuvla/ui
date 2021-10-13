@@ -6,12 +6,6 @@
 
 
 (reg-sub
-  ::loading?
-  (fn [db]
-    (::spec/loading? db)))
-
-
-(reg-sub
   ::deployments
   (fn [db]
     (::spec/deployments db)))

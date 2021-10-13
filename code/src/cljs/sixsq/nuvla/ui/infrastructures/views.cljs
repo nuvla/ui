@@ -430,8 +430,8 @@
              (when (= utils/infra-service-subtype-openstack @mgmt-cred-subtype)
                [:<>
                 [TableRowFieldProjectId cloud-project on-change true]
-                [uix/TableRowField [:span "Project Domain"
-                                    [CloudHelpPopup "Cloud Project Domain." @mgmt-cred-subtype]],
+                [uix/TableRowField [:span "User Domain Name"
+                                    [CloudHelpPopup "User Domain Name." @mgmt-cred-subtype]],
                  :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-domain,
                  :spec ::spec/cloud-domain, :on-change (partial on-change :cloud-domain),
                  :validate-form? @validate-form?]
@@ -441,12 +441,12 @@
                  :spec ::spec/cloud-api-endpoint, :on-change (partial on-change :cloud-api-endpoint),
                  :validate-form? @validate-form?]
                 [uix/TableRowField [:span "Network"
-                                    [CloudHelpPopup "OpenStack compute network name." @mgmt-cred-subtype]],
+                                    [CloudHelpPopup "OpenStack compute network name. Ensure your Network is routed to the Floating IP Pool, i.e. there is a Router defined that bridges the Network and the Floating IP Pool." @mgmt-cred-subtype]],
                  :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-network,
                  :spec ::spec/cloud-network, :on-change (partial on-change :cloud-network),
                  :validate-form? @validate-form?]
                 [uix/TableRowField [:span "Floating IP Pool"
-                                    [CloudHelpPopup "OpenStack floating IP pool." @mgmt-cred-subtype]],
+                                    [CloudHelpPopup "OpenStack floating IP pool. The IP pool must have the number of free IPs that is not less than 'cluster size' plus one." @mgmt-cred-subtype]],
                  :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-floating-ip,
                  :spec ::spec/cloud-floating-ip, :on-change (partial on-change :cloud-floating-ip),
                  :validate-form? @validate-form?]

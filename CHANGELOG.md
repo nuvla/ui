@@ -2,11 +2,9 @@
 
 ## Unreleased
 
-### Added
-  
-  - NuvlaBox update action has new option to force restart during the update operation 
-
 ### Changed
+
+  - NuvlaBox update action has new option to force restart during the update operation
 
 ## [2.23.0] - 2021-10-13
 

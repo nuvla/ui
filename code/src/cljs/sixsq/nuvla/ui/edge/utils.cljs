@@ -189,7 +189,8 @@
 (defn format-update-data
   [form-data]
   (let [payload-releated (select-keys form-data [:project-name :working-dir
-                                                 :environment :config-files])
+                                                 :environment :config-files
+                                                 :current-version :force-restart])
         payload?         (some (fn [[_ v]] (not (str/blank? v))) payload-releated)
         payload          (when payload?
                            (-> payload-releated

@@ -134,13 +134,14 @@
                                              {:position "right center"
                                               :content  (@tr [:public-key-info])
                                               :trigger  (r/as-element
-                                                          [:span (@tr [:public-key]) [ui/Icon {:name "info circle"}]])}]),
+                                                          [:span (@tr [:public-key])
+                                                           [ui/Icon {:name "info circle"}]])}]),
             :placeholder (@tr [:public-key]), :editable? editable?, :required? false,
-            :default-value public-key, :spec ::spec/public-key-optional, :validate-form? @validate-form?, :type :textarea,
-            :on-change (partial on-change :public-key)]
+            :default-value public-key, :spec ::spec/public-key-optional, :validate-form? @validate-form?,
+            :type :textarea, :on-change (partial on-change :public-key)]
            [uix/TableRowField (@tr [:private-key]), :placeholder (@tr [:private-key]), :editable? editable?,
-            :required? false, :default-value private-key, :spec ::spec/private-key-optional, :validate-form? @validate-form?,
-            :type :textarea, :on-change (partial on-change :private-key)]]]]))))
+            :required? false, :default-value private-key, :spec ::spec/private-key-optional,
+            :validate-form? @validate-form?, :type :textarea, :on-change (partial on-change :private-key)]]]]))))
 
 
 (defn credential-gpg
@@ -314,7 +315,8 @@
             :default-value exoscale-api-key, :spec ::spec/exoscale-api-key, :validate-form? @validate-form?,
             :on-change (partial on-change :exoscale-api-key)]
            [uix/TableRowField "api secret", :placeholder "Exoscale API secret", :editable? editable?, :required? true,
-            :default-value exoscale-api-secret-key, :spec ::spec/exoscale-api-secret-key, :validate-form? @validate-form?,
+            :default-value exoscale-api-secret-key, :spec ::spec/exoscale-api-secret-key,
+            :validate-form? @validate-form?, :type :password,
             :on-change (partial on-change :exoscale-api-secret-key)]]]
          [:div {:style {:color "grey" :font-style "oblique"}} (@tr [:credential-cloud-follow-link])]
          [:a {:href   "https://community.exoscale.com/documentation/iam/quick-start/"
@@ -348,7 +350,7 @@
             :on-change (partial on-change :amazonec2-access-key)]
            [uix/TableRowField "api secret", :placeholder "AWS EC2 API secret", :editable? editable?, :required? true,
             :default-value amazonec2-secret-key, :spec ::spec/amazonec2-secret-key, :validate-form? @validate-form?,
-            :on-change (partial on-change :amazonec2-secret-key)]]]
+            :type :password, :on-change (partial on-change :amazonec2-secret-key)]]]
          [:div {:style {:color "grey" :font-style "oblique"}} (@tr [:credential-cloud-follow-link])]
          [:a {:href   "https://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html"
               :target "_blank"}
@@ -376,15 +378,15 @@
            [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
             :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
             :on-change (partial on-change :description)]
-           [uix/TableRowField "subscription id", :placeholder "Azure Subscription ID", :editable? editable?, :required? true,
-            :default-value azure-subscription-id, :spec ::spec/azure-subscription-id, :validate-form? @validate-form?,
-            :on-change (partial on-change :azure-subscription-id)]
+           [uix/TableRowField "subscription id", :placeholder "Azure Subscription ID", :editable? editable?,
+            :required? true, :default-value azure-subscription-id, :spec ::spec/azure-subscription-id,
+            :validate-form? @validate-form?, :on-change (partial on-change :azure-subscription-id)]
            [uix/TableRowField "client id", :placeholder "Azure Client ID", :editable? editable?, :required? true,
             :default-value azure-client-id, :spec ::spec/azure-client-id, :validate-form? @validate-form?,
             :on-change (partial on-change :azure-client-id)]
-           [uix/TableRowField "client secret", :placeholder "Azure Client Secret", :editable? editable?, :required? true,
-            :default-value azure-client-secret, :spec ::spec/azure-client-secret, :validate-form? @validate-form?,
-            :on-change (partial on-change :azure-client-secret)]]]
+           [uix/TableRowField "client secret", :placeholder "Azure Client Secret", :editable? editable?,
+            :required? true, :default-value azure-client-secret, :spec ::spec/azure-client-secret,
+            :validate-form? @validate-form?, :type :password, :on-change (partial on-change :azure-client-secret)]]]
          [:div {:style {:color "grey" :font-style "oblique"}} (@tr [:credential-cloud-follow-link])]
          [:a {:href   "https://www.inkoop.io/blog/how-to-get-azure-api-credentials"
               :target "_blank"}
@@ -418,8 +420,8 @@
            [uix/TableRowField "client id", :placeholder "Google Client ID", :editable? editable?, :required? true,
             :default-value client-id, :spec ::spec/client-id, :validate-form? @validate-form?,
             :on-change (partial on-change :client-id)]
-           [uix/TableRowField "client secret", :placeholder "Google Client Secret", :editable? editable?, :required? true,
-            :default-value client-secret, :spec ::spec/client-secret, :validate-form? @validate-form?,
+           [uix/TableRowField "client secret", :placeholder "Google Client Secret", :editable? editable?,
+            :required? true, :type :password, :default-value client-secret, :spec ::spec/client-secret, :validate-form? @validate-form?,
             :on-change (partial on-change :client-secret)]
            [uix/TableRowField "refresh token", :placeholder "Google Refresh Token", :editable? editable?, :required? true,
             :default-value refresh-token, :spec ::spec/refresh-token, :validate-form? @validate-form?,

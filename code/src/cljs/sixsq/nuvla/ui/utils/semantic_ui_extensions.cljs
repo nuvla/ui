@@ -10,7 +10,8 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [taoensso.timbre :as log]))
 
 
 (defn Icon
@@ -204,7 +205,8 @@
   [{:keys [_key _placeholder _default-value _spec _width _on-change _on-validation
            _editable? _validate-form? _type _input-help-msg]}]
   (let [local-validate? (r/atom false)
-        active-input?   (r/atom false)]
+        active-input?   (r/atom false)
+        show            (r/atom false)]
     (fn [{:keys [key placeholder default-value spec width on-change on-validation
                  editable? validate-form? type input-help-msg]
           :or   {editable? true, spec any?, type :input}}]
@@ -218,7 +220,12 @@
                          :on-change     (ui-callback/input-callback
                                           #(let [text (when-not (str/blank? %) %)]
                                              (reset! local-validate? true)
-                                             (on-change text)))}]
+                                             (on-change text)))}
+            icon        (cond
+                          (= :password type) [ui/Icon {:name     (if @show "eye slash" :eye)
+                                                       :link     true
+                                                       :on-click #(swap! show not)}]
+                          @active-input? :pencil)]
         (when on-validation
           (dispatch [on-validation key error?]))
 
@@ -230,9 +237,9 @@
              [ui/Input (assoc common-opts
                          :error error?
                          :fluid true
-                         :type type
+                         :type (if @show :input type)
                          :auto-complete "nope"
-                         :icon (when @active-input? :pencil))]
+                         :icon (r/as-element icon))]
              [ui/Form
               [ui/FormField {:error error?}
                [:div {:className "ui input icon"}

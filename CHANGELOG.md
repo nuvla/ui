@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+  - Obfuscate input field for passwords and secrets
+
 ### Changed
 
 ## [2.24.0] - 2021-10-13

@@ -42,7 +42,7 @@
     :cloud-security-group "docker-machine"
     :cloud-doc-link       "https://www.exoscale.com/compute"}
    infra-service-subtype-openstack
-   {:cloud-vm-size      "eo1.xsmall"
+   {:cloud-vm-size      "eo1.small"
     :cloud-vm-disk-size 50
     :cloud-doc-link     "https://docs.openstack.org/wallaby/user/"}
    infra-service-subtype-amazonec2

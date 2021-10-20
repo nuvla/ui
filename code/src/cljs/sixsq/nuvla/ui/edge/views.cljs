@@ -106,7 +106,7 @@
 
 
 (defn MenuBar []
-  (let [loading?      (subscribe [::subs/loading?])]
+  (let [loading? (subscribe [::subs/loading?])]
     (fn []
       [components/StickyBar
        [ui/Menu {:borderless true, :stackable true}
@@ -772,8 +772,8 @@
 
 (defn NuvlaboxMap
   []
-  (let [nuvlabox-locations          (subscribe [::subs/nuvlabox-locations])
-        nbs-locations               (:resources @nuvlabox-locations)]
+  (let [nuvlabox-locations (subscribe [::subs/nuvlabox-locations])
+        nbs-locations      (:resources @nuvlabox-locations)]
     [map/MapBox
      {:style  {:height 500}
       :center map/sixsq-latlng
@@ -805,9 +805,10 @@
         {:default-value @full-text
          :on-change     (ui-callback/input-callback
                           #(dispatch [::events/set-full-text-search %]))
-         :style         {:display    "inline-table"
+         :style         {:align-self "flex-start"
                          :margin-top "20px"}}]
        [StatisticStates]
+       ; Hack to center the statistics component
        [ui/Input {:style {:visibility "hidden"}
                   :icon  "search"}]]
       (case @view-type

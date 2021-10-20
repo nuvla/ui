@@ -417,6 +417,7 @@
         :no-available-creds-registry                   "No credentials available for this registry"
         :no-children-modules                           "no sub-modules"
         :no-credentials                                "no credentials"
+        :no-credentials-to-remove                      "There are no credentials to remove"
         :no-data                                       "no data"
         :no-data-location                              "no location with selected data"
         :no-data-set-message-header                    "Oops can't find data set"

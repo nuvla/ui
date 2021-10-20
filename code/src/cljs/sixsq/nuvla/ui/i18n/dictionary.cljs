@@ -169,6 +169,7 @@
         :credentials-cloud-select                      "Select Cloud Service Provider credential"
         :credentials-cloud-services                    "Credentials for Cloud Services"
         :credentials-cloud-short                       "CSP credential"
+        :credentials-cloud                             "Cloud Service Provider credential"
         :credentials-help                              "Credentials allow you to access clouds and infrastructure services."
         :credentials-infra-services                    "Credentials for Infrastructure Services"
         :credentials-select-related-infra              "Select related infrastructure service"

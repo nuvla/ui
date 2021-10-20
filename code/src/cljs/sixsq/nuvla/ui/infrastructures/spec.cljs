@@ -57,6 +57,11 @@
 (s/def ::cloud-region utils-spec/nonblank-string)
 (s/def ::cloud-security-group utils-spec/nonblank-string)
 (s/def ::cloud-project utils-spec/nonblank-string)
+(s/def ::cloud-domain utils-spec/nonblank-string)
+(s/def ::cloud-api-endpoint utils-spec/nonblank-string)
+(s/def ::cloud-floating-ip utils-spec/nonblank-string)
+(s/def ::cloud-user utils-spec/nonblank-string)
+(s/def ::cloud-network utils-spec/nonblank-string)
 (s/def ::coe-manager-install boolean?)
 (s/def ::management-credential utils-spec/nonblank-string)
 

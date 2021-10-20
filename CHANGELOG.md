@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+  - Support for OpenStack infrastructures and credentials
+
 ### Changed
 
 ## [2.24.0] - 2021-10-13

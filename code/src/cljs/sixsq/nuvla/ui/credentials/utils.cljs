@@ -117,6 +117,23 @@
         (cond-> acl (assoc-in [:template :acl] acl)))))
 
 
+(defn db->new-openstack-credential
+  [db]
+  (let [name        (get-in db [::spec/credential :name])
+        description (get-in db [::spec/credential :description])
+        subtype     (get-in db [::spec/credential :subtype])
+        secret      (get-in db [::spec/credential :openstack-password])
+        key         (get-in db [::spec/credential :openstack-username])
+        acl         (get-in db [::spec/credential :acl])]
+    (-> {}
+      (assoc :name name)
+      (assoc :description description)
+      (assoc-in [:template :href] (str "credential-template/store-" subtype))
+      (assoc-in [:template :openstack-username] key)
+      (assoc-in [:template :openstack-password] secret)
+      (cond-> acl (assoc-in [:template :acl] acl)))))
+
+
 (defn db->new-amazonec2-credential
   [db]
   (let [name        (get-in db [::spec/credential :name])
@@ -183,6 +200,7 @@
       "infrastructure-service-minio" (db->new-minio-credential db)
       "infrastructure-service-vpn" (db->new-vpn-credential db)
       "infrastructure-service-exoscale" (db->new-exoscale-credential db)
+      "infrastructure-service-openstack" (db->new-openstack-credential db)
       "infrastructure-service-amazonec2" (db->new-amazonec2-credential db)
       "infrastructure-service-azure" (db->new-azure-credential db)
       "infrastructure-service-google" (db->new-google-credential db)

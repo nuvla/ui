@@ -20,35 +20,49 @@
 
 (def infra-service-subtype-exoscale "infrastructure-service-exoscale")
 (def infra-service-subtype-google "infrastructure-service-google")
+(def infra-service-subtype-openstack "infrastructure-service-openstack")
+(def infra-service-subtype-amazonec2 "infrastructure-service-amazonec2")
+(def infra-service-subtype-azure "infrastructure-service-azure")
+
+(def infra-service-subtype-pretty-names
+  {infra-service-subtype-exoscale  "Exoscale"
+   infra-service-subtype-google    "Google Compute Cloud"
+   infra-service-subtype-openstack "Cloud OpenStack"
+   infra-service-subtype-amazonec2 "Amazon EC2"
+   infra-service-subtype-azure     "Microsoft Azure"})
+
 ;; TODO: This needs to come from the server as configuration defaults.
 ;; Probably from template(s) or better a configuration resource?
 (def cloud-params-defaults
   {infra-service-subtype-exoscale
-   {:cloud-vm-size "Small"
-    :cloud-vm-disk-size 50
-    :cloud-region "CH-DK-2"
-    :cloud-vm-image "Linux Ubuntu 18.04 LTS 64-bit"
+   {:cloud-vm-size        "Small"
+    :cloud-vm-disk-size   50
+    :cloud-region         "CH-DK-2"
+    :cloud-vm-image       "Linux Ubuntu 18.04 LTS 64-bit"
     :cloud-security-group "docker-machine"
-    :cloud-doc-link "https://www.exoscale.com/compute"}
-   "infrastructure-service-amazonec2"
-   {:cloud-vm-size "t2.medium"
+    :cloud-doc-link       "https://www.exoscale.com/compute"}
+   infra-service-subtype-openstack
+   {:cloud-vm-size      "eo1.small"
     :cloud-vm-disk-size 50
-    :cloud-region "us-east-1"
-    :cloud-vm-image "ami-927185ef"
-    :cloud-doc-link "https://docs.aws.amazon.com/ec2"}
-   "infrastructure-service-azure"
-   {:cloud-vm-size "Standard_A2"
-    :cloud-region "francecentral"
+    :cloud-doc-link     "https://docs.openstack.org/wallaby/user/"}
+   infra-service-subtype-amazonec2
+   {:cloud-vm-size      "t2.medium"
+    :cloud-vm-disk-size 50
+    :cloud-region       "us-east-1"
+    :cloud-vm-image     "ami-927185ef"
+    :cloud-doc-link     "https://docs.aws.amazon.com/ec2"}
+   infra-service-subtype-azure
+   {:cloud-vm-size  "Standard_A2"
+    :cloud-region   "francecentral"
     :cloud-vm-image "canonical:UbuntuServer:16.04.0-LTS:latest"
     :cloud-doc-link "https://docs.microsoft.com/en-us/azure"}
    infra-service-subtype-google
-   {:cloud-vm-size "e2-medium"
+   {:cloud-vm-size      "e2-medium"
     :cloud-vm-disk-size 50
-    :cloud-region "europe-west3-a"
-    :cloud-project ""
-    :cloud-vm-image "ubuntu-os-cloud/global/images/ubuntu-1804-bionic-v20200610"
-    :cloud-doc-link "https://cloud.google.com/docs"}
-   })
+    :cloud-region       "europe-west3-a"
+    :cloud-project      ""
+    :cloud-vm-image     "ubuntu-os-cloud/global/images/ubuntu-1804-bionic-v20200610"
+    :cloud-doc-link     "https://cloud.google.com/docs"}})
 
 
 (defn mgmt-cred-subtype-by-id
@@ -81,6 +95,7 @@
       10
       user-disk-size)))
 
+
 (defn db->new-service
   [db]
   (let [service-name          (get-in db [::spec/infra-service :name])
@@ -99,8 +114,13 @@
         cloud-vm-size         (get-in db [::spec/infra-service :cloud-vm-size] (cloud-param-default-value mgmt-cred-subtype :cloud-vm-size))
         cloud-vm-disk-size    (calc-disk-size (get-in db [::spec/infra-service :cloud-vm-disk-size]) (cloud-param-default-value mgmt-cred-subtype :cloud-vm-disk-size))
         cloud-region          (get-in db [::spec/infra-service :cloud-region] (cloud-param-default-value mgmt-cred-subtype :cloud-region))
-        cloud-project          (get-in db [::spec/infra-service :cloud-project] (cloud-param-default-value mgmt-cred-subtype :cloud-project))
+        cloud-project         (get-in db [::spec/infra-service :cloud-project] (cloud-param-default-value mgmt-cred-subtype :cloud-project))
         cloud-security-group  (get-in db [::spec/infra-service :cloud-security-group])
+        cloud-network         (get-in db [::spec/infra-service :cloud-network])
+        cloud-domain          (get-in db [::spec/infra-service :cloud-domain])
+        cloud-api-endpoint    (get-in db [::spec/infra-service :cloud-api-endpoint])
+        cloud-floating-ip     (get-in db [::spec/infra-service :cloud-floating-ip])
+        cloud-user            (get-in db [::spec/infra-service :cloud-user])
         acl                   (get-in db [::spec/infra-service :acl])]
     (-> {}
         (assoc-in [:template :href] (str "infrastructure-service-template/" template-type))
@@ -118,5 +138,10 @@
         (cond-> (and (= template-type "coe") (not-empty cloud-region)) (assoc-in [:template :cluster-params :cloud-region] cloud-region))
         (cond-> (and (= template-type "coe") (not-empty cloud-project)) (assoc-in [:template :cluster-params :cloud-project] cloud-project))
         (cond-> (and (= template-type "coe") (not-empty cloud-security-group)) (assoc-in [:template :cluster-params :cloud-security-group] cloud-security-group))
+        (cond-> (and (= template-type "coe") (not-empty cloud-network)) (assoc-in [:template :cluster-params :cloud-network] cloud-network))
+        (cond-> (and (= template-type "coe") (not-empty cloud-domain)) (assoc-in [:template :cluster-params :cloud-domain] cloud-domain))
+        (cond-> (and (= template-type "coe") (not-empty cloud-api-endpoint)) (assoc-in [:template :cluster-params :cloud-api-endpoint] cloud-api-endpoint))
+        (cond-> (and (= template-type "coe") (not-empty cloud-floating-ip)) (assoc-in [:template :cluster-params :cloud-floating-ip] cloud-floating-ip))
+        (cond-> (and (= template-type "coe") (not-empty cloud-user)) (assoc-in [:template :cluster-params :cloud-user] cloud-user))
         (cond-> (and (= template-type "coe") coe-manager-install) (assoc-in [:template :cluster-params :coe-manager-install] coe-manager-install))
         (cond-> (and (= template-type "coe") management-credential) (assoc-in [:template :management-credential] management-credential)))))

@@ -34,7 +34,6 @@
     :cloud-doc-link "https://www.exoscale.com/compute"}
    "infrastructure-service-openstack"
    {:cloud-vm-size "eo1.small"
-    :cloud-vm-image "ebbb230b-2b55-4873-9625-342148252c55"
     :cloud-vm-disk-size 50
     :cloud-doc-link "https://docs.openstack.org/wallaby/user/"}
    "infrastructure-service-amazonec2"

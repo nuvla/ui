@@ -88,17 +88,18 @@
     (when is-add?
       (dispatch [::events/get-ssh-keys-not-associated #(reset! ssh-keys %)]))
     (fn [_operation on-change-fn]
-      [ui/FormDropdown
-       {:label       "SSH key"
-        :loading     (nil? @ssh-keys)
-        :placeholder (if is-add?
-                       (@tr [:leave-empty-to-generate-ssh-keypair])
-                       (@tr [:select-credential]))
-        :on-change   (ui-callback/value on-change-fn)
-        :clearable   true
-        :options     (map (fn [{:keys [id name]}]
-                            {:key id, :text (or name id), :value id}) @ssh-keys)
-        :selection   true}])))
+      (if (nil? @ssh-keys)
+        [ui/Message {:info true} (@tr [:no-credentials-to-remove])]
+        [ui/FormDropdown
+         {:label       "SSH key"
+          :placeholder (if is-add?
+                         (@tr [:leave-empty-to-generate-ssh-keypair])
+                         (@tr [:select-credential]))
+          :on-change   (ui-callback/value on-change-fn)
+          :clearable   true
+          :options     (map (fn [{:keys [id name]}]
+                              {:key id, :text (or name id), :value id}) @ssh-keys)
+          :selection   true}]))))
 
 
 (defn DropdownReleases
@@ -118,7 +119,7 @@
   [{:keys [id] :as _resource} operation show? _title _icon _button-text]
   (let [tr            (subscribe [::i18n-subs/tr])
         close-fn      #(reset! show? false)
-        form-data     (r/atom {:execution-mode "push"})
+        form-data     (r/atom {:execution-mode "pull"})
         key-data      (r/atom nil)
         loading?      (r/atom nil)
         on-change-fn  (fn [k v]
@@ -136,47 +137,46 @@
                          (dispatch [::events/operation id operation @form-data
                                     on-success-fn on-error-fn]))]
     (fn [_resource operation show? title icon button-text]
-      [ui/Modal
-       {:open       @show?
-        :close-icon true
-        :on-close   close-fn
-        :trigger    (r/as-element
-                      [ui/MenuItem {:on-click #(reset! show? true)}
-                       [ui/Icon {:name icon}]
-                       title])}
-       [uix/ModalHeader {:header title}]
-       [ui/ModalContent
-        [ui/Form
-         [ui/FormDropdown {:label         "Execution mode"
-                           :selection     true
-                           :default-value (:execution-mode @form-data)
-                           :on-change     (ui-callback/value (partial on-change-fn :execution-mode))
-                           :options       [{:key "push", :text "push", :value "push"}
-                                           {:key "mixed", :text "mixed", :value "mixed"}
-                                           {:key "pull", :text "pull", :value "pull"}]}]
-         [SshKeysDropdown operation (partial on-change-fn :credential)]
+      (let [credential (:credential @form-data)]
+        [ui/Modal
+         {:open       @show?
+          :close-icon true
+          :on-close   close-fn
+          :trigger    (r/as-element
+                        [ui/MenuItem {:on-click #(reset! show? true)}
+                         [ui/Icon {:name icon}]
+                         title])}
+         [uix/ModalHeader {:header title}]
+         [ui/ModalContent
+          [ui/Form
+           [ui/FormDropdown {:label         "Execution mode"
+                             :selection     true
+                             :default-value (:execution-mode @form-data)
+                             :on-change     (ui-callback/value (partial on-change-fn :execution-mode))
+                             :options       [{:key "push", :text "push", :value "push"}
+                                             {:key "mixed", :text "mixed", :value "mixed"}
+                                             {:key "pull", :text "pull", :value "pull"}]}]
+           [SshKeysDropdown operation (partial on-change-fn :credential)]
 
-         (when @key-data
-           [ui/FormField
-            [:a {:href     (str "data:text/plain;charset=utf-8,"
-                                (js/encodeURIComponent @key-data))
-                 :target   "_blank"
-                 :download "ssh_private.key"}
-             [ui/Button {:positive       true
-                         :fluid          true
-                         :icon           "download"
-                         :label-position "left"
-                         :as             "div"
-                         :content        (@tr [:download])}]]])]]
-       [ui/ModalActions
-        [uix/Button
-         {:text     (@tr [:cancel])
-          :on-click close-fn}]
-        [uix/Button
-         {:text     (if @key-data (@tr [:close]) button-text)
-          :primary  true
-          :loading  (true? @loading?)
-          :on-click (if @key-data close-fn on-click-fn)}]]])))
+           (when @key-data
+             [ui/FormField
+              [:a {:href     (str "data:text/plain;charset=utf-8,"
+                                  (js/encodeURIComponent @key-data))
+                   :target   "_blank"
+                   :download "ssh_private.key"}
+               [ui/Button {:positive       true
+                           :fluid          true
+                           :icon           "download"
+                           :label-position "left"
+                           :as             "div"
+                           :content        (@tr [:download])}]]])]]
+         [ui/ModalActions
+          [uix/Button
+           {:text     (if @key-data (@tr [:close]) button-text)
+            :primary  true
+            :disabled (nil? credential)
+            :loading  (true? @loading?)
+            :on-click (if @key-data close-fn on-click-fn)}]]]))))
 
 
 (defn is-old-version?
@@ -309,9 +309,6 @@
            :title-size :h4
            :default-open false]]
          [ui/ModalActions
-          [uix/Button
-           {:text     (@tr [:cancel])
-            :on-click close-fn}]
           [uix/Button
            {:text     button-text
             :disabled (or (utils/form-update-data-incomplete? @form-data) (is-old-version? nb-version))

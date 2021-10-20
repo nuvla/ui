@@ -410,7 +410,7 @@
 
              [TableRowFieldRegion cloud-region on-change false]
 
-             [uix/TableRowField [:span "Image" [CloudHelpPopup "Cloud specific image." @mgmt-cred-subtype]],
+             [uix/TableRowField [:span "Image" [CloudHelpPopup "Cloud specific Ubuntu 18.04 image." @mgmt-cred-subtype]],
               :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-vm-image,
               :spec ::spec/cloud-vm-image, :on-change (partial on-change :cloud-vm-image),
               :validate-form? @validate-form?]

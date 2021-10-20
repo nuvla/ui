@@ -850,7 +850,7 @@
           [ui/CardContent {:text-align :center}
            [ui/Header "Cloud OpenStack"]
            [ui/Image {:src   "/ui/images/openstack.png"
-                      :style {:max-width 220}}]]]]]])))
+                      :style {:max-width 130}}]]]]]])))
 
 
 (defn generated-credential-modal

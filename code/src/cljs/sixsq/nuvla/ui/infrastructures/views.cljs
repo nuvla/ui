@@ -365,19 +365,19 @@
 
            (when (= utils/infra-service-subtype-openstack @mgmt-cred-subtype)
              [:<>
-              [uix/TableRowField [:div "Project Domain" (cloud-help-popup "Cloud Project Domain." @mgmt-cred-subtype)],
+              [uix/TableRowField [:div "User Domain Name" (cloud-help-popup "User Domain Name." @mgmt-cred-subtype)],
                :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-domain,
                :spec ::spec/cloud-domain, :on-change (partial on-change :cloud-domain), :validate-form? @validate-form?]
               [uix/TableRowField [:div "Authorization URL" (cloud-help-popup "OpenStack authorization URL." @mgmt-cred-subtype)],
                :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-api-endpoint,
                :spec ::spec/cloud-api-endpoint, :on-change (partial on-change :cloud-api-endpoint), :validate-form? @validate-form?]
-              [uix/TableRowField [:div "Network" (cloud-help-popup "OpenStack compute network name." @mgmt-cred-subtype)],
+              [uix/TableRowField [:div "Network" (cloud-help-popup "OpenStack compute network name. Ensure your Network is routed to the Floating IP Pool, i.e. there is a Router defined that bridges the Network and the Floating IP Pool." @mgmt-cred-subtype)],
                :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-network,
                :spec ::spec/cloud-network, :on-change (partial on-change :cloud-network), :validate-form? @validate-form?]
-              [uix/TableRowField [:div "Floating IP Pool" (cloud-help-popup "OpenStack floating IP pool." @mgmt-cred-subtype)],
+              [uix/TableRowField [:div "Floating IP Pool" (cloud-help-popup "OpenStack floating IP pool. The IP pool must have the number of free IPs that is not less than 'cluster size' plus one." @mgmt-cred-subtype)],
                :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-floating-ip,
                :spec ::spec/cloud-floating-ip, :on-change (partial on-change :cloud-floating-ip), :validate-form? @validate-form?]
-              [uix/TableRowField [:div "User" (cloud-help-popup "VM user for SSH." @mgmt-cred-subtype)],
+              [uix/TableRowField [:div "SSH User" (cloud-help-popup "VM user for SSH." @mgmt-cred-subtype)],
                :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-user,
                :spec ::spec/cloud-user, :on-change (partial on-change :cloud-user), :validate-form? @validate-form?]])
 
@@ -387,7 +387,7 @@
               :default-value cloud-region, :spec ::spec/cloud-region, :on-change (partial on-change :cloud-region),
               :validate-form? @validate-form?])
 
-           [uix/TableRowField [:div "Image" (cloud-help-popup "Cloud specific image." @mgmt-cred-subtype)],
+           [uix/TableRowField [:div "Image" (cloud-help-popup "Cloud specific Ubuntu 18.04 image." @mgmt-cred-subtype)],
             :placeholder "", :editable? @mgmt-cred-set?, :required? false, :default-value cloud-vm-image,
             :spec ::spec/cloud-vm-image, :on-change (partial on-change :cloud-vm-image), :validate-form? @validate-form?]
 

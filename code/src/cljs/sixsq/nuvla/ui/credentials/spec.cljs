@@ -145,6 +145,16 @@
                                             ::client-secret
                                             ::refresh-token]))
 
+; OpenStack CSP
+
+(s/def ::openstack-username utils-spec/nonblank-string)
+(s/def ::openstack-password utils-spec/nonblank-string)
+(s/def ::openstack-credential (s/keys :req-un [::name
+                                               ::description
+                                               ::openstack-username
+                                               ::openstack-password]))
+
+
 (s/def ::hashed-password any?)
 
 (s/def ::state-selector any?)

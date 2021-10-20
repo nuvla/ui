@@ -388,7 +388,7 @@
               :validate-form? @validate-form?])
 
            [uix/TableRowField [:div "Image" (cloud-help-popup "Cloud specific Ubuntu 18.04 image." @mgmt-cred-subtype)],
-            :placeholder "", :editable? @mgmt-cred-set?, :required? false, :default-value cloud-vm-image,
+            :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-vm-image,
             :spec ::spec/cloud-vm-image, :on-change (partial on-change :cloud-vm-image), :validate-form? @validate-form?]
 
            (when (or (= utils/infra-service-subtype-google @mgmt-cred-subtype) (= utils/infra-service-subtype-openstack @mgmt-cred-subtype))

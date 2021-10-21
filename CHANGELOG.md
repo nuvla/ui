@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Allow to set advertised address when forcing a new Swarm cluster on a NuvlaBox
+
 ## [2.24.0] - 2021-10-13
 
 ### Changed

@@ -373,6 +373,7 @@
             is-join-manager?    (= cluster-action "join-manager")
             is-join-worker?     (= cluster-action "join-worker")
             is-leave-action?    (= cluster-action "leave")
+            is-new-action?      (= cluster-action "force-new-cluster")
             is-join-action?     (or is-join-worker? is-join-manager?)
             manager-selected?   (not (nil? nuvlabox-manager-id))
             valid-manager?      (and
@@ -405,6 +406,8 @@
                                     (swap! form-data dissoc :cluster-action)
                                     (do
                                       (swap! form-data dissoc :token)
+                                      (swap! form-data dissoc :advertise-addr)
+                                      (swap! form-data dissoc :nuvlabox-manager-status)
                                       (swap! form-data assoc :cluster-action value)
                                       ))
                                   (swap! form-data dissoc :nuvlabox-manager-id)))
@@ -440,7 +443,16 @@
                     [:p {:style {:font-weight "bold"}} (:token @join-token)]]])])
              (when is-leave-action?
                [ui/Message {:negative true
-                            :content  (@tr [:cluster-action-leave-warning])}])])]
+                            :content  (@tr [:cluster-action-leave-warning])}])
+             (when is-new-action?
+               [ui/FormInput
+                {:label       "Advertise address"
+                 :placeholder "(optional)"
+                 :on-change   (ui-callback/value
+                                (fn [value]
+                                  (if (str/blank? value)
+                                    (swap! form-data dissoc :advertise-addr)
+                                    (swap! form-data assoc :advertise-addr value))))}])])]
 
          [ui/ModalActions
           [uix/Button

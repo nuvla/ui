@@ -361,10 +361,11 @@
         nb-releases                (subscribe [::subs/nuvlabox-releases])
         ssh-credentials            (subscribe [::subs/ssh-keys-available])
         nb-releases-by-id          (group-by :id @nb-releases)
-        default-data               {:refresh-interval 30}
         first-nb-release           (->> @nb-releases
                                         (remove :pre-release)
                                         first)
+        default-major-version      (->> first-nb-release :release utils/get-major-version general-utils/str->int)
+        default-data               {:refresh-interval 30, :version default-major-version}
         creation-data              (r/atom default-data)
         default-release-data       {:nb-rel      (:id first-nb-release)
                                     :nb-selected first-nb-release
@@ -651,8 +652,7 @@
                                   :trigger  (r/as-element [ui/Icon {:name  "question"
                                                                     :color "grey"}])}]]
 
-                      [NuvlaDocLink tr :nuvlabox-modal-more-info usb-doc-anchor]
-                      ]]])]
+                      [NuvlaDocLink tr :nuvlabox-modal-more-info usb-doc-anchor]]]])]
 
                 [ui/ModalActions
                  [utils-forms/validation-error-msg (@tr [:nuvlabox-modal-missing-fields]) (not (nil? @install-strategy-error))]

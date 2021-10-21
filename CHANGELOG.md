@@ -8,6 +8,8 @@
 
 ### Changed
 
+  - Fix selection of default NuvlaBox version during creation 
+
 ## [2.24.0] - 2021-10-13
 
 ### Changed

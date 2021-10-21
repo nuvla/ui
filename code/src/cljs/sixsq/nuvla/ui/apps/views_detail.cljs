@@ -75,7 +75,7 @@
   (let [module-subtype (subscribe [::subs/module-subtype])
         tab-name       (if (= application-kubernetes-subtype @module-subtype) "Kubernetes" "Docker")]
     [:<>
-     [uix/Icon {:name "docker"}]
+     [:i {:class "fak fa-k8s" :style {:padding-right "5px"}}]
      (str/capitalize tab-name)]))
 
 

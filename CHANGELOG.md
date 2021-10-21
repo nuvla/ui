@@ -8,6 +8,8 @@
 
 ### Changed
 
+  - Use Kubernetes icon instead of Docker icon when appropriate
+
 ## [2.24.0] - 2021-10-13
 
 ### Changed

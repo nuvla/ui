@@ -2,13 +2,17 @@
 
 ## Unreleased
 
+### Changed
+
+## [2.25.0] - 2021-10-21
+
 ### Added
 
   - Support for OpenStack infrastructures and credentials
 
 ### Changed
 
-  - Fix selection of default NuvlaBox version during creation 
+  - Fix selection of default NuvlaBox version during creation
 
 ## [2.24.0] - 2021-10-13
 

@@ -131,9 +131,9 @@
                    :form-spec         ::credential-change-password
                    :names->validators {:new-password-repeat [password-repeat-check]}}
         form      (fv/init-form form-conf)
-        spec->msg {::current-password   (@tr [:should-not-be-empty])
-                   ::new-password       (@tr [:password-constraint])
-                   :new-password-repeat (@tr [:passwords-doesnt-match])}]
+        spec->msg {::current-password    (@tr [:should-not-be-empty])
+                   ::new-password        (@tr [:password-constraint])
+                   ::new-password-repeat (@tr [:passwords-doesnt-match])}]
     (fn []
       [ui/Modal
        {:size      :tiny
@@ -141,7 +141,7 @@
         :closeIcon true
         :on-close  #(do
                       (dispatch [::events/close-modal])
-                      (reset! form (fv/init-form form-conf)))}
+                      (reset! form @(fv/init-form form-conf)))}
 
        [uix/ModalHeader {:header (@tr [:change-password])}]
 

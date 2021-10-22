@@ -40,3 +40,7 @@
        (sort-by :text)
        vec))
 
+
+(defn get-tr-fn
+  [locale]
+  (create-tr-fn (or locale "en")))

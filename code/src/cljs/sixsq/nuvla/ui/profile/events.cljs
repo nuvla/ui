@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
+    [sixsq.nuvla.ui.i18n.utils :as i18n-utils]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.profile.effects :as fx]
@@ -261,8 +262,9 @@
 (reg-event-fx
   ::change-password
   (fn [{{:keys [::spec/user
-                ::i18n-spec/tr]} :db} [_ body]]
-    (let [callback-fn #(if (instance? js/Error %)
+                ::i18n-spec/locale]} :db} [_ body]]
+    (let [tr          (i18n-utils/get-tr-fn locale)
+          callback-fn #(if (instance? js/Error %)
                          (dispatch [::set-error (-> % response/parse-ex-info :message)])
                          (let [{:keys [status message]} %]
                            (if (= status 200)

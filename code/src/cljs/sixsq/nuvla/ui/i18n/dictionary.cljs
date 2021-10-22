@@ -1202,7 +1202,7 @@
         :password                                      "Mot de passe"
         :password-constraint                           "Le mot de passe doit contenir au moins 8 caractères, au moins une majuscule, une minuscule, un chiffre et un caractère spécial."
         :password-repeat                               "Repétez le mot de passe"
-        :password-updated                              "votre mot de passe a éte mis à jour"
+        :password-updated                              "votre mot de passe a été mis à jour"
         :passwords-doesnt-match                        "Les mots de passe doivent être égaux."
         :paste                                         "coller"
         :payment-method                                "Moyen de paiement"

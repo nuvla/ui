@@ -551,9 +551,6 @@
     :modal-content   credential-ssh}
    "generate-ssh-key"
    {:validation-spec ::spec/ssh-credential
-    :modal-content   credential-ssh}
-   "hashed-password"
-   {:validation-spec ::spec/hashed-password
     :modal-content   credential-ssh}})
 
 
@@ -642,7 +639,7 @@
              [components/ClickMeStaticPopup])]])))))
 
 
-(defn credential-modal
+(defn CredentialModal
   []
   (let [tr          (subscribe [::i18n-subs/tr])
         visible?    (subscribe [::subs/credential-modal-visible?])
@@ -682,7 +679,7 @@
                                                    active-tab-index]))}]]])))))
 
 
-(defn add-credential-modal
+(defn AddCredentialModal
   []
   (let [tr        (subscribe [::i18n-subs/tr])
         visible?  (subscribe [::subs/add-credential-modal-visible?])
@@ -853,7 +850,7 @@
                       :style {:max-width 220}}]]]]]])))
 
 
-(defn generated-credential-modal
+(defn GeneratedCredentialModal
   []
   (let [tr             (subscribe [::i18n-subs/tr])
         generated-cred (subscribe [::subs/generated-credential-modal])
@@ -930,7 +927,7 @@
       :button-text (@tr [:delete])}]))
 
 
-(defn single-credential
+(defn SingleCredential
   [{:keys [subtype name description] :as credential}]
   [ui/TableRow
    [ui/TableCell {:floated :left
@@ -957,7 +954,7 @@
                 :on-click #(dispatch [::events/open-credential-modal credential false])}])]])
 
 
-(defn credentials-pane
+(defn CredentialsPane
   [section-sub-text credentials]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/TabPane
@@ -975,7 +972,7 @@
               [ui/TableBody
                (for [credential credentials]
                  ^{:key (:id credential)}
-                 [single-credential credential])]]])]))
+                 [SingleCredential credential])]]])]))
 
 
 (defn credential
@@ -989,7 +986,7 @@
                                                                       credential-count])])
                 :key     section-name
                 :icon    icon}
-     :render   (fn [] (r/as-element [credentials-pane section-sub-text credentials]))}))
+     :render   (fn [] (r/as-element [CredentialsPane section-sub-text credentials]))}))
 
 
 (defn credentials
@@ -1042,6 +1039,6 @@
      [uix/PageHeader "key" (@tr [:credentials])]
      [MenuBar]
      [TabsCredentials]
-     [add-credential-modal]
-     [credential-modal]
-     [generated-credential-modal]]))
+     [AddCredentialModal]
+     [CredentialModal]
+     [GeneratedCredentialModal]]))

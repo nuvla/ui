@@ -204,11 +204,7 @@
         session    (subscribe [::session-subs/session])
         user-id    (:user @session)
         is-group?  (subscribe [::session-subs/active-claim-is-group?])
-        identifier (:identifier @session)
-        ;user       (subscribe [::subs/user])
-        ;acl        (:acl @user)
-        ;ui-acl     (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))
-        ]
+        identifier (:identifier @session)]
     (dispatch [::intercom-events/set-event "nuvla-user-id" user-id])
     [:<>
      [ui/Segment {:padded true, :color "teal"}
@@ -237,11 +233,7 @@
          [ui/GridColumn
           [ui/Header {:as :h3, :icon true, :disabled true, :text-align "center"}
            [ui/Icon {:className "fad fa-sign-in-alt"}]
-           (@tr [:no-session])]]])]
-     ;[ui/Segment {:padded true :color "blue"}
-     ; [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:access-rights]))]
-     ; [acl-views/AclWidget {:default-value acl, :read-only false} ui-acl]]
-     ]))
+           (@tr [:no-session])]]])]]))
 
 
 (def Elements (r/adapt-react-class react-stripe/Elements))

@@ -135,30 +135,6 @@
                                 (dispatch [::history-events/navigate resource]))}]]))
 
 
-(defn TabOverviewCredentials
-  []
-  (let [tr    (subscribe [::i18n-subs/tr])
-        icon  "key"
-        color "brown"
-        {:keys [resource]} utils/target-creds]
-    [ui/Segment {:secondary true
-                 :color     color
-                 :raised    true
-                 :style     {:display         "flex"
-                             :flex-direction  "column"
-                             :justify-content "space-between"}}
-
-     [:h4 [ui/Icon {:name icon}] (str/upper-case (@tr [:credentials]))]
-
-     [credentials-views/StatisticStates false]
-
-     [ui/Button {:color    color
-                 :icon     icon
-                 :style    {:align-self "start"}
-                 :content  "Show me"
-                 :on-click #(dispatch [::history-events/navigate resource])}]]))
-
-
 (defn Statistic
   [value icon label target]
   (let [color (if (pos? value) "black" "grey")
@@ -197,7 +173,7 @@
      [Statistic no-of-creds (utils/type->icon utils/type-creds) utils/type-creds utils/target-creds]]))
 
 
-(defn dashboard-main
+(defn DashboardMain
   []
   (let [tr       (subscribe [::i18n-subs/tr])]
     (refresh)
@@ -223,7 +199,7 @@
   [path]
   (let [n    (count path)
         [_ uuid] path
-        root [dashboard-main]]
+        root [DashboardMain]]
     (case n
       2 ^{:key uuid} (dispatch [::history-events/navigate (str "deployment/" uuid)])
       [ui/Segment utils-style/basic root])))

@@ -119,7 +119,7 @@
   [{:keys [id] :as _resource} operation show? _title _icon _button-text]
   (let [tr            (subscribe [::i18n-subs/tr])
         close-fn      #(reset! show? false)
-        form-data     (r/atom {:execution-mode "pull"})
+        form-data     (r/atom {})
         key-data      (r/atom nil)
         loading?      (r/atom nil)
         on-change-fn  (fn [k v]
@@ -149,13 +149,6 @@
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
           [ui/Form
-           [ui/FormDropdown {:label         "Execution mode"
-                             :selection     true
-                             :default-value (:execution-mode @form-data)
-                             :on-change     (ui-callback/value (partial on-change-fn :execution-mode))
-                             :options       [{:key "push", :text "push", :value "push"}
-                                             {:key "mixed", :text "mixed", :value "mixed"}
-                                             {:key "pull", :text "pull", :value "pull"}]}]
            [SshKeysDropdown operation (partial on-change-fn :credential)]
 
            (when @key-data

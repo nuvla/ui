@@ -4,6 +4,10 @@
 
 ### Changed
 
+### Changed
+
+  - Edge detail - Do not propose execution-mode in add or revoke SSH credentials modal
+
 ## [2.25.0] - 2021-10-21
 
 ### Added

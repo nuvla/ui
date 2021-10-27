@@ -106,7 +106,7 @@
 
 
 (defn MenuBar []
-  (let [loading?      (subscribe [::subs/loading?])]
+  (let [loading? (subscribe [::subs/loading?])]
     (fn []
       [components/StickyBar
        [ui/Menu {:borderless true, :stackable true}
@@ -361,10 +361,11 @@
         nb-releases                (subscribe [::subs/nuvlabox-releases])
         ssh-credentials            (subscribe [::subs/ssh-keys-available])
         nb-releases-by-id          (group-by :id @nb-releases)
-        default-data               {:refresh-interval 30}
         first-nb-release           (->> @nb-releases
                                         (remove :pre-release)
                                         first)
+        default-major-version      (->> first-nb-release :release utils/get-major-version general-utils/str->int)
+        default-data               {:refresh-interval 30, :version default-major-version}
         creation-data              (r/atom default-data)
         default-release-data       {:nb-rel      (:id first-nb-release)
                                     :nb-selected first-nb-release
@@ -651,8 +652,7 @@
                                   :trigger  (r/as-element [ui/Icon {:name  "question"
                                                                     :color "grey"}])}]]
 
-                      [NuvlaDocLink tr :nuvlabox-modal-more-info usb-doc-anchor]
-                      ]]])]
+                      [NuvlaDocLink tr :nuvlabox-modal-more-info usb-doc-anchor]]]])]
 
                 [ui/ModalActions
                  [utils-forms/validation-error-msg (@tr [:nuvlabox-modal-missing-fields]) (not (nil? @install-strategy-error))]
@@ -772,8 +772,8 @@
 
 (defn NuvlaboxMap
   []
-  (let [nuvlabox-locations          (subscribe [::subs/nuvlabox-locations])
-        nbs-locations               (:resources @nuvlabox-locations)]
+  (let [nuvlabox-locations (subscribe [::subs/nuvlabox-locations])
+        nbs-locations      (:resources @nuvlabox-locations)]
     [map/MapBox
      {:style  {:height 500}
       :center map/sixsq-latlng
@@ -805,9 +805,10 @@
         {:default-value @full-text
          :on-change     (ui-callback/input-callback
                           #(dispatch [::events/set-full-text-search %]))
-         :style         {:display    "inline-table"
+         :style         {:align-self "flex-start"
                          :margin-top "20px"}}]
        [StatisticStates]
+       ; Hack to center the statistics component
        [ui/Input {:style {:visibility "hidden"}
                   :icon  "search"}]]
       (case @view-type

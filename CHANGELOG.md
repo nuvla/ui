@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-### Changed
+### Added
+
+  - Obfuscate input field for passwords and secrets
 
 ### Changed
 

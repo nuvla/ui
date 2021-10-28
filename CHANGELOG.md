@@ -4,8 +4,11 @@
 
 ### Added
 
-  - Obfuscate input field for passwords and secrets
+## [2.26.0] - 2021-10-28
 
+### Added
+
+  - Obfuscate input field for passwords and secrets
   - Allow to set advertised address when forcing a new Swarm cluster on a NuvlaBox
   - Edge detail - Do not propose execution-mode in add or revoke SSH credentials modal
 

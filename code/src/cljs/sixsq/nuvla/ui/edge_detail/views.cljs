@@ -436,8 +436,8 @@
                             :content  (@tr [:cluster-action-leave-warning])}])
              (when is-new-action?
                [ui/FormInput
-                {:label       "Advertise address"
-                 :placeholder "(optional)"
+                {:label       "Advertise address (optional)"
+                 :placeholder "<ip|interface>[:port]"
                  :on-change   (ui-callback/value
                                 (fn [value]
                                   (if (str/blank? value)

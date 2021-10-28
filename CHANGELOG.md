@@ -6,8 +6,7 @@
 
   - Obfuscate input field for passwords and secrets
 
-### Changed
-
+  - Allow to set advertised address when forcing a new Swarm cluster on a NuvlaBox
   - Edge detail - Do not propose execution-mode in add or revoke SSH credentials modal
 
 ## [2.25.0] - 2021-10-21
@@ -19,7 +18,7 @@
 ### Changed
 
   - Fix selection of default NuvlaBox version during creation
-  - Do not display hashed password type credentials in credentials page 
+  - Do not display hashed password type credentials in credentials page
 
 ## [2.24.0] - 2021-10-13
 

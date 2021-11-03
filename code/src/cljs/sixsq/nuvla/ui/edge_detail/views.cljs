@@ -384,6 +384,13 @@
                          title])}
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
+          [ui/Message
+           {:warning true
+            :icon    {:name "warning sign", :size "large"}
+            :header  (@tr [:nuvlabox-clustering-warning-header])
+            :content (r/as-element
+                       [:span
+                        (@tr [:nuvlabox-clustering-warning-content])])}]
           (if has-active-dp
             [ui/Message {:negative true}
              (@tr [:nuvlabox-cant-cluster-with-dpls])]

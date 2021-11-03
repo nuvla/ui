@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-### Added
+### Changed
+
+  - Edge detail - Clustering modal warn user on feature stability
 
 ## [2.26.0] - 2021-10-28
 

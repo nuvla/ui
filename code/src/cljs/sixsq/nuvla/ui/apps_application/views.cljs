@@ -593,7 +593,6 @@
             parent (get @module-common ::apps-spec/parent-path)]
         [ui/Container {:fluid true}
          [uix/PageHeader "cubes" (str parent (when (not-empty parent) "/") name) :inline true]
-         [apps-views-detail/VersionWarning]
          [apps-views-detail/MenuBar]
          [ui/Tab
           {:menu             {:secondary true

@@ -2,6 +2,41 @@
 
 ## Unreleased
 
+### Added
+
+## [2.26.0] - 2021-10-28
+
+### Added
+
+  - Obfuscate input field for passwords and secrets
+  - Allow to set advertised address when forcing a new Swarm cluster on a NuvlaBox
+  - Edge detail - Do not propose execution-mode in add or revoke SSH credentials modal
+
+## [2.25.0] - 2021-10-21
+
+### Added
+
+  - Support for OpenStack infrastructures and credentials
+
+### Changed
+
+  - Fix selection of default NuvlaBox version during creation
+  - Do not display hashed password type credentials in credentials page
+
+## [2.24.0] - 2021-10-13
+
+### Changed
+
+  - NuvlaBox update action has new option to force restart during the update operation
+
+## [2.23.0] - 2021-10-13
+
+### Changed
+
+  - Nuvlabox add modal doesn't select pre-release versions
+  - NuvlaBox map view now show all NuvlaBoxes, including NBs with inferred location
+  - Fix refresh of cluster info on default NuvlaBox view
+
 ## [2.22.0] - 2021-09-14
 
 ### Added

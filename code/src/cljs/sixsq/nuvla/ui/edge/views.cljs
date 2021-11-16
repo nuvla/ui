@@ -21,7 +21,6 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.utils.zip :as zip]))
@@ -107,7 +106,7 @@
 
 
 (defn MenuBar []
-  (let [loading?      (subscribe [::subs/loading?])]
+  (let [loading? (subscribe [::subs/loading?])]
     (fn []
       [components/StickyBar
        [ui/Menu {:borderless true, :stackable true}
@@ -362,8 +361,11 @@
         nb-releases                (subscribe [::subs/nuvlabox-releases])
         ssh-credentials            (subscribe [::subs/ssh-keys-available])
         nb-releases-by-id          (group-by :id @nb-releases)
-        default-data               {:refresh-interval 30}
-        first-nb-release           (first @nb-releases)
+        first-nb-release           (->> @nb-releases
+                                        (remove :pre-release)
+                                        first)
+        default-major-version      (->> first-nb-release :release utils/get-major-version general-utils/str->int)
+        default-data               {:refresh-interval 30, :version default-major-version}
         creation-data              (r/atom default-data)
         default-release-data       {:nb-rel      (:id first-nb-release)
                                     :nb-selected first-nb-release
@@ -650,8 +652,7 @@
                                   :trigger  (r/as-element [ui/Icon {:name  "question"
                                                                     :color "grey"}])}]]
 
-                      [NuvlaDocLink tr :nuvlabox-modal-more-info usb-doc-anchor]
-                      ]]])]
+                      [NuvlaDocLink tr :nuvlabox-modal-more-info usb-doc-anchor]]]])]
 
                 [ui/ModalActions
                  [utils-forms/validation-error-msg (@tr [:nuvlabox-modal-missing-fields]) (not (nil? @install-strategy-error))]
@@ -740,40 +741,16 @@
 
 
 (defn NuvlaboxMapPoint
-  [{:keys [id name location online]}]
+  [{:keys [id name location inferred-location online]}]
   (let [uuid     (general-utils/id->uuid id)
         on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
     [map/CircleMarker {:on-click on-click
-                       :center   (map/longlat->latlong location)
+                       :center   (map/longlat->latlong (or location inferred-location))
                        :color    (utils/map-online->color online)
                        :opacity  0.5
-                       :weight   2}
+                       :weight   1
+                       :radius   7}
      [map/Tooltip (or name id)]]))
-
-
-(defn NuvlaboxCard
-  [_nuvlabox _managers]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [id name description created state tags online]} managers]
-      (let [href (str "edge/" (general-utils/id->uuid id))]
-        ^{:key id}
-        [uix/Card
-         {:on-click    #(dispatch [::history-events/navigate href])
-          :href        href
-          :header      [:<>
-                        [:div {:style {:float "right"}}
-                         [edge-detail/OnlineStatusIcon online]]
-                        [ui/IconGroup
-                         [ui/Icon {:name "box"}]
-                         (when (some #{id} managers)
-                           [ui/Icon {:className "fas fa-crown"
-                                     :corner    true
-                                     :color     "blue"}])]
-                        (or name id)]
-          :meta        (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))
-          :state       state
-          :description (when-not (str/blank? description) description)
-          :tags        tags}]))))
 
 
 (defn NuvlaboxCards
@@ -795,15 +772,14 @@
 
 (defn NuvlaboxMap
   []
-  (let [nuvlaboxes   (subscribe [::subs/nuvlaboxes])
-        selected-nbs (:resources @nuvlaboxes)]
+  (let [nuvlabox-locations (subscribe [::subs/nuvlabox-locations])
+        nbs-locations      (:resources @nuvlabox-locations)]
     [map/MapBox
      {:style  {:height 500}
       :center map/sixsq-latlng
       :zoom   3}
      (doall
-       (for [{:keys [id] :as nuvlabox} (->> selected-nbs
-                                            (filter #(:location %)))]
+       (for [{:keys [id] :as nuvlabox} nbs-locations]
          ^{:key id}
          [NuvlaboxMapPoint nuvlabox]))]))
 
@@ -829,9 +805,10 @@
         {:default-value @full-text
          :on-change     (ui-callback/input-callback
                           #(dispatch [::events/set-full-text-search %]))
-         :style         {:display    "inline-table"
+         :style         {:align-self "flex-start"
                          :margin-top "20px"}}]
        [StatisticStates]
+       ; Hack to center the statistics component
        [ui/Input {:style {:visibility "hidden"}
                   :icon  "search"}]]
       (case @view-type

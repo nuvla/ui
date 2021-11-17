@@ -4,6 +4,10 @@
 
 ### Changed
 
+## [2.26.1] - 2021-11-17
+
+### Changed
+
   - Module detail - Warning message appear twice when not on latest version fixed
   - Edge detail - Clustering modal warn user on feature stability
 

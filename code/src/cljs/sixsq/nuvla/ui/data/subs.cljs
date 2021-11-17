@@ -84,7 +84,13 @@
 
 (reg-sub
   ::modal-open?
-  ::spec/modal-open?)
+  (fn [db]
+    (::spec/modal-open? db)))
+
+(reg-sub
+  ::add-data-set-form
+  (fn [db]
+    (::spec/add-data-set-form db)))
 
 
 (reg-sub

@@ -17,7 +17,8 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]))
+    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
+    [taoensso.timbre :as log]))
 
 
 (defn refresh

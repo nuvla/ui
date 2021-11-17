@@ -7,8 +7,11 @@
     [sixsq.nuvla.ui.data-set.spec :as data-set-spec]
     [sixsq.nuvla.ui.deployment-dialog.events :as dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.spec :as dialog-spec]
+    [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.response :as response]
+    [taoensso.timbre :as log]))
 
 
 (reg-event-fx
@@ -18,9 +21,20 @@
 
 
 (reg-event-db
+  ::reset-add-data-set-form
+  (fn [db _]
+    (assoc db ::spec/add-data-set-form {})))
+
+(reg-event-fx
   ::set-modal-open?
-  (fn [db [_ modal-open?]]
-    (assoc db ::spec/modal-open? modal-open?)))
+  (fn [{db :db} [_ modal-open?]]
+    {:db       (assoc db ::spec/modal-open? modal-open?)
+     :dispatch [::reset-add-data-set-form]}))
+
+(reg-event-db
+  ::set-add-data-set-form
+  (fn [db [_ k v]]
+    (assoc-in db [::spec/add-data-set-form k] v)))
 
 
 (reg-event-db
@@ -29,7 +43,7 @@
     (let [doc-count   (get-in response [:aggregations :value_count:id :value])
           total-bytes (get-in response [:aggregations :sum:bytes :value])]
       (-> db
-          (assoc-in  [::spec/counts data-set-id] doc-count)
+          (assoc-in [::spec/counts data-set-id] doc-count)
           (assoc-in [::spec/sizes data-set-id] total-bytes)))))
 
 
@@ -180,3 +194,20 @@
   ::set-elements-per-page
   (fn [db [_ elements-per-page]]
     (assoc db ::spec/elements-per-page elements-per-page)))
+
+
+(reg-event-fx
+  ::add-data-set
+  (fn [{{:keys [::spec/add-data-set-form]} :db}]
+    {::cimi-api-fx/add [:data-set add-data-set-form
+                        #(do
+                           (dispatch [::set-modal-open? false])
+                           (let [{:keys [status message resource-id]} %]
+                             (dispatch [::messages-events/add
+                                        {:header  (cond-> (str "added " (or (:name add-data-set-form)
+                                                                            resource-id))
+                                                          status (str " (" status ")"))
+                                         :content message
+                                         :type    :success}]))
+                           (dispatch [::refresh])
+                           (dispatch [::reset-add-data-set-form]))]}))

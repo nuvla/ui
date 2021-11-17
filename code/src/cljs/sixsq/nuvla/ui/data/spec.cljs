@@ -37,6 +37,8 @@
 
 (s/def ::active-tab-index number?)
 
+(s/def ::add-data-set-form any?)
+
 (s/def ::db (s/keys :req [::active-tab-index
                           ::modal-open?
                           ::data-records
@@ -52,7 +54,8 @@
                           ::data-sets
                           ::selected-data-set-ids
                           ::page
-                          ::elements-per-page]))
+                          ::elements-per-page
+                          ::add-data-set-form]))
 
 (def default-time-period [(time/days-before 30)
                           (time/now)])
@@ -72,4 +75,5 @@
                ::data-sets                   {}
                ::selected-data-set-ids       #{}
                ::page                        1
-               ::elements-per-page           8})
+               ::elements-per-page           8
+               ::add-data-set-form           {}})

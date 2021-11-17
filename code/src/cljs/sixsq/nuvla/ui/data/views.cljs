@@ -24,7 +24,11 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as utils-values]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]
+    [taoensso.timbre :as log]
+
+    [sixsq.nuvla.ui.utils.spec :as us]
+    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]))
 
 
 (def view-type (r/atom :cards))
@@ -35,85 +39,65 @@
 
 
 (defn NewDatasetModal []
-  (let [open? (subscribe [::subs/modal-open?])
-        ;error     (subscribe [::subs/error-message])
-        tr    (subscribe [::i18n-subs/tr])
-        ;form-conf {:names->value      {:current-password    ""
-        ;                               :new-password        ""
-        ;                               :new-password-repeat ""}
-        ;           :form-spec         ::credential-change-password
-        ;           :names->validators {:new-password-repeat [password-repeat-check]}}
-        ;form      (fv/init-form form-conf)
-        ]
+  (let [open?                  (subscribe [::subs/modal-open?])
+        tr                     (subscribe [::i18n-subs/tr])
+        form!                  (subscribe [::subs/add-data-set-form])
+        module-filter-key      :module-filter
+        data-record-filter-key :data-record-filter
+        set-form-value         (fn [k v] (dispatch [::events/set-add-data-set-form k v]))
+        filter-record-open?    (r/atom false)
+        filter-module-open?    (r/atom false)]
     (fn []
       (when @open?
         [ui/Modal
          {:size      :tiny
           :open      @open?
           :closeIcon true
-          :on-close  #(dispatch [::events/set-modal-open? false])
-          ; (do
-          ;(dispatch [::events/close-modal])
-          ;(reset! form (fv/init-form form-conf)))
-          }
+          :on-close  #(dispatch [::events/set-modal-open? false])}
 
          [uix/ModalHeader {:header (@tr [:new-dataset])
                            :icon   "add"}]
-
          [ui/ModalContent
-
-          ;(when @error
-          ;  [ui/Message {:negative  true
-          ;               :size      "tiny"
-          ;               :onDismiss #(dispatch [::events/clear-error-message])}
-          ;   [ui/MessageHeader (str/capitalize (@tr [:error]))]
-          ;   [:p @error]])
-
-          ;[ui/Form
-          ; [ui/FormInput
-          ;  {:name          :current-password
-          ;   :id            "current-password"
-          ;   :label         (str/capitalize (@tr [:current-password]))
-          ;   :required      true
-          ;   :icon          "key"
-          ;   :icon-position "left"
-          ;   :auto-focus    "on"
-          ;   :auto-complete "off"
-          ;   :type          "password"
-          ;   :on-change     (partial fv/event->names->value! form)
-          ;   :on-blur       (partial fv/event->show-message form)
-          ;   :error         (fv/?show-message form :current-password spec->msg)}]
-          ; [ui/FormGroup {:widths 2}
-          ;  [ui/FormInput {:name          :new-password
-          ;                 :icon          "key"
-          ;                 :icon-position "left"
-          ;                 :required      true
-          ;                 :auto-complete "new-password"
-          ;                 :label         (str/capitalize (@tr [:new-password]))
-          ;                 :type          "password"
-          ;                 :on-change     (partial fv/event->names->value! form)
-          ;                 :on-blur       (partial fv/event->show-message form)
-          ;                 :error         (fv/?show-message form :new-password spec->msg)}]
-          ;  [ui/FormInput {:name      :new-password-repeat
-          ;                 :required  true
-          ;                 :label     (str/capitalize (@tr [:new-password-repeat]))
-          ;                 :type      "password"
-          ;                 :on-change (partial fv/event->names->value! form)
-          ;                 :on-blur   (partial fv/event->show-message form)
-          ;                 :error     (fv/?show-message form :new-password-repeat spec->msg)}]]]
-          ]
-
+          [ui/Form
+           [ui/FormInput
+            {:label      (str/capitalize (@tr [:name]))
+             :required   true
+             :auto-focus "on"
+             :on-change  (ui-callback/input-callback (partial set-form-value :name))}]
+           [ui/FormInput
+            {:label     (str/capitalize (@tr [:description]))
+             :on-change (ui-callback/input-callback (partial set-form-value :description))}]
+           [ui/FormField
+            [:label "Data records filter"]
+            [components/SearchInput
+             {:on-change     (ui-callback/input-callback (partial set-form-value data-record-filter-key))
+              :default-value ""
+              :placeholder   "Data records filter"
+              :action        (r/as-element
+                               ^{:key (random-uuid)}
+                               [filter-comp/ButtonFilter
+                                {:resource-name  "data-record"
+                                 :default-filter (get @form! data-record-filter-key "")
+                                 :open?          filter-record-open?
+                                 :on-done        (partial set-form-value data-record-filter-key)}])}]]
+           [ui/FormField
+            [:label "Applications filter"]
+            [components/SearchInput
+             {:on-change     (ui-callback/input-callback (partial set-form-value module-filter-key))
+              :default-value ""
+              :placeholder   "Applications filter"
+              :action        (r/as-element
+                               ^{:key (random-uuid)}
+                               [filter-comp/ButtonFilter
+                                {:resource-name  "module"
+                                 :default-filter (get @form! module-filter-key "")
+                                 :open?          filter-module-open?
+                                 :on-done        (partial set-form-value module-filter-key)}])}]]]]
          [ui/ModalActions
           [uix/Button
            {:text     (str/capitalize (@tr [:create]))
             :positive true
-            :on-click #()
-            ; (when (fv/validate-form-and-show? form)
-            ;(dispatch [::events/change-password
-            ;           (-> @form
-            ;               :names->value
-            ;               (dissoc :new-password-repeat))]))
-            }]]]))))
+            :on-click #(dispatch [::events/add-data-set])}]]]))))
 
 
 (defn ProcessButton
@@ -136,10 +120,12 @@
 
 
 (defn AddDataSet []
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        active-index (subscribe [::subs/active-tab-index])]
     [uix/MenuItem
      {:name     (@tr [:add])
       :icon     "add"
+      :disabled (= @active-index 1)
       :on-click #(dispatch [::events/set-modal-open? true])}]))
 
 
@@ -159,7 +145,7 @@
   [components/StickyBar
    [ui/Menu {:borderless true, :stackable true}
     [ProcessButton]
-    [AddButton]
+    [AddDataSet]
     [ui/MenuItem {:icon     "grid layout"
                   :active   (= @view-type :cards)
                   :on-click #(reset! view-type :cards)}]
@@ -398,9 +384,9 @@
 
 (defn DataSetCards
   []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        data-sets         (subscribe [::subs/data-sets])
-        loading?          (subscribe [::main-subs/loading?])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        data-sets (subscribe [::subs/data-sets])
+        loading?  (subscribe [::main-subs/loading?])]
     (fn []
       (if @loading?
         [ui/Loader {:active true

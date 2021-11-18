@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Edge detail - Bugfixes in Location tab
+
 ## [2.26.1] - 2021-11-17
 
 ### Changed

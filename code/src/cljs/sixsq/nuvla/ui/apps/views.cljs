@@ -10,13 +10,11 @@
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.views-detail :as views-detail]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
-    [sixsq.nuvla.ui.deployment.events :as deployment-events]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.validation :as utils-validation]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.validation :as utils-validation]))
 
 
 (defn new-module
@@ -30,7 +28,7 @@
     (apps-project-views/clear-module)))
 
 
-(defn ModuleDetails
+#_(defn ModuleDetails
   [nav-query-params]
   (let [module      (subscribe [::subs/module])
         new-subtype (:subtype @nav-query-params)]
@@ -64,7 +62,7 @@
          :no-module-message-header
          :no-module-message-content]
         [views-detail/VersionWarning]
-        [ModuleDetails nav-query-params]]])))
+        #_[ModuleDetails nav-query-params]]])))
 
 
 (defn Apps

@@ -47,23 +47,20 @@
 
 (reg-event-fx
   ::get-data-records
-  (fn [{{:keys [::spec/full-text-search
-                ::spec/page
+  (fn [{{:keys [::spec/page
                 ::spec/elements-per-page
-                ::spec/time-period-filter] :as _db} :db} [_ data-record-filter]]
+                ::spec/time-period-filter
+                ::spec/data-set
+                ::spec/data-record-filter]} :db}]
     {::cimi-api-fx/search [:data-record
-                           (utils/get-query-params data-record-filter
-                                                   full-text-search
+                           (utils/get-query-params (or
+                                                     data-record-filter
+                                                     (:data-record-filter data-set))
+                                                   nil
                                                    time-period-filter
                                                    page
                                                    elements-per-page)
                            #(dispatch [::set-data-records %])]}))
-
-
-(reg-event-fx
-  ::get-all-data-records
-  (fn [_ _]
-    {:fx [[:dispatch [::get-data-records nil]]]}))
 
 
 (reg-event-db
@@ -72,21 +69,22 @@
     (assoc db ::spec/data-set-id id)))
 
 
-(reg-event-db
+(reg-event-fx
   ::set-data-set
-  (fn [db [_ data-set]]
-    (assoc db ::spec/not-found? (nil? data-set)
-              ::spec/data-set data-set
-              ;::main-spec/loading? false
-              )))
+  (fn [{{:keys [::spec/data-set] :as db} :db} [_ new-data-set]]
+    (let [data-set-changed? (or (not= (:id new-data-set) (:id data-set))
+                                (not= (:updated new-data-set) (:updated data-set)))]
+      {:db (cond-> (assoc db ::spec/not-found? (nil? new-data-set)
+                            ::spec/data-set new-data-set)
+                   data-set-changed? (assoc ::spec/data-record-filter (:data-record-filter new-data-set)))
+      :fx [[:dispatch [::get-data-records]]]})))
 
 
 (reg-event-fx
   ::get-data-set
   (fn [{{:keys [::spec/data-set-id]} :db} _]
     {::cimi-api-fx/get [(str "data-set/" data-set-id)
-                        #(do (dispatch [::set-data-set %])
-                             (dispatch [::get-data-records (:data-record-filter %)]))
+                        #(dispatch [::set-data-set %])
                         :on-error #(dispatch [::set-data-set nil])]}))
 
 
@@ -127,3 +125,9 @@
   ::set-elements-per-page
   (fn [db [_ elements-per-page]]
     (assoc db ::spec/elements-per-page elements-per-page)))
+
+
+(reg-event-db
+  ::set-data-record-filter
+  (fn [db [_ data-record-filter]]
+    (assoc db ::spec/data-record-filter data-record-filter)))

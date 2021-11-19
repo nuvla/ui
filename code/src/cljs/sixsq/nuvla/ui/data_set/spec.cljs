@@ -15,7 +15,7 @@
 
 (s/def ::data-set any?)
 
-(s/def ::data-record-filter any?)
+(s/def ::data-record-filter (s/nilable string?))
 
 (s/def ::data-records any?)
 
@@ -26,6 +26,7 @@
 (s/def ::full-text-search (s/nilable string?))
 
 (s/def ::page int?)
+
 (s/def ::elements-per-page int?)
 
 (s/def ::db (s/keys :req [::not-found?

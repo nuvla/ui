@@ -9,9 +9,7 @@
     [sixsq.nuvla.ui.deployment-dialog.spec :as dialog-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-event-fx
@@ -25,11 +23,13 @@
   (fn [db _]
     (assoc db ::spec/add-data-set-form {})))
 
+
 (reg-event-fx
   ::set-modal-open?
   (fn [{db :db} [_ modal-open?]]
-    {:db       (assoc db ::spec/modal-open? modal-open?)
-     :dispatch [::reset-add-data-set-form]}))
+    (cond-> {:db (assoc db ::spec/modal-open? modal-open?)}
+            (false? modal-open?) (assoc :fx [[:dispatch [::reset-add-data-set-form]]]))))
+
 
 (reg-event-db
   ::set-add-data-set-form
@@ -91,23 +91,6 @@
   ::set-data-records
   (fn [db [_ data-records]]
     (assoc db ::spec/data-records data-records)))
-
-
-;(reg-event-db
-;  ::set-credentials
-;  (fn [db [_ {credentials :resources}]]
-;    (assoc db ::spec/credentials credentials
-;              ::spec/counts nil
-;              ::spec/sizes nil)))
-
-
-;(reg-event-fx
-;  ::get-credentials
-;  (fn [{:keys [db]} _]
-;    {:db                  (assoc db ::spec/credentials nil)
-;     ::cimi-api-fx/search [:credential {:filter "subtype^='infrastructure-service-swarm'"
-;                                        :select "id, name, services"}
-;                           #(dispatch [::set-credentials %])]}))
 
 
 (reg-event-db
@@ -187,7 +170,10 @@
 (reg-event-db
   ::set-active-tab-index
   (fn [db [_ active-tab-index]]
-    (assoc db ::spec/active-tab-index active-tab-index)))
+    (cond-> (assoc db ::spec/active-tab-index active-tab-index)
+            (= active-tab-index 1) (assoc ::data-set-spec/data-set-id nil
+                                          ::data-set-spec/data-record-filter nil
+                                          ::data-set-spec/data-set nil))))
 
 
 (reg-event-db

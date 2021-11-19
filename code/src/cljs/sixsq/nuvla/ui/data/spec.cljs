@@ -21,6 +21,7 @@
 (s/def ::full-text-search (s/nilable string?))
 
 (s/def ::page int?)
+
 (s/def ::elements-per-page int?)
 
 (s/def ::total any?)

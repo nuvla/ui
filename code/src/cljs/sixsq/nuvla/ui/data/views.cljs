@@ -25,9 +25,6 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as utils-values]
-    [taoensso.timbre :as log]
-
-    [sixsq.nuvla.ui.utils.spec :as us]
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]))
 
 
@@ -60,18 +57,21 @@
          [ui/ModalContent
           [ui/Form
            [ui/FormInput
-            {:label      (str/capitalize (@tr [:name]))
-             :required   true
-             :auto-focus "on"
-             :on-change  (ui-callback/input-callback (partial set-form-value :name))}]
+            {:label         (str/capitalize (@tr [:name]))
+             :required      true
+             :auto-focus    "on"
+             :default-value (get @form! :name "")
+             :on-change     (ui-callback/input-callback (partial set-form-value :name))}]
            [ui/FormInput
-            {:label     (str/capitalize (@tr [:description]))
-             :on-change (ui-callback/input-callback (partial set-form-value :description))}]
+            {:label         (str/capitalize (@tr [:description]))
+             :default-value (get @form! :description "")
+             :on-change     (ui-callback/input-callback (partial set-form-value :description))}]
            [ui/FormField
             [:label "Data records filter"]
+            ^{:key (str data-record-filter-key "-" (get @form! data-record-filter-key ""))}
             [components/SearchInput
-             {:on-change     (ui-callback/input-callback (partial set-form-value data-record-filter-key))
-              :default-value ""
+             {:on-blur       (ui-callback/input-callback (partial set-form-value data-record-filter-key))
+              :default-value (get @form! data-record-filter-key "")
               :placeholder   "Data records filter"
               :action        (r/as-element
                                ^{:key (random-uuid)}
@@ -82,12 +82,12 @@
                                  :on-done        (partial set-form-value data-record-filter-key)}])}]]
            [ui/FormField
             [:label "Applications filter"]
+            ^{:key (str module-filter-key "-" (get @form! module-filter-key ""))}
             [components/SearchInput
-             {:on-change     (ui-callback/input-callback (partial set-form-value module-filter-key))
-              :default-value ""
+             {:on-blur       (ui-callback/input-callback (partial set-form-value module-filter-key))
+              :default-value (get @form! module-filter-key "")
               :placeholder   "Applications filter"
               :action        (r/as-element
-                               ^{:key (random-uuid)}
                                [filter-comp/ButtonFilter
                                 {:resource-name  "module"
                                  :default-filter (get @form! module-filter-key "")
@@ -113,12 +113,6 @@
                               [::events/open-application-select-modal]])}])))
 
 
-(defn RefreshMenuItem
-  []
-  [components/RefreshMenu
-   {:on-refresh refresh}])
-
-
 (defn AddDataSet []
   (let [tr           (subscribe [::i18n-subs/tr])
         active-index (subscribe [::subs/active-tab-index])]
@@ -127,17 +121,6 @@
       :icon     "add"
       :disabled (= @active-index 1)
       :on-click #(dispatch [::events/set-modal-open? true])}]))
-
-
-(defn AddButton
-  []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [uix/MenuItem
-     {:name     (@tr [:add])
-      :icon     "add"
-      :on-click #(dispatch
-                   [::main-events/subscription-required-dispatch
-                    [::events/open-modal :add]])}]))
 
 
 (defn MenuBar
@@ -152,11 +135,21 @@
     [ui/MenuItem {:icon     "table"
                   :active   (= @view-type :table)
                   :on-click #(reset! view-type :table)}]
-    [ui/MenuItem {:icon     "map"
-                  :active   (= @view-type :map)
-                  :on-click #(reset! view-type :map)}]
+    #_[ui/MenuItem {:icon     "map"
+                    :active   (= @view-type :map)
+                    :on-click #(reset! view-type :map)}]
     [components/RefreshMenu
      {:on-refresh refresh}]]])
+
+
+(defn FullTextSearch
+  []
+  (let [full-text (subscribe [::subs/full-text-search])]
+    (fn []
+      [components/SearchInput
+       {:on-change     (ui-callback/input-callback
+                         #(dispatch [::events/set-full-text-search %]))
+        :default-value @full-text}])))
 
 
 (defn SearchBar []
@@ -164,7 +157,7 @@
     [:div {:style {:padding "10px 0"}}
      [ui/Message {:info true}
       (@tr [:data-set-search-message])]
-     [data-set-views/SearchHeader refresh ::events/set-full-text-search ::subs/full-text-search]]))
+     [data-set-views/SearchHeader refresh [FullTextSearch]]]))
 
 (defn ApplicationListItem
   [{:keys [id name description subtype created] :as _application}]
@@ -421,11 +414,11 @@
 
 (defn DataRecords
   []
-  (dispatch [::data-set-events/get-all-data-records])
+  (dispatch [::data-set-events/get-data-records])
   [:<>
    (case @view-type
-     :cards [data-set-views/DataRecordCards data-set-views/PaginationAllDataRecords]
-     :table [data-set-views/DataRecordTable data-set-views/PaginationAllDataRecords])
+     :cards [data-set-views/DataRecordCards [data-set-views/Pagination]]
+     :table [data-set-views/DataRecordTable [data-set-views/Pagination]])
    [MainActionButton]])
 
 
@@ -439,7 +432,6 @@
      :table [DataSetTable]
      :map [DataSetCards])
    [deployment-dialog-views/deploy-modal true]
-   [NewDatasetModal]
    [MainActionButton]])
 
 
@@ -475,6 +467,7 @@
        [ui/Segment style/basic
         [uix/PageHeader "database" (@tr [:data-processing])]
         [MenuBar]
+        [NewDatasetModal]
         [ui/Tab
          {:menu        {:secondary true
                         :pointing  true

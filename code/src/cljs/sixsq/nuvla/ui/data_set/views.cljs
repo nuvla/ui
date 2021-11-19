@@ -4,6 +4,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.data-set.events :as events]
+    [sixsq.nuvla.ui.data.events :as data-events]
     [sixsq.nuvla.ui.data-set.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
@@ -26,19 +27,57 @@
   (dispatch [::events/refresh]))
 
 
-(defn SearchHeader
-  [refresh-fn full-search-event full-text-search-subs]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        time-period  (subscribe [::subs/time-period])
-        locale       (subscribe [::i18n-subs/locale])
-        full-text    (subscribe [full-text-search-subs])
-        filter-open? (r/atom false)]
+(defn DataRecordFilter
+  []
+  (let [tr                        (subscribe [::i18n-subs/tr])
+        data-record-filter        (subscribe [::subs/data-record-filter])
+        suggest-edit-filter?      (subscribe [::subs/suggest-update-data-record-filter?])
+        suggest-new-data-set?     (subscribe [::subs/suggest-new-data-set?])
+        data-set                  (subscribe [::subs/data-set])
+        filter-open?              (r/atom false)
+        set-data-record-filter-fn #(dispatch [::events/set-data-record-filter %])]
     (fn []
+      [components/SearchInput
+       {:on-change     (ui-callback/input-callback set-data-record-filter-fn)
+        :default-value (or @data-record-filter "")
+        :placeholder   "Data records filter"
+        :action        (r/as-element [:<>
+                                      [ui/Button {:icon     "search"
+                                                  :on-click #(dispatch [::events/get-data-records])}]
+                                      ^{:key (random-uuid)}
+                                      [filter-comp/ButtonFilter
+                                       {:resource-name  "data-record"
+                                        :default-filter @data-record-filter
+                                        :open?          filter-open?
+                                        :on-done        set-data-record-filter-fn}]
+                                      (when @suggest-new-data-set?
+                                        [ui/Button {:icon     "plus"
+                                                    :primary  true
+                                                    :content  (@tr [:create])
+                                                    :on-click #(do
+                                                                 (dispatch [::data-events/set-modal-open? true])
+                                                                 (dispatch [::data-events/set-add-data-set-form :data-record-filter @data-record-filter]))}])
+                                      (when @suggest-edit-filter?
+                                        [ui/Button {:icon     "save"
+                                                    :primary  true
+                                                    :content  (@tr [:save])
+                                                    :on-click #(dispatch [::events/edit
+                                                                          (:id @data-set)
+                                                                          {:data-record-filter @data-record-filter}
+                                                                          (@tr [:updated-message])])}])])}])))
+
+
+(defn SearchHeader
+  [_refresh-fn _extra]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        time-period (subscribe [::subs/time-period])
+        locale      (subscribe [::i18n-subs/locale])]
+    (fn [refresh-fn extra]
       (let [[time-start time-end] @time-period
             date-format "MMMM DD, YYYY HH:mm"
             time-format "HH:mm"]
         [ui/Form
-         [ui/FormGroup {:widths 3}
+         [ui/FormGroup {:widths (if extra 3 2)}
           [ui/FormField
            ;; FIXME: Find a better way to set the field width.
            [ui/DatePicker {:custom-input     (r/as-element [ui/Input {:label (str/capitalize (@tr [:from]))
@@ -74,16 +113,8 @@
                            :date-format      date-format
                            :on-change        #(do (dispatch [::events/set-time-period [time-start %]])
                                                   (refresh-fn))}]]
-          [ui/FormField
-           [components/SearchInput
-            {:on-change     (ui-callback/input-callback
-                              #(dispatch [full-search-event %]))
-             :default-value @full-text
-             :action        (r/as-element [filter-comp/ButtonFilter
-                                           {:resource-name  "deployment"
-                                            :default-filter "" ;@additional-filter
-                                            :open?          filter-open?
-                                            :on-done        #(dispatch [::events/set-additional-filter %])}])}]]]]))))
+          (when extra
+            [ui/FormField extra])]]))))
 
 
 (defn ProcessButton
@@ -128,26 +159,6 @@
                                                                  (dispatch [::events/get-data-set])))}]))
 
 
-(defn PaginationAllDataRecords
-  []
-  (let [data-records      (subscribe [::subs/data-records])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
-        total-elements    (:count @data-records)
-        total-pages       (utils-general/total-pages total-elements @elements-per-page)]
-    [uix/Pagination {:totalitems              total-elements
-                     :totalPages              total-pages
-                     :activePage              @page
-                     :elementsperpage         @elements-per-page
-                     :onElementsPerPageChange (ui-callback/value
-                                                #(do (dispatch [::events/set-elements-per-page %])
-                                                     (dispatch [::events/set-page 1])
-                                                     (dispatch [::events/get-all-data-records])))
-                     :onPageChange            (ui-callback/callback
-                                                :activePage #(do (dispatch [::events/set-page %])
-                                                                 (dispatch [::events/get-all-data-records])))}]))
-
-
 (defn DataRecordRow
   [{:keys [id name description tags created timestamp bucket content-type infrastructure-service
            resource:deployment] :as _data-record}]
@@ -170,11 +181,11 @@
 
 
 (defn DataRecordTable
-  [pagination]
+  [Pagination]
   (let [tr           (subscribe [::i18n-subs/tr])
         data-records (subscribe [::subs/data-records])]
     [:<>
-     [SearchHeader refresh ::events/set-full-text-search ::subs/full-text-search]
+     [SearchHeader refresh [DataRecordFilter]]
      [ui/Table {:compact "very", :selectable true}
       [ui/TableHeader
        [ui/TableRow
@@ -192,7 +203,7 @@
        (for [{:keys [id] :as dr} (:resources @data-records)]
          ^{:key id}
          [DataRecordRow dr])]]
-     [pagination]]))
+     Pagination]))
 
 
 (defn DataRecordCard
@@ -324,7 +335,7 @@
 
 
 (defn DataRecordCards
-  [pagination]
+  [Pagination]
   (let [data-records (subscribe [::subs/data-records])
         device       (subscribe [::main-subs/device])]
     [:<>
@@ -334,7 +345,7 @@
                :centered  true}
       [ui/GridRow {:centered true}
        [ui/GridColumn
-        [SearchHeader refresh ::events/set-full-text-search ::subs/full-text-search]]]
+        [SearchHeader refresh [DataRecordFilter]]]]
       [ui/GridRow {:centered true}
        [ui/GridColumn
         [ui/Segment style/basic
@@ -344,7 +355,7 @@
           (for [data-record (:resources @data-records)]
             ^{:key (:id data-record)}
             [DataRecordCard data-record])]]]]]
-     [pagination]]))
+     Pagination]))
 
 
 (defn DataSet
@@ -365,4 +376,4 @@
          [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
          [MenuBar dataset-id]
          [Summary]
-         [DataRecordCards Pagination]]]])))
+         [DataRecordCards [Pagination]]]]])))

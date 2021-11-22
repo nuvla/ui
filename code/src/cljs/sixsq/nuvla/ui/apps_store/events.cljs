@@ -36,8 +36,8 @@
   ::get-published-modules
   (fn [{{:keys [::spec/full-text-search-published
                 ::spec/page
-                ::spec/elements-per-page] :as db} :db} _]
-    (published-modules-cofx db full-text-search-published elements-per-page page)))
+                ::spec/elements-per-page]} :db} _]
+    (published-modules-cofx {} full-text-search-published elements-per-page page)))
 
 
 (reg-event-fx

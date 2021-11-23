@@ -564,14 +564,14 @@
         editable? (subscribe [::apps-subs/editable?])
         stripe    (subscribe [::main-subs/stripe])]
     (remove nil? [(overview)
+                  (details)
                   (deployments)
                   (license)
                   (when @stripe
                     (pricing))
-                  (versions)
-                  (details)
                   (docker)
                   (configuration)
+                  (versions)
                   (apps-views-detail/TabAcls
                     module
                     @editable?

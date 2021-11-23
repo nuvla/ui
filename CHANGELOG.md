@@ -4,6 +4,8 @@
 
 ### Changed
 
+  - Data - New workflow
+  - App application detail - change order tabs fix issue when no pricing is configured 
   - App store - Regression re-frame events logged to console
   - Edge detail - Bugfixes in Location tab
 

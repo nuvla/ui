@@ -539,7 +539,6 @@
   [{:keys [_extras _validation-event]}]
   (let [tr               (subscribe [::i18n-subs/tr])
         default-logo-url (subscribe [::subs/default-logo-url])
-        module           (subscribe [::subs/module])
         module-common    (subscribe [::subs/module-common])
         editable?        (subscribe [::subs/editable?])
         validate-form?   (subscribe [::subs/validate-form?])

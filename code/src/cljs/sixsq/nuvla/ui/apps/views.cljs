@@ -28,12 +28,12 @@
     (apps-project-views/clear-module)))
 
 
-#_(defn ModuleDetails
-  [nav-query-params]
-  (let [module      (subscribe [::subs/module])
-        new-subtype (:subtype @nav-query-params)]
-    (fn [_nav-query-params]
-      (let [subtype (or (:subtype @module) new-subtype)]
+(defn ModuleDetails
+  [_nav-query-params]
+  (let [module      (subscribe [::subs/module])]
+    (fn [nav-query-params]
+      (let [new-subtype (:subtype @nav-query-params)
+            subtype (or (:subtype @module) new-subtype)]
         (case subtype
           "component" [apps-component-views/view-edit]
           "application" [apps-application-views/ViewEdit]
@@ -43,26 +43,27 @@
 
 
 (defn Module
-  [nav-query-params]
-  (let [version     (:version @nav-query-params nil)
-        new-subtype (:subtype @nav-query-params)
-        is-new?     (boolean (seq new-subtype))]
-    (dispatch [::events/is-new? is-new?])
+  [_nav-query-params]
+  (let []
     (dispatch [::main-events/changes-protection? false])
     (dispatch [::events/form-valid true])
     (dispatch [::events/set-validate-form? false])
-    (dispatch [::events/get-module version])
-    (fn [_nav-query-params]
-      (when is-new?
-        (new-module new-subtype))
-      [components/LoadingPage {:dimmable? true}
-       [:<>
-        [components/NotFoundPortal
-         ::subs/module-not-found?
-         :no-module-message-header
-         :no-module-message-content]
-        [views-detail/VersionWarning]
-        #_[ModuleDetails nav-query-params]]])))
+    (fn [nav-query-params]
+      (let [version     (:version @nav-query-params)
+            new-subtype (:subtype @nav-query-params)
+            is-new?     (boolean (seq new-subtype))]
+        (dispatch [::events/is-new? is-new?])
+        (if is-new?
+          (new-module new-subtype)
+          (dispatch [::events/get-module version]))
+        [components/LoadingPage {:dimmable? true}
+         [:<>
+          [components/NotFoundPortal
+           ::subs/module-not-found?
+           :no-module-message-header
+           :no-module-message-content]
+          [views-detail/VersionWarning]
+          [ModuleDetails nav-query-params]]]))))
 
 
 (defn Apps

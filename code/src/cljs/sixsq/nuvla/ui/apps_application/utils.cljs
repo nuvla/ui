@@ -3,8 +3,8 @@
             [sixsq.nuvla.ui.apps.utils :as apps-utils]))
 
 
-(def tab-deployments-index 1)
-(def tab-details-index 5)
+(def tab-deployments-index 2)
+(def tab-details-index 1)
 
 
 ;; Deserialization functions: module->db

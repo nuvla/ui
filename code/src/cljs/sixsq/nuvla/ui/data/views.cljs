@@ -425,11 +425,9 @@
 (defn DataRecords
   []
   (dispatch [::data-set-events/get-data-records])
-  [:<>
-   (case @view-type
-     :cards [data-set-views/DataRecordCards [data-set-views/Pagination]]
-     :table [data-set-views/DataRecordTable [data-set-views/Pagination]])
-   [MainActionButton]])
+  (case @view-type
+    :cards [data-set-views/DataRecordCards [data-set-views/Pagination]]
+    :table [data-set-views/DataRecordTable [data-set-views/Pagination]]))
 
 
 (defn DataSets

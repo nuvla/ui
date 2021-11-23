@@ -11,7 +11,7 @@
 
 (s/def ::time-period-filter (s/nilable string?))
 
-(s/def ::data-set-id any?)
+(s/def ::data-set-id (s/nilable string?))
 
 (s/def ::data-set any?)
 

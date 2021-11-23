@@ -312,17 +312,27 @@
 
 (defn DataSetRow
   [{:keys [id name description tags created module-filter data-record-filter] :as _data-set}]
-  (fn [_data-set]
-    ^{:key id}
-    (let [uuid (utils-general/id->uuid id)]
-      [ui/TableRow
-       [ui/TableCell name]
-       [ui/TableCell description]
-       [ui/TableCell (utils-values/format-created created)]
-       [ui/TableCell data-record-filter]
-       [ui/TableCell module-filter]
-       [ui/TableCell [uix/Tags tags]]
-       [ui/TableCell (utils-values/as-link id :label uuid)]])))
+  (let [data-sets (subscribe [::subs/selected-data-set-ids])]
+    (fn [_data-set]
+     ^{:key id}
+     (let [uuid      (utils-general/id->uuid id)
+           selected? (boolean (@data-sets id))]
+       [ui/TableRow {:style    {:cursor "pointer"}
+                     :on-click (fn [event]
+                                 (dispatch [::history-events/navigate (utils/data-record-href id)])
+                                 (.preventDefault event))}
+        [ui/TableCell
+         [ui/Checkbox {:checked  selected?
+                       :on-click (fn [event]
+                                   (dispatch [::events/toggle-data-set-id id])
+                                   (.stopPropagation event))}]]
+        [ui/TableCell name]
+        [ui/TableCell description]
+        [ui/TableCell (utils-values/format-created created)]
+        [ui/TableCell data-record-filter]
+        [ui/TableCell module-filter]
+        [ui/TableCell [uix/Tags tags]]
+        [ui/TableCell (utils-values/as-link id :label uuid)]]))))
 
 
 (defn DataSetTable

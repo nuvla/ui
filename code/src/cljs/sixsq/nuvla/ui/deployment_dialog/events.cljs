@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.credentials.events :as creds-events]
     [sixsq.nuvla.ui.data.spec :as data-spec]
+    [sixsq.nuvla.ui.data-set.spec :as data-set-spec]
     [sixsq.nuvla.ui.deployment-detail.events :as deployment-detail-events]
     [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
     [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
@@ -50,13 +51,11 @@
 (reg-event-fx
   ::set-data-filters
   (fn [{{:keys [::spec/deployment
-                ::data-spec/time-period
-                ::data-spec/full-text-search
                 ::spec/cloud-filter
+                ::data-set-spec/time-period
                 ::data-spec/content-type-filter]} :db} _]
     (let [filter       (general-utils/join-and cloud-filter
-                                               content-type-filter
-                                               full-text-search)
+                                               content-type-filter)
           data-filters {:records {:filters
                                   [{:filter     filter
                                     :data-type  "data-record"

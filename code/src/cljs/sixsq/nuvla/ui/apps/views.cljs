@@ -49,21 +49,14 @@
     (dispatch [::events/form-valid true])
     (dispatch [::events/set-validate-form? false])
     (fn [nav-query-params]
-      (let [version     (:version @nav-query-params)
-            new-subtype (:subtype @nav-query-params)
-            is-new?     (boolean (seq new-subtype))]
-        (dispatch [::events/is-new? is-new?])
-        (if is-new?
-          (new-module new-subtype)
-          (dispatch [::events/get-module version]))
-        [components/LoadingPage {:dimmable? true}
-         [:<>
-          [components/NotFoundPortal
-           ::subs/module-not-found?
-           :no-module-message-header
-           :no-module-message-content]
-          [views-detail/VersionWarning]
-          [ModuleDetails nav-query-params]]]))))
+      [components/LoadingPage {:dimmable? true}
+       [:<>
+        [components/NotFoundPortal
+         ::subs/module-not-found?
+         :no-module-message-header
+         :no-module-message-content]
+        [views-detail/VersionWarning]
+        [ModuleDetails nav-query-params]]])))
 
 
 (defn Apps
@@ -72,7 +65,14 @@
         nav-query-params (subscribe [::main-subs/nav-query-params])]
     (fn []
       (let [module-name (utils/nav-path->module-name @nav-path)
-            is-root?    (empty? module-name)]
+            is-root?    (empty? module-name)
+            version     (:version nav-query-params)
+            new-subtype (:subtype nav-query-params)
+            is-new?     (boolean (seq new-subtype))]
+        (dispatch [::events/is-new? is-new?])
+        (if is-new?
+          (new-module new-subtype)
+          (dispatch [::events/get-module version]))
         (if is-root?
           [apps-store-views/RootView]
           [Module nav-query-params])))))

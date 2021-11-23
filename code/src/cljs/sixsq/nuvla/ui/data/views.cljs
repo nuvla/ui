@@ -55,7 +55,7 @@
          [uix/ModalHeader {:header (@tr [:new-dataset])
                            :icon   "add"}]
          [ui/ModalContent
-          [ui/Form
+          [ui/Form {:noValidate true}
            [ui/FormInput
             {:label         (str/capitalize (@tr [:name]))
              :required      true

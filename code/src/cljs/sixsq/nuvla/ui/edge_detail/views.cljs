@@ -383,6 +383,13 @@
                          title])}
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
+          [ui/Message
+           {:warning true
+            :icon    {:name "warning sign", :size "large"}
+            :header  (@tr [:nuvlabox-clustering-warning-header])
+            :content (r/as-element
+                       [:span
+                        (@tr [:nuvlabox-clustering-warning-content])])}]
           (if has-active-dp
             [ui/Message {:negative true}
              (@tr [:nuvlabox-cant-cluster-with-dpls])]
@@ -1159,13 +1166,11 @@
   []
   (let [tr                (subscribe [::i18n-subs/tr])
         nuvlabox          (subscribe [::subs/nuvlabox])
-        nuvlabox-status   (subscribe [::subs/nuvlabox-status])
         zoom              (atom 3)
-        new-location      (r/atom nil)
-        {:keys [id location]} nuvlabox
-        inferred-location (:inferred-location @nuvlabox-status)]
+        new-location      (r/atom nil)]
     (fn []
-      (let [update-new-location #(reset! new-location %)
+      (let [{:keys [id location inferred-location]} @nuvlabox
+            update-new-location #(reset! new-location %)
             position            (some-> (or @new-location location inferred-location) map/longlat->latlong)]
         [:div
          (if position (@tr [:map-drag-to-update-nb-location])
@@ -1188,7 +1193,7 @@
           [ui/Button {:primary  true
                       :on-click #(dispatch
                                    [::events/edit id
-                                    (assoc nuvlabox
+                                    (assoc @nuvlabox
                                       :location
                                       (update @new-location 0 map/normalize-lng))
                                     (@tr [:nuvlabox-position-update])])}

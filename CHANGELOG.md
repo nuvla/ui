@@ -2,7 +2,16 @@
 
 ## Unreleased
 
-### Added
+### Changed
+
+  - Edge detail - Bugfixes in Location tab
+
+## [2.26.1] - 2021-11-17
+
+### Changed
+
+  - Module detail - Warning message appear twice when not on latest version fixed
+  - Edge detail - Clustering modal warn user on feature stability
 
 ## [2.26.0] - 2021-10-28
 

@@ -3,7 +3,7 @@
     [clojure.spec.alpha :as s]))
 
 
-(s/def ::nuvlabox (s/nilable string?))
+(s/def ::nuvlabox (s/nilable any?))
 (s/def ::nuvlabox-status (s/nilable any?))
 (s/def ::nuvlabox-associated-ssh-keys (s/nilable any?))
 (s/def ::nuvlabox-peripherals (s/nilable any?))

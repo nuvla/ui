@@ -308,9 +308,7 @@
 
 
 (defn ModalAppPreview
-  [module-filter]
-  ;; dispatch search with filter
-  ;; on-close clear applications
+  [_module-filter]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [module-filter]
       [uix/ModalFromButton
@@ -321,9 +319,8 @@
                                :color    "blue"
                                :on-click #(dispatch [::data-events/search-application module-filter])}
                      [ui/Icon {:name "eye"}]
-                     "preview"])
-        :header   "Application preview"
-        :on-close #()
+                     (@tr [:preview])])
+        :header   (str/capitalize (@tr [:application]))
         :content  [ApplicationList {:selectable? false}]}])))
 
 

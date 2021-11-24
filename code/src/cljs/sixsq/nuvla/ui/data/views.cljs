@@ -114,32 +114,33 @@
 
 
 (defn AddDataSet []
-  (let [tr           (subscribe [::i18n-subs/tr])
-        active-index (subscribe [::subs/active-tab-index])]
+  (let [tr           (subscribe [::i18n-subs/tr])]
     [uix/MenuItem
      {:name     (@tr [:add])
       :icon     "add"
-      :disabled (= @active-index 1)
       :on-click #(dispatch [::events/set-modal-open? true])}]))
 
 
 (defn MenuBar
   []
-  [components/StickyBar
-   [ui/Menu {:borderless true, :stackable true}
-    [ProcessButton]
-    [AddDataSet]
-    [ui/MenuItem {:icon     "grid layout"
-                  :active   (= @view-type :cards)
-                  :on-click #(reset! view-type :cards)}]
-    [ui/MenuItem {:icon     "table"
-                  :active   (= @view-type :table)
-                  :on-click #(reset! view-type :table)}]
-    #_[ui/MenuItem {:icon     "map"
-                    :active   (= @view-type :map)
-                    :on-click #(reset! view-type :map)}]
-    [components/RefreshMenu
-     {:on-refresh refresh}]]])
+  (let [active-index (subscribe [::subs/active-tab-index])]
+    [components/StickyBar
+     [ui/Menu {:borderless true, :stackable true}
+      (when (= @active-index 0)
+        [:<>
+         [ProcessButton]
+         [AddDataSet]
+         [ui/MenuItem {:icon     "grid layout"
+                       :active   (= @view-type :cards)
+                       :on-click #(reset! view-type :cards)}]
+         [ui/MenuItem {:icon     "table"
+                       :active   (= @view-type :table)
+                       :on-click #(reset! view-type :table)}]
+         #_[ui/MenuItem {:icon     "map"
+                         :active   (= @view-type :map)
+                         :on-click #(reset! view-type :map)}]])
+      [components/RefreshMenu
+       {:on-refresh refresh}]]]))
 
 
 (defn FullTextSearch
@@ -162,56 +163,56 @@
 
 
 #_(defn LaunchButton
-  []
-  (let [tr                     (subscribe [::i18n-subs/tr])
-        visible?               (subscribe [::subs/application-select-visible?])
-        selected-app-id        (subscribe [::subs/selected-application-id])
+    []
+    (let [tr                     (subscribe [::i18n-subs/tr])
+          visible?               (subscribe [::subs/application-select-visible?])
+          selected-app-id        (subscribe [::subs/selected-application-id])
 
-        data-step-active?      (subscribe [::deployment-dialog-subs/data-step-active?])
+          data-step-active?      (subscribe [::deployment-dialog-subs/data-step-active?])
 
-        deployment             (subscribe [::deployment-dialog-subs/deployment])
-        data-completed?        (subscribe [::deployment-dialog-subs/data-completed?])
-        credentials-completed? (subscribe [::deployment-dialog-subs/credentials-completed?])
-        env-completed?         (subscribe [::deployment-dialog-subs/env-variables-completed?])
-        hide-fn                #(do
-                                  (dispatch [::events/close-application-select-modal])
-                                  (dispatch [::events/delete-deployment]))
-        configure-fn           (fn [id]
-                                 (dispatch [::events/close-application-select-modal])
-                                 (dispatch [::deployment-dialog-events/create-deployment id :data]))
+          deployment             (subscribe [::deployment-dialog-subs/deployment])
+          data-completed?        (subscribe [::deployment-dialog-subs/data-completed?])
+          credentials-completed? (subscribe [::deployment-dialog-subs/credentials-completed?])
+          env-completed?         (subscribe [::deployment-dialog-subs/env-variables-completed?])
+          hide-fn                #(do
+                                    (dispatch [::events/close-application-select-modal])
+                                    (dispatch [::events/delete-deployment]))
+          configure-fn           (fn [id]
+                                   (dispatch [::events/close-application-select-modal])
+                                   (dispatch [::deployment-dialog-events/create-deployment id :data]))
 
-        launch-fn              #(do
-                                  (dispatch [::events/close-application-select-modal])
-                                  (dispatch [::deployment-dialog-events/edit-deployment]))]
+          launch-fn              #(do
+                                    (dispatch [::events/close-application-select-modal])
+                                    (dispatch [::deployment-dialog-events/edit-deployment]))]
 
-    (fn []
-      (let [launch-disabled? (or (not @deployment)
-                                 (and (not @data-completed?) @data-step-active?)
-                                 (not @credentials-completed?)
-                                 (not @env-completed?))]
+      (fn []
+        (let [launch-disabled? (or (not @deployment)
+                                   (and (not @data-completed?) @data-step-active?)
+                                   (not @credentials-completed?)
+                                   (not @env-completed?))]
 
-        [ui/Modal {:open       @visible?
-                   :close-icon true
-                   :on-close   hide-fn}
+          [ui/Modal {:open       @visible?
+                     :close-icon true
+                     :on-close   hide-fn}
 
-         [uix/ModalHeader {:header (@tr [:select-application]) :icon "sitemap"}]
+           [uix/ModalHeader {:header (@tr [:select-application]) :icon "sitemap"}]
 
-         [ui/ModalContent {:scrolling true}
-          [ui/ModalDescription
-           [data-set-views/ApplicationList]]]
-         [ui/ModalActions
-          [ui/Button {:disabled (nil? @selected-app-id)
-                      :primary  true
-                      :on-click #(configure-fn @selected-app-id)}
-           [ui/Icon {:name "settings"}]
-           (@tr [:configure])]
-          [ui/Button {:disabled (nil? @selected-app-id)
-                      :primary  true
-                      :on-click #()}
-           [ui/Icon {:name     "rocket"
-                     :disabled launch-disabled?
-                     :on-click launch-fn}]
-           (@tr [:launch])]]]))))
+           [ui/ModalContent {:scrolling true}
+            [ui/ModalDescription
+             [data-set-views/ApplicationList]]]
+           [ui/ModalActions
+            [ui/Button {:disabled (nil? @selected-app-id)
+                        :primary  true
+                        :on-click #(configure-fn @selected-app-id)}
+             [ui/Icon {:name "settings"}]
+             (@tr [:configure])]
+            [ui/Button {:disabled (nil? @selected-app-id)
+                        :primary  true
+                        :on-click #()}
+             [ui/Icon {:name     "rocket"
+                       :disabled launch-disabled?
+                       :on-click launch-fn}]
+             (@tr [:launch])]]]))))
 
 
 (defn ApplicationSelectModal
@@ -288,25 +289,25 @@
   [{:keys [id name description tags created module-filter data-record-filter] :as _data-set}]
   (let [data-sets (subscribe [::subs/selected-data-set-ids])]
     (fn [_data-set]
-     ^{:key id}
-     (let [uuid      (utils-general/id->uuid id)
-           selected? (boolean (@data-sets id))]
-       [ui/TableRow {:style    {:cursor "pointer"}
-                     :on-click (fn [event]
-                                 (dispatch [::history-events/navigate (utils/data-record-href id)])
-                                 (.preventDefault event))}
-        [ui/TableCell
-         [ui/Checkbox {:checked  selected?
-                       :on-click (fn [event]
-                                   (dispatch [::events/toggle-data-set-id id])
-                                   (.stopPropagation event))}]]
-        [ui/TableCell name]
-        [ui/TableCell description]
-        [ui/TableCell (utils-values/format-created created)]
-        [ui/TableCell data-record-filter]
-        [ui/TableCell module-filter]
-        [ui/TableCell [uix/Tags tags]]
-        [ui/TableCell (utils-values/as-link id :label uuid)]]))))
+      ^{:key id}
+      (let [uuid      (utils-general/id->uuid id)
+            selected? (boolean (@data-sets id))]
+        [ui/TableRow {:style    {:cursor "pointer"}
+                      :on-click (fn [event]
+                                  (dispatch [::history-events/navigate (utils/data-record-href id)])
+                                  (.preventDefault event))}
+         [ui/TableCell
+          [ui/Checkbox {:checked  selected?
+                        :on-click (fn [event]
+                                    (dispatch [::events/toggle-data-set-id id])
+                                    (.stopPropagation event))}]]
+         [ui/TableCell name]
+         [ui/TableCell description]
+         [ui/TableCell (utils-values/format-created created)]
+         [ui/TableCell data-record-filter]
+         [ui/TableCell module-filter]
+         [ui/TableCell [uix/Tags tags]]
+         [ui/TableCell (utils-values/as-link id :label uuid)]]))))
 
 
 (defn DataSetTable

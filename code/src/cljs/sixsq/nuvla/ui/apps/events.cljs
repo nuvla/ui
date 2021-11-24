@@ -167,6 +167,7 @@
           (assoc ::spec/module {})
           (assoc ::spec/module-immutable {})
           (assoc ::spec/module-common {})
+          (assoc ::main-spec/loading? false)
           (assoc-in [::spec/module-common ::spec/name] new-name)
           (assoc-in [::spec/module-common ::spec/description] "")
           (assoc-in [::spec/module-common ::spec/logo-url] default-logo-url)

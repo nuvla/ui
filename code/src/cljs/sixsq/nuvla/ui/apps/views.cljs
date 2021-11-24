@@ -66,8 +66,8 @@
     (fn []
       (let [module-name (utils/nav-path->module-name @nav-path)
             is-root?    (empty? module-name)
-            version     (:version nav-query-params)
-            new-subtype (:subtype nav-query-params)
+            version     (:version @nav-query-params)
+            new-subtype (:subtype @nav-query-params)
             is-new?     (boolean (seq new-subtype))]
         (dispatch [::events/is-new? is-new?])
         (if is-new?

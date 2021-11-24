@@ -102,19 +102,21 @@
 
 (defn ProcessButton
   []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        data-sets (subscribe [::subs/selected-data-set-ids])]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        data-sets    (subscribe [::subs/selected-data-set-ids])
+        active-index (subscribe [::subs/active-tab-index])]
     (fn []
       [uix/MenuItem
        {:name     (@tr [:process])
-        :disabled (not (seq @data-sets))
+        :disabled (or (not (seq @data-sets))
+                      (not= @active-index 0))
         :icon     "rocket"
         :on-click #(dispatch [::main-events/subscription-required-dispatch
                               [::events/open-application-select-modal]])}])))
 
 
 (defn AddDataSet []
-  (let [tr           (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     [uix/MenuItem
      {:name     (@tr [:add])
       :icon     "add"
@@ -126,9 +128,9 @@
   (let [active-index (subscribe [::subs/active-tab-index])]
     [components/StickyBar
      [ui/Menu {:borderless true, :stackable true}
+      [ProcessButton]
       (when (= @active-index 0)
         [:<>
-         [ProcessButton]
          [AddDataSet]
          [ui/MenuItem {:icon     "grid layout"
                        :active   (= @view-type :cards)

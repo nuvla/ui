@@ -19,12 +19,43 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.data.subs :as data-subs]
+    [sixsq.nuvla.ui.apps.utils :as application-utils]))
 
 
 (defn refresh
   []
   (dispatch [::events/refresh]))
+
+
+(defn ApplicationListItem
+  [{:keys [id name description subtype created] :as _application} selectable?]
+  (let [selected-application-id (subscribe [::data-subs/selected-application-id])
+        on-click-fn             #(dispatch [::data-events/set-selected-application-id id])]
+    [ui/ListItem (cond-> {:active (and @selected-application-id (= id @selected-application-id))}
+                         selectable? (assoc :on-click on-click-fn))
+     [ui/ListIcon {:name (application-utils/subtype-icon subtype), :size "large"}]
+     [ui/ListContent
+      [ui/ListHeader (str (or name id) " (" (time/ago (time/parse-iso8601 created)) ")")]
+      (or description "")]]))
+
+
+(defn ApplicationList
+  [_opts]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        applications (subscribe [::data-subs/applications])
+        loading?     (subscribe [::data-subs/loading-applications?])]
+    (fn [{:keys [selectable?] :or {selectable? true} :as _opts}]
+      [ui/Segment {:loading @loading?
+                   :basic   true}
+       (if (seq @applications)
+         [ui/ListSA {:divided   true
+                     :relaxed   true
+                     :selection selectable?}
+          (for [application @applications]
+            ^{:key (:id application)}
+            [ApplicationListItem application selectable?])]
+         [ui/Message {:error true} (@tr [:no-apps])])])))
 
 
 (defn DataRecordFilter
@@ -276,6 +307,27 @@
       [ui/TableCell (get element attribute)])))
 
 
+(defn ModalAppPreview
+  [module-filter]
+  ;; dispatch search with filter
+  ;; on-close clear applications
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (fn [module-filter]
+      [uix/ModalFromButton
+       {:trigger  (r/as-element
+                    [ui/Label {:style    {:float  "right"
+                                          :cursor "pointer"}
+                               :circular true
+                               :color    "blue"
+                               :on-click #(dispatch [::data-events/search-application module-filter])}
+                     [ui/Icon {:name "eye"}]
+                     "preview"])
+        :header   "Application preview"
+        :on-close #()
+        :content  [ApplicationList {:selectable? false}]}])))
+
+
+
 (defn Summary
   []
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -327,8 +379,11 @@
             [ui/TableCell (str/capitalize (@tr [:data-record-filter]))]
             [ui/TableCell data-record-filter]]
            [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:module-filter]))]
-            [ui/TableCell module-filter]]
+            [ui/TableCell (str/capitalize (@tr [:application]))]
+            [ui/TableCell
+             module-filter
+             (when-not (str/blank? module-filter)
+               [ModalAppPreview module-filter])]]
            [ui/TableRow
             [ui/TableCell "Id"]
             [ui/TableCell (when (some? id) [values/as-link id :label (subs id 11)])]]]]]]]]]))

@@ -159,35 +159,9 @@
       (@tr [:data-set-search-message])]
      [data-set-views/SearchHeader refresh [FullTextSearch]]]))
 
-(defn ApplicationListItem
-  [{:keys [id name description subtype created] :as _application}]
-  (let [selected-application-id (subscribe [::subs/selected-application-id])
-        on-click-fn             #(dispatch [::events/set-selected-application-id id])]
-    ^{:key id}
-    [ui/ListItem {:active   (and @selected-application-id (= id @selected-application-id))
-                  :on-click on-click-fn}
-     [ui/ListIcon {:name (application-utils/subtype-icon subtype), :size "large"}]
-     [ui/ListContent
-      [ui/ListHeader (str (or name id) " (" (time/ago (time/parse-iso8601 created)) ")")]
-      (or description "")]]))
 
 
-(defn ApplicationList
-  []
-  (let [tr           (subscribe [::i18n-subs/tr])
-        applications (subscribe [::subs/applications])
-        loading?     (subscribe [::subs/loading-applications?])]
-    [ui/Segment {:loading @loading?
-                 :basic   true}
-     (if (seq @applications)
-       (vec (concat [ui/ListSA {:divided   true
-                                :relaxed   true
-                                :selection true}]
-                    (mapv ApplicationListItem @applications)))
-       [ui/Message {:error true} (@tr [:no-apps])])]))
-
-
-(defn LaunchButton
+#_(defn LaunchButton
   []
   (let [tr                     (subscribe [::i18n-subs/tr])
         visible?               (subscribe [::subs/application-select-visible?])
@@ -224,7 +198,7 @@
 
          [ui/ModalContent {:scrolling true}
           [ui/ModalDescription
-           [ApplicationList]]]
+           [data-set-views/ApplicationList]]]
          [ui/ModalActions
           [ui/Button {:disabled (nil? @selected-app-id)
                       :primary  true
@@ -276,7 +250,7 @@
 
          [ui/ModalContent {:scrolling true}
           [ui/ModalDescription
-           [ApplicationList]]]
+           [data-set-views/ApplicationList]]]
          [ui/ModalActions
           [ui/Button {:disabled (nil? @selected-app-id)
                       :primary  true
@@ -343,6 +317,7 @@
      [ui/Table {:compact "very", :selectable true}
       [ui/TableHeader
        [ui/TableRow
+        [ui/TableHeaderCell]
         [ui/TableHeaderCell (@tr [:name])]
         [ui/TableHeaderCell (@tr [:description])]
         [ui/TableHeaderCell (@tr [:created])]

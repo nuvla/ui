@@ -337,15 +337,16 @@
        [ui/ModalContent {:scrolling false}
         (when content content)]
 
-       [ui/ModalActions
-        (when modal-action modal-action)
-        [Button {:text     (str/lower-case button-text)
-                 :primary  true
-                 :loading  @clicked?
-                 :active   true
-                 :icon     icon
-                 :on-click #(do (reset! clicked? true)
-                                (on-confirm))}]]])))
+       (when (or button-text modal-action)
+         [ui/ModalActions
+          (when modal-action modal-action)
+          [Button {:text     (str/lower-case button-text)
+                   :primary  true
+                   :loading  @clicked?
+                   :active   true
+                   :icon     icon
+                   :on-click #(do (reset! clicked? true)
+                                  (on-confirm))}]])])))
 
 
 (defn TimeAgo
@@ -380,19 +381,19 @@
 
 (defn Tags
   [tags]
-   [ui/LabelGroup {:size  "tiny"
-                     :color "teal"
-                     :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-      (for [tag tags]
-        ^{:key (str uuid "_" tag)}
-        [ui/Popup
-         {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
-                                         (utils-general/truncate tag 20)])
-          :content        tag
-          :position       "bottom center"
-          :on             "hover"
-          :size           "tiny"
-          :hide-on-scroll true}])])
+  [ui/LabelGroup {:size  "tiny"
+                  :color "teal"
+                  :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+   (for [tag tags]
+     ^{:key (str uuid "_" tag)}
+     [ui/Popup
+      {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
+                                      (utils-general/truncate tag 20)])
+       :content        tag
+       :position       "bottom center"
+       :on             "hover"
+       :size           "tiny"
+       :hide-on-scroll true}])])
 
 
 (defn Card

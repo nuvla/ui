@@ -106,6 +106,15 @@
     (dispatch [::dialog-events/create-deployment application-id :data true])
     {:db (assoc db ::spec/selected-application-id application-id)}))
 
+(reg-event-fx
+  ::search-application
+  (fn [{db :db} [_ query-application]]
+    {:db                  (assoc db
+                            ::spec/applications nil
+                            ::spec/loading-applications? true)
+     ::cimi-api-fx/search [:module {:filter query-application}
+                           #(dispatch [::set-applications %])]}))
+
 
 (reg-event-fx
   ::open-application-select-modal
@@ -118,12 +127,10 @@
                                           "subtype!='project'"))
           query-objects      (apply general-utils/join-or
                                     (map :data-record-filter selected-data-sets))]
-      {:db                  (assoc db ::spec/application-select-visible? true
-                                      ::spec/loading-applications? true
-                                      ::spec/selected-application-id nil
-                                      ::spec/content-type-filter query-objects)
-       ::cimi-api-fx/search [:module {:filter query-application}
-                             #(dispatch [::set-applications %])]})))
+      {:db (assoc db ::spec/application-select-visible? true
+                     ::spec/selected-application-id nil
+                     ::spec/content-type-filter query-objects)
+       :fx [[:dispatch [::search-application query-application]]]})))
 
 
 (reg-event-fx

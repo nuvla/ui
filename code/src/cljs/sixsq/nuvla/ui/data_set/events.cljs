@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.data-set.spec :as spec]
     [sixsq.nuvla.ui.data-set.utils :as utils]
     [sixsq.nuvla.ui.main.spec :as main-spec]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]))
 
@@ -131,3 +132,8 @@
   ::set-data-record-filter
   (fn [db [_ data-record-filter]]
     (assoc db ::spec/data-record-filter data-record-filter)))
+
+(reg-event-fx
+  ::delete
+  (fn [{{:keys [::spec/data-set]} :db}]
+    {::cimi-api-fx/delete [(:id data-set) #(dispatch [::history-events/navigate "data"])]}))

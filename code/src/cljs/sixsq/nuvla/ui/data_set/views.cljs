@@ -20,7 +20,8 @@
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.data.subs :as data-subs]
-    [sixsq.nuvla.ui.apps.utils :as application-utils]))
+    [sixsq.nuvla.ui.apps.utils :as application-utils]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (defn refresh
@@ -161,13 +162,31 @@
                               [::events/open-application-select-modal]])}])))
 
 
+
+(defn DeleteButton
+  [{:keys [id name description] :as _data-set}]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        content (str (or name id) (when description " - ") description)]
+    [uix/ModalDanger
+     {:button-text (@tr [:delete])
+      :on-confirm  #(dispatch [::events/delete])
+      :trigger     (r/as-element [ui/MenuItem
+                                  [ui/Icon {:name "trash"}]
+                                  (@tr [:delete])])
+      :header      (@tr [:delete-data-set])
+      :content     content}]))
+
+
 (defn MenuBar
   []
-  [:div
-   [components/StickyBar
-    [ui/Menu {:attached "top", :borderless true}
-     [components/RefreshMenu
-      {:on-refresh #(refresh)}]]]])
+  (let [data-set (subscribe [::subs/data-set])]
+    [:div
+     [components/StickyBar
+      [ui/Menu {:attached "top", :borderless true}
+       (when (general-utils/can-delete? @data-set)
+         [DeleteButton @data-set])
+       [components/RefreshMenu
+        {:on-refresh #(refresh)}]]]]))
 
 
 (defn Pagination
@@ -312,16 +331,16 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [module-filter]
       [uix/ModalFromButton
-       {:trigger  (r/as-element
-                    [ui/Label {:style    {:float  "right"
-                                          :cursor "pointer"}
-                               :circular true
-                               :color    "blue"
-                               :on-click #(dispatch [::data-events/search-application module-filter])}
-                     [ui/Icon {:name "eye"}]
-                     (@tr [:preview])])
-        :header   (str/capitalize (@tr [:application]))
-        :content  [ApplicationList {:selectable? false}]}])))
+       {:trigger (r/as-element
+                   [ui/Label {:style    {:float  "right"
+                                         :cursor "pointer"}
+                              :circular true
+                              :color    "blue"
+                              :on-click #(dispatch [::data-events/search-application module-filter])}
+                    [ui/Icon {:name "eye"}]
+                    (@tr [:preview])])
+        :header  (str/capitalize (@tr [:application]))
+        :content [ApplicationList {:selectable? false}]}])))
 
 
 
@@ -415,17 +434,17 @@
   (dispatch [::events/set-data-set-id dataset-id])
   (refresh)
   (let [tr       (subscribe [::i18n-subs/tr])
-        data-set (subscribe [::subs/data-set])
-        name     (:name @data-set)]
+        data-set (subscribe [::subs/data-set])]
     (fn [dataset-id]
-      [components/LoadingPage {:dimmable? true}
-       [:<>
-        [components/NotFoundPortal
-         ::subs/not-found?
-         :no-data-set-message-header
-         :no-data-set-message-content]
-        [ui/Segment style/basic
-         [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
-         [MenuBar dataset-id]
-         [Summary]
-         [DataRecordCards [Pagination]]]]])))
+      (let [name (:name @data-set)]
+        [components/LoadingPage {:dimmable? true}
+         [:<>
+          [components/NotFoundPortal
+           ::subs/not-found?
+           :no-data-set-message-header
+           :no-data-set-message-content]
+          [ui/Segment style/basic
+           [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
+           [MenuBar dataset-id]
+           [Summary]
+           [DataRecordCards [Pagination]]]]]))))

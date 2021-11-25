@@ -270,8 +270,8 @@
         data-object-id            (:resource:object data-record)
         data-object               (get @data-objects data-object-id)
         filename                  object
-        resource-deployment-id    (values/resource->id (:resource:deployment data-record))
-        infrastructure-service-id (values/resource->id infrastructure-service)]
+        resource-deployment-id    (some-> data-record :resource:deployment values/resource->id)
+        infrastructure-service-id (some-> infrastructure-service values/resource->id)]
     ^{:key id}
     [uix/Card
      {:header      [:span [:p {:style {:overflow      "hidden",

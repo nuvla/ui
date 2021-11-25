@@ -20,13 +20,17 @@
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.data.subs :as data-subs]
-    [sixsq.nuvla.ui.apps.utils :as application-utils]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.apps.utils :as application-utils]))
 
 
 (defn refresh
   []
   (dispatch [::events/refresh]))
+
+
+(defn refresh-data-records
+  []
+  (dispatch [::events/get-data-records]))
 
 
 (defn ApplicationListItem
@@ -75,7 +79,7 @@
         :placeholder   "Data records filter"
         :action        (r/as-element [:<>
                                       [ui/Button {:icon     "search"
-                                                  :on-click #(dispatch [::events/get-data-records])}]
+                                                  :on-click refresh-data-records}]
                                       ^{:key (random-uuid)}
                                       [filter-comp/ButtonFilter
                                        {:resource-name  "data-record"
@@ -183,7 +187,7 @@
     [:div
      [components/StickyBar
       [ui/Menu {:attached "top", :borderless true}
-       (when (general-utils/can-delete? @data-set)
+       (when (utils-general/can-delete? @data-set)
          [DeleteButton @data-set])
        [components/RefreshMenu
         {:on-refresh #(refresh)}]]]]))
@@ -225,8 +229,10 @@
        [ui/TableCell bucket]
        [ui/TableCell content-type]
        [ui/TableCell [uix/Tags tags]]
-       [ui/TableCell (values/as-link infrastructure-service :label is-uuid :page "infrastructure-service")]
-       [ui/TableCell (values/as-link resource:deployment :label deployment-uuid)]
+       [ui/TableCell
+        [values/as-link is-uuid :page "infrastructures" :label (utils-general/id->short-uuid infrastructure-service)]]
+       [ui/TableCell (when resource:deployment
+                       (values/as-link resource:deployment :label deployment-uuid))]
        [ui/TableCell (values/as-link id :label uuid)]])))
 
 
@@ -235,7 +241,7 @@
   (let [tr           (subscribe [::i18n-subs/tr])
         data-records (subscribe [::subs/data-records])]
     [:<>
-     [SearchHeader refresh [DataRecordFilter]]
+     [SearchHeader refresh-data-records [DataRecordFilter]]
      [ui/Table {:compact "very", :selectable true}
       [ui/TableHeader
        [ui/TableRow
@@ -416,7 +422,7 @@
                :centered  true}
       [ui/GridRow {:centered true}
        [ui/GridColumn
-        [SearchHeader refresh [DataRecordFilter]]]]
+        [SearchHeader refresh-data-records [DataRecordFilter]]]]
       [ui/GridRow {:centered true}
        [ui/GridColumn
         [ui/Segment style/basic

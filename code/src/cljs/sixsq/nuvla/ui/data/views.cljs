@@ -3,7 +3,6 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.apps.utils :as application-utils]
     [sixsq.nuvla.ui.data.events :as events]
     [sixsq.nuvla.ui.data-set.events :as data-set-events]
     [sixsq.nuvla.ui.data-set.views :as data-set-views]
@@ -22,7 +21,6 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as utils-values]
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]))
@@ -130,17 +128,16 @@
      [ui/Menu {:borderless true, :stackable true}
       [ProcessButton]
       (when (= @active-index 0)
-        [:<>
-         [AddDataSet]
-         [ui/MenuItem {:icon     "grid layout"
-                       :active   (= @view-type :cards)
-                       :on-click #(reset! view-type :cards)}]
-         [ui/MenuItem {:icon     "table"
-                       :active   (= @view-type :table)
-                       :on-click #(reset! view-type :table)}]
-         #_[ui/MenuItem {:icon     "map"
-                         :active   (= @view-type :map)
-                         :on-click #(reset! view-type :map)}]])
+        [AddDataSet])
+      [ui/MenuItem {:icon     "grid layout"
+                    :active   (= @view-type :cards)
+                    :on-click #(reset! view-type :cards)}]
+      [ui/MenuItem {:icon     "table"
+                    :active   (= @view-type :table)
+                    :on-click #(reset! view-type :table)}]
+      #_[ui/MenuItem {:icon     "map"
+                      :active   (= @view-type :map)
+                      :on-click #(reset! view-type :map)}]
       [components/RefreshMenu
        {:on-refresh refresh}]]]))
 

@@ -9,7 +9,8 @@
     [sixsq.nuvla.ui.deployment-dialog.spec :as dialog-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [clojure.string :as str]))
 
 
 (reg-event-fx
@@ -116,21 +117,55 @@
                            #(dispatch [::set-applications %])]}))
 
 
+
+(reg-event-fx
+  ::data-sets-to-process
+  (fn [{{:keys [::spec/selected-data-set-ids] :as db} :db} [_ data-sets]]
+    (let [query-application (apply general-utils/join-and
+                                   (conj (map :module-filter data-sets)
+                                         "subtype!='project'"))
+          query-objects     (apply general-utils/join-or
+                                   (map :data-record-filter data-sets))]
+      {:db (assoc db ::spec/content-type-filter query-objects)
+       :fx [[:dispatch [::search-application query-application]]]})))
+
+
+(reg-event-fx
+  ::data-records-to-process
+  (fn [{db :db} [_ data-records]]
+    (let [query-application (apply general-utils/join-and
+                                   (conj
+                                     (->> data-records
+                                          (map :content-type)
+                                          distinct
+                                          (map #(when % (str "data-accept-content-types='" % "'"))))
+                                     "subtype!='project'"))]
+      {:db (assoc db ::spec/content-type-filter nil)
+       :fx [[:dispatch [::search-application query-application]]]})))
+
+
 (reg-event-fx
   ::open-application-select-modal
   (fn [{{:keys [::spec/data-sets
-                ::spec/selected-data-set-ids] :as db} :db} _]
-    (let [selected-data-sets (vals (filter (fn [[k _]]
-                                             (boolean (selected-data-set-ids k))) data-sets))
-          query-application  (apply general-utils/join-and
-                                    (conj (map :module-filter selected-data-sets)
-                                          "subtype!='project'"))
-          query-objects      (apply general-utils/join-or
-                                    (map :data-record-filter selected-data-sets))]
-      {:db (assoc db ::spec/application-select-visible? true
-                     ::spec/selected-application-id nil
-                     ::spec/content-type-filter query-objects)
-       :fx [[:dispatch [::search-application query-application]]]})))
+                ::spec/selected-data-set-ids
+                ::data-set-spec/selected-data-record-ids
+                ::spec/active-tab-index] :as db} :db}]
+    (let [tab-data-set-selected? (zero? active-tab-index)
+          {:keys [resource
+                  selected-data
+                  dispatch-event]} (if tab-data-set-selected?
+                                     {:resource       :data-set
+                                      :selected-data  selected-data-set-ids
+                                      :dispatch-event ::data-sets-to-process}
+                                     {:resource       :data-record
+                                      :selected-data  selected-data-record-ids
+                                      :dispatch-event ::data-records-to-process})
+          filter-str             (apply general-utils/join-or (map #(str "id='" % "'") selected-data))]
+      {:db                  (assoc db ::spec/application-select-visible? true
+                                      ::spec/selected-application-id nil)
+       ::cimi-api-fx/search [resource {:filter filter-str
+                                       :last   10000}
+                             #(dispatch [dispatch-event (:resources %)])]})))
 
 
 (reg-event-fx

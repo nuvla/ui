@@ -71,3 +71,8 @@
                ::spec/data-record-filter]}]
     (and (nil? data-set) (not (str/blank? data-record-filter)))))
 
+
+(reg-sub
+  ::selected-data-record-ids
+  (fn [db]
+    (::spec/selected-data-record-ids db)))

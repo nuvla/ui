@@ -10,12 +10,6 @@
     [sixsq.nuvla.ui.utils.response :as response]))
 
 
-(reg-event-fx
-  ::refresh
-  (fn [_ _]
-    {:fx [[:dispatch [::get-data-set]]]}))
-
-
 (reg-event-db
   ::set-page
   (fn [db [_ page]]
@@ -133,7 +127,15 @@
   (fn [db [_ data-record-filter]]
     (assoc db ::spec/data-record-filter data-record-filter)))
 
+
 (reg-event-fx
   ::delete
   (fn [{{:keys [::spec/data-set]} :db}]
     {::cimi-api-fx/delete [(:id data-set) #(dispatch [::history-events/navigate "data"])]}))
+
+
+(reg-event-db
+  ::toggle-data-record-id
+  (fn [{:keys [::spec/selected-data-record-ids] :as db} [_ id]]
+    (let [f (if (get selected-data-record-ids id) disj conj)]
+      (assoc db ::spec/selected-data-record-ids (f selected-data-record-ids id)))))

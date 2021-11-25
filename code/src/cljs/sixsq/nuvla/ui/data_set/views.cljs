@@ -25,7 +25,7 @@
 
 (defn refresh
   []
-  (dispatch [::events/refresh]))
+  (dispatch [::events/get-data-set]))
 
 
 (defn refresh-data-records
@@ -154,17 +154,31 @@
 
 
 (defn ProcessButton
-  []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        data-sets (subscribe [::subs/selected-data-set-ids])]
-    (fn []
-      [uix/MenuItem
-       {:name     (@tr [:process])
-        :disabled (not (seq @data-sets))
-        :icon     "rocket"
-        :on-click #(dispatch [::main-events/subscription-required-dispatch
-                              [::events/open-application-select-modal]])}])))
-
+  [_button-type]
+  (let [tr                    (subscribe [::i18n-subs/tr])
+        selected-data-sets    (subscribe [::data-subs/selected-data-set-ids])
+        selected-data-records (subscribe [::subs/selected-data-record-ids])
+        active-index          (subscribe [::data-subs/active-tab-index])
+        on-click              #(dispatch [::main-events/subscription-required-dispatch
+                                          [::data-events/open-application-select-modal]])]
+    (fn [button-type]
+      (let [selected (if (zero? @active-index)
+                       @selected-data-sets
+                       @selected-data-records)
+            disabled? (not (seq selected))]
+        (if (= button-type :menu-item)
+          [uix/MenuItem
+           {:name     (@tr [:process])
+            :disabled disabled?
+            :icon     "rocket"
+            :on-click on-click}]
+          [ui/ButtonGroup {:primary true
+                           :style   {:padding-top 10}}
+           [ui/Button
+            {:content  (@tr [:process])
+             :disabled disabled?
+             :icon     "rocket"
+             :on-click on-click}]])))))
 
 
 (defn DeleteButton
@@ -207,33 +221,40 @@
                      :onElementsPerPageChange (ui-callback/value
                                                 #(do (dispatch [::events/set-elements-per-page %])
                                                      (dispatch [::events/set-page 1])
-                                                     (dispatch [::events/get-data-set])))
+                                                     (dispatch [::events/get-data-records])))
                      :onPageChange            (ui-callback/callback
                                                 :activePage #(do (dispatch [::events/set-page %])
-                                                                 (dispatch [::events/get-data-set])))}]))
+                                                                 (dispatch [::events/get-data-records])))}]))
 
 
 (defn DataRecordRow
   [{:keys [id name description tags created timestamp bucket content-type infrastructure-service
            resource:deployment] :as _data-record}]
-  (fn [_data-record]
-    ^{:key id}
-    (let [uuid            (utils-general/id->uuid id)
-          deployment-uuid (utils-general/id->uuid resource:deployment)
-          is-uuid         (utils-general/id->uuid infrastructure-service)]
-      [ui/TableRow
-       [ui/TableCell name]
-       [ui/TableCell description]
-       [ui/TableCell (values/format-created created)]
-       [ui/TableCell timestamp]
-       [ui/TableCell bucket]
-       [ui/TableCell content-type]
-       [ui/TableCell [uix/Tags tags]]
-       [ui/TableCell
-        [values/as-link is-uuid :page "infrastructures" :label (utils-general/id->short-uuid infrastructure-service)]]
-       [ui/TableCell (when resource:deployment
-                       (values/as-link resource:deployment :label deployment-uuid))]
-       [ui/TableCell (values/as-link id :label uuid)]])))
+  (let [data-records-set (subscribe [::subs/selected-data-record-ids])]
+    (fn [_data-record]
+      ^{:key id}
+      (let [uuid            (utils-general/id->uuid id)
+            deployment-uuid (utils-general/id->uuid resource:deployment)
+            is-uuid         (utils-general/id->uuid infrastructure-service)
+            selected?       (boolean (@data-records-set id))]
+        [ui/TableRow
+         [ui/TableCell
+          [ui/Checkbox {:checked  selected?
+                        :on-click (fn [event]
+                                    (dispatch [::events/toggle-data-record-id id])
+                                    (.stopPropagation event))}]]
+         [ui/TableCell name]
+         [ui/TableCell description]
+         [ui/TableCell (values/format-created created)]
+         [ui/TableCell timestamp]
+         [ui/TableCell bucket]
+         [ui/TableCell content-type]
+         [ui/TableCell [uix/Tags tags]]
+         [ui/TableCell
+          [values/as-link is-uuid :page "infrastructures" :label (utils-general/id->short-uuid infrastructure-service)]]
+         [ui/TableCell (when resource:deployment
+                         (values/as-link resource:deployment :label deployment-uuid))]
+         [ui/TableCell (values/as-link id :label uuid)]]))))
 
 
 (defn DataRecordTable
@@ -245,6 +266,7 @@
      [ui/Table {:compact "very", :selectable true}
       [ui/TableHeader
        [ui/TableRow
+        [ui/TableHeaderCell]
         [ui/TableHeaderCell (@tr [:name])]
         [ui/TableHeaderCell (@tr [:description])]
         [ui/TableHeaderCell (@tr [:created])]
@@ -267,11 +289,13 @@
   (let [tr                        (subscribe [::i18n-subs/tr])
         data-objects              (subscribe [::subs/data-objects])
         nuvla-api                 (subscribe [::main-subs/nuvla-api])
+        data-records-set          (subscribe [::subs/selected-data-record-ids])
         data-object-id            (:resource:object data-record)
         data-object               (get @data-objects data-object-id)
         filename                  object
         resource-deployment-id    (some-> data-record :resource:deployment values/resource->id)
-        infrastructure-service-id (some-> infrastructure-service values/resource->id)]
+        infrastructure-service-id (some-> infrastructure-service values/resource->id)
+        selected?                 (boolean (@data-records-set id))]
     ^{:key id}
     [uix/Card
      {:header      [:span [:p {:style {:overflow      "hidden",
@@ -289,6 +313,8 @@
                        [ui/Icon {:name "cloud"}]
                        [values/as-link infrastructure-service-id :page "infrastructures" :label (@tr [:storage-service])]])]
       :tags        tags
+      :on-select   #(dispatch [::events/toggle-data-record-id id])
+      :selected?   selected?
       :button      (when data-object
                      [ui/Button {:color  "green"
                                  :target "_blank"

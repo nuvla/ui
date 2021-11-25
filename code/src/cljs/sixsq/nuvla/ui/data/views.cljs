@@ -98,21 +98,6 @@
             :on-click #(dispatch [::events/add-data-set])}]]]))))
 
 
-(defn ProcessButton
-  []
-  (let [tr           (subscribe [::i18n-subs/tr])
-        data-sets    (subscribe [::subs/selected-data-set-ids])
-        active-index (subscribe [::subs/active-tab-index])]
-    (fn []
-      [uix/MenuItem
-       {:name     (@tr [:process])
-        :disabled (or (not (seq @data-sets))
-                      (not= @active-index 0))
-        :icon     "rocket"
-        :on-click #(dispatch [::main-events/subscription-required-dispatch
-                              [::events/open-application-select-modal]])}])))
-
-
 (defn AddDataSet []
   (let [tr (subscribe [::i18n-subs/tr])]
     [uix/MenuItem
@@ -126,8 +111,8 @@
   (let [active-index (subscribe [::subs/active-tab-index])]
     [components/StickyBar
      [ui/Menu {:borderless true, :stackable true}
-      [ProcessButton]
-      (when (= @active-index 0)
+      [data-set-views/ProcessButton :menu-item]
+      (when (zero? @active-index)
         [AddDataSet])
       [ui/MenuItem {:icon     "grid layout"
                     :active   (= @view-type :cards)
@@ -383,20 +368,6 @@
          [Pagination]]))))
 
 
-(defn MainActionButton
-  []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        data-sets (subscribe [::subs/selected-data-set-ids])]
-    [ui/ButtonGroup {:primary true
-                     :style   {:padding-top 10}}
-     [ui/Button
-      {:content  (@tr [:process])
-       :disabled (not (seq @data-sets))
-       :icon     "rocket"
-       :on-click #(dispatch [::main-events/subscription-required-dispatch
-                             [::events/open-application-select-modal]])}]]))
-
-
 (defn DataRecords
   []
   (dispatch [::data-set-events/get-data-records])
@@ -409,13 +380,11 @@
   []
   [:<>
    [SearchBar]
-   [ApplicationSelectModal]
    (case @view-type
      :cards [DataSetCards]
      :table [DataSetTable]
-     :map [DataSetCards])
-   [deployment-dialog-views/deploy-modal true]
-   [MainActionButton]])
+     ;:map [DataSetCards]
+     )])
 
 
 (defn data-sets
@@ -461,7 +430,10 @@
           :activeIndex @active-index
           :onTabChange (fn [_ data]
                          (let [active-index (. data -activeIndex)]
-                           (dispatch [::events/set-active-tab-index active-index])))}]]])))
+                           (dispatch [::events/set-active-tab-index active-index])))}]
+        [ApplicationSelectModal]
+        [deployment-dialog-views/deploy-modal true]
+        [data-set-views/ProcessButton]]])))
 
 
 (defmethod panel/render :data

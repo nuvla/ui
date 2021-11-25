@@ -53,15 +53,16 @@
   (fn [{{:keys [::spec/deployment
                 ::spec/cloud-filter
                 ::data-set-spec/time-period
-                ::data-spec/content-type-filter]} :db} _]
-    (let [filter       (general-utils/join-and cloud-filter
-                                               content-type-filter)
-          data-filters {:records {:filters
-                                  [{:filter     filter
-                                    :data-type  "data-record"
-                                    :time-start (first time-period)
-                                    :time-end   (second time-period)}]}}]
-      {:dispatch [::set-deployment (assoc deployment :data data-filters)]})))
+                ::data-spec/content-type-filter
+                ::data-set-spec/selected-data-record-ids]} :db}]
+    (let [data-filter (if content-type-filter
+                        {:records {:filters
+                                   [{:filter     (general-utils/join-and cloud-filter content-type-filter)
+                                     :data-type  "data-record"
+                                     :time-start (first time-period)
+                                     :time-end   (second time-period)}]}}
+                        {:records {:records-ids selected-data-record-ids}})]
+      {:dispatch [::set-deployment (assoc deployment :data data-filter)]})))
 
 
 (reg-event-fx
@@ -278,7 +279,7 @@
   (fn [{{:keys [::spec/deployment] :as db} :db} [_ id first-step do-not-open-modal?]]
     (when (= :data first-step)
       (dispatch [::get-data-records]))
-    (let [data              (if (str/starts-with? id "module/")
+    (let [body              (if (str/starts-with? id "module/")
                               {:module {:href id}}
                               {:deployment {:href id}})
           old-deployment-id (:id deployment)
@@ -298,7 +299,7 @@
                                      ::spec/module-info nil
                                      ::spec/selected-version nil
                                      ::spec/original-module nil)
-         ::cimi-api-fx/add [:deployment data on-success
+         ::cimi-api-fx/add [:deployment body on-success
                             :on-error #(do
                                          (dispatch [::reset])
                                          (dispatch
@@ -456,8 +457,11 @@
 (reg-event-fx
   ::get-data-records
   (fn [{{:keys [::data-spec/time-period-filter
-                ::data-spec/content-type-filter] :as db} :db} _]
-    (let [filter (general-utils/join-and time-period-filter content-type-filter)]
+                ::data-spec/content-type-filter
+                ::data-set-spec/selected-data-record-ids] :as db} :db} _]
+    (let [filter (if (nil? content-type-filter)
+                   (apply general-utils/join-or (map #(str "id='" % "'") selected-data-record-ids))
+                   (general-utils/join-and time-period-filter content-type-filter))]
       {:db db
        ::cimi-api-fx/search
            [:data-record {:filter      filter

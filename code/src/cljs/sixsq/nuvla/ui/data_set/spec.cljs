@@ -23,6 +23,8 @@
 
 (s/def ::content-type-filter (s/nilable string?))
 
+(s/def ::selected-data-record-ids (s/coll-of string? :kind set?))
+
 (s/def ::full-text-search (s/nilable string?))
 
 (s/def ::page int?)

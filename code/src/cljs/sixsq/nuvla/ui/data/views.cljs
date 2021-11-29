@@ -23,7 +23,8 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as utils-values]
-    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]))
+    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
+    [sixsq.nuvla.ui.utils.map :as map]))
 
 
 (def view-type (r/atom :cards))
@@ -120,9 +121,9 @@
       [ui/MenuItem {:icon     "table"
                     :active   (= @view-type :table)
                     :on-click #(reset! view-type :table)}]
-      #_[ui/MenuItem {:icon     "map"
-                      :active   (= @view-type :map)
-                      :on-click #(reset! view-type :map)}]
+      [ui/MenuItem {:icon     "map"
+                    :active   (= @view-type :map)
+                    :on-click #(reset! view-type :map)}]
       [components/RefreshMenu
        {:on-refresh refresh}]]]))
 
@@ -367,13 +368,21 @@
                               (vals @data-sets)))))]
          [Pagination]]))))
 
+(defn Map
+  []
+  [map/MapBox
+   {:style  {:height 500}
+    :center map/sixsq-latlng
+    :zoom   3}])
+
 
 (defn DataRecords
   []
   (dispatch [::data-set-events/get-data-records])
   (case @view-type
     :cards [data-set-views/DataRecordCards [data-set-views/Pagination]]
-    :table [data-set-views/DataRecordTable [data-set-views/Pagination]]))
+    :table [data-set-views/DataRecordTable [data-set-views/Pagination]]
+    :map [Map]))
 
 
 (defn DataSets
@@ -383,7 +392,7 @@
    (case @view-type
      :cards [DataSetCards]
      :table [DataSetTable]
-     ;:map [DataSetCards]
+     :map [Map]
      )])
 
 

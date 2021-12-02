@@ -368,12 +368,34 @@
                               (vals @data-sets)))))]
          [Pagination]]))))
 
+#_(defn Map
+    []
+    [map/MapBox
+     {:style  {:height 500}
+      :center map/sixsq-latlng
+      :zoom   3}])
+
 (defn Map
   []
-  [map/MapBox
-   {:style  {:height 500}
-    :center map/sixsq-latlng
-    :zoom   3}])
+  (let [selected-feature (r/atom nil)]
+    (fn []
+      (let [enable-selection?    (nil? @selected-feature)
+            set-selected-feature #(reset! selected-feature %1)
+            on-edited            #(some-> %1 :features first set-selected-feature)
+            on-deleted           #(when (some-> %1 :features first) (reset! selected-feature nil))]
+        [map/MapBoxEdit
+         {:style     {:height 500}
+          :center    map/sixsq-latlng
+          :zoom      3
+          :onCreated (partial map/geojson-layer set-selected-feature)
+          :onEdited  (partial map/geojson-layers on-edited)
+          :onDeleted (partial map/geojson-layers on-deleted)
+          :draw      {:rectangle    enable-selection?
+                      :polygon      enable-selection?
+                      :polyline     false
+                      :marker       false
+                      :circle       false
+                      :circlemarker false}}]))))
 
 
 (defn DataRecords

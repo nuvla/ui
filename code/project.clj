@@ -38,6 +38,7 @@
                                     "resources/public/ui/css/dialog.css"
                                     "resources/public/ui/css/matchesonscrollbar.css"
                                     "resources/public/ui/css/leaflet.css"
+                                    "resources/public/ui/css/leaflet.draw.css"
                                     "resources/public/ui/css/images"]
 
   :auto-clean false
@@ -70,6 +71,14 @@
                              {:target-path "resources/public/ui/css/version.css"}]
                             ["node_modules/leaflet/dist/leaflet.css"
                              {:target-path "resources/public/ui/css/leaflet.css"}]
+                            ["node_modules/leaflet-draw/dist/leaflet.draw.css"
+                             {:target-path "resources/public/ui/css/leaflet.draw.css"}]
+                            ["node_modules/leaflet-draw/dist/images/spritesheet.png"
+                             {:target-path "resources/public/ui/css/images/spritesheet.png"}]
+                            ["node_modules/leaflet-draw/dist/images/spritesheet-2x.png"
+                             {:target-path "resources/public/ui/css/images/spritesheet-2x.png"}]
+                            ["node_modules/leaflet-draw/dist/images/spritesheet.svg"
+                             {:target-path "resources/public/ui/css/images/spritesheet.svg"}]
                             ["node_modules/leaflet/dist/images"
                              {:target-path "resources/public/ui/css/images"}]]}
 
@@ -80,7 +89,7 @@
                                cljsjs/react-dom]]
                  [re-frame "1.2.0" :scope "provided"]
                  [day8.re-frame/http-fx "0.2.3" :scope "provided"]
-                 [cljs-ajax "0.8.3" :scope "provided"]
+                 [cljs-ajax "0.8.4" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
                  [com.taoensso/timbre "5.1.2" :scope "provided"]
@@ -96,7 +105,7 @@
 
   :profiles
   {:dev   {:dependencies [[org.clojure/clojure "1.10.3"]
-                          [org.clojure/clojurescript "1.10.773"
+                          [org.clojure/clojurescript "1.10.893"
                            :exclusions
                            [com.google.javascript/closure-compiler-unshaded
                             org.clojure/google-closure-library
@@ -104,10 +113,10 @@
                           [binaryage/devtools "1.0.3" :scope "test"]
                           [day8.re-frame/re-frame-10x "0.7.0"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.11.26"]   ;; WARNING: also in package.json
-                          [org.clojure/google-closure-library "0.0-20191016-6ae1f72f"]
-                          [org.clojure/google-closure-library-third-party "0.0-20191016-6ae1f72f"]
-                          [com.google.javascript/closure-compiler-unshaded "v20200830"]]}}
+   :scljs {:dependencies [[thheller/shadow-cljs "2.16.6"]   ;; WARNING: also in package.json
+                          [org.clojure/google-closure-library "0.0-20211011-0726fdeb"]
+                          [org.clojure/google-closure-library-third-party "0.0-20211011-0726fdeb"]
+                          [com.google.javascript/closure-compiler-unshaded "v20211006"]]}}
 
 
 

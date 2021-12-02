@@ -1,13 +1,20 @@
 (ns sixsq.nuvla.ui.utils.map
   (:require
     ["react-leaflet" :as leaflet]
+    ["react-leaflet-draw" :as react-leaflet-draw]
     [clojure.string :as str]
     [re-frame.core :refer [subscribe]]
     [reagent.core :as reagent]
     [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.main.subs :as main-subs]))
+    [sixsq.nuvla.ui.main.subs :as main-subs]
+    [reagent.core :as r]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (def Map (reagent/adapt-react-class leaflet/Map))
+
+(def FeatureGroup (reagent/adapt-react-class leaflet/FeatureGroup))
+
+(def EditControl (reagent/adapt-react-class react-leaflet-draw/EditControl))
 
 (def Marker (reagent/adapt-react-class leaflet/Marker))
 
@@ -89,6 +96,13 @@
 (def sixsq-latlng [46.2273, 6.07661])
 
 
+(defn geojson-layer [callback event]
+  (-> event .-layer .toGeoJSON (js->clj :keywordize-keys true) callback))
+
+(defn geojson-layers [callback event]
+  (-> event .-layers .toGeoJSON (js->clj :keywordize-keys true) callback))
+
+
 (defn MapBox
   [opts content]
   [:div {:className "mapbox-map"}
@@ -98,3 +112,10 @@
    [Map opts
     [DefaultLayers]
     content]])
+
+
+(defn MapBoxEdit
+  [opts]
+  [MapBox opts
+   [FeatureGroup
+    [EditControl opts]]])

@@ -14,7 +14,6 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as utils-general]
@@ -23,8 +22,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as utils-values]
-    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
-    [sixsq.nuvla.ui.utils.map :as map]))
+    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]))
 
 
 (def view-type (r/atom :cards))
@@ -376,15 +374,15 @@
           :panes       (data-panes)
           :activeIndex @active-index
           :onTabChange (fn [_ data]
-                         (let [active-index (. data -activeIndex)]
-                           (dispatch [::events/set-active-tab-index active-index])
-                           (when (and
-                                   (= @view-type :map)
-                                   (zero? active-index))
+                         (let [i (. data -activeIndex)]
+                           (dispatch [::events/set-active-tab-index i])
+                           (when (and (= @view-type :map)
+                                      (zero? i))
                              (reset! view-type :cards))))}]
         [ApplicationSelectModal]
         [deployment-dialog-views/deploy-modal true]
-        [data-set-views/ProcessButton]]])))
+        [data-set-views/ProcessButton]
+        [data-set-views/CreateDataSet]]])))
 
 
 (defmethod panel/render :data

@@ -182,6 +182,29 @@
              :on-click on-click}]])))))
 
 
+(defn CreateDataSet
+  []
+  (let [tr                       (subscribe [::i18n-subs/tr])
+        active-tab-index         (subscribe [::data-subs/active-tab-index])
+        selected-data-record-ids (subscribe [::subs/selected-data-record-ids])]
+    (fn []
+      (when (and (= @active-tab-index 1)
+                 (seq @selected-data-record-ids))
+        [:span
+         " "
+         [ui/Button
+          {:content  (@tr [:create-data-set])
+           :icon     "plus"
+           :primary  true
+           :on-click (fn []
+                       (dispatch [::data-events/set-modal-open? true])
+                       (dispatch [::data-events/set-add-data-set-form :data-record-filter
+                                  (->> @selected-data-record-ids
+                                       (map #(str "id='" %1 "'"))
+                                       (str/join " or "))]))}]]
+        ))))
+
+
 (defn DeleteButton
   [{:keys [id name description] :as _data-set}]
   (let [tr      (subscribe [::i18n-subs/tr])

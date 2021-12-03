@@ -140,6 +140,7 @@
         :coupon-code                                   "Coupon code"
         :create                                        "create"
         :create-an                                     "Create an "
+        :create-data-set                               "Create data set"
         :create-nuvlabox-compose                       "Get your NuvlaBox Engine as a bundle of compose files, and install it with a single Docker Compose command"
         :create-nuvlabox-usb                           "Automate the installation of multiple NuvlaBox devices with a single USB stick. With this method, a new API key credential will be generated for you, and included in a trigger file that you must place inside a USB stick"
         :create-vpn-credential                         "create a VPN credential"

@@ -103,6 +103,16 @@
   (-> event .-layers .toGeoJSON (js->clj :keywordize-keys true) callback))
 
 
+(defn geojson->filter [{:keys [geometry] :as geojson} attribute operation]
+  (when geojson
+    (->> geometry
+         :coordinates
+         first
+         (map #(update %1 0 normalize-lng))
+         vec
+         (str attribute " " operation " POLYGON"))))
+
+
 (defn MapBox
   [opts content]
   [:div {:className "mapbox-map"}
@@ -115,7 +125,8 @@
 
 
 (defn MapBoxEdit
-  [opts]
+  [opts content]
   [MapBox opts
    [FeatureGroup
-    [EditControl opts]]])
+    [EditControl opts]
+    content]])

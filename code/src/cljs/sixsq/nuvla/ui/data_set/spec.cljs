@@ -17,6 +17,8 @@
 
 (s/def ::data-record-filter (s/nilable string?))
 
+(s/def ::data-record-map-filter (s/nilable any?))
+
 (s/def ::data-records any?)
 
 (s/def ::data-objects any?)
@@ -37,6 +39,7 @@
                           ::data-set
                           ::data-set-id
                           ::data-record-filter
+                          ::data-record-map-filter
                           ::data-records
                           ::data-objects
                           ::content-type-filter
@@ -54,6 +57,7 @@
                ::data-set-id              nil
                ::data-set                 nil
                ::data-record-filter       nil
+               ::data-record-map-filter   nil
                ::data-records             nil
                ::data-objects             {}
                ::content-type-filter      nil

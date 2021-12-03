@@ -28,11 +28,12 @@
 
 
 (defn get-query-params
-  [data-record-filter full-text-search time-period-filter page elements-per-page]
+  [data-record-filter data-record-map-filter full-text-search time-period-filter page elements-per-page]
   {:first   (inc (* (dec page) elements-per-page))
    :last    (* page elements-per-page)
    :orderby "timestamp:desc"
    :filter  (general-utils/join-and
               time-period-filter
               data-record-filter
+              data-record-map-filter
               (general-utils/fulltext-query-string full-text-search))})

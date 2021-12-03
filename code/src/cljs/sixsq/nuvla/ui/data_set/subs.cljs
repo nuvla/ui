@@ -51,10 +51,17 @@
   (fn [db]
     (utils-general/can-edit? (::spec/data-set db))))
 
+
 (reg-sub
   ::data-record-filter
   (fn [db]
     (::spec/data-record-filter db)))
+
+
+(reg-sub
+  ::data-record-map-filter
+  (fn [db]
+    (::spec/data-record-map-filter db)))
 
 
 (reg-sub

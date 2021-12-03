@@ -109,21 +109,22 @@
 
 (defn MenuBar
   []
-  (let [active-index (subscribe [::subs/active-tab-index])]
+  (let [active-index   (subscribe [::subs/active-tab-index])
+        data-set-view? (zero? @active-index)]
     [components/StickyBar
      [ui/Menu {:borderless true, :stackable true}
       [data-set-views/ProcessButton :menu-item]
-      (when (zero? @active-index)
-        [AddDataSet])
+      (when (zero? @active-index) [AddDataSet])
       [ui/MenuItem {:icon     "grid layout"
                     :active   (= @view-type :cards)
                     :on-click #(reset! view-type :cards)}]
       [ui/MenuItem {:icon     "table"
                     :active   (= @view-type :table)
                     :on-click #(reset! view-type :table)}]
-      [ui/MenuItem {:icon     "map"
-                    :active   (= @view-type :map)
-                    :on-click #(reset! view-type :map)}]
+      (when-not data-set-view?
+        [ui/MenuItem {:icon     "map"
+                      :active   (= @view-type :map)
+                      :on-click #(reset! view-type :map)}])
       [components/RefreshMenu
        {:on-refresh refresh}]]]))
 
@@ -144,60 +145,6 @@
      [ui/Message {:info true}
       (@tr [:data-set-search-message])]
      [data-set-views/SearchHeader refresh [FullTextSearch]]]))
-
-
-
-#_(defn LaunchButton
-    []
-    (let [tr                     (subscribe [::i18n-subs/tr])
-          visible?               (subscribe [::subs/application-select-visible?])
-          selected-app-id        (subscribe [::subs/selected-application-id])
-
-          data-step-active?      (subscribe [::deployment-dialog-subs/data-step-active?])
-
-          deployment             (subscribe [::deployment-dialog-subs/deployment])
-          data-completed?        (subscribe [::deployment-dialog-subs/data-completed?])
-          credentials-completed? (subscribe [::deployment-dialog-subs/credentials-completed?])
-          env-completed?         (subscribe [::deployment-dialog-subs/env-variables-completed?])
-          hide-fn                #(do
-                                    (dispatch [::events/close-application-select-modal])
-                                    (dispatch [::events/delete-deployment]))
-          configure-fn           (fn [id]
-                                   (dispatch [::events/close-application-select-modal])
-                                   (dispatch [::deployment-dialog-events/create-deployment id :data]))
-
-          launch-fn              #(do
-                                    (dispatch [::events/close-application-select-modal])
-                                    (dispatch [::deployment-dialog-events/edit-deployment]))]
-
-      (fn []
-        (let [launch-disabled? (or (not @deployment)
-                                   (and (not @data-completed?) @data-step-active?)
-                                   (not @credentials-completed?)
-                                   (not @env-completed?))]
-
-          [ui/Modal {:open       @visible?
-                     :close-icon true
-                     :on-close   hide-fn}
-
-           [uix/ModalHeader {:header (@tr [:select-application]) :icon "sitemap"}]
-
-           [ui/ModalContent {:scrolling true}
-            [ui/ModalDescription
-             [data-set-views/ApplicationList]]]
-           [ui/ModalActions
-            [ui/Button {:disabled (nil? @selected-app-id)
-                        :primary  true
-                        :on-click #(configure-fn @selected-app-id)}
-             [ui/Icon {:name "settings"}]
-             (@tr [:configure])]
-            [ui/Button {:disabled (nil? @selected-app-id)
-                        :primary  true
-                        :on-click #()}
-             [ui/Icon {:name     "rocket"
-                       :disabled launch-disabled?
-                       :on-click launch-fn}]
-             (@tr [:launch])]]]))))
 
 
 (defn ApplicationSelectModal
@@ -368,35 +315,6 @@
                               (vals @data-sets)))))]
          [Pagination]]))))
 
-#_(defn Map
-    []
-    [map/MapBox
-     {:style  {:height 500}
-      :center map/sixsq-latlng
-      :zoom   3}])
-
-(defn Map
-  []
-  (let [selected-feature (r/atom nil)]
-    (fn []
-      (let [enable-selection?    (nil? @selected-feature)
-            set-selected-feature #(reset! selected-feature %1)
-            on-edited            #(some-> %1 :features first set-selected-feature)
-            on-deleted           #(when (some-> %1 :features first) (reset! selected-feature nil))]
-        [map/MapBoxEdit
-         {:style     {:height 500}
-          :center    map/sixsq-latlng
-          :zoom      3
-          :onCreated (partial map/geojson-layer set-selected-feature)
-          :onEdited  (partial map/geojson-layers on-edited)
-          :onDeleted (partial map/geojson-layers on-deleted)
-          :draw      {:rectangle    enable-selection?
-                      :polygon      enable-selection?
-                      :polyline     false
-                      :marker       false
-                      :circle       false
-                      :circlemarker false}}]))))
-
 
 (defn DataRecords
   []
@@ -404,7 +322,7 @@
   (case @view-type
     :cards [data-set-views/DataRecordCards [data-set-views/Pagination]]
     :table [data-set-views/DataRecordTable [data-set-views/Pagination]]
-    :map [Map]))
+    :map [data-set-views/MapDataRecords [data-set-views/Pagination]]))
 
 
 (defn DataSets
@@ -413,9 +331,7 @@
    [SearchBar]
    (case @view-type
      :cards [DataSetCards]
-     :table [DataSetTable]
-     :map [Map]
-     )])
+     :table [DataSetTable])])
 
 
 (defn data-sets
@@ -461,7 +377,11 @@
           :activeIndex @active-index
           :onTabChange (fn [_ data]
                          (let [active-index (. data -activeIndex)]
-                           (dispatch [::events/set-active-tab-index active-index])))}]
+                           (dispatch [::events/set-active-tab-index active-index])
+                           (when (and
+                                   (= @view-type :map)
+                                   (zero? active-index))
+                             (reset! view-type :cards))))}]
         [ApplicationSelectModal]
         [deployment-dialog-views/deploy-modal true]
         [data-set-views/ProcessButton]]])))

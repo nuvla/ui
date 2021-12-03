@@ -9,8 +9,7 @@
     [sixsq.nuvla.ui.deployment-dialog.spec :as dialog-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [clojure.string :as str]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-event-fx
@@ -120,7 +119,7 @@
 
 (reg-event-fx
   ::data-sets-to-process
-  (fn [{{:keys [::spec/selected-data-set-ids] :as db} :db} [_ data-sets]]
+  (fn [{db :db} [_ data-sets]]
     (let [query-application (apply general-utils/join-and
                                    (conj (map :module-filter data-sets)
                                          "subtype!='project'"))
@@ -146,8 +145,7 @@
 
 (reg-event-fx
   ::open-application-select-modal
-  (fn [{{:keys [::spec/data-sets
-                ::spec/selected-data-set-ids
+  (fn [{{:keys [::spec/selected-data-set-ids
                 ::data-set-spec/selected-data-record-ids
                 ::spec/active-tab-index] :as db} :db}]
     (let [tab-data-set-selected? (zero? active-tab-index)
@@ -215,6 +213,7 @@
     (cond-> (assoc db ::spec/active-tab-index active-tab-index)
             (= active-tab-index 1) (assoc ::data-set-spec/data-set-id nil
                                           ::data-set-spec/data-record-filter nil
+                                          ::data-set-spec/data-record-map-filter nil
                                           ::data-set-spec/data-set nil))))
 
 

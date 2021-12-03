@@ -20,7 +20,8 @@
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.data.subs :as data-subs]
-    [sixsq.nuvla.ui.apps.utils :as application-utils]))
+    [sixsq.nuvla.ui.apps.utils :as application-utils]
+    [sixsq.nuvla.ui.utils.map :as map]))
 
 
 (defn refresh
@@ -162,9 +163,9 @@
         on-click              #(dispatch [::main-events/subscription-required-dispatch
                                           [::data-events/open-application-select-modal]])]
     (fn [button-type]
-      (let [selected (if (zero? @active-index)
-                       @selected-data-sets
-                       @selected-data-records)
+      (let [selected  (if (zero? @active-index)
+                        @selected-data-sets
+                        @selected-data-records)
             disabled? (not (seq selected))]
         (if (= button-type :menu-item)
           [uix/MenuItem
@@ -461,6 +462,54 @@
      Pagination]))
 
 
+(defn DataRecordMarker
+  [{:keys [id name location]}]
+  (when location
+    [map/Marker {:position (map/longlat->latlong location)}
+     [map/Tooltip (or name id)]]))
+
+
+(defn MapDataRecords
+  [_Pagination]
+  (let [data-records (subscribe [::subs/data-records])]
+    (fn [Pagination]
+      (let []
+        [:<>
+         [SearchHeader refresh-data-records [DataRecordFilter]]
+         [map/MapBox
+          {:style  {:height 500}
+           :center map/sixsq-latlng
+           :zoom   3}
+          (doall
+            (for [data-record (:resources @data-records)]
+              ^{:key (:id data-record)}
+              [DataRecordMarker data-record]))]
+         Pagination]))))
+
+
+(defn MapFilter
+  []
+  (let [data-record-map-filter (subscribe [::subs/data-record-map-filter])
+        set-selected-feature   #(dispatch [::events/set-data-record-map-filter %1])
+        on-edited              #(some-> %1 :features first set-selected-feature)
+        on-deleted             #(when (some-> %1 :features first) (set-selected-feature nil))]
+    (fn []
+      (let [enable-selection? (nil? @data-record-map-filter)]
+        [map/MapBoxEdit
+         {:style     {:height 500}
+          :center    map/sixsq-latlng
+          :zoom      3
+          :onCreated (partial map/geojson-layer set-selected-feature)
+          :onEdited  (partial map/geojson-layers on-edited)
+          :onDeleted (partial map/geojson-layers on-deleted)
+          :draw      {:rectangle    enable-selection?
+                      :polygon      enable-selection?
+                      :polyline     false
+                      :marker       false
+                      :circle       false
+                      :circlemarker false}}]))))
+
+
 (defn DataSet
   [dataset-id]
   (dispatch [::events/set-data-set-id dataset-id])
@@ -479,4 +528,5 @@
            [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
            [MenuBar dataset-id]
            [Summary]
+           [MapFilter]
            [DataRecordCards [Pagination]]]]]))))

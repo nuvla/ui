@@ -7,7 +7,8 @@
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [sixsq.nuvla.ui.utils.map :as map]))
 
 
 (reg-event-db
@@ -46,11 +47,13 @@
                 ::spec/elements-per-page
                 ::spec/time-period-filter
                 ::spec/data-set
-                ::spec/data-record-filter]} :db}]
+                ::spec/data-record-filter
+                ::spec/data-record-map-filter]} :db}]
     {::cimi-api-fx/search [:data-record
                            (utils/get-query-params (or
                                                      data-record-filter
                                                      (:data-record-filter data-set))
+                                                   data-record-map-filter
                                                    nil
                                                    time-period-filter
                                                    page
@@ -70,9 +73,9 @@
     (let [data-set-changed? (or (not= (:id new-data-set) (:id data-set))
                                 (not= (:updated new-data-set) (:updated data-set)))]
       {:db (cond-> (assoc db ::spec/not-found? (nil? new-data-set)
-                            ::spec/data-set new-data-set)
+                             ::spec/data-set new-data-set)
                    data-set-changed? (assoc ::spec/data-record-filter (:data-record-filter new-data-set)))
-      :fx [[:dispatch [::get-data-records]]]})))
+       :fx [[:dispatch [::get-data-records]]]})))
 
 
 (reg-event-fx
@@ -126,6 +129,15 @@
   ::set-data-record-filter
   (fn [db [_ data-record-filter]]
     (assoc db ::spec/data-record-filter data-record-filter)))
+
+
+(reg-event-fx
+  ::set-data-record-map-filter
+  (fn [{db :db} [_ geojson]]
+    (let [map-filter (when geojson
+                       (map/geojson->filter geojson "location" "in"))]
+      {:db (assoc db ::spec/data-record-map-filter map-filter)
+       :fx [[:dispatch [::get-data-records]]]})))
 
 
 (reg-event-fx

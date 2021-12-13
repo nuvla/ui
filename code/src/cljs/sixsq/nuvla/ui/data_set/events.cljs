@@ -8,7 +8,8 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.utils.map :as map]))
+    [sixsq.nuvla.ui.utils.map :as map]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-event-db
@@ -135,7 +136,9 @@
   ::set-data-record-map-filter
   (fn [{db :db} [_ geojson]]
     (let [map-filter (when geojson
-                       (map/geojson->filter geojson "location" "in"))]
+                       (general-utils/join-or
+                         (map/geojson->filter "geometry" "intersects" geojson)
+                         (map/geojson->filter "location" "intersects" geojson)))]
       {:db (assoc db ::spec/data-record-map-filter map-filter)
        :fx [[:dispatch [::get-data-records]]]})))
 

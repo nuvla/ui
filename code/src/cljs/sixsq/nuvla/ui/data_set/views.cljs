@@ -491,6 +491,13 @@
     [map/Marker {:position (map/longlat->latlong location)}
      [map/Tooltip (or name id)]]))
 
+(defn DataRecordGeoJson
+  [{:keys [id name geometry]}]
+  (when geometry
+    [map/GeoJSON {:style {:color "lime"}
+                  :data  geometry}
+     [map/Tooltip (or name id)]]))
+
 
 (defn MapDataRecords
   [_Pagination]
@@ -506,7 +513,9 @@
           (doall
             (for [data-record (:resources @data-records)]
               ^{:key (:id data-record)}
-              [DataRecordMarker data-record]))]
+              [:<>
+               [DataRecordMarker data-record]
+               [DataRecordGeoJson data-record]]))]
          Pagination]))))
 
 
@@ -514,8 +523,8 @@
   []
   (let [data-record-map-filter (subscribe [::subs/data-record-map-filter])
         set-selected-feature   #(dispatch [::events/set-data-record-map-filter %1])
-        on-edited              #(some-> %1 :features first set-selected-feature)
-        on-deleted             #(when (some-> %1 :features first) (set-selected-feature nil))]
+        on-edited              #(set-selected-feature %1)
+        on-deleted             #(when (some? %1) (set-selected-feature nil))]
     (fn []
       (let [enable-selection? (nil? @data-record-map-filter)]
         [map/MapBoxEdit

@@ -2,6 +2,7 @@
   (:require
     ["react-leaflet" :as leaflet]
     ["react-leaflet-draw" :as react-leaflet-draw]
+    ["wellknown" :as wellknown]
     [clojure.string :as str]
     [re-frame.core :refer [subscribe]]
     [reagent.core :as reagent]
@@ -29,6 +30,8 @@
 (def CircleMarker (reagent/adapt-react-class leaflet/CircleMarker))
 
 (def Circle (reagent/adapt-react-class leaflet/Circle))
+
+(def GeoJSON (reagent/adapt-react-class leaflet/GeoJSON))
 
 (def Tooltip (reagent/adapt-react-class leaflet/Tooltip))
 
@@ -95,22 +98,48 @@
 
 (def sixsq-latlng [46.2273, 6.07661])
 
+#_(defn normalize-lat-lng
+    [^js latlng]
+    (.map latlng #(.wrap %1)))
+
+#_(defn normalize-lat-lngs
+    [^js latlngs]
+    (.map latlngs normalize-lat-lng))
+
+
+(defn normalize-lng-coordinates
+  [coordinates]
+  (mapv #(update %1 0 normalize-lng) coordinates))
+
+
+(defn normalize-lng-geojson
+  [geojson]
+  (update-in geojson [:geometry :coordinates] #(mapv normalize-lng-coordinates %1)))
+
 
 (defn geojson-layer [callback event]
-  (-> event .-layer .toGeoJSON (js->clj :keywordize-keys true) callback))
+  (-> event
+      .-layer
+      .toGeoJSON
+      (js->clj :keywordize-keys true)
+      callback))
 
 (defn geojson-layers [callback event]
-  (-> event .-layers .toGeoJSON (js->clj :keywordize-keys true) callback))
+  (some-> event
+          .-layers
+          .toGeoJSON
+          (js->clj :keywordize-keys true)
+          :features
+          first
+          callback))
 
 
-(defn geojson->filter [{:keys [geometry] :as geojson} attribute operation]
-  (when geojson
-    (->> geometry
-         :coordinates
-         first
-         (map #(update %1 0 normalize-lng))
-         vec
-         (str attribute " " operation " POLYGON"))))
+(defn geojson->filter [attribute operation geojson]
+  (some-> geojson
+          normalize-lng-geojson
+          clj->js
+          wellknown/stringify
+          (as-> wkt (str attribute " " operation " '" wkt "'"))))
 
 
 (defn MapBox

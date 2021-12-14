@@ -524,11 +524,22 @@
         [DataRecordOnMap]]
        Pagination])))
 
+(def geo-operation-helper
+  {"intersects" "Return all documents whose geo_shape or geo_point field intersects the query geometry."
+   "disjoint" "Return all documents whose geo_shape or geo_point field has nothing in common with the query geometry."
+   "within" "Return all documents whose geo_shape or geo_point field is within the query geometry. Line geometries are not supported."
+   "contains" "Return all documents whose geo_shape or geo_point field contains the query geometry."})
+
 (defn GeoOperationButton
   [geo-operation]
-  (let [active? (subscribe [::subs/geo-opeation-active? geo-operation])]
-    [ui/Button {:active   @active?
-                :on-click #(dispatch [::events/set-geo-operation geo-operation])} geo-operation]))
+  (let [active? (subscribe [::subs/geo-opeation-active? geo-operation])
+        button [ui/Button {:active   @active?
+                           :on-click #(dispatch [::events/set-geo-operation geo-operation])} geo-operation]]
+    [ui/Popup
+     {:header            (str/capitalize geo-operation)
+      :content           (get geo-operation-helper geo-operation)
+      :mouse-enter-delay 500
+      :trigger           (r/as-element button)}]))
 
 
 (defn MapFilter

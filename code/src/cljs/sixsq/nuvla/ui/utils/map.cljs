@@ -156,6 +156,7 @@
 (defn MapBoxEdit
   [opts content]
   [MapBox opts
-   [FeatureGroup
-    [EditControl opts]
+   [:<>
+    [FeatureGroup
+     [EditControl opts]]
     content]])

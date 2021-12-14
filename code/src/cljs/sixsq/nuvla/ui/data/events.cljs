@@ -213,7 +213,7 @@
     (cond-> (assoc db ::spec/active-tab-index active-tab-index)
             (= active-tab-index 1) (assoc ::data-set-spec/data-set-id nil
                                           ::data-set-spec/data-record-filter nil
-                                          ::data-set-spec/data-record-map-filter nil
+                                          ::data-set-spec/data-record-map-geojson nil
                                           ::data-set-spec/data-set nil))))
 
 

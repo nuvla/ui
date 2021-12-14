@@ -49,12 +49,14 @@
                 ::spec/time-period-filter
                 ::spec/data-set
                 ::spec/data-record-filter
-                ::spec/data-record-map-filter]} :db}]
+                ::spec/data-record-map-geojson
+                ::spec/geo-operation]} :db}]
     {::cimi-api-fx/search [:data-record
                            (utils/get-query-params (or
                                                      data-record-filter
                                                      (:data-record-filter data-set))
-                                                   data-record-map-filter
+                                                   data-record-map-geojson
+                                                   geo-operation
                                                    nil
                                                    time-period-filter
                                                    page
@@ -133,14 +135,17 @@
 
 
 (reg-event-fx
-  ::set-data-record-map-filter
-  (fn [{db :db} [_ geojson]]
-    (let [map-filter (when geojson
-                       (general-utils/join-or
-                         (map/geojson->filter "geometry" "intersects" geojson)
-                         (map/geojson->filter "location" "intersects" geojson)))]
-      {:db (assoc db ::spec/data-record-map-filter map-filter)
-       :fx [[:dispatch [::get-data-records]]]})))
+  ::set-data-record-map-geojson
+  (fn [{{:keys [::spec/geo-operation] :as db} :db} [_ geojson]]
+    {:db (assoc db ::spec/data-record-map-geojson geojson)
+     :fx [[:dispatch [::get-data-records]]]}))
+
+
+(reg-event-fx
+  ::set-geo-operation
+  (fn [{db :db} [_ op]]
+    {:db (assoc db ::spec/geo-operation op)
+     :fx [[:dispatch [::get-data-records]]]}))
 
 
 (reg-event-fx

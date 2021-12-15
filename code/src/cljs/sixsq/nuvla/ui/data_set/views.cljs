@@ -518,23 +518,21 @@
       [:<>
        [SearchHeader refresh-data-records [DataRecordFilter]]
        [map/MapBox
-        {:style  {:height 500}
-         :center map/sixsq-latlng
-         :zoom   3}
+        {}
         [DataRecordOnMap]]
        Pagination])))
 
 (def geo-operation-helper
   {"intersects" "Return all documents whose geo_shape or geo_point field intersects the query geometry."
-   "disjoint" "Return all documents whose geo_shape or geo_point field has nothing in common with the query geometry."
-   "within" "Return all documents whose geo_shape or geo_point field is within the query geometry. Line geometries are not supported."
-   "contains" "Return all documents whose geo_shape or geo_point field contains the query geometry."})
+   "disjoint"   "Return all documents whose geo_shape or geo_point field has nothing in common with the query geometry."
+   "within"     "Return all documents whose geo_shape or geo_point field is within the query geometry. Line geometries are not supported."
+   "contains"   "Return all documents whose geo_shape or geo_point field contains the query geometry."})
 
 (defn GeoOperationButton
   [geo-operation]
   (let [active? (subscribe [::subs/geo-opeation-active? geo-operation])
-        button [ui/Button {:active   @active?
-                           :on-click #(dispatch [::events/set-geo-operation geo-operation])} geo-operation]]
+        button  [ui/Button {:active   @active?
+                            :on-click #(dispatch [::events/set-geo-operation geo-operation])} geo-operation]]
     [ui/Popup
      {:header            (str/capitalize geo-operation)
       :content           (get geo-operation-helper geo-operation)
@@ -557,18 +555,15 @@
             [GeoOperationButton geo-operation])]
          [ui/Segment {:attached true}
           [map/MapBoxEdit
-           {:style     {:height 500}
-            :center    map/sixsq-latlng
-            :zoom      3
-            :onCreated (partial map/geojson-layer set-selected-feature)
-            :onEdited  (partial map/geojson-layers on-edited)
-            :onDeleted (partial map/geojson-layers on-deleted)
-            :draw      {:rectangle    enable-selection?
-                        :polygon      enable-selection?
-                        :polyline     false
-                        :marker       false
-                        :circle       false
-                        :circlemarker false}}
+           {:onCreated     (partial map/geojson-layer set-selected-feature)
+            :onEdited      (partial map/geojson-layers on-edited)
+            :onDeleted     (partial map/geojson-layers on-deleted)
+            :draw          {:rectangle    enable-selection?
+                            :polygon      enable-selection?
+                            :polyline     false
+                            :marker       false
+                            :circle       false
+                            :circlemarker false}}
            [DataRecordOnMap]]]]))))
 
 

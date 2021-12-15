@@ -144,9 +144,7 @@
                             (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
                           (:resources @nuvlaboxes))]
     [map/MapBox
-     {:style  {:height 500}
-      :center map/sixsq-latlng
-      :zoom   3}
+     {}
      (doall
        (for [{:keys [id] :as nuvlabox} (->> selected-nbs
                                             (filter #(:location %)))]

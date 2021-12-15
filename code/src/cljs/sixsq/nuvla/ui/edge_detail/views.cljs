@@ -1178,7 +1178,7 @@
          [map/MapBox
           {:style             {:height 400
                                :cursor (when-not location "pointer")}
-           :center            (or position map/sixsq-latlng)
+           :center            (or position map/default-latlng-center)
            :zoom              @zoom
            :onViewportChanged #(reset! zoom (.-zoom %))
            :on-click          (when-not position

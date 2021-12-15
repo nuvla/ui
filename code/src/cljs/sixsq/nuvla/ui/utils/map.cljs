@@ -41,30 +41,28 @@
              "© <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a>"
              "<strong><a href=\"https://www.mapbox.com/map-feedback/\" target=\"_blank\">Improve this map</a></strong>"]))
 
+
 (defn DefaultLayers
   []
   (let [access-token (subscribe [::main-subs/config :mapbox-access-token])]
     [LayersControl {:position "topright"}
      (when @access-token
-       [BaseLayer {:name    "Light"
-                   :checked (not config/debug?)}
-        [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
-                    :attribution attributions}]])
-     (when @access-token
-       [BaseLayer {:name "Streets"}
-        [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
-                    :attribution attributions}]])
-     (when @access-token
-       [BaseLayer {:name "Satellite"}
-        [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
-                    :attribution attributions}]])
+       [:<>
+        [BaseLayer {:name    "Light"
+                    :checked (not config/debug?)}
+         [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
+                     :attribution attributions}]]
+        [BaseLayer {:name "Streets"}
+         [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
+                     :attribution attributions}]]
+        [BaseLayer {:name "Satellite"}
+         [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
+                     :attribution attributions}]]])
      (when config/debug?
        [BaseLayer {:name    "Light cartodb dev"
                    :checked config/debug?}
         [TileLayer {:url         "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
-                    :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a>, &copy; <a href=\"https://carto.com/attributions\">Carto</a>"
-                    }]])
-     ]))
+                    :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a>, &copy; <a href=\"https://carto.com/attributions\">Carto</a>"}]])]))
 
 
 (defn normalize-lng
@@ -96,7 +94,7 @@
       (callback (convert-latlong-map latlong)))))
 
 
-(def sixsq-latlng [46.2273, 6.07661])
+(def default-latlng-center [45, 0])
 
 #_(defn normalize-lat-lng
     [^js latlng]
@@ -142,20 +140,28 @@
           (as-> wkt (str attribute " " operation " '" wkt "'"))))
 
 
+(def map-default-ops
+  {:min-zoom           2
+   :style              {:height 500}
+   :center             default-latlng-center
+   :worldCopyJump      true
+   :zoom               3})
+
+
 (defn MapBox
   [opts content]
   [:div {:className "mapbox-map"}
    [:a {:className "mapbox-wordmark"
         :href      "http://mapbox.com/about/maps"
         :target    "_blank"} "Mapbox"]
-   [Map opts
+   [Map (merge map-default-ops opts)
     [DefaultLayers]
     content]])
 
 
 (defn MapBoxEdit
   [opts content]
-  [MapBox opts
+  [MapBox (merge map-default-ops opts)
    [:<>
     [FeatureGroup
      [EditControl opts]]

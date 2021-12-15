@@ -121,9 +121,7 @@
   (let [nuvlaboxes   (subscribe [::subs/nuvlaboxes])
         selected-nbs (:resources @nuvlaboxes)]
     [map/MapBox
-     {:style  {:height 500}
-      :center map/sixsq-latlng
-      :zoom   3}
+     {}
      (doall
        (for [{:keys [id] :as nuvlabox} (->> selected-nbs
                                             (filter #(:location %)))]

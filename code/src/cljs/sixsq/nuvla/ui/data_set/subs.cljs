@@ -72,12 +72,6 @@
          (utils-general/can-edit? data-set)
          (not= (:data-record-filter data-set) data-record-filter))))
 
-(reg-sub
-  ::suggest-new-data-set?
-  (fn [{:keys [::spec/data-set
-               ::spec/data-record-filter]}]
-    (and (nil? data-set) (not (str/blank? data-record-filter)))))
-
 
 (reg-sub
   ::selected-data-record-ids
@@ -86,12 +80,12 @@
 
 
 (reg-sub
-  ::geo-opeation
+  ::geo-operation
   (fn [db]
     (::spec/geo-operation db)))
 
 (reg-sub
-  ::geo-opeation-active?
-  :<- [::geo-opeation]
+  ::geo-operation-active?
+  :<- [::geo-operation]
   (fn [geo-operation [_ op]]
     (= geo-operation op)))

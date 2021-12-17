@@ -21,7 +21,8 @@
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.data.subs :as data-subs]
     [sixsq.nuvla.ui.apps.utils :as application-utils]
-    [sixsq.nuvla.ui.utils.map :as map]))
+    [sixsq.nuvla.ui.utils.map :as map]
+    [sixsq.nuvla.ui.data-set.utils :as utils]))
 
 
 (defn refresh
@@ -69,7 +70,6 @@
   (let [tr                        (subscribe [::i18n-subs/tr])
         data-record-filter        (subscribe [::subs/data-record-filter])
         suggest-edit-filter?      (subscribe [::subs/suggest-update-data-record-filter?])
-        suggest-new-data-set?     (subscribe [::subs/suggest-new-data-set?])
         data-set                  (subscribe [::subs/data-set])
         filter-open?              (r/atom false)
         set-data-record-filter-fn #(dispatch [::events/set-data-record-filter %])]
@@ -87,13 +87,6 @@
                                         :default-filter @data-record-filter
                                         :open?          filter-open?
                                         :on-done        set-data-record-filter-fn}]
-                                      (when @suggest-new-data-set?
-                                        [ui/Button {:icon     "plus"
-                                                    :primary  true
-                                                    :content  (@tr [:create])
-                                                    :on-click #(do
-                                                                 (dispatch [::data-events/set-modal-open? true])
-                                                                 (dispatch [::data-events/set-add-data-set-form :data-record-filter @data-record-filter]))}])
                                       (when @suggest-edit-filter?
                                         [ui/Button {:icon     "save"
                                                     :primary  true
@@ -130,7 +123,7 @@
 
 (defn GeoOperationButton
   [geo-operation]
-  (let [active? (subscribe [::subs/geo-opeation-active? geo-operation])
+  (let [active? (subscribe [::subs/geo-operation-active? geo-operation])
         button  [ui/Button {:active   @active?
                             :on-click #(dispatch [::events/set-geo-operation geo-operation])} geo-operation]]
     [ui/Popup
@@ -288,23 +281,38 @@
   []
   (let [tr                       (subscribe [::i18n-subs/tr])
         active-tab-index         (subscribe [::data-subs/active-tab-index])
-        selected-data-record-ids (subscribe [::subs/selected-data-record-ids])]
+        selected-data-record-ids (subscribe [::subs/selected-data-record-ids])
+        data-record-filter       (subscribe [::subs/data-record-filter])
+        map-selection            (subscribe [::subs/map-selection])
+        geo-operation            (subscribe [::subs/geo-operation])]
     (fn []
-      (when (and (= @active-tab-index 1)
-                 (seq @selected-data-record-ids))
-        [:span
-         " "
-         [ui/Button
-          {:content  (@tr [:create-data-set])
-           :icon     "plus"
-           :primary  true
-           :on-click (fn []
-                       (dispatch [::data-events/set-modal-open? true])
-                       (dispatch [::data-events/set-add-data-set-form :data-record-filter
-                                  (->> @selected-data-record-ids
-                                       (map #(str "id='" %1 "'"))
-                                       (str/join " or "))]))}]]
-        ))))
+      (let [selected-data-records? (-> @selected-data-record-ids seq boolean)
+            some-filter-str?       (not (str/blank? @data-record-filter))
+            some-map-selection?    (some? @map-selection)]
+        (when (and (= @active-tab-index 1)
+                   (or selected-data-records?
+                       some-filter-str?
+                       some-map-selection?))
+          [:span
+           " "
+           [ui/Button
+            {:content  (@tr [:create-data-set])
+             :icon     "plus"
+             :primary  true
+             :on-click (fn []
+                         (dispatch [::data-events/set-modal-open? true])
+                         (dispatch [::data-events/set-add-data-set-form :data-record-filter
+                                    (utils-general/join-and
+                                      (when selected-data-records?
+                                        (->> @selected-data-record-ids
+                                             (map #(str "id='" %1 "'"))
+                                             (str/join " or ")))
+                                      (when some-filter-str?
+                                        @data-record-filter)
+                                      (when some-map-selection?
+                                        (utils/data-record-geometry-filter @geo-operation (:geojson @map-selection))))
+                                    ]))}]]
+          )))))
 
 
 (defn DeleteButton

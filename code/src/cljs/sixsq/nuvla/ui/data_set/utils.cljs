@@ -39,12 +39,12 @@
 
 
 (defn get-query-params
-  [data-record-filter data-record-map-geojson geo-operation full-text-search time-period-filter page elements-per-page]
+  [data-record-filter geojson geo-operation full-text-search time-period-filter page elements-per-page]
   {:first   (inc (* (dec page) elements-per-page))
    :last    (* page elements-per-page)
    :orderby "timestamp:desc"
    :filter  (general-utils/join-and
               time-period-filter
               data-record-filter
-              (data-record-geometry-filter geo-operation data-record-map-geojson)
+              (data-record-geometry-filter geo-operation geojson)
               (general-utils/fulltext-query-string full-text-search))})

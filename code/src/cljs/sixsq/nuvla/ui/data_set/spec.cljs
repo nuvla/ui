@@ -17,7 +17,7 @@
 
 (s/def ::data-record-filter (s/nilable string?))
 
-(s/def ::data-record-map-geojson (s/nilable any?))
+(s/def ::map-selection (s/nilable any?))
 
 (s/def ::geo-operation (s/nilable string?))
 
@@ -41,7 +41,7 @@
                           ::data-set
                           ::data-set-id
                           ::data-record-filter
-                          ::data-record-map-geojson
+                          ::map-selection
                           ::geo-operation
                           ::data-records
                           ::data-objects
@@ -60,7 +60,7 @@
                ::data-set-id              nil
                ::data-set                 nil
                ::data-record-filter       nil
-               ::data-record-map-geojson  nil
+               ::map-selection            nil
                ::geo-operation            "intersects"
                ::data-records             nil
                ::data-objects             {}

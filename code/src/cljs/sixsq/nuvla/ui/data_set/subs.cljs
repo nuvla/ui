@@ -59,9 +59,9 @@
 
 
 (reg-sub
-  ::data-record-map-geojson
+  ::map-selection
   (fn [db]
-    (::spec/data-record-map-geojson db)))
+    (::spec/map-selection db)))
 
 
 (reg-sub
@@ -86,6 +86,12 @@
 
 
 (reg-sub
+  ::geo-opeation
+  (fn [db]
+    (::spec/geo-operation db)))
+
+(reg-sub
   ::geo-opeation-active?
-  (fn [db [_ op]]
-    (= (::spec/geo-operation db) op)))
+  :<- [::geo-opeation]
+  (fn [geo-operation [_ op]]
+    (= geo-operation op)))

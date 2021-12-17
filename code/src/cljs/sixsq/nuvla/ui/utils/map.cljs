@@ -31,6 +31,10 @@
 
 (def Circle (reagent/adapt-react-class leaflet/Circle))
 
+(def Rectangle (reagent/adapt-react-class leaflet/Rectangle))
+
+(def Polygon (reagent/adapt-react-class leaflet/Polygon))
+
 (def GeoJSON (reagent/adapt-react-class leaflet/GeoJSON))
 
 (def Tooltip (reagent/adapt-react-class leaflet/Tooltip))
@@ -113,23 +117,6 @@
 (defn normalize-lng-geojson
   [geojson]
   (update-in geojson [:geometry :coordinates] #(mapv normalize-lng-coordinates %1)))
-
-
-(defn geojson-layer [callback event]
-  (-> event
-      .-layer
-      .toGeoJSON
-      (js->clj :keywordize-keys true)
-      callback))
-
-(defn geojson-layers [callback event]
-  (some-> event
-          .-layers
-          .toGeoJSON
-          (js->clj :keywordize-keys true)
-          :features
-          first
-          callback))
 
 
 (defn geojson->filter [attribute operation geojson]

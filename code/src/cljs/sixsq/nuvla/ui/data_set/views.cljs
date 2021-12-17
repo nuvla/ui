@@ -104,6 +104,108 @@
                                                                           (@tr [:updated-message])])}])])}])))
 
 
+
+
+(defn DataRecordMarker
+  [{:keys [id name location]}]
+  (when location
+    [map/Marker {:position (map/longlat->latlong location)}
+     [map/Tooltip (or name id)]]))
+
+
+(defn DataRecordGeoJson
+  [{:keys [id name geometry]}]
+  (when geometry
+    [map/GeoJSON {:style {:color "lime"}
+                  :data  geometry}
+     [map/Tooltip (or name id)]]))
+
+
+(def geo-operation-helper
+  {"intersects" "Return all documents whose geo_shape or geo_point field intersects the query geometry."
+   "disjoint"   "Return all documents whose geo_shape or geo_point field has nothing in common with the query geometry."
+   "within"     "Return all documents whose geo_shape or geo_point field is within the query geometry. Line geometries are not supported."
+   "contains"   "Return all documents whose geo_shape or geo_point field contains the query geometry."})
+
+
+(defn GeoOperationButton
+  [geo-operation]
+  (let [active? (subscribe [::subs/geo-opeation-active? geo-operation])
+        button  [ui/Button {:active   @active?
+                            :on-click #(dispatch [::events/set-geo-operation geo-operation])} geo-operation]]
+    [ui/Popup
+     {:header            (str/capitalize geo-operation)
+      :content           (get geo-operation-helper geo-operation)
+      :mouse-enter-delay 500
+      :trigger           (r/as-element button)}]))
+
+
+(defn MapFilter
+  []
+  (let [map-selection     (subscribe [::subs/map-selection])
+        data-records      (subscribe [::subs/data-records])
+        set-map-selection #(dispatch [::events/set-map-selection %1])
+        get-first-layer   #(-> %1 .-layers .getLayers first)]
+    (set-map-selection nil)
+    (fn []
+      (let [enable-selection? (nil? @map-selection)]
+        [uix/Accordion
+         [:div
+          [ui/ButtonGroup {:attached "top" :basic true}
+           (for [op ["intersects" "disjoint" "within" "contains"]]
+             ^{:key (str "button-" op)}
+             [GeoOperationButton op])]
+          [ui/Segment {:attached true}
+           [map/MapBox {}
+            [:<>
+             [map/FeatureGroup
+              (doall
+                (for [data-record (:resources @data-records)]
+                  ^{:key (:id data-record)}
+                  [:<>
+                   [DataRecordMarker data-record]
+                   [DataRecordGeoJson data-record]]))]
+             [map/FeatureGroup
+              [map/EditControl
+               {:onCreated (fn [event]
+                             (let [layer      (.-layer event)
+                                   geojson    (-> layer .toGeoJSON (js->clj :keywordize-keys true))
+                                   layer-type (.-layerType event)]
+                               (set-map-selection {:geojson    geojson
+                                                   :layer-type layer-type
+                                                   :lat-lngs   (.getLatLngs layer)})
+                               (-> event .-layer .remove)))
+                :onEdited  (fn [event]
+                             (let [layer   (get-first-layer event)
+                                   geojson (-> layer .toGeoJSON (js->clj :keywordize-keys true))]
+                               (set-map-selection {:geojson    geojson
+                                                   :layer-type (:layer-type @map-selection)
+                                                   :lat-lngs   (.getLatLngs layer)})))
+                :onDeleted (fn [event]
+                             (when (some? (get-first-layer event))
+                               (set-map-selection nil)))
+                :draw      {:rectangle    enable-selection?
+                            :polygon      enable-selection?
+                            :polyline     false
+                            :marker       false
+                            :circle       false
+                            :circlemarker false}}]
+
+              ;; key is random to keep selection on top
+              (when (= (:layer-type @map-selection) "rectangle")
+                ^{:key (random-uuid)}
+                [map/Rectangle {:bounds (:lat-lngs @map-selection)}])
+
+              (when (= (:layer-type @map-selection) "polygon")
+                ^{:key (random-uuid)}
+                [map/Polygon {:positions (:lat-lngs @map-selection)}])]
+             ]]]]
+         :label "Map Filter"
+         :title-size :h5
+         :default-open false]
+        ))))
+
+
 (defn SearchHeader
   [_refresh-fn _extra]
   (let [tr          (subscribe [::i18n-subs/tr])
@@ -287,6 +389,7 @@
         data-records (subscribe [::subs/data-records])]
     [:<>
      [SearchHeader refresh-data-records [DataRecordFilter]]
+     [MapFilter]
      [ui/Table {:compact "very", :selectable true}
       [ui/TableHeader
        [ui/TableRow
@@ -472,7 +575,8 @@
                :centered  true}
       [ui/GridRow {:centered true}
        [ui/GridColumn
-        [SearchHeader refresh-data-records [DataRecordFilter]]]]
+        [SearchHeader refresh-data-records [DataRecordFilter]]
+        [MapFilter]]]
       [ui/GridRow {:centered true}
        [ui/GridColumn
         [ui/Segment style/basic
@@ -483,88 +587,6 @@
             ^{:key (:id data-record)}
             [DataRecordCard data-record])]]]]]
      Pagination]))
-
-
-(defn DataRecordMarker
-  [{:keys [id name location]}]
-  (when location
-    [map/Marker {:position (map/longlat->latlong location)}
-     [map/Tooltip (or name id)]]))
-
-(defn DataRecordGeoJson
-  [{:keys [id name geometry]}]
-  (when geometry
-    [map/GeoJSON {:style {:color "lime"}
-                  :data  geometry}
-     [map/Tooltip (or name id)]]))
-
-(defn DataRecordOnMap
-  []
-  (let [data-records (subscribe [::subs/data-records])]
-    (fn []
-      [map/FeatureGroup
-       (doall
-         (for [data-record (:resources @data-records)]
-           ^{:key (:id data-record)}
-           [:<>
-            [DataRecordMarker data-record]
-            [DataRecordGeoJson data-record]]))])))
-
-
-(defn MapDataRecords
-  [_Pagination]
-  (fn [Pagination]
-    (let []
-      [:<>
-       [SearchHeader refresh-data-records [DataRecordFilter]]
-       [map/MapBox
-        {}
-        [DataRecordOnMap]]
-       Pagination])))
-
-(def geo-operation-helper
-  {"intersects" "Return all documents whose geo_shape or geo_point field intersects the query geometry."
-   "disjoint"   "Return all documents whose geo_shape or geo_point field has nothing in common with the query geometry."
-   "within"     "Return all documents whose geo_shape or geo_point field is within the query geometry. Line geometries are not supported."
-   "contains"   "Return all documents whose geo_shape or geo_point field contains the query geometry."})
-
-(defn GeoOperationButton
-  [geo-operation]
-  (let [active? (subscribe [::subs/geo-opeation-active? geo-operation])
-        button  [ui/Button {:active   @active?
-                            :on-click #(dispatch [::events/set-geo-operation geo-operation])} geo-operation]]
-    [ui/Popup
-     {:header            (str/capitalize geo-operation)
-      :content           (get geo-operation-helper geo-operation)
-      :mouse-enter-delay 500
-      :trigger           (r/as-element button)}]))
-
-
-(defn MapFilter
-  []
-  (let [data-record-map-filter (subscribe [::subs/data-record-map-geojson])
-        set-selected-feature   #(dispatch [::events/set-data-record-map-geojson %1])
-        on-edited              #(set-selected-feature %1)
-        on-deleted             #(when (some? %1) (set-selected-feature nil))]
-    (fn []
-      (let [enable-selection? (nil? @data-record-map-filter)]
-        [:div
-         [ui/ButtonGroup {:attached "top" :basic true}
-          (for [geo-operation ["intersects" "disjoint" "within" "contains"]]
-            ^{:key (str "button-" geo-operation)}
-            [GeoOperationButton geo-operation])]
-         [ui/Segment {:attached true}
-          [map/MapBoxEdit
-           {:onCreated     (partial map/geojson-layer set-selected-feature)
-            :onEdited      (partial map/geojson-layers on-edited)
-            :onDeleted     (partial map/geojson-layers on-deleted)
-            :draw          {:rectangle    enable-selection?
-                            :polygon      enable-selection?
-                            :polyline     false
-                            :marker       false
-                            :circle       false
-                            :circlemarker false}}
-           [DataRecordOnMap]]]]))))
 
 
 (defn DataSet
@@ -585,5 +607,4 @@
            [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
            [MenuBar dataset-id]
            [Summary]
-           [MapFilter]
            [DataRecordCards [Pagination]]]]]))))

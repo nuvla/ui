@@ -107,8 +107,7 @@
 
 (defn MenuBar
   []
-  (let [active-index   (subscribe [::subs/active-tab-index])
-        data-set-view? (zero? @active-index)]
+  (let [active-index   (subscribe [::subs/active-tab-index])]
     [components/StickyBar
      [ui/Menu {:borderless true, :stackable true}
       [data-set-views/ProcessButton :menu-item]
@@ -119,10 +118,6 @@
       [ui/MenuItem {:icon     "table"
                     :active   (= @view-type :table)
                     :on-click #(reset! view-type :table)}]
-      (when-not data-set-view?
-        [ui/MenuItem {:icon     "map"
-                      :active   (= @view-type :map)
-                      :on-click #(reset! view-type :map)}])
       [components/RefreshMenu
        {:on-refresh refresh}]]]))
 
@@ -319,8 +314,7 @@
   (dispatch [::data-set-events/get-data-records])
   (case @view-type
     :cards [data-set-views/DataRecordCards [data-set-views/Pagination]]
-    :table [data-set-views/DataRecordTable [data-set-views/Pagination]]
-    :map [data-set-views/MapDataRecords [data-set-views/Pagination]]))
+    :table [data-set-views/DataRecordTable [data-set-views/Pagination]]))
 
 
 (defn DataSets

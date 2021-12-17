@@ -7,9 +7,7 @@
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.utils.map :as map]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-db
@@ -49,13 +47,13 @@
                 ::spec/time-period-filter
                 ::spec/data-set
                 ::spec/data-record-filter
-                ::spec/data-record-map-geojson
+                ::spec/map-selection
                 ::spec/geo-operation]} :db}]
     {::cimi-api-fx/search [:data-record
                            (utils/get-query-params (or
                                                      data-record-filter
                                                      (:data-record-filter data-set))
-                                                   data-record-map-geojson
+                                                   (:geojson map-selection)
                                                    geo-operation
                                                    nil
                                                    time-period-filter
@@ -135,9 +133,9 @@
 
 
 (reg-event-fx
-  ::set-data-record-map-geojson
-  (fn [{{:keys [::spec/geo-operation] :as db} :db} [_ geojson]]
-    {:db (assoc db ::spec/data-record-map-geojson geojson)
+  ::set-map-selection
+  (fn [{{:keys [::spec/geo-operation] :as db} :db} [_ map-selection]]
+    {:db (assoc db ::spec/map-selection map-selection)
      :fx [[:dispatch [::get-data-records]]]}))
 
 

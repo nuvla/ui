@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.data.spec :as spec]
     [sixsq.nuvla.ui.data.utils :as utils]
     [sixsq.nuvla.ui.data-set.spec :as data-set-spec]
+    [sixsq.nuvla.ui.data-set.utils :as data-set-utils]
     [sixsq.nuvla.ui.deployment-dialog.events :as dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.spec :as dialog-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -62,6 +63,8 @@
   ::fetch-all-datasets-stats
   (fn [{{:keys [::spec/data-sets
                 ::spec/full-text-search
+                ::data-set-spec/geo-operation
+                ::data-set-spec/map-selection
                 ::data-set-spec/time-period-filter]} :db} _]
     (let [data-sets-vals  (vals data-sets)
           full-text-query (general-utils/fulltext-query-string full-text-search)]
@@ -69,7 +72,10 @@
                   [:dispatch [::fetch-dataset-stats
                               (:id data-set)
                               (general-utils/join-and
-                                time-period-filter full-text-query (:data-record-filter data-set))]])
+                                time-period-filter
+                                full-text-query
+                                (data-set-utils/data-record-geometry-filter geo-operation map-selection)
+                                (:data-record-filter data-set))]])
                 data-sets-vals)})))
 
 
@@ -213,7 +219,7 @@
     (cond-> (assoc db ::spec/active-tab-index active-tab-index)
             (= active-tab-index 1) (assoc ::data-set-spec/data-set-id nil
                                           ::data-set-spec/data-record-filter nil
-                                          ::data-set-spec/data-record-map-geojson nil
+                                          ::data-set-spec/map-selection nil
                                           ::data-set-spec/data-set nil))))
 
 

@@ -114,23 +114,19 @@
      [map/Tooltip (or name id)]]))
 
 
-(def geo-operation-helper
-  {"intersects" "Return all documents whose geo_shape or geo_point field intersects the query geometry."
-   "disjoint"   "Return all documents whose geo_shape or geo_point field has nothing in common with the query geometry."
-   "within"     "Return all documents whose geo_shape or geo_point field is within the query geometry. Line geometries are not supported."
-   "contains"   "Return all documents whose geo_shape or geo_point field contains the query geometry."})
-
-
 (defn GeoOperationButton
   [geo-operation]
-  (let [active? (subscribe [::subs/geo-operation-active? geo-operation])
-        button  [ui/Button {:active   @active?
-                            :on-click #(dispatch [::events/set-geo-operation geo-operation])} geo-operation]]
-    [ui/Popup
-     {:header            (str/capitalize geo-operation)
-      :content           (get geo-operation-helper geo-operation)
-      :mouse-enter-delay 500
-      :trigger           (r/as-element button)}]))
+  (let [tr      (subscribe [::i18n-subs/tr])
+        active? (subscribe [::subs/geo-operation-active? geo-operation])]
+    (fn [geo-operation]
+      (let [button [ui/Button {:active   @active?
+                               :on-click #(dispatch [::events/set-geo-operation geo-operation])}
+                    geo-operation]]
+        [ui/Popup
+         {:header            (str/capitalize geo-operation)
+          :content           (@tr [(->> geo-operation (str "geo-op-helper-") keyword)])
+          :mouse-enter-delay 500
+          :trigger           (r/as-element button)}]))))
 
 
 (defn MapFilter
@@ -399,31 +395,40 @@
          [ui/TableCell (values/as-link id :label uuid)]]))))
 
 
+(defn NoDataRecordsMessage
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/Message {:info true} (@tr [:no-data-records])]))
+
+
 (defn DataRecordTable
   [Pagination]
   (let [tr           (subscribe [::i18n-subs/tr])
-        data-records (subscribe [::subs/data-records])]
+        data-records (subscribe [::subs/data-records])
+        resources    (:resources @data-records)]
     [:<>
      [SearchHeader refresh-data-records [DataRecordFilter]]
      [MapFilter]
-     [ui/Table {:compact "very", :selectable true}
-      [ui/TableHeader
-       [ui/TableRow
-        [ui/TableHeaderCell]
-        [ui/TableHeaderCell (@tr [:name])]
-        [ui/TableHeaderCell (@tr [:description])]
-        [ui/TableHeaderCell (@tr [:created])]
-        [ui/TableHeaderCell (@tr [:timestamp])]
-        [ui/TableHeaderCell "bucket"]
-        [ui/TableHeaderCell "content-type"]
-        [ui/TableHeaderCell (@tr [:tags])]
-        [ui/TableHeaderCell (str/lower-case (@tr [:storage-service]))]
-        [ui/TableHeaderCell (@tr [:deployment])]
-        [ui/TableHeaderCell (@tr [:id])]]]
-      [ui/TableBody
-       (for [{:keys [id] :as dr} (:resources @data-records)]
-         ^{:key id}
-         [DataRecordRow dr])]]
+     (if (-> resources count pos?)
+       [ui/Table {:compact "very", :selectable true}
+        [ui/TableHeader
+         [ui/TableRow
+          [ui/TableHeaderCell]
+          [ui/TableHeaderCell (@tr [:name])]
+          [ui/TableHeaderCell (@tr [:description])]
+          [ui/TableHeaderCell (@tr [:created])]
+          [ui/TableHeaderCell (@tr [:timestamp])]
+          [ui/TableHeaderCell "bucket"]
+          [ui/TableHeaderCell "content-type"]
+          [ui/TableHeaderCell (@tr [:tags])]
+          [ui/TableHeaderCell (str/lower-case (@tr [:storage-service]))]
+          [ui/TableHeaderCell (@tr [:deployment])]
+          [ui/TableHeaderCell (@tr [:id])]]]
+        [ui/TableBody
+         (for [{:keys [id] :as dr} resources]
+           ^{:key id}
+           [DataRecordRow dr])]]
+       [NoDataRecordsMessage])
      Pagination]))
 
 
@@ -582,8 +587,10 @@
 
 (defn DataRecordCards
   [Pagination]
-  (let [data-records (subscribe [::subs/data-records])
-        device       (subscribe [::main-subs/device])]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        data-records (subscribe [::subs/data-records])
+        device       (subscribe [::main-subs/device])
+        resources    (:resources @data-records)]
     [:<>
      [ui/Grid {:columns   (columns-per-device @device)
                :stackable true
@@ -596,12 +603,15 @@
       [ui/GridRow {:centered true}
        [ui/GridColumn
         [ui/Segment style/basic
-         [ui/CardGroup {:centered    true
-                        :itemsPerRow (cards-per-device @device)
-                        :stackable   true}
-          (for [data-record (:resources @data-records)]
-            ^{:key (:id data-record)}
-            [DataRecordCard data-record])]]]]]
+         (if (-> resources count pos?)
+           [ui/CardGroup {:centered    true
+                          :itemsPerRow (cards-per-device @device)
+                          :stackable   true}
+            (for [data-record resources]
+              ^{:key (:id data-record)}
+              [DataRecordCard data-record])]
+           [NoDataRecordsMessage]
+           )]]]]
      Pagination]))
 
 

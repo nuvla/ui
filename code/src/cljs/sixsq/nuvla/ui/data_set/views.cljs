@@ -138,7 +138,11 @@
   (let [map-selection     (subscribe [::subs/map-selection])
         data-records      (subscribe [::subs/data-records])
         set-map-selection #(dispatch [::events/set-map-selection %1])
-        get-first-layer   #(-> %1 .-layers .getLayers first)]
+        get-first-layer   #(-> %1 .-layers .getLayers first)
+        map-ref!          (atom nil)
+        fg-props          {:onAdd #(let [bounds (-> %1 .-target .getBounds)]
+                                     (when (.isValid bounds)
+                                       (.fitBounds @map-ref! bounds)))}]
     (set-map-selection nil)
     (fn []
       (let [enable-selection? (nil? @map-selection)]
@@ -149,16 +153,20 @@
              ^{:key (str "button-" op)}
              [GeoOperationButton op])]
           [ui/Segment {:attached true}
-           [map/MapBox {}
+           [map/MapBox {:ref #(some->> %1 .-leafletElement (reset! map-ref!))}
             [:<>
+             ^{:key (random-uuid)}
              [map/FeatureGroup
+              (when-not @map-selection fg-props)
               (doall
                 (for [data-record (:resources @data-records)]
                   ^{:key (:id data-record)}
                   [:<>
                    [DataRecordMarker data-record]
                    [DataRecordGeoJson data-record]]))]
+             ^{:key (random-uuid)}
              [map/FeatureGroup
+              (when @map-selection fg-props)
               [map/EditControl
                {:onCreated (fn [event]
                              (let [layer      (.-layer event)

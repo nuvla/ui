@@ -50,18 +50,20 @@
   []
   (let [access-token (subscribe [::main-subs/config :mapbox-access-token])]
     [LayersControl {:position "topright"}
+     ;; don't optimize, @access-token with :<>, will break UI with funtion removeLayer not defined
      (when @access-token
-       [:<>
-        [BaseLayer {:name    "Light"
-                    :checked (not config/debug?)}
-         [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
-                     :attribution attributions}]]
-        [BaseLayer {:name "Streets"}
-         [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
-                     :attribution attributions}]]
-        [BaseLayer {:name "Satellite"}
-         [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
-                     :attribution attributions}]]])
+       [BaseLayer {:name    "Light"
+                   :checked (not config/debug?)}
+        [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
+                    :attribution attributions}]])
+     (when @access-token
+       [BaseLayer {:name "Streets"}
+        [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
+                    :attribution attributions}]])
+     (when @access-token
+       [BaseLayer {:name "Satellite"}
+        [TileLayer {:url         (str "https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/tiles/{z}/{x}/{y}?access_token=" @access-token)
+                    :attribution attributions}]])
      (when config/debug?
        [BaseLayer {:name    "Light cartodb dev"
                    :checked config/debug?}

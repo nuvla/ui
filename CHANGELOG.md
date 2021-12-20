@@ -4,8 +4,15 @@
 
 ### Changed
 
+  - Dependencies updates
+  - Map - Support draw
   - Data - New workflow
   - App application detail - change order tabs fix issue when no pricing is configured 
+
+## [2.26.2] - 2021-12-14
+
+### Changed
+
   - App store - Regression re-frame events logged to console
   - Edge detail - Bugfixes in Location tab
 

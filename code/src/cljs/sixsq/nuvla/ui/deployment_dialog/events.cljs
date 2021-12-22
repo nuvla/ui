@@ -456,7 +456,7 @@
 
 (reg-event-fx
   ::get-data-records
-  (fn [{{:keys [::data-spec/time-period-filter
+  (fn [{{:keys [::data-set-spec/time-period-filter
                 ::data-spec/content-type-filter
                 ::data-set-spec/selected-data-record-ids] :as db} :db} _]
     (let [filter (if (nil? content-type-filter)

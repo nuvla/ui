@@ -59,7 +59,7 @@
                       [ui/Icon {:name (apps-utils/subtype-icon subtype)}]
                       (or name id)]
       :description   (utils-general/truncate desc-summary 180)
-      :content       [uix/Tags {:tags tags}]
+      :content       [uix/Tags tags]
       :corner-button (when (and published show-published?)
                        [ui/Label {:corner true} [uix/Icon {:name apps-utils/publish-icon}]])
       :href          detail-href

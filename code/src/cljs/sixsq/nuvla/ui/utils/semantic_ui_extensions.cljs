@@ -7,7 +7,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.accordion :as accordion-utils]
     [sixsq.nuvla.ui.utils.form-fields :as form-fields]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
@@ -256,7 +256,7 @@
                  :or   {editable? true, spec any?}
                  :as   options}]
       (let [name-label (cond-> name
-                               (and editable? required?) (general-utils/mandatory-name))
+                               (and editable? required?) (utils-general/mandatory-name))
             validate?  (boolean (or @local-validate? validate-form?))
             error?     (and validate? (not (s/valid? spec default-value)))]
         (when on-validation
@@ -337,15 +337,16 @@
        [ui/ModalContent {:scrolling false}
         (when content content)]
 
-       [ui/ModalActions
-        (when modal-action modal-action)
-        [Button {:text     (str/lower-case button-text)
-                 :primary  true
-                 :loading  @clicked?
-                 :active   true
-                 :icon     icon
-                 :on-click #(do (reset! clicked? true)
-                                (on-confirm))}]]])))
+       (when (or button-text modal-action)
+         [ui/ModalActions
+          (when modal-action modal-action)
+          [Button {:text     (str/lower-case button-text)
+                   :primary  true
+                   :loading  @clicked?
+                   :active   true
+                   :icon     icon
+                   :on-click #(do (reset! clicked? true)
+                                  (on-confirm))}]])])))
 
 
 (defn TimeAgo
@@ -379,22 +380,20 @@
 
 
 (defn Tags
-  [_resource]
-  (let [uuid (random-uuid)]
-    (fn [{:keys [tags]}]
-      [ui/LabelGroup {:size  "tiny"
-                      :color "teal"
-                      :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-       (for [tag tags]
-         ^{:key (str uuid "_" tag)}
-         [ui/Popup
-          {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
-                                          (general-utils/truncate tag 20)])
-           :content        tag
-           :position       "bottom center"
-           :on             "hover"
-           :size           "tiny"
-           :hide-on-scroll true}])])))
+  [tags]
+  [ui/LabelGroup {:size  "tiny"
+                  :color "teal"
+                  :style {:margin-top 10, :max-height 150, :overflow "auto"}}
+   (for [tag tags]
+     ^{:key (str uuid "_" tag)}
+     [ui/Popup
+      {:trigger        (r/as-element [ui/Label [ui/Icon {:name "tag"}]
+                                      (utils-general/truncate tag 20)])
+       :content        tag
+       :position       "bottom center"
+       :on             "hover"
+       :size           "tiny"
+       :hide-on-scroll true}])])
 
 
 (defn Card
@@ -453,7 +452,7 @@
     (when content content)
 
     (when (seq tags)
-      [Tags {:tags tags}])]
+      [Tags tags])]
 
    (when button button)
 

@@ -11,11 +11,15 @@
 
 (s/def ::time-period-filter (s/nilable string?))
 
-(s/def ::data-set-id any?)
+(s/def ::data-set-id (s/nilable string?))
 
 (s/def ::data-set any?)
 
-(s/def ::data-record-filter any?)
+(s/def ::data-record-filter (s/nilable string?))
+
+(s/def ::map-selection (s/nilable any?))
+
+(s/def ::geo-operation (s/nilable string?))
 
 (s/def ::data-records any?)
 
@@ -23,9 +27,12 @@
 
 (s/def ::content-type-filter (s/nilable string?))
 
+(s/def ::selected-data-record-ids (s/coll-of string? :kind set?))
+
 (s/def ::full-text-search (s/nilable string?))
 
 (s/def ::page int?)
+
 (s/def ::elements-per-page int?)
 
 (s/def ::db (s/keys :req [::not-found?
@@ -34,6 +41,8 @@
                           ::data-set
                           ::data-set-id
                           ::data-record-filter
+                          ::map-selection
+                          ::geo-operation
                           ::data-records
                           ::data-objects
                           ::content-type-filter
@@ -51,6 +60,8 @@
                ::data-set-id              nil
                ::data-set                 nil
                ::data-record-filter       nil
+               ::map-selection            nil
+               ::geo-operation            "intersects"
                ::data-records             nil
                ::data-objects             {}
                ::content-type-filter      nil

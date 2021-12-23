@@ -113,7 +113,7 @@ div.search.dropdown > input {
 }
 
 .react-datepicker-popper {
-    z-index: 11 !important;
+    z-index: 999 !important;
 }
 
 .mapbox-map {
@@ -129,7 +129,7 @@ div.search.dropdown > input {
   left: 3px;
   bottom: 0px;
   text-indent: -9999px;
-  z-index: 99999;
+  z-index: 998;
   overflow: hidden;
 
   /* `background-image` contains the Mapbox wordmark */

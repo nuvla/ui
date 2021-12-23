@@ -167,6 +167,7 @@
           (assoc ::spec/module {})
           (assoc ::spec/module-immutable {})
           (assoc ::spec/module-common {})
+          (assoc ::main-spec/loading? false)
           (assoc-in [::spec/module-common ::spec/name] new-name)
           (assoc-in [::spec/module-common ::spec/description] "")
           (assoc-in [::spec/module-common ::spec/logo-url] default-logo-url)
@@ -185,7 +186,8 @@
           v    (if (nil? requested-version) version requested-version)]
       {:db                  (cond-> db
                                     requested-version (assoc ::spec/version requested-version))
-       ::apps-fx/get-module [path v #(dispatch [::set-module %])]})))
+       ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
+                                         (dispatch [::deployment-events/get-module-deployments]))]})))
 
 
 (reg-event-db
@@ -701,3 +703,9 @@
   ::set-details-validation-error
   (fn [db [_ key error?]]
     (utils/set-reset-error db key error? ::spec/details-validation-errors)))
+
+
+(reg-event-db
+  ::set-tags
+  (fn [db [_ tags]]
+    (assoc-in db [::spec/module :tags] tags)))

@@ -680,8 +680,8 @@
       [ui/Icon {:icon (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
-     [ui/TableCell (utils/format-created created)]
-     [ui/TableCell [views-utils/FormatTags tags id]]
+     [ui/TableCell (values/format-created created)]
+     [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)
         [ui/Icon {:name "check"}])]]))
@@ -775,9 +775,7 @@
   (let [nuvlabox-locations (subscribe [::subs/nuvlabox-locations])
         nbs-locations      (:resources @nuvlabox-locations)]
     [map/MapBox
-     {:style  {:height 500}
-      :center map/sixsq-latlng
-      :zoom   3}
+     {}
      (doall
        (for [{:keys [id] :as nuvlabox} nbs-locations]
          ^{:key id}

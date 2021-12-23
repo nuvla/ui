@@ -321,8 +321,7 @@
              :default-filter $filter
              :disabled?      (nil? @selected-id)
              :open?          filter-open?
-             :on-done        #(dispatch [::events/set-filter %])}]]]
-         ]))))
+             :on-done        #(dispatch [::events/set-filter %])}]]]]))))
 
 
 (defn format-field-item [selections-atom item]

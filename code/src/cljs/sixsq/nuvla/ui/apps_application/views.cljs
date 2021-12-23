@@ -17,7 +17,7 @@
     [sixsq.nuvla.ui.deployment.views :as deployment-views]
     [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
@@ -262,7 +262,7 @@
     (when tags
       [ui/TableRow
        [ui/TableCell (str/capitalize (@tr [:tags]))]
-       [ui/TableCell [uix/Tags module]]])))
+       [ui/TableCell [apps-views-detail/Tags]]])))
 
 
 (defn OverviewModuleSummary
@@ -511,7 +511,7 @@
                           [ui/TableCell {:collapsing true
                                          :style      {:padding-bottom 8}}
                            (@tr [:grant-nuvla-access]) ff/nbsp
-                           [main-components/InfoPopup (@tr [:module-requires-user-rights])]]
+                           [components/InfoPopup (@tr [:module-requires-user-rights])]]
                           [ui/TableCell [RequiresUserRightsCheckbox]]]]
       :validation-event ::apps-events/set-details-validation-error}]))
 
@@ -564,14 +564,14 @@
         editable? (subscribe [::apps-subs/editable?])
         stripe    (subscribe [::main-subs/stripe])]
     (remove nil? [(overview)
+                  (details)
                   (deployments)
                   (license)
                   (when @stripe
                     (pricing))
-                  (versions)
-                  (details)
                   (docker)
                   (configuration)
+                  (versions)
                   (apps-views-detail/TabAcls
                     module
                     @editable?

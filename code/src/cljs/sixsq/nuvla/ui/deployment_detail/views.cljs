@@ -802,7 +802,7 @@
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:tags]))]
            [ui/TableCell
-            [uix/Tags {:tags tags}]]])
+            [uix/Tags tags]]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (str (@tr [:created])))]
          [ui/TableCell (-> @deployment :created time/parse-iso8601 time/ago)]]

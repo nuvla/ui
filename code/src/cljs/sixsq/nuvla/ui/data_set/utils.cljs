@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.data-set.utils
   (:require
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.utils.map :as map]))
 
 
 (defn create-time-period-filter
@@ -27,12 +28,23 @@
     "..."))
 
 
+(defn data-record-geometry-filter
+  [geo-operation data-record-map-geojson]
+  (when data-record-map-geojson
+    (if (= geo-operation "intersects")
+      (general-utils/join-or
+        (map/geojson->filter "geometry" geo-operation data-record-map-geojson)
+        (map/geojson->filter "location" geo-operation data-record-map-geojson))
+      (map/geojson->filter "geometry" geo-operation data-record-map-geojson))))
+
+
 (defn get-query-params
-  [data-record-filter full-text-search time-period-filter page elements-per-page]
+  [data-record-filter geojson geo-operation full-text-search time-period-filter page elements-per-page]
   {:first   (inc (* (dec page) elements-per-page))
    :last    (* page elements-per-page)
    :orderby "timestamp:desc"
    :filter  (general-utils/join-and
               time-period-filter
               data-record-filter
+              (data-record-geometry-filter geo-operation geojson)
               (general-utils/fulltext-query-string full-text-search))})

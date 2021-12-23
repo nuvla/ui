@@ -80,3 +80,20 @@
   ::full-text-search
   (fn [db]
     (::spec/full-text-search db)))
+
+
+(reg-sub
+  ::modal-open?
+  (fn [db]
+    (::spec/modal-open? db)))
+
+(reg-sub
+  ::add-data-set-form
+  (fn [db]
+    (::spec/add-data-set-form db)))
+
+
+(reg-sub
+  ::active-tab-index
+  (fn [db]
+    (get-in db [::spec/active-tab-index])))

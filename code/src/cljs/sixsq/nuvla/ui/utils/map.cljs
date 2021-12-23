@@ -1,13 +1,21 @@
 (ns sixsq.nuvla.ui.utils.map
   (:require
     ["react-leaflet" :as leaflet]
+    ["react-leaflet-draw" :as react-leaflet-draw]
+    ["wellknown" :as wellknown]
     [clojure.string :as str]
     [re-frame.core :refer [subscribe]]
     [reagent.core :as reagent]
     [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.main.subs :as main-subs]))
+    [sixsq.nuvla.ui.main.subs :as main-subs]
+    [reagent.core :as r]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (def Map (reagent/adapt-react-class leaflet/Map))
+
+(def FeatureGroup (reagent/adapt-react-class leaflet/FeatureGroup))
+
+(def EditControl (reagent/adapt-react-class react-leaflet-draw/EditControl))
 
 (def Marker (reagent/adapt-react-class leaflet/Marker))
 
@@ -23,6 +31,12 @@
 
 (def Circle (reagent/adapt-react-class leaflet/Circle))
 
+(def Rectangle (reagent/adapt-react-class leaflet/Rectangle))
+
+(def Polygon (reagent/adapt-react-class leaflet/Polygon))
+
+(def GeoJSON (reagent/adapt-react-class leaflet/GeoJSON))
+
 (def Tooltip (reagent/adapt-react-class leaflet/Tooltip))
 
 (def attributions
@@ -31,10 +45,12 @@
              "© <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a>"
              "<strong><a href=\"https://www.mapbox.com/map-feedback/\" target=\"_blank\">Improve this map</a></strong>"]))
 
+
 (defn DefaultLayers
   []
   (let [access-token (subscribe [::main-subs/config :mapbox-access-token])]
     [LayersControl {:position "topright"}
+     ;; don't optimize, @access-token with :<>, will break UI with funtion removeLayer not defined
      (when @access-token
        [BaseLayer {:name    "Light"
                    :checked (not config/debug?)}
@@ -52,9 +68,7 @@
        [BaseLayer {:name    "Light cartodb dev"
                    :checked config/debug?}
         [TileLayer {:url         "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
-                    :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a>, &copy; <a href=\"https://carto.com/attributions\">Carto</a>"
-                    }]])
-     ]))
+                    :attribution "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap</a>, &copy; <a href=\"https://carto.com/attributions\">Carto</a>"}]])]))
 
 
 (defn normalize-lng
@@ -86,7 +100,41 @@
       (callback (convert-latlong-map latlong)))))
 
 
-(def sixsq-latlng [46.2273, 6.07661])
+(def default-latlng-center [45, 0])
+
+#_(defn normalize-lat-lng
+    [^js latlng]
+    (.map latlng #(.wrap %1)))
+
+#_(defn normalize-lat-lngs
+    [^js latlngs]
+    (.map latlngs normalize-lat-lng))
+
+
+(defn normalize-lng-coordinates
+  [coordinates]
+  (mapv #(update %1 0 normalize-lng) coordinates))
+
+
+(defn normalize-lng-geojson
+  [geojson]
+  (update-in geojson [:geometry :coordinates] #(mapv normalize-lng-coordinates %1)))
+
+
+(defn geojson->filter [attribute operation geojson]
+  (some-> geojson
+          normalize-lng-geojson
+          clj->js
+          wellknown/stringify
+          (as-> wkt (str attribute " " operation " '" wkt "'"))))
+
+
+(def map-default-ops
+  {:min-zoom           2
+   :style              {:height 500}
+   :center             default-latlng-center
+   :worldCopyJump      true
+   :zoom               3})
 
 
 (defn MapBox
@@ -95,6 +143,15 @@
    [:a {:className "mapbox-wordmark"
         :href      "http://mapbox.com/about/maps"
         :target    "_blank"} "Mapbox"]
-   [Map opts
+   [Map (merge map-default-ops opts)
     [DefaultLayers]
+    content]])
+
+
+(defn MapBoxEdit
+  [opts content]
+  [MapBox (merge map-default-ops opts)
+   [:<>
+    [FeatureGroup
+     [EditControl opts]]
     content]])

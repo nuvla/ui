@@ -21,6 +21,7 @@
 (s/def ::full-text-search (s/nilable string?))
 
 (s/def ::page int?)
+
 (s/def ::elements-per-page int?)
 
 (s/def ::total any?)
@@ -33,7 +34,15 @@
 
 (s/def ::selected-data-set-ids (s/coll-of string? :kind set?))
 
-(s/def ::db (s/keys :req [::data-records
+(s/def ::modal-open? boolean?)
+
+(s/def ::active-tab-index number?)
+
+(s/def ::add-data-set-form any?)
+
+(s/def ::db (s/keys :req [::active-tab-index
+                          ::modal-open?
+                          ::data-records
                           ::credentials
                           ::application-select-visible?
                           ::loading-applications?
@@ -46,12 +55,15 @@
                           ::data-sets
                           ::selected-data-set-ids
                           ::page
-                          ::elements-per-page]))
+                          ::elements-per-page
+                          ::add-data-set-form]))
 
 (def default-time-period [(time/days-before 30)
                           (time/now)])
 
-(def defaults {::data-records                nil
+(def defaults {::active-tab-index            0
+               ::modal-open?                 false
+               ::data-records                nil
                ::credentials                 nil
                ::application-select-visible? false
                ::loading-applications?       false
@@ -64,4 +76,5 @@
                ::data-sets                   {}
                ::selected-data-set-ids       #{}
                ::page                        1
-               ::elements-per-page           8})
+               ::elements-per-page           8
+               ::add-data-set-form           {}})

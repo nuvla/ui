@@ -1,52 +1,91 @@
 (ns sixsq.nuvla.ui.data-set.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.data-set.spec :as spec]))
+    [sixsq.nuvla.ui.data-set.spec :as spec]
+    [sixsq.nuvla.ui.utils.general :as utils-general]
+    [clojure.string :as str]))
 
 
 (reg-sub
   ::time-period
-  (fn [db]
-    (::spec/time-period db)))
+  ::spec/time-period)
 
 
 (reg-sub
   ::data-set
-  (fn [db]
-    (::spec/data-set db)))
+  ::spec/data-set)
 
 
 (reg-sub
   ::not-found?
-  (fn [db]
-    (::spec/not-found? db)))
+  ::spec/not-found?)
 
 
 (reg-sub
   ::data-records
-  (fn [db]
-    (::spec/data-records db)))
+  ::spec/data-records)
 
 
 (reg-sub
   ::data-objects
-  (fn [db]
-    (::spec/data-objects db)))
+  ::spec/data-objects)
 
 
 (reg-sub
   ::elements-per-page
-  (fn [db]
-    (::spec/elements-per-page db)))
+  ::spec/elements-per-page)
 
 
 (reg-sub
   ::page
-  (fn [db]
-    (::spec/page db)))
+  ::spec/page)
 
 
 (reg-sub
   ::full-text-search
+  ::spec/full-text-search)
+
+
+(reg-sub
+  ::editable?
   (fn [db]
-    (::spec/full-text-search db)))
+    (utils-general/can-edit? (::spec/data-set db))))
+
+
+(reg-sub
+  ::data-record-filter
+  (fn [db]
+    (::spec/data-record-filter db)))
+
+
+(reg-sub
+  ::map-selection
+  (fn [db]
+    (::spec/map-selection db)))
+
+
+(reg-sub
+  ::suggest-update-data-record-filter?
+  (fn [{:keys [::spec/data-set
+               ::spec/data-record-filter]}]
+    (and (some? data-set)
+         (utils-general/can-edit? data-set)
+         (not= (:data-record-filter data-set) data-record-filter))))
+
+
+(reg-sub
+  ::selected-data-record-ids
+  (fn [db]
+    (::spec/selected-data-record-ids db)))
+
+
+(reg-sub
+  ::geo-operation
+  (fn [db]
+    (::spec/geo-operation db)))
+
+(reg-sub
+  ::geo-operation-active?
+  :<- [::geo-operation]
+  (fn [geo-operation [_ op]]
+    (= geo-operation op)))

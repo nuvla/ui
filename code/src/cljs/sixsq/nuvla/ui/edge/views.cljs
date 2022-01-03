@@ -168,7 +168,7 @@
     (@tr [:nuvlabox-modal-private-ssh-key-info])]])
 
 (defn CreatedNuvlaBox
-  [nuvlabox-id _creation-data nuvlabox-release-data nuvlabox-ssh-keys _new-private-ssh-key _on-close-fn]
+  [nuvlabox-id _creation-data nuvlabox-release-data nuvlabox-ssh-keys _new-private-ssh-key playbooks-toggle _on-close-fn]
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
         private-ssh-key-file (str (general-utils/id->short-uuid nuvlabox-id) ".ssh.private")
@@ -383,6 +383,7 @@
         ; default ttl for API key is 30 days
         default-ttl                30
         usb-trigger-key-ttl        (r/atom default-ttl)
+        playbooks-toggle           (r/atom false)
         ssh-toggle                 (r/atom false)
         ssh-existing-key           (r/atom false)
         ssh-chosen-keys            (r/atom [])
@@ -396,6 +397,7 @@
                                       (dispatch [::events/set-nuvlabox-created-private-ssh-key nil])
                                       (dispatch [::events/open-modal nil])
                                       (reset! advanced? false)
+                                      (reset! playbooks-toggle false)
                                       (reset! ssh-toggle false)
                                       (reset! ssh-existing-key false)
                                       (reset! ssh-chosen-keys [])
@@ -457,7 +459,7 @@
                  :on-close   on-close-fn}
        (cond
          @nuvlabox-id [CreatedNuvlaBox @nuvlabox-id @creation-data @nuvlabox-release-data
-                       nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
+                       nuvlabox-ssh-keys new-private-ssh-key @playbooks-toggle on-close-fn]
          @usb-api-key [CreatedNuvlaBoxUSBTrigger @creation-data @nuvlabox-release-data @usb-api-key
                        nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
          :else [:<>
@@ -614,6 +616,22 @@
                        (@tr [:create-nuvlabox-compose])]
                       [NuvlaDocLink tr :nuvlabox-modal-more-info compose-doc-anchor]
 
+                      [:div {:style {:margin  "10px 5px 5px 5px"
+                                     :display (if (= @install-strategy "compose")
+                                                "block" "none")}}
+                       [ui/Checkbox {:toggle    true
+                                     :label     (@tr [:nuvlabox-modal-enable-playbooks])
+                                     :checked   @playbooks-toggle
+                                     :on-change #(do
+                                                   (swap! playbooks-toggle not))}]
+                       [ui/Popup
+                        {:trigger        (r/as-element [ui/Icon {:name "info circle"
+                                                                 :style {:margin-left  "1em"}}])
+                         :content        (@tr [:nuvlabox-modal-enable-playbooks-info])
+                         :on             "hover"
+                         :hide-on-scroll true}]]
+
+
                       [ui/Divider {:fitted     true
                                    :horizontal true
                                    :style      {:text-transform "lowercase"
@@ -625,7 +643,8 @@
                                         :checked   (= @install-strategy "usb")
                                         :on-change #(do
                                                       (reset! install-strategy "usb")
-                                                      (reset! install-strategy-error nil))}]
+                                                      (reset! install-strategy-error nil)
+                                                      (reset! playbooks-toggle false))}]
 
                       [:div {:style {:color "grey" :font-style "oblique"}}
                        (@tr [:create-nuvlabox-usb])]

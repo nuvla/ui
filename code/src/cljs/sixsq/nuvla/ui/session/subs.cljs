@@ -126,12 +126,14 @@
 
 (reg-sub
   ::error-message
-  ::spec/error-message)
+  (fn [db]
+    (::spec/error-message db)))
 
 
 (reg-sub
   ::success-message
-  ::spec/success-message)
+  (fn [db]
+    (::spec/success-message db)))
 
 
 (reg-sub

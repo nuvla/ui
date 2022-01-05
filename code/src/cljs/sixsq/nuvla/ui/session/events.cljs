@@ -17,7 +17,7 @@
 
 (reg-event-fx
   ::initialize
-  (fn [{db :db} _]
+  (fn [{db :db}]
     {:db                   (assoc db ::spec/loading-session? true)
      ::cimi-api-fx/session [(fn [session]
                               (dispatch [::set-session session])
@@ -37,14 +37,13 @@
     (let [no-session-protected-page? (and (nil? session-arg)
                                           (->> nav-path first (get pages) :protected?))]
       (cond-> {:db (assoc db ::spec/session session-arg
-                             ::spec/session-loading? false
-                             :dispatch-n [])}
+                             ::spec/session-loading? false)}
               session-arg (assoc ::fx/automatic-logout-at-session-expiry [session-arg])
               no-session-protected-page? (update :dispatch-n conj [::history-events/navigate "sign-in"])
               ;; force refresh templates collection cache when not the same user (different session)
-              (not= session session-arg) (update :dispatch-n conj
-                                                 [::cimi-events/get-cloud-entry-point]
-                                                 [:sixsq.nuvla.ui.main.events/force-refresh-content])))))
+              (not= session session-arg) (assoc :dispatch-n
+                                                [[::cimi-events/get-cloud-entry-point]
+                                                 [:sixsq.nuvla.ui.main.events/force-refresh-content]])))))
 
 
 (reg-event-fx
@@ -90,6 +89,31 @@
 
 
 (reg-event-fx
+  ::code-validation-2fa-failed
+  (fn []
+    {:fx [[:dispatch [::set-error-message "Code validation failed!"]]]}))
+
+
+(reg-event-fx
+  ::validate-2fa-activation
+  (fn [{{:keys [::spec/callback-2fa]} :db} [_ token]]
+    (when-not (str/blank? token)
+      {:http-xhrio {:method          :put
+                    :uri             callback-2fa
+                    :format          (ajax/json-request-format)
+                    :params          {:token token}
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::initialize]
+                    :on-failure      [::code-validation-2fa-failed]}})))
+
+
+(reg-event-db
+  ::set-callback-2fa
+  (fn [db [_ {callback-url :location :as _reponse}]]
+    (assoc db ::spec/callback-2fa callback-url)))
+
+
+(reg-event-fx
   ::submit
   (fn [{{:keys [::spec/server-redirect-uri] :as db} :db} [_ form-id form-data opts]]
     (let [{close-modal  :close-modal,
@@ -103,13 +127,18 @@
           on-success    (or callback-add
                             #(do
                                (dispatch [::clear-loading])
-                               (dispatch [::initialize])
-                               (when close-modal
-                                 (dispatch [::close-modal]))
-                               (when success-msg
-                                 (dispatch [::set-success-message success-msg]))
-                               (when navigate-to
-                                 (dispatch [::history-events/navigate navigate-to]))))
+                               (if (= (:status %1) 201)
+                                 (do
+                                   (dispatch [::initialize])
+                                   (when close-modal
+                                     (dispatch [::close-modal]))
+                                   (when success-msg
+                                     (dispatch [::set-success-message success-msg]))
+                                   (when navigate-to
+                                     (dispatch [::history-events/navigate navigate-to])))
+                                 (do
+                                   (dispatch [::set-callback-2fa %1])
+                                   (dispatch [::history-events/navigate "sign-in-token"])))))
 
           on-error      #(let [{:keys [message]} (response/parse-ex-info %)]
                            (dispatch [::clear-loading])
@@ -120,7 +149,6 @@
           collection-kw (cond
                           (str/starts-with? form-id "session-template/") :session
                           (str/starts-with? form-id "user-template/") :user)]
-
       {:db               (assoc db ::spec/loading? true
                                    ::spec/success-message nil
                                    ::spec/error-message nil)

@@ -239,6 +239,7 @@
          "sign-up" [session-views/SessionPage true]
          "reset-password" [session-views/SessionPage true]
          "set-password" [session-views/SessionPage false]
+         "sign-in-token" [session-views/SessionPage true]
          nil [session-views/SessionPage true]
          [:<>
           [intercom/widget]

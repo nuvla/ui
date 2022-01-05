@@ -12,7 +12,9 @@
     [sixsq.nuvla.ui.session.subs :as subs]
     [sixsq.nuvla.ui.session.utils :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.spec :as us]))
+    [sixsq.nuvla.ui.utils.spec :as us]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [reagent.core :as r]))
 
 ;; VALIDATION SPEC
 (s/def ::username us/nonblank-string)
@@ -22,6 +24,31 @@
   (s/keys :req-un [::username
                    ::password]))
 
+
+(defn FormTokenValidation
+  []
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        token               (r/atom nil)]
+    (fn []
+      [comp/RightPanel
+       {:title        "Sign-in " #_(@tr [:login-to])
+        :title-bold   "code validation" #_(@tr [:account])
+        :FormFields   [:<>
+                       [ui/Message {:info    true
+                                    :header  "Code verification"
+                                    :content "We will send you a message with a verification code."
+                                    :icon    "envelope"}]
+                       [ui/FormInput
+                        {:label         "Code" #_(str/capitalize (@tr [:code]))
+                         :required      true
+                         :icon          "key"
+                         :icon-position "left"
+                         :auto-focus    "on"
+                         :auto-complete "off"
+                         :type          "number"
+                         :on-change     (ui-callback/input-callback #(reset! token %1))}]]
+        :submit-text  "Validate" #_(@tr [:sign-in])
+        :submit-fn    #(dispatch [::events/validate-2fa-activation @token])}])))
 
 (defn Form
   []

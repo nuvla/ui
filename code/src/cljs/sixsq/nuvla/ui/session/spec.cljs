@@ -23,6 +23,8 @@
 
 (s/def ::groups any?)
 
+(s/def ::callback-2fa (s/nilable string?))
+
 
 (s/def ::db (s/keys :req [::session-loading?
                           ::open-modal
@@ -33,7 +35,8 @@
                           ::server-redirect-uri
                           ::loading?
                           ::peers
-                          ::groups]))
+                          ::groups
+                          ::callback-2fa]))
 
 
 (def defaults
@@ -46,4 +49,5 @@
    ::server-redirect-uri (str @config/path-prefix "/sign-in")
    ::loading?            false
    ::peers               nil
-   ::groups              nil})
+   ::groups              nil
+   ::callback-2fa        nil})

@@ -54,6 +54,8 @@
 
 (s/def ::nuvlabox-not-found? boolean?)
 
+(s/def ::nuvlabox-playbooks-cronjob any?)
+
 
 (s/def ::db (s/keys :req [::nuvlaboxes
                           ::nuvlaboxes-summary
@@ -76,7 +78,8 @@
                           ::vpn-infra
                           ::ssh-keys-available
                           ::nuvlabox-clusters
-                          ::nuvlabox-cluster]))
+                          ::nuvlabox-cluster
+                          ::nuvlabox-playbooks-cronjob]))
 
 
 (def defaults {::nuvlaboxes                nil
@@ -100,4 +103,5 @@
                ::vpn-infra                 nil
                ::ssh-keys-available        nil
                ::nuvlabox-clusters         nil
-               ::nuvlabox-cluster          nil})
+               ::nuvlabox-cluster          nil
+               ::nuvlabox-playbooks-cronjob nil})

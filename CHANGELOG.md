@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+  - NuvlaBox - new options for opting in on host-level management, at NuvlaBox creation time
+
 ### Changed
 
   - Dependencies updates

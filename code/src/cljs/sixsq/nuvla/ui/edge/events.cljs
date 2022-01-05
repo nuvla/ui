@@ -387,3 +387,18 @@
   ::set-active-tab-index
   (fn [db [_ active-tab-index]]
     (assoc db ::spec/active-tab-index active-tab-index)))
+
+
+(reg-event-fx
+  ::enable-host-level-management
+  (fn [_ [_ nuvlabox-id]]
+    {::cimi-api-fx/operation [nuvlabox-id
+                              "enable-host-level-management"
+                              #(dispatch [::set-nuvlabox-playbooks-cronjob %])
+                              nil]}))
+
+
+(reg-event-db
+  ::set-nuvlabox-playbooks-cronjob
+  (fn [db [_ cronjob]]
+    (assoc db ::spec/nuvlabox-playbooks-cronjob cronjob)))

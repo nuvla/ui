@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+  - Profile - Enable or disable 2FA (Two factor authentication)
+
 ### Changed
 
   - Dependencies updates

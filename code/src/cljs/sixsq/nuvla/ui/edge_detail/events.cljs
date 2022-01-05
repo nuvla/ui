@@ -203,7 +203,8 @@
                            #(dispatch [::set-nuvlabox-peripherals %])]
      :fx                  [[:dispatch [::get-nuvlabox-events id]]
                            [:dispatch [::job-events/get-jobs id]]
-                           [:dispatch [::deployment-events/get-nuvlabox-deployments id]]]}))
+                           [:dispatch [::deployment-events/get-nuvlabox-deployments id]]
+                           [:dispatch [::get-nuvlabox-playbooks id]]]}))
 
 
 (reg-event-fx
@@ -367,3 +368,19 @@
   (fn [db [_ nuvlabox-cluster]]
     (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster)))
 
+
+(reg-event-fx
+  ::get-nuvlabox-playbooks
+  (fn [_ [_ nuvlabox-id]]
+    {::cimi-api-fx/search [:nuvlabox-playbook
+                           {:filter (str "parent='" nuvlabox-id "'")
+                            :select "id, run, enabled, type, output, name"
+                            :orderby  "type:desc"
+                            :last   1000}
+                           #(dispatch [::set-nuvlabox-playbooks (:resources %)])]}))
+
+
+(reg-event-db
+  ::set-nuvlabox-playbooks
+  (fn [db [_ nuvlabox-playbooks]]
+    (assoc db ::spec/nuvlabox-playbooks nuvlabox-playbooks)))

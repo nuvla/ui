@@ -1460,6 +1460,101 @@
            [ui/Message {:content (@tr [:nuvlabox-vuln-unavailable])}])]))))
 
 
+(defn TabPlaybooks
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        nuvlabox       (subscribe [::subs/nuvlabox])
+        playbooks      (subscribe [::subs/nuvlabox-playbooks])
+        selected-playbook (r/atom nil)]
+    (fn []
+      (let [n (count @playbooks)
+            on-change-fn   (fn [k]
+                             (reset! selected-playbook (first (get (group-by :id @playbooks) k))))]
+        [ui/TabPane
+         (when (nil? (:host-level-management-api-key @nuvlabox))
+           [ui/Message {:warning true} (@tr [:nuvlabox-playbooks-disabled])])
+
+         [ui/Container {:text-align "center"
+                        :centered   true}
+          [ui/Label {:basic true}
+           "Total NuvlaBox playbooks found: "
+           [ui/LabelDetail n]]
+
+          [ui/Segment {:secondary true
+                       :color     "grey"
+                       :raised    true}
+
+           [ui/Container
+            [ui/Icon  {:name "search"
+                       :style {:display "inline"}}]
+            [ui/Dropdown
+             {:header      [(r/as-element [ui/Icon {:name "book"}]) " Select Playbook"]
+              :placeholder "select playbook"
+              :on-change   (ui-callback/value on-change-fn)
+              :selection   true
+              :search      true
+              :icon        ""
+              :style       {:margin "1em"}
+              :clearable   false
+              :options     (map (fn [{:keys [id name type enabled]}]
+                                  {:key id,
+                                   :text (or name id),
+                                   :value id,
+                                   :description  (if enabled
+                                                   "enabled"
+                                                   "disabled")
+                                   :icon (if (= "EMERGENCY" type)
+                                           "emergency"
+                                           "wrench")}) @playbooks)}]
+
+            [ui/Container
+             (if @selected-playbook
+               [:<>
+                [ui/Segment {:placeholder true}
+                 [ui/Grid {:columns 2
+                           :stackable true
+                           :text-align "center"}
+                  [ui/Divider {:vertical true}]
+                  [ui/GridRow {:vertical-align "middle"}
+                   [ui/GridColumn
+                    [ui/Table {:basic  "very"
+                               :padded false}
+                     [ui/TableBody
+                      [ui/TableRow
+                       [ui/TableCell "ID"]
+                       [ui/TableCell [values/as-link (:id @selected-playbook) :label (subs (:id @selected-playbook) 9)]]]
+                      (when (:name @selected-playbook)
+                        [ui/TableRow
+                         [ui/TableCell (str/capitalize (@tr [:name]))]
+                         [ui/TableCell (:name @selected-playbook)]])
+                      (when (:description @selected-playbook)
+                        [ui/TableRow
+                         [ui/TableCell (str/capitalize (@tr [:description]))]
+                         [ui/TableCell (:description @selected-playbook)]])
+                      [ui/TableRow
+                       [ui/TableCell "Type"]
+                       [ui/TableCell [:<>
+                                      [ui/Icon {:name (if (= "EMERGENCY" (:type @selected-playbook))
+                                                                      "emergency"
+                                                                      "wrench")}]
+                                      (:type @selected-playbook)]]]
+                      [ui/TableRow
+                       [ui/TableCell "Run"]
+                       [ui/TableCell [ui/Form
+                                      [ui/FormField
+                                       [ui/TextArea {:required      true
+                                                     :default-value (:run @selected-playbook)
+                                                     :on-change     (ui-callback/input-callback
+                                                                      #(swap! {} assoc :run %))}]]]]]]]]
+                   [ui/GridColumn
+                    "123123"]]]
+                 ]
+                ]
+               (@tr [:nuvlabox-playbooks-not-selected]))]
+
+            ]]]]))))
+
+
 (defn tabs
   [count-peripherals]
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -1507,6 +1602,10 @@
                  :key     "vuln"
                  :icon    "shield"}
       :render   (fn [] (r/as-element [TabVulnerabilities]))}
+     {:menuItem {:content "Playbooks"
+                 :key     "playbooks"
+                 :icon    "book"}
+      :render   (fn [] (r/as-element [TabPlaybooks]))}
      (job-views/jobs-section)
      (acl/TabAcls nuvlabox @can-edit? ::events/edit)]))
 

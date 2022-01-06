@@ -5,6 +5,7 @@
 ### Added
 
   - NuvlaBox - new options for opting in on host-level management, at NuvlaBox creation time
+  - NuvlaBox - new tab for managing playbooks
 
 ### Changed
 

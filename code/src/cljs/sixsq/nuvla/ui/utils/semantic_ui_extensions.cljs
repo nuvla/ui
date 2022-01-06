@@ -133,6 +133,19 @@
                     :class      "full-height"}]))
 
 
+(defn EditorShell
+  [_text _on-change-fn _editable?]
+  (fn [text on-change-fn editable?]
+    [ui/CodeMirror {:value      text
+                    :autoCursor true
+                    :options    {:mode              "text/x-sh"
+                                 :read-only         (not editable?)
+                                 :line-numbers      true
+                                 :style-active-line true}
+                    :on-change  on-change-fn
+                    :class      "full-height"}]))
+
+
 (defn EditorMarkdown
   "A convenience function to setup the CodeMirror editor component for Markdown."
   [_text _on-change-fn _editable?]

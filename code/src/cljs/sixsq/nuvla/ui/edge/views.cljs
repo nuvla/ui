@@ -651,8 +651,7 @@
                        [ui/Checkbox {:toggle    true
                                      :label     (@tr [:nuvlabox-modal-enable-playbooks])
                                      :checked   @playbooks-toggle
-                                     :on-change #(do
-                                                   (swap! playbooks-toggle not))}]
+                                     :on-change #(swap! playbooks-toggle not)}]
                        [ui/Popup
                         {:trigger        (r/as-element [ui/Icon {:name "info circle"
                                                                  :style {:margin-left  "1em"}}])

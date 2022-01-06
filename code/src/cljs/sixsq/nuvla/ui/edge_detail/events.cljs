@@ -374,7 +374,7 @@
   (fn [_ [_ nuvlabox-id]]
     {::cimi-api-fx/search [:nuvlabox-playbook
                            {:filter (str "parent='" nuvlabox-id "'")
-                            :select "id, run, enabled, type, output, name"
+                            :select "id, run, enabled, type, output, name, description"
                             :orderby  "type:desc"
                             :last   1000}
                            #(dispatch [::set-nuvlabox-playbooks (:resources %)])]}))
@@ -384,3 +384,32 @@
   ::set-nuvlabox-playbooks
   (fn [db [_ nuvlabox-playbooks]]
     (assoc db ::spec/nuvlabox-playbooks nuvlabox-playbooks)))
+
+
+(reg-event-fx
+  ::edit-playbook-run
+  (fn [_ [_ playbook new-run]]
+    (let [nuvlabox-id (:parent playbook)
+          playbook-id (:id playbook)
+          new-run-body  {:run new-run}]
+      {::cimi-api-fx/edit [playbook-id new-run-body
+                           #(if (instance? js/Error %)
+                              (let [{:keys [status message]} (response/parse-ex-info %)]
+                                (dispatch [::messages-events/add
+                                           {:header  (cond-> "Failed to update the playbook's run"
+                                                       status (str " (" status ")"))
+                                            :content message
+                                            :type    :error}]))
+                              (do
+                                (dispatch [::messages-events/add
+                                           {:header  "Playbook updated"
+                                            :content "The Playbook's run script has been updated."
+                                            :type    :info}])
+                                (dispatch [::get-nuvlabox-playbooks nuvlabox-id])))]})))
+
+
+(reg-event-fx
+  ::add-nuvlabox-playbook
+  (fn [_ [_ data]]
+    {::cimi-api-fx/add [:nuvlabox-playbook data
+                        #(dispatch [::get-nuvlabox-playbooks (:parent data)])]}))

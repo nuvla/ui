@@ -3,26 +3,26 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.apps.utils :as application-utils]
     [sixsq.nuvla.ui.data-set.events :as events]
-    [sixsq.nuvla.ui.data.events :as data-events]
     [sixsq.nuvla.ui.data-set.subs :as subs]
+    [sixsq.nuvla.ui.data-set.utils :as utils]
+    [sixsq.nuvla.ui.data.events :as data-events]
+    [sixsq.nuvla.ui.data.subs :as data-subs]
+    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as utils-general]
+    [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
-    [sixsq.nuvla.ui.data.subs :as data-subs]
-    [sixsq.nuvla.ui.apps.utils :as application-utils]
-    [sixsq.nuvla.ui.utils.map :as map]
-    [sixsq.nuvla.ui.data-set.utils :as utils]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (defn refresh

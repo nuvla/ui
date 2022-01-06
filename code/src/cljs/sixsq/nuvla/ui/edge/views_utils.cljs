@@ -6,7 +6,6 @@
     [sixsq.nuvla.ui.edge.events :as events]
     [sixsq.nuvla.ui.edge.subs :as subs]
     [sixsq.nuvla.ui.edge.utils :as utils]
-    [sixsq.nuvla.ui.utils.values :as utils-values]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -15,7 +14,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.utils.values :as utils-values]))
 
 
 (defn NuvlaboxRow

@@ -6,9 +6,9 @@
     [clojure.string :as str]
     [re-frame.core :refer [subscribe]]
     [reagent.core :as reagent]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [reagent.core :as r]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (def Map (reagent/adapt-react-class leaflet/Map))

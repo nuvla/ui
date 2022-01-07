@@ -210,3 +210,10 @@
                                  boolean)]
     (or (str/blank? (:nuvlabox-release form-data))
         (and payload? payload-incomplete?))))
+
+
+(defn form-add-playbook-incomplete?
+  [{:keys [name run enabled type parent] :as form-data}]
+  (->> [name run enabled type parent]
+    (some str/blank?)
+    boolean))

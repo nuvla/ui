@@ -143,7 +143,7 @@
                                  :line-numbers      true
                                  :style-active-line true}
                     :on-change  on-change-fn
-                    :class      "full-height"}]))
+                    :class      "full-width"}]))
 
 
 (defn EditorMarkdown

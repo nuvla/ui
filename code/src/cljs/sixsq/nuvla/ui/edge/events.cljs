@@ -408,7 +408,7 @@
                                                             status (str " (" status ")"))
                                                  :content message
                                                  :type    :success}]))
-                                   (dispatch [::set-nuvlabox-playbooks-cronjob %])))
+                                   (dispatch [::set-nuvlabox-playbooks-cronjob (:cronjob %)])))
                               nil]}))
 
 

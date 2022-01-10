@@ -19,9 +19,9 @@
                                                           day8.re-frame-10x.preload]}
 
                                 :dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL
-                                                                "https://swarm.nuvla.io"}
+                                                                "https://nuvla.io"
                                                                 #_"https://localhost"
-                                                                ;re_frame.trace.trace_enabled_QMARK_ true}
+                                                                re_frame.trace.trace_enabled_QMARK_ true}
                                              :compiler-options {:infer-externs :auto}}
 
                                 :release    {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL ""}

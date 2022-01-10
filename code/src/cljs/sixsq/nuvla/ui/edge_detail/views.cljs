@@ -458,6 +458,101 @@
             :on-click on-click-fn}]]]))))
 
 
+(defn EmergencyPlaybooksDropdown
+  [_nuvlabox-id _on-change]
+  (let [em-playbooks  (subscribe [::subs/nuvlabox-emergency-playbooks])
+        tr            (subscribe [::i18n-subs/tr])]
+    (fn [nuvlabox-id on-change]
+      (dispatch [::events/get-emergency-playbooks nuvlabox-id])
+      (let [em-enabled    (get (group-by :enabled @em-playbooks) true)
+            em-disabled   (get (group-by :enabled @em-playbooks) false)]
+        [:<>
+         [ui/FormDropdown
+          {:label      "Emergency Playbooks"
+           :selection  true
+           :placeholder  (if (and @em-playbooks (not em-disabled))
+                           (@tr [:nuvlabox-emergency-playbooks-none])
+                           (str (@tr [:select]) " playbook"))
+           :multiple   true
+           :loading    (nil? @em-playbooks)
+           :options    (map (fn [{:keys [id name]}]
+                              {:key id,
+                               :text (or name id),
+                               :value id}) em-disabled)
+           :on-change  (ui-callback/value on-change)}]
+        (when (pos? (count em-enabled))
+          [ui/Message
+           (@tr [:nuvlabox-emergency-playbooks-already-enabled])
+           [ui/ListSA {:bulleted  true}
+            (map (fn [{:keys [id name] :as pb}]
+                   [ui/ListItem
+                    ^{:key id}
+                    [values/as-link id :label (or name id)]])
+              em-enabled)]])]))))
+
+
+(defn AssemblePlaybooksButton
+  [{:keys [id name description] :as _nuvlabox} operation show? title icon button-text]
+  (let [tr      (subscribe [::i18n-subs/tr])
+        close-fn      #(reset! show? false)
+        on-click-fn   #(dispatch [::events/operation-assemble-playbooks id close-fn close-fn])]
+    [ui/Modal
+     {:open       @show?
+      :close-icon true
+      :on-close   close-fn
+      :trigger    (r/as-element
+                    [ui/MenuItem {:on-click #(reset! show? true)}
+                     [ui/Icon {:name icon}]
+                     title])}
+     [uix/ModalHeader {:header title}]
+     [ui/ModalActions
+      [uix/Button
+       {:text     button-text
+        :primary  true
+        :on-click on-click-fn}]]]))
+
+
+(defn EnableEmergencyPlaybooksButton
+  [{:keys [id] :as _resource} operation show? _title _icon _button-text]
+  (let [close-fn      #(reset! show? false)
+        form-data     (r/atom {})
+        loading?      (r/atom nil)
+        on-change-fn  (fn [k v]
+                        (if (str/blank? v)
+                          (swap! form-data dissoc k)
+                          (swap! form-data assoc k v)))
+        on-success-fn (fn [emergency-playbooks-ids]
+                        (reset! loading? false)
+                        (when (:emergency-playbooks-ids @form-data)
+                          (close-fn)))
+        on-error-fn   close-fn
+        on-click-fn   #(do
+                         (reset! loading? true)
+                         (dispatch [::events/operation id operation @form-data
+                                    on-success-fn on-error-fn]))]
+    (fn [resource _operation show? title icon button-text]
+      (let [playbooks (:emergency-playbooks-ids @form-data)]
+        [ui/Modal
+         {:open       @show?
+          :close-icon true
+          :on-close   close-fn
+          :trigger    (r/as-element
+                        [ui/MenuItem {:on-click #(reset! show? true)}
+                         [ui/Icon {:name icon}]
+                         title])}
+         [uix/ModalHeader {:header title}]
+         [ui/ModalContent
+          [ui/Form
+           [EmergencyPlaybooksDropdown (:id resource) (partial on-change-fn :emergency-playbooks-ids)]]]
+         [ui/ModalActions
+          [uix/Button
+           {:text     button-text
+            :primary  true
+            :disabled (empty? playbooks)
+            :loading  (true? @loading?)
+            :on-click on-click-fn}]]]))))
+
+
 (defmethod cimi-detail-views/other-button ["nuvlabox" "cluster-nuvlabox"]
   [_resource _operation]
   (let [show? (r/atom false)]
@@ -490,6 +585,25 @@
     (fn [resource operation]
       ^{:key (str "update-nuvlabox" @show?)}
       [UpdateButton resource operation show? "Update NuvlaBox" "download" (@tr [:update])])))
+
+
+(defmethod cimi-detail-views/other-button ["nuvlabox" "enable-emergency-playbooks"]
+  [_resource _operation]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        show? (r/atom false)]
+    (fn [resource operation]
+      ^{:key (str "enable-emergency-playbooks" @show?)}
+      [EnableEmergencyPlaybooksButton resource operation show? "Enable emergency playbooks" "ambulance" (@tr [:enable])])))
+
+
+(defmethod cimi-detail-views/other-button ["nuvlabox" "assemble-playbooks"]
+  [_resource _operation]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        show? (r/atom false)]
+    (fn [resource operation]
+      ^{:key (str "assemble-playbooks" @show?)}
+      [AssemblePlaybooksButton resource operation show? "Assemble playbooks" "book" (@tr [:yes])])))
+
 
 
 (defn MenuBar [uuid]
@@ -1572,7 +1686,7 @@
             [ui/Dropdown
              {:header      (r/as-element [ui/DropdownHeader {:content "Select Playbook"
                                                              :icon "book"}])
-              :placeholder "select playbook"
+              :placeholder (str (@tr [:select]) " playbook")
               :on-change   (ui-callback/value on-change-fn)
               :selection   true
               :search      true

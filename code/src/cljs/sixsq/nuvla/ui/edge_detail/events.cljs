@@ -165,6 +165,29 @@
 
 
 (reg-event-fx
+  ::operation-assemble-playbooks
+  (fn [_ [_ resource-id on-success-fn on-error-fn]]
+    {::cimi-api-fx/operation
+     [resource-id "assemble-playbooks"
+      #(if (instance? js/Error %)
+         (let [{:keys [status message]} (response/parse-ex-info %)]
+           (dispatch [::messages-events/add
+                      {:header  (cond-> "error assembling NuvlaBox playbooks "
+                                  status (str " (" status ")"))
+                       :content message
+                       :type    :error}])
+           (on-error-fn))
+         (do
+           (dispatch [::messages-events/add
+                      {:header  "playbooks assembled and ready for usage"
+                       :content %
+                       :type    :success}])
+           (on-success-fn (:message %))
+           (dispatch [::get-nuvlabox resource-id])))
+      nil]}))
+
+
+(reg-event-fx
   ::set-page
   (fn [{db :db} [_ page]]
     {:db       (assoc db ::spec/page page)
@@ -413,3 +436,20 @@
   (fn [_ [_ data]]
     {::cimi-api-fx/add [:nuvlabox-playbook data
                         #(dispatch [::get-nuvlabox-playbooks (:parent data)])]}))
+
+
+(reg-event-fx
+  ::get-emergency-playbooks
+  (fn [_ [_ nuvlabox-id]]
+    {::cimi-api-fx/search [:nuvlabox-playbook
+                           {:filter (str "parent='" nuvlabox-id "' and type='EMERGENCY'")
+                            :select "id, enabled, type, name"
+                            :orderby  "enabled:desc"
+                            :last   1000}
+                           #(dispatch [::set-emergency-playbooks (:resources %)])]}))
+
+
+(reg-event-db
+  ::set-emergency-playbooks
+  (fn [db [_ nuvlabox-playbooks]]
+    (assoc db ::spec/nuvlabox-emergency-playbooks nuvlabox-playbooks)))

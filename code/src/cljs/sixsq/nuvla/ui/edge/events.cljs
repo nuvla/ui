@@ -401,7 +401,14 @@
                                                           status (str " (" status ")"))
                                                :content message
                                                :type    :error}]))
-                                 (dispatch [::set-nuvlabox-playbooks-cronjob %]))
+                                 (do
+                                   (let [{:keys [status message]} (response/parse %)]
+                                     (dispatch [::messages-events/add
+                                                {:header  (cond-> (str "host level management enabled for " nuvlabox-id)
+                                                            status (str " (" status ")"))
+                                                 :content message
+                                                 :type    :success}]))
+                                   (dispatch [::set-nuvlabox-playbooks-cronjob %])))
                               nil]}))
 
 

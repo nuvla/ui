@@ -165,21 +165,21 @@
 
 
 (reg-event-fx
-  ::operation-assemble-playbooks
-  (fn [_ [_ resource-id on-success-fn on-error-fn]]
+  ::operation-text-response
+  (fn [_ [_ operation resource-id on-success-fn on-error-fn]]
     {::cimi-api-fx/operation
-     [resource-id "assemble-playbooks"
+     [resource-id operation
       #(if (instance? js/Error %)
          (let [{:keys [status message]} (response/parse-ex-info %)]
            (dispatch [::messages-events/add
-                      {:header  (cond-> "error assembling NuvlaBox playbooks "
+                      {:header  (cond-> (str "error executing " operation " for NuvlaBox " resource-id)
                                   status (str " (" status ")"))
                        :content message
                        :type    :error}])
            (on-error-fn))
          (do
            (dispatch [::messages-events/add
-                      {:header  "playbooks assembled and ready for usage"
+                      {:header  (str "operation " operation " successful")
                        :content %
                        :type    :success}])
            (on-success-fn (:message %))

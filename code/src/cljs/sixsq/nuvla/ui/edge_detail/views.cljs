@@ -491,11 +491,11 @@
               em-enabled)]])]))))
 
 
-(defn AssemblePlaybooksButton
+(defn TextActionButton
   [{:keys [id name description] :as _nuvlabox} operation show? title icon button-text]
   (let [tr      (subscribe [::i18n-subs/tr])
         close-fn      #(reset! show? false)
-        on-click-fn   #(dispatch [::events/operation-assemble-playbooks id close-fn close-fn])]
+        on-click-fn   #(dispatch [::events/operation-text-response operation id close-fn close-fn])]
     [ui/Modal
      {:open       @show?
       :close-icon true
@@ -505,6 +505,8 @@
                      [ui/Icon {:name icon}]
                      title])}
      [uix/ModalHeader {:header title}]
+     [ui/ModalContent
+      [:p (@tr [:execute-action-msg] [operation])]]
      [ui/ModalActions
       [uix/Button
        {:text     button-text
@@ -602,8 +604,16 @@
         show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "assemble-playbooks" @show?)}
-      [AssemblePlaybooksButton resource operation show? "Assemble playbooks" "book" (@tr [:yes])])))
+      [TextActionButton resource operation show? "Assemble playbooks" "book" (@tr [:yes])])))
 
+
+(defmethod cimi-detail-views/other-button ["nuvlabox" "enable-host-level-management"]
+  [_resource _operation]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        show? (r/atom false)]
+    (fn [resource operation]
+      ^{:key (str "enable-host-level-management" @show?)}
+      [TextActionButton resource operation show? "Enable host level management" "cog" (@tr [:enable])])))
 
 
 (defn MenuBar [uuid]

@@ -134,8 +134,8 @@
 
 
 (defn EditorShell
-  [_text _on-change-fn _editable?]
-  (fn [text on-change-fn editable?]
+  [_text _on-change-fn _editable? _class]
+  (fn [text on-change-fn editable? class]
     [ui/CodeMirror {:value      text
                     :autoCursor true
                     :options    {:mode              "text/x-sh"
@@ -143,7 +143,7 @@
                                  :line-numbers      true
                                  :style-active-line true}
                     :on-change  on-change-fn
-                    :class      "full-width"}]))
+                    :class      class}]))
 
 
 (defn EditorMarkdown

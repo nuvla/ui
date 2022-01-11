@@ -1651,12 +1651,14 @@
                                       (swap! form-data assoc :enabled (not (:enabled @form-data))))}]]
             [ui/FormField {:label "Run"
                            :required  true}]
+            "Shell script: "
             [uix/EditorShell
-             "#!/bin/sh\n"
+             ""
              (fn [_editor _data value]
                (ui-callback/input-callback
                  (swap! form-data assoc :run value)))
-             true]]]]
+             true
+             "full-width"]]]]
          [ui/ModalActions
           [uix/Button
            {:text     (@tr [:add])
@@ -1672,7 +1674,8 @@
         playbooks      (subscribe [::subs/nuvlabox-playbooks])
         selected-playbook (subscribe [::subs/nuvlabox-current-playbook])
         run-changed?   (r/atom false)
-        run            (r/atom nil)]
+        run            (r/atom nil)
+        enabled-changed?  (r/atom false)]
     (fn []
       (let [n     (count @playbooks)
             on-change-fn   (fn [k]
@@ -1691,8 +1694,6 @@
                        :raised    true}
 
            [ui/Container
-            [ui/Icon  {:name "search"
-                       :style {:display "inline"}}]
             [ui/Dropdown
              {:header      (r/as-element [ui/DropdownHeader {:content "Select Playbook"
                                                              :icon "book"}])
@@ -1700,7 +1701,7 @@
               :on-change   (ui-callback/value on-change-fn)
               :selection   true
               :search      true
-              :icon        ""
+              ;:icon        ""
               :style       {:margin "1em"}
               :clearable   false
               :options     (map (fn [{:keys [id name type enabled]}]
@@ -1722,82 +1723,87 @@
 
             [ui/Container
              (if @selected-playbook
-               [:<>
-                [ui/Segment {:placeholder true}
-                 [ui/Grid {:columns 2
-                           :stackable true
-                           :divided true
-                           :text-align "center"}
-                  [ui/GridRow {:vertical-align "middle"
-                               :stretched true}
-                   [ui/GridColumn
-                    [ui/Table {:basic  "very"
-                               :padded false}
-                     [ui/TableBody
-                      [ui/TableRow
-                       [ui/TableCell "ID"]
-                       [ui/TableCell [values/as-link (:id @selected-playbook) :label (subs (:id @selected-playbook) 9)]]]
-                      (when (:name @selected-playbook)
-                        [ui/TableRow
-                         [ui/TableCell (str/capitalize (@tr [:name]))]
-                         [ui/TableCell (:name @selected-playbook)]])
-                      (when (:description @selected-playbook)
-                        [ui/TableRow
-                         [ui/TableCell (str/capitalize (@tr [:description]))]
-                         [ui/TableCell (:description @selected-playbook)]])
-                      [ui/TableRow
-                       [ui/TableCell "Enabled"]
-                       [ui/TableCell [:<>
-                                      [ui/Label {:circular  true
-                                                 :empty true
-                                                 :key   "enabled"
-                                                 :color (if (:enabled @selected-playbook)
-                                                        "green"
-                                                        "red")}]
-                                      (if (:enabled @selected-playbook)
-                                        " True"
-                                        " False")]]]
-                      [ui/TableRow
-                       [ui/TableCell "Type"]
-                       [ui/TableCell [:<>
-                                      [ui/Icon {:name (if (= "EMERGENCY" (:type @selected-playbook))
-                                                                      "emergency"
-                                                                      "wrench")}]
-                                      (:type @selected-playbook)]]]
-                      [ui/TableRow
-                       [ui/TableCell [:span {:style {:font-weight "bold"}} "Run"]]
-                       [ui/TableCell [:<>
-                                      [uix/EditorShell
-                                       (:run @selected-playbook)
-                                       (fn [_editor _data value]
-                                         (reset! run value)
-                                         (reset! run-changed? true))
-                                       true]
-                                      [uix/Button {:primary  true
-                                                   :text     (@tr [:save])
-                                                   :icon     "save"
-                                                   :disabled (or (not @run-changed?) (empty? @run))
-                                                   :on-click #(do
-                                                                (dispatch [::events/edit-playbook-run @selected-playbook @run])
-                                                                (reset! run-changed? false)
-                                                                (reset! run nil))}]]]]]]]
-                   [ui/GridColumn
-                    (if (some? (:output @selected-playbook))
-                      [:<>
-                       [ui/Header {:as "h4"
-                                   :attached "top"}
-                        "Output"]
-                       [ui/Segment {:attached  true
-                                    :text-align "left"}
-                        [ui/CodeMirror {:value      (:output @selected-playbook)
-                                        :autoCursor true
-                                        :options    {:mode              "text/plain"
-                                                     :read-only         true
-                                                     :line-numbers      false
-                                                     :style-active-line false}
-                                        :class      "full-width"}]]]
-                      [ui/Segment {:vertical  true}
-                       (@tr [:nuvlabox-playbooks-no-outputs])])]]]]]
+               [ui/Segment {:placeholder true}
+                [ui/Grid {:columns 2
+                          :stackable true
+                          :divided true
+                          :text-align "center"}
+                 [ui/GridRow {:vertical-align "middle"
+                              :stretched true}
+                  [ui/GridColumn
+                   [ui/Table {:basic  "very"
+                              :padded false}
+                    [ui/TableBody
+                     [ui/TableRow
+                      [ui/TableCell "ID"]
+                      [ui/TableCell [values/as-link (:id @selected-playbook) :label (subs (:id @selected-playbook) 9)]]]
+                     (when (:name @selected-playbook)
+                       [ui/TableRow
+                        [ui/TableCell (str/capitalize (@tr [:name]))]
+                        [ui/TableCell (:name @selected-playbook)]])
+                     (when (:description @selected-playbook)
+                       [ui/TableRow
+                        [ui/TableCell (str/capitalize (@tr [:description]))]
+                        [ui/TableCell (:description @selected-playbook)]])
+                     [ui/TableRow
+                      [ui/TableCell "Enabled"]
+                      [ui/TableCell
+                       [ui/Radio {:toggle    true
+                                  :checked   (if @enabled-changed?
+                                               (not (:enabled @selected-playbook))
+                                               (:enabled @selected-playbook))
+                                  :on-change #(do
+                                                (swap! enabled-changed? not))}]]]
+                     [ui/TableRow
+                      [ui/TableCell "Type"]
+                      [ui/TableCell [:<>
+                                     [ui/Icon {:name (if (= "EMERGENCY" (:type @selected-playbook))
+                                                       "emergency"
+                                                       "wrench")}]
+                                     (:type @selected-playbook)]]]]]
+
+                   [ui/Container {:text-align "left"}
+                    "Shell script: "
+                    [uix/EditorShell
+                     (:run @selected-playbook)
+                     (fn [_editor _data value]
+                       (reset! run value)
+                       (reset! run-changed? true))
+                     true
+                     "full-height"]]
+
+                   [uix/Button {:primary  true
+                                :text     (@tr [:save])
+                                :icon     "save"
+                                :disabled (not (or (and @run-changed? (not-empty @run)) @enabled-changed?))
+                                :on-click #(do
+                                             (dispatch [::events/edit-playbook
+                                                        @selected-playbook
+                                                        (cond-> {}
+                                                          @enabled-changed? (assoc :enabled (not (:enabled @selected-playbook)))
+                                                          (and @run-changed? (not-empty @run)) (assoc :run @run))])
+                                             (refresh (general-utils/id->uuid (:id @nuvlabox)))
+                                             (reset! run-changed? false)
+                                             (reset! enabled-changed? false)
+                                             (reset! run nil))}]]
+
+                  [ui/GridColumn
+                   (if (some? (:output @selected-playbook))
+                     [:<>
+                      [ui/Header {:as "h4"
+                                  :attached "top"}
+                       "Output"]
+                      [ui/Segment {:attached  true
+                                   :text-align "left"}
+                       [ui/CodeMirror {:value      (:output @selected-playbook)
+                                       :autoCursor true
+                                       :options    {:mode              "text/plain"
+                                                    :read-only         true
+                                                    :line-numbers      false
+                                                    :style-active-line false}
+                                       :class      "full-width"}]]]
+                     [ui/Segment {:vertical  true}
+                      (@tr [:nuvlabox-playbooks-no-outputs])])]]]]
                (@tr [:nuvlabox-playbooks-not-selected]))]]]]]))))
 
 

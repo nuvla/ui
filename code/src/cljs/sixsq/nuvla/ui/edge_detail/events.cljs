@@ -411,12 +411,11 @@
 
 
 (reg-event-fx
-  ::edit-playbook-run
-  (fn [_ [_ playbook new-run]]
+  ::edit-playbook
+  (fn [_ [_ playbook new-body]]
     (let [nuvlabox-id (:parent playbook)
-          playbook-id (:id playbook)
-          new-run-body  {:run new-run}]
-      {::cimi-api-fx/edit [playbook-id new-run-body
+          playbook-id (:id playbook)]
+      {::cimi-api-fx/edit [playbook-id new-body
                            #(if (instance? js/Error %)
                               (let [{:keys [status message]} (response/parse-ex-info %)]
                                 (dispatch [::messages-events/add

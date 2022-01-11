@@ -157,3 +157,9 @@
   ::nuvlabox-emergency-playbooks
   (fn [db]
     (::spec/nuvlabox-emergency-playbooks db)))
+
+
+(reg-sub
+  ::nuvlabox-current-playbook
+  (fn [db]
+    (::spec/nuvlabox-current-playbook db)))

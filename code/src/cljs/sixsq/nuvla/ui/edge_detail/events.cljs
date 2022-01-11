@@ -215,7 +215,7 @@
 
 (reg-event-fx
   ::get-nuvlabox
-  (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ id]]
+  (fn [{{:keys [::spec/nuvlabox ::spec/nuvlabox-current-playbook] :as db} :db} [_ id]]
     {:db                  (if (= (:id nuvlabox) id) db (merge db spec/defaults))
      ::cimi-api-fx/get    [id #(dispatch [::set-nuvlabox %])
                            :on-error #(dispatch [::set-nuvlabox nil])]
@@ -227,7 +227,8 @@
      :fx                  [[:dispatch [::get-nuvlabox-events id]]
                            [:dispatch [::job-events/get-jobs id]]
                            [:dispatch [::deployment-events/get-nuvlabox-deployments id]]
-                           [:dispatch [::get-nuvlabox-playbooks id]]]}))
+                           [:dispatch [::get-nuvlabox-playbooks id]]
+                           [:dispatch [::get-nuvlabox-current-playbook (:id nuvlabox-current-playbook)]]]}))
 
 
 (reg-event-fx
@@ -453,3 +454,16 @@
   ::set-emergency-playbooks
   (fn [db [_ nuvlabox-playbooks]]
     (assoc db ::spec/nuvlabox-emergency-playbooks nuvlabox-playbooks)))
+
+
+(reg-event-fx
+  ::get-nuvlabox-current-playbook
+  (fn [db [_ nuvlabox-playbook-id]]
+    {::cimi-api-fx/get [nuvlabox-playbook-id #(dispatch [::set-nuvlabox-current-playbook %])
+                        :on-error #(dispatch [::set-nuvlabox-current-playbook nil])]}))
+
+
+(reg-event-db
+  ::set-nuvlabox-current-playbook
+  (fn [db [_ nuvlabox-playbook]]
+    (assoc db ::spec/nuvlabox-current-playbook nuvlabox-playbook)))

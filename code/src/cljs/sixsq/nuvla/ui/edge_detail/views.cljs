@@ -1670,13 +1670,13 @@
   (let [tr             (subscribe [::i18n-subs/tr])
         nuvlabox       (subscribe [::subs/nuvlabox])
         playbooks      (subscribe [::subs/nuvlabox-playbooks])
-        selected-playbook (r/atom nil)
+        selected-playbook (subscribe [::subs/nuvlabox-current-playbook])
         run-changed?   (r/atom false)
         run            (r/atom nil)]
     (fn []
       (let [n     (count @playbooks)
             on-change-fn   (fn [k]
-                             (reset! selected-playbook (first (get (group-by :id @playbooks) k))))]
+                             (dispatch [::events/get-nuvlabox-current-playbook k]))]
         [ui/TabPane
          (when (nil? (:host-level-management-api-key @nuvlabox))
            [ui/Message {:warning true} (@tr [:nuvlabox-playbooks-disabled])])

@@ -165,3 +165,9 @@
   ::nuvlabox-not-found?
   (fn [db]
     (::spec/nuvlabox-not-found? db)))
+
+
+(reg-sub
+  ::nuvlabox-playbooks-cronjob
+  (fn [db]
+    (::spec/nuvlabox-playbooks-cronjob db)))

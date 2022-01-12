@@ -4,12 +4,12 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
-    [sixsq.nuvla.ui.edge.views-clusters :as views-clusters]
-    [sixsq.nuvla.ui.edge.views-cluster :as views-cluster]
     [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
     [sixsq.nuvla.ui.edge.events :as events]
     [sixsq.nuvla.ui.edge.subs :as subs]
     [sixsq.nuvla.ui.edge.utils :as utils]
+    [sixsq.nuvla.ui.edge.views-cluster :as views-cluster]
+    [sixsq.nuvla.ui.edge.views-clusters :as views-clusters]
     [sixsq.nuvla.ui.edge.views-utils :as views-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -168,9 +168,11 @@
     (@tr [:nuvlabox-modal-private-ssh-key-info])]])
 
 (defn CreatedNuvlaBox
-  [nuvlabox-id _creation-data nuvlabox-release-data nuvlabox-ssh-keys _new-private-ssh-key _on-close-fn]
+  [nuvlabox-id _creation-data nuvlabox-release-data nuvlabox-ssh-keys
+   _new-private-ssh-key playbooks-toggle _on-close-fn]
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
+        playbooks-cronjob    (subscribe [::subs/nuvlabox-playbooks-cronjob])
         private-ssh-key-file (str (general-utils/id->short-uuid nuvlabox-id) ".ssh.private")
         public-keys          (if @nuvlabox-ssh-keys
                                (str (str/join "\\n" (:public-keys @nuvlabox-ssh-keys)) "\\n")
@@ -181,10 +183,13 @@
                                 #"\$\{NUVLABOX_SSH_PUB_KEY\}" public-keys]
                                [#"\$\{NUVLABOX_UUID\}" nuvlabox-id])
         download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals envsubst)]
+    (when playbooks-toggle
+      (dispatch [::events/enable-host-level-management nuvlabox-id]))
     (zip/create download-files #(reset! zip-url %))
     (when @nuvlabox-ssh-keys
       (dispatch [::events/assign-ssh-keys @nuvlabox-ssh-keys nuvlabox-id]))
-    (fn [nuvlabox-id creation-data _nuvlabox-release-data _nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
+    (fn [nuvlabox-id creation-data _nuvlabox-release-data _nuvlabox-ssh-keys
+         new-private-ssh-key playbooks-toggle on-close-fn]
       (let [tr                  (subscribe [::i18n-subs/tr])
             nuvlabox-name-or-id (str "NuvlaBox " (or (:name creation-data)
                                                      (general-utils/id->short-uuid nuvlabox-id)))
@@ -193,9 +198,33 @@
         [:<>
          [uix/ModalHeader {:header (str nuvlabox-name-or-id " created") :icon "box"}]
 
-         (when @new-private-ssh-key
+         (when (or @new-private-ssh-key playbooks-toggle)
            [ui/Segment {:basic true}
-            [CreateSSHKeyMessage @new-private-ssh-key private-ssh-key-file tr]])
+            (when playbooks-toggle
+              [ui/Message {:icon true}
+               [ui/Icon {:name    (if @playbooks-cronjob "check circle outline" "spinner")
+                         :loading (if @playbooks-cronjob false true)}]
+               [ui/MessageContent
+                [ui/MessageHeader [:span (@tr [:nuvlabox-playbooks-cronjob]) " "
+                                   (when @playbooks-cronjob
+                                     [ui/Popup {:content        @playbooks-cronjob
+                                                :wide           "very"
+                                                :position       "bottom center"
+                                                :hide-on-scroll true
+                                                :hoverable      true
+                                                :trigger        (r/as-element [ui/IconGroup
+                                                                               [ui/Icon {:name "eye"}]
+                                                                               [ui/Icon {:corner true
+                                                                                         :name   "exclamation"}]])}])]]
+                (if @playbooks-cronjob
+                  [:span (str (@tr [:nuvlabox-playbooks-cronjob-ready])
+                              " ")
+                   (values/copy-value-to-clipboard
+                     "" @playbooks-cronjob (@tr [:copy-to-clipboard]) true)]
+                  (@tr [:nuvlabox-playbooks-cronjob-wait]))]])
+
+            (when @new-private-ssh-key
+              [CreateSSHKeyMessage @new-private-ssh-key private-ssh-key-file tr])])
 
          [ui/ModalContent
           [ui/Container
@@ -383,6 +412,7 @@
         ; default ttl for API key is 30 days
         default-ttl                30
         usb-trigger-key-ttl        (r/atom default-ttl)
+        playbooks-toggle           (r/atom false)
         ssh-toggle                 (r/atom false)
         ssh-existing-key           (r/atom false)
         ssh-chosen-keys            (r/atom [])
@@ -396,6 +426,7 @@
                                       (dispatch [::events/set-nuvlabox-created-private-ssh-key nil])
                                       (dispatch [::events/open-modal nil])
                                       (reset! advanced? false)
+                                      (reset! playbooks-toggle false)
                                       (reset! ssh-toggle false)
                                       (reset! ssh-existing-key false)
                                       (reset! ssh-chosen-keys [])
@@ -457,7 +488,7 @@
                  :on-close   on-close-fn}
        (cond
          @nuvlabox-id [CreatedNuvlaBox @nuvlabox-id @creation-data @nuvlabox-release-data
-                       nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
+                       nuvlabox-ssh-keys new-private-ssh-key @playbooks-toggle on-close-fn]
          @usb-api-key [CreatedNuvlaBoxUSBTrigger @creation-data @nuvlabox-release-data @usb-api-key
                        nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
          :else [:<>
@@ -614,6 +645,21 @@
                        (@tr [:create-nuvlabox-compose])]
                       [NuvlaDocLink tr :nuvlabox-modal-more-info compose-doc-anchor]
 
+                      [:div {:style {:margin  "10px 5px 5px 5px"
+                                     :display (if (= @install-strategy "compose")
+                                                "block" "none")}}
+                       [ui/Checkbox {:toggle    true
+                                     :label     (@tr [:nuvlabox-modal-enable-playbooks])
+                                     :checked   @playbooks-toggle
+                                     :on-change #(swap! playbooks-toggle not)}]
+                       [ui/Popup
+                        {:trigger        (r/as-element [ui/Icon {:name  "info circle"
+                                                                 :style {:margin-left "1em"}}])
+                         :content        (@tr [:nuvlabox-modal-enable-playbooks-info])
+                         :on             "hover"
+                         :hide-on-scroll true}]]
+
+
                       [ui/Divider {:fitted     true
                                    :horizontal true
                                    :style      {:text-transform "lowercase"
@@ -625,7 +671,8 @@
                                         :checked   (= @install-strategy "usb")
                                         :on-change #(do
                                                       (reset! install-strategy "usb")
-                                                      (reset! install-strategy-error nil))}]
+                                                      (reset! install-strategy-error nil)
+                                                      (reset! playbooks-toggle false))}]
 
                       [:div {:style {:color "grey" :font-style "oblique"}}
                        (@tr [:create-nuvlabox-usb])]

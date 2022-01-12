@@ -145,3 +145,21 @@
   ::nuvlabox-not-found?
   (fn [db]
     (::spec/nuvlabox-not-found? db)))
+
+
+(reg-sub
+  ::nuvlabox-playbooks
+  (fn [db]
+    (::spec/nuvlabox-playbooks db)))
+
+
+(reg-sub
+  ::nuvlabox-emergency-playbooks
+  (fn [db]
+    (::spec/nuvlabox-emergency-playbooks db)))
+
+
+(reg-sub
+  ::nuvlabox-current-playbook
+  (fn [db]
+    (::spec/nuvlabox-current-playbook db)))

@@ -18,6 +18,10 @@
 (s/def ::join-token (s/nilable any?))
 (s/def ::nuvlabox-cluster (s/nilable any?))
 (s/def ::nuvlabox-not-found? boolean?)
+(s/def ::nuvlabox-playbooks (s/nilable any?))
+(s/def ::nuvlabox-emergency-playbooks (s/nilable any?))
+(s/def ::nuvlabox-current-playbook (s/nilable any?))
+
 
 (s/def ::db (s/keys :req [::nuvlabox
                           ::nuvlabox-status
@@ -33,7 +37,10 @@
                           ::nuvlabox-managers
                           ::join-token
                           ::nuvlabox-cluster
-                          ::nuvlabox-not-found?]))
+                          ::nuvlabox-not-found?
+                          ::nuvlabox-playbooks
+                          ::nuvlabox-emergency-playbooks
+                          ::nuvlabox-current-playbook]))
 
 
 (def defaults {::nuvlabox                     nil
@@ -50,4 +57,7 @@
                ::nuvlabox-managers            nil
                ::join-token                   nil
                ::nuvlabox-cluster             nil
-               ::nuvlabox-not-found?          false})
+               ::nuvlabox-not-found?          false
+               ::nuvlabox-playbooks           nil
+               ::nuvlabox-emergency-playbooks nil
+               ::nuvlabox-current-playbook    nil})

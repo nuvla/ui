@@ -168,7 +168,8 @@
     (@tr [:nuvlabox-modal-private-ssh-key-info])]])
 
 (defn CreatedNuvlaBox
-  [nuvlabox-id _creation-data nuvlabox-release-data nuvlabox-ssh-keys _new-private-ssh-key playbooks-toggle _on-close-fn]
+  [nuvlabox-id _creation-data nuvlabox-release-data nuvlabox-ssh-keys
+   _new-private-ssh-key playbooks-toggle _on-close-fn]
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
         playbooks-cronjob    (subscribe [::subs/nuvlabox-playbooks-cronjob])
@@ -187,7 +188,8 @@
     (zip/create download-files #(reset! zip-url %))
     (when @nuvlabox-ssh-keys
       (dispatch [::events/assign-ssh-keys @nuvlabox-ssh-keys nuvlabox-id]))
-    (fn [nuvlabox-id creation-data _nuvlabox-release-data _nuvlabox-ssh-keys new-private-ssh-key playbooks-toggle on-close-fn]
+    (fn [nuvlabox-id creation-data _nuvlabox-release-data _nuvlabox-ssh-keys
+         new-private-ssh-key playbooks-toggle on-close-fn]
       (let [tr                  (subscribe [::i18n-subs/tr])
             nuvlabox-name-or-id (str "NuvlaBox " (or (:name creation-data)
                                                      (general-utils/id->short-uuid nuvlabox-id)))
@@ -200,23 +202,23 @@
            [ui/Segment {:basic true}
             (when playbooks-toggle
               [ui/Message {:icon true}
-               [ui/Icon {:name (if @playbooks-cronjob "check circle outline" "spinner")
+               [ui/Icon {:name    (if @playbooks-cronjob "check circle outline" "spinner")
                          :loading (if @playbooks-cronjob false true)}]
                [ui/MessageContent
                 [ui/MessageHeader [:span (@tr [:nuvlabox-playbooks-cronjob]) " "
                                    (when @playbooks-cronjob
-                                     [ui/Popup {:content @playbooks-cronjob
-                                                :wide     "very"
-                                                :position "bottom center"
+                                     [ui/Popup {:content        @playbooks-cronjob
+                                                :wide           "very"
+                                                :position       "bottom center"
                                                 :hide-on-scroll true
-                                                :hoverable  true
-                                                :trigger (r/as-element [ui/IconGroup
-                                                                        [ui/Icon {:name   "eye"}]
-                                                                        [ui/Icon {:corner true
-                                                                                  :name   "exclamation"}]])}])]]
+                                                :hoverable      true
+                                                :trigger        (r/as-element [ui/IconGroup
+                                                                               [ui/Icon {:name "eye"}]
+                                                                               [ui/Icon {:corner true
+                                                                                         :name   "exclamation"}]])}])]]
                 (if @playbooks-cronjob
                   [:span (str (@tr [:nuvlabox-playbooks-cronjob-ready])
-                           " ")
+                              " ")
                    (values/copy-value-to-clipboard
                      "" @playbooks-cronjob (@tr [:copy-to-clipboard]) true)]
                   (@tr [:nuvlabox-playbooks-cronjob-wait]))]])
@@ -651,8 +653,8 @@
                                      :checked   @playbooks-toggle
                                      :on-change #(swap! playbooks-toggle not)}]
                        [ui/Popup
-                        {:trigger        (r/as-element [ui/Icon {:name "info circle"
-                                                                 :style {:margin-left  "1em"}}])
+                        {:trigger        (r/as-element [ui/Icon {:name  "info circle"
+                                                                 :style {:margin-left "1em"}}])
                          :content        (@tr [:nuvlabox-modal-enable-playbooks-info])
                          :on             "hover"
                          :hide-on-scroll true}]]

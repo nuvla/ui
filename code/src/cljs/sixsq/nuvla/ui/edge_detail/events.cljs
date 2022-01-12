@@ -173,7 +173,7 @@
          (let [{:keys [status message]} (response/parse-ex-info %)]
            (dispatch [::messages-events/add
                       {:header  (cond-> (str "error executing " operation " for NuvlaBox " resource-id)
-                                  status (str " (" status ")"))
+                                        status (str " (" status ")"))
                        :content message
                        :type    :error}])
            (on-error-fn))
@@ -399,10 +399,10 @@
   ::get-nuvlabox-playbooks
   (fn [_ [_ nuvlabox-id]]
     {::cimi-api-fx/search [:nuvlabox-playbook
-                           {:filter (str "parent='" nuvlabox-id "'")
-                            :select "id, run, enabled, type, output, name, description"
-                            :orderby  "type:desc"
-                            :last   1000}
+                           {:filter  (str "parent='" nuvlabox-id "'")
+                            :select  "id, run, enabled, type, output, name, description"
+                            :orderby "type:desc"
+                            :last    1000}
                            #(dispatch [::set-nuvlabox-playbooks (:resources %)])]}))
 
 
@@ -422,7 +422,7 @@
                               (let [{:keys [status message]} (response/parse-ex-info %)]
                                 (dispatch [::messages-events/add
                                            {:header  (cond-> "Failed to update the playbook's run"
-                                                       status (str " (" status ")"))
+                                                             status (str " (" status ")"))
                                             :content message
                                             :type    :error}]))
                               (do
@@ -444,10 +444,10 @@
   ::get-emergency-playbooks
   (fn [_ [_ nuvlabox-id]]
     {::cimi-api-fx/search [:nuvlabox-playbook
-                           {:filter (str "parent='" nuvlabox-id "' and type='EMERGENCY'")
-                            :select "id, enabled, type, name"
-                            :orderby  "enabled:desc"
-                            :last   1000}
+                           {:filter  (str "parent='" nuvlabox-id "' and type='EMERGENCY'")
+                            :select  "id, enabled, type, name"
+                            :orderby "enabled:desc"
+                            :last    1000}
                            #(dispatch [::set-emergency-playbooks (:resources %)])]}))
 
 

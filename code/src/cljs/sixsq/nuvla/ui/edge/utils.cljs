@@ -1,8 +1,7 @@
 (ns sixsq.nuvla.ui.edge.utils
   (:require
     [clojure.string :as str]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (def state-new "NEW")
 (def state-activated "ACTIVATED")
@@ -213,7 +212,7 @@
 
 
 (defn form-add-playbook-incomplete?
-  [{:keys [name run enabled type parent] :as form-data}]
+  [{:keys [name run enabled type parent] :as _form-data}]
   (->> [name run enabled type parent]
-    (some str/blank?)
-    boolean))
+       (some str/blank?)
+       boolean))

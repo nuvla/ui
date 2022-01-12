@@ -392,17 +392,18 @@
 (reg-event-fx
   ::enable-host-level-management
   (fn [_ [_ nuvlabox-id]]
-    {::cimi-api-fx/operation [nuvlabox-id
-                              "enable-host-level-management"
-                              #(if (instance? js/Error %)
-                                 (let [{:keys [status message]} (response/parse-ex-info %)]
-                                   (dispatch [::messages-events/add
-                                              {:header  (cond-> (str "error enabling host level management for " nuvlabox-id)
-                                                          status (str " (" status ")"))
-                                               :content message
-                                               :type    :error}]))
-                                 (dispatch [::set-nuvlabox-playbooks-cronjob %]))
-                              nil]}))
+    {::cimi-api-fx/operation
+     [nuvlabox-id
+      "enable-host-level-management"
+      #(if (instance? js/Error %)
+         (let [{:keys [status message]} (response/parse-ex-info %)]
+           (dispatch [::messages-events/add
+                      {:header  (cond-> (str "error enabling host level management for " nuvlabox-id)
+                                        status (str " (" status ")"))
+                       :content message
+                       :type    :error}]))
+         (dispatch [::set-nuvlabox-playbooks-cronjob %]))
+      nil]}))
 
 
 (reg-event-db

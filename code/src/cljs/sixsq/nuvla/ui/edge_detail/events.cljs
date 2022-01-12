@@ -228,7 +228,9 @@
                            [:dispatch [::job-events/get-jobs id]]
                            [:dispatch [::deployment-events/get-nuvlabox-deployments id]]
                            [:dispatch [::get-nuvlabox-playbooks id]]
-                           [:dispatch [::get-nuvlabox-current-playbook (:id nuvlabox-current-playbook)]]]}))
+                           [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
+                                                                         (:id nuvlabox-current-playbook)
+                                                                         nil)]]]}))
 
 
 (reg-event-fx

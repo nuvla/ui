@@ -1675,11 +1675,12 @@
         selected-playbook (subscribe [::subs/nuvlabox-current-playbook])
         run-changed?   (r/atom false)
         run            (r/atom nil)
-        enabled-changed?  (r/atom false)]
+        enabled-changed?  (r/atom false)
+        can-edit?      (subscribe [::subs/can-edit?])
+        on-change-fn   (fn [k]
+                         (dispatch [::events/get-nuvlabox-current-playbook k]))]
     (fn []
-      (let [n     (count @playbooks)
-            on-change-fn   (fn [k]
-                             (dispatch [::events/get-nuvlabox-current-playbook k]))]
+      (let [n     (count @playbooks)]
         [ui/TabPane
          (when (nil? (:host-level-management-api-key @nuvlabox))
            [ui/Message {:warning true} (@tr [:nuvlabox-playbooks-disabled])])
@@ -1715,11 +1716,12 @@
                                    :icon (if (= "EMERGENCY" type)
                                            "emergency"
                                            "wrench")}) @playbooks)}]
-            [ui/Button {:icon "plus"
+            (when @can-edit?
+              [ui/Button {:icon "plus"
                         :size   "mini"
                         :positive true
                         :circular true
-                        :on-click #(dispatch [::edge-events/open-modal :nuvlabox-playbook-add])}]
+                        :on-click #(dispatch [::edge-events/open-modal :nuvlabox-playbook-add])}])
 
             [ui/Container
              (if @selected-playbook
@@ -1749,6 +1751,7 @@
                       [ui/TableCell "Enabled"]
                       [ui/TableCell
                        [ui/Radio {:toggle    true
+                                  :disabled  (not @can-edit?)
                                   :checked   (if @enabled-changed?
                                                (not (:enabled @selected-playbook))
                                                (:enabled @selected-playbook))
@@ -1769,7 +1772,7 @@
                      (fn [_editor _data value]
                        (reset! run value)
                        (reset! run-changed? true))
-                     true
+                     @can-edit?
                      "full-height"]]
 
                    [uix/Button {:primary  true

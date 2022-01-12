@@ -1671,14 +1671,14 @@
         nuvlabox          (subscribe [::subs/nuvlabox])
         playbooks         (subscribe [::subs/nuvlabox-playbooks])
         selected-playbook (subscribe [::subs/nuvlabox-current-playbook])
-        run-changed?   (r/atom false)
-        run            (r/atom nil)
+        run-changed?      (r/atom false)
+        run               (r/atom nil)
         enabled-changed?  (r/atom false)
-        can-edit?      (subscribe [::subs/can-edit?])
-        on-change-fn   (fn [k]
-                         (dispatch [::events/get-nuvlabox-current-playbook k]))]
+        can-edit?         (subscribe [::subs/can-edit?])
+        on-change-fn      (fn [k]
+                            (dispatch [::events/get-nuvlabox-current-playbook k]))]
     (fn []
-      (let [n     (count @playbooks)]
+      (let [n (count @playbooks)]
         [ui/TabPane
          (when (nil? (:host-level-management-api-key @nuvlabox))
            [ui/Message {:warning true} (@tr [:nuvlabox-playbooks-disabled])])
@@ -1715,10 +1715,10 @@
                                                   "wrench")}) @playbooks)}]
             (when @can-edit?
               [ui/Button {:icon     "plus"
-                        :size     "mini"
-                        :positive true
-                        :circular true
-                        :on-click #(dispatch [::edge-events/open-modal :nuvlabox-playbook-add])}])
+                          :size     "mini"
+                          :positive true
+                          :circular true
+                          :on-click #(dispatch [::edge-events/open-modal :nuvlabox-playbook-add])}])
 
             [ui/Container
              (if @selected-playbook

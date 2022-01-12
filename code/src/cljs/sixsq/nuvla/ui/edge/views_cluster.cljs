@@ -3,6 +3,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.edge.events :as events]
     [sixsq.nuvla.ui.edge.subs :as subs]
     [sixsq.nuvla.ui.edge.utils :as utils]
@@ -16,8 +17,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.acl.views :as acl]))
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (def view-type (r/atom :cards))

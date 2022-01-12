@@ -17,6 +17,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
@@ -29,8 +30,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as utils-values]
-    [sixsq.nuvla.ui.main.components :as components]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]))
 
 
 (def application-kubernetes-subtype "application_kubernetes")

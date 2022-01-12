@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.data-set.utils
   (:require
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.map :as map]))
+    [sixsq.nuvla.ui.utils.map :as map]
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (defn create-time-period-filter

@@ -2,14 +2,14 @@
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.data.spec :as spec]
-    [sixsq.nuvla.ui.data.utils :as utils]
     [sixsq.nuvla.ui.data-set.spec :as data-set-spec]
     [sixsq.nuvla.ui.data-set.utils :as data-set-utils]
+    [sixsq.nuvla.ui.data.spec :as spec]
+    [sixsq.nuvla.ui.data.utils :as utils]
     [sixsq.nuvla.ui.deployment-dialog.events :as dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.spec :as dialog-spec]
-    [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 

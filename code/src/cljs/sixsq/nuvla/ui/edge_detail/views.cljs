@@ -629,7 +629,7 @@
         (when @can-delete?
           [DeleteButton @nuvlabox])
 
-        [cimi-detail-views/format-operations @nuvlabox #{"edit" "delete" "activate" "decommission"
+        [cimi-detail-views/format-operations @nuvlabox #{"edit" "delete" "activate" "decommission" "generate-new-api-key"
                                                          "commission" "check-api"}]
 
         [components/RefreshMenu

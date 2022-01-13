@@ -92,8 +92,11 @@
 
 (s/def ::currency string?)
 
+(s/def ::follow-customer-trial boolean?)
+
 (s/def ::price (s/nilable (s/keys :req-un [::cent-amount-daily
-                                           ::currency])))
+                                           ::currency]
+                                  :opt-un [::follow-customer-trial])))
 
 (s/def ::license-name spec-utils/nonblank-string)
 

@@ -13,7 +13,9 @@
   - Dependencies updates
   - Map - Support draw
   - Data - New workflow
-  - App application detail - change order tabs fix issue when no pricing is configured 
+  - App application detail - change order tabs fix issue when no pricing is configured
+  - App - Accordion missing in pricing section for component
+  - Pricing - support follow customer trial attribute
 
 ## [2.26.2] - 2021-12-14
 

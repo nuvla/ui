@@ -54,6 +54,8 @@
 
 (s/def ::nuvlabox-not-found? boolean?)
 
+(s/def ::nuvlabox-playbooks-cronjob any?)
+
 
 (s/def ::db (s/keys :req [::nuvlaboxes
                           ::nuvlaboxes-summary
@@ -76,28 +78,30 @@
                           ::vpn-infra
                           ::ssh-keys-available
                           ::nuvlabox-clusters
-                          ::nuvlabox-cluster]))
+                          ::nuvlabox-cluster
+                          ::nuvlabox-playbooks-cronjob]))
 
 
-(def defaults {::nuvlaboxes                nil
-               ::nuvlabox-cluster-summary  nil
-               ::nuvlaboxes-summary        nil
-               ::nuvlaboxes-summary-all    nil
-               ::nuvlabox-releases         nil
-               ::state-nuvlaboxes          nil
-               ::page                      1
-               ::elements-per-page         8
-               ::total-elements            0
-               ::active-tab-index          0
-               ::full-text-search          nil
-               ::full-text-clusters-search nil
-               ::state-selector            nil
-               ::open-modal                nil
-               ::nuvlabox-created-id       nil
-               ::nuvlabox-usb-api-key      nil
-               ::nuvlabox-ssh-key          nil
-               ::nuvlabox-private-ssh-key  nil
-               ::vpn-infra                 nil
-               ::ssh-keys-available        nil
-               ::nuvlabox-clusters         nil
-               ::nuvlabox-cluster          nil})
+(def defaults {::nuvlaboxes                 nil
+               ::nuvlabox-cluster-summary   nil
+               ::nuvlaboxes-summary         nil
+               ::nuvlaboxes-summary-all     nil
+               ::nuvlabox-releases          nil
+               ::state-nuvlaboxes           nil
+               ::page                       1
+               ::elements-per-page          8
+               ::total-elements             0
+               ::active-tab-index           0
+               ::full-text-search           nil
+               ::full-text-clusters-search  nil
+               ::state-selector             nil
+               ::open-modal                 nil
+               ::nuvlabox-created-id        nil
+               ::nuvlabox-usb-api-key       nil
+               ::nuvlabox-ssh-key           nil
+               ::nuvlabox-private-ssh-key   nil
+               ::vpn-infra                  nil
+               ::ssh-keys-available         nil
+               ::nuvlabox-clusters          nil
+               ::nuvlabox-cluster           nil
+               ::nuvlabox-playbooks-cronjob nil})

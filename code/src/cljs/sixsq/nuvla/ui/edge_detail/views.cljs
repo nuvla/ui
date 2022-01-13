@@ -458,6 +458,103 @@
             :on-click on-click-fn}]]]))))
 
 
+(defn EmergencyPlaybooksDropdown
+  [_nuvlabox-id _on-change]
+  (let [em-playbooks (subscribe [::subs/nuvlabox-emergency-playbooks])
+        tr           (subscribe [::i18n-subs/tr])]
+    (fn [nuvlabox-id on-change]
+      (dispatch [::events/get-emergency-playbooks nuvlabox-id])
+      (let [em-enabled  (get (group-by :enabled @em-playbooks) true)
+            em-disabled (get (group-by :enabled @em-playbooks) false)]
+        [:<>
+         [ui/FormDropdown
+          {:label       "Emergency Playbooks"
+           :selection   true
+           :placeholder (if (and @em-playbooks (not em-disabled))
+                          (@tr [:nuvlabox-emergency-playbooks-none])
+                          (str (@tr [:select]) " playbook"))
+           :multiple    true
+           :loading     (nil? @em-playbooks)
+           :options     (map (fn [{:keys [id name]}]
+                               {:key   id,
+                                :text  (or name id),
+                                :value id}) em-disabled)
+           :on-change   (ui-callback/value on-change)}]
+         (when (pos? (count em-enabled))
+           [ui/Message
+            (@tr [:nuvlabox-emergency-playbooks-already-enabled])
+            [ui/ListSA {:bulleted true}
+             (map (fn [{:keys [id name] :as pb}]
+                    [ui/ListItem
+                     ^{:key id}
+                     [values/as-link id :label (or name id)]])
+                  em-enabled)]])]))))
+
+
+(defn TextActionButton
+  [{:keys [id] :as _nuvlabox} operation show? title icon button-text]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        close-fn    #(reset! show? false)
+        on-click-fn #(dispatch [::events/operation-text-response operation id close-fn close-fn])]
+    [ui/Modal
+     {:open       @show?
+      :close-icon true
+      :on-close   close-fn
+      :trigger    (r/as-element
+                    [ui/MenuItem {:on-click #(reset! show? true)}
+                     [ui/Icon {:name icon}]
+                     title])}
+     [uix/ModalHeader {:header title}]
+     [ui/ModalContent
+      [:p (@tr [:execute-action-msg] [operation])]]
+     [ui/ModalActions
+      [uix/Button
+       {:text     button-text
+        :primary  true
+        :on-click on-click-fn}]]]))
+
+
+(defn EnableEmergencyPlaybooksButton
+  [{:keys [id] :as _resource} operation show? _title _icon _button-text]
+  (let [close-fn      #(reset! show? false)
+        form-data     (r/atom {})
+        loading?      (r/atom nil)
+        on-change-fn  (fn [k v]
+                        (if (str/blank? v)
+                          (swap! form-data dissoc k)
+                          (swap! form-data assoc k v)))
+        on-success-fn (fn [_]
+                        (reset! loading? false)
+                        (when (:emergency-playbooks-ids @form-data)
+                          (close-fn)))
+        on-error-fn   close-fn
+        on-click-fn   #(do
+                         (reset! loading? true)
+                         (dispatch [::events/operation id operation @form-data
+                                    on-success-fn on-error-fn]))]
+    (fn [resource _operation show? title icon button-text]
+      (let [playbooks (:emergency-playbooks-ids @form-data)]
+        [ui/Modal
+         {:open       @show?
+          :close-icon true
+          :on-close   close-fn
+          :trigger    (r/as-element
+                        [ui/MenuItem {:on-click #(reset! show? true)}
+                         [ui/Icon {:name icon}]
+                         title])}
+         [uix/ModalHeader {:header title}]
+         [ui/ModalContent
+          [ui/Form
+           [EmergencyPlaybooksDropdown (:id resource) (partial on-change-fn :emergency-playbooks-ids)]]]
+         [ui/ModalActions
+          [uix/Button
+           {:text     button-text
+            :primary  true
+            :disabled (empty? playbooks)
+            :loading  (true? @loading?)
+            :on-click on-click-fn}]]]))))
+
+
 (defmethod cimi-detail-views/other-button ["nuvlabox" "cluster-nuvlabox"]
   [_resource _operation]
   (let [show? (r/atom false)]
@@ -490,6 +587,33 @@
     (fn [resource operation]
       ^{:key (str "update-nuvlabox" @show?)}
       [UpdateButton resource operation show? "Update NuvlaBox" "download" (@tr [:update])])))
+
+
+(defmethod cimi-detail-views/other-button ["nuvlabox" "enable-emergency-playbooks"]
+  [_resource _operation]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        show? (r/atom false)]
+    (fn [resource operation]
+      ^{:key (str "enable-emergency-playbooks" @show?)}
+      [EnableEmergencyPlaybooksButton resource operation show? "Enable emergency playbooks" "ambulance" (@tr [:enable])])))
+
+
+(defmethod cimi-detail-views/other-button ["nuvlabox" "assemble-playbooks"]
+  [_resource _operation]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        show? (r/atom false)]
+    (fn [resource operation]
+      ^{:key (str "assemble-playbooks" @show?)}
+      [TextActionButton resource operation show? "Assemble playbooks" "book" (@tr [:yes])])))
+
+
+(defmethod cimi-detail-views/other-button ["nuvlabox" "enable-host-level-management"]
+  [_resource _operation]
+  (let [tr    (subscribe [::i18n-subs/tr])
+        show? (r/atom false)]
+    (fn [resource operation]
+      ^{:key (str "enable-host-level-management" @show?)}
+      [TextActionButton resource operation show? "Enable host level management" "cog" (@tr [:enable])])))
 
 
 (defn MenuBar [uuid]
@@ -882,8 +1006,8 @@
         can-edit?    (subscribe [::subs/can-edit?])
         id           (:id @nuvlabox)
         on-change-fn #(dispatch [::events/edit
-                                   id {attribute %}
-                                   (@tr [:updated-successfully])])]
+                                 id {attribute %}
+                                 (@tr [:updated-successfully])])]
     (if @can-edit?
       [components/EditableInput attribute @nuvlabox on-change-fn]
       [ui/TableCell (get @nuvlabox attribute)])))
@@ -1164,10 +1288,10 @@
 
 (defn TabLocationMap
   []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        nuvlabox          (subscribe [::subs/nuvlabox])
-        zoom              (atom 3)
-        new-location      (r/atom nil)]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        nuvlabox     (subscribe [::subs/nuvlabox])
+        zoom         (atom 3)
+        new-location (r/atom nil)]
     (fn []
       (let [{:keys [id location inferred-location]} @nuvlabox
             update-new-location #(reset! new-location %)
@@ -1460,6 +1584,229 @@
            [ui/Message {:content (@tr [:nuvlabox-vuln-unavailable])}])]))))
 
 
+(defn AddPlaybookModal
+  []
+  (let [modal-id             :nuvlabox-playbook-add
+        tr                   (subscribe [::i18n-subs/tr])
+        nuvlabox             (subscribe [::subs/nuvlabox])
+        default-form-data    {:enabled true
+                              :type    "MANAGEMENT"}
+        available-types      [{:key "MANAGEMENT", :text "MANAGEMENT", :value "MANAGEMENT", :icon "wrench"}
+                              {:key "EMERGENCY", :text "EMERGENCY", :value "EMERGENCY", :icon "emergency"}]
+        form-data            (r/atom default-form-data)
+        disabled-by-default? (r/atom false)
+        close-fn             #(do
+                                (reset! form-data default-form-data)
+                                (reset! disabled-by-default? false)
+                                (dispatch [::edge-events/open-modal nil]))
+        show-modal?          (subscribe [::edge-subs/modal-visible? modal-id])
+        on-change-type       (fn [v]
+                               (do
+                                 (swap! form-data assoc :type v)
+                                 (if (= v "EMERGENCY")
+                                   (do
+                                     (reset! disabled-by-default? true)
+                                     (swap! form-data assoc :enabled false))
+                                   (reset! disabled-by-default? false))))
+        on-click-fn          #(do
+                                (dispatch [::events/add-nuvlabox-playbook @form-data])
+                                (close-fn))]
+
+    (fn []
+      (let [nuvlabox-id (:id @nuvlabox)]
+        (swap! form-data assoc :parent nuvlabox-id)
+        [ui/Modal {:open       @show-modal?
+                   :close-icon true
+                   :on-close   close-fn}
+         [uix/ModalHeader {:header (@tr [:nuvlabox-add-playbook])
+                           :icon   "book"}]
+         [ui/ModalContent
+          [:<>
+           [ui/Form
+            [ui/FormInput {:label     (str/capitalize (@tr [:name]))
+                           :required  true
+                           :on-change (ui-callback/input-callback
+                                        #(swap! form-data assoc :name %))}]
+            [ui/FormInput {:label     (str/capitalize (@tr [:description]))
+                           :required  false
+                           :on-change (ui-callback/input-callback
+                                        #(swap! form-data assoc :description %))}]
+            [ui/FormSelect {:selection     true
+                            :label         "Type"
+                            :fluid         false
+                            :default-value "MANAGEMENT"
+                            :options       available-types
+                            :on-change     (ui-callback/value on-change-type)}]
+            [ui/FormInput {:label ["Enabled " (when @disabled-by-default?
+                                                (r/as-element
+                                                  [ui/Popup
+                                                   {:trigger (r/as-element [ui/Icon {:name "info circle"}])
+                                                    :content (@tr [:nuvlabox-playbook-emergency-info])}]))]}
+             [ui/Radio {:toggle    true
+                        :disabled  @disabled-by-default?
+                        :checked   (:enabled @form-data)
+                        :on-change #(do
+                                      (swap! form-data assoc :enabled (not (:enabled @form-data))))}]]
+            [ui/FormField {:label    "Run"
+                           :required true}]
+            "Shell script: "
+            [uix/EditorShell
+             ""
+             (fn [_editor _data value]
+               (ui-callback/input-callback
+                 (swap! form-data assoc :run value)))
+             true
+             "full-width"]]]]
+         [ui/ModalActions
+          [uix/Button
+           {:text     (@tr [:add])
+            :disabled (utils/form-add-playbook-incomplete? @form-data)
+            :primary  true
+            :on-click on-click-fn}]]]))))
+
+
+(defn TabPlaybooks
+  []
+  (let [tr                (subscribe [::i18n-subs/tr])
+        nuvlabox          (subscribe [::subs/nuvlabox])
+        playbooks         (subscribe [::subs/nuvlabox-playbooks])
+        selected-playbook (subscribe [::subs/nuvlabox-current-playbook])
+        run-changed?      (r/atom false)
+        run               (r/atom nil)
+        enabled-changed?  (r/atom false)
+        can-edit?         (subscribe [::subs/can-edit?])
+        on-change-fn      (fn [k]
+                            (dispatch [::events/get-nuvlabox-current-playbook k]))]
+    (fn []
+      (let [n (count @playbooks)]
+        [ui/TabPane
+         (when (nil? (:host-level-management-api-key @nuvlabox))
+           [ui/Message {:warning true} (@tr [:nuvlabox-playbooks-disabled])])
+
+         [ui/Container {:text-align "center"}
+          [ui/Label {:basic true}
+           "Total NuvlaBox playbooks found: "
+           [ui/LabelDetail n]]
+
+          [ui/Segment {:secondary true
+                       :color     "grey"
+                       :raised    true}
+
+           [ui/Container
+            [ui/Dropdown
+             {:header      (r/as-element [ui/DropdownHeader {:content "Select Playbook"
+                                                             :icon    "book"}])
+              :placeholder (str (@tr [:select]) " playbook")
+              :on-change   (ui-callback/value on-change-fn)
+              :selection   true
+              :search      true
+              :style       {:margin "1em"}
+              :clearable   false
+              :options     (map (fn [{:keys [id name type enabled]}]
+                                  ^{:key id}
+                                  {:key         id,
+                                   :text        (or name id),
+                                   :value       id,
+                                   :description (if enabled
+                                                  "enabled"
+                                                  "disabled")
+                                   :icon        (if (= "EMERGENCY" type)
+                                                  "emergency"
+                                                  "wrench")}) @playbooks)}]
+            (when @can-edit?
+              [ui/Button {:icon     "plus"
+                          :size     "mini"
+                          :positive true
+                          :circular true
+                          :on-click #(dispatch [::edge-events/open-modal :nuvlabox-playbook-add])}])
+
+            [ui/Container
+             (if @selected-playbook
+               [ui/Segment {:placeholder true}
+                [ui/Grid {:columns    2
+                          :stackable  true
+                          :divided    true
+                          :text-align "center"}
+                 [ui/GridRow {:vertical-align "middle"
+                              :stretched      true}
+                  [ui/GridColumn
+                   [ui/Table {:basic  "very"
+                              :padded false}
+                    [ui/TableBody
+                     [ui/TableRow
+                      [ui/TableCell "ID"]
+                      [ui/TableCell [values/as-link (:id @selected-playbook) :label (subs (:id @selected-playbook) 9)]]]
+                     (when (:name @selected-playbook)
+                       [ui/TableRow
+                        [ui/TableCell (str/capitalize (@tr [:name]))]
+                        [ui/TableCell (:name @selected-playbook)]])
+                     (when (:description @selected-playbook)
+                       [ui/TableRow
+                        [ui/TableCell (str/capitalize (@tr [:description]))]
+                        [ui/TableCell (:description @selected-playbook)]])
+                     [ui/TableRow
+                      [ui/TableCell "Enabled"]
+                      [ui/TableCell
+                       [ui/Radio {:toggle    true
+                                  :disabled  (not @can-edit?)
+                                  :checked   (if @enabled-changed?
+                                               (not (:enabled @selected-playbook))
+                                               (:enabled @selected-playbook))
+                                  :on-change #(do
+                                                (swap! enabled-changed? not))}]]]
+                     [ui/TableRow
+                      [ui/TableCell "Type"]
+                      [ui/TableCell [:<>
+                                     [ui/Icon {:name (if (= "EMERGENCY" (:type @selected-playbook))
+                                                       "emergency"
+                                                       "wrench")}]
+                                     (:type @selected-playbook)]]]]]
+
+                   [ui/Container {:text-align "left"}
+                    "Shell script: "
+                    [uix/EditorShell
+                     (:run @selected-playbook)
+                     (fn [_editor _data value]
+                       (reset! run value)
+                       (reset! run-changed? true))
+                     @can-edit?
+                     "full-height"]]
+
+                   [uix/Button {:primary  true
+                                :text     (@tr [:save])
+                                :icon     "save"
+                                :disabled (not (or (and @run-changed? (not-empty @run)) @enabled-changed?))
+                                :on-click #(do
+                                             (dispatch [::events/edit-playbook
+                                                        @selected-playbook
+                                                        (cond-> {}
+                                                                @enabled-changed? (assoc :enabled (not (:enabled @selected-playbook)))
+                                                                (and @run-changed? (not-empty @run)) (assoc :run @run))])
+                                             (refresh (general-utils/id->uuid (:id @nuvlabox)))
+                                             (reset! run-changed? false)
+                                             (reset! enabled-changed? false)
+                                             (reset! run nil))}]]
+
+                  [ui/GridColumn
+                   (if (some? (:output @selected-playbook))
+                     [:<>
+                      [ui/Header {:as       "h4"
+                                  :attached "top"}
+                       "Output"]
+                      [ui/Segment {:attached   true
+                                   :text-align "left"}
+                       [ui/CodeMirror {:value      (:output @selected-playbook)
+                                       :autoCursor true
+                                       :options    {:mode              "text/plain"
+                                                    :read-only         true
+                                                    :line-numbers      false
+                                                    :style-active-line false}
+                                       :class      "full-width"}]]]
+                     [ui/Segment {:vertical true}
+                      (@tr [:nuvlabox-playbooks-no-outputs])])]]]]
+               (@tr [:nuvlabox-playbooks-not-selected]))]]]]]))))
+
+
 (defn tabs
   [count-peripherals]
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -1507,6 +1854,10 @@
                  :key     "vuln"
                  :icon    "shield"}
       :render   (fn [] (r/as-element [TabVulnerabilities]))}
+     {:menuItem {:content "Playbooks"
+                 :key     "playbooks"
+                 :icon    "book"}
+      :render   (fn [] (r/as-element [TabPlaybooks]))}
      (job-views/jobs-section)
      (acl/TabAcls nuvlabox @can-edit? ::events/edit)]))
 
@@ -1563,4 +1914,6 @@
        [MenuBar uuid]
        [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
        [job-views/ProgressJobAction @nb-status]
-       [TabsNuvlaBox]]]]))
+       [TabsNuvlaBox]
+       [AddPlaybookModal]
+       ]]]))

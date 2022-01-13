@@ -165,6 +165,29 @@
 
 
 (reg-event-fx
+  ::operation-text-response
+  (fn [_ [_ operation resource-id on-success-fn on-error-fn]]
+    {::cimi-api-fx/operation
+     [resource-id operation
+      #(if (instance? js/Error %)
+         (let [{:keys [status message]} (response/parse-ex-info %)]
+           (dispatch [::messages-events/add
+                      {:header  (cond-> (str "error executing " operation " for NuvlaBox " resource-id)
+                                        status (str " (" status ")"))
+                       :content message
+                       :type    :error}])
+           (on-error-fn))
+         (do
+           (dispatch [::messages-events/add
+                      {:header  (str "operation " operation " successful")
+                       :content %
+                       :type    :success}])
+           (on-success-fn (:message %))
+           (dispatch [::get-nuvlabox resource-id])))
+      nil]}))
+
+
+(reg-event-fx
   ::set-page
   (fn [{db :db} [_ page]]
     {:db       (assoc db ::spec/page page)
@@ -192,7 +215,7 @@
 
 (reg-event-fx
   ::get-nuvlabox
-  (fn [{{:keys [::spec/nuvlabox] :as db} :db} [_ id]]
+  (fn [{{:keys [::spec/nuvlabox ::spec/nuvlabox-current-playbook] :as db} :db} [_ id]]
     {:db                  (if (= (:id nuvlabox) id) db (merge db spec/defaults))
      ::cimi-api-fx/get    [id #(dispatch [::set-nuvlabox %])
                            :on-error #(dispatch [::set-nuvlabox nil])]
@@ -203,7 +226,11 @@
                            #(dispatch [::set-nuvlabox-peripherals %])]
      :fx                  [[:dispatch [::get-nuvlabox-events id]]
                            [:dispatch [::job-events/get-jobs id]]
-                           [:dispatch [::deployment-events/get-nuvlabox-deployments id]]]}))
+                           [:dispatch [::deployment-events/get-nuvlabox-deployments id]]
+                           [:dispatch [::get-nuvlabox-playbooks id]]
+                           [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
+                                                                         (:id nuvlabox-current-playbook)
+                                                                         nil)]]]}))
 
 
 (reg-event-fx
@@ -367,3 +394,77 @@
   (fn [db [_ nuvlabox-cluster]]
     (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster)))
 
+
+(reg-event-fx
+  ::get-nuvlabox-playbooks
+  (fn [_ [_ nuvlabox-id]]
+    {::cimi-api-fx/search [:nuvlabox-playbook
+                           {:filter  (str "parent='" nuvlabox-id "'")
+                            :select  "id, run, enabled, type, output, name, description"
+                            :orderby "type:desc"
+                            :last    1000}
+                           #(dispatch [::set-nuvlabox-playbooks (:resources %)])]}))
+
+
+(reg-event-db
+  ::set-nuvlabox-playbooks
+  (fn [db [_ nuvlabox-playbooks]]
+    (assoc db ::spec/nuvlabox-playbooks nuvlabox-playbooks)))
+
+
+(reg-event-fx
+  ::edit-playbook
+  (fn [_ [_ playbook new-body]]
+    (let [nuvlabox-id (:parent playbook)
+          playbook-id (:id playbook)]
+      {::cimi-api-fx/edit [playbook-id new-body
+                           #(if (instance? js/Error %)
+                              (let [{:keys [status message]} (response/parse-ex-info %)]
+                                (dispatch [::messages-events/add
+                                           {:header  (cond-> "Failed to update the playbook's run"
+                                                             status (str " (" status ")"))
+                                            :content message
+                                            :type    :error}]))
+                              (do
+                                (dispatch [::messages-events/add
+                                           {:header  "Playbook updated"
+                                            :content "The Playbook's run script has been updated."
+                                            :type    :info}])
+                                (dispatch [::get-nuvlabox-playbooks nuvlabox-id])))]})))
+
+
+(reg-event-fx
+  ::add-nuvlabox-playbook
+  (fn [_ [_ data]]
+    {::cimi-api-fx/add [:nuvlabox-playbook data
+                        #(dispatch [::get-nuvlabox-playbooks (:parent data)])]}))
+
+
+(reg-event-fx
+  ::get-emergency-playbooks
+  (fn [_ [_ nuvlabox-id]]
+    {::cimi-api-fx/search [:nuvlabox-playbook
+                           {:filter  (str "parent='" nuvlabox-id "' and type='EMERGENCY'")
+                            :select  "id, enabled, type, name"
+                            :orderby "enabled:desc"
+                            :last    1000}
+                           #(dispatch [::set-emergency-playbooks (:resources %)])]}))
+
+
+(reg-event-db
+  ::set-emergency-playbooks
+  (fn [db [_ nuvlabox-playbooks]]
+    (assoc db ::spec/nuvlabox-emergency-playbooks nuvlabox-playbooks)))
+
+
+(reg-event-fx
+  ::get-nuvlabox-current-playbook
+  (fn [db [_ nuvlabox-playbook-id]]
+    {::cimi-api-fx/get [nuvlabox-playbook-id #(dispatch [::set-nuvlabox-current-playbook %])
+                        :on-error #(dispatch [::set-nuvlabox-current-playbook nil])]}))
+
+
+(reg-event-db
+  ::set-nuvlabox-current-playbook
+  (fn [db [_ nuvlabox-playbook]]
+    (assoc db ::spec/nuvlabox-current-playbook nuvlabox-playbook)))

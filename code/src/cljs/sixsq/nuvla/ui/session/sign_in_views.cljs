@@ -31,7 +31,7 @@
         token (r/atom nil)]
     (fn []
       [comp/RightPanel
-       {:title       (@tr [:sign-in])
+       {:title       (str (@tr [:sign-in]) " ")
         :title-bold  (@tr [:code-verification])
         :FormFields  [:<>
                       [ui/Message {:info    true
@@ -45,8 +45,8 @@
                         :icon-position "left"
                         :auto-focus    "on"
                         :auto-complete "off"
-                        :type          "number"
-                        :on-change     (ui-callback/input-callback #(reset! token %1))}]]
+                        :value         @token
+                        :on-change     (ui-callback/input-callback #(reset! token (or (re-find #"\d+" %1) "")))}]]
         :submit-text (str/capitalize (@tr [:validate]))
         :submit-fn   #(dispatch [::events/validate-2fa-activation @token])}])))
 

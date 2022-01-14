@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.27.0] - 2022-01-14
+
 ### Added
 
   - UIX - Translation component

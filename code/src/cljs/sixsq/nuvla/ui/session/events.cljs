@@ -18,7 +18,8 @@
 (reg-event-fx
   ::initialize
   (fn [{db :db}]
-    {:db                   (assoc db ::spec/loading-session? true)
+    {:db                   (assoc db ::spec/loading-session? true
+                                     ::spec/error-message nil)
      ::cimi-api-fx/session [(fn [session]
                               (dispatch [::set-session session])
                               (when session
@@ -91,7 +92,7 @@
 (reg-event-fx
   ::code-validation-2fa-failed
   (fn []
-    {:fx [[:dispatch [::set-error-message "Code validation failed!"]]]}))
+    {:fx [[:dispatch [::set-error-message :code-validation-failed]]]}))
 
 
 (reg-event-fx

@@ -493,7 +493,7 @@
 
 (reg-event-db
   ::set-callback-2fa
-  (fn [{:keys [::spec/user] :as db} [_ response loading-key]]
+  (fn [db [_ response loading-key]]
     (let [callback-url (:location response)]
       (-> db
           (update ::spec/loading disj loading-key)
@@ -510,6 +510,7 @@
      ::cimi-api-fx/operation [(:id user) "enable-2fa"
                               #(if (instance? js/Error %)
                                  (let [{:keys [status message]} (response/parse-ex-info %)]
+                                   (dispatch [::set-callback-2fa nil :enable-2fa])
                                    (dispatch [::messages-events/add
                                               {:header  (cond-> (str "Enable 2FA failed!")
                                                                 status (str " (" status ")"))
@@ -529,6 +530,7 @@
      ::cimi-api-fx/operation [(:id user) "disable-2fa"
                               #(if (instance? js/Error %)
                                  (let [{:keys [status message]} (response/parse-ex-info %)]
+                                   (dispatch [::set-callback-2fa nil :disable-2fa])
                                    (dispatch [::messages-events/add
                                               {:header  (cond-> (str "Disable 2FA failed!")
                                                                 status (str " (" status ")"))

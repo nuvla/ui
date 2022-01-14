@@ -2,17 +2,17 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
     [sixsq.nuvla.ui.session.events :as events]
     [sixsq.nuvla.ui.session.subs :as subs]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+
 
 (defn RightPanel
   [{:keys [title title-bold FormFields submit-text submit-fn ExtraContent]}]
   (let [error-message   (subscribe [::subs/error-message])
         success-message (subscribe [::subs/success-message])
-        tr              (subscribe [::i18n-subs/tr])
         loading?        (subscribe [::subs/loading?])]
     [:<>
      [:div {:style {:float "right"}} [i18n-views/LocaleDropdown]]
@@ -27,15 +27,15 @@
          [ui/Message {:negative  true
                       :size      "tiny"
                       :onDismiss #(dispatch [::events/set-error-message nil])}
-          [ui/MessageHeader (str/capitalize (@tr [:error]))]
-          [:p @error-message]])
+          [ui/MessageHeader [uix/TR :error str/capitalize]]
+          [:p [uix/TR @error-message ]]])
 
        (when @success-message
          [ui/Message {:negative  false
                       :size      "tiny"
                       :onDismiss #(dispatch [::events/set-success-message nil])}
-          [ui/MessageHeader (str/capitalize (@tr [:success]))]
-          [:p (@tr [@success-message])]])
+          [ui/MessageHeader [uix/TR :success str/capitalize]]
+          [:p [uix/TR @success-message ]]])
 
        FormFields
 

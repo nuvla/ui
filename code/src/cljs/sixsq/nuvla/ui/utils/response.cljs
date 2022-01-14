@@ -13,7 +13,7 @@
       (let [{:keys [status message resource-id] :as document} (utils/json->edn json-str)]
         (if (or status message resource-id)
           document
-          {:message (with-out-str (pprint document))}))
+          {:message (with-out-str (pprint (or document json-str)))}))
       (catch :default _
         {:message json-str}))
     {:message (with-out-str (pprint json-str))}))

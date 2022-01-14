@@ -41,9 +41,9 @@
 (s/def ::group-form (s/keys :req [::group-name
                                   ::group-description]))
 
-
 (s/def ::active-tab-index number?)
 
+(s/def ::callback-2fa (s/nilable string?))
 
 (s/def ::db (s/keys :req [::user
                           ::customer
@@ -59,7 +59,8 @@
                           ::setup-intent
                           ::vendor
                           ::group
-                          ::active-tab-index]))
+                          ::active-tab-index
+                          ::callback-2fa]))
 
 
 (def defaults {::user              nil
@@ -76,4 +77,5 @@
                ::loading           #{}
                ::vendor            nil
                ::group             nil
-               ::active-tab-index  0})
+               ::active-tab-index  0
+               ::callback-2fa      nil})

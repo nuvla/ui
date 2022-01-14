@@ -282,6 +282,7 @@
       "sign-up" [sign-up-views/Form]
       "reset-password" [reset-password-views/Form]
       "set-password" [set-password-views/Form]
+      "sign-in-token" [sign-in-views/FormTokenValidation]
       [sign-in-views/Form])))
 
 

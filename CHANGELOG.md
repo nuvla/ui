@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+  - Sign-in-token - Warning logged to console fix
+
 ## [2.27.1] - 2022-01-17
 
 ### Changed

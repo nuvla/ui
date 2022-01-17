@@ -45,7 +45,7 @@
                         :icon-position "left"
                         :auto-focus    "on"
                         :auto-complete "off"
-                        :value         @token
+                        :value         (or @token "")
                         :on-change     (ui-callback/input-callback #(reset! token (or (re-find #"\d+" %1) "")))}]]
         :submit-text (str/capitalize (@tr [:validate]))
         :submit-fn   #(dispatch [::events/validate-2fa-activation @token])}])))

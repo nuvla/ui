@@ -2,14 +2,19 @@
 
 ## Unreleased
 
+## [2.27.0] - 2022-01-14
+
 ### Added
 
+  - UIX - Translation component
+  - Profile - Enable or disable 2FA (Two factor authentication)
   - NuvlaBox - new options for opting in on host-level management, at NuvlaBox creation time
   - NuvlaBox - new tab for managing playbooks
   - NuvlaBox - new buttons for playbook management operations
 
 ### Changed
 
+  - Error message parsing return in some cases false without any message fix
   - Dependencies updates
   - Map - Support draw
   - Data - New workflow

@@ -1,7 +1,9 @@
 (ns sixsq.nuvla.ui.profile.events
   (:require
     ["@stripe/react-stripe-js" :as react-stripe]
+    [ajax.core :as ajax]
     [clojure.string :as str]
+    [day8.re-frame.http-fx]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.config :as config]
@@ -459,3 +461,79 @@
   ::set-active-tab-index
   (fn [db [_ active-tab-index]]
     (assoc db ::spec/active-tab-index active-tab-index)))
+
+
+(reg-event-fx
+  ::code-validation-2fa-failed
+  (fn [_ [_ response]]
+    {:fx [[:dispatch [::set-error (-> response :response :message)]]]}))
+
+(reg-event-fx
+  ::code-validation-2fa-success
+  (fn [_ [_ success-header success-content]]
+    {:fx [[:dispatch [::close-modal]]
+          [:dispatch [::messages-events/add
+                      {:header  success-header
+                       :content success-content
+                       :type    :success}]]
+          [:dispatch [::get-user]]]}))
+
+
+(reg-event-fx
+  ::validate-2fa-activation
+  (fn [{{:keys [::spec/callback-2fa]} :db} [_ token success-header success-content]]
+    {:http-xhrio {:method          :put
+                  :uri             callback-2fa
+                  :format          (ajax/json-request-format)
+                  :params          {:token token}
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [::code-validation-2fa-success success-header success-content]
+                  :on-failure      [::code-validation-2fa-failed]}}))
+
+
+(reg-event-db
+  ::set-callback-2fa
+  (fn [db [_ response loading-key]]
+    (let [callback-url (:location response)]
+      (-> db
+          (update ::spec/loading disj loading-key)
+          (assoc ::spec/callback-2fa callback-url)))))
+
+
+(reg-event-fx
+  ::enable-2fa
+  (fn [{{:keys [::spec/user] :as db} :db}]
+    {:db                     (-> db
+                                 (update ::spec/loading conj :enable-2fa)
+                                 (assoc ::spec/open-modal :enable-2fa)
+                                 (assoc ::spec/callback-2fa nil))
+     ::cimi-api-fx/operation [(:id user) "enable-2fa"
+                              #(if (instance? js/Error %)
+                                 (let [{:keys [status message]} (response/parse-ex-info %)]
+                                   (dispatch [::set-callback-2fa nil :enable-2fa])
+                                   (dispatch [::messages-events/add
+                                              {:header  (cond-> (str "Enable 2FA failed!")
+                                                                status (str " (" status ")"))
+                                               :content message
+                                               :type    :error}]))
+                                 (dispatch [::set-callback-2fa %1 :enable-2fa]))
+                              {:method "email"}]}))
+
+
+(reg-event-fx
+  ::disable-2fa
+  (fn [{{:keys [::spec/user] :as db} :db}]
+    {:db                     (-> db
+                                 (update ::spec/loading conj :disable-2fa)
+                                 (assoc ::spec/open-modal :disable-2fa)
+                                 (assoc ::spec/deactivation-2fa-callback nil))
+     ::cimi-api-fx/operation [(:id user) "disable-2fa"
+                              #(if (instance? js/Error %)
+                                 (let [{:keys [status message]} (response/parse-ex-info %)]
+                                   (dispatch [::set-callback-2fa nil :disable-2fa])
+                                   (dispatch [::messages-events/add
+                                              {:header  (cond-> (str "Disable 2FA failed!")
+                                                                status (str " (" status ")"))
+                                               :content message
+                                               :type    :error}]))
+                                 (dispatch [::set-callback-2fa %1 :disable-2fa]))]}))

@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -12,7 +13,8 @@
     [sixsq.nuvla.ui.session.subs :as subs]
     [sixsq.nuvla.ui.session.utils :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.spec :as us]))
+    [sixsq.nuvla.ui.utils.spec :as us]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 ;; VALIDATION SPEC
 (s/def ::username us/nonblank-string)
@@ -22,6 +24,31 @@
   (s/keys :req-un [::username
                    ::password]))
 
+
+(defn FormTokenValidation
+  []
+  (let [tr    (subscribe [::i18n-subs/tr])
+        token (r/atom nil)]
+    (fn []
+      [comp/RightPanel
+       {:title       (str (@tr [:sign-in]) " ")
+        :title-bold  (@tr [:code-verification])
+        :FormFields  [:<>
+                      [ui/Message {:info    true
+                                   :header  (@tr [:code-verification])
+                                   :content (@tr [:two-factor-authentication-message-send])
+                                   :icon    "envelope"}]
+                      [ui/FormInput
+                       {:label         (str/capitalize (@tr [:code]))
+                        :required      true
+                        :icon          "key"
+                        :icon-position "left"
+                        :auto-focus    "on"
+                        :auto-complete "off"
+                        :value         @token
+                        :on-change     (ui-callback/input-callback #(reset! token (or (re-find #"\d+" %1) "")))}]]
+        :submit-text (str/capitalize (@tr [:validate]))
+        :submit-fn   #(dispatch [::events/validate-2fa-activation @token])}])))
 
 (defn Form
   []

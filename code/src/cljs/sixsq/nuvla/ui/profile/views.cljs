@@ -678,7 +678,6 @@
         default-pm           (subscribe [::subs/default-payment-method])
         session              (subscribe [::session-subs/session])
         user-id              (:user @session)]
-    (dispatch [::events/list-payment-methods])
     (fn []
       (let [set-as-default-str (@tr [:set-as-default])
             delete-str         (str/capitalize (@tr [:delete]))]
@@ -761,7 +760,6 @@
         loading?         (subscribe [::subs/loading? :upcoming-invoice])
         upcoming-invoice (subscribe [::subs/upcoming-invoice])
         upcoming-lines   (subscribe [::subs/upcoming-invoice-lines])]
-    (dispatch [::events/upcoming-invoice])
     (fn []
       (let [locale @(subscribe [::i18n-subs/locale])
             {upcoming-total    :total
@@ -832,7 +830,6 @@
   (let [tr       (subscribe [::i18n-subs/tr])
         loading? (subscribe [::subs/loading? :invoices])
         invoices (subscribe [::subs/invoices])]
-    (dispatch [::events/list-invoices])
     (fn []
       (let [locale @(subscribe [::i18n-subs/locale])]
         [ui/Segment {:padded  true
@@ -918,7 +915,6 @@
         loading?      (subscribe [::subs/loading? :customer-info])
         customer-info (subscribe [::subs/customer-info])
         open?         (subscribe [::subs/modal-open? :add-coupon])]
-    (dispatch [::events/customer-info])
     (fn []
       (let [{:keys [name percent-off currency amount-off
                     duration duration-in-month] :as coupon} (:coupon @customer-info)]
@@ -1032,7 +1028,6 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         loading?      (subscribe [::subs/loading? :customer-info])
         customer-info (subscribe [::subs/customer-info])]
-    (dispatch [::events/customer-info])
     (fn []
       (let [{:keys [street-address city country postal-code]} (:address @customer-info)
             fullname (:fullname @customer-info)]

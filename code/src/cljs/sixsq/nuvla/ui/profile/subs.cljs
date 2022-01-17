@@ -12,13 +12,6 @@
 
 
 (reg-sub
-  ::credential-password
-  :<- [::user]
-  (fn [user]
-    (:credential-password user)))
-
-
-(reg-sub
   ::customer
   (fn [db]
     (::spec/customer db)))

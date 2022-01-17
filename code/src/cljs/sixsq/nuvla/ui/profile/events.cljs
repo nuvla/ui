@@ -23,9 +23,9 @@
 (reg-event-fx
   ::init
   (fn [{db :db} _]
-    {:db         (merge db spec/defaults)
-     :dispatch-n [[::get-user]
-                  [::search-existing-customer]]}))
+    {:db (merge db spec/defaults)
+     :fx [[:dispatch [::get-user]]
+          [:dispatch [::search-existing-customer]]]}))
 
 
 (reg-event-db
@@ -53,11 +53,10 @@
   ::get-user
   (fn [{{:keys [::session-spec/session] :as db} :db} _]
     (when-let [user (:user session)]
-      (let [active-claim (:active-claim session)]
-        {:db               (update db ::spec/loading conj :user)
-         ::cimi-api-fx/get [user #(do (dispatch [::set-user %])
-                                      (when (session-utils/is-group? active-claim)
-                                        (dispatch [::get-group])))]}))))
+      (let [is-group? (-> session :active-claim session-utils/is-group?)]
+        (cond-> {:fx [(when is-group? [:dispatch [::get-group]])]}
+                (not is-group?) (assoc ::cimi-api-fx/get [user #(do (dispatch [::set-user %]))]
+                                       :db (update db ::spec/loading conj :user)))))))
 
 
 (reg-event-fx
@@ -144,8 +143,12 @@
   (fn [{{:keys [::spec/loading] :as db} :db} [_ customer]]
     (cond-> {:db (assoc db ::spec/customer customer
                            ::spec/loading (disj loading :customer))}
-            customer (assoc :dispatch-n [[::get-subscription]
-                                         [::close-modal]]))))
+            customer (assoc :fx [[:dispatch [::get-subscription]]
+                                 [:dispatch [::close-modal]]
+                                 [:dispatch [::customer-info]]
+                                 [:dispatch [::list-invoices]]
+                                 [:dispatch [::upcoming-invoice]]
+                                 [:dispatch [::list-payment-methods]]]))))
 
 
 (reg-event-fx
@@ -224,7 +227,13 @@
   (fn [{{:keys [::spec/customer] :as db} :db} _]
     {:db                     (update db ::spec/loading conj :invoices)
      ::cimi-api-fx/operation [(:id customer) "list-invoices"
-                              #(dispatch [::set-invoices %])]}))
+                              #(if (instance? js/Error %)
+                                 (do (dispatch [::messages-events/add
+                                                {:header  "List invoices failed"
+                                                 :content "Wasn't able to load invoices"
+                                                 :type    :error}])
+                                     (dispatch [::set-invoices nil]))
+                                 (dispatch [::set-invoices %]))]}))
 
 
 (reg-event-db
@@ -416,7 +425,7 @@
 
 (reg-event-fx
   ::remove-coupon
-  (fn [{{:keys [::spec/customer] :as db} :db} _]
+  (fn [{{:keys [::spec/customer] :as db} :db}]
     {::cimi-api-fx/operation [(:id customer) "remove-coupon"
                               #(dispatch [::remove-coupon-result %])]
      :db                     (update db ::spec/loading conj :remove-coupon)}))
@@ -449,7 +458,7 @@
 
 (reg-event-fx
   ::search-existing-vendor
-  (fn [{{:keys [::session-spec/session]} :db} _]
+  (fn [{{:keys [::session-spec/session]} :db}]
     {::cimi-api-fx/search [:vendor {:filter (str "parent='" (or (:active-claim session)
                                                                 (:user session)) "'")}
                            #(if-let [id (-> % :resources first :id)]

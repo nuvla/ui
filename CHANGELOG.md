@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [2.27.1] - 2022-01-17
+
+### Changed
+
+  - Profile - Bugfix race condition loading customer and user
+
 ## [2.27.0] - 2022-01-14
 
 ### Added

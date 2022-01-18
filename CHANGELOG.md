@@ -4,6 +4,9 @@
 
 ### Changed
 
+  - Deps - update to @stripe/react-stripe-js@1.7.0
+  - Deps - update to @stripe/stripe-js@1.22.0
+  - Profile - Warning logged to console fix because of list payment methods fix
   - Sign-in-token - Warning logged to console fix
 
 ## [2.27.1] - 2022-01-17

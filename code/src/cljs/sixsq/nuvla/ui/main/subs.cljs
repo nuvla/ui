@@ -151,13 +151,6 @@
 
 
 (reg-sub
-  ::nuvla-api
-  :<- [::config "nuvla-api"]
-  (fn [nuvla-api [_]]
-    (or nuvla-api "https://nuvla.io/api")))
-
-
-(reg-sub
   ::open-modal
   (fn [db]
     (::spec/open-modal db)))

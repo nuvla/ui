@@ -4,7 +4,7 @@
 
 ### Changed
 
-- Session - Error message in sign-in sign-up pages not always
+- Session - Error message in sign-in and sign-up pages not always
   visible [#778](https://github.com/nuvla/ui/issues/778)
 
 ## [2.27.2] - 2022-01-19

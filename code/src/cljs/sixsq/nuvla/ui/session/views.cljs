@@ -64,14 +64,14 @@
                          :size      "tiny"
                          :onDismiss #(dispatch [::events/set-error-message nil])}
              [ui/MessageHeader (@tr [:error-occured])]
-             [:p @error-message]])
+             [:p [uix/TR @error-message]]])
 
           (when @success-message
             [ui/Message {:negative  false
                          :size      "tiny"
                          :onDismiss #(dispatch [::events/set-success-message nil])}
              [ui/MessageHeader (@tr [:success])]
-             [:p (@tr [@success-message])]])
+             [:p [uix/TR @success-message]]])
 
           [ui/Form
            [ui/FormInput {:name          :email
@@ -282,6 +282,7 @@
       "sign-up" [sign-up-views/Form]
       "reset-password" [reset-password-views/Form]
       "set-password" [set-password-views/Form]
+      "sign-in-token" [sign-in-views/FormTokenValidation]
       [sign-in-views/Form])))
 
 
@@ -289,15 +290,15 @@
   [navigate?]
   (let [session      (subscribe [::subs/session])
         query-params (subscribe [::main-subs/nav-query-params])
-        tr           (subscribe [::i18n-subs/tr])
-        error        (some-> @query-params :error keyword)
-        message      (some-> @query-params :message keyword)]
+        tr           (subscribe [::i18n-subs/tr])]
     (when (and navigate? @session)
       (dispatch [::history-events/navigate "welcome"]))
-    (when error
-      (dispatch [::events/set-error-message (or (@tr [(keyword error)]) error)]))
-    (when message
-      (dispatch [::events/set-success-message (or (@tr [(keyword message)]) message)]))
+    (when-let [error (:error @query-params)]
+      (dispatch [::events/set-error-message
+                 (or (@tr [(keyword error)]) error)]))
+    (when-let [message (:message @query-params)]
+      (dispatch [::events/set-success-message
+                 (or (@tr [(keyword message)]) message)]))
     [ui/Grid {:stackable true
               :columns   2
               :style     {:margin           0

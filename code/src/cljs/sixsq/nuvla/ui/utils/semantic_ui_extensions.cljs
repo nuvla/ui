@@ -13,6 +13,16 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
+(defn TR
+  [msg-or-key fn]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    ((or fn identity)
+     (cond
+       (keyword? msg-or-key) (@tr [msg-or-key])
+       (nil? msg-or-key) ""
+       :else msg-or-key))))
+
+
 (defn Icon
   [{:keys [name] :as opts}]
   [ui/Icon (cond-> opts
@@ -98,7 +108,7 @@
                 :style          {:margin-top "20px"}}
        [ui/GridColumn {:floated "left", :width 3}
         [ui/Label {:size :medium}
-         (str (str/capitalize (@tr [:total])) " " itemnames ": " totalitems)]]
+         [TR :total #(str (str/capitalize %1) " " itemnames ": " totalitems)]]]
        [ui/GridColumn {:floated "right", :width 10, :text-align "right"}
         (when onElementsPerPageChange
           [:<>
@@ -288,8 +298,7 @@
 (defn ModalDanger
   [{:keys [_button-text _on-confirm danger-msg _header _content _trigger _open _on-close _modal-action
            control-confirmed?]}]
-  (let [tr         (subscribe [::i18n-subs/tr])
-        confirmed? (or control-confirmed? (r/atom (nil? danger-msg)))
+  (let [confirmed? (or control-confirmed? (r/atom (nil? danger-msg)))
         clicked?   (r/atom false)]
     (fn [{:keys [button-text on-confirm danger-msg header content trigger open on-close modal-action]}]
       [ui/Modal (cond->
@@ -311,7 +320,7 @@
         (when content content)
         (when danger-msg
           [ui/Message {:error true}
-           [ui/MessageHeader {:style {:margin-bottom 10}} (@tr [:danger-action-cannot-be-undone])]
+           [ui/MessageHeader {:style {:margin-bottom 10}} [TR :danger-action-cannot-be-undone]]
            [ui/MessageContent [ui/Checkbox {:label     danger-msg
                                             :checked   @confirmed?
                                             :fitted    true
@@ -389,7 +398,7 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [message]
       [ui/Message {:info true}
-       (or message (@tr [:no-items-to-show]))])))
+       (or message [TR :no-items-to-show])])))
 
 
 (defn Tags

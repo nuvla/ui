@@ -73,7 +73,15 @@
 
 (reg-sub
   ::cloud-entry-point
-  ::spec/cloud-entry-point)
+  (fn [db]
+    (::spec/cloud-entry-point db)))
+
+
+(reg-sub
+  ::base-uri
+  :<- [::cloud-entry-point]
+  (fn [cloud-entry-point]
+    (:base-uri cloud-entry-point)))
 
 
 (reg-sub

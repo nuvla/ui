@@ -10,7 +10,6 @@
   "stripe": null,
   "pricing-url": null,
   "nuvla-logo-url": null,
-  "nuvla-api": null,
   "licenses": [
     {
       "license-name": "Apache 2.0",

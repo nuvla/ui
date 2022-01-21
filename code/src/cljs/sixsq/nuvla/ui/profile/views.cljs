@@ -198,6 +198,79 @@
                                       (dissoc :new-password-repeat))]))}]]])))
 
 
+(defn ModalEnableDisableTwoFactorAuth
+  [_enable?]
+  (let [error (subscribe [::subs/error-message])
+        tr    (subscribe [::i18n-subs/tr])
+        token (r/atom nil)]
+    (fn [enable?]
+      (let [{:keys [modal-key modal-header
+                    button-text success-header
+                    success-content button-color]} (if enable?
+                                                     {:modal-key       :enable-2fa
+                                                      :modal-header    :two-factor-authentication-enable
+                                                      :button-text     :enable
+                                                      :button-color    "green"
+                                                      :success-header  :two-factor-authentication-enabled
+                                                      :success-content :two-factor-code-accepted-enabled}
+                                                     {:modal-key       :disable-2fa
+                                                      :modal-header    :two-factor-authentication-disable
+                                                      :button-text     :disable
+                                                      :button-color    "red"
+                                                      :success-header  :two-factor-authentication-disabled
+                                                      :success-content :two-factor-code-accepted-disabled})
+            open?     (subscribe [::subs/modal-open? modal-key])
+            loading?  (subscribe [::subs/loading? modal-key])
+            on-submit #(do
+                         (dispatch [::events/validate-2fa-activation @token
+                                    (@tr [success-header])
+                                    (@tr [success-content])])
+                         (dispatch [::events/clear-error-message])
+                         (reset! token nil))]
+        [ui/Modal
+         {:size      :tiny
+          :open      @open?
+          :closeIcon true
+          :on-close  #(do
+                        (dispatch [::events/close-modal])
+                        (reset! token nil))}
+
+         [uix/ModalHeader {:header (@tr [modal-header])}]
+
+         [ui/ModalContent
+
+          (when @error
+            [ui/Message {:negative  true
+                         :size      "tiny"
+                         :onDismiss #(dispatch [::events/clear-error-message])}
+             [ui/MessageHeader (str/capitalize (@tr [:error]))]
+             [:p @error]])
+
+          [ui/Message {:info    true
+                       :header  (@tr [:code-verification])
+                       :content (@tr [:two-factor-authentication-message-send])
+                       :icon    "envelope"}]
+
+          [ui/Form {:loading   @loading?
+                    :on-submit on-submit}
+           [ui/FormInput
+            {:label         (str/capitalize (@tr [:code]))
+             :required      true
+             :icon          "key"
+             :icon-position "left"
+             :auto-focus    "on"
+             :auto-complete "off"
+             :value         @token
+             :on-change     (ui-callback/input-callback #(reset! token (or (re-find #"\d+" %1) "")))}]]]
+
+         [ui/ModalActions
+          [uix/Button
+           {:text     (str/capitalize (@tr [button-text]))
+            :color    button-color
+            :disabled (str/blank? @token)
+            :on-click on-submit}]]]))))
+
+
 (defn Details
   []
   (let [tr         (subscribe [::i18n-subs/tr])
@@ -605,7 +678,6 @@
         default-pm           (subscribe [::subs/default-payment-method])
         session              (subscribe [::session-subs/session])
         user-id              (:user @session)]
-    (dispatch [::events/list-payment-methods])
     (fn []
       (let [set-as-default-str (@tr [:set-as-default])
             delete-str         (str/capitalize (@tr [:delete]))]
@@ -688,7 +760,6 @@
         loading?         (subscribe [::subs/loading? :upcoming-invoice])
         upcoming-invoice (subscribe [::subs/upcoming-invoice])
         upcoming-lines   (subscribe [::subs/upcoming-invoice-lines])]
-    (dispatch [::events/upcoming-invoice])
     (fn []
       (let [locale @(subscribe [::i18n-subs/locale])
             {upcoming-total    :total
@@ -759,7 +830,6 @@
   (let [tr       (subscribe [::i18n-subs/tr])
         loading? (subscribe [::subs/loading? :invoices])
         invoices (subscribe [::subs/invoices])]
-    (dispatch [::events/list-invoices])
     (fn []
       (let [locale @(subscribe [::i18n-subs/locale])]
         [ui/Segment {:padded  true
@@ -845,7 +915,6 @@
         loading?      (subscribe [::subs/loading? :customer-info])
         customer-info (subscribe [::subs/customer-info])
         open?         (subscribe [::subs/modal-open? :add-coupon])]
-    (dispatch [::events/customer-info])
     (fn []
       (let [{:keys [name percent-off currency amount-off
                     duration duration-in-month] :as coupon} (:coupon @customer-info)]
@@ -959,7 +1028,6 @@
   (let [tr            (subscribe [::i18n-subs/tr])
         loading?      (subscribe [::subs/loading? :customer-info])
         customer-info (subscribe [::subs/customer-info])]
-    (dispatch [::events/customer-info])
     (fn []
       (let [{:keys [street-address city country postal-code]} (:address @customer-info)
             fullname (:fullname @customer-info)]
@@ -1280,8 +1348,11 @@
 
 (defmethod panel/render :profile
   [_path]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        is-group? (subscribe [::session-subs/active-claim-is-group?])]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        is-group?        (subscribe [::session-subs/active-claim-is-group?])
+        user             (subscribe [::subs/user])
+        can-enable-2fa?  (utils-general/can-operation? "enable-2fa" @user)
+        can-disable-2fa? (utils-general/can-operation? "disable-2fa" @user)]
     [ui/Container {:fluid true}
      [uix/PageHeader "user" (str/capitalize (@tr [:profile]))]
      [ui/Menu {:borderless true}
@@ -1290,5 +1361,16 @@
                     :content  (str/capitalize (@tr [:change-password]))
                     :on-click #(dispatch [::events/open-modal :change-password])}]
       [AddGroupButton]
-      [ModalChangePassword]]
+      (when can-enable-2fa?
+        [ui/MenuItem {:icon     "shield"
+                      :content  (@tr [:two-factor-authentication-enable])
+                      :on-click #(dispatch [::events/enable-2fa])}])
+      (when can-disable-2fa?
+        [ui/MenuItem {:on-click #(dispatch [::events/disable-2fa])}
+         [ui/IconGroup
+          [ui/Icon {:name "shield"}]
+          [ui/Icon {:name "x" :corner true}]]
+         (@tr [:two-factor-authentication-disable])])
+      [ModalChangePassword]
+      [ModalEnableDisableTwoFactorAuth can-enable-2fa?]]
      [Tabs]]))

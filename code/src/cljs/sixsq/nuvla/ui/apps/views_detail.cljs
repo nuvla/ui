@@ -1062,7 +1062,7 @@
                   "...")
                 "€/" (str/capitalize (@tr [:month])))]]
          [:span
-          [ui/Checkbox {:label          "Follow customer trial period" #_(@tr [:custom-license])
+          [ui/Checkbox {:label          (@tr [:follow-customer-trial])
                         :defaultChecked follow-trial
                         :toggle         true
                         :on-change      (ui-callback/checked
@@ -1071,7 +1071,7 @@
                                              (dispatch [::main-events/changes-protection? true])
                                              (dispatch [::events/validate-form])))}]
           " "
-          [ui/Popup {:content "This will allow users to try your application for free during their trial period of Nuvla."
+          [ui/Popup {:content (@tr [:follow-customer-trial-help])
                      :trigger (r/as-element [ui/Icon {:name "info circle"}])}]]
          ]))))
 

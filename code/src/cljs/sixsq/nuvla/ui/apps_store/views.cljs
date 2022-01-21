@@ -37,22 +37,32 @@
 
 (defn ModuleCard
   [{:keys [id name description path subtype logo-url price published versions tags]} show-published?]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        map-versions (apps-utils/map-versions-index versions)
-        module-id    (if (true? published) (apps-utils/latest-published-module-with-index id map-versions) id)
-        module-index (apps-utils/latest-published-index map-versions)
-        detail-href  (str "apps/" path (when (true? published) (str "?version=" module-index)))
-        button-ops   {:fluid    true
-                      :primary  true
-                      :icon     :rocket
-                      :content  (@tr [:launch])
-                      :on-click (fn [event]
-                                  (dispatch [::main-events/subscription-required-dispatch
-                                             [::deployment-dialog-events/create-deployment
-                                              module-id :infra-services]])
-                                  (.preventDefault event)
-                                  (.stopPropagation event))}
-        desc-summary (utils-values/markdown->summary description)]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        map-versions   (apps-utils/map-versions-index versions)
+        module-id      (if (true? published) (apps-utils/latest-published-module-with-index id map-versions) id)
+        module-index   (apps-utils/latest-published-index map-versions)
+        detail-href    (str "apps/" path (when (true? published) (str "?version=" module-index)))
+        follow-trial?  (get price :follow-customer-trial false)
+        button-icon    (if (and price (not follow-trial?)) :cart :rocket)
+        button-color   (if follow-trial? "green" "blue")
+        launch-price   (str (@tr [(if follow-trial?
+                                    :free-trial-and-then
+                                    :launch-for)])
+                            (/ (:cent-amount-daily price) 100) "€/"
+                            (@tr [:day]))
+        button-content (if price launch-price (@tr [:launch]))
+        on-click       (fn [event]
+                         (dispatch [::main-events/subscription-required-dispatch
+                                    [::deployment-dialog-events/create-deployment
+                                     module-id :infra-services]])
+                         (.preventDefault event)
+                         (.stopPropagation event))
+        button-ops     {:fluid    true
+                        :color    button-color
+                        :icon     button-icon
+                        :content  button-content
+                        :on-click on-click}
+        desc-summary   (utils-values/markdown->summary description)]
     [uix/Card
      {:image         logo-url
       :header        [:<>
@@ -64,12 +74,7 @@
                        [ui/Label {:corner true} [uix/Icon {:name apps-utils/publish-icon}]])
       :href          detail-href
       :on-click      #(dispatch [::history-events/navigate detail-href])
-      :button        [ui/Button
-                      (cond-> button-ops
-                              price (assoc :icon :cart
-                                           :content (str (@tr [:launch-for])
-                                                         (/ (:cent-amount-daily price) 100) "€/"
-                                                         (@tr [:day]))))]}]))
+      :button        [ui/Button button-ops]}]))
 
 
 (defn ModulesCardsGroup

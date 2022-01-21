@@ -207,7 +207,7 @@
                            [::fetch-deployment-log]
                            [::create-log])
                          [::main-events/action-interval-delete
-                          :deployment-get-deployment-log])}
+                          {:id      :deployment-get-deployment-log}])}
             (and play?
                  deployment-log-id)
             (assoc :dispatch-later

@@ -9,6 +9,7 @@
     [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
     [sixsq.nuvla.ui.deployment.views :as deployment-views]
     [sixsq.nuvla.ui.edge-detail.events :as events]
+    [sixsq.nuvla.ui.edge-detail.spec :as spec]
     [sixsq.nuvla.ui.edge-detail.subs :as subs]
     [sixsq.nuvla.ui.edge.events :as edge-events]
     [sixsq.nuvla.ui.edge.subs :as edge-subs]
@@ -630,7 +631,7 @@
           [DeleteButton @nuvlabox])
 
         [cimi-detail-views/format-operations @nuvlabox #{"edit" "delete" "activate" "decommission" "generate-new-api-key"
-                                                         "commission" "check-api"}]
+                                                         "commission" "check-api" "create-log"}]
 
         [components/RefreshMenu
          {:action-id  refresh-action-id
@@ -1807,6 +1808,100 @@
                (@tr [:nuvlabox-playbooks-not-selected]))]]]]]))))
 
 
+(defn log-controller
+  [_go-live?]
+  (let [locale        (subscribe [::i18n-subs/locale])
+        since         (subscribe [::subs/nuvlabox-log-since])
+        play?         (subscribe [::subs/nuvlabox-log-play?])]
+    (fn [go-live?]
+      [ui/Menu {:size "small", :attached "top"}
+
+       [ui/MenuItem
+        {:on-click #(dispatch [::events/set-nuvlabox-log-play? (not @play?)])}
+        [ui/Icon {:name (if @play? "pause" "play")}]]
+
+       [ui/MenuItem
+        [:span
+         "Since:  "
+         [ui/DatePicker
+          {:custom-input     (r/as-element
+                               [ui/Input {:transparent true
+                                          :style       {:width "17em"}}])
+           :locale           @locale
+           :date-format      "LLL"
+           :show-time-select true
+           :timeIntervals    1
+           :selected         @since
+           :on-change        #(dispatch [::events/set-nuvlabox-log-since %])}]]]
+
+       [ui/MenuMenu {:position "right"}
+
+        [ui/MenuItem
+         {:active   @go-live?
+          :color    (if @go-live? "green" "black")
+          :on-click #(swap! go-live? not)}
+         [ui/IconGroup {:size "large"}
+          [ui/Icon {:name "bars"}]
+          [ui/Icon {:name "chevron circle down", :corner true}]]
+         "Go Live"]
+
+        [ui/MenuItem {:on-click #(dispatch [::events/clear-nuvlabox-log])}
+         [ui/IconGroup {:size "large"}
+          [ui/Icon {:name "bars"}]
+          [ui/Icon {:name "trash", :corner true}]]
+         "Clear"]]])))
+
+
+(defn logs-viewer
+  []
+  (let [nuvlabox-log   (subscribe [::subs/nuvlabox-log])
+        id             (subscribe [::subs/nuvlabox-log-id])
+        play?          (subscribe [::subs/nuvlabox-log-play?])
+        go-live?       (r/atom true)
+        scroll-info    (r/atom nil)]
+    (fn []
+      (let [log (:log @nuvlabox-log)
+            last-timestamp  (:last-timestamp @nuvlabox-log)]
+        [:div
+         [log-controller go-live?]
+         [:<>
+          ^{:key (str "logger" @go-live?)}
+          [ui/Segment {:attached    "bottom"
+                       :loading     (and (nil? last-timestamp)
+                                      @play?)
+                       :placeholder true
+                       :style       {:padding 0
+                                     :z-index 0
+                                     :height  600}}
+           (if @id
+             [ui/CodeMirror {:value    (str/join "\n" log)
+                             :scroll   {:x (:left @scroll-info)
+                                        :y (if @go-live?
+                                             (.-MAX_VALUE js/Number)
+                                             (:top @scroll-info))}
+                             :onScroll #(reset! scroll-info
+                                          (js->clj %2 :keywordize-keys true))
+                             :options  {:mode     ""
+                                        :readOnly true
+                                        :theme    "logger"}
+                             :class    ["large-height"]}]
+             [ui/Header {:icon true}
+              [ui/Icon {:name "search"}]
+              "Get NuvlaBox logs"]
+             )]
+          [ui/Label (str "line count:")
+           [ui/LabelDetail (count log)]]]]))))
+
+
+(defn TabLogs
+  []
+  (r/create-class
+    {:component-will-unmount #(do
+                                (dispatch [::events/delete-nuvlabox-log])
+                                (dispatch [::events/set-nuvlabox-log-since (spec/default-since)]))
+     :reagent-render         logs-viewer}))
+
+
 (defn tabs
   [count-peripherals]
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -1833,6 +1928,10 @@
                  :key     "res-cons"
                  :icon    "thermometer half"}
       :render   (fn [] (r/as-element [TabLoad]))}
+     {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:logs]))])
+                 :key     "logs"
+                 :icon    "file code"}
+      :render   (fn [] (r/as-element [TabLogs]))}
      {:menuItem {:content (r/as-element [:span "Peripherals"
                                          [ui/Label {:circular true
                                                     :size     "mini"

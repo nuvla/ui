@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.edge-detail.spec
   (:require
-    [clojure.spec.alpha :as s]))
+    [clojure.spec.alpha :as s]
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (s/def ::nuvlabox (s/nilable any?))
@@ -21,6 +22,10 @@
 (s/def ::nuvlabox-playbooks (s/nilable any?))
 (s/def ::nuvlabox-emergency-playbooks (s/nilable any?))
 (s/def ::nuvlabox-current-playbook (s/nilable any?))
+(s/def ::nuvlabox-log any?)
+(s/def ::nuvlabox-log-id (s/nilable string?))
+(s/def ::nuvlabox-log-since (s/nilable string?))
+(s/def ::nuvlabox-log-play? boolean?)
 
 
 (s/def ::db (s/keys :req [::nuvlabox
@@ -40,8 +45,14 @@
                           ::nuvlabox-not-found?
                           ::nuvlabox-playbooks
                           ::nuvlabox-emergency-playbooks
-                          ::nuvlabox-current-playbook]))
+                          ::nuvlabox-current-playbook
+                          ::nuvlabox-log
+                          ::nuvlabox-log-id
+                          ::nuvlabox-log-since
+                          ::nuvlabox-log-play?]))
 
+(defn default-since []
+  (-> (time/now) (.seconds 0)))
 
 (def defaults {::nuvlabox                     nil
                ::nuvlabox-status              nil
@@ -60,4 +71,8 @@
                ::nuvlabox-not-found?          false
                ::nuvlabox-playbooks           nil
                ::nuvlabox-emergency-playbooks nil
-               ::nuvlabox-current-playbook    nil})
+               ::nuvlabox-current-playbook    nil
+               ::nuvlabox-log                 nil
+               ::nuvlabox-log-id              nil
+               ::nuvlabox-log-play?           false
+               ::nuvlabox-log-since           (default-since)})

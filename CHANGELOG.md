@@ -2,8 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- NuvlaBox detail page - add Logs tab
+
 ### Changed
 
+- Fixed "stop logs" action button for deployment and NuvlaBox logs
 - Nuvlabox detail page - hide generate-new-api-key
 - Session - Error message in sign-in and sign-up pages not always
   visible [#778](https://github.com/nuvla/ui/issues/778)

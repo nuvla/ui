@@ -8,10 +8,12 @@
     [sixsq.nuvla.ui.edge.utils :as edge-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 
 (reg-event-db
@@ -468,3 +470,88 @@
   ::set-nuvlabox-current-playbook
   (fn [db [_ nuvlabox-playbook]]
     (assoc db ::spec/nuvlabox-current-playbook nuvlabox-playbook)))
+
+
+(reg-event-fx
+  ::delete-nuvlabox-log
+  (fn [{{:keys [::spec/nuvlabox-log-id] :as db} :db} _]
+    (cond-> {:db (assoc db ::spec/nuvlabox-log-id nil
+                   ::spec/nuvlabox-log nil)}
+      nuvlabox-log-id (assoc ::cimi-api-fx/delete [nuvlabox-log-id #()]
+                          :dispatch [::set-nuvlabox-log-play? false]))))
+
+
+(reg-event-fx
+  ::set-nuvlabox-log-since
+  (fn [{{:keys [::spec/nuvlabox-log-id] :as db} :db} [_ since]]
+    (cond-> {:db (assoc db ::spec/nuvlabox-log-since since)}
+      nuvlabox-log-id (assoc :dispatch [::delete-nuvlabox-log]))))
+
+
+(reg-event-fx
+  ::set-nuvlabox-log-play?
+  (fn [{{:keys [::spec/nuvlabox-log-id] :as db} :db} [_ play?]]
+    (cond-> {:db       (assoc db ::spec/nuvlabox-log-play? play?)
+             :dispatch (if play?
+                         (if nuvlabox-log-id
+                           [::fetch-nuvlabox-log]
+                           [::create-log])
+                         [::main-events/action-interval-delete
+                          {:id   :nuvlabox-get-nuvlabox-log}])}
+      (and play?
+        nuvlabox-log-id)
+      (assoc :dispatch-later
+        [{:ms       5000
+          :dispatch [::main-events/action-interval-start
+                     {:id        :nuvlabox-get-nuvlabox-log
+                      :frequency 10000
+                      :event     [::get-nuvlabox-log]}]}]))))
+
+
+(reg-event-fx
+  ::get-nuvlabox-log
+  (fn [{{:keys [::spec/nuvlabox-log-id]} :db} _]
+    (when nuvlabox-log-id
+      {::cimi-api-fx/get [nuvlabox-log-id #(dispatch [::set-nuvlabox-log %])]})))
+
+
+(reg-event-fx
+  ::set-nuvlabox-log
+  (fn [{{:keys [::spec/nuvlabox-log] :as db} :db} [_ new-nuvlabox-log]]
+    (let [new-log               (:log new-nuvlabox-log)
+          old-log               (:log nuvlabox-log)
+          removed-duplicate-log (remove (set new-log) old-log)
+          concatenated-log      (concat removed-duplicate-log new-log)]
+      {:db       (assoc db ::spec/nuvlabox-log
+                   (assoc new-nuvlabox-log :log concatenated-log))
+       :dispatch [::fetch-nuvlabox-log]})))
+
+
+(reg-event-fx
+  ::fetch-nuvlabox-log
+  (fn [{{:keys [::spec/nuvlabox-log-id]} :db} _]
+    {::cimi-api-fx/operation [nuvlabox-log-id "fetch" #()]}))
+
+
+(reg-event-fx
+  ::create-log
+  (fn [{{:keys [::spec/nuvlabox
+                ::spec/nuvlabox-log-since]} :db} _]
+    {::cimi-api-fx/operation [(:id nuvlabox) "create-log"
+                              #(if (instance? js/Error %)
+                                 (cimi-api-fx/default-error-message % "Create log action failed!")
+                                 (dispatch [::set-nuvlabox-log-id (:resource-id %)]))
+                              {:since   (time/time->utc-str nuvlabox-log-since)}]}))
+
+
+(reg-event-fx
+  ::set-nuvlabox-log-id
+  (fn [{{:keys [::spec/nuvlabox-log-play?] :as db} :db} [_ nuvlabox-log-id]]
+    {:db       (assoc db ::spec/nuvlabox-log-id nuvlabox-log-id)
+     :dispatch [::set-nuvlabox-log-play? nuvlabox-log-play?]}))
+
+
+(reg-event-db
+  ::clear-nuvlabox-log
+  (fn [db]
+    (assoc-in db [::spec/nuvlabox-log :log] [])))

@@ -218,8 +218,7 @@
 
     [ui/MenuMenu {:position "right"}
      [messages/bell-menu]
-     [ui/MenuItem {:fitted true}
-      [session-views/authn-menu]]]]
+     [session-views/AuthnMenu]]]
 
    [messages/alert-slider]
    [messages/alert-modal]])

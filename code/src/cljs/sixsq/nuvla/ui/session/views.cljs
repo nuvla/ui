@@ -19,7 +19,8 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.spec :as us]))
+    [sixsq.nuvla.ui.utils.spec :as us]
+    [reagent.core :as r]))
 
 
 ;;; VALIDATION SPEC
@@ -188,6 +189,92 @@
      [modal-create-user]]))
 
 
+(defn SwitchGroupMenuItem
+  []
+  (let [options  (subscribe [::subs/switch-group-options])
+        on-click #(dispatch [::events/switch-group %1])]
+    (fn []
+      (when (seq @options)
+        [ui/Dropdown
+         {:className "nuvla-close-menu-item"
+          :item      true
+          :text      (r/as-element
+                       [:<>
+                        [ui/IconGroup
+                         [ui/Icon {:name "users" :size "large"}]
+                         [ui/Icon {:name "refresh" :corner "top right"}]]
+                        [uix/TR :switch-group]])}
+         [ui/DropdownMenu
+          (doall
+            (for [account @options]
+              ^{:key account}
+              [ui/DropdownItem
+               {:text     (utils/remove-group-prefix account)
+                :icon     (if (str/starts-with? account "group/")
+                            "group" "user")
+                :on-click #(on-click account)}]))]]))))
+
+
+(defn UserMenuItem
+  []
+  (let [user      (subscribe [::subs/user])
+        is-group? (subscribe [::subs/active-claim-is-group?])
+        on-click  #(dispatch [::history-events/navigate "profile"])]
+    (fn []
+      [ui/MenuItem {:className "nuvla-close-menu-item"
+                    :on-click  on-click}
+       [ui/Icon {:name     (if @is-group? "group" "user")
+                 :circular true}]
+       (-> @user utils/remove-group-prefix general-utils/truncate)])))
+
+
+(defn LogoutMenuItem
+  []
+  (let [on-click #(dispatch [::events/logout])]
+    (fn []
+      [ui/MenuItem {:className "nuvla-close-menu-item"
+                    :on-click  on-click}
+       [ui/Icon {:name "logout"
+                 :size "large"}]
+       [uix/TR :logout]])))
+
+
+(defn SignUpMenuItem
+  []
+  (let [signup-template? (subscribe [::subs/user-template-exist?
+                                     utils/user-tmpl-email-password])
+        on-click         #(dispatch [::history-events/navigate "sign-up"])]
+    (fn []
+      (when @signup-template?
+        [ui/MenuItem {:on-click on-click}
+         [ui/Icon {:name "signup"}]
+         [uix/TR :sign-up]]))))
+
+
+(defn SignInButton
+  []
+  (let [on-click #(dispatch [::history-events/navigate "sign-in"])]
+    (fn []
+      [ui/Button {:primary  true
+                  :on-click on-click}
+       [ui/Icon {:name "sign in"}]
+       [uix/TR :login]])))
+
+
+(defn AuthnMenu
+  []
+  (let [logged-in? (subscribe [::subs/logged-in?])]
+    (fn []
+      (if @logged-in?
+        [:<>
+         [SwitchGroupMenuItem]
+         [UserMenuItem]
+         [LogoutMenuItem]]
+        [:<>
+         [SignUpMenuItem]
+         [SignInButton]]))))
+
+
 (defn follow-us
   []
   (let [tr           (subscribe [::i18n-subs/tr])
@@ -210,6 +297,7 @@
              :target "_blank"
              :style  {:color "white"}}
          [ui/Icon {:name icon}]])]]))
+
 
 (defn LeftPanel
   []

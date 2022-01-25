@@ -28,7 +28,7 @@
         [ui/Dropdown
          {:className "nuvla-close-menu-item"
           :item      true
-          :text      (r/as-element
+          :icon  (r/as-element
                        [:<>
                         [ui/IconGroup
                          [ui/Icon {:name "users" :size "large"}]
@@ -66,7 +66,7 @@
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
                     :on-click  on-click}
-       [ui/Icon {:name "logout"
+       [ui/Icon {:name "sign-out"
                  :size "large"}]
        (when-not @is-mobile?
          [uix/TR :logout])])))

@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Profile - Warning in console fix for list of payment methods
+- Main subs - is-mobile-device? new reframe subs
 - Authn Menu - Remove documentation, support and invite user entries
 - Authn Menu - Dropdown changed to MenuItems
 - Nuvlabox detail page - hide generate-new-api-key

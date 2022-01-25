@@ -26,6 +26,7 @@
 (s/def ::nuvlabox-log-id (s/nilable string?))
 (s/def ::nuvlabox-log-since (s/nilable string?))
 (s/def ::nuvlabox-log-play? boolean?)
+(s/def ::nuvlabox-log-components any?)
 
 
 (s/def ::db (s/keys :req [::nuvlabox
@@ -49,7 +50,8 @@
                           ::nuvlabox-log
                           ::nuvlabox-log-id
                           ::nuvlabox-log-since
-                          ::nuvlabox-log-play?]))
+                          ::nuvlabox-log-play?
+                          ::nuvlabox-log-components]))
 
 (defn default-since []
   (-> (time/now) (.seconds 0)))
@@ -75,4 +77,5 @@
                ::nuvlabox-log                 nil
                ::nuvlabox-log-id              nil
                ::nuvlabox-log-play?           false
-               ::nuvlabox-log-since           (default-since)})
+               ::nuvlabox-log-since           (default-since)
+               ::nuvlabox-log-components      nil})

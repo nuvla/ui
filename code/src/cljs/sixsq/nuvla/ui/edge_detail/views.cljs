@@ -1812,44 +1812,66 @@
   [_go-live?]
   (let [locale        (subscribe [::i18n-subs/locale])
         since         (subscribe [::subs/nuvlabox-log-since])
+        nb-status     (subscribe [::subs/nuvlabox-status])
+        components    (subscribe [::subs/nuvlabox-log-components])
         play?         (subscribe [::subs/nuvlabox-log-play?])]
     (fn [go-live?]
-      [ui/Menu {:size "small", :attached "top"}
+      (let [avail-components (:components @nb-status)]
+        [ui/Menu {:size "small", :attached "top"}
 
-       [ui/MenuItem
-        {:on-click #(dispatch [::events/set-nuvlabox-log-play? (not @play?)])}
-        [ui/Icon {:name (if @play? "pause" "play")}]]
+         [ui/MenuItem
+          {:on-click #(dispatch [::events/set-nuvlabox-log-play? (not @play?)])}
+          [ui/Icon {:name (if @play? "pause" "play")}]]
 
-       [ui/MenuItem
-        [:span
-         "Since:  "
-         [ui/DatePicker
-          {:custom-input     (r/as-element
-                               [ui/Input {:transparent true
-                                          :style       {:width "17em"}}])
-           :locale           @locale
-           :date-format      "LLL"
-           :show-time-select true
-           :timeIntervals    1
-           :selected         @since
-           :on-change        #(dispatch [::events/set-nuvlabox-log-since %])}]]]
+         (when (pos? (count avail-components))
+           [ui/Dropdown
+            {:placeholder      (if (empty? @components) "All components" "")
+             :item      true
+             :multiple  true
+             :on-change (ui-callback/value #(dispatch [::events/set-nuvlabox-log-components %]))
+             :options   (map (fn [service]
+                               {:key service, :text service, :value service}) avail-components)}])
 
-       [ui/MenuMenu {:position "right"}
+         [ui/MenuItem
+          [:span
+           "Since:  "
+           [ui/DatePicker
+            {:custom-input     (r/as-element
+                                 [ui/Input {:transparent true
+                                            :style       {:width "17em"}}])
+             :locale           @locale
+             :date-format      "LLL"
+             :show-time-select true
+             :timeIntervals    1
+             :selected         @since
+             :on-change        #(dispatch [::events/set-nuvlabox-log-since %])}]]]
 
-        [ui/MenuItem
-         {:active   @go-live?
-          :color    (if @go-live? "green" "black")
-          :on-click #(swap! go-live? not)}
-         [ui/IconGroup {:size "large"}
-          [ui/Icon {:name "bars"}]
-          [ui/Icon {:name "chevron circle down", :corner true}]]
-         "Go Live"]
+         [ui/MenuMenu {:position "right"}
 
-        [ui/MenuItem {:on-click #(dispatch [::events/clear-nuvlabox-log])}
-         [ui/IconGroup {:size "large"}
-          [ui/Icon {:name "bars"}]
-          [ui/Icon {:name "trash", :corner true}]]
-         "Clear"]]])))
+          [ui/MenuItem
+           {:active   @go-live?
+            :color    (if @go-live? "green" "black")
+            :on-click #(swap! go-live? not)}
+           [ui/IconGroup {:size "large"}
+            [ui/Icon {:name "bars"}]
+            [ui/Icon {:name "chevron circle down", :corner true}]]
+           "Go Live"]
+
+          [ui/MenuItem {:on-click #(dispatch [::events/clear-nuvlabox-log])}
+           [ui/IconGroup {:size "large"}
+            [ui/Icon {:name "bars"}]
+            [ui/Icon {:name "trash", :corner true}]]
+           "Clear"]]]))))
+
+
+(defn extract-component-logs
+  [logs component-name]
+  (filter some?
+    (map
+      (fn [line]
+        (when (str/starts-with? line component-name)
+          line))
+      logs)))
 
 
 (defn logs-viewer
@@ -1861,6 +1883,7 @@
         scroll-info    (r/atom nil)]
     (fn []
       (let [log (:log @nuvlabox-log)
+            log-components  (:components @nuvlabox-log)
             last-timestamp  (:last-timestamp @nuvlabox-log)]
         [:div
          [log-controller go-live?]
@@ -1874,17 +1897,41 @@
                                      :z-index 0
                                      :height  600}}
            (if @id
-             [ui/CodeMirror {:value    (str/join "\n" log)
-                             :scroll   {:x (:left @scroll-info)
-                                        :y (if @go-live?
-                                             (.-MAX_VALUE js/Number)
-                                             (:top @scroll-info))}
-                             :onScroll #(reset! scroll-info
-                                          (js->clj %2 :keywordize-keys true))
-                             :options  {:mode     ""
-                                        :readOnly true
-                                        :theme    "logger"}
-                             :class    ["large-height"]}]
+             (if (empty? log-components)
+               [ui/CodeMirror {:value    (str/join "\n" log)
+                               :scroll   {:x (:left @scroll-info)
+                                          :y (if @go-live?
+                                               (.-MAX_VALUE js/Number)
+                                               (:top @scroll-info))}
+                               :onScroll #(reset! scroll-info
+                                            (js->clj %2 :keywordize-keys true))
+                               :options  {:mode     ""
+                                          :readOnly true
+                                          :theme    "logger"}
+                               :class    ["large-height"]}]
+               [ui/Tab {:menu     {:tabular false
+                                   :pointing true
+                                   :fluid    true
+                                   :vertical true
+                                   :compact true}
+                        :panes    (map
+                                    (fn [logc]
+                                      {:menuItem {:content logc
+                                                  :key     logc}
+                                       :render (fn []
+                                                 (r/as-element
+                                                   [ui/CodeMirror {:value    (str/join "\n"
+                                                                               (extract-component-logs log logc))
+                                                                   :scroll   {:x (:left @scroll-info)
+                                                                              :y (if @go-live?
+                                                                                   (.-MAX_VALUE js/Number)
+                                                                                   (:top @scroll-info))}
+                                                                   :onScroll #(reset! scroll-info
+                                                                                (js->clj %2 :keywordize-keys true))
+                                                                   :options  {:mode     ""
+                                                                              :readOnly true
+                                                                              :theme    "logger"}
+                                                                   :class    ["large-height"]}]))}) log-components)}])
              [ui/Header {:icon true}
               [ui/Icon {:name "search"}]
               "Get NuvlaBox logs"]

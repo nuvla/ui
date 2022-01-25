@@ -187,3 +187,9 @@
   ::nuvlabox-log-play?
   (fn [db]
     (::spec/nuvlabox-log-play? db)))
+
+
+(reg-sub
+  ::nuvlabox-log-components
+  (fn [db]
+    (::spec/nuvlabox-log-components db)))

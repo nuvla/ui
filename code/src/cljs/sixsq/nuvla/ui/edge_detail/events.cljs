@@ -536,12 +536,14 @@
 (reg-event-fx
   ::create-log
   (fn [{{:keys [::spec/nuvlabox
-                ::spec/nuvlabox-log-since]} :db} _]
+                ::spec/nuvlabox-log-since
+                ::spec/nuvlabox-log-components]} :db} _]
     {::cimi-api-fx/operation [(:id nuvlabox) "create-log"
                               #(if (instance? js/Error %)
                                  (cimi-api-fx/default-error-message % "Create log action failed!")
                                  (dispatch [::set-nuvlabox-log-id (:resource-id %)]))
-                              {:since   (time/time->utc-str nuvlabox-log-since)}]}))
+                              {:since       (time/time->utc-str nuvlabox-log-since)
+                               :components  nuvlabox-log-components}]}))
 
 
 (reg-event-fx
@@ -555,3 +557,10 @@
   ::clear-nuvlabox-log
   (fn [db]
     (assoc-in db [::spec/nuvlabox-log :log] [])))
+
+
+(reg-event-fx
+  ::set-nuvlabox-log-components
+  (fn [{{:keys [::spec/nuvlabox-log-id] :as db} :db} [_ components]]
+    (cond-> {:db (assoc db ::spec/nuvlabox-log-components components)}
+      nuvlabox-log-id (assoc :dispatch [::delete-nuvlabox-log]))))

@@ -40,7 +40,14 @@
   :<- [::is-device? :mobile]
   :<- [::is-device? :tablet]
   (fn [[is-mobile? is-tablet?]]
-    (boolean (or is-mobile? is-tablet?))))
+    (or is-mobile? is-tablet?)))
+
+
+(reg-sub
+  ::is-mobile-device?
+  :<- [::is-device? :mobile]
+  (fn [is-mobile?]
+    is-mobile?))
 
 
 (reg-sub

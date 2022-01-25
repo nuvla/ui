@@ -692,44 +692,46 @@
          (if @cards-bank-accounts
            [ui/Table {:basic "very"}
             [ui/TableBody
-             (for [{:keys [last4 brand payment-method exp-month exp-year]} @cards-bank-accounts]
-               (let [is-default? (= @default-pm payment-method)]
-                 ^{:key (str payment-method)}
-                 [ui/TableRow
-                  [ui/TableCell
-                   [ui/Icon {:name (case brand
-                                     "visa" "cc visa"
-                                     "mastercard" "cc mastercard"
-                                     "amex" "cc amex"
-                                     "iban" "building"
-                                     "payment")
-                             :size "large"}]
-                   (str/upper-case brand)]
-                  [ui/TableCell "•••• " last4 " "
-                   (when is-default?
-                     [ui/Label {:size :tiny :circular true :color "blue"} "default"])]
-                  [ui/TableCell {:style {:color "grey"}}
-                   (when (and exp-month exp-year)
-                     (str (utils-general/format "%02d" exp-month) "/" exp-year))]
-                  [ui/TableCell
-                   [ui/ButtonGroup {:basic true :size "small" :icon true :floated "right"}
-                    (when-not is-default?
+             (doall
+               (for [{:keys [last4 brand payment-method exp-month
+                             exp-year]} @cards-bank-accounts]
+                 (let [is-default? (= @default-pm payment-method)]
+                   ^{:key (str payment-method)}
+                   [ui/TableRow
+                    [ui/TableCell
+                     [ui/Icon {:name (case brand
+                                       "visa" "cc visa"
+                                       "mastercard" "cc mastercard"
+                                       "amex" "cc amex"
+                                       "iban" "building"
+                                       "payment")
+                               :size "large"}]
+                     (str/upper-case brand)]
+                    [ui/TableCell "•••• " last4 " "
+                     (when is-default?
+                       [ui/Label {:size :tiny :circular true :color "blue"} "default"])]
+                    [ui/TableCell {:style {:color "grey"}}
+                     (when (and exp-month exp-year)
+                       (str (utils-general/format "%02d" exp-month) "/" exp-year))]
+                    [ui/TableCell
+                     [ui/ButtonGroup {:basic true :size "small" :icon true :floated "right"}
+                      (when-not is-default?
+                        [ui/Popup
+                         {:position "top center"
+                          :content  set-as-default-str
+                          :trigger  (r/as-element
+                                      [ui/Button
+                                       {:on-click #(dispatch [::events/set-default-payment-method
+                                                              payment-method])}
+                                       [ui/Icon {:name "pin"}]])}])
                       [ui/Popup
                        {:position "top center"
-                        :content  set-as-default-str
-                        :trigger  (r/as-element
-                                    [ui/Button
-                                     {:on-click #(dispatch [::events/set-default-payment-method
-                                                            payment-method])}
-                                     [ui/Icon {:name "pin"}]])}])
-                    [ui/Popup
-                     {:position "top center"
-                      :content  delete-str
-                      :trigger  (r/as-element [ui/Button
-                                               {:on-click #(dispatch
-                                                             [::events/detach-payment-method
-                                                              payment-method])}
-                                               [ui/Icon {:name "trash", :color "red"}]])}]]]]))
+                        :content  delete-str
+                        :trigger  (r/as-element [ui/Button
+                                                 {:on-click #(dispatch
+                                                               [::events/detach-payment-method
+                                                                payment-method])}
+                                                 [ui/Icon {:name "trash", :color "red"}]])}]]]])))
              [ui/TableRow
               [ui/TableCell {:col-span 4}
                ^{:key (random-uuid)}

@@ -1,11 +1,8 @@
 (ns sixsq.nuvla.ui.session.views
   (:require
-    [clojure.spec.alpha :as s]
     [clojure.string :as str]
-    [form-validator.core :as fv]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.config :as config]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
@@ -18,181 +15,14 @@
     [sixsq.nuvla.ui.session.utils :as utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.spec :as us]
-    [reagent.core :as r]))
-
-
-;;; VALIDATION SPEC
-(s/def ::email (s/and string? us/email?))
-
-(s/def ::user-template-email-invitation
-  (s/keys :req-un [::email]))
-
-
-(defn modal-create-user []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        open-modal      (subscribe [::subs/open-modal])
-        error-message   (subscribe [::subs/error-message])
-        success-message (subscribe [::subs/success-message])
-        loading?        (subscribe [::subs/loading?])
-        form-conf       {:form-spec ::user-template-email-invitation}
-        form            (fv/init-form form-conf)
-        spec->msg       {::email (@tr [:email-invalid-format])}]
-    (fn []
-      (let [submit-fn #(when (fv/validate-form-and-show? form)
-                         (dispatch [::events/submit utils/user-tmpl-email-invitation
-                                    (:names->value @form)
-                                    {:success-msg  :invitation-email-success-msg
-                                     :close-modal  false
-                                     :redirect-url (str @config/path-prefix
-                                                        "/set-password")}]))]
-        [ui/Modal
-         {:id        "modal-create-user"
-          :size      :tiny
-          :open      (= @open-modal :invite-user)
-          :closeIcon true
-          :on-close  #(do
-                        (dispatch [::events/close-modal])
-                        (reset! form @(fv/init-form form-conf)))}
-
-         [uix/ModalHeader {:header (@tr [:invite-user])}]
-
-         [ui/ModalContent
-
-          (when @error-message
-            [ui/Message {:negative  true
-                         :size      "tiny"
-                         :onDismiss #(dispatch [::events/set-error-message nil])}
-             [ui/MessageHeader (@tr [:error-occured])]
-             [:p [uix/TR @error-message]]])
-
-          (when @success-message
-            [ui/Message {:negative  false
-                         :size      "tiny"
-                         :onDismiss #(dispatch [::events/set-success-message nil])}
-             [ui/MessageHeader (@tr [:success])]
-             [:p [uix/TR @success-message]]])
-
-          [ui/Form
-           [ui/FormInput {:name          :email
-                          :label         "Email"
-                          :required      true
-                          :icon          "mail"
-                          :icon-position "left"
-                          :auto-focus    true
-                          :auto-complete "on"
-                          :on-change     (partial fv/event->names->value! form)
-                          :on-blur       (partial fv/event->show-message form)
-                          :error         (fv/?show-message form :email spec->msg)}]]
-
-          [:div {:style {:padding "10px 0"}} (@tr [:invite-user-inst])]]
-
-         [ui/ModalActions
-          [uix/Button
-           {:text     (@tr [:invite-user])
-            :positive true
-            :loading  @loading?
-            :on-click submit-fn}]]]))))
-
-
-(defn authn-dropdown-menu
-  []
-  (let [tr                   (subscribe [::i18n-subs/tr])
-        user                 (subscribe [::subs/user])
-        sign-out-fn          #(dispatch [::events/logout])
-        create-user-fn       #(dispatch [::events/open-modal :invite-user])
-        logged-in?           (boolean @user)
-
-        invitation-template? (subscribe [::subs/user-template-exist?
-                                         utils/user-tmpl-email-invitation])
-        switch-group-options (subscribe [::subs/switch-group-options])]
-
-    [ui/DropdownMenu
-     (when (seq @switch-group-options)
-       [:<>
-        [ui/DropdownHeader (@tr [:switch-group])]
-        (for [account @switch-group-options]
-          ^{:key account}
-          [ui/DropdownItem {:text     (utils/remove-group-prefix account)
-                            :icon     (if (str/starts-with? account "group/") "group" "user")
-                            :on-click #(dispatch [::events/switch-group account])}])
-        [ui/DropdownDivider]])
-
-     (when @invitation-template?
-       [:<>
-        [ui/DropdownItem
-         {:key      "invite"
-          :text     (@tr [:invite-user])
-          :icon     "user add"
-          :on-click create-user-fn}]
-        [ui/DropdownDivider]])
-
-     [ui/DropdownItem {:aria-label (@tr [:documentation])
-                       :icon       "book"
-                       :text       (@tr [:documentation])
-                       :href       "https://docs.nuvla.io/"
-                       :target     "_blank"
-                       :rel        "noreferrer"}]
-     [ui/DropdownItem {:aria-label (@tr [:support])
-                       :icon       "mail"
-                       :text       (@tr [:support])
-                       :href       (js/encodeURI
-                                     (str "mailto:support@sixsq.com?subject=["
-                                          @cimi-api-fx/NUVLA_URL
-                                          "] Support question - "
-                                          (if logged-in? @user "Not logged in")))}]
-
-     (when logged-in?
-       [:<>
-        [ui/DropdownDivider]
-        [ui/DropdownItem
-         {:key      "sign-out"
-          :text     (@tr [:logout])
-          :icon     "sign out"
-          :on-click sign-out-fn}]])]))
-
-
-(defn authn-menu
-  []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        user             (subscribe [::subs/user])
-        profile-fn       #(dispatch [::history-events/navigate "profile"])
-        logged-in?       (subscribe [::subs/logged-in?])
-        is-group?        (subscribe [::subs/active-claim-is-group?])
-
-        signup-template? (subscribe [::subs/user-template-exist? utils/user-tmpl-email-password])
-        dropdown-menu    [ui/Dropdown {:inline    true
-                                       :button    true
-                                       :pointing  "top right"
-                                       :className "icon"}
-                          (authn-dropdown-menu)]]
-    [:<>
-     (if @logged-in?
-       [ui/ButtonGroup {:primary true}
-        [ui/Button {:id "nuvla-username-button" :on-click profile-fn}
-         [ui/Icon {:name (if @is-group? "group" "user")}]
-         [:span {:id "nuvla-username"} (general-utils/truncate (utils/remove-group-prefix @user))]]
-        dropdown-menu]
-       [:div
-        (when @signup-template?
-          [:span {:style    {:padding-right "10px"
-                             :cursor        "pointer"}
-                  :on-click #(dispatch [::history-events/navigate "sign-up"])}
-           [ui/Icon {:name "signup"}]
-           (@tr [:sign-up])])
-        [ui/ButtonGroup {:primary true}
-         [ui/Button {:on-click #(dispatch [::history-events/navigate "sign-in"])}
-          [ui/Icon {:name "sign in"}]
-          (@tr [:login])]
-         dropdown-menu]])
-     [modal-create-user]]))
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 
 (defn SwitchGroupMenuItem
   []
-  (let [options  (subscribe [::subs/switch-group-options])
-        on-click #(dispatch [::events/switch-group %1])]
+  (let [options    (subscribe [::subs/switch-group-options])
+        on-click   #(dispatch [::events/switch-group %1])
+        is-mobile? (subscribe [::main-subs/is-mobile-device?])]
     (fn []
       (when (seq @options)
         [ui/Dropdown
@@ -203,7 +33,8 @@
                         [ui/IconGroup
                          [ui/Icon {:name "users" :size "large"}]
                          [ui/Icon {:name "refresh" :corner "top right"}]]
-                        [uix/TR :switch-group]])}
+                        (when-not @is-mobile?
+                          [uix/TR :switch-group])])}
          [ui/DropdownMenu
           (doall
             (for [account @options]
@@ -230,13 +61,15 @@
 
 (defn LogoutMenuItem
   []
-  (let [on-click #(dispatch [::events/logout])]
+  (let [on-click   #(dispatch [::events/logout])
+        is-mobile? (subscribe [::main-subs/is-mobile-device?])]
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
                     :on-click  on-click}
        [ui/Icon {:name "logout"
                  :size "large"}]
-       [uix/TR :logout]])))
+       (when-not @is-mobile?
+         [uix/TR :logout])])))
 
 
 (defn SignUpMenuItem

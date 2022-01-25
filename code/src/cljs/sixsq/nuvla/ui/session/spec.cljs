@@ -5,8 +5,6 @@
 
 (s/def ::session-loading? boolean?)
 
-(s/def ::open-modal (s/nilable keyword?))
-
 (s/def ::session (s/nilable any?))
 
 (s/def ::error-message (s/nilable string?))
@@ -27,7 +25,6 @@
 
 
 (s/def ::db (s/keys :req [::session-loading?
-                          ::open-modal
                           ::session
                           ::error-message
                           ::success-message
@@ -41,7 +38,6 @@
 
 (def defaults
   {::session-loading?    true
-   ::open-modal          nil
    ::session             nil
    ::error-message       nil
    ::success-message     nil

@@ -90,8 +90,8 @@
 
 
 (defn breadcrumbs []
-  (let [device (subscribe [::subs/device])]
-    (if (#{:mobile} @device)
+  (let [is-mobile? (subscribe [::subs/is-mobile-device?])]
+    (if @is-mobile?
       [breadcrumbs-dropdown]
       [breadcrumbs-links])))
 

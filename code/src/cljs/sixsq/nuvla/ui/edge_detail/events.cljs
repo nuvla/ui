@@ -520,8 +520,25 @@
   (fn [{{:keys [::spec/nuvlabox-log] :as db} :db} [_ new-nuvlabox-log]]
     (let [new-log               (:log new-nuvlabox-log)
           old-log               (:log nuvlabox-log)
-          removed-duplicate-log (remove (set new-log) old-log)
-          concatenated-log      (concat removed-duplicate-log new-log)]
+          all-in-one?           (empty? (:components new-nuvlabox-log))
+          concatenated-log      (if all-in-one?
+                                  {:_all-in-one (concat
+                                                  (:_all-in-one old-log)
+                                                  (map
+                                                    (fn [el]
+                                                      (str (name (first el)) "  | " (second el)))
+                                                    (sort-by second
+                                                      (mapcat
+                                                        (fn [[k v]]
+                                                          (map
+                                                            (fn [s]
+                                                              [k s]) v)) new-log))))}
+
+                                  (into {}
+                                    (map
+                                      (fn [[k v]]
+                                        {k (concat (remove (set (get new-log k [])) (get old-log k [])) v)})
+                                      new-log)))]
       {:db       (assoc db ::spec/nuvlabox-log
                    (assoc new-nuvlabox-log :log concatenated-log))
        :dispatch [::fetch-nuvlabox-log]})))
@@ -543,7 +560,7 @@
                                  (cimi-api-fx/default-error-message % "Create log action failed!")
                                  (dispatch [::set-nuvlabox-log-id (:resource-id %)]))
                               {:since       (time/time->utc-str nuvlabox-log-since)
-                               :components  nuvlabox-log-components}]}))
+                               :components  (or nuvlabox-log-components [])}]}))
 
 
 (reg-event-fx
@@ -555,8 +572,8 @@
 
 (reg-event-db
   ::clear-nuvlabox-log
-  (fn [db]
-    (assoc-in db [::spec/nuvlabox-log :log] [])))
+  (fn [db [_ current-log]]
+    (assoc-in db [::spec/nuvlabox-log :log] (into {} (map (fn [[k _]] {k []}) current-log)))))
 
 
 (reg-event-fx

@@ -1809,13 +1809,13 @@
 
 
 (defn log-controller
-  [_go-live?]
+  [_go-live? _current-log]
   (let [locale        (subscribe [::i18n-subs/locale])
         since         (subscribe [::subs/nuvlabox-log-since])
         nb-status     (subscribe [::subs/nuvlabox-status])
         components    (subscribe [::subs/nuvlabox-log-components])
         play?         (subscribe [::subs/nuvlabox-log-play?])]
-    (fn [go-live?]
+    (fn [go-live? current-log]
       (let [avail-components (:components @nb-status)]
         [ui/Menu {:size "small", :attached "top"}
 
@@ -1857,21 +1857,33 @@
             [ui/Icon {:name "chevron circle down", :corner true}]]
            "Go Live"]
 
-          [ui/MenuItem {:on-click #(dispatch [::events/clear-nuvlabox-log])}
+          [ui/MenuItem {:on-click #(dispatch [::events/clear-nuvlabox-log current-log])}
            [ui/IconGroup {:size "large"}
             [ui/Icon {:name "bars"}]
             [ui/Icon {:name "trash", :corner true}]]
            "Clear"]]]))))
 
 
-(defn extract-component-logs
-  [logs component-name]
-  (filter some?
-    (map
-      (fn [line]
-        (when (str/starts-with? line component-name)
-          line))
-      logs)))
+(defn print-logs
+  [log scroll-info go-live?]
+  [:<>
+   [ui/Segment {:attached    true
+                :style       {:padding 0
+                              :z-index 0
+                              :height  600}}
+    [ui/CodeMirror {:value    (str/join "\n" log)
+                    :scroll   {:x (:left @scroll-info)
+                               :y (if go-live?
+                                    (.-MAX_VALUE js/Number)
+                                    (:top @scroll-info))}
+                    :onScroll #(reset! scroll-info
+                                 (js->clj %2 :keywordize-keys true))
+                    :options  {:mode     ""
+                               :readOnly true
+                               :theme    "logger"}
+                    :class    ["large-height"]}]]
+   [ui/Label (str "line count:")
+    [ui/LabelDetail (count log)]]])
 
 
 (defn logs-viewer
@@ -1886,7 +1898,7 @@
             log-components  (:components @nuvlabox-log)
             last-timestamp  (:last-timestamp @nuvlabox-log)]
         [:div
-         [log-controller go-live?]
+         [log-controller go-live? log]
          [:<>
           ^{:key (str "logger" @go-live?)}
           [ui/Segment {:attached    "bottom"
@@ -1894,50 +1906,23 @@
                                       @play?)
                        :placeholder true
                        :style       {:padding 0
-                                     :z-index 0
-                                     :height  600}}
-           (if @id
+                                     :z-index 0}}
+           (if (and @id last-timestamp)
              (if (empty? log-components)
-               [ui/CodeMirror {:value    (str/join "\n" log)
-                               :scroll   {:x (:left @scroll-info)
-                                          :y (if @go-live?
-                                               (.-MAX_VALUE js/Number)
-                                               (:top @scroll-info))}
-                               :onScroll #(reset! scroll-info
-                                            (js->clj %2 :keywordize-keys true))
-                               :options  {:mode     ""
-                                          :readOnly true
-                                          :theme    "logger"}
-                               :class    ["large-height"]}]
+               (print-logs (:_all-in-one log) scroll-info @go-live?)
                [ui/Tab {:menu     {:tabular false
                                    :pointing true
-                                   :fluid    true
-                                   :vertical true
-                                   :compact true}
+                                   :attached "top"}
                         :panes    (map
-                                    (fn [logc]
-                                      {:menuItem {:content logc
-                                                  :key     logc}
+                                    (fn [[component-name component-log]]
+                                      {:menuItem {:content (name component-name)
+                                                  :key     (name component-name)}
                                        :render (fn []
                                                  (r/as-element
-                                                   [ui/CodeMirror {:value    (str/join "\n"
-                                                                               (extract-component-logs log logc))
-                                                                   :scroll   {:x (:left @scroll-info)
-                                                                              :y (if @go-live?
-                                                                                   (.-MAX_VALUE js/Number)
-                                                                                   (:top @scroll-info))}
-                                                                   :onScroll #(reset! scroll-info
-                                                                                (js->clj %2 :keywordize-keys true))
-                                                                   :options  {:mode     ""
-                                                                              :readOnly true
-                                                                              :theme    "logger"}
-                                                                   :class    ["large-height"]}]))}) log-components)}])
+                                                   (print-logs component-log scroll-info @go-live?)))}) log)}])
              [ui/Header {:icon true}
               [ui/Icon {:name "search"}]
-              "Get NuvlaBox logs"]
-             )]
-          [ui/Label (str "line count:")
-           [ui/LabelDetail (count log)]]]]))))
+              "Get NuvlaBox logs"])]]]))))
 
 
 (defn TabLogs

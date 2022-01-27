@@ -28,7 +28,7 @@
         [ui/Dropdown
          {:className "nuvla-close-menu-item"
           :item      true
-          :icon  (r/as-element
+          :icon      (r/as-element
                        [:<>
                         [ui/IconGroup
                          [ui/Icon {:name "users" :size "large"}]
@@ -48,15 +48,18 @@
 
 (defn UserMenuItem
   []
-  (let [user      (subscribe [::subs/user])
-        is-group? (subscribe [::subs/active-claim-is-group?])
-        on-click  #(dispatch [::history-events/navigate "profile"])]
+  (let [user       (subscribe [::subs/user])
+        is-group?  (subscribe [::subs/active-claim-is-group?])
+        on-click   #(dispatch [::history-events/navigate "profile"])
+        is-mobile? (subscribe [::main-subs/is-mobile-device?])]
     (fn []
       [ui/MenuItem {:className "nuvla-close-menu-item"
                     :on-click  on-click}
        [ui/Icon {:name     (if @is-group? "group" "user")
                  :circular true}]
-       (-> @user utils/remove-group-prefix general-utils/truncate)])))
+       (-> @user
+           utils/remove-group-prefix
+           (general-utils/truncate (if @is-mobile? 6 20)))])))
 
 
 (defn LogoutMenuItem

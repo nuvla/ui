@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.28.0] - 2022-02-04
+
 ### Changed
 
 - Profile - Warning in console fix for list of payment methods

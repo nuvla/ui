@@ -43,7 +43,15 @@
 
 (s/def ::active-tab-index number?)
 
-(s/def ::callback-2fa (s/nilable string?))
+(s/def ::two-factor-step (s/nilable string?))
+
+(s/def ::two-factor-enable? boolean?)
+
+(s/def ::two-factor-method (s/nilable string?))
+
+(s/def ::two-factor-callback (s/nilable string?))
+
+(s/def ::two-factor-secret (s/nilable string?))
 
 (s/def ::db (s/keys :req [::user
                           ::customer
@@ -60,22 +68,30 @@
                           ::vendor
                           ::group
                           ::active-tab-index
-                          ::callback-2fa]))
+                          ::two-factor-step
+                          ::two-factor-enable?
+                          ::two-factor-method
+                          ::two-factor-callback
+                          ::two-factor-secret]))
 
 
-(def defaults {::user              nil
-               ::customer          nil
-               ::pricing-catalogue nil
-               ::payment-methods   nil
-               ::upcoming-invoice  nil
-               ::invoices          nil
-               ::customer-info     nil
-               ::subscription      nil
-               ::setup-intent      nil
-               ::open-modal        nil
-               ::error-message     nil
-               ::loading           #{}
-               ::vendor            nil
-               ::group             nil
-               ::active-tab-index  0
-               ::callback-2fa      nil})
+(def defaults {::user               nil
+               ::customer           nil
+               ::pricing-catalogue  nil
+               ::payment-methods    nil
+               ::upcoming-invoice   nil
+               ::invoices           nil
+               ::customer-info      nil
+               ::subscription       nil
+               ::setup-intent       nil
+               ::open-modal         nil
+               ::error-message      nil
+               ::loading            #{}
+               ::vendor             nil
+               ::group              nil
+               ::active-tab-index   0
+               ::two-factor-step    :select-method
+               ::two-factor-enable? true
+               ::two-factor-method  nil
+               :two-factor-callback nil
+               ::two-factor-secret  nil})

@@ -33,22 +33,18 @@
       [comp/RightPanel
        {:title       (str (@tr [:sign-in]) " ")
         :title-bold  (@tr [:code-verification])
-        :FormFields  [:<>
-                      [ui/Message {:info    true
-                                   :header  (@tr [:code-verification])
-                                   :content (@tr [:two-factor-authentication-message-send])
-                                   :icon    "envelope"}]
-                      [ui/FormInput
-                       {:label         (str/capitalize (@tr [:code]))
-                        :required      true
-                        :icon          "key"
-                        :icon-position "left"
-                        :auto-focus    "on"
-                        :auto-complete "off"
-                        :value         (or @token "")
-                        :on-change     (ui-callback/input-callback #(reset! token (or (re-find #"\d+" %1) "")))}]]
-        :submit-text (str/capitalize (@tr [:validate]))
+        :FormFields  [ui/FormInput
+                      {:label         (str/capitalize (@tr [:code]))
+                       :required      true
+                       :icon          "key"
+                       :icon-position "left"
+                       :auto-focus    "on"
+                       :auto-complete "off"
+                       :value         (or @token "")
+                       :on-change     (ui-callback/input-callback #(reset! token (or (re-find #"\d+" %1) "")))}]
+        :submit-text (str/capitalize (@tr [:verify]))
         :submit-fn   #(dispatch [::events/validate-2fa-activation @token])}])))
+
 
 (defn Form
   []

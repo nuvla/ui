@@ -489,10 +489,10 @@
 
 
 (reg-event-fx
-  ::validate-2fa-activation
-  (fn [{{:keys [::spec/callback-2fa]} :db} [_ token success-header success-content]]
+  ::two-factor-auth-callback-execute
+  (fn [{{:keys [::spec/two-factor-callback]} :db} [_ token success-header success-content]]
     {:http-xhrio {:method          :put
-                  :uri             callback-2fa
+                  :uri             two-factor-callback
                   :format          (ajax/json-request-format)
                   :params          {:token token}
                   :response-format (ajax/json-response-format {:keywords? true})
@@ -501,48 +501,68 @@
 
 
 (reg-event-db
-  ::set-callback-2fa
-  (fn [db [_ response loading-key]]
-    (let [callback-url (:location response)]
-      (-> db
-          (update ::spec/loading disj loading-key)
-          (assoc ::spec/callback-2fa callback-url)))))
+  ::set-two-factor-step
+  (fn [db [_ step]]
+    (assoc db ::spec/two-factor-step step)))
 
 
 (reg-event-fx
-  ::enable-2fa
-  (fn [{{:keys [::spec/user] :as db} :db}]
-    {:db                     (-> db
-                                 (update ::spec/loading conj :enable-2fa)
-                                 (assoc ::spec/open-modal :enable-2fa)
-                                 (assoc ::spec/callback-2fa nil))
-     ::cimi-api-fx/operation [(:id user) "enable-2fa"
-                              #(if (instance? js/Error %)
-                                 (let [{:keys [status message]} (response/parse-ex-info %)]
-                                   (dispatch [::set-callback-2fa nil :enable-2fa])
-                                   (dispatch [::messages-events/add
-                                              {:header  (cond-> (str "Enable 2FA failed!")
-                                                                status (str " (" status ")"))
-                                               :content message
-                                               :type    :error}]))
-                                 (dispatch [::set-callback-2fa %1 :enable-2fa]))
-                              {:method "email"}]}))
+  ::set-two-factor-op-response
+  (fn [{db :db} [_ {:keys [location secret] :as _response}]]
+    (let [next-step (if secret :install-app :check-token)]
+      {:db (-> db
+               (update ::spec/loading disj :two-factor-auth)
+               (assoc ::spec/two-factor-callback location)
+               (assoc ::spec/two-factor-secret secret))
+       :fx [[:dispatch [::set-two-factor-step next-step]]]})))
 
 
 (reg-event-fx
-  ::disable-2fa
+  ::two-factor-operation-call
+  (fn [{{:keys [::spec/user
+                ::spec/two-factor-enable?
+                ::spec/two-factor-method] :as db} :db}]
+    (let [op             (if two-factor-enable? "enable-2fa" "disable-2fa")
+          enable-disable (if two-factor-enable? "Enable" "Disable")]
+      {:db (update db ::spec/loading conj
+                   :two-factor-auth)
+       ::cimi-api-fx/operation
+       [(:id user) op
+        #(if (instance? js/Error %)
+           (let [{:keys [status message]} (response/parse-ex-info %)]
+             (dispatch [::set-two-factor-op-response nil])
+             (dispatch [::close-modal])
+             (dispatch [::messages-events/add
+                        {:header  (cond-> (str enable-disable " 2FA failed!")
+                                          status (str " (" status ")"))
+                         :content message
+                         :type    :error}]))
+           (dispatch [::set-two-factor-op-response %1]))
+        {:method two-factor-method}]})))
+
+
+(reg-event-fx
+  ::select-method
+  (fn [{{:keys [::spec/user] :as db} :db} [_ method]]
+    {:db (assoc db ::spec/two-factor-method method)
+     :fx [[:dispatch [::two-factor-operation-call]]]}))
+
+
+(reg-event-db
+  ::two-factor-enable
+  (fn [db]
+    (-> db
+        (assoc ::spec/open-modal :two-factor-auth)
+        (assoc ::spec/two-factor-step :select-method)
+        (assoc ::spec/two-factor-enable? true))))
+
+
+(reg-event-fx
+  ::two-factor-disable
   (fn [{{:keys [::spec/user] :as db} :db}]
-    {:db                     (-> db
-                                 (update ::spec/loading conj :disable-2fa)
-                                 (assoc ::spec/open-modal :disable-2fa)
-                                 (assoc ::spec/deactivation-2fa-callback nil))
-     ::cimi-api-fx/operation [(:id user) "disable-2fa"
-                              #(if (instance? js/Error %)
-                                 (let [{:keys [status message]} (response/parse-ex-info %)]
-                                   (dispatch [::set-callback-2fa nil :disable-2fa])
-                                   (dispatch [::messages-events/add
-                                              {:header  (cond-> (str "Disable 2FA failed!")
-                                                                status (str " (" status ")"))
-                                               :content message
-                                               :type    :error}]))
-                                 (dispatch [::set-callback-2fa %1 :disable-2fa]))]}))
+    {:db (-> db
+             (assoc ::spec/open-modal :two-factor-auth)
+             (assoc ::spec/two-factor-enable? false)
+             (assoc ::spec/two-factor-step :check-token)
+             (assoc ::spec/two-factor-method (:auth-method-2fa user)))
+     :fx [[:dispatch [::two-factor-operation-call]]]}))

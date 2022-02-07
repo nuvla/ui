@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- Session - Two factor authentication TOTP method
+- Profile - Modal select method two factor authentication
+
 ### Changed
 
 - Nuvlabox detail page - hide generate-new-api-key

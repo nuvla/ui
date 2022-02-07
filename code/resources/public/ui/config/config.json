@@ -10,6 +10,16 @@
   "stripe": null,
   "pricing-url": null,
   "nuvla-logo-url": null,
+  "totp-apps": [
+    {
+      "name": "2FAS",
+      "url": "https://2fas.com/"
+    },
+    {
+      "name": "LastPass",
+      "url": "https://lastpass.com/misc_download2.php"
+    }
+  ],
   "licenses": [
     {
       "license-name": "Apache 2.0",

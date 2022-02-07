@@ -198,47 +198,126 @@
                                       (dissoc :new-password-repeat))]))}]]])))
 
 
-(defn ModalEnableDisableTwoFactorAuth
-  [_enable?]
-  (let [error (subscribe [::subs/error-message])
-        tr    (subscribe [::i18n-subs/tr])
-        token (r/atom nil)]
-    (fn [enable?]
-      (let [{:keys [modal-key modal-header
-                    button-text success-header
-                    success-content button-color]} (if enable?
-                                                     {:modal-key       :enable-2fa
-                                                      :modal-header    :two-factor-authentication-enable
-                                                      :button-text     :enable
-                                                      :button-color    "green"
-                                                      :success-header  :two-factor-authentication-enabled
-                                                      :success-content :two-factor-code-accepted-enabled}
-                                                     {:modal-key       :disable-2fa
-                                                      :modal-header    :two-factor-authentication-disable
-                                                      :button-text     :disable
-                                                      :button-color    "red"
-                                                      :success-header  :two-factor-authentication-disabled
-                                                      :success-content :two-factor-code-accepted-disabled})
-            open?     (subscribe [::subs/modal-open? modal-key])
-            loading?  (subscribe [::subs/loading? modal-key])
+(defmulti ModalTwoFactorContent identity)
+
+(defmethod ModalTwoFactorContent :default [_step]
+  nil)
+
+(defmethod ModalTwoFactorContent :select-method
+  [_step]
+  (let [loading? (subscribe [::subs/loading? :two-factor-auth])]
+    [ui/ModalContent
+     [ui/Loader {:active @loading?}]
+     [:div {:style {:padding-bottom 20}}
+      [uix/TR :two-factor-authentication-select-method]]
+     [ui/CardGroup {:centered true}
+      [ui/Card {:on-click #(dispatch [::events/select-method "email"])}
+       [ui/CardContent {:text-align :center}
+        [ui/Header "Email"]
+        [ui/Icon {:name "mail"
+                  :size :massive}]
+        [ui/CardDescription [uix/TR :two-factor-authentication-email-method]]]]
+      [ui/Card {:on-click #(dispatch [::events/select-method "totp"])}
+       [ui/CardContent {:text-align :center}
+        [ui/Header "Smartphone"]
+        [ui/Icon {:name "mobile alternate"
+                  :size :massive}]
+        [ui/CardDescription
+         [uix/TR :two-factor-authentication-totp-method]]
+        ]]]]))
+
+
+(defn ModalTwoFactorButton
+  [button-name button-icon on-click]
+  [ui/ModalActions
+   [ui/Button
+    {:primary  true
+     :on-click on-click}
+    button-name
+    [ui/Icon {:name button-icon}]]])
+
+
+(defn ModalTwoFactorButtonNext
+  [on-click]
+  [ModalTwoFactorButton [uix/TR :next] "right chevron" on-click])
+
+
+(def modal-two-factor-content-style {:style {:min-height "50vh"}})
+
+(defmethod ModalTwoFactorContent :install-app
+  [_step]
+  [:<>
+   [ui/ModalContent modal-two-factor-content-style
+    [ui/Segment {:basic true}
+     [:p [uix/TR :two-factor-authentication-install-app]]
+     [:span [uix/TR :e.g.] " "
+      (doall
+        (interpose
+          ", "
+          (for [{app-name :name
+                 app-url  :url} @(subscribe [::main-subs/config :totp-apps])]
+
+            ^{:key app-name}
+            [:a {:href   app-url
+                 :target "_blank"}
+             app-name])))]]]
+   [ModalTwoFactorButtonNext
+    #(dispatch [::events/set-two-factor-step :show-secret])]])
+
+
+(defmethod ModalTwoFactorContent :show-secret
+  [_step]
+  (let [value     (subscribe [::subs/two-factor-qrcode-value])]
+    (fn [_step]
+      [:<>
+      [ui/ModalContent modal-two-factor-content-style
+       [ui/Segment {:basic true}
+        [:p [uix/TR :two-factor-authentication-scan-qrcode]]
+        [ui/Container {:text-align :center}
+         [ui/QRCode {:value @value :size 172}]]]]
+      [ModalTwoFactorButtonNext
+       #(dispatch [::events/set-two-factor-step :save-secret])]])))
+
+
+(defmethod ModalTwoFactorContent :save-secret
+  [_step]
+  (let [secret (subscribe [::subs/two-factor-secret])]
+    [:<>
+     [ui/ModalContent modal-two-factor-content-style
+      [ui/Segment {:basic true}
+       [:span
+        [uix/TR :two-factor-authentication-save-secret]
+        [ui/Label {:basic true} @secret]]
+       [:br]
+       [:br]
+       [:p [:i [uix/TR :two-factor-authentication-restore-secret]]]]]
+     [ModalTwoFactorButtonNext
+      #(dispatch [::events/set-two-factor-step :check-token])]]))
+
+
+(defmethod ModalTwoFactorContent :check-token
+  [_step]
+  (let [tr       (subscribe [::i18n-subs/tr])
+        enable?  (subscribe [::subs/two-factor-enable?])
+        method   (subscribe [::subs/two-factor-method])
+        loading? (subscribe [::subs/loading? :two-factor-auth])
+        error    (subscribe [::subs/error-message])
+        token    (r/atom nil)]
+    (fn [_step]
+      (let [ops       (if @enable?
+                        {:success-header  :two-factor-authentication-enabled
+                         :success-content :two-factor-code-accepted-enabled}
+                        {:success-header  :two-factor-authentication-disabled
+                         :success-content :two-factor-code-accepted-disabled})
             on-submit #(do
-                         (dispatch [::events/validate-2fa-activation @token
-                                    (@tr [success-header])
-                                    (@tr [success-content])])
+                         (dispatch [::events/two-factor-auth-callback-execute @token
+                                    (@tr [(:success-header ops)])
+                                    (@tr [(:success-content ops)])])
                          (dispatch [::events/clear-error-message])
-                         (reset! token nil))]
-        [ui/Modal
-         {:size      :tiny
-          :open      @open?
-          :closeIcon true
-          :on-close  #(do
-                        (dispatch [::events/close-modal])
-                        (reset! token nil))}
-
-         [uix/ModalHeader {:header (@tr [modal-header])}]
-
-         [ui/ModalContent
-
+                         (reset! token nil))
+            email?    (= @method "email")]
+        [:<>
+         [ui/ModalContent modal-two-factor-content-style
           (when @error
             [ui/Message {:negative  true
                          :size      "tiny"
@@ -248,27 +327,44 @@
 
           [ui/Message {:info    true
                        :header  (@tr [:code-verification])
-                       :content (@tr [:two-factor-authentication-message-send])
-                       :icon    "envelope"}]
+                       :content (if email?
+                                  (@tr [:two-factor-authentication-message-send])
+                                  (@tr [:two-factor-authentication-totp-code]))
+                       :icon    (if email? "envelope" "mobile alternate")}]
 
           [ui/Form {:loading   @loading?
                     :on-submit on-submit}
            [ui/FormInput
-            {:label         (str/capitalize (@tr [:code]))
+            {:label         (@tr [:two-factor-authentication-enter-code])
              :required      true
              :icon          "key"
              :icon-position "left"
              :auto-focus    "on"
              :auto-complete "off"
-             :value         @token
-             :on-change     (ui-callback/input-callback #(reset! token (or (re-find #"\d+" %1) "")))}]]]
-
+             :inline        true
+             :value         (or @token "")
+             :on-change     (ui-callback/input-callback
+                              #(reset! token (or (re-find #"\d+" %1) "")))}]]]
          [ui/ModalActions
           [uix/Button
-           {:text     (str/capitalize (@tr [button-text]))
-            :color    button-color
+           {:text     [uix/TR :verify str/capitalize]
+            :primary  true
             :disabled (str/blank? @token)
             :on-click on-submit}]]]))))
+
+
+(defn ModalTwoFactorAuth
+  []
+  (let [open? (subscribe [::subs/modal-open? :two-factor-auth])
+        step  (subscribe [::subs/two-factor-step])]
+    (fn []
+      [ui/Modal
+       {:open      @open?
+        :closeIcon true
+        :on-close  #(dispatch [::events/close-modal])}
+       [ui/ModalHeader [uix/TR :two-factor-authentication]]
+       ^{:key @step}
+       [ModalTwoFactorContent @step]])))
 
 
 (defn Details
@@ -1362,15 +1458,18 @@
                     :on-click #(dispatch [::events/open-modal :change-password])}]
       [AddGroupButton]
       (when can-enable-2fa?
-        [ui/MenuItem {:icon     "shield"
-                      :content  (@tr [:two-factor-authentication-enable])
-                      :on-click #(dispatch [::events/enable-2fa])}])
+        [ui/MenuItem
+         {:icon     "shield"
+          :content  (@tr [:two-factor-authentication-enable])
+          :on-click #(dispatch [::events/two-factor-enable])}])
       (when can-disable-2fa?
-        [ui/MenuItem {:on-click #(dispatch [::events/disable-2fa])}
+        [ui/MenuItem {:on-click #(dispatch [::events/two-factor-disable])}
          [ui/IconGroup
           [ui/Icon {:name "shield"}]
           [ui/Icon {:name "x" :corner true}]]
          (@tr [:two-factor-authentication-disable])])
       [ModalChangePassword]
-      [ModalEnableDisableTwoFactorAuth can-enable-2fa?]]
+      #_[ModalTwoFactorAuthMethod]
+      #_[ModalEnableDisableTwoFactorAuth can-enable-2fa?]]
+     [ModalTwoFactorAuth]
      [Tabs]]))

@@ -14,12 +14,6 @@
 
 
 (reg-sub
-  ::open-modal
-  (fn [db]
-    (::spec/open-modal db)))
-
-
-(reg-sub
   ::session
   (fn [db]
     (::spec/session db)))

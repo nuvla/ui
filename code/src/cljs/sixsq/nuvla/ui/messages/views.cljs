@@ -160,12 +160,11 @@
                    :on-open  #(dispatch [::events/open-popup])
                    :on-close #(dispatch [::events/close-popup])
                    :trigger  (r/as-element
-                               [ui/MenuItem {:disabled disabled?}
-                                [ui/Button {:aria-label "notifications"
-                                            :primary    true
-                                            :disabled   disabled?}
-                                 [ui/Icon {:name (if disabled? "bell slash" "bell")}]
-                                 (str n)]])}
+                               [ui/MenuItem {:className "nuvla-close-menu-item"
+                                             :disabled  disabled?}
+                                n
+                                [ui/Icon {:name "bell"
+                                          :size "large"}]])}
          [ui/PopupHeader (@tr [:notifications])]
          [ui/PopupContent [ui/Divider]]
          [ui/PopupContent [message-feed]]

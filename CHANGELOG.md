@@ -4,11 +4,16 @@
 
 ### Added
 
-- Session - Two factor authentication TOTP method
-- Profile - Modal select method two factor authentication
+- Session/Profile - Two factor authentication TOTP method support
+
+## [2.28.0] - 2022-02-04
 
 ### Changed
 
+- Profile - Warning in console fix for list of payment methods
+- Main subs - is-mobile-device? new reframe subs
+- Authn Menu - Remove documentation, support and invite user entries
+- Authn Menu - Dropdown changed to MenuItems
 - Nuvlabox detail page - hide generate-new-api-key
 - Session - Error message in sign-in and sign-up pages not always
   visible [#778](https://github.com/nuvla/ui/issues/778)

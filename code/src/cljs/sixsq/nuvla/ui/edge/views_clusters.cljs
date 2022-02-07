@@ -18,7 +18,7 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
-(def view-type (r/atom :cards))
+(def view-type (r/atom :cluster))
 
 
 (defn MenuBar []
@@ -36,6 +36,9 @@
                   :disabled true
                   :active   (= @view-type :map)
                   :on-click #(reset! view-type :map)}]
+    [ui/MenuItem {:active   (= @view-type :cluster)
+                  :on-click #(dispatch [::history-events/navigate "edge/nuvlabox-cluster"])}
+     [ui/Icon {:className "fas fa-chart-network"}]]
     [components/RefreshMenu
      {:action-id  events/refresh-id
       :on-refresh #(dispatch [::events/refresh-clusters])}]]])
@@ -62,6 +65,7 @@
             cluster-nodes (+ (count managers) (count workers))
             nb-per-id     (group-by :id (:resources nuvlaboxes))
             name          (or name cluster-id)]
+        (js/console.warn (:resources nuvlaboxes))
         [uix/Card
          {:on-click    #(dispatch [::history-events/navigate href])
           :href        href
@@ -100,7 +104,7 @@
 
 (defn NuvlaboxClusters
   []
-  (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
+  (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes-in-clusters])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])]
     [:div style/center-items
      [ui/CardGroup {:centered    true

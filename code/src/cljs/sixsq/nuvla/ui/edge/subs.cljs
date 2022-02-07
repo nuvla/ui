@@ -171,3 +171,9 @@
   ::nuvlabox-playbooks-cronjob
   (fn [db]
     (::spec/nuvlabox-playbooks-cronjob db)))
+
+
+(reg-sub
+  ::nuvlaboxes-in-clusters
+  (fn [db]
+    (::spec/nuvlaboxes-in-clusters db)))

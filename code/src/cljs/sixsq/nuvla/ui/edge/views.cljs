@@ -747,7 +747,7 @@
                               (+ (count (:nuvlabox-managers @current-cluster)) (count (:nuvlabox-managers @current-cluster)))
                               (get @nuvlaboxes :count 0)))
         total-pages       (general-utils/total-pages total-elements @elements-per-page)]
-
+    (js/console.warn @view-type)
     [uix/Pagination {:totalitems   total-elements
                      :totalPages   total-pages
                      :activePage   @page
@@ -876,4 +876,6 @@
     [:<>
      [ui/Segment style/basic
       children]
-     [AddModalWrapper]]))
+     [AddModalWrapper]
+     (when-not (= @view-type :map)
+       [Pagination])]))

@@ -51,6 +51,7 @@
 
 (s/def ::nuvlabox-cluster any?)
 
+(s/def ::nuvlaboxes-in-clusters any?)
 
 (s/def ::nuvlabox-not-found? boolean?)
 
@@ -79,6 +80,7 @@
                           ::ssh-keys-available
                           ::nuvlabox-clusters
                           ::nuvlabox-cluster
+                          ::nuvlaboxes-in-clusters
                           ::nuvlabox-playbooks-cronjob]))
 
 
@@ -104,4 +106,5 @@
                ::ssh-keys-available         nil
                ::nuvlabox-clusters          nil
                ::nuvlabox-cluster           nil
+               ::nuvlaboxes-in-clusters     nil
                ::nuvlabox-playbooks-cronjob nil})

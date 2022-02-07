@@ -18,32 +18,6 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
-(def view-type (r/atom :cluster))
-
-
-(defn MenuBar []
-  [components/StickyBar
-   [ui/Menu {:borderless true, :stackable true}
-    [views-utils/AddButton]
-    [ui/MenuItem {:icon     "grid layout"
-                  :active   (= @view-type :cards)
-                  :on-click #(reset! view-type :cards)}]
-    [ui/MenuItem {:icon     "table"
-                  :disabled true
-                  :active   (= @view-type :table)
-                  :on-click #(reset! view-type :table)}]
-    [ui/MenuItem {:icon     "map"
-                  :disabled true
-                  :active   (= @view-type :map)
-                  :on-click #(reset! view-type :map)}]
-    [ui/MenuItem {:active   (= @view-type :cluster)
-                  :on-click #(dispatch [::history-events/navigate "edge/nuvlabox-cluster"])}
-     [ui/Icon {:className "fas fa-chart-network"}]]
-    [components/RefreshMenu
-     {:action-id  events/refresh-id
-      :on-refresh #(dispatch [::events/refresh-clusters])}]]])
-
-
 (defn StatisticStates
   []
   (let [clusters (subscribe [::subs/nuvlabox-clusters])]
@@ -65,7 +39,6 @@
             cluster-nodes (+ (count managers) (count workers))
             nb-per-id     (group-by :id (:resources nuvlaboxes))
             name          (or name cluster-id)]
-        (js/console.warn (:resources nuvlaboxes))
         [uix/Card
          {:on-click    #(dispatch [::history-events/navigate href])
           :href        href
@@ -115,24 +88,3 @@
           [NuvlaBoxClusterCard cluster @nuvlaboxes]))]]))
 
 
-(defn ClustersView
-  []
-  (dispatch [::events/refresh-clusters])
-  (let [tr        (subscribe [::i18n-subs/tr])
-        full-text (subscribe [::subs/full-text-clusters-search])]
-    [components/LoadingPage {}
-     [:<>
-      [uix/PageHeader "fas fa-chart-network" (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
-                                                  (general-utils/capitalize-first-letter (@tr [:clusters])))]
-      [MenuBar]
-      [:div {:style {:display "flex"}}
-       [components/SearchInput
-        {:default-value @full-text
-         :on-change     (ui-callback/input-callback
-                          #(dispatch [::events/set-full-text-clusters-search %]))
-         :style         {:display    "inline-table"
-                         :margin-top "20px"}}]
-       [StatisticStates]
-       [ui/Input {:style {:visibility "hidden"}
-                  :icon  "search"}]]
-      [NuvlaboxClusters]]]))

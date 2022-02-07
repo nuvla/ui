@@ -104,6 +104,12 @@
               [components/StatisticState error [(utils/state->icon utils/state-error)]
                utils/state-error clickable? ::events/set-state-selector ::subs/state-selector]]])])))))
 
+(defn switch-from-cluster-view?
+  [current-view new-view]
+  (do
+    (when (= current-view :cluster)
+      (dispatch [::events/set-page 1]))
+    (reset! view-type new-view)))
 
 (defn MenuBar []
   (let [loading? (subscribe [::subs/loading?])]
@@ -113,7 +119,7 @@
         [views-utils/AddButton]
         [ui/MenuItem {:icon     "grid layout"
                       :active   (= @view-type :cards)
-                      :on-click #(reset! view-type :cards)}]
+                      :on-click #(switch-from-cluster-view? @view-type :cards)}]
         [ui/MenuItem {:icon     "table"
                       :active   (= @view-type :table)
                       :on-click #(reset! view-type :table)}]
@@ -121,7 +127,9 @@
                       :active   (= @view-type :map)
                       :on-click #(reset! view-type :map)}]
         [ui/MenuItem {:active   (= @view-type :cluster)
-                      :on-click #(dispatch [::history-events/navigate "edge/nuvlabox-cluster"])}
+                      :on-click #(do
+                                   (dispatch [::events/set-page 1])
+                                   (reset! view-type :cluster))}
          [ui/Icon {:className "fas fa-chart-network"}]]
         [components/RefreshMenu
          {:action-id  events/refresh-id
@@ -747,7 +755,6 @@
                               (+ (count (:nuvlabox-managers @current-cluster)) (count (:nuvlabox-managers @current-cluster)))
                               (get @nuvlaboxes :count 0)))
         total-pages       (general-utils/total-pages total-elements @elements-per-page)]
-    (js/console.warn @view-type)
     [uix/Pagination {:totalitems   total-elements
                      :totalPages   total-pages
                      :activePage   @page
@@ -829,21 +836,17 @@
          [NuvlaboxMapPoint nuvlabox]))]))
 
 
-(defn DetailedView
-  [uuid]
-  (if (= "nuvlabox-cluster" uuid)
-    [views-clusters/ClustersView]
-    [edge-detail/EdgeDetails uuid]))
-
-
-(defn NuvlaBoxes
-  []
+(defn NuvlaBoxesOrClusters
+  [path-uuid]
   (dispatch [::events/refresh-root])
   (let [tr        (subscribe [::i18n-subs/tr])
         full-text (subscribe [::subs/full-text-search])]
     [components/LoadingPage {}
      [:<>
-      [uix/PageHeader "box" (general-utils/capitalize-first-letter (@tr [:edge]))]
+      [uix/PageHeader "box" (str
+                              (general-utils/capitalize-first-letter (@tr [:edge])) " "
+                              (when (= @view-type :cluster)
+                                (general-utils/capitalize-first-letter (@tr [:clusters]))))]
       [MenuBar]
       [:div {:style {:display "flex"}}
        [components/SearchInput
@@ -852,16 +855,24 @@
                           #(dispatch [::events/set-full-text-search %]))
          :style         {:align-self "flex-start"
                          :margin-top "20px"}}]
-       [StatisticStates]
+       (if (= @view-type :cluster)
+         [views-clusters/StatisticStates]
+         [StatisticStates])
        ; Hack to center the statistics component
        [ui/Input {:style {:visibility "hidden"}
                   :icon  "search"}]]
       (case @view-type
         :cards [NuvlaboxCards]
         :table [NuvlaboxTable]
-        :map [NuvlaboxMap])
+        :map [NuvlaboxMap]
+        :cluster [views-clusters/NuvlaboxClusters])
       (when-not (= @view-type :map)
         [Pagination])]]))
+
+
+(defn DetailedView
+  [uuid]
+    [edge-detail/EdgeDetails uuid])
 
 
 (defmethod panel/render :edge
@@ -872,10 +883,8 @@
         children (case n
                    3 [views-cluster/ClusterView path2]
                    2 [DetailedView path1]
-                   [NuvlaBoxes])]
+                   [NuvlaBoxesOrClusters path1])]
     [:<>
      [ui/Segment style/basic
       children]
-     [AddModalWrapper]
-     (when-not (= @view-type :map)
-       [Pagination])]))
+     [AddModalWrapper]]))

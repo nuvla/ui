@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- NuvlaBox Cluster Detailed - print status notes cluster detailed view
+
 ## [2.28.0] - 2022-02-04
 
 ### Changed

@@ -156,7 +156,7 @@
   []
   (let [tr      (subscribe [::i18n-subs/tr])
         cluster (subscribe [::subs/nuvlabox-cluster])
-        {:keys [id name description owners tags created updated version orchestrator]} @cluster]
+        {:keys [id name description owners tags created updated version orchestrator status-notes]} @cluster]
     [:<>
      [ui/Segment {:secondary true
                   :color     "blue"
@@ -198,7 +198,17 @@
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:tags]))]
            [ui/TableCell
-            [uix/Tags tags]]])]]]
+            [uix/Tags tags]]])]
+       (when (not-empty status-notes)
+         [ui/TableFooter
+          [ui/TableRow
+           [ui/TableCell {:colspan 2}
+            [ui/Message {:color "brown"
+                         :size  "tiny"}
+             [ui/MessageHeader
+              [ui/Icon {:name "sticky note"}]
+              "Notes"]
+             [ui/MessageList {:items status-notes}]]]]])]]
      [ui/Segment
       (case @view-type
         :cards [NuvlaboxCards]

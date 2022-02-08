@@ -34,7 +34,7 @@
   [_nuvlabox-cluster nuvlaboxes]
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [{:keys [id cluster-id created managers workers nuvlabox-managers
-                 nuvlabox-workers name description orchestrator] :as _nuvlabox-cluster}]
+                 nuvlabox-workers name description orchestrator status-notes] :as _nuvlabox-cluster}]
       (let [href          (str "edge/nuvlabox-cluster/" (general-utils/id->uuid id))
             cluster-nodes (+ (count managers) (count workers))
             nb-per-id     (group-by :id (:resources @nuvlaboxes))
@@ -72,7 +72,16 @@
                                  [:div {:style {:float "right"}}
                                   [edge-detail/OnlineStatusIcon online :corner "top right"]]]
                                 [ui/ListDescription (str (@tr [:updated]) " " (-> updated time/parse-iso8601 time/ago))]]])))]
-          :extra       (str (@tr [:nuvlabox-cluster-nodes]) cluster-nodes)}]))))
+          :extra       [:<>
+                        (when (not-empty status-notes)
+                          [:div {:style {:float "right"}}
+                           [ui/Popup {:content        (r/as-element [ui/MessageList {:items status-notes}])
+                                      :position       "bottom center"
+                                      :hide-on-scroll true
+                                      :hoverable      true
+                                      :trigger        (r/as-element [ui/Icon {:name  "info circle"
+                                                                              :color "brown"}])}]])
+                        (str (@tr [:nuvlabox-cluster-nodes]) cluster-nodes)]}]))))
 
 
 (defn NuvlaboxClusters

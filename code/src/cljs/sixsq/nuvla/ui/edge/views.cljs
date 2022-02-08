@@ -872,7 +872,11 @@
 
 (defn DetailedView
   [uuid]
-    [edge-detail/EdgeDetails uuid])
+  (if (= "nuvlabox-cluster" uuid)
+    (do
+      (reset! view-type :cluster)
+      (dispatch [::history-events/navigate "edge/"]))
+    [edge-detail/EdgeDetails uuid]))
 
 
 (defmethod panel/render :edge

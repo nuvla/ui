@@ -37,7 +37,6 @@
 (s/def ::active-tab-index number?)
 
 (s/def ::full-text-search (s/nilable string?))
-(s/def ::full-text-clusters-search (s/nilable string?))
 
 (s/def ::state-selector #{"all" "new" "activated" "commissioned"
                           "decommissioning" "decommissioned" "error"})
@@ -69,7 +68,6 @@
                           ::total-elements
                           ::active-tab-index
                           ::full-text-search
-                          ::full-text-clusters-search
                           ::state-selector
                           ::open-modal
                           ::nuvlabox-created-id
@@ -95,7 +93,6 @@
                ::total-elements             0
                ::active-tab-index           0
                ::full-text-search           nil
-               ::full-text-clusters-search  nil
                ::state-selector             nil
                ::open-modal                 nil
                ::nuvlabox-created-id        nil

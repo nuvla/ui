@@ -37,7 +37,7 @@
                  nuvlabox-workers name description orchestrator] :as _nuvlabox-cluster}]
       (let [href          (str "edge/nuvlabox-cluster/" (general-utils/id->uuid id))
             cluster-nodes (+ (count managers) (count workers))
-            nb-per-id     (group-by :id (:resources nuvlaboxes))
+            nb-per-id     (group-by :id (:resources @nuvlaboxes))
             name          (or name cluster-id)]
         [uix/Card
          {:on-click    #(dispatch [::history-events/navigate href])
@@ -85,6 +85,6 @@
       (doall
         (for [{:keys [id] :as cluster} (:resources @nuvlabox-clusters)]
           ^{:key id}
-          [NuvlaBoxClusterCard cluster @nuvlaboxes]))]]))
+          [NuvlaBoxClusterCard cluster nuvlaboxes]))]]))
 
 

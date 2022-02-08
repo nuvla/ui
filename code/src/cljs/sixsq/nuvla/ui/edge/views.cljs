@@ -122,10 +122,10 @@
                       :on-click #(switch-from-cluster-view? @view-type :cards)}]
         [ui/MenuItem {:icon     "table"
                       :active   (= @view-type :table)
-                      :on-click #(reset! view-type :table)}]
+                      :on-click #(switch-from-cluster-view? @view-type :table)}]
         [ui/MenuItem {:icon     "map"
                       :active   (= @view-type :map)
-                      :on-click #(reset! view-type :map)}]
+                      :on-click #(switch-from-cluster-view? @view-type :map)}]
         [ui/MenuItem {:active   (= @view-type :cluster)
                       :on-click #(do
                                    (dispatch [::events/set-page 1])

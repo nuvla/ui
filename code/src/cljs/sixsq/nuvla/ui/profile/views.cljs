@@ -244,6 +244,16 @@
 
 (def modal-two-factor-content-style {:style {:min-height "50vh"}})
 
+(defn AppTOTPLink
+  [{app-name :name
+    app-url  :url}]
+  (if app-url
+    [:a {:href   app-url
+         :target "_blank"}
+     app-name]
+    app-name))
+
+
 (defmethod ModalTwoFactorContent :install-app
   [_step]
   [:<>
@@ -254,29 +264,25 @@
       (doall
         (interpose
           ", "
-          (for [{app-name :name
-                 app-url  :url} @(subscribe [::main-subs/config :totp-apps])]
-
-            ^{:key app-name}
-            [:a {:href   app-url
-                 :target "_blank"}
-             app-name])))]]]
+          (for [totp-app @(subscribe [::main-subs/config :totp-apps])]
+            ^{:key (:name totp-app)}
+            [AppTOTPLink totp-app])))]]]
    [ModalTwoFactorButtonNext
     #(dispatch [::events/set-two-factor-step :show-secret])]])
 
 
 (defmethod ModalTwoFactorContent :show-secret
   [_step]
-  (let [value     (subscribe [::subs/two-factor-qrcode-value])]
+  (let [value (subscribe [::subs/two-factor-qrcode-value])]
     (fn [_step]
       [:<>
-      [ui/ModalContent modal-two-factor-content-style
-       [ui/Segment {:basic true}
-        [:p [uix/TR :two-factor-authentication-scan-qrcode]]
-        [ui/Container {:text-align :center}
-         [ui/QRCode {:value @value :size 172}]]]]
-      [ModalTwoFactorButtonNext
-       #(dispatch [::events/set-two-factor-step :save-secret])]])))
+       [ui/ModalContent modal-two-factor-content-style
+        [ui/Segment {:basic true}
+         [:p [uix/TR :two-factor-authentication-scan-qrcode]]
+         [ui/Container {:text-align :center}
+          [ui/QRCode {:value @value :size 172}]]]]
+       [ModalTwoFactorButtonNext
+        #(dispatch [::events/set-two-factor-step :save-secret])]])))
 
 
 (defmethod ModalTwoFactorContent :save-secret

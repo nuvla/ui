@@ -211,7 +211,7 @@
 (defn TwoFactorInstallApp
   []
   [:<>
-   [uix/TR :two-factor-authentication-install-app]
+   [uix/TR :two-factor-auth-install-app]
    " "
    [uix/TR :e.g.]
    " "
@@ -228,7 +228,7 @@
   (let [value (subscribe [::subs/two-factor-qrcode-value])]
     (fn []
       [:<>
-       [uix/TR :two-factor-authentication-scan-qrcode]
+       [uix/TR :two-factor-auth-scan-qrcode]
        [:div {:style {:text-align :center
                       :margin-top 15}}
         [ui/QRCode {:value @value :size 172}]]])))
@@ -242,8 +242,8 @@
       [:<>
        [:span
         [uix/TR (if @enable?
-                  :two-factor-authentication-enter-code-enable
-                  :two-factor-authentication-enter-code-disable)]
+                  :two-factor-auth-enter-code-enable
+                  :two-factor-auth-enter-code-disable)]
         ": "
         [uix/TokenSubmiter ops]]
        (when @error
@@ -258,8 +258,8 @@
      {:on-change #(dispatch [::events/clear-error-message])
       :on-submit #(dispatch [::events/two-factor-auth-callback-exec %1
                              [::events/two-factor-enabled
-                              (@tr [:two-factor-authentication-enabled])
-                              (@tr [:two-factor-code-accepted-enabled])]])}]))
+                              (@tr [:two-factor-auth-enabled])
+                              (@tr [:two-factor-auth-code-accepted-enabled])]])}]))
 
 
 (defmulti ModalTwoFactorContent identity)
@@ -273,21 +273,21 @@
     [ui/ModalContent
      [ui/Loader {:active @loading?}]
      [:div {:style {:padding-bottom 20}}
-      [uix/TR :two-factor-authentication-select-method]]
+      [uix/TR :two-factor-auth-select-method]]
      [ui/CardGroup {:centered true}
       [ui/Card {:on-click #(dispatch [::events/select-method "email"])}
        [ui/CardContent {:text-align :center}
         [ui/Header "Email"]
         [ui/Icon {:name "mail"
                   :size :massive}]
-        [ui/CardDescription [uix/TR :two-factor-authentication-email-method]]]]
+        [ui/CardDescription [uix/TR :two-factor-auth-email-method]]]]
       [ui/Card {:on-click #(dispatch [::events/select-method "totp"])}
        [ui/CardContent {:text-align :center}
         [ui/Header "Smartphone"]
         [ui/Icon {:name "mobile alternate"
                   :size :massive}]
         [ui/CardDescription
-         [uix/TR :two-factor-authentication-totp-method]]]]]]))
+         [uix/TR :two-factor-auth-totp-method]]]]]]))
 
 (defmethod ModalTwoFactorContent :save-secret
   [_step]
@@ -296,11 +296,11 @@
      [ui/ModalContent
       [ui/Segment {:basic true}
        [:span
-        [uix/TR :two-factor-authentication-save-secret]
+        [uix/TR :two-factor-auth-save-secret]
         [ui/Label {:basic true} @secret]]
        [:br]
        [:br]
-       [:p [:i [uix/TR :two-factor-authentication-restore-secret]]]]]
+       [:p [:i [uix/TR :two-factor-auth-restore-secret]]]]]
      [ui/ModalActions
       [ui/Button
        {:primary  true
@@ -317,13 +317,13 @@
         {:on-change #(dispatch [::events/clear-error-message])
          :on-submit #(dispatch [::events/two-factor-auth-callback-exec %1
                                 [::events/two-factor-disabled
-                                 (@tr [:two-factor-authentication-disabled])
-                                 (@tr [:two-factor-code-accepted-disabled])]])}]])))
+                                 (@tr [:two-factor-auth-disabled])
+                                 (@tr [:two-factor-auth-code-accepted-disabled])]])}]])))
 
 
 (defmethod ModalTwoFactorContent :totp
   [_step]
-  [ui/ModalContent #_{:style {:text-align :center}}
+  [ui/ModalContent
    [ui/ListSA {:relaxed true}
     (for [[i C] [[1 TwoFactorInstallApp]
                  [2 TwoFactorQRCodeSecret]
@@ -350,7 +350,7 @@
        {:open      @open?
         :closeIcon true
         :on-close  #(dispatch [::events/close-modal])}
-       [ui/ModalHeader [uix/TR :two-factor-authentication]]
+       [ui/ModalHeader [uix/TR :two-factor-auth]]
        ^{:key @step}
        [ModalTwoFactorContent @step]])))
 
@@ -1450,16 +1450,14 @@
       (when can-enable-2fa?
         [ui/MenuItem
          {:icon     "shield"
-          :content  (@tr [:two-factor-authentication-enable])
+          :content  (@tr [:two-factor-auth-enable])
           :on-click #(dispatch [::events/two-factor-enable])}])
       (when can-disable-2fa?
         [ui/MenuItem {:on-click #(dispatch [::events/two-factor-disable])}
          [ui/IconGroup
           [ui/Icon {:name "shield"}]
           [ui/Icon {:name "x" :corner true}]]
-         (@tr [:two-factor-authentication-disable])])
-      [ModalChangePassword]
-      #_[ModalTwoFactorAuthMethod]
-      #_[ModalEnableDisableTwoFactorAuth can-enable-2fa?]]
+         (@tr [:two-factor-auth-disable])])
+      [ModalChangePassword]]
      [ModalTwoFactorAuth]
      [Tabs]]))

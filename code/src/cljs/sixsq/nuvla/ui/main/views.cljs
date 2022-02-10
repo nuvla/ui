@@ -35,6 +35,7 @@
     [sixsq.nuvla.ui.utils.general :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.welcome.views]))
 
@@ -98,12 +99,13 @@
 
 (defn footer
   []
-  (let [grid-style {:style {:padding-top    5
-                            :padding-bottom 5
-                            :text-align     "center"}}]
+  (let [grid-style   {:style {:padding-top    5
+                              :padding-bottom 5
+                              :text-align     "center"}}
+        current-year (.year (time/now))]
     [ui/Segment {:style {:border-radius 0}}
      [ui/Grid {:columns 3}
-      [ui/GridColumn grid-style "© 2021, SixSq SA"]
+      [ui/GridColumn grid-style (str "© " current-year ", SixSq SA")]
       [ui/GridColumn grid-style
        [:a {:on-click #(dispatch [::history-events/navigate "about"])
             :style    {:cursor "pointer"}}
@@ -138,7 +140,7 @@
   []
   (let [tr                  (subscribe [::i18n-subs/tr])
         open-subs-required? (subscribe [::subs/modal-open? :subscription-required])
-        open-subs-unpaid?        (subscribe [::subs/modal-open? :subscription-unpaid])]
+        open-subs-unpaid?   (subscribe [::subs/modal-open? :subscription-unpaid])]
 
     [ui/Modal {:open       (or @open-subs-required?
                                @open-subs-unpaid?)

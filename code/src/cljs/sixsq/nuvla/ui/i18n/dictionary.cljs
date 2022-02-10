@@ -738,13 +738,16 @@
         :two-factor-authentication-email-method        "I prefer to receive a code by email"
         :two-factor-authentication-enable              "Enable two-factor authentication"
         :two-factor-authentication-enabled             "Two-factor authentication enabled."
-        :two-factor-authentication-enter-code          "Enter code"
+        :two-factor-authentication-enter-code-disable  "Enter code to disable two factor authentication"
+        :two-factor-authentication-enter-code-enable   "Enter code to enable two factor authentication"
         :two-factor-authentication-install-app         "Install a compatible TOTP authentication app on your smartphone."
+        #_to_be_deleted
         :two-factor-authentication-message-send        "We will shortly send you a message with a verification code."
         :two-factor-authentication-restore-secret      "You will need it to restore your access in the authentication app in case you loose your phone data."
         :two-factor-authentication-save-secret         "Save this secret in a safe place: "
         :two-factor-authentication-scan-qrcode         "Scan this QRCode with the App to link it to your Nuvla account."
         :two-factor-authentication-select-method       "Select your preferred way to get an authentication code."
+        #_to_be_deleted
         :two-factor-authentication-totp-code           "Enter the diplayed code in the Authentication App"
         :two-factor-authentication-totp-method         "I prefer to get a code by using an authentication App on my phone"
         :two-factor-code-accepted-disabled             "Code accepted. Two-factor authentication disabled."
@@ -774,6 +777,7 @@
         :value                                         "value"
         :vendor                                        "Vendor"
         :vendor-getting-paid                           "Start getting paid for your Software integration and development."
+        #_to_be_deleted
         :verify                                        "verify"
         :version                                       "version"
         :version-number                                "Version number"

@@ -75,23 +75,23 @@
                           ::two-factor-secret]))
 
 
-(def defaults {::user               nil
-               ::customer           nil
-               ::pricing-catalogue  nil
-               ::payment-methods    nil
-               ::upcoming-invoice   nil
-               ::invoices           nil
-               ::customer-info      nil
-               ::subscription       nil
-               ::setup-intent       nil
-               ::open-modal         nil
-               ::error-message      nil
-               ::loading            #{}
-               ::vendor             nil
-               ::group              nil
-               ::active-tab-index   0
-               ::two-factor-step    :select-method
-               ::two-factor-enable? true
-               ::two-factor-method  nil
-               :two-factor-callback nil
-               ::two-factor-secret  nil})
+(def defaults {::user                nil
+               ::customer            nil
+               ::pricing-catalogue   nil
+               ::payment-methods     nil
+               ::upcoming-invoice    nil
+               ::invoices            nil
+               ::customer-info       nil
+               ::subscription        nil
+               ::setup-intent        nil
+               ::open-modal          nil
+               ::error-message       nil
+               ::loading             #{}
+               ::vendor              nil
+               ::group               nil
+               ::active-tab-index    0
+               ::two-factor-step     :install-app
+               ::two-factor-enable?  true
+               ::two-factor-method   nil
+               ::two-factor-callback nil
+               ::two-factor-secret   nil})

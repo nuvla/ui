@@ -477,6 +477,7 @@
   (fn [_ [_ response]]
     {:fx [[:dispatch [::set-error (-> response :response :message)]]]}))
 
+
 (reg-event-fx
   ::code-validation-2fa-success
   (fn [_ [_ success-header success-content]]
@@ -489,14 +490,36 @@
 
 
 (reg-event-fx
-  ::two-factor-auth-callback-execute
-  (fn [{{:keys [::spec/two-factor-callback]} :db} [_ token success-header success-content]]
+  ::two-factor-enabled
+  (fn [_ [_ success-header success-content]]
+    {:fx [[:dispatch [::messages-events/add
+                      {:header  success-header
+                       :content success-content
+                       :type    :success}]]
+          [:dispatch [::get-user]]
+          [:dispatch [::set-two-factor-step :save-secret]]]}))
+
+
+(reg-event-fx
+  ::two-factor-disabled
+  (fn [_ [_ success-header success-content]]
+    {:fx [[:dispatch [::messages-events/add
+                      {:header  success-header
+                       :content success-content
+                       :type    :success}]]
+          [:dispatch [::get-user]]
+          [:dispatch [::close-modal]]]}))
+
+
+(reg-event-fx
+  ::two-factor-auth-callback-exec
+  (fn [{{:keys [::spec/two-factor-callback]} :db} [_ token success-dispatch-vec]]
     {:http-xhrio {:method          :put
                   :uri             two-factor-callback
                   :format          (ajax/json-request-format)
                   :params          {:token token}
                   :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [::code-validation-2fa-success success-header success-content]
+                  :on-success      success-dispatch-vec
                   :on-failure      [::code-validation-2fa-failed]}}))
 
 
@@ -508,13 +531,14 @@
 
 (reg-event-fx
   ::set-two-factor-op-response
-  (fn [{db :db} [_ {:keys [location secret] :as _response}]]
-    (let [next-step (if secret :install-app :check-token)]
+  (fn [{{:keys [::spec/two-factor-enable?] :as db} :db} [_ {:keys [location secret] :as _response}]]
+    (let [next-step (if secret :totp :email)]
       {:db (-> db
                (update ::spec/loading disj :two-factor-auth)
                (assoc ::spec/two-factor-callback location)
                (assoc ::spec/two-factor-secret secret))
-       :fx [[:dispatch [::set-two-factor-step next-step]]]})))
+       :fx [(when two-factor-enable?
+              [:dispatch [::set-two-factor-step next-step]])]})))
 
 
 (reg-event-fx
@@ -524,8 +548,7 @@
                 ::spec/two-factor-method] :as db} :db}]
     (let [op             (if two-factor-enable? "enable-2fa" "disable-2fa")
           enable-disable (if two-factor-enable? "Enable" "Disable")]
-      {:db (update db ::spec/loading conj
-                   :two-factor-auth)
+      {:db (update db ::spec/loading conj :two-factor-auth)
        ::cimi-api-fx/operation
        [(:id user) op
         #(if (instance? js/Error %)
@@ -543,7 +566,7 @@
 
 (reg-event-fx
   ::select-method
-  (fn [{{:keys [::spec/user] :as db} :db} [_ method]]
+  (fn [{db :db} [_ method]]
     {:db (assoc db ::spec/two-factor-method method)
      :fx [[:dispatch [::two-factor-operation-call]]]}))
 
@@ -563,6 +586,6 @@
     {:db (-> db
              (assoc ::spec/open-modal :two-factor-auth)
              (assoc ::spec/two-factor-enable? false)
-             (assoc ::spec/two-factor-step :check-token)
+             (assoc ::spec/two-factor-step :disable)
              (assoc ::spec/two-factor-method (:auth-method-2fa user)))
      :fx [[:dispatch [::two-factor-operation-call]]]}))

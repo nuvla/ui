@@ -4,6 +4,12 @@
 
 ### Changed
 
+- NuvlaBox Cluster - [bug] edge page subscriptions are not refreshed on "
+  navigate" [#630](https://github.com/nuvla/ui/issues/630)
+- NuvlaBox Cluster - [bug] NB cards view disappears when in cluster
+  view [#760](https://github.com/nuvla/ui/issues/760)
+- NuvlaBox Cluster - [bug] cluster view listing weird
+  NuvlaBoxes [#755](https://github.com/nuvla/ui/issues/755)
 - NuvlaBox Cluster Detailed - print status notes cluster detailed view
 - Footer - Make copyright year in footer update
   automatically [#790](https://github.com/nuvla/ui/issues/790)

@@ -24,12 +24,6 @@
 
 
 (reg-sub
-  ::full-text-clusters-search
-  (fn [db]
-    (::spec/full-text-clusters-search db)))
-
-
-(reg-sub
   ::nuvlaboxes
   (fn [db]
     (::spec/nuvlaboxes db)))
@@ -171,3 +165,9 @@
   ::nuvlabox-playbooks-cronjob
   (fn [db]
     (::spec/nuvlabox-playbooks-cronjob db)))
+
+
+(reg-sub
+  ::nuvlaboxes-in-clusters
+  (fn [db]
+    (::spec/nuvlaboxes-in-clusters db)))

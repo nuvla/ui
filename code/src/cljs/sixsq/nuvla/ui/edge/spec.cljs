@@ -37,7 +37,6 @@
 (s/def ::active-tab-index number?)
 
 (s/def ::full-text-search (s/nilable string?))
-(s/def ::full-text-clusters-search (s/nilable string?))
 
 (s/def ::state-selector #{"all" "new" "activated" "commissioned"
                           "decommissioning" "decommissioned" "error"})
@@ -51,6 +50,7 @@
 
 (s/def ::nuvlabox-cluster any?)
 
+(s/def ::nuvlaboxes-in-clusters any?)
 
 (s/def ::nuvlabox-not-found? boolean?)
 
@@ -68,7 +68,6 @@
                           ::total-elements
                           ::active-tab-index
                           ::full-text-search
-                          ::full-text-clusters-search
                           ::state-selector
                           ::open-modal
                           ::nuvlabox-created-id
@@ -79,6 +78,7 @@
                           ::ssh-keys-available
                           ::nuvlabox-clusters
                           ::nuvlabox-cluster
+                          ::nuvlaboxes-in-clusters
                           ::nuvlabox-playbooks-cronjob]))
 
 
@@ -93,7 +93,6 @@
                ::total-elements             0
                ::active-tab-index           0
                ::full-text-search           nil
-               ::full-text-clusters-search  nil
                ::state-selector             nil
                ::open-modal                 nil
                ::nuvlabox-created-id        nil
@@ -104,4 +103,5 @@
                ::ssh-keys-available         nil
                ::nuvlabox-clusters          nil
                ::nuvlabox-cluster           nil
+               ::nuvlaboxes-in-clusters     nil
                ::nuvlabox-playbooks-cronjob nil})

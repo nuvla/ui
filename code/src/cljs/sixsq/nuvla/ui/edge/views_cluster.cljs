@@ -50,8 +50,10 @@
         nuvlabox-cluster (subscribe [::subs/nuvlabox-cluster])
         name             (:name @nuvlabox-cluster)
         cluster-id       (:cluster-id @nuvlabox-cluster)
-        all-nodes        (+ (count (:managers @nuvlabox-cluster)) (count (:workers @nuvlabox-cluster)))
-        nuvlabox-nodes   (+ (count (:nuvlabox-managers @nuvlabox-cluster)) (count (:nuvlabox-workers @nuvlabox-cluster)))]
+        all-nodes        (+ (count (:managers @nuvlabox-cluster))
+                            (count (:workers @nuvlabox-cluster)))
+        nuvlabox-nodes   (+ (count (:nuvlabox-managers @nuvlabox-cluster))
+                            (count (:nuvlabox-workers @nuvlabox-cluster)))]
     [ui/Header {:as        "h3"
                 :float     "left"
                 :icon      (r/as-element [uix/Icon {:name "fas fa-chart-network"}])
@@ -269,7 +271,8 @@
          ::subs/nuvlabox-not-found?
          :no-nuvlabox-cluster-message-header
          :no-nuvlabox-cluster-message-content]
-        [uix/PageHeader "fas fa-chart-network" (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
-                                                    (:name @cluster))]
+        [uix/PageHeader "fas fa-chart-network"
+         (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
+              (:name @cluster))]
         [MenuBar cluster-id]
         [TabsCluster]]])))

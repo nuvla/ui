@@ -363,13 +363,13 @@
   (fn [_ [_ selected-clusters]]
     {::cimi-api-fx/search [:nuvlabox
                            {:filter (apply general-utils/join-or
-                                      (map #(str "id='" % "'") (flatten
-                                                                 (map
-                                                                   (fn [c]
-                                                                     (concat
-                                                                       (:nuvlabox-managers c)
-                                                                       (get c :nuvlabox-workers [])))
-                                                                   (:resources selected-clusters)))))
+                                           (map #(str "id='" % "'") (flatten
+                                                                      (map
+                                                                        (fn [c]
+                                                                          (concat
+                                                                            (:nuvlabox-managers c)
+                                                                            (get c :nuvlabox-workers [])))
+                                                                        (:resources selected-clusters)))))
                             :last   10000}
                            #(dispatch [::set-nuvlaboxes-in-clusters %])]}))
 
@@ -381,11 +381,11 @@
       (dispatch [::messages-events/add
                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
                    {:header  (cond-> (str "failure getting nuvlaboxes")
-                               status (str " (" status ")"))
+                                     status (str " (" status ")"))
                     :content message
                     :type    :error})])
       {:db (assoc db ::spec/nuvlaboxes-in-clusters nuvlaboxes
-             ::main-spec/loading? false)})))
+                     ::main-spec/loading? false)})))
 
 (reg-event-db
   ::set-ssh-keys-available

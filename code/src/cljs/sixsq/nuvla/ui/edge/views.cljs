@@ -106,10 +106,9 @@
 
 (defn switch-from-cluster-view?
   [current-view new-view]
-  (do
-    (when (= current-view :cluster)
-      (dispatch [::events/set-page 1]))
-    (reset! view-type new-view)))
+  (when (= current-view :cluster)
+    (dispatch [::events/set-page 1]))
+  (reset! view-type new-view))
 
 (defn MenuBar []
   (let [loading? (subscribe [::subs/loading?])]

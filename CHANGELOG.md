@@ -5,6 +5,8 @@
 ### Changed
 
 - NuvlaBox Cluster Detailed - print status notes cluster detailed view
+- Footer - Make copyright year in footer update
+  automatically [#790](https://github.com/nuvla/ui/issues/790)
 
 ## [2.28.0] - 2022-02-04
 

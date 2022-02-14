@@ -77,14 +77,6 @@
 
 
 (reg-event-fx
-  ::set-full-text-clusters-search
-  (fn [{db :db} [_ full-text-search]]
-    {:db       (assoc db ::spec/full-text-clusters-search full-text-search
-                         ::spec/page 1)
-     :dispatch [::refresh-clusters]}))
-
-
-(reg-event-fx
   ::get-nuvlaboxes
   (fn [{{:keys [::spec/state-selector
                 ::spec/page
@@ -197,10 +189,12 @@
   ::get-nuvlabox-clusters
   (fn [{{:keys [::spec/page
                 ::spec/elements-per-page
-                ::spec/full-text-clusters-search] :as _db} :db} _]
+                ::spec/full-text-search] :as _db} :db} _]
     {::cimi-api-fx/search [:nuvlabox-cluster
-                           (utils/get-query-params full-text-clusters-search page elements-per-page nil)
-                           #(dispatch [::set-nuvlabox-clusters %])]}))
+                           (utils/get-query-params full-text-search page elements-per-page nil)
+                           #(do
+                              (dispatch [::set-nuvlabox-clusters %])
+                              (dispatch [::get-nuvlaboxes-in-clusters %]))]}))
 
 
 (reg-event-fx
@@ -363,6 +357,35 @@
     {::cimi-api-fx/get [cluster-id #(dispatch [::set-nuvlabox-cluster %])
                         :on-error #(dispatch [::set-nuvlabox-cluster nil])]}))
 
+
+(reg-event-fx
+  ::get-nuvlaboxes-in-clusters
+  (fn [_ [_ selected-clusters]]
+    {::cimi-api-fx/search [:nuvlabox
+                           {:filter (apply general-utils/join-or
+                                           (map #(str "id='" % "'") (flatten
+                                                                      (map
+                                                                        (fn [c]
+                                                                          (concat
+                                                                            (:nuvlabox-managers c)
+                                                                            (get c :nuvlabox-workers [])))
+                                                                        (:resources selected-clusters)))))
+                            :last   10000}
+                           #(dispatch [::set-nuvlaboxes-in-clusters %])]}))
+
+
+(reg-event-fx
+  ::set-nuvlaboxes-in-clusters
+  (fn [{:keys [db]} [_ nuvlaboxes]]
+    (if (instance? js/Error nuvlaboxes)
+      (dispatch [::messages-events/add
+                 (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
+                   {:header  (cond-> (str "failure getting nuvlaboxes")
+                                     status (str " (" status ")"))
+                    :content message
+                    :type    :error})])
+      {:db (assoc db ::spec/nuvlaboxes-in-clusters nuvlaboxes
+                     ::main-spec/loading? false)})))
 
 (reg-event-db
   ::set-ssh-keys-available

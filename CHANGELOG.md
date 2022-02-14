@@ -9,6 +9,24 @@
 ### Changed
 
 - Fixed "stop logs" action button for deployment and NuvlaBox logs
+- NuvlaBox Cluster - [bug] edge page subscriptions are not refreshed on "
+  navigate" [#630](https://github.com/nuvla/ui/issues/630)
+- NuvlaBox Cluster - [bug] NB cards view disappears when in cluster
+  view [#760](https://github.com/nuvla/ui/issues/760)
+- NuvlaBox Cluster - [bug] cluster view listing weird
+  NuvlaBoxes [#755](https://github.com/nuvla/ui/issues/755)
+- NuvlaBox Cluster Detailed - print status notes cluster detailed view
+- Footer - Make copyright year in footer update
+  automatically [#790](https://github.com/nuvla/ui/issues/790)
+
+## [2.28.0] - 2022-02-04
+
+### Changed
+
+- Profile - Warning in console fix for list of payment methods
+- Main subs - is-mobile-device? new reframe subs
+- Authn Menu - Remove documentation, support and invite user entries
+- Authn Menu - Dropdown changed to MenuItems
 - Nuvlabox detail page - hide generate-new-api-key
 - Session - Error message in sign-in and sign-up pages not always
   visible [#778](https://github.com/nuvla/ui/issues/778)

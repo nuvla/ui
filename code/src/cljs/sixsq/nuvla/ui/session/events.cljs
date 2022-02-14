@@ -57,20 +57,6 @@
 
 
 (reg-event-db
-  ::open-modal
-  (fn [db [_ modal-key]]
-    (assoc db ::spec/open-modal modal-key)))
-
-
-(reg-event-db
-  ::close-modal
-  (fn [db _]
-    (assoc db ::spec/open-modal nil
-              ::spec/error-message nil
-              ::spec/success-message nil)))
-
-
-(reg-event-db
   ::clear-loading
   (fn [db _]
     (assoc db ::spec/loading? false)))
@@ -117,13 +103,11 @@
 (reg-event-fx
   ::submit
   (fn [{{:keys [::spec/server-redirect-uri] :as db} :db} [_ form-id form-data opts]]
-    (let [{close-modal  :close-modal,
-           success-msg  :success-msg,
+    (let [{success-msg  :success-msg,
            callback-add :callback-add,
            redirect-url :redirect-url
            navigate-to  :navigate-to
-           :or          {close-modal  true
-                         redirect-url server-redirect-uri}} opts
+           :or          {redirect-url server-redirect-uri}} opts
 
           on-success    (or callback-add
                             #(do
@@ -131,8 +115,6 @@
                                (if (= (:status %1) 201)
                                  (do
                                    (dispatch [::initialize])
-                                   (when close-modal
-                                     (dispatch [::close-modal]))
                                    (when success-msg
                                      (dispatch [::set-success-message success-msg]))
                                    (when navigate-to

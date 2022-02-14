@@ -265,7 +265,7 @@
 
 (defn AclOwners
   [_opts _ui-acl]
-  (let [mobile? (subscribe [::main-subs/is-device? :mobile])
+  (let [mobile? (subscribe [::main-subs/is-mobile-device?])
         tr      (subscribe [::i18n-subs/tr])]
     (fn [{:keys [read-only on-change mode] :as opts} ui-acl]
       (let [is-advanced? (is-advanced-mode? @mode)
@@ -341,17 +341,19 @@
 
 (defn AclWidget
   [{:keys [default-value read-only mode] :as _opts} & [ui-acl]]
-  (let [mode   (r/atom (or mode :simple))
-        ui-acl (or ui-acl
-                   (->ui-acl default-value (not read-only)))]
+  (let [mode       (r/atom (or mode :simple))
+        ui-acl     (or ui-acl
+                       (->ui-acl default-value (not read-only)))
+        is-mobile? (subscribe [::main-subs/is-mobile-device?])]
     (fn [{:keys [on-change read-only] :as opts}]
       (let [opts (assoc opts :mode mode
                              :read-only (or (nil? read-only) read-only)
                              :on-change (or on-change #()))]
 
-        [:div {:style (cond-> {:margin-bottom "10px"
-                               :margin-top    "10px"}
-                              @(subscribe [::main-subs/is-device? :mobile]) (assoc :overflow-x "auto"))}
+        [:div
+         {:style (cond-> {:margin-bottom "10px"
+                          :margin-top    "10px"}
+                         @is-mobile? (assoc :overflow-x "auto"))}
          [AclOwners opts ui-acl]
          (when (or (not read-only)
                    (not (utils/acl-rights-empty? @ui-acl)))

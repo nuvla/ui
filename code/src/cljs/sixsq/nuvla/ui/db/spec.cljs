@@ -16,6 +16,7 @@
     [sixsq.nuvla.ui.docs.spec :as docs]
     [sixsq.nuvla.ui.edge-detail.spec :as edge-detail]
     [sixsq.nuvla.ui.edge.spec :as edge]
+    [sixsq.nuvla.ui.log-resource.spec :as log-resource]
     [sixsq.nuvla.ui.i18n.spec :as i18n]
     [sixsq.nuvla.ui.infrastructures-detail.spec :as infra-service-detail]
     [sixsq.nuvla.ui.infrastructures.spec :as infra-service]
@@ -48,7 +49,8 @@
                      ::edge-detail/db
                      ::profile/db
                      ::session/db
-                     ::job/db))
+                     ::job/db
+                     ::log-resource/db))
 
 
 (def default-db
@@ -75,4 +77,5 @@
          edge-detail/defaults
          profile/defaults
          session/defaults
-         job/defaults))
+         job/defaults
+         log-resource/defaults))

@@ -163,33 +163,3 @@
   ::nuvlabox-current-playbook
   (fn [db]
     (::spec/nuvlabox-current-playbook db)))
-
-
-(reg-sub
-  ::nuvlabox-log
-  (fn [db]
-    (::spec/nuvlabox-log db)))
-
-
-(reg-sub
-  ::nuvlabox-log-id
-  (fn [db]
-    (::spec/nuvlabox-log-id db)))
-
-
-(reg-sub
-  ::nuvlabox-log-since
-  (fn [db]
-    (::spec/nuvlabox-log-since db)))
-
-
-(reg-sub
-  ::nuvlabox-log-play?
-  (fn [db]
-    (::spec/nuvlabox-log-play? db)))
-
-
-(reg-sub
-  ::nuvlabox-log-components
-  (fn [db]
-    (::spec/nuvlabox-log-components db)))

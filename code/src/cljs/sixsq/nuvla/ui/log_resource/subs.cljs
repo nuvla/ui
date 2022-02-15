@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.log-resource.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.edge-detail.spec :as spec]))
+    [sixsq.nuvla.ui.log-resource.spec :as spec]))
 
 
 (reg-sub
@@ -32,3 +32,9 @@
   ::components
   (fn [db]
     (::spec/components db)))
+
+
+(reg-sub
+  ::available-components
+  (fn [db]
+    (::spec/available-components db)))

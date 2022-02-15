@@ -2,7 +2,7 @@
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.edge-detail.spec :as spec]
+    [sixsq.nuvla.ui.log-resource.spec :as spec]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.utils.time :as time]))
 
@@ -32,7 +32,7 @@
                            [::fetch]
                            [::create-log])
                          [::main-events/action-interval-delete
-                          {:id   :get-resource-log}])}
+                          {:id :get-resource-log}])}
             (and play?
                  id)
             (assoc :dispatch-later
@@ -53,27 +53,27 @@
 (reg-event-fx
   ::set-resource-log
   (fn [{{:keys [::spec/resource-log] :as db} :db} [_ new-resource-log]]
-    (let [new-log               (:log new-resource-log)
-          old-log               (:log resource-log)
-          all-in-one?           (empty? (:components new-resource-log))
-          concatenated-log      (if all-in-one?
-                                  {:_all-in-one (concat
-                                                  (:_all-in-one old-log)
-                                                  (map
-                                                    (fn [el]
-                                                      (str (name (first el)) "  | " (second el)))
-                                                    (sort-by second
-                                                             (mapcat
-                                                               (fn [[k v]]
-                                                                 (map
-                                                                   (fn [s]
-                                                                     [k s]) v)) new-log))))}
+    (let [new-log          (:log new-resource-log)
+          old-log          (:log resource-log)
+          all-in-one?      (empty? (:components new-resource-log))
+          concatenated-log (if all-in-one?
+                             {:_all-in-one (concat
+                                             (:_all-in-one old-log)
+                                             (map
+                                               (fn [el]
+                                                 (str (name (first el)) "  | " (second el)))
+                                               (sort-by second
+                                                        (mapcat
+                                                          (fn [[k v]]
+                                                            (map
+                                                              (fn [s]
+                                                                [k s]) v)) new-log))))}
 
-                                  (into {}
-                                        (map
-                                          (fn [[k v]]
-                                            {k (concat (remove (set (get new-log k [])) (get old-log k [])) v)})
-                                          new-log)))]
+                             (into {}
+                                   (map
+                                     (fn [[k v]]
+                                       {k (concat (remove (set (get new-log k [])) (get old-log k [])) v)})
+                                     new-log)))]
       {:db       (assoc db ::spec/resource-log
                            (assoc new-resource-log :log concatenated-log))
        :dispatch [::fetch]})))
@@ -87,15 +87,15 @@
 
 (reg-event-fx
   ::create-log
-  (fn [{{:keys [::spec/nuvlabox
+  (fn [{{:keys [::spec/parent
                 ::spec/since
                 ::spec/components]} :db} _]
-    {::cimi-api-fx/operation [(:id nuvlabox) "create-log"
+    {::cimi-api-fx/operation [parent "create-log"
                               #(if (instance? js/Error %)
                                  (cimi-api-fx/default-error-message % "Create log action failed!")
                                  (dispatch [::set-log-id (:resource-id %)]))
-                              {:since       (time/time->utc-str since)
-                               :components  (or components [])}]}))
+                              {:since      (time/time->utc-str since)
+                               :components (or components [])}]}))
 
 
 (reg-event-fx
@@ -103,6 +103,12 @@
   (fn [{{:keys [::spec/play?] :as db} :db} [_ resource-log-id]]
     {:db       (assoc db ::spec/id resource-log-id)
      :dispatch [::set-play? play?]}))
+
+
+(reg-event-db
+  ::set-parent
+  (fn [db [_ resource-id]]
+    (assoc db ::spec/parent resource-id)))
 
 
 (reg-event-db
@@ -116,3 +122,9 @@
   (fn [{{:keys [::spec/id] :as db} :db} [_ components]]
     (cond-> {:db (assoc db ::spec/components components)}
             id (assoc :dispatch [::delete]))))
+
+
+(reg-event-db
+  ::set-available-components
+  (fn [db [_ components]]
+    (assoc db ::spec/available-components components)))

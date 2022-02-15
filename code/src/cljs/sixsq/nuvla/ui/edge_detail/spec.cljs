@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.edge-detail.spec
   (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [clojure.spec.alpha :as s]))
 
 
 (s/def ::nuvlabox (s/nilable any?))

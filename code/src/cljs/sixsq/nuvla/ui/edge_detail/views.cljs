@@ -1811,9 +1811,9 @@
 
 (defn tabs
   [count-peripherals]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        nuvlabox  (subscribe [::subs/nuvlabox])
-        can-edit? (subscribe [::subs/can-edit?])]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        nuvlabox        (subscribe [::subs/nuvlabox])
+        can-edit?       (subscribe [::subs/can-edit?])]
     [{:menuItem {:content "Overview"
                  :key     "overview"
                  :icon    "info"}
@@ -1838,7 +1838,9 @@
      {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:logs]))])
                  :key     "logs"
                  :icon    "file code"}
-      :render   (fn [] (r/as-element [log-views/TabLogs]))}
+      :render   (fn [] (r/as-element [log-views/TabLogs
+                                      (:id @nuvlabox)
+                                      #(subscribe [::subs/nuvlabox-components])]))}
      {:menuItem {:content (r/as-element [:span "Peripherals"
                                          [ui/Label {:circular true
                                                     :size     "mini"

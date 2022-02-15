@@ -3,11 +3,10 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.log-resource.events :as events]
-    [sixsq.nuvla.ui.log-resource.spec :as spec]
     [sixsq.nuvla.ui.log-resource.subs :as subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
@@ -133,7 +132,5 @@
   [_parent _components-subs]
   (r/create-class
     {:display-name           "TabLogs"
-     :component-will-unmount #(do
-                                (dispatch [::events/delete])
-                                (dispatch [::events/set-since (spec/default-since)]))
+     :component-will-unmount #(dispatch [::events/reset])
      :reagent-render         logs-viewer}))

@@ -8,6 +8,13 @@
 
 
 (reg-event-fx
+  ::reset
+  (fn [{{:keys [::spec/id] :as db} :db}]
+    {:db                  (merge db spec/defaults)
+     ::cimi-api-fx/delete [id #()]}))
+
+
+(reg-event-fx
   ::delete
   (fn [{{:keys [::spec/id] :as db} :db} _]
     (cond-> {:db (assoc db ::spec/id nil
@@ -19,8 +26,8 @@
 (reg-event-fx
   ::set-since
   (fn [{{:keys [::spec/id] :as db} :db} [_ since]]
-    (cond-> {:db (assoc db ::spec/since since)}
-            id (assoc :dispatch [::delete]))))
+    {:db (assoc db ::spec/since since)
+     :fx [(when id [:dispatch [::delete]])]}))
 
 
 (reg-event-fx
@@ -33,8 +40,7 @@
                            [::create-log])
                          [::main-events/action-interval-delete
                           {:id :get-resource-log}])}
-            (and play?
-                 id)
+            (and play? id)
             (assoc :dispatch-later
                    [{:ms       5000
                      :dispatch [::main-events/action-interval-start

@@ -7,12 +7,10 @@
     [sixsq.nuvla.ui.deployment.events :as deployment-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
-    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-db
@@ -123,99 +121,6 @@
   (fn [db [_ node-parameters]]
     (assoc db ::spec/node-parameters node-parameters)))
 
-
-(reg-event-fx
-  ::fetch-deployment-log
-  (fn [{{:keys [::spec/deployment-log-id]} :db} _]
-    {::cimi-api-fx/operation [deployment-log-id "fetch" #()]}))
-
-
-(reg-event-fx
-  ::set-deployment-log
-  (fn [{{:keys [::spec/deployment-log] :as db} :db} [_ new-deployment-log]]
-    (let [new-log               (:log new-deployment-log)
-          old-log               (:log deployment-log)
-          removed-duplicate-log (remove (set new-log) old-log)
-          concatenated-log      (concat removed-duplicate-log new-log)]
-      {:db       (assoc db ::spec/deployment-log
-                           (assoc new-deployment-log :log concatenated-log))
-       :dispatch [::fetch-deployment-log]})))
-
-
-(reg-event-db
-  ::clear-deployment-log
-  (fn [db]
-    (assoc-in db [::spec/deployment-log :log] [])))
-
-
-(reg-event-fx
-  ::set-deployment-log-id
-  (fn [{{:keys [::spec/deployment-log-play?] :as db} :db} [_ deployment-log-id]]
-    {:db       (assoc db ::spec/deployment-log-id deployment-log-id)
-     :dispatch [::set-deployment-log-play? deployment-log-play?]}))
-
-
-(reg-event-fx
-  ::create-log
-  (fn [{{:keys [::spec/deployment
-                ::spec/deployment-log-service
-                ::spec/deployment-log-since]} :db} _]
-    {::cimi-api-fx/operation [(:id deployment) "create-log"
-                              #(if (instance? js/Error %)
-                                 (cimi-api-fx/default-error-message % "Create log action failed!")
-                                 (dispatch [::set-deployment-log-id (:resource-id %)]))
-                              {:service deployment-log-service
-                               :since   (time/time->utc-str deployment-log-since)}]}))
-
-
-(reg-event-fx
-  ::delete-deployment-log
-  (fn [{{:keys [::spec/deployment-log-id] :as db} :db} _]
-    (cond-> {:db (assoc db ::spec/deployment-log-id nil
-                           ::spec/deployment-log nil)}
-            deployment-log-id (assoc ::cimi-api-fx/delete [deployment-log-id #()]
-                                     :dispatch [::set-deployment-log-play? false]))))
-
-
-(reg-event-fx
-  ::get-deployment-log
-  (fn [{{:keys [::spec/deployment-log-id]} :db} _]
-    (when deployment-log-id
-      {::cimi-api-fx/get [deployment-log-id #(dispatch [::set-deployment-log %])]})))
-
-
-(reg-event-fx
-  ::set-deployment-log-service
-  (fn [{{:keys [::spec/deployment-log-id] :as db} :db} [_ service]]
-    (cond-> {:db (assoc db ::spec/deployment-log-service service)}
-            deployment-log-id (assoc :dispatch [::delete-deployment-log]))))
-
-
-(reg-event-fx
-  ::set-deployment-log-since
-  (fn [{{:keys [::spec/deployment-log-id] :as db} :db} [_ since]]
-    (cond-> {:db (assoc db ::spec/deployment-log-since since)}
-            deployment-log-id (assoc :dispatch [::delete-deployment-log]))))
-
-
-(reg-event-fx
-  ::set-deployment-log-play?
-  (fn [{{:keys [::spec/deployment-log-id] :as db} :db} [_ play?]]
-    (cond-> {:db       (assoc db ::spec/deployment-log-play? play?)
-             :dispatch (if play?
-                         (if deployment-log-id
-                           [::fetch-deployment-log]
-                           [::create-log])
-                         [::main-events/action-interval-delete
-                          {:id      :deployment-get-deployment-log}])}
-            (and play?
-                 deployment-log-id)
-            (assoc :dispatch-later
-                   [{:ms       5000
-                     :dispatch [::main-events/action-interval-start
-                                {:id        :deployment-get-deployment-log
-                                 :frequency 10000
-                                 :event     [::get-deployment-log]}]}]))))
 
 ;;
 ;; events used for cimi operations

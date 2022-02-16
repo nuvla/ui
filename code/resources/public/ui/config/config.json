@@ -10,6 +10,19 @@
   "stripe": null,
   "pricing-url": null,
   "nuvla-logo-url": null,
+  "totp-apps": [
+    {
+      "name": "2FAS",
+      "url": "https://2fas.com/"
+    },
+    {
+      "name": "TOTP Authenticator",
+      "url": "https://www.binaryboot.com/totp-authenticator"
+    },
+    {
+      "name": "Google Authenticator"
+    }
+  ],
   "licenses": [
     {
       "license-name": "Apache 2.0",

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Session/Profile - Two factor authentication TOTP method support
+
 ### Changed
 
 - NuvlaBox Cluster - [bug] edge page subscriptions are not refreshed on "

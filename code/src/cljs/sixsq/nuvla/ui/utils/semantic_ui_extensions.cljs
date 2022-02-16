@@ -480,3 +480,33 @@
 
    (when extra [ui/CardContent {:extra true}
                 extra])])
+
+
+(defn TokenSubmiter
+  [_opts]
+  (let [token (r/atom nil)]
+    (fn [{:keys [character-count
+                 on-submit
+                 on-change
+                 regex-characters]
+          :or   {character-count  6
+                 regex-characters #"\d+"
+                 on-submit        #()
+                 on-change        #()}
+          :as   _opts}]
+      [ui/Input
+       {:icon          "key"
+        :icon-position "left"
+        :auto-focus    "on"
+        :auto-complete "off"
+        :value         (or @token "")
+        :on-change     (ui-callback/input-callback
+                         #(do
+                            (on-change %1)
+                            (reset! token
+                                    (-> (re-find regex-characters %1)
+                                        (or "")
+                                        (subs 0 character-count)))
+                            (when (= (count @token) character-count)
+                              (on-submit @token)
+                              (reset! token nil))))}])))

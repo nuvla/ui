@@ -11,7 +11,8 @@
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [wscljs.client :as ws]))
 
 
 (reg-event-db
@@ -300,6 +301,139 @@
                                                              :success
                                                              :error)}]))
                :refresh-interval-ms 5000}])))]}))
+
+
+(reg-event-fx
+  ::start-ssh-session
+  (fn [{{:keys [::spec/nuvlabox]} :db} [_ websocket-token]]
+    {::cimi-api-fx/operation
+     [(:id nuvlabox) "ssh"
+      #(if (instance? js/Error %)
+         (let [{:keys [status message]} (response/parse-ex-info %)]
+           (dispatch [::messages-events/add
+                      {:header  (cond-> (str "error on operation ssh for " (:id nuvlabox))
+                                  status (str " (" status ")"))
+                       :content message
+                       :type    :error}]))
+
+         (do
+           (dispatch [::set-ssh-session-job %])
+           (dispatch [::set-ssh-active false])
+           (dispatch
+             [::wait-ssh-job
+              {:job-id              (:location %)
+               :on-refresh          (fn [{:keys [progress return-code] :as job}]
+                                      (dispatch [::set-ssh-session-job job])
+                                      (when (> (or progress 0) 0)
+                                        (dispatch [::set-ssh-active true])))
+               :on-complete         (fn [{:keys [status-message return-code]}]
+                                      (dispatch [::set-ssh-active false])
+                                      (let [ret-code  (or return-code -1)]
+                                        (dispatch [::messages-events/add
+                                                   {:header  (str "SSH on " (:id nuvlabox)
+                                                               (if (= ret-code 0)
+                                                                 " completed."
+                                                                 (if (= ret-code -1)
+                                                                   " interrupted."
+                                                                   " failed!")))
+                                                    :content status-message
+                                                    :type    (if (<= return-code 0)
+                                                               :success
+                                                               :error)}])))
+               :refresh-interval-ms 5000}
+              (dispatch [::set-ssh-active false])])))
+      {:token websocket-token}]}))
+
+
+(reg-event-fx
+  ::check-ssh-job
+  (fn [_ [_
+          {:keys [progress state] :as job}
+          {:keys [on-complete on-refresh refresh-interval-ms] :as opts}]]
+    (let [job-completed? (= progress 100)
+          state-completed (#{"STOPPED" "FAILED" "SUCCESS"} state)]
+      (if (or job-completed? state-completed)
+        (do (on-complete job)
+            {})
+        (do
+          (on-refresh job)
+          {:dispatch-later [{:ms       refresh-interval-ms
+                             :dispatch [::wait-ssh-job opts]}]})))))
+
+
+(reg-event-fx
+  ::wait-ssh-job
+  (fn [_ [_ {:keys [job-id] :as opts}]]
+      {::cimi-api-fx/get [job-id
+                          #(dispatch [::check-ssh-job % opts])
+                          :on-error #(dispatch [::set-ssh-active false])]}))
+
+
+(reg-event-fx
+  ::stop-ssh-session-job
+  (fn [{{:keys [::spec/ssh-session-job]} :db} [_]]
+    (let [job-id  (:id ssh-session-job)
+          job-state (:state ssh-session-job)]
+      (if (= job-state "RUNNING")
+        {::cimi-api-fx/operation
+         [job-id "stop"
+          #(when (instance? js/Error %)
+             (let [{:keys [status message]} (response/parse-ex-info %)]
+               (dispatch [::messages-events/add
+                          {:header  (cond-> (str "error stoping SSH operation " job-id)
+                                      status (str " (" status ")"))
+                           :content message
+                           :type    :error}])))]}
+
+        {::cimi-api-fx/edit
+         [job-id {:state "STOPPED" :progress 100}
+          #(if (instance? js/Error %)
+             (let [{:keys [status message]} (response/parse-ex-info %)]
+               (dispatch [::messages-events/add
+                          {:header  (cond-> (str "Failed to update SSH job " job-id)
+                                      status (str " (" status ")"))
+                           :content message
+                           :type    :error}]))
+             (do
+               (dispatch [::messages-events/add
+                          {:header  "SSH job interrupted"
+                           :content (str "The SSH job " job-id " was in state " job-state " and was interrupted.")
+                           :type    :info}])
+               (dispatch [::set-ssh-active false])
+               (dispatch [::set-ssh-session-job nil])))]}))))
+
+
+(reg-event-db
+  ::set-ssh-session-job
+  (fn [db [_ job]]
+    (assoc db ::spec/ssh-session-job job)))
+
+
+(reg-event-fx
+  ::open-ssh-socket
+  (fn [_ [_ endpoint handlers]]
+    (let [socket (ws/create endpoint handlers)]
+      (dispatch [::set-ssh-socket socket]))))
+
+
+(reg-event-fx
+  ::close-ssh-socket
+  (fn [{{:keys [::spec/ssh-socket]} :db} [_]]
+    (when (and ssh-socket (not= false ssh-socket))
+      (ws/close ssh-socket))
+    (dispatch [::set-ssh-socket nil])))
+
+
+(reg-event-db
+  ::set-ssh-socket
+  (fn [db [_ socket]]
+    (assoc db ::spec/ssh-socket socket)))
+
+
+(reg-event-db
+  ::set-ssh-active
+  (fn [db [_ is-active?]]
+    (assoc db ::spec/ssh-active is-active?)))
 
 
 (reg-event-db

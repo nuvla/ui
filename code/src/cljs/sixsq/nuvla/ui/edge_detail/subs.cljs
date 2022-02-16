@@ -163,3 +163,21 @@
   ::nuvlabox-current-playbook
   (fn [db]
     (::spec/nuvlabox-current-playbook db)))
+
+
+(reg-sub
+  ::ssh-session-job
+  (fn [db]
+    (::spec/ssh-session-job db)))
+
+
+(reg-sub
+  ::ssh-socket
+  (fn [db]
+    (::spec/ssh-socket db)))
+
+
+(reg-sub
+  ::ssh-active
+  (fn [db]
+    (::spec/ssh-active db)))

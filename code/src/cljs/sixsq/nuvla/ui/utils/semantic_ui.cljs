@@ -24,6 +24,8 @@
     ["react-diff-viewer" :as react-diff-viewer]
     ["react-markdown" :as react-markdown]
     ["semantic-ui-react" :as semantic]
+    ["react-console-emulator" :as terminal]
+    ["@webscopeio/react-console" :as console]
     [reagent.core :as r]))
 
 
@@ -185,6 +187,9 @@
 (def TableHeader (r/adapt-react-class semantic/TableHeader))
 (def TableHeaderCell (r/adapt-react-class semantic/TableHeaderCell))
 (def TableRow (r/adapt-react-class semantic/TableRow))
+
+(def Terminal (r/adapt-react-class terminal/default))
+(def Console (r/adapt-react-class console/default))
 
 (def TextArea (r/adapt-react-class semantic/TextArea))
 

@@ -21,6 +21,9 @@
 (s/def ::nuvlabox-playbooks (s/nilable any?))
 (s/def ::nuvlabox-emergency-playbooks (s/nilable any?))
 (s/def ::nuvlabox-current-playbook (s/nilable any?))
+(s/def ::ssh-active boolean?)
+(s/def ::ssh-session-job (s/nilable any?))
+(s/def ::ssh-socket (s/nilable any?))
 
 
 (s/def ::db (s/keys :req [::nuvlabox
@@ -40,7 +43,10 @@
                           ::nuvlabox-not-found?
                           ::nuvlabox-playbooks
                           ::nuvlabox-emergency-playbooks
-                          ::nuvlabox-current-playbook]))
+                          ::nuvlabox-current-playbook
+                          ::ssh-active
+                          ::ssh-session-job
+                          ::ssh-socket]))
 
 
 (def defaults {::nuvlabox                     nil
@@ -60,4 +66,7 @@
                ::nuvlabox-not-found?          false
                ::nuvlabox-playbooks           nil
                ::nuvlabox-emergency-playbooks nil
-               ::nuvlabox-current-playbook    nil})
+               ::nuvlabox-current-playbook    nil
+               ::ssh-active                   false
+               ::ssh-session-job              nil
+               ::ssh-socket                   nil})

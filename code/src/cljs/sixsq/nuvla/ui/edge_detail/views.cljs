@@ -26,6 +26,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
+    [wscljs.client :as ws]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]))
 
@@ -630,7 +631,7 @@
           [DeleteButton @nuvlabox])
 
         [cimi-detail-views/format-operations @nuvlabox #{"edit" "delete" "activate" "decommission" "generate-new-api-key"
-                                                         "commission" "check-api"}]
+                                                         "commission" "check-api" "ssh"}]
 
         [components/RefreshMenu
          {:action-id  refresh-action-id
@@ -1807,6 +1808,70 @@
                (@tr [:nuvlabox-playbooks-not-selected]))]]]]]))))
 
 
+(defn TabTerminal
+  []
+  (let [ref       (r/atom nil)
+        token     (apply str (take 100 (repeatedly #(char (+ (rand 26) 65)))))
+        socket-err  (r/atom "")
+        handlers  {:on-message (fn [e] (.pushToStdout ^js @ref (.-data e)))
+                   :on-open    #(do
+                                  (reset! socket-err "")
+                                  (js/console.warn "Opening a new connection"))
+                   :on-close   #(js/console.warn "Closing a connection")
+                   :on-error   #(do
+                                  (reset! socket-err "Failed to establish connection. Retrying...")
+                                  (js/console.warn "Failed to establish connection"))}
+        socket-url  (str "ws://localhost:8765/?token=" token)
+        socket    (subscribe [::subs/ssh-socket])
+        ssh-job   (subscribe [::subs/ssh-session-job])
+        ssh-active? (subscribe [::subs/ssh-active])]
+    (dispatch [::events/start-ssh-session token])
+    (fn []
+      (when (and @ssh-active? (or (not @socket) (not-empty @socket-err)))
+        (dispatch [::events/open-ssh-socket socket-url handlers]))
+
+      [ui/Segment {:style {:font-family "Courier New"}}
+       (when (or (not @socket) (not-empty @socket-err))
+         [ui/Dimmer {:active true}
+
+          [ui/Loader {:indeterminate true
+                      :size "large"}
+           (cond-> @socket-err
+             (nil? @ssh-job) (str "Setting up job to start SSH session")
+             (and @ssh-job (not @ssh-active?)) (str "Waiting for NuvlaBox to prepare SSH session")
+             (and @ssh-active? (nil? @socket)) (str "Trying to establish the connection to the NuvlaBox"))]])
+
+       [:div
+        "Type "
+        [ui/Label "help"]
+        " for a description of special commands only available in this console"
+        [ui/Terminal {:ref (fn [el]
+                             (reset! ref el))
+                      :autoFocus true
+                      :disableOnProcess  true
+                      :hidePromptWhenDisabled  true
+                      :promptLabel ">>> "
+                      :commands {}
+                      :errorText " "
+                      :welcomeMessage  "You're now connected to your NuvlaBox \uD83D\uDE80"
+                      :commandCallback (fn []
+                                         (let [cmd (last (.-history (.-state ^js @ref)))]
+                                           (when (nil? (#{"help" "clear" ""} cmd))
+                                             (ws/send @socket cmd))))
+                      ; this should instead take the `full-remaining-height` of the screen
+                      :style {:max-height "400px"}}]]])))
+
+
+(defn TabTerminalWrapper
+  []
+  (r/create-class
+    {:component-will-unmount #(do
+                                (dispatch [::events/set-ssh-active false])
+                                (dispatch [::events/stop-ssh-session-job])
+                                (dispatch [::events/close-ssh-socket]))
+     :reagent-render         TabTerminal}))
+
+
 (defn tabs
   [count-peripherals]
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -1858,6 +1923,10 @@
                  :key     "playbooks"
                  :icon    "book"}
       :render   (fn [] (r/as-element [TabPlaybooks]))}
+     {:menuItem {:content "Terminal"
+                 :key     "terminal"
+                 :icon    "terminal"}
+      :render   (fn [] (r/as-element [TabTerminalWrapper]))}
      (job-views/jobs-section)
      (acl/TabAcls nuvlabox @can-edit? ::events/edit)]))
 

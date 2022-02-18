@@ -326,8 +326,9 @@
                                       (dispatch [::set-ssh-session-job job])
                                       (when (> (or progress 0) 0)
                                         (dispatch [::set-ssh-active true])))
-               :on-complete         (fn [{:keys [status-message return-code]}]
+               :on-complete         (fn [{:keys [status-message return-code] :as job}]
                                       (dispatch [::set-ssh-active false])
+                                      (dispatch [::set-ssh-session-job job])
                                       (let [ret-code  (or return-code -1)]
                                         (dispatch [::messages-events/add
                                                    {:header  (str "SSH on " (:id nuvlabox)

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- NuvlaBox detail - add new tab for SSH console
+
 ## [2.28.0] - 2022-02-04
 
 ### Changed

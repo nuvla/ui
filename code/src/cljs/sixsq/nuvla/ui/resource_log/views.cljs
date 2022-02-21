@@ -1,11 +1,11 @@
-(ns sixsq.nuvla.ui.log-resource.views
+(ns sixsq.nuvla.ui.resource-log.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.log-resource.events :as events]
-    [sixsq.nuvla.ui.log-resource.subs :as subs]
+    [sixsq.nuvla.ui.resource-log.events :as events]
+    [sixsq.nuvla.ui.resource-log.subs :as subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
@@ -18,14 +18,20 @@
         components       (subscribe [::subs/components])
         play?            (subscribe [::subs/play?])]
     (fn [go-live? current-log]
-      [ui/Menu {:size "small", :attached "top"}
+      [ui/Menu {:size      "small"
+                :attached  "top"
+                :stackable true}
        [ui/MenuItem
         {:on-click #(dispatch [::events/set-play? (not @play?)])}
         [ui/Icon {:name (if @play? "pause" "play")}]]
 
        (when (pos? (count @avail-components))
          [ui/Dropdown
-          {:placeholder (if (empty? @components) "All components" "")
+          {:style       (when (seq @components)
+                          {:flex-direction  :column
+                           :justify-content :space-around})
+           :placeholder "All components"
+           :icon        (if (empty? @components) "caret down" nil)
            :item        true
            :multiple    true
            :on-change   (ui-callback/value #(dispatch [::events/set-components %]))

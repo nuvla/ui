@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.log-resource.spec
+(ns sixsq.nuvla.ui.resource-log.spec
   (:require
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.utils.time :as time]))

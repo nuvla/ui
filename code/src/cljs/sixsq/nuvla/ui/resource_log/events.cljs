@@ -1,9 +1,9 @@
-(ns sixsq.nuvla.ui.log-resource.events
+(ns sixsq.nuvla.ui.resource-log.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.log-resource.spec :as spec]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.resource-log.spec :as spec]
     [sixsq.nuvla.ui.utils.time :as time]))
 
 

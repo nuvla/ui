@@ -1,7 +1,7 @@
-(ns sixsq.nuvla.ui.log-resource.subs
+(ns sixsq.nuvla.ui.resource-log.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.log-resource.spec :as spec]))
+    [sixsq.nuvla.ui.resource-log.spec :as spec]))
 
 
 (reg-sub

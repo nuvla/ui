@@ -21,7 +21,7 @@
     [sixsq.nuvla.ui.infrastructures.spec :as infra-service]
     [sixsq.nuvla.ui.intercom.spec :as intercom]
     [sixsq.nuvla.ui.job.spec :as job]
-    [sixsq.nuvla.ui.log-resource.spec :as log-resource]
+    [sixsq.nuvla.ui.resource-log.spec :as resource-log]
     [sixsq.nuvla.ui.main.spec :as main]
     [sixsq.nuvla.ui.messages.spec :as messages]
     [sixsq.nuvla.ui.profile.spec :as profile]
@@ -50,7 +50,7 @@
                      ::profile/db
                      ::session/db
                      ::job/db
-                     ::log-resource/db))
+                     ::resource-log/db))
 
 
 (def default-db
@@ -78,4 +78,4 @@
          profile/defaults
          session/defaults
          job/defaults
-         log-resource/defaults))
+         resource-log/defaults))

@@ -34,9 +34,11 @@
            :icon        (if (empty? @components) "caret down" nil)
            :item        true
            :multiple    true
-           :on-change   (ui-callback/value #(dispatch [::events/set-components %]))
+           :on-change   (ui-callback/value
+                          #(dispatch [::events/set-components %]))
            :options     (map (fn [service]
-                               {:key service, :text service, :value service}) @avail-components)}])
+                               {:key service, :text service, :value service})
+                             @avail-components)}])
 
        [ui/MenuItem
         [:span
@@ -70,7 +72,7 @@
          "Clear"]]])))
 
 
-(defn print-logs
+(defn LogsArea
   [log scroll-info go-live?]
   [:<>
    [ui/Segment {:attached true
@@ -118,17 +120,18 @@
                                      :z-index 0}}
            (if (and @id last-timestamp)
              (if (empty? log-components)
-               (print-logs (:_all-in-one log) scroll-info @go-live?)
-               [ui/Tab {:menu  {:tabular  false
-                                :pointing true
-                                :attached "top"}
-                        :panes (map
-                                 (fn [[component-name component-log]]
-                                   {:menuItem {:content (name component-name)
-                                               :key     (name component-name)}
-                                    :render   (fn []
-                                                (r/as-element
-                                                  (print-logs component-log scroll-info @go-live?)))}) log)}])
+               [LogsArea (:_all-in-one log) scroll-info @go-live?]
+               [ui/Tab
+                {:menu  {:tabular  false
+                         :pointing true
+                         :attached "top"}
+                 :panes (map
+                          (fn [[component-name component-log]]
+                            {:menuItem {:content (name component-name)
+                                        :key     (name component-name)}
+                             :render   #(r/as-element
+                                          [LogsArea component-log
+                                           scroll-info @go-live?])}) log)}])
              [ui/Header {:icon true}
               [ui/Icon {:name "search"}]
               "Get logs"])]]]))))

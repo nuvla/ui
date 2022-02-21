@@ -56,32 +56,54 @@
       {::cimi-api-fx/get [id #(dispatch [::set-resource-log %])]})))
 
 
+(defn join-component-name-to-line
+  [[component-name line]]
+  (str component-name "  | " line))
+
+(defn prepend-component-name
+  [[component lines]]
+  (let [component-name (name component)]
+    (map
+      #(vector component-name %1)
+      lines)))
+
+(defn build-all-in-one-log
+  [new-log]
+  (->> new-log
+       (mapcat prepend-component-name)
+       (sort-by second)
+       (map join-component-name-to-line)
+       (assoc {} :_all-in-one)))
+
+(defn concat-deduplicate-log-lines
+  [new-lines old-lines]
+  (-> (set new-lines)
+      (remove old-lines)
+      (concat new-lines)))
+
+(defn merge-each-component-logs
+  [old-log [component new-lines]]
+  [component (concat-deduplicate-log-lines
+               (or new-lines [])
+               (get old-log component []))])
+
+(defn merge-logs
+  [new-log old-log]
+  (->> new-log
+       (map (partial merge-each-component-logs old-log))
+       (into {})))
+
 (reg-event-fx
   ::set-resource-log
   (fn [{{:keys [::spec/resource-log] :as db} :db} [_ new-resource-log]]
-    (let [new-log          (:log new-resource-log)
-          old-log          (:log resource-log)
-          all-in-one?      (empty? (:components new-resource-log))
-          concatenated-log (if all-in-one?
-                             {:_all-in-one (concat
-                                             (:_all-in-one old-log)
-                                             (map
-                                               (fn [el]
-                                                 (str (name (first el)) "  | " (second el)))
-                                               (sort-by second
-                                                        (mapcat
-                                                          (fn [[k v]]
-                                                            (map
-                                                              (fn [s]
-                                                                [k s]) v)) new-log))))}
-
-                             (into {}
-                                   (map
-                                     (fn [[k v]]
-                                       {k (concat (remove (set (get new-log k [])) (get old-log k [])) v)})
-                                     new-log)))]
+    (let [new-log     (:log new-resource-log)
+          old-log     (:log resource-log)
+          all-in-one? (empty? (:components new-resource-log))
+          merged-logs (-> new-log
+                          (cond-> all-in-one? (build-all-in-one-log))
+                          (merge-logs old-log))]
       {:db       (assoc db ::spec/resource-log
-                           (assoc new-resource-log :log concatenated-log))
+                           (assoc new-resource-log :log merged-logs))
        :dispatch [::fetch]})))
 
 

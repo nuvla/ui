@@ -4,10 +4,14 @@
 
 ### Added
 
+- Main component - ResponsiveMenuBar
 - Session/Profile - Two factor authentication TOTP method support
 
 ### Changed
 
+- Edge detail - Use ResponsiveMenuBar
+- Cimi detail - Use ResponsiveMenuBar
+- Cimi detail - Format operation simplified and transformed in a plain function 
 - NuvlaBox Cluster - [bug] edge page subscriptions are not refreshed on "
   navigate" [#630](https://github.com/nuvla/ui/issues/630)
 - NuvlaBox Cluster - [bug] NB cards view disappears when in cluster

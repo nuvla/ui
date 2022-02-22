@@ -622,20 +622,24 @@
         nuvlabox          (subscribe [::subs/nuvlabox])
         loading?          (subscribe [::subs/loading?])]
     (fn []
-      [components/StickyBar
-       [ui/Menu {:borderless true, :stackable true}
-        (when @can-decommission?
-          [DecommissionButton @nuvlabox])
-        (when @can-delete?
-          [DeleteButton @nuvlabox])
-
-        [cimi-detail-views/format-operations @nuvlabox #{"edit" "delete" "activate" "decommission" "generate-new-api-key"
-                                                         "commission" "check-api"}]
-
-        [components/RefreshMenu
-         {:action-id  refresh-action-id
-          :loading?   @loading?
-          :on-refresh #(refresh uuid)}]]])))
+      (let [MenuItems (cimi-detail-views/format-operations
+                        @nuvlabox
+                        #{"edit" "delete" "activate" "decommission"
+                          "generate-new-api-key" "commission" "check-api"})]
+        [components/StickyBar
+         [components/ResponsiveMenuBar
+          (conj
+            MenuItems
+            (when @can-decommission?
+              ^{:key "decomission-nb"}
+              [DecommissionButton @nuvlabox])
+            (when @can-delete?
+              ^{:key "delete-nb"}
+              [DeleteButton @nuvlabox]))
+          [components/RefreshMenu
+           {:action-id  refresh-action-id
+            :loading?   @loading?
+            :on-refresh #(refresh uuid)}]]]))))
 
 
 (defn get-available-actions

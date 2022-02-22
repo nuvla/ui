@@ -4,7 +4,6 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.apps-store.subs :as apps-store-subs]
     [sixsq.nuvla.ui.credentials.subs :as credentials-subs]
-    [sixsq.nuvla.ui.credentials.views :as credentials-views]
     [sixsq.nuvla.ui.dashboard.events :as events]
     [sixsq.nuvla.ui.dashboard.subs :as subs]
     [sixsq.nuvla.ui.dashboard.utils :as utils]

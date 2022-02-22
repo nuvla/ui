@@ -131,9 +131,9 @@
                    :form-spec         ::credential-change-password
                    :names->validators {:new-password-repeat [password-repeat-check]}}
         form      (fv/init-form form-conf)
-        spec->msg {::current-password   (@tr [:should-not-be-empty])
-                   ::new-password       (@tr [:password-constraint])
-                   :new-password-repeat (@tr [:passwords-doesnt-match])}]
+        spec->msg {::current-password    (@tr [:should-not-be-empty])
+                   ::new-password        (@tr [:password-constraint])
+                   ::new-password-repeat (@tr [:passwords-doesnt-match])}]
     (fn []
       [ui/Modal
        {:size      :tiny
@@ -141,7 +141,7 @@
         :closeIcon true
         :on-close  #(do
                       (dispatch [::events/close-modal])
-                      (reset! form (fv/init-form form-conf)))}
+                      (reset! form @(fv/init-form form-conf)))}
 
        [uix/ModalHeader {:header (@tr [:change-password])}]
 
@@ -361,11 +361,7 @@
         session    (subscribe [::session-subs/session])
         user-id    (:user @session)
         is-group?  (subscribe [::session-subs/active-claim-is-group?])
-        identifier (:identifier @session)
-        ;user       (subscribe [::subs/user])
-        ;acl        (:acl @user)
-        ;ui-acl     (when acl (r/atom (acl-utils/acl->ui-acl-format acl)))
-        ]
+        identifier (:identifier @session)]
     (dispatch [::intercom-events/set-event "nuvla-user-id" user-id])
     [:<>
      [ui/Segment {:padded true, :color "teal"}
@@ -394,11 +390,7 @@
          [ui/GridColumn
           [ui/Header {:as :h3, :icon true, :disabled true, :text-align "center"}
            [ui/Icon {:className "fad fa-sign-in-alt"}]
-           (@tr [:no-session])]]])]
-     ;[ui/Segment {:padded true :color "blue"}
-     ; [ui/Header {:as :h2 :dividing true} (str/capitalize (@tr [:access-rights]))]
-     ; [acl-views/AclWidget {:default-value acl, :read-only false} ui-acl]]
-     ]))
+           (@tr [:no-session])]]])]]))
 
 
 (def Elements (r/adapt-react-class react-stripe/Elements))

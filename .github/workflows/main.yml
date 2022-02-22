@@ -8,6 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting for sonar
+          fetch-depth: 0
 
       - name: Cache local Maven repository
         uses: actions/cache@v2
@@ -36,6 +39,30 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
+
+      - name: Setup Sonar Scanner
+        uses: warchant/setup-sonar-scanner@v3
+        with:
+          version: 4.6.2.2472
+
+      - name: Run Sonar Scanner
+        env:
+          # provide GITHUB_TOKEN to get access to secrets.SONAR_TOKEN
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: code
+        run: sonar-scanner
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
+
+      - name: SonarQube Quality Gate check
+        uses: sonarsource/sonarqube-quality-gate-action@v1.0.0
+        # Force to fail step after specific time
+        timeout-minutes: 5
+        with:
+          scanMetadataReportFile: code/.scannerwork/report-task.txt
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       - uses: s4u/maven-settings-action@v2.2.0
         with:

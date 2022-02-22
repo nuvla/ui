@@ -1,7 +1,9 @@
 (ns sixsq.nuvla.ui.profile.subs
   (:require
     [re-frame.core :refer [reg-sub]]
+    [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.profile.spec :as spec]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
@@ -142,3 +144,43 @@
   ::active-tab-index
   (fn [db]
     (get-in db [::spec/active-tab-index])))
+
+
+(reg-sub
+  ::two-factor-step
+  (fn [db]
+    (::spec/two-factor-step db)))
+
+
+(reg-sub
+  ::two-factor-method
+  (fn [db]
+    (::spec/two-factor-method db)))
+
+
+(reg-sub
+  ::two-factor-secret
+  (fn [db]
+    (::spec/two-factor-secret db)))
+
+
+(reg-sub
+  ::two-factor-qrcode-value
+  :<- [::two-factor-secret]
+  :<- [::session-subs/identifier]
+  (fn [[secret identifier]]
+    (js/encodeURI
+      (str "otpauth://totp/"
+           @cimi-fx/NUVLA_URL
+           ":"
+           identifier
+           "?secret="
+           secret
+           "&issuer=Nuvla"))))
+
+
+(reg-sub
+  ::two-factor-enable?
+  (fn [db]
+    (::spec/two-factor-enable? db)))
+

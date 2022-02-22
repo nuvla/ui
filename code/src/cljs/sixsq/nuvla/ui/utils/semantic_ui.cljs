@@ -18,6 +18,7 @@
     ["codemirror/mode/markdown/markdown"]
     ["codemirror/mode/shell/shell"]
     ["codemirror/mode/yaml/yaml"]
+    ["qrcode.react" :as qrcode]
     ["react-codemirror2" :as code-mirror]
     ["react-copy-to-clipboard" :as copy-to-clipboard]
     ["react-datepicker" :as date-picker]
@@ -218,3 +219,7 @@
 ;;
 (def DiffViewer (r/adapt-react-class react-diff-viewer/default))
 
+;;
+;; QR Code
+;;
+(def QRCode (r/adapt-react-class qrcode))

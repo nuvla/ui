@@ -39,11 +39,12 @@
 
        FormFields
 
-       [ui/Button {:primary  true
-                   :floated  "right"
-                   :loading  @loading?
-                   :on-click submit-fn}
-        submit-text]]
+       (when submit-fn
+         [ui/Button {:primary  true
+                    :floated  "right"
+                    :loading  @loading?
+                    :on-click submit-fn}
+         submit-text])]
 
       (when ExtraContent
         ExtraContent)]]))

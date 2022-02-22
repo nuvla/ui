@@ -5,6 +5,8 @@
 ### Added
 
 - NuvlaBox detail page - add Logs tab
+- Resource log reusable component
+- Session/Profile - Two factor authentication TOTP method support
 
 ### Changed
 

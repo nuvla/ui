@@ -33,6 +33,7 @@
     "leaflet": "^1.7.1",
     "leaflet-draw": "^1.0.4",
     "moment": "^2.29.1",
+    "qrcode.react": "^1.0.1",
     "react": "16.14.0",
     "react-chartjs-2": "2.11.2",
     "react-codemirror2": "^7.2.1",

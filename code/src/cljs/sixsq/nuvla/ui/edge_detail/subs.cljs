@@ -27,6 +27,13 @@
 
 
 (reg-sub
+  ::nuvlabox-components
+  :<- [::nuvlabox-status]
+  (fn [{:keys [components]}]
+    components))
+
+
+(reg-sub
   ::nuvlabox-vulns
   (fn [db]
     (::spec/nuvlabox-vulns db)))

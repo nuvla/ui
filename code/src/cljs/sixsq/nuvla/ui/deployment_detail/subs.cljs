@@ -113,36 +113,6 @@
 
 
 (reg-sub
-  ::deployment-log
-  (fn [db]
-    (::spec/deployment-log db)))
-
-
-(reg-sub
-  ::deployment-log-id
-  (fn [db]
-    (::spec/deployment-log-id db)))
-
-
-(reg-sub
-  ::deployment-log-service
-  (fn [db]
-    (::spec/deployment-log-service db)))
-
-
-(reg-sub
-  ::deployment-log-since
-  (fn [db]
-    (::spec/deployment-log-since db)))
-
-
-(reg-sub
-  ::deployment-log-play?
-  (fn [db]
-    (::spec/deployment-log-play? db)))
-
-
-(reg-sub
   ::module-versions
   (fn [db]
     (let [versions (::spec/module-versions db)]

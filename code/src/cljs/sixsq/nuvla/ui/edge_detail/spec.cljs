@@ -42,7 +42,6 @@
                           ::nuvlabox-emergency-playbooks
                           ::nuvlabox-current-playbook]))
 
-
 (def defaults {::nuvlabox                     nil
                ::nuvlabox-status              nil
                ::nuvlabox-associated-ssh-keys nil

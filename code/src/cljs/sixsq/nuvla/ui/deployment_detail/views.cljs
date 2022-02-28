@@ -11,7 +11,6 @@
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.credentials.utils :as creds-utils]
     [sixsq.nuvla.ui.deployment-detail.events :as events]
-    [sixsq.nuvla.ui.deployment-detail.spec :as spec]
     [sixsq.nuvla.ui.deployment-detail.subs :as subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
@@ -25,6 +24,7 @@
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.resource-log.views :as log-views]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -32,7 +32,6 @@
     [sixsq.nuvla.ui.utils.spec :as spec-utils]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]))
 
 
@@ -346,121 +345,17 @@
                           (or total "-") " " currency]]]]]))})))
 
 
-(defn log-controller
-  [_go-live?]
-  (let [locale        (subscribe [::i18n-subs/locale])
-        services-list (subscribe [::subs/deployment-services-list])
-        since         (subscribe [::subs/deployment-log-since])
-        service       (subscribe [::subs/deployment-log-service])
-        play?         (subscribe [::subs/deployment-log-play?])]
-    (when (= (count @services-list) 1)
-      (dispatch [::events/set-deployment-log-service (first @services-list)]))
-    (fn [go-live?]
-      [ui/Menu {:size "small", :attached "top"}
-
-       [ui/MenuItem
-        {:disabled (not @service)
-         :on-click #(dispatch [::events/set-deployment-log-play? (not @play?)])}
-        [ui/Icon {:name (if @play? "pause" "play")}]]
-
-       (when (> (count @services-list) 1)
-         [ui/Dropdown
-          {:value     @service
-           :text      (if @service @service "Select a service")
-           :item      true
-           :on-change (ui-callback/value #(dispatch [::events/set-deployment-log-service %]))
-           :options   (map (fn [service]
-                             {:key service, :text service, :value service}) @services-list)}])
-       [ui/MenuItem
-        [:span
-         "Since:  "
-         [ui/DatePicker
-          {:custom-input     (r/as-element
-                               [ui/Input {:transparent true
-                                          :style       {:width "17em"}}])
-           :locale           @locale
-           :date-format      "LLL"
-           :show-time-select true
-           :timeIntervals    1
-           :selected         @since
-           :on-change        #(dispatch [::events/set-deployment-log-since %])}]]]
-
-       [ui/MenuMenu {:position "right"}
-
-        [ui/MenuItem
-         {:active   @go-live?
-          :color    (if @go-live? "green" "black")
-          :on-click #(swap! go-live? not)}
-         [ui/IconGroup {:size "large"}
-          [ui/Icon {:name "bars"}]
-          [ui/Icon {:name "chevron circle down", :corner true}]]
-         "Go Live"]
-
-        [ui/MenuItem {:on-click #(dispatch [::events/clear-deployment-log])}
-         [ui/IconGroup {:size "large"}
-          [ui/Icon {:name "bars"}]
-          [ui/Icon {:name "trash", :corner true}]]
-         "Clear"]]])))
-
-
-(defn logs-viewer
-  []
-  (let [deployment-log (subscribe [::subs/deployment-log])
-        id             (subscribe [::subs/deployment-log-id])
-        play?          (subscribe [::subs/deployment-log-play?])
-        go-live?       (r/atom true)
-        scroll-info    (r/atom nil)]
-    (fn []
-      (let [log (:log @deployment-log)]
-        [:div
-         [log-controller go-live?]
-         [:<>
-          ^{:key (str "logger" @go-live?)}
-          [ui/Segment {:attached    "bottom"
-                       :loading     (and (nil? @deployment-log)
-                                         @play?)
-                       :placeholder true
-                       :style       {:padding 0
-                                     :z-index 0
-                                     :height  600}}
-           (if @id
-             [ui/CodeMirror {:value    (str/join "\n" log)
-                             :scroll   {:x (:left @scroll-info)
-                                        :y (if @go-live?
-                                             (.-MAX_VALUE js/Number)
-                                             (:top @scroll-info))}
-                             :onScroll #(reset! scroll-info
-                                                (js->clj %2 :keywordize-keys true))
-                             :options  {:mode     ""
-                                        :readOnly true
-                                        :theme    "logger"}
-                             :class    ["large-height"]}]
-             [ui/Header {:icon true}
-              [ui/Icon {:name "search"}]
-              "Get service logs"]
-             )]
-          [ui/Label (str "line count:")
-           [ui/LabelDetail (count log)]]]]))))
-
-
-(defn logs-viewer-wrapper
-  []
-  (r/create-class
-    {:component-will-unmount #(do
-                                (dispatch [::events/delete-deployment-log])
-                                (dispatch [::events/set-deployment-log-since (spec/default-since)])
-                                (dispatch [::events/set-deployment-log-service nil]))
-     :reagent-render         logs-viewer}))
-
-
 (defn logs-section
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
+  (let [tr            (subscribe [::i18n-subs/tr])
+        deployment    (subscribe [::subs/deployment])]
     {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:logs]))])
                 :key     "logs"
                 :icon    "file code"}
      :render   (fn [] (r/as-element
-                        [logs-viewer-wrapper]))}))
+                        [log-views/TabLogs
+                         (:id @deployment)
+                         #(subscribe [::subs/deployment-services-list])]))}))
 
 
 

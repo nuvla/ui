@@ -191,6 +191,19 @@
         (cond-> acl (assoc-in [:template :acl] acl)))))
 
 
+(defn db->new-api-key
+  [db]
+  (let [name        (get-in db [::spec/credential :name])
+        description (get-in db [::spec/credential :description])
+        subtype     (get-in db [::spec/credential :subtype])
+        acl         (get-in db [::spec/credential :acl])]
+    (-> {}
+        (assoc :name name)
+        (assoc :description description)
+        (assoc-in [:template :href] (str "credential-template/" subtype))
+        (cond-> acl (assoc-in [:template :acl] acl)))))
+
+
 (defn db->new-credential
   [db]
   (let [subtype (get-in db [::spec/credential :subtype])]
@@ -206,6 +219,7 @@
       "infrastructure-service-google" (db->new-google-credential db)
       "infrastructure-service-registry" (db->new-registry-credential db)
       "generate-ssh-key" (db->new-ssh-credential db)
+      "generate-api-key" (db->new-api-key db)
       "gpg-key" (db->new-ssh-credential db))))
 
 

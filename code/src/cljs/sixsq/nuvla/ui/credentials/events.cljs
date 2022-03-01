@@ -105,15 +105,15 @@
     (let [id (:id credential)]
       (if (nil? id)
         (let [new-credential (utils/db->new-credential db)]
-          {:db               db
-           ::cimi-api-fx/add [:credential new-credential
+          {::cimi-api-fx/add [:credential new-credential
                               #(do (dispatch [::cimi-detail-events/get (:resource-id %)])
                                    (dispatch [::close-credential-modal])
                                    (dispatch [::get-credentials])
                                    ;(dispatch [::main-events/check-bootstrap-message])
                                    (when
                                      (contains?
-                                       #{"credential-template/create-credential-vpn-customer"}
+                                       #{"credential-template/create-credential-vpn-customer"
+                                         "credential-template/generate-api-key"}
                                        (get-in new-credential [:template :href]))
                                      (dispatch [::set-generated-credential-modal %]))
                                    (let [{:keys [status message resource-id]} (response/parse %)]
@@ -123,8 +123,7 @@
                                                  :content message
                                                  :type    :success}]))
                                    )]})
-        {:db                db
-         ::cimi-api-fx/edit [id credential
+        {::cimi-api-fx/edit [id credential
                              #(if (instance? js/Error %)
                                 (let [{:keys [status message]} (response/parse-ex-info %)]
                                   (dispatch [::messages-events/add

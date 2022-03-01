@@ -96,6 +96,10 @@
                                               ::parent]))
 
 
+(s/def ::api-key-credential (s/keys :req-un [::name
+                                             ::description]))
+
+
 ; VPN
 
 (s/def ::vpn-credential (s/keys :req-un [::name

@@ -251,6 +251,34 @@
             (partial on-change :parent)]]]]))))
 
 
+(defn credential-api-key
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        is-new?        (subscribe [::subs/is-new?])
+        credential     (subscribe [::subs/credential])
+        validate-form? (subscribe [::subs/validate-form?])
+        on-change      (fn [name-kw value]
+                         (dispatch [::events/update-credential name-kw value])
+                         (dispatch [::events/validate-credential-form ::spec/api-key-credential]))]
+    (fn []
+      (let [editable? (utils-general/editable? @credential @is-new?)
+            {:keys [name description]} @credential]
+
+        [:<>
+         [acl/AclButton {:default-value (:acl @credential)
+                         :read-only     (not editable?)
+                         :on-change     #(dispatch [::events/update-credential :acl %])}]
+
+         [ui/Table style/definition
+          [ui/TableBody
+           [uix/TableRowField (@tr [:name]), :editable? editable?, :required? true,
+            :default-value name, :spec ::spec/name, :on-change (partial on-change :name),
+            :validate-form? @validate-form?]
+           [uix/TableRowField (@tr [:description]), :editable? editable?, :required? true,
+            :default-value description, :spec ::spec/description, :validate-form? @validate-form?,
+            :on-change (partial on-change :description)]]]]))))
+
+
 (defn credential-vpn
   []
   (let [tr                 (subscribe [::i18n-subs/tr])
@@ -466,6 +494,77 @@
           (@tr [:nuvlabox-modal-more-info])]]))))
 
 
+(defn VpnGeneratedCredential
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        generated-cred (subscribe [::subs/generated-credential-modal])
+        cred           (subscribe [::subs/credential])
+        infra-services (subscribe [::subs/infrastructure-services-available])]
+    (fn []
+      (let [infra  (some #(when (= (:parent @cred) (:id %)) %) @infra-services)
+            config (utils/vpn-config (:vpn-ca-certificate infra)
+                                     (:vpn-intermediate-ca infra)
+                                     (:intermediate-ca @generated-cred)
+                                     (:certificate @generated-cred)
+                                     (:private-key @generated-cred)
+                                     (:vpn-shared-key infra)
+                                     (:vpn-common-name-prefix infra)
+                                     (:vpn-endpoints infra))]
+        [:<>
+
+         [ui/Message {:warning true}
+          [ui/MessageHeader (@tr [:warning])]
+          [ui/MessageContent
+           [:div
+            (@tr [:credential-please-save-this-file])
+            [:br]
+            " "
+            (@tr [:credential-go-to])
+            " "
+            [:a {:href "https://docs.nuvla.io/nuvla/vpn", :target "_blank"} (@tr [:documentation])]
+            " "
+            (@tr [:credential-for-details-vpn])]]]
+
+         [ui/CardGroup {:centered true}
+
+          [ui/Card
+           {:href     (str "data:text/plain;charset=utf-8," (js/encodeURIComponent config))
+            :download (str "vpn client " (:name @cred) ".conf")
+            :disabled (not config)}
+           [ui/CardContent {:text-align :center}
+            [ui/Header (@tr [:credential-save])]
+            [ui/Icon {:name "file text"
+                      :size :massive}]]]]]))))
+
+
+(defn ApiKeyGeneratedCredential
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        generated-cred (subscribe [::subs/generated-credential-modal])]
+    (fn []
+      [:b "AAA"]
+      #_[ui/Table
+       [ui/TableHeader
+        [ui/TableHeaderCell "name"]
+        [ui/TableHeaderCell "value"]]
+       [ui/TableBody
+        [ui/TableRow
+         [ui/TableCell {:style {:max-width     "150px"
+                                :overflow      "hidden"
+                                :text-overflow "ellipsis"}}
+          "helo3"
+          [ui/Popup {:trigger  (r/as-element [ui/CopyToClipboard {:text "aaa"}
+                                              [uix/LinkIcon {:name "clipboard outline"}]])
+                     :position "top center"}
+           "copy to clipboard"]
+
+          ]]]
+
+
+
+       ])))
+
+
 (defn save-callback
   [form-validation-spec]
   (dispatch-sync [::events/set-validate-form? true])
@@ -532,9 +631,13 @@
 
 
 (def api-key-validation-map
-  {"api-key"
-   {:validation-spec ::spec/registry-credential
-    :modal-content   credential-registy}})
+  {"generate-api-key"
+   {:validation-spec      ::spec/api-key-credential
+    :modal-content        credential-api-key
+    :generated-content ApiKeyGeneratedCredential}
+   "api-key"
+   {:validation-spec ::spec/api-key-credential
+    :modal-content   credential-api-key}})
 
 
 (def api-key-subtypes
@@ -543,8 +646,9 @@
 
 (def infrastructure-service-access-keys-validation-map
   {"infrastructure-service-vpn"
-   {:validation-spec ::spec/vpn-credential
-    :modal-content   credential-vpn}
+   {:validation-spec   ::spec/vpn-credential
+    :modal-content     credential-vpn
+    :generated-content VpnGeneratedCredential}
    "gpg-key"
    {:validation-spec ::spec/gpg-credential
     :modal-content   credential-gpg}
@@ -796,6 +900,19 @@
                         (dispatch [::events/form-valid])
                         (dispatch [::events/close-add-credential-modal])
                         (dispatch [::events/open-credential-modal
+                                   {:subtype "generate-api-key"} true]))}
+          [ui/CardContent {:text-align :center}
+           [ui/Header "Api Key"]
+           [:div]
+           [ui/Image {:src   "/ui/images/nuvla_logo_red_on_transparent_1000px.png"
+                      :style {:max-width 120}}]]]
+
+         [ui/Card
+          {:on-click #(do
+                        (dispatch [::events/set-validate-form? false])
+                        (dispatch [::events/form-valid])
+                        (dispatch [::events/close-add-credential-modal])
+                        (dispatch [::events/open-credential-modal
                                    {:subtype "infrastructure-service-exoscale"} true]))}
           [ui/CardContent {:text-align :center}
            [ui/Header "Cloud Exoscale"]
@@ -856,18 +973,11 @@
   []
   (let [tr             (subscribe [::i18n-subs/tr])
         generated-cred (subscribe [::subs/generated-credential-modal])
-        cred           (subscribe [::subs/credential])
-        infra-services (subscribe [::subs/infrastructure-services-available])]
+        cred           (subscribe [::subs/credential])]
     (fn []
-      (let [infra  (some #(when (= (:parent @cred) (:id %)) %) @infra-services)
-            config (utils/vpn-config (:vpn-ca-certificate infra)
-                                     (:vpn-intermediate-ca infra)
-                                     (:intermediate-ca @generated-cred)
-                                     (:certificate @generated-cred)
-                                     (:private-key @generated-cred)
-                                     (:vpn-shared-key infra)
-                                     (:vpn-common-name-prefix infra)
-                                     (:vpn-endpoints infra))]
+      (let [subtype       (:subtype @cred "")
+            item          (get infrastructure-service-validation-map subtype)
+            modal-content (:generated-content item)]
         [ui/Modal {:open       (boolean @generated-cred)
                    :close-icon true
                    :on-close   #(dispatch [::events/set-generated-credential-modal nil])}
@@ -875,30 +985,9 @@
          [uix/ModalHeader {:header (@tr [:credential-generate])}]
 
          [ui/ModalContent {:scrolling false}
-
-          [ui/Message {:warning true}
-           [ui/MessageHeader (@tr [:warning])]
-           [ui/MessageContent
-            [:div
-             (@tr [:credential-please-save-this-file])
-             [:br]
-             " "
-             (@tr [:credential-go-to])
-             " "
-             [:a {:href "https://docs.nuvla.io/nuvla/vpn", :target "_blank"} (@tr [:documentation])]
-             " "
-             (@tr [:credential-for-details-vpn])]]]
-
-          [ui/CardGroup {:centered true}
-
-           [ui/Card
-            {:href     (str "data:text/plain;charset=utf-8," (js/encodeURIComponent config))
-             :download (str "vpn client " (:name @cred) ".conf")
-             :disabled (not config)}
-            [ui/CardContent {:text-align :center}
-             [ui/Header (@tr [:credential-save])]
-             [ui/Icon {:name "file text"
-                       :size :massive}]]]]]]))))
+          (js/console.error subtype modal-content)
+          (when modal-content
+            [modal-content])]]))))
 
 
 (defn MenuBar []

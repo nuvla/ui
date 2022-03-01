@@ -50,8 +50,10 @@
         nuvlabox-cluster (subscribe [::subs/nuvlabox-cluster])
         name             (:name @nuvlabox-cluster)
         cluster-id       (:cluster-id @nuvlabox-cluster)
-        all-nodes        (+ (count (:managers @nuvlabox-cluster)) (count (:workers @nuvlabox-cluster)))
-        nuvlabox-nodes   (+ (count (:nuvlabox-managers @nuvlabox-cluster)) (count (:nuvlabox-workers @nuvlabox-cluster)))]
+        all-nodes        (+ (count (:managers @nuvlabox-cluster))
+                            (count (:workers @nuvlabox-cluster)))
+        nuvlabox-nodes   (+ (count (:nuvlabox-managers @nuvlabox-cluster))
+                            (count (:nuvlabox-workers @nuvlabox-cluster)))]
     [ui/Header {:as        "h3"
                 :float     "left"
                 :icon      (r/as-element [uix/Icon {:name "fas fa-chart-network"}])
@@ -156,7 +158,7 @@
   []
   (let [tr      (subscribe [::i18n-subs/tr])
         cluster (subscribe [::subs/nuvlabox-cluster])
-        {:keys [id name description owners tags created updated version orchestrator]} @cluster]
+        {:keys [id name description owners tags created updated version orchestrator status-notes]} @cluster]
     [:<>
      [ui/Segment {:secondary true
                   :color     "blue"
@@ -198,7 +200,17 @@
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:tags]))]
            [ui/TableCell
-            [uix/Tags tags]]])]]]
+            [uix/Tags tags]]])]
+       (when (not-empty status-notes)
+         [ui/TableFooter
+          [ui/TableRow
+           [ui/TableCell {:colspan 2}
+            [ui/Message {:color "brown"
+                         :size  "tiny"}
+             [ui/MessageHeader
+              [ui/Icon {:name "sticky note"}]
+              "Notes"]
+             [ui/MessageList {:items status-notes}]]]]])]]
      [ui/Segment
       (case @view-type
         :cards [NuvlaboxCards]
@@ -259,7 +271,8 @@
          ::subs/nuvlabox-not-found?
          :no-nuvlabox-cluster-message-header
          :no-nuvlabox-cluster-message-content]
-        [uix/PageHeader "fas fa-chart-network" (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
-                                                    (:name @cluster))]
+        [uix/PageHeader "fas fa-chart-network"
+         (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
+              (:name @cluster))]
         [MenuBar cluster-id]
         [TabsCluster]]])))

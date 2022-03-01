@@ -35,15 +35,16 @@
                       :size      "tiny"
                       :onDismiss #(dispatch [::events/set-success-message nil])}
           [ui/MessageHeader [uix/TR :success str/capitalize]]
-          [:p [uix/TR @success-message ]]])
+          [:p [uix/TR @success-message]]])
 
        FormFields
 
-       [ui/Button {:primary  true
-                   :floated  "right"
-                   :loading  @loading?
-                   :on-click submit-fn}
-        submit-text]]
+       (when submit-fn
+         [ui/Button {:primary  true
+                    :floated  "right"
+                    :loading  @loading?
+                    :on-click submit-fn}
+         submit-text])]
 
       (when ExtraContent
         ExtraContent)]]))

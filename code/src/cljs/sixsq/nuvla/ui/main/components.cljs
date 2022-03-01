@@ -81,6 +81,24 @@
    Menu])
 
 
+(defn ResponsiveMenuBar
+  [Children & [Refresh]]
+  (let [mobile?            (subscribe [::subs/is-mobile-device?])
+        n                  (if @mobile? 0 2)
+        Children           (remove nil? Children)
+        ChildrenFirstPart  (take n Children)
+        ChildrenSecondPart (drop n Children)]
+    [ui/Menu {:borderless true}
+     (when (seq ChildrenFirstPart)
+       ChildrenFirstPart)
+     (when (seq ChildrenSecondPart)
+       [ui/Dropdown {:item true
+                     :icon "ellipsis horizontal"}
+        [ui/DropdownMenu
+         ChildrenSecondPart]])
+     Refresh]))
+
+
 (defn ErrorJobsMessage
   [_job-subs _set-active-tab-index-event _job-tab-index]
   (let [tr                (subscribe [::i18n-subs/tr])

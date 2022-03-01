@@ -4,6 +4,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.apps.utils :as application-utils]
+    [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.data-set.events :as events]
     [sixsq.nuvla.ui.data-set.subs :as subs]
     [sixsq.nuvla.ui.data-set.utils :as utils]
@@ -197,7 +198,7 @@
                 ^{:key (random-uuid)}
                 [map/Polygon {:positions (:lat-lngs @map-selection)}])]
              ]]]]
-         :label "Map Filter"
+         :label [uix/TR :select-on-map]
          :title-size :h5
          :default-open false]
         ))))
@@ -436,7 +437,7 @@
   [{:keys [id name description timestamp _bucket tags _data-object infrastructure-service object] :as data-record}]
   (let [tr                        (subscribe [::i18n-subs/tr])
         data-objects              (subscribe [::subs/data-objects])
-        nuvla-api                 (subscribe [::main-subs/nuvla-api])
+        base-uri                  (subscribe [::cimi-subs/base-uri])
         data-records-set          (subscribe [::subs/selected-data-record-ids])
         data-object-id            (:resource:object data-record)
         data-object               (get @data-objects data-object-id)
@@ -459,7 +460,8 @@
                     (when infrastructure-service-id
                       [:div {:style {:padding "10px 0 0 0"}}
                        [ui/Icon {:name "cloud"}]
-                       [values/as-link infrastructure-service-id :page "infrastructures" :label (@tr [:storage-service])]])]
+                       [values/as-link infrastructure-service-id
+                        :page "infrastructures" :label (@tr [:storage-service])]])]
       :tags        tags
       :on-select   #(dispatch [::events/toggle-data-record-id id])
       :selected?   selected?
@@ -467,10 +469,11 @@
                      [ui/Button {:color  "green"
                                  :target "_blank"
                                  :rel    "noreferrer"}
-                      [:a {:href     (str @nuvla-api "/" data-object-id "/download")
+                      [:a {:href     (str @base-uri data-object-id "/download")
                            :target   "_blank"
                            :style    {:color "white"}
-                           :download (when filename filename)} [ui/Icon {:name "cloud download"}] " " (@tr [:download])]])}]))
+                           :download (when filename filename)}
+                       [ui/Icon {:name "cloud download"}] " " (@tr [:download])]])}]))
 
 
 (defn cards-per-device

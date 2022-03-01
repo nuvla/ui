@@ -206,7 +206,7 @@
 (defn DocumentationButton
   []
   (let [tr                 (subscribe [::i18n-subs/tr])
-        mobile?            (subscribe [::main-subs/is-device? :mobile])
+        mobile?            (subscribe [::main-subs/is-mobile-device?])
         documentation-page (subscribe [::main-subs/page-info "documentation"])
         on-button          (r/atom false)]
     (fn []
@@ -222,7 +222,8 @@
           :on-mouse-enter #(reset! on-button true)
           :on-mouse-leave #(reset! on-button false)
           :on-click       #(when @on-button
-                             (dispatch [::history-events/navigate (:url @documentation-page)]))}
+                             (dispatch [::history-events/navigate
+                                        (:url @documentation-page)]))}
          (not @mobile?) (assoc :floated "right"))])))
 
 

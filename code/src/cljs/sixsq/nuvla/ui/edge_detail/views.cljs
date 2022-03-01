@@ -18,6 +18,7 @@
     [sixsq.nuvla.ui.job.views :as job-views]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.resource-log.views :as log-views]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -622,20 +623,24 @@
         nuvlabox          (subscribe [::subs/nuvlabox])
         loading?          (subscribe [::subs/loading?])]
     (fn []
-      [components/StickyBar
-       [ui/Menu {:borderless true, :stackable true}
-        (when @can-decommission?
-          [DecommissionButton @nuvlabox])
-        (when @can-delete?
-          [DeleteButton @nuvlabox])
-
-        [cimi-detail-views/format-operations @nuvlabox #{"edit" "delete" "activate" "decommission"
-                                                         "commission" "check-api"}]
-
-        [components/RefreshMenu
-         {:action-id  refresh-action-id
-          :loading?   @loading?
-          :on-refresh #(refresh uuid)}]]])))
+      (let [MenuItems (cimi-detail-views/format-operations
+                        @nuvlabox
+                        #{"edit" "delete" "activate" "decommission"
+                          "generate-new-api-key" "commission" "check-api"})]
+        [components/StickyBar
+         [components/ResponsiveMenuBar
+          (conj
+            MenuItems
+            (when @can-decommission?
+              ^{:key "decomission-nb"}
+              [DecommissionButton @nuvlabox])
+            (when @can-delete?
+              ^{:key "delete-nb"}
+              [DeleteButton @nuvlabox]))
+          [components/RefreshMenu
+           {:action-id  refresh-action-id
+            :loading?   @loading?
+            :on-refresh #(refresh uuid)}]]]))))
 
 
 (defn get-available-actions
@@ -1809,9 +1814,9 @@
 
 (defn tabs
   [count-peripherals]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        nuvlabox  (subscribe [::subs/nuvlabox])
-        can-edit? (subscribe [::subs/can-edit?])]
+  (let [tr              (subscribe [::i18n-subs/tr])
+        nuvlabox        (subscribe [::subs/nuvlabox])
+        can-edit?       (subscribe [::subs/can-edit?])]
     [{:menuItem {:content "Overview"
                  :key     "overview"
                  :icon    "info"}
@@ -1833,6 +1838,12 @@
                  :key     "res-cons"
                  :icon    "thermometer half"}
       :render   (fn [] (r/as-element [TabLoad]))}
+     {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:logs]))])
+                 :key     "logs"
+                 :icon    "file code"}
+      :render   (fn [] (r/as-element [log-views/TabLogs
+                                      (:id @nuvlabox)
+                                      #(subscribe [::subs/nuvlabox-components])]))}
      {:menuItem {:content (r/as-element [:span "Peripherals"
                                          [ui/Label {:circular true
                                                     :size     "mini"

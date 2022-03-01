@@ -25,6 +25,10 @@
     background-color: rgba(255, 255, 255, 0.65);
 }
 
+.nuvla-close-menu-item {
+    padding: 5px !important;
+}
+
 /*
   Allows the container to scroll with overview in the x-direction.  Usually
   put on a Container to take advantage of the automatic width calculation of

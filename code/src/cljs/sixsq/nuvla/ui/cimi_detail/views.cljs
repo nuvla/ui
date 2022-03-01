@@ -10,7 +10,7 @@
     [sixsq.nuvla.ui.cimi.events :as cimi-events]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as main-components]
+    [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.collapsible-card :as cc]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -41,10 +41,10 @@
 
 
 (defn action-button-icon
-  [_menu-item-label _button-confirm-label _icon _title-text _body _on-confirm _on-cancel & [_scrolling? _position]]
+  [_menu-item-label _button-confirm-label _icon _title-text _body _on-confirm _on-cancel & [_scrolling?]]
   (let [tr    (subscribe [::i18n-subs/tr])
         show? (r/atom false)]
-    (fn [menu-item-label button-confirm-label icon title-text body on-confirm on-cancel & [scrolling? position]]
+    (fn [menu-item-label button-confirm-label icon title-text body on-confirm on-cancel & [scrolling?]]
       (let [action-fn (fn []
                         (reset! show? false)
                         (on-confirm))
@@ -57,10 +57,9 @@
           :close-icon true
           :on-close   #(reset! show? false)
           :trigger    (r/as-element
-                        [ui/MenuItem (cond-> {:aria-label menu-item-label
-                                              :name       menu-item-label
-                                              :on-click   #(reset! show? true)}
-                                             position (assoc :position position))
+                        [ui/MenuItem {:aria-label menu-item-label
+                                      :name       menu-item-label
+                                      :on-click   #(reset! show? true)}
                          (when icon
                            [ui/Icon {:name icon}])
                          (str/capitalize menu-item-label)])}
@@ -111,7 +110,7 @@
 
 (defmulti other-button
           (fn [{:keys [resource-type] :as _resource} operation]
-                         [resource-type operation]))
+            [resource-type operation]))
 
 
 (defmethod other-button :default
@@ -151,23 +150,22 @@
 ;; errors for duplicate keys, which may happen when the data contains :key.
 ;; It is probably a bad idea to have a first argument that can be a map
 ;; as this will be confused with reagent options.
-(defn operation-button [{:keys [id] :as data} operation]
-  (case operation
-    "edit" ^{:key "edit"} [edit-button data #(dispatch [::events/edit id %])]
-    "delete" ^{:key "delete"} [delete-button data #(dispatch [::events/delete id])]
-    ^{:key operation} [other-button data operation]))
-
-
-(defn format-operations [{:keys [id resource-type operations] :as data} remove-fn]
-  (let [ops               (map #(general-utils/operation-name (:rel %)) operations)
-        resource-metadata (subscribe [::cimi-subs/resource-metadata resource-type])]
+(defn operation-button [{:keys [id resource-type] :as data} operation]
+  (let [resource-metadata (subscribe [::cimi-subs/resource-metadata resource-type])]
     (when (and resource-type (nil? @resource-metadata))
       (dispatch [::cimi-events/get-resource-metadata resource-type]))
-    [:<>
-     (for [op (cond->> ops
-                       remove-fn (remove remove-fn))]
-       ^{:key (str id "_" op)}
-       [operation-button data op])]))
+    (case operation
+      "edit" ^{:key "edit"} [edit-button data #(dispatch [::events/edit id %])]
+      "delete" ^{:key "delete"} [delete-button data #(dispatch [::events/delete id])]
+      ^{:key operation} [other-button data operation])))
+
+
+(defn format-operations [{:keys [id operations] :as data} & [remove-fn]]
+  (let [ops (map #(general-utils/operation-name (:rel %)) operations)]
+    (for [op (cond->> ops
+                      remove-fn (remove remove-fn))]
+      ^{:key (str id "_" op)}
+      [operation-button data op])))
 
 
 (defn metadata-row
@@ -228,10 +226,11 @@
 
 
 (defn detail-menu
-  [refresh-button data]
-  [ui/Menu {:borderless true}
-   [format-operations data]
-   refresh-button])
+  [RefreshButton data]
+  (let [MenuItems (format-operations data)]
+    [components/ResponsiveMenuBar
+     MenuItems
+     RefreshButton]))
 
 
 (defn resource-detail
@@ -269,7 +268,7 @@
                                                             resource-id
                                                             (assoc resource-value :acl %)])}])
          [resource-detail
-          [main-components/RefreshMenu
+          [components/RefreshMenu
            {:on-refresh #(dispatch [::events/get resource-id])
             :loading?   @loading?}]
           (when (and (not @loading?) correct-resource?) @resource)]]))))

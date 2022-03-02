@@ -153,7 +153,10 @@
 
            (when @key-data
              [ui/FormField
-              [:a {:href     (str "data:text/plain;charset=utf-8,"
+              [uix/DownloadFile {:name     "Private-key"
+                                 :value    @key-data
+                                 :filename "ssh_private.key"}]
+              #_[:a {:href     (str "data:text/plain;charset=utf-8,"
                                   (js/encodeURIComponent @key-data))
                    :target   "_blank"
                    :download "ssh_private.key"}
@@ -167,7 +170,6 @@
           [uix/Button
            {:text     (if @key-data (@tr [:close]) button-text)
             :primary  true
-            :disabled (nil? credential)
             :loading  (true? @loading?)
             :on-click (if @key-data close-fn on-click-fn)}]]]))))
 
@@ -1814,9 +1816,9 @@
 
 (defn tabs
   [count-peripherals]
-  (let [tr              (subscribe [::i18n-subs/tr])
-        nuvlabox        (subscribe [::subs/nuvlabox])
-        can-edit?       (subscribe [::subs/can-edit?])]
+  (let [tr        (subscribe [::i18n-subs/tr])
+        nuvlabox  (subscribe [::subs/nuvlabox])
+        can-edit? (subscribe [::subs/can-edit?])]
     [{:menuItem {:content "Overview"
                  :key     "overview"
                  :icon    "info"}

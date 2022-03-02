@@ -542,27 +542,35 @@
   (let [tr             (subscribe [::i18n-subs/tr])
         generated-cred (subscribe [::subs/generated-credential-modal])]
     (fn []
-      [:b "AAA"]
-      #_[ui/Table
-       [ui/TableHeader
-        [ui/TableHeaderCell "name"]
-        [ui/TableHeaderCell "value"]]
-       [ui/TableBody
-        [ui/TableRow
-         [ui/TableCell {:style {:max-width     "150px"
-                                :overflow      "hidden"
-                                :text-overflow "ellipsis"}}
-          "helo3"
-          [ui/Popup {:trigger  (r/as-element [ui/CopyToClipboard {:text "aaa"}
-                                              [uix/LinkIcon {:name "clipboard outline"}]])
-                     :position "top center"}
-           "copy to clipboard"]
-
-          ]]]
+      (let [secret-key (:secret-key @generated-cred)]
+        [:<>
+         [uix/Message
+          {:header  "Api key successfully generated"
+           :content "This secret will be dislayed only once. Please store it in a safe place."
+           :icon    "circle check outline"
+           :type    :success}]
+         [uix/CopyToClipboard {:name "Api-key"
+                               :value secret-key}]]))))
 
 
-
-       ])))
+(defn SshGeneratedCredential
+  []
+  (let [tr             (subscribe [::i18n-subs/tr])
+        generated-cred (subscribe [::subs/generated-credential-modal])]
+    (fn []
+      (let [{:keys [private-key public-key]} @generated-cred]
+        [:<>
+         [uix/Message
+          {:header  "SSH key successfully generated"
+           :content "This secret will be dislayed only once. Please store it in a safe place."
+           :icon    "circle check outline"
+           :type    :success}]
+         [uix/CopyToClipboard {:name  "Public-key"
+                               :value public-key}]
+         [uix/DownloadFile {:name     "Private-key"
+                            :value    private-key
+                            :filename "ssh_private.key"}]
+         ]))))
 
 
 (defn save-callback
@@ -632,9 +640,9 @@
 
 (def api-key-validation-map
   {"generate-api-key"
-   {:validation-spec      ::spec/api-key-credential
-    :modal-content        credential-api-key
-    :generated-content ApiKeyGeneratedCredential}
+   {:validation-spec ::spec/api-key-credential
+    :modal-content   credential-api-key
+    :modal-generated ApiKeyGeneratedCredential}
    "api-key"
    {:validation-spec ::spec/api-key-credential
     :modal-content   credential-api-key}})
@@ -646,9 +654,9 @@
 
 (def infrastructure-service-access-keys-validation-map
   {"infrastructure-service-vpn"
-   {:validation-spec   ::spec/vpn-credential
-    :modal-content     credential-vpn
-    :generated-content VpnGeneratedCredential}
+   {:validation-spec ::spec/vpn-credential
+    :modal-content   credential-vpn
+    :modal-generated VpnGeneratedCredential}
    "gpg-key"
    {:validation-spec ::spec/gpg-credential
     :modal-content   credential-gpg}
@@ -657,7 +665,8 @@
     :modal-content   credential-ssh}
    "generate-ssh-key"
    {:validation-spec ::spec/ssh-credential
-    :modal-content   credential-ssh}})
+    :modal-content   credential-ssh
+    :modal-generated SshGeneratedCredential}})
 
 
 (def access-keys-subtypes
@@ -697,8 +706,9 @@
     "infrastructure-service-openstack" {:tab-index (:cloud-services tab-indices), :icon "cloud", :name "OpenStack"}
     "infrastructure-service-vpn" {:tab-index (:access-services tab-indices), :icon "key", :name "VPN"}
     "gpg-key" {:tab-index (:access-services tab-indices), :icon "key", :name "GPG keys"}
-    "ssh-key" {:tab-index (:access-services tab-indices), :icon "key", :name "SSH keys"}
     "api-key" {:tab-index (:api-keys tab-indices), :icon "key", :name "API keys"}
+    "generate-api-key" {:tab-index (:api-keys tab-indices), :icon "key", :name "API keys"}
+    "ssh-key" {:tab-index (:access-services tab-indices), :icon "key", :name "SSH keys"}
     "generate-ssh-key" {:tab-index (:access-services tab-indices), :icon "key", :name "SSH keys"}
     {:tab-index 0, :icon "cloud", :name ""}))
 
@@ -902,7 +912,7 @@
                         (dispatch [::events/open-credential-modal
                                    {:subtype "generate-api-key"} true]))}
           [ui/CardContent {:text-align :center}
-           [ui/Header "Api Key"]
+           [ui/Header "Api-Key"]
            [:div]
            [ui/Image {:src   "/ui/images/nuvla_logo_red_on_transparent_1000px.png"
                       :style {:max-width 120}}]]]
@@ -977,7 +987,7 @@
     (fn []
       (let [subtype       (:subtype @cred "")
             item          (get infrastructure-service-validation-map subtype)
-            modal-content (:generated-content item)]
+            modal-content (:modal-generated item)]
         [ui/Modal {:open       (boolean @generated-cred)
                    :close-icon true
                    :on-close   #(dispatch [::events/set-generated-credential-modal nil])}
@@ -985,7 +995,6 @@
          [uix/ModalHeader {:header (@tr [:credential-generate])}]
 
          [ui/ModalContent {:scrolling false}
-          (js/console.error subtype modal-content)
           (when modal-content
             [modal-content])]]))))
 

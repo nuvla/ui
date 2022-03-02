@@ -7,21 +7,21 @@
 
 (defn db->new-coe-credential
   [db]
-  (let [name        (get-in db [::spec/credential :name])
-        description (get-in db [::spec/credential :description])
-        parent      (get-in db [::spec/credential :parent])
+  (let [name          (get-in db [::spec/credential :name])
+        description   (get-in db [::spec/credential :description])
+        parent        (get-in db [::spec/credential :parent])
 
         ;; subtype of the credential has to match the subtype for the infra-service
         infra-subtype (->> (::spec/infrastructure-services-available db)
                            (filter #(= (:id %) parent))
                            first
                            :subtype)
-        subtype (str "infrastructure-service-" infra-subtype)
+        subtype       (str "infrastructure-service-" infra-subtype)
 
-        ca          (get-in db [::spec/credential :ca])
-        cert        (get-in db [::spec/credential :cert])
-        key         (get-in db [::spec/credential :key])
-        acl         (get-in db [::spec/credential :acl])]
+        ca            (get-in db [::spec/credential :ca])
+        cert          (get-in db [::spec/credential :cert])
+        key           (get-in db [::spec/credential :key])
+        acl           (get-in db [::spec/credential :acl])]
     (-> {}
         (assoc :name name)
         (assoc :description description)
@@ -126,12 +126,12 @@
         key         (get-in db [::spec/credential :openstack-username])
         acl         (get-in db [::spec/credential :acl])]
     (-> {}
-      (assoc :name name)
-      (assoc :description description)
-      (assoc-in [:template :href] (str "credential-template/store-" subtype))
-      (assoc-in [:template :openstack-username] key)
-      (assoc-in [:template :openstack-password] secret)
-      (cond-> acl (assoc-in [:template :acl] acl)))))
+        (assoc :name name)
+        (assoc :description description)
+        (assoc-in [:template :href] (str "credential-template/store-" subtype))
+        (assoc-in [:template :openstack-username] key)
+        (assoc-in [:template :openstack-password] secret)
+        (cond-> acl (assoc-in [:template :acl] acl)))))
 
 
 (defn db->new-amazonec2-credential
@@ -289,6 +289,18 @@
       (credential-can-op-check? credential)
       (or (not (credential-status-valid credential))
           (credential-is-outdated? credential delta-minutes)))))
+
+
+(defn show-generated-cred-modal?
+  [{{:keys [href private-key]} :template :as _new-credential}]
+  (js/console.error _new-credential)
+  (or
+    (contains?
+      #{"credential-template/create-credential-vpn-customer"
+        "credential-template/generate-api-key"}
+      href)
+    (and (= href "credential-template/generate-ssh-key")
+         (nil? private-key))))
 
 
 (defn credential-check-status

@@ -101,7 +101,7 @@
 
 (reg-event-fx
   ::edit-credential
-  (fn [{{:keys [::spec/credential] :as db} :db} [_]]
+  (fn [{{:keys [::spec/credential] :as db} :db}]
     (let [id (:id credential)]
       (if (nil? id)
         (let [new-credential (utils/db->new-credential db)]
@@ -110,11 +110,7 @@
                                    (dispatch [::close-credential-modal])
                                    (dispatch [::get-credentials])
                                    ;(dispatch [::main-events/check-bootstrap-message])
-                                   (when
-                                     (contains?
-                                       #{"credential-template/create-credential-vpn-customer"
-                                         "credential-template/generate-api-key"}
-                                       (get-in new-credential [:template :href]))
+                                   (when (utils/show-generated-cred-modal? new-credential)
                                      (dispatch [::set-generated-credential-modal %]))
                                    (let [{:keys [status message resource-id]} (response/parse %)]
                                      (dispatch [::messages-events/add

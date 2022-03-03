@@ -537,40 +537,41 @@
                       :size :massive}]]]]]))))
 
 
+(defn MessageKeyGenerated
+  [header-key]
+  [uix/Message
+   {:header  [uix/TR header-key]
+    :content [uix/TR :warning-secret-displayed-once]
+    :icon    "circle check outline"
+    :type    :success}])
+
+
 (defn ApiKeyGeneratedCredential
   []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        generated-cred (subscribe [::subs/generated-credential-modal])]
+  (let [generated-cred (subscribe [::subs/generated-credential-modal])]
     (fn []
       (let [secret-key (:secret-key @generated-cred)]
         [:<>
-         [uix/Message
-          {:header  "Api key successfully generated"
-           :content "This secret will be dislayed only once. Please store it in a safe place."
-           :icon    "circle check outline"
-           :type    :success}]
-         [uix/CopyToClipboard {:name "Api-key"
-                               :value secret-key}]]))))
+         [MessageKeyGenerated :api-key-generated]
+         [uix/CopyToClipboardDownload {:name  "Api-key"
+                                       :value secret-key}]]))))
 
 
 (defn SshGeneratedCredential
   []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        generated-cred (subscribe [::subs/generated-credential-modal])]
+  (let [generated-cred (subscribe [::subs/generated-credential-modal])]
     (fn []
       (let [{:keys [private-key public-key]} @generated-cred]
         [:<>
-         [uix/Message
-          {:header  "SSH key successfully generated"
-           :content "This secret will be dislayed only once. Please store it in a safe place."
-           :icon    "circle check outline"
-           :type    :success}]
-         [uix/CopyToClipboard {:name  "Public-key"
-                               :value public-key}]
-         [uix/DownloadFile {:name     "Private-key"
-                            :value    private-key
-                            :filename "ssh_private.key"}]
-         ]))))
+         [MessageKeyGenerated :ssh-key-generated]
+         [uix/CopyToClipboardDownload {:name     "Public-key"
+                                       :value    public-key
+                                       :download true
+                                       :filename "ssh_public.key"}]
+         [uix/CopyToClipboardDownload {:name     "Private-key"
+                                       :value    private-key
+                                       :download true
+                                       :filename "ssh_private.key"}]]))))
 
 
 (defn save-callback

@@ -4,6 +4,7 @@
 
 ### Added
 
+- Component - CopyToClipboardDownload
 - NuvlaBox detail page - add Logs tab
 - Resource log reusable component
 - Main component - ResponsiveMenuBar
@@ -11,6 +12,9 @@
 
 ### Changed
 
+- NuvlaBox detail - Change download button in SSH modal
+- NuvlaBox detail - Bugfix allow generation of SSH credential
+- Credential - Show generated credential for SSH and API key
 - Fixed "stop logs" action button for deployment and NuvlaBox logs
 - Edge detail - Use ResponsiveMenuBar
 - Cimi detail - Use ResponsiveMenuBar

@@ -143,52 +143,44 @@
     (when content content)]])
 
 
-(defn DownloadFileOrCopyToClipboard
-    [{:keys [name value Button] :as _ops}]
-    [ui/Segment {:inverted true
-                 :color    "grey"
-                 :style    {:text-overflow :ellipsis
-                            :overflow      :hidden
-                            :white-space   :nowrap}}
-     Button
-     [:span
-      [:b (str name ": ")]
-      [:span {:style {:margin-left 10}} value]]])
-
-
-(defn DownloadFile
-  [{:keys [_name value filename copy] :as opts}]
-  (let [tr      (subscribe [::i18n-subs/tr])
-        Icon    [ui/Icon {:link  true
-                          :size  "large"
-                          :name  "download"}]
-        Link    [ui/Icon {:style {:float :right}}
-                 [:a {:href     (str "data:text/plain;charset=utf-8,"
-                                     (js/encodeURIComponent value))
-                      :target   "_blank"
-                      :download filename
-                      :style    {:color :white}}
-                  Icon]]
-        Element [ui/Popup {:trigger (r/as-element
-                                      Link)}
-                 "Click to download to a file"]]
-    [DownloadFileOrCopyToClipboard
-     (assoc opts :Button Element)]))
-
-
-(defn CopyToClipboard
-  [{:keys [_name value] :as opts}]
-  (let [Icon    [ui/Icon {:style {:float :right}
-                          :link  true
-                          :size  "large"
-                          :name  "clone"}]
-        Pop-up  [ui/Popup {:trigger (r/as-element Icon)}
-                 "Click to copy to clipboard"]
-        Element [ui/CopyToClipboard
-                 {:text value}
-                 [:div Pop-up]]]
-    [DownloadFileOrCopyToClipboard
-     (assoc opts :Button Element)]))
+(defn CopyToClipboardDownload
+  [{:keys [name value copy download filename]
+    :or {filename "file.txt"
+         copy     true
+         download false} :as _ops}]
+  [ui/Segment {:inverted true
+               :color    "grey"}
+   [ui/Grid {:stackable true}
+    [ui/GridRow {:columns 2}
+     [ui/GridColumn {:width 14
+                     :style {:text-overflow :ellipsis
+                             :overflow      :hidden
+                             :white-space   :nowrap}}
+      [:b (str name ": \u000B")]
+      value]
+     [ui/GridColumn {:width      2
+                     :text-align "right"}
+      (when download
+        [ui/Popup
+         {:trigger (r/as-element
+                     [:a {:style    {:color "white"}
+                          :href     (str "data:text/plain;charset=utf-8,"
+                                         (js/encodeURIComponent value))
+                          :target   "_blank"
+                          :download filename}
+                      [ui/Icon {:link true
+                                :size "large"
+                                :name "download"}]])}
+         [TR :click-to-download]])
+      (when copy
+        [ui/Popup
+         {:trigger (r/as-element
+                     [ui/CopyToClipboard {:text value}
+                      [ui/Icon {:style {:margin-left 10}
+                                :link true
+                                :size "large"
+                                :name "clone"}]])}
+         [TR :click-to-copy]])]]]])
 
 
 (defn EditorYaml

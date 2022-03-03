@@ -110,14 +110,14 @@
                                    (dispatch [::close-credential-modal])
                                    (dispatch [::get-credentials])
                                    ;(dispatch [::main-events/check-bootstrap-message])
-                                   (when (utils/show-generated-cred-modal? new-credential)
-                                     (dispatch [::set-generated-credential-modal %]))
-                                   (let [{:keys [status message resource-id]} (response/parse %)]
-                                     (dispatch [::messages-events/add
-                                                {:header  (cond-> (str "added " resource-id)
-                                                                  status (str " (" status ")"))
-                                                 :content message
-                                                 :type    :success}]))
+                                   (if (utils/show-generated-cred-modal? new-credential)
+                                     (dispatch [::set-generated-credential-modal %])
+                                     (let [{:keys [status message resource-id]} (response/parse %)]
+                                       (dispatch [::messages-events/add
+                                                  {:header  (cond-> (str "added " resource-id)
+                                                                    status (str " (" status ")"))
+                                                   :content message
+                                                   :type    :success}])))
                                    )]})
         {::cimi-api-fx/edit [id credential
                              #(if (instance? js/Error %)

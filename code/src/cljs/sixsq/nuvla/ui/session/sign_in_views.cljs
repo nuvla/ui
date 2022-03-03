@@ -12,8 +12,8 @@
     [sixsq.nuvla.ui.session.subs :as subs]
     [sixsq.nuvla.ui.session.utils :as utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.spec :as us]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.spec :as us]))
 
 ;; VALIDATION SPEC
 (s/def ::username us/nonblank-string)

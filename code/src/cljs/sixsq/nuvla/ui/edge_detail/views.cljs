@@ -153,19 +153,11 @@
 
            (when @key-data
              [ui/FormField
-              [uix/DownloadFile {:name     "Private-key"
-                                 :value    @key-data
-                                 :filename "ssh_private.key"}]
-              #_[:a {:href     (str "data:text/plain;charset=utf-8,"
-                                  (js/encodeURIComponent @key-data))
-                   :target   "_blank"
-                   :download "ssh_private.key"}
-               [ui/Button {:positive       true
-                           :fluid          true
-                           :icon           "download"
-                           :label-position "left"
-                           :as             "div"
-                           :content        (@tr [:download])}]]])]]
+              [uix/CopyToClipboardDownload
+               {:name     "Private-key"
+                :value    @key-data
+                :download true
+                :filename "ssh_private.key"}]])]]
          [ui/ModalActions
           [uix/Button
            {:text     (if @key-data (@tr [:close]) button-text)

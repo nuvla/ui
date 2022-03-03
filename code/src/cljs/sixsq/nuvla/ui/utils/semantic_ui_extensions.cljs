@@ -144,24 +144,23 @@
 
 
 (defn DownloadFileOrCopyToClipboard
-  [{:keys [name value Button] :as _ops}]
-  [ui/Segment {:inverted true
-               :color    "grey"
-               :style    {:text-overflow :ellipsis
-                          :overflow      :hidden
-                          :white-space   :nowrap}}
-   Button
-   [:span
-    [:b (str name ": ")]
-    [:span {:style {:margin-left 10}} value]]])
+    [{:keys [name value Button] :as _ops}]
+    [ui/Segment {:inverted true
+                 :color    "grey"
+                 :style    {:text-overflow :ellipsis
+                            :overflow      :hidden
+                            :white-space   :nowrap}}
+     Button
+     [:span
+      [:b (str name ": ")]
+      [:span {:style {:margin-left 10}} value]]])
 
 
 (defn DownloadFile
-  [{:keys [_name value filename] :as opts}]
+  [{:keys [_name value filename copy] :as opts}]
   (let [tr      (subscribe [::i18n-subs/tr])
         Icon    [ui/Icon {:link  true
                           :size  "large"
-                          :color "green"
                           :name  "download"}]
         Link    [ui/Icon {:style {:float :right}}
                  [:a {:href     (str "data:text/plain;charset=utf-8,"
@@ -170,17 +169,8 @@
                       :download filename
                       :style    {:color :white}}
                   Icon]]
-        Button  [:a {:href     (str "data:text/plain;charset=utf-8,"
-                                    (js/encodeURIComponent value))
-                     :target   "_blank"
-                     :download filename}
-                 [ui/Button {:floated        "right"
-                             :positive       true
-                             :icon           "download"
-                             :label-position "left"
-                             :content        (@tr [:download])}]]
         Element [ui/Popup {:trigger (r/as-element
-                                      Button)}
+                                      Link)}
                  "Click to download to a file"]]
     [DownloadFileOrCopyToClipboard
      (assoc opts :Button Element)]))
@@ -190,7 +180,6 @@
   [{:keys [_name value] :as opts}]
   (let [Icon    [ui/Icon {:style {:float :right}
                           :link  true
-                          :color "green"
                           :size  "large"
                           :name  "clone"}]
         Pop-up  [ui/Popup {:trigger (r/as-element Icon)}

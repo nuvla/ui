@@ -293,7 +293,6 @@
 
 (defn show-generated-cred-modal?
   [{{:keys [href private-key]} :template :as _new-credential}]
-  (js/console.error _new-credential)
   (or
     (contains?
       #{"credential-template/create-credential-vpn-customer"

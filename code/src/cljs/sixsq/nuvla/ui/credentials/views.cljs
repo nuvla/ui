@@ -550,11 +550,12 @@
   []
   (let [generated-cred (subscribe [::subs/generated-credential-modal])]
     (fn []
-      (let [secret-key (:secret-key @generated-cred)]
-        [:<>
-         [MessageKeyGenerated :api-key-generated]
-         [uix/CopyToClipboardDownload {:name  "Api-key"
-                                       :value secret-key}]]))))
+      [:<>
+       [MessageKeyGenerated :api-key-generated]
+       [uix/CopyToClipboardDownload {:name  "Key"
+                                     :value (:resource-id @generated-cred)}]
+       [uix/CopyToClipboardDownload {:name  "Secret"
+                                     :value (:secret-key @generated-cred)}]])))
 
 
 (defn SshGeneratedCredential

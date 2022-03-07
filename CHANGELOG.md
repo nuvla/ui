@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Changed
+
+- Deps - update to @stripe/react-stripe-js@1.7.0
+- Deps - update to @stripe/stripe-js@1.24.0
+- Profile - Warning logged to console fix because of list payment methods fix
+- Sign-in-token - Warning logged to console fix
+- App - Accordion missing in pricing section for component
+- Pricing - support follow customer trial attribute
+
 ## [2.29.0] - 2022-03-07
 
 ### Added
@@ -20,7 +29,7 @@
 - Fixed "stop logs" action button for deployment and NuvlaBox logs
 - Edge detail - Use ResponsiveMenuBar
 - Cimi detail - Use ResponsiveMenuBar
-- Cimi detail - Format operation simplified and transformed in a plain function 
+- Cimi detail - Format operation simplified and transformed in a plain function
 - NuvlaBox Cluster - [bug] edge page subscriptions are not refreshed on "
   navigate" [#630](https://github.com/nuvla/ui/issues/630)
 - NuvlaBox Cluster - [bug] NB cards view disappears when in cluster

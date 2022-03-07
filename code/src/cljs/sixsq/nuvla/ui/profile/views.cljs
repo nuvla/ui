@@ -777,8 +777,7 @@
            [ui/Table {:basic "very"}
             [ui/TableBody
              (doall
-               (for [{:keys [last4 brand payment-method exp-month
-                             exp-year]} @cards-bank-accounts]
+               (for [{:keys [last4 brand payment-method exp-month exp-year]} @cards-bank-accounts]
                  (let [is-default? (= @default-pm payment-method)]
                    ^{:key (str payment-method)}
                    [ui/TableRow

@@ -372,7 +372,10 @@
          [Details]
          [apps-views-detail/registries-section]
          (when @stripe
-           [apps-views-detail/price-section])
+           [uix/Accordion
+            [apps-views-detail/price-section]
+            :label (str/capitalize (@tr [:pricing]))
+            :default-open false])
          [uix/Accordion
           [apps-views-detail/LicenseSection]
           :label (str/capitalize (@tr [:license]))

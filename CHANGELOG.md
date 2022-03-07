@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.29.0] - 2022-03-07
+
 ### Added
 
 - Component - CopyToClipboardDownload

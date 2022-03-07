@@ -130,6 +130,59 @@
                 (dissoc options :onElementsPerPageChange))]]])))
 
 
+(defn Message
+  [{:keys [icon content header type] :as _ops}]
+  [ui/Message
+   (cond-> {}
+           type (assoc type true)
+           icon (assoc :icon true))
+   (when icon [ui/Icon {:name icon}])
+   [ui/MessageContent
+    [ui/MessageHeader
+     (when header header)]
+    (when content content)]])
+
+
+(defn CopyToClipboardDownload
+  [{:keys [name value copy download filename]
+    :or {filename "file.txt"
+         copy     true
+         download false} :as _ops}]
+  [ui/Segment {:inverted true
+               :color    "grey"}
+   [ui/Grid {:stackable true}
+    [ui/GridRow {:columns 2}
+     [ui/GridColumn {:width 14
+                     :style {:text-overflow :ellipsis
+                             :overflow      :hidden
+                             :white-space   :nowrap}}
+      [:b (str name ": \u000B")]
+      value]
+     [ui/GridColumn {:width      2
+                     :text-align "right"}
+      (when download
+        [ui/Popup
+         {:trigger (r/as-element
+                     [:a {:style    {:color "white"}
+                          :href     (str "data:text/plain;charset=utf-8,"
+                                         (js/encodeURIComponent value))
+                          :target   "_blank"
+                          :download filename}
+                      [ui/Icon {:link true
+                                :size "large"
+                                :name "download"}]])}
+         [TR :click-to-download]])
+      (when copy
+        [ui/Popup
+         {:trigger (r/as-element
+                     [ui/CopyToClipboard {:text value}
+                      [ui/Icon {:style {:margin-left 10}
+                                :link true
+                                :size "large"
+                                :name "clone"}]])}
+         [TR :click-to-copy]])]]]])
+
+
 (defn EditorYaml
   [_text _on-change-fn _editable?]
   (fn [text on-change-fn editable?]

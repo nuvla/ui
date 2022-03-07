@@ -2,8 +2,18 @@
 
 ## Unreleased
 
+### Changed
+
+- Deps - update to @stripe/react-stripe-js@1.7.0
+- Deps - update to @stripe/stripe-js@1.22.0
+- Profile - Warning logged to console fix because of list payment methods fix
+- Sign-in-token - Warning logged to console fix
+
+## [2.29.0] - 2022-03-07
+
 ### Added
 
+- Component - CopyToClipboardDownload
 - NuvlaBox detail page - add Logs tab
 - Resource log reusable component
 - Main component - ResponsiveMenuBar
@@ -11,10 +21,9 @@
 
 ### Changed
 
-- Deps - update to @stripe/react-stripe-js@1.7.0
-- Deps - update to @stripe/stripe-js@1.22.0
-- Profile - Warning logged to console fix because of list payment methods fix
-- Sign-in-token - Warning logged to console fix
+- NuvlaBox detail - Change download button in SSH modal
+- NuvlaBox detail - Bugfix allow generation of SSH credential
+- Credential - Show generated credential for SSH and API key
 - Fixed "stop logs" action button for deployment and NuvlaBox logs
 - Edge detail - Use ResponsiveMenuBar
 - Cimi detail - Use ResponsiveMenuBar

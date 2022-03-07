@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^1.7.0",
-    "@stripe/stripe-js": "^1.22.0",
+    "@stripe/stripe-js": "^1.24.0",
     "bluebird": "^3.7.2",
     "chart.js": "^2.3.0",
     "codemirror": "^5.61.1",

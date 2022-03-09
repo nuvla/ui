@@ -15,7 +15,13 @@
   :plugins [[lein-parent "0.3.2"]
             [lein-unpack-resources "0.1.1"]
             [pdok/lein-filegen "0.1.0"]
-            [lein-resource "16.9.1"]]
+            [lein-resource "16.9.1"]
+            [lein-ancient "1.0.0-RC3"]
+            [jonase/eastwood "1.2.2"]
+            [lein-cloverage "1.2.2"]
+            [lein-kibit "0.1.8"]
+            [com.github.clj-kondo/lein-clj-kondo "0.1.3"]
+            [lein-nvd "1.9.0"]]
 
   :parent-project {:coords  [sixsq.nuvla/parent ~parent-version]
                    :inherit [:plugins
@@ -99,7 +105,8 @@
                  [kwladyka/form-validator-cljs "1.2.1"]
                  [instaparse]
                  [com.degel/re-frame-storage-fx "0.1.1"]
-                 [markdown-to-hiccup "0.6.2"]]
+                 [markdown-to-hiccup "0.6.2"]
+                 [clj-kondo "RELEASE"]]
 
   :source-paths ["src/clj" "src/cljs"]
 

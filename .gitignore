@@ -34,3 +34,6 @@ release.properties
 versions.sh
 
 package-lock.json
+
+.scannerwork
+.eastwood

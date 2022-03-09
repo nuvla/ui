@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [2.29.1] - 2022-03-09
+
+### Changed
+
+- ResponsiveMenuBar open when a user click into modal bugfix [#805](https://github.com/nuvla/ui/issues/805)
+
 ## [2.29.0] - 2022-03-07
 
 ### Added

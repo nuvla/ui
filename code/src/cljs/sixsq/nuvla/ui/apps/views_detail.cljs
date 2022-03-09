@@ -1032,7 +1032,8 @@
         editable? (subscribe [::subs/editable?])
         price     (subscribe [::subs/price])]
     (fn []
-      (let [amount (:cent-amount-daily @price)]
+      (let [amount       (:cent-amount-daily @price)
+            follow-trial (boolean (:follow-customer-trial @price))]
         [:<>
          (when @editable?
            [ui/Message {:info true}
@@ -1059,7 +1060,20 @@
                 (if (pos-int? amount)
                   (general-utils/format "%.2f" (* amount 0.3))
                   "...")
-                "€/" (str/capitalize (@tr [:month])))]]]))))
+                "€/" (str/capitalize (@tr [:month])))]]
+         [:span
+          [ui/Checkbox {:label          (@tr [:follow-customer-trial])
+                        :defaultChecked follow-trial
+                        :toggle         true
+                        :on-change      (ui-callback/checked
+                                          #(do
+                                             (dispatch [::events/follow-customer-trial %1])
+                                             (dispatch [::main-events/changes-protection? true])
+                                             (dispatch [::events/validate-form])))}]
+          " "
+          [ui/Popup {:content (@tr [:follow-customer-trial-help])
+                     :trigger (r/as-element [ui/Icon {:name "info circle"}])}]]
+         ]))))
 
 
 (defn price-section

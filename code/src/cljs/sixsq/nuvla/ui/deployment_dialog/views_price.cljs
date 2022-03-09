@@ -44,7 +44,10 @@
     [:<>
      [ui/Segment
       [:p
-       (str (when @start? (@tr [:trial-deployment]))
+       (str (when @start?
+              (if (:follow-customer-trial @price)
+                (@tr [:trial-deployment-follow])
+                (@tr [:trial-deployment])))
             (cond-> (@tr [:deployment-will-cost])
                     @new-price (str/capitalize)))
        (when @new-price

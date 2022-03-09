@@ -74,7 +74,7 @@
 ; Perform form validation if validate-form? is true.
 (reg-event-db
   ::validate-form
-  (fn [db [_]]
+  (fn [db]
     (let [form-spec      (get db ::spec/form-spec)
           module-subtype (-> db ::spec/module-common ::spec/subtype)
           module-common  (get db ::spec/module-common)
@@ -445,6 +445,11 @@
   (fn [db [_ amount]]
     (assoc-in db [::spec/module-common ::spec/price] {:cent-amount-daily amount
                                                       :currency          "EUR"})))
+
+(reg-event-db
+  ::follow-customer-trial
+  (fn [db [_ follow?]]
+    (update-in db [::spec/module-common ::spec/price] assoc :follow-customer-trial follow?)))
 
 
 (defn find-license

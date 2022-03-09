@@ -12,6 +12,7 @@ Make sure `project.clj` contains code analysis plugins and dependencies of your
 choice and supported by `sonar-scanner`. E.g. (defaults):
 
 ```
+  ;; the plugins can come from the parent
   :plugins [[lein-ancient "1.0.0-RC3"]
             [jonase/eastwood "1.2.2"]
             [lein-cloverage "1.2.2"]

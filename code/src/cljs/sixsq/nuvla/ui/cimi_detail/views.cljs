@@ -55,6 +55,7 @@
         [ui/Modal
          {:open       (boolean @show?)
           :close-icon true
+          :on-click   #(.stopPropagation %)
           :on-close   #(reset! show? false)
           :trigger    (r/as-element
                         [ui/MenuItem {:aria-label menu-item-label

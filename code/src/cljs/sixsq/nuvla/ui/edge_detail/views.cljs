@@ -140,6 +140,7 @@
       (let [credential (:credential @form-data)]
         [ui/Modal
          {:open       @show?
+          :on-click   #(.stopPropagation %)
           :close-icon true
           :on-close   close-fn
           :trigger    (r/as-element
@@ -213,7 +214,8 @@
           ;; needed to make modal work in cimi detail page
           (dispatch [::events/get-nuvlabox id]))
         [ui/Modal
-         {:open       @show?
+         {:on-click   #(.stopPropagation %)
+          :open       @show?
           :close-icon true
           :on-close   close-fn
           :trigger    (r/as-element
@@ -370,6 +372,7 @@
 
         [ui/Modal
          {:open       @show?
+          :on-click   #(.stopPropagation %)
           :close-icon true
           :on-close   close-fn
           :trigger    (r/as-element
@@ -494,6 +497,7 @@
     [ui/Modal
      {:open       @show?
       :close-icon true
+      :on-click   #(.stopPropagation %)
       :on-close   close-fn
       :trigger    (r/as-element
                     [ui/MenuItem {:on-click #(reset! show? true)}
@@ -531,6 +535,7 @@
       (let [playbooks (:emergency-playbooks-ids @form-data)]
         [ui/Modal
          {:open       @show?
+          :on-click   #(.stopPropagation %)
           :close-icon true
           :on-close   close-fn
           :trigger    (r/as-element

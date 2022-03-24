@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Package.json - Fix scripts and js filename
 - Deps - update to @stripe/react-stripe-js@1.7.0
 - Deps - update to @stripe/stripe-js@1.24.0
 - Profile - Warning logged to console fix because of list payment methods fix

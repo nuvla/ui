@@ -3,11 +3,11 @@
   "description": "Web application for Nuvla, a cloud and edge application management platform.",
   "repository": "https://github.com/nuvla/ui",
   "version": "1.0.0",
-  "main": "resources/webui.js",
+  "main": "resources/nuvla-ui.js",
   "scripts": {
-    "dev": "./node_modules/.bin/shadow-cljs watch webui",
-    "build": "./node_modules/.bin/shadow-cljs compile webui",
-    "release": "./node_modules/.bin/shadow-cljs release webui",
+    "dev": "./node_modules/.bin/shadow-cljs watch nuvla-ui",
+    "build": "./node_modules/.bin/shadow-cljs compile nuvla-ui",
+    "release": "./node_modules/.bin/shadow-cljs release nuvla-ui",
     "clean": "rm -rf resources/public/js/* && rm -rf target"
   },
   "author": "SixSq SA",

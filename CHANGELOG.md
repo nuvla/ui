@@ -4,6 +4,9 @@
 
 ### Changed
 
+- Sign-in - Automatically redirect user when user want to access a protected
+  page but doesn't have a session
+- Sign-in - Support redirect query parameter to change page after a set session
 - Package.json - Fix scripts and js filename
 - Deps - update to @stripe/react-stripe-js@1.7.0
 - Deps - update to @stripe/stripe-js@1.24.0
@@ -16,7 +19,8 @@
 
 ### Changed
 
-- ResponsiveMenuBar open when a user click into modal bugfix [#805](https://github.com/nuvla/ui/issues/805)
+- ResponsiveMenuBar open when a user click into modal
+  bugfix [#805](https://github.com/nuvla/ui/issues/805)
 
 ## [2.29.0] - 2022-03-07
 

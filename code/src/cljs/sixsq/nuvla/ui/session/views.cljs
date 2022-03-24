@@ -216,7 +216,8 @@
         query-params (subscribe [::main-subs/nav-query-params])
         tr           (subscribe [::i18n-subs/tr])]
     (when (and navigate? @session)
-      (dispatch [::history-events/navigate "welcome"]))
+      (dispatch [::history-events/navigate (or (:redirect @query-params)
+                                               "welcome")]))
     (when-let [error (:error @query-params)]
       (dispatch [::events/set-error-message
                  (or (@tr [(keyword error)]) error)]))

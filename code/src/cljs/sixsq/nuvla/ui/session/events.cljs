@@ -35,16 +35,24 @@
   (fn [{{:keys [::spec/session
                 ::main-spec/nav-path
                 ::main-spec/pages] :as db} :db} [_ session-arg]]
-    (let [no-session-protected-page? (and (nil? session-arg)
-                                          (->> nav-path first (get pages) :protected?))]
+    (let [query-str (.-search (.-location js/window))
+          redirect  (when (and (nil? session-arg)
+                               (->> nav-path first (get pages) :protected?))
+                      (str (str/join "/" nav-path)
+                           (when-not (str/blank? query-str)
+                             (js/encodeURIComponent query-str))))
+          navigate  (str "sign-in" (when redirect
+                                     (str "?redirect=" redirect)))]
       (cond-> {:db (assoc db ::spec/session session-arg
                              ::spec/session-loading? false)}
-              session-arg (assoc ::fx/automatic-logout-at-session-expiry [session-arg])
-              no-session-protected-page? (update :dispatch-n conj [::history-events/navigate "sign-in"])
+              session-arg (assoc ::fx/automatic-logout-at-session-expiry
+                                 [session-arg])
+
+              redirect (update :fx conj [:dispatch [::history-events/navigate navigate]])
               ;; force refresh templates collection cache when not the same user (different session)
-              (not= session session-arg) (assoc :dispatch-n
-                                                [[::cimi-events/get-cloud-entry-point]
-                                                 [:sixsq.nuvla.ui.main.events/force-refresh-content]])))))
+              (not= session session-arg) (assoc :fx
+                                                [[:dispatch [::cimi-events/get-cloud-entry-point]]
+                                                 [:dispatch [:sixsq.nuvla.ui.main.events/force-refresh-content]]])))))
 
 
 (reg-event-fx

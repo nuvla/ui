@@ -7,6 +7,7 @@
 - Sign-in - Automatically redirect user when user want to access a protected
   page but doesn't have a session
 - Sign-in - Support redirect query parameter to change page after a set session
+- Notification - Set this page as protected
 - Package.json - Fix scripts and js filename
 - Deps - update to @stripe/react-stripe-js@1.7.0
 - Deps - update to @stripe/stripe-js@1.24.0

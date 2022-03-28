@@ -1,4 +1,4 @@
-(def parent-version "6.7.6")
+(def parent-version "6.7.7-SNAPSHOT")
 (def sixsq-nuvla-api-version "2.0.10")
 (def version "2.29.2-SNAPSHOT")
 
@@ -91,22 +91,22 @@
                  [day8.re-frame/http-fx "0.2.4" :scope "provided"]
                  [cljs-ajax "0.8.4" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
-                 [expound "0.9.0" :scope "provided"]
+                 [expound :scope "provided"]
                  [com.taoensso/timbre "5.2.1" :scope "provided"]
                  [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]
                  [com.taoensso/tempura "1.2.1" :scope "provided"]
                  [com.cemerick/url :scope "provided"]
-                 [kwladyka/form-validator-cljs "1.2.1"]
-                 [instaparse]
-                 [com.degel/re-frame-storage-fx "0.1.1"]
-                 [markdown-to-hiccup "0.6.2"]
-                 [clj-kondo "RELEASE"]]
+                 [kwladyka/form-validator-cljs "1.2.1" :scope "provided"]
+                 [instaparse :scope "provided"]
+                 [com.degel/re-frame-storage-fx "0.1.1" :scope "provided"]
+                 [markdown-to-hiccup "0.6.2" :scope "provided"]
+                 [clj-kondo "RELEASE" :scope "provided"]]
 
   :source-paths ["src/clj" "src/cljs"]
 
   :profiles
-  {:dev   {:dependencies [[org.clojure/clojure "1.11.0"]
-                          [org.clojure/clojurescript "1.11.4"
+  {:dev   {:dependencies [[org.clojure/clojure "1.10.3"]
+                          [org.clojure/clojurescript "1.10.914"
                            :exclusions
                            [com.google.javascript/closure-compiler-unshaded
                             org.clojure/google-closure-library

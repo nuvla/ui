@@ -590,8 +590,7 @@
 
 (defn DataRecordCards
   [Pagination]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        data-records (subscribe [::subs/data-records])
+  (let [data-records (subscribe [::subs/data-records])
         device       (subscribe [::main-subs/device])
         resources    (:resources @data-records)]
     [:<>

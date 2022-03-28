@@ -5,39 +5,37 @@
     ["wellknown" :as wellknown]
     [clojure.string :as str]
     [re-frame.core :refer [subscribe]]
-    [reagent.core :as reagent]
     [reagent.core :as r]
     [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.main.subs :as main-subs]))
 
-(def Map (reagent/adapt-react-class leaflet/Map))
+(def Map (r/adapt-react-class leaflet/Map))
 
-(def FeatureGroup (reagent/adapt-react-class leaflet/FeatureGroup))
+(def FeatureGroup (r/adapt-react-class leaflet/FeatureGroup))
 
-(def EditControl (reagent/adapt-react-class react-leaflet-draw/EditControl))
+(def EditControl (r/adapt-react-class react-leaflet-draw/EditControl))
 
-(def Marker (reagent/adapt-react-class leaflet/Marker))
+(def Marker (r/adapt-react-class leaflet/Marker))
 
-(def TileLayer (reagent/adapt-react-class leaflet/TileLayer))
+(def TileLayer (r/adapt-react-class leaflet/TileLayer))
 
-(def Popup (reagent/adapt-react-class leaflet/Popup))
+(def Popup (r/adapt-react-class leaflet/Popup))
 
-(def LayersControl (reagent/adapt-react-class leaflet/LayersControl))
+(def LayersControl (r/adapt-react-class leaflet/LayersControl))
 
-(def BaseLayer (reagent/adapt-react-class leaflet/LayersControl.BaseLayer))
+(def BaseLayer (r/adapt-react-class leaflet/LayersControl.BaseLayer))
 
-(def CircleMarker (reagent/adapt-react-class leaflet/CircleMarker))
+(def CircleMarker (r/adapt-react-class leaflet/CircleMarker))
 
-(def Circle (reagent/adapt-react-class leaflet/Circle))
+(def Circle (r/adapt-react-class leaflet/Circle))
 
-(def Rectangle (reagent/adapt-react-class leaflet/Rectangle))
+(def Rectangle (r/adapt-react-class leaflet/Rectangle))
 
-(def Polygon (reagent/adapt-react-class leaflet/Polygon))
+(def Polygon (r/adapt-react-class leaflet/Polygon))
 
-(def GeoJSON (reagent/adapt-react-class leaflet/GeoJSON))
+(def GeoJSON (r/adapt-react-class leaflet/GeoJSON))
 
-(def Tooltip (reagent/adapt-react-class leaflet/Tooltip))
+(def Tooltip (r/adapt-react-class leaflet/Tooltip))
 
 (def attributions
   (str/join " "
@@ -130,11 +128,11 @@
 
 
 (def map-default-ops
-  {:min-zoom           2
-   :style              {:height 500}
-   :center             default-latlng-center
-   :worldCopyJump      true
-   :zoom               3})
+  {:min-zoom      2
+   :style         {:height 500}
+   :center        default-latlng-center
+   :worldCopyJump true
+   :zoom          3})
 
 
 (defn MapBox

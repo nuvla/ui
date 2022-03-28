@@ -137,34 +137,33 @@
                          (dispatch [::events/operation id operation @form-data
                                     on-success-fn on-error-fn]))]
     (fn [_resource operation show? title icon button-text]
-      (let [credential (:credential @form-data)]
-        [ui/Modal
-         {:open       @show?
-          :on-click   #(.stopPropagation %)
-          :close-icon true
-          :on-close   close-fn
-          :trigger    (r/as-element
-                        [ui/MenuItem {:on-click #(reset! show? true)}
-                         [ui/Icon {:name icon}]
-                         title])}
-         [uix/ModalHeader {:header title}]
-         [ui/ModalContent
-          [ui/Form
-           [SshKeysDropdown operation (partial on-change-fn :credential)]
+      [ui/Modal
+       {:open       @show?
+        :on-click   #(.stopPropagation %)
+        :close-icon true
+        :on-close   close-fn
+        :trigger    (r/as-element
+                      [ui/MenuItem {:on-click #(reset! show? true)}
+                       [ui/Icon {:name icon}]
+                       title])}
+       [uix/ModalHeader {:header title}]
+       [ui/ModalContent
+        [ui/Form
+         [SshKeysDropdown operation (partial on-change-fn :credential)]
 
-           (when @key-data
-             [ui/FormField
-              [uix/CopyToClipboardDownload
-               {:name     "Private-key"
-                :value    @key-data
-                :download true
-                :filename "ssh_private.key"}]])]]
-         [ui/ModalActions
-          [uix/Button
-           {:text     (if @key-data (@tr [:close]) button-text)
-            :primary  true
-            :loading  (true? @loading?)
-            :on-click (if @key-data close-fn on-click-fn)}]]]))))
+         (when @key-data
+           [ui/FormField
+            [uix/CopyToClipboardDownload
+             {:name     "Private-key"
+              :value    @key-data
+              :download true
+              :filename "ssh_private.key"}]])]]
+       [ui/ModalActions
+        [uix/Button
+         {:text     (if @key-data (@tr [:close]) button-text)
+          :primary  true
+          :loading  (true? @loading?)
+          :on-click (if @key-data close-fn on-click-fn)}]]])))
 
 
 (defn is-old-version?
@@ -482,7 +481,7 @@
            [ui/Message
             (@tr [:nuvlabox-emergency-playbooks-already-enabled])
             [ui/ListSA {:bulleted true}
-             (map (fn [{:keys [id name] :as pb}]
+             (map (fn [{:keys [id name] :as _pb}]
                     [ui/ListItem
                      ^{:key id}
                      [values/as-link id :label (or name id)]])
@@ -1605,13 +1604,12 @@
                                 (dispatch [::edge-events/open-modal nil]))
         show-modal?          (subscribe [::edge-subs/modal-visible? modal-id])
         on-change-type       (fn [v]
-                               (do
-                                 (swap! form-data assoc :type v)
-                                 (if (= v "EMERGENCY")
-                                   (do
-                                     (reset! disabled-by-default? true)
-                                     (swap! form-data assoc :enabled false))
-                                   (reset! disabled-by-default? false))))
+                               (swap! form-data assoc :type v)
+                               (if (= v "EMERGENCY")
+                                 (do
+                                   (reset! disabled-by-default? true)
+                                   (swap! form-data assoc :enabled false))
+                                 (reset! disabled-by-default? false)))
         on-click-fn          #(do
                                 (dispatch [::events/add-nuvlabox-playbook @form-data])
                                 (close-fn))]

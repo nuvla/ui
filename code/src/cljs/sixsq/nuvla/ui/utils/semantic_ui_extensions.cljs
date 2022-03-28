@@ -97,8 +97,7 @@
   "Provide pagination element with more visible icons. Note: :totalitems is in lowercase not to
    interfere with React DOM attributes."
   [_options]
-  (let [tr     (subscribe [::i18n-subs/tr])
-        small  8
+  (let [small  8
         medium 16
         large  24]
     (fn [{:keys [totalitems itemnames elementsperpage onElementsPerPageChange] :as options
@@ -448,10 +447,9 @@
 
 (defn WarningMsgNoElements
   [_message]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [message]
-      [ui/Message {:info true}
-       (or message [TR :no-items-to-show])])))
+  (fn [message]
+    [ui/Message {:info true}
+     (or message [TR :no-items-to-show])]))
 
 
 (defn Tags

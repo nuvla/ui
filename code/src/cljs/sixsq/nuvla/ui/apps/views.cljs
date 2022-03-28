@@ -44,19 +44,18 @@
 
 (defn Module
   [_nav-query-params]
-  (let []
-    (dispatch [::main-events/changes-protection? false])
-    (dispatch [::events/form-valid true])
-    (dispatch [::events/set-validate-form? false])
-    (fn [nav-query-params]
-      [components/LoadingPage {:dimmable? true}
-       [:<>
-        [components/NotFoundPortal
-         ::subs/module-not-found?
-         :no-module-message-header
-         :no-module-message-content]
-        [views-detail/VersionWarning]
-        [ModuleDetails nav-query-params]]])))
+  (dispatch [::main-events/changes-protection? false])
+  (dispatch [::events/form-valid true])
+  (dispatch [::events/set-validate-form? false])
+  (fn [nav-query-params]
+    [components/LoadingPage {:dimmable? true}
+     [:<>
+      [components/NotFoundPortal
+       ::subs/module-not-found?
+       :no-module-message-header
+       :no-module-message-content]
+      [views-detail/VersionWarning]
+      [ModuleDetails nav-query-params]]]))
 
 
 (defn Apps

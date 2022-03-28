@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.data-set.subs
   (:require
-    [clojure.string :as str]
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.data-set.spec :as spec]
     [sixsq.nuvla.ui.utils.general :as utils-general]))

@@ -91,7 +91,7 @@
                  [day8.re-frame/http-fx "0.2.4" :scope "provided"]
                  [cljs-ajax "0.8.4" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
-                 [expound "0.9.0" :scope "provided"]
+                 [expound "0.8.9" :scope "provided"]
                  [com.taoensso/timbre "5.2.1" :scope "provided"]
                  [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]
                  [com.taoensso/tempura "1.2.1" :scope "provided"]

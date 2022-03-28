@@ -121,7 +121,7 @@
                                        "notifications"   {:url        "notifications"
                                                           :label-kw   :notifications
                                                           :icon       "bell"
-                                                          :protected? false
+                                                          :protected? true
                                                           :order      5}
                                        "data"            {:url             "data"
                                                           :label-kw        :data

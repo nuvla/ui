@@ -1,4 +1,4 @@
-(def parent-version "6.7.6")
+(def parent-version "6.7.7-SNAPSHOT")
 (def sixsq-nuvla-api-version "2.0.10")
 (def version "2.29.2-SNAPSHOT")
 
@@ -15,13 +15,7 @@
   :plugins [[lein-parent "0.3.2"]
             [lein-unpack-resources "0.1.1"]
             [pdok/lein-filegen "0.1.0"]
-            [lein-resource "16.9.1"]
-            [lein-ancient "1.0.0-RC3"]
-            [jonase/eastwood "1.2.2"]
-            [lein-cloverage "1.2.2"]
-            [lein-kibit "0.1.8"]
-            [com.github.clj-kondo/lein-clj-kondo "0.1.3"]
-            [lein-nvd "1.9.0"]]
+            [lein-resource "16.9.1"]]
 
   :parent-project {:coords  [sixsq.nuvla/parent ~parent-version]
                    :inherit [:plugins
@@ -97,7 +91,7 @@
                  [day8.re-frame/http-fx "0.2.4" :scope "provided"]
                  [cljs-ajax "0.8.4" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
-                 [expound :scope "provided"]
+                 [expound "0.8.9" :scope "provided"]
                  [com.taoensso/timbre "5.2.1" :scope "provided"]
                  [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]
                  [com.taoensso/tempura "1.2.1" :scope "provided"]

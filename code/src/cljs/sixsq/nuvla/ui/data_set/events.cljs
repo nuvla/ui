@@ -134,7 +134,7 @@
 
 (reg-event-fx
   ::set-map-selection
-  (fn [{{:keys [::spec/geo-operation] :as db} :db} [_ map-selection]]
+  (fn [{db :db} [_ map-selection]]
     {:db (assoc db ::spec/map-selection map-selection)
      :fx [[:dispatch [::get-data-records]]]}))
 

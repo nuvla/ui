@@ -836,7 +836,7 @@
 
 
 (defn NuvlaBoxesOrClusters
-  [path-uuid]
+  []
   (dispatch [::events/refresh-root])
   (let [tr        (subscribe [::i18n-subs/tr])
         full-text (subscribe [::subs/full-text-search])]
@@ -886,7 +886,7 @@
         children (case n
                    3 [views-cluster/ClusterView path2]
                    2 [DetailedView path1]
-                   [NuvlaBoxesOrClusters path1])]
+                   [NuvlaBoxesOrClusters])]
     [:<>
      [ui/Segment style/basic
       children]

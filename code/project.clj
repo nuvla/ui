@@ -1,4 +1,4 @@
-(def parent-version "6.7.5")
+(def parent-version "6.7.7")
 (def sixsq-nuvla-api-version "2.0.10")
 (def version "2.29.2-SNAPSHOT")
 
@@ -15,13 +15,7 @@
   :plugins [[lein-parent "0.3.2"]
             [lein-unpack-resources "0.1.1"]
             [pdok/lein-filegen "0.1.0"]
-            [lein-resource "16.9.1"]
-            [lein-ancient "1.0.0-RC3"]
-            [jonase/eastwood "1.2.2"]
-            [lein-cloverage "1.2.2"]
-            [lein-kibit "0.1.8"]
-            [com.github.clj-kondo/lein-clj-kondo "0.1.3"]
-            [lein-nvd "1.9.0"]]
+            [lein-resource "16.9.1"]]
 
   :parent-project {:coords  [sixsq.nuvla/parent ~parent-version]
                    :inherit [:plugins
@@ -90,40 +84,40 @@
 
   ;; mark all dependencies as provided to avoid having transitive
   ;; dependencies pulled in by those that depend on this
-  :dependencies [[reagent "0.10.0" :scope "provided"
+  :dependencies [[reagent "1.1.1" :scope "provided"
                   :exclusions [cljsjs/react
                                cljsjs/react-dom]]
                  [re-frame "1.2.0" :scope "provided"]
-                 [day8.re-frame/http-fx "0.2.3" :scope "provided"]
+                 [day8.re-frame/http-fx "0.2.4" :scope "provided"]
                  [cljs-ajax "0.8.4" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]
                  [expound :scope "provided"]
-                 [com.taoensso/timbre "5.1.2" :scope "provided"]
+                 [com.taoensso/timbre "5.2.1" :scope "provided"]
                  [sixsq.nuvla/api ~sixsq-nuvla-api-version :scope "provided"]
                  [com.taoensso/tempura "1.2.1" :scope "provided"]
                  [com.cemerick/url :scope "provided"]
-                 [kwladyka/form-validator-cljs "1.2.1"]
-                 [instaparse]
-                 [com.degel/re-frame-storage-fx "0.1.1"]
-                 [markdown-to-hiccup "0.6.2"]
-                 [clj-kondo "RELEASE"]]
+                 [kwladyka/form-validator-cljs "1.2.1" :scope "provided"]
+                 [instaparse :scope "provided"]
+                 [com.degel/re-frame-storage-fx "0.1.1" :scope "provided"]
+                 [markdown-to-hiccup "0.6.2" :scope "provided"]
+                 [clj-kondo "RELEASE" :scope "provided"]]
 
   :source-paths ["src/clj" "src/cljs"]
 
   :profiles
   {:dev   {:dependencies [[org.clojure/clojure "1.10.3"]
-                          [org.clojure/clojurescript "1.10.893"
+                          [org.clojure/clojurescript "1.10.914"
                            :exclusions
                            [com.google.javascript/closure-compiler-unshaded
                             org.clojure/google-closure-library
                             org.clojure/google-closure-library-third-party]]
-                          [binaryage/devtools "1.0.3" :scope "test"]
-                          [day8.re-frame/re-frame-10x "0.7.0"]]}
+                          [binaryage/devtools "1.0.5" :scope "test"]
+                          [day8.re-frame/re-frame-10x "1.2.3"]]}
 
-   :scljs {:dependencies [[thheller/shadow-cljs "2.16.6"]   ;; WARNING: also in package.json
+   :scljs {:dependencies [[thheller/shadow-cljs "2.17.8"]   ;; WARNING: also in package.json
                           [org.clojure/google-closure-library "0.0-20211011-0726fdeb"]
                           [org.clojure/google-closure-library-third-party "0.0-20211011-0726fdeb"]
-                          [com.google.javascript/closure-compiler-unshaded "v20211006"]]}}
+                          [com.google.javascript/closure-compiler-unshaded "v20220202"]]}}
 
 
 

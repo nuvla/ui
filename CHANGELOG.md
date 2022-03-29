@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Deps - Fix vulnerabilities
 - Sign-in - Automatically redirect user when user want to access a protected
   page but doesn't have a session
 - Sign-in - Support redirect query parameter to change page after a set session

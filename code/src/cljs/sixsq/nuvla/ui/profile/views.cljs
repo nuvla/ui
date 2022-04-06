@@ -584,7 +584,6 @@
                                                  :country        ""
                                                  :postal-code    ""}}
         form                     (fv/init-form form-conf)]
-    (dispatch [::events/get-pricing-catalogue])
     (fn []
       [:<>
        [ui/Modal

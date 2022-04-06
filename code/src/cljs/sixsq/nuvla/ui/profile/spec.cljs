@@ -10,8 +10,6 @@
 
 (s/def ::subscription any?)
 
-(s/def ::pricing-catalogue any?)
-
 (s/def ::payment-methods any?)
 
 (s/def ::upcoming-invoice any?)
@@ -25,8 +23,6 @@
 (s/def ::error-message (s/nilable string?))
 
 (s/def ::loading set?)
-
-(s/def ::plan-id (s/nilable string?))
 
 (s/def ::setup-intent any?)
 
@@ -56,7 +52,6 @@
 (s/def ::db (s/keys :req [::user
                           ::customer
                           ::subscription
-                          ::pricing-catalogue
                           ::payment-methods
                           ::upcoming-invoice
                           ::invoices
@@ -77,7 +72,6 @@
 
 (def defaults {::user                nil
                ::customer            nil
-               ::pricing-catalogue   nil
                ::payment-methods     nil
                ::upcoming-invoice    nil
                ::invoices            nil

@@ -287,19 +287,11 @@
       {::cimi-api-fx/operation [(:credential-password user) "change-password" callback-fn body]})))
 
 
-(defn catalogue->subscription
-  [pricing-catalogue]
-  (let [pay-as-you-go (-> pricing-catalogue :plans first)]
-    {:plan-id       (:plan-id pay-as-you-go)
-     :plan-item-ids (:required-items pay-as-you-go)}))
-
-
 (reg-event-fx
   ::create-customer
   (fn [{{:keys [::spec/pricing-catalogue] :as db} :db} [_ {:keys [payment-method] :as customer}]]
     {:db               (update db ::spec/loading conj :create-customer)
-     ::cimi-api-fx/add [:customer (cond-> (assoc customer :subscription (catalogue->subscription
-                                                                          pricing-catalogue))
+     ::cimi-api-fx/add [:customer (cond-> (assoc customer :subscription? true)
                                           payment-method (assoc :payment-method payment-method))
                         #(do
                            (dispatch [::get-customer (:resource-id %)])
@@ -321,20 +313,7 @@
                                  (do
                                    (dispatch [::get-customer (:id customer)])
                                    (dispatch [::history-events/navigate "profile"])))
-                              (catalogue->subscription pricing-catalogue)]}))
-
-
-(reg-event-fx
-  ::get-pricing-catalogue
-  (fn [_ _]
-    {::cimi-api-fx/get ["pricing/catalogue" #(dispatch [::set-pricing-catalogue %])]}))
-
-
-(reg-event-db
-  ::set-pricing-catalogue
-  (fn [db [_ resource]]
-    (assoc db ::spec/pricing-catalogue resource)))
-
+                              nil]}))
 
 (reg-event-fx
   ::confirm-card-setup

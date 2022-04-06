@@ -66,6 +66,7 @@
                                                    :country        ""
                                                    :postal-code    ""}}
         form-customer              (fv/init-form form-customer-conf)]
+    (dispatch [::profile-events/get-pricing-catalogue])
     (fn []
       [comp/RightPanel
        {:title        (@tr [:create-an])
@@ -128,7 +129,9 @@
                              (if @create-customer
                                (let [customer  (-> form-customer
                                                    profile-views/customer-form->customer
-                                                   (assoc :subscription? true))
+                                                   (assoc :subscription
+                                                          (profile-events/catalogue->subscription
+                                                            @pricing-catalogue)))
                                      data-cust (assoc data :customer customer)]
                                  (dispatch [::events/submit utils/user-tmpl-email-password
                                             data-cust opts]))

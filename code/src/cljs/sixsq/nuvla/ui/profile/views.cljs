@@ -25,7 +25,8 @@
     [sixsq.nuvla.ui.utils.spec :as us]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [taoensso.timbre :as log]))
 
 
 ;;; VALIDATION SPEC
@@ -573,8 +574,9 @@
         error                    (subscribe [::subs/error-message])
         loading-create-customer? (subscribe [::subs/loading? :create-customer])
         customer                 (subscribe [::subs/customer])
-        subscription             (subscribe [::subs/subscription])
         is-group?                (subscribe [::session-subs/active-claim-is-group?])
+        pm?                      (subscribe [::subs/payment-methods?])
+        canceled?                (subscribe [::subs/subscription-canceled?])
         form-conf                {:form-spec    (if @is-group?
                                                   ::customer-with-email
                                                   ::customer)
@@ -622,7 +624,8 @@
                    :circular true
                    :basic    true
                    :loading  @loading-customer?
-                   :disabled (or @loading-subscription? (some? (:status @subscription)))
+                   :disabled (or @loading-subscription?
+                                 (and @canceled? (not @pm?)))
                    :on-click (if @session
                                #(dispatch [::events/open-modal :subscribe])
                                #(dispatch [::history-events/navigate "sign-up"]))}
@@ -637,16 +640,18 @@
   (let [tr           (subscribe [::i18n-subs/tr])
         locale       (subscribe [::i18n-subs/locale])
         subscription (subscribe [::subs/subscription])
-        loading?     (subscribe [::subs/loading? :subscription])]
+        loading?     (subscribe [::subs/loading? :subscription])
+        pm?          (subscribe [::subs/payment-methods?])]
     (fn []
       (let [{:keys [status start-date trial-start trial-end
-                    current-period-start current-period-end]} @subscription]
+                    current-period-start current-period-end]} @subscription
+            canceled? (= status "canceled")]
         [ui/Segment {:padded  true
                      :color   "red"
                      :loading @loading?
                      :style   {:height "100%"}}
          [ui/Header {:as :h2 :dividing true} (@tr [:subscription])]
-         (if status
+         (if (and status (not canceled?))
            [ui/Table {:basic "very"}
             [ui/TableBody
              [ui/TableRow
@@ -677,7 +682,11 @@
             [ui/GridColumn
              [ui/Header {:as :h3, :icon true, :disabled true}
               [ui/Icon {:className "fad fa-money-check-edit"}]
-              (@tr [:not-subscribed-yet])]
+              (if canceled?
+                (if @pm?
+                  "Reactivate your subscription now"
+                  "To reactivate your subscription you need first to add a payment method")
+                (@tr [:not-subscribed-yet]))]
              [:br]
              [SubscribeButton]]])]))))
 

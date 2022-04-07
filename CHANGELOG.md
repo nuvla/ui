@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Profile - Handle canceled subscription and reactivation of it
 - Deps - Fix vulnerabilities
 - Sign-in - Automatically redirect user when user want to access a protected
   page but doesn't have a session

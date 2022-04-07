@@ -6,6 +6,7 @@
 (def state-new "NEW")
 (def state-activated "ACTIVATED")
 (def state-commissioned "COMMISSIONED")
+(def state-suspended "SUSPENDED")
 (def state-decommissioning "DECOMMISSIONING")
 (def state-decommissioned "DECOMMISSIONED")
 (def state-error "ERROR")
@@ -32,6 +33,7 @@
                    state-commissioned    "fas fa-check"
                    state-decommissioning "fas fa-eraser"
                    state-decommissioned  "fas fa-trash"
+                   state-suspended       "fas fa-pause"
                    state-error           "fas fa-exclamation"}]
     (get icons-map state)))
 

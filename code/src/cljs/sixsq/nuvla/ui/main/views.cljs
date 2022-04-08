@@ -29,6 +29,7 @@
     [sixsq.nuvla.ui.messages.views :as messages]
     [sixsq.nuvla.ui.notifications.views]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.profile.views]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.session.views :as session-views]
@@ -37,7 +38,6 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.welcome.views]))
 
 
@@ -258,11 +258,11 @@
            [:div {:ref main-components/ref}
             (when @subs-canceled?
               [uix/Message {:icon    "warning"
-                            :header  "Subscription is canceled"
+                            :header  [uix/TR :subscription-is-canceled]
                             :content [:span
-                                      "To reactivate your subscription "
-                                      [:a {:href "profile"} "go to the profile"]
-                                      " and make sure to have a payment method."]
+                                      [uix/TR :to-reactivate-your-subscription]
+                                      [:a {:href "profile"} [uix/TR :go-to-profile]]
+                                      [uix/TR :make-sure-you-have-pm]]
                             :type    :error}])
             [contents]
             [ignore-changes-modal]

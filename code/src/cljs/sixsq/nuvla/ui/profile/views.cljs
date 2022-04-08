@@ -683,10 +683,11 @@
              [ui/Header {:as :h3, :icon true, :disabled true}
               [ui/Icon {:className "fad fa-money-check-edit"}]
               (if canceled?
-                (if @pm?
-                  "Reactivate your subscription now"
-                  "To reactivate your subscription you need first to add a payment method")
-                (@tr [:not-subscribed-yet]))]
+                [uix/TR
+                 (if @pm?
+                   :reactivate-subscription
+                   :reactivate-subscription-need-pm)]
+                [uix/TR :not-subscribed-yet])]
              [:br]
              [SubscribeButton]]])]))))
 

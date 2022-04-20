@@ -29,6 +29,7 @@
     [sixsq.nuvla.ui.messages.views :as messages]
     [sixsq.nuvla.ui.notifications.views]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.profile.views]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.session.views :as session-views]
@@ -232,7 +233,8 @@
         iframe?          (subscribe [::subs/iframe?])
         is-small-device? (subscribe [::subs/is-small-device?])
         resource-path    (subscribe [::subs/nav-path])
-        session-loading? (subscribe [::session-subs/session-loading?])]
+        session-loading? (subscribe [::session-subs/session-loading?])
+        subs-canceled?   (subscribe [::profile-subs/subscription-canceled?])]
     (if (and @cep (not @session-loading?))
       [:div {:id "nuvla-ui-main"}
        (case (first @resource-path)
@@ -254,6 +256,14 @@
                        :on-click #(dispatch [::events/close-sidebar])}]
            [header]
            [:div {:ref main-components/ref}
+            (when @subs-canceled?
+              [uix/Message {:icon    "warning"
+                            :header  [uix/TR :subscription-is-canceled]
+                            :content [:span
+                                      [uix/TR :to-reactivate-your-subscription]
+                                      [:a {:href "profile"} [uix/TR :go-to-profile]]
+                                      [uix/TR :make-sure-you-have-pm]]
+                            :type    :error}])
             [contents]
             [ignore-changes-modal]
             [subscription-required-modal]

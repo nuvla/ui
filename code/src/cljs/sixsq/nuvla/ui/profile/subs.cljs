@@ -26,6 +26,13 @@
 
 
 (reg-sub
+  ::subscription-canceled?
+  :<- [::subscription]
+  (fn [{:keys [status]}]
+    (= status "canceled")))
+
+
+(reg-sub
   ::payment-methods
   (fn [db]
     (::spec/payment-methods db)))
@@ -39,6 +46,16 @@
       (->> (concat cards (map #(assoc % :brand "iban") bank-accounts))
            (sort-by (juxt :exp-year :exp-month :payment-method))
            seq))))
+
+
+(reg-sub
+  ::payment-methods?
+  :<- [::payment-methods]
+  (fn [payment-methods]
+    (let [{:keys [cards bank-accounts]} payment-methods]
+      (boolean
+        (or (seq cards)
+           (seq bank-accounts))))))
 
 
 (reg-sub

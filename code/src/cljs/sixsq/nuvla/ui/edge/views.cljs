@@ -45,6 +45,7 @@
              commissioned    (:COMMISSIONED terms 0)
              decommissioning (:DECOMMISSIONING terms 0)
              decommissioned  (:DECOMMISSIONED terms 0)
+             suspended       (:SUSPENDED terms 0)
              error           (:ERROR terms 0)
              total           (:count @summary)
              online-statuses (general-utils/aggregate-to-map
@@ -101,6 +102,8 @@
                utils/state-decommissioning clickable? ::events/set-state-selector ::subs/state-selector]
               [components/StatisticState decommissioned [(utils/state->icon utils/state-decommissioned)]
                utils/state-decommissioned clickable? ::events/set-state-selector ::subs/state-selector]
+              [components/StatisticState suspended [(utils/state->icon utils/state-suspended)]
+               utils/state-suspended clickable? ::events/set-state-selector ::subs/state-selector]
               [components/StatisticState error [(utils/state->icon utils/state-error)]
                utils/state-error clickable? ::events/set-state-selector ::subs/state-selector]]])])))))
 

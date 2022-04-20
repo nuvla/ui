@@ -1257,13 +1257,14 @@
   []
   (let [nuvlabox  (subscribe [::subs/nuvlabox])
         nb-status (subscribe [::subs/nuvlabox-status])
-        ssh-creds (subscribe [::subs/nuvlabox-associated-ssh-keys])]
+        ssh-creds (subscribe [::subs/nuvlabox-associated-ssh-keys])
+        {:keys [state]}   @(subscribe [::subs/nuvlabox])]
     (fn []
       (let [{:keys [id tags ssh-keys]} @nuvlabox]
         (when (not= (count ssh-keys) (count @ssh-creds))
           (dispatch [::events/get-nuvlabox-associated-ssh-keys ssh-keys]))
         [ui/TabPane
-         [ui/Grid {:columns   2,
+         [ui/Grid {:columns   2
                    :stackable true
                    :padded    true}
           [ui/GridRow
@@ -1276,9 +1277,10 @@
           [ui/GridColumn {:stretched true}
            [TabOverviewStatus @nb-status id (:online @nuvlabox)]]
 
-          [ui/GridColumn {:stretched true}
-           [deployment-views/DeploymentsOverviewSegment
-            ::deployment-subs/deployments ::events/set-active-tab-index tab-deployment-index]]
+          (when-not (= state "SUSPENDED") 
+            [ui/GridColumn {:stretched true}
+             [deployment-views/DeploymentsOverviewSegment
+              ::deployment-subs/deployments ::events/set-active-tab-index tab-deployment-index]])
 
           (when (:node-id @nb-status)
             [ui/GridColumn {:stretched true}
@@ -1874,14 +1876,20 @@
   []
   (fn []
     (let [count-peripherals (subscribe [::subs/nuvlabox-peripherals-ids])
-          active-index      (subscribe [::subs/active-tab-index])]
+          active-index      (subscribe [::subs/active-tab-index])
+          {:keys [state]}   @(subscribe [::subs/nuvlabox])]
       [ui/Tab
        {:menu        {:secondary true
                       :pointing  true
                       :style     {:display        "flex"
                                   :flex-direction "row"
                                   :flex-wrap      "wrap"}}
-        :panes       (tabs (count @count-peripherals))
+        :panes       (case state
+                       "SUSPENDED" [{:menuItem {:content "Overview"
+                                                :key     "overview"
+                                                :icon    "info"}
+                                     :render   (fn [] (r/as-element [TabOverview]))}]
+                       (tabs (count @count-peripherals)))
         :activeIndex @active-index
         :onTabChange (fn [_ data]
                        (let [active-index (. data -activeIndex)]
@@ -1923,5 +1931,4 @@
        [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
        [job-views/ProgressJobAction @nb-status]
        [TabsNuvlaBox]
-       [AddPlaybookModal]
-       ]]]))
+       [AddPlaybookModal]]]]))

@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Profile - Display customer balance
 - Profile - Handle canceled subscription and reactivation of it
 - Deps - Fix vulnerabilities
 - Sign-in - Automatically redirect user when user want to access a protected

@@ -1139,7 +1139,7 @@
             [ui/TableCell [:b (@tr [:street-address])]]
             [ui/TableCell street-address [:br] postal-code " - " city [:br] country]]
           [ui/TableRow
-           [ui/TableCell {:width 5} [:b (str/capitalize (@tr [:credit-balance]))]]
+           [ui/TableCell {:width 5} [:b (str/capitalize (@tr [:balance]))]]
            [ui/TableCell {:width 11} (format-currency currency balance)]]]]]))))
 
 

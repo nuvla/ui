@@ -1124,12 +1124,13 @@
         customer-info (subscribe [::subs/customer-info])]
     (fn []
       (let [{:keys [street-address city country postal-code]} (:address @customer-info)
-            fullname (:fullname @customer-info)]
+            {:keys [fullname balance currency] :or {balance 0}} @customer-info
+            balance (* balance -1)]
         [ui/Segment {:padded  true
                      :color   "grey"
                      :loading @loading?
                      :style   {:height "100%"}}
-         [ui/Header {:as :h2 :dividing true} (@tr [:billing-contact])]
+         [ui/Header {:as :h2 :dividing true} (@tr [:billing-info])]
          [ui/Table {:basic "very"}
           [ui/TableBody
            [ui/TableRow
@@ -1138,8 +1139,10 @@
            [ui/TableRow
             [ui/TableCell [:b (@tr [:street-address])]]
             [ui/TableCell street-address [:br] postal-code " - " city [:br] country]]
-           ]]
-         ]))))
+           [ui/TableRow {:negative (neg? balance)
+                         :positive (pos? balance)}
+            [ui/TableCell {:width 5} [:b (str/capitalize (@tr [:balance]))]]
+            [ui/TableCell {:width 11} (format-currency currency balance)]]]]]))))
 
 
 (defn DropdownPrincipals

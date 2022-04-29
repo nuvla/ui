@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.infrastructures-detail.spec
+(ns sixsq.nuvla.ui.clouds-detail.spec
   (:require
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.utils.spec :as spec-utils]))

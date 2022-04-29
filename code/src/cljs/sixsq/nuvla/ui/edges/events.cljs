@@ -1,9 +1,9 @@
-(ns sixsq.nuvla.ui.edge.events
+(ns sixsq.nuvla.ui.edges.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.edge.spec :as spec]
-    [sixsq.nuvla.ui.edge.utils :as utils]
+    [sixsq.nuvla.ui.edges.spec :as spec]
+    [sixsq.nuvla.ui.edges.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]

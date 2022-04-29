@@ -79,17 +79,27 @@
                                            ::action-interval-pause) actions-interval]}
             visible? (assoc :dispatch [::session-events/initialize]))))
 
+(def page-alias {"nuvlabox"        "edges"
+                 "edge"            "edges"
+                 "infrastructures" "clouds"})
+
+(defn split-path-alias
+  [path]
+  (let [[page :as path-vec] (vec (str/split path #"/"))
+        real-page (get page-alias page)]
+    (if (and page real-page)
+      (assoc path-vec 0 real-page)
+      path-vec)))
 
 (reg-event-fx
   ::set-navigation-info
   (fn [{{:keys [::spec/actions-interval
                 ::spec/changes-protection?] :as db} :db} [_ path query-params]]
-    (let [path-vec (vec (str/split path #"/"))]
-      (when (not changes-protection?)
-        {:db                        (assoc db ::spec/nav-path path-vec
-                                              ::spec/nav-query-params query-params)
-         ::fx/bulk-actions-interval [::action-interval-delete
-                                     (dissoc actions-interval notification-polling-id)]}))))
+    (when (not changes-protection?)
+      {:db                        (assoc db ::spec/nav-path (split-path-alias path)
+                                            ::spec/nav-query-params query-params)
+       ::fx/bulk-actions-interval [::action-interval-delete
+                                   (dissoc actions-interval notification-polling-id)]})))
 
 
 (reg-event-fx
@@ -323,12 +333,12 @@
   (fn [{{:keys [::spec/stripe
                 :sixsq.nuvla.ui.profile.spec/subscription]} :db} [_ dispatch-vector]]
     (let [subs-status (:status subscription)
-          active? (boolean
-                    (or (and (some? stripe)
-                             (#{"trialing" "active" "past_due"} subs-status))
-                        (nil? stripe)))
-          unpaid? (and (some? stripe)
-                       (= subs-status "unpaid"))]
+          active?     (boolean
+                        (or (and (some? stripe)
+                                 (#{"trialing" "active" "past_due"} subs-status))
+                            (nil? stripe)))
+          unpaid?     (and (some? stripe)
+                           (= subs-status "unpaid"))]
       {:dispatch (if active?
                    dispatch-vector
                    (if unpaid?

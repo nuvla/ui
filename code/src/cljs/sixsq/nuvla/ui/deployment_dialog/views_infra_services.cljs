@@ -20,7 +20,7 @@
         creds-completed?       (subscribe [::subs/credentials-completed?])
         on-click-fn            #(dispatch [::events/set-active-step :infra-services])]
 
-    ^{:key "infra-services"}
+    ^{:key "clouds"}
     [:<>
      (let [{:keys [id name description subtype]} @selected-infra-service]
        [ui/TableRow {:active   false
@@ -29,7 +29,7 @@
          (if @completed?
            [ui/Icon {:name "cloud", :size "large"}]
            [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
-        [ui/TableCell {:collapsing true} (@tr [:infra-services])]
+        [ui/TableCell {:collapsing true} (@tr [:clouds])]
         [ui/TableCell [:div
                        [:span (or name id)]
                        [:br]

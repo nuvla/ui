@@ -88,57 +88,57 @@
                ::message              nil
                ::actions-interval     {}
                ::content-key          (random-uuid)
-               ::pages                {"welcome"         {:url        "welcome"
-                                                          :label-kw   :home
-                                                          :icon       "home"
-                                                          :protected? false
-                                                          :order      0}
-                                       "documentation"   {:url        "documentation"
-                                                          :label-kw   :api-doc
-                                                          :icon       "info"
-                                                          :protected? false}
-                                       "dashboard"       {:url        "dashboard"
-                                                          :label-kw   :dashboard
-                                                          :icon       "dashboard"
-                                                          :protected? true
-                                                          :order      1}
-                                       "apps"            {:url        "apps"
-                                                          :label-kw   :apps
-                                                          :icon       "fas fa-store"
-                                                          :protected? true
-                                                          :order      2}
-                                       "edge"            {:url        "edge"
-                                                          :label-kw   :nuvlabox
-                                                          :name       "NuvlaBox"
-                                                          :icon       "box"
-                                                          :protected? true
-                                                          :order      3}
-                                       "credentials"     {:url        "credentials"
-                                                          :label-kw   :credentials
-                                                          :icon       "key"
-                                                          :protected? true
-                                                          :order      4}
-                                       "notifications"   {:url        "notifications"
-                                                          :label-kw   :notifications
-                                                          :icon       "bell"
-                                                          :protected? true
-                                                          :order      5}
-                                       "data"            {:url             "data"
-                                                          :label-kw        :data
-                                                          :icon            "database"
-                                                          :protected?      true
-                                                          :iframe-visible? true
-                                                          :order           6}
-                                       "infrastructures" {:url        "infrastructures"
-                                                          :label-kw   :infra-service-short
-                                                          :icon       "cloud"
-                                                          :protected? true
-                                                          :order      7}
-                                       "api"             {:url        "api"
-                                                          :label-kw   :api
-                                                          :icon       "code"
-                                                          :protected? false
-                                                          :order      8}
+               ::pages                {"welcome"       {:url        "welcome"
+                                                        :label-kw   :home
+                                                        :icon       "home"
+                                                        :protected? false
+                                                        :order      0}
+                                       "documentation" {:url        "documentation"
+                                                        :label-kw   :api-doc
+                                                        :icon       "info"
+                                                        :protected? false}
+                                       "dashboard"     {:url        "dashboard"
+                                                        :label-kw   :dashboard
+                                                        :icon       "dashboard"
+                                                        :protected? true
+                                                        :order      1}
+                                       "apps"          {:url        "apps"
+                                                        :label-kw   :apps
+                                                        :icon       "fas fa-store"
+                                                        :protected? true
+                                                        :order      2}
+                                       "edges"          {:url        "edges"
+                                                        :label-kw   :edges
+                                                        :name       "edges"
+                                                        :icon       "box"
+                                                        :protected? true
+                                                        :order      3}
+                                       "credentials"   {:url        "credentials"
+                                                        :label-kw   :credentials
+                                                        :icon       "key"
+                                                        :protected? true
+                                                        :order      4}
+                                       "notifications" {:url        "notifications"
+                                                        :label-kw   :notifications
+                                                        :icon       "bell"
+                                                        :protected? true
+                                                        :order      5}
+                                       "data"          {:url             "data"
+                                                        :label-kw        :data
+                                                        :icon            "database"
+                                                        :protected?      true
+                                                        :iframe-visible? true
+                                                        :order           6}
+                                       "clouds"        {:url        "clouds"
+                                                        :label-kw   :infra-service-short
+                                                        :icon       "cloud"
+                                                        :protected? true
+                                                        :order      7}
+                                       "api"           {:url        "api"
+                                                        :label-kw   :api
+                                                        :icon       "code"
+                                                        :protected? false
+                                                        :order      8}
                                        }
                ::open-modal           nil
                ::stripe               nil})

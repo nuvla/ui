@@ -1,8 +1,8 @@
-(ns sixsq.nuvla.ui.edge-detail.subs
+(ns sixsq.nuvla.ui.edges-detail.subs
   (:require
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.edge-detail.spec :as spec]
-    [sixsq.nuvla.ui.edge.utils :as utils]
+    [sixsq.nuvla.ui.edges-detail.spec :as spec]
+    [sixsq.nuvla.ui.edges.utils :as utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.time :as time]))
 

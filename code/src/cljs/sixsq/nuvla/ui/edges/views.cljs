@@ -1,16 +1,16 @@
-(ns sixsq.nuvla.ui.edge.views
+(ns sixsq.nuvla.ui.edges.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
-    [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
-    [sixsq.nuvla.ui.edge.events :as events]
-    [sixsq.nuvla.ui.edge.subs :as subs]
-    [sixsq.nuvla.ui.edge.utils :as utils]
-    [sixsq.nuvla.ui.edge.views-cluster :as views-cluster]
-    [sixsq.nuvla.ui.edge.views-clusters :as views-clusters]
-    [sixsq.nuvla.ui.edge.views-utils :as views-utils]
+    [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
+    [sixsq.nuvla.ui.edges.events :as events]
+    [sixsq.nuvla.ui.edges.subs :as subs]
+    [sixsq.nuvla.ui.edges.utils :as utils]
+    [sixsq.nuvla.ui.edges.views-cluster :as views-cluster]
+    [sixsq.nuvla.ui.edges.views-clusters :as views-clusters]
+    [sixsq.nuvla.ui.edges.views-utils :as views-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
@@ -579,7 +579,7 @@
                    [ui/Container
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:version])]
-                    [edge-detail/DropdownReleases
+                    [edges-detail/DropdownReleases
                      {:placeholder release
                       :value       nb-rel
                       :on-change   (ui-callback/value
@@ -729,10 +729,10 @@
 (defn NuvlaboxRow
   [{:keys [id name description created state tags online] :as _nuvlabox} managers]
   (let [uuid (general-utils/id->uuid id)]
-    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])
+    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
-      [edge-detail/OnlineStatusIcon online]]
+      [edges-detail/OnlineStatusIcon online]]
      [ui/TableCell {:collapsing true}
       [ui/Icon {:icon (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
@@ -799,7 +799,7 @@
 (defn NuvlaboxMapPoint
   [{:keys [id name location inferred-location online]}]
   (let [uuid     (general-utils/id->uuid id)
-        on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
+        on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])]
     [map/CircleMarker {:on-click on-click
                        :center   (map/longlat->latlong (or location inferred-location))
                        :color    (utils/map-online->color online)
@@ -846,7 +846,7 @@
     [components/LoadingPage {}
      [:<>
       [uix/PageHeader "box" (str
-                              (general-utils/capitalize-first-letter (@tr [:edge])) " "
+                              (general-utils/capitalize-first-letter (@tr [:edges])) " "
                               (when (= @view-type :cluster)
                                 (general-utils/capitalize-first-letter (@tr [:clusters]))))]
       [MenuBar]
@@ -877,11 +877,11 @@
   (if (= "nuvlabox-cluster" uuid)
     (do
       (reset! view-type :cluster)
-      (dispatch [::history-events/navigate "edge/"]))
-    [edge-detail/EdgeDetails uuid]))
+      (dispatch [::history-events/navigate "edges/"]))
+    [edges-detail/EdgeDetails uuid]))
 
 
-(defmethod panel/render :edge
+(defmethod panel/render :edges
   [path]
   (dispatch [::events/get-nuvlabox-releases])
   (let [[_ path1 path2] path
@@ -891,6 +891,5 @@
                    2 [DetailedView path1]
                    [NuvlaBoxesOrClusters])]
     [:<>
-     [ui/Segment style/basic
-      children]
+     [ui/Segment style/basic children]
      [AddModalWrapper]]))

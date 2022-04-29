@@ -1,12 +1,12 @@
-(ns sixsq.nuvla.ui.edge.views-clusters
+(ns sixsq.nuvla.ui.edges.views-clusters
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
-    [sixsq.nuvla.ui.edge.events :as events]
-    [sixsq.nuvla.ui.edge.subs :as subs]
-    [sixsq.nuvla.ui.edge.views-utils :as views-utils]
+    [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
+    [sixsq.nuvla.ui.edges.events :as events]
+    [sixsq.nuvla.ui.edges.subs :as subs]
+    [sixsq.nuvla.ui.edges.views-utils :as views-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
@@ -34,7 +34,7 @@
   (let [tr (subscribe [::i18n-subs/tr])]
     (fn [{:keys [id cluster-id created managers workers nuvlabox-managers
                  nuvlabox-workers name description orchestrator status-notes] :as _nuvlabox-cluster}]
-      (let [href          (str "edge/nuvlabox-cluster/" (general-utils/id->uuid id))
+      (let [href          (str "edges/nuvlabox-cluster/" (general-utils/id->uuid id))
             cluster-nodes (+ (count managers) (count workers))
             nb-per-id     (group-by :id (:resources @nuvlaboxes))
             name          (or name cluster-id)]
@@ -69,7 +69,7 @@
                                [ui/ListContent
                                 [ui/ListHeader name
                                  [:div {:style {:float "right"}}
-                                  [edge-detail/OnlineStatusIcon online :corner "top right"]]]
+                                  [edges-detail/OnlineStatusIcon online :corner "top right"]]]
                                 [ui/ListDescription (str (@tr [:updated]) " " (-> updated time/parse-iso8601 time/ago))]]])))]
           :extra       [:<>
                         (when (not-empty status-notes)

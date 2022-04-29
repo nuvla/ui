@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.infrastructures.views
+(ns sixsq.nuvla.ui.clouds.views
   (:require
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
@@ -7,14 +7,14 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.credentials.views :as cred-views]
-    [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
+    [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.infrastructures-detail.views :as infra-detail]
-    [sixsq.nuvla.ui.infrastructures.events :as events]
-    [sixsq.nuvla.ui.infrastructures.spec :as spec]
-    [sixsq.nuvla.ui.infrastructures.subs :as subs]
-    [sixsq.nuvla.ui.infrastructures.utils :as utils]
+    [sixsq.nuvla.ui.clouds-detail.views :as infra-detail]
+    [sixsq.nuvla.ui.clouds.events :as events]
+    [sixsq.nuvla.ui.clouds.spec :as spec]
+    [sixsq.nuvla.ui.clouds.subs :as subs]
+    [sixsq.nuvla.ui.clouds.utils :as utils]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.panel :as panel]
@@ -61,14 +61,14 @@
                         (true? online) true
                         (false? online) false
                         :else nil)
-        href          (str "infrastructures/" (general-utils/id->uuid id))]
+        href          (str "clouds/" (general-utils/id->uuid id))]
     [uix/Card
      {:on-click    #(dispatch [::history-events/navigate href])
       :href        href
       :image       logo-url
       :header      [:<>
                     [:div {:style {:float "right"}}
-                     [edge-detail/OnlineStatusIcon status]]
+                     [edges-detail/OnlineStatusIcon status]]
                     (if (str/starts-with? icon-or-image "/")
                       [ui/Image {:src   icon-or-image
                                  :style {:overflow       "hidden"
@@ -117,7 +117,7 @@
         (for [{service-id :id :as service} @services]
           ^{:key service-id}
           [ServiceCard service])
-        [ui/CardMeta "Empty infrastructure group"])]]))
+        [ui/CardMeta "Empty cloud group"])]]))
 
 
 (defn ServiceGroups
@@ -138,7 +138,7 @@
       (let [infra-group-count (get @isgs :count 0)
             total-pages       (general-utils/total-pages infra-group-count @elements-per-page)]
         [:<>
-         [uix/PageHeader "cloud" (@tr [:infra-services])]
+         [uix/PageHeader "cloud" (@tr [:clouds])]
          [MenuBar]
          (when (pos-int? infra-group-count)
            [:<>
@@ -592,7 +592,7 @@
     [AddServiceModal]]])
 
 
-(defmethod panel/render :infrastructures
+(defmethod panel/render :clouds
   [path]
   (timbre/set-level! :info)
   (let [[_ uuid] path

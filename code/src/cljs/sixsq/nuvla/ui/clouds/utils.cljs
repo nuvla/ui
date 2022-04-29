@@ -1,6 +1,6 @@
-(ns sixsq.nuvla.ui.infrastructures.utils
+(ns sixsq.nuvla.ui.clouds.utils
   (:require [clojure.string :as str]
-            [sixsq.nuvla.ui.infrastructures.spec :as spec]))
+            [sixsq.nuvla.ui.clouds.spec :as spec]))
 
 (defn get-query-params
   [page elements-per-page]

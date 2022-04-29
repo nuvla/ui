@@ -14,11 +14,11 @@
     [sixsq.nuvla.ui.deployment-dialog.spec :as deployment-dialog]
     [sixsq.nuvla.ui.deployment.spec :as deployment]
     [sixsq.nuvla.ui.docs.spec :as docs]
-    [sixsq.nuvla.ui.edge-detail.spec :as edge-detail]
-    [sixsq.nuvla.ui.edge.spec :as edge]
+    [sixsq.nuvla.ui.edges-detail.spec :as edges-detail]
+    [sixsq.nuvla.ui.edges.spec :as edges]
     [sixsq.nuvla.ui.i18n.spec :as i18n]
-    [sixsq.nuvla.ui.infrastructures-detail.spec :as infra-service-detail]
-    [sixsq.nuvla.ui.infrastructures.spec :as infra-service]
+    [sixsq.nuvla.ui.clouds-detail.spec :as infra-service-detail]
+    [sixsq.nuvla.ui.clouds.spec :as infra-service]
     [sixsq.nuvla.ui.intercom.spec :as intercom]
     [sixsq.nuvla.ui.job.spec :as job]
     [sixsq.nuvla.ui.main.spec :as main]
@@ -45,8 +45,8 @@
                      ::intercom/db
                      ::main/db
                      ::messages/db
-                     ::edge/db
-                     ::edge-detail/db
+                     ::edges/db
+                     ::edges-detail/db
                      ::profile/db
                      ::session/db
                      ::job/db
@@ -73,8 +73,8 @@
          intercom/defaults
          main/defaults
          messages/defaults
-         edge/defaults
-         edge-detail/defaults
+         edges/defaults
+         edges-detail/defaults
          profile/defaults
          session/defaults
          job/defaults

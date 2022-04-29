@@ -14,13 +14,13 @@
     [sixsq.nuvla.ui.dashboard.views]
     [sixsq.nuvla.ui.data.views]
     [sixsq.nuvla.ui.docs.views]
-    [sixsq.nuvla.ui.edge.views]
+    [sixsq.nuvla.ui.edges.views]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.utils :as history-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.i18n.views :as i18n-views]
-    [sixsq.nuvla.ui.infrastructures-detail.views]
-    [sixsq.nuvla.ui.infrastructures.views]
+    [sixsq.nuvla.ui.clouds-detail.views]
+    [sixsq.nuvla.ui.clouds.views]
     [sixsq.nuvla.ui.intercom.views :as intercom]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as events]
@@ -188,7 +188,6 @@
 (defn contents
   []
   (let [resource-path    (subscribe [::subs/nav-path])
-        ;bootstrap-message (subscribe [::subs/bootstrap-message])
         content-key      (subscribe [::subs/content-key])
         is-small-device? (subscribe [::subs/is-small-device?])]
     (fn []
@@ -201,8 +200,6 @@
 
        [Message]
 
-       #_(when @bootstrap-message
-           [BootstrapMessage @bootstrap-message])
        (panel/render @resource-path)])))
 
 

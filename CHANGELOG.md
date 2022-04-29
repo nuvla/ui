@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Main - Alias support for URL page navigation
+
 ### Changed
 
 - Profile - Display customer balance

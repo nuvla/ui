@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.30.0] - 2022-04-29
+
 ### Changed
 
 - Profile - Display customer balance

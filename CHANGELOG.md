@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [2.30.1] - 2022-04-29
+
+### Changed
+
+- Project - update parent version
+
 ## [2.30.0] - 2022-04-29
 
 ### Changed

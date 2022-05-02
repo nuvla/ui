@@ -6,6 +6,15 @@
 
 - Main - Alias support for URL page navigation
 
+## [2.30.1] - 2022-04-29
+
+### Changed
+
+- Project - update parent version
+
+## [2.30.0] - 2022-04-29
+>>>>>>> master
+
 ### Changed
 
 - Profile - Display customer balance

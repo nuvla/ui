@@ -90,8 +90,7 @@
   [ui/ModalHeader
    (when icon
      [ui/Icon {:name icon}])
-   (str/capitalize header)])
-
+   (utils-general/capitalize-first-letter header)])
 
 (defn Pagination
   "Provide pagination element with more visible icons. Note: :totalitems is in lowercase not to

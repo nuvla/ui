@@ -29,7 +29,7 @@
          (if @completed?
            [ui/Icon {:name "cloud", :size "large"}]
            [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
-        [ui/TableCell {:collapsing true} (@tr [:clouds])]
+        [ui/TableCell {:collapsing true} (@tr [:infra-services])]
         [ui/TableCell [:div
                        [:span (or name id)]
                        [:br]

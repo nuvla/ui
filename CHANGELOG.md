@@ -6,6 +6,11 @@
 
 - Main - Alias support for URL page navigation
 
+### Changed
+
+- Project - Renamed NuvlaBox and infrastructure
+- Project - Fix broken links to docs
+
 ## [2.30.1] - 2022-04-29
 
 ### Changed
@@ -13,7 +18,6 @@
 - Project - update parent version
 
 ## [2.30.0] - 2022-04-29
->>>>>>> master
 
 ### Changed
 

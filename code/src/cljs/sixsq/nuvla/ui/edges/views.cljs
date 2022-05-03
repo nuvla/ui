@@ -139,26 +139,18 @@
           :on-refresh #(dispatch [::events/refresh-root])}]]])))
 
 
-(defonce usb-doc-anchor "install-via-usb-stick")
-(defonce compose-doc-anchor "install-via-compose-file-bundle")
-
-
-(defn NuvlaDocLink
-  "anchor should match the html id in the doc page"
-  ([tr text-key] [NuvlaDocLink tr text-key nil])
-  ([tr text-key anchor]
-   [:a {:href   (str "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/quickstart.html" (when anchor (str "#" anchor)))
-        :target "_blank"}
-    (@tr [text-key])]))
+(def usb-doc-url "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/install-with-usb-stick/")
+(def compose-doc-url "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/install-with-compose-files/")
 
 
 (defn NuvlaDocs
-  "anchor should match the html id in the doc page"
-  [tr anchor]
+  [tr url]
   [ui/Container {:text-align :center
                  :style      {:margin "0.5em"}}
    [:span (@tr [:nuvlabox-documentation])
-    [NuvlaDocLink tr :nuvla-docs anchor]]])
+    [:a {:href  url 
+         :target "_blank"}
+     (@tr [:nuvla-docs])]]])
 
 
 (defn CreateSSHKeyMessage
@@ -274,7 +266,7 @@
              [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]]
 
            [:div {:style {:margin "20px 0px 0px 0px"}}
-            [NuvlaDocs tr compose-doc-anchor]]]]
+            [NuvlaDocs tr compose-doc-url]]]]
 
          [ui/ModalActions
           [ui/Button {:positive true
@@ -382,7 +374,7 @@
              [:span (@tr [:repeat-info])]]]]
 
           [:div {:style {:margin "20px 0px 0px 0px"}}
-           [NuvlaDocs tr usb-doc-anchor]]]
+           [NuvlaDocs tr usb-doc-url]]]
 
          [ui/ModalActions
           [ui/Button {:positive true
@@ -653,7 +645,9 @@
 
                       [:div {:style {:color "grey" :font-style "oblique"}}
                        (@tr [:create-nuvlabox-compose])]
-                      [NuvlaDocLink tr :nuvlabox-modal-more-info compose-doc-anchor]
+                      [:a {:href  compose-doc-url 
+                           :target "_blank"}
+                       (@tr [:nuvlabox-modal-more-info])]
 
                       [:div {:style {:margin  "10px 5px 5px 5px"
                                      :display (if (= @install-strategy "compose")
@@ -708,8 +702,9 @@
                                   :wide     true
                                   :trigger  (r/as-element [ui/Icon {:name  "question"
                                                                     :color "grey"}])}]]
-
-                      [NuvlaDocLink tr :nuvlabox-modal-more-info usb-doc-anchor]]]])]
+                      [:a {:href  usb-doc-url 
+                           :target "_blank"}
+                       (@tr [:nuvlabox-modal-more-info])]]]])]
 
                 [ui/ModalActions
                  [utils-forms/validation-error-msg (@tr [:nuvlabox-modal-missing-fields]) (not (nil? @install-strategy-error))]

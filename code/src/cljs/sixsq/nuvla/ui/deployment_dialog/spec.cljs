@@ -97,7 +97,7 @@
 (def step-states {:data           {:step-id :data
                                    :icon    "database"}
                   :infra-services {:step-id :infra-services
-                                   :icon    "cloud"}
+                                   :icon    "map marker alternate"}
                   :module-version {:step-id :module-version
                                    :icon    "list ol"}
                   :registries     {:step-id :registries

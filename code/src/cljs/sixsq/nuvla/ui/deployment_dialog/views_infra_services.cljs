@@ -27,7 +27,7 @@
                      :on-click on-click-fn}
         [ui/TableCell {:collapsing true}
          (if @completed?
-           [ui/Icon {:name "cloud", :size "large"}]
+           [ui/Icon {:name "map marker alternate", :size "large"}]
            [ui/Icon {:name "warning sign", :size "large", :color "red"}])]
         [ui/TableCell {:collapsing true} (@tr [:infra-services])]
         [ui/TableCell [:div

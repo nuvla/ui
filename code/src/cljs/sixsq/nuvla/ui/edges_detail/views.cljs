@@ -232,8 +232,7 @@
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
                             [:span (str (@tr [:nuvlabox-update-error-content])) " "
-                             [:a {:href   (str "https://docs.nuvla.io/nuvlabox/"
-                                               "nuvlabox-engine/quickstart.html#from-nuvla")
+                             [:a {:href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/"
                                   :target "_blank"}
                               (str/capitalize (@tr [:see-more]))]])}])
              (when (and (some? target-version) (is-old-version? target-version))

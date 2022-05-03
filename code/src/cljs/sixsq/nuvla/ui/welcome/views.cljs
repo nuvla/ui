@@ -144,7 +144,7 @@
               " "
               [:a {:target "_blank"
                    :key    "nuvlabox-engine-quickstart"
-                   :href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/quickstart"}
+                   :href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/"}
                (@tr [:documentation])]
               " "
               (@tr [:welcome-how-to-nb-3-subheader-post])
@@ -231,7 +231,7 @@
               ^{:key (@tr [:welcome-how-to-video-1-subheader-mid])}
               [:a {:target "_blank"
                    :key    "video-nuvlabox-engine-quickstart"
-                   :href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/quickstart"}
+                   :href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/"}
                (@tr [:welcome-how-to-video-1-subheader-mid])]
               " "
               (@tr [:welcome-how-to-video-1-subheader-post])

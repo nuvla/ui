@@ -201,8 +201,8 @@
     (fn [nuvlabox-id creation-data _nuvlabox-release-data _nuvlabox-ssh-keys
          new-private-ssh-key playbooks-toggle on-close-fn]
       (let [tr                  (subscribe [::i18n-subs/tr])
-            nuvlabox-name-or-id (str "NuvlaBox " (or (:name creation-data)
-                                                     (general-utils/id->short-uuid nuvlabox-id)))
+            nuvlabox-name-or-id (str "NuvlaEdge " (or (:name creation-data)
+                                                      (general-utils/id->short-uuid nuvlabox-id)))
             execute-command     (str "docker-compose -p nuvlabox -f "
                                      (str/join " -f " (map :name download-files)) " up -d")]
         [:<>
@@ -465,7 +465,7 @@
                                                                                  (str/blank? v)))
                                                                        (into {}))])]))
                                                   ; else, create new one
-                                                  (let [ssh-desc "SSH credential generated for NuvlaBox: "
+                                                  (let [ssh-desc "SSH credential generated for NuvlaEdge: "
                                                         ssh-tpl  {:name        (str "SSH key for " (:name @creation-data))
                                                                   :description (str ssh-desc (:name @creation-data))
                                                                   :template    {:href "credential-template/generate-ssh-key"}}]

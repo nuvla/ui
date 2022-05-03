@@ -317,7 +317,7 @@
                      :value     @component-type
                      :on-change (ui-callback/value #(dispatch [::events/set-collection %]))
                      :options   [{:key   "nuvlabox-status"
-                                  :text  "NuvlaBox Telemetry"
+                                  :text  "NuvlaEdge Telemetry"
                                   :value "nuvlabox-status"}
                                  {:key   "infrastructure-service"
                                   :text  "Infrastructure Service"
@@ -362,7 +362,7 @@
 
 
 (def component-options
-  [{:key "nuvlabox", :text "NuvlaBox Telemetry", :value "nuvlabox"}
+  [{:key "nuvlabox", :text "NuvlaEdge Telemetry", :value "nuvlabox"}
    {:key "infrastructure-service", :text "Infrastructure Service", :value "infrastructure-service"}
    {:key "data-record", :text "Data Record", :value "data-record"}])
 
@@ -901,7 +901,7 @@
   "Transform kebab names into spaced camel case, with special exceptions"
   [name]
   (case name
-    "nuvlabox" "NuvlaBox"
+    "nuvlabox" "NuvlaEdge"
     (str/join " " (map str/capitalize (str/split name #"-")))))
 
 

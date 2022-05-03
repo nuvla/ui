@@ -5,7 +5,7 @@
 
 (def type-apps "APPS")
 (def type-deployments "DEPLOYMENTS")
-(def type-nbs "NUVLABOXES")
+(def type-nbs "NUVLAEDGES")
 (def type-creds "CREDENTIALS")
 
 (def target-apps {:resource        "apps"

@@ -294,8 +294,8 @@
 (reg-event-fx
   ::create-nuvlabox-usb-api-key
   (fn [_ [_ ttl-days]]
-    (let [creation-data {:description "Auto-generated for NuvlaBox self-registration USB trigger"
-                         :name        "NuvlaBox self-registration USB trigger"
+    (let [creation-data {:description "Auto-generated for NuvlaEdge self-registration USB trigger"
+                         :name        "NuvlaEdge self-registration USB trigger"
                          :template    {:method "generate-api-key"
                                        :ttl    (* ttl-days 24 60 60)
                                        :href   "credential-template/generate-api-key"}}]

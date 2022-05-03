@@ -66,8 +66,8 @@
                              all-nodes
                              " "
                              (if (> nuvlabox-nodes 1)
-                               (str (@tr [:they-are]) " NuvlaBox " (@tr [:nodes]))
-                               (str (@tr [:it-is-a]) " NuvlaBox " (@tr [:node]))))}]))
+                               (str (@tr [:they-are]) " NuvlaEdge " (@tr [:nodes]))
+                               (str (@tr [:it-is-a]) " NuvlaEdge " (@tr [:node]))))}]))
 
 
 (defn NuvlaboxCards

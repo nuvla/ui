@@ -172,7 +172,7 @@
       #(if (instance? js/Error %)
          (let [{:keys [status message]} (response/parse-ex-info %)]
            (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error executing " operation " for NuvlaBox " resource-id)
+                      {:header  (cond-> (str "error executing " operation " for NuvlaEdge " resource-id)
                                         status (str " (" status ")"))
                        :content message
                        :type    :error}])

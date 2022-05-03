@@ -94,7 +94,7 @@
                              :flex-direction  "column"
                              :justify-content "space-between"}}
 
-     [:h4 [ui/Icon {:name icon}] (str/upper-case "NuvlaBoxes")]
+     [:h4 [ui/Icon {:name icon}] (str/upper-case "NuvlaEdges")]
 
      [edges-views/StatisticStates false]
 

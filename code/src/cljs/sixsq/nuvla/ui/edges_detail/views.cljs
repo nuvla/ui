@@ -585,7 +585,7 @@
         show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "update-nuvlabox" @show?)}
-      [UpdateButton resource operation show? "Update NuvlaBox" "download" (@tr [:update])])))
+      [UpdateButton resource operation show? "Update NuvlaEdge" "download" (@tr [:update])])))
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "enable-emergency-playbooks"]
@@ -1025,7 +1025,7 @@
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
-     [:h4 "NuvlaBox "
+     [:h4 "NuvlaEdge "
       (when nuvlabox-engine-version
         [ui/Label {:circular true
                    :color    "blue"
@@ -1689,7 +1689,7 @@
 
          [ui/Container {:text-align "center"}
           [ui/Label {:basic true}
-           "Total NuvlaBox playbooks found: "
+           "Total NuvlaEdge playbooks found: "
            [ui/LabelDetail n]]
 
           [ui/Segment {:secondary true

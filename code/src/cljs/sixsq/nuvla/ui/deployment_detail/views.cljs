@@ -721,7 +721,7 @@
             [:div [ui/Icon {:name "key"}] cred])]]
         (when nuvlabox
           [ui/TableRow
-           [ui/TableCell "NuvlaBox"]
+           [ui/TableCell "NuvlaEdge"]
            [ui/TableCell
             (deployment-utils/format-nuvlabox-value nuvlabox)]])
         [ui/TableRow

@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.edge-detail.spec
+(ns sixsq.nuvla.ui.edges-detail.spec
   (:require
     [clojure.spec.alpha :as s]))
 

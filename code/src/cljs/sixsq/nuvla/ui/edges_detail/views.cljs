@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.edge-detail.views
+(ns sixsq.nuvla.ui.edges-detail.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
@@ -8,11 +8,11 @@
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
     [sixsq.nuvla.ui.deployment.views :as deployment-views]
-    [sixsq.nuvla.ui.edge-detail.events :as events]
-    [sixsq.nuvla.ui.edge-detail.subs :as subs]
-    [sixsq.nuvla.ui.edge.events :as edge-events]
-    [sixsq.nuvla.ui.edge.subs :as edge-subs]
-    [sixsq.nuvla.ui.edge.utils :as utils]
+    [sixsq.nuvla.ui.edges-detail.events :as events]
+    [sixsq.nuvla.ui.edges-detail.subs :as subs]
+    [sixsq.nuvla.ui.edges.events :as edges-events]
+    [sixsq.nuvla.ui.edges.subs :as edges-subs]
+    [sixsq.nuvla.ui.edges.utils :as utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.job.subs :as job-subs]
     [sixsq.nuvla.ui.job.views :as job-views]
@@ -104,10 +104,10 @@
 
 (defn DropdownReleases
   [_opts]
-  (let [releases (subscribe [::edge-subs/nuvlabox-releases-options])]
+  (let [releases (subscribe [::edges-subs/nuvlabox-releases-options])]
     (fn [opts]
       (when (empty? @releases)
-        (dispatch [::edge-events/get-nuvlabox-releases]))
+        (dispatch [::edges-events/get-nuvlabox-releases]))
       [ui/Dropdown
        (merge {:selection true
                :loading   (empty? @releases)
@@ -181,7 +181,7 @@
   [{:keys [id] :as _resource} operation show?]
   (let [tr            (subscribe [::i18n-subs/tr])
         status        (subscribe [::subs/nuvlabox-status])
-        releases      (subscribe [::edge-subs/nuvlabox-releases-options])
+        releases      (subscribe [::edges-subs/nuvlabox-releases-options])
         close-fn      #(reset! show? false)
         form-data     (r/atom nil)
         force-restart (r/atom false)
@@ -232,8 +232,7 @@
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
                             [:span (str (@tr [:nuvlabox-update-error-content])) " "
-                             [:a {:href   (str "https://docs.nuvla.io/nuvlabox/"
-                                               "nuvlabox-engine/quickstart.html#from-nuvla")
+                             [:a {:href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/"
                                   :target "_blank"}
                               (str/capitalize (@tr [:see-more]))]])}])
              (when (and (some? target-version) (is-old-version? target-version))
@@ -585,7 +584,7 @@
         show? (r/atom false)]
     (fn [resource operation]
       ^{:key (str "update-nuvlabox" @show?)}
-      [UpdateButton resource operation show? "Update NuvlaBox" "download" (@tr [:update])])))
+      [UpdateButton resource operation show? "Update NuvlaEdge" "download" (@tr [:update])])))
 
 
 (defmethod cimi-detail-views/other-button ["nuvlabox" "enable-emergency-playbooks"]
@@ -1025,7 +1024,7 @@
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
-     [:h4 "NuvlaBox "
+     [:h4 "NuvlaEdge "
       (when nuvlabox-engine-version
         [ui/Label {:circular true
                    :color    "blue"
@@ -1603,8 +1602,8 @@
         close-fn             #(do
                                 (reset! form-data default-form-data)
                                 (reset! disabled-by-default? false)
-                                (dispatch [::edge-events/open-modal nil]))
-        show-modal?          (subscribe [::edge-subs/modal-visible? modal-id])
+                                (dispatch [::edges-events/open-modal nil]))
+        show-modal?          (subscribe [::edges-subs/modal-visible? modal-id])
         on-change-type       (fn [v]
                                (swap! form-data assoc :type v)
                                (if (= v "EMERGENCY")
@@ -1689,7 +1688,7 @@
 
          [ui/Container {:text-align "center"}
           [ui/Label {:basic true}
-           "Total NuvlaBox playbooks found: "
+           "Total NuvlaEdge playbooks found: "
            [ui/LabelDetail n]]
 
           [ui/Segment {:secondary true
@@ -1722,7 +1721,7 @@
                           :size     "mini"
                           :positive true
                           :circular true
-                          :on-click #(dispatch [::edge-events/open-modal :nuvlabox-playbook-add])}])
+                          :on-click #(dispatch [::edges-events/open-modal :nuvlabox-playbook-add])}])
 
             [ui/Container
              (if @selected-playbook

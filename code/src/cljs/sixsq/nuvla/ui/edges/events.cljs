@@ -1,9 +1,9 @@
-(ns sixsq.nuvla.ui.edge.events
+(ns sixsq.nuvla.ui.edges.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.edge.spec :as spec]
-    [sixsq.nuvla.ui.edge.utils :as utils]
+    [sixsq.nuvla.ui.edges.spec :as spec]
+    [sixsq.nuvla.ui.edges.utils :as utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -294,8 +294,8 @@
 (reg-event-fx
   ::create-nuvlabox-usb-api-key
   (fn [_ [_ ttl-days]]
-    (let [creation-data {:description "Auto-generated for NuvlaBox self-registration USB trigger"
-                         :name        "NuvlaBox self-registration USB trigger"
+    (let [creation-data {:description "Auto-generated for NuvlaEdge self-registration USB trigger"
+                         :name        "NuvlaEdge self-registration USB trigger"
                          :template    {:method "generate-api-key"
                                        :ttl    (* ttl-days 24 60 60)
                                        :href   "credential-template/generate-api-key"}}]

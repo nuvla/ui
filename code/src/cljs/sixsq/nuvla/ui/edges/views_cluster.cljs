@@ -1,13 +1,13 @@
-(ns sixsq.nuvla.ui.edge.views-cluster
+(ns sixsq.nuvla.ui.edges.views-cluster
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
-    [sixsq.nuvla.ui.edge.events :as events]
-    [sixsq.nuvla.ui.edge.subs :as subs]
-    [sixsq.nuvla.ui.edge.utils :as utils]
-    [sixsq.nuvla.ui.edge.views-utils :as views-utils]
+    [sixsq.nuvla.ui.edges.events :as events]
+    [sixsq.nuvla.ui.edges.subs :as subs]
+    [sixsq.nuvla.ui.edges.utils :as utils]
+    [sixsq.nuvla.ui.edges.views-utils :as views-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
@@ -66,8 +66,8 @@
                              all-nodes
                              " "
                              (if (> nuvlabox-nodes 1)
-                               (str (@tr [:they-are]) " NuvlaBox " (@tr [:nodes]))
-                               (str (@tr [:it-is-a]) " NuvlaBox " (@tr [:node]))))}]))
+                               (str (@tr [:they-are]) " NuvlaEdge " (@tr [:nodes]))
+                               (str (@tr [:it-is-a]) " NuvlaEdge " (@tr [:node]))))}]))
 
 
 (defn NuvlaboxCards
@@ -127,7 +127,7 @@
 (defn NuvlaboxMapPoint
   [{:keys [id name location online]}]
   (let [uuid     (general-utils/id->uuid id)
-        on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
+        on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])]
     [map/CircleMarker {:on-click on-click
                        :center   (map/longlat->latlong location)
                        :color    (utils/map-online->color online)
@@ -272,7 +272,7 @@
          :no-nuvlabox-cluster-message-header
          :no-nuvlabox-cluster-message-content]
         [uix/PageHeader "fas fa-chart-network"
-         (str (general-utils/capitalize-first-letter (@tr [:edge])) " "
+         (str (general-utils/capitalize-first-letter (@tr [:edges])) " "
               (:name @cluster))]
         [MenuBar cluster-id]
         [TabsCluster]]])))

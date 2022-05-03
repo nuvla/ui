@@ -9,8 +9,8 @@
     [sixsq.nuvla.ui.dashboard.utils :as utils]
     [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
     [sixsq.nuvla.ui.deployment.views :as deployment-views]
-    [sixsq.nuvla.ui.edge.subs :as edge-subs]
-    [sixsq.nuvla.ui.edge.views :as edge-views]
+    [sixsq.nuvla.ui.edges.subs :as edges-subs]
+    [sixsq.nuvla.ui.edges.views :as edges-views]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
@@ -94,9 +94,9 @@
                              :flex-direction  "column"
                              :justify-content "space-between"}}
 
-     [:h4 [ui/Icon {:name icon}] (str/upper-case "NuvlaBoxes")]
+     [:h4 [ui/Icon {:name icon}] (str/upper-case "NuvlaEdges")]
 
-     [edge-views/StatisticStates false]
+     [edges-views/StatisticStates false]
 
      [ui/Button {:icon     icon
                  :color    :green
@@ -155,7 +155,7 @@
   []
   (let [apps              (subscribe [::apps-store-subs/modules])
         no-of-apps        (:count @apps)
-        nuvlaboxes        (subscribe [::edge-subs/nuvlaboxes-summary-all])
+        nuvlaboxes        (subscribe [::edges-subs/nuvlaboxes-summary-all])
         no-of-nb          (:count @nuvlaboxes)
         deployments       (subscribe [::deployment-subs/deployments-summary-all])
         no-of-deployments (:count @deployments)

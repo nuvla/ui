@@ -134,7 +134,7 @@
               (@tr [:welcome-how-to-nb-2-subheader-pre])
               " "
               ^{:key (@tr [:welcome-how-to-nb-2-subheader-mid])}
-              [navigate-link "edge" (@tr [:welcome-how-to-nb-2-subheader-mid])]
+              [navigate-link "edges" (@tr [:welcome-how-to-nb-2-subheader-mid])]
               " "
               (@tr [:welcome-how-to-nb-2-subheader-post])
               ".")
@@ -144,7 +144,7 @@
               " "
               [:a {:target "_blank"
                    :key    "nuvlabox-engine-quickstart"
-                   :href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/quickstart"}
+                   :href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/"}
                (@tr [:documentation])]
               " "
               (@tr [:welcome-how-to-nb-3-subheader-post])
@@ -154,7 +154,7 @@
               (@tr [:welcome-how-to-nb-4-subheader-pre])
               " "
               ^{:key (@tr [:welcome-how-to-nb-4-subheader-mid])}
-              [navigate-link "edge" (@tr [:welcome-how-to-nb-4-subheader-mid])]
+              [navigate-link "edges" (@tr [:welcome-how-to-nb-4-subheader-mid])]
               ". "
               (@tr [:welcome-how-to-nb-4-subheader-post])
               ".")
@@ -231,7 +231,7 @@
               ^{:key (@tr [:welcome-how-to-video-1-subheader-mid])}
               [:a {:target "_blank"
                    :key    "video-nuvlabox-engine-quickstart"
-                   :href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/quickstart"}
+                   :href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/"}
                (@tr [:welcome-how-to-video-1-subheader-mid])]
               " "
               (@tr [:welcome-how-to-video-1-subheader-post])
@@ -241,7 +241,7 @@
               (@tr [:welcome-how-to-video-2-subheader-pre])
               " "
               ^{:key (@tr [:welcome-how-to-video-2-subheader-post])}
-              [navigate-link "edge" (@tr [:welcome-how-to-video-2-subheader-post])] ".")
+              [navigate-link "edges" (@tr [:welcome-how-to-video-2-subheader-post])] ".")
         (step 3
               (@tr [:welcome-how-to-video-3-header])
               (@tr [:welcome-how-to-video-3-subheader-pre]))]]]]))

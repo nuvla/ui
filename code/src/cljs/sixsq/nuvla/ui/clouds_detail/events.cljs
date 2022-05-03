@@ -1,9 +1,9 @@
-(ns sixsq.nuvla.ui.infrastructures-detail.events
+(ns sixsq.nuvla.ui.clouds-detail.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.infrastructures-detail.spec :as spec]
+    [sixsq.nuvla.ui.clouds-detail.spec :as spec]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -48,25 +48,25 @@
   (fn [{{:keys [::spec/infrastructure-service]} :db} _]
     (let [infra-id (:id infrastructure-service)]
       {::cimi-api-fx/delete [infra-id #(dispatch
-                                         [::history-events/navigate "infrastructures"])]})))
+                                         [::history-events/navigate "clouds"])]})))
 
 
 (reg-event-fx
   ::terminate
   (fn [{{:keys [::spec/infrastructure-service]} :db} _]
     (let [infra-id (:id infrastructure-service)]
-      {::cimi-api-fx/operation [infra-id "terminate" #(dispatch [::history-events/navigate "infrastructures"])]})))
+      {::cimi-api-fx/operation [infra-id "terminate" #(dispatch [::history-events/navigate "clouds"])]})))
 
 
 (reg-event-fx
   ::stop
   (fn [{{:keys [::spec/infrastructure-service]} :db} _]
     (let [infra-id (:id infrastructure-service)]
-      {::cimi-api-fx/operation [infra-id "stop" #(dispatch [::history-events/navigate "infrastructures"])]})))
+      {::cimi-api-fx/operation [infra-id "stop" #(dispatch [::history-events/navigate "clouds"])]})))
 
 
 (reg-event-fx
   ::start
   (fn [{{:keys [::spec/infrastructure-service]} :db} _]
     (let [infra-id (:id infrastructure-service)]
-      {::cimi-api-fx/operation [infra-id "start" #(dispatch [::history-events/navigate "infrastructures"])]})))
+      {::cimi-api-fx/operation [infra-id "start" #(dispatch [::history-events/navigate "clouds"])]})))

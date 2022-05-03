@@ -390,7 +390,7 @@
          [ui/TableCell content-type]
          [ui/TableCell [uix/Tags tags]]
          [ui/TableCell
-          [values/as-link is-uuid :page "infrastructures" :label (utils-general/id->short-uuid infrastructure-service)]]
+          [values/as-link is-uuid :page "clouds" :label (utils-general/id->short-uuid infrastructure-service)]]
          [ui/TableCell (when resource:deployment
                          (values/as-link resource:deployment :label deployment-uuid))]
          [ui/TableCell (values/as-link id :label uuid)]]))))
@@ -461,7 +461,7 @@
                       [:div {:style {:padding "10px 0 0 0"}}
                        [ui/Icon {:name "cloud"}]
                        [values/as-link infrastructure-service-id
-                        :page "infrastructures" :label (@tr [:storage-service])]])]
+                        :page "clouds" :label (@tr [:storage-service])]])]
       :tags        tags
       :on-select   #(dispatch [::events/toggle-data-record-id id])
       :selected?   selected?

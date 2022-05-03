@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.infrastructures-detail.views
+(ns sixsq.nuvla.ui.clouds-detail.views
   (:require
     [cljs.spec.alpha :as s]
     [clojure.string :as str]
@@ -6,11 +6,11 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
-    [sixsq.nuvla.ui.edge-detail.views :as edge-detail-views]
+    [sixsq.nuvla.ui.edges-detail.views :as edges-detail-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.infrastructures-detail.events :as events]
-    [sixsq.nuvla.ui.infrastructures-detail.spec :as spec]
-    [sixsq.nuvla.ui.infrastructures-detail.subs :as subs]
+    [sixsq.nuvla.ui.clouds-detail.events :as events]
+    [sixsq.nuvla.ui.clouds-detail.spec :as spec]
+    [sixsq.nuvla.ui.clouds-detail.subs :as subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
@@ -202,7 +202,7 @@
           [ui/Icon {:name "cloud"}]
           (or name id)]
          [:p {:style {:margin "0.5em 0 1em 0"}}
-          [edge-detail-views/OnlineStatusIcon online]
+          [edges-detail-views/OnlineStatusIcon online]
           [:span {:style {:font-weight "bold"}}
            "State "
            [ui/Popup

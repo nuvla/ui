@@ -1,16 +1,16 @@
-(ns sixsq.nuvla.ui.edge.views
+(ns sixsq.nuvla.ui.edges.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
-    [sixsq.nuvla.ui.edge-detail.views :as edge-detail]
-    [sixsq.nuvla.ui.edge.events :as events]
-    [sixsq.nuvla.ui.edge.subs :as subs]
-    [sixsq.nuvla.ui.edge.utils :as utils]
-    [sixsq.nuvla.ui.edge.views-cluster :as views-cluster]
-    [sixsq.nuvla.ui.edge.views-clusters :as views-clusters]
-    [sixsq.nuvla.ui.edge.views-utils :as views-utils]
+    [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
+    [sixsq.nuvla.ui.edges.events :as events]
+    [sixsq.nuvla.ui.edges.subs :as subs]
+    [sixsq.nuvla.ui.edges.utils :as utils]
+    [sixsq.nuvla.ui.edges.views-cluster :as views-cluster]
+    [sixsq.nuvla.ui.edges.views-clusters :as views-clusters]
+    [sixsq.nuvla.ui.edges.views-utils :as views-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
@@ -139,26 +139,18 @@
           :on-refresh #(dispatch [::events/refresh-root])}]]])))
 
 
-(defonce usb-doc-anchor "install-via-usb-stick")
-(defonce compose-doc-anchor "install-via-compose-file-bundle")
-
-
-(defn NuvlaDocLink
-  "anchor should match the html id in the doc page"
-  ([tr text-key] [NuvlaDocLink tr text-key nil])
-  ([tr text-key anchor]
-   [:a {:href   (str "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/quickstart.html" (when anchor (str "#" anchor)))
-        :target "_blank"}
-    (@tr [text-key])]))
+(def usb-doc-url "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/install-with-usb-stick/")
+(def compose-doc-url "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/install-with-compose-files/")
 
 
 (defn NuvlaDocs
-  "anchor should match the html id in the doc page"
-  [tr anchor]
+  [tr url]
   [ui/Container {:text-align :center
                  :style      {:margin "0.5em"}}
    [:span (@tr [:nuvlabox-documentation])
-    [NuvlaDocLink tr :nuvla-docs anchor]]])
+    [:a {:href  url 
+         :target "_blank"}
+     (@tr [:nuvla-docs])]]])
 
 
 (defn CreateSSHKeyMessage
@@ -201,8 +193,8 @@
     (fn [nuvlabox-id creation-data _nuvlabox-release-data _nuvlabox-ssh-keys
          new-private-ssh-key playbooks-toggle on-close-fn]
       (let [tr                  (subscribe [::i18n-subs/tr])
-            nuvlabox-name-or-id (str "NuvlaBox " (or (:name creation-data)
-                                                     (general-utils/id->short-uuid nuvlabox-id)))
+            nuvlabox-name-or-id (str "NuvlaEdge " (or (:name creation-data)
+                                                      (general-utils/id->short-uuid nuvlabox-id)))
             execute-command     (str "docker-compose -p nuvlabox -f "
                                      (str/join " -f " (map :name download-files)) " up -d")]
         [:<>
@@ -274,7 +266,7 @@
              [:span {:style {:font "1em Inconsolata, monospace"}} execute-command]]]
 
            [:div {:style {:margin "20px 0px 0px 0px"}}
-            [NuvlaDocs tr compose-doc-anchor]]]]
+            [NuvlaDocs tr compose-doc-url]]]]
 
          [ui/ModalActions
           [ui/Button {:positive true
@@ -382,7 +374,7 @@
              [:span (@tr [:repeat-info])]]]]
 
           [:div {:style {:margin "20px 0px 0px 0px"}}
-           [NuvlaDocs tr usb-doc-anchor]]]
+           [NuvlaDocs tr usb-doc-url]]]
 
          [ui/ModalActions
           [ui/Button {:positive true
@@ -465,7 +457,7 @@
                                                                                  (str/blank? v)))
                                                                        (into {}))])]))
                                                   ; else, create new one
-                                                  (let [ssh-desc "SSH credential generated for NuvlaBox: "
+                                                  (let [ssh-desc "SSH credential generated for NuvlaEdge: "
                                                         ssh-tpl  {:name        (str "SSH key for " (:name @creation-data))
                                                                   :description (str ssh-desc (:name @creation-data))
                                                                   :template    {:href "credential-template/generate-ssh-key"}}]
@@ -579,7 +571,7 @@
                    [ui/Container
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:version])]
-                    [edge-detail/DropdownReleases
+                    [edges-detail/DropdownReleases
                      {:placeholder release
                       :value       nb-rel
                       :on-change   (ui-callback/value
@@ -653,7 +645,9 @@
 
                       [:div {:style {:color "grey" :font-style "oblique"}}
                        (@tr [:create-nuvlabox-compose])]
-                      [NuvlaDocLink tr :nuvlabox-modal-more-info compose-doc-anchor]
+                      [:a {:href  compose-doc-url 
+                           :target "_blank"}
+                       (@tr [:nuvlabox-modal-more-info])]
 
                       [:div {:style {:margin  "10px 5px 5px 5px"
                                      :display (if (= @install-strategy "compose")
@@ -708,8 +702,9 @@
                                   :wide     true
                                   :trigger  (r/as-element [ui/Icon {:name  "question"
                                                                     :color "grey"}])}]]
-
-                      [NuvlaDocLink tr :nuvlabox-modal-more-info usb-doc-anchor]]]])]
+                      [:a {:href  usb-doc-url 
+                           :target "_blank"}
+                       (@tr [:nuvlabox-modal-more-info])]]]])]
 
                 [ui/ModalActions
                  [utils-forms/validation-error-msg (@tr [:nuvlabox-modal-missing-fields]) (not (nil? @install-strategy-error))]
@@ -729,10 +724,10 @@
 (defn NuvlaboxRow
   [{:keys [id name description created state tags online] :as _nuvlabox} managers]
   (let [uuid (general-utils/id->uuid id)]
-    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])
+    [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
-      [edge-detail/OnlineStatusIcon online]]
+      [edges-detail/OnlineStatusIcon online]]
      [ui/TableCell {:collapsing true}
       [ui/Icon {:icon (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
@@ -799,7 +794,7 @@
 (defn NuvlaboxMapPoint
   [{:keys [id name location inferred-location online]}]
   (let [uuid     (general-utils/id->uuid id)
-        on-click #(dispatch [::history-events/navigate (str "edge/" uuid)])]
+        on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])]
     [map/CircleMarker {:on-click on-click
                        :center   (map/longlat->latlong (or location inferred-location))
                        :color    (utils/map-online->color online)
@@ -846,7 +841,7 @@
     [components/LoadingPage {}
      [:<>
       [uix/PageHeader "box" (str
-                              (general-utils/capitalize-first-letter (@tr [:edge])) " "
+                              (general-utils/capitalize-first-letter (@tr [:edges])) " "
                               (when (= @view-type :cluster)
                                 (general-utils/capitalize-first-letter (@tr [:clusters]))))]
       [MenuBar]
@@ -877,11 +872,11 @@
   (if (= "nuvlabox-cluster" uuid)
     (do
       (reset! view-type :cluster)
-      (dispatch [::history-events/navigate "edge/"]))
-    [edge-detail/EdgeDetails uuid]))
+      (dispatch [::history-events/navigate "edges/"]))
+    [edges-detail/EdgeDetails uuid]))
 
 
-(defmethod panel/render :edge
+(defmethod panel/render :edges
   [path]
   (dispatch [::events/get-nuvlabox-releases])
   (let [[_ path1 path2] path
@@ -891,6 +886,5 @@
                    2 [DetailedView path1]
                    [NuvlaBoxesOrClusters])]
     [:<>
-     [ui/Segment style/basic
-      children]
+     [ui/Segment style/basic children]
      [AddModalWrapper]]))

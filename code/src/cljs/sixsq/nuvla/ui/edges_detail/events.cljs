@@ -1,11 +1,11 @@
-(ns sixsq.nuvla.ui.edge-detail.events
+(ns sixsq.nuvla.ui.edges-detail.events
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployment.events :as deployment-events]
-    [sixsq.nuvla.ui.edge-detail.spec :as spec]
-    [sixsq.nuvla.ui.edge.utils :as edge-utils]
+    [sixsq.nuvla.ui.edges-detail.spec :as spec]
+    [sixsq.nuvla.ui.edges.utils :as edges-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
@@ -32,19 +32,19 @@
                                     (cond
                                       (>= vulnerability-score 9.0) (assoc item
                                                                      :severity "CRITICAL"
-                                                                     :color edge-utils/vuln-critical-color)
+                                                                     :color edges-utils/vuln-critical-color)
                                       (and (< vulnerability-score 9.0)
                                            (>= vulnerability-score 7.0)) (assoc item
                                                                            :severity "HIGH"
-                                                                           :color edge-utils/vuln-high-color)
+                                                                           :color edges-utils/vuln-high-color)
                                       (and (< vulnerability-score 7.0)
                                            (>= vulnerability-score 4.0)) (assoc item
                                                                            :severity "MEDIUM"
-                                                                           :color edge-utils/vuln-medium-color)
+                                                                           :color edges-utils/vuln-medium-color)
                                       (< vulnerability-score 4.0) (assoc item
                                                                     :severity "LOW"
-                                                                    :color edge-utils/vuln-low-color))
-                                    (assoc item :severity "UNKNOWN" :color edge-utils/vuln-unknown-color)))
+                                                                    :color edges-utils/vuln-low-color))
+                                    (assoc item :severity "UNKNOWN" :color edges-utils/vuln-unknown-color)))
                                 (:items nuvlabox-vulns)))})))
 
 
@@ -172,7 +172,7 @@
       #(if (instance? js/Error %)
          (let [{:keys [status message]} (response/parse-ex-info %)]
            (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error executing " operation " for NuvlaBox " resource-id)
+                      {:header  (cond-> (str "error executing " operation " for NuvlaEdge " resource-id)
                                         status (str " (" status ")"))
                        :content message
                        :type    :error}])
@@ -264,7 +264,7 @@
   ::delete
   (fn [{{:keys [::spec/nuvlabox]} :db} _]
     (let [nuvlabox-id (:id nuvlabox)]
-      {::cimi-api-fx/delete [nuvlabox-id #(dispatch [::history-events/navigate "edge"])]})))
+      {::cimi-api-fx/delete [nuvlabox-id #(dispatch [::history-events/navigate "edges"])]})))
 
 
 (reg-event-fx

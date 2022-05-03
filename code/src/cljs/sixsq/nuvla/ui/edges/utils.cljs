@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.edge.utils
+(ns sixsq.nuvla.ui.edges.utils
   (:require
     [clojure.string :as str]
     [sixsq.nuvla.ui.utils.general :as general-utils]))

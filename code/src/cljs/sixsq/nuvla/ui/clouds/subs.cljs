@@ -1,10 +1,10 @@
-(ns sixsq.nuvla.ui.infrastructures.subs
+(ns sixsq.nuvla.ui.clouds.subs
   (:require
     [clojure.set :as set]
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.infrastructures.spec :as spec]
-    [sixsq.nuvla.ui.infrastructures.utils :as utils]))
+    [sixsq.nuvla.ui.clouds.spec :as spec]
+    [sixsq.nuvla.ui.clouds.utils :as utils]))
 
 
 (reg-sub

@@ -19,6 +19,7 @@
 (s/def ::nuvlabox-cluster (s/nilable any?))
 (s/def ::nuvlabox-not-found? boolean?)
 (s/def ::nuvlabox-playbooks (s/nilable any?))
+(s/def ::infra-services (s/nilable coll?))
 (s/def ::nuvlabox-emergency-playbooks (s/nilable any?))
 (s/def ::nuvlabox-current-playbook (s/nilable any?))
 
@@ -39,6 +40,7 @@
                           ::nuvlabox-cluster
                           ::nuvlabox-not-found?
                           ::nuvlabox-playbooks
+                          ::infra-services
                           ::nuvlabox-emergency-playbooks
                           ::nuvlabox-current-playbook]))
 
@@ -58,5 +60,6 @@
                ::nuvlabox-cluster             nil
                ::nuvlabox-not-found?          false
                ::nuvlabox-playbooks           nil
+               ::infra-services               []
                ::nuvlabox-emergency-playbooks nil
                ::nuvlabox-current-playbook    nil})

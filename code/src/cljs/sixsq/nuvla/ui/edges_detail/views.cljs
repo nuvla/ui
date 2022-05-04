@@ -13,6 +13,7 @@
     [sixsq.nuvla.ui.edges.events :as edges-events]
     [sixsq.nuvla.ui.edges.subs :as edges-subs]
     [sixsq.nuvla.ui.edges.utils :as utils]
+    [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.job.subs :as job-subs]
     [sixsq.nuvla.ui.job.views :as job-views]
@@ -45,7 +46,6 @@
              {:id        refresh-action-id
               :frequency 10000
               :event     [::events/get-nuvlabox (str "nuvlabox/" uuid)]}]))
-
 
 (defn DecommissionButton
   [nuvlabox]
@@ -1177,6 +1177,43 @@
                                                    (@tr [:updated-successfully])])]]))
 
 
+(defn ServiceIcon 
+  [subtype]
+  (let [[kind path] (get {:swarm      [:icon "docker"]
+                          :s3         [:image "/ui/images/s3.png"]
+                          :kubernetes [:image "/ui/images/kubernetes.svg"]
+                          :registry   [:icon "database"]}
+                         (keyword subtype)
+                         [:icon "question circle"])]
+    (case kind 
+      :image [ui/Image {:src  path 
+                        :style {:overflow       "hidden"
+                                :display        "inline-block"
+                                :height         28
+                                :margin-right   4
+                                :padding-bottom 7}}]
+      [ui/Icon {:name path}])))
+
+
+(defn BoxServices
+  []
+  (let [tr (subscribe [::i18n-subs/tr])
+        services @(subscribe [::subs/infra-services])]
+    [ui/Segment {:secondary true
+                 :color     "pink"
+                 :raised    true}
+     [:h4 "Services"]
+     [ui/ListSA {:divided true :relaxed true}
+      (for [{:keys [id name description subtype]} services]
+        ^{:key id}
+        [ui/ListItem
+         [ServiceIcon subtype]
+         [ui/ListContent
+          [ui/ListHeader
+           [history-views/link (str "clouds/" (general-utils/id->uuid id)) (or name id)]]
+          [ui/ListDescription description]]])]]))
+
+
 (defn TabOverviewCluster
   [{:keys [node-id cluster-id swarm-node-cert-expiry-date cluster-join-address
            cluster-node-role cluster-managers cluster-nodes orchestrator] :as _nuvlabox}]
@@ -1287,7 +1324,12 @@
 
           (when (> (count tags) 0)
             [ui/GridColumn
-             [TabOverviewTags @nuvlabox]])]]))))
+             [TabOverviewTags @nuvlabox]])
+          
+          ; TODO feature-flag service box (#823)
+          (when false
+            [ui/GridColumn
+             [BoxServices]])]]))))
 
 
 (defn TabLocationMap

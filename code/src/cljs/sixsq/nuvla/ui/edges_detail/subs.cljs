@@ -161,6 +161,12 @@
 
 
 (reg-sub
+  ::infra-services
+  (fn [db]
+    (::spec/infra-services db)))
+
+
+(reg-sub
   ::nuvlabox-emergency-playbooks
   (fn [db]
     (::spec/nuvlabox-emergency-playbooks db)))

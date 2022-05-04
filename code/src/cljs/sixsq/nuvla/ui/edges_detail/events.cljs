@@ -82,7 +82,9 @@
 
 (reg-event-fx
   ::set-nuvlabox
-  (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status :as nuvlabox}]]
+  (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status 
+                        infra-srv-grp-id :infrastructure-service-group
+                        :as nuvlabox}]]
     {:db               (assoc db ::spec/nuvlabox-not-found? (nil? nuvlabox)
                                  ::spec/nuvlabox nuvlabox
                                  ::main-spec/loading? false)
@@ -93,7 +95,8 @@
                                                                                      (:items (:vulnerabilities %)))]))
                         :on-error #(do
                                      (dispatch [::set-nuvlabox-status nil])
-                                     (dispatch [::set-nuvlabox-vulns nil]))]}))
+                                     (dispatch [::set-nuvlabox-vulns nil]))]
+     :fx                [(when infra-srv-grp-id [:dispatch [::get-infra-services infra-srv-grp-id]])]}))
 
 
 (reg-event-fx
@@ -405,11 +408,26 @@
                             :last    1000}
                            #(dispatch [::set-nuvlabox-playbooks (:resources %)])]}))
 
-
 (reg-event-db
   ::set-nuvlabox-playbooks
   (fn [db [_ nuvlabox-playbooks]]
     (assoc db ::spec/nuvlabox-playbooks nuvlabox-playbooks)))
+
+
+(reg-event-fx
+  ::get-infra-services
+  (fn [_ [_ group-id]]
+    {::cimi-api-fx/search [:infrastructure-service
+                           {:filter  (str "parent='" group-id "'")
+                            :select  "id, name, description, subtype"
+                            :orderby "subtype:asc, name:asc"
+                            :last    1000}
+                           #(dispatch [::set-infra-services (:resources %)])]}))
+
+(reg-event-db
+  ::set-infra-services
+  (fn [db [_ infra-services]]
+    (assoc db ::spec/infra-services infra-services)))
 
 
 (reg-event-fx

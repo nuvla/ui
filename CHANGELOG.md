@@ -8,7 +8,8 @@
 
 ### Changed
 
-- Project - Remove NuvlaEdge from cloud list
+- Edge detail - Add services box [Disabled]
+- Clouds - Remove NuvlaEdge from cloud list
 - Project - Renamed NuvlaBox and infrastructure
 - Project - Fix broken links to docs
 

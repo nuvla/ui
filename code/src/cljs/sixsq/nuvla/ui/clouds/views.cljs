@@ -47,21 +47,14 @@
        {:on-refresh #(dispatch [::events/get-infra-service-groups])}]]]))
 
 
-(def service-icons
-  {:swarm      "docker"
-   :s3         "/ui/images/s3.png"
-   :kubernetes "/ui/images/kubernetes.svg"
-   :registry   "database"})
-
 
 (defn ServiceCard
   [{:keys [id name description path subtype logo-url swarm-enabled online] :as _service}]
-  (let [icon-or-image (get service-icons (keyword subtype) "question circle")
-        status        (cond
-                        (true? online) true
-                        (false? online) false
-                        :else nil)
-        href          (str "clouds/" (general-utils/id->uuid id))]
+  (let [status (cond
+                 (true? online) true
+                 (false? online) false
+                 :else nil)
+        href   (str "clouds/" (general-utils/id->uuid id))]
     [uix/Card
      {:on-click    #(dispatch [::history-events/navigate href])
       :href        href
@@ -69,15 +62,7 @@
       :header      [:<>
                     [:div {:style {:float "right"}}
                      [edges-detail/OnlineStatusIcon status]]
-                    (if (str/starts-with? icon-or-image "/")
-                      [ui/Image {:src   icon-or-image
-                                 :style {:overflow       "hidden"
-                                         :display        "inline-block"
-                                         :height         28
-                                         :margin-right   4
-                                         :padding-bottom 7
-                                         }}]
-                      [ui/Icon {:name icon-or-image}])
+                    [edges-detail/ServiceIcon subtype]
                     (or name id)]
       :meta        path
       :description description
@@ -89,7 +74,7 @@
                                 :style    {:left   "0"
                                            :margin "0.7em 0 0 0"}}
                       [ui/Image {:bordered true}
-                       [ui/Icon {:name icon-or-image}]]
+                       [ui/Icon {:name "docker"}]]
                       "Swarm enabled"])}]))
 
 

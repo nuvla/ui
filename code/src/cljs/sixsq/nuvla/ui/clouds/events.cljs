@@ -200,7 +200,7 @@
                 ::spec/elements-per-page] :as db} :db} _]
     {:db                  (assoc db ::spec/infra-service-groups nil)
      ::cimi-api-fx/search [:infrastructure-service-group
-                           (utils/get-query-params page elements-per-page)
+                           (utils/get-query-params page elements-per-page "parent=null")
                            #(dispatch [::set-infra-service-groups %])]}))
 
 
@@ -230,10 +230,8 @@
 (reg-event-fx
   ::set-page
   (fn [{{:keys [::spec/elements-per-page] :as db} :db} [_ page]]
-    {:db                  (assoc db ::spec/page page)
-     ::cimi-api-fx/search [:infrastructure-service-group
-                           (utils/get-query-params page elements-per-page)
-                           #(dispatch [::set-infra-service-groups %])]}))
+    {:db (assoc db ::spec/page page)
+     :fx [[:dispatch ::get-infra-service-groups]]}))
 
 
 (reg-event-db

@@ -3,11 +3,13 @@
             [sixsq.nuvla.ui.clouds.spec :as spec]))
 
 (defn get-query-params
-  [page elements-per-page]
-  {:first   (inc (* (dec page) elements-per-page))
-   :last    (* page elements-per-page)
-   :select  "id, name"
-   :orderby "created:desc"})
+  ([page elements-per-page] (get-query-params page elements-per-page nil))
+  ([page elements-per-page filter-str]
+   (cond-> {:first   (inc (* (dec page) elements-per-page))
+            :last    (* page elements-per-page)
+            :select  "id, name"
+            :orderby "created:desc"}
+     filter-str (assoc :filter filter-str))))
 
 
 (defn db->new-service-group

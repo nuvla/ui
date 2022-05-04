@@ -8,6 +8,7 @@
 
 ### Changed
 
+- Project - Remove NuvlaEdge from cloud list
 - Project - Renamed NuvlaBox and infrastructure
 - Project - Fix broken links to docs
 

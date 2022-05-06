@@ -6,6 +6,7 @@
 
 (def dictionary
   {:en {
+        :infrastructure-services                       "Infrastructure services"
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
@@ -867,6 +868,7 @@
         }
 
    :fr {
+        :infrastructure-services                       "Services d'infrastructure"
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"

@@ -1177,7 +1177,7 @@
                                                    (@tr [:updated-successfully])])]]))
 
 
-(defn ServiceIcon 
+(defn ServiceIcon
   [subtype]
   (let [[kind path] (get {:swarm      [:icon "docker"]
                           :s3         [:image "/ui/images/s3.png"]
@@ -1185,8 +1185,8 @@
                           :registry   [:icon "database"]}
                          (keyword subtype)
                          [:icon "question circle"])]
-    (case kind 
-      :image [ui/Image {:src  path 
+    (case kind
+      :image [ui/Image {:src   path
                         :style {:overflow       "hidden"
                                 :display        "inline-block"
                                 :height         28
@@ -1195,14 +1195,13 @@
       [ui/Icon {:name path}])))
 
 
-(defn BoxServices
+(defn BoxInfraServices
   []
-  (let [tr (subscribe [::i18n-subs/tr])
-        services @(subscribe [::subs/infra-services])]
+  (let [services @(subscribe [::subs/infra-services])]
     [ui/Segment {:secondary true
                  :color     "pink"
                  :raised    true}
-     [:h4 "Services"]
+     [:h4 [uix/TR :infrastructure-services]]
      [ui/ListSA {:divided true :relaxed true}
       (for [{:keys [id name description subtype]} services]
         ^{:key id}
@@ -1291,10 +1290,11 @@
 
 (defn TabOverview
   []
-  (let [nuvlabox  (subscribe [::subs/nuvlabox])
-        nb-status (subscribe [::subs/nuvlabox-status])
-        ssh-creds (subscribe [::subs/nuvlabox-associated-ssh-keys])
-        {:keys [state]}   @(subscribe [::subs/nuvlabox])]
+  (let [nuvlabox       (subscribe [::subs/nuvlabox])
+        nb-status      (subscribe [::subs/nuvlabox-status])
+        ssh-creds      (subscribe [::subs/nuvlabox-associated-ssh-keys])
+        {:keys [state]} @(subscribe [::subs/nuvlabox])
+        infra-services (subscribe [::subs/infra-services])]
     (fn []
       (let [{:keys [id tags ssh-keys]} @nuvlabox]
         (when (not= (count ssh-keys) (count @ssh-creds))
@@ -1313,7 +1313,7 @@
           [ui/GridColumn {:stretched true}
            [TabOverviewStatus @nb-status id (:online @nuvlabox)]]
 
-          (when-not (= state "SUSPENDED") 
+          (when-not (= state "SUSPENDED")
             [ui/GridColumn {:stretched true}
              [deployment-views/DeploymentsOverviewSegment
               ::deployment-subs/deployments ::events/set-active-tab-index tab-deployment-index]])
@@ -1322,14 +1322,13 @@
             [ui/GridColumn {:stretched true}
              [TabOverviewCluster @nb-status]])
 
-          (when (> (count tags) 0)
+          (when (seq tags)
             [ui/GridColumn
              [TabOverviewTags @nuvlabox]])
-          
-          ; TODO feature-flag service box (#823)
-          (when false
+
+          (when (seq @infra-services)
             [ui/GridColumn
-             [BoxServices]])]]))))
+             [BoxInfraServices]])]]))))
 
 
 (defn TabLocationMap
@@ -1918,7 +1917,7 @@
   (fn []
     (let [count-peripherals (subscribe [::subs/nuvlabox-peripherals-ids])
           active-index      (subscribe [::subs/active-tab-index])
-          {:keys [state]}   @(subscribe [::subs/nuvlabox])]
+          {:keys [state]} @(subscribe [::subs/nuvlabox])]
       [ui/Tab
        {:menu        {:secondary true
                       :pointing  true

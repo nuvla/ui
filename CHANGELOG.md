@@ -8,6 +8,7 @@
 
 ### Changed
 
+- Profile - Show coupon end date for reapeating coupons
 - Edge detail - Add services box [Disabled]
 - Clouds - Remove NuvlaEdge from cloud list
 - Project - Renamed NuvlaBox and infrastructure

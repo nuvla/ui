@@ -1010,8 +1010,9 @@
         customer-info (subscribe [::subs/customer-info])
         open?         (subscribe [::subs/modal-open? :add-coupon])]
     (fn []
-      (let [{:keys [name percent-off currency amount-off
-                    duration duration-in-month] :as coupon} (:coupon @customer-info)]
+      (let [{{:keys [name percent-off currency amount-off duration] :as coupon} :coupon
+             {:keys [end]} :discount} @customer-info
+            locale @(subscribe [::i18n-subs/locale])]
         [ui/Segment {:padded  true
                      :color   "green"
                      :loading @loading?
@@ -1031,14 +1032,14 @@
                [ui/TableRow
                 [ui/TableCell [:b (@tr [:amount])]]
                 [ui/TableCell (format-currency currency amount-off)]])
-             (when duration-in-month
-               [ui/TableRow
-                [ui/TableCell [:b (@tr [:duration-in-month])]]
-                [ui/TableCell duration-in-month]])
-             (when duration
+             (when (and duration (not= duration "repeating"))
                [ui/TableRow
                 [ui/TableCell [:b (@tr [:duration])]]
                 [ui/TableCell (str/capitalize duration)]])
+             (when end
+               [ui/TableRow
+                [ui/TableCell [:b (@tr [:end-date])]]
+                [ui/TableCell (time/time->format end "LLL" locale)]])
              [ui/TableRow
               [ui/TableCell {:col-span 2}
                [ui/Popup

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.30.2] - 2022-05-12
+
 ### Added
 
 - Main - Alias support for URL page navigation

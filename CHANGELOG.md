@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## [2.30.3] - 2022-05-13
+
+### Changed
+
+- NuvlaEdge detail - Deployment list filtering regression bugfix
+- NuvlaEdge detail - Deployment tab selection bugfix
+
 ## [2.30.2] - 2022-05-12
 
 ### Added

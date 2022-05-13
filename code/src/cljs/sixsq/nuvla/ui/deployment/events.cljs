@@ -88,7 +88,7 @@
                 ::spec/page
                 ::spec/elements-per-page]} :db} _]
     (let [state (if (= "all" state-selector) nil state-selector)
-          nb-id (:id ::edges-detail-spec/nuvlabox)]
+          nb-id (:id nuvlabox)]
       {::cimi-api-fx/search [:deployment (utils/get-query-params
                                            {:full-text-search  full-text-search
                                             :additional-filter additional-filter

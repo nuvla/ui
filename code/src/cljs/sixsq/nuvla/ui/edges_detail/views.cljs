@@ -33,7 +33,7 @@
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
-(def tab-deployment-index 5)
+(def tab-deployment-index 6)
 
 (def orchestration-icons
   {:swarm      "docker"

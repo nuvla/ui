@@ -170,7 +170,7 @@
 
 (s/def ::paste-modal-visible? boolean?)
 
-(s/def ::active-tab-index number?)
+(s/def ::active-tab keyword?)
 
 (s/def ::module-not-found? boolean?)
 
@@ -194,7 +194,7 @@
                           ::version
                           ::copy-module
                           ::paste-modal-visible?
-                          ::active-tab-index
+                          ::active-tab
                           ::module-not-found?]))
 
 (def defaults {::active-input              nil
@@ -218,6 +218,6 @@
                ::version                   nil
                ::copy-module               nil
                ::paste-modal-visible?      false
-               ::active-tab-index          0
+               ::active-tab                :overview
                ::module-not-found?         false
                ::details-validation-errors #{}})

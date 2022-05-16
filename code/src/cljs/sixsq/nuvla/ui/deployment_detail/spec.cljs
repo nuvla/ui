@@ -15,7 +15,7 @@
 
 (s/def ::upcoming-invoice any?)
 
-(s/def ::active-tab-index number?)
+(s/def ::active-tab keyword?)
 
 (s/def ::not-found? boolean?)
 
@@ -26,7 +26,7 @@
                           ::events
                           ::node-parameters
                           ::upcoming-invoice
-                          ::active-tab-index]))
+                          ::active-tab]))
 
 
 (def defaults {::not-found?                false
@@ -37,4 +37,4 @@
                ::node-parameters           nil
                ::deployment-log-controller nil
                ::upcoming-invoice          nil
-               ::active-tab-index          0})
+               ::active-tab                :overview})

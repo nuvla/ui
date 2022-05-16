@@ -1021,30 +1021,30 @@
 
 
 (defn tabs
-  [tr]
-  [{:menuItem {:content (str/capitalize (@tr [:subscriptions]))
-               :key     "subscriptions"
-               :icon    "list alternate outline"}
-    :render   (fn [] (r/as-element [TabSubscriptions]))}
-   {:menuItem {:content (str/capitalize (@tr [:methods]))
-               :key     "methods"
-               :icon    "at"}
-    :render   (fn [] (r/as-element [TabMethods]))}])
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [{:menuItem {:content (str/capitalize (@tr [:subscriptions]))
+                 :key     :subscriptions
+                 :icon    "list alternate outline"}
+      :render   #(r/as-element [TabSubscriptions])}
+     {:menuItem {:content (str/capitalize (@tr [:methods]))
+                 :key     :methods
+                 :icon    "at"}
+      :render   #(r/as-element [TabMethods])}]))
 
 
 (defn TabsAll
   []
   (dispatch [::events/get-notification-methods])
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn []
-      [components/LoadingPage {}
-       [ui/Tab
-        {:menu  {:secondary true
-                 :pointing  true
-                 :style     {:display        "flex"
-                             :flex-direction "row"
-                             :flex-wrap      "wrap"}}
-         :panes (tabs tr)}]])))
+  (fn []
+    [components/LoadingPage {}
+     [ui/Tab
+      {:menu  {:secondary true
+               :pointing  true
+               :style     {:display        "flex"
+                           :flex-direction "row"
+                           :flex-wrap      "wrap"}}
+       :panes (tabs)}]]))
 
 
 (defmethod panel/render :notifications

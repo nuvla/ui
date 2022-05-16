@@ -125,9 +125,9 @@
 
 
 (reg-sub
-  ::active-tab-index
+  ::active-tab
   (fn [db]
-    (get-in db [::spec/active-tab-index])))
+    (get-in db [::spec/active-tab])))
 
 
 (reg-sub

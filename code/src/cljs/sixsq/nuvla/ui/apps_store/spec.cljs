@@ -20,7 +20,7 @@
 (s/def ::elements-per-page int?)
 
 
-(s/def ::active-tab-index number?)
+(s/def ::active-tab keyword?)
 
 
 ;FIXME: needed for apps?
@@ -42,7 +42,7 @@
                           ::full-text-search-my
                           ::page
                           ::elements-per-page
-                          ::active-tab-index
+                          ::active-tab
                           ::state-selector]))
 
 
@@ -55,5 +55,5 @@
                ::full-text-search-my        nil
                ::page                       1
                ::elements-per-page          8
-               ::active-tab-index           0
+               ::active-tab                 :appstore
                ::state-selector             "all"})

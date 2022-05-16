@@ -135,7 +135,7 @@
                    :active   true
                    :on-click #(do (dispatch [::events/ignore-changes true])
                                   (dispatch [::apps-events/form-valid])
-                                  (dispatch [::apps-events/set-active-tab-index 0]))}]]]))
+                                  (dispatch [::apps-events/set-active-tab :overview]))}]]]))
 
 (defn subscription-required-modal
   []

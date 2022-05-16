@@ -100,10 +100,10 @@
 
 
 (defn ErrorJobsMessage
-  [_job-subs _set-active-tab-index-event _job-tab-index]
+  [_job-subs _set-active-tab-event _job-tab]
   (let [tr                (subscribe [::i18n-subs/tr])
         errors-dissmissed (r/atom #{})]
-    (fn [job-subs set-active-tab-index-event job-tab-index]
+    (fn [job-subs set-active-tab-event job-tab]
       (let [fn-filter   (fn [coll _action jobs]
                           (let [{:keys [id state] :as last-job} (first jobs)]
                             (if (and (= state "FAILED") (not (@errors-dissmissed id)))
@@ -123,7 +123,7 @@
                           :on-dismiss #(swap! errors-dissmissed conj id)}
               [ui/MessageHeader
                {:style    {:cursor "pointer"}
-                :on-click #(dispatch [set-active-tab-index-event job-tab-index])}
+                :on-click #(dispatch [set-active-tab-event job-tab])}
                (str (str/capitalize (@tr [:job])) " " action " " (@tr [:failed]))]
               [ui/MessageContent (last (str/split-lines (or status-message "")))]]))]))))
 

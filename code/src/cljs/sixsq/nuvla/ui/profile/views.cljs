@@ -26,7 +26,8 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [sixsq.nuvla.ui.utils.tab :as tab]))
 
 
 ;;; VALIDATION SPEC
@@ -1010,8 +1011,9 @@
         customer-info (subscribe [::subs/customer-info])
         open?         (subscribe [::subs/modal-open? :add-coupon])]
     (fn []
-      (let [{{:keys [name percent-off currency amount-off duration] :as coupon} :coupon
-             {:keys [end]} :discount} @customer-info
+      (let [{{:keys [name percent-off currency
+                     amount-off duration] :as coupon} :coupon
+             {:keys [end]}                            :discount} @customer-info
             locale @(subscribe [::i18n-subs/locale])]
         [ui/Segment {:padded  true
                      :color   "green"
@@ -1359,14 +1361,6 @@
   [SubscriptionAndBilling])
 
 
-(defn subscription
-  []
-  {:menuItem {:content (r/as-element [TabMenuSubscription])
-              :key     "subscription"
-              :icon    "credit card"}
-   :render   (fn [] (r/as-element [SubscriptionPane]))})
-
-
 (defn TabMenuGroups
   []
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -1383,14 +1377,6 @@
      [ui/GridRow {:columns (grid-columns @device)}
       [ui/GridColumn
        [Groups]]]]))
-
-
-(defn groups
-  []
-  {:menuItem {:content (r/as-element [TabMenuGroups])
-              :key     "groups"
-              :icon    "users"}
-   :render   (fn [] (r/as-element [GroupsPane]))})
 
 
 (defn TabMenuDetails
@@ -1411,37 +1397,38 @@
        [Details]]]]))
 
 
-(defn details
-  []
-  {:menuItem {:content (r/as-element [TabMenuDetails])
-              :key     "details"
-              :icon    "info"}
-   :render   (fn [] (r/as-element [DetailsPane]))})
-
-
 (defn profile-panes
   []
-  [(subscription)
-   (groups)
-   (details)])
+  [{:menuItem {:content (r/as-element [TabMenuSubscription])
+               :key     :subscription
+               :icon    "credit card"}
+    :render   #(r/as-element [SubscriptionPane])}
+   {:menuItem {:content (r/as-element [TabMenuGroups])
+               :key     :groups
+               :icon    "users"}
+    :render   #(r/as-element [GroupsPane])}
+   {:menuItem {:content (r/as-element [TabMenuDetails])
+               :key     :details
+               :icon    "info"}
+    :render   #(r/as-element [DetailsPane])}])
 
 
 (defn Tabs
   []
-  (let [active-index (subscribe [::subs/active-tab-index])]
+  (let [active-tab (subscribe [::subs/active-tab])]
     (dispatch [::events/init])
     (fn []
-      [ui/Tab
-       {:menu        {:secondary true
-                      :pointing  true
-                      :style     {:display        "flex"
-                                  :flex-direction "row"
-                                  :flex-wrap      "wrap"}}
-        :panes       (profile-panes)
-        :activeIndex @active-index
-        :onTabChange (fn [_ data]
-                       (let [active-index (. data -activeIndex)]
-                         (dispatch [::events/set-active-tab-index active-index])))}])))
+      (let [panes (profile-panes)]
+        [ui/Tab
+         {:menu        {:secondary true
+                        :pointing  true
+                        :style     {:display        "flex"
+                                    :flex-direction "row"
+                                    :flex-wrap      "wrap"}}
+          :panes       panes
+          :activeIndex (tab/key->index panes @active-tab)
+          :onTabChange (tab/on-tab-change
+                         panes #(dispatch [::events/set-active-tab %]))}]))))
 
 
 (defmethod panel/render :profile

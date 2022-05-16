@@ -37,7 +37,7 @@
 (s/def ::group-form (s/keys :req [::group-name
                                   ::group-description]))
 
-(s/def ::active-tab-index number?)
+(s/def ::active-tab keyword?)
 
 (s/def ::two-factor-step (s/nilable string?))
 
@@ -62,7 +62,7 @@
                           ::setup-intent
                           ::vendor
                           ::group
-                          ::active-tab-index
+                          ::active-tab
                           ::two-factor-step
                           ::two-factor-enable?
                           ::two-factor-method
@@ -83,7 +83,7 @@
                ::loading             #{}
                ::vendor              nil
                ::group               nil
-               ::active-tab-index    0
+               ::active-tab          :subscription
                ::two-factor-step     :install-app
                ::two-factor-enable?  true
                ::two-factor-method   nil

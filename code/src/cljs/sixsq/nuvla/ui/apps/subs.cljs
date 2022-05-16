@@ -307,8 +307,8 @@
   ::spec/paste-modal-visible?)
 
 (reg-sub
-  ::active-tab-index
-  ::spec/active-tab-index)
+  ::active-tab
+  ::spec/active-tab)
 
 
 (reg-sub

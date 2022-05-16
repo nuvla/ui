@@ -34,8 +34,6 @@
 (s/def ::elements-per-page int?)
 (s/def ::total-elements int?)
 
-(s/def ::active-tab-index number?)
-
 (s/def ::full-text-search (s/nilable string?))
 
 (s/def ::state-selector #{"all" "new" "activated" "commissioned"
@@ -66,7 +64,6 @@
                           ::page
                           ::elements-per-page
                           ::total-elements
-                          ::active-tab-index
                           ::full-text-search
                           ::state-selector
                           ::open-modal
@@ -91,7 +88,6 @@
                ::page                       1
                ::elements-per-page          8
                ::total-elements             0
-               ::active-tab-index           0
                ::full-text-search           nil
                ::state-selector             nil
                ::open-modal                 nil

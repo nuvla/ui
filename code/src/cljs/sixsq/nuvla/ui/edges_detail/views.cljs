@@ -29,6 +29,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.utils.tab :as tab]
     [sixsq.nuvla.ui.utils.values :as values]))
 
 
@@ -1316,7 +1317,7 @@
           (when-not (= state "SUSPENDED")
             [ui/GridColumn {:stretched true}
              [deployment-views/DeploymentsOverviewSegment
-              ::deployment-subs/deployments ::events/set-active-tab-index tab-deployment-index]])
+              ::deployment-subs/deployments ::events/set-active-tab :deployments]])
 
           (when (:node-id @nb-status)
             [ui/GridColumn {:stretched true}
@@ -1852,88 +1853,86 @@
 
 
 (defn tabs
-  [count-peripherals]
-  (let [tr        (subscribe [::i18n-subs/tr])
-        nuvlabox  (subscribe [::subs/nuvlabox])
-        can-edit? (subscribe [::subs/can-edit?])]
-    [{:menuItem {:content "Overview"
-                 :key     "overview"
-                 :icon    "info"}
-      :render   (fn [] (r/as-element [TabOverview]))}
-     {:menuItem {:content "Location"
-                 :key     "location"
-                 :icon    "map"}
-      :render   (fn [] (r/as-element [TabLocation]))}
-     {:menuItem {:content (r/as-element
-                            [ui/Popup
-                             {:trigger        (r/as-element [:span "Resource Consumption"])
-                              :content        (@tr [:nuvlabox-datagateway-popup])
-                              :header         "data-gateway"
-                              :position       "top center"
-                              :wide           true
-                              :on             "hover"
-                              :size           "tiny"
-                              :hide-on-scroll true}])
-                 :key     "res-cons"
-                 :icon    "thermometer half"}
-      :render   (fn [] (r/as-element [TabLoad]))}
-     {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:logs]))])
-                 :key     "logs"
-                 :icon    "file code"}
-      :render   (fn [] (r/as-element [log-views/TabLogs
-                                      (:id @nuvlabox)
-                                      #(subscribe [::subs/nuvlabox-components])]))}
-     {:menuItem {:content (r/as-element [:span "Peripherals"
-                                         [ui/Label {:circular true
-                                                    :size     "mini"
-                                                    :attached "top right"}
-                                          count-peripherals]])
-                 :key     "peripherals"
-                 :icon    "usb"}
-      :render   (fn [] (r/as-element [TabPeripherals]))}
-     {:menuItem {:content "Events"
-                 :key     "events"
-                 :icon    "bolt"}
-      :render   (fn [] (r/as-element [TabEvents]))}
-     {:menuItem {:content "Deployments"
-                 :key     "deployments"
-                 :icon    "rocket"}
-      :render   (fn [] (r/as-element [deployment-views/DeploymentTable
-                                      {:empty-msg (@tr [:empty-deployment-nuvlabox-msg])}]))}
-     {:menuItem {:content "Vulnerabilities"
-                 :key     "vuln"
-                 :icon    "shield"}
-      :render   (fn [] (r/as-element [TabVulnerabilities]))}
-     {:menuItem {:content "Playbooks"
-                 :key     "playbooks"
-                 :icon    "book"}
-      :render   (fn [] (r/as-element [TabPlaybooks]))}
-     (job-views/jobs-section)
-     (acl/TabAcls nuvlabox @can-edit? ::events/edit)]))
+  []
+  (let [tr          @(subscribe [::i18n-subs/tr])
+        nuvlabox    (subscribe [::subs/nuvlabox])
+        can-edit?   @(subscribe [::subs/can-edit?])
+        peripherals @(subscribe [::subs/nuvlabox-peripherals-ids])
+        overview    {:menuItem {:content "Overview"
+                                :key     :overview
+                                :icon    "info"}
+                     :render   (fn [] (r/as-element [TabOverview]))}]
+    (case (:state @nuvlabox)
+      "SUSPENDED" [overview]
+      [overview
+       {:menuItem {:content "Location"
+                   :key     :location
+                   :icon    "map"}
+        :render   #(r/as-element [TabLocation])}
+       {:menuItem {:content (r/as-element
+                              [ui/Popup
+                               {:trigger        (r/as-element
+                                                  [:span "Resource Consumption"])
+                                :content        (tr [:nuvlabox-datagateway-popup])
+                                :header         "data-gateway"
+                                :position       "top center"
+                                :wide           true
+                                :on             "hover"
+                                :size           "tiny"
+                                :hide-on-scroll true}])
+                   :key     :consumption
+                   :icon    "thermometer half"}
+        :render   #(r/as-element [TabLoad])}
+       {:menuItem {:content (r/as-element [:span (str/capitalize (tr [:logs]))])
+                   :key     :logs
+                   :icon    "file code"}
+        :render   (fn [] (r/as-element [log-views/TabLogs
+                                        (:id nuvlabox)
+                                        #(subscribe [::subs/nuvlabox-components])]))}
+       {:menuItem {:content (r/as-element [:span "Peripherals"
+                                           [ui/Label {:circular true
+                                                      :size     "mini"
+                                                      :attached "top right"}
+                                            (count peripherals)]])
+                   :key     :peripherals
+                   :icon    "usb"}
+        :render   #(r/as-element [TabPeripherals])}
+       {:menuItem {:content "Events"
+                   :key     :events
+                   :icon    "bolt"}
+        :render   #(r/as-element [TabEvents])}
+       {:menuItem {:content "Deployments"
+                   :key     :deployments
+                   :icon    "rocket"}
+        :render   #(r/as-element [deployment-views/DeploymentTable
+                                  {:empty-msg (tr [:empty-deployment-nuvlabox-msg])}])}
+       {:menuItem {:content "Vulnerabilities"
+                   :key     :vulnerabilities
+                   :icon    "shield"}
+        :render   #(r/as-element [TabVulnerabilities])}
+       {:menuItem {:content "Playbooks"
+                   :key     :playbooks
+                   :icon    "book"}
+        :render   #(r/as-element [TabPlaybooks])}
+       (job-views/jobs-section)
+       (acl/TabAcls nuvlabox can-edit? ::events/edit)])))
 
 
 (defn TabsNuvlaBox
   []
-  (fn []
-    (let [count-peripherals (subscribe [::subs/nuvlabox-peripherals-ids])
-          active-index      (subscribe [::subs/active-tab-index])
-          {:keys [state]} @(subscribe [::subs/nuvlabox])]
-      [ui/Tab
-       {:menu        {:secondary true
-                      :pointing  true
-                      :style     {:display        "flex"
-                                  :flex-direction "row"
-                                  :flex-wrap      "wrap"}}
-        :panes       (case state
-                       "SUSPENDED" [{:menuItem {:content "Overview"
-                                                :key     "overview"
-                                                :icon    "info"}
-                                     :render   (fn [] (r/as-element [TabOverview]))}]
-                       (tabs (count @count-peripherals)))
-        :activeIndex @active-index
-        :onTabChange (fn [_ data]
-                       (let [active-index (. data -activeIndex)]
-                         (dispatch [::events/set-active-tab-index active-index])))}])))
+  (let [active-tab (subscribe [::subs/active-tab])
+        panes      (tabs)]
+    [ui/Tab
+     {:menu        {:secondary true
+                    :pointing  true
+                    :style     {:display        "flex"
+                                :flex-direction "row"
+                                :flex-wrap      "wrap"}}
+      :panes       panes
+      :activeIndex (tab/key->index panes @active-tab)
+      :onTabChange (tab/on-tab-change
+                     panes
+                     #(dispatch [::events/set-active-tab %]))}]))
 
 
 (defn PageHeader
@@ -1968,7 +1967,7 @@
       [ui/Container {:fluid true}
        [PageHeader]
        [MenuBar uuid]
-       [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 7]
+       [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab :jobs]
        [job-views/ProgressJobAction @nb-status]
        [TabsNuvlaBox]
        [AddPlaybookModal]]]]))

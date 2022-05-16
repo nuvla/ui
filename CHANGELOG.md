@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Tab selection is based on keys for all places where it is used
+
 ## [2.30.3] - 2022-05-13
 
 ### Changed

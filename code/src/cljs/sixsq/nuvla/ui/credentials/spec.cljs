@@ -165,7 +165,7 @@
 
 (s/def ::infrastructure-services-available any?)
 
-(s/def ::active-tab-index number?)
+(s/def ::active-tab keyword?)
 
 (s/def ::db (s/keys :req [::add-credential-modal-visible?
                           ::credential-modal-visible?
@@ -181,7 +181,7 @@
                           ::error-message
                           ::state-selector
                           ::infrastructure-services-available
-                          ::active-tab-index
+                          ::active-tab
                           ::credential-check-table]))
 
 
@@ -200,5 +200,5 @@
                ::state-selector                    nil
                ::infrastructure-services-available nil
                ::credential-check-table            nil
-               ::active-tab-index                  1})
+               ::active-tab                        :cloud-services})
 

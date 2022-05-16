@@ -143,12 +143,6 @@
 
 
 (reg-sub
-  ::active-tab-index
-  (fn [db]
-    (get-in db [::spec/active-tab-index])))
-
-
-(reg-sub
   ::can-edit-cluster?
   :<- [::nuvlabox-cluster]
   (fn [cluster _]

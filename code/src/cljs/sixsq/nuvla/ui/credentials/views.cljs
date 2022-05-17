@@ -1074,7 +1074,7 @@
   (let [tr               (subscribe [::i18n-subs/tr])
         credential-count (count credentials)]
     {:menuItem {:content (r/as-element [:span (@tr [section-name])
-                                        (when (> credential-count 0)
+                                        (when (pos? credential-count)
                                           [ui/Label {:circular true
                                                      :size     "mini"
                                                      :attached "top right"}

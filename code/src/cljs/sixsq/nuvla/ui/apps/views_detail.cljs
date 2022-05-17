@@ -1193,7 +1193,7 @@
 
 
 (defn OverviewDescription
-  [_details-tab]
+  []
   (let [tr          (subscribe [::i18n-subs/tr])
         editable?   (subscribe [::subs/editable?])
         description (subscribe [::subs/description])

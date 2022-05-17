@@ -496,7 +496,7 @@
           ::deployment-subs/deployments ::apps-events/set-active-tab :deployments]])]
      [ui/GridRow {:centered true}
       [ui/GridColumn
-       [apps-views-detail/OverviewDescription :details]]]
+       [apps-views-detail/OverviewDescription]]]
      [ui/GridRow
       [ui/GridColumn
        [OverviewModuleSummary]]]]))

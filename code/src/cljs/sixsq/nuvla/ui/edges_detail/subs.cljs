@@ -127,7 +127,7 @@
 (reg-sub
   ::active-tab
   (fn [db]
-    (get-in db [::spec/active-tab])))
+    (::spec/active-tab db)))
 
 
 (reg-sub

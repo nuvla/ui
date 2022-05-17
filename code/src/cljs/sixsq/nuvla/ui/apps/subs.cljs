@@ -306,9 +306,11 @@
   ::paste-modal-visible?
   ::spec/paste-modal-visible?)
 
+
 (reg-sub
   ::active-tab
-  ::spec/active-tab)
+  (fn [db]
+    (::spec/active-tab db)))
 
 
 (reg-sub

@@ -1193,7 +1193,7 @@
 
 
 (defn OverviewDescription
-  [details-tab-index]
+  []
   (let [tr          (subscribe [::i18n-subs/tr])
         editable?   (subscribe [::subs/editable?])
         description (subscribe [::subs/description])
@@ -1212,7 +1212,7 @@
          [ui/GridColumn {:style {:text-align "right"}}
           [ui/Button {:icon     "pencil"
                       :compact  true
-                      :on-click #(dispatch [::events/set-active-tab-index details-tab-index])}]])]
+                      :on-click #(dispatch [::events/set-active-tab :details])}]])]
       [ui/GridRow
        [ui/GridColumn {:textAlign "center"
                        :only      "mobile"}
@@ -1243,13 +1243,13 @@
                             {:owners [user-id]}))
         ui-acl        (r/atom (when acl (acl-utils/acl->ui-acl-format acl)))]
     {:menuItem {:content (r/as-element [ShareTitle])
-                :key     "share"}
-     :pane     {:key     "share-pane"
-                :content (r/as-element
+                :key     :share}
+     :pane     {:content (r/as-element
                            [:<>
                             [:h2 [ShareTitle]]
                             ^{:key (:updated @e)}
                             [acl-views/AclWidget {:default-value default-value
                                                   :read-only     (not can-edit?)
                                                   :on-change     edit-event}
-                             ui-acl]])}}))
+                             ui-acl]])
+                :key :share-pane}}))

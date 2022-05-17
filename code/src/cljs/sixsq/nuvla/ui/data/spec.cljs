@@ -36,11 +36,11 @@
 
 (s/def ::modal-open? boolean?)
 
-(s/def ::active-tab-index number?)
+(s/def ::active-tab keyword?)
 
 (s/def ::add-data-set-form any?)
 
-(s/def ::db (s/keys :req [::active-tab-index
+(s/def ::db (s/keys :req [::active-tab
                           ::modal-open?
                           ::data-records
                           ::credentials
@@ -61,7 +61,7 @@
 (def default-time-period [(time/days-before 30)
                           (time/now)])
 
-(def defaults {::active-tab-index            0
+(def defaults {::active-tab                  :data-sets
                ::modal-open?                 false
                ::data-records                nil
                ::credentials                 nil

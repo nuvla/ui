@@ -1,22 +1,21 @@
 (ns sixsq.nuvla.ui.dashboard.utils
   (:require
-    [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
-    [sixsq.nuvla.ui.apps-store.utils :as apps-store-utils]))
+    [sixsq.nuvla.ui.apps-store.events :as apps-store-events]))
 
 (def type-apps "APPS")
 (def type-deployments "DEPLOYMENTS")
 (def type-nbs "NUVLAEDGES")
 (def type-creds "CREDENTIALS")
 
-(def target-apps {:resource        "apps"
-                  :tab-index       apps-store-utils/tab-app-store
-                  :tab-index-event ::apps-store-events/set-active-tab-index})
-(def target-deployments {:resource        "apps"
-                         :tab-index       apps-store-utils/tab-deployments
-                         :tab-index-event ::apps-store-events/set-active-tab-index})
-(def target-navigator {:resource        "apps"
-                       :tab-index       apps-store-utils/tab-navigator
-                       :tab-index-event ::apps-store-events/set-active-tab-index})
+(def target-apps {:resource  "apps"
+                  :tab-key   :appstore
+                  :tab-event ::apps-store-events/set-active-tab})
+(def target-deployments {:resource  "apps"
+                         :tab-key   :deployments
+                         :tab-event ::apps-store-events/set-active-tab})
+(def target-navigator {:resource  "apps"
+                       :tab-key   :navigate
+                       :tab-event ::apps-store-events/set-active-tab})
 (def target-nbs {:resource "edges"})
 (def target-creds {:resource "credentials"})
 

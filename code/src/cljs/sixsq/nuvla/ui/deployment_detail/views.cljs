@@ -32,7 +32,8 @@
     [sixsq.nuvla.ui.utils.spec :as spec-utils]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.utils.tab :as tab]))
 
 
 (def refresh-action-id :deployment-get-deployment)
@@ -134,23 +135,22 @@
                                                      :size     "mini"
                                                      :attached "top right"}
                                            url-count])])
-                :key     "urls"
+                :key     :urls
                 :icon    "linkify"}
-     :render   (fn []
-                 (r/as-element
-                   (if (empty? urls)
-                     [uix/WarningMsgNoElements (@tr [:no-urls])]
-                     [ui/TabPane
-                      [ui/Table {:basic   "very"
-                                 :columns 2}
-                       [ui/TableHeader
-                        [ui/TableRow
-                         [ui/TableHeaderCell [:span (@tr [:name])]]
-                         [ui/TableHeaderCell [:span (@tr [:url])]]]]
-                       [ui/TableBody
-                        (for [[url-name url-pattern] urls]
-                          ^{:key url-name}
-                          [url-to-row url-name url-pattern])]]])))}))
+     :render   #(r/as-element
+                  (if (empty? urls)
+                    [uix/WarningMsgNoElements (@tr [:no-urls])]
+                    [ui/TabPane
+                     [ui/Table {:basic   "very"
+                                :columns 2}
+                      [ui/TableHeader
+                       [ui/TableRow
+                        [ui/TableHeaderCell [:span (@tr [:name])]]
+                        [ui/TableHeaderCell [:span (@tr [:url])]]]]
+                      [ui/TableBody
+                       (for [[url-name url-pattern] urls]
+                         ^{:key url-name}
+                         [url-to-row url-name url-pattern])]]]))}))
 
 
 (defn module-version-section
@@ -159,11 +159,11 @@
         module-versions   (subscribe [::subs/module-versions])
         module-content-id (subscribe [::subs/current-module-content-id])]
     {:menuItem {:content (r/as-element [:span (@tr [:module-version])])
-                :key     "versions"
+                :key     :versions
                 :icon    "linkify"}
-     :render   (fn [] (r/as-element
-                        [ui/TabPane
-                         [views-versions/versions-table @module-versions @module-content-id]]))}))
+     :render   #(r/as-element
+                  [ui/TabPane [views-versions/versions-table
+                               @module-versions @module-content-id]])}))
 
 
 (defn item-to-row
@@ -198,36 +198,35 @@
                                items-count])])
                 :key     section-key
                 :icon    "list ol"}
-     :render   (fn []
-                 (r/as-element
-                   (if (empty? items)
-                     [uix/WarningMsgNoElements]
-                     [ui/TabPane
-                      [ui/Table {:basic   "very"
-                                 :columns 2}
-                       [ui/TableHeader
-                        [ui/TableRow
-                         [ui/TableHeaderCell [:span (@tr [:name])]]
-                         [ui/TableHeaderCell [:span (@tr [:value])]]]]
-                       (when-not (empty? items)
-                         [ui/TableBody
-                          (for [{name :name :as item} items]
-                            ^{:key name}
-                            [item-to-row item])])]])))}))
+     :render   #(r/as-element
+                  (if (empty? items)
+                    [uix/WarningMsgNoElements]
+                    [ui/TabPane
+                     [ui/Table {:basic   "very"
+                                :columns 2}
+                      [ui/TableHeader
+                       [ui/TableRow
+                        [ui/TableHeaderCell [:span (@tr [:name])]]
+                        [ui/TableHeaderCell [:span (@tr [:value])]]]]
+                      (when-not (empty? items)
+                        [ui/TableBody
+                         (for [{name :name :as item} items]
+                           ^{:key name}
+                           [item-to-row item])])]]))}))
 
 
 (defn parameters-section
   []
   (let [deployment-parameters (subscribe [::subs/deployment-parameters])
         params                (vals @deployment-parameters)]
-    (list-section params "parameters-section" :module-output-parameters)))
+    (list-section params :parameters :module-output-parameters)))
 
 
 (defn env-vars-section
   []
   (let [module-content (subscribe [::subs/deployment-module-content])
         env-vars       (get @module-content :environmental-variables [])]
-    (list-section env-vars "env-vars" :env-variables)))
+    (list-section env-vars :env-vars :env-variables)))
 
 
 (def event-fields #{:id :content :timestamp :category})
@@ -277,15 +276,16 @@
         events      (subscribe [::subs/events])
         events-info (events-table-info @events)
         event-count (count events-info)]
-    {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:events]))
-                                        (when (> event-count 0) [ui/Label {:circular true
-                                                                           :size     "mini"
-                                                                           :attached "top right"}
-                                                                 event-count])])
-                :key     "events"
+    {:menuItem {:content (r/as-element
+                           [:span (str/capitalize (@tr [:events]))
+                            (when (> event-count 0)
+                              [ui/Label {:circular true
+                                         :size     "mini"
+                                         :attached "top right"}
+                               event-count])])
+                :key     :events
                 :icon    "bolt"}
-     :render   (fn [] (r/as-element
-                        [events-table events-info]))}))
+     :render   #(r/as-element [events-table events-info])}))
 
 
 (defn job-map-to-row
@@ -307,50 +307,49 @@
         deployment       (subscribe [::subs/deployment])
         locale           (subscribe [::i18n-subs/locale])
         {total    :total
-         currency :currency} @upcoming-invoice              ;{:total 100.45 :currency "eur"}
+         currency :currency} @upcoming-invoice
         {:keys [description period]} (some-> @upcoming-invoice :lines first)
         coupon           (get-in @upcoming-invoice [:discount :coupon])]
     (when (some? (:subscription-id @deployment))
       {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:billing]))])
-                  :key     "billing"
+                  :key     :billing
                   :icon    "eur"}
-       :render   (fn []
-                   (r/as-element
-                     [ui/Segment
-                      [ui/Table {:collapsing true
-                                 :basic      "very"
-                                 :padded     false}
-                       [ui/TableBody
-                        [ui/TableRow
-                         [ui/TableCell
-                          [:b (str/capitalize (@tr [:details])) ": "]]
-                         [ui/TableCell
-                          description]]
-                        [ui/TableRow
-                         [ui/TableCell
-                          [:b (str/capitalize (@tr [:period])) ": "]]
-                         [ui/TableCell
-                          (some-> period :start (time/time->format "LL" @locale))
-                          " - "
-                          (some-> period :end (time/time->format "LL" @locale))]]
-                        [ui/TableRow
-                         [ui/TableCell
-                          [:b (str/capitalize (@tr [:coupon])) ": "]]
-                         [ui/TableCell
-                          (or (:name coupon) "-")]]
-                        [ui/TableRow
-                         [ui/TableCell
-                          [:b (str/capitalize (@tr [:total])) ": "]]
-                         [ui/TableCell
-                          (or total "-") " " currency]]]]]))})))
+       :render   #(r/as-element
+                    [ui/Segment
+                     [ui/Table {:collapsing true
+                                :basic      "very"
+                                :padded     false}
+                      [ui/TableBody
+                       [ui/TableRow
+                        [ui/TableCell
+                         [:b (str/capitalize (@tr [:details])) ": "]]
+                        [ui/TableCell
+                         description]]
+                       [ui/TableRow
+                        [ui/TableCell
+                         [:b (str/capitalize (@tr [:period])) ": "]]
+                        [ui/TableCell
+                         (some-> period :start (time/time->format "LL" @locale))
+                         " - "
+                         (some-> period :end (time/time->format "LL" @locale))]]
+                       [ui/TableRow
+                        [ui/TableCell
+                         [:b (str/capitalize (@tr [:coupon])) ": "]]
+                        [ui/TableCell
+                         (or (:name coupon) "-")]]
+                       [ui/TableRow
+                        [ui/TableCell
+                         [:b (str/capitalize (@tr [:total])) ": "]]
+                        [ui/TableCell
+                         (or total "-") " " currency]]]]])})))
 
 
 (defn logs-section
   []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        deployment    (subscribe [::subs/deployment])]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        deployment (subscribe [::subs/deployment])]
     {:menuItem {:content (r/as-element [:span (str/capitalize (@tr [:logs]))])
-                :key     "logs"
+                :key     :logs
                 :icon    "file code"}
      :render   (fn [] (r/as-element
                         [log-views/TabLogs
@@ -750,9 +749,9 @@
 (defn overview
   []
   {:menuItem {:content (r/as-element [:span "Overview"])
-              :key     "overview"
+              :key     :overview
               :icon    "info"}
-   :render   (fn [] (r/as-element [OverviewPane]))})
+   :render   #(r/as-element [OverviewPane])})
 
 
 (defn MenuBar
@@ -835,7 +834,8 @@
         resource-id (str "deployment/" uuid)]
     (refresh resource-id)
     (fn [_]
-      (let [active-index (subscribe [::subs/active-tab-index])]
+      (let [active-tab (subscribe [::subs/active-tab])
+            panes      (deployment-detail-panes)]
         [components/LoadingPage {:dimmable? true}
          [:<>
           [components/NotFoundPortal
@@ -844,7 +844,7 @@
            :no-deployment-message-content]
           [PageHeader]
           [MenuBar @deployment]
-          [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab-index 8]
+          [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab :jobs]
           [ProgressBars]
           [vpn-info]
           [ui/Tab
@@ -853,11 +853,11 @@
                           :style     {:display        "flex"
                                       :flex-direction "row"
                                       :flex-wrap      "wrap"}}
-            :panes       (deployment-detail-panes)
-            :activeIndex @active-index
-            :onTabChange (fn [_ data]
-                           (let [active-index (. data -activeIndex)]
-                             (dispatch [::events/set-active-tab-index active-index])))}]]]))))
+            :panes       panes
+            :activeIndex (tab/key->index panes @active-tab)
+            :onTabChange (tab/on-tab-change
+                           panes #(dispatch [::events/set-active-tab %]))}]
+          ]]))))
 
 
 (defmethod panel/render :deployment
@@ -867,5 +867,5 @@
     (case n
       2 [TabsDeployment uuid]
       (do
-        (dispatch [::apps-store-events/set-active-tab-index apps-store-utils/tab-deployments])
-        (dispatch [::history-events/navigate (str "apps")])))))
+        (dispatch [::apps-store-events/set-active-tab :deployments])
+        (dispatch [::history-events/navigate "apps"])))))

@@ -237,27 +237,21 @@
   (let [cluster   (subscribe [::subs/nuvlabox-cluster])
         can-edit? (subscribe [::subs/can-edit-cluster?])]
     [{:menuItem {:content "Overview"
-                 :key     "overview"
+                 :key     :overview
                  :icon    "info"}
-      :render   (fn [] (r/as-element [TabOverview]))}
+      :render   #(r/as-element [TabOverview])}
      (acl/TabAcls cluster @can-edit? ::events/edit)]))
 
 
 (defn TabsCluster
   []
-  (fn []
-    (let [active-index (subscribe [::subs/active-tab-index])]
-      [ui/Tab
-       {:menu        {:secondary true
-                      :pointing  true
-                      :style     {:display        "flex"
-                                  :flex-direction "row"
-                                  :flex-wrap      "wrap"}}
-        :panes       (tabs)
-        :activeIndex @active-index
-        :onTabChange (fn [_ data]
-                       (let [active-index (. data -activeIndex)]
-                         (dispatch [::events/set-active-tab-index active-index])))}])))
+  [ui/Tab
+   {:menu        {:secondary true
+                  :pointing  true
+                  :style     {:display        "flex"
+                              :flex-direction "row"
+                              :flex-wrap      "wrap"}}
+    :panes       (tabs)}])
 
 (defn ClusterView
   [cluster-id]

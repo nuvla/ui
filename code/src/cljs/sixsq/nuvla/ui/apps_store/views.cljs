@@ -20,7 +20,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as utils-style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as utils-values]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]
+    [sixsq.nuvla.ui.utils.tab :as tab]))
 
 
 (defn RefreshMenu
@@ -230,60 +231,53 @@
 (defn tabs
   []
   (let [tr (subscribe [::i18n-subs/tr])]
-    [
-     {:menuItem (r/as-element
-                  [ui/MenuItem
-                   {:key "appstore"}
-                   [ui/Icon {:className "fas fa-store"}]
-                   (utils-general/capitalize-words (@tr [:appstore]))])
-      :render   (fn [] (r/as-element [TabAppStore]))}
-     {:menuItem (r/as-element
-                  [ui/MenuItem
-                   {:key "allapps"}
-                   [ui/Icon {:className "grid layout"}]
-                   (utils-general/capitalize-words (@tr [:all-apps]))])
-      :render   (fn [] (r/as-element [TabAllApps]))}
-     {:menuItem (r/as-element
-                  [ui/MenuItem
-                   {:key "myapps"}
-                   [ui/Icon {:className "user"}]
-                   (utils-general/capitalize-words (@tr [:my-apps]))])
-      :render   (fn [] (r/as-element [TabMyApps]))}
+    [{:menuItem {:content (utils-general/capitalize-words (@tr [:appstore]))
+                 :key     :appstore
+                 :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
+      :render   #(r/as-element [TabAppStore])}
+     {:menuItem {:content (utils-general/capitalize-words (@tr [:all-apps]))
+                 :key     :allapps
+                 :icon    "grid layout"}
+      :render   #(r/as-element [TabAllApps])}
+     {:menuItem {:content (utils-general/capitalize-words (@tr [:my-apps]))
+                 :key     :myapps
+                 :icon    "user"}
+      :render   #(r/as-element [TabMyApps])}
      {:menuItem {:content "Navigate Apps"
-                 :key     "navigate"
+                 :key     :navigate
                  :icon    "folder open"}
-      :render   (fn [] (r/as-element [TabNavigator]))}
+      :render   #(r/as-element [TabNavigator])}
      {:menuItem {:content "Deployments"
-                 :key     "deployments"
+                 :key     :deployments
                  :icon    "rocket"}
-      :render   (fn [] (r/as-element [TabDeployments]))}]))
+      :render   #(r/as-element [TabDeployments])}]))
 
 
 (defn TabsApps
   []
-  (fn []
-    (let [active-index (subscribe [::subs/active-tab-index])]
-      [ui/Tab
-       {:menu        {:secondary true
-                      :pointing  true
-                      :style     {:display        "flex"
-                                  :flex-direction "row"
-                                  :flex-wrap      "wrap"}}
-        :panes       (tabs)
-        :activeIndex @active-index
-        :onTabChange (fn [_ data]
-                       (let [active-index (. data -activeIndex)]
-                         (dispatch [::events/set-active-tab-index active-index])))}])))
+  (let [active-tab (subscribe [::subs/active-tab])
+        panes      (tabs)]
+    [ui/Tab
+     {:menu        {:secondary true
+                    :pointing  true
+                    :style     {:display        "flex"
+                                :flex-direction "row"
+                                :flex-wrap      "wrap"}}
+      :panes       panes
+      :activeIndex (tab/key->index panes @active-tab)
+      :onTabChange (tab/on-tab-change
+                     panes
+                     #(dispatch [::events/set-active-tab %]))}]))
 
 
 (defn RootView
   []
-  (let [tr               (subscribe [::i18n-subs/tr])
-        active-tab-index (subscribe [::subs/active-tab-index])]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        active-tab (subscribe [::subs/active-tab])]
     (dispatch [::apps-events/reset-version])
     (dispatch [::apps-events/module-not-found false])
     (fn []
-      @active-tab-index
+      @active-tab
       (dispatch [::events/reset-page])
       [ui/Container {:fluid true}
        [:<>

@@ -13,6 +13,7 @@
         :accept-license                                "I accept the license agreement"
         :access-deployment                             "access deployment"
         :access-keys                                   "Access keys"
+        :access-services                               "Access keys"
         :access-rights                                 "Access rights"
         :account                                       "Account"
         :acl-owners                                    "Owners have all the rights on the resource. This is why they don't appear in the rights table."

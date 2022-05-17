@@ -366,7 +366,7 @@
                :placeholder "", :editable? @mgmt-cred-set?, :required? true, :default-value cloud-user,
                :spec ::spec/cloud-user, :on-change (partial on-change :cloud-user), :validate-form? @validate-form?]])
 
-           (when (not  (= utils/infra-service-subtype-openstack @mgmt-cred-subtype))
+           (when (not= utils/infra-service-subtype-openstack @mgmt-cred-subtype)
              [uix/TableRowField [:div "Region" (cloud-help-popup "Cloud specific region." @mgmt-cred-subtype)],
               :placeholder "", :editable? @mgmt-cred-set?, :required? false,
               :default-value cloud-region, :spec ::spec/cloud-region, :on-change (partial on-change :cloud-region),

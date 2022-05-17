@@ -68,10 +68,9 @@
                                                                          :size     "mini"
                                                                          :attached "top right"}
                                                                job-count])])
-                :key     "job-section"
+                :key     :jobs
                 :icon    "clipboard list"}
-     :render   (fn [] (r/as-element
-                        [JobsTable @jobs]))}))
+     :render   #(r/as-element [JobsTable @jobs])}))
 
 
 (def filtered-actions #{"dct_check"})

@@ -153,8 +153,8 @@
   ::open-application-select-modal
   (fn [{{:keys [::spec/selected-data-set-ids
                 ::data-set-spec/selected-data-record-ids
-                ::spec/active-tab-index] :as db} :db}]
-    (let [tab-data-set-selected? (zero? active-tab-index)
+                ::spec/active-tab] :as db} :db}]
+    (let [tab-data-set-selected? (= active-tab :data-sets)
           {:keys [resource
                   selected-data
                   dispatch-event]} (if tab-data-set-selected?
@@ -214,13 +214,13 @@
 
 
 (reg-event-db
-  ::set-active-tab-index
-  (fn [db [_ active-tab-index]]
-    (cond-> (assoc db ::spec/active-tab-index active-tab-index)
-            (= active-tab-index 1) (assoc ::data-set-spec/data-set-id nil
-                                          ::data-set-spec/data-record-filter nil
-                                          ::data-set-spec/map-selection nil
-                                          ::data-set-spec/data-set nil))))
+  ::set-active-tab
+  (fn [db [_ active-tab]]
+    (cond-> (assoc db ::spec/active-tab active-tab)
+            (= active-tab :data-records) (assoc ::data-set-spec/data-set-id nil
+                                                ::data-set-spec/data-record-filter nil
+                                                ::data-set-spec/map-selection nil
+                                                ::data-set-spec/data-set nil))))
 
 
 (reg-event-db

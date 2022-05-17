@@ -8,7 +8,6 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.profile.events :as profile-events]
     [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.profile.views :as profile-views]
     [sixsq.nuvla.ui.session.components :as comp]
@@ -56,7 +55,6 @@
         geant-template?            (subscribe [::subs/user-template-exist?
                                                "user-template/geant"])
         stripe                     (subscribe [::main-subs/stripe])
-        pricing-catalogue          (subscribe [::profile-subs/pricing-catalogue])
         pricing-url                (subscribe [::main-subs/config :pricing-url])
         create-customer            (r/atom false)
         form-customer-conf         {:form-spec    ::profile-views/customer

@@ -289,7 +289,7 @@
 
 (reg-event-fx
   ::create-customer
-  (fn [{{:keys [::spec/pricing-catalogue] :as db} :db} [_ {:keys [payment-method] :as customer}]]
+  (fn [{db :db} [_ {:keys [payment-method] :as customer}]]
     {:db               (update db ::spec/loading conj :create-customer)
      ::cimi-api-fx/add [:customer (cond-> (assoc customer :subscription? true)
                                           payment-method (assoc :payment-method payment-method))
@@ -446,9 +446,9 @@
 
 
 (reg-event-db
-  ::set-active-tab-index
-  (fn [db [_ active-tab-index]]
-    (assoc db ::spec/active-tab-index active-tab-index)))
+  ::set-active-tab
+  (fn [db [_ active-tab]]
+    (assoc db ::spec/active-tab active-tab)))
 
 
 (reg-event-fx

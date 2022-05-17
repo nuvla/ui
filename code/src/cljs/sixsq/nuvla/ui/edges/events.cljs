@@ -406,12 +406,6 @@
                            #(dispatch [::set-ssh-keys-available %])]}))
 
 
-(reg-event-db
-  ::set-active-tab-index
-  (fn [db [_ active-tab-index]]
-    (assoc db ::spec/active-tab-index active-tab-index)))
-
-
 (reg-event-fx
   ::enable-host-level-management
   (fn [_ [_ nuvlabox-id]]

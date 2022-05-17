@@ -42,7 +42,7 @@
         no-of-apps (count (:resources @apps))
         color      "grey"
         icon       "fas fa-store"
-        {:keys [resource tab-index tab-index-event]} utils/target-apps]
+        {:keys [resource tab-key tab-event]} utils/target-apps]
     [ui/Segment {:secondary true
                  :color     color
                  :raised    true}
@@ -78,8 +78,8 @@
                  :icon     icon
                  :color    color
                  :content  "Show me"
-                 :on-click #((when (and tab-index tab-index-event)
-                               (dispatch [tab-index-event tab-index]))
+                 :on-click #((when (and tab-event tab-key)
+                               (dispatch [tab-event tab-key]))
                              (dispatch [::history-events/navigate resource]))}]]))
 
 
@@ -113,7 +113,7 @@
   (let [tr    (subscribe [::i18n-subs/tr])
         icon  "rocket"
         color "blue"
-        {:keys [resource tab-index tab-index-event]} utils/target-deployments]
+        {:keys [resource tab-key tab-event]} utils/target-deployments]
     [ui/Segment {:secondary true
                  :color     color
                  :raised    true
@@ -129,21 +129,21 @@
                  :icon     icon
                  :style    {:align-self "start"}
                  :content  "Show me"
-                 :on-click #(do (when (and tab-index tab-index-event)
-                                  (dispatch [tab-index-event tab-index]))
+                 :on-click #(do (when (and tab-event tab-key)
+                                  (dispatch [tab-event tab-key]))
                                 (dispatch [::history-events/navigate resource]))}]]))
 
 
 (defn Statistic
   [value icon label target]
   (let [color (if (pos? value) "black" "grey")
-        {:keys [resource tab-index tab-index-event]} target]
+        {:keys [resource tab-key tab-event]} target]
     [ui/Statistic {:style    {:cursor "pointer"}
                    :color    color
                    :class    "slight-up"
                    :on-click #(do
-                                (when (and tab-index tab-index-event)
-                                  (dispatch [tab-index-event tab-index]))
+                                (when (and tab-event tab-key)
+                                  (dispatch [tab-event tab-key]))
                                 (dispatch [::history-events/navigate resource]))}
      [ui/StatisticValue (or value "-")
       "\u2002"

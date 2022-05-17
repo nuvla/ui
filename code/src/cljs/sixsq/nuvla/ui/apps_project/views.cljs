@@ -5,7 +5,6 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.apps-project.events :as events]
     [sixsq.nuvla.ui.apps-project.spec :as spec]
-    [sixsq.nuvla.ui.apps-project.utils :as utils]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
@@ -19,7 +18,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.utils.tab :as tab]))
 
 
 (defn clear-module
@@ -110,8 +110,8 @@
 
 (defn DetailsPane
   []
-  (let [active-index (subscribe [::apps-subs/active-tab-index])]
-    @active-index
+  (let [active-tab (subscribe [::apps-subs/active-tab])]
+    @active-tab
     ^{:key (random-uuid)}
     [apps-views-detail/Details
      {:validation-event
@@ -128,7 +128,7 @@
                :centered  true}
       [ui/GridRow {:centered true}
        [ui/GridColumn
-        [apps-views-detail/OverviewDescription utils/tab-details]]]
+        [apps-views-detail/OverviewDescription]]]
       [ui/GridRow
        [ui/GridColumn
         [ModulesView]]]
@@ -137,27 +137,19 @@
         [OverviewModuleSummary]]]]]))
 
 
-(defn overview
-  []
-  {:menuItem {:content (r/as-element [:span "Overview"])
-              :key     "overview"
-              :icon    "info"}
-   :pane     {:key "overview" :content (r/as-element [OverviewPane])}})
-
-
-(defn details
-  []
-  {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
-              :key     "details"}
-   :pane     {:key "details-pane" :content (r/as-element [DetailsPane])}})
-
-
 (defn module-detail-panes
   []
   (let [module    (subscribe [::apps-subs/module])
         editable? (subscribe [::apps-subs/editable?])]
-    [(overview)
-     (details)
+    [{:menuItem {:content (r/as-element [:span "Overview"])
+                 :key     :overview
+                 :icon    "info"}
+      :pane     {:content (r/as-element [OverviewPane])
+                 :key :overview-pane}}
+     {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
+                 :key     :details}
+      :pane     {:content (r/as-element [DetailsPane])
+                 :key :details-pane}}
      (apps-views-detail/TabAcls module @editable? #(do (dispatch [::apps-events/acl %])
                                                        (dispatch [::main-events/changes-protection? true])))]))
 
@@ -165,14 +157,15 @@
 (defn ViewEdit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        active-index  (subscribe [::apps-subs/active-tab-index])
+        active-tab  (subscribe [::apps-subs/active-tab])
         is-new?       (subscribe [::apps-subs/is-new?])]
-    (if (true? @is-new?) (dispatch [::apps-events/set-active-tab-index utils/tab-details])
-                         (dispatch [::apps-events/set-active-tab-index 0]))
+    (if (true? @is-new?) (dispatch [::apps-events/set-active-tab :details])
+                         (dispatch [::apps-events/set-active-tab :overview]))
     (dispatch [::apps-events/set-form-spec ::spec/module-project])
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
-            parent (get @module-common ::apps-spec/parent-path)]
+            parent (get @module-common ::apps-spec/parent-path)
+            panes  (module-detail-panes)]
         [ui/Container {:fluid true}
          [uix/PageHeader "folder" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/paste-modal]
@@ -183,9 +176,10 @@
                               :style     {:display        "flex"
                                           :flex-direction "row"
                                           :flex-wrap      "wrap"}}
-           :panes            (module-detail-panes)
-           :activeIndex      @active-index
+           :panes            panes
+           :activeIndex      (tab/key->index panes @active-tab)
            :renderActiveOnly false
-           :onTabChange      (fn [_ data]
-                               (let [active-index (. data -activeIndex)]
-                                 (dispatch [::apps-events/set-active-tab-index active-index])))}]]))))
+           :onTabChange      (tab/on-tab-change
+                               panes
+                               #(dispatch [::apps-events/set-active-tab %]))}]])
+      )))

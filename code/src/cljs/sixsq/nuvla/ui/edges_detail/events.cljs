@@ -306,9 +306,9 @@
 
 
 (reg-event-db
-  ::set-active-tab-index
-  (fn [db [_ active-tab-index]]
-    (assoc db ::spec/active-tab-index active-tab-index)))
+  ::set-active-tab
+  (fn [db [_ key]]
+    (assoc db ::spec/active-tab key)))
 
 
 (reg-event-db

@@ -21,7 +21,7 @@
                           ::available-components]))
 
 (defn default-since []
-  (-> (time/now) (.seconds 0)))
+  (.seconds (time/now) 0))
 
 (def defaults {::resource-log nil
                ::id           nil

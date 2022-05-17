@@ -22,7 +22,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as utils-values]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]
+    [sixsq.nuvla.ui.utils.tab :as tab]))
 
 
 (def view-type (r/atom :cards))
@@ -107,11 +108,11 @@
 
 (defn MenuBar
   []
-  (let [active-index   (subscribe [::subs/active-tab-index])]
+  (let [active-tab (subscribe [::subs/active-tab])]
     [components/StickyBar
      [ui/Menu {:borderless true, :stackable true}
       [data-set-views/ProcessButton :menu-item]
-      (when (zero? @active-index) [AddDataSet])
+      (when (= @active-tab :data-sets) [AddDataSet])
       [ui/MenuItem {:icon     "grid layout"
                     :active   (= @view-type :cards)
                     :on-click #(reset! view-type :cards)}]
@@ -326,57 +327,45 @@
      :table [DataSetTable])])
 
 
-(defn data-sets
-  []
-  {:menuItem {:content (r/as-element [:span "Datasets"])
-              :key     "data-sets"
-              :icon    "object group"}
-   :render   (fn [] (r/as-element [DataSets]))})
-
-
-(defn data-records
-  []
-  {:menuItem {:content (r/as-element [:span "Data records"])
-              :key     "data-records"
-              :icon    "file"}
-   :render   (fn [] (r/as-element [DataRecords]))})
-
-
 (defn data-panes
   []
-  [(data-sets)
-   (data-records)])
+  [{:menuItem {:content (r/as-element [:span "Datasets"])
+               :key     :data-sets
+               :icon    "object group"}
+    :render   #(r/as-element [DataSets])}
+   {:menuItem {:content (r/as-element [:span "Data records"])
+               :key     :data-records
+               :icon    "file"}
+    :render   #(r/as-element [DataRecords])}])
 
 
 (defn Data
   []
   (refresh)
-  (let [tr           (subscribe [::i18n-subs/tr])
-        active-index (subscribe [::subs/active-tab-index])]
+  (let [tr         (subscribe [::i18n-subs/tr])
+        active-tab (subscribe [::subs/active-tab])]
     (fn []
-      [components/LoadingPage {}
-       [ui/Segment style/basic
-        [uix/PageHeader "database" (@tr [:data-processing])]
-        [MenuBar]
-        [NewDatasetModal]
-        [ui/Tab
-         {:menu        {:secondary true
-                        :pointing  true
-                        :style     {:display        "flex"
-                                    :flex-direction "row"
-                                    :flex-wrap      "wrap"}}
-          :panes       (data-panes)
-          :activeIndex @active-index
-          :onTabChange (fn [_ data]
-                         (let [i (. data -activeIndex)]
-                           (dispatch [::events/set-active-tab-index i])
-                           (when (and (= @view-type :map)
-                                      (zero? i))
-                             (reset! view-type :cards))))}]
-        [ApplicationSelectModal]
-        [deployment-dialog-views/deploy-modal true]
-        [data-set-views/ProcessButton]
-        [data-set-views/CreateDataSet]]])))
+      (let [panes (data-panes)]
+        [components/LoadingPage {}
+         [ui/Segment style/basic
+          [uix/PageHeader "database" (@tr [:data-processing])]
+          [MenuBar]
+          [NewDatasetModal]
+          [ui/Tab
+           {:menu        {:secondary true
+                          :pointing  true
+                          :style     {:display        "flex"
+                                      :flex-direction "row"
+                                      :flex-wrap      "wrap"}}
+            :panes       panes
+            :activeIndex (tab/key->index panes @active-tab)
+            :onTabChange (tab/on-tab-change
+                           panes
+                           #(dispatch [::events/set-active-tab %]))}]
+          [ApplicationSelectModal]
+          [deployment-dialog-views/deploy-modal true]
+          [data-set-views/ProcessButton]
+          [data-set-views/CreateDataSet]]]))))
 
 
 (defmethod panel/render :data

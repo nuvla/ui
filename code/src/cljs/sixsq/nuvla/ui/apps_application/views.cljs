@@ -28,7 +28,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.utils.tab :as tab]))
 
 
 (defn clear-module
@@ -326,13 +327,6 @@
                                           :empty-msg      (@tr [:empty-deployment-module-msg])}])]))
 
 
-(defn deployments
-  []
-  {:menuItem {:content (r/as-element [TabMenuDeployments])
-              :key     "deployments"}
-   :pane     {:key "deplyment-pane" :content (r/as-element [DeploymentsPane])}})
-
-
 (defn TabMenuVersions
   []
   [:span
@@ -342,13 +336,6 @@
 (defn VersionsPane
   []
   [apps-views-versions/Versions])
-
-
-(defn versions
-  []
-  {:menuItem {:content (r/as-element [TabMenuVersions])
-              :key     "versions"}
-   :pane     {:key "versions-pane" :content (r/as-element [VersionsPane])}})
 
 
 (defn TabMenuConfiguration
@@ -369,13 +356,6 @@
    [apps-views-detail/DataTypesSection]])
 
 
-(defn configuration
-  []
-  {:menuItem {:content (r/as-element [TabMenuConfiguration])
-              :key     "configuration"}
-   :pane     {:key "configuration-pane" :content (r/as-element [ConfigurationPane])}})
-
-
 (defn TabMenuLicense
   []
   (let [error? (subscribe [::subs/license-error?])]
@@ -386,13 +366,6 @@
 (defn LicensePane
   []
   [apps-views-detail/LicenseSection])
-
-
-(defn license
-  []
-  {:menuItem {:content (r/as-element [TabMenuLicense])
-              :key     "license"}
-   :pane     {:key "license-pane" :content (r/as-element [LicensePane])}})
 
 
 (defn TabMenuPricing
@@ -418,13 +391,6 @@
             [ui/Message {:info true} (@tr [:become-a-vendor])])])])))
 
 
-(defn pricing
-  []
-  {:menuItem {:content (r/as-element [TabMenuPricing])
-              :key     "pricing"}
-   :pane     {:key "pricing-pane" :content (r/as-element [PricingPane])}})
-
-
 (defn TabMenuDocker
   []
   (let [error? (subscribe [::subs/docker-compose-validation-error?])]
@@ -438,9 +404,9 @@
   1. The CodeMirror component used must be reloaded to render correctly
   2. The component must be loaded even if not visible to run the validation"
   []
-  (let [active-index   (subscribe [::apps-subs/active-tab-index])
+  (let [active-tab     (subscribe [::apps-subs/active-tab])
         module-subtype (subscribe [::apps-subs/module-subtype])]
-    @active-index
+    @active-tab
     [:<>
      [:h2 [apps-views-detail/DockerTitle]]
      [apps-views-detail/registries-section]
@@ -449,13 +415,6 @@
       (cond
         (= @module-subtype apps-views-detail/docker-compose-subtype) [DockerComposeSection]
         (= @module-subtype apps-views-detail/application-kubernetes-subtype) [KubernetesSection])]]))
-
-
-(defn docker
-  []
-  {:menuItem {:content (r/as-element [TabMenuDocker])
-              :key     "docker"}
-   :pane     {:key "docker-pane" :content (r/as-element [DockerPane])}})
 
 
 (defn RequiresUserRightsCheckbox
@@ -494,9 +453,9 @@
 (defn DetailsPane []
   (let [tr             (subscribe [::i18n-subs/tr])
         module-subtype (subscribe [::apps-subs/module-subtype])
-        active-index   (subscribe [::apps-subs/active-tab-index])
+        active-tab     (subscribe [::apps-subs/active-tab])
         editable?      (subscribe [::apps-subs/editable?])]
-    @active-index
+    @active-tab
     ^{:key (random-uuid)}
     [apps-views-detail/Details
      {:extras           [^{:key "module_subtype"}
@@ -514,13 +473,6 @@
                            [components/InfoPopup (@tr [:module-requires-user-rights])]]
                           [ui/TableCell [RequiresUserRightsCheckbox]]]]
       :validation-event ::apps-events/set-details-validation-error}]))
-
-
-(defn details
-  []
-  {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
-              :key     "details"}
-   :pane     {:key "details-pane" :content (r/as-element [DetailsPane])}})
 
 
 (defn TabMenuOverview
@@ -541,21 +493,13 @@
       (when (not @is-new?)
         [ui/GridColumn
          [deployment-views/DeploymentsOverviewSegment
-          ::deployment-subs/deployments ::apps-events/set-active-tab-index utils/tab-deployments-index]])]
+          ::deployment-subs/deployments ::apps-events/set-active-tab :deployments]])]
      [ui/GridRow {:centered true}
       [ui/GridColumn
-       [apps-views-detail/OverviewDescription utils/tab-details-index]]]
+       [apps-views-detail/OverviewDescription]]]
      [ui/GridRow
       [ui/GridColumn
        [OverviewModuleSummary]]]]))
-
-
-(defn overview
-  []
-  {:menuItem {:content (r/as-element [TabMenuOverview])
-              :key     "overview"
-              :icon    "info"}
-   :pane     {:key "overview-pane" :content (r/as-element [OverviewPane])}})
 
 
 (defn module-detail-panes
@@ -563,15 +507,40 @@
   (let [module    (subscribe [::apps-subs/module])
         editable? (subscribe [::apps-subs/editable?])
         stripe    (subscribe [::main-subs/stripe])]
-    (remove nil? [(overview)
-                  (details)
-                  (deployments)
-                  (license)
+    (remove nil? [{:menuItem {:content (r/as-element [TabMenuOverview])
+                              :key     :overview
+                              :icon    "info"}
+                   :pane     {:content (r/as-element [OverviewPane])
+                              :key     :overview-pane}}
+                  {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
+                              :key     :details}
+                   :pane     {:content (r/as-element [DetailsPane])
+                              :key     :details-pane}}
+                  {:menuItem {:content (r/as-element [TabMenuDeployments])
+                              :key     :deployments}
+                   :pane     {:content (r/as-element [DeploymentsPane])
+                              :key     :deployments-pane}}
+                  {:menuItem {:content (r/as-element [TabMenuLicense])
+                              :key     :license}
+                   :pane     {:content (r/as-element [LicensePane])
+                              :key     :license-pane}}
                   (when @stripe
-                    (pricing))
-                  (docker)
-                  (configuration)
-                  (versions)
+                    {:menuItem {:content (r/as-element [TabMenuPricing])
+                                :key     :pricing}
+                     :pane     {:content (r/as-element [PricingPane])
+                                :key     :pricing-pane}})
+                  {:menuItem {:content (r/as-element [TabMenuDocker])
+                              :key     :docker}
+                   :pane     {:content (r/as-element [DockerPane])
+                              :key     :docker-pane}}
+                  {:menuItem {:content (r/as-element [TabMenuConfiguration])
+                              :key     :configuration}
+                   :pane     {:content (r/as-element [ConfigurationPane])
+                              :key :configuration-pane}}
+                  {:menuItem {:content (r/as-element [TabMenuVersions])
+                              :key     :versions}
+                   :pane     {:content (r/as-element [VersionsPane])
+                              :key :versions-pane}}
                   (apps-views-detail/TabAcls
                     module
                     @editable?
@@ -582,15 +551,16 @@
 (defn ViewEdit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        active-index  (subscribe [::apps-subs/active-tab-index])
+        active-tab    (subscribe [::apps-subs/active-tab])
         is-new?       (subscribe [::apps-subs/is-new?])]
-    (if (true? @is-new?) (dispatch [::apps-events/set-active-tab-index utils/tab-details-index])
-                         (dispatch [::apps-events/set-active-tab-index 0]))
+    (if (true? @is-new?) (dispatch [::apps-events/set-active-tab :details])
+                         (dispatch [::apps-events/set-active-tab :overview]))
     (dispatch [::apps-events/reset-version])
     (dispatch [::apps-events/set-form-spec ::spec/module-application])
     (fn []
       (let [name   (get @module-common ::apps-spec/name)
-            parent (get @module-common ::apps-spec/parent-path)]
+            parent (get @module-common ::apps-spec/parent-path)
+            panes  (module-detail-panes)]
         [ui/Container {:fluid true}
          [uix/PageHeader "cubes" (str parent (when (not-empty parent) "/") name) :inline true]
          [apps-views-detail/MenuBar]
@@ -600,9 +570,10 @@
                               :style     {:display        "flex"
                                           :flex-direction "row"
                                           :flex-wrap      "wrap"}}
-           :panes            (module-detail-panes)
-           :activeIndex      @active-index
+           :panes            panes
+           :activeIndex      (tab/key->index panes @active-tab)
            :renderActiveOnly false
-           :onTabChange      (fn [_ data]
-                               (let [active-index (. data -activeIndex)]
-                                 (dispatch [::apps-events/set-active-tab-index active-index])))}]]))))
+           :onTabChange      (tab/on-tab-change
+                               panes
+                               #(dispatch [::apps-events/set-active-tab %]))}]
+         ]))))

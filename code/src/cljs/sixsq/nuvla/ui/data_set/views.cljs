@@ -259,11 +259,11 @@
   (let [tr                    (subscribe [::i18n-subs/tr])
         selected-data-sets    (subscribe [::data-subs/selected-data-set-ids])
         selected-data-records (subscribe [::subs/selected-data-record-ids])
-        active-index          (subscribe [::data-subs/active-tab-index])
+        active-tab            (subscribe [::data-subs/active-tab])
         on-click              #(dispatch [::main-events/subscription-required-dispatch
                                           [::data-events/open-application-select-modal]])]
     (fn [button-type]
-      (let [selected  (if (zero? @active-index)
+      (let [selected  (if (= @active-tab :data-sets)
                         @selected-data-sets
                         @selected-data-records)
             disabled? (not (seq selected))]
@@ -285,7 +285,7 @@
 (defn CreateDataSet
   []
   (let [tr                       (subscribe [::i18n-subs/tr])
-        active-tab-index         (subscribe [::data-subs/active-tab-index])
+        active-tab               (subscribe [::data-subs/active-tab])
         selected-data-record-ids (subscribe [::subs/selected-data-record-ids])
         data-record-filter       (subscribe [::subs/data-record-filter])
         map-selection            (subscribe [::subs/map-selection])
@@ -294,7 +294,7 @@
       (let [selected-data-records? (-> @selected-data-record-ids seq boolean)
             some-filter-str?       (not (str/blank? @data-record-filter))
             some-map-selection?    (some? @map-selection)]
-        (when (and (= @active-tab-index 1)
+        (when (and (= @active-tab :data-records)
                    (or selected-data-records?
                        some-filter-str?
                        some-map-selection?))

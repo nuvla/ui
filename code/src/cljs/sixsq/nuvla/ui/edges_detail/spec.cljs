@@ -13,7 +13,7 @@
 (s/def ::elements-per-page int?)
 (s/def ::page int?)
 (s/def ::nuvlabox-vulns (s/nilable any?))
-(s/def ::active-tab-index number?)
+(s/def ::active-tab keyword?)
 (s/def ::nuvlabox-managers (s/nilable any?))
 (s/def ::join-token (s/nilable any?))
 (s/def ::nuvlabox-cluster (s/nilable any?))
@@ -34,7 +34,7 @@
                           ::elements-per-page
                           ::page
                           ::nuvlabox-vulns
-                          ::active-tab-index
+                          ::active-tab
                           ::nuvlabox-managers
                           ::join-token
                           ::nuvlabox-cluster
@@ -54,7 +54,7 @@
                ::elements-per-page            15
                ::page                         1
                ::nuvlabox-vulns               nil
-               ::active-tab-index             0
+               ::active-tab                   :overview
                ::nuvlabox-managers            nil
                ::join-token                   nil
                ::nuvlabox-cluster             nil

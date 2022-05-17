@@ -366,17 +366,19 @@
         default-value (:acl @e)
         ui-acl        (->ui-acl default-value can-edit?)]
     {:menuItem {:content "Share"
-                :key     "share"
+                :key     :share
                 :icon    "users"}
-     :render   (fn [] (r/as-element
-                        (when default-value
-                          ^{:key (:updated @e)}
-                          [AclWidget {:default-value default-value
-                                      :read-only     (not can-edit?)
-                                      :on-change     #(dispatch [edit-event
-                                                                 (:id @e) (assoc @e :acl %)
-                                                                 (@tr [:acl-updated])])}
-                           ui-acl])))}))
+     :render   (fn []
+                 (r/as-element
+                   (when default-value
+                     ^{:key (:updated @e)}
+                     [AclWidget {:default-value default-value
+                                 :read-only     (not can-edit?)
+                                 :on-change     #(dispatch
+                                                   [edit-event
+                                                    (:id @e) (assoc @e :acl %)
+                                                    (@tr [:acl-updated])])}
+                      ui-acl])))}))
 
 
 (defn AclButtonOnly

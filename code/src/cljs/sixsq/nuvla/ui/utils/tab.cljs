@@ -25,4 +25,4 @@
 (defn on-tab-change
   [panes callback]
   (fn [_ data]
-    (callback (index->key panes (. data -activeIndex)))))
+    (callback (index->key panes (.-activeIndex data)))))

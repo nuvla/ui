@@ -289,7 +289,7 @@
 
 (reg-event-fx
   ::create-customer
-  (fn [{{:keys [::spec/pricing-catalogue] :as db} :db} [_ {:keys [payment-method] :as customer}]]
+  (fn [{db :db} [_ {:keys [payment-method] :as customer}]]
     {:db               (update db ::spec/loading conj :create-customer)
      ::cimi-api-fx/add [:customer (cond-> (assoc customer :subscription? true)
                                           payment-method (assoc :payment-method payment-method))

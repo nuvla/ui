@@ -829,7 +829,7 @@
                       :style {:max-width 112}}]]]
 
          [ui/Card
-          (when (not @is-group?)
+          (when-not @is-group?
             {:on-click #(do
                           (dispatch [::events/set-validate-form? false])
                           (dispatch [::events/form-valid])

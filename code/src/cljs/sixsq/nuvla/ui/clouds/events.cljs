@@ -229,7 +229,7 @@
 
 (reg-event-fx
   ::set-page
-  (fn [{{:keys [::spec/elements-per-page] :as db} :db} [_ page]]
+  (fn [{db :db} [_ page]]
     {:db (assoc db ::spec/page page)
      :fx [[:dispatch ::get-infra-service-groups]]}))
 

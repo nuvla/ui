@@ -83,7 +83,7 @@
 
 (defn calc-disk-size
   [user-disk-size default-disk-size]
-  (if (= 0 user-disk-size)
+  (if (zero? user-disk-size)
     default-disk-size
     (if (< user-disk-size 10)
       10

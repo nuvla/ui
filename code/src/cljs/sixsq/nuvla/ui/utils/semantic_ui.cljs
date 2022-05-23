@@ -119,6 +119,7 @@
 (def LabelDetail (r/adapt-react-class semantic/LabelDetail))
 
 (def ListSA (r/adapt-react-class semantic/List))
+(def ListList (r/adapt-react-class semantic/ListList))
 (def ListContent (r/adapt-react-class semantic/ListContent))
 (def ListDescription (r/adapt-react-class semantic/ListDescription))
 (def ListHeader (r/adapt-react-class semantic/ListHeader))

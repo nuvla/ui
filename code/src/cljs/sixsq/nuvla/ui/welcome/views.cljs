@@ -6,7 +6,8 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [reagent.core :as r]))
 
 (defn navigate-link [target-page text]
   [:a {:on-click #(dispatch [::history-events/navigate target-page])
@@ -27,6 +28,45 @@
       [ui/ListHeader title]
       [ui/ListDescription content]]]]])
 
+(defn Group
+  [_group]
+  (let [collapsed (r/atom true)]
+    (fn [{:keys [id name children] :as _group}]
+      [ui/ListItem {:on-click #(do (swap! collapsed not)
+                                   (.stopPropagation %))}
+       [ui/ListIcon {:name  (if @collapsed "folder" "folder open")
+                     :color (if (seq children) "blue" "grey")}]
+       [ui/ListContent
+        [ui/ListHeader id]
+        [ui/ListDescription name]
+        (when (and (not @collapsed) (seq children))
+          [ui/ListList
+           (for [child children]
+             ^{:key (:id child)}
+             [Group child])])]])))
+
+
+(defn GroupHierarchy
+  []
+  (let [trees [{:children [{:children [{:id   "group/c"
+                                       :name "Group c"}]
+                           :id       "group/b"
+                           :name     "Group b"}
+                          {:id   "group/b1"
+                           :name "Group b1"}]
+               :id       "group/a"
+               :name     "Group a"}
+              {:id   "group/z"
+               :name "Group z"}]]
+    [:<>
+     [:h1 "GroupHierarchy Testing"]
+     [ui/ListSA {:celled true
+                 :style {:cursor :pointer}}
+      (for [tree trees]
+        ^{:key (:id tree)}
+        [Group tree])]]))
+
+
 (defmethod panel/render :welcome
   [path]
   (let [tr           (subscribe [::i18n-subs/tr])
@@ -41,6 +81,9 @@
       (dispatch [::history-events/navigate (str (first path) "/")]))
 
     [:<>
+     ;; #FIXME Group hierarchy feature flag, to be change from dev env
+     (when false
+       [GroupHierarchy])
      [ui/Grid {:stackable     true
                :centered      true
                :verticalAlign :middle
@@ -95,7 +138,7 @@
                   :color "blue"}]
         [ui/Header {:as :h4}
          (@tr [:welcome-video-subheader-pre]) " "
-           [:a {:href "https://sixsq.com/media/videos.html"}
+         [:a {:href "https://sixsq.com/media/videos.html"}
           (@tr [:video-channel])]
          " " (@tr [:welcome-video-subheader-post])]]]]
 

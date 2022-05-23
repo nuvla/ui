@@ -6,6 +6,11 @@
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
+(reg-sub
+  ::group-trees
+  (fn [db]
+    (::spec/group-trees db)))
+
 
 (reg-sub
   ::user

@@ -28,44 +28,6 @@
       [ui/ListHeader title]
       [ui/ListDescription content]]]]])
 
-(defn Group
-  [_group]
-  (let [collapsed (r/atom true)]
-    (fn [{:keys [id name children] :as _group}]
-      [ui/ListItem {:on-click #(do (swap! collapsed not)
-                                   (.stopPropagation %))}
-       [ui/ListIcon {:name  (if @collapsed "folder" "folder open")
-                     :color (if (seq children) "blue" "grey")}]
-       [ui/ListContent
-        [ui/ListHeader id]
-        [ui/ListDescription name]
-        (when (and (not @collapsed) (seq children))
-          [ui/ListList
-           (for [child children]
-             ^{:key (:id child)}
-             [Group child])])]])))
-
-
-(defn GroupHierarchy
-  []
-  (let [trees [{:children [{:children [{:id   "group/c"
-                                       :name "Group c"}]
-                           :id       "group/b"
-                           :name     "Group b"}
-                          {:id   "group/b1"
-                           :name "Group b1"}]
-               :id       "group/a"
-               :name     "Group a"}
-              {:id   "group/z"
-               :name "Group z"}]]
-    [:<>
-     [:h1 "GroupHierarchy Testing"]
-     [ui/ListSA {:celled true
-                 :style {:cursor :pointer}}
-      (for [tree trees]
-        ^{:key (:id tree)}
-        [Group tree])]]))
-
 
 (defmethod panel/render :welcome
   [path]
@@ -81,9 +43,6 @@
       (dispatch [::history-events/navigate (str (first path) "/")]))
 
     [:<>
-     ;; #FIXME Group hierarchy feature flag, to be change from dev env
-     (when false
-       [GroupHierarchy])
      [ui/Grid {:stackable     true
                :centered      true
                :verticalAlign :middle

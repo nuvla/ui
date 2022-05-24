@@ -6,8 +6,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [reagent.core :as r]))
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defn navigate-link [target-page text]
   [:a {:on-click #(dispatch [::history-events/navigate target-page])

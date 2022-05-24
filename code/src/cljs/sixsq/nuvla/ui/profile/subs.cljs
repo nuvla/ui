@@ -205,4 +205,3 @@
   ::two-factor-enable?
   (fn [db]
     (::spec/two-factor-enable? db)))
-

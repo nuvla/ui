@@ -6,6 +6,8 @@
 
 (s/def ::user any?)
 
+(s/def ::group-trees any?)
+
 (s/def ::customer any?)
 
 (s/def ::subscription any?)
@@ -62,6 +64,7 @@
                           ::setup-intent
                           ::vendor
                           ::group
+                          ::group-trees
                           ::active-tab
                           ::two-factor-step
                           ::two-factor-enable?
@@ -83,6 +86,7 @@
                ::loading             #{}
                ::vendor              nil
                ::group               nil
+               ::group-trees         nil
                ::active-tab          :subscription
                ::two-factor-step     :install-app
                ::two-factor-enable?  true

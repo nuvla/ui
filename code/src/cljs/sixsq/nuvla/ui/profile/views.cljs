@@ -1292,6 +1292,36 @@
        [GroupMembers @group]])))
 
 
+
+(defn Group
+  []
+  (let [collapsed (r/atom true)]
+    (fn [{:keys [id name description children] :as _group}]
+      [ui/ListItem {:on-click #(do (swap! collapsed not)
+                                   (.stopPropagation %))}
+       [ui/ListIcon {:name  (if @collapsed "folder" "folder open")
+                     :color (if (seq children) "blue" "grey")}]
+       [ui/ListContent
+        [ui/ListHeader (or name id)]
+        (when description [ui/ListDescription description])
+        (when (and (not @collapsed) (seq children))
+          [ui/ListList
+           (for [child children]
+             ^{:key (:id child)}
+             [Group child])])]])))
+
+
+(defn GroupHierarchy
+  []
+  (let [trees @(subscribe [::subs/group-trees])]
+    [ui/Segment
+     [:h3 "Group Hierarchy"]
+     [ui/ListSA {:celled true
+                 :style {:cursor :pointer}}
+      (for [tree trees]
+        ^{:key (:id tree)}
+        [Group tree])]]))
+
 (defn Groups
   []
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -1310,6 +1340,9 @@
             [GroupMembersSegment]])
          [ui/Segment {:padded true, :color "blue"}
           [ui/Header {:as :h2} (str/capitalize (@tr [:groups]))]
+          ;; #FIXME Group hierarchy feature flag, to be change from dev env
+          (when false
+            [GroupHierarchy])
           (for [group sorted-groups]
             ^{:key (str "group-" group)}
             [GroupMembers group])]]))))

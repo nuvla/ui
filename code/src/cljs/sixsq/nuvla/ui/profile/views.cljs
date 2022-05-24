@@ -26,8 +26,7 @@
     [sixsq.nuvla.ui.utils.tab :as tab]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as log]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 ;;; VALIDATION SPEC
@@ -1342,7 +1341,7 @@
          [ui/Segment {:padded true, :color "blue"}
           [ui/Header {:as :h2} (str/capitalize (@tr [:groups]))]
           ;; #FIXME Group hierarchy feature flag, to be change from dev env
-          (when true
+          (when false
             [GroupHierarchy])
           (for [group sorted-groups]
             ^{:key (str "group-" group)}
@@ -1398,7 +1397,6 @@
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:span (str/capitalize (@tr [:groups]))]))
-
 
 
 (defn GroupsPane

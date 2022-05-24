@@ -28,7 +28,6 @@
       [ui/ListHeader title]
       [ui/ListDescription content]]]]])
 
-
 (defmethod panel/render :welcome
   [path]
   (let [tr           (subscribe [::i18n-subs/tr])

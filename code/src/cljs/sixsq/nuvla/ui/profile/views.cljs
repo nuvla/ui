@@ -964,15 +964,16 @@
 
 
 (defn AddCouponButton
-  [_open?]
+  []
   (let [tr          (subscribe [::i18n-subs/tr])
         loading?    (subscribe [::subs/loading? :add-coupon])
         error       (subscribe [::subs/error-message])
+        open?       (subscribe [::subs/modal-open? :add-coupon])
         coupon-code (r/atom nil)]
-    (fn [open?]
+    (fn []
       [:<>
        [ui/Modal
-        {:open       open?
+        {:open       @open?
          :size       "small"
          :on-close   #(dispatch [::events/close-modal])
          :close-icon true}
@@ -1007,8 +1008,7 @@
   []
   (let [tr            (subscribe [::i18n-subs/tr])
         loading?      (subscribe [::subs/loading? :customer-info])
-        customer-info (subscribe [::subs/customer-info])
-        open?         (subscribe [::subs/modal-open? :add-coupon])]
+        customer-info (subscribe [::subs/customer-info])]
     (fn []
       (let [{{:keys [name percent-off currency
                      amount-off duration] :as coupon} :coupon
@@ -1062,7 +1062,7 @@
                [:<>
                 [:br]
                 ^{:key (random-uuid)}
-                [AddCouponButton @open?]])]])]))))
+                [AddCouponButton]])]])]))))
 
 
 
@@ -1317,7 +1317,7 @@
     [ui/Segment
      [:h3 "Group Hierarchy"]
      [ui/ListSA {:celled true
-                 :style {:cursor :pointer}}
+                 :style  {:cursor :pointer}}
       (for [tree trees]
         ^{:key (:id tree)}
         [Group tree])]]))

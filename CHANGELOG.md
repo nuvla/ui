@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- Profile - Group tab show group hierarchy
+
+### Changed
+
+- Profile - add coupon modal displayed after a remove of coupon fix
+
 ## [2.30.4] - 2022-05-17
 
 - Clouds - Page navigation bugfix

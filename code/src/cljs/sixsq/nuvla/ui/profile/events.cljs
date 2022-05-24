@@ -414,8 +414,9 @@
   (fn [{db :db} [_ result]]
     (if (instance? js/Error result)
       {:dispatch [::set-error (-> result response/parse-ex-info :message) :add-coupon]}
-      {:dispatch [::customer-info]
-       :db       (update db ::spec/loading disj :add-coupon)})))
+      {:fx [[:dispatch [::customer-info]]
+            [:dispatch [::close-modal]]]
+       :db (update db ::spec/loading disj :add-coupon)})))
 
 
 (reg-event-fx

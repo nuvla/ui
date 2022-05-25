@@ -4,7 +4,8 @@
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.session.spec :as spec]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [clojure.walk :as walk]))
 
 
 (reg-sub
@@ -36,12 +37,35 @@
 
 
 (reg-sub
+  ::groups-hierarchies
+  (fn [db]
+    (::spec/groups-hierarchies db)))
+
+
+(reg-sub
+  ::groups-user
+  :<- [::groups-hierarchies]
+  (fn [hierarchies]
+    (->> hierarchies
+         (walk/postwalk
+           (fn [x]
+             (cond
+               (and (map? x)
+                    (nil? (:children x))) (dissoc x :children)
+               (map? x) (conj (:children x) (dissoc x :children))
+               :else x)))
+         flatten
+         (map :id)
+         set)))
+
+
+(reg-sub
   ::switch-group-options
   :<- [::session]
-  :<- [::claims-groups]
-  (fn [[{:keys [identifier active-claim] :as session} claims-groups]]
+  :<- [::groups-user]
+  (fn [[{:keys [identifier active-claim] :as session} groups-user]]
     (when (general-utils/can-operation? "switch-group" session)
-      (cond-> (remove #(= active-claim %) claims-groups)
+      (cond-> (disj groups-user active-claim)
               (and (string? active-claim)
                    (str/starts-with? active-claim "group/")) (conj identifier)))))
 
@@ -57,13 +81,6 @@
   :<- [::session]
   (fn [session]
     (set (some-> session :roles (str/split #"\s+")))))
-
-
-(reg-sub
-  ::claims-groups
-  :<- [::session]
-  (fn [session]
-    (into (sorted-set) (some-> session :groups (str/split #"\s+")))))
 
 
 (reg-sub
@@ -222,8 +239,8 @@
   :<- [::groups-mapping]
   (fn [[current-user-id identifier peers groups] [_ id]]
     (if (string? id)
-     (cond
-       (str/starts-with? id "group/") (get groups id id)
-       (= id current-user-id) identifier
-       :else (get peers id id))
-     id)))
+      (cond
+        (str/starts-with? id "group/") (get groups id id)
+        (= id current-user-id) identifier
+        :else (get peers id id))
+      id)))

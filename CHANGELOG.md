@@ -4,11 +4,12 @@
 
 ### Added
 
-- Profile - Group tab show group hierarchy
+- Profile - Group tab show new segment with group hierarchy
 
 ### Changed
 
 - Profile - add coupon modal displayed after a remove of coupon fix
+- Switch group menu - Display subgroups that the user is part of
 
 ## [2.30.4] - 2022-05-17
 

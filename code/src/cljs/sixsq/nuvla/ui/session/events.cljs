@@ -52,7 +52,8 @@
               ;; force refresh templates collection cache when not the same user (different session)
               (not= session session-arg) (assoc :fx
                                                 [[:dispatch [::cimi-events/get-cloud-entry-point]]
-                                                 [:dispatch [:sixsq.nuvla.ui.main.events/force-refresh-content]]])))))
+                                                 [:dispatch [:sixsq.nuvla.ui.main.events/force-refresh-content]]
+                                                 [:dispatch [::get-session-groups]]])))))
 
 
 (reg-event-fx
@@ -193,6 +194,19 @@
                   :on-failure      [::set-password-error]}}))
 
 
+(reg-event-db
+  ::set-session-groups
+  (fn [db [_ groups-hierarchies]]
+    (assoc db ::spec/groups-hierarchies groups-hierarchies)))
+
+
+(reg-event-fx
+  ::get-session-groups
+  (fn [{{:keys [::spec/session]} :db} _]
+    {::cimi-api-fx/operation [(:id session) "get-groups"
+                              #(dispatch [::set-session-groups %])]}))
+
+
 (reg-event-fx
   ::switch-group
   (fn [{{:keys [::spec/session]} :db} [_ claim]]
@@ -227,7 +241,7 @@
     (when resources
       (assoc db ::spec/groups resources))))
 
-
+;; FIXME Consider replacement of this call by get-groups
 (reg-event-fx
   ::search-groups
   (fn [_ _]

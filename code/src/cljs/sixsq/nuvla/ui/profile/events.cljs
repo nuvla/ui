@@ -25,7 +25,6 @@
   (fn [{db :db} _]
     {:db (merge db spec/defaults)
      :fx [[:dispatch [::get-user]]
-          [:dispatch [::get-groups]]
           [:dispatch [::search-existing-customer]]]}))
 
 
@@ -58,21 +57,6 @@
         (cond-> {:fx [(when is-group? [:dispatch [::get-group]])]}
                 (not is-group?) (assoc ::cimi-api-fx/get [user #(do (dispatch [::set-user %]))]
                                        :db (update db ::spec/loading conj :user)))))))
-(reg-event-db
-  ::set-groups
-  (fn [{:keys [::spec/loading] :as db} [_ groups-tree]]
-    (assoc db ::spec/group-trees groups-tree
-              :spec/loading (disj loading :get-groups))))
-
-
-(reg-event-fx
-  ::get-groups
-  (fn [{{:keys [::session-spec/session] :as db} :db} _]
-    (when session
-      {::cimi-api-fx/operation [(:id session)
-                                "get-groups"
-                                #(dispatch [::set-groups %])]
-       :db                     (update db ::spec/loading conj :get-groups)})))
 
 
 (reg-event-fx

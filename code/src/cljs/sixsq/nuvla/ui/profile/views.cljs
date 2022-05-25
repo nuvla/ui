@@ -1311,16 +1311,17 @@
              [Group child])])]])))
 
 
-(defn GroupHierarchy
+(defn GroupHierarchySegment
   []
-  (let [trees @(subscribe [::subs/group-trees])]
-    [ui/Segment
-     [:h3 "Group Hierarchy"]
+  (let [groups-hierarchy @(subscribe [::session-subs/groups-hierarchies])]
+    [ui/Segment {:padded true
+                 :color  "purple"}
+     [ui/Header {:as :h2 :dividing true} "Group Hierarchy"]
      [ui/ListSA {:celled true
                  :style  {:cursor :pointer}}
-      (for [tree trees]
-        ^{:key (:id tree)}
-        [Group tree])]]))
+      (for [group-hierarchy groups-hierarchy]
+        ^{:key (:id group-hierarchy)}
+        [Group group-hierarchy])]]))
 
 (defn Groups
   []
@@ -1338,11 +1339,9 @@
          (when @is-group?
            [ui/GridColumn
             [GroupMembersSegment]])
+         [GroupHierarchySegment]
          [ui/Segment {:padded true, :color "blue"}
           [ui/Header {:as :h2} (str/capitalize (@tr [:groups]))]
-          ;; #FIXME Group hierarchy feature flag, to be change from dev env
-          (when false
-            [GroupHierarchy])
           (for [group sorted-groups]
             ^{:key (str "group-" group)}
             [GroupMembers group])]]))))

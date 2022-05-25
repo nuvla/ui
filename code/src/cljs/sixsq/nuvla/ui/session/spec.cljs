@@ -21,6 +21,8 @@
 
 (s/def ::groups any?)
 
+(s/def ::groups-hierarchies coll?)
+
 (s/def ::callback-2fa (s/nilable string?))
 
 
@@ -33,7 +35,8 @@
                           ::loading?
                           ::peers
                           ::groups
-                          ::callback-2fa]))
+                          ::callback-2fa
+                          ::groups-hierarchies]))
 
 
 (def defaults
@@ -46,4 +49,5 @@
    ::loading?            false
    ::peers               nil
    ::groups              nil
+   ::groups-hierarchies  []
    ::callback-2fa        nil})

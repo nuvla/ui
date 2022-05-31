@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.session.spec :as spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.session.utils :as utils]
     [clojure.walk :as walk]))
 
 
@@ -25,15 +26,6 @@
   :<- [::session]
   (fn [{:keys [active-claim user]}]
     (or active-claim user)))
-
-
-(reg-sub
-  ::active-claim-is-group?
-  :<- [::active-claim]
-  (fn [active-claim]
-    (boolean
-      (some-> active-claim
-              (str/starts-with? "group/")))))
 
 
 (reg-sub
@@ -60,14 +52,28 @@
 
 
 (reg-sub
+  ::root-groups
+  :<- [::groups-hierarchies]
+  (fn [hierarchies]
+    (set (map :id hierarchies))))
+
+
+(reg-sub
+  ::is-group?
+  :<- [::active-claim]
+  (fn [active-claim]
+    (utils/is-group? active-claim)))
+
+
+(reg-sub
   ::switch-group-options
   :<- [::session]
+  :<- [::is-group?]
   :<- [::groups-user]
-  (fn [[{:keys [identifier active-claim] :as session} groups-user]]
+  (fn [[{:keys [identifier active-claim] :as session} is-group? groups-user]]
     (when (general-utils/can-operation? "switch-group" session)
       (cond-> (disj groups-user active-claim)
-              (and (string? active-claim)
-                   (str/starts-with? active-claim "group/")) (conj identifier)))))
+              is-group? (conj identifier)))))
 
 
 (reg-sub
@@ -102,6 +108,16 @@
   :<- [::has-role? "group/nuvla-user"]
   (fn [is-user?]
     is-user?))
+
+
+(reg-sub
+  ::is-subgroup?
+  :<- [::active-claim]
+  :<- [::is-group?]
+  :<- [::root-groups]
+  (fn [[active-claim is-group? root-groups]]
+    (and is-group?
+         (not (root-groups active-claim)))))
 
 
 (reg-sub

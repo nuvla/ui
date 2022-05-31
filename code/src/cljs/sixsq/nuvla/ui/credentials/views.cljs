@@ -793,7 +793,7 @@
   []
   (let [tr        (subscribe [::i18n-subs/tr])
         visible?  (subscribe [::subs/add-credential-modal-visible?])
-        is-group? (subscribe [::session-subs/active-claim-is-group?])]
+        is-group? (subscribe [::session-subs/is-group?])]
     (fn []
       [ui/Modal {:open       @visible?
                  :close-icon true

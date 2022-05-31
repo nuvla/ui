@@ -675,7 +675,6 @@
              [ui/TableRow
               [ui/TableCell [:b (@tr [:current-period-end])]]
               [ui/TableCell (some-> current-period-end (time/time->format "LLL" @locale))]]]]
-
            [ui/Grid {:text-align     "center"
                      :vertical-align "middle"
                      :style          {:height "100%"}}
@@ -1349,36 +1348,37 @@
 
 (defn SubscriptionAndBilling
   []
-  (let [tr        (subscribe [::i18n-subs/tr])
-        stripe    (subscribe [::main-subs/stripe])
-        session   (subscribe [::session-subs/session])
-        is-admin? (subscribe [::session-subs/is-admin?])
-        customer  (subscribe [::subs/customer])
-        device    (subscribe [::main-subs/device])]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        stripe       (subscribe [::main-subs/stripe])
+        session      (subscribe [::session-subs/session])
+        is-admin?    (subscribe [::session-subs/is-admin?])
+        is-subgroup? (subscribe [::session-subs/is-subgroup?])
+        customer     (subscribe [::subs/customer])
+        device       (subscribe [::main-subs/device])]
     (fn []
-      (let [show-subscription      (and @stripe @session (not @is-admin?))
-            show-customer-sections (and show-subscription @customer)
-            sub-sections           (remove nil? (flatten
-                                                  (conj [] [(when show-subscription
-                                                              [Subscription])
-                                                            (when show-customer-sections
-                                                              [Coupon
-                                                               BillingContact
-                                                               CurrentConsumption
-                                                               Invoices])
-                                                            (when show-subscription
-                                                              [(when show-customer-sections
-                                                                 PaymentMethods)
-                                                               Vendor])])))]
-        (if (not (seq sub-sections))
-          [ui/Message {:info true}
-           (@tr [:no-subscription-information])]
+      (let [show-subscription      (and @stripe
+                                        @session
+                                        (not @is-admin?)
+                                        (or (not @is-subgroup?) @customer))
+            show-customer-sections (and show-subscription @customer)]
+        (if-let [sub-sections (cond->
+                                []
+                                show-subscription (conj Subscription)
+                                show-customer-sections (conj Coupon
+                                                             BillingContact
+                                                             CurrentConsumption
+                                                             Invoices
+                                                             PaymentMethods)
+                                show-subscription (conj Vendor)
+                                true seq)]
           [ui/Grid {:stackable true
                     :centered  true}
            [ui/GridRow {:columns (grid-columns-dense @device)}
             (for [s sub-sections]
               ^{:key (random-uuid)}
-              [ui/GridColumn {:style {:padding-bottom "20px"}} [s]])]])))))
+              [ui/GridColumn {:style {:padding-bottom "20px"}} [s]])]]
+          [ui/Message {:info true}
+           (@tr [:no-subscription-information])])))))
 
 
 (defn TabMenuSubscription

@@ -31,6 +31,8 @@
 
 ### Changed
 
+- Profile - Hide Billing for subgroups and display them when customer is
+  inherited from root group
 - Profile - Show coupon end date for reapeating coupons
 - Edge detail - Add services box [Disabled]
 - Clouds - Remove NuvlaEdge from cloud list

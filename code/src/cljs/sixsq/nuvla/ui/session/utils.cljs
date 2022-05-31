@@ -8,8 +8,7 @@
 
 (defn is-group?
   [active-claim]
-  (when active-claim
-    (str/starts-with? active-claim "group/")))
+  (str/starts-with? active-claim "group/"))
 
 (defn remove-group-prefix
   [account]

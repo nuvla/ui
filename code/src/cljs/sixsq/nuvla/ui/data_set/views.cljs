@@ -226,7 +226,7 @@
                            :selects-start    true
                            :show-time-select true
                            :time-format      time-format
-                           :time-intervals   15
+                           :time-intervals   1
                            :locale           @locale
                            :fixed-height     true
                            :date-format      date-format
@@ -244,7 +244,7 @@
                            :selects-end      true
                            :show-time-select true
                            :time-format      time-format
-                           :time-intervals   15
+                           :time-intervals   1
                            :locale           @locale
                            :fixed-height     true
                            :date-format      date-format

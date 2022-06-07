@@ -323,7 +323,7 @@
 (defn group->name
   "Drop the 'group/' prefix"
   [group]
-  (subs group 6))
+  (utils-general/id->uuid group))
 
 
 (defn module->groups

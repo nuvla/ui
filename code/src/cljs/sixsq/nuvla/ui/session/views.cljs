@@ -16,8 +16,7 @@
     [sixsq.nuvla.ui.session.utils :as utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
 
 
 (defn SwitchGroupMenuItem

@@ -8,7 +8,8 @@
 
 ### Changed
 
-- Fix - id being truncated on deployment/Edge details page 
+- Project - id being truncated on details pages fix
+- Apps - active-tab navigation bugfix
 - Profile - add coupon modal displayed after a remove of coupon fix
 - Switch group menu - Display subgroups that the user is part of
 

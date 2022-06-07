@@ -8,6 +8,8 @@
 
 ### Changed
 
+- Apps - My apps show application owned by the active-claim instead of connected
+  user
 - Project - id being truncated on details pages fix
 - Apps - active-tab navigation bugfix
 - Profile - add coupon modal displayed after a remove of coupon fix

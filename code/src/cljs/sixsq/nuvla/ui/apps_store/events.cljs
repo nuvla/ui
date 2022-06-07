@@ -79,8 +79,8 @@
                 ::spec/full-text-search-my
                 ::spec/page
                 ::spec/elements-per-page] :as db} :db} _]
-    (let [user-id (:user session)]
-      (my-modules-cofx {:db db} user-id full-text-search-my elements-per-page page))))
+    (my-modules-cofx {:db db} (:active-claim session)
+                     full-text-search-my elements-per-page page)))
 
 
 (reg-event-fx
@@ -97,9 +97,9 @@
   (fn [{{:keys [::spec/full-text-search
                 ::session-spec/session
                 ::spec/elements-per-page] :as db} :db} [_ page]]
-    (let [user-id (:user session)]
-      (-> {:db (assoc db ::spec/page page)}
-          (my-modules-cofx user-id full-text-search elements-per-page page)))))
+    (-> {:db (assoc db ::spec/page page)}
+        (my-modules-cofx (:active-claim session)
+                         full-text-search elements-per-page page))))
 
 
 ;; All modules

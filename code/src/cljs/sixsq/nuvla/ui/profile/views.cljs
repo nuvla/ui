@@ -361,7 +361,7 @@
   (let [tr         (subscribe [::i18n-subs/tr])
         session    (subscribe [::session-subs/session])
         user-id    (:user @session)
-        is-group?  (subscribe [::session-subs/active-claim-is-group?])
+        is-group?  (subscribe [::session-subs/is-group?])
         identifier (:identifier @session)
         ;user       (subscribe [::subs/user])
         ;acl        (:acl @user)
@@ -478,7 +478,7 @@
 (defn CustomerFormFields
   [_form]
   (let [tr        (subscribe [::i18n-subs/tr])
-        is-group? (subscribe [::session-subs/active-claim-is-group?])]
+        is-group? (subscribe [::session-subs/is-group?])]
     (fn [form]
       (let [should-not-be-empty-msg (@tr [:should-not-be-empty])
             spec->msg               {::fullname       should-not-be-empty-msg
@@ -574,7 +574,7 @@
         error                    (subscribe [::subs/error-message])
         loading-create-customer? (subscribe [::subs/loading? :create-customer])
         customer                 (subscribe [::subs/customer])
-        is-group?                (subscribe [::session-subs/active-claim-is-group?])
+        is-group?                (subscribe [::session-subs/is-group?])
         pm?                      (subscribe [::subs/payment-methods?])
         canceled?                (subscribe [::subs/subscription-canceled?])
         form-conf                {:form-spec    (if @is-group?
@@ -1326,7 +1326,7 @@
   []
   (let [tr        (subscribe [::i18n-subs/tr])
         groups    (subscribe [::session-subs/groups])
-        is-group? (subscribe [::session-subs/active-claim-is-group?])
+        is-group? (subscribe [::session-subs/is-group?])
         is-admin? (subscribe [::session-subs/is-admin?])]
     (fn []
       (let [remove-groups #{"group/nuvla-nuvlabox" "group/nuvla-anon" "group/nuvla-user"
@@ -1465,7 +1465,7 @@
 (defmethod panel/render :profile
   [_path]
   (let [tr               (subscribe [::i18n-subs/tr])
-        is-group?        (subscribe [::session-subs/active-claim-is-group?])
+        is-group?        (subscribe [::session-subs/is-group?])
         user             (subscribe [::subs/user])
         can-enable-2fa?  (utils-general/can-operation? "enable-2fa" @user)
         can-disable-2fa? (utils-general/can-operation? "disable-2fa" @user)]

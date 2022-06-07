@@ -124,7 +124,7 @@
   ::user
   :<- [::active-claim]
   :<- [::identifier]
-  :<- [::active-claim-is-group?]
+  :<- [::is-group?]
   (fn [[active-claim identifier is-group?]]
     (or
       (when is-group? active-claim)

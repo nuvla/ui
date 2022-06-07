@@ -49,7 +49,7 @@
 (defn UserMenuItem
   []
   (let [user       (subscribe [::subs/user])
-        is-group?  (subscribe [::subs/active-claim-is-group?])
+        is-group?  (subscribe [::subs/is-group?])
         on-click   #(dispatch [::history-events/navigate "profile"])
         is-mobile? (subscribe [::main-subs/is-mobile-device?])]
     (fn []

@@ -1037,7 +1037,7 @@
        [ui/TableRow
         [ui/TableCell "Id"]
         (when id
-          [ui/TableCell [values/as-link id :label (subs id 9)]])]
+          [ui/TableCell [values/as-link id :label (general-utils/id->uuid id)]])]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:name]))]
         [EditableCell :name]]
@@ -1780,7 +1780,8 @@
                     [ui/TableBody
                      [ui/TableRow
                       [ui/TableCell "ID"]
-                      [ui/TableCell [values/as-link (:id @selected-playbook) :label (subs (:id @selected-playbook) 9)]]]
+                      [ui/TableCell [values/as-link (:id @selected-playbook) :label 
+                                     (general-utils/id->uuid (:id @selected-playbook))]]]
                      (when (:name @selected-playbook)
                        [ui/TableRow
                         [ui/TableCell (str/capitalize (@tr [:name]))]

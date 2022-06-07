@@ -585,7 +585,7 @@
                [ModalAppPreview module-filter])]]
            [ui/TableRow
             [ui/TableCell "Id"]
-            [ui/TableCell (when (some? id) [values/as-link id :label (subs id 9)])]]]]]]]]]))
+            [ui/TableCell (when (some? id) [values/as-link id :label (utils-general/id->uuid id)])]]]]]]]]]))
 
 
 (defn DataRecordCards

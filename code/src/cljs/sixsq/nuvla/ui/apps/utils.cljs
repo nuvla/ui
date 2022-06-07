@@ -320,12 +320,6 @@
   (reverse (map-indexed vector versions)))
 
 
-(defn group->name
-  "Drop the 'group/' prefix"
-  [group]
-  (subs group 6))
-
-
 (defn module->groups
   [module]
   (let [owners  (-> module :acl :owners)

@@ -14,6 +14,7 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
@@ -104,7 +105,7 @@
          (when id
            [ui/TableRow
             [ui/TableCell (str/capitalize (@tr [:id]))]
-            [ui/TableCell [values/as-link id :label (subs id 11)]]])
+            [ui/TableCell [values/as-link id :label (general-utils/id->uuid id)]]])
          [apps-views-detail/AuthorVendor]]]]]]))
 
 

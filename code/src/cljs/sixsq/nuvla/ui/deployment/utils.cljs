@@ -166,7 +166,7 @@
 
 (defn format-nuvlabox-value
   [nuvlabox]
-  [:div [ui/Icon {:name "box"}] [values/as-link (subs nuvlabox 9) :page "edges"]])
+  [:div [ui/Icon {:name "box"}] [values/as-link (general-utils/id->uuid nuvlabox) :page "edges"]])
 
 
 (defn build-bulk-filter

@@ -586,7 +586,7 @@
         [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:id]))]
-        [ui/TableCell [values/as-link id :label (subs id 11)]]]]]]))
+        [ui/TableCell [values/as-link id :label (general-utils/id->uuid id)]]]]]]))
 
 
 (defn DeploymentCard
@@ -702,7 +702,7 @@
          [ui/TableCell (-> @deployment :created time/parse-iso8601 time/ago)]]
         [ui/TableRow
          [ui/TableCell "Id"]
-         [ui/TableCell (when (some? id) [values/as-link id :label (subs id 11)])]]
+         [ui/TableCell (when (some? id) [values/as-link id :label (general-utils/id->uuid id)])]]
         (when (not-empty owners)
           [ui/TableRow
            [ui/TableCell (str/capitalize (@tr [:owner]))]
@@ -813,7 +813,7 @@
         [:div
          [:h2 {:style {:margin "0 0 0 0"}}
           [ui/Icon {:name "rocket"}]
-          module-name " (" (general-utils/truncate (subs uuid 11)) ")"]
+          module-name " (" (general-utils/id->uuid uuid) ")"]
          [:p {:style {:margin "0.5em 0 1em 0"}}
           [StatusIcon (depl-state->status state)]
           [:span {:style {:font-weight "bold"}}

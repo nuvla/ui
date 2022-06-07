@@ -145,11 +145,11 @@
                  :key     :overview
                  :icon    "info"}
       :pane     {:content (r/as-element [OverviewPane])
-                 :key :overview-pane}}
+                 :key     :overview-pane}}
      {:menuItem {:content (r/as-element [apps-views-detail/TabMenuDetails])
                  :key     :details}
       :pane     {:content (r/as-element [DetailsPane])
-                 :key :details-pane}}
+                 :key     :details-pane}}
      (apps-views-detail/TabAcls module @editable? #(do (dispatch [::apps-events/acl %])
                                                        (dispatch [::main-events/changes-protection? true])))]))
 
@@ -157,7 +157,7 @@
 (defn ViewEdit
   []
   (let [module-common (subscribe [::apps-subs/module-common])
-        active-tab  (subscribe [::apps-subs/active-tab])
+        active-tab    (subscribe [::apps-subs/active-tab])
         is-new?       (subscribe [::apps-subs/is-new?])]
     (if (true? @is-new?) (dispatch [::apps-events/set-active-tab :details])
                          (dispatch [::apps-events/set-active-tab :overview]))

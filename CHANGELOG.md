@@ -5,6 +5,7 @@
 ### Added
 
 - Profile - Group tab show new segment with group hierarchy
+- Profile - Display customer email
 
 ### Changed
 

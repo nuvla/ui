@@ -8,6 +8,7 @@
 
 ### Changed
 
+- Fix - id being truncated on deployment/Edge details page 
 - Profile - add coupon modal displayed after a remove of coupon fix
 - Switch group menu - Display subgroups that the user is part of
 

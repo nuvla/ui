@@ -300,7 +300,7 @@
        (when id
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:id]))]
-          [ui/TableCell [values/as-link id :label id]]])
+          [ui/TableCell [values/as-link id :label (general-utils/id->uuid id)]]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:version-number]))]
         [ui/TableCell version-index " " (up-to-date? version-index @versions-map @is-module-published?)]]

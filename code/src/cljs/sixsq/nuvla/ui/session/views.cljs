@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.session.events :as events]
     [sixsq.nuvla.ui.session.reset-password-views :as reset-password-views]
     [sixsq.nuvla.ui.session.set-password-views :as set-password-views]
@@ -20,9 +21,11 @@
 
 (defn SwitchGroupMenuItem
   []
-  (let [options    (subscribe [::subs/switch-group-options])
-        on-click   #(dispatch [::events/switch-group %1])
-        is-mobile? (subscribe [::main-subs/is-mobile-device?])]
+  (let [extended?   (r/atom false)
+        options    (subscribe [::subs/switch-group-options])
+        on-click   #(dispatch [::events/switch-group %1 @extended?])
+        is-mobile? (subscribe [::main-subs/is-mobile-device?])
+        active-claim (subscribe [::session-subs/active-claim])]
     (fn []
       (when (seq @options)
         [ui/Dropdown
@@ -36,6 +39,13 @@
                         (when-not @is-mobile?
                           [uix/TR :switch-group])])}
          [ui/DropdownMenu
+          [ui/DropdownItem {:text     "show subgroups resources"
+                            :icon     (str (when @extended? "check ")
+                                           "square outline")
+                            :on-click #(do (swap! extended? not)
+                                           (on-click @active-claim)
+                                           (.stopPropagation %))}]
+          [ui/DropdownDivider]
           (doall
             (for [account @options]
               ^{:key account}

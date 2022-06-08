@@ -209,10 +209,11 @@
 
 (reg-event-fx
   ::switch-group
-  (fn [{{:keys [::spec/session]} :db} [_ claim]]
+  (fn [{{:keys [::spec/session]} :db} [_ claim extended]]
     (let [claim (if (= (:identifier session) claim) (:user session) claim)]
       {::cimi-api-fx/operation [(:id session) "switch-group" #(dispatch [::initialize])
-                                {:claim claim}]})))
+                                {:claim claim
+                                 :extended extended}]})))
 
 
 (reg-event-db

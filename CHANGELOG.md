@@ -9,6 +9,7 @@
 
 ### Changed
 
+- CIMI - Error getting resource-metadata/data-object fix
 - Apps - My apps show application owned by the active-claim instead of connected
   user
 - Project - id being truncated on details pages fix

@@ -250,5 +250,6 @@
                                  "nuvlabox" "nuvlabox-1"
                                  "nuvlabox-status" "nuvlabox-status-1"
                                  "nuvlabox-peripheral" "nuvlabox-peripheral-1-1"
+                                 "data-object" "data-object-public"
                                  resource-name))
                           #(dispatch [::set-resource-metadata resource-name %])]})))

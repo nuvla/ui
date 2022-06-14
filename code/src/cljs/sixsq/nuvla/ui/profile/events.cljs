@@ -302,8 +302,7 @@
 
 (reg-event-fx
   ::create-subscription
-  (fn [{{:keys [::spec/pricing-catalogue
-                ::spec/customer] :as db} :db} _]
+  (fn [{{:keys [::spec/customer] :as db} :db} _]
     {:db                     (update db ::spec/loading conj :create-customer)
      ::cimi-api-fx/operation [(:id customer)
                               "create-subscription"

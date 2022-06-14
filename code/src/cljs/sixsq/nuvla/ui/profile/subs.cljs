@@ -145,12 +145,6 @@
 
 
 (reg-sub
-  ::pricing-catalogue
-  (fn [db]
-    (::spec/pricing-catalogue db)))
-
-
-(reg-sub
   ::vendor
   (fn [db]
     (::spec/vendor db)))

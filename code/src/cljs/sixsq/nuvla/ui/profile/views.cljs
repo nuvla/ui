@@ -851,8 +851,8 @@
   []
   (let [tr               (subscribe [::i18n-subs/tr])
         loading?         (subscribe [::subs/loading? :upcoming-invoice])
-        upcoming-invoice (subscribe [::subs/upcoming-invoice])
-        upcoming-lines   (subscribe [::subs/upcoming-invoice-lines])]
+        upcoming-lines   (subscribe [::subs/upcoming-invoice-lines])
+        upcoming-invoice (subscribe [::subs/upcoming-invoice-filtered])]
     (fn []
       (let [locale @(subscribe [::i18n-subs/locale])
             {upcoming-total    :total
@@ -864,7 +864,7 @@
                      :loading @loading?
                      :style   {:height "100%"}}
          [ui/Header {:as :h2 :dividing true} (@tr [:current-consumption])]
-         (if upcoming-total
+         (if (seq @upcoming-lines)
            [ui/Table
             [ui/TableHeader
              [ui/TableRow
@@ -886,10 +886,11 @@
                    [ui/TableCell {:text-align "right"}
                     (format-currency currency amount)]])])
 
-             [ui/TableRow {:active true}
-              [ui/TableCell [:i [:b (@tr [:subtotal])]]]
-              [ui/TableCell {:text-align "right"}
-               [:b [:i (format-currency upcoming-currency upcoming-subtotal)]]]]
+             (when upcoming-subtotal
+               [ui/TableRow {:active true}
+               [ui/TableCell [:i [:b (@tr [:subtotal])]]]
+               [ui/TableCell {:text-align "right"}
+                [:b [:i (format-currency upcoming-currency upcoming-subtotal)]]]])
              (when coupon
                (let [{:keys [percent-off amount-off currency]} coupon]
                  [ui/TableRow
@@ -905,10 +906,11 @@
                   [ui/TableCell {:text-align "right"}
                    [:i (format-currency upcoming-currency
                                         (- upcoming-total upcoming-subtotal))]]]))
-             [ui/TableRow {:active true}
-              [ui/TableCell [:b (str/capitalize (@tr [:total]))]]
-              [ui/TableCell {:text-align "right"}
-               [:b (format-currency upcoming-currency upcoming-total)]]]]]
+             (when upcoming-total
+               [ui/TableRow {:active true}
+               [ui/TableCell [:b (str/capitalize (@tr [:total]))]]
+               [ui/TableCell {:text-align "right"}
+                [:b (format-currency upcoming-currency upcoming-total)]]])]]
            [ui/Grid {:text-align     "center"
                      :vertical-align "middle"
                      :style          {:height "100%"}}

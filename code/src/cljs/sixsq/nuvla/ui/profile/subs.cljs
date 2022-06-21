@@ -60,7 +60,7 @@
     (let [{:keys [cards bank-accounts]} payment-methods]
       (boolean
         (or (seq cards)
-           (seq bank-accounts))))))
+            (seq bank-accounts))))))
 
 
 (reg-sub
@@ -75,10 +75,26 @@
   (fn [db]
     (::spec/upcoming-invoice db)))
 
+(reg-sub
+  ::upcoming-invoice-filtered
+  :<- [::upcoming-invoice]
+  :<- [::session-subs/is-subgroup?]
+  :<- [::session-subs/active-claim]
+  (fn [[upcoming-invoice is-subgroup? active-claim]]
+    (if is-subgroup?
+      (-> upcoming-invoice
+          (dissoc :subtotal :total :invoice-pdf)
+          (update :lines (partial filter
+                                  #(re-matches
+                                     (re-pattern
+                                       (str ".*NuvlaEdge " active-claim ".*"))
+                                     (:description %)))))
+      upcoming-invoice)))
+
 
 (reg-sub
   ::upcoming-invoice-lines
-  :<- [::upcoming-invoice]
+  :<- [::upcoming-invoice-filtered]
   (fn [upcoming-invoice]
     (->> upcoming-invoice
          :lines

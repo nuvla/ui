@@ -4,6 +4,7 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.profile.spec :as spec]
     [sixsq.nuvla.ui.session.subs :as session-subs]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub
@@ -35,6 +36,54 @@
   :<- [::subscription]
   (fn [{:keys [status]}]
     (= status "canceled")))
+
+
+(reg-sub
+  ::show-subscription
+  :<- [::main-subs/stripe]
+  :<- [::session-subs/session]
+  :<- [::session-subs/is-admin?]
+  :<- [::customer]
+  (fn [[stripe session is-admin? customer]]
+    (and stripe
+         session
+         (not is-admin?)
+         customer)))
+
+
+(reg-sub
+  ::show-coupon
+  :<- [::customer]
+  (fn [customer]
+    (general-utils/can-operation? "add-coupon" customer)))
+
+
+(reg-sub
+  ::show-billing-contact
+  :<- [::customer]
+  (fn [customer]
+    (general-utils/can-operation? "customer-info" customer)))
+
+
+(reg-sub
+  ::show-consumption
+  :<- [::customer]
+  (fn [customer]
+    (general-utils/can-operation? "upcoming-invoice" customer)))
+
+
+(reg-sub
+  ::show-invoices
+  :<- [::customer]
+  (fn [customer]
+    (general-utils/can-operation? "list-invoices" customer)))
+
+
+(reg-sub
+  ::show-payment-methods
+  :<- [::customer]
+  (fn [customer]
+    (general-utils/can-operation? "list-payment-methods" customer)))
 
 
 (reg-sub
@@ -75,26 +124,10 @@
   (fn [db]
     (::spec/upcoming-invoice db)))
 
-(reg-sub
-  ::upcoming-invoice-filtered
-  :<- [::upcoming-invoice]
-  :<- [::session-subs/is-subgroup?]
-  :<- [::session-subs/active-claim]
-  (fn [[upcoming-invoice is-subgroup? active-claim]]
-    (if is-subgroup?
-      (-> upcoming-invoice
-          (dissoc :subtotal :total :invoice-pdf)
-          (update :lines (partial filter
-                                  #(re-matches
-                                     (re-pattern
-                                       (str ".*NuvlaEdge " active-claim ".*"))
-                                     (:description %)))))
-      upcoming-invoice)))
-
 
 (reg-sub
   ::upcoming-invoice-lines
-  :<- [::upcoming-invoice-filtered]
+  :<- [::upcoming-invoice]
   (fn [upcoming-invoice]
     (->> upcoming-invoice
          :lines

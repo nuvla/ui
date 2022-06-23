@@ -202,7 +202,7 @@
 
 (reg-event-fx
   ::get-session-groups
-  (fn [{{:keys [::spec/session]} :db} _]
+  (fn [{{:keys [::spec/session]} :db}]
     {::cimi-api-fx/operation [(:id session) "get-groups"
                               #(dispatch [::set-session-groups %])]}))
 
@@ -211,8 +211,9 @@
   ::switch-group
   (fn [{{:keys [::spec/session]} :db} [_ claim extended]]
     (let [claim (if (= (:identifier session) claim) (:user session) claim)]
-      {::cimi-api-fx/operation [(:id session) "switch-group" #(dispatch [::initialize])
-                                {:claim claim
+      {::cimi-api-fx/operation [(:id session) "switch-group"
+                                #(dispatch [::initialize])
+                                {:claim    claim
                                  :extended extended}]})))
 
 
@@ -245,8 +246,9 @@
 ;; FIXME Consider replacement of this call by get-groups
 (reg-event-fx
   ::search-groups
-  (fn [_ _]
+  (fn []
     {::cimi-api-fx/search [:group {:select  "id, name, acl, users, description"
                                    :last    10000
                                    :orderby "name:asc,id:asc"}
-                           #(dispatch [::set-groups %])]}))
+                           #(dispatch [::set-groups %])]
+     :fx                  [[:dispatch [::get-session-groups]]]}))

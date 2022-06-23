@@ -1347,6 +1347,7 @@
          (when @is-group?
            [ui/GridColumn
             [GroupMembersSegment]])
+         ;; FIXME no more needed propose delete this section
          [GroupHierarchySegment]
          [ui/Segment {:padded true, :color "blue"}
           [ui/Header {:as :h2} (str/capitalize (@tr [:groups]))]

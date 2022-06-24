@@ -1300,37 +1300,6 @@
        [GroupMembers @group]])))
 
 
-
-(defn Group
-  []
-  (let [collapsed (r/atom true)]
-    (fn [{:keys [id name description children] :as _group}]
-      [ui/ListItem {:on-click #(do (swap! collapsed not)
-                                   (.stopPropagation %))}
-       [ui/ListIcon {:name  (if @collapsed "folder" "folder open")
-                     :color (if (seq children) "blue" "grey")}]
-       [ui/ListContent
-        [ui/ListHeader (or name id)]
-        (when description [ui/ListDescription description])
-        (when (and (not @collapsed) (seq children))
-          [ui/ListList
-           (for [child children]
-             ^{:key (:id child)}
-             [Group child])])]])))
-
-
-(defn GroupHierarchySegment
-  []
-  (let [groups-hierarchy @(subscribe [::session-subs/groups-hierarchies])]
-    [ui/Segment {:padded true
-                 :color  "purple"}
-     [ui/Header {:as :h2 :dividing true} "Group Hierarchy"]
-     [ui/ListSA {:celled true
-                 :style  {:cursor :pointer}}
-      (for [group-hierarchy groups-hierarchy]
-        ^{:key (:id group-hierarchy)}
-        [Group group-hierarchy])]]))
-
 (defn Groups
   []
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -1347,8 +1316,6 @@
          (when @is-group?
            [ui/GridColumn
             [GroupMembersSegment]])
-         ;; FIXME no more needed propose delete this section
-         [GroupHierarchySegment]
          [ui/Segment {:padded true, :color "blue"}
           [ui/Header {:as :h2} (str/capitalize (@tr [:groups]))]
           (for [group sorted-groups]

@@ -38,11 +38,12 @@
   ::groups-user
   :<- [::session]
   :<- [::groups-hierarchies]
-  (fn [[{:keys [identifier active-claim]} groups-hierarchies]]
+  (fn [[{:keys [user identifier active-claim]} groups-hierarchies]]
     (loop [acc [{:text  identifier
-                 :value identifier
+                 :value user
                  :level 0
-                 :icon  "user"}]
+                 :icon  "user"
+                 :selected (= active-claim user)}]
            h   groups-hierarchies]
       (if (nil? (seq h))
         acc

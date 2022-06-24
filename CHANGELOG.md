@@ -6,7 +6,6 @@
 
 - Switch group - Allow optionally to extend claims to all subgroups and
   represent groups hierarchy
-- Profile - Group tab show new segment with group hierarchy
 - Profile - Display customer email
 
 ### Changed

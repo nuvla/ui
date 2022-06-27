@@ -16,7 +16,8 @@
     [sixsq.nuvla.ui.session.events :as session-events]
     [sixsq.nuvla.ui.session.spec :as session-spec]
     [sixsq.nuvla.ui.session.utils :as session-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 ;; TODO when customer exist but not valid subscription
 
@@ -143,23 +144,30 @@
   (fn [{{:keys [::spec/loading] :as db} :db} [_ customer]]
     (cond-> {:db (assoc db ::spec/customer customer
                            ::spec/loading (disj loading :customer))}
-            customer (assoc :fx [[:dispatch [::get-subscription]]
+            customer (assoc :fx [(when (general-utils/can-operation? "get-subscription" customer)
+                                   [:dispatch [::get-subscription]])
                                  [:dispatch [::close-modal]]
-                                 [:dispatch [::customer-info]]
-                                 [:dispatch [::list-invoices]]
-                                 [:dispatch [::upcoming-invoice]]
-                                 [:dispatch [::list-payment-methods]]]))))
+                                 (when (general-utils/can-operation? "customer-info" customer)
+                                   [:dispatch [::customer-info]])
+                                 (when (general-utils/can-operation? "list-invoices" customer)
+                                   [:dispatch [::list-invoices]])
+                                 (when (general-utils/can-operation? "upcoming-invoice" customer)
+                                   [:dispatch [::upcoming-invoice]])
+                                 (when (general-utils/can-operation? "list-payment-methods" customer)
+                                   [:dispatch [::list-payment-methods]])]))))
 
 
 (reg-event-fx
   ::search-existing-customer
   (fn [{{:keys [::session-spec/session]} :db} _]
-    {::cimi-api-fx/search [:customer {:filter (str "parent='" (or (:active-claim session)
-                                                                  (:user session)) "'")}
-                           #(if-let [id (-> % :resources first :id)]
-                              (dispatch [::get-customer id])
-                              (do (dispatch [::set-customer nil])
-                                  (dispatch [::set-subscription nil])))]}))
+    (if (not= (:active-claim session) "group/nuvla-admin")
+      {::cimi-api-fx/search [:customer {:select "id"}
+                             #(if-let [id (-> % :resources first :id)]
+                                (dispatch [::get-customer id])
+                                (do (dispatch [::set-customer nil])
+                                    (dispatch [::set-subscription nil])))]}
+      {:fx [[:dispatch [::set-customer nil]]
+            [:dispatch [::set-subscription nil]]]})))
 
 
 (reg-event-fx

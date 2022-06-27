@@ -67,14 +67,16 @@
                               :group-identifier id}
                 :name        name
                 :description description}]
-      {::cimi-api-fx/add ["group" user #(let [{:keys [status message resource-id]} (response/parse %)]
-                                          (dispatch [::session-events/search-groups])
-                                          (dispatch [::messages-events/add
-                                                     {:header  (cond-> (str "added " resource-id)
-                                                                       status (str " (" status ")"))
-                                                      :content message
-                                                      :type    :success}])
-                                          (reset! loading? false))]})))
+      {::cimi-api-fx/add
+       ["group" user
+        #(let [{:keys [status message resource-id]} (response/parse %)]
+           (dispatch [::session-events/search-groups])
+           (dispatch [::messages-events/add
+                      {:header  (cond-> (str "added " resource-id)
+                                        status (str " (" status ")"))
+                       :content message
+                       :type    :success}])
+           (reset! loading? false))]})))
 
 
 (reg-event-db

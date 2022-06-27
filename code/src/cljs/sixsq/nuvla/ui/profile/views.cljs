@@ -1307,8 +1307,7 @@
     (fn [{:keys [id name description children] :as _group}]
       [ui/ListItem {:on-click #(do (swap! collapsed not)
                                    (.stopPropagation %))}
-       [ui/ListIcon {:name  (if @collapsed "folder" "folder open")
-                     :color (if (seq children) "blue" "grey")}]
+       [ui/ListIcon {:name "group"}]
        [ui/ListContent
         [ui/ListHeader (or name id)]
         (when description [ui/ListDescription description])

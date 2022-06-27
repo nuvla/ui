@@ -36,19 +36,28 @@
 
 (reg-sub
   ::groups-user
+  :<- [::session]
   :<- [::groups-hierarchies]
-  (fn [hierarchies]
-    (->> hierarchies
-         (walk/postwalk
-           (fn [x]
-             (cond
-               (and (map? x)
-                    (nil? (:children x))) (dissoc x :children)
-               (map? x) (conj (:children x) (dissoc x :children))
-               :else x)))
-         flatten
-         (map :id)
-         set)))
+  (fn [[{:keys [user identifier active-claim]} groups-hierarchies]]
+    (loop [acc [{:text  identifier
+                 :value user
+                 :level 0
+                 :icon  "user"
+                 :selected (= active-claim user)}]
+           h   groups-hierarchies]
+      (if (nil? (seq h))
+        acc
+        (let [{:keys [id name level children]} (first h)]
+          (recur (conj acc {:text     (or name (general-utils/id->uuid id))
+                            :value    id
+                            :selected (= active-claim id)
+                            :level    (or level 0)
+                            :icon     "group"})
+                 (concat
+                   (->> children
+                        (map #(assoc % :level (inc level)))
+                        (sort (juxt :name :id)))
+                   (next h))))))))
 
 
 (reg-sub
@@ -68,12 +77,11 @@
 (reg-sub
   ::switch-group-options
   :<- [::session]
-  :<- [::is-group?]
   :<- [::groups-user]
-  (fn [[{:keys [identifier active-claim] :as session} is-group? groups-user]]
-    (when (general-utils/can-operation? "switch-group" session)
-      (cond-> (disj groups-user active-claim)
-              is-group? (conj identifier)))))
+  (fn [[session groups-user]]
+    (when (and (general-utils/can-operation? "switch-group" session)
+               (-> groups-user count (> 1)))
+      groups-user)))
 
 
 (reg-sub

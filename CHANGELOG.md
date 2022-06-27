@@ -4,8 +4,8 @@
 
 ### Added
 
-- Switch group - Allow optionally to extend claims to all subgroups
-- Profile - Group tab show new segment with group hierarchy
+- Switch group - Allow optionally to extend claims to all subgroups and
+  represent groups hierarchy
 - Profile - Display customer email
 
 ### Changed

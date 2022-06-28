@@ -1009,14 +1009,15 @@
 
 (defn Coupon
   []
-  (let [tr            (subscribe [::i18n-subs/tr])
-        loading?      (subscribe [::subs/loading? :customer-info])
-        customer-info (subscribe [::subs/customer-info])]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        loading?     (subscribe [::subs/loading? :customer-info])
+        subscription (subscribe [::subs/subscription])]
     (fn []
       (let [{{:keys [name percent-off currency
                      amount-off duration] :as coupon} :coupon
-             {:keys [end]}                            :discount} @customer-info
+             {:keys [end]}                            :discount} @subscription
             locale @(subscribe [::i18n-subs/locale])]
+        (js/console.error @subscription)
         [ui/Segment {:padded  true
                      :color   "green"
                      :loading @loading?
@@ -1061,7 +1062,7 @@
              [ui/Header {:as :h3, :icon true, :disabled true}
               [ui/Icon {:className "fad fa-ticket"}]
               (@tr [:not-any])]
-             (when @customer-info
+             (when @subscription
                [:<>
                 [:br]
                 ^{:key (random-uuid)}

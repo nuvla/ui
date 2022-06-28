@@ -174,7 +174,7 @@
 
 (reg-event-fx
   ::get-subscription
-  (fn [{{:keys [::spec/customer] :as db} :db} _]
+  (fn [{{:keys [::spec/customer] :as db} :db}]
     {:db                     (update db ::spec/loading conj :subscription)
      ::cimi-api-fx/operation [(:id customer) "get-subscription"
                               #(dispatch [::set-subscription %])]}))
@@ -407,7 +407,7 @@
   (fn [{db :db} [_ result]]
     (if (instance? js/Error result)
       {:dispatch [::set-error (-> result response/parse-ex-info :message) :add-coupon]}
-      {:fx [[:dispatch [::customer-info]]
+      {:fx [[:dispatch [::get-subscription]]
             [:dispatch [::close-modal]]]
        :db (update db ::spec/loading disj :add-coupon)})))
 
@@ -425,7 +425,7 @@
   (fn [{db :db} [_ result]]
     (if (instance? js/Error result)
       {:dispatch [::set-error (-> result response/parse-ex-info :message) :remove-coupon]}
-      {:dispatch [::customer-info]
+      {:dispatch [::get-subscription]
        :db       (update db ::spec/loading disj :remove-coupon)})))
 
 

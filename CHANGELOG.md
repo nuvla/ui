@@ -10,6 +10,7 @@
 
 ### Changed
 
+- Profile - Align with API coupon moved to subscription
 - CIMI - Error getting resource-metadata/data-object fix
 - Apps - My apps show application owned by the active-claim instead of connected
   user

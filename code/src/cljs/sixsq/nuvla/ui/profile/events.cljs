@@ -16,8 +16,8 @@
     [sixsq.nuvla.ui.session.events :as session-events]
     [sixsq.nuvla.ui.session.spec :as session-spec]
     [sixsq.nuvla.ui.session.utils :as session-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 ;; TODO when customer exist but not valid subscription
 

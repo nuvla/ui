@@ -4,9 +4,8 @@
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.session.spec :as spec]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.session.utils :as utils]
-    [clojure.walk :as walk]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (reg-sub

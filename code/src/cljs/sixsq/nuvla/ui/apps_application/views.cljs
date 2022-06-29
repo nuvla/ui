@@ -7,7 +7,6 @@
     [sixsq.nuvla.ui.apps-application.events :as events]
     [sixsq.nuvla.ui.apps-application.spec :as spec]
     [sixsq.nuvla.ui.apps-application.subs :as subs]
-    [sixsq.nuvla.ui.apps-application.utils :as utils]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]

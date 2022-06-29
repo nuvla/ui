@@ -8,7 +8,6 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.subs :as main-subs]
-    [sixsq.nuvla.ui.profile.subs :as profile-subs]
     [sixsq.nuvla.ui.profile.views :as profile-views]
     [sixsq.nuvla.ui.session.components :as comp]
     [sixsq.nuvla.ui.session.events :as events]

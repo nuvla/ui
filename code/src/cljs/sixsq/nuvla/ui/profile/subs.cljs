@@ -2,9 +2,9 @@
   (:require
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
+    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.profile.spec :as spec]
     [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub

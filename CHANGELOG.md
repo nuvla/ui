@@ -2,10 +2,14 @@
 
 ## Unreleased
 
+## [2.31.0] - 2022-06-29
+
 ### Added
 
-- Switch group - Allow optionally to extend claims to all subgroups and
+- Switch group menu - Display subgroups that the user is part of
+- Switch group menu - Allow optionally to extend claims to all subgroups and
   represent groups hierarchy
+- Switch group menu - Searchable
 - Profile - Display customer email
 
 ### Changed
@@ -17,7 +21,6 @@
 - Project - id being truncated on details pages fix
 - Apps - active-tab navigation bugfix
 - Profile - add coupon modal displayed after a remove of coupon fix
-- Switch group menu - Display subgroups that the user is part of
 
 ## [2.30.4] - 2022-05-17
 

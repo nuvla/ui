@@ -549,8 +549,8 @@
         deployment (subscribe [::subs/deployment])
         locale     (subscribe [::i18n-subs/locale])
         module     (:module @deployment)
-        id         (:id module "")
-        {:keys [created updated name description parent-path path logo-url]} module
+        {:keys [id created updated name description
+                parent-path path logo-url]} module
         desc-short (values/markdown->summary description)]
     [ui/Segment {:secondary true
                  :color     "blue"
@@ -561,7 +561,7 @@
                  :style    {:width      "auto"
                             :height     "100px"
                             :object-fit "contain"}}]]
-     [:h4 {:style {:margin-top 0}} "Module"]
+     [:h4 {:style {:margin-top 0}} (str/capitalize (@tr [:app]))]
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody
@@ -585,7 +585,8 @@
         [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:id]))]
-        [ui/TableCell [values/as-link id :label (general-utils/id->uuid id)]]]]]]))
+        [ui/TableCell [values/as-link id :label (general-utils/id->uuid
+                                                  (or id ""))]]]]]]))
 
 
 (defn DeploymentCard
@@ -672,13 +673,12 @@
         deployment      (subscribe [::subs/deployment])
         version         (subscribe [::subs/current-module-version])
         versions        (subscribe [::subs/module-versions])
-        {:keys [id state module tags acl credential-name parent]} @deployment
+        {:keys [id state module tags acl credential-name
+                parent nuvlabox owner created-by]} @deployment
         owners          (:owners acl)
         resolved-owners (subscribe [::session-subs/resolve-users owners])
         cred            (or credential-name parent)
-        {module-content :content} module
-        urls            (:urls module-content)
-        nuvlabox        (:nuvlabox @deployment)]
+        urls            (get-in module [:content :urls])]
 
     [ui/SegmentGroup {:style  {:display    "flex", :justify-content "space-between",
                                :background "#f3f4f5"}
@@ -702,10 +702,16 @@
         [ui/TableRow
          [ui/TableCell "Id"]
          [ui/TableCell (when (some? id) [values/as-link id :label (general-utils/id->uuid id)])]]
-        (when (not-empty owners)
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (@tr [:owner]))]
+         [ui/TableCell
+          (cond
+            owner @(subscribe [::session-subs/resolve-user owner])
+            (seq owners) (str/join ", " @resolved-owners))]]
+        (when (and created-by (str/starts-with? owner "group/"))
           [ui/TableRow
-           [ui/TableCell (str/capitalize (@tr [:owner]))]
-           [ui/TableCell (str/join ", " @resolved-owners)]])
+           [ui/TableCell (str/capitalize (@tr [:created-by]))]
+           [ui/TableCell @(subscribe [::session-subs/resolve-user created-by])]])
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:status]))]
          [ui/TableCell state
@@ -729,7 +735,7 @@
                   :secondary true}
       (for [[i [url-name url-pattern]] (map-indexed list urls)]
         ^{:key url-name}
-        [url-to-button url-name url-pattern (= i 0)])]]))
+        [url-to-button url-name url-pattern (zero? i)])]]))
 
 
 (defn OverviewPane

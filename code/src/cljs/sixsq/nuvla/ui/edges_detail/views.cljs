@@ -1017,11 +1017,10 @@
 
 
 (defn TabOverviewNuvlaBox
-  [{:keys [id created updated version refresh-interval owner]}
+  [{:keys [id created updated version refresh-interval owner created-by]}
    {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}]
-  (let [tr             (subscribe [::i18n-subs/tr])
-        resolved-owner (subscribe [::session-subs/resolve-user owner])
-        locale         (subscribe [::i18n-subs/locale])]
+  (let [tr     (subscribe [::i18n-subs/tr])
+        locale (subscribe [::i18n-subs/locale])]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
@@ -1046,7 +1045,11 @@
         [EditableCell :description]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:owner]))]
-        [ui/TableCell @resolved-owner]]
+        [ui/TableCell @(subscribe [::session-subs/resolve-user owner])]]
+       (when (and created-by (str/starts-with? owner "group/"))
+         [ui/TableRow
+          [ui/TableCell (str/capitalize (@tr [:created-by]))]
+          [ui/TableCell @(subscribe [::session-subs/resolve-user created-by])]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:telemetry-period]))]
         [ui/TableCell (str refresh-interval " seconds")]]
@@ -1780,7 +1783,7 @@
                     [ui/TableBody
                      [ui/TableRow
                       [ui/TableCell "ID"]
-                      [ui/TableCell [values/as-link (:id @selected-playbook) :label 
+                      [ui/TableCell [values/as-link (:id @selected-playbook) :label
                                      (general-utils/id->uuid (:id @selected-playbook))]]]
                      (when (:name @selected-playbook)
                        [ui/TableRow

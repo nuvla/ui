@@ -43,12 +43,13 @@
   :<- [::main-subs/stripe]
   :<- [::session-subs/session]
   :<- [::session-subs/is-admin?]
+  :<- [::session-subs/is-subgroup?]
   :<- [::customer]
-  (fn [[stripe session is-admin? customer]]
+  (fn [[stripe session is-admin? is-subgroup?]]
     (and stripe
          session
          (not is-admin?)
-         customer)))
+         (not is-subgroup?))))
 
 
 (reg-sub

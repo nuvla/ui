@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Profile - Creation subscription for root group not possible bugfix
+
 ## [2.31.0] - 2022-06-29
 
 ### Added

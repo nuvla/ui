@@ -1017,7 +1017,6 @@
                      amount-off duration] :as coupon} :coupon
              {:keys [end]}                            :discount} @subscription
             locale @(subscribe [::i18n-subs/locale])]
-        (js/console.error @subscription)
         [ui/Segment {:padded  true
                      :color   "green"
                      :loading @loading?

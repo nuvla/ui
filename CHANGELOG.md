@@ -2,8 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- Edge detail - Overview display "created by" when owner is a group 
+- Deployment detail - Overview display "created by" when owner is a group 
+
 ### Changed
 
+- Deployment detail - Rename module section renamed app.
+- Deployment detail - Show owner of deployment or acl owners when no owner
 - Profile - Creation subscription for root group not possible bugfix
 
 ## [2.31.0] - 2022-06-29

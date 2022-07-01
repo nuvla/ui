@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.31.1] - 2022-07-01
+
 ### Added
 
 - Edge detail - Overview display "created by" when owner is a group 

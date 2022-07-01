@@ -6,6 +6,7 @@
 
 (def dictionary
   {:en {
+        :created-by                                    "created by"
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
@@ -869,6 +870,7 @@
         }
 
    :fr {
+        :created-by                                    "Créé par"
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"

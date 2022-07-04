@@ -24,11 +24,13 @@
   []
   (let [extended?    (r/atom false)
         search       (r/atom "")
+        open         (r/atom false)
         on-click     #(dispatch [::events/switch-group % @extended?])
         options      (subscribe [::subs/switch-group-options])
         tr           (subscribe [::i18n-subs/tr])
         is-mobile?   (subscribe [::main-subs/is-mobile-device?])
-        active-claim (subscribe [::subs/active-claim])]
+        active-claim (subscribe [::subs/active-claim])
+        id-menu      "nuvla-close-menu-item"]
     (fn []
       (let [visible-opts (->> @options
                               (filter
@@ -41,44 +43,56 @@
                               doall)]
         (when (seq @options)
           [ui/Dropdown
-           {:className "nuvla-close-menu-item"
-            :item      true
-            :on-close  #(reset! search "")
-            :icon      (r/as-element
-                         [:<>
-                          [ui/IconGroup
-                           [ui/Icon {:name "users" :size "large"}]
-                           [ui/Icon {:name "refresh" :corner "top right"}]]
-                          (when-not @is-mobile?
-                            [uix/TR :switch-group])])}
-           [ui/DropdownMenu
-            [ui/Input
-             {:icon          :search
-              :icon-position :left
-              :class-name    "search"
-              :auto-complete :off
-              :placeholder   (@tr [:search])
-              :on-change     (ui-callback/input-callback
-                               #(reset! search %))
-              :on-click      #(.stopPropagation %)}]
-            [ui/DropdownMenu {:scrolling true}
-             (for [{:keys [value text icon level selected]} visible-opts]
-               ^{:key value}
-               [ui/DropdownItem {:on-click #(on-click value)
-                                 :selected selected}
-                [:span (str/join (repeat (* level 5) ff/nbsp))]
-                [ui/Icon {:name icon}]
-                (if selected
-                  [:b text]
-                  text)])]
-            [ui/DropdownDivider]
-            [ui/DropdownItem
-             {:text     "show subgroups resources"
-              :icon     (str (when @extended? "check ")
-                             "square outline")
-              :on-click #(do (swap! extended? not)
-                             (on-click @active-claim)
-                             (.stopPropagation %))}]]])))))
+           {:id            id-menu
+            :className     "nuvla-close-menu-item"
+            :item          true
+            :on-click      #(reset! open true)
+            :close-on-blur false
+            :on-blur       #(when (not= (.-id (.-target %1))
+                                        id-menu)
+                              (reset! open false))
+            :open          @open
+            :on-close      #(do
+                              (reset! open false)
+                              (reset! search ""))
+            :icon          (r/as-element
+                             [:<>
+                              [ui/IconGroup
+                               [ui/Icon {:name "users" :size "large"}]
+                               [ui/Icon {:name "refresh" :corner "top right"}]]
+                              (when-not @is-mobile?
+                                [uix/TR :switch-group])])}
+           (when @open
+             [ui/DropdownMenu
+              [ui/Input
+               {:icon          :search
+                :icon-position :left
+                :class-name    "search"
+                :auto-complete :off
+                :auto-focus    true
+                :value         @search
+                :placeholder   (@tr [:search])
+                :on-change     (ui-callback/input-callback
+                                 #(reset! search %))
+                :on-click      #(.stopPropagation %)}]
+              [ui/DropdownMenu {:scrolling true}
+               (for [{:keys [value text icon level selected]} visible-opts]
+                 ^{:key value}
+                 [ui/DropdownItem {:on-click #(on-click value)
+                                   :selected selected}
+                  [:span (str/join (repeat (* level 5) ff/nbsp))]
+                  [ui/Icon {:name icon}]
+                  (if selected
+                    [:b text]
+                    text)])]
+              [ui/DropdownDivider]
+              [ui/DropdownItem
+               {:text     "show subgroups resources"
+                :icon     (str (when @extended? "check ")
+                               "square outline")
+                :on-click #(do (swap! extended? not)
+                               (on-click @active-claim)
+                               (.stopPropagation %))}]])])))))
 
 
 (defn UserMenuItem

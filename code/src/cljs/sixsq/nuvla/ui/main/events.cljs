@@ -17,6 +17,7 @@
 
 
 (def notification-polling-id :notifications-polling)
+(def check-ui-version-polling-id :check-ui-version)
 
 
 (reg-event-db
@@ -99,7 +100,9 @@
       {:db                        (assoc db ::spec/nav-path (split-path-alias path)
                                             ::spec/nav-query-params query-params)
        ::fx/bulk-actions-interval [::action-interval-delete
-                                   (dissoc actions-interval notification-polling-id)]})))
+                                   (dissoc actions-interval
+                                           notification-polling-id
+                                           check-ui-version-polling-id)]})))
 
 
 (reg-event-fx
@@ -280,6 +283,15 @@
     (cond-> {:db (assoc db ::spec/config result)}
             stripe (assoc :dispatch [::load-stripe]))))
 
+(reg-event-db
+  ::get-ui-version-result
+  (fn [{:keys [::spec/current-ui-version] :as db} [_ result]]
+    (cond
+      (nil? current-ui-version) (js/console.error "Init UI version to " result)
+      (not= current-ui-version result) (js/console.error "UI change detected " result)
+      :else (js/console.error "UI version still " result))
+    (assoc db ::spec/current-ui-version result)))
+
 
 (reg-event-db
   ::get-ui-config-bad
@@ -298,6 +310,25 @@
                   :on-success      [::get-ui-config-good]
                   :on-failure      [::get-ui-config-bad]}}))
 
+
+(reg-event-fx
+  ::get-ui-version
+  (fn [_ _]
+    {:http-xhrio {:method          :get
+                  :uri             "/ui/css/version.css"
+                  :timeout         8000
+                  :response-format (ajax/text-response-format)
+                  :on-success      [::get-ui-version-result]
+                  :on-failure      [::get-ui-version-result]}}))
+
+
+(reg-event-fx
+  ::check-ui-version-polling
+  (fn [_ _]
+    {:dispatch [::action-interval-start
+                {:id        check-ui-version-polling-id
+                 :frequency 3000
+                 :event     [::get-ui-version]}]}))
 
 (reg-event-db
   ::open-modal

@@ -70,6 +70,7 @@
   (dispatch-sync [::i18n-events/get-locale-from-local-storage])
   (dispatch-sync [::api-events/get-cloud-entry-point])
   (dispatch-sync [::main-events/get-ui-config])
+  (dispatch-sync [::main-events/check-ui-version-polling])
   (dispatch-sync [::session-events/initialize])
   (dispatch-sync [::main-events/check-iframe])
   (visibility-watcher)

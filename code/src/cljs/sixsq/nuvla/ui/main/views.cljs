@@ -203,6 +203,31 @@
        (panel/render @resource-path)])))
 
 
+(defn UpdateUIVersion
+  []
+  (let [open?       (subscribe [::subs/ui-version-modal-open?])
+        new-version (subscribe [::subs/ui-version-new-version])
+        open-modal  #(dispatch [::events/new-version-open-modal? true])
+        close-modal #(dispatch [::events/new-version-open-modal? false])
+        reload      #(.reload js/location true)]
+    [:<>
+     [ui/Modal {:open @open? :size "small" :basic true}
+      [uix/ModalHeader {:icon "refresh" :header "New UI version"}]
+      [ui/ModalContent
+       "A new version of Nuvla web app has been released."]
+      [ui/ModalActions
+       [ui/Button {:negative true
+                   :on-click close-modal} "Will do it later"]
+       [ui/Button {:positive true
+                   :on-click reload} "Update now"]]]
+     (when @new-version
+       [ui/MenuItem {:on-click open-modal}
+        [ui/Label {:color    "red"
+                   :icon     "refresh"
+                   :circular true
+                   :content  "New UI version"}]])]))
+
+
 (defn header
   []
   [:header
@@ -216,7 +241,9 @@
 
     [ui/MenuItem [breadcrumbs]]
 
+
     [ui/MenuMenu {:position "right"}
+     [UpdateUIVersion]
      [messages/bell-menu]
      [session-views/AuthnMenu]]]
 

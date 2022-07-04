@@ -2,48 +2,35 @@
   (:require
     [clojure.spec.alpha :as s]))
 
-
 (s/def ::loading? boolean?)
-
 
 (s/def ::not-found? boolean?)
 
-
 (s/def ::iframe? boolean?)
-
 
 (s/def ::device #{:mobile :tablet :computer :large-screen :wide-screen})
 
-
 (s/def ::sidebar-open? boolean?)
-
 
 (s/def ::visible? boolean?)
 
-
 (s/def ::nav-path any?)
-
 
 (s/def ::nav-query-params any?)
 
-
 (s/def ::changes-protection? boolean?)
-
 
 (s/def ::ignore-changes-modal (s/nilable any?))
 
+(s/def ::ui-version map?)
 
 (s/def ::bootstrap-message (s/nilable keyword?))
 
-
 (s/def ::message any?)
-
 
 (s/def ::actions-interval map?)
 
-
 (s/def ::content-key string?)
-
 
 (s/def ::pages map?)
 
@@ -53,7 +40,6 @@
 (s/def ::open-modal (s/nilable keyword?))
 
 (s/def ::stripe any?)
-
 
 (s/def ::db (s/keys :req [::loading?
                           ::not-found?
@@ -65,6 +51,7 @@
                           ::nav-query-params
                           ::changes-protection?
                           ::ignore-changes-modal
+                          ::ui-version
                           ::bootstrap-message
                           ::message
                           ::actions-interval
@@ -84,6 +71,10 @@
                ::nav-query-params     {}
                ::changes-protection?  false
                ::ignore-changes-modal nil
+               ::ui-version           {:current-version nil
+                                       :new-version     nil
+                                       :modal-open?     false
+                                       :notify?         true}
                ::bootstrap-message    nil
                ::message              nil
                ::actions-interval     {}
@@ -107,7 +98,7 @@
                                                         :icon       "fas fa-store"
                                                         :protected? true
                                                         :order      2}
-                                       "edges"          {:url        "edges"
+                                       "edges"         {:url        "edges"
                                                         :label-kw   :edges
                                                         :name       "edges"
                                                         :icon       "box"

@@ -278,26 +278,46 @@
 
 
 (reg-event-fx
-  ::get-ui-config-good
+  ::get-ui-config-success
   (fn [{db :db} [_ {:keys [stripe] :as result}]]
     (cond-> {:db (assoc db ::spec/config result)}
             stripe (assoc :dispatch [::load-stripe]))))
 
-(reg-event-db
-  ::get-ui-version-result
-  (fn [{:keys [::spec/current-ui-version] :as db} [_ result]]
-    (cond
-      (nil? current-ui-version) (js/console.error "Init UI version to " result)
-      (not= current-ui-version result) (js/console.error "UI change detected " result)
-      :else (js/console.error "UI version still " result))
-    (assoc db ::spec/current-ui-version result)))
-
 
 (reg-event-db
-  ::get-ui-config-bad
-  (fn [db [_ _response]]
-    (log/info "Failed to load UI configuration file")
+  ::log-failed-response
+  (fn [db [_ msg response]]
+    (log/error msg ": " response)
     db))
+
+
+(reg-event-db
+  ::get-ui-version-success
+  (fn [{{:keys [current-version notify?]
+         :as   ui-version} ::spec/ui-version
+        :as                db} [_ response]]
+    (let [init-current-version? (nil? current-version)
+          new-version-detected? (and notify?
+                                     (some? current-version)
+                                     (not= current-version response))
+          should-open-modal?    (and notify?
+                                     new-version-detected?)]
+      (when init-current-version?
+        (log/info "Init ui version to: " response))
+      (when new-version-detected?
+        (log/info "New ui version detected: " response))
+      (assoc db ::spec/ui-version
+                (cond-> ui-version
+                        init-current-version? (assoc :current-version response)
+                        new-version-detected? (assoc :new-version response
+                                                     :notify? false)
+                        should-open-modal? (assoc :open-modal? true))))))
+
+
+(reg-event-db
+  ::new-version-open-modal?
+  (fn [db [_ open]]
+    (assoc-in db [::spec/ui-version :open-modal?] open)))
 
 
 (reg-event-fx
@@ -307,8 +327,9 @@
                   :uri             "/ui/config/config.json"
                   :timeout         8000
                   :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [::get-ui-config-good]
-                  :on-failure      [::get-ui-config-bad]}}))
+                  :on-success      [::get-ui-config-success]
+                  :on-failure      [::log-failed-response
+                                    "Failed to load UI configuration file"]}}))
 
 
 (reg-event-fx
@@ -318,8 +339,9 @@
                   :uri             "/ui/css/version.css"
                   :timeout         8000
                   :response-format (ajax/text-response-format)
-                  :on-success      [::get-ui-version-result]
-                  :on-failure      [::get-ui-version-result]}}))
+                  :on-success      [::get-ui-version-success]
+                  :on-failure      [::log-failed-response
+                                    "Failed to load UI version file"]}}))
 
 
 (reg-event-fx

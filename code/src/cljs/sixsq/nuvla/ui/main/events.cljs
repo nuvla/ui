@@ -353,7 +353,7 @@
   (fn []
     {:dispatch [::action-interval-start
                 {:id        check-ui-version-polling-id
-                 :frequency 20000
+                 :frequency 120000
                  :event     [::get-ui-version]}]}))
 
 (reg-event-db

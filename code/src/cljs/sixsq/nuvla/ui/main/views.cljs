@@ -205,27 +205,32 @@
 
 (defn UpdateUIVersion
   []
-  (let [open?       (subscribe [::subs/ui-version-modal-open?])
+  (let [tr          (subscribe [::i18n-subs/tr])
+        open?       (subscribe [::subs/ui-version-modal-open?])
         new-version (subscribe [::subs/ui-version-new-version])
         open-modal  #(dispatch [::events/new-version-open-modal? true])
         close-modal #(dispatch [::events/new-version-open-modal? false])
         reload      #(.reload js/location true)]
     [:<>
-     [ui/Modal {:open @open? :size "small" :basic true}
-      [uix/ModalHeader {:icon "refresh" :header "New UI version"}]
-      [ui/ModalContent
-       "A new version of Nuvla web app has been released."]
+     [ui/Modal {:open @open?
+                :size :small
+                :basic true}
+      [uix/ModalHeader {:icon "refresh"
+                        :header (@tr [:new-ui-version])}]
+      [ui/ModalContent (@tr [:new-ui-version-content])]
       [ui/ModalActions
        [ui/Button {:negative true
-                   :on-click close-modal} "Will do it later"]
+                   :on-click close-modal}
+        (@tr [:will-do-it-later])]
        [ui/Button {:positive true
-                   :on-click reload} "Update now"]]]
+                   :on-click reload}
+        (@tr [:update-and-reload])]]]
      (when @new-version
        [ui/MenuItem {:on-click open-modal}
         [ui/Label {:color    "red"
                    :icon     "refresh"
                    :circular true
-                   :content  "New UI version"}]])]))
+                   :content  (@tr [:new-ui-version])}]])]))
 
 
 (defn header

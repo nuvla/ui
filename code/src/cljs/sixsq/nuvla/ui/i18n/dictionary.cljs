@@ -6,6 +6,10 @@
 
 (def dictionary
   {:en {
+        :new-ui-version                                "New UI version"
+        :new-ui-version-content                        "A new version of Nuvla web app has been released."
+        :will-do-it-later                              "Will do it later"
+        :update-and-reload                             "Update & reload"
         :created-by                                    "created by"
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
@@ -870,6 +874,10 @@
         }
 
    :fr {
+        :new-ui-version                                "Nouvelle version UI"
+        :new-ui-version-content                        "Une nouvelle version de l'application web Nuvla a été publiée."
+        :will-do-it-later                              "Je le ferai plus tard"
+        :update-and-reload                             "Mettre à jour et recharger"
         :created-by                                    "Créé par"
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"

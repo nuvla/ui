@@ -174,3 +174,20 @@
   ::stripe
   (fn [db]
     (::spec/stripe db)))
+
+(reg-sub
+  ::ui-version
+  (fn [db]
+    (::spec/ui-version db)))
+
+(reg-sub
+  ::ui-version-modal-open?
+  :<- [::ui-version]
+  (fn [{:keys [open-modal?]}]
+    open-modal?))
+
+(reg-sub
+  ::ui-version-new-version
+  :<- [::ui-version]
+  (fn [{:keys [new-version]}]
+    new-version))

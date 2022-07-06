@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Main - Modal and label to notify about UI release and propose user to reload
+
 ### Changed
 
 - Switch group menu - auto-focus search field on open

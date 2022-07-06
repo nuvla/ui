@@ -350,7 +350,7 @@
 
 (reg-event-fx
   ::check-ui-version-polling
-  (fn [_ _]
+  (fn []
     {:dispatch [::action-interval-start
                 {:id        check-ui-version-polling-id
                  :frequency 20000

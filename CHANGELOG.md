@@ -8,6 +8,7 @@
 
 ### Changed
 
+- Deployment detail - Hide urls from overview when state is stopped
 - Switch group menu - auto-focus search field on open
 - Switch group menu - search filter on close persisted but filtering is lost
   bugfix

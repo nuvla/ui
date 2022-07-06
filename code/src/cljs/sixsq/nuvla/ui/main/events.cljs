@@ -322,26 +322,30 @@
 
 (reg-event-fx
   ::get-ui-config
-  (fn [_ _]
-    {:http-xhrio {:method          :get
-                  :uri             "/ui/config/config.json"
-                  :timeout         8000
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [::get-ui-config-success]
-                  :on-failure      [::log-failed-response
-                                    "Failed to load UI configuration file"]}}))
+  (fn []
+    (let [force-no-cache (int (time/timestamp))
+          url            (str "/ui/config/config.json?" force-no-cache)]
+      {:http-xhrio {:method          :get
+                    :uri             url
+                    :timeout         8000
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::get-ui-config-success]
+                    :on-failure      [::log-failed-response
+                                      "Failed to load UI configuration file"]}})))
 
 
 (reg-event-fx
   ::get-ui-version
-  (fn [_ _]
-    {:http-xhrio {:method          :get
-                  :uri             "/ui/css/version.css"
-                  :timeout         8000
-                  :response-format (ajax/text-response-format)
-                  :on-success      [::get-ui-version-success]
-                  :on-failure      [::log-failed-response
-                                    "Failed to load UI version file"]}}))
+  (fn []
+    (let [force-no-cache (int (time/timestamp))
+          url            (str "/ui/css/version.css?" force-no-cache)]
+      {:http-xhrio {:method          :get
+                    :uri             url
+                    :timeout         8000
+                    :response-format (ajax/text-response-format)
+                    :on-success      [::get-ui-version-success]
+                    :on-failure      [::log-failed-response
+                                      "Failed to load UI version file"]}})))
 
 
 (reg-event-fx
@@ -349,7 +353,7 @@
   (fn [_ _]
     {:dispatch [::action-interval-start
                 {:id        check-ui-version-polling-id
-                 :frequency 3000
+                 :frequency 20000
                  :event     [::get-ui-version]}]}))
 
 (reg-event-db

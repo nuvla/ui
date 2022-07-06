@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Main - Modal and label to notify about UI release and propose user to reload
+
 ## [2.31.2] - 2022-07-01
 
 ### Added

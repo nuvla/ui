@@ -6,12 +6,18 @@
 
 - Main - Modal and label to notify about UI release and propose user to reload
 
+### Changed
+
+- Switch group menu - auto-focus search field on open
+- Switch group menu - search filter on close persisted but filtering is lost
+  bugfix
+
 ## [2.31.2] - 2022-07-01
 
 ### Added
 
-- Edge detail - Overview display "created by" when owner is a group 
-- Deployment detail - Overview display "created by" when owner is a group 
+- Edge detail - Overview display "created by" when owner is a group
+- Deployment detail - Overview display "created by" when owner is a group
 
 ### Changed
 

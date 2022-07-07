@@ -1865,7 +1865,7 @@
         overview    {:menuItem {:content "Overview"
                                 :key     :overview
                                 :icon    "info"}
-                     :render   (fn [] (r/as-element [TabOverview]))}]
+                     :render   #(r/as-element [TabOverview])}]
     (case (:state @nuvlabox)
       "SUSPENDED" [overview]
       [overview
@@ -1891,7 +1891,7 @@
                    :key     :logs
                    :icon    "file code"}
         :render   (fn [] (r/as-element [log-views/TabLogs
-                                        (:id nuvlabox)
+                                        (:id @nuvlabox)
                                         #(subscribe [::subs/nuvlabox-components])]))}
        {:menuItem {:content (r/as-element [:span "Peripherals"
                                            [ui/Label {:circular true

@@ -248,7 +248,7 @@
         [primary-url-name
          primary-url-pattern] (-> module-content (get :urls []) first)
         primary-url  (subscribe [::subs/deployment-url id primary-url-pattern])
-        started?     (utils/is-started? state)
+        started?     (utils/started? state)
         dep-href     (utils/deployment-href id)
         select-all?  (subscribe [::subs/select-all?])
         is-selected? (subscribe [::subs/is-selected? id])
@@ -337,16 +337,16 @@
                                      :padding-bottom  "20px"}}
           [components/StatisticState total ["fas fa-rocket"] "TOTAL" clickable?
            ::events/set-state-selector ::subs/state-selector]
-          [components/StatisticState started [(utils/status->icon utils/status-started)] utils/status-started
+          [components/StatisticState started [(utils/state->icon utils/STARTED)] utils/STARTED
            clickable? "green"
            ::events/set-state-selector ::subs/state-selector]
-          [components/StatisticState starting-plus [(utils/status->icon utils/status-starting)]
-           utils/status-starting clickable? "yellow"
+          [components/StatisticState starting-plus [(utils/state->icon utils/STARTING)]
+           utils/STARTING clickable? "yellow"
            ::events/set-state-selector ::subs/state-selector]
-          [components/StatisticState stopped [(utils/status->icon utils/status-stopped)] utils/status-stopped
+          [components/StatisticState stopped [(utils/state->icon utils/STOPPED)] utils/STOPPED
            clickable? "yellow"
            ::events/set-state-selector ::subs/state-selector]
-          [components/StatisticState error [(utils/status->icon utils/status-error)] utils/status-error
+          [components/StatisticState error [(utils/state->icon utils/ERROR)] utils/ERROR
            clickable? "red" ::events/set-state-selector ::subs/state-selector]]]))))
 
 

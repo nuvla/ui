@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- Deployment detail - Hide urls from overview when state is stopped and disable
+  links in urls tab
+
 ## [2.32.0] - 2022-07-07
 
 ### Added

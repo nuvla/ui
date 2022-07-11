@@ -92,16 +92,18 @@
 (defn url-to-row
   [url-name url-pattern]
   (let [tr  (subscribe [::i18n-subs/tr])
-        url (subscribe [::subs/url url-pattern])]
+        url (subscribe [::subs/url url-pattern])
+        {:keys [state]} @(subscribe [::subs/deployment])]
     [ui/TableRow
      [ui/TableCell url-name]
      [ui/TableCell {:class ["show-on-hover-value"]}
-      (if @url
-        (values/copy-value-to-clipboard
-          [:a {:href @url, :target "_blank"} @url false]
-          @url
-          (@tr [:copy-to-clipboard]))
-        url-pattern)]]))
+      (cond
+        (and @url (= state deployment-utils/STOPPED)) @url
+        @url (values/copy-value-to-clipboard
+               [:a {:href @url, :target "_blank"} @url false]
+               @url
+               (@tr [:copy-to-clipboard]))
+        :else url-pattern)]]))
 
 
 (defn url-to-button
@@ -518,7 +520,7 @@
         tr          (subscribe [::i18n-subs/tr])
         primary-url (subscribe [::subs/url url])
         parameters  (subscribe [::subs/deployment-parameters])
-        started?    (deployment-utils/is-started? state)
+        started?    (deployment-utils/started? state)
         hostname    (or (get-in @parameters ["hostname" :value]) "")]
     (when (and started? @primary-url (spec-utils/private-ipv4? hostname))
       [ui/Message {:info true}
@@ -602,7 +604,6 @@
         primary-url (if clickable?
                       (subscribe [::deployment-subs/deployment-url id primary-url-pattern])
                       (subscribe [::subs/url primary-url-pattern]))
-        started?    (deployment-utils/is-started? state)
         cred        (or credential-name parent)]
 
     ^{:key id}
@@ -655,7 +656,8 @@
                             :white-space   "nowrap"}}
           [ui/Icon {:name "tag"}] tag])]]
 
-     (when (and started? @primary-url)
+     (when (and (deployment-utils/started? state)
+                @primary-url)
        [ui/Button {:color    "green"
                    :icon     "external"
                    :content  primary-url-name
@@ -731,11 +733,12 @@
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
          [ui/TableCell @version " " (up-to-date? @version @versions)]]]]]
-     [ui/Segment {:attached  false
-                  :secondary true}
-      (for [[i [url-name url-pattern]] (map-indexed list urls)]
-        ^{:key url-name}
-        [url-to-button url-name url-pattern (zero? i)])]]))
+     (when-not (deployment-utils/stopped? state)
+       [ui/Segment {:attached  false
+                    :secondary true}
+        (for [[i [url-name url-pattern]] (map-indexed list urls)]
+          ^{:key url-name}
+          [url-to-button url-name url-pattern (zero? i)])])]))
 
 
 (defn OverviewPane

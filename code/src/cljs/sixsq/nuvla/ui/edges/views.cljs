@@ -148,7 +148,7 @@
   [ui/Container {:text-align :center
                  :style      {:margin "0.5em"}}
    [:span (@tr [:nuvlabox-documentation])
-    [:a {:href  url 
+    [:a {:href   url
          :target "_blank"}
      (@tr [:nuvla-docs])]]])
 
@@ -613,7 +613,7 @@
                          (when-not (#{"core" ""} scope)
                            [ui/Checkbox {:key             scope
                                          :label           scope
-                                         :default-checked (contains?
+                                         :checked         (contains?
                                                             (:nb-assets @nuvlabox-release-data)
                                                             scope)
                                          :style           {:margin "1em"}
@@ -645,7 +645,7 @@
 
                       [:div {:style {:color "grey" :font-style "oblique"}}
                        (@tr [:create-nuvlabox-compose])]
-                      [:a {:href  compose-doc-url 
+                      [:a {:href   compose-doc-url
                            :target "_blank"}
                        (@tr [:nuvlabox-modal-more-info])]
 
@@ -702,7 +702,7 @@
                                   :wide     true
                                   :trigger  (r/as-element [ui/Icon {:name  "question"
                                                                     :color "grey"}])}]]
-                      [:a {:href  usb-doc-url 
+                      [:a {:href   usb-doc-url
                            :target "_blank"}
                        (@tr [:nuvlabox-modal-more-info])]]]])]
 

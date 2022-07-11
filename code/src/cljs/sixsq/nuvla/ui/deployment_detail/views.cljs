@@ -92,16 +92,18 @@
 (defn url-to-row
   [url-name url-pattern]
   (let [tr  (subscribe [::i18n-subs/tr])
-        url (subscribe [::subs/url url-pattern])]
+        url (subscribe [::subs/url url-pattern])
+        {:keys [state]} @(subscribe [::subs/deployment])]
     [ui/TableRow
      [ui/TableCell url-name]
      [ui/TableCell {:class ["show-on-hover-value"]}
-      (if @url
-        (values/copy-value-to-clipboard
-          [:a {:href @url, :target "_blank"} @url false]
-          @url
-          (@tr [:copy-to-clipboard]))
-        url-pattern)]]))
+      (cond
+        (and @url (= state "STOPPED")) @url
+        @url (values/copy-value-to-clipboard
+               [:a {:href @url, :target "_blank"} @url false]
+               @url
+               (@tr [:copy-to-clipboard]))
+        :else url-pattern)]]))
 
 
 (defn url-to-button

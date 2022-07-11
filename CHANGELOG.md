@@ -2,13 +2,21 @@
 
 ## Unreleased
 
+### Changed
+
+- Deployment detail - Hide urls from overview when state is stopped and disable
+  links in urls tab
+
+## [2.32.0] - 2022-07-07
+
 ### Added
 
 - Main - Modal and label to notify about UI release and propose user to reload
 
 ### Changed
 
-- Deployment detail - Hide urls from overview when state is stopped
+- Create NuvlaEdge additional modules not respected when changing version
+- NuvlaEdge detail - Create-log not created bugfix
 - Switch group menu - auto-focus search field on open
 - Switch group menu - search filter on close persisted but filtering is lost
   bugfix

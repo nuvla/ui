@@ -98,7 +98,7 @@
      [ui/TableCell url-name]
      [ui/TableCell {:class ["show-on-hover-value"]}
       (cond
-        (and @url (= state "STOPPED")) @url
+        (and @url (= state deployment-utils/STOPPED)) @url
         @url (values/copy-value-to-clipboard
                [:a {:href @url, :target "_blank"} @url false]
                @url

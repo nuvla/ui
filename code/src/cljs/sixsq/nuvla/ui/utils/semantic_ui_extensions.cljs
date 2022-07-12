@@ -469,8 +469,8 @@
 
 
 (defn Card
-  [{:keys [header description meta image on-click href
-           button tags content corner-button state loading? on-select selected? extra]}]
+  [{:keys [header description meta image on-click href button tags content
+           corner-button state left-state loading? on-select selected? extra]}]
   [ui/Card (when on-click
              (cond-> {:on-click (fn [event]
                                   (on-click event)
@@ -505,16 +505,15 @@
 
     (when meta [ui/CardMeta meta])
 
-    (when state
-      [ui/Segment {:basic  true
-                   :padded false
-                   :style  {:padding    0
-                            :text-align "right"
-                            :margin     "0px 5px 10px"}}
-       [:div
-        [:p {:style {:color "initial"}} state]
+    (when (or state left-state)
+      [ui/Grid {:style {:color "initial"
+                        :padding-bottom 5}
+                :columns 2}
+       [ui/GridColumn left-state]
+       [ui/GridColumn {:text-align :right}
         [ui/Loader {:active        loading?
-                    :indeterminate true}]]])
+                    :indeterminate true}]
+        state]])
 
     (when description
       [ui/CardDescription

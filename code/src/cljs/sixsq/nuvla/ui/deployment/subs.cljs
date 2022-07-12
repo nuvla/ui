@@ -48,12 +48,6 @@
 
 
 (reg-sub
-  ::creds-name-map
-  (fn [db]
-    (::spec/creds-name-map db)))
-
-
-(reg-sub
   ::view
   (fn [db]
     (::spec/view db)))

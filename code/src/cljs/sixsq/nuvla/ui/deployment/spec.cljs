@@ -19,8 +19,6 @@
 
 (s/def ::additional-filter (s/nilable string?))
 
-(s/def ::creds-name-map any?)
-
 (s/def ::view #{"cards" "table"})
 
 (s/def ::deployments-params-map {})
@@ -50,7 +48,6 @@
                           ::full-text-search
                           ::additional-filter
                           ::nuvlabox
-                          ::creds-name-map
                           ::view
                           ::state-selector
                           ::bulk-update-modal
@@ -67,7 +64,6 @@
                ::deployments-summary     nil
                ::deployments-summary-all nil
                ::deployments-params-map  nil
-               ::creds-name-map          {}
                ::view                    "cards"
                ::state-selector          "all"
                ::bulk-update-modal       nil

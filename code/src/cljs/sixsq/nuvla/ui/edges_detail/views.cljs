@@ -1017,7 +1017,7 @@
 
 
 (defn TabOverviewNuvlaBox
-  [{:keys [id created updated version refresh-interval owner created-by]}
+  [{:keys [id created updated refresh-interval owner created-by]}
    {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
@@ -1062,10 +1062,7 @@
         [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:updated]))]
-        [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]
-       [ui/TableRow
-        [ui/TableCell (str/capitalize (@tr [:version]))]
-        [ui/TableCell version]]]]]))
+        [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]]]]))
 
 
 (defn TabOverviewHost

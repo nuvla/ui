@@ -2,6 +2,7 @@
   (:require
     [clojure.set :as set]
     [clojure.string :as str]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.deployment.spec :as spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -151,11 +152,29 @@
   [selected-set visible-deps-ids-set]
   (set/superset? selected-set visible-deps-ids-set))
 
-(defn format-nuvlabox-value
-  [nuvlabox]
-  [:div
-   [ui/Icon {:name "box"}]
-   [values/as-link (general-utils/id->uuid nuvlabox) :page "edges"]])
+(defn CloudNuvlaEdgeLink
+  [{:keys [parent nuvlabox nuvlabox-name credential-name
+           infrastructure-service infrastructure-service-name] :as _deployment}
+   & {:keys [link] :or {link true}}]
+  (let [href  (or nuvlabox infrastructure-service parent)
+        label (or nuvlabox-name
+                  infrastructure-service-name
+                  credential-name
+                  (some-> href general-utils/id->short-uuid))]
+    (when href
+      [:<>
+       [ui/Icon {:name (cond nuvlabox "box"
+                             infrastructure-service "cloud"
+                             parent "key"
+                             :else nil)}]
+       (if link
+         [values/as-link (general-utils/id->uuid href)
+          :label label
+          :page (cond nuvlabox "edges"
+                      infrastructure-service "clouds"
+                      parent "api/credential"
+                      :else nil)]
+         label)])))
 
 (defn build-bulk-filter
   [{:keys [::spec/select-all?
@@ -174,3 +193,10 @@
     (->> selected-set
          (map #(str "id='" % "'"))
          (apply general-utils/join-or))))
+
+(defn deployment-version
+  [{:keys [module] :as _deployment}]
+  (str "v"
+       (apps-utils/find-current-version
+         (apps-utils/map-versions-index (:versions module))
+         (-> module :content :id))))

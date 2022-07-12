@@ -2,8 +2,14 @@
 
 ## Unreleased
 
+## [2.32.1] - 2022-07-12
+
 ### Changed
 
+- Deployments - Add version to deployment card and row
+- Deployment detail - Remove credential and replace with unified cloud/nuvlaedge
+  link
+- Edge detail - Remove version from overview
 - Deployment detail - Hide urls from overview when state is stopped and disable
   links in urls tab
 

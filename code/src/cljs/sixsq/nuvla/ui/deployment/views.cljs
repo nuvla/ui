@@ -165,11 +165,9 @@
 
 
 (defn RowFn
-  [{:keys [id state module parent nuvlabox] :as deployment}
+  [{:keys [id state module] :as deployment}
    {:keys [no-actions no-module-name select-all] :as _options}]
-  (let [credential-id parent
-        creds-name    (subscribe [::subs/creds-name-map])
-        [primary-url-name
+  (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
         url           @(subscribe [::subs/deployment-url id primary-url-pattern])
         selected?     (subscribe [::subs/is-selected? id])
@@ -187,6 +185,7 @@
        [ui/TableCell {:style {:overflow      "hidden",
                               :text-overflow "ellipsis",
                               :max-width     "20ch"}} (:name module)])
+     [ui/TableCell (utils/deployment-version deployment)]
      [ui/TableCell state]
      [ui/TableCell (when url
                      [:a {:href url, :target "_blank", :rel "noreferrer"}
@@ -196,9 +195,7 @@
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}}
-      (if nuvlabox
-        (utils/format-nuvlabox-value nuvlabox)
-        (get @creds-name credential-id credential-id))]
+      [utils/CloudNuvlaEdgeLink deployment]]
      (when show-options?
        [ui/TableCell
         (cond
@@ -228,6 +225,7 @@
              [ui/TableHeaderCell (@tr [:id])]
              (when (not no-module-name)
                [ui/TableHeaderCell (@tr [:module])])
+             [ui/TableHeaderCell (@tr [:version])]
              [ui/TableHeaderCell (@tr [:status])]
              [ui/TableHeaderCell (@tr [:url])]
              [ui/TableHeaderCell (@tr [:created])]
@@ -240,7 +238,7 @@
 
 
 (defn DeploymentCard
-  [{:keys [id state module tags parent credential-name] :as deployment}]
+  [{:keys [id state module tags] :as deployment}]
   (let [tr           (subscribe [::i18n-subs/tr])
         {module-logo-url :logo-url
          module-name     :name
@@ -251,8 +249,7 @@
         started?     (utils/started? state)
         dep-href     (utils/deployment-href id)
         select-all?  (subscribe [::subs/select-all?])
-        is-selected? (subscribe [::subs/is-selected? id])
-        cred         (or credential-name parent)]
+        is-selected? (subscribe [::subs/is-selected? id])]
     ^{:key id}
     [uix/Card
      (cond-> {:header        [:span [:p {:style {:overflow      "hidden",
@@ -260,8 +257,7 @@
                                                  :max-width     "20ch"}} module-name]]
               :meta          (str (@tr [:created]) " " (-> deployment :created
                                                            time/parse-iso8601 time/ago))
-              :description   (when cred
-                               [:div [ui/Icon {:name "key"}] cred])
+              :description   [utils/CloudNuvlaEdgeLink deployment :link false]
               :tags          tags
               :button        (when (and started? @primary-url)
                                [ui/Button {:color    "green"
@@ -280,6 +276,7 @@
                                (.preventDefault event))
               :href          dep-href
               :image         (or module-logo-url "")
+              :left-state    (utils/deployment-version deployment)
               :corner-button (cond
                                (utils-general/can-operation? "stop" deployment)
                                [deployment-detail-views/ShutdownButton deployment :label? true]

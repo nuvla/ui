@@ -675,11 +675,9 @@
         deployment      (subscribe [::subs/deployment])
         version         (subscribe [::subs/current-module-version])
         versions        (subscribe [::subs/module-versions])
-        {:keys [id state module tags acl credential-name
-                parent nuvlabox owner created-by]} @deployment
+        {:keys [id state module tags acl owner created-by]} @deployment
         owners          (:owners acl)
         resolved-owners (subscribe [::session-subs/resolve-users owners])
-        cred            (or credential-name parent)
         urls            (get-in module [:content :urls])]
 
     [ui/SegmentGroup {:style  {:display    "flex", :justify-content "space-between",
@@ -721,15 +719,9 @@
           (when (deployment-utils/deployment-in-transition? state)
             [ui/Icon {:loading true :name "circle notch" :color "grey"}])]]
         [ui/TableRow
-         [ui/TableCell (str/capitalize (@tr [:credential]))]
+         [ui/TableCell (@tr [:infrastructure])]
          [ui/TableCell
-          (when cred
-            [:div [ui/Icon {:name "key"}] cred])]]
-        (when nuvlabox
-          [ui/TableRow
-           [ui/TableCell "NuvlaEdge"]
-           [ui/TableCell
-            (deployment-utils/format-nuvlabox-value nuvlabox)]])
+          [deployment-utils/CloudNuvlaEdgeLink @deployment]]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
          [ui/TableCell @version " " (up-to-date? @version @versions)]]]]]

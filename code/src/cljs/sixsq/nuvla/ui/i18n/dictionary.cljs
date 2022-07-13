@@ -6,6 +6,10 @@
 
 (def dictionary
   {:en {
+        :bulk-force-delete-in-progress                 "Bulk force delete in progress"
+        :bulk-stop-in-progress                         "Bulk stop in progress"
+        :bulk-update-in-progress                       "Bulk update in progress"
+        :click-for-details                             "Click for more details"
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
@@ -874,6 +878,11 @@
         }
 
    :fr {
+        :bulk-force-delete-in-progress                 "Batch de suppression forcée en cours"
+        :bulk-stop-in-progress                         "Batch d'arrêt en cours"
+        :bulk-update-in-progress                       "Batch de mise à jours en cours"
+        :failed                                        "échoué"
+        :click-for-details                             "Cliquez pour plus de détails"
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"

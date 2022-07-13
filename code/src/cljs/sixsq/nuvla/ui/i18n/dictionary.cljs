@@ -878,9 +878,9 @@
         }
 
    :fr {
-        :bulk-force-delete-in-progress                 "Batch de suppression forcée en cours"
-        :bulk-stop-in-progress                         "Batch d'arrêt en cours"
-        :bulk-update-in-progress                       "Batch de mise à jours en cours"
+        :bulk-force-delete-in-progress                 "Batch de suppressions forcées en cours"
+        :bulk-stop-in-progress                         "Batch d'arrêts en cours"
+        :bulk-update-in-progress                       "Batch de mises à jour en cours"
         :failed                                        "échoué"
         :click-for-details                             "Cliquez pour plus de détails"
         :about                                         "à propos"

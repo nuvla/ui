@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Components - Bulk action progress wrong header and enhancements
 - Deployments - Hide version when not resolvable without extra calls
 
 ## [2.32.1] - 2022-07-12

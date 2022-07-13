@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Deployments - Hide version when not resolvable without extra calls
+
 ## [2.32.1] - 2022-07-12
 
 ### Changed

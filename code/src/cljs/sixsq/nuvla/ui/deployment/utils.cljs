@@ -195,8 +195,8 @@
          (apply general-utils/join-or))))
 
 (defn deployment-version
-  [{:keys [module] :as _deployment}]
-  (str "v"
-       (apps-utils/find-current-version
-         (apps-utils/map-versions-index (:versions module))
-         (-> module :content :id))))
+  [{{:keys [versions content]} :module :as _deployment}]
+  (when-let [version (some-> versions
+                             apps-utils/map-versions-index
+                             (apps-utils/find-current-version (:id content)))]
+    (str "v" version)))

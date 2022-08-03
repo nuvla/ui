@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [2.32.2] - 2022-08-03
+
+### Added
+
+- Assets - add email header image
+
 ### Changed
 
 - Components - Bulk action progress wrong header and enhancements

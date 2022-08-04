@@ -3,8 +3,8 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.deployment-detail.subs :as deployment-detail-subs]
-    [sixsq.nuvla.ui.deployment-detail.views :as deployment-detail-views]
+    [sixsq.nuvla.ui.deployments-detail.subs :as deployments-detail-subs]
+    [sixsq.nuvla.ui.deployments-detail.views :as deployments-detail-views]
     [sixsq.nuvla.ui.deployment-dialog.views-module-version :as dep-diag-versions]
     [sixsq.nuvla.ui.deployments.events :as events]
     [sixsq.nuvla.ui.deployments.subs :as subs]
@@ -52,7 +52,7 @@
   []
   (let [tr              (subscribe [::i18n-subs/tr])
         info            (subscribe [::subs/bulk-update-modal])
-        versions        (subscribe [::deployment-detail-subs/module-versions])
+        versions        (subscribe [::deployments-detail-subs/module-versions])
         selected-module (r/atom nil)]
     (fn []
       (let [options     (map (fn [[idx {:keys [href commit]}]]
@@ -202,9 +202,9 @@
        [ui/TableCell
         (cond
           (utils-general/can-operation? "stop" deployment)
-          [deployment-detail-views/ShutdownButton deployment]
+          [deployments-detail-views/ShutdownButton deployment]
           (utils-general/can-delete? deployment)
-          [deployment-detail-views/DeleteButton deployment])])]))
+          [deployments-detail-views/DeleteButton deployment])])]))
 
 
 (defn VerticalDataTable
@@ -281,10 +281,10 @@
               :left-state    (utils/deployment-version deployment)
               :corner-button (cond
                                (utils-general/can-operation? "stop" deployment)
-                               [deployment-detail-views/ShutdownButton deployment :label? true]
+                               [deployments-detail-views/ShutdownButton deployment :label? true]
 
                                (utils-general/can-delete? deployment)
-                               [deployment-detail-views/DeleteButton deployment :label? true])
+                               [deployments-detail-views/DeleteButton deployment :label? true])
               :state         state}
 
              (not @select-all?) (assoc :on-select #(dispatch [::events/select-id id])
@@ -436,6 +436,6 @@
   (let [[_ uuid] path
         n        (count path)
         children (case n
-                   2 [deployment-detail-views/TabsDeployment uuid]
+                   2 [deployments-detail-views/TabsDeployment uuid]
                    [DeploymentsMainContent])]
     [ui/Segment style/basic children]))

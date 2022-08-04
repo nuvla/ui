@@ -211,7 +211,7 @@
                           ::cimi-api-fx/get
                           [module-href
                            #(dispatch
-                              [:sixsq.nuvla.ui.deployment-detail.events/set-module-versions %])]))))
+                              [:sixsq.nuvla.ui.deployments-detail.events/set-module-versions %])]))))
 
 
 (reg-event-db

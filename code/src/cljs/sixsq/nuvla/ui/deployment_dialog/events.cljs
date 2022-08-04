@@ -6,7 +6,7 @@
     [sixsq.nuvla.ui.credentials.events :as creds-events]
     [sixsq.nuvla.ui.data-set.spec :as data-set-spec]
     [sixsq.nuvla.ui.data.spec :as data-spec]
-    [sixsq.nuvla.ui.deployment-detail.events :as deployment-detail-events]
+    [sixsq.nuvla.ui.deployments-detail.events :as deployments-detail-events]
     [sixsq.nuvla.ui.deployment-dialog.spec :as spec]
     [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -393,7 +393,7 @@
                                           :type    :success}]
                          (dispatch [::reset])
                          (dispatch [::messages-events/add success-msg])
-                         (dispatch [::deployment-detail-events/get-deployment id])
+                         (dispatch [::deployments-detail-events/get-deployment id])
                          (dispatch [::history-events/navigate
                                     (str "deployment/" (general-utils/id->uuid id))]))))]
       {::cimi-api-fx/operation [id operation callback]})))

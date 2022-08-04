@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.deployment-detail.views
+(ns sixsq.nuvla.ui.deployments-detail.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
@@ -8,8 +8,8 @@
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.credentials.utils :as creds-utils]
-    [sixsq.nuvla.ui.deployment-detail.events :as events]
-    [sixsq.nuvla.ui.deployment-detail.subs :as subs]
+    [sixsq.nuvla.ui.deployments-detail.events :as events]
+    [sixsq.nuvla.ui.deployments-detail.subs :as subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]

@@ -1,8 +1,8 @@
-(ns sixsq.nuvla.ui.deployment-detail.subs
+(ns sixsq.nuvla.ui.deployments-detail.subs
   (:require
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [sixsq.nuvla.ui.deployment-detail.spec :as spec]
+    [sixsq.nuvla.ui.deployments-detail.spec :as spec]
     [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 

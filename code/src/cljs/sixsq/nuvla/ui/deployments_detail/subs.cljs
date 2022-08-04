@@ -1,9 +1,9 @@
-(ns sixsq.nuvla.ui.deployment-detail.subs
+(ns sixsq.nuvla.ui.deployments-detail.subs
   (:require
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [sixsq.nuvla.ui.deployment-detail.spec :as spec]
-    [sixsq.nuvla.ui.deployment.utils :as deployment-utils]
+    [sixsq.nuvla.ui.deployments-detail.spec :as spec]
+    [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
@@ -108,8 +108,8 @@
   ::url
   :<- [::deployment-parameters]
   (fn [deployment-parameters [_ url-pattern]]
-    (when (deployment-utils/running-replicas? deployment-parameters)
-      (deployment-utils/resolve-url-pattern url-pattern deployment-parameters))))
+    (when (deployments-utils/running-replicas? deployment-parameters)
+      (deployments-utils/resolve-url-pattern url-pattern deployment-parameters))))
 
 
 (reg-sub

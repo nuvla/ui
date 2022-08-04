@@ -14,7 +14,7 @@
     [sixsq.nuvla.ui.data-set.spec :as data-set]
     [sixsq.nuvla.ui.data.spec :as data]
     [sixsq.nuvla.ui.deployment-dialog.spec :as deployment-dialog]
-    [sixsq.nuvla.ui.deployment.spec :as deployment]
+    [sixsq.nuvla.ui.deployments.spec :as deployments]
     [sixsq.nuvla.ui.docs.spec :as docs]
     [sixsq.nuvla.ui.edges-detail.spec :as edges-detail]
     [sixsq.nuvla.ui.edges.spec :as edges]
@@ -34,7 +34,7 @@
                      ::api-detail/db
                      ::credential/db
                      ::dashboard/db
-                     ::deployment/db
+                     ::deployments/db
                      ::deployment-dialog/db
                      ::data/db
                      ::data-set/db
@@ -63,7 +63,7 @@
          data/defaults
          data-set/defaults
          dashboard/defaults
-         deployment/defaults
+         deployments/defaults
          deployment-dialog/defaults
          credential/defaults
          docs/defaults

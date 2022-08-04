@@ -1,10 +1,10 @@
-(ns sixsq.nuvla.ui.deployment-detail.events
+(ns sixsq.nuvla.ui.deployments-detail.events
   (:require
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.credentials.events :as creds-events]
-    [sixsq.nuvla.ui.deployment-detail.spec :as spec]
-    [sixsq.nuvla.ui.deployment.events :as deployment-events]
+    [sixsq.nuvla.ui.deployments-detail.spec :as spec]
+    [sixsq.nuvla.ui.deployments.events :as deployments-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
@@ -93,7 +93,7 @@
                                                :type    :error}]))
                                  (do
                                    (dispatch [::get-deployment href])
-                                   (dispatch [::deployment-events/get-nuvlabox-deployments])))]}))
+                                   (dispatch [::deployments-events/get-nuvlabox-deployments])))]}))
 
 
 (reg-event-db
@@ -138,7 +138,7 @@
                                                            status (str " (" status ")"))
                                           :content message
                                           :type    :success}])
-                              (dispatch [::deployment-events/get-nuvlabox-deployments])
+                              (dispatch [::deployments-events/get-nuvlabox-deployments])
                               (dispatch [::history-events/navigate "deployment"]))]}))
 
 

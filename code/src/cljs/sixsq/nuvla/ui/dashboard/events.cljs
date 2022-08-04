@@ -3,7 +3,7 @@
     [re-frame.core :refer [reg-event-fx]]
     [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
     [sixsq.nuvla.ui.credentials.events :as credentials-events]
-    [sixsq.nuvla.ui.deployment.events :as deployment-events]
+    [sixsq.nuvla.ui.deployments.events :as deployments-events]
     [sixsq.nuvla.ui.edges.events :as edges-events]
     [sixsq.nuvla.ui.main.events :as main-events]))
 
@@ -22,7 +22,7 @@
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-id
                        :frequency 20000
-                       :event     [::deployment-events/get-deployments-summary-all]}]]
+                       :event     [::deployments-events/get-deployments-summary-all]}]]
           [:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-nuvlaboxes-summary-id
                        :frequency 20000

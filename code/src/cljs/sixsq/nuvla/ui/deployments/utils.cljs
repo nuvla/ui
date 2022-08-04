@@ -1,9 +1,9 @@
-(ns sixsq.nuvla.ui.deployment.utils
+(ns sixsq.nuvla.ui.deployments.utils
   (:require
     [clojure.set :as set]
     [clojure.string :as str]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [sixsq.nuvla.ui.deployment.spec :as spec]
+    [sixsq.nuvla.ui.deployments.spec :as spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]

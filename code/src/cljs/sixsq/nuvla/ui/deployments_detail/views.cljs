@@ -1,20 +1,19 @@
-(ns sixsq.nuvla.ui.deployment-detail.views
+(ns sixsq.nuvla.ui.deployments-detail.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
-    [sixsq.nuvla.ui.apps-store.events :as apps-store-events]
     [sixsq.nuvla.ui.apps.views-versions :as views-versions]
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.credentials.utils :as creds-utils]
-    [sixsq.nuvla.ui.deployment-detail.events :as events]
-    [sixsq.nuvla.ui.deployment-detail.subs :as subs]
+    [sixsq.nuvla.ui.deployments-detail.events :as events]
+    [sixsq.nuvla.ui.deployments-detail.subs :as subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
-    [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
-    [sixsq.nuvla.ui.deployment.utils :as deployment-utils]
+    [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
+    [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.history.views :as history-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -22,7 +21,6 @@
     [sixsq.nuvla.ui.job.views :as job-views]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.resource-log.views :as log-views]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -98,7 +96,7 @@
      [ui/TableCell url-name]
      [ui/TableCell {:class ["show-on-hover-value"]}
       (cond
-        (and @url (= state deployment-utils/STOPPED)) @url
+        (and @url (= state deployments-utils/STOPPED)) @url
         @url (values/copy-value-to-clipboard
                [:a {:href @url, :target "_blank"} @url false]
                @url
@@ -236,7 +234,7 @@
 (defn events-table-info
   [events]
   (when-let [start (-> events last :timestamp)]
-    (let [dt-fn (partial deployment-utils/assoc-delta-time start)]
+    (let [dt-fn (partial deployments-utils/assoc-delta-time start)]
       (->> events
            (map #(select-keys % event-fields))
            (map dt-fn)))))
@@ -520,7 +518,7 @@
         tr          (subscribe [::i18n-subs/tr])
         primary-url (subscribe [::subs/url url])
         parameters  (subscribe [::subs/deployment-parameters])
-        started?    (deployment-utils/started? state)
+        started?    (deployments-utils/started? state)
         hostname    (or (get-in @parameters ["hostname" :value]) "")]
     (when (and started? @primary-url (spec-utils/private-ipv4? hostname))
       [ui/Message {:info true}
@@ -602,7 +600,7 @@
         [primary-url-name
          primary-url-pattern] (-> module-content (get :urls []) first)
         primary-url (if clickable?
-                      (subscribe [::deployment-subs/deployment-url id primary-url-pattern])
+                      (subscribe [::deployments-subs/deployment-url id primary-url-pattern])
                       (subscribe [::subs/url primary-url-pattern]))
         cred        (or credential-name parent)]
 
@@ -611,7 +609,7 @@
                {:as       :div
                 :link     true
                 :on-click (fn [event]
-                            (dispatch [::history-events/navigate (deployment-utils/deployment-href id)])
+                            (dispatch [::history-events/navigate (deployments-utils/deployment-href id)])
                             (.preventDefault event))})
      [ui/Image {:src      (or module-logo-url "")
                 :bordered true
@@ -629,7 +627,7 @@
 
       [ui/Segment (merge style/basic {:floated "right"})
        [:p {:style {:color "initial"}} state]
-       [ui/Loader {:active        (deployment-utils/deployment-in-transition? state)
+       [ui/Loader {:active        (deployments-utils/deployment-in-transition? state)
                    :indeterminate true}]]
 
       [ui/CardHeader (if clickable?
@@ -656,7 +654,7 @@
                             :white-space   "nowrap"}}
           [ui/Icon {:name "tag"}] tag])]]
 
-     (when (and (deployment-utils/started? state)
+     (when (and (deployments-utils/started? state)
                 @primary-url)
        [ui/Button {:color    "green"
                    :icon     "external"
@@ -716,16 +714,16 @@
          [ui/TableCell (str/capitalize (@tr [:status]))]
          [ui/TableCell state
           " "
-          (when (deployment-utils/deployment-in-transition? state)
+          (when (deployments-utils/deployment-in-transition? state)
             [ui/Icon {:loading true :name "circle notch" :color "grey"}])]]
         [ui/TableRow
          [ui/TableCell (@tr [:infrastructure])]
          [ui/TableCell
-          [deployment-utils/CloudNuvlaEdgeLink @deployment]]]
+          [deployments-utils/CloudNuvlaEdgeLink @deployment]]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
          [ui/TableCell @version " " (up-to-date? @version @versions)]]]]]
-     (when-not (deployment-utils/stopped? state)
+     (when-not (deployments-utils/stopped? state)
        [ui/Segment {:attached  false
                     :secondary true}
         (for [[i [url-name url-pattern]] (map-indexed list urls)]
@@ -858,14 +856,3 @@
             :onTabChange (tab/on-tab-change
                            panes #(dispatch [::events/set-active-tab %]))}]
           ]]))))
-
-
-(defmethod panel/render :deployment
-  [path]
-  (let [[_ uuid] path
-        n (count path)]
-    (case n
-      2 [TabsDeployment uuid]
-      (do
-        (dispatch [::apps-store-events/set-active-tab :deployments])
-        (dispatch [::history-events/navigate "apps"])))))

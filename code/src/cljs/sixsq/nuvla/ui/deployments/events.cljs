@@ -1,12 +1,12 @@
-(ns sixsq.nuvla.ui.deployment.events
+(ns sixsq.nuvla.ui.deployments.events
   (:require
     [clojure.set :as set]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.deployment.spec :as spec]
-    [sixsq.nuvla.ui.deployment.utils :as utils]
+    [sixsq.nuvla.ui.deployments.spec :as spec]
+    [sixsq.nuvla.ui.deployments.utils :as utils]
     [sixsq.nuvla.ui.edges-detail.spec :as edges-detail-spec]
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -67,7 +67,7 @@
                 ::apps-spec/module
                 ::spec/page
                 ::spec/elements-per-page]} :db} _]
-    (let [state     (if (= "all" state-selector) nil state-selector)
+    (let [state     (when-not (= "all" state-selector) state-selector)
           module-id (:id module)]
       {::cimi-api-fx/search [:deployment (utils/get-query-params
                                            {:full-text-search  full-text-search
@@ -87,7 +87,7 @@
                 ::edges-detail-spec/nuvlabox
                 ::spec/page
                 ::spec/elements-per-page]} :db} _]
-    (let [state (if (= "all" state-selector) nil state-selector)
+    (let [state (when-not (= "all" state-selector) state-selector)
           nb-id (:id nuvlabox)]
       {::cimi-api-fx/search [:deployment (utils/get-query-params
                                            {:full-text-search  full-text-search
@@ -106,7 +106,7 @@
                 ::spec/state-selector
                 ::spec/page
                 ::spec/elements-per-page]} :db}]
-    (let [state (if (= "all" state-selector) nil state-selector)]
+    (let [state (when-not (= "all" state-selector) state-selector)]
       {::cimi-api-fx/search [:deployment (utils/get-query-params
                                            {:full-text-search  full-text-search
                                             :additional-filter additional-filter
@@ -211,7 +211,7 @@
                           ::cimi-api-fx/get
                           [module-href
                            #(dispatch
-                              [:sixsq.nuvla.ui.deployment-detail.events/set-module-versions %])]))))
+                              [:sixsq.nuvla.ui.deployments-detail.events/set-module-versions %])]))))
 
 
 (reg-event-db

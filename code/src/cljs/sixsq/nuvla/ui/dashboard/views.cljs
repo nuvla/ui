@@ -7,8 +7,8 @@
     [sixsq.nuvla.ui.dashboard.events :as events]
     [sixsq.nuvla.ui.dashboard.subs :as subs]
     [sixsq.nuvla.ui.dashboard.utils :as utils]
-    [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
-    [sixsq.nuvla.ui.deployment.views :as deployment-views]
+    [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
+    [sixsq.nuvla.ui.deployments.views :as deployments-views]
     [sixsq.nuvla.ui.edges.subs :as edges-subs]
     [sixsq.nuvla.ui.edges.views :as edges-views]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -123,7 +123,7 @@
 
      [:h4 [ui/Icon {:name icon}] (str/upper-case (@tr [:deployments]))]
 
-     [deployment-views/StatisticStates false ::deployment-subs/deployments-summary-all]
+     [deployments-views/StatisticStates false ::deployments-subs/deployments-summary-all]
 
      [ui/Button {:color    color
                  :icon     icon
@@ -157,7 +157,7 @@
         no-of-apps        (:count @apps)
         nuvlaboxes        (subscribe [::edges-subs/nuvlaboxes-summary-all])
         no-of-nb          (:count @nuvlaboxes)
-        deployments       (subscribe [::deployment-subs/deployments-summary-all])
+        deployments       (subscribe [::deployments-subs/deployments-summary-all])
         no-of-deployments (:count @deployments)
         credentials       (subscribe [::credentials-subs/credentials-summary])
         no-of-creds       (:count @credentials)]

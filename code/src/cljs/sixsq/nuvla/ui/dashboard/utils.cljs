@@ -10,12 +10,7 @@
 (def target-apps {:resource  "apps"
                   :tab-key   :appstore
                   :tab-event ::apps-store-events/set-active-tab})
-(def target-deployments {:resource  "apps"
-                         :tab-key   :deployments
-                         :tab-event ::apps-store-events/set-active-tab})
-(def target-navigator {:resource  "apps"
-                       :tab-key   :navigate
-                       :tab-event ::apps-store-events/set-active-tab})
+(def target-deployments {:resource  "deployments"})
 (def target-nbs {:resource "edges"})
 (def target-creds {:resource "credentials"})
 

@@ -3,7 +3,7 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.deployment.events :as deployment-events]
+    [sixsq.nuvla.ui.deployments.events :as deployments-events]
     [sixsq.nuvla.ui.edges-detail.spec :as spec]
     [sixsq.nuvla.ui.edges.utils :as edges-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -229,7 +229,7 @@
                            #(dispatch [::set-nuvlabox-peripherals %])]
      :fx                  [[:dispatch [::get-nuvlabox-events id]]
                            [:dispatch [::job-events/get-jobs id]]
-                           [:dispatch [::deployment-events/get-nuvlabox-deployments id]]
+                           [:dispatch [::deployments-events/get-nuvlabox-deployments id]]
                            [:dispatch [::get-nuvlabox-playbooks id]]
                            [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
                                                                          (:id nuvlabox-current-playbook)

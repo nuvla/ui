@@ -13,8 +13,8 @@
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
     [sixsq.nuvla.ui.apps.views-versions :as apps-views-versions]
-    [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
-    [sixsq.nuvla.ui.deployment.views :as deployment-views]
+    [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
+    [sixsq.nuvla.ui.deployments.views :as deployments-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -321,9 +321,9 @@
      [:h2 [apps-views-detail/DeploymentsTitle]]
      (if @is-new?
        [uix/WarningMsgNoElements]
-       [deployment-views/DeploymentTable {:no-selection   true
-                                          :no-module-name true
-                                          :empty-msg      (@tr [:empty-deployment-module-msg])}])]))
+       [deployments-views/DeploymentTable {:no-selection   true
+                                           :no-module-name true
+                                           :empty-msg      (@tr [:empty-deployment-module-msg])}])]))
 
 
 (defn TabMenuVersions
@@ -491,8 +491,8 @@
      [ui/GridRow {:centered true}
       (when (not @is-new?)
         [ui/GridColumn
-         [deployment-views/DeploymentsOverviewSegment
-          ::deployment-subs/deployments ::apps-events/set-active-tab :deployments]])]
+         [deployments-views/DeploymentsOverviewSegment
+          ::deployments-subs/deployments ::apps-events/set-active-tab :deployments]])]
      [ui/GridRow {:centered true}
       [ui/GridColumn
        [apps-views-detail/OverviewDescription]]]
@@ -535,11 +535,11 @@
                   {:menuItem {:content (r/as-element [TabMenuConfiguration])
                               :key     :configuration}
                    :pane     {:content (r/as-element [ConfigurationPane])
-                              :key :configuration-pane}}
+                              :key     :configuration-pane}}
                   {:menuItem {:content (r/as-element [TabMenuVersions])
                               :key     :versions}
                    :pane     {:content (r/as-element [VersionsPane])
-                              :key :versions-pane}}
+                              :key     :versions-pane}}
                   (apps-views-detail/TabAcls
                     module
                     @editable?

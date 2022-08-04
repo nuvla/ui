@@ -82,7 +82,8 @@
 
 (def page-alias {"nuvlabox"        "edges"
                  "edge"            "edges"
-                 "infrastructures" "clouds"})
+                 "infrastructures" "clouds"
+                 "deployment"      "deployments"})
 
 (defn split-path-alias
   [path]

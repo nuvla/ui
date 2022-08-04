@@ -1,26 +1,27 @@
-(ns sixsq.nuvla.ui.deployment.views
+(ns sixsq.nuvla.ui.deployments.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
-    [sixsq.nuvla.ui.deployment-detail.subs :as deployment-detail-subs]
-    [sixsq.nuvla.ui.deployment-detail.views :as deployment-detail-views]
+    [sixsq.nuvla.ui.deployments-detail.subs :as deployments-detail-subs]
+    [sixsq.nuvla.ui.deployments-detail.views :as deployments-detail-views]
     [sixsq.nuvla.ui.deployment-dialog.views-module-version :as dep-diag-versions]
-    [sixsq.nuvla.ui.deployment.events :as events]
-    [sixsq.nuvla.ui.deployment.subs :as subs]
-    [sixsq.nuvla.ui.deployment.utils :as utils]
+    [sixsq.nuvla.ui.deployments.events :as events]
+    [sixsq.nuvla.ui.deployments.subs :as subs]
+    [sixsq.nuvla.ui.deployments.utils :as utils]
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (defn refresh
@@ -50,7 +51,7 @@
   []
   (let [tr              (subscribe [::i18n-subs/tr])
         info            (subscribe [::subs/bulk-update-modal])
-        versions        (subscribe [::deployment-detail-subs/module-versions])
+        versions        (subscribe [::deployments-detail-subs/module-versions])
         selected-module (r/atom nil)]
     (fn []
       (let [options     (map (fn [[idx {:keys [href commit]}]]
@@ -179,9 +180,9 @@
                       :on-click (fn [event]
                                   (dispatch [::events/select-id id])
                                   (.stopPropagation event))}]])
-     [ui/TableCell [values/as-link (utils-general/id->uuid id)
-                    :page "deployment" :label (utils-general/id->short-uuid id)]]
-     (when (not no-module-name)
+     [ui/TableCell [values/as-link (general-utils/id->uuid id)
+                    :page "deployment" :label (general-utils/id->short-uuid id)]]
+     (when-not no-module-name
        [ui/TableCell {:style {:overflow      "hidden",
                               :text-overflow "ellipsis",
                               :max-width     "20ch"}} (:name module)])
@@ -199,10 +200,10 @@
      (when show-options?
        [ui/TableCell
         (cond
-          (utils-general/can-operation? "stop" deployment)
-          [deployment-detail-views/ShutdownButton deployment]
-          (utils-general/can-delete? deployment)
-          [deployment-detail-views/DeleteButton deployment])])]))
+          (general-utils/can-operation? "stop" deployment)
+          [deployments-detail-views/ShutdownButton deployment]
+          (general-utils/can-delete? deployment)
+          [deployments-detail-views/DeleteButton deployment])])]))
 
 
 (defn VerticalDataTable
@@ -223,7 +224,7 @@
                  {:checked  @is-all-page-selected?
                   :on-click #(dispatch [::events/select-all-page])}]])
              [ui/TableHeaderCell (@tr [:id])]
-             (when (not no-module-name)
+             (when-not no-module-name
                [ui/TableHeaderCell (@tr [:module])])
              [ui/TableHeaderCell (@tr [:version])]
              [ui/TableHeaderCell (@tr [:status])]
@@ -278,11 +279,11 @@
               :image         (or module-logo-url "")
               :left-state    (utils/deployment-version deployment)
               :corner-button (cond
-                               (utils-general/can-operation? "stop" deployment)
-                               [deployment-detail-views/ShutdownButton deployment :label? true]
+                               (general-utils/can-operation? "stop" deployment)
+                               [deployments-detail-views/ShutdownButton deployment :label? true]
 
-                               (utils-general/can-delete? deployment)
-                               [deployment-detail-views/DeleteButton deployment :label? true])
+                               (general-utils/can-delete? deployment)
+                               [deployments-detail-views/DeleteButton deployment :label? true])
               :state         state}
 
              (not @select-all?) (assoc :on-select #(dispatch [::events/select-id id])
@@ -317,7 +318,7 @@
   [_clickable? summary-subs]
   (let [summary (subscribe [summary-subs])]
     (fn [clickable? _summary-subs]
-      (let [terms         (utils-general/aggregate-to-map
+      (let [terms         (general-utils/aggregate-to-map
                             (get-in @summary [:aggregations :terms:state :buckets]))
             started       (:STARTED terms 0)
             starting      (:STARTING terms 0)
@@ -378,7 +379,7 @@
         select-all?       (subscribe [::subs/select-all?])]
     (fn []
       (let [total-elements (:count @elements)
-            total-pages    (utils-general/total-pages total-elements @elements-per-page)
+            total-pages    (general-utils/total-pages total-elements @elements-per-page)
             deployments    (:resources @elements)]
         [ui/TabPane
          [VerticalDataTable deployments (assoc options :select-all @select-all?)]
@@ -394,18 +395,20 @@
 
 (defn DeploymentsMainContent
   []
-  (let
-    [elements-per-page   (subscribe [::subs/elements-per-page])
-     page                (subscribe [::subs/page])
-     dep-count           (subscribe [::subs/deployments-count])
-     bulk-jobs-monitored (subscribe [::subs/bulk-jobs-monitored])]
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        elements-per-page   (subscribe [::subs/elements-per-page])
+        page                (subscribe [::subs/page])
+        dep-count           (subscribe [::subs/deployments-count])
+        bulk-jobs-monitored (subscribe [::subs/bulk-jobs-monitored])]
     (refresh)
     (fn []
       (let [total-deployments @dep-count
-            total-pages       (utils-general/total-pages
+            total-pages       (general-utils/total-pages
                                 @dep-count @elements-per-page)]
         [components/LoadingPage {}
          [:<>
+          [uix/PageHeader "rocket"
+           (general-utils/capitalize-first-letter (@tr [:deployments]))]
           [MenuBar]
           [ui/Segment style/basic
            [ui/Grid {:columns   3
@@ -425,3 +428,13 @@
             :totalPages   total-pages
             :activePage   @page
             :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]]))))
+
+
+(defmethod panel/render :deployments
+  [path]
+  (let [[_ uuid] path
+        n        (count path)
+        children (case n
+                   2 [deployments-detail-views/TabsDeployment uuid]
+                   [DeploymentsMainContent])]
+    [ui/Segment style/basic children]))

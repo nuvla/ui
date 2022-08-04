@@ -67,7 +67,7 @@
                 ::apps-spec/module
                 ::spec/page
                 ::spec/elements-per-page]} :db} _]
-    (let [state     (if (= "all" state-selector) nil state-selector)
+    (let [state     (when-not (= "all" state-selector) state-selector)
           module-id (:id module)]
       {::cimi-api-fx/search [:deployment (utils/get-query-params
                                            {:full-text-search  full-text-search
@@ -87,7 +87,7 @@
                 ::edges-detail-spec/nuvlabox
                 ::spec/page
                 ::spec/elements-per-page]} :db} _]
-    (let [state (if (= "all" state-selector) nil state-selector)
+    (let [state (when-not (= "all" state-selector) state-selector)
           nb-id (:id nuvlabox)]
       {::cimi-api-fx/search [:deployment (utils/get-query-params
                                            {:full-text-search  full-text-search
@@ -106,7 +106,7 @@
                 ::spec/state-selector
                 ::spec/page
                 ::spec/elements-per-page]} :db}]
-    (let [state (if (= "all" state-selector) nil state-selector)]
+    (let [state (when-not (= "all" state-selector) state-selector)]
       {::cimi-api-fx/search [:deployment (utils/get-query-params
                                            {:full-text-search  full-text-search
                                             :additional-filter additional-filter

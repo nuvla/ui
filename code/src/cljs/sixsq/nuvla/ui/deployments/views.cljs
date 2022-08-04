@@ -14,7 +14,6 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
-    [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
@@ -181,9 +180,9 @@
                       :on-click (fn [event]
                                   (dispatch [::events/select-id id])
                                   (.stopPropagation event))}]])
-     [ui/TableCell [values/as-link (utils-general/id->uuid id)
-                    :page "deployment" :label (utils-general/id->short-uuid id)]]
-     (when (not no-module-name)
+     [ui/TableCell [values/as-link (general-utils/id->uuid id)
+                    :page "deployment" :label (general-utils/id->short-uuid id)]]
+     (when-not no-module-name
        [ui/TableCell {:style {:overflow      "hidden",
                               :text-overflow "ellipsis",
                               :max-width     "20ch"}} (:name module)])
@@ -201,9 +200,9 @@
      (when show-options?
        [ui/TableCell
         (cond
-          (utils-general/can-operation? "stop" deployment)
+          (general-utils/can-operation? "stop" deployment)
           [deployments-detail-views/ShutdownButton deployment]
-          (utils-general/can-delete? deployment)
+          (general-utils/can-delete? deployment)
           [deployments-detail-views/DeleteButton deployment])])]))
 
 
@@ -225,7 +224,7 @@
                  {:checked  @is-all-page-selected?
                   :on-click #(dispatch [::events/select-all-page])}]])
              [ui/TableHeaderCell (@tr [:id])]
-             (when (not no-module-name)
+             (when-not no-module-name
                [ui/TableHeaderCell (@tr [:module])])
              [ui/TableHeaderCell (@tr [:version])]
              [ui/TableHeaderCell (@tr [:status])]
@@ -280,10 +279,10 @@
               :image         (or module-logo-url "")
               :left-state    (utils/deployment-version deployment)
               :corner-button (cond
-                               (utils-general/can-operation? "stop" deployment)
+                               (general-utils/can-operation? "stop" deployment)
                                [deployments-detail-views/ShutdownButton deployment :label? true]
 
-                               (utils-general/can-delete? deployment)
+                               (general-utils/can-delete? deployment)
                                [deployments-detail-views/DeleteButton deployment :label? true])
               :state         state}
 
@@ -319,7 +318,7 @@
   [_clickable? summary-subs]
   (let [summary (subscribe [summary-subs])]
     (fn [clickable? _summary-subs]
-      (let [terms         (utils-general/aggregate-to-map
+      (let [terms         (general-utils/aggregate-to-map
                             (get-in @summary [:aggregations :terms:state :buckets]))
             started       (:STARTED terms 0)
             starting      (:STARTING terms 0)
@@ -380,7 +379,7 @@
         select-all?       (subscribe [::subs/select-all?])]
     (fn []
       (let [total-elements (:count @elements)
-            total-pages    (utils-general/total-pages total-elements @elements-per-page)
+            total-pages    (general-utils/total-pages total-elements @elements-per-page)
             deployments    (:resources @elements)]
         [ui/TabPane
          [VerticalDataTable deployments (assoc options :select-all @select-all?)]
@@ -404,7 +403,7 @@
     (refresh)
     (fn []
       (let [total-deployments @dep-count
-            total-pages       (utils-general/total-pages
+            total-pages       (general-utils/total-pages
                                 @dep-count @elements-per-page)]
         [components/LoadingPage {}
          [:<>

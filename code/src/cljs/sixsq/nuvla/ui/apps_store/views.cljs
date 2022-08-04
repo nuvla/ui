@@ -10,7 +10,6 @@
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.apps.views-detail :as apps-views-detail]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
-    [sixsq.nuvla.ui.deployment.views :as deployment-views]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
@@ -221,13 +220,6 @@
                                        :activePage #(dispatch [::events/set-page-my-modules %]))}]]]))))
 
 
-(defn TabDeployments
-  []
-  (fn []
-    [ui/TabPane
-     [deployment-views/DeploymentsMainContent]]))
-
-
 (defn tabs
   []
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -246,11 +238,7 @@
      {:menuItem {:content "Navigate Apps"
                  :key     :navigate
                  :icon    "folder open"}
-      :render   #(r/as-element [TabNavigator])}
-     {:menuItem {:content "Deployments"
-                 :key     :deployments
-                 :icon    "rocket"}
-      :render   #(r/as-element [TabDeployments])}]))
+      :render   #(r/as-element [TabNavigator])}]))
 
 
 (defn TabsApps

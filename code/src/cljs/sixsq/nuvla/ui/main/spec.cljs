@@ -98,38 +98,44 @@
                                                         :icon       "fas fa-store"
                                                         :protected? true
                                                         :order      2}
+                                       "deployments"   {:url        "deployments"
+                                                        :label-kw   :deployments
+                                                        :name       "deployments"
+                                                        :icon       "rocket"
+                                                        :protected? true
+                                                        :order      3}
                                        "edges"         {:url        "edges"
                                                         :label-kw   :edges
                                                         :name       "edges"
                                                         :icon       "box"
                                                         :protected? true
-                                                        :order      3}
+                                                        :order      4}
                                        "credentials"   {:url        "credentials"
                                                         :label-kw   :credentials
                                                         :icon       "key"
                                                         :protected? true
-                                                        :order      4}
+                                                        :order      5}
                                        "notifications" {:url        "notifications"
                                                         :label-kw   :notifications
                                                         :icon       "bell"
                                                         :protected? true
-                                                        :order      5}
+                                                        :order      6}
                                        "data"          {:url             "data"
                                                         :label-kw        :data
                                                         :icon            "database"
                                                         :protected?      true
                                                         :iframe-visible? true
-                                                        :order           6}
+                                                        :order           7}
                                        "clouds"        {:url        "clouds"
                                                         :label-kw   :infra-service-short
                                                         :icon       "cloud"
                                                         :protected? true
-                                                        :order      7}
+                                                        :order      8}
                                        "api"           {:url        "api"
                                                         :label-kw   :api
                                                         :icon       "code"
                                                         :protected? false
-                                                        :order      8}
+                                                        :order      9}
                                        }
                ::open-modal           nil
                ::stripe               nil})

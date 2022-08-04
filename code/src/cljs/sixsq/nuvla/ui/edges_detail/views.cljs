@@ -6,8 +6,8 @@
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
     [sixsq.nuvla.ui.config :as config]
-    [sixsq.nuvla.ui.deployment.subs :as deployment-subs]
-    [sixsq.nuvla.ui.deployment.views :as deployment-views]
+    [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
+    [sixsq.nuvla.ui.deployments.views :as deployments-views]
     [sixsq.nuvla.ui.edges-detail.events :as events]
     [sixsq.nuvla.ui.edges-detail.subs :as subs]
     [sixsq.nuvla.ui.edges.events :as edges-events]
@@ -325,7 +325,7 @@
 (defn ClusterButton
   [{:keys [id] :as _resource} operation show?]
   (let [tr               (subscribe [::i18n-subs/tr])
-        deployments      (subscribe [::deployment-subs/deployments])
+        deployments      (subscribe [::deployments-subs/deployments])
         join-token       (subscribe [::subs/join-token])
         nuvlabox-cluster (subscribe [::subs/nuvlabox-cluster])
         managers         (subscribe [::subs/nuvlabox-managers])
@@ -1316,8 +1316,8 @@
 
           (when-not (= state "SUSPENDED")
             [ui/GridColumn {:stretched true}
-             [deployment-views/DeploymentsOverviewSegment
-              ::deployment-subs/deployments ::events/set-active-tab :deployments]])
+             [deployments-views/DeploymentsOverviewSegment
+              ::deployments-subs/deployments ::events/set-active-tab :deployments]])
 
           (when (:node-id @nb-status)
             [ui/GridColumn {:stretched true}
@@ -1905,7 +1905,7 @@
        {:menuItem {:content "Deployments"
                    :key     :deployments
                    :icon    "rocket"}
-        :render   #(r/as-element [deployment-views/DeploymentTable
+        :render   #(r/as-element [deployments-views/DeploymentTable
                                   {:empty-msg (tr [:empty-deployment-nuvlabox-msg])}])}
        {:menuItem {:content "Vulnerabilities"
                    :key     :vulnerabilities

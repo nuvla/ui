@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.deployment.views
+(ns sixsq.nuvla.ui.deployments.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
@@ -6,9 +6,9 @@
     [sixsq.nuvla.ui.deployment-detail.subs :as deployment-detail-subs]
     [sixsq.nuvla.ui.deployment-detail.views :as deployment-detail-views]
     [sixsq.nuvla.ui.deployment-dialog.views-module-version :as dep-diag-versions]
-    [sixsq.nuvla.ui.deployment.events :as events]
-    [sixsq.nuvla.ui.deployment.subs :as subs]
-    [sixsq.nuvla.ui.deployment.utils :as utils]
+    [sixsq.nuvla.ui.deployments.events :as events]
+    [sixsq.nuvla.ui.deployments.subs :as subs]
+    [sixsq.nuvla.ui.deployments.utils :as utils]
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -20,7 +20,9 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 
 (defn refresh
@@ -394,11 +396,11 @@
 
 (defn DeploymentsMainContent
   []
-  (let
-    [elements-per-page   (subscribe [::subs/elements-per-page])
-     page                (subscribe [::subs/page])
-     dep-count           (subscribe [::subs/deployments-count])
-     bulk-jobs-monitored (subscribe [::subs/bulk-jobs-monitored])]
+  (let [tr                  (subscribe [::i18n-subs/tr])
+        elements-per-page   (subscribe [::subs/elements-per-page])
+        page                (subscribe [::subs/page])
+        dep-count           (subscribe [::subs/deployments-count])
+        bulk-jobs-monitored (subscribe [::subs/bulk-jobs-monitored])]
     (refresh)
     (fn []
       (let [total-deployments @dep-count
@@ -406,6 +408,8 @@
                                 @dep-count @elements-per-page)]
         [components/LoadingPage {}
          [:<>
+          [uix/PageHeader "rocket"
+           (general-utils/capitalize-first-letter (@tr [:deployments]))]
           [MenuBar]
           [ui/Segment style/basic
            [ui/Grid {:columns   3
@@ -425,3 +429,13 @@
             :totalPages   total-pages
             :activePage   @page
             :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]]))))
+
+
+(defmethod panel/render :deployments
+  [path]
+  (let [[_ uuid] path
+        n        (count path)
+        children (case n
+                   2 [deployment-detail-views/TabsDeployment uuid]
+                   [DeploymentsMainContent])]
+    [ui/Segment style/basic children]))

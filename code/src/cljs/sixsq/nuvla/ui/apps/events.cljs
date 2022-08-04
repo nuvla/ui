@@ -13,7 +13,7 @@
     [sixsq.nuvla.ui.apps.utils :as utils]
     [sixsq.nuvla.ui.apps.utils-detail :as utils-detail]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.deployment.events :as deployment-events]
+    [sixsq.nuvla.ui.deployments.events :as deployments-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -41,7 +41,7 @@
             [:dispatch [::main-events/action-interval-start
                         {:id        refresh-action-get-deployment
                          :frequency 20000
-                         :event     [::deployment-events/get-module-deployments]}]]]})))
+                         :event     [::deployments-events/get-module-deployments]}]]]})))
 
 
 ;; Validation
@@ -187,7 +187,7 @@
       {:db                  (cond-> db
                                     requested-version (assoc ::spec/version requested-version))
        ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
-                                         (dispatch [::deployment-events/get-module-deployments]))]})))
+                                         (dispatch [::deployments-events/get-module-deployments]))]})))
 
 
 (reg-event-db

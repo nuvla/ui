@@ -6,6 +6,7 @@
 
 (def dictionary
   {:en {
+        :deployment-fleets "Deployment fleets"
         :bulk-force-delete-in-progress                 "Bulk force delete in progress"
         :bulk-stop-in-progress                         "Bulk stop in progress"
         :bulk-update-in-progress                       "Bulk update in progress"

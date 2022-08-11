@@ -15,6 +15,7 @@
     [sixsq.nuvla.ui.data.spec :as data]
     [sixsq.nuvla.ui.deployment-dialog.spec :as deployment-dialog]
     [sixsq.nuvla.ui.deployments.spec :as deployments]
+    [sixsq.nuvla.ui.deployment-fleets.spec :as deployment-fleets]
     [sixsq.nuvla.ui.docs.spec :as docs]
     [sixsq.nuvla.ui.edges-detail.spec :as edges-detail]
     [sixsq.nuvla.ui.edges.spec :as edges]
@@ -50,7 +51,8 @@
                      ::profile/db
                      ::session/db
                      ::job/db
-                     ::resource-log/db))
+                     ::resource-log/db
+                     ::deployment-fleets/db))
 
 
 (def default-db
@@ -78,4 +80,5 @@
          profile/defaults
          session/defaults
          job/defaults
-         resource-log/defaults))
+         resource-log/defaults
+         deployment-fleets/defaults))

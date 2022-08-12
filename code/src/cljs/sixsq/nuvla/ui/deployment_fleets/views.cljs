@@ -757,7 +757,7 @@
     (fn []
       [ui/GridColumn {:width 4}
        [components/SearchInput
-        {:on-change     (ui-callback/input-callback #(dispatch [::edges-events/set-full-text-search %]))
+        {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))
          :default-value @full-text}]
        " "
        ^{:key (random-uuid)}

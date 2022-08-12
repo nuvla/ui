@@ -67,9 +67,9 @@
 
 
 (reg-sub
-  ::nuvlabox-events
+  ::deployment-fleet-events
   (fn [db]
-    (::edges-detail-spec/nuvlabox-events db)))
+    (::spec/deployment-fleet-events db)))
 
 (reg-sub
   ::elements-per-page

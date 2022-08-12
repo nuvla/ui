@@ -1094,12 +1094,12 @@
 (defn TabEvents
   []
   (let [tr                (subscribe [::i18n-subs/tr])
-        nuvlabox          (subscribe [::edges-detail-subs/nuvlabox])
-        all-events        (subscribe [::edges-detail-subs/nuvlabox-events])
-        elements-per-page (subscribe [::edges-detail-subs/elements-per-page])
+        deployment-fleet  (subscribe [::subs/deployment-fleet])
+        all-events        (subscribe [::subs/deployment-fleet-events])
+        elements-per-page (subscribe [::subs/elements-per-page])
         total-elements    (get @all-events :count 0)
         total-pages       (general-utils/total-pages total-elements @elements-per-page)
-        page              (subscribe [::edges-detail-subs/page])]
+        page              (subscribe [::subs/page])]
     (fn []
       (let [events (:resources @all-events)]
         [ui/TabPane
@@ -1127,8 +1127,8 @@
                           :activePage   @page
                           :onPageChange (ui-callback/callback
                                           :activePage #(do
-                                                         (dispatch [::edges-detail-events/set-page %])
-                                                         (refresh (:id @nuvlabox))))}]]))))
+                                                         (dispatch [::events/set-page %])
+                                                         (refresh (:id @deployment-fleet))))}]]))))
 
 
 (defn tabs

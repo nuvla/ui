@@ -7,7 +7,7 @@
 (s/def ::nuvlabox-status (s/nilable any?))
 (s/def ::nuvlabox-associated-ssh-keys (s/nilable any?))
 (s/def ::nuvlabox-peripherals (s/nilable any?))
-(s/def ::nuvlabox-events (s/nilable any?))
+(s/def ::deployment-fleet-events (s/nilable any?))
 (s/def ::vuln-severity-selector (s/nilable any?))
 (s/def ::matching-vulns-from-db (s/nilable any?))
 (s/def ::elements-per-page int?)
@@ -28,7 +28,7 @@
                           ::nuvlabox-status
                           ::nuvlabox-associated-ssh-keys
                           ::nuvlabox-peripherals
-                          ::nuvlabox-events
+                          ::deployment-fleet-events
                           ::vuln-severity-selector
                           ::matching-vulns-from-db
                           ::elements-per-page
@@ -48,7 +48,7 @@
                ::nuvlabox-status              nil
                ::nuvlabox-associated-ssh-keys nil
                ::nuvlabox-peripherals         nil
-               ::nuvlabox-events              nil
+               ::deployment-fleet-events      nil
                ::vuln-severity-selector       nil
                ::matching-vulns-from-db       nil
                ::elements-per-page            15

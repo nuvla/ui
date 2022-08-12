@@ -70,9 +70,9 @@
 
 
 (reg-event-db
-  ::set-nuvlabox-events
-  (fn [db [_ nuvlabox-events]]
-    (assoc db ::edges-detail-spec/nuvlabox-events nuvlabox-events)))
+  ::set-deployment-fleet-events
+  (fn [db [_ events]]
+    (assoc db ::spec/deployment-fleet-events events)))
 
 
 (reg-event-db
@@ -184,13 +184,13 @@
   ::set-page
   (fn [{db :db} [_ page]]
     {:db       (assoc db ::edges-detail-spec/page page)
-     :dispatch [::get-nuvlabox-events]}))
+     :dispatch [::get-deployment-fleet-events]}))
 
 
 (reg-event-fx
-  ::get-nuvlabox-events
-  (fn [{{:keys [::edges-detail-spec/page
-                ::edges-detail-spec/elements-per-page]} :db} [_ href]]
+  ::get-deployment-fleet-events
+  (fn [{{:keys [::spec/page
+                ::spec/elements-per-page]} :db} [_ href]]
     (let [filter-str   (str "content/resource/href='" href "'")
           order-by-str "created:desc"
           select-str   "id, content, severity, timestamp, category"
@@ -203,7 +203,7 @@
                         :last    last}]
       {::cimi-api-fx/search [:event
                              (general-utils/prepare-params query-params)
-                             #(dispatch [::set-nuvlabox-events %])]})))
+                             #(dispatch [::set-deployment-fleet-events %])]})))
 
 
 (reg-event-fx
@@ -214,7 +214,7 @@
      ::cimi-api-fx/get [id #(dispatch [::set-deployment-fleet %])
                         :on-error #(dispatch [::set-deployment-fleet nil])]
      :fx               [
-                        ;[:dispatch [::get-nuvlabox-events id]]
+                        [:dispatch [::get-deployment-fleet-events id]]
                         [:dispatch [::job-events/get-jobs id]]
                         [:dispatch [::deployments-events/get-deployments (str "deployment-fleet='" id "'")]]
                         ;[:dispatch [::get-nuvlabox-playbooks id]]

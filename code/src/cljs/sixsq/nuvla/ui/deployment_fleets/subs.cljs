@@ -36,9 +36,9 @@
 
 
 (reg-sub
-  ::nuvlaboxes-summary
+  ::deployment-fleets-summary
   (fn [db]
-    (::edges-spec/nuvlaboxes-summary db)))
+    (::spec/deployment-fleets-summary db)))
 
 
 (reg-sub
@@ -50,19 +50,19 @@
 (reg-sub
   ::state-selector
   (fn [db]
-    (::edges-spec/state-selector db)))
+    (::spec/state-selector db)))
 
 
 (reg-sub
   ::elements-per-page
   (fn [db]
-    (::edges-spec/elements-per-page db)))
+    (::spec/elements-per-page db)))
 
 
 (reg-sub
   ::page
   (fn [db]
-    (::edges-spec/page db)))
+    (::spec/page db)))
 
 
 (reg-sub

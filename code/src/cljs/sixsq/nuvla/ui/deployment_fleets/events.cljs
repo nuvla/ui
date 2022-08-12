@@ -4,17 +4,17 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.edges.spec :as edges-spec]
     [sixsq.nuvla.ui.deployment-fleets.spec :as spec]
-    [sixsq.nuvla.ui.edges.utils :as utils]
+    [sixsq.nuvla.ui.edges.utils :as edges-utils]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
-(def refresh-id :nuvlabox-get-nuvlaboxes)
+(def refresh-id :dep-fleets-get-deployment-fleets)
 (def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
 (def refresh-id-inferred-locations :nuvlabox-get-nuvlabox-inferred-locations)
-(def refresh-summary-id :nuvlabox-get-nuvlaboxes-summary)
+(def refresh-summary-id :dep-fleets-get-deployment-fleets-summary)
 (def refresh-id-cluster :nuvlabox-get-nuvlabox-cluster)
 (def refresh-id-clusters :nuvlabox-get-nuvlabox-clusters)
 
@@ -28,9 +28,9 @@
           #_[:dispatch [::main-events/action-interval-start {:id        refresh-id-locations
                                                            :frequency 10000
                                                            :event     [::get-nuvlabox-locations]}]]
-          #_[:dispatch [::main-events/action-interval-start {:id        refresh-summary-id
+          [:dispatch [::main-events/action-interval-start {:id        refresh-summary-id
                                                            :frequency 10000
-                                                           :event     [::get-nuvlaboxes-summary]}]]
+                                                           :event     [::get-deployment-fleets-summary]}]]
           #_[:dispatch [::main-events/action-interval-start {:id        refresh-id-clusters
                                                            :frequency 10000
                                                            :event     [::get-nuvlabox-clusters]}]]]}))
@@ -76,6 +76,20 @@
                          ::spec/page 1)
      :dispatch [::refresh]}))
 
+(defn state-filter
+  [state]
+  (case state
+    "PENDING" "state='CREATING' or state='STARTING' or state='STOPPING'"
+    (str "state='" state "'")))
+
+(defn get-query-params
+  [full-text-search page elements-per-page state-selector]
+  {:first   (inc (* (dec page) elements-per-page))
+   :last    (* page elements-per-page)
+   :orderby "created:desc"
+   :filter  (general-utils/join-and
+              (when state-selector (state-filter state-selector))
+              (general-utils/fulltext-query-string full-text-search))})
 
 (reg-event-fx
   ::get-deployment-fleets
@@ -84,7 +98,7 @@
                 ::spec/elements-per-page
                 ::spec/full-text-search] :as _db} :db} _]
     {::cimi-api-fx/search [:deployment-fleet
-                           (utils/get-query-params
+                           (get-query-params
                              full-text-search
                              page
                              elements-per-page
@@ -116,7 +130,7 @@
                             :select "id,name,online,location,inferred-location"
                             :filter (general-utils/join-and
                                       "(location!=null or inferred-location!=null)"
-                                      (when ::edges-spec/state-selector (utils/state-filter ::edges-spec/state-selector))
+                                      (when ::edges-spec/state-selector (edges-utils/state-filter ::edges-spec/state-selector))
                                       (general-utils/fulltext-query-string ::edges-spec/full-text-search))}
                            #(dispatch [::set-nuvlabox-locations %])]}))
 
@@ -136,20 +150,20 @@
 
 
 (reg-event-fx
-  ::set-nuvlaboxes-summary
-  (fn [{db :db} [_ nuvlaboxes-summary]]
-    {:db (assoc db ::edges-spec/nuvlaboxes-summary nuvlaboxes-summary)}))
+  ::set-deployment-fleets-summary
+  (fn [{db :db} [_ deployment-fleets-summary]]
+    {:db (assoc db ::spec/deployment-fleets-summary deployment-fleets-summary)}))
 
 
 (reg-event-fx
-  ::get-nuvlaboxes-summary
-  (fn [{{:keys [::edges-spec/full-text-search] :as _db} :db} _]
-    {::cimi-api-fx/search [:nuvlabox
-                           (utils/get-query-aggregation-params
-                             ::edges-spec/full-text-search
-                             "terms:online,terms:state"
+  ::get-deployment-fleets-summary
+  (fn [{{:keys [::spec/full-text-search] :as _db} :db} _]
+    {::cimi-api-fx/search [:deployment-fleet
+                           (edges-utils/get-query-aggregation-params
+                             full-text-search
+                             "terms:state"
                              nil)
-                           #(dispatch [::set-nuvlaboxes-summary %])]}))
+                           #(dispatch [::set-deployment-fleets-summary %])]}))
 
 
 (reg-event-fx
@@ -163,7 +177,7 @@
   (fn [{{:keys [::edges-spec/full-text-search
                 ::edges-spec/nuvlabox-cluster] :as _db} :db} _]
     {::cimi-api-fx/search [:nuvlabox
-                           (utils/get-query-aggregation-params
+                           (edges-utils/get-query-aggregation-params
                              ::edges-spec/full-text-search
                              "terms:online,terms:state"
                              (->> (concat (:nuvlabox-managers ::edges-spec/nuvlabox-cluster) (:nuvlabox-workers ::edges-spec/nuvlabox-cluster))
@@ -195,7 +209,7 @@
                 ::edges-spec/elements-per-page
                 ::edges-spec/full-text-search] :as _db} :db} _]
     {::cimi-api-fx/search [:nuvlabox-cluster
-                           (utils/get-query-params ::edges-spec/full-text-search ::edges-spec/page ::edges-spec/elements-per-page nil)
+                           (edges-utils/get-query-params ::edges-spec/full-text-search ::edges-spec/page ::edges-spec/elements-per-page nil)
                            #(do
                               (dispatch [::set-nuvlabox-clusters %])
                               (dispatch [::get-nuvlaboxes-in-clusters %]))]}))
@@ -211,16 +225,15 @@
   ::get-nuvlaboxes-summary-all
   (fn [{_db :db} _]
     {::cimi-api-fx/search [:nuvlabox
-                           (utils/get-query-aggregation-params nil "terms:online,terms:state" nil)
+                           (edges-utils/get-query-aggregation-params nil "terms:online,terms:state" nil)
                            #(dispatch [::set-nuvlaboxes-summary-all %])]}))
 
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
-    {:db (assoc db ::edges-spec/state-selector state-selector
-                   ::edges-spec/page 1)
-     :fx [[:dispatch [::get-nuvlaboxes]]
-          [:dispatch [::get-nuvlabox-locations]]]}))
+    {:db (assoc db ::spec/state-selector state-selector
+                   ::spec/page 1)
+     :fx [[:dispatch [::get-deployment-fleets]]]}))
 
 
 (reg-event-db

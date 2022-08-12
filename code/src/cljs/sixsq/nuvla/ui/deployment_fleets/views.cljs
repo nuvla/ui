@@ -45,45 +45,36 @@
 
 (defn StatisticStates
   [clickable?]
-  (let [
-        ;terms         (general-utils/aggregate-to-map
-        ;                (get-in @summary [:aggregations :terms:state :buckets]))
-        ;started       (:STARTED terms 0)
-        ;starting      (:STARTING terms 0)
-        ;created       (:CREATED terms 0)
-        ;stopped       (:STOPPED terms 0)
-        ;error         (:ERROR terms 0)
-        ;pending       (:PENDING terms 0)
-        ;starting-plus (+ starting created pending)
-        ;total         (:count @summary)
-        ]
+  (let [summary  (subscribe [::subs/deployment-fleets-summary])
+        terms    (general-utils/aggregate-to-map
+                   (get-in @summary [:aggregations :terms:state :buckets]))
+        started  (:STARTED terms 0)
+        starting (:STARTING terms 0)
+        creating (:CREATING terms 0)
+        created  (:CREATED terms 0)
+        stopping (:STOPPING terms 0)
+        stopped  (:STOPPED terms 0)
+        pending  (+ starting creating stopping)
+        total    (:count @summary)]
     [ui/GridColumn {:width 8}
      [ui/StatisticGroup {:size  "tiny"
                          :style {:justify-content "center"
                                  :padding-top     "20px"
                                  :padding-bottom  "20px"}}
-      [components/StatisticState 10 ["fas fa-bullseye"] "TOTAL" clickable?
-       ::edges-events/set-state-selector ::edges-subs/state-selector]
-      [components/StatisticState 2 [(state->icon CREATED)] CREATED
+      [components/StatisticState total ["fas fa-bullseye"] "TOTAL" clickable?
+       ::events/set-state-selector ::subs/state-selector]
+      [components/StatisticState created [(state->icon CREATED)] CREATED
        clickable? "blue"
-       ::edges-events/set-state-selector ::edges-subs/state-selector]
-      [components/StatisticState 2 [(state->icon STARTED)] STARTED
+       ::events/set-state-selector ::subs/state-selector]
+      [components/StatisticState started [(state->icon STARTED)] STARTED
        clickable? "green"
-       ::edges-events/set-state-selector ::edges-subs/state-selector]
-      [components/StatisticState 2 [(state->icon STOPPED)] STOPPED
+       ::events/set-state-selector ::subs/state-selector]
+      [components/StatisticState stopped [(state->icon STOPPED)] STOPPED
        clickable? "red"
-       ::edges-events/set-state-selector ::edges-subs/state-selector]
-      [components/StatisticState 2 [(state->icon PENDING)] PENDING
+       ::events/set-state-selector ::subs/state-selector]
+      [components/StatisticState pending [(state->icon PENDING)] PENDING
        clickable? "brown"
-       ::edges-events/set-state-selector ::edges-subs/state-selector]
-      #_[components/StatisticState starting-plus [(utils/state->icon utils/STARTING)]
-         utils/STARTING clickable? "yellow"
-         ::edges-events/set-state-selector ::edges-subs/state-selector]
-      #_[components/StatisticState stopped [(utils/state->icon utils/STOPPED)] utils/STOPPED
-         clickable? "yellow"
-         ::edges-events/set-state-selector ::edges-subs/state-selector]
-      #_[components/StatisticState error [(utils/state->icon utils/ERROR)] utils/ERROR
-         clickable? "red" ::edges-events/set-state-selector ::edges-subs/state-selector]]]))
+       ::events/set-state-selector ::subs/state-selector]]]))
 
 
 (defn MenuBar []
@@ -701,7 +692,7 @@
 
 (defn DeploymentFleetTable
   []
-  (let [deployment-fleets        (subscribe [::subs/deployment-fleets])]
+  (let [deployment-fleets (subscribe [::subs/deployment-fleets])]
     [:div style/center-items
      [ui/Table {:compact "very", :selectable true}
       [ui/TableHeader

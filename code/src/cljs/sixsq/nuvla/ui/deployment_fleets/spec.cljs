@@ -13,7 +13,7 @@
 
 (s/def ::nuvlabox-cluster-summary any?)
 
-(s/def ::nuvlaboxes-summary any?)
+(s/def ::deployment-fleets-summary any?)
 
 (s/def ::nuvlaboxes-summary-all any?)
 
@@ -56,7 +56,7 @@
 
 
 (s/def ::db (s/keys :req [::deployment-fleets
-                          ::nuvlaboxes-summary
+                          ::deployment-fleets-summary
                           ::nuvlabox-cluster-summary
                           ::nuvlaboxes-summary-all
                           ::nuvlabox-releases
@@ -81,7 +81,7 @@
 
 (def defaults {::deployment-fleets          nil
                ::nuvlabox-cluster-summary   nil
-               ::nuvlaboxes-summary         nil
+               ::deployment-fleets-summary  nil
                ::nuvlaboxes-summary-all     nil
                ::nuvlabox-releases          nil
                ::state-nuvlaboxes           nil

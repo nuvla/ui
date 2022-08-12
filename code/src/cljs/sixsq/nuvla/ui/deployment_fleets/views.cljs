@@ -91,9 +91,9 @@
                       :active   (= @view-type :table)
                       :on-click #(reset! view-type :table)}]
         [components/RefreshMenu
-         {:action-id  edges-events/refresh-id
+         {:action-id  events/refresh-id
           :loading?   @loading?
-          :on-refresh #(dispatch [::edges-events/refresh-root])}]]])))
+          :on-refresh #(dispatch [::events/refresh])}]]])))
 
 
 (defn NuvlaDocs

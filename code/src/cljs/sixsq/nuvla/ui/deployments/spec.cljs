@@ -3,8 +3,6 @@
     [clojure.spec.alpha :as s]))
 
 
-(s/def ::nuvlabox (s/nilable string?))
-
 (s/def ::deployments any?)
 
 (s/def ::deployments-summary any?)
@@ -18,6 +16,8 @@
 (s/def ::full-text-search (s/nilable string?))
 
 (s/def ::additional-filter (s/nilable string?))
+
+(s/def ::filter-external (s/nilable string?))
 
 (s/def ::view #{"cards" "table"})
 
@@ -47,7 +47,7 @@
                           ::elements-per-page
                           ::full-text-search
                           ::additional-filter
-                          ::nuvlabox
+                          ::filter-external
                           ::view
                           ::state-selector
                           ::bulk-update-modal
@@ -59,11 +59,11 @@
                ::elements-per-page       8
                ::full-text-search        nil
                ::additional-filter       nil
-               ::nuvlabox                nil
                ::deployments             nil
                ::deployments-summary     nil
                ::deployments-summary-all nil
                ::deployments-params-map  nil
+               ::filter-external         nil
                ::view                    "cards"
                ::state-selector          "all"
                ::bulk-update-modal       nil

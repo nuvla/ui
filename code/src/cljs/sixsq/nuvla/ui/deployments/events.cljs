@@ -60,58 +60,21 @@
 
 
 (reg-event-fx
-  ::get-module-deployments
-  (fn [{{:keys [::spec/full-text-search
-                ::spec/additional-filter
-                ::spec/state-selector
-                ::apps-spec/module
-                ::spec/page
-                ::spec/elements-per-page]} :db} _]
-    (let [state     (when-not (= "all" state-selector) state-selector)
-          module-id (:id module)]
-      {::cimi-api-fx/search [:deployment (utils/get-query-params
-                                           {:full-text-search  full-text-search
-                                            :additional-filter additional-filter
-                                            :state-selector    state
-                                            :module-id         module-id
-                                            :page              page
-                                            :elements-per-page elements-per-page})
-                             #(dispatch [::set-deployments %])]})))
-
-
-(reg-event-fx
-  ::get-nuvlabox-deployments
-  (fn [{{:keys [::spec/full-text-search
-                ::spec/additional-filter
-                ::spec/state-selector
-                ::edges-detail-spec/nuvlabox
-                ::spec/page
-                ::spec/elements-per-page]} :db} _]
-    (let [state (when-not (= "all" state-selector) state-selector)
-          nb-id (:id nuvlabox)]
-      {::cimi-api-fx/search [:deployment (utils/get-query-params
-                                           {:full-text-search  full-text-search
-                                            :additional-filter additional-filter
-                                            :state-selector    state
-                                            :nuvlabox          nb-id
-                                            :page              page
-                                            :elements-per-page elements-per-page})
-                             #(dispatch [::set-deployments %])]})))
-
-
-(reg-event-fx
   ::get-deployments
   (fn [{{:keys [::spec/full-text-search
                 ::spec/additional-filter
                 ::spec/state-selector
+                ::spec/filter-external
                 ::spec/page
-                ::spec/elements-per-page]} :db}]
+                ::spec/elements-per-page] :as db} :db} [_ filter-external]]
     (let [state (when-not (= "all" state-selector) state-selector)]
-      {::cimi-api-fx/search [:deployment (utils/get-query-params
+      {:db                  (assoc db ::spec/filter-external filter-external)
+       ::cimi-api-fx/search [:deployment (utils/get-query-params
                                            {:full-text-search  full-text-search
                                             :additional-filter additional-filter
                                             :state-selector    state
                                             :page              page
+                                            :filter-external   filter-external
                                             :elements-per-page elements-per-page})
                              #(dispatch [::set-deployments %])]})))
 

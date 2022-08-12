@@ -1084,7 +1084,7 @@
             [TabOverviewDeploymentFleet @deployment-fleet]]
            [ui/GridColumn {:stretched true}
             [deployments-views/DeploymentsOverviewSegment
-             ::deployments-subs/deployments ::edges-detail-events/set-active-tab :deployments]]]
+             ::deployments-subs/deployments ::events/set-active-tab :deployments]]]
 
           (when (seq tags)
             [ui/GridColumn

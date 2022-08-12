@@ -97,29 +97,25 @@
     (str "state='" state "'")))
 
 (defn get-filter-param
-  [{:keys [full-text-search additional-filter state-selector nuvlabox module-id]
+  [{:keys [full-text-search additional-filter state-selector filter-external]
     :as   _args}]
   (let [filter-state     (when state-selector (state-filter state-selector))
-        filter-nuvlabox  (when nuvlabox (str "nuvlabox='" nuvlabox "'"))
-        filter-module-id (when module-id (str "module/id='" module-id "'"))
         full-text-search (general-utils/fulltext-query-string full-text-search)]
     (general-utils/join-and
       "id!=null"
       filter-state
-      filter-nuvlabox
-      filter-module-id
+      filter-external
       full-text-search
       additional-filter)))
 
 (defn get-query-params
   [{:keys [full-text-search additional-filter
-           state-selector nuvlabox module-id page elements-per-page]}]
+           state-selector filter-external page elements-per-page]}]
   (let [filter-str (get-filter-param
                      {:full-text-search  full-text-search
                       :additional-filter additional-filter
                       :state-selector    state-selector
-                      :nuvlabox          nuvlabox
-                      :module-id         module-id})]
+                      :filter-external   filter-external})]
     {:first       (inc (* (dec page) elements-per-page))
      :last        (* page elements-per-page)
      :aggregation "terms:state"
@@ -181,14 +177,12 @@
            ::spec/selected-set
            ::spec/full-text-search
            ::spec/additional-filter
-           ::spec/state-selector
-           ::spec/nuvlabox]}]
+           ::spec/state-selector]}]
   (if select-all?
     (get-filter-param
       {:full-text-search  full-text-search
        :additional-filter additional-filter
        :state-selector    (when-not (= "all" state-selector) state-selector)
-       :nuvlabox          nuvlabox
        :module-id         nil})
     (->> selected-set
          (map #(str "id='" % "'"))

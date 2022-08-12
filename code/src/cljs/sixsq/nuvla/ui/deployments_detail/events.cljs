@@ -81,9 +81,8 @@
 
 (reg-event-fx
   ::stop-deployment
-  (fn [{:keys [db]} [_ href]]
-    {:db                     db
-     ::cimi-api-fx/operation [href "stop"
+  (fn [_ [_ href]]
+    {::cimi-api-fx/operation [href "stop"
                               #(if (instance? js/Error %)
                                  (let [{:keys [status message]} (response/parse-ex-info %)]
                                    (dispatch [::messages-events/add
@@ -93,7 +92,7 @@
                                                :type    :error}]))
                                  (do
                                    (dispatch [::get-deployment href])
-                                   (dispatch [::deployments-events/get-nuvlabox-deployments])))]}))
+                                   (dispatch [::deployments-events/get-deployments])))]}))
 
 
 (reg-event-db
@@ -138,7 +137,7 @@
                                                            status (str " (" status ")"))
                                           :content message
                                           :type    :success}])
-                              (dispatch [::deployments-events/get-nuvlabox-deployments])
+                              (dispatch [::deployments-events/get-deployments])
                               (dispatch [::history-events/navigate "deployment"]))]}))
 
 

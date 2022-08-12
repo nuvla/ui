@@ -4,6 +4,7 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployments.events :as deployments-events]
+    [sixsq.nuvla.ui.deployments.spec :as deployments-spec]
     [sixsq.nuvla.ui.edges-detail.spec :as spec]
     [sixsq.nuvla.ui.edges.utils :as edges-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -82,9 +83,9 @@
 
 (reg-event-fx
   ::set-nuvlabox
-  (fn [{:keys [db]} [_ {nb-status-id :nuvlabox-status 
+  (fn [{:keys [db]} [_ {nb-status-id     :nuvlabox-status
                         infra-srv-grp-id :infrastructure-service-group
-                        :as nuvlabox}]]
+                        :as              nuvlabox}]]
     {:db               (assoc db ::spec/nuvlabox-not-found? (nil? nuvlabox)
                                  ::spec/nuvlabox nuvlabox
                                  ::main-spec/loading? false)
@@ -96,7 +97,7 @@
                         :on-error #(do
                                      (dispatch [::set-nuvlabox-status nil])
                                      (dispatch [::set-nuvlabox-vulns nil]))]
-     :fx                [(when infra-srv-grp-id [:dispatch [::get-infra-services infra-srv-grp-id]])]}))
+     :fx               [(when infra-srv-grp-id [:dispatch [::get-infra-services infra-srv-grp-id]])]}))
 
 
 (reg-event-fx
@@ -219,7 +220,9 @@
 (reg-event-fx
   ::get-nuvlabox
   (fn [{{:keys [::spec/nuvlabox ::spec/nuvlabox-current-playbook] :as db} :db} [_ id]]
-    {:db                  (if (= (:id nuvlabox) id) db (merge db spec/defaults))
+    {:db                  (cond-> db
+                                  (not= (:id nuvlabox) id)
+                                  (merge spec/defaults))
      ::cimi-api-fx/get    [id #(dispatch [::set-nuvlabox %])
                            :on-error #(dispatch [::set-nuvlabox nil])]
      ::cimi-api-fx/search [:nuvlabox-peripheral
@@ -229,7 +232,8 @@
                            #(dispatch [::set-nuvlabox-peripherals %])]
      :fx                  [[:dispatch [::get-nuvlabox-events id]]
                            [:dispatch [::job-events/get-jobs id]]
-                           [:dispatch [::deployments-events/get-nuvlabox-deployments id]]
+                           [:dispatch [::deployments-events/get-deployments
+                                       (str "nuvlabox='" id "'")]]
                            [:dispatch [::get-nuvlabox-playbooks id]]
                            [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
                                                                          (:id nuvlabox-current-playbook)

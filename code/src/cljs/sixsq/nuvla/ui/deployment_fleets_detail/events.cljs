@@ -213,13 +213,15 @@
                                (not= (:id deployment-fleet) id) (merge spec/defaults))
      ::cimi-api-fx/get [id #(dispatch [::set-deployment-fleet %])
                         :on-error #(dispatch [::set-deployment-fleet nil])]
-     ;:fx                  [[:dispatch [::get-nuvlabox-events id]]
-     ;                      [:dispatch [::job-events/get-jobs id]]
-     ;                      [:dispatch [::deployments-events/get-nuvlabox-deployments id]]
-     ;                      [:dispatch [::get-nuvlabox-playbooks id]]
-     ;                      [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
-     ;                                                                    (:id nuvlabox-current-playbook)
-     ;                                                                    nil)]]]
+     :fx               [
+                        ;[:dispatch [::get-nuvlabox-events id]]
+                        [:dispatch [::job-events/get-jobs id]]
+                        [:dispatch [::deployments-events/get-deployments (str "deployment-fleet='" id "'")]]
+                        ;[:dispatch [::get-nuvlabox-playbooks id]]
+                        ;[:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
+                        ;                                              (:id nuvlabox-current-playbook)
+                        ;                                              nil)]]
+                        ]
      }))
 
 

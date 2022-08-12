@@ -29,10 +29,12 @@
 
 (reg-event-fx
   ::refresh
-  (fn [{{:keys [::spec/version] :as db} :db} [_ page-changed?]]
+  (fn [{{:keys [::spec/version
+                ::spec/module] :as db} :db} [_ page-changed?]]
     (let [get-module-fn ::get-module
-          dispatch-fn   (if page-changed? [::main-events/ignore-changes-modal get-module-fn]
-                                          [get-module-fn version])]
+          dispatch-fn   (if page-changed?
+                          [::main-events/ignore-changes-modal get-module-fn]
+                          [get-module-fn version])]
       {:db db
        :fx [[:dispatch [::main-events/action-interval-start
                         {:id        refresh-action-get-module
@@ -41,7 +43,8 @@
             [:dispatch [::main-events/action-interval-start
                         {:id        refresh-action-get-deployment
                          :frequency 20000
-                         :event     [::deployments-events/get-module-deployments]}]]]})))
+                         :event     [::deployments-events/get-deployments
+                                     (str "module/id='" (:id module) "'")]}]]]})))
 
 
 ;; Validation
@@ -181,13 +184,15 @@
 
 (reg-event-fx
   ::get-module
-  (fn [{{:keys [::main-spec/nav-path ::spec/version] :as db} :db} [_ requested-version]]
+  (fn [{{:keys [::main-spec/nav-path
+                ::spec/version] :as db} :db} [_ requested-version]]
     (let [path (utils/nav-path->module-path nav-path)
           v    (if (nil? requested-version) version requested-version)]
       {:db                  (cond-> db
                                     requested-version (assoc ::spec/version requested-version))
        ::apps-fx/get-module [path v #(do (dispatch [::set-module %])
-                                         (dispatch [::deployments-events/get-module-deployments]))]})))
+                                         (dispatch [::deployments-events/get-deployments
+                                                    (str "module/id='" (:id %) "'")]))]})))
 
 
 (reg-event-db
@@ -558,21 +563,21 @@
         {:db (assoc db ::spec/validate-docker-compose {:loading?  true
                                                        :module-id id})
          ::cimi-api-fx/operation
-             [id validate-op
-              (fn [response]
-                (if (instance? js/Error response)
-                  (let [{:keys [status message]} (response/parse-ex-info response)]
-                    (dispatch [::messages-events/add
-                               {:header  (cond-> (str "error on operation "
-                                                      validate-op " for " id)
-                                                 status (str " (" status ")"))
-                                :content message
-                                :type    :error}]))
-                  (dispatch [::job-events/wait-job-to-complete
-                             {:job-id              (:location response)
-                              :on-complete         #(dispatch
-                                                      [::docker-compose-validation-complete %])
-                              :refresh-interval-ms 5000}])))]}))))
+         [id validate-op
+          (fn [response]
+            (if (instance? js/Error response)
+              (let [{:keys [status message]} (response/parse-ex-info response)]
+                (dispatch [::messages-events/add
+                           {:header  (cond-> (str "error on operation "
+                                                  validate-op " for " id)
+                                             status (str " (" status ")"))
+                            :content message
+                            :type    :error}]))
+              (dispatch [::job-events/wait-job-to-complete
+                         {:job-id              (:location response)
+                          :on-complete         #(dispatch
+                                                  [::docker-compose-validation-complete %])
+                          :refresh-interval-ms 5000}])))]}))))
 
 
 (reg-event-fx

@@ -6,6 +6,9 @@
 
 (def dictionary
   {:en {
+        :empty-deployemnt-msg                 "There are currently no running apps (aka deployments)."
+        :no-deployment-fleet-message-content                   "Deployment fleet does not exist or you do not have sufficient access rights."
+        :no-deployment-fleet-message-header                    "Oops can't find deployment fleet"
         :deployment-fleets "Deployment fleets"
         :bulk-force-delete-in-progress                 "Bulk force delete in progress"
         :bulk-stop-in-progress                         "Bulk stop in progress"

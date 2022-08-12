@@ -5,6 +5,7 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
+    [sixsq.nuvla.ui.deployment-fleets-detail.views :as detail]
     [sixsq.nuvla.ui.edges.events :as edges-events]
     [sixsq.nuvla.ui.deployment-fleets.events :as events]
     [sixsq.nuvla.ui.deployment-fleets.subs :as subs]
@@ -762,10 +763,10 @@
        " "
        ^{:key (random-uuid)}
        [filter-comp/ButtonFilter
-        {:resource-name "deployment"
+        {:resource-name "deployment-fleet"
          ;:default-filter @additional-filter
          :open?         filter-open?
-         :on-done       #(dispatch [::edges-events/set-additional-filter %])}]])))
+         :on-done       #(dispatch [::events/set-additional-filter %])}]])))
 
 (defn Page
   []
@@ -787,21 +788,12 @@
       [Pagination]]]))
 
 
-(defn DetailedView
-  [uuid]
-  (if (= "nuvlabox-cluster" uuid)
-    (do
-      (reset! view-type :cluster)
-      (dispatch [::history-events/navigate "edges/"]))
-    [edges-detail/EdgeDetails uuid]))
-
-
 (defmethod panel/render :deployment-fleets
   [path]
   (let [[_ path1] path
         n        (count path)
         children (case n
-                   2 [DetailedView path1]
+                   2 [detail/Details path1]
                    [Page])]
     [:<>
      [ui/Segment style/basic children]]))

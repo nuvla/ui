@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.edges-detail.views
+(ns sixsq.nuvla.ui.deployment-fleets-detail.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
@@ -8,8 +8,10 @@
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.views :as deployments-views]
-    [sixsq.nuvla.ui.edges-detail.events :as events]
-    [sixsq.nuvla.ui.edges-detail.subs :as subs]
+    [sixsq.nuvla.ui.edges-detail.events :as edges-detail-events]
+    [sixsq.nuvla.ui.deployment-fleets-detail.events :as events]
+    [sixsq.nuvla.ui.edges-detail.subs :as edges-detail-subs]
+    [sixsq.nuvla.ui.deployment-fleets-detail.subs :as subs]
     [sixsq.nuvla.ui.edges.events :as edges-events]
     [sixsq.nuvla.ui.edges.subs :as edges-subs]
     [sixsq.nuvla.ui.edges.utils :as utils]
@@ -33,7 +35,7 @@
     [sixsq.nuvla.ui.utils.values :as values]))
 
 
-(def refresh-action-id :nuvlabox-get-nuvlabox)
+(def refresh-action-id :deployment-fleet-get-deployment-fleet)
 
 (def orchestration-icons
   {:swarm      "docker"
@@ -45,7 +47,7 @@
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
               :frequency 10000
-              :event     [::events/get-nuvlabox (str "nuvlabox/" uuid)]}]))
+              :event     [::events/get-deployment-fleet (str "deployment-fleet/" uuid)]}]))
 
 (defn DecommissionButton
   [nuvlabox]
@@ -54,7 +56,7 @@
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
      {:button-text (@tr [:decommission])
-      :on-confirm  #(dispatch [::events/decommission])
+      :on-confirm  #(dispatch [::edges-detail-events/decommission])
       :danger-msg  (@tr [:nuvlabox-decommission-warning])
       :trigger     (r/as-element [ui/MenuItem
                                   [ui/Icon {:name "eraser"}]
@@ -70,7 +72,7 @@
         content (str (or name id) (when description " - ") description)]
     [uix/ModalDanger
      {:button-text (@tr [:delete])
-      :on-confirm  #(dispatch [::events/delete])
+      :on-confirm  #(dispatch [::edges-detail-events/delete])
       :trigger     (r/as-element [ui/MenuItem
                                   [ui/Icon {:name "trash"}]
                                   (@tr [:delete])])
@@ -84,9 +86,9 @@
         is-add?  (= operation "add-ssh-key")
         ssh-keys (if is-add?
                    (r/atom nil)
-                   (subscribe [::subs/nuvlabox-associated-ssh-keys]))]
+                   (subscribe [::edges-detail-subs/nuvlabox-associated-ssh-keys]))]
     (when is-add?
-      (dispatch [::events/get-ssh-keys-not-associated #(reset! ssh-keys %)]))
+      (dispatch [::edges-detail-events/get-ssh-keys-not-associated #(reset! ssh-keys %)]))
     (fn [_operation on-change-fn]
       (if (nil? @ssh-keys)
         [ui/Message {:info true} (@tr [:no-credentials-to-remove])]
@@ -134,7 +136,7 @@
         on-error-fn   close-fn
         on-click-fn   #(do
                          (reset! loading? true)
-                         (dispatch [::events/operation id operation @form-data
+                         (dispatch [::edges-detail-events/operation id operation @form-data
                                     on-success-fn on-error-fn]))]
     (fn [_resource operation show? title icon button-text]
       [ui/Modal
@@ -180,7 +182,7 @@
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
   (let [tr            (subscribe [::i18n-subs/tr])
-        status        (subscribe [::subs/nuvlabox-status])
+        status        (subscribe [::edges-detail-subs/nuvlabox-status])
         releases      (subscribe [::edges-subs/nuvlabox-releases-options])
         close-fn      #(reset! show? false)
         form-data     (r/atom nil)
@@ -193,7 +195,7 @@
         on-change-fn  #(swap! form-data assoc :nuvlabox-release %)
         on-success-fn close-fn
         on-error-fn   close-fn
-        on-click-fn   #(dispatch [::events/operation id operation
+        on-click-fn   #(dispatch [::edges-detail-events/operation id operation
                                   (utils/format-update-data @form-data)
                                   on-success-fn on-error-fn])]
 
@@ -211,7 +213,7 @@
                                 :key)]
         (when-not correct-nb?
           ;; needed to make modal work in cimi detail page
-          (dispatch [::events/get-nuvlabox id]))
+          (dispatch [::edges-detail-events/get-nuvlabox id]))
         [ui/Modal
          {:on-click   #(.stopPropagation %)
           :open       @show?
@@ -306,8 +308,8 @@
 (defn NBManagersDropdown
   [nuvlabox-id _on-change-fn]
   (let [tr       (subscribe [::i18n-subs/tr])
-        managers (subscribe [::subs/nuvlabox-managers])]
-    (dispatch [::events/get-nuvlabox-managers nuvlabox-id])
+        managers (subscribe [::edges-detail-subs/nuvlabox-managers])]
+    (dispatch [::edges-detail-events/get-nuvlabox-managers nuvlabox-id])
     (fn [_nuvlabox-id on-change-fn]
       [ui/FormDropdown
        {:label       (@tr [:nuvlabox-available-managers])
@@ -325,9 +327,9 @@
   [{:keys [id] :as _resource} operation show?]
   (let [tr               (subscribe [::i18n-subs/tr])
         deployments      (subscribe [::deployments-subs/deployments])
-        join-token       (subscribe [::subs/join-token])
-        nuvlabox-cluster (subscribe [::subs/nuvlabox-cluster])
-        managers         (subscribe [::subs/nuvlabox-managers])
+        join-token       (subscribe [::edges-detail-subs/join-token])
+        nuvlabox-cluster (subscribe [::edges-detail-subs/nuvlabox-cluster])
+        managers         (subscribe [::edges-detail-subs/nuvlabox-managers])
         close-fn         #(reset! show? false)
         default-action   "join-worker"
         form-data        (r/atom {:cluster-action default-action})
@@ -339,8 +341,8 @@
         on-error-fn      close-fn
         on-click-fn      #(do
                             (swap! form-data assoc :token (:token @join-token))
-                            (dispatch [::events/set-join-token nil])
-                            (dispatch [::events/operation id operation @form-data
+                            (dispatch [::edges-detail-events/set-join-token nil])
+                            (dispatch [::edges-detail-events/operation id operation @form-data
                                        on-success-fn on-error-fn]))]
     (fn [resource _operation show?]
       (let [dpls                (:resources @deployments)
@@ -416,8 +418,8 @@
                               (do
                                 (swap! form-data dissoc :token)
                                 (swap! form-data assoc :nuvlabox-manager-status (get-in @managers [nuvlabox-manager-id :status]))
-                                (dispatch [::events/get-join-token nuvlabox-manager-id join-token-scope])
-                                (dispatch [::events/get-nuvlabox-cluster nuvlabox-manager-id]))))
+                                (dispatch [::edges-detail-events/get-join-token nuvlabox-manager-id join-token-scope])
+                                (dispatch [::edges-detail-events/get-nuvlabox-cluster nuvlabox-manager-id]))))
                           join-type)]
                 (when invalid-manager?
                   [ui/Message {:negative true
@@ -456,10 +458,10 @@
 
 (defn EmergencyPlaybooksDropdown
   [_nuvlabox-id _on-change]
-  (let [em-playbooks (subscribe [::subs/nuvlabox-emergency-playbooks])
+  (let [em-playbooks (subscribe [::edges-detail-subs/nuvlabox-emergency-playbooks])
         tr           (subscribe [::i18n-subs/tr])]
     (fn [nuvlabox-id on-change]
-      (dispatch [::events/get-emergency-playbooks nuvlabox-id])
+      (dispatch [::edges-detail-events/get-emergency-playbooks nuvlabox-id])
       (let [em-enabled  (get (group-by :enabled @em-playbooks) true)
             em-disabled (get (group-by :enabled @em-playbooks) false)]
         [:<>
@@ -491,7 +493,7 @@
   [{:keys [id] :as _nuvlabox} operation show? title icon button-text]
   (let [tr          (subscribe [::i18n-subs/tr])
         close-fn    #(reset! show? false)
-        on-click-fn #(dispatch [::events/operation-text-response operation id close-fn close-fn])]
+        on-click-fn #(dispatch [::edges-detail-events/operation-text-response operation id close-fn close-fn])]
     [ui/Modal
      {:open       @show?
       :close-icon true
@@ -527,7 +529,7 @@
         on-error-fn   close-fn
         on-click-fn   #(do
                          (reset! loading? true)
-                         (dispatch [::events/operation id operation @form-data
+                         (dispatch [::edges-detail-events/operation id operation @form-data
                                     on-success-fn on-error-fn]))]
     (fn [resource _operation show? title icon button-text]
       (let [playbooks (:emergency-playbooks-ids @form-data)]
@@ -615,25 +617,15 @@
 
 
 (defn MenuBar [uuid]
-  (let [can-decommission? (subscribe [::subs/can-decommission?])
-        can-delete?       (subscribe [::subs/can-delete?])
-        nuvlabox          (subscribe [::subs/nuvlabox])
-        loading?          (subscribe [::subs/loading?])]
+  (let [deployment-fleet (subscribe [::subs/deployment-fleet])
+        loading?         (subscribe [::subs/loading?])]
     (fn []
       (let [MenuItems (cimi-detail-views/format-operations
-                        @nuvlabox
-                        #{"edit" "delete" "activate" "decommission"
-                          "generate-new-api-key" "commission" "check-api"})]
+                        @deployment-fleet
+                        #{})]
         [components/StickyBar
          [components/ResponsiveMenuBar
-          (conj
-            MenuItems
-            (when @can-decommission?
-              ^{:key "decomission-nb"}
-              [DecommissionButton @nuvlabox])
-            (when @can-delete?
-              ^{:key "delete-nb"}
-              [DeleteButton @nuvlabox]))
+          MenuItems
           [components/RefreshMenu
            {:action-id  refresh-action-id
             :loading?   @loading?
@@ -651,7 +643,7 @@
         tr           (subscribe [::i18n-subs/tr])
         last-updated (r/atom "1970-01-01T00:00:00Z")
         button-load? (r/atom false)
-        peripheral   (subscribe [::subs/nuvlabox-peripheral id])]
+        peripheral   (subscribe [::edges-detail-subs/nuvlabox-peripheral id])]
     (fn [_id]
       (let [{p-id                :id
              p-ops               :operations
@@ -781,7 +773,7 @@
                                   {:on-click (fn [event]
                                                (reset! button-load? true)
                                                (dispatch
-                                                 [::events/custom-action p-id (first actions)
+                                                 [::edges-detail-events/custom-action p-id (first actions)
                                                   (str "Triggered " (first actions) " for " p-id)])
                                                (.stopPropagation event))
                                    :style    {:margin "-.6em"}
@@ -816,8 +808,8 @@
   [updated]
   (let [tr                       (subscribe [::i18n-subs/tr])
         updated-moment           (time/parse-iso8601 updated)
-        status                   (subscribe [::subs/nuvlabox-online-status])
-        next-heartbeat-moment    (subscribe [::subs/next-heartbeat-moment])
+        status                   (subscribe [::edges-detail-subs/nuvlabox-online-status])
+        next-heartbeat-moment    (subscribe [::edges-detail-subs/next-heartbeat-moment])
         next-heartbeat-times-ago (time/ago @next-heartbeat-moment)
 
         last-heartbeat-msg       (if updated
@@ -995,7 +987,7 @@
 (defn edit-action
   [uuid body close-fn]
   (let [tr (subscribe [::i18n-subs/tr])]
-    (dispatch [::events/edit
+    (dispatch [::edges-detail-events/edit
                uuid body
                (@tr [:updated-successfully])])
     (close-fn)))
@@ -1003,32 +995,26 @@
 
 (defn EditableCell
   [attribute]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        nuvlabox     (subscribe [::subs/nuvlabox])
-        can-edit?    (subscribe [::subs/can-edit?])
-        id           (:id @nuvlabox)
-        on-change-fn #(dispatch [::events/edit
-                                 id {attribute %}
-                                 (@tr [:updated-successfully])])]
+  (let [tr               (subscribe [::i18n-subs/tr])
+        deployment-fleet (subscribe [::subs/deployment-fleet])
+        can-edit?        (subscribe [::subs/can-edit?])
+        id               (:id @deployment-fleet)
+        on-change-fn     #(dispatch [::events/edit
+                                     id {attribute %}
+                                     (@tr [:updated-successfully])])]
     (if @can-edit?
-      [components/EditableInput attribute @nuvlabox on-change-fn]
-      [ui/TableCell (get @nuvlabox attribute)])))
+      [components/EditableInput attribute @deployment-fleet on-change-fn]
+      [ui/TableCell (get @deployment-fleet attribute)])))
 
 
-(defn TabOverviewNuvlaBox
-  [{:keys [id created updated refresh-interval owner created-by]}
-   {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}]
+(defn TabOverviewDeploymentFleet
+  [{:keys [id created updated created-by]}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
-     [:h4 "NuvlaEdge "
-      (when nuvlabox-engine-version
-        [ui/Label {:circular true
-                   :color    "blue"
-                   :size     "tiny"}
-         nuvlabox-engine-version])]
+     [:h4 "Deployment fleet"]
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody
@@ -1042,20 +1028,10 @@
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:description]))]
         [EditableCell :description]]
-       [ui/TableRow
-        [ui/TableCell (str/capitalize (@tr [:owner]))]
-        [ui/TableCell @(subscribe [::session-subs/resolve-user owner])]]
-       (when (and created-by (str/starts-with? owner "group/"))
+       (when created-by
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:created-by]))]
           [ui/TableCell @(subscribe [::session-subs/resolve-user created-by])]])
-       [ui/TableRow
-        [ui/TableCell (str/capitalize (@tr [:telemetry-period]))]
-        [ui/TableCell (str refresh-interval " seconds")]]
-       (when nuvlabox-api-endpoint
-         [ui/TableRow
-          [ui/TableCell (str/capitalize (@tr [:nuvla-api-endpoint]))]
-          [ui/TableCell nuvlabox-api-endpoint]])
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:created]))]
         [ui/TableCell (time/ago (time/parse-iso8601 created) @locale)]]
@@ -1064,117 +1040,16 @@
         [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]]]]))
 
 
-(defn TabOverviewHost
-  [{:keys [hostname ip docker-server-version
-           operating-system architecture last-boot docker-plugins] :as nb-status}
-   ssh-creds]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment {:secondary true
-                 :color     "grey"
-                 :raised    true}
-     [:h4 "Host"]
-     (if nb-status
-       [ui/Table {:basic  "very"
-                  :padded false}
-        [ui/TableBody
-         (when hostname
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:hostname]))]
-            [ui/TableCell hostname]])
-         (when operating-system
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:operating-system]))]
-            [ui/TableCell operating-system]])
-         (when architecture
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:architecture]))]
-            [ui/TableCell architecture]])
-         (when ip
-           [ui/TableRow
-            [ui/TableCell "IP"]
-            [ui/TableCell (values/copy-value-to-clipboard
-                            ip ip (@tr [:copy-to-clipboard]) true)]])
-         (when (pos? (count @ssh-creds))
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
-            [ui/TableCell [ui/Popup
-                           {:hoverable true
-                            :flowing   true
-                            :position  "bottom center"
-                            :content   (r/as-element [ui/ListSA {:divided true
-                                                                 :relaxed true}
-                                                      (for [sshkey @ssh-creds]
-                                                        ^{:key (:id sshkey)}
-                                                        [ui/ListItem
-                                                         [ui/ListContent
-                                                          [ui/ListHeader
-                                                           [:a {:href   (str @config/path-prefix
-                                                                             "/api/" (:id sshkey))
-                                                                :target "_blank"}
-                                                            (or (:name sshkey) (:id sshkey))]]
-                                                          [ui/ListDescription
-                                                           (str (subs (:public-key sshkey) 0 55) " ...")]]])])
-                            :trigger   (r/as-element [ui/Icon {:name   "key"
-                                                               :fitted true}
-                                                      (@tr [:nuvlabox-detail-ssh-enabled])
-                                                      [ui/Icon {:name   "angle down"
-                                                                :fitted true}]])}]]])
-         (when docker-server-version
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:docker-server-version]))]
-            [ui/TableCell docker-server-version]])
-         (when (seq docker-plugins)
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:docker-plugins]))]
-            [ui/TableCell (str/join ", " docker-plugins)]])
-         (when last-boot
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:last-boot]))]
-            [ui/TableCell (time/time->format last-boot)]])]]
-       ;else
-       [ui/Message {:content (@tr [:nuvlabox-status-unavailable])}])]))
-
-
-(defn TabOverviewStatus
-  [{:keys [updated status status-notes] :as _nb-status} nb-id online-status]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment {:secondary true
-                 :color     (utils/status->color online-status)
-                 :raised    true}
-     [:h4 "Status "]
-     (when status
-       [:div {:style {:margin "0.5em 0 1em 0"}}
-        "Operational Status: "
-        [ui/Popup
-         {:trigger        (r/as-element [ui/Label {:circular   true
-                                                   :size       "small"
-                                                   :horizontal true
-                                                   :color      (utils/operational-status->color status)}
-                                         status])
-          :content        (@tr [:nuvlabox-operational-status-popup])
-          :position       "bottom center"
-          :on             "hover"
-          :size           "tiny"
-          :hide-on-scroll true}]
-        (when (not-empty status-notes)
-          [ui/Message {:color "brown"
-                       :size  "tiny"}
-           [ui/MessageHeader
-            [ui/Icon {:name "sticky note"}]
-            "Notes"]
-           [ui/MessageList {:items status-notes}]])])
-     [Heartbeat updated nb-id]]))
-
-
 (defn TabOverviewTags
-  [{:keys [id] :as nuvlabox}]
+  [{:keys [id] :as deployment-fleet}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
                  :color     "teal"
                  :raised    true}
      [:h4 "Tags"]
-     [components/EditableTags nuvlabox #(dispatch [::events/edit id {:tags %}
-                                                   (@tr [:updated-successfully])])]]))
+     [components/EditableTags
+      deployment-fleet #(dispatch [::events/edit id {:tags %}
+                                   (@tr [:updated-successfully])])]]))
 
 
 (defn ServiceIcon
@@ -1195,231 +1070,36 @@
       [ui/Icon {:name path}])))
 
 
-(defn BoxInfraServices
-  []
-  (let [services @(subscribe [::subs/infra-services])]
-    [ui/Segment {:secondary true
-                 :color     "pink"
-                 :raised    true}
-     [:h4 [uix/TR :infrastructure-services]]
-     [ui/ListSA {:divided true :relaxed true}
-      (for [{:keys [id name description subtype]} services]
-        ^{:key id}
-        [ui/ListItem
-         [ServiceIcon subtype]
-         [ui/ListContent
-          [ui/ListHeader
-           [history-views/link (str "clouds/" (general-utils/id->uuid id)) (or name id)]]
-          [ui/ListDescription description]]])]]))
-
-
-(defn TabOverviewCluster
-  [{:keys [node-id cluster-id swarm-node-cert-expiry-date cluster-join-address
-           cluster-node-role cluster-managers cluster-nodes orchestrator] :as _nuvlabox}]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment {:secondary true
-                 :color     "black"
-                 :raised    true}
-     [:h4 (str/capitalize (@tr [:cluster])) " " (@tr [:status])
-      (when orchestrator
-        [ui/Label {:circular   true
-                   :color      "blue"
-                   :size       "tiny"
-                   :basic      true
-                   :float      "right"
-                   :horizontal true
-                   :style      {:float "right"}}
-         [ui/Icon {:name (get orchestration-icons (keyword orchestrator) "question circle")}] orchestrator])]
-     [ui/Table {:basic  "very"
-                :padded false}
-      [ui/TableBody
-       [ui/TableRow
-        [ui/TableCell "Node ID"]
-        [ui/TableCell node-id]]
-       (when cluster-id
-         [ui/TableRow
-          [ui/TableCell "Cluster ID"]
-          [ui/TableCell cluster-id]])
-       [ui/TableRow
-        [ui/TableCell "Node Role"]
-        [ui/TableCell cluster-node-role
-         (when (= cluster-node-role "manager")
-           [:<>
-            (str " ")
-            [ui/Icon {:className "fas fa-crown"
-                      :corner    true
-                      :color     "blue"}]])]]
-       (when cluster-join-address
-         [ui/TableRow
-          [ui/TableCell "Cluster Join Address"]
-          [ui/TableCell cluster-join-address]])
-       (when cluster-managers
-         [ui/TableRow
-          [ui/TableCell "Cluster Managers"]
-          [ui/TableCell
-           [ui/LabelGroup {:size  "tiny"
-                           :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-            (for [manager cluster-managers]
-              ^{:key (str manager)}
-              [ui/Label {:basic true
-                         :style {:max-width     "15ch"
-                                 :overflow      "hidden"
-                                 :text-overflow "ellipsis"
-                                 :white-space   "nowrap"}}
-               manager])]]])
-       (when cluster-nodes
-         [ui/TableRow
-          [ui/TableCell "Cluster Nodes"]
-          [ui/TableCell
-           [ui/LabelGroup {:size  "tiny"
-                           :style {:margin-top 10, :max-height 150, :overflow "auto"}}
-            (for [node cluster-nodes]
-              ^{:key (str node)}
-              [ui/Label {:basic true
-                         :style {:max-width     "15ch"
-                                 :overflow      "hidden"
-                                 :text-overflow "ellipsis"
-                                 :white-space   "nowrap"}}
-               node])]]])
-
-       (when swarm-node-cert-expiry-date
-         [ui/TableRow
-          [ui/TableCell "Swarm Certificate Expiry Date"]
-          [ui/TableCell swarm-node-cert-expiry-date]])]]]))
-
-
 (defn TabOverview
   []
-  (let [nuvlabox       (subscribe [::subs/nuvlabox])
-        nb-status      (subscribe [::subs/nuvlabox-status])
-        ssh-creds      (subscribe [::subs/nuvlabox-associated-ssh-keys])
-        {:keys [state]} @(subscribe [::subs/nuvlabox])
-        infra-services (subscribe [::subs/infra-services])]
+  (let [deployment-fleet (subscribe [::subs/deployment-fleet])]
     (fn []
-      (let [{:keys [id tags ssh-keys]} @nuvlabox]
-        (when (not= (count ssh-keys) (count @ssh-creds))
-          (dispatch [::events/get-nuvlabox-associated-ssh-keys ssh-keys]))
+      (let [{:keys [tags]} @deployment-fleet]
         [ui/TabPane
          [ui/Grid {:columns   2
                    :stackable true
                    :padded    true}
           [ui/GridRow
            [ui/GridColumn {:stretched true}
-            [TabOverviewNuvlaBox @nuvlabox @nb-status]]
-
+            [TabOverviewDeploymentFleet @deployment-fleet]]
            [ui/GridColumn {:stretched true}
-            [TabOverviewHost @nb-status ssh-creds]]]
-
-          [ui/GridColumn {:stretched true}
-           [TabOverviewStatus @nb-status id (:online @nuvlabox)]]
-
-          (when-not (= state "SUSPENDED")
-            [ui/GridColumn {:stretched true}
-             [deployments-views/DeploymentsOverviewSegment
-              ::deployments-subs/deployments ::events/set-active-tab :deployments]])
-
-          (when (:node-id @nb-status)
-            [ui/GridColumn {:stretched true}
-             [TabOverviewCluster @nb-status]])
+            [deployments-views/DeploymentsOverviewSegment
+             ::deployments-subs/deployments ::edges-detail-events/set-active-tab :deployments]]]
 
           (when (seq tags)
             [ui/GridColumn
-             [TabOverviewTags @nuvlabox]])
-
-          (when (seq @infra-services)
-            [ui/GridColumn
-             [BoxInfraServices]])]]))))
-
-
-(defn TabLocationMap
-  []
-  (let [tr           (subscribe [::i18n-subs/tr])
-        nuvlabox     (subscribe [::subs/nuvlabox])
-        zoom         (atom 3)
-        new-location (r/atom nil)]
-    (fn []
-      (let [{:keys [id location inferred-location]} @nuvlabox
-            update-new-location #(reset! new-location %)
-            position            (some-> (or @new-location location inferred-location) map/longlat->latlong)]
-        [:div
-         (if position (@tr [:map-drag-to-update-nb-location])
-                      (@tr [:map-click-to-set-nb-location]))
-         [map/MapBox
-          {:style             {:height 400
-                               :cursor (when-not location "pointer")}
-           :center            (or position map/default-latlng-center)
-           :zoom              @zoom
-           :onViewportChanged #(reset! zoom (.-zoom %))
-           :on-click          (when-not position
-                                (map/click-location update-new-location))}
-          (when position
-            [map/Marker {:position    position
-                         :draggable   true
-                         :on-drag-end (map/drag-end-location update-new-location)}])]
-         [:div {:align "right"}
-          [ui/Button {:on-click #(reset! new-location nil)}
-           (@tr [:cancel])]
-          [ui/Button {:primary  true
-                      :on-click #(dispatch
-                                   [::events/edit id
-                                    (assoc @nuvlabox
-                                      :location
-                                      (update @new-location 0 map/normalize-lng))
-                                    (@tr [:nuvlabox-position-update])])}
-           (@tr [:save])]]]))))
-
-
-(defn TabLocation
-  []
-  [ui/TabPane
-   [TabLocationMap]])
-
-
-(defn TabLoad
-  []
-  (let [tr              (subscribe [::i18n-subs/tr])
-        nuvlabox-status (subscribe [::subs/nuvlabox-status])]
-    (fn []
-      (let [{:keys [resources]} @nuvlabox-status]
-        [ui/TabPane
-         (if resources
-           [Load resources]
-           [ui/Message
-            {:warning true
-             :content (@tr [:nuvlabox-resources-unavailable])}])]))))
-
-
-(defn TabPeripherals
-  []
-  (let [peripherals-per-id (subscribe [::subs/nuvlabox-peripherals])]
-    (fn []
-      (let [peripheral-resources (into [] (map (fn [[_id res]] res) @peripherals-per-id))
-            per-interface        (group-by :interface peripheral-resources)]
-        [ui/TabPane
-         (if (empty? peripheral-resources)
-           [uix/WarningMsgNoElements]
-           (for [[interface peripherals] per-interface]
-             ^{:key interface}
-             [uix/Accordion
-              (for [id (map :id peripherals)]
-                ^{:key id}
-                [Peripheral id])
-              :title-size :h4
-              :default-open false
-              :styled? false
-              :count (count peripherals)
-              :label interface]))]))))
+             [TabOverviewTags @deployment-fleet]])]]))))
 
 
 (defn TabEvents
   []
   (let [tr                (subscribe [::i18n-subs/tr])
-        nuvlabox          (subscribe [::subs/nuvlabox])
-        all-events        (subscribe [::subs/nuvlabox-events])
-        elements-per-page (subscribe [::subs/elements-per-page])
+        nuvlabox          (subscribe [::edges-detail-subs/nuvlabox])
+        all-events        (subscribe [::edges-detail-subs/nuvlabox-events])
+        elements-per-page (subscribe [::edges-detail-subs/elements-per-page])
         total-elements    (get @all-events :count 0)
         total-pages       (general-utils/total-pages total-elements @elements-per-page)
-        page              (subscribe [::subs/page])]
+        page              (subscribe [::edges-detail-subs/page])]
     (fn []
       (let [events (:resources @all-events)]
         [ui/TabPane
@@ -1447,478 +1127,33 @@
                           :activePage   @page
                           :onPageChange (ui-callback/callback
                                           :activePage #(do
-                                                         (dispatch [::events/set-page %])
+                                                         (dispatch [::edges-detail-events/set-page %])
                                                          (refresh (:id @nuvlabox))))}]]))))
-
-
-; there's a similar function in edge.views which can maybe be generalized
-(defn VulnStatisticState
-  [value label label-popup color state-selector]
-  (let [selected?      (or
-                         (= label @state-selector)
-                         (and (= label "collected")
-                              (nil? @state-selector)))
-        selected-style (if selected? {:color       "black"
-                                      :font-weight "bold"
-                                      :padding     "10px"}
-                                     {:color       color
-                                      :font-weight "normal"
-                                      :padding     "3px"})]
-    [ui/Statistic {:style    {:cursor "pointer"}
-                   :on-click #(dispatch [::events/set-vuln-severity-selector
-                                         (if (= label "collected") nil label)])}
-     [ui/StatisticValue {:style selected-style}
-      (or value "-")]
-     [ui/StatisticLabel [ui/Popup
-                         {:trigger        (r/as-element [:span {:style selected-style} label])
-                          :content        label-popup
-                          :position       "bottom center"
-                          :on             "hover"
-                          :size           "tiny"
-                          :hide-on-scroll true}]]]))
-
-
-(defn VulnerabilitiesTableBody
-  [vulnerability-id product vulnerability-score color matching-vuln-db]
-  [ui/TableRow
-   [ui/TableCell (if matching-vuln-db
-                   [:<>
-                    vulnerability-id
-                    " "
-                    [ui/Popup
-                     {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
-                      :header         vulnerability-id
-                      :content        (r/as-element [:div
-                                                     [:span (:description matching-vuln-db)]
-                                                     [:hr]
-                                                     [:a {:href   (:reference matching-vuln-db)
-                                                          :target "_blank"}
-                                                      (:reference matching-vuln-db)]])
-                      :position       "right center"
-                      :on             "hover"
-                      :wide           "very"
-                      :size           "tiny"
-                      :hoverable      true
-                      :hide-on-scroll true}]]
-                   vulnerability-id
-                   )]
-   [ui/TableCell product]
-   [ui/TableCell {:style {:background-color color
-                          :font-weight      "bold"}} vulnerability-score]])
-
-
-(defn TabVulnerabilities
-  []
-  (let [tr             (subscribe [::i18n-subs/tr])
-        state-selector (subscribe [::subs/vuln-severity-selector])
-        vulns          (subscribe [::subs/nuvlabox-vulns])
-        matching-vulns (subscribe [::subs/matching-vulns-from-db])]
-    (fn []
-      (let [summary        (:summary @vulns)
-            items-extended (:items @vulns)
-            items-severity (group-by :severity items-extended)
-            vulns-in-db    @matching-vulns]
-        [ui/TabPane
-         (if @vulns
-           [:<>
-            [ui/Container {:text-align "center"
-                           :style      {:margin "5px"}}
-             [ui/Label {:basic true}
-              (@tr [:nuvlabox-total-vuln])
-              [ui/LabelDetail (:total summary)]]
-             [ui/Label {:basic true}
-              [ui/Popup
-               {:trigger        (r/as-element [ui/Icon {:name "info circle"}])
-                :content        (r/as-element
-                                  [ui/ListSA {:bulleted true}
-                                   (map (fn [k]
-                                          ^{:key (random-uuid)}
-                                          [ui/ListItem k]) (:affected-products summary))])
-                :position       "bottom center"
-                :on             "hover"
-                :size           "tiny"
-                :hide-on-scroll true}]
-              (@tr [:nuvlabox-vuln-affected])
-              [ui/LabelDetail (count (:affected-products summary))]]
-             (when (:average-score summary)
-               [ui/Label {:basic true}
-                (@tr [:nuvlabox-vuln-cvss])
-                [ui/LabelDetail (:average-score summary)]])]
-
-            ; taking too much space at the moment. TBD later, once more plots are added
-            ;[ui/Segment {:secondary   true
-            ;             :color       "olive"
-            ;             :raised      true}
-            ; [plot/Polar {:height  80
-            ;              :data    {:labels   (map (fn [[key v]] key) items-severity)
-            ;                        :datasets [{:data            (map (fn [[k values]] (count values)) items-severity)
-            ;                                    :backgroundColor (map (fn [[k v]] (:color (first v))) items-severity)}]}
-            ;              :options {:title  {:display true,
-            ;                                 :text    "Vulnerabilities by Severity"
-            ;                                 :position    "top"},
-            ;                        :legend {:display  true
-            ;                                 :position "left"}}}]]
-
-            [ui/Segment {:secondary true
-                         :color     "brown"
-                         :raised    true}
-             [ui/StatisticGroup {:width (count items-severity)
-                                 :size  "mini"
-                                 :style {:display    "inline-block"
-                                         :text-align "center"
-                                         :width      "100%"
-                                         :margin     "5px"}}
-
-              [VulnStatisticState
-               (count items-extended)
-               "collected"
-               (@tr [:nuvlabox-vuln-most-severe])
-               "grey"
-               state-selector]
-              [VulnStatisticState
-               (count (get items-severity "CRITICAL"))
-               "critical"
-               "CVSS: 9.0-10.0"
-               utils/vuln-critical-color
-               state-selector]
-              [VulnStatisticState
-               (count (get items-severity "HIGH"))
-               "high"
-               "CVSS: 7.0-8.9"
-               utils/vuln-high-color
-               state-selector]
-              [VulnStatisticState
-               (count (get items-severity "MEDIUM"))
-               "medium"
-               "CVSS: 4.0-6.9"
-               utils/vuln-medium-color
-               state-selector]
-              [VulnStatisticState
-               (count (get items-severity "LOW"))
-               "low"
-               "CVSS: 0.1-3.9"
-               utils/vuln-low-color
-               state-selector]
-              [VulnStatisticState
-               (count (get items-severity "UNKNOWN"))
-               "unknown"
-               "without CVSS score"
-               utils/vuln-unknown-color
-               state-selector]]
-
-             [:div {:style {:max-height "25em"
-                            :width      "100%"
-                            :overflow-y "auto"}}
-              [ui/Table {:basic "very"}
-               [ui/TableHeader
-                [ui/TableRow
-                 [ui/TableHeaderCell "ID"]
-                 [ui/TableHeaderCell "Product"]
-                 [ui/TableHeaderCell "CVSS Score"]]]
-
-               [ui/TableBody
-                (if @state-selector
-                  (for [{:keys [vulnerability-id product vulnerability-score color]}
-                        (get items-severity (str/upper-case @state-selector))]
-                    ^{:key vulnerability-id}
-                    [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color (get vulns-in-db vulnerability-id)])
-                  (for [{:keys [vulnerability-id product vulnerability-score color]} items-extended]
-                    ^{:key vulnerability-id}
-                    [VulnerabilitiesTableBody vulnerability-id product vulnerability-score color (get vulns-in-db vulnerability-id)]))]]]]]
-
-           [ui/Message {:content (@tr [:nuvlabox-vuln-unavailable])}])]))))
-
-
-(defn AddPlaybookModal
-  []
-  (let [modal-id             :nuvlabox-playbook-add
-        tr                   (subscribe [::i18n-subs/tr])
-        nuvlabox             (subscribe [::subs/nuvlabox])
-        default-form-data    {:enabled true
-                              :type    "MANAGEMENT"}
-        available-types      [{:key "MANAGEMENT", :text "MANAGEMENT", :value "MANAGEMENT", :icon "wrench"}
-                              {:key "EMERGENCY", :text "EMERGENCY", :value "EMERGENCY", :icon "emergency"}]
-        form-data            (r/atom default-form-data)
-        disabled-by-default? (r/atom false)
-        close-fn             #(do
-                                (reset! form-data default-form-data)
-                                (reset! disabled-by-default? false)
-                                (dispatch [::edges-events/open-modal nil]))
-        show-modal?          (subscribe [::edges-subs/modal-visible? modal-id])
-        on-change-type       (fn [v]
-                               (swap! form-data assoc :type v)
-                               (if (= v "EMERGENCY")
-                                 (do
-                                   (reset! disabled-by-default? true)
-                                   (swap! form-data assoc :enabled false))
-                                 (reset! disabled-by-default? false)))
-        on-click-fn          #(do
-                                (dispatch [::events/add-nuvlabox-playbook @form-data])
-                                (close-fn))]
-
-    (fn []
-      (let [nuvlabox-id (:id @nuvlabox)]
-        (swap! form-data assoc :parent nuvlabox-id)
-        [ui/Modal {:open       @show-modal?
-                   :close-icon true
-                   :on-close   close-fn}
-         [uix/ModalHeader {:header (@tr [:nuvlabox-add-playbook])
-                           :icon   "book"}]
-         [ui/ModalContent
-          [:<>
-           [ui/Form
-            [ui/FormInput {:label     (str/capitalize (@tr [:name]))
-                           :required  true
-                           :on-change (ui-callback/input-callback
-                                        #(swap! form-data assoc :name %))}]
-            [ui/FormInput {:label     (str/capitalize (@tr [:description]))
-                           :required  false
-                           :on-change (ui-callback/input-callback
-                                        #(swap! form-data assoc :description %))}]
-            [ui/FormSelect {:selection     true
-                            :label         "Type"
-                            :fluid         false
-                            :default-value "MANAGEMENT"
-                            :options       available-types
-                            :on-change     (ui-callback/value on-change-type)}]
-            [ui/FormInput {:label ["Enabled " (when @disabled-by-default?
-                                                (r/as-element
-                                                  [ui/Popup
-                                                   {:trigger (r/as-element [ui/Icon {:name "info circle"}])
-                                                    :content (@tr [:nuvlabox-playbook-emergency-info])}]))]}
-             [ui/Radio {:toggle    true
-                        :disabled  @disabled-by-default?
-                        :checked   (:enabled @form-data)
-                        :on-change #(do
-                                      (swap! form-data assoc :enabled (not (:enabled @form-data))))}]]
-            [ui/FormField {:label    "Run"
-                           :required true}]
-            "Shell script: "
-            [uix/EditorShell
-             ""
-             (fn [_editor _data value]
-               (ui-callback/input-callback
-                 (swap! form-data assoc :run value)))
-             true
-             "full-width"]]]]
-         [ui/ModalActions
-          [uix/Button
-           {:text     (@tr [:add])
-            :disabled (utils/form-add-playbook-incomplete? @form-data)
-            :primary  true
-            :on-click on-click-fn}]]]))))
-
-
-(defn TabPlaybooks
-  []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        nuvlabox          (subscribe [::subs/nuvlabox])
-        playbooks         (subscribe [::subs/nuvlabox-playbooks])
-        selected-playbook (subscribe [::subs/nuvlabox-current-playbook])
-        run-changed?      (r/atom false)
-        run               (r/atom nil)
-        enabled-changed?  (r/atom false)
-        can-edit?         (subscribe [::subs/can-edit?])
-        on-change-fn      (fn [k]
-                            (dispatch [::events/get-nuvlabox-current-playbook k]))]
-    (fn []
-      (let [n (count @playbooks)]
-        [ui/TabPane
-         (when (nil? (:host-level-management-api-key @nuvlabox))
-           [ui/Message {:warning true} (@tr [:nuvlabox-playbooks-disabled])])
-
-         [ui/Container {:text-align "center"}
-          [ui/Label {:basic true}
-           "Total NuvlaEdge playbooks found: "
-           [ui/LabelDetail n]]
-
-          [ui/Segment {:secondary true
-                       :color     "grey"
-                       :raised    true}
-
-           [ui/Container
-            [ui/Dropdown
-             {:header      (r/as-element [ui/DropdownHeader {:content "Select Playbook"
-                                                             :icon    "book"}])
-              :placeholder (str (@tr [:select]) " playbook")
-              :on-change   (ui-callback/value on-change-fn)
-              :selection   true
-              :search      true
-              :style       {:margin "1em"}
-              :clearable   false
-              :options     (map (fn [{:keys [id name type enabled]}]
-                                  ^{:key id}
-                                  {:key         id,
-                                   :text        (or name id),
-                                   :value       id,
-                                   :description (if enabled
-                                                  "enabled"
-                                                  "disabled")
-                                   :icon        (if (= "EMERGENCY" type)
-                                                  "emergency"
-                                                  "wrench")}) @playbooks)}]
-            (when @can-edit?
-              [ui/Button {:icon     "plus"
-                          :size     "mini"
-                          :positive true
-                          :circular true
-                          :on-click #(dispatch [::edges-events/open-modal :nuvlabox-playbook-add])}])
-
-            [ui/Container
-             (if @selected-playbook
-               [ui/Segment {:placeholder true}
-                [ui/Grid {:columns    2
-                          :stackable  true
-                          :divided    true
-                          :text-align "center"}
-                 [ui/GridRow {:vertical-align "middle"
-                              :stretched      true}
-                  [ui/GridColumn
-                   [ui/Table {:basic  "very"
-                              :padded false}
-                    [ui/TableBody
-                     [ui/TableRow
-                      [ui/TableCell "ID"]
-                      [ui/TableCell [values/as-link (:id @selected-playbook) :label
-                                     (general-utils/id->uuid (:id @selected-playbook))]]]
-                     (when (:name @selected-playbook)
-                       [ui/TableRow
-                        [ui/TableCell (str/capitalize (@tr [:name]))]
-                        [ui/TableCell (:name @selected-playbook)]])
-                     (when (:description @selected-playbook)
-                       [ui/TableRow
-                        [ui/TableCell (str/capitalize (@tr [:description]))]
-                        [ui/TableCell (:description @selected-playbook)]])
-                     [ui/TableRow
-                      [ui/TableCell "Enabled"]
-                      [ui/TableCell
-                       [ui/Radio {:toggle    true
-                                  :disabled  (not @can-edit?)
-                                  :checked   (if @enabled-changed?
-                                               (not (:enabled @selected-playbook))
-                                               (:enabled @selected-playbook))
-                                  :on-change #(do
-                                                (swap! enabled-changed? not))}]]]
-                     [ui/TableRow
-                      [ui/TableCell "Type"]
-                      [ui/TableCell [:<>
-                                     [ui/Icon {:name (if (= "EMERGENCY" (:type @selected-playbook))
-                                                       "emergency"
-                                                       "wrench")}]
-                                     (:type @selected-playbook)]]]]]
-
-                   [ui/Container {:text-align "left"}
-                    "Shell script: "
-                    [uix/EditorShell
-                     (:run @selected-playbook)
-                     (fn [_editor _data value]
-                       (reset! run value)
-                       (reset! run-changed? true))
-                     @can-edit?
-                     "full-height"]]
-
-                   [uix/Button {:primary  true
-                                :text     (@tr [:save])
-                                :icon     "save"
-                                :disabled (not (or (and @run-changed? (not-empty @run)) @enabled-changed?))
-                                :on-click #(do
-                                             (dispatch [::events/edit-playbook
-                                                        @selected-playbook
-                                                        (cond-> {}
-                                                                @enabled-changed? (assoc :enabled (not (:enabled @selected-playbook)))
-                                                                (and @run-changed? (not-empty @run)) (assoc :run @run))])
-                                             (refresh (general-utils/id->uuid (:id @nuvlabox)))
-                                             (reset! run-changed? false)
-                                             (reset! enabled-changed? false)
-                                             (reset! run nil))}]]
-
-                  [ui/GridColumn
-                   (if (some? (:output @selected-playbook))
-                     [:<>
-                      [ui/Header {:as       "h4"
-                                  :attached "top"}
-                       "Output"]
-                      [ui/Segment {:attached   true
-                                   :text-align "left"}
-                       [ui/CodeMirror {:value      (:output @selected-playbook)
-                                       :autoCursor true
-                                       :options    {:mode              "text/plain"
-                                                    :read-only         true
-                                                    :line-numbers      false
-                                                    :style-active-line false}
-                                       :class      "full-width"}]]]
-                     [ui/Segment {:vertical true}
-                      (@tr [:nuvlabox-playbooks-no-outputs])])]]]]
-               (@tr [:nuvlabox-playbooks-not-selected]))]]]]]))))
 
 
 (defn tabs
   []
-  (let [tr          @(subscribe [::i18n-subs/tr])
-        nuvlabox    (subscribe [::subs/nuvlabox])
-        can-edit?   @(subscribe [::subs/can-edit?])
-        peripherals @(subscribe [::subs/nuvlabox-peripherals-ids])
-        overview    {:menuItem {:content "Overview"
-                                :key     :overview
-                                :icon    "info"}
-                     :render   #(r/as-element [TabOverview])}]
-    (case (:state @nuvlabox)
-      "SUSPENDED" [overview]
-      [overview
-       {:menuItem {:content "Location"
-                   :key     :location
-                   :icon    "map"}
-        :render   #(r/as-element [TabLocation])}
-       {:menuItem {:content (r/as-element
-                              [ui/Popup
-                               {:trigger        (r/as-element
-                                                  [:span "Resource Consumption"])
-                                :content        (tr [:nuvlabox-datagateway-popup])
-                                :header         "data-gateway"
-                                :position       "top center"
-                                :wide           true
-                                :on             "hover"
-                                :size           "tiny"
-                                :hide-on-scroll true}])
-                   :key     :consumption
-                   :icon    "thermometer half"}
-        :render   #(r/as-element [TabLoad])}
-       {:menuItem {:content (r/as-element [:span (str/capitalize (tr [:logs]))])
-                   :key     :logs
-                   :icon    "file code"}
-        :render   (fn [] (r/as-element [log-views/TabLogs
-                                        (:id @nuvlabox)
-                                        #(subscribe [::subs/nuvlabox-components])]))}
-       {:menuItem {:content (r/as-element [:span "Peripherals"
-                                           [ui/Label {:circular true
-                                                      :size     "mini"
-                                                      :attached "top right"}
-                                            (count peripherals)]])
-                   :key     :peripherals
-                   :icon    "usb"}
-        :render   #(r/as-element [TabPeripherals])}
-       {:menuItem {:content "Events"
-                   :key     :events
-                   :icon    "bolt"}
-        :render   #(r/as-element [TabEvents])}
-       {:menuItem {:content "Deployments"
-                   :key     :deployments
-                   :icon    "rocket"}
-        :render   #(r/as-element [deployments-views/DeploymentTable
-                                  {:empty-msg (tr [:empty-deployment-nuvlabox-msg])}])}
-       {:menuItem {:content "Vulnerabilities"
-                   :key     :vulnerabilities
-                   :icon    "shield"}
-        :render   #(r/as-element [TabVulnerabilities])}
-       {:menuItem {:content "Playbooks"
-                   :key     :playbooks
-                   :icon    "book"}
-        :render   #(r/as-element [TabPlaybooks])}
-       (job-views/jobs-section)
-       (acl/TabAcls nuvlabox can-edit? ::events/edit)])))
+  (let [tr               @(subscribe [::i18n-subs/tr])
+        deployment-fleet (subscribe [::subs/deployment-fleet])
+        can-edit?        @(subscribe [::subs/can-edit?])]
+    [{:menuItem {:content "Overview"
+                 :key     :overview
+                 :icon    "info"}
+      :render   #(r/as-element [TabOverview])}
+     {:menuItem {:content "Events"
+                 :key     :events
+                 :icon    "bolt"}
+      :render   #(r/as-element [TabEvents])}
+     {:menuItem {:content "Deployments"
+                 :key     :deployments
+                 :icon    "rocket"}
+      :render   #(r/as-element [deployments-views/DeploymentTable
+                                {:empty-msg (tr [:empty-deployemnt-msg])}])}
+     (job-views/jobs-section)
+     (acl/TabAcls deployment-fleet can-edit? ::events/edit)]))
 
 
-(defn TabsNuvlaBox
+(defn TabsDeploymentFleet
   []
   (let [active-tab (subscribe [::subs/active-tab])
         panes      (tabs)]
@@ -1937,37 +1172,30 @@
 
 (defn PageHeader
   []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        nuvlabox (subscribe [::subs/nuvlabox])]
-    (fn []
-      (let [{:keys [id name state online]} @nuvlabox]
-        [:div
-         [:h2 {:style {:margin "0 0 0 0"}}
-          [ui/Icon {:name "box"}]
-          (or name id)]
-         [:p {:style {:margin "0.5em 0 1em 0"}}
-          [OnlineStatusIcon online]
-          [:span {:style {:font-weight "bold"}}
-           (str/capitalize (@tr [:state]))
-           (@tr [:colon])
-           ff/nbsp]
-          state]]))))
+  (let [{:keys [id name]} @(subscribe [::subs/deployment-fleet])]
+    [uix/PageHeader "bullseye" (or name id)]))
 
 
-(defn EdgeDetails
+(defn Details
   [uuid]
+  #_(if (= (str/lower-case uuid) "new")
+      [:h1 "New"]
+      [:h1 uuid])
   (refresh uuid)
-  (let [nb-status (subscribe [::subs/nuvlabox-status])]
+  (let [
+        ;nb-status (subscribe [::edges-detail-subs/nuvlabox-status])
+        ]
     [components/LoadingPage {:dimmable? true}
      [:<>
       [components/NotFoundPortal
-       ::subs/nuvlabox-not-found?
-       :no-nuvlabox-message-header
-       :no-nuvlabox-message-content]
+       ::subs/deployment-fleet-not-found?
+       :no-deployment-fleet-message-header
+       :no-deployment-fleet-message-content]
       [ui/Container {:fluid true}
        [PageHeader]
        [MenuBar uuid]
-       [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab :jobs]
-       [job-views/ProgressJobAction @nb-status]
-       [TabsNuvlaBox]
-       [AddPlaybookModal]]]]))
+       ;[components/ErrorJobsMessage ::job-subs/jobs ::edges-detail-events/set-active-tab :jobs]
+       ;[job-views/ProgressJobAction @nb-status]
+       [TabsDeploymentFleet]
+       ;[AddPlaybookModal]
+       ]]]))

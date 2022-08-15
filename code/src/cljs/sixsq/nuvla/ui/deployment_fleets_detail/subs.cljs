@@ -5,7 +5,8 @@
     [sixsq.nuvla.ui.edges-detail.spec :as edges-detail-spec]
     [sixsq.nuvla.ui.edges.utils :as edges-utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [clojure.string :as str]))
 
 
 (reg-sub
@@ -177,3 +178,34 @@
   ::nuvlabox-current-playbook
   (fn [db]
     (::edges-detail-spec/nuvlabox-current-playbook db)))
+
+(reg-sub
+  ::apps
+  (fn [db]
+    (::spec/apps db)))
+
+(defn transform
+  [tree {:keys [parent-path] :as app}]
+  (let [paths (if (str/blank? parent-path)
+                [:applications]
+                (-> parent-path
+                    (str/split "/")
+                    (conj :applications)))]
+    (update-in tree paths conj app)))
+
+
+(reg-sub
+  ::apps-tree
+  :<- [::apps]
+  (fn [apps]
+    (reduce transform {} apps)))
+
+(reg-sub
+  ::apps-fulltext-search
+  (fn [db]
+    (::spec/apps-fulltext-search db)))
+
+(reg-sub
+  ::app-selected?
+  (fn [{:keys [::spec/apps-selected]} [_ id]]
+    (contains? apps-selected id)))

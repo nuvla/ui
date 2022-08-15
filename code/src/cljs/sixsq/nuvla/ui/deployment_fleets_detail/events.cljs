@@ -205,3 +205,32 @@
   ::set-active-tab
   (fn [db [_ key]]
     (assoc db ::spec/active-tab key)))
+
+
+(reg-event-db
+  ::set-apps
+  (fn [db [_ apps]]
+    (assoc db ::spec/apps (:resources apps))))
+
+
+(reg-event-fx
+  ::set-apps-fulltext-search
+  (fn [{db :db} [_ search]]
+    {:db (assoc db ::spec/apps-fulltext-search search)
+     :fx [[:dispatch [::search-apps]]]}))
+
+(reg-event-fx
+  ::search-apps
+  (fn [{{:keys [::spec/apps-fulltext-search]} :db}]
+    {::cimi-api-fx/search [:module {:last   10000
+                                    :filter (general-utils/join-and
+                                              (general-utils/fulltext-query-string apps-fulltext-search)
+                                              "subtype!='project'")}
+                           #(dispatch [::set-apps %])]}))
+
+
+(reg-event-db
+  ::toggle-select-app
+  (fn [{:keys [::spec/apps-selected] :as db} [_ id]]
+    (let [op (if (contains? apps-selected id) disj conj)]
+      (update db ::spec/apps-selected op id))))

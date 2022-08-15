@@ -17,6 +17,7 @@
     [sixsq.nuvla.ui.data.views]
     [sixsq.nuvla.ui.deployments.views]
     [sixsq.nuvla.ui.deployment-fleets.views]
+    [sixsq.nuvla.ui.deployment-fleets-detail.views]
     [sixsq.nuvla.ui.docs.views]
     [sixsq.nuvla.ui.edges.views]
     [sixsq.nuvla.ui.history.events :as history-events]

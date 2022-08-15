@@ -22,6 +22,9 @@
 (s/def ::infra-services (s/nilable coll?))
 (s/def ::nuvlabox-emergency-playbooks (s/nilable any?))
 (s/def ::nuvlabox-current-playbook (s/nilable any?))
+(s/def ::apps (s/nilable any?))
+(s/def ::apps-fulltext-search (s/nilable string?))
+(s/def ::apps-selected (s/nilable set?))
 
 
 (s/def ::db (s/keys :req [::deployment-fleet
@@ -42,7 +45,10 @@
                           ::nuvlabox-playbooks
                           ::infra-services
                           ::nuvlabox-emergency-playbooks
-                          ::nuvlabox-current-playbook]))
+                          ::nuvlabox-current-playbook
+                          ::apps
+                          ::apps-fulltext-search
+                          ::apps-selected]))
 
 (def defaults {::deployment-fleet             nil
                ::nuvlabox-status              nil
@@ -62,4 +68,7 @@
                ::nuvlabox-playbooks           nil
                ::infra-services               []
                ::nuvlabox-emergency-playbooks nil
-               ::nuvlabox-current-playbook    nil})
+               ::nuvlabox-current-playbook    nil
+               ::apps                         nil
+               ::apps-fulltext-search         nil
+               ::apps-selected                #{}})

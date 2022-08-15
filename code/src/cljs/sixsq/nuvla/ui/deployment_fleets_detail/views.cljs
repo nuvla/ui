@@ -1171,16 +1171,89 @@
 
 
 (defn PageHeader
-  []
+  [new]
   (let [{:keys [id name]} @(subscribe [::subs/deployment-fleet])]
-    [uix/PageHeader "bullseye" (or name id)]))
+    [uix/PageHeader "bullseye" (if new "New" (or name id))]))
 
+(defn Application
+  [{:keys [id name description]}]
+  (let [selected? @(subscribe [::subs/app-selected? id])]
+    [ui/ListItem {:on-click #(dispatch [::events/toggle-select-app id])
+                  :style    {:cursor :pointer}}
+     [ui/ListIcon {:name (if selected?
+                           "check square outline"
+                           "square outline")}]
+     [ui/ListContent
+      [ui/ListHeader (when selected? {:as :a}) name]
+      [ui/ListDescription description]]]))
 
-(defn Details
-  [uuid]
-  #_(if (= (str/lower-case uuid) "new")
-      [:h1 "New"]
-      [:h1 uuid])
+(defn Applications
+  [applications]
+  [:<>
+   (for [{:keys [id] :as child} applications]
+     ^{:key id}
+     [Application child])])
+
+(declare Node)
+
+(defn Project
+  [path {:keys [applications] :as content}]
+  [ui/ListItem
+   [ui/ListIcon {:name "folder"}]
+   [ui/ListContent
+    [ui/ListHeader path]
+    [ui/ListList
+     [Node
+      (dissoc content :applications)
+      applications]]]])
+
+(defn Projects
+  [projects]
+  [:<>
+   (for [[path content] projects]
+     ^{:key path}
+     [Project path content])])
+
+(defn Node
+  [projects applications]
+  (js/console.error "Node " (sort-by first projects))
+  [:<>
+   [Projects (sort-by first projects)]
+   [Applications (sort-by (juxt :id :name) applications)]])
+
+(defn SelectApps
+  []
+  (let [apps     @(subscribe [::subs/apps-tree])
+        fulltext @(subscribe [::subs/apps-fulltext-search])]
+    [:<>
+     [components/SearchInput
+      {:on-change     (ui-callback/input-callback #(dispatch [::events/set-apps-fulltext-search %]))
+       :default-value fulltext}]
+     [ui/ListSA
+      [Node (dissoc apps :applications) (:applications apps)]]]))
+
+(defn New
+  []
+  (dispatch [::events/search-apps])
+  [ui/Container {:fluid true}
+   [PageHeader true]
+   [ui/Grid
+    [ui/GridRow {:columns   2
+                 :stackable :mobile}
+     [ui/GridColumn
+      [ui/Segment
+       [:h2 "Applications"]
+       [SelectApps]
+       ]
+      ]
+     [ui/GridColumn
+      [ui/Segment
+       [:h2 "Targets"]]
+      ]]]
+   ])
+
+(defn DeploymentFleet
+  []
   (refresh uuid)
   [components/LoadingPage {:dimmable? true}
    [:<>
@@ -1193,5 +1266,11 @@
      [MenuBar uuid]
      [components/ErrorJobsMessage
       ::job-subs/jobs ::events/set-active-tab :jobs]
-     [TabsDeploymentFleet]
-     ]]])
+     [TabsDeploymentFleet]]]])
+
+
+(defn Details
+  [uuid]
+  (if (= (str/lower-case uuid) "new")
+    [New]
+    [DeploymentFleet]))

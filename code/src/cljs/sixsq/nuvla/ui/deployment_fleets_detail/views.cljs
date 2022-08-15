@@ -1182,20 +1182,16 @@
       [:h1 "New"]
       [:h1 uuid])
   (refresh uuid)
-  (let [
-        ;nb-status (subscribe [::edges-detail-subs/nuvlabox-status])
-        ]
-    [components/LoadingPage {:dimmable? true}
-     [:<>
-      [components/NotFoundPortal
-       ::subs/deployment-fleet-not-found?
-       :no-deployment-fleet-message-header
-       :no-deployment-fleet-message-content]
-      [ui/Container {:fluid true}
-       [PageHeader]
-       [MenuBar uuid]
-       ;[components/ErrorJobsMessage ::job-subs/jobs ::edges-detail-events/set-active-tab :jobs]
-       ;[job-views/ProgressJobAction @nb-status]
-       [TabsDeploymentFleet]
-       ;[AddPlaybookModal]
-       ]]]))
+  [components/LoadingPage {:dimmable? true}
+   [:<>
+    [components/NotFoundPortal
+     ::subs/deployment-fleet-not-found?
+     :no-deployment-fleet-message-header
+     :no-deployment-fleet-message-content]
+    [ui/Container {:fluid true}
+     [PageHeader]
+     [MenuBar uuid]
+     [components/ErrorJobsMessage
+      ::job-subs/jobs ::events/set-active-tab :jobs]
+     [TabsDeploymentFleet]
+     ]]])

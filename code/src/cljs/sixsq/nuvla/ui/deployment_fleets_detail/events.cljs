@@ -56,29 +56,9 @@
 
 
 (reg-event-db
-  ::set-matching-vulns-from-db
-  (fn [db [_ vulns]]
-    (assoc db ::edges-detail-spec/matching-vulns-from-db (zipmap (map :name vulns) vulns))))
-
-
-(reg-event-db
-  ::set-nuvlabox-peripherals
-  (fn [db [_ nuvlabox-peripherals]]
-    (assoc db ::edges-detail-spec/nuvlabox-peripherals (->> (get nuvlabox-peripherals :resources [])
-                                                            (map (juxt :id identity))
-                                                            (into {})))))
-
-
-(reg-event-db
   ::set-deployment-fleet-events
   (fn [db [_ events]]
     (assoc db ::spec/deployment-fleet-events events)))
-
-
-(reg-event-db
-  ::set-vuln-severity-selector
-  (fn [db [_ vuln-severity]]
-    (assoc db ::edges-detail-spec/vuln-severity-selector vuln-severity)))
 
 
 (reg-event-fx
@@ -87,49 +67,6 @@
     {:db (assoc db ::spec/deployment-fleet-not-found? (nil? deployment-fleet)
                    ::spec/deployment-fleet deployment-fleet
                    ::main-spec/loading? false)}))
-
-
-(reg-event-fx
-  ::get-nuvlabox-associated-ssh-keys
-  (fn [_ [_ ssh-keys-ids]]
-    (if (empty? ssh-keys-ids)
-      (dispatch [::set-nuvlabox-associated-ssh-keys {}])
-      {::cimi-api-fx/search
-       [:credential
-        {:filter (->> ssh-keys-ids
-                      (map #(str "id='" % "'"))
-                      (apply general-utils/join-or))
-         :last   100}
-        #(dispatch [::set-nuvlabox-associated-ssh-keys (:resources %)])]})))
-
-
-(reg-event-fx
-  ::get-ssh-keys-not-associated
-  (fn [{{{:keys [ssh-keys]} ::edges-detail-spec/nuvlabox} :db} [_ callback-fn]]
-    (let [keys (if (nil? ssh-keys) [] ssh-keys)]
-      (callback-fn [])
-      {::cimi-api-fx/search
-       [:credential
-        {:filter (->> keys
-                      (map #(str "id!='" % "'"))
-                      (apply general-utils/join-and)
-                      (general-utils/join-and "subtype=\"ssh-key\""))
-         :last   100}
-        #(callback-fn (get % :resources []))]})))
-
-
-(reg-event-fx
-  ::get-matching-vulns-from-db
-  (fn [_ [_ vuln-ids]]
-    (if (empty? vuln-ids)
-      (dispatch [::set-matching-vulns-from-db {}])
-      {::cimi-api-fx/search
-       [:vulnerability
-        {:filter (->> vuln-ids
-                      (map #(str "name='" % "'"))
-                      (apply general-utils/join-or))
-         :last   110}
-        #(dispatch [::set-matching-vulns-from-db (:resources %)])]})))
 
 
 (reg-event-fx
@@ -158,35 +95,12 @@
 
 
 (reg-event-fx
-  ::operation-text-response
-  (fn [_ [_ operation resource-id on-success-fn on-error-fn]]
-    {::cimi-api-fx/operation
-     [resource-id operation
-      #(if (instance? js/Error %)
-         (let [{:keys [status message]} (response/parse-ex-info %)]
-           (dispatch [::messages-events/add
-                      {:header  (cond-> (str "error executing " operation " for NuvlaEdge " resource-id)
-                                        status (str " (" status ")"))
-                       :content message
-                       :type    :error}])
-           (on-error-fn))
-         (do
-           (dispatch [::messages-events/add
-                      {:header  (str "operation " operation " successful")
-                       :content %
-                       :type    :success}])
-           (on-success-fn (:message %))
-           (dispatch [::get-nuvlabox resource-id])))
-      nil]}))
-
-
-(reg-event-fx
   ::set-page
   (fn [{db :db} [_ page]]
     {:db       (assoc db ::edges-detail-spec/page page)
      :dispatch [::get-deployment-fleet-events]}))
 
-
+;; FIXME duplicated in multiple places, build an event reusable component
 (reg-event-fx
   ::get-deployment-fleet-events
   (fn [{{:keys [::spec/page
@@ -224,13 +138,6 @@
                         ]
      }))
 
-
-(reg-event-fx
-  ::decommission
-  (fn [{{:keys [::edges-detail-spec/nuvlabox]} :db} _]
-    (let [nuvlabox-id (:id ::edges-detail-spec/nuvlabox)]
-      {::cimi-api-fx/operation [nuvlabox-id "decommission"
-                                #(dispatch [::get-nuvlabox nuvlabox-id])]})))
 
 (reg-event-fx
   ::edit
@@ -298,180 +205,3 @@
   ::set-active-tab
   (fn [db [_ key]]
     (assoc db ::spec/active-tab key)))
-
-
-(reg-event-db
-  ::set-nuvlabox-managers
-  (fn [db [_ status-per-manager]]
-    (assoc db ::edges-detail-spec/nuvlabox-managers status-per-manager)))
-
-
-(reg-event-db
-  ::set-join-token
-  (fn [db [_ token]]
-    (assoc db ::edges-detail-spec/join-token token)))
-
-
-(reg-event-fx
-  ::get-join-token
-  (fn [_ [_ nuvlabox-id scope]]
-    {::cimi-api-fx/get [nuvlabox-id #(dispatch [::get-join-token-from-isg (:infrastructure-service-group %) scope])]}))
-
-
-(reg-event-fx
-  ::get-join-token-from-isg
-  (fn [_ [_ isg-id scope]]
-    {::cimi-api-fx/search
-     [:infrastructure-service
-      {:filter (str "parent='" isg-id "' and subtype='swarm'")
-       :select "id"
-       :last   1}
-      #(dispatch [::get-join-token-from-is (:id (first (:resources %))) scope])]}))
-
-
-(reg-event-fx
-  ::get-join-token-from-is
-  (fn [_ [_ is-id scope]]
-    {::cimi-api-fx/search
-     [:credential
-      {:filter (str "parent='" is-id "' and subtype='swarm-token' and scope='" scope "'")
-       :select "id, token"
-       :last   1}
-      #(dispatch [::set-join-token (first (:resources %))])]}))
-
-
-(reg-event-fx
-  ::get-nuvlabox-managers
-  (fn [_ [_ self-id]]
-    {::cimi-api-fx/search
-     [:nuvlabox-status
-      {:filter (str "cluster-node-role='manager' and parent!='" self-id "'")
-       :select "id, parent, cluster-id, cluster-join-address"
-       :last   100}
-      #(dispatch [::get-nuvlabox-manager-by-status (:resources %)])]}))
-
-
-(reg-event-fx
-  ::get-nuvlabox-manager-by-status
-  (fn [_ [_ statuses]]
-    {::cimi-api-fx/search
-     [:nuvlabox
-      {:filter (->> (map :parent statuses)
-                    (map #(str "id='" % "'"))
-                    (apply general-utils/join-or))
-       :select "id, name, nuvlabox-status"
-       :last   100}
-      #(dispatch [::set-nuvlabox-managers
-                  (into {}
-                        (for [status statuses]
-                          (let [id (:parent status)]
-                            {id
-                             {:id     id
-                              :name   (:name (first (get (group-by :id (:resources %)) (:parent status))))
-                              :status status}})))])]}))
-
-
-(reg-event-fx
-  ::get-nuvlabox-cluster
-  (fn [_ [_ nuvlabox-id]]
-    {::cimi-api-fx/search [:nuvlabox-cluster
-                           {:filter (str "nuvlabox-managers='" nuvlabox-id "'")
-                            :select "id, cluster-id, managers, workers, orchestrator, name"
-                            :last   1}
-                           #(dispatch [::set-nuvlabox-cluster (first (:resources %))])]}))
-
-
-(reg-event-db
-  ::set-nuvlabox-cluster
-  (fn [db [_ nuvlabox-cluster]]
-    (assoc db ::edges-detail-spec/nuvlabox-cluster nuvlabox-cluster)))
-
-
-(reg-event-fx
-  ::get-nuvlabox-playbooks
-  (fn [_ [_ nuvlabox-id]]
-    {::cimi-api-fx/search [:nuvlabox-playbook
-                           {:filter  (str "parent='" nuvlabox-id "'")
-                            :select  "id, run, enabled, type, output, name, description"
-                            :orderby "type:desc"
-                            :last    1000}
-                           #(dispatch [::set-nuvlabox-playbooks (:resources %)])]}))
-
-(reg-event-db
-  ::set-nuvlabox-playbooks
-  (fn [db [_ nuvlabox-playbooks]]
-    (assoc db ::edges-detail-spec/nuvlabox-playbooks nuvlabox-playbooks)))
-
-
-(reg-event-fx
-  ::get-infra-services
-  (fn [_ [_ group-id]]
-    {::cimi-api-fx/search [:infrastructure-service
-                           {:filter  (str "parent='" group-id "'")
-                            :select  "id, name, description, subtype"
-                            :orderby "subtype:asc, name:asc"
-                            :last    1000}
-                           #(dispatch [::set-infra-services (:resources %)])]}))
-
-(reg-event-db
-  ::set-infra-services
-  (fn [db [_ infra-services]]
-    (assoc db ::edges-detail-spec/infra-services infra-services)))
-
-
-(reg-event-fx
-  ::edit-playbook
-  (fn [_ [_ playbook new-body]]
-    (let [nuvlabox-id (:parent playbook)
-          playbook-id (:id playbook)]
-      {::cimi-api-fx/edit [playbook-id new-body
-                           #(if (instance? js/Error %)
-                              (let [{:keys [status message]} (response/parse-ex-info %)]
-                                (dispatch [::messages-events/add
-                                           {:header  (cond-> "Failed to update the playbook's run"
-                                                             status (str " (" status ")"))
-                                            :content message
-                                            :type    :error}]))
-                              (do
-                                (dispatch [::messages-events/add
-                                           {:header  "Playbook updated"
-                                            :content "The Playbook's run script has been updated."
-                                            :type    :info}])
-                                (dispatch [::get-nuvlabox-playbooks nuvlabox-id])))]})))
-
-
-(reg-event-fx
-  ::add-nuvlabox-playbook
-  (fn [_ [_ data]]
-    {::cimi-api-fx/add [:nuvlabox-playbook data
-                        #(dispatch [::get-nuvlabox-playbooks (:parent data)])]}))
-
-
-(reg-event-fx
-  ::get-emergency-playbooks
-  (fn [_ [_ nuvlabox-id]]
-    {::cimi-api-fx/search [:nuvlabox-playbook
-                           {:filter  (str "parent='" nuvlabox-id "' and type='EMERGENCY'")
-                            :select  "id, enabled, type, name"
-                            :orderby "enabled:desc"
-                            :last    1000}
-                           #(dispatch [::set-emergency-playbooks (:resources %)])]}))
-
-
-(reg-event-db
-  ::set-emergency-playbooks
-  (fn [db [_ nuvlabox-playbooks]]
-    (assoc db ::edges-detail-spec/nuvlabox-emergency-playbooks nuvlabox-playbooks)))
-
-
-(reg-event-fx
-  ::get-nuvlabox-current-playbook
-  (fn [_ [_ nuvlabox-playbook-id]]
-    {::cimi-api-fx/get [nuvlabox-playbook-id #(dispatch [::set-nuvlabox-current-playbook %])
-                        :on-error #(dispatch [::set-nuvlabox-current-playbook nil])]}))
-
-
-(reg-event-db
-  ::set-nuvlabox-current-playbook
-  (fn [db [_ nuvlabox-playbook]]
-    (assoc db ::edges-detail-spec/nuvlabox-current-playbook nuvlabox-playbook)))

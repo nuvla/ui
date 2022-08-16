@@ -11,7 +11,6 @@
     [sixsq.nuvla.ui.deployment-fleets.subs :as subs]
     [sixsq.nuvla.ui.edges.subs :as edges-subs]
     [sixsq.nuvla.ui.edges.utils :as utils]
-    [sixsq.nuvla.ui.edges.views-utils :as views-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
@@ -77,13 +76,21 @@
        clickable? "brown"
        ::events/set-state-selector ::subs/state-selector]]]))
 
+(defn AddButton
+  []
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [uix/MenuItem
+     {:name     (@tr [:add])
+      :icon     "add"
+      :on-click #(dispatch
+                   [::history-events/navigate "deployment-fleets/New"])}]))
 
 (defn MenuBar []
   (let [loading? (subscribe [::edges-subs/loading?])]
     (fn []
       [components/StickyBar
        [ui/Menu {:borderless true, :stackable true}
-        [views-utils/AddButton]
+        [AddButton]
         [ui/MenuItem {:icon     "grid layout"
                       :active   (= @view-type :cards)
                       :on-click #(reset! view-type :cards)}]

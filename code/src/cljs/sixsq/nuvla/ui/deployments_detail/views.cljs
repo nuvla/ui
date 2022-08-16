@@ -673,7 +673,8 @@
         deployment      (subscribe [::subs/deployment])
         version         (subscribe [::subs/current-module-version])
         versions        (subscribe [::subs/module-versions])
-        {:keys [id state module tags acl owner created-by]} @deployment
+        {:keys [id state module tags acl owner created-by
+                deployment-fleet]} @deployment
         owners          (:owners acl)
         resolved-owners (subscribe [::session-subs/resolve-users owners])
         urls            (get-in module [:content :urls])]
@@ -722,7 +723,13 @@
           [deployments-utils/CloudNuvlaEdgeLink @deployment]]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
-         [ui/TableCell @version " " (up-to-date? @version @versions)]]]]]
+         [ui/TableCell @version " " (up-to-date? @version @versions)]]
+        (when deployment-fleet
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:deployment-fleet]))]
+           [ui/TableCell [values/as-link (general-utils/id->uuid deployment-fleet) :label
+                          (general-utils/id->uuid deployment-fleet)
+                          :page "deployment-fleets"]]])]]]
      (when-not (deployments-utils/stopped? state)
        [ui/Segment {:attached  false
                     :secondary true}

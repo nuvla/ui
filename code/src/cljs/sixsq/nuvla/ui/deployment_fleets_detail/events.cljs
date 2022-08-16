@@ -15,6 +15,14 @@
     [sixsq.nuvla.ui.utils.response :as response]))
 
 
+(reg-event-fx
+  ::new
+  (fn [{db :db}]
+    {:db (merge db spec/defaults)
+     :fx [[:dispatch [::search-apps]]
+          [:dispatch [::search-creds]]]}))
+
+
 (reg-event-db
   ::set-nuvlabox-status
   (fn [db [_ nuvlabox-status]]
@@ -127,16 +135,10 @@
                                (not= (:id deployment-fleet) id) (merge spec/defaults))
      ::cimi-api-fx/get [id #(dispatch [::set-deployment-fleet %])
                         :on-error #(dispatch [::set-deployment-fleet nil])]
-     :fx               [
-                        [:dispatch [::get-deployment-fleet-events id]]
+     :fx               [[:dispatch [::get-deployment-fleet-events id]]
                         [:dispatch [::job-events/get-jobs id]]
-                        [:dispatch [::deployments-events/get-deployments (str "deployment-fleet='" id "'")]]
-                        ;[:dispatch [::get-nuvlabox-playbooks id]]
-                        ;[:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
-                        ;                                              (:id nuvlabox-current-playbook)
-                        ;                                              nil)]]
-                        ]
-     }))
+                        [:dispatch [::deployments-events/get-deployments
+                                    (str "deployment-fleet='" id "'")]]]}))
 
 
 (reg-event-fx
@@ -222,11 +224,13 @@
 (reg-event-fx
   ::search-apps
   (fn [{{:keys [::spec/apps-fulltext-search]} :db}]
-    {::cimi-api-fx/search [:module {:last   10000
-                                    :filter (general-utils/join-and
-                                              (general-utils/fulltext-query-string apps-fulltext-search)
-                                              "subtype!='project'")}
-                           #(dispatch [::set-apps %])]}))
+    {::cimi-api-fx/search
+     [:module {:last   10000
+               :select "id, name, description, parent-path"
+               :filter (general-utils/join-and
+                         (general-utils/fulltext-query-string apps-fulltext-search)
+                         "subtype!='project'")}
+      #(dispatch [::set-apps %])]}))
 
 
 (reg-event-db
@@ -234,3 +238,76 @@
   (fn [{:keys [::spec/apps-selected] :as db} [_ id]]
     (let [op (if (contains? apps-selected id) disj conj)]
       (update db ::spec/apps-selected op id))))
+
+
+(reg-event-fx
+  ::set-creds-fulltext-search
+  (fn [{db :db} [_ search]]
+    {:db (assoc db ::spec/creds-fulltext-search search)
+     :fx [[:dispatch [::search-creds]]]}))
+
+(reg-event-fx
+  ::set-creds
+  (fn [{db :db} [_ {:keys [resources] :as infras} creds-by-parent]]
+    (if (instance? js/Error infras)
+      (dispatch [::messages-events/add
+                 (let [{:keys [status message]} (response/parse-ex-info infras)]
+                   {:header  (cond-> (str "failure getting infrastructure-services")
+                                     status (str " (" status ")"))
+                    :content message
+                    :type    :error})])
+      (let [infra-creds (->> resources
+                             (map #(-> %
+                                       (select-keys [:id :name :description :tags :subtype])
+                                       (assoc :credentials
+                                              (->> (get creds-by-parent (:id %))
+                                                   (map (fn [cred]
+                                                          (select-keys cred [:id :name :description :tags])))
+                                                   )))))]
+
+        {:db (assoc db ::spec/creds infra-creds)}))))
+
+(reg-event-fx
+  ::search-infras
+  (fn [{db :db} [_ {:keys [resources] :as creds}]]
+    (if (instance? js/Error creds)
+      (dispatch [::messages-events/add
+                 (let [{:keys [status message]} (response/parse-ex-info creds)]
+                   {:header  (cond-> (str "failure getting credentials")
+                                     status (str " (" status ")"))
+                    :content message
+                    :type    :error})])
+      (let [creds-by-parent (group-by :parent resources)]
+        (if (pos? (count resources))
+          {::cimi-api-fx/search
+           [:infrastructure-service {:last   10000
+                                     :select "id, name, description, tags, subtype"
+                                     :order  "name:asc, id:asc"
+                                     :filter (->> creds-by-parent
+                                                  keys
+                                                  (map #(str "id='" % "'"))
+                                                  (apply general-utils/join-or))}
+            #(dispatch [::set-creds % creds-by-parent])]}
+          {:db (assoc db ::spec/creds nil)})))))
+
+(reg-event-fx
+  ::search-creds
+  (fn [{{:keys [::spec/creds-fulltext-search]} :db}]
+    {::cimi-api-fx/search
+     [:credential {:last   10000
+                   :select "id, name, description, tags, parent"
+                   :filter (general-utils/join-and
+                             (general-utils/fulltext-query-string creds-fulltext-search)
+                             (general-utils/join-or
+                               "subtype='infrastructure-service-swarm'"
+                               "subtype='infrastructure-service-kubernetes'"))}
+      #(dispatch [::search-infras %])]}))
+
+
+(reg-event-db
+  ::toggle-select-cred
+  (fn [{:keys [::spec/creds-selected] :as db} [_ id cred-ids]]
+    (let [op (if (contains? creds-selected id) disj conj)]
+      (-> db
+          (assoc ::spec/creds-selected (apply disj creds-selected cred-ids))
+          (update ::spec/creds-selected op id)))))

@@ -25,6 +25,8 @@
 (s/def ::apps (s/nilable any?))
 (s/def ::apps-fulltext-search (s/nilable string?))
 (s/def ::apps-selected (s/nilable set?))
+(s/def ::creds (s/nilable any?))
+(s/def ::creds-fulltext-search (s/nilable string?))
 
 
 (s/def ::db (s/keys :req [::deployment-fleet
@@ -48,7 +50,10 @@
                           ::nuvlabox-current-playbook
                           ::apps
                           ::apps-fulltext-search
-                          ::apps-selected]))
+                          ::apps-selected
+                          ::creds
+                          ::creds-fulltext-search
+                          ::creds-selected]))
 
 (def defaults {::deployment-fleet             nil
                ::nuvlabox-status              nil
@@ -71,4 +76,7 @@
                ::nuvlabox-current-playbook    nil
                ::apps                         nil
                ::apps-fulltext-search         nil
-               ::apps-selected                #{}})
+               ::apps-selected                #{}
+               ::creds                        nil
+               ::creds-fulltext-search        nil
+               ::creds-selected               #{}})

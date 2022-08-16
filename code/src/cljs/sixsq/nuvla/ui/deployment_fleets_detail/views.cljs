@@ -44,6 +44,7 @@
 
 (defn refresh
   [uuid]
+  (js/console.error "refresh" uuid)
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
               :frequency 10000
@@ -1216,7 +1217,6 @@
 
 (defn Node
   [projects applications]
-  (js/console.error "Node " (sort-by first projects))
   [:<>
    [Projects (sort-by first projects)]
    [Applications (sort-by (juxt :id :name) applications)]])
@@ -1232,28 +1232,90 @@
      [ui/ListSA
       [Node (dissoc apps :applications) (:applications apps)]]]))
 
+(defn CredentialItem
+  [{:keys [id name description] :as _credential} cred-ids]
+  (let [selected? @(subscribe [::subs/creds-selected? [id]])]
+    [ui/ListItem {:style    {:cursor :pointer}
+                  :on-click #(dispatch [::events/toggle-select-cred id cred-ids])}
+     [ui/ListIcon
+      [ui/Icon {:name (if selected?
+                        "check square outline"
+                        "square outline")}]]
+     [ui/ListContent
+      [ui/ListHeader (when selected? {:as :a}) [ui/Icon {:name "key"}] " " (or name id)]
+      (when description
+        [ui/ListDescription description])]]))
+
+(defn TargetItem
+  [{:keys [id name description credentials] :as infra-cred}]
+  (let [cred-ids       (map :id credentials)
+        selected?      (subscribe [::subs/creds-selected? cred-ids])
+        multiple-cred? (> (count credentials) 1)]
+    [ui/ListItem (when-not multiple-cred?
+                   {:style    {:cursor :pointer}
+                    :on-click #(dispatch [::events/toggle-select-cred
+                                          (-> credentials first :id)])})
+     [ui/ListIcon
+      [ui/Icon {:name (if @selected?
+                        "check square outline"
+                        "square outline")}]]
+     [ui/ListContent
+      [ui/ListHeader (when (and (not multiple-cred?) @selected?) {:as :a})
+
+       [ui/Icon {:name "docker"}] " " (or name id)]
+      (when description
+        [ui/ListDescription description])
+      (when multiple-cred?
+        [ui/ListList
+         [:<>
+          (for [{:keys [id] :as credential} credentials]
+            ^{:key id}
+            [CredentialItem credential cred-ids])]])]]))
+
+(defn SelectTargets
+  []
+  (let [infra-creds @(subscribe [::subs/creds])
+        fulltext    @(subscribe [::subs/creds-fulltext-search])]
+    [:<>
+     [components/SearchInput
+      {:on-change     (ui-callback/input-callback #(dispatch [::events/set-creds-fulltext-search %]))
+       :default-value fulltext}]
+     [ui/ListSA {:divided true}
+      [:<>
+       (for [{:keys [id] :as infra-cred} infra-creds]
+         ^{:key id}
+         [TargetItem infra-cred])]]]))
+
+(defn CreateButton
+  []
+  (let [disabled? @(subscribe [::subs/create-disabled?])]
+    [ui/Button {:floated  :right
+                :primary  true
+                :disabled disabled?} "create"]))
+
 (defn New
   []
-  (dispatch [::events/search-apps])
+  (dispatch [::events/new])
   [ui/Container {:fluid true}
    [PageHeader true]
    [ui/Grid
     [ui/GridRow {:columns   2
+                 :stretched true
                  :stackable :mobile}
      [ui/GridColumn
       [ui/Segment
        [:h2 "Applications"]
-       [SelectApps]
-       ]
-      ]
+       [SelectApps]]]
      [ui/GridColumn
       [ui/Segment
-       [:h2 "Targets"]]
-      ]]]
-   ])
+       [:h2 "Targets"]
+       [SelectTargets]]]]
+    [ui/GridRow
+     [ui/GridColumn
+      [CreateButton]]]]])
 
 (defn DeploymentFleet
-  []
+  [uuid]
   (refresh uuid)
   [components/LoadingPage {:dimmable? true}
    [:<>
@@ -1273,4 +1335,4 @@
   [uuid]
   (if (= (str/lower-case uuid) "new")
     [New]
-    [DeploymentFleet]))
+    [DeploymentFleet uuid]))

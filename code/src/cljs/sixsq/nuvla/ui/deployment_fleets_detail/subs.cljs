@@ -6,7 +6,8 @@
     [sixsq.nuvla.ui.edges.utils :as edges-utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.time :as time]
-    [clojure.string :as str]))
+    [clojure.string :as str]
+    [clojure.set :as set]))
 
 
 (reg-sub
@@ -209,3 +210,28 @@
   ::app-selected?
   (fn [{:keys [::spec/apps-selected]} [_ id]]
     (contains? apps-selected id)))
+
+(reg-sub
+  ::creds
+  (fn [db]
+    (::spec/creds db)))
+
+(reg-sub
+  ::creds-fulltext-search
+  (fn [db]
+    (::spec/creds-fulltext-search db)))
+
+
+(reg-sub
+  ::creds-selected?
+  (fn [{:keys [::spec/creds-selected]} [_ ids]]
+    (->> creds-selected
+         (some (set ids))
+         boolean)))
+(reg-sub
+  ::create-disabled?
+  (fn [{:keys [::spec/creds-selected
+               ::spec/apps-selected]}]
+    (boolean
+      (or (empty? apps-selected)
+          (empty? creds-selected)))))

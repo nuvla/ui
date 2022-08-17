@@ -349,7 +349,7 @@
 
 
 (defn DeploymentsOverviewSegment
-  [deployment-subs set-active-tab-event deployment-tab-key]
+  [deployment-subs set-active-tab-event deployment-tab-key on-click]
   (let [tr    (subscribe [::i18n-subs/tr])
         icon  "rocket"
         color "blue"]
@@ -368,7 +368,8 @@
                  :icon     icon
                  :style    {:align-self "start"}
                  :content  "Show me"
-                 :on-click #(dispatch [set-active-tab-event deployment-tab-key])}]]))
+                 :on-click (or on-click
+                               #(dispatch [set-active-tab-event deployment-tab-key]))}]]))
 
 
 (defn DeploymentTable

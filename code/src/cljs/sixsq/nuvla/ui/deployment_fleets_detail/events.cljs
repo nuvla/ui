@@ -4,12 +4,12 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployments.events :as deployments-events]
-    [sixsq.nuvla.ui.edges-detail.spec :as edges-detail-spec]
     [sixsq.nuvla.ui.deployment-fleets-detail.spec :as spec]
-    [sixsq.nuvla.ui.edges.utils :as edges-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
+    [sixsq.nuvla.ui.plugins.tab :as tab]
     [sixsq.nuvla.ui.main.spec :as main-spec]
+    [sixsq.nuvla.ui.session.spec :as session-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
@@ -21,46 +21,6 @@
     {:db (merge db spec/defaults)
      :fx [[:dispatch [::search-apps]]
           [:dispatch [::search-creds]]]}))
-
-
-(reg-event-db
-  ::set-nuvlabox-status
-  (fn [db [_ nuvlabox-status]]
-    (assoc db ::edges-detail-spec/nuvlabox-status nuvlabox-status)))
-
-
-(reg-event-db
-  ::set-nuvlabox-vulns
-  (fn [db [_ nuvlabox-vulns]]
-    (assoc db ::edges-detail-spec/nuvlabox-vulns
-              {:summary (:summary nuvlabox-vulns)
-               :items   (into []
-                              (map
-                                (fn [{:keys [vulnerability-score] :as item}]
-                                  (if vulnerability-score
-                                    (cond
-                                      (>= vulnerability-score 9.0) (assoc item
-                                                                     :severity "CRITICAL"
-                                                                     :color edges-utils/vuln-critical-color)
-                                      (and (< vulnerability-score 9.0)
-                                           (>= vulnerability-score 7.0)) (assoc item
-                                                                           :severity "HIGH"
-                                                                           :color edges-utils/vuln-high-color)
-                                      (and (< vulnerability-score 7.0)
-                                           (>= vulnerability-score 4.0)) (assoc item
-                                                                           :severity "MEDIUM"
-                                                                           :color edges-utils/vuln-medium-color)
-                                      (< vulnerability-score 4.0) (assoc item
-                                                                    :severity "LOW"
-                                                                    :color edges-utils/vuln-low-color))
-                                    (assoc item :severity "UNKNOWN" :color edges-utils/vuln-unknown-color)))
-                                (:items nuvlabox-vulns)))})))
-
-
-(reg-event-db
-  ::set-nuvlabox-associated-ssh-keys
-  (fn [db [_ ssh-keys]]
-    (assoc db ::edges-detail-spec/nuvlabox-associated-ssh-keys ssh-keys)))
 
 
 (reg-event-db
@@ -105,7 +65,7 @@
 (reg-event-fx
   ::set-page
   (fn [{db :db} [_ page]]
-    {:db       (assoc db ::edges-detail-spec/page page)
+    {:db       (assoc db ::spec/page page)
      :dispatch [::get-deployment-fleet-events]}))
 
 ;; FIXME duplicated in multiple places, build an event reusable component
@@ -163,9 +123,9 @@
 
 (reg-event-fx
   ::delete
-  (fn [{{:keys [::edges-detail-spec/nuvlabox]} :db} _]
-    (let [nuvlabox-id (:id ::edges-detail-spec/nuvlabox)]
-      {::cimi-api-fx/delete [nuvlabox-id #(dispatch [::history-events/navigate "edges"])]})))
+  (fn [{{:keys [::spec/deployment-fleet]} :db} _]
+    (let [id (:id deployment-fleet)]
+      {::cimi-api-fx/delete [id #(dispatch [::history-events/navigate "deployment-fleets"])]})))
 
 
 (reg-event-fx
@@ -204,15 +164,10 @@
 
 
 (reg-event-db
-  ::set-active-tab
-  (fn [db [_ key]]
-    (assoc db ::spec/active-tab key)))
-
-
-(reg-event-db
   ::set-apps
   (fn [db [_ apps]]
-    (assoc db ::spec/apps (:resources apps))))
+    (assoc db ::spec/apps (:resources apps)
+              ::spec/apps-loading? false)))
 
 
 (reg-event-fx
@@ -223,12 +178,19 @@
 
 (reg-event-fx
   ::search-apps
-  (fn [{{:keys [::spec/apps-fulltext-search]} :db}]
-    {::cimi-api-fx/search
+  (fn [{{:keys [::spec/apps-fulltext-search
+                ::spec/tab-new-apps
+                ::session-spec/session] :as db} :db}]
+    {:db (assoc db ::spec/apps-loading? true)
+     ::cimi-api-fx/search
      [:module {:last   10000
                :select "id, name, description, parent-path"
                :filter (general-utils/join-and
                          (general-utils/fulltext-query-string apps-fulltext-search)
+                         (case (::tab/active-tab tab-new-apps)
+                           :my-apps (str "acl/owners='" (:active-claim session) "'")
+                           :app-store "published=true"
+                           nil)
                          "subtype!='project'")}
       #(dispatch [::set-apps %])]}))
 

@@ -2,6 +2,7 @@
   (:require
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.plugins.tab :as tab]
+    [sixsq.nuvla.ui.plugins.events-table :as events-table]
     [sixsq.nuvla.ui.plugins.step-group :as step-group]))
 
 (s/def ::deployment-fleet (s/nilable any?))
@@ -51,4 +52,5 @@
                      (tab/add-spec ::tab :overview)
                      (tab/add-spec ::tab-new-apps :my-apps)
                      (tab/add-spec ::tab-new-targets :edges)
-                     (step-group/add-spec ::steps :select-apps-targets)))
+                     (step-group/add-spec ::steps :select-apps-targets)
+                     (events-table/add-spec ::events)))

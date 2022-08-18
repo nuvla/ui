@@ -3,11 +3,14 @@
     [re-frame.core :refer [dispatch subscribe reg-sub reg-event-db]]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.plugins.helpers :as helpers]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [cljs.spec.alpha :as s]))
+
+(s/def ::active-tab keyword?)
 
 (defn add-spec
-  [location-kw default-active-tab]
-  {location-kw {::active-tab default-active-tab}})
+  [db-location default-active-tab]
+  {db-location {::active-tab default-active-tab}})
 
 (defn- key->index
   [panes k]
@@ -45,5 +48,5 @@
     [ui/Tab
      (-> opts
          (dissoc :db-location :on-change)
-         (assoc :activeIndex (key->index panes @active-tab)
-                :onTabChange (on-tab-change db-location panes on-change)))]))
+         (assoc :active-index (key->index panes @active-tab)
+                :on-tab-change (on-tab-change db-location panes on-change)))]))

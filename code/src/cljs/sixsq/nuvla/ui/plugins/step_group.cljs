@@ -3,11 +3,14 @@
     [re-frame.core :refer [dispatch subscribe reg-sub reg-event-db]]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.plugins.helpers :as helpers]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [cljs.spec.alpha :as s]))
+
+(s/def ::active-step keyword?)
 
 (defn add-spec
-  [location-kw default-active-step]
-  {location-kw {::active-step default-active-step}})
+  [db-location default-active-step]
+  {db-location {::active-step default-active-step}})
 
 (defn change-step
   [db-location step-key]

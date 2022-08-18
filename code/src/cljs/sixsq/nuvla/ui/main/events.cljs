@@ -258,7 +258,7 @@
 (reg-event-fx
   ::notifications-polling
   (fn [_ _]
-    {:dispatch [::action-interval-start
+    {:dispatch [::action-interval-start`
                 {:id        notification-polling-id
                  :frequency 60000
                  :event     [::check-notifications]}]}))

@@ -23,6 +23,8 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.plugins.tab :as tab]
+    [sixsq.nuvla.ui.plugins.events-table :as events-table]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination]
     [sixsq.nuvla.ui.plugins.step-group :as step-group]))
 
 
@@ -137,42 +139,10 @@
 
 (defn TabEvents
   []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        deployment-fleet  (subscribe [::subs/deployment-fleet])
-        all-events        (subscribe [::subs/deployment-fleet-events])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        total-elements    (get @all-events :count 0)
-        total-pages       (general-utils/total-pages total-elements @elements-per-page)
-        page              (subscribe [::subs/page])]
-    (fn []
-      (let [events (:resources @all-events)]
-        [ui/TabPane
-         (if (and (pos? total-elements) (= (count events) 0))
-           [ui/Loader {:active true
-                       :inline "centered"}]
-           [ui/Table {:basic "very"}
-            [ui/TableHeader
-             [ui/TableRow
-              [ui/TableHeaderCell [:span (@tr [:event])]]
-              [ui/TableHeaderCell [:span (@tr [:timestamp])]]
-              [ui/TableHeaderCell [:span (@tr [:category])]]
-              [ui/TableHeaderCell [:span (@tr [:state])]]]]
-            [ui/TableBody
-             (for [{:keys [id content timestamp category]} events]
-               ^{:key id}
-               [ui/TableRow
-                [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
-                [ui/TableCell timestamp]
-                [ui/TableCell category]
-                [ui/TableCell (:state content)]])]])
-
-
-         [uix/Pagination {:totalPages   total-pages
-                          :activePage   @page
-                          :onPageChange (ui-callback/callback
-                                          :activePage #(do
-                                                         (dispatch [::events/set-page %])
-                                                         (refresh (:id @deployment-fleet))))}]]))))
+  (let [{:keys [id]} @(subscribe [::subs/deployment-fleet])]
+    [ui/TabPane
+     [events-table/Events {:db-path [::spec/events]
+                           :href    id}]]))
 
 
 (defn TabsDeploymentFleet

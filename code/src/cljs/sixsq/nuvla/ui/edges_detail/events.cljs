@@ -4,7 +4,6 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployments.events :as deployments-events]
-    [sixsq.nuvla.ui.deployments.spec :as deployments-spec]
     [sixsq.nuvla.ui.edges-detail.spec :as spec]
     [sixsq.nuvla.ui.edges.utils :as edges-utils]
     [sixsq.nuvla.ui.history.events :as history-events]

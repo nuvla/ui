@@ -78,8 +78,8 @@
 
 (defn StepPane
   [{:keys [db-path items] :as _opts}]
-  (let [active-step (subscribe [::helpers/retrieve db-path ::active-step])
-        render      (key->render items @active-step)]
+  (let [active-step @(subscribe [::helpers/retrieve db-path ::active-step])
+        render      (key->render items active-step)]
     (when render
       [render])))
 
@@ -94,8 +94,8 @@
                                (assoc :onClick #(dispatch [::change-step
                                                            db-path step-key])
                                       :active (= @active-step step-key))
-                               (dissoc :render))) items)
-        opts        (-> opts
-                        (dissoc :db-path :change-event)
-                        (assoc :items items))]
-    [ui/StepGroup opts]))
+                               (dissoc :render))) items)]
+    [ui/StepGroup
+     (-> opts
+         (dissoc :db-path :change-event)
+         (assoc :items items))]))

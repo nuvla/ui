@@ -4,6 +4,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.deployment-fleets-detail.views :as detail]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
     [sixsq.nuvla.ui.deployment-fleets.events :as events]
     [sixsq.nuvla.ui.deployment-fleets.subs :as subs]
     [sixsq.nuvla.ui.deployment-fleets.spec :as spec]
@@ -20,7 +21,6 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.plugins.pagination :as pagination]))
 
-
 (def view-type (r/atom :cards))
 
 (def ^:const STARTED "STARTED")
@@ -35,7 +35,6 @@
     (get {STARTED "play"
           STOPPED "stop"
           CREATED "circle outline"} state)))
-
 
 (defn StatisticStates
   [clickable?]
@@ -96,7 +95,6 @@
           :loading?   @loading?
           :on-refresh #(dispatch [::events/refresh])}]]])))
 
-
 (defn DeploymentFleetRow
   [{:keys [id name description created state tags] :as _deployment-fleet}]
   (let [uuid (general-utils/id->uuid id)]
@@ -108,14 +106,12 @@
      [ui/TableCell (values/format-created created)]
      [ui/TableCell [uix/Tags tags]]]))
 
-
 (defn Pagination
   []
   (let [deployment-fleets @(subscribe [::subs/deployment-fleets])]
     [pagination/Pagination {:db-path      [::spec/pagination]
                             :total-items  (get deployment-fleets :count 0)
                             :change-event [::events/refresh]}]))
-
 
 (defn DeploymentFleetTable
   []
@@ -135,7 +131,6 @@
          (when id
            ^{:key id}
            [DeploymentFleetRow deployment-fleet]))]]]))
-
 
 (defn DeploymentFleetCard
   [{:keys [id created name state description tags] :as _deployment-fleet}]
@@ -165,13 +160,10 @@
           [DeploymentFleetCard deployment-fleet]))]]))
 
 (defn ControlBar []
-  (let [full-text (subscribe [::subs/full-text-search])]
-    (fn []
-      [ui/GridColumn {:width 4}
-       [components/SearchInput
-        {:on-change     (ui-callback/input-callback
-                          #(dispatch [::events/set-full-text-search %]))
-         :default-value @full-text}]])))
+  [ui/GridColumn {:width 4}
+   [full-text-search/FullTextSearch
+    {:db-path      [::spec/search]
+     :change-event [::pagination/change-page [::spec/pagination] 1]}]])
 
 (defn Main
   []

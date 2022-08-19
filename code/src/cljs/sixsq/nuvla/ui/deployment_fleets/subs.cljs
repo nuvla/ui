@@ -9,11 +9,6 @@
     (::spec/loading? db)))
 
 (reg-sub
-  ::full-text-search
-  (fn [db]
-    (::spec/full-text-search db)))
-
-(reg-sub
   ::deployment-fleets
   (fn [db]
     (::spec/deployment-fleets db)))

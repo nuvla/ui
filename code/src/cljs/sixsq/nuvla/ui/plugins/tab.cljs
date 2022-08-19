@@ -48,9 +48,9 @@
 (defn Tab
   [{:keys [db-path panes change-event] :as opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
-  (let [active-tab (subscribe [::helpers/retrieve db-path ::active-tab])]
+  (let [active-tab @(subscribe [::helpers/retrieve db-path ::active-tab])]
     [ui/Tab
      (-> opts
-         (dissoc :db-path :on-change)
-         (assoc :active-index (key->index panes @active-tab)
+         (dissoc :db-path :change-event)
+         (assoc :active-index (key->index panes active-tab)
                 :on-tab-change (on-tab-change db-path panes)))]))

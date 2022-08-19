@@ -11,21 +11,6 @@
     (::spec/loading? db)))
 
 (reg-sub
-  ::deployment-fleet-events
-  (fn [db]
-    (::spec/deployment-fleet-events db)))
-
-(reg-sub
-  ::elements-per-page
-  (fn [db]
-    (::spec/elements-per-page db)))
-
-(reg-sub
-  ::page
-  (fn [db]
-    (::spec/page db)))
-
-(reg-sub
   ::deployment-fleet
   (fn [db]
     (::spec/deployment-fleet db)))

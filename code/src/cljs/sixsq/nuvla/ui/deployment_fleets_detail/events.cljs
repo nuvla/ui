@@ -7,13 +7,13 @@
     [sixsq.nuvla.ui.deployment-fleets-detail.spec :as spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
+    [sixsq.nuvla.ui.plugins.events-table :as events-table]
     [sixsq.nuvla.ui.plugins.tab :as tab]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.session.spec :as session-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
-
 
 (reg-event-fx
   ::new
@@ -22,20 +22,12 @@
      :fx [[:dispatch [::search-apps]]
           [:dispatch [::search-creds]]]}))
 
-
-(reg-event-db
-  ::set-deployment-fleet-events
-  (fn [db [_ events]]
-    (assoc db ::spec/deployment-fleet-events events)))
-
-
 (reg-event-fx
   ::set-deployment-fleet
   (fn [{:keys [db]} [_ deployment-fleet]]
     {:db (assoc db ::spec/deployment-fleet-not-found? (nil? deployment-fleet)
                    ::spec/deployment-fleet deployment-fleet
                    ::main-spec/loading? false)}))
-
 
 (reg-event-fx
   ::operation
@@ -61,33 +53,6 @@
            (dispatch [::get-nuvlabox resource-id])))
       data]}))
 
-
-(reg-event-fx
-  ::set-page
-  (fn [{db :db} [_ page]]
-    {:db       (assoc db ::spec/page page)
-     :dispatch [::get-deployment-fleet-events]}))
-
-;; FIXME duplicated in multiple places, build an event reusable component
-(reg-event-fx
-  ::get-deployment-fleet-events
-  (fn [{{:keys [::spec/page
-                ::spec/elements-per-page]} :db} [_ href]]
-    (let [filter-str   (str "content/resource/href='" href "'")
-          order-by-str "created:desc"
-          select-str   "id, content, severity, timestamp, category"
-          first        (inc (* (dec page) elements-per-page))
-          last         (* page elements-per-page)
-          query-params {:filter  filter-str
-                        :orderby order-by-str
-                        :select  select-str
-                        :first   first
-                        :last    last}]
-      {::cimi-api-fx/search [:event
-                             (general-utils/prepare-params query-params)
-                             #(dispatch [::set-deployment-fleet-events %])]})))
-
-
 (reg-event-fx
   ::get-deployment-fleet
   (fn [{{:keys [::spec/deployment-fleet] :as db} :db} [_ id]]
@@ -95,11 +60,10 @@
                                (not= (:id deployment-fleet) id) (merge spec/defaults))
      ::cimi-api-fx/get [id #(dispatch [::set-deployment-fleet %])
                         :on-error #(dispatch [::set-deployment-fleet nil])]
-     :fx               [[:dispatch [::get-deployment-fleet-events id]]
+     :fx               [[:dispatch [::events-table/load-events [::spec/events] id]]
                         [:dispatch [::job-events/get-jobs id]]
                         [:dispatch [::deployments-events/get-deployments
                                     (str "deployment-fleet='" id "'")]]]}))
-
 
 (reg-event-fx
   ::edit
@@ -120,13 +84,11 @@
                                             :type    :success}]))
                               (dispatch [::set-deployment-fleet %])))]}))
 
-
 (reg-event-fx
   ::delete
   (fn [{{:keys [::spec/deployment-fleet]} :db} _]
     (let [id (:id deployment-fleet)]
       {::cimi-api-fx/delete [id #(dispatch [::history-events/navigate "deployment-fleets"])]})))
-
 
 (reg-event-fx
   ::custom-action
@@ -162,13 +124,11 @@
                                                              :error)}]))
                :refresh-interval-ms 5000}])))]}))
 
-
 (reg-event-db
   ::set-apps
   (fn [db [_ apps]]
     (assoc db ::spec/apps (:resources apps)
               ::spec/apps-loading? false)))
-
 
 (reg-event-fx
   ::set-apps-fulltext-search
@@ -194,13 +154,11 @@
                          "subtype!='project'")}
       #(dispatch [::set-apps %])]}))
 
-
 (reg-event-db
   ::toggle-select-app
   (fn [{:keys [::spec/apps-selected] :as db} [_ id]]
     (let [op (if (contains? apps-selected id) disj conj)]
       (update db ::spec/apps-selected op id))))
-
 
 (reg-event-fx
   ::set-creds-fulltext-search

@@ -8,7 +8,8 @@
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]))
 
 (def refresh-id :dep-fleets-get-deployment-fleets)
 (def refresh-summary-id :dep-fleets-get-deployment-fleets-summary)
@@ -26,14 +27,6 @@
                        :frequency 10000
                        :event     [::get-deployment-fleets-summary]}]]]}))
 
-
-(reg-event-fx
-  ::set-full-text-search
-  (fn [{db :db} [_ full-text-search]]
-    {:db       (assoc db ::spec/full-text-search full-text-search
-                         ::spec/page 1)
-     :dispatch [::refresh]}))
-
 (defn state-filter
   [state]
   (case state
@@ -48,8 +41,8 @@
                        :filter  (general-utils/join-and
                                   (when state-selector
                                     (state-filter state-selector))
-                                  (general-utils/fulltext-query-string
-                                    full-text-search))}
+                                  (full-text-search/filter-text
+                                    db [::spec/search]))}
                       (pagination/first-last-params db [::spec/pagination])
                       (general-utils/prepare-params))]
       {::cimi-api-fx/search [:deployment-fleet params
@@ -96,4 +89,4 @@
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
     {:db (assoc db ::spec/state-selector state-selector)
-     :fx [[:dispatch [::pagination/change-page 1]]]}))
+     :fx [[:dispatch [::pagination/change-page [::spec/pagination] 1]]]}))

@@ -13,7 +13,8 @@
     [sixsq.nuvla.ui.session.spec :as session-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]))
 
 (reg-event-fx
   ::new
@@ -131,22 +132,15 @@
               ::spec/apps-loading? false)))
 
 (reg-event-fx
-  ::set-apps-fulltext-search
-  (fn [{db :db} [_ search]]
-    {:db (assoc db ::spec/apps-fulltext-search search)
-     :fx [[:dispatch [::search-apps]]]}))
-
-(reg-event-fx
   ::search-apps
-  (fn [{{:keys [::spec/apps-fulltext-search
-                ::spec/tab-new-apps
+  (fn [{{:keys [::spec/tab-new-apps
                 ::session-spec/session] :as db} :db}]
     {:db (assoc db ::spec/apps-loading? true)
      ::cimi-api-fx/search
      [:module {:last   10000
                :select "id, name, description, parent-path"
                :filter (general-utils/join-and
-                         (general-utils/fulltext-query-string apps-fulltext-search)
+                         (full-text-search/filter-text db [::spec/apps-search])
                          (case (::tab/active-tab tab-new-apps)
                            :my-apps (str "acl/owners='" (:active-claim session) "'")
                            :app-store "published=true"
@@ -159,12 +153,6 @@
   (fn [{:keys [::spec/apps-selected] :as db} [_ id]]
     (let [op (if (contains? apps-selected id) disj conj)]
       (update db ::spec/apps-selected op id))))
-
-(reg-event-fx
-  ::set-creds-fulltext-search
-  (fn [{db :db} [_ search]]
-    {:db (assoc db ::spec/creds-fulltext-search search)
-     :fx [[:dispatch [::search-creds]]]}))
 
 (reg-event-fx
   ::set-creds
@@ -212,12 +200,13 @@
 
 (reg-event-fx
   ::search-creds
-  (fn [{{:keys [::spec/creds-fulltext-search]} :db}]
+  (fn [{db :db}]
     {::cimi-api-fx/search
      [:credential {:last   10000
                    :select "id, name, description, tags, parent"
                    :filter (general-utils/join-and
-                             (general-utils/fulltext-query-string creds-fulltext-search)
+                             (full-text-search/filter-text
+                               db [::spec/creds-search])
                              (general-utils/join-or
                                "subtype='infrastructure-service-swarm'"
                                "subtype='infrastructure-service-kubernetes'"))}

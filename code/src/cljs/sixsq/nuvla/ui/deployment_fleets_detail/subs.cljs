@@ -53,11 +53,6 @@
     (reduce transform {} apps)))
 
 (reg-sub
-  ::apps-fulltext-search
-  (fn [db]
-    (::spec/apps-fulltext-search db)))
-
-(reg-sub
   ::app-selected?
   (fn [{:keys [::spec/apps-selected]} [_ id]]
     (contains? apps-selected id)))
@@ -71,11 +66,6 @@
   ::creds
   (fn [db]
     (::spec/creds db)))
-
-(reg-sub
-  ::creds-fulltext-search
-  (fn [db]
-    (::spec/creds-fulltext-search db)))
 
 (reg-sub
   ::creds-selected?

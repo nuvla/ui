@@ -24,7 +24,8 @@
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.plugins.tab :as tab]
     [sixsq.nuvla.ui.plugins.events-table :as events-table]
-    [sixsq.nuvla.ui.plugins.step-group :as step-group]))
+    [sixsq.nuvla.ui.plugins.step-group :as step-group]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]))
 
 
 (def refresh-action-id :deployment-fleet-get-deployment-fleet)
@@ -217,14 +218,13 @@
 (defn SelectApps
   []
   (let [apps     @(subscribe [::subs/apps-tree])
-        fulltext @(subscribe [::subs/apps-fulltext-search])
         loading? @(subscribe [::subs/apps-loading?])
         render   (fn []
                    (r/as-element
                      [ui/TabPane {:loading loading?}
-                      [components/SearchInput
-                       {:on-change     (ui-callback/input-callback #(dispatch [::events/set-apps-fulltext-search %]))
-                        :default-value fulltext}]
+                      [full-text-search/FullTextSearch
+                       {:db-path      [::spec/apps-search]
+                        :change-event [::events/search-apps]}]
                       [ui/ListSA
                        [Node (dissoc apps :applications) (:applications apps)]]]))]
     [tab/Tab
@@ -286,13 +286,12 @@
 (defn SelectTargets
   []
   (let [infra-creds @(subscribe [::subs/creds])
-        fulltext    @(subscribe [::subs/creds-fulltext-search])
         render      (fn []
                       (r/as-element
                         [ui/TabPane
-                         [components/SearchInput
-                          {:on-change     (ui-callback/input-callback #(dispatch [::events/set-creds-fulltext-search %]))
-                           :default-value fulltext}]
+                         [full-text-search/FullTextSearch
+                          {:db-path      [::spec/creds-search]
+                           :change-event [::events/search-creds]}]
                          [ui/ListSA
                           [:<>
                            (for [{:keys [id] :as infra-cred} infra-creds]

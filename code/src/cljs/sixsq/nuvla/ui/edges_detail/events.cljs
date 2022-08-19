@@ -188,7 +188,6 @@
 (reg-event-fx
   ::get-nuvlabox
   (fn [{{:keys [::spec/nuvlabox ::spec/nuvlabox-current-playbook] :as db} :db} [_ id]]
-    (js/console.error ::get-nuvlabox)
     {:db                  (cond-> db
                                   (not= (:id nuvlabox) id)
                                   (merge spec/defaults))

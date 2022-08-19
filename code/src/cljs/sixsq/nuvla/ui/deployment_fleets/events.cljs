@@ -3,6 +3,7 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployment-fleets.spec :as spec]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
@@ -15,7 +16,7 @@
 
 (reg-event-fx
   ::refresh
-  (fn [_ _]
+  (fn []
     {:fx [[:dispatch [::main-events/action-interval-start
                       {:id        refresh-id
                        :frequency 10000
@@ -24,13 +25,6 @@
                       {:id        refresh-summary-id
                        :frequency 10000
                        :event     [::get-deployment-fleets-summary]}]]]}))
-
-
-(reg-event-fx
-  ::set-page
-  (fn [{db :db} [_ page]]
-    {:db       (assoc db ::spec/page page)
-     :dispatch [::refresh]}))
 
 
 (reg-event-fx
@@ -46,28 +40,20 @@
     "PENDING" "state='CREATING' or state='STARTING' or state='STOPPING'"
     (str "state='" state "'")))
 
-(defn get-query-params
-  [full-text-search page elements-per-page state-selector]
-  {:first   (inc (* (dec page) elements-per-page))
-   :last    (* page elements-per-page)
-   :orderby "created:desc"
-   :filter  (general-utils/join-and
-              (when state-selector (state-filter state-selector))
-              (general-utils/fulltext-query-string full-text-search))})
-
 (reg-event-fx
   ::get-deployment-fleets
   (fn [{{:keys [::spec/state-selector
-                ::spec/page
-                ::spec/elements-per-page
-                ::spec/full-text-search] :as _db} :db} _]
-    {::cimi-api-fx/search [:deployment-fleet
-                           (get-query-params
-                             full-text-search
-                             page
-                             elements-per-page
-                             state-selector)
-                           #(dispatch [::set-deployment-fleets %])]}))
+                ::spec/full-text-search] :as db} :db}]
+    (let [params (->> {:orderby "created:desc"
+                       :filter  (general-utils/join-and
+                                  (when state-selector
+                                    (state-filter state-selector))
+                                  (general-utils/fulltext-query-string
+                                    full-text-search))}
+                      (pagination/first-last-params db [::spec/pagination])
+                      (general-utils/prepare-params))]
+      {::cimi-api-fx/search [:deployment-fleet params
+                             #(dispatch [::set-deployment-fleets %])]})))
 
 (reg-event-fx
   ::set-deployment-fleets
@@ -109,6 +95,5 @@
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
-    {:db (assoc db ::spec/state-selector state-selector
-                   ::spec/page 1)
-     :fx [[:dispatch [::get-deployment-fleets]]]}))
+    {:db (assoc db ::spec/state-selector state-selector)
+     :fx [[:dispatch [::pagination/change-page 1]]]}))

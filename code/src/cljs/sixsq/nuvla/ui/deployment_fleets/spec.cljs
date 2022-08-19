@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.deployment-fleets.spec
   (:require
-    [clojure.spec.alpha :as s]))
+    [clojure.spec.alpha :as s]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination]))
 
 (s/def ::deployment-fleets any?)
 
@@ -24,10 +25,13 @@
                           ::full-text-search
                           ::state-selector]))
 
-(def defaults {::deployment-fleets          nil
-               ::deployment-fleets-summary  nil
-               ::page                       1
-               ::elements-per-page          8
-               ::total-elements             0
-               ::full-text-search           nil
-               ::state-selector             nil})
+(def defaults
+  {::deployment-fleets         nil
+   ::deployment-fleets-summary nil
+   ::page                      1
+   ::elements-per-page         8
+   ::total-elements            0
+   ::full-text-search          nil
+   ::state-selector            nil
+   ::pagination                (pagination/build-spec
+                                 :default-items-per-page 1)})

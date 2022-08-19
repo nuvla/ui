@@ -11,6 +11,7 @@
 (s/def ::items-per-page (s/nilable int?))
 (s/def ::default-items-per-page (s/nilable int?))
 (s/def ::active-page (s/nilable int?))
+(s/def ::change-event (s/nilable coll?))
 
 (defn build-spec
   [& {:keys [default-items-per-page]
@@ -19,12 +20,28 @@
    ::default-items-per-page default-items-per-page
    ::active-page            1})
 
+(reg-event-fx
+  ::change-page
+  (fn [{db :db} [_ db-path page]]
+    (let [change-event (get-in db (conj db-path ::change-event))]
+      {:db (assoc-in db (conj db-path ::active-page) page)
+       :fx [[:dispatch change-event]]})))
+
+(defn first-last-params
+  [db db-path params]
+  (let [page           (get-in db (conj db-path ::active-page))
+        items-per-page (get-in db (conj db-path ::items-per-page))]
+    (assoc params
+      :first (inc (* (dec page) items-per-page))
+      :last (* page items-per-page))))
+
 (defn- icon
   [icon-name]
   {:content (r/as-element [ui/Icon {:name icon-name}]) :icon true})
 
 (defn Pagination
-  [{:keys [db-path total-items on-change] :as _opts}]
+  [{:keys [db-path total-items change-event] :as _opts}]
+  (dispatch [::helpers/set db-path ::change-event change-event])
   (let [dipp          @(subscribe [::helpers/retrieve db-path
                                    ::default-items-per-page])
         per-page-opts (map (fn [i]
@@ -32,9 +49,7 @@
                               :value (* dipp i)
                               :text  (* dipp i)})
                            (range 1 4))
-        change-page   #(do
-                         (dispatch [::helpers/set db-path ::active-page %])
-                         (on-change %))
+        change-page   #(dispatch [::change-page db-path %])
         tr            @(subscribe [::i18n-subs/tr])
         active-page   @(subscribe [::helpers/retrieve db-path ::active-page])
         per-page      @(subscribe [::helpers/retrieve db-path ::items-per-page])
@@ -56,7 +71,7 @@
                                   #(do
                                      (dispatch [::helpers/set db-path
                                                 ::items-per-page %])
-                                     (on-change active-page)))}]
+                                     (change-page active-page)))}]
        " per page "]]
      [ui/GridColumn {:floated    :right
                      :width      10

@@ -129,7 +129,7 @@
            [ui/GridColumn {:stretched true}
             [deployments-views/DeploymentsOverviewSegment
              ::deployments-subs/deployments nil nil
-             #(tab/change-tab [::spec/tab] :deployments)]]]
+             #(dispatch [::tab/change-tab [::spec/tab] :deployments])]]]
 
           (when (seq tags)
             [ui/GridColumn
@@ -228,20 +228,20 @@
                       [ui/ListSA
                        [Node (dissoc apps :applications) (:applications apps)]]]))]
     [tab/Tab
-     {:db-path   [::spec/tab-new-apps]
-      :panes     [{:menuItem {:content "My apps"
-                              :key     :my-apps
-                              :icon    "user"}
-                   :render   render}
-                  {:menuItem {:content "App Store"
-                              :key     :app-store
-                              :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
-                   :render   render}
-                  {:menuItem {:content "All apps"
-                              :key     :all-apps
-                              :icon    "grid layout"}
-                   :render   render}]
-      :on-change #(dispatch [::events/search-apps])}]))
+     {:db-path      [::spec/tab-new-apps]
+      :panes        [{:menuItem {:content "My apps"
+                                 :key     :my-apps
+                                 :icon    "user"}
+                      :render   render}
+                     {:menuItem {:content "App Store"
+                                 :key     :app-store
+                                 :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
+                      :render   render}
+                     {:menuItem {:content "All apps"
+                                 :key     :all-apps
+                                 :icon    "grid layout"}
+                      :render   render}]
+      :change-event [::events/search-apps]}]))
 
 (defn CredentialItem
   [{:keys [id name description] :as _credential} cred-ids]
@@ -309,14 +309,6 @@
                             :icon    "cloud"}
                  :render   render}]}]))
 
-(defn CreateButton
-  []
-  (let [disabled? @(subscribe [::subs/create-disabled?])]
-    [ui/Button {:floated  :right
-                :primary  true
-                :on-click #(step-group/change-step ::spec/steps :billing)
-                :disabled disabled?} "create"]))
-
 (defn StepApplicationsTargets
   []
   [ui/Grid {:stackable true}
@@ -332,8 +324,7 @@
       [SelectTargets]]]]
    [ui/GridRow
     [ui/GridColumn
-     [step-group/PreviousNextButtons [::spec/steps]]
-     [CreateButton]]]])
+     [step-group/PreviousNextButtons [::spec/steps]]]]])
 
 (defn AddPage
   []
@@ -398,7 +389,8 @@
        [uix/PageHeader "bullseye" (or name id)]
        [MenuBar uuid]
        [components/ErrorJobsMessage
-        ::job-subs/jobs nil nil #(tab/change-tab [::spec/tab] :jobs)]
+        ::job-subs/jobs nil nil
+        #(dispatch [::tab/change-tab [::spec/tab] :jobs])]
        [TabsDeploymentFleet]]]]))
 
 

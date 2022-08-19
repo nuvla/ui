@@ -1,21 +1,17 @@
 (ns sixsq.nuvla.ui.plugins.tab
   (:require
-    [re-frame.core :refer [dispatch subscribe reg-sub reg-event-db]]
+    [re-frame.core :refer [dispatch subscribe reg-event-fx]]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.plugins.helpers :as helpers]
     [taoensso.timbre :as log]
     [cljs.spec.alpha :as s]))
 
-(s/def ::default-active-tab keyword?)
 (s/def ::active-tab keyword?)
+(s/def ::change-event (s/nilable coll?))
 
 (defn build-spec
   [& {:keys [active-tab]}]
-  {::active-tab active-tab})
-
-(defn add-spec
-  [db-location default-active-tab]
-  {db-location {::active-tab default-active-tab}})
+  {::active-tab   active-tab})
 
 (defn- key->index
   [panes k]
@@ -35,23 +31,26 @@
     k
     (log/error "tab-index not found:" i panes)))
 
-(defn change-tab
-  [db-path tab-key]
-  (dispatch [::helpers/set db-path ::active-tab tab-key]))
+(reg-event-fx
+  ::change-tab
+  (fn [{db :db} [_ db-path tab-key]]
+    (let [change-event (get-in db (conj db-path ::change-event))]
+      {:db (assoc-in db (conj db-path ::active-tab) tab-key)
+       :fx [(when change-event
+              [:dispatch change-event])]})))
 
 (defn- on-tab-change
-  [db-path panes on-change]
+  [db-path panes]
   (fn [_ data]
     (let [tab-key (index->key panes (.-activeIndex data))]
-      (change-tab db-path tab-key)
-      (when on-change
-        (on-change tab-key)))))
+      (dispatch [::change-tab db-path tab-key]))))
 
 (defn Tab
-  [{:keys [db-path panes on-change] :as opts}]
+  [{:keys [db-path panes change-event] :as opts}]
+  (dispatch [::helpers/set db-path ::change-event change-event])
   (let [active-tab (subscribe [::helpers/retrieve db-path ::active-tab])]
     [ui/Tab
      (-> opts
          (dissoc :db-path :on-change)
          (assoc :active-index (key->index panes @active-tab)
-                :on-tab-change (on-tab-change db-path panes on-change)))]))
+                :on-tab-change (on-tab-change db-path panes)))]))

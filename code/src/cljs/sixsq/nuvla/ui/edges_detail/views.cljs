@@ -1416,7 +1416,6 @@
 (defn TabEvents
   []
   (let [{:keys [id]} @(subscribe [::subs/nuvlabox])]
-    (js/console.error "TabEvents Render " id)
     [ui/TabPane
      [events-table/Events {:db-path [::spec/events]
                            :href    id}]]))

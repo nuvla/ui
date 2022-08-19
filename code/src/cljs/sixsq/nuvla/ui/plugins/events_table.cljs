@@ -15,30 +15,23 @@
 (defn build-spec
   [& {:keys [default-items-per-page]
       :or   {default-items-per-page 10}}]
-  {::events     nil
-   ::loading?   true
+  {::loading?   true
    ::pagination (pagination/build-spec
                   :default-items-per-page default-items-per-page)})
 
 (reg-event-fx
   ::load-events
   (fn [{db :db} [_ db-path href loading?]]
-    (let [page           (get-in db (conj db-path
-                                          ::pagination
-                                          ::pagination/active-page))
-          items-per-page (get-in db (conj db-path
-                                          ::pagination
-                                          ::pagination/items-per-page))
-          query-params   {:filter  (str "content/resource/href='" href "'")
-                          :orderby "created:desc"
-                          :select  "id, content, severity, timestamp, category"
-                          :first   (inc (* (dec page) items-per-page))
-                          :last    (* page items-per-page)}]
+    (let [params (->> {:filter  (str "content/resource/href='" href "'")
+                       :orderby "created:desc"
+                       :select  "id, content, severity, timestamp, category"}
+                      (pagination/first-last-params
+                        db (conj db-path ::pagination))
+                      general-utils/prepare-params)]
       {:db                  (cond-> db
                                     loading? (assoc-in
                                                (conj db-path ::loading?) true))
-       ::cimi-api-fx/search [:event
-                             (general-utils/prepare-params query-params)
+       ::cimi-api-fx/search [:event params
                              #(dispatch [::helpers/set db-path
                                          ::events %
                                          ::loading? false])]})))
@@ -47,12 +40,10 @@
 (defn Events
   [{:keys [db-path href] :as _opts}]
   (dispatch [::load-events db-path href true])
-  (js/console.warn "Events Mount")
   (fn [{:keys [db-path] :as _opts}]
     (let [tr       @(subscribe [::i18n-subs/tr])
           events   @(subscribe [::helpers/retrieve db-path ::events])
           loading? @(subscribe [::helpers/retrieve db-path ::loading?])]
-      (js/console.warn "Events render" tr loading? events)
       [ui/Segment {:basic   true
                    :loading loading?
                    :style   {:padding 0}}
@@ -73,6 +64,6 @@
             [ui/TableCell category]
             [ui/TableCell (:state content)]])]]
        [pagination/Pagination
-        {:db-path     (conj db-path ::pagination)
-         :total-items (get events :count 0)
-         :on-change   #(dispatch [::load-events db-path href true])}]])))
+        {:db-path      (conj db-path ::pagination)
+         :total-items  (get events :count 0)
+         :change-event [::load-events db-path href true]}]])))

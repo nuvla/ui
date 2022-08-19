@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.deployment-fleets-detail.views :as detail]
     [sixsq.nuvla.ui.deployment-fleets.events :as events]
     [sixsq.nuvla.ui.deployment-fleets.subs :as subs]
+    [sixsq.nuvla.ui.deployment-fleets.spec :as spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
@@ -16,7 +17,8 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.time :as time]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination]))
 
 
 (def view-type (r/atom :cards))
@@ -109,16 +111,10 @@
 
 (defn Pagination
   []
-  (let [deployment-fleets (subscribe [::subs/deployment-fleets])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
-        total-elements    (:count @deployment-fleets)
-        total-pages       (general-utils/total-pages total-elements @elements-per-page)]
-    [uix/Pagination {:totalitems   total-elements
-                     :totalPages   total-pages
-                     :activePage   @page
-                     :onPageChange (ui-callback/callback
-                                     :activePage #(dispatch [::events/set-page %]))}]))
+  (let [deployment-fleets @(subscribe [::subs/deployment-fleets])]
+    [pagination/Pagination {:db-path      [::spec/pagination]
+                            :total-items  (get deployment-fleets :count 0)
+                            :change-event [::events/refresh]}]))
 
 
 (defn DeploymentFleetTable
@@ -169,7 +165,7 @@
           [DeploymentFleetCard deployment-fleet]))]]))
 
 (defn ControlBar []
-  (let [full-text    (subscribe [::subs/full-text-search])]
+  (let [full-text (subscribe [::subs/full-text-search])]
     (fn []
       [ui/GridColumn {:width 4}
        [components/SearchInput
@@ -177,7 +173,7 @@
                           #(dispatch [::events/set-full-text-search %]))
          :default-value @full-text}]])))
 
-(defn Page
+(defn Main
   []
   (dispatch [::events/refresh])
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -203,6 +199,6 @@
         n        (count path)
         children (case n
                    2 [detail/Details path1]
-                   [Page])]
+                   [Main])]
     [:<>
      [ui/Segment style/basic children]]))

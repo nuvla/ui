@@ -27,13 +27,3 @@
   ::state-selector
   (fn [db]
     (::spec/state-selector db)))
-
-(reg-sub
-  ::elements-per-page
-  (fn [db]
-    (::spec/elements-per-page db)))
-
-(reg-sub
-  ::page
-  (fn [db]
-    (::spec/page db)))

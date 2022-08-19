@@ -1,17 +1,14 @@
 (ns sixsq.nuvla.ui.edges-detail.spec
   (:require
-    [clojure.spec.alpha :as s]))
-
+    [clojure.spec.alpha :as s]
+    [sixsq.nuvla.ui.plugins.events-table :as events-table]))
 
 (s/def ::nuvlabox (s/nilable any?))
 (s/def ::nuvlabox-status (s/nilable any?))
 (s/def ::nuvlabox-associated-ssh-keys (s/nilable any?))
 (s/def ::nuvlabox-peripherals (s/nilable any?))
-(s/def ::nuvlabox-events (s/nilable any?))
 (s/def ::vuln-severity-selector (s/nilable any?))
 (s/def ::matching-vulns-from-db (s/nilable any?))
-(s/def ::elements-per-page int?)
-(s/def ::page int?)
 (s/def ::nuvlabox-vulns (s/nilable any?))
 (s/def ::active-tab keyword?)
 (s/def ::nuvlabox-managers (s/nilable any?))
@@ -28,11 +25,8 @@
                           ::nuvlabox-status
                           ::nuvlabox-associated-ssh-keys
                           ::nuvlabox-peripherals
-                          ::nuvlabox-events
                           ::vuln-severity-selector
                           ::matching-vulns-from-db
-                          ::elements-per-page
-                          ::page
                           ::nuvlabox-vulns
                           ::active-tab
                           ::nuvlabox-managers
@@ -48,11 +42,8 @@
                ::nuvlabox-status              nil
                ::nuvlabox-associated-ssh-keys nil
                ::nuvlabox-peripherals         nil
-               ::nuvlabox-events              nil
                ::vuln-severity-selector       nil
                ::matching-vulns-from-db       nil
-               ::elements-per-page            15
-               ::page                         1
                ::nuvlabox-vulns               nil
                ::active-tab                   :overview
                ::nuvlabox-managers            nil
@@ -62,4 +53,6 @@
                ::nuvlabox-playbooks           nil
                ::infra-services               []
                ::nuvlabox-emergency-playbooks nil
-               ::nuvlabox-current-playbook    nil})
+               ::nuvlabox-current-playbook    nil
+               ::events                       (events-table/build-spec
+                                                :default-items-per-page 15)})

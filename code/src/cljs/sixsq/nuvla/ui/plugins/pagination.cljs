@@ -25,47 +25,49 @@
 
 (defn Pagination
   [{:keys [db-path total-items on-change] :as _opts}]
-  (let [default-items-per-page @(subscribe [::helpers/retrieve db-path ::default-items-per-page])
-        items-per-page-opts    (map (fn [i]
-                                      {:key   (* default-items-per-page i)
-                                       :value (* default-items-per-page i)
-                                       :text  (* default-items-per-page i)})
-                                    (range 1 4))
-        change-page            #(do
-                                  (dispatch [::helpers/set db-path ::active-page %])
-                                  (on-change %))
-        tr                     @(subscribe [::i18n-subs/tr])
-        active-page            @(subscribe [::helpers/retrieve db-path ::active-page])
-        items-per-page         @(subscribe [::helpers/retrieve db-path ::items-per-page])]
-    (let [total-pages (general-utils/total-pages total-items items-per-page)]
-      (when (> active-page total-pages)
-        (change-page 1))
-      [ui/Grid {:vertical-align :middle
-                :style          {:margin-top 20}}
-       [ui/GridColumn {:width 6}
-        [ui/Label {:size :medium} (str (tr [:total]) " : " total-items)]
-        [:span
-         " "
-         [ui/Dropdown {:value     items-per-page
-                       :compact   true
-                       :selection true
-                       :options   items-per-page-opts
-                       :on-change (ui-callback/value
-                                    #(do
-                                       (dispatch [::helpers/set db-path
-                                                  ::items-per-page %])
-                                       (on-change active-page)))}]
-         " per page "]]
-       [ui/GridColumn {:floated    :right
-                       :width      10
-                       :text-align :right}
-        [ui/Pagination
-         {:size         :tiny
-          :total-pages  total-pages
-          :first-item   (icon "angle double left")
-          :last-item    (icon "angle double right")
-          :prevItem     (icon "angle left")
-          :nextItem     (icon "angle right")
-          :active-page  active-page
-          :onPageChange (ui-callback/callback :activePage #(change-page %))}
-         ]]])))
+  (let [dipp          @(subscribe [::helpers/retrieve db-path
+                                   ::default-items-per-page])
+        per-page-opts (map (fn [i]
+                             {:key   (* dipp i)
+                              :value (* dipp i)
+                              :text  (* dipp i)})
+                           (range 1 4))
+        change-page   #(do
+                         (dispatch [::helpers/set db-path ::active-page %])
+                         (on-change %))
+        tr            @(subscribe [::i18n-subs/tr])
+        active-page   @(subscribe [::helpers/retrieve db-path ::active-page])
+        per-page      @(subscribe [::helpers/retrieve db-path ::items-per-page])
+        total-pages   (general-utils/total-pages total-items per-page)]
+    (when (and (> active-page total-pages)
+               (not= total-pages 0))
+      (change-page 1))
+    [ui/Grid {:vertical-align :middle
+              :style          {:margin-top 20}}
+     [ui/GridColumn {:width 6}
+      [ui/Label {:size :medium} (str (tr [:total]) " : " total-items)]
+      [:span
+       " "
+       [ui/Dropdown {:value     per-page
+                     :compact   true
+                     :selection true
+                     :options   per-page-opts
+                     :on-change (ui-callback/value
+                                  #(do
+                                     (dispatch [::helpers/set db-path
+                                                ::items-per-page %])
+                                     (on-change active-page)))}]
+       " per page "]]
+     [ui/GridColumn {:floated    :right
+                     :width      10
+                     :text-align :right}
+      [ui/Pagination
+       {:size         :tiny
+        :total-pages  total-pages
+        :first-item   (icon "angle double left")
+        :last-item    (icon "angle double right")
+        :prevItem     (icon "angle left")
+        :nextItem     (icon "angle right")
+        :active-page  active-page
+        :onPageChange (ui-callback/callback :activePage #(change-page %))}
+       ]]]))

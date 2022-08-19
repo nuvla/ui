@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.edges.utils :as edges-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
+    [sixsq.nuvla.ui.plugins.events-table :as events-table]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -66,12 +67,6 @@
     (assoc db ::spec/nuvlabox-peripherals (->> (get nuvlabox-peripherals :resources [])
                                                (map (juxt :id identity))
                                                (into {})))))
-
-
-(reg-event-db
-  ::set-nuvlabox-events
-  (fn [db [_ nuvlabox-events]]
-    (assoc db ::spec/nuvlabox-events nuvlabox-events)))
 
 
 (reg-event-db
@@ -191,34 +186,9 @@
 
 
 (reg-event-fx
-  ::set-page
-  (fn [{db :db} [_ page]]
-    {:db       (assoc db ::spec/page page)
-     :dispatch [::get-nuvlabox-events]}))
-
-
-(reg-event-fx
-  ::get-nuvlabox-events
-  (fn [{{:keys [::spec/page
-                ::spec/elements-per-page]} :db} [_ href]]
-    (let [filter-str   (str "content/resource/href='" href "'")
-          order-by-str "created:desc"
-          select-str   "id, content, severity, timestamp, category"
-          first        (inc (* (dec page) elements-per-page))
-          last         (* page elements-per-page)
-          query-params {:filter  filter-str
-                        :orderby order-by-str
-                        :select  select-str
-                        :first   first
-                        :last    last}]
-      {::cimi-api-fx/search [:event
-                             (general-utils/prepare-params query-params)
-                             #(dispatch [::set-nuvlabox-events %])]})))
-
-
-(reg-event-fx
   ::get-nuvlabox
   (fn [{{:keys [::spec/nuvlabox ::spec/nuvlabox-current-playbook] :as db} :db} [_ id]]
+    (js/console.error ::get-nuvlabox)
     {:db                  (cond-> db
                                   (not= (:id nuvlabox) id)
                                   (merge spec/defaults))
@@ -229,7 +199,8 @@
                             :last    10000
                             :orderby "id"}
                            #(dispatch [::set-nuvlabox-peripherals %])]
-     :fx                  [[:dispatch [::get-nuvlabox-events id]]
+     :fx                  [[:dispatch [::events-table/load-events
+                                       [::spec/events] id false]]
                            [:dispatch [::job-events/get-jobs id]]
                            [:dispatch [::deployments-events/get-deployments
                                        (str "nuvlabox='" id "'")]]

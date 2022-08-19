@@ -51,11 +51,8 @@
    ::creds-fulltext-search       nil
    ::creds-selected              #{}
    ::events                      (events-table/build-spec)
-   ::tab                         (tab/build-spec
-                                   :active-tab :overview)
-   ::tab-new-apps                (tab/build-spec
-                                   :active-tab :my-apps)
-   ::tab-new-targets             (tab/build-spec
-                                   :active-tab :edges)
+   ::tab                         (tab/build-spec :active-tab :overview)
+   ::tab-new-apps                (tab/build-spec :active-tab :my-apps)
+   ::tab-new-targets             (tab/build-spec :active-tab :edges)
    ::steps                       (step-group/build-spec
                                    :active-step :select-apps-targets)})

@@ -47,10 +47,12 @@
 (defn Events
   [{:keys [db-path href] :as _opts}]
   (dispatch [::load-events db-path href true])
+  (js/console.warn "Events Mount")
   (fn [{:keys [db-path] :as _opts}]
     (let [tr       @(subscribe [::i18n-subs/tr])
           events   @(subscribe [::helpers/retrieve db-path ::events])
           loading? @(subscribe [::helpers/retrieve db-path ::loading?])]
+      (js/console.warn "Events render" tr loading? events)
       [ui/Segment {:basic   true
                    :loading loading?
                    :style   {:padding 0}}
@@ -70,7 +72,6 @@
             [ui/TableCell timestamp]
             [ui/TableCell category]
             [ui/TableCell (:state content)]])]]
-       (js/console.error)
        [pagination/Pagination
         {:db-path     (conj db-path ::pagination)
          :total-items (get events :count 0)

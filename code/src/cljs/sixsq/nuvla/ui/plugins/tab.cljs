@@ -6,7 +6,12 @@
     [taoensso.timbre :as log]
     [cljs.spec.alpha :as s]))
 
+(s/def ::default-active-tab keyword?)
 (s/def ::active-tab keyword?)
+
+(defn build-spec
+  [& {:keys [active-tab]}]
+  {::active-tab active-tab})
 
 (defn add-spec
   [db-location default-active-tab]
@@ -31,22 +36,22 @@
     (log/error "tab-index not found:" i panes)))
 
 (defn change-tab
-  [db-location tab-key]
-  (dispatch [::helpers/set db-location ::active-tab tab-key]))
+  [db-path tab-key]
+  (dispatch [::helpers/set db-path ::active-tab tab-key]))
 
 (defn- on-tab-change
-  [db-location panes on-change]
+  [db-path panes on-change]
   (fn [_ data]
     (let [tab-key (index->key panes (.-activeIndex data))]
-      (change-tab db-location tab-key)
+      (change-tab db-path tab-key)
       (when on-change
         (on-change tab-key)))))
 
 (defn Tab
-  [{:keys [db-location panes on-change] :as opts}]
-  (let [active-tab (subscribe [::helpers/retrieve db-location ::active-tab])]
+  [{:keys [db-path panes on-change] :as opts}]
+  (let [active-tab (subscribe [::helpers/retrieve db-path ::active-tab])]
     [ui/Tab
      (-> opts
-         (dissoc :db-location :on-change)
+         (dissoc :db-path :on-change)
          (assoc :active-index (key->index panes @active-tab)
-                :on-tab-change (on-tab-change db-location panes on-change)))]))
+                :on-tab-change (on-tab-change db-path panes on-change)))]))

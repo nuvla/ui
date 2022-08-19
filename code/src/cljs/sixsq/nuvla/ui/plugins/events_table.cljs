@@ -12,24 +12,13 @@
 (s/def ::events (s/nilable coll?))
 (s/def ::loading? (s/nilable boolean?))
 
-; persistent configuration
-(defn add-spec
-  [db-path & {:keys [default-items-per-page]
-              :or   {default-items-per-page 10}}]
-  {db-path (merge
-             {::events   nil
-              ::loading? true}
-             (pagination/add-spec
-               ::pagination
-               :default-items-per-page default-items-per-page))})
-
-
-(reg-event-db
-  ::set-events
-  (fn [db [_ db-path events]]
-    (-> db
-        (assoc-in (conj db-path ::events) events)
-        (assoc-in (conj db-path ::loading?) false))))
+(defn build-spec
+  [& {:keys [default-items-per-page]
+      :or   {default-items-per-page 10}}]
+  {::events     nil
+   ::loading?   true
+   ::pagination (pagination/build-spec
+                  :default-items-per-page default-items-per-page)})
 
 (reg-event-fx
   ::load-events
@@ -46,10 +35,13 @@
                           :first   (inc (* (dec page) items-per-page))
                           :last    (* page items-per-page)}]
       {:db                  (cond-> db
-                                    loading? (assoc-in (conj db-path ::loading?) true))
+                                    loading? (assoc-in
+                                               (conj db-path ::loading?) true))
        ::cimi-api-fx/search [:event
                              (general-utils/prepare-params query-params)
-                             #(dispatch [::set-events db-path %])]})))
+                             #(dispatch [::helpers/set db-path
+                                         ::events %
+                                         ::loading? false])]})))
 
 
 (defn Events
@@ -57,8 +49,8 @@
   (dispatch [::load-events db-path href true])
   (fn [{:keys [db-path] :as _opts}]
     (let [tr       @(subscribe [::i18n-subs/tr])
-          events   @(subscribe [::helpers/retrieve2 db-path ::events])
-          loading? @(subscribe [::helpers/retrieve2 db-path ::loading?])]
+          events   @(subscribe [::helpers/retrieve db-path ::events])
+          loading? @(subscribe [::helpers/retrieve db-path ::loading?])]
       [ui/Segment {:basic   true
                    :loading loading?
                    :style   {:padding 0}}

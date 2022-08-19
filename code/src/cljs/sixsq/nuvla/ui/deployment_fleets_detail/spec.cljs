@@ -37,20 +37,25 @@
                           ::tab-new-apps
                           ::tab]))
 
-(def defaults (merge {::deployment-fleet            nil
-                      ::deployment-fleet-events     nil
-                      ::elements-per-page           15
-                      ::page                        1
-                      ::deployment-fleet-not-found? false
-                      ::apps                        nil
-                      ::apps-fulltext-search        nil
-                      ::apps-selected               #{}
-                      ::apps-loading?               false
-                      ::creds                       nil
-                      ::creds-fulltext-search       nil
-                      ::creds-selected              #{}}
-                     (tab/add-spec ::tab :overview)
-                     (tab/add-spec ::tab-new-apps :my-apps)
-                     (tab/add-spec ::tab-new-targets :edges)
-                     (step-group/add-spec ::steps :select-apps-targets)
-                     (events-table/add-spec ::events)))
+(def defaults
+  {::deployment-fleet            nil
+   ::deployment-fleet-events     nil
+   ::elements-per-page           15
+   ::page                        1
+   ::deployment-fleet-not-found? false
+   ::apps                        nil
+   ::apps-fulltext-search        nil
+   ::apps-selected               #{}
+   ::apps-loading?               false
+   ::creds                       nil
+   ::creds-fulltext-search       nil
+   ::creds-selected              #{}
+   ::events                      (events-table/build-spec)
+   ::tab                         (tab/build-spec
+                                   :active-tab :overview)
+   ::tab-new-apps                (tab/build-spec
+                                   :active-tab :my-apps)
+   ::tab-new-targets             (tab/build-spec
+                                   :active-tab :edges)
+   ::steps                       (step-group/build-spec
+                                   :active-step :select-apps-targets)})

@@ -24,7 +24,6 @@
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.plugins.tab :as tab]
     [sixsq.nuvla.ui.plugins.events-table :as events-table]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination]
     [sixsq.nuvla.ui.plugins.step-group :as step-group]))
 
 
@@ -130,7 +129,7 @@
            [ui/GridColumn {:stretched true}
             [deployments-views/DeploymentsOverviewSegment
              ::deployments-subs/deployments nil nil
-             #(tab/change-tab ::spec/tab :deployments)]]]
+             #(tab/change-tab [::spec/tab] :deployments)]]]
 
           (when (seq tags)
             [ui/GridColumn
@@ -151,24 +150,24 @@
         deployment-fleet (subscribe [::subs/deployment-fleet])
         can-edit?        @(subscribe [::subs/can-edit?])]
     [tab/Tab
-     {:db-location ::spec/tab
-      :panes       [{:menuItem {:content "Overview"
-                                :key     :overview
-                                :icon    "info"}
-                     :render   #(r/as-element [TabOverview])}
-                    {:menuItem {:content "Events"
-                                :key     :events
-                                :icon    "bolt"}
-                     :render   #(r/as-element [TabEvents])}
-                    {:menuItem {:content "Deployments"
-                                :key     :deployments
-                                :icon    "rocket"}
-                     :render   #(r/as-element [deployments-views/DeploymentTable
-                                               {:empty-msg (tr [:empty-deployemnt-msg])}])}
-                    (job-views/jobs-section)
-                    (acl/TabAcls deployment-fleet can-edit? ::events/edit)]
-      :menu        {:secondary true
-                    :pointing  true}}]))
+     {:db-path [::spec/tab]
+      :panes   [{:menuItem {:content "Overview"
+                            :key     :overview
+                            :icon    "info"}
+                 :render   #(r/as-element [TabOverview])}
+                {:menuItem {:content "Events"
+                            :key     :events
+                            :icon    "bolt"}
+                 :render   #(r/as-element [TabEvents])}
+                {:menuItem {:content "Deployments"
+                            :key     :deployments
+                            :icon    "rocket"}
+                 :render   #(r/as-element [deployments-views/DeploymentTable
+                                           {:empty-msg (tr [:empty-deployemnt-msg])}])}
+                (job-views/jobs-section)
+                (acl/TabAcls deployment-fleet can-edit? ::events/edit)]
+      :menu    {:secondary true
+                :pointing  true}}]))
 
 (defn Application
   [{:keys [id name description]}]
@@ -229,20 +228,20 @@
                       [ui/ListSA
                        [Node (dissoc apps :applications) (:applications apps)]]]))]
     [tab/Tab
-     {:db-location ::spec/tab-new-apps
-      :panes       [{:menuItem {:content "My apps"
-                                :key     :my-apps
-                                :icon    "user"}
-                     :render   render}
-                    {:menuItem {:content "App Store"
-                                :key     :app-store
-                                :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
-                     :render   render}
-                    {:menuItem {:content "All apps"
-                                :key     :all-apps
-                                :icon    "grid layout"}
-                     :render   render}]
-      :on-change   #(dispatch [::events/search-apps])}]))
+     {:db-path   [::spec/tab-new-apps]
+      :panes     [{:menuItem {:content "My apps"
+                              :key     :my-apps
+                              :icon    "user"}
+                   :render   render}
+                  {:menuItem {:content "App Store"
+                              :key     :app-store
+                              :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
+                   :render   render}
+                  {:menuItem {:content "All apps"
+                              :key     :all-apps
+                              :icon    "grid layout"}
+                   :render   render}]
+      :on-change #(dispatch [::events/search-apps])}]))
 
 (defn CredentialItem
   [{:keys [id name description] :as _credential} cred-ids]
@@ -286,30 +285,6 @@
 
 (defn SelectTargets
   []
-  (let [apps     @(subscribe [::subs/apps-tree])
-        fulltext @(subscribe [::subs/apps-fulltext-search])
-        render   (fn []
-                   (r/as-element
-                     [ui/TabPane
-                      [components/SearchInput
-                       {:on-change     (ui-callback/input-callback #(dispatch [::events/set-apps-fulltext-search %]))
-                        :default-value fulltext}]
-                      [ui/ListSA
-                       [Node (dissoc apps :applications) (:applications apps)]]]))]
-    [tab/Tab
-     {:db-location ::spec/tab-new-apps
-      :panes       [{:menuItem {:content "My apps"
-                                :key     :my-apps
-                                :icon    "user"}
-                     :render   render}
-                    {:menuItem {:content "App Store"
-                                :key     :app-store
-                                :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
-                     :render   render}
-                    {:menuItem {:content "All apps"
-                                :key     :all-apps
-                                :icon    "grid layout"}
-                     :render   render}]}])
   (let [infra-creds @(subscribe [::subs/creds])
         fulltext    @(subscribe [::subs/creds-fulltext-search])
         render      (fn []
@@ -324,15 +299,15 @@
                              ^{:key id}
                              [TargetItem infra-cred])]]]))]
     [tab/Tab
-     {:db-location ::spec/tab-new-targets
-      :panes       [{:menuItem {:content "Edges"
-                                :key     :edges
-                                :icon    "box"}
-                     :render   render}
-                    {:menuItem {:content "Clouds"
-                                :key     :clouds
-                                :icon    "cloud"}
-                     :render   render}]}]))
+     {:db-path [::spec/tab-new-targets]
+      :panes   [{:menuItem {:content "Edges"
+                            :key     :edges
+                            :icon    "box"}
+                 :render   render}
+                {:menuItem {:content "Clouds"
+                            :key     :clouds
+                            :icon    "cloud"}
+                 :render   render}]}]))
 
 (defn CreateButton
   []
@@ -357,7 +332,7 @@
       [SelectTargets]]]]
    [ui/GridRow
     [ui/GridColumn
-     [step-group/PreviousNextButtons ::spec/steps]
+     [step-group/PreviousNextButtons [::spec/steps]]
      [CreateButton]]]])
 
 (defn AddPage
@@ -374,40 +349,40 @@
                     :icon        "configure"
                     :render      (fn [] (r/as-element [:div
                                                        "Configure the applications here"
-                                                       [step-group/PreviousNextButtons ::spec/steps]]))
+                                                       [step-group/PreviousNextButtons [::spec/steps]]]))
                     :title       "Configure"
                     :disabled    @disabled?
                     :description "Configure applications"}
                    {:key         :license
                     :icon        "book"
                     :render      (fn [] (r/as-element [:div "Accept applications licenses"
-                                                       [step-group/PreviousNextButtons ::spec/steps]]))
+                                                       [step-group/PreviousNextButtons [::spec/steps]]]))
                     :title       "License"
                     :disabled    @disabled?
                     :description "Accept licenses"}
                    {:key         :price
                     :icon        "euro"
                     :render      (fn [] (r/as-element [:div "Accept prices"
-                                                       [step-group/PreviousNextButtons ::spec/steps]]))
+                                                       [step-group/PreviousNextButtons [::spec/steps]]]))
                     :title       "Prices"
                     :disabled    @disabled?
                     :description "Accept prices"}
                    {:key         :summary
                     :icon        "info"
                     :render      (fn [] (r/as-element [:div "This will contain a summary"
-                                                       [step-group/PreviousNextButtons ::spec/steps]]))
+                                                       [step-group/PreviousNextButtons [::spec/steps]]]))
                     :title       "Summary"
                     :description "Enter billing information"}]]
         [ui/Container {:fluid true}
          [uix/PageHeader "add" "Add"]
          [step-group/StepGroup
-          {:db-location ::spec/steps
-           :size        :mini
-           :fluid       true
-           :items       items}]
+          {:db-path [::spec/steps]
+           :size    :mini
+           :fluid   true
+           :items   items}]
          [step-group/StepPane
-          {:db-location ::spec/steps
-           :items       items}]]))))
+          {:db-path [::spec/steps]
+           :items   items}]]))))
 
 (defn DeploymentFleet
   [uuid]
@@ -423,7 +398,7 @@
        [uix/PageHeader "bullseye" (or name id)]
        [MenuBar uuid]
        [components/ErrorJobsMessage
-        ::job-subs/jobs nil nil #(tab/change-tab ::spec/tab :jobs)]
+        ::job-subs/jobs nil nil #(tab/change-tab [::spec/tab] :jobs)]
        [TabsDeploymentFleet]]]]))
 
 

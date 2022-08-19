@@ -4,17 +4,22 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.plugins.helpers :as helpers]
     [taoensso.timbre :as log]
-    [cljs.spec.alpha :as s]))
+    [cljs.spec.alpha :as s]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [clojure.string :as str]
+    [reagent.core :as r]))
 
 (s/def ::active-step keyword?)
+(s/def ::items (s/nilable coll?))
+(s/def ::on-change (s/nilable fn?))
 
-(defn add-spec
-  [db-location default-active-step]
-  {db-location {::active-step default-active-step}})
+(defn build-spec
+  [& {:keys [active-step]}]
+  {::active-step active-step})
 
 (defn change-step
-  [db-location step-key]
-  (dispatch [::helpers/set db-location ::active-step step-key]))
+  [db-path step-key]
+  (dispatch [::helpers/set db-path ::active-step step-key]))
 
 (defn- key->render
   [items step-key]
@@ -22,73 +27,75 @@
       (log/error "step-key not found: " step-key items)))
 
 (defn- on-step-change
-  [db-location on-change step-key]
-  (change-step db-location step-key)
+  [db-path on-change step-key]
+  (change-step db-path step-key)
   (when on-change
     (on-change step-key)))
 
 (defn- NextPreviousButton
-  [{:keys [db-location get-step icon content label-position]}]
-  (let [active-step @(subscribe [::helpers/retrieve db-location ::active-step])
-        {:keys [items on-change]} @(subscribe [::helpers/retrieve
-                                               db-location ::opts])
+  [{:keys [db-path get-step icon content label-position]}]
+  (let [active-step @(subscribe [::helpers/retrieve db-path ::active-step])
+        items       @(subscribe [::helpers/retrieve db-path ::items])
+        on-change   @(subscribe [::helpers/retrieve db-path ::on-change])
         step        (get-step items active-step)
         disabled?   (or (nil? step) (:disabled step))
-        on-click    (partial on-step-change db-location on-change)]
+        on-click    (partial on-step-change db-path on-change)]
     [ui/Button {:icon           icon
-                :content        content
+                :content        (r/as-element [uix/TR content str/capitalize])
                 :disabled       disabled?
                 :on-click       #(on-click (:key step))
                 :label-position label-position}]))
 
 (defn PreviousButton
-  [db-location]
+  [db-path]
   [NextPreviousButton
-   {:db-location    db-location
+   {:db-path        db-path
     :get-step       (fn [items active-step]
                       (->> items
                            (take-while #(not= active-step (:key %)))
                            last))
     :icon           "left chevron"
-    :content        "Previous"
+    :content        :previous
     :label-position :left}])
 
 (defn NextButton
-  [db-location]
+  [db-path]
   [NextPreviousButton
-   {:db-location    db-location
+   {:db-path        db-path
     :get-step       (fn [items active-step]
                       (->> items
                            (drop-while #(not= active-step (:key %)))
                            second))
     :icon           "right chevron"
-    :content        "Next"
+    :content        :next
     :label-position :right}])
 
 (defn PreviousNextButtons
-  [db-location]
+  [db-path]
   [ui/ButtonGroup {:floated :right}
-   [PreviousButton db-location]
-   [NextButton db-location]])
+   [PreviousButton db-path]
+   [NextButton db-path]])
 
 (defn StepPane
-  [{:keys [db-location items] :as _opts}]
-  (let [active-step (subscribe [::helpers/retrieve db-location ::active-step])
+  [{:keys [db-path items] :as _opts}]
+  (let [active-step (subscribe [::helpers/retrieve db-path ::active-step])
         render      (key->render items @active-step)]
     (when render
       [render])))
 
 (defn StepGroup
-  [{:keys [db-location items on-change] :as opts}]
-  (dispatch [::helpers/set db-location ::opts opts])
-  (let [on-click    (partial on-step-change db-location on-change)
-        active-step (subscribe [::helpers/retrieve db-location ::active-step])
+  [{:keys [db-path items on-change] :as opts}]
+  (dispatch [::helpers/set db-path
+             ::on-change on-change
+             ::items items])
+  (let [on-click    (partial on-step-change db-path on-change)
+        active-step (subscribe [::helpers/retrieve db-path ::active-step])
         items       (map (fn [{step-key :key :as item}]
                            (-> item
                                (assoc :onClick #(on-click step-key)
                                       :active (= @active-step step-key))
                                (dissoc :render))) items)
         opts        (-> opts
-                        (dissoc :db-location :on-change)
+                        (dissoc :db-path :on-change)
                         (assoc :items items))]
     [ui/StepGroup opts]))

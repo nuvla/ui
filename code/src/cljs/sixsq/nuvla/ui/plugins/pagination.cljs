@@ -12,33 +12,31 @@
 (s/def ::default-items-per-page (s/nilable int?))
 (s/def ::active-page (s/nilable int?))
 
-; persistent configuration
-(defn add-spec
-  [db-path & {:keys [default-items-per-page]
-              :or   {default-items-per-page 10}}]
-  {db-path {::items-per-page         default-items-per-page
-            ::default-items-per-page default-items-per-page
-            ::active-page            1}})
+(defn build-spec
+  [& {:keys [default-items-per-page]
+      :or   {default-items-per-page 10}}]
+  {::items-per-page         default-items-per-page
+   ::default-items-per-page default-items-per-page
+   ::active-page            1})
 
 (defn- icon
   [icon-name]
   {:content (r/as-element [ui/Icon {:name icon-name}]) :icon true})
 
-; configuration that change
 (defn Pagination
   [{:keys [db-path total-items on-change] :as _opts}]
-  (let [default-items-per-page @(subscribe [::helpers/retrieve2 db-path ::default-items-per-page])
+  (let [default-items-per-page @(subscribe [::helpers/retrieve db-path ::default-items-per-page])
         items-per-page-opts    (map (fn [i]
                                       {:key   (* default-items-per-page i)
                                        :value (* default-items-per-page i)
                                        :text  (* default-items-per-page i)})
                                     (range 1 4))
         change-page            #(do
-                                  (dispatch [::helpers/set2 db-path ::active-page %])
+                                  (dispatch [::helpers/set db-path ::active-page %])
                                   (on-change %))
         tr                     @(subscribe [::i18n-subs/tr])
-        active-page            @(subscribe [::helpers/retrieve2 db-path ::active-page])
-        items-per-page         @(subscribe [::helpers/retrieve2 db-path ::items-per-page])]
+        active-page            @(subscribe [::helpers/retrieve db-path ::active-page])
+        items-per-page         @(subscribe [::helpers/retrieve db-path ::items-per-page])]
     (let [total-pages (general-utils/total-pages total-items items-per-page)]
       (when (> active-page total-pages)
         (change-page 1))
@@ -54,7 +52,7 @@
                        :options   items-per-page-opts
                        :on-change (ui-callback/value
                                     #(do
-                                       (dispatch [::helpers/set2 db-path
+                                       (dispatch [::helpers/set db-path
                                                   ::items-per-page %])
                                        (on-change active-page)))}]
          " per page "]]

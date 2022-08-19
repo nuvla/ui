@@ -16,6 +16,7 @@
 (defn TR
   [msg-or-key fn]
   (let [tr (subscribe [::i18n-subs/tr])]
+    (js/console.warn msg-or-key)
     ((or fn identity)
      (cond
        (keyword? msg-or-key) (@tr [msg-or-key])

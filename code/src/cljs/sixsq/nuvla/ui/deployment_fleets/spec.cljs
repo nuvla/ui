@@ -15,5 +15,5 @@
    ::full-text-search          nil
    ::state-selector            nil
    ::pagination                (pagination/build-spec
-                                 :default-items-per-page 1)
+                                 :default-items-per-page 10)
    ::search                    (full-text-search/build-spec)})

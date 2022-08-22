@@ -68,6 +68,49 @@
     (::spec/creds db)))
 
 (reg-sub
+  ::edges
+  (fn [db]
+    (::spec/edges db)))
+
+(reg-sub
+  ::credentials
+  (fn [db]
+    (::spec/credentials db)))
+
+(reg-sub
+  ::credentials-grouped-by-parent
+  :<- [::credentials]
+  (fn [{:keys [resources]}]
+    (group-by :parent resources)))
+
+(reg-sub
+  ::infrastructures
+  (fn [db]
+    (::spec/infrastructures db)))
+
+(reg-sub
+  ::infrastructures-with-credentials
+  :<- [::infrastructures]
+  :<- [::credentials-grouped-by-parent]
+  (fn [[{:keys [resources]} creds-by-parent]]
+    (map #(assoc % :credentials (get creds-by-parent (:id %))) resources)))
+
+(reg-sub
+  ::infrastructures-with-credentials-by-parent
+  :<- [::infrastructures-with-credentials]
+  (fn [infras-with-creds]
+    (group-by :parent infras-with-creds)))
+
+(reg-sub
+  ::edges-with-infras-creds
+  :<- [::edges]
+  :<- [::infrastructures-with-credentials-by-parent]
+  (fn [[{:keys [resources]} infras-with-creds-by-parent]]
+    (map #(assoc % :infrastructures
+                   (get infras-with-creds-by-parent
+                        (:infrastructure-service-group %))) resources)))
+
+(reg-sub
   ::creds-selected?
   (fn [{:keys [::spec/creds-selected]} [_ ids]]
     (->> creds-selected

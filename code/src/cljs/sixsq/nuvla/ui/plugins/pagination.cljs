@@ -77,12 +77,13 @@
                      :width      10
                      :text-align :right}
       [ui/Pagination
-       {:size         :tiny
-        :total-pages  total-pages
-        :first-item   (icon "angle double left")
-        :last-item    (icon "angle double right")
-        :prevItem     (icon "angle left")
-        :nextItem     (icon "angle right")
-        :active-page  active-page
-        :onPageChange (ui-callback/callback :activePage #(change-page %))}
+       {:size          :tiny
+        :total-pages   total-pages
+        :first-item    (icon "angle double left")
+        :last-item     (icon "angle double right")
+        :prev-item     (icon "angle left")
+        :next-item     (icon "angle right")
+        :ellipsis-item nil
+        :active-page   active-page
+        :onPageChange  (ui-callback/callback :activePage #(change-page %))}
        ]]]))

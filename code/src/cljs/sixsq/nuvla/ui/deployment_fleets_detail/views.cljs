@@ -25,7 +25,8 @@
     [sixsq.nuvla.ui.plugins.tab :as tab]
     [sixsq.nuvla.ui.plugins.events-table :as events-table]
     [sixsq.nuvla.ui.plugins.step-group :as step-group]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]))
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination]))
 
 
 (def refresh-action-id :deployment-fleet-get-deployment-fleet)
@@ -283,6 +284,49 @@
             ^{:key id}
             [CredentialItem credential cred-ids])]])]]))
 
+(defn TargetEdgeItem
+  [{:keys [id name description] :as edge}]
+  (let []
+    [ui/ListItem {:disabled true} #_(when-not multiple-cred?
+                                      {:style    {:cursor :pointer}
+                                       :on-click #(dispatch [::events/toggle-select-cred
+                                                             (-> credentials first :id)])})
+     [ui/ListIcon
+      [ui/Icon {:name "box"}]]
+     [ui/ListContent
+      [ui/ListHeader #_(when (and (not multiple-cred?) @selected?) {:as :a})
+
+       #_[ui/Icon {:name "docker"}] " " (or name id)]
+      (when description
+        [ui/ListDescription description])
+      #_(when multiple-cred?
+          [ui/ListList
+           [:<>
+            (for [{:keys [id] :as credential} credentials]
+              ^{:key id}
+              [CredentialItem credential cred-ids])]])]]))
+
+
+(defn TargetEdges
+  []
+  (dispatch [::events/search-edges])
+  (fn []
+    (let [{:keys [count]} @(subscribe [::subs/edges])
+          edges @(subscribe [::subs/edges-with-infras-creds])]
+      (js/console.error edges)
+      [ui/TabPane
+       [full-text-search/FullTextSearch
+        {:db-path      [::spec/edges-search]
+         :change-event [::events/search-edges]}]
+       [ui/ListSA
+        [:<>
+         (for [{:keys [id] :as edge} edges]
+           ^{:key id}
+           [TargetEdgeItem edge])]]
+       [pagination/Pagination {:db-path      [::spec/edges-pagination]
+                               :total-items  (or count 0)
+                               :change-event [::events/search-edges]}]])))
+
 (defn SelectTargets
   []
   (let [infra-creds @(subscribe [::subs/creds])
@@ -296,13 +340,14 @@
                           [:<>
                            (for [{:keys [id] :as infra-cred} infra-creds]
                              ^{:key id}
-                             [TargetItem infra-cred])]]]))]
+                             [TargetItem infra-cred])]]]))
+        render2     [:div "clouds"]]
     [tab/Tab
      {:db-path [::spec/tab-new-targets]
       :panes   [{:menuItem {:content "Edges"
                             :key     :edges
                             :icon    "box"}
-                 :render   render}
+                 :render   #(r/as-element [TargetEdges])}
                 {:menuItem {:content "Clouds"
                             :key     :clouds
                             :icon    "cloud"}

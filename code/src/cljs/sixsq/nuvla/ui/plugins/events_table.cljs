@@ -26,8 +26,7 @@
                        :orderby "created:desc"
                        :select  "id, content, severity, timestamp, category"}
                       (pagination/first-last-params
-                        db (conj db-path ::pagination))
-                      general-utils/prepare-params)]
+                        db (conj db-path ::pagination)))]
       {:db                  (cond-> db
                                     loading? (assoc-in
                                                (conj db-path ::loading?) true))

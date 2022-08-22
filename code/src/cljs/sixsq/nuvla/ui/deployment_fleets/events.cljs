@@ -43,8 +43,7 @@
                                     (state-filter state-selector))
                                   (full-text-search/filter-text
                                     db [::spec/search]))}
-                      (pagination/first-last-params db [::spec/pagination])
-                      (general-utils/prepare-params))]
+                      (pagination/first-last-params db [::spec/pagination]))]
       {::cimi-api-fx/search [:deployment-fleet params
                              #(dispatch [::set-deployment-fleets %])]})))
 

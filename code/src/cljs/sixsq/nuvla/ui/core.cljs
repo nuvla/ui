@@ -13,12 +13,14 @@
     [sixsq.nuvla.ui.main.views :as main-views]
     [sixsq.nuvla.ui.routes :as routes]
     [sixsq.nuvla.ui.session.events :as session-events]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [cljs.spec.test.alpha :as ts]))
 
 
 (defn dev-setup []
   (when config/debug?
     (enable-console-print!)
+    (ts/instrument)
     (log/info "development mode")))
 
 

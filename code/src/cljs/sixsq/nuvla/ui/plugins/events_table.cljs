@@ -66,3 +66,9 @@
         {:db-path      (conj db-path ::pagination)
          :total-items  (get events :count 0)
          :change-event [::load-events db-path href true]}]])))
+
+(s/def ::href string?)
+
+(s/fdef Events
+        :args (s/cat :opts (s/keys :req-un [::helpers/db-path
+                                            ::href])))

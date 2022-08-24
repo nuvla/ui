@@ -54,3 +54,7 @@
          (dissoc :db-path :change-event)
          (assoc :active-index (key->index panes active-tab)
                 :on-tab-change (on-tab-change db-path panes)))]))
+
+(s/fdef Tab
+        :args (s/cat :opts (s/keys :req-un [::helpers/db-path
+                                            ::helpers/change-event])))

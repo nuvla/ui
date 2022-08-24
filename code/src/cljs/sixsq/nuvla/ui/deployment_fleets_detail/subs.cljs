@@ -49,8 +49,8 @@
 (reg-sub
   ::apps-tree
   :<- [::apps]
-  (fn [apps]
-    (reduce transform {} apps)))
+  (fn [{:keys [resources]}]
+    (reduce transform {} resources)))
 
 (reg-sub
   ::app-selected?
@@ -61,11 +61,6 @@
   ::apps-loading?
   (fn [db]
     (::spec/apps-loading? db)))
-
-(reg-sub
-  ::creds
-  (fn [db]
-    (::spec/creds db)))
 
 (reg-sub
   ::edges

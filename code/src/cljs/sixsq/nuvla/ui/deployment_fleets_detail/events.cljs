@@ -20,9 +20,7 @@
 (reg-event-fx
   ::new
   (fn [{db :db}]
-    {:db (merge db spec/defaults)
-     :fx [[:dispatch [::search-apps]]
-          [:dispatch [::search-creds]]]}))
+    {:db (merge db spec/defaults)}))
 
 (reg-event-fx
   ::set-deployment-fleet
@@ -129,7 +127,7 @@
 (reg-event-db
   ::set-apps
   (fn [db [_ apps]]
-    (assoc db ::spec/apps (:resources apps)
+    (assoc db ::spec/apps apps
               ::spec/apps-loading? false)))
 
 (reg-event-fx
@@ -138,15 +136,17 @@
                 ::session-spec/session] :as db} :db}]
     {:db (assoc db ::spec/apps-loading? true)
      ::cimi-api-fx/search
-     [:module {:last   10000
-               :select "id, name, description, parent-path"
-               :filter (general-utils/join-and
-                         (full-text-search/filter-text db [::spec/apps-search])
-                         (case (::tab/active-tab tab-new-apps)
-                           :my-apps (str "acl/owners='" (:active-claim session) "'")
-                           :app-store "published=true"
-                           nil)
-                         "subtype!='project'")}
+     [:module (->>
+                {:select "id, name, description, parent-path"
+                 :order  "parent-path:asc"
+                 :filter (general-utils/join-and
+                           (full-text-search/filter-text db [::spec/apps-search])
+                           (case (::tab/active-tab tab-new-apps)
+                             :my-apps (str "acl/owners='" (:active-claim session) "'")
+                             :app-store "published=true"
+                             nil)
+                           "subtype!='project'")}
+                (pagination/first-last-params db [::spec/apps-pagination]))
       #(dispatch [::set-apps %])]}))
 
 (reg-event-db
@@ -154,80 +154,6 @@
   (fn [{:keys [::spec/apps-selected] :as db} [_ id]]
     (let [op (if (contains? apps-selected id) disj conj)]
       (update db ::spec/apps-selected op id))))
-
-(reg-event-fx
-  ::set-creds
-  (fn [{db :db} [_ {:keys [resources] :as infras} creds-by-parent]]
-    (if (instance? js/Error infras)
-      (dispatch [::messages-events/add
-                 (let [{:keys [status message]} (response/parse-ex-info infras)]
-                   {:header  (cond-> (str "failure getting infrastructure-services")
-                                     status (str " (" status ")"))
-                    :content message
-                    :type    :error})])
-      (let [infra-creds (->> resources
-                             (map #(-> %
-                                       (select-keys [:id :name :description :tags :subtype])
-                                       (assoc :credentials
-                                              (->> (get creds-by-parent (:id %))
-                                                   (map (fn [cred]
-                                                          (select-keys cred [:id :name :description :tags])))
-                                                   )))))]
-
-        {:db (assoc db ::spec/creds infra-creds)}))))
-
-(reg-event-fx
-  ::search-infras
-  (fn [{db :db} [_ {:keys [resources] :as creds}]]
-    (if (instance? js/Error creds)
-      (dispatch [::messages-events/add
-                 (let [{:keys [status message]} (response/parse-ex-info creds)]
-                   {:header  (cond-> (str "failure getting credentials")
-                                     status (str " (" status ")"))
-                    :content message
-                    :type    :error})])
-      (let [creds-by-parent (group-by :parent resources)]
-        (if (pos? (count resources))
-          {::cimi-api-fx/search
-           [:infrastructure-service {:last   10000
-                                     :select "id, name, description, tags, subtype"
-                                     :order  "name:asc, id:asc"
-                                     :filter (->> creds-by-parent
-                                                  keys
-                                                  (map #(str "id='" % "'"))
-                                                  (apply general-utils/join-or))}
-            #(dispatch [::set-creds % creds-by-parent])]}
-          {:db (assoc db ::spec/creds nil)})))))
-
-(reg-event-fx
-  ::set-targets
-  (fn [{db :db} [_ infrastructures credentials]]
-    (let [credentials-by-parent (group-by :parent credentials)
-          infra-creds           (->> infrastructures
-                                     (map #(-> %
-                                               (select-keys [:id :name :description :subtype])
-                                               (assoc :credentials
-                                                      (->> (get credentials-by-parent (:id %))
-                                                           (map (fn [cred]
-                                                                  (select-keys cred [:id :name :description :tags])))
-                                                           )))))]
-      {:db (assoc db ::spec/targets-loading? false
-                     ::spec/creds infra-creds)})))
-
-(reg-event-fx
-  ::search-creds
-  (fn [{db :db}]
-    #_{::cimi-api-fx/search
-       [:credential {:last   10000
-                     :select "id, name, description, tags, parent"
-                     :filter (general-utils/join-and
-                               (full-text-search/filter-text
-                                 db [::spec/creds-search])
-                               (general-utils/join-or
-                                 "subtype='infrastructure-service-swarm'"
-                                 "subtype='infrastructure-service-kubernetes'"))}
-        #(dispatch [::search-infras %])]}))
-
 
 (reg-event-db
   ::toggle-select-cred
@@ -272,12 +198,29 @@
 
 (reg-event-fx
   ::search-infrastructures
-  (fn [{db :db} [_ filter-str]]
+  (fn [_ [_ filter-str]]
+    {::cimi-api-fx/search
+     [:infrastructure-service
+      {:last   10000
+       :select "id, name, description, subtype, parent"
+       :filter filter-str}
+      #(dispatch [::set-infrastructures %])]}))
+
+(reg-event-fx
+  ::search-clouds
+  (fn [{db :db}]
     {:db (assoc db ::spec/targets-loading? true)
      ::cimi-api-fx/search
-     [:infrastructure-service {:last   10000
-                               :select "id, name, description, subtype, parent"
-                               :filter filter-str}
+     [:infrastructure-service
+      (->> {:select "id, name, description, subtype, parent"
+            :filter (general-utils/join-and
+                      "tags!='nuvlabox=True'"
+                      (general-utils/join-or
+                        "subtype='swarm'"
+                        "subtype='kubernetes'")
+                      (full-text-search/filter-text
+                        db [::spec/clouds-search]))}
+           (pagination/first-last-params db [::spec/clouds-pagination]))
       #(dispatch [::set-infrastructures %])]}))
 
 (reg-event-fx
@@ -305,13 +248,11 @@
   (fn [{db :db}]
     {:db (assoc db ::spec/targets-loading? true)
      ::cimi-api-fx/search
-     [:nuvlabox (->> {:select "id, name, description, infrastructure-service-group"
-                      :order  "name:asc, id:asc"
-                      :filter (general-utils/join-and
-                                (full-text-search/filter-text
-                                  db [::spec/edges-search])
-                                "state='COMMISSIONED'"
-                                "infrastructure-service-group!=null")}
-                     (pagination/first-last-params
-                       db [::spec/edges-pagination]))
+     [:nuvlabox
+      (->> {:select "id, name, description, infrastructure-service-group"
+            :filter (general-utils/join-and
+                      (full-text-search/filter-text db [::spec/edges-search])
+                      "state='COMMISSIONED'"
+                      "infrastructure-service-group!=null")}
+           (pagination/first-last-params db [::spec/edges-pagination]))
       #(dispatch [::set-edges %])]}))

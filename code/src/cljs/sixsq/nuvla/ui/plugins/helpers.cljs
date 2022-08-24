@@ -1,6 +1,10 @@
 (ns sixsq.nuvla.ui.plugins.helpers
   (:require
-    [re-frame.core :refer [reg-sub reg-event-db]]))
+    [re-frame.core :refer [reg-sub reg-event-db]]
+    [cljs.spec.alpha :as s]))
+
+(s/def ::db-path (s/* keyword?))
+(s/def ::change-event (s/cat :dispatch-key keyword? :data (s/* any?)))
 
 (reg-sub
   ::retrieve

@@ -13,7 +13,6 @@
 (s/def ::apps-selected (s/nilable set?))
 (s/def ::apps-loading? boolean?)
 (s/def ::targets-loading? boolean?)
-(s/def ::creds (s/nilable any?))
 (s/def ::edges (s/nilable any?))
 (s/def ::infrastructures (s/nilable any?))
 (s/def ::credentials (s/nilable any?))
@@ -25,19 +24,23 @@
    ::apps-selected               #{}
    ::apps-loading?               false
    ::targets-loading?            false
-   ::creds                       nil
    ::credentials                 nil
    ::edges                       nil
    ::infrastructures             nil
-   ::apps-search                 (full-text-search/build-spec)
-   ::creds-search                (full-text-search/build-spec)
-   ::creds-selected              #{}
    ::events                      (events-table/build-spec)
    ::tab                         (tab/build-spec :active-tab :overview)
    ::tab-new-apps                (tab/build-spec :active-tab :my-apps)
    ::tab-new-targets             (tab/build-spec :active-tab :edges)
+   ::apps-search                 (full-text-search/build-spec)
+   ::creds-search                (full-text-search/build-spec)
    ::steps                       (step-group/build-spec
                                    :active-step :select-apps-targets)
+   ::creds-selected              #{}
    ::edges-pagination            (pagination/build-spec
                                    :default-items-per-page 15)
-   ::edges-search                (full-text-search/build-spec)})
+   ::edges-search                (full-text-search/build-spec)
+   ::clouds-pagination           (pagination/build-spec
+                                   :default-items-per-page 15)
+   ::clouds-search               (full-text-search/build-spec)
+   ::apps-pagination             (pagination/build-spec
+                                   :default-items-per-page 50)})

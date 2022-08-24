@@ -218,31 +218,38 @@
 
 (defn SelectApps
   []
-  (let [apps     @(subscribe [::subs/apps-tree])
-        loading? @(subscribe [::subs/apps-loading?])
-        render   (fn []
-                   (r/as-element
-                     [ui/TabPane {:loading loading?}
-                      [full-text-search/FullTextSearch
-                       {:db-path      [::spec/apps-search]
-                        :change-event [::events/search-apps]}]
-                      [ui/ListSA
-                       [Node (dissoc apps :applications) (:applications apps)]]]))]
-    [tab/Tab
-     {:db-path      [::spec/tab-new-apps]
-      :panes        [{:menuItem {:content "My apps"
-                                 :key     :my-apps
-                                 :icon    "user"}
-                      :render   render}
-                     {:menuItem {:content "App Store"
-                                 :key     :app-store
-                                 :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
-                      :render   render}
-                     {:menuItem {:content "All apps"
-                                 :key     :all-apps
-                                 :icon    "grid layout"}
-                      :render   render}]
-      :change-event [::events/search-apps]}]))
+  (dispatch [::events/search-apps])
+  (fn []
+    (let [{:keys [count]} @(subscribe [::subs/apps])
+          apps     @(subscribe [::subs/apps-tree])
+          loading? @(subscribe [::subs/apps-loading?])
+          render   (fn []
+                     (r/as-element
+                       [ui/TabPane {:loading loading?}
+                        [full-text-search/FullTextSearch
+                         {:db-path      [::spec/apps-search]
+                          :change-event [::events/search-apps]}]
+                        [ui/ListSA
+                         [Node (dissoc apps :applications) (:applications apps)]]
+                        [pagination/Pagination
+                         {:db-path      [::spec/apps-pagination]
+                          :total-items  (or count 0)
+                          :change-event [::events/search-apps]}]]))]
+      [tab/Tab
+       {:db-path      [::spec/tab-new-apps]
+        :panes        [{:menuItem {:content "My apps"
+                                   :key     :my-apps
+                                   :icon    "user"}
+                        :render   render}
+                       {:menuItem {:content "App Store"
+                                   :key     :app-store
+                                   :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
+                        :render   render}
+                       {:menuItem {:content "All apps"
+                                   :key     :all-apps
+                                   :icon    "grid layout"}
+                        :render   render}]
+        :change-event [::events/search-apps]}])))
 
 (defn CredentialItem
   [{:keys [id name description] :as _credential} cred-ids]
@@ -347,7 +354,7 @@
   []
   (dispatch [::events/search-edges])
   (fn []
-    (let [{:keys [count] :as edges} @(subscribe [::subs/edges])
+    (let [{:keys [count]} @(subscribe [::subs/edges])
           infrastructures @(subscribe [::subs/infrastructures-with-credentials])]
       [ui/TabPane
        [full-text-search/FullTextSearch
@@ -362,31 +369,37 @@
                                :total-items  (or count 0)
                                :change-event [::events/search-edges]}]])))
 
+(defn TargetClouds
+  []
+  (dispatch [::events/search-clouds])
+  (fn []
+    (let [{:keys [count]} @(subscribe [::subs/infrastructures])
+          infrastructures @(subscribe [::subs/infrastructures-with-credentials])]
+      [ui/TabPane
+       [full-text-search/FullTextSearch
+        {:db-path      [::spec/clouds-search]
+         :change-event [::events/search-clouds]}]
+       [ui/ListSA
+        [:<>
+         (for [{:keys [id] :as infrastructures} infrastructures]
+           ^{:key id}
+           [TargetItem infrastructures])]]
+       [pagination/Pagination {:db-path      [::spec/clouds-pagination]
+                               :total-items  (or count 0)
+                               :change-event [::events/search-clouds]}]])))
+
 (defn SelectTargets
   []
-  (let [infra-creds @(subscribe [::subs/creds])
-        render      (fn []
-                      (r/as-element
-                        [ui/TabPane
-                         [full-text-search/FullTextSearch
-                          {:db-path      [::spec/creds-search]
-                           :change-event [::events/search-creds]}]
-                         [ui/ListSA
-                          [:<>
-                           (for [{:keys [id] :as infra-cred} infra-creds]
-                             ^{:key id}
-                             [TargetItem infra-cred])]]]))
-        render2     [:div "clouds"]]
-    [tab/Tab
-     {:db-path [::spec/tab-new-targets]
-      :panes   [{:menuItem {:content "Edges"
-                            :key     :edges
-                            :icon    "box"}
-                 :render   #(r/as-element [TargetEdges])}
-                {:menuItem {:content "Clouds"
-                            :key     :clouds
-                            :icon    "cloud"}
-                 :render   render}]}]))
+  [tab/Tab
+   {:db-path [::spec/tab-new-targets]
+    :panes   [{:menuItem {:content "Edges"
+                          :key     :edges
+                          :icon    "box"}
+               :render   #(r/as-element [TargetEdges])}
+              {:menuItem {:content "Clouds"
+                          :key     :clouds
+                          :icon    "cloud"}
+               :render   #(r/as-element [TargetClouds])}]}])
 
 (defn StepApplicationsTargets
   []
@@ -403,7 +416,8 @@
       [SelectTargets]]]]
    [ui/GridRow
     [ui/GridColumn
-     [step-group/PreviousNextButtons [::spec/steps]]]]])
+     [step-group/PreviousNextButtons
+      {:db-path [::spec/steps]}]]]])
 
 (defn AddPage
   []
@@ -419,28 +433,32 @@
                     :icon        "configure"
                     :render      (fn [] (r/as-element [:div
                                                        "Configure the applications here"
-                                                       [step-group/PreviousNextButtons [::spec/steps]]]))
+                                                       [step-group/PreviousNextButtons
+                                                        {:db-path [::spec/steps]}]]))
                     :title       "Configure"
                     :disabled    @disabled?
                     :description "Configure applications"}
                    {:key         :license
                     :icon        "book"
                     :render      (fn [] (r/as-element [:div "Accept applications licenses"
-                                                       [step-group/PreviousNextButtons [::spec/steps]]]))
+                                                       [step-group/PreviousNextButtons
+                                                        {:db-path [::spec/steps]}]]))
                     :title       "License"
                     :disabled    @disabled?
                     :description "Accept licenses"}
                    {:key         :price
                     :icon        "euro"
                     :render      (fn [] (r/as-element [:div "Accept prices"
-                                                       [step-group/PreviousNextButtons [::spec/steps]]]))
+                                                       [step-group/PreviousNextButtons
+                                                        {:db-path [::spec/steps]}]]))
                     :title       "Prices"
                     :disabled    @disabled?
                     :description "Accept prices"}
                    {:key         :summary
                     :icon        "info"
                     :render      (fn [] (r/as-element [:div "This will contain a summary"
-                                                       [step-group/PreviousNextButtons [::spec/steps]]]))
+                                                       [step-group/PreviousNextButtons
+                                                        {:db-path [::spec/steps]}]]))
                     :title       "Summary"
                     :description "Enter billing information"}]]
         [ui/Container {:fluid true}

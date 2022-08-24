@@ -71,10 +71,13 @@
     :label-position :right}])
 
 (defn PreviousNextButtons
-  [db-path]
+  [{:keys [db-path]}]
   [ui/ButtonGroup {:floated :right}
    [PreviousButton db-path]
    [NextButton db-path]])
+
+(s/fdef PreviousNextButtons
+        :args (s/cat :opts (s/keys :req-un [::helpers/db-path])))
 
 (defn StepPane
   [{:keys [db-path items] :as _opts}]
@@ -82,6 +85,9 @@
         render      (key->render items active-step)]
     (when render
       [render])))
+
+(s/fdef StepPane
+        :args (s/cat :opts (s/keys :req-un [::helpers/db-path])))
 
 (defn StepGroup
   [{:keys [db-path items change-event] :as opts}]
@@ -99,3 +105,7 @@
      (-> opts
          (dissoc :db-path :change-event)
          (assoc :items items))]))
+
+(s/fdef StepGroup
+        :args (s/cat :opts (s/keys :req-un [::helpers/db-path
+                                            ::helpers/change-event])))

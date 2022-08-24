@@ -8,7 +8,10 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [clojure.string :as str]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]))
+            [cljs.spec.test.alpha :as ts]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.config :as config]
+            [clojure.spec.alpha :as spec]))
 
 (s/def ::items-per-page (s/nilable int?))
 (s/def ::default-items-per-page (s/nilable int?))
@@ -87,3 +90,11 @@
        :ellipsis-item nil
        :active-page   active-page
        :onPageChange  (ui-callback/callback :activePage #(change-page %))}]]))
+
+(s/def ::total-items nat-int?)
+
+(s/fdef Pagination
+        :args (s/cat :opts (s/keys :req-un [::helpers/db-path
+                                            ::helpers/change-event
+                                            ::total-items])))
+

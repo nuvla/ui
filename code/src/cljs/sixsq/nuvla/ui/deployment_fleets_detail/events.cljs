@@ -267,7 +267,7 @@
         {:db (assoc db ::spec/infrastructures response)
          :fx [[:dispatch [::search-credentials filter-str]]]})
       {:db (assoc db ::spec/targets-loading? false
-                     ::spec/infrastructures nil
+                     ::spec/infrastructures response
                      ::spec/credentials nil)})))
 
 (reg-event-fx
@@ -296,7 +296,7 @@
         {:db (assoc db ::spec/edges response)
          :fx [[:dispatch [::search-infrastructures filter-str]]]})
       {:db (assoc db ::spec/targets-loading? false
-                     ::spec/edges nil
+                     ::spec/edges response
                      ::spec/infrastrutures nil
                      ::spec/credentials nil)})))
 

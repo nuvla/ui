@@ -6,7 +6,9 @@
             [cljs.spec.alpha :as s]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [reagent.core :as r]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+            [clojure.string :as str]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]))
 
 (s/def ::items-per-page (s/nilable int?))
 (s/def ::default-items-per-page (s/nilable int?))
@@ -57,33 +59,31 @@
     (when (and (> active-page total-pages)
                (not= total-pages 0))
       (change-page 1))
-    [ui/Grid {:vertical-align :middle
-              :style          {:margin-top 20}}
-     [ui/GridColumn {:width 6}
-      [ui/Label {:size :medium} (str (tr [:total]) " : " total-items)]
-      [:span
-       " "
+    [:div {:style {:display         :flex
+                   :justify-content :space-between
+                   :align-items     :baseline
+                   :flex-wrap       :wrap-reverse}}
+     [ui/Label {:size :medium}
+      (str (str/capitalize (tr [:total])) " : " total-items)
+      [:div {:style {:display :inline-block}}
+       ff/nbsp
+       "| "
        [ui/Dropdown {:value     per-page
-                     :compact   true
-                     :selection true
+                     :trigger   per-page
                      :options   per-page-opts
                      :on-change (ui-callback/value
                                   #(do
                                      (dispatch [::helpers/set db-path
                                                 ::items-per-page %])
                                      (change-page active-page)))}]
-       " per page "]]
-     [ui/GridColumn {:floated    :right
-                     :width      10
-                     :text-align :right}
-      [ui/Pagination
-       {:size          :tiny
-        :total-pages   total-pages
-        :first-item    (icon "angle double left")
-        :last-item     (icon "angle double right")
-        :prev-item     (icon "angle left")
-        :next-item     (icon "angle right")
-        :ellipsis-item nil
-        :active-page   active-page
-        :onPageChange  (ui-callback/callback :activePage #(change-page %))}
-       ]]]))
+       " " (tr [:per-page])]]
+     [ui/Pagination
+      {:size          :tiny
+       :total-pages   total-pages
+       :first-item    (icon "angle double left")
+       :last-item     (icon "angle double right")
+       :prev-item     (icon "angle left")
+       :next-item     (icon "angle right")
+       :ellipsis-item nil
+       :active-page   active-page
+       :onPageChange  (ui-callback/callback :activePage #(change-page %))}]]))

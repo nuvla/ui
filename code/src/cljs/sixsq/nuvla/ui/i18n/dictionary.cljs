@@ -6,6 +6,7 @@
 
 (def dictionary
   {:en {
+        :per-page                                      "per page"
         :previous                                      "previous"
         :empty-deployemnt-msg                          "There are currently no running apps (aka deployments)."
         :no-deployment-fleet-message-content           "Deployment fleet does not exist or you do not have sufficient access rights."

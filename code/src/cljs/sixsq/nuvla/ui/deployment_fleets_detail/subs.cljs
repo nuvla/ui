@@ -92,8 +92,19 @@
   ::infrastructures-with-credentials
   :<- [::infrastructures]
   :<- [::credentials-grouped-by-parent]
-  (fn [[{:keys [resources]} creds-by-parent]]
-    (map #(assoc % :credentials (get creds-by-parent (:id %))) resources)))
+  :<- [::edges]
+  (fn [[{:keys [resources]} creds-by-parent {edges :resources}]]
+    (let [edges-by-infra-group (->> edges
+                                    (map (juxt :infrastructure-service-group identity))
+                                    (into {}))]
+      (->> resources
+           (map #(let [{:keys [id parent name description]} %
+                   {edge-name  :name
+                    edge-descr :description} (get edges-by-infra-group parent)]
+               (assoc % :credentials (get creds-by-parent id)
+                        :name (or edge-name name)
+                        :description (or edge-descr description))))
+           (sort-by (juxt :name :id))))))
 
 (reg-sub
   ::infrastructures-with-credentials-by-parent
@@ -105,7 +116,13 @@
   ::edges-with-infras-creds
   :<- [::edges]
   :<- [::infrastructures-with-credentials-by-parent]
-  (fn [[{:keys [resources]} infras-with-creds-by-parent]]
+  :<- [::infrastructures-with-credentials]
+  (fn [[{:keys [resources]} infras-with-creds-by-parent
+        infrastructures-with-credentials]]
+    (let [edges-by-infra-group (->> resources
+                                    (map (juxt :infrastructure-service-group identity))
+                                    (into {}))]
+      (js/console.warn infrastructures-with-credentials))
     (map #(assoc % :infrastructures
                    (get infras-with-creds-by-parent
                         (:infrastructure-service-group %))) resources)))

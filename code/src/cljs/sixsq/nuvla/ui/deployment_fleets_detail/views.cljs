@@ -20,7 +20,6 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.plugins.tab :as tab]
     [sixsq.nuvla.ui.plugins.events-table :as events-table]
@@ -181,7 +180,8 @@
                            "square outline")}]
      [ui/ListContent
       [ui/ListHeader (when selected? {:as :a}) name]
-      [ui/ListDescription description]]]))
+      [ui/ListDescription
+       (general-utils/substring description 150)]]]))
 
 (defn Applications
   [applications]
@@ -254,12 +254,14 @@
                         "check square outline"
                         "square outline")}]]
      [ui/ListContent
-      [ui/ListHeader (when selected? {:as :a}) [ui/Icon {:name "key"}] " " (or name id)]
+      [ui/ListHeader (when selected? {:as :a})
+       [ui/Icon {:name "key"}] " "
+       (or name id)]
       (when description
-        [ui/ListDescription description])]]))
+        [ui/ListDescription (general-utils/substring description 150)])]]))
 
 (defn TargetItem
-  [{:keys [id name description credentials] :as _infra-cred}]
+  [{:keys [id name description credentials subtype] :as _infrastructure}]
   (let [cred-ids       (map :id credentials)
         selected?      (subscribe [::subs/creds-selected? cred-ids])
         multiple-cred? (> (count credentials) 1)]
@@ -273,10 +275,50 @@
                         "square outline")}]]
      [ui/ListContent
       [ui/ListHeader (when (and (not multiple-cred?) @selected?) {:as :a})
-
-       [ui/Icon {:name "docker"}] " " (or name id)]
+       (case subtype
+         "swarm" [ui/Icon {:name "docker"}]
+         "kubernetes" [ui/Image {:src   (if @selected?
+                                          "/ui/images/kubernetes.svg"
+                                          "/ui/images/kubernetes-grey.svg")
+                                 :style {:width   "1.18em"
+                                         :margin  "0 .25rem 0 0"
+                                         :display :inline-block}}])
+       " " (or name id)]
       (when description
-        [ui/ListDescription description])
+        [ui/ListDescription (general-utils/substring description 150)])
+      (when multiple-cred?
+        [ui/ListList
+         [:<>
+          (for [{:keys [id] :as credential} credentials]
+            ^{:key id}
+            [CredentialItem credential cred-ids])]])]]))
+
+(defn TargetInfrastructure
+  [{:keys [id name description credentials subtype] :as _infrastructure}]
+  (let [cred-ids       (map :id credentials)
+        selected?      (subscribe [::subs/creds-selected? cred-ids])
+        multiple-cred? (> (count credentials) 1)]
+    [ui/ListItem (when-not multiple-cred?
+                   {:style    {:cursor :pointer}
+                    :on-click #(dispatch [::events/toggle-select-cred
+                                          (-> credentials first :id)])})
+     [ui/ListIcon
+      [ui/Icon {:name (if @selected?
+                        "check square outline"
+                        "square outline")}]]
+     [ui/ListContent
+      [ui/ListHeader (when (and (not multiple-cred?) @selected?) {:as :a})
+       (case subtype
+         "swarm" [ui/Icon {:name "docker"}]
+         "kubernetes" [ui/Image {:src   (if @selected?
+                                          "/ui/images/kubernetes.svg"
+                                          "/ui/images/kubernetes-grey.svg")
+                                 :style {:width   "1.18em"
+                                         :margin  "0 .25rem 0 0"
+                                         :display :inline-block}}])
+       " " (or name id)]
+      (when description
+        [ui/ListDescription (general-utils/substring description 150)])
       (when multiple-cred?
         [ui/ListList
          [:<>
@@ -285,44 +327,37 @@
             [CredentialItem credential cred-ids])]])]]))
 
 (defn TargetEdgeItem
-  [{:keys [id name description] :as edge}]
-  (let []
-    [ui/ListItem {:disabled true} #_(when-not multiple-cred?
-                                      {:style    {:cursor :pointer}
-                                       :on-click #(dispatch [::events/toggle-select-cred
-                                                             (-> credentials first :id)])})
-     [ui/ListIcon
-      [ui/Icon {:name "box"}]]
-     [ui/ListContent
-      [ui/ListHeader #_(when (and (not multiple-cred?) @selected?) {:as :a})
-
-       #_[ui/Icon {:name "docker"}] " " (or name id)]
-      (when description
-        [ui/ListDescription description])
-      #_(when multiple-cred?
-          [ui/ListList
-           [:<>
-            (for [{:keys [id] :as credential} credentials]
-              ^{:key id}
-              [CredentialItem credential cred-ids])]])]]))
+  [{:keys [id name description infrastructures] :as edge}]
+  [ui/ListItem
+   [ui/ListIcon
+    [ui/Icon {:name "box"}]]
+   [ui/ListContent
+    [ui/ListHeader (or name id)]
+    (when description
+      [ui/ListDescription (general-utils/substring description 150)])
+    (when (seq infrastructures)
+      [ui/ListList
+       [:<>
+        (for [{:keys [id] :as infrastructure} infrastructures]
+          ^{:key id}
+          [TargetItem (dissoc infrastructure :description)])]])]])
 
 
 (defn TargetEdges
   []
   (dispatch [::events/search-edges])
   (fn []
-    (let [{:keys [count]} @(subscribe [::subs/edges])
-          edges @(subscribe [::subs/edges-with-infras-creds])]
-      (js/console.error edges)
+    (let [{:keys [count] :as edges} @(subscribe [::subs/edges])
+          infrastructures @(subscribe [::subs/infrastructures-with-credentials])]
       [ui/TabPane
        [full-text-search/FullTextSearch
         {:db-path      [::spec/edges-search]
          :change-event [::events/search-edges]}]
        [ui/ListSA
         [:<>
-         (for [{:keys [id] :as edge} edges]
+         (for [{:keys [id] :as infrastructures} infrastructures]
            ^{:key id}
-           [TargetEdgeItem edge])]]
+           [TargetItem infrastructures])]]
        [pagination/Pagination {:db-path      [::spec/edges-pagination]
                                :total-items  (or count 0)
                                :change-event [::events/search-edges]}]])))

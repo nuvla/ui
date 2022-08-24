@@ -63,6 +63,11 @@
     (::spec/apps-loading? db)))
 
 (reg-sub
+  ::targets-loading?
+  (fn [db]
+    (::spec/targets-loading? db)))
+
+(reg-sub
   ::edges
   (fn [db]
     (::spec/edges db)))

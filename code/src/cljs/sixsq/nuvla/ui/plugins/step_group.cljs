@@ -29,9 +29,9 @@
        :fx [(when change-event
               [:dispatch change-event])]})))
 
-(defn- key->render
+(defn- key->content
   [items step-key]
-  (or (some #(when (= step-key (:key %)) (:render %)) items)
+  (or (some #(when (= step-key (:key %)) (:content %)) items)
       (log/error "step-key not found: " step-key items)))
 
 (defn- NextPreviousButton
@@ -46,7 +46,7 @@
                 :on-click       #(dispatch [::change-step db-path (:key step)])
                 :label-position label-position}]))
 
-(defn PreviousButton
+(defn- PreviousButton
   [db-path]
   [NextPreviousButton
    {:db-path        db-path
@@ -58,7 +58,7 @@
     :content        :previous
     :label-position :left}])
 
-(defn NextButton
+(defn- NextButton
   [db-path]
   [NextPreviousButton
    {:db-path        db-path
@@ -70,23 +70,16 @@
     :content        :next
     :label-position :right}])
 
-(defn PreviousNextButtons
-  [{:keys [db-path]}]
-  [ui/ButtonGroup {:floated :right}
-   [PreviousButton db-path]
-   [NextButton db-path]])
+(defn- PreviousNextButtons
+  [db-path]
+  [:div {:style {:display         :flex
+                 :justify-content :flex-end
+                 :margin-top      10}}
+   [ui/ButtonGroup
+    [PreviousButton db-path]
+    [NextButton db-path]]])
 
 (s/fdef PreviousNextButtons
-        :args (s/cat :opts (s/keys :req-un [::helpers/db-path])))
-
-(defn StepPane
-  [{:keys [db-path items] :as _opts}]
-  (let [active-step @(subscribe [::helpers/retrieve db-path ::active-step])
-        render      (key->render items active-step)]
-    (when render
-      [render])))
-
-(s/fdef StepPane
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path])))
 
 (defn StepGroup
@@ -94,17 +87,21 @@
   (dispatch [::helpers/set db-path
              ::change-event change-event
              ::items items])
-  (let [active-step (subscribe [::helpers/retrieve db-path ::active-step])
+  (let [active-step @(subscribe [::helpers/retrieve db-path ::active-step])
+        content     (key->content items active-step)
         items       (map (fn [{step-key :key :as item}]
                            (-> item
                                (assoc :onClick #(dispatch [::change-step
                                                            db-path step-key])
-                                      :active (= @active-step step-key))
-                               (dissoc :render))) items)]
-    [ui/StepGroup
-     (-> opts
-         (dissoc :db-path :change-event)
-         (assoc :items items))]))
+                                      :active (= active-step step-key))
+                               (dissoc :content))) items)]
+    [:<>
+     [ui/StepGroup
+      (-> opts
+          (dissoc :db-path :change-event)
+          (assoc :items items))]
+     (when content content)
+     [PreviousNextButtons db-path]]))
 
 (s/fdef StepGroup
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path

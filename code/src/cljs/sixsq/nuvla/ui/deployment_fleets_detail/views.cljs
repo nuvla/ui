@@ -300,63 +300,14 @@
             ^{:key id}
             [CredentialItem credential cred-ids])]])]]))
 
-(defn TargetInfrastructure
-  [{:keys [id name description credentials subtype] :as _infrastructure}]
-  (let [cred-ids       (map :id credentials)
-        selected?      (subscribe [::subs/creds-selected? cred-ids])
-        multiple-cred? (> (count credentials) 1)]
-    [ui/ListItem (when-not multiple-cred?
-                   {:style    {:cursor :pointer}
-                    :on-click #(dispatch [::events/toggle-select-cred
-                                          (-> credentials first :id)])})
-     [ui/ListIcon
-      [ui/Icon {:name (if @selected?
-                        "check square outline"
-                        "square outline")}]]
-     [ui/ListContent
-      [ui/ListHeader (when (and (not multiple-cred?) @selected?) {:as :a})
-       (case subtype
-         "swarm" [ui/Icon {:name "docker"}]
-         "kubernetes" [ui/Image {:src   (if @selected?
-                                          "/ui/images/kubernetes.svg"
-                                          "/ui/images/kubernetes-grey.svg")
-                                 :style {:width   "1.18em"
-                                         :margin  "0 .25rem 0 0"
-                                         :display :inline-block}}])
-       " " (or name id)]
-      (when description
-        [ui/ListDescription (general-utils/substring description 150)])
-      (when multiple-cred?
-        [ui/ListList
-         [:<>
-          (for [{:keys [id] :as credential} credentials]
-            ^{:key id}
-            [CredentialItem credential cred-ids])]])]]))
-
-(defn TargetEdgeItem
-  [{:keys [id name description infrastructures] :as edge}]
-  [ui/ListItem
-   [ui/ListIcon
-    [ui/Icon {:name "box"}]]
-   [ui/ListContent
-    [ui/ListHeader (or name id)]
-    (when description
-      [ui/ListDescription (general-utils/substring description 150)])
-    (when (seq infrastructures)
-      [ui/ListList
-       [:<>
-        (for [{:keys [id] :as infrastructure} infrastructures]
-          ^{:key id}
-          [TargetItem (dissoc infrastructure :description)])]])]])
-
-
 (defn TargetEdges
   []
   (dispatch [::events/search-edges])
   (fn []
     (let [{:keys [count]} @(subscribe [::subs/edges])
-          infrastructures @(subscribe [::subs/infrastructures-with-credentials])]
-      [ui/TabPane
+          infrastructures @(subscribe [::subs/infrastructures-with-credentials])
+          loading?        @(subscribe [::subs/targets-loading?])]
+      [ui/TabPane {:loading loading?}
        [full-text-search/FullTextSearch
         {:db-path      [::spec/edges-search]
          :change-event [::events/search-edges]}]
@@ -374,8 +325,9 @@
   (dispatch [::events/search-clouds])
   (fn []
     (let [{:keys [count]} @(subscribe [::subs/infrastructures])
-          infrastructures @(subscribe [::subs/infrastructures-with-credentials])]
-      [ui/TabPane
+          infrastructures @(subscribe [::subs/infrastructures-with-credentials])
+          loading?        @(subscribe [::subs/targets-loading?])]
+      [ui/TabPane {:loading loading?}
        [full-text-search/FullTextSearch
         {:db-path      [::spec/clouds-search]
          :change-event [::events/search-clouds]}]
@@ -413,11 +365,7 @@
     [ui/GridColumn
      [ui/Segment
       [:h2 "Targets"]
-      [SelectTargets]]]]
-   [ui/GridRow
-    [ui/GridColumn
-     [step-group/PreviousNextButtons
-      {:db-path [::spec/steps]}]]]])
+      [SelectTargets]]]]])
 
 (defn AddPage
   []
@@ -426,39 +374,31 @@
     (fn []
       (let [items [{:key         :select-apps-targets
                     :icon        "bullseye"
-                    :render      (fn [] (r/as-element [StepApplicationsTargets]))
+                    :content     [StepApplicationsTargets]
                     :title       "Applications/Targets"
                     :description "Select applications and targets"}
                    {:key         :configure
                     :icon        "configure"
-                    :render      (fn [] (r/as-element [:div
-                                                       "Configure the applications here"
-                                                       [step-group/PreviousNextButtons
-                                                        {:db-path [::spec/steps]}]]))
+                    :content     [:div
+                                  "Configure the applications here"]
                     :title       "Configure"
                     :disabled    @disabled?
                     :description "Configure applications"}
                    {:key         :license
                     :icon        "book"
-                    :render      (fn [] (r/as-element [:div "Accept applications licenses"
-                                                       [step-group/PreviousNextButtons
-                                                        {:db-path [::spec/steps]}]]))
+                    :content     [:div "Accept applications licenses"]
                     :title       "License"
                     :disabled    @disabled?
                     :description "Accept licenses"}
                    {:key         :price
                     :icon        "euro"
-                    :render      (fn [] (r/as-element [:div "Accept prices"
-                                                       [step-group/PreviousNextButtons
-                                                        {:db-path [::spec/steps]}]]))
+                    :content     [:div "Accept prices"]
                     :title       "Prices"
                     :disabled    @disabled?
                     :description "Accept prices"}
                    {:key         :summary
                     :icon        "info"
-                    :render      (fn [] (r/as-element [:div "This will contain a summary"
-                                                       [step-group/PreviousNextButtons
-                                                        {:db-path [::spec/steps]}]]))
+                    :content     [:div "This will contain a summary"]
                     :title       "Summary"
                     :description "Enter billing information"}]]
         [ui/Container {:fluid true}
@@ -467,9 +407,6 @@
           {:db-path [::spec/steps]
            :size    :mini
            :fluid   true
-           :items   items}]
-         [step-group/StepPane
-          {:db-path [::spec/steps]
            :items   items}]]))))
 
 (defn DeploymentFleet

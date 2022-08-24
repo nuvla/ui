@@ -137,15 +137,15 @@
     {:db (assoc db ::spec/apps-loading? true)
      ::cimi-api-fx/search
      [:module (->>
-                {:select "id, name, description, parent-path"
-                 :order  "parent-path:asc"
-                 :filter (general-utils/join-and
-                           (full-text-search/filter-text db [::spec/apps-search])
-                           (case (::tab/active-tab tab-new-apps)
-                             :my-apps (str "acl/owners='" (:active-claim session) "'")
-                             :app-store "published=true"
-                             nil)
-                           "subtype!='project'")}
+                {:select  "id, name, description, parent-path"
+                 :orderby "path:asc"
+                 :filter  (general-utils/join-and
+                            (full-text-search/filter-text db [::spec/apps-search])
+                            (case (::tab/active-tab tab-new-apps)
+                              :my-apps (str "acl/owners='" (:active-claim session) "'")
+                              :app-store "published=true"
+                              nil)
+                            "subtype!='project'")}
                 (pagination/first-last-params db [::spec/apps-pagination]))
       #(dispatch [::set-apps %])]}))
 
@@ -212,14 +212,15 @@
     {:db (assoc db ::spec/targets-loading? true)
      ::cimi-api-fx/search
      [:infrastructure-service
-      (->> {:select "id, name, description, subtype, parent"
-            :filter (general-utils/join-and
-                      "tags!='nuvlabox=True'"
-                      (general-utils/join-or
-                        "subtype='swarm'"
-                        "subtype='kubernetes'")
-                      (full-text-search/filter-text
-                        db [::spec/clouds-search]))}
+      (->> {:select  "id, name, description, subtype, parent"
+            :orderby "name:asc,id:asc"
+            :filter  (general-utils/join-and
+                       "tags!='nuvlabox=True'"
+                       (general-utils/join-or
+                         "subtype='swarm'"
+                         "subtype='kubernetes'")
+                       (full-text-search/filter-text
+                         db [::spec/clouds-search]))}
            (pagination/first-last-params db [::spec/clouds-pagination]))
       #(dispatch [::set-infrastructures %])]}))
 
@@ -250,6 +251,7 @@
      ::cimi-api-fx/search
      [:nuvlabox
       (->> {:select "id, name, description, infrastructure-service-group"
+            :orderby  "name:asc,id:asc"
             :filter (general-utils/join-and
                       (full-text-search/filter-text db [::spec/edges-search])
                       "state='COMMISSIONED'"

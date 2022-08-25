@@ -175,7 +175,7 @@
 
 (defn Application
   [{:keys [id name subtype description] :as module}]
-  (let [selected? @(subscribe [::subs/app-selected? module])]
+  (let [selected? @(subscribe [::subs/apps-selected? module])]
     [ui/ListItem {:on-click #(dispatch [::events/toggle-select-app module])
                   :style    {:cursor :pointer}}
      [ui/ListIcon {:name (if selected?
@@ -258,10 +258,11 @@
         :change-event [::events/search-apps]}])))
 
 (defn CredentialItem
-  [{:keys [id name description] :as _credential} cred-ids]
-  (let [selected? @(subscribe [::subs/creds-selected? [id]])]
+  [{:keys [id name description] :as credential} credentials]
+  (let [selected? @(subscribe [::subs/targets-selected? [credential]])]
     [ui/ListItem {:style    {:cursor :pointer}
-                  :on-click #(dispatch [::events/toggle-select-cred id cred-ids])}
+                  :on-click #(dispatch [::events/toggle-select-target
+                                        credential credentials])}
      [ui/ListIcon
       [ui/Icon {:name (if selected?
                         "check square outline"
@@ -275,13 +276,12 @@
 
 (defn TargetItem
   [{:keys [id name description credentials subtype] :as _infrastructure}]
-  (let [cred-ids       (map :id credentials)
-        selected?      (subscribe [::subs/creds-selected? cred-ids])
+  (let [selected?      (subscribe [::subs/targets-selected? credentials])
         multiple-cred? (> (count credentials) 1)]
     [ui/ListItem (when-not multiple-cred?
                    {:style    {:cursor :pointer}
-                    :on-click #(dispatch [::events/toggle-select-cred
-                                          (-> credentials first :id)])})
+                    :on-click #(dispatch [::events/toggle-select-target
+                                          (first credentials)])})
      [ui/ListIcon
       [ui/Icon {:name (if @selected?
                         "check square outline"
@@ -304,7 +304,7 @@
          [:<>
           (for [{:keys [id] :as credential} credentials]
             ^{:key id}
-            [CredentialItem credential cred-ids])]])]]))
+            [CredentialItem credential credentials])]])]]))
 
 (defn TargetEdges
   []
@@ -375,41 +375,54 @@
 
 (defn ConfigureApplications
   []
-  (let [app-selected (subscribe [::subs/app-selected])]
-    (dispatch [::tab2/change-tab [::spec/config-apps-tab]
-               (some-> (seq @app-selected) first :id)])
+  (let [apps-selected (subscribe [::subs/apps-selected])]
     [:div
      "Configure the applications here"
-     @app-selected
-     [tab2/Tab {:db-path [::spec/config-apps-tab]
-                :panes   (map
-                           (fn [{:keys [id name description subtype]}]
-                             {:menuItem {:content (or name id)
-                                         :key     id
-                                         :icon    (r/as-element
-                                                    (apps-utils/subtype-icon-infra
-                                                      subtype false))}
-                              :render   #(r/as-element
-                                           [ui/TabPane
-                                            [:h1 (or name id)]
-                                            description
-                                            ^{:key id}
-                                            [module-version/ModuleVersions
-                                             {:db-path [::spec/module-versions]
-                                              :href    id}]
-                                            [module-version/EnvVariables
-                                             {:db-path [::spec/module-versions]
-                                              :href    id}]
-                                            ])}
-                             )
-                           @app-selected)}]
+     [tab2/Tab
+      {:db-path [::spec/config-apps-tab]
+       :panes   (map
+                  (fn [{:keys [id name subtype]}]
+                    {:menuItem {:content (or name id)
+                                :key     id
+                                :icon    (r/as-element
+                                           (apps-utils/subtype-icon-infra
+                                             subtype false))}
+                     :render   #(r/as-element
+                                  [ui/TabPane
+                                   [uix/Accordion
+                                    ^{:key id}
+                                    [module-version/ModuleVersions
+                                     {:db-path [::spec/module-versions]
+                                      :href    id}]
+                                    :label "Select version"
+                                    :default-open true]
+                                   [uix/Accordion
+                                    [module-version/EnvVariables
+                                     {:db-path [::spec/module-versions]
+                                      :href    id}]
+                                    :label "Environment variables"
+                                    :default-open true]
+                                   [uix/Accordion
+                                    [:div "licence"]
+                                    :label "License"
+                                    :default-open false]
+                                   [uix/Accordion
+                                    [:div "price"]
+                                    :label "Price"
+                                    :default-open false]
+                                   ])}
+                    ) @apps-selected)
+
+       }]
      #_[module-version/ModuleVersions
         {:db-path [::spec/module-versions]
          :hrefs   @app-selected}]]))
 
 (defn AddPage
   []
-  (let [disabled? (subscribe [::subs/create-disabled?])]
+  (let [disabled?        (subscribe [::subs/create-disabled?])
+        apps-selected    (subscribe [::subs/apps-selected])
+        targets-selected (subscribe [::subs/targets-selected])]
     (dispatch [::events/new])
     (fn []
       (let [items [{:key         :select-apps-targets
@@ -423,23 +436,46 @@
                     :title       "Configure"
                     :disabled    @disabled?
                     :description "Configure applications"}
-                   {:key         :license
-                    :icon        "book"
-                    :content     [:div "Accept applications licenses"]
-                    :title       "License"
-                    :disabled    @disabled?
-                    :description "Accept licenses"}
-                   {:key         :price
-                    :icon        "euro"
-                    :content     [:div "Accept prices"]
-                    :title       "Prices"
-                    :disabled    @disabled?
-                    :description "Accept prices"}
+                   #_{:key         :license
+                      :icon        "book"
+                      :content     [:div "Accept applications licenses"]
+                      :title       "License"
+                      :disabled    @disabled?
+                      :description "Accept licenses"}
+                   #_{:key         :price
+                      :icon        "eur"
+                      :content     [:div "Accept prices"]
+                      :title       "Prices"
+                      :disabled    @disabled?
+                      :description "Accept prices"}
                    {:key         :summary
                     :icon        "info"
-                    :content     [:div "This will contain a summary"]
+                    :content     [:div "This will contain a summary"
+                                  [ui/Segment
+                                   "Kubernetes"
+                                   [:div "Targets: "
+                                    (str (map :name (get (group-by :subtype @targets-selected)
+                                                                 "infrastructure-service-kubernetes")))]
+                                   [:span "Apps: "
+                                    (str (map :name (get (group-by :subtype @apps-selected) "application_kubernetes")))
+                                    ]
+                                   ]
+                                  [ui/Segment
+                                   "Docker"
+                                   [:div "Targets: "
+                                    (str (map :name (get (group-by :subtype @targets-selected)
+                                                         "infrastructure-service-swarm")))]
+                                   [:span "Apps: "
+                                    (str (map :name (remove #(= (:subtype %) "application_kubernetes") @apps-selected)))
+                                    ]
+                                   ]
+
+                                  [ui/Button {:positive true
+                                              :floated  :right} "Create"]
+                                  [:br] [:br] [:br]
+                                  ]
                     :title       "Summary"
-                    :description "Enter billing information"}]]
+                    :description "Overall summary"}]]
         [ui/Container {:fluid true}
          [uix/PageHeader "add" "Add"]
          ;(dispatch [::module-version/load-module [::spec/module-versions]

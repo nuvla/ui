@@ -156,12 +156,13 @@
       (update db ::spec/apps-selected op id))))
 
 (reg-event-db
-  ::toggle-select-cred
-  (fn [{:keys [::spec/creds-selected] :as db} [_ id cred-ids]]
-    (let [op (if (contains? creds-selected id) disj conj)]
+  ::toggle-select-target
+  (fn [{:keys [::spec/targets-selected] :as db} [_ credential credentials]]
+    (let [op (if (contains? targets-selected credential) disj conj)]
       (-> db
-          (assoc ::spec/creds-selected (apply disj creds-selected cred-ids))
-          (update ::spec/creds-selected op id)))))
+          (assoc ::spec/targets-selected
+                 (apply disj targets-selected credentials))
+          (update ::spec/targets-selected op credential)))))
 
 (reg-event-fx
   ::set-credentials
@@ -174,7 +175,7 @@
   (fn [_ [_ filter-str]]
     {::cimi-api-fx/search
      [:credential {:last   10000
-                   :select "id, name, description, parent"
+                   :select "id, name, description, parent, subtype"
                    :filter filter-str}
       #(dispatch [::set-credentials %])]}))
 

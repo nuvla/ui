@@ -53,13 +53,13 @@
     (reduce transform {} resources)))
 
 (reg-sub
-  ::app-selected
+  ::apps-selected
   (fn [db]
     (::spec/apps-selected db)))
 
 (reg-sub
-  ::app-selected?
-  :<- [::app-selected]
+  ::apps-selected?
+  :<- [::apps-selected]
   (fn [apps-selected [_ module]]
     (contains? apps-selected module)))
 
@@ -134,16 +134,22 @@
                         (:infrastructure-service-group %))) resources)))
 
 (reg-sub
-  ::creds-selected?
-  (fn [{:keys [::spec/creds-selected]} [_ ids]]
-    (->> creds-selected
-         (some (set ids))
+  ::targets-selected
+  (fn [db]
+    (::spec/targets-selected db)))
+
+(reg-sub
+  ::targets-selected?
+  :<- [::targets-selected]
+  (fn [targets-selected [_ credentials]]
+    (->> targets-selected
+         (some (set credentials))
          boolean)))
 
 (reg-sub
   ::create-disabled?
-  (fn [{:keys [::spec/creds-selected
+  (fn [{:keys [::spec/targets-selected
                ::spec/apps-selected]}]
     (boolean
       (or (empty? apps-selected)
-          (empty? creds-selected)))))
+          (empty? targets-selected)))))

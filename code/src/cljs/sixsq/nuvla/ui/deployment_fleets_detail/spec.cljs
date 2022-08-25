@@ -5,13 +5,13 @@
     [sixsq.nuvla.ui.plugins.events-table :as events-table]
     [sixsq.nuvla.ui.plugins.step-group :as step-group]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
-    [sixsq.nuvla.ui.plugins.module-version :as module-version]
     [sixsq.nuvla.ui.plugins.pagination :as pagination]))
 
 (s/def ::deployment-fleet (s/nilable any?))
 (s/def ::deployment-fleet-not-found? boolean?)
 (s/def ::apps (s/nilable any?))
 (s/def ::apps-selected (s/nilable set?))
+(s/def ::targets-selected (s/nilable set?))
 (s/def ::apps-loading? boolean?)
 (s/def ::targets-loading? boolean?)
 (s/def ::edges (s/nilable any?))
@@ -36,7 +36,7 @@
    ::creds-search                (full-text-search/build-spec)
    ::steps                       (step-group/build-spec
                                    :active-step :select-apps-targets)
-   ::creds-selected              #{}
+   ::targets-selected            #{}
    ::edges-pagination            (pagination/build-spec
                                    :default-items-per-page 15)
    ::edges-search                (full-text-search/build-spec)

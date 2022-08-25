@@ -23,7 +23,6 @@
 (reg-sub
   ::module
   (fn [db [_ db-path href]]
-    (js/console.error "subs" ::module db-path href)
     (get-in db (conj db-path ::modules href))))
 
 
@@ -92,7 +91,8 @@
 
 
 (defn AsFormInput
-  [index {env-name        :name
+  [db-path href
+   index {env-name        :name
           env-description :description
           env-value       :value
           env-required    :required}]
@@ -106,19 +106,14 @@
      ;(if selected-creds
      ;  [CredentialsDropdown env-value index deployment selected-creds]
      [ui/Input
-      {:type          "text"
-       :name          env-name
-       :default-value (or env-value "")
-       :read-only     false
-       :fluid         true
-       :on-change     (ui-callback/input-callback
-                        #()
-                        ;#(dispatch [::events/set-deployment (assoc-in
-                        ;                                      @deployment
-                        ;                                      [:module :content
-                        ;                                       :environmental-variables
-                        ;                                       index :value] %)])
-                        )}]
+      {:type      "text"
+       :name      env-name
+       :value     (or env-value "")
+       :read-only false
+       :fluid     true
+       :on-change (ui-callback/input-callback
+                    #(dispatch [::helpers/set (conj db-path ::modules href :content :environmental-variables index) :value %])
+                    )}]
      ;)
      ]))
 
@@ -132,7 +127,7 @@
       (map-indexed
         (fn [i env-variable]
           ^{:key (str (:name env-variable) "_" i)}
-          [AsFormInput i env-variable])
+          [AsFormInput db-path href i env-variable])
         env-variables)]]))
 
 (defn ModuleVersions
@@ -163,7 +158,7 @@
 
          ]))))
 
-(s/def ::href (s/coll-of string?))
+(s/def ::href string?)
 
 (s/fdef ModuleVersions
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path

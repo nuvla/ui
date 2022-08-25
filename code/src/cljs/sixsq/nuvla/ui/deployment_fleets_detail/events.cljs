@@ -137,7 +137,7 @@
     {:db (assoc db ::spec/apps-loading? true)
      ::cimi-api-fx/search
      [:module (->>
-                {:select  "id, name, description, parent-path"
+                {:select  "id, name, description, parent-path, subtype"
                  :orderby "path:asc"
                  :filter  (general-utils/join-and
                             (full-text-search/filter-text db [::spec/apps-search])
@@ -215,7 +215,9 @@
       (->> {:select  "id, name, description, subtype, parent"
             :orderby "name:asc,id:asc"
             :filter  (general-utils/join-and
-                       "tags!='nuvlabox=True'"
+                       (general-utils/join-or
+                         "tags!='nuvlabox=True'"
+                         "tags!='nuvlaedge=True'")
                        (general-utils/join-or
                          "subtype='swarm'"
                          "subtype='kubernetes'")

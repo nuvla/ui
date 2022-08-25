@@ -22,10 +22,13 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.plugins.tab :as tab]
+    [sixsq.nuvla.ui.plugins.tab2 :as tab2]
     [sixsq.nuvla.ui.plugins.events-table :as events-table]
     [sixsq.nuvla.ui.plugins.step-group :as step-group]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination]))
+    [sixsq.nuvla.ui.plugins.pagination :as pagination]
+    [sixsq.nuvla.ui.plugins.module-version :as module-version]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]))
 
 
 (def refresh-action-id :deployment-fleet-get-deployment-fleet)
@@ -171,17 +174,20 @@
                 :pointing  true}}]))
 
 (defn Application
-  [{:keys [id name description]}]
-  (let [selected? @(subscribe [::subs/app-selected? id])]
-    [ui/ListItem {:on-click #(dispatch [::events/toggle-select-app id])
+  [{:keys [id name subtype description] :as module}]
+  (let [selected? @(subscribe [::subs/app-selected? module])]
+    [ui/ListItem {:on-click #(dispatch [::events/toggle-select-app module])
                   :style    {:cursor :pointer}}
      [ui/ListIcon {:name (if selected?
                            "check square outline"
                            "square outline")}]
      [ui/ListContent
-      [ui/ListHeader (when selected? {:as :a}) name]
+      [ui/ListHeader (when selected? {:as :a})
+       (apps-utils/subtype-icon-infra subtype selected?)
+       " "
+       (or name id)]
       [ui/ListDescription
-       (general-utils/substring description 150)]]]))
+       (general-utils/truncate description 100)]]]))
 
 (defn Applications
   [applications]
@@ -265,7 +271,7 @@
        [ui/Icon {:name "key"}] " "
        (or name id)]
       (when description
-        [ui/ListDescription (general-utils/substring description 150)])]]))
+        [ui/ListDescription (general-utils/truncate description 100)])]]))
 
 (defn TargetItem
   [{:keys [id name description credentials subtype] :as _infrastructure}]
@@ -292,7 +298,7 @@
                                          :display :inline-block}}])
        " " (or name id)]
       (when description
-        [ui/ListDescription (general-utils/substring description 150)])
+        [ui/ListDescription (general-utils/truncate description 100)])
       (when multiple-cred?
         [ui/ListList
          [:<>
@@ -367,6 +373,40 @@
       [:h2 "Targets"]
       [SelectTargets]]]]])
 
+(defn ConfigureApplications
+  []
+  (let [app-selected (subscribe [::subs/app-selected])]
+    (dispatch [::tab2/change-tab [::spec/config-apps-tab]
+               (some-> (seq @app-selected) first :id)])
+    [:div
+     "Configure the applications here"
+     @app-selected
+     [tab2/Tab {:db-path [::spec/config-apps-tab]
+                :panes   (map
+                           (fn [{:keys [id name description subtype]}]
+                             {:menuItem {:content (or name id)
+                                         :key     id
+                                         :icon    (r/as-element
+                                                    (apps-utils/subtype-icon-infra
+                                                      subtype false))}
+                              :render   #(r/as-element
+                                           [ui/TabPane
+                                            [:h1 (or name id)]
+                                            description
+                                            ^{:key id}
+                                            [module-version/ModuleVersions
+                                             {:db-path [::spec/module-versions]
+                                              :href    id}]
+                                            [module-version/EnvVariables
+                                             {:db-path [::spec/module-versions]
+                                              :href    id}]
+                                            ])}
+                             )
+                           @app-selected)}]
+     #_[module-version/ModuleVersions
+        {:db-path [::spec/module-versions]
+         :hrefs   @app-selected}]]))
+
 (defn AddPage
   []
   (let [disabled? (subscribe [::subs/create-disabled?])]
@@ -379,8 +419,7 @@
                     :description "Select applications and targets"}
                    {:key         :configure
                     :icon        "configure"
-                    :content     [:div
-                                  "Configure the applications here"]
+                    :content     [ConfigureApplications]
                     :title       "Configure"
                     :disabled    @disabled?
                     :description "Configure applications"}
@@ -403,6 +442,11 @@
                     :description "Enter billing information"}]]
         [ui/Container {:fluid true}
          [uix/PageHeader "add" "Add"]
+         ;(dispatch [::module-version/load-module [::spec/module-versions]
+         ;           "module/f34b5882-45b5-4eb3-95a2-bc7fd236b8ff"])
+         ;[module-version/ModuleVersions
+         ; {:db-path [::spec/module-versions]
+         ;  :href    "module/f34b5882-45b5-4eb3-95a2-bc7fd236b8ff"}]
          [step-group/StepGroup
           {:db-path [::spec/steps]
            :size    :mini

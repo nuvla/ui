@@ -53,9 +53,15 @@
     (reduce transform {} resources)))
 
 (reg-sub
+  ::app-selected
+  (fn [db]
+    (::spec/apps-selected db)))
+
+(reg-sub
   ::app-selected?
-  (fn [{:keys [::spec/apps-selected]} [_ id]]
-    (contains? apps-selected id)))
+  :<- [::app-selected]
+  (fn [apps-selected [_ module]]
+    (contains? apps-selected module)))
 
 (reg-sub
   ::apps-loading?

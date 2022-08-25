@@ -5,6 +5,7 @@
     [sixsq.nuvla.ui.plugins.events-table :as events-table]
     [sixsq.nuvla.ui.plugins.step-group :as step-group]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
+    [sixsq.nuvla.ui.plugins.module-version :as module-version]
     [sixsq.nuvla.ui.plugins.pagination :as pagination]))
 
 (s/def ::deployment-fleet (s/nilable any?))
@@ -43,4 +44,4 @@
                                    :default-items-per-page 15)
    ::clouds-search               (full-text-search/build-spec)
    ::apps-pagination             (pagination/build-spec
-                                   :default-items-per-page 50)})
+                                   :default-items-per-page 15)})

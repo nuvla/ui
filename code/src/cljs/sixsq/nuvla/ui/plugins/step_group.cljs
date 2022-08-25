@@ -79,9 +79,6 @@
     [PreviousButton db-path]
     [NextButton db-path]]])
 
-(s/fdef PreviousNextButtons
-        :args (s/cat :opts (s/keys :req-un [::helpers/db-path])))
-
 (defn StepGroup
   [{:keys [db-path items change-event] :as opts}]
   (dispatch [::helpers/set db-path
@@ -104,5 +101,5 @@
      [PreviousNextButtons db-path]]))
 
 (s/fdef StepGroup
-        :args (s/cat :opts (s/keys :req-un [::helpers/db-path
-                                            ::helpers/change-event])))
+        :args (s/cat :opts (s/keys :req-un [::helpers/db-path]
+                                   :opt-un [::helpers/change-event])))

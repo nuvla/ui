@@ -15,3 +15,10 @@
   ::set
   (fn [db [_ db-path & {:as m}]]
     (update-in db db-path merge m)))
+
+(reg-event-db
+  ::init-spec
+  (fn [db [_ db-path default-spec]]
+    (let [existing-comp-db (get-in db db-path)]
+      (cond-> db
+              (nil? existing-comp-db) (assoc-in db-path default-spec)))))

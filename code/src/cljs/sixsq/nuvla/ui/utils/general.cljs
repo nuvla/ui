@@ -217,14 +217,6 @@
     short-uuid))
 
 
-(defn substring
-  [text max-length]
-  (if (> (count text) max-length)
-    (-> text
-        (subs 0 (- max-length 3))
-        (str "..."))
-    text))
-
 (defn operation-name [op-uri]
   (second (re-matches #"^(?:.*/)?(.+)$" op-uri)))
 

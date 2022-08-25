@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.32.3] - 2022-08-25
+
 ### Changed
 
 - Deployments - Move deployments tab to a new page

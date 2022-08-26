@@ -22,14 +22,14 @@
         i
         (recur (inc i) (next next-panes)))
       (do
-        (log/error "tab-key not found: " k panes)
+        (log/warn "tab-key not found: " k panes)
         0))))
 
 (defn- index->key
   [panes i]
   (if-let [k (some-> panes vec (get i) :menuItem :key)]
     k
-    (log/error "tab-index not found:" i panes)))
+    (log/warn "tab-index not found:" i panes)))
 
 (reg-event-fx
   ::change-tab
@@ -46,14 +46,21 @@
       (dispatch [::change-tab db-path tab-key]))))
 
 (defn Tab
-  [{:keys [db-path panes change-event] :as opts}]
-  (dispatch [::helpers/set db-path ::change-event change-event])
-  (let [active-tab @(subscribe [::helpers/retrieve db-path ::active-tab])]
-    [ui/Tab
-     (-> opts
-         (dissoc :db-path :change-event)
-         (assoc :active-index (key->index panes active-tab)
-                :on-tab-change (on-tab-change db-path panes)))]))
+  [{:keys [db-path change-event] :as _opts}]
+  (let [active-tab (subscribe [::helpers/retrieve db-path ::active-tab])]
+    (dispatch [::helpers/set db-path ::change-event change-event])
+    (fn [{:keys [db-path panes] :as opts}]
+      (when (nil? @active-tab)
+        (dispatch [::helpers/set db-path
+                   ::active-tab (some-> (seq panes) first :menuItem :key)]))
+      [ui/Tab
+       (-> opts
+           (dissoc :db-path :change-event :default-active-tab)
+           (assoc :on-tab-change (on-tab-change db-path panes))
+           (cond->
+             @active-tab (assoc :active-index
+                                (key->index panes @active-tab))))])))
+
 
 (s/fdef Tab
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path]

@@ -8,16 +8,14 @@
             [reagent.core :as r]
             [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
             [clojure.string :as str]
-            [cljs.spec.test.alpha :as ts]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]
-            [sixsq.nuvla.ui.config :as config]
-            [clojure.spec.alpha :as spec]))
+            [sixsq.nuvla.ui.utils.form-fields :as ff]))
 
 (s/def ::items-per-page (s/nilable int?))
 (s/def ::default-items-per-page (s/nilable int?))
 (s/def ::active-page (s/nilable int?))
 (s/def ::change-event (s/nilable coll?))
 
+;; mandatory init component
 (defn build-spec
   [& {:keys [default-items-per-page]
       :or   {default-items-per-page 10}}]
@@ -58,7 +56,9 @@
         tr            @(subscribe [::i18n-subs/tr])
         active-page   @(subscribe [::helpers/retrieve db-path ::active-page])
         per-page      @(subscribe [::helpers/retrieve db-path ::items-per-page])
-        total-pages   (general-utils/total-pages total-items per-page)]
+        total-pages   (or (some-> total-items
+                                  (general-utils/total-pages per-page))
+                          0)]
     (when (and (> active-page total-pages)
                (not= total-pages 0))
       (change-page 1))
@@ -91,7 +91,7 @@
        :active-page   active-page
        :onPageChange  (ui-callback/callback :activePage #(change-page %))}]]))
 
-(s/def ::total-items nat-int?)
+(s/def ::total-items (s/nilable nat-int?))
 
 (s/fdef Pagination
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path

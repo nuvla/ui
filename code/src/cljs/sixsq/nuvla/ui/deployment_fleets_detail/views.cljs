@@ -22,7 +22,6 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.plugins.tab :as tab]
-    [sixsq.nuvla.ui.plugins.tab2 :as tab2]
     [sixsq.nuvla.ui.plugins.events-table :as events-table]
     [sixsq.nuvla.ui.plugins.step-group :as step-group]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
@@ -115,8 +114,6 @@
      [components/EditableTags
       deployment-fleet #(dispatch [::events/edit id {:tags %}
                                    (@tr [:updated-successfully])])]]))
-
-
 
 (defn TabOverview
   []
@@ -239,7 +236,7 @@
                          [Node (dissoc apps :applications) (:applications apps)]]
                         [pagination/Pagination
                          {:db-path      [::spec/apps-pagination]
-                          :total-items  (or count 0)
+                          :total-items  count
                           :change-event [::events/search-apps]}]]))]
       [tab/Tab
        {:db-path      [::spec/tab-new-apps]
@@ -323,7 +320,7 @@
            ^{:key id}
            [TargetItem infrastructures])]]
        [pagination/Pagination {:db-path      [::spec/edges-pagination]
-                               :total-items  (or count 0)
+                               :total-items  count
                                :change-event [::events/search-edges]}]])))
 
 (defn TargetClouds
@@ -343,7 +340,7 @@
            ^{:key id}
            [TargetItem infrastructures])]]
        [pagination/Pagination {:db-path      [::spec/clouds-pagination]
-                               :total-items  (or count 0)
+                               :total-items  count
                                :change-event [::events/search-clouds]}]])))
 
 (defn SelectTargets
@@ -378,7 +375,7 @@
   (let [apps-selected (subscribe [::subs/apps-selected])]
     [:div
      "Configure the applications here"
-     [tab2/Tab
+     [tab/Tab
       {:db-path [::spec/config-apps-tab]
        :panes   (map
                   (fn [{:keys [id name subtype]}]
@@ -422,7 +419,8 @@
   []
   (let [disabled?        (subscribe [::subs/create-disabled?])
         apps-selected    (subscribe [::subs/apps-selected])
-        targets-selected (subscribe [::subs/targets-selected])]
+        targets-selected (subscribe [::subs/targets-selected])
+        create-disabled? (subscribe [::subs/create-disabled?])]
     (dispatch [::events/new])
     (fn []
       (let [items [{:key         :select-apps-targets
@@ -455,7 +453,7 @@
                                    "Kubernetes"
                                    [:div "Targets: "
                                     (str (map :name (get (group-by :subtype @targets-selected)
-                                                                 "infrastructure-service-kubernetes")))]
+                                                         "infrastructure-service-kubernetes")))]
                                    [:span "Apps: "
                                     (str (map :name (get (group-by :subtype @apps-selected) "application_kubernetes")))
                                     ]
@@ -470,8 +468,11 @@
                                     ]
                                    ]
 
-                                  [ui/Button {:positive true
-                                              :floated  :right} "Create"]
+                                  [ui/Button
+                                   {:positive true
+                                    :on-click #(dispatch [::events/create])
+                                    :disabled @create-disabled?
+                                    :floated  :right} "Create"]
                                   [:br] [:br] [:br]
                                   ]
                     :title       "Summary"

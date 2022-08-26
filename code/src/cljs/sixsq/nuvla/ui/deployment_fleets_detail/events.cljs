@@ -15,7 +15,9 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination]))
+    [sixsq.nuvla.ui.plugins.pagination :as pagination]
+    [sixsq.nuvla.ui.plugins.module-version :as module-version]))
+
 
 (reg-event-fx
   ::new
@@ -142,7 +144,8 @@
                  :filter  (general-utils/join-and
                             (full-text-search/filter-text db [::spec/apps-search])
                             (case (::tab/active-tab tab-new-apps)
-                              :my-apps (str "acl/owners='" (:active-claim session) "'")
+                              :my-apps (str "acl/owners='" (or (:active-claim session)
+                                                               (:user session)) "'")
                               :app-store "published=true"
                               nil)
                             "subtype!='project'")}
@@ -253,11 +256,26 @@
     {:db (assoc db ::spec/targets-loading? true)
      ::cimi-api-fx/search
      [:nuvlabox
-      (->> {:select "id, name, description, infrastructure-service-group"
-            :orderby  "name:asc,id:asc"
-            :filter (general-utils/join-and
-                      (full-text-search/filter-text db [::spec/edges-search])
-                      "state='COMMISSIONED'"
-                      "infrastructure-service-group!=null")}
+      (->> {:select  "id, name, description, infrastructure-service-group"
+            :orderby "name:asc,id:asc"
+            :filter  (general-utils/join-and
+                       (full-text-search/filter-text db [::spec/edges-search])
+                       "state='COMMISSIONED'"
+                       "infrastructure-service-group!=null")}
            (pagination/first-last-params db [::spec/edges-pagination]))
       #(dispatch [::set-edges %])]}))
+
+
+(reg-event-fx
+  ::create
+  (fn [{{:keys [::spec/targets-selected
+                ::spec/apps-selected] :as db} :db}]
+    {::cimi-api-fx/add
+     [:deployment-fleet
+      {:spec {:applications (map #(module-version/selected-version
+                                    db [::spec/module-versions] (:id %))
+                                 apps-selected)
+              :targets      (map :id targets-selected)}}
+      #(dispatch [::history-events/navigate
+                  (str "deployment-fleets/"
+                       (general-utils/id->uuid (:resource-id %)))])]}))

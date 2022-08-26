@@ -1,10 +1,10 @@
 (ns sixsq.nuvla.ui.deployment-fleets-detail.spec
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.plugins.tab :as tab]
     [sixsq.nuvla.ui.plugins.events-table :as events-table]
     [sixsq.nuvla.ui.plugins.step-group :as step-group]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
+    [sixsq.nuvla.ui.plugins.tab :as tab]
     [sixsq.nuvla.ui.plugins.pagination :as pagination]))
 
 (s/def ::deployment-fleet (s/nilable any?))
@@ -29,19 +29,17 @@
    ::edges                       nil
    ::infrastructures             nil
    ::events                      (events-table/build-spec)
-   ::tab                         (tab/build-spec :active-tab :overview)
-   ::tab-new-apps                (tab/build-spec :active-tab :my-apps)
-   ::tab-new-targets             (tab/build-spec :active-tab :edges)
    ::apps-search                 (full-text-search/build-spec)
    ::creds-search                (full-text-search/build-spec)
    ::steps                       (step-group/build-spec
                                    :active-step :select-apps-targets)
    ::targets-selected            #{}
-   ::edges-pagination            (pagination/build-spec
-                                   :default-items-per-page 15)
    ::edges-search                (full-text-search/build-spec)
    ::clouds-pagination           (pagination/build-spec
                                    :default-items-per-page 15)
    ::clouds-search               (full-text-search/build-spec)
    ::apps-pagination             (pagination/build-spec
-                                   :default-items-per-page 15)})
+                                   :default-items-per-page 15)
+   ::edges-pagination             (pagination/build-spec
+                                   :default-items-per-page 15)
+   ::config-apps-tab             (tab/build-spec :active-tab :my-apps)})

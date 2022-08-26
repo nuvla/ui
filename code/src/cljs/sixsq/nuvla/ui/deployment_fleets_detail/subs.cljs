@@ -122,13 +122,7 @@
   ::edges-with-infras-creds
   :<- [::edges]
   :<- [::infrastructures-with-credentials-by-parent]
-  :<- [::infrastructures-with-credentials]
-  (fn [[{:keys [resources]} infras-with-creds-by-parent
-        infrastructures-with-credentials]]
-    (let [edges-by-infra-group (->> resources
-                                    (map (juxt :infrastructure-service-group identity))
-                                    (into {}))]
-      (js/console.warn infrastructures-with-credentials))
+  (fn [[{:keys [resources]} infras-with-creds-by-parent]]
     (map #(assoc % :infrastructures
                    (get infras-with-creds-by-parent
                         (:infrastructure-service-group %))) resources)))

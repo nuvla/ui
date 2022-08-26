@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.deployment-fleets.spec
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]))
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination]))
 
 (s/def ::deployment-fleets any?)
 (s/def ::deployment-fleets-summary any?)
@@ -14,6 +14,5 @@
    ::deployment-fleets-summary nil
    ::full-text-search          nil
    ::state-selector            nil
-   ::pagination                (pagination/build-spec
-                                 :default-items-per-page 10)
+   ::pagination                (pagination/build-spec)
    ::search                    (full-text-search/build-spec)})

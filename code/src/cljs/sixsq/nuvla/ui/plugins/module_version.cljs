@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.plugins.module-version
   (:require [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.values :as values]
             [re-frame.core :refer [subscribe dispatch reg-event-fx reg-sub]]
             [sixsq.nuvla.ui.plugins.helpers :as helpers]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -15,20 +14,31 @@
 (reg-event-fx
   ::load-module
   (fn [_ [_ db-path href]]
-    (js/console.error ::load-module db-path href)
     (let [module-id (some-> href (str/split "_") first)]
       {::cimi-api-fx/get
        [href #(dispatch [::helpers/set (conj db-path ::modules)
                          module-id %])]})))
-(reg-sub
-  ::module
-  (fn [db [_ db-path href]]
-    (get-in db (conj db-path ::modules href))))
-
 
 (defn get-version-id
   [module-versions version]
   (some (fn [[idx {:keys [href]}]] (when (= version href) idx)) module-versions))
+
+(defn module-content-id->version-url
+  [versions-indexed id module-content-id]
+  (->> module-content-id
+       (get-version-id versions-indexed)
+       (str id "_")))
+
+(defn selected-version
+  [db db-path href]
+  (let [module-content-id (get-in db (conj db-path ::modules href :content :id))
+        versions-indexed  (subscribe [::module-versions-indexed db-path href])]
+    (module-content-id->version-url @versions-indexed href module-content-id)))
+
+(reg-sub
+  ::module
+  (fn [db [_ db-path href]]
+    (get-in db (conj db-path ::modules href))))
 
 (reg-sub
   ::module-versions-indexed
@@ -135,10 +145,8 @@
   (let [module           (subscribe [::module db-path href])
         versions-indexed (subscribe [::module-versions-indexed db-path href])
         options          (subscribe [::module-versions-options db-path href])]
-    (js/console.error "ModuleVersions mount " href)
     (fn [{:keys [db-path href] :as _opts}]
-      (let [{:keys [id name content]} @module]
-        (js/console.error "ModuleVersions render " href id)
+      (let [{:keys [id content]} @module]
         (when (nil? id)
           (dispatch [::load-module db-path href]))
         [:<>
@@ -149,9 +157,8 @@
            :selection true
            :on-change (ui-callback/value
                         #(dispatch [::load-module db-path
-                                    (->> %
-                                         (get-version-id @versions-indexed)
-                                         (str id "_"))]))
+                                    (module-content-id->version-url
+                                      @versions-indexed id %)]))
            :fluid     true
            :options   @options}]
          [:div (str content)]

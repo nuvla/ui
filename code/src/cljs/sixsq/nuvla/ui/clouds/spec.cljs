@@ -105,12 +105,6 @@
 
 (s/def ::management-credentials-available any?)
 
-(s/def ::db (s/keys :req [::infra-service-groups
-                          ::infra-services
-                          ::page
-                          ::management-credentials-available
-                          ::elements-per-page]))
-
 (def defaults
   {::infra-service-groups             nil
    ::infra-services                   {}

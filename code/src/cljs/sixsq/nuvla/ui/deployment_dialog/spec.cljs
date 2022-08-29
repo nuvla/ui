@@ -63,37 +63,6 @@
 
 (s/def ::submit-loading? boolean?)
 
-(s/def ::db (s/keys :req [::deploy-modal-visible?
-                          ::deployment
-                          ::infra-services
-                          ::infra-services-loading?
-                          ::infra-registries
-                          ::infra-registries-loading?
-                          ::infra-registries-creds
-                          ::registries-creds
-                          ::invisible-registries-creds
-                          ::selected-infra-service
-                          ::credentials
-                          ::credentials-loading?
-                          ::selected-credential-id
-                          ::data-clouds
-                          ::selected-cloud
-                          ::cloud-filter
-                          ::cloud-infra-services            ;; from search to display data
-                          ::license-accepted?
-                          ::price-accepted?
-
-                          ::active-step
-                          ::data-step-active?
-                          ::step-states
-                          ::error-message
-                          ::check-dct
-                          ::module-info
-                          ::selected-version
-                          ::original-module
-                          ::submit-loading?]))
-
-
 (def step-states {:data           {:step-id :data
                                    :icon    "database"}
                   :infra-services {:step-id :infra-services

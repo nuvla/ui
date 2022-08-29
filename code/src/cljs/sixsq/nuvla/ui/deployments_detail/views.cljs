@@ -9,6 +9,7 @@
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.credentials.utils :as creds-utils]
     [sixsq.nuvla.ui.deployments-detail.events :as events]
+    [sixsq.nuvla.ui.deployments-detail.spec :as spec]
     [sixsq.nuvla.ui.deployments-detail.subs :as subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
@@ -28,6 +29,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.spec :as spec-utils]
     [sixsq.nuvla.ui.utils.style :as style]
+    [sixsq.nuvla.ui.plugins.events :as events-plugin]
     [sixsq.nuvla.ui.utils.tab :as tab]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.values :as values]))
@@ -226,65 +228,6 @@
   (let [module-content (subscribe [::subs/deployment-module-content])
         env-vars       (get @module-content :environmental-variables [])]
     (list-section env-vars :env-vars :env-variables)))
-
-
-(def event-fields #{:id :content :timestamp :category})
-
-
-(defn events-table-info
-  [events]
-  (when-let [start (-> events last :timestamp)]
-    (let [dt-fn (partial deployments-utils/assoc-delta-time start)]
-      (->> events
-           (map #(select-keys % event-fields))
-           (map dt-fn)))))
-
-
-(defn event-map-to-row
-  [{:keys [id content timestamp category delta-time]}]
-  [ui/TableRow
-   [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
-   [ui/TableCell timestamp]
-   [ui/TableCell (general-utils/round-up delta-time)]
-   [ui/TableCell category]
-   [ui/TableCell (:state content)]])
-
-
-(defn events-table
-  [_events]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [events]
-      [ui/TabPane
-       [ui/Table {:basic "very"}
-        [ui/TableHeader
-         [ui/TableRow
-          [ui/TableHeaderCell [:span (@tr [:event])]]
-          [ui/TableHeaderCell [:span (@tr [:timestamp])]]
-          [ui/TableHeaderCell [:span (@tr [:delta-min])]]
-          [ui/TableHeaderCell [:span (@tr [:category])]]
-          [ui/TableHeaderCell [:span (@tr [:state])]]]]
-        [ui/TableBody
-         (for [{:keys [id] :as event} events]
-           ^{:key id}
-           [event-map-to-row event])]]])))
-
-
-(defn events-section                                        ;FIXME: add paging
-  []
-  (let [tr          (subscribe [::i18n-subs/tr])
-        events      (subscribe [::subs/events])
-        events-info (events-table-info @events)
-        event-count (count events-info)]
-    {:menuItem {:content (r/as-element
-                           [:span (str/capitalize (@tr [:events]))
-                            (when (> event-count 0)
-                              [ui/Label {:circular true
-                                         :size     "mini"
-                                         :attached "top right"}
-                               event-count])])
-                :key     :events
-                :icon    "bolt"}
-     :render   #(r/as-element [events-table events-info])}))
 
 
 (defn job-map-to-row
@@ -782,7 +725,10 @@
      (urls-section)
      (module-version-section)
      (logs-section)
-     (events-section)
+     (when @deployment
+       (events-plugin/events-section
+         {:db-path [::spec/events]
+          :href    (:id @deployment)}))
      (parameters-section)
      (env-vars-section)
      (billing-section)

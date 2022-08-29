@@ -167,24 +167,6 @@
 
 (s/def ::active-tab keyword?)
 
-(s/def ::db (s/keys :req [::add-credential-modal-visible?
-                          ::credential-modal-visible?
-                          ::generated-credential-modal
-                          ::credential
-                          ::credentials
-                          ::credentials-summary
-                          ::active-input
-                          ::form-spec
-                          ::form-valid?
-                          ::validate-form?
-                          ::credential-password
-                          ::error-message
-                          ::state-selector
-                          ::infrastructure-services-available
-                          ::active-tab
-                          ::credential-check-table]))
-
-
 (def defaults {::add-credential-modal-visible?     false
                ::credential-modal-visible?         false
                ::generated-credential-modal        nil

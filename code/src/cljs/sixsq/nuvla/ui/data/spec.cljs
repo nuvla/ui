@@ -40,24 +40,6 @@
 
 (s/def ::add-data-set-form any?)
 
-(s/def ::db (s/keys :req [::active-tab
-                          ::modal-open?
-                          ::data-records
-                          ::credentials
-                          ::application-select-visible?
-                          ::loading-applications?
-                          ::applications
-                          ::content-type-filter
-                          ::full-text-search
-                          ::total
-                          ::counts
-                          ::sizes
-                          ::data-sets
-                          ::selected-data-set-ids
-                          ::page
-                          ::elements-per-page
-                          ::add-data-set-form]))
-
 (def default-time-period [(time/days-before 30)
                           (time/now)])
 

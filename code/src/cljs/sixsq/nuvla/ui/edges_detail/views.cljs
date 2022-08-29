@@ -32,7 +32,7 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.plugins.events-table :as events-table]))
+    [sixsq.nuvla.ui.plugins.events :as events-plugin]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -1413,14 +1413,6 @@
               :label interface]))]))))
 
 
-(defn TabEvents
-  []
-  (let [{:keys [id]} @(subscribe [::subs/nuvlabox])]
-    [ui/TabPane
-     [events-table/Events {:db-path [::spec/events]
-                           :href    id}]]))
-
-
 ; there's a similar function in edge.views which can maybe be generalized
 (defn VulnStatisticState
   [value label label-popup color state-selector]
@@ -1867,10 +1859,9 @@
                    :key     :peripherals
                    :icon    "usb"}
         :render   #(r/as-element [TabPeripherals])}
-       {:menuItem {:content "Events"
-                   :key     :events
-                   :icon    "bolt"}
-        :render   #(r/as-element [TabEvents])}
+       (events-plugin/events-section
+         {:db-path [::spec/events]
+          :href    (:id @nuvlabox)})
        {:menuItem {:content "Deployments"
                    :key     :deployments
                    :icon    "rocket"}

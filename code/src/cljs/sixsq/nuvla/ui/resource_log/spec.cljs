@@ -11,15 +11,6 @@
 (s/def ::components any?)
 (s/def ::available-components coll?)
 
-
-(s/def ::db (s/keys :req [::resource-log
-                          ::id
-                          ::parent
-                          ::since
-                          ::play?
-                          ::components
-                          ::available-components]))
-
 (defn default-since []
   (.seconds (time/now) 0))
 

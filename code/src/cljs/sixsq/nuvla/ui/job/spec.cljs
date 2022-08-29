@@ -10,13 +10,6 @@
 
 (s/def ::job-page nat-int?)
 
-
-(s/def ::db (s/keys :req [::target-resource
-                          ::jobs
-                          ::jobs-per-page
-                          ::job-page]))
-
-
 (def defaults {::target-resource nil
                ::jobs            nil
                ::jobs-per-page   10

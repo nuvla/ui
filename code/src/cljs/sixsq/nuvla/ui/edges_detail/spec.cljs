@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.edges-detail.spec
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.plugins.events-table :as events-table]))
+    [sixsq.nuvla.ui.plugins.events :as events-plugin]))
 
 (s/def ::nuvlabox (s/nilable any?))
 (s/def ::nuvlabox-status (s/nilable any?))
@@ -20,24 +20,6 @@
 (s/def ::nuvlabox-emergency-playbooks (s/nilable any?))
 (s/def ::nuvlabox-current-playbook (s/nilable any?))
 
-
-(s/def ::db (s/keys :req [::nuvlabox
-                          ::nuvlabox-status
-                          ::nuvlabox-associated-ssh-keys
-                          ::nuvlabox-peripherals
-                          ::vuln-severity-selector
-                          ::matching-vulns-from-db
-                          ::nuvlabox-vulns
-                          ::active-tab
-                          ::nuvlabox-managers
-                          ::join-token
-                          ::nuvlabox-cluster
-                          ::nuvlabox-not-found?
-                          ::nuvlabox-playbooks
-                          ::infra-services
-                          ::nuvlabox-emergency-playbooks
-                          ::nuvlabox-current-playbook]))
-
 (def defaults {::nuvlabox                     nil
                ::nuvlabox-status              nil
                ::nuvlabox-associated-ssh-keys nil
@@ -54,5 +36,5 @@
                ::infra-services               []
                ::nuvlabox-emergency-playbooks nil
                ::nuvlabox-current-playbook    nil
-               ::events                       (events-table/build-spec
+               ::events                       (events-plugin/build-spec
                                                 :default-items-per-page 15)})

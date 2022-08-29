@@ -49,27 +49,6 @@
 
 (s/def ::two-factor-secret (s/nilable string?))
 
-(s/def ::db (s/keys :req [::user
-                          ::customer
-                          ::subscription
-                          ::payment-methods
-                          ::upcoming-invoice
-                          ::invoices
-                          ::customer-info
-                          ::open-modal
-                          ::error-message
-                          ::loading
-                          ::setup-intent
-                          ::vendor
-                          ::group
-                          ::active-tab
-                          ::two-factor-step
-                          ::two-factor-enable?
-                          ::two-factor-method
-                          ::two-factor-callback
-                          ::two-factor-secret]))
-
-
 (def defaults {::user                nil
                ::customer            nil
                ::payment-methods     nil

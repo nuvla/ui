@@ -5,7 +5,6 @@
     [sixsq.nuvla.ui.apps-store.subs :as apps-store-subs]
     [sixsq.nuvla.ui.credentials.subs :as credentials-subs]
     [sixsq.nuvla.ui.dashboard.events :as events]
-    [sixsq.nuvla.ui.dashboard.subs :as subs]
     [sixsq.nuvla.ui.dashboard.utils :as utils]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.views :as deployments-views]
@@ -27,12 +26,10 @@
 
 (defn MenuRefresh
   []
-  (let [loading? (subscribe [::subs/loading?])]
-    [:span {:style {:display "inline-flex"}}
-     [components/RefreshCompact
-      {:action-id  events/refresh-action-deployments-id
-       :loading?   @loading?
-       :on-refresh refresh}]]))
+  [:span {:style {:display "inline-flex"}}
+   [components/RefreshCompact
+    {:action-id  events/refresh-action-deployments-id
+     :on-refresh refresh}]])
 
 
 (defn TabOverviewApps

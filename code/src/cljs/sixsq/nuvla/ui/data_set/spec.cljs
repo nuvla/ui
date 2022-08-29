@@ -35,22 +35,6 @@
 
 (s/def ::elements-per-page int?)
 
-(s/def ::db (s/keys :req [::not-found?
-                          ::time-period
-                          ::time-period-filter
-                          ::data-set
-                          ::data-set-id
-                          ::data-record-filter
-                          ::map-selection
-                          ::geo-operation
-                          ::data-records
-                          ::data-objects
-                          ::content-type-filter
-                          ::full-text-search
-                          ::selected-data-record-ids
-                          ::page
-                          ::elements-per-page]))
-
 (def default-time-period [(time/days-before 30)
                           (time/days-before -1)])
 

@@ -23,9 +23,5 @@
                                                    :opt-un [::description])))
 
 
-(s/def ::db (s/keys :req [::infrastructure-service
-                          ::infra-service-not-found?]))
-
-
 (def defaults {::infrastructure-service   nil
                ::infra-service-not-found? false})

@@ -22,7 +22,7 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.plugins.tab :as tab]
-    [sixsq.nuvla.ui.plugins.events-table :as events-table]
+    [sixsq.nuvla.ui.plugins.events :as events-table]
     [sixsq.nuvla.ui.plugins.step-group :as step-group]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
     [sixsq.nuvla.ui.plugins.pagination :as pagination]
@@ -145,8 +145,8 @@
   []
   (let [{:keys [id]} @(subscribe [::subs/deployment-fleet])]
     [ui/TabPane
-     [events-table/Events {:db-path [::spec/events]
-                           :href    id}]]))
+     [events-table/EventsTabPane {:db-path [::spec/events]
+                           :href           id}]]))
 
 
 (defn TabsDeploymentFleet

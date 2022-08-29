@@ -41,25 +41,6 @@
 
 (s/def ::stripe any?)
 
-(s/def ::db (s/keys :req [::loading?
-                          ::not-found?
-                          ::iframe?
-                          ::device
-                          ::sidebar-open?
-                          ::visible?
-                          ::nav-path
-                          ::nav-query-params
-                          ::changes-protection?
-                          ::ignore-changes-modal
-                          ::ui-version
-                          ::bootstrap-message
-                          ::message
-                          ::actions-interval
-                          ::content-key
-                          ::open-modal
-                          ::stripe]))
-
-
 (def defaults {::loading?             true
                ::not-found?           false
                ::iframe?              false

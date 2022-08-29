@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.deployment-fleets-detail.spec
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.plugins.events-table :as events-table]
+    [sixsq.nuvla.ui.plugins.events :as events-table]
     [sixsq.nuvla.ui.plugins.step-group :as step-group]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
     [sixsq.nuvla.ui.plugins.tab :as tab]

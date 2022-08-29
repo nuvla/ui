@@ -47,18 +47,6 @@
 
 (s/def ::resource-metadata any?)
 
-(s/def ::db (s/keys :req [::cloud-entry-point
-                          ::query-params
-                          ::loading?
-                          ::aggregations
-                          ::collection
-                          ::collection-name
-                          ::selected-fields
-                          ::available-fields
-                          ::show-add-modal?
-                          ::collections-templates-cache
-                          ::selected-rows]))
-
 (def defaults {::cloud-entry-point           nil
                ::query-params                {:first       0
                                               :last        20

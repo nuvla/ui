@@ -54,31 +54,6 @@
 
 (s/def ::nuvlabox-playbooks-cronjob any?)
 
-
-(s/def ::db (s/keys :req [::nuvlaboxes
-                          ::nuvlaboxes-summary
-                          ::nuvlabox-cluster-summary
-                          ::nuvlaboxes-summary-all
-                          ::nuvlabox-releases
-                          ::state-nuvlaboxes
-                          ::page
-                          ::elements-per-page
-                          ::total-elements
-                          ::full-text-search
-                          ::state-selector
-                          ::open-modal
-                          ::nuvlabox-created-id
-                          ::nuvlabox-usb-api-key
-                          ::nuvlabox-ssh-key
-                          ::nuvlabox-private-ssh-key
-                          ::vpn-infra
-                          ::ssh-keys-available
-                          ::nuvlabox-clusters
-                          ::nuvlabox-cluster
-                          ::nuvlaboxes-in-clusters
-                          ::nuvlabox-playbooks-cronjob]))
-
-
 (def defaults {::nuvlaboxes                 nil
                ::nuvlabox-cluster-summary   nil
                ::nuvlaboxes-summary         nil

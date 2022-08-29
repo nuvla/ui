@@ -39,22 +39,6 @@
 
 (s/def ::bulk-jobs-monitored any?)
 
-(s/def ::db (s/keys :req [::deployments
-                          ::deployments-summary
-                          ::deployments-summary-all
-                          ::deployments-params-map
-                          ::page
-                          ::elements-per-page
-                          ::full-text-search
-                          ::additional-filter
-                          ::filter-external
-                          ::view
-                          ::state-selector
-                          ::bulk-update-modal
-                          ::selected-set
-                          ::select-all?
-                          ::bulk-jobs-monitored]))
-
 (def defaults {::page                    1
                ::elements-per-page       8
                ::full-text-search        nil

@@ -7,7 +7,7 @@
     [sixsq.nuvla.ui.deployment-fleets-detail.spec :as spec]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
-    [sixsq.nuvla.ui.plugins.events-table :as events-table]
+    [sixsq.nuvla.ui.plugins.events :as events-table]
     [sixsq.nuvla.ui.plugins.tab :as tab]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.session.spec :as session-spec]

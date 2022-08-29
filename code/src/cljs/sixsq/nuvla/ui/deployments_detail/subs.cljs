@@ -15,7 +15,8 @@
 
 (reg-sub
   ::deployment
-  ::spec/deployment)
+  (fn [db]
+    (::spec/deployment db)))
 
 
 (reg-sub
@@ -88,12 +89,6 @@
   :<- [::deployment]
   (fn [deployment]
     (not (general-utils/can-edit? deployment))))
-
-
-(reg-sub
-  ::events
-  (fn [db]
-    (::spec/events db)))
 
 
 (reg-sub

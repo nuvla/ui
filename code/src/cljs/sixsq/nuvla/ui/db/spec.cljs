@@ -1,6 +1,5 @@
 (ns sixsq.nuvla.ui.db.spec
   (:require
-    [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.apps-application.spec :as apps-application]
     [sixsq.nuvla.ui.apps-component.spec :as apps-component]
     [sixsq.nuvla.ui.apps-store.spec :as apps-store]
@@ -10,7 +9,6 @@
     [sixsq.nuvla.ui.clouds-detail.spec :as infra-service-detail]
     [sixsq.nuvla.ui.clouds.spec :as infra-service]
     [sixsq.nuvla.ui.credentials.spec :as credential]
-    [sixsq.nuvla.ui.dashboard.spec :as dashboard]
     [sixsq.nuvla.ui.data-set.spec :as data-set]
     [sixsq.nuvla.ui.data.spec :as data]
     [sixsq.nuvla.ui.deployment-dialog.spec :as deployment-dialog]
@@ -29,35 +27,6 @@
     [sixsq.nuvla.ui.resource-log.spec :as resource-log]
     [sixsq.nuvla.ui.session.spec :as session]))
 
-
-(s/def ::db (s/merge ::apps/db
-                     ::apps-store/db
-                     ::api/db
-                     ::api-detail/db
-                     ::credential/db
-                     ::dashboard/db
-                     ::deployments/db
-                     ::deployment-dialog/db
-                     ::data/db
-                     ::data-set/db
-                     ::docs/db
-                     ::i18n/db
-                     ::infra-service/db
-                     ::infra-service-detail/db
-                     ::intercom/db
-                     ::main/db
-                     ::messages/db
-                     ::edges/db
-                     ::edges-detail/db
-                     ::profile/db
-                     ::session/db
-                     ::job/db
-                     ::resource-log/db
-                     ::deployment-fleets/db
-                     ::deployment-fleets-detail/db
-                     ))
-
-
 (def default-db
   (merge apps/defaults
          apps-component/defaults
@@ -67,7 +36,6 @@
          api-detail/defaults
          data/defaults
          data-set/defaults
-         dashboard/defaults
          deployments/defaults
          deployment-dialog/defaults
          credential/defaults

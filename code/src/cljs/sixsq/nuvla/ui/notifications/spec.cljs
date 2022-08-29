@@ -113,13 +113,10 @@
 
 (s/def ::is-new? boolean?)
 
-(s/def ::db (s/keys :req [::add-notification-method-modal-visible?
-                          ::notification-method-modal-visible?]))
+(s/def ::notification-method-create-button-visible? boolean?)
 
 
 (def defaults {::notification-method                    {}
                ::notification-methods                   []
                ::add-notification-method-modal-visible? false
                ::notification-method-modal-visible?     false})
-
-(s/def ::notification-method-create-button-visible? boolean?)

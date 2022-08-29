@@ -33,19 +33,6 @@
                           "queued"})
 
 
-(s/def ::db (s/keys :req [::modules
-                          ::published-modules
-                          ::my-modules
-                          ::all-my-modules
-                          ::full-text-search-all-apps
-                          ::full-text-search-published
-                          ::full-text-search-my
-                          ::page
-                          ::elements-per-page
-                          ::active-tab
-                          ::state-selector]))
-
-
 (def defaults {::modules                    nil
                ::published-modules          nil
                ::my-modules                 nil

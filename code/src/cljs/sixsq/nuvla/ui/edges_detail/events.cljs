@@ -8,7 +8,7 @@
     [sixsq.nuvla.ui.edges.utils :as edges-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
-    [sixsq.nuvla.ui.plugins.events-table :as events-table]
+    [sixsq.nuvla.ui.plugins.events :as events-plugin]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -198,7 +198,7 @@
                             :last    10000
                             :orderby "id"}
                            #(dispatch [::set-nuvlabox-peripherals %])]
-     :fx                  [[:dispatch [::events-table/load-events
+     :fx                  [[:dispatch [::events-plugin/load-events
                                        [::spec/events] id false]]
                            [:dispatch [::job-events/get-jobs id]]
                            [:dispatch [::deployments-events/get-deployments

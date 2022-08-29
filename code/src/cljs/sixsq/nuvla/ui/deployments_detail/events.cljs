@@ -4,26 +4,23 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.credentials.events :as creds-events]
     [sixsq.nuvla.ui.deployments-detail.spec :as spec]
+    [sixsq.nuvla.ui.plugins.events :as events-plugin]
     [sixsq.nuvla.ui.deployments.events :as deployments-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
-
 
 (reg-event-db
   ::set-module-versions
   (fn [db [_ module]]
     (assoc db ::spec/module-versions (:versions module))))
 
-
 (reg-event-db
   ::set-upcoming-invoice
   (fn [db [_ upcoming-invoice]]
     (assoc db ::spec/upcoming-invoice upcoming-invoice)))
-
 
 (reg-event-fx
   ::set-deployment
@@ -33,6 +30,7 @@
     (let [module-href (:href module)]
       (cond-> {:db (assoc db ::spec/not-found? (nil? resource)
                              ::main-spec/loading? false
+                             ::spec/loading? false
                              ::spec/deployment resource)}
               (and (not module-versions)
                    module-href) (assoc ::cimi-api-fx/get
@@ -42,13 +40,11 @@
                                            [id "upcoming-invoice"
                                             #(dispatch [::set-upcoming-invoice %])])))))
 
-
 (reg-event-db
   ::set-deployment-parameters
   (fn [db [_ resources]]
     (assoc db ::spec/deployment-parameters
               (into {} (map (juxt :name identity) (get resources :resources []))))))
-
 
 (reg-event-fx
   ::get-deployment-parameters
@@ -59,18 +55,18 @@
           get-depl-params-callback #(dispatch [::set-deployment-parameters %])]
       {::cimi-api-fx/search [:deployment-parameter query-params get-depl-params-callback]})))
 
-
 (reg-event-fx
   ::get-deployment
   (fn [{{:keys [::spec/deployment] :as db} :db} [_ id]]
     (let [different-deployment? (not= (:id deployment) id)]
-      (cond-> {:dispatch-n       [[::get-deployment-parameters id]
-                                  [::get-events id]
-                                  [::job-events/get-jobs id]]
+      (cond-> {:db               (assoc db ::spec/loading? true)
+               :fx               [[:dispatch [::get-deployment-parameters id]]
+                                  [:dispatch [::events-plugin/load-events
+                                              [::spec/events] id true]]
+                                  [:dispatch [::job-events/get-jobs id]]]
                ::cimi-api-fx/get [id #(dispatch [::set-deployment %])
                                   :on-error #(dispatch [::set-deployment nil])]}
               different-deployment? (assoc :db (merge db spec/defaults))))))
-
 
 (reg-event-db
   ::reset-db
@@ -93,26 +89,6 @@
                                  (do
                                    (dispatch [::get-deployment href])
                                    (dispatch [::deployments-events/get-deployments])))]}))
-
-
-(reg-event-db
-  ::set-events
-  (fn [db [_ events]]
-    (assoc db ::spec/events events)))
-
-
-(reg-event-fx
-  ::get-events
-  (fn [_ [_ href]]
-    (let [filter-str   (str "content/resource/href='" href "'")
-          order-by-str "timestamp:desc"
-          select-str   "id, content, severity, timestamp, category"
-          query-params {:filter  filter-str
-                        :orderby order-by-str
-                        :select  select-str}]
-      {::cimi-api-fx/search [:event
-                             (general-utils/prepare-params query-params)
-                             #(dispatch [::set-events (:resources %)])]})))
 
 
 (reg-event-db

@@ -72,7 +72,7 @@
 
 
 (defn TabOverviewDeploymentFleet
-  [{:keys [id created updated created-by]}]
+  [{:keys [id created updated created-by state]}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
     [ui/Segment {:secondary true
@@ -92,6 +92,9 @@
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:description]))]
         [EditableCell :description]]
+       [ui/TableRow
+        [ui/TableCell (str/capitalize (@tr [:state]))]
+        [ui/TableCell state]]
        (when created-by
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:created-by]))]
@@ -277,6 +280,7 @@
         multiple-cred? (> (count credentials) 1)]
     [ui/ListItem (when-not multiple-cred?
                    {:style    {:cursor :pointer}
+                    :disabled (-> credentials count zero?)
                     :on-click #(dispatch [::events/toggle-select-target
                                           (first credentials)])})
      [ui/ListIcon

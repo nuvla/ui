@@ -269,13 +269,20 @@
 (reg-event-fx
   ::create
   (fn [{{:keys [::spec/targets-selected
-                ::spec/apps-selected] :as db} :db}]
+                ::spec/apps-selected] :as db} :db}
+       [_ {df-name  :name
+           df-descr :description
+           df-start :start}]]
     {::cimi-api-fx/add
      [:deployment-fleet
-      {:spec {:applications (map #(module-version/selected-version
-                                    db [::spec/module-versions] (:id %))
-                                 apps-selected)
-              :targets      (map :id targets-selected)}}
+      (cond->
+        {:spec {:applications (map #(module-version/selected-version
+                                      db [::spec/module-versions] (:id %))
+                                   apps-selected)
+                :targets      (map :id targets-selected)
+                :start        df-start}}
+        df-name (assoc :name df-name)
+        df-descr (assoc :description df-descr))
       #(dispatch [::history-events/navigate
                   (str "deployment-fleets/"
                        (general-utils/id->uuid (:resource-id %)))])]}))

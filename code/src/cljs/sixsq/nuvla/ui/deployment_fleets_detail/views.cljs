@@ -27,7 +27,8 @@
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
     [sixsq.nuvla.ui.plugins.pagination :as pagination]
     [sixsq.nuvla.ui.plugins.module-version :as module-version]
-    [sixsq.nuvla.ui.apps.utils :as apps-utils]))
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 
 (def refresh-action-id :deployment-fleet-get-deployment-fleet)
@@ -421,12 +422,18 @@
 
 (defn AddPage
   []
-  (let [disabled?        (subscribe [::subs/create-disabled?])
-        apps-selected    (subscribe [::subs/apps-selected])
-        targets-selected (subscribe [::subs/targets-selected])
-        create-disabled? (subscribe [::subs/create-disabled?])]
+  (let [tr                (subscribe [::i18n-subs/tr])
+        disabled?         (subscribe [::subs/create-disabled?])
+        apps-selected     (subscribe [::subs/apps-selected])
+        targets-selected  (subscribe [::subs/targets-selected])
+        create-disabled?  (subscribe [::subs/create-disabled?])
+        create-name-descr (r/atom {:start false})
+        on-change-input   (fn [key]
+                            (ui-callback/input-callback
+                             #(swap! create-name-descr assoc key %)))]
     (dispatch [::events/new])
     (fn []
+      (js/console.warn @create-name-descr)
       (let [items [{:key         :select-apps-targets
                     :icon        "bullseye"
                     :content     [StepApplicationsTargets]
@@ -453,6 +460,23 @@
                    {:key         :summary
                     :icon        "info"
                     :content     [:div "This will contain a summary"
+                                  [ui/Form
+                                   [ui/FormInput
+                                    {:label       (str/capitalize (@tr [:name]))
+                                     :placeholder "Name your deployment fleet"
+                                     :value       (or (:name @create-name-descr) "")
+                                     :on-change   (on-change-input :name)}]
+                                   [ui/FormInput
+                                    {:label       (str/capitalize (@tr [:description]))
+                                     :placeholder "Describe your deployment fleet"
+                                     :value       (or (:description @create-name-descr) "")
+                                     :on-change (on-change-input :description)}]
+                                   [ui/FormCheckbox
+                                    {:label   "Start deployment automatically directly after creation"
+                                     :checked (:start @create-name-descr)
+                                     :on-change (ui-callback/checked
+                                                  #(swap! create-name-descr update :start not))}]]
+
                                   [ui/Segment
                                    "Kubernetes"
                                    [:div "Targets: "
@@ -474,7 +498,7 @@
 
                                   [ui/Button
                                    {:positive true
-                                    :on-click #(dispatch [::events/create])
+                                    :on-click #(dispatch [::events/create @create-name-descr])
                                     :disabled @create-disabled?
                                     :floated  :right} "Create"]
                                   [:br] [:br] [:br]

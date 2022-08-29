@@ -611,23 +611,23 @@
                      (doall
                        (for [{:keys [scope]} compose-files]
                          (when-not (#{"core" ""} scope)
-                           [ui/Checkbox {:key             scope
-                                         :label           scope
-                                         :checked         (contains?
-                                                            (:nb-assets @nuvlabox-release-data)
-                                                            scope)
-                                         :style           {:margin "1em"}
-                                         :on-change       (ui-callback/checked
-                                                            (fn [checked]
-                                                              (if checked
-                                                                (swap! nuvlabox-release-data assoc
-                                                                       :nb-assets
-                                                                       (conj nb-assets scope))
-                                                                (swap! nuvlabox-release-data assoc
-                                                                       :nb-assets
-                                                                       (-> @nuvlabox-release-data
-                                                                           :nb-assets
-                                                                           (disj scope))))))}])))]
+                           [ui/Checkbox {:key       scope
+                                         :label     scope
+                                         :checked   (contains?
+                                                      (:nb-assets @nuvlabox-release-data)
+                                                      scope)
+                                         :style     {:margin "1em"}
+                                         :on-change (ui-callback/checked
+                                                      (fn [checked]
+                                                        (if checked
+                                                          (swap! nuvlabox-release-data assoc
+                                                                 :nb-assets
+                                                                 (conj nb-assets scope))
+                                                          (swap! nuvlabox-release-data assoc
+                                                                 :nb-assets
+                                                                 (-> @nuvlabox-release-data
+                                                                     :nb-assets
+                                                                     (disj scope))))))}])))]
 
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:nuvlabox-modal-install-method])]

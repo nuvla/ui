@@ -308,7 +308,7 @@
         select-all? (subscribe [::subs/select-all?])]
     (fn []
       (let [deployments-list (get @deployments :resources [])]
-        [ui/Segment style/basic
+        [ui/Segment {:attached "bottom"}
          (if (= @view "cards")
            [CardsDataTable deployments-list]
            [VerticalDataTable deployments-list {:select-all @select-all?}])]))))
@@ -411,19 +411,18 @@
           [uix/PageHeader "rocket"
            (general-utils/capitalize-first-letter (@tr [:deployments]))]
           [MenuBar]
-          [ui/Segment style/basic
-           [ui/Grid {:columns   3
-                     :stackable true
-                     :reversed  "mobile"}
-            [ControlBar]
-            [StatisticStates true ::subs/deployments-summary]]
-           (for [[job-id job] @bulk-jobs-monitored]
-             ^{:key job-id}
-             [components/BulkActionProgress
-              {:header      "Bulk update in progress"
-               :job         job
-               :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
-           [DeploymentsDisplay]]
+          [ui/Grid {:columns   3
+                    :stackable true
+                    :reversed  "mobile"}
+           [ControlBar]
+           [StatisticStates true ::subs/deployments-summary]]
+          (for [[job-id job] @bulk-jobs-monitored]
+            ^{:key job-id}
+            [components/BulkActionProgress
+             {:header      "Bulk update in progress"
+              :job         job
+              :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
+          [DeploymentsDisplay]
           [uix/Pagination
            {:totalitems   total-deployments
             :totalPages   total-pages

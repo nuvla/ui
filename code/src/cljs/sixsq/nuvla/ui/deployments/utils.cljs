@@ -108,20 +108,6 @@
       full-text-search
       additional-filter)))
 
-(defn get-query-params
-  [{:keys [full-text-search additional-filter
-           state-selector filter-external page elements-per-page]}]
-  (let [filter-str (get-filter-param
-                     {:full-text-search  full-text-search
-                      :additional-filter additional-filter
-                      :state-selector    state-selector
-                      :filter-external   filter-external})]
-    {:first       (inc (* (dec page) elements-per-page))
-     :last        (* page elements-per-page)
-     :aggregation "terms:state"
-     :orderby     "created:desc"
-     :filter      filter-str}))
-
 (defn get-query-params-summary
   [full-text-search additional-filter]
   (let [full-text-search (general-utils/fulltext-query-string full-text-search)

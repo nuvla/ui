@@ -12,7 +12,8 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
 
 
 (def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
@@ -64,18 +65,20 @@
   (fn [{{:keys [::spec/full-text-search
                 ::spec/additional-filter
                 ::spec/state-selector
-                ::spec/filter-external
-                ::spec/page
-                ::spec/elements-per-page] :as db} :db} [_ filter-external]]
-    (let [state (when-not (= "all" state-selector) state-selector)]
+                ::spec/filter-external] :as db} :db} [_ filter-external]]
+    (let [state      (when-not (= "all" state-selector) state-selector)
+          filter-str (utils/get-filter-param
+                       {:full-text-search  full-text-search
+                        :additional-filter additional-filter
+                        :state-selector    state
+                        :filter-external   filter-external})]
       {:db                  (assoc db ::spec/filter-external filter-external)
-       ::cimi-api-fx/search [:deployment (utils/get-query-params
-                                           {:full-text-search  full-text-search
-                                            :additional-filter additional-filter
-                                            :state-selector    state
-                                            :page              page
-                                            :filter-external   filter-external
-                                            :elements-per-page elements-per-page})
+       ::cimi-api-fx/search [:deployment
+                             (->> {:aggregation "terms:state"
+                                   :orderby     "created:desc"
+                                   :filter      filter-str}
+                                  (pagination-plugin/first-last-params
+                                    db [::spec/pagination]))
                              #(dispatch [::set-deployments %])]})))
 
 
@@ -108,31 +111,23 @@
     {::cimi-api-fx/search [:deployment (utils/get-query-params-summary nil nil)
                            #(dispatch [::set-deployments-summary-all %])]}))
 
-
-(reg-event-fx
-  ::set-page
-  (fn [{db :db} [_ page]]
-    {:db       (assoc db ::spec/page page)
-     :dispatch [::refresh]}))
-
-
 (reg-event-fx
   ::set-full-text-search
   (fn [{db :db} [_ full-text-search]]
-    {:db       (-> db
-                   (assoc ::spec/full-text-search full-text-search)
-                   (assoc ::spec/page 1)
-                   (assoc ::spec/selected-set #{}))
-     :dispatch [::refresh]}))
+    {:db (assoc db
+           ::spec/full-text-search full-text-search
+           ::spec/selected-set #{})
+     :fx [[:dispatch
+           [::pagination-plugin/change-page [::spec/pagination] 1]]]}))
 
 
 (reg-event-fx
   ::set-additional-filter
   (fn [{db :db} [_ additional-filter]]
-    {:db       (assoc db ::spec/additional-filter additional-filter
-                         ::spec/page 1
-                         ::spec/selected-set #{})
-     :dispatch [::refresh]}))
+    {:db (assoc db ::spec/additional-filter additional-filter
+                   ::spec/selected-set #{})
+     :fx [[:dispatch
+           [::pagination-plugin/change-page [::spec/pagination] 1]]]}))
 
 
 (reg-event-db
@@ -159,10 +154,10 @@
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
-    {:dispatch [::get-deployments]
-     :db       (assoc db ::spec/state-selector state-selector
-                         ::spec/page 1
-                         ::spec/selected-set #{})}))
+    {:db (assoc db ::spec/state-selector state-selector
+                   ::spec/selected-set #{})
+     :fx [[:dispatch
+           [::pagination-plugin/change-page [::spec/pagination] 1]]]}))
 
 
 (reg-event-fx

@@ -24,18 +24,6 @@
 
 
 (reg-sub
-  ::elements-per-page
-  (fn [db]
-    (::spec/elements-per-page db)))
-
-
-(reg-sub
-  ::page
-  (fn [db]
-    (::spec/page db)))
-
-
-(reg-sub
   ::full-text-search
   (fn [db]
     (::spec/full-text-search db)))

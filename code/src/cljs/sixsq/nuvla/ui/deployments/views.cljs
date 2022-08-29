@@ -8,12 +8,14 @@
     [sixsq.nuvla.ui.deployment-dialog.views-module-version :as dep-diag-versions]
     [sixsq.nuvla.ui.deployments.events :as events]
     [sixsq.nuvla.ui.deployments.subs :as subs]
+    [sixsq.nuvla.ui.deployments.spec :as spec]
     [sixsq.nuvla.ui.deployments.utils :as utils]
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
@@ -371,63 +373,50 @@
                  :on-click (or on-click
                                #(dispatch [set-active-tab-event deployment-tab-key]))}]]))
 
+(defn Pagination
+  []
+  (let [dep-count @(subscribe [::subs/deployments-count])]
+    [pagination-plugin/Pagination
+     {:db-path      [::spec/pagination]
+      :total-items  dep-count
+      :change-event [::events/refresh]}]))
 
 (defn DeploymentTable
   [options]
-  (let [elements          (subscribe [::subs/deployments])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
-        select-all?       (subscribe [::subs/select-all?])]
+  (let [elements    (subscribe [::subs/deployments])
+        select-all? (subscribe [::subs/select-all?])]
     (fn []
-      (let [total-elements (:count @elements)
-            total-pages    (general-utils/total-pages total-elements @elements-per-page)
-            deployments    (:resources @elements)]
+      (let [deployments (:resources @elements)]
         [ui/TabPane
-         [VerticalDataTable deployments (assoc options :select-all @select-all?)]
-
-         (when (pos? (:count @elements))
-           [uix/Pagination {:totalitems   total-elements
-                            :totalPages   total-pages
-                            :activePage   @page
-                            :onPageChange (ui-callback/callback
-                                            :activePage
-                                            #(dispatch [::events/set-page %]))}])]))))
+         [VerticalDataTable
+          deployments (assoc options :select-all @select-all?)]
+         [Pagination]]))))
 
 
 (defn DeploymentsMainContent
   []
   (let [tr                  (subscribe [::i18n-subs/tr])
-        elements-per-page   (subscribe [::subs/elements-per-page])
-        page                (subscribe [::subs/page])
-        dep-count           (subscribe [::subs/deployments-count])
         bulk-jobs-monitored (subscribe [::subs/bulk-jobs-monitored])]
     (refresh)
     (fn []
-      (let [total-deployments @dep-count
-            total-pages       (general-utils/total-pages
-                                @dep-count @elements-per-page)]
-        [components/LoadingPage {}
-         [:<>
-          [uix/PageHeader "rocket"
-           (general-utils/capitalize-first-letter (@tr [:deployments]))]
-          [MenuBar]
-          [ui/Grid {:columns   3
-                    :stackable true
-                    :reversed  "mobile"}
-           [ControlBar]
-           [StatisticStates true ::subs/deployments-summary]]
-          (for [[job-id job] @bulk-jobs-monitored]
-            ^{:key job-id}
-            [components/BulkActionProgress
-             {:header      "Bulk update in progress"
-              :job         job
-              :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
-          [DeploymentsDisplay]
-          [uix/Pagination
-           {:totalitems   total-deployments
-            :totalPages   total-pages
-            :activePage   @page
-            :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]]))))
+      [components/LoadingPage {}
+       [:<>
+        [uix/PageHeader "rocket"
+         (general-utils/capitalize-first-letter (@tr [:deployments]))]
+        [MenuBar]
+        [ui/Grid {:columns   3
+                  :stackable true
+                  :reversed  "mobile"}
+         [ControlBar]
+         [StatisticStates true ::subs/deployments-summary]]
+        (for [[job-id job] @bulk-jobs-monitored]
+          ^{:key job-id}
+          [components/BulkActionProgress
+           {:header      "Bulk update in progress"
+            :job         job
+            :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
+        [DeploymentsDisplay]
+        [Pagination]]])))
 
 
 (defmethod panel/render :deployments

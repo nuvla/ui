@@ -1,28 +1,16 @@
 (ns sixsq.nuvla.ui.deployments.spec
   (:require
-    [clojure.spec.alpha :as s]))
-
+    [clojure.spec.alpha :as s]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
 
 (s/def ::deployments any?)
-
 (s/def ::deployments-summary any?)
-
 (s/def ::deployments-summary-all any?)
-
-(s/def ::page int?)
-
-(s/def ::elements-per-page int?)
-
 (s/def ::full-text-search (s/nilable string?))
-
 (s/def ::additional-filter (s/nilable string?))
-
 (s/def ::filter-external (s/nilable string?))
-
 (s/def ::view #{"cards" "table"})
-
 (s/def ::deployments-params-map {})
-
 (s/def ::state-selector #{"all"
                           "started"
                           "starting"
@@ -30,18 +18,12 @@
                           "stopped"
                           "error"
                           "pending"})
-
 (s/def ::bulk-update-modal any?)
-
 (s/def ::selected-set set?)
-
 (s/def ::select-all? boolean?)
-
 (s/def ::bulk-jobs-monitored any?)
 
-(def defaults {::page                    1
-               ::elements-per-page       8
-               ::full-text-search        nil
+(def defaults {::full-text-search        nil
                ::additional-filter       nil
                ::deployments             nil
                ::deployments-summary     nil
@@ -53,4 +35,6 @@
                ::bulk-update-modal       nil
                ::selected-set            #{}
                ::select-all?             false
-               ::bulk-jobs-monitored     (sorted-map)})
+               ::bulk-jobs-monitored     (sorted-map)
+               ::pagination              (pagination-plugin/build-spec
+                                           :default-items-per-page 8)})

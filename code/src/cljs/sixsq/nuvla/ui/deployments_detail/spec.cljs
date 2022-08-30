@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.deployments-detail.spec
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.plugins.events :as events-plugin]))
+    [sixsq.nuvla.ui.plugins.events :as events-plugin]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
 
 (s/def ::deployment any?)
 (s/def ::loading? boolean?)
@@ -10,7 +11,6 @@
 (s/def ::events any?)
 (s/def ::node-parameters any?)
 (s/def ::upcoming-invoice any?)
-(s/def ::active-tab keyword?)
 (s/def ::not-found? boolean?)
 
 (def defaults
@@ -24,4 +24,4 @@
    ::node-parameters           nil
    ::deployment-log-controller nil
    ::upcoming-invoice          nil
-   ::active-tab                :overview})
+   ::tab                       (tab-plugin/build-spec)})

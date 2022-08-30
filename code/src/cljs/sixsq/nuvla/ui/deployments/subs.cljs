@@ -4,12 +4,10 @@
     [sixsq.nuvla.ui.deployments.spec :as spec]
     [sixsq.nuvla.ui.deployments.utils :as utils]))
 
-
 (reg-sub
   ::deployments
   (fn [db]
     (::spec/deployments db)))
-
 
 (reg-sub
   ::deployments-summary

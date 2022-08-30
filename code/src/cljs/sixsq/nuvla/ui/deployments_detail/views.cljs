@@ -30,7 +30,7 @@
     [sixsq.nuvla.ui.utils.spec :as spec-utils]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.plugins.events :as events-plugin]
-    [sixsq.nuvla.ui.utils.tab :as tab]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.values :as values]))
 
@@ -785,8 +785,7 @@
         resource-id (str "deployment/" uuid)]
     (refresh resource-id)
     (fn [_]
-      (let [active-tab (subscribe [::subs/active-tab])
-            panes      (deployment-detail-panes)]
+      (let [panes      (deployment-detail-panes)]
         [components/LoadingPage {:dimmable? true}
          [:<>
           [components/NotFoundPortal
@@ -795,17 +794,15 @@
            :no-deployment-message-content]
           [PageHeader]
           [MenuBar @deployment]
-          [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab :jobs]
+          [components/ErrorJobsMessage ::job-subs/jobs
+           nil nil #(dispatch [::tab-plugin/change-tab [::spec/tab] :jobs])]
           [ProgressBars]
           [vpn-info]
-          [ui/Tab
-           {:menu        {:secondary true
-                          :pointing  true
-                          :style     {:display        "flex"
-                                      :flex-direction "row"
-                                      :flex-wrap      "wrap"}}
-            :panes       panes
-            :activeIndex (tab/key->index panes @active-tab)
-            :onTabChange (tab/on-tab-change
-                           panes #(dispatch [::events/set-active-tab %]))}]
-          ]]))))
+          [tab-plugin/Tab
+           {:db-path [::spec/tab]
+            :menu  {:secondary true
+                    :pointing  true
+                    :style     {:display        "flex"
+                                :flex-direction "row"
+                                :flex-wrap      "wrap"}}
+            :panes panes}]]]))))

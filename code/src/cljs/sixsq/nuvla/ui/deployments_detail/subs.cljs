@@ -135,12 +135,6 @@
 
 
 (reg-sub
-  ::active-tab
-  (fn [db]
-    (::spec/active-tab db)))
-
-
-(reg-sub
   ::not-found?
   (fn [db]
     (::spec/not-found? db)))

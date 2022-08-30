@@ -74,7 +74,6 @@
     (assoc db ::spec/module-versions nil
               ::spec/upcoming-invoice nil)))
 
-
 (reg-event-fx
   ::stop-deployment
   (fn [_ [_ href]]
@@ -90,12 +89,10 @@
                                    (dispatch [::get-deployment href])
                                    (dispatch [::deployments-events/get-deployments])))]}))
 
-
 (reg-event-db
   ::set-node-parameters
   (fn [db [_ node-parameters]]
     (assoc db ::spec/node-parameters node-parameters)))
-
 
 ;;
 ;; events used for cimi operations
@@ -116,7 +113,6 @@
                               (dispatch [::deployments-events/get-deployments])
                               (dispatch [::history-events/navigate "deployment"]))]}))
 
-
 (reg-event-fx
   ::edit
   (fn [_ [_ resource-id data success-msg]]
@@ -135,7 +131,6 @@
                                             :content success-msg
                                             :type    :success}]))
                               (dispatch [::set-deployment %])))]}))
-
 
 (reg-event-fx
   ::operation
@@ -156,20 +151,11 @@
                                                  :content message
                                                  :type    :success}]))))]}))
 
-
 (reg-event-fx
   ::check-credential
   (fn [_ [_ credential-href]]
     {::cimi-api-fx/get [credential-href
-                        #(dispatch [::creds-events/check-credential % 1])
-                        ]}))
-
-
-(reg-event-db
-  ::set-active-tab
-  (fn [db [_ active-tab]]
-    (assoc db ::spec/active-tab active-tab)))
-
+                        #(dispatch [::creds-events/check-credential % 1])]}))
 
 (reg-event-db
   ::not-found?

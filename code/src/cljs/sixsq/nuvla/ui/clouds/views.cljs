@@ -27,8 +27,8 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as timbre]))
-
+    [taoensso.timbre :as timbre]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
 
 (defn MenuBar []
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -45,8 +45,6 @@
                       (dispatch [::events/open-add-service-modal]))}]]
       [components/RefreshMenu
        {:on-refresh #(dispatch [::events/get-infra-service-groups])}]]]))
-
-
 
 (defn ServiceCard
   [{:keys [id name description path subtype logo-url swarm-enabled online] :as _service}]
@@ -77,7 +75,6 @@
                        [ui/Icon {:name "docker"}]]
                       "Swarm enabled"])}]))
 
-
 (defn ServiceGroupCard
   [id name]
   (let [services (subscribe [::subs/services-in-group id])]
@@ -104,7 +101,6 @@
           [ServiceCard service])
         [ui/CardMeta "Empty cloud group"])]]))
 
-
 (defn ServiceGroups
   [isgs]
   [ui/CardGroup {:centered true}
@@ -112,35 +108,27 @@
      ^{:key id}
      [ServiceGroupCard id name])])
 
-
 (defn InfraServices
   []
   (let [tr                (subscribe [::i18n-subs/tr])
-        isgs              (subscribe [::subs/infra-service-groups])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])]
+        isgs              (subscribe [::subs/infra-service-groups])]
     (fn []
-      (let [infra-group-count (get @isgs :count 0)
-            total-pages       (general-utils/total-pages infra-group-count @elements-per-page)]
+      (let [infra-group-count (get @isgs :count 0)]
         [:<>
          [uix/PageHeader "cloud" (@tr [:clouds])]
          [MenuBar]
          (when (pos-int? infra-group-count)
            [:<>
             [ServiceGroups @isgs]
-            [uix/Pagination
-             {:totalitems   infra-group-count
-              :totalPages   total-pages
-              :activePage   @page
-              :onPageChange (ui-callback/callback
-                              :activePage #(dispatch [::events/set-page %]))}]])]))))
-
+            [pagination-plugin/Pagination
+             {:db-path [::spec/pagination]
+              :total-items infra-group-count
+              :change-event [::events/get-infra-service-groups]}]])]))))
 
 (defn in?
   "true if coll contains elm"
   [coll elm]
   (some #(= elm %) coll))
-
 
 (defn cloud-params-default-by-cred-id
   [db cred-id]
@@ -187,7 +175,6 @@
                                             @mgmt-creds)}]
             [ui/Message {:content (@tr [:credentials-cloud-not-found])}])]]))))
 
-
 (defn ssh-keys-selector
   [_disabled?]
   (let [ssh-keys         (subscribe [::subs/ssh-keys])
@@ -220,7 +207,6 @@
                                   (dispatch [::events/validate-coe-service-form])))}]
             [:span (str/join ", " @ssh-keys)]]]]]))))
 
-
 (defn cloud-help-popup
   [text cred-subtype]
   [:span ff/nbsp
@@ -230,7 +216,6 @@
                        [:a {:href   (utils/cloud-param-default-value cred-subtype :cloud-doc-link)
                             :target "_blank"} "See this link."])])
                   :on (if cred-subtype "focus" "hover"))])
-
 
 (defn service-coe
   []
@@ -382,7 +367,6 @@
               :spec ::spec/cloud-security-group, :on-change (partial on-change :cloud-security-group),
               :validate-form? @validate-form?])]]]))))
 
-
 (defn service-registry
   []
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -413,7 +397,6 @@
             :default-value endpoint, :spec ::spec/endpoint, :editable? editable?, :required? true,
             :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]]))))
 
-
 (defn service-object-store
   []
   (let [tr             (subscribe [::i18n-subs/tr])
@@ -443,7 +426,6 @@
             :default-value endpoint, :spec ::spec/endpoint, :editable? editable?, :required? true,
             :on-change (partial on-change :endpoint), :validate-form? @validate-form?]]]]))))
 
-
 (def infrastructure-service-validation-map
   {"swarm"      {:validation-event ::events/validate-coe-service-form
                  :modal-content    service-coe}
@@ -454,7 +436,6 @@
    "registry"   {:validation-event ::events/validate-registry-service-form
                  :modal-content    service-registry}})
 
-
 (defn save-callback
   [form-validation-event]
   (dispatch-sync [::events/set-validate-form? true])
@@ -464,7 +445,6 @@
       (dispatch [::events/set-validate-form? false])
       (dispatch [::events/edit-infra-service])
       (dispatch [::intercom-events/set-event "Last create Infrastructure Service" (time/timestamp)]))))
-
 
 (defn ServiceModal
   []
@@ -498,7 +478,6 @@
                          :disabled (when-not @form-valid? true)
                          :active   true
                          :on-click #(save-callback validation-event)}]]])))))
-
 
 (defn AddServiceModal
   []
@@ -566,7 +545,6 @@
            [ui/Image {:src   "/ui/images/s3.png"
                       :style {:max-width 112}}]]]]]])))
 
-
 (defn Infrastructures
   []
   (dispatch [::events/get-infra-service-groups])
@@ -575,7 +553,6 @@
     [InfraServices]
     [ServiceModal]
     [AddServiceModal]]])
-
 
 (defmethod panel/render :clouds
   [path]

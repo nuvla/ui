@@ -1,24 +1,16 @@
 (ns sixsq.nuvla.ui.clouds.spec
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.utils.spec :as utils-spec]))
+    [sixsq.nuvla.ui.utils.spec :as utils-spec]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
 
 (s/def ::infra-service-groups any?)
-
 (s/def ::infra-services any?)
-
 (s/def ::infra-service any?)
-
-(s/def ::page int?)
-
-(s/def ::elements-per-page int?)
-
+(s/def ::pagination any?)
 (s/def ::service-modal-visible? boolean?)
-
 (s/def ::add-service-modal-visible? boolean?)
-
 (s/def ::is-new? boolean?)
-
 (s/def ::active-input (s/nilable string?))
 
 ;; Validation
@@ -112,7 +104,7 @@
    ::add-service-modal-visible?       false
    ::is-new?                          false
    ::infra-service                    nil
-   ::page                             1
    ::multiplicity                     1
    ::management-credentials-available nil
-   ::elements-per-page                8})
+   ::pagination                       (pagination-plugin/build-spec
+                                        :default-items-per-page 8)})

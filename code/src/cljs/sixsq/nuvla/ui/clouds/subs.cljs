@@ -6,17 +6,14 @@
     [sixsq.nuvla.ui.clouds.spec :as spec]
     [sixsq.nuvla.ui.clouds.utils :as utils]))
 
-
 (reg-sub
   ::infra-service-groups
   ::spec/infra-service-groups)
-
 
 (reg-sub
   ::infra-services
   (fn [db]
     (::spec/infra-services db)))
-
 
 (reg-sub
   ::services-in-group
@@ -26,27 +23,14 @@
         :groups
         (get group-id))))
 
-
 (reg-sub
  ::management-credentials-available
  (fn [db]
    (::spec/management-credentials-available db)))
 
-
-(reg-sub
-  ::elements-per-page
-  ::spec/elements-per-page)
-
-
-(reg-sub
-  ::page
-  ::spec/page)
-
-
 (reg-sub
   ::is-new?
   ::spec/is-new?)
-
 
 ;; Validation
 
@@ -56,34 +40,28 @@
   ::form-valid?
   ::spec/form-valid?)
 
-
 ; Should the form be validated?
 
 (reg-sub
   ::validate-form?
   ::spec/validate-form?)
 
-
 (reg-sub
   ::active-input
   ::spec/active-input)
-
 
 (reg-sub
   ::infra-service
   ::spec/infra-service)
 
-
 (reg-sub
   ::service-group
   ::spec/service-group)
-
 
 (reg-sub
   ::service-modal-visible?
   (fn [db]
     (::spec/service-modal-visible? db)))
-
 
 (reg-sub
   ::add-service-modal-visible?
@@ -94,7 +72,6 @@
  ::ssh-keys
  (fn [db]
    (::spec/ssh-keys db)))
-
 
 (reg-sub
  ::ssh-keys-options
@@ -109,7 +86,6 @@
             {:key id, :value id, :text (or name id)})
           (concat ssh-keys-infra
                   (map (fn [id] {:id id}) not-existing-ssh-keys))))))
-
 
 (reg-sub
   ::mgmt-creds-set?

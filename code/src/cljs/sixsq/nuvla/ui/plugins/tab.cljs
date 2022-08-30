@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.plugins.tab
   (:require
-    [re-frame.core :refer [dispatch subscribe reg-event-fx]]
+    [re-frame.core :refer [dispatch subscribe reg-event-fx reg-sub]]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.plugins.helpers :as helpers]
     [taoensso.timbre :as log]
@@ -38,6 +38,12 @@
       {:db (assoc-in db (conj db-path ::active-tab) tab-key)
        :fx [(when change-event
               [:dispatch change-event])]})))
+
+(reg-sub
+  ::active-tab
+  (fn [db [_ db-path]]
+    (get-in db (conj db-path ::active-tab))))
+
 
 (defn- on-tab-change
   [db-path panes]

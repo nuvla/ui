@@ -25,11 +25,9 @@
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
-
 (defn refresh
   []
   (dispatch [::events/refresh]))
-
 
 (defn ControlBar []
   (let [full-text         (subscribe [::subs/full-text-search])
@@ -47,7 +45,6 @@
          :default-filter @additional-filter
          :open?          filter-open?
          :on-done        #(dispatch [::events/set-additional-filter %])}]])))
-
 
 (defn BulkUpdateModal
   []
@@ -95,7 +92,6 @@
                                              "bulk-update"
                                              {:module-href @selected-module}
                                              [::events/close-modal-bulk-update]])}]]]))))
-
 
 (defn MenuBar
   []
@@ -161,11 +157,9 @@
            :on-refresh refresh}]]]
        [BulkUpdateModal]])))
 
-
 (defn show-options
   [select-all? no-actions]
   (not (or select-all? (true? no-actions))))
-
 
 (defn RowFn
   [{:keys [id state module] :as deployment}
@@ -207,7 +201,6 @@
           (general-utils/can-delete? deployment)
           [deployments-detail-views/DeleteButton deployment])])]))
 
-
 (defn VerticalDataTable
   [_deployments-list _options]
   (let [tr                    (subscribe [::i18n-subs/tr])
@@ -238,7 +231,6 @@
             (for [{:keys [id] :as deployment} deployments-list]
               ^{:key id}
               [RowFn deployment options])]])))))
-
 
 (defn DeploymentCard
   [{:keys [id state module tags] :as deployment}]
@@ -291,7 +283,6 @@
              (not @select-all?) (assoc :on-select #(dispatch [::events/select-id id])
                                        :selected? @is-selected?))]))
 
-
 (defn CardsDataTable
   [deployments-list]
   [:div style/center-items
@@ -301,7 +292,6 @@
     (for [{:keys [id] :as deployment} deployments-list]
       ^{:key id}
       [DeploymentCard deployment])]])
-
 
 (defn DeploymentsDisplay
   []
@@ -314,7 +304,6 @@
          (if (= @view "cards")
            [CardsDataTable deployments-list]
            [VerticalDataTable deployments-list {:select-all @select-all?}])]))))
-
 
 (defn StatisticStates
   [_clickable? summary-subs]
@@ -348,7 +337,6 @@
            ::events/set-state-selector ::subs/state-selector]
           [components/StatisticState error [(utils/state->icon utils/ERROR)] utils/ERROR
            clickable? "red" ::events/set-state-selector ::subs/state-selector]]]))))
-
 
 (defn DeploymentsOverviewSegment
   [deployment-subs set-active-tab-event deployment-tab-key on-click]
@@ -392,7 +380,6 @@
           deployments (assoc options :select-all @select-all?)]
          [Pagination]]))))
 
-
 (defn DeploymentsMainContent
   []
   (let [tr                  (subscribe [::i18n-subs/tr])
@@ -417,7 +404,6 @@
             :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
         [DeploymentsDisplay]
         [Pagination]]])))
-
 
 (defmethod panel/render :deployments
   [path]

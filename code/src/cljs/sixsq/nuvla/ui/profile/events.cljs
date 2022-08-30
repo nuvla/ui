@@ -19,15 +19,12 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
-;; TODO when customer exist but not valid subscription
-
 (reg-event-fx
   ::init
-  (fn [{db :db} _]
+  (fn [{{:keys [::spec/tab] :as db} :db}]
     {:db (merge db spec/defaults)
      :fx [[:dispatch [::get-user]]
           [:dispatch [::search-existing-customer]]]}))
-
 
 (reg-event-db
   ::add-group-member
@@ -35,20 +32,17 @@
     (let [users (:users group)]
       (update-in db [::spec/group :users] #(conj users member)))))
 
-
 (reg-event-db
   ::remove-group-member
   (fn [{:keys [::spec/group] :as db} [_ member]]
     (let [users (:users group)]
       (update-in db [::spec/group :users] #(vec (disj (set users) member))))))
 
-
 (reg-event-db
   ::set-user
   (fn [{:keys [::spec/loading] :as db} [_ user]]
     (assoc db ::spec/user user
               ::spec/loading (disj loading :user))))
-
 
 (reg-event-fx
   ::get-user
@@ -58,7 +52,6 @@
         (cond-> {:fx [(when is-group? [:dispatch [::get-group]])]}
                 (not is-group?) (assoc ::cimi-api-fx/get [user #(do (dispatch [::set-user %]))]
                                        :db (update db ::spec/loading conj :user)))))))
-
 
 (reg-event-fx
   ::add-group
@@ -78,13 +71,11 @@
                        :type    :success}])
            (reset! loading? false))]})))
 
-
 (reg-event-db
   ::set-group
   (fn [{:keys [::spec/loading] :as db} [_ group]]
     (assoc db ::spec/group group
               ::spec/loading (disj loading :group))))
-
 
 (reg-event-fx
   ::get-group
@@ -92,7 +83,6 @@
     (when-let [group (:active-claim session)]
       {:db               (update db ::spec/loading conj :group)
        ::cimi-api-fx/get [group #(dispatch [::set-group %])]})))
-
 
 (reg-event-fx
   ::edit-group
@@ -131,7 +121,6 @@
        :redirect-url     (str (::session-spec/server-redirect-uri db) "?message=join-group-accepted")
        :set-password-url (str @config/path-prefix "/set-password")}]}))
 
-
 (reg-event-fx
   ::get-customer
   (fn [{db :db} [_ id]]
@@ -139,7 +128,6 @@
                            (update ::spec/loading disj :create-customer)
                            (update ::spec/loading conj :customer))
      ::cimi-api-fx/get [id #(dispatch [::set-customer %])]}))
-
 
 (reg-event-fx
   ::set-customer
@@ -158,7 +146,6 @@
                                  (when (general-utils/can-operation? "list-payment-methods" customer)
                                    [:dispatch [::list-payment-methods]])]))))
 
-
 (reg-event-fx
   ::search-existing-customer
   (fn [{{:keys [::session-spec/session]} :db} _]
@@ -171,7 +158,6 @@
       {:fx [[:dispatch [::set-customer nil]]
             [:dispatch [::set-subscription nil]]]})))
 
-
 (reg-event-fx
   ::get-subscription
   (fn [{{:keys [::spec/customer] :as db} :db}]
@@ -179,13 +165,11 @@
      ::cimi-api-fx/operation [(:id customer) "get-subscription"
                               #(dispatch [::set-subscription %])]}))
 
-
 (reg-event-db
   ::set-subscription
   (fn [{:keys [::spec/loading] :as db} [_ subscription]]
     (assoc db ::spec/subscription subscription
               ::spec/loading (disj loading :subscription))))
-
 
 (reg-event-fx
   ::customer-info
@@ -194,13 +178,11 @@
      ::cimi-api-fx/operation [(:id customer) "customer-info"
                               #(dispatch [::set-customer-info %])]}))
 
-
 (reg-event-db
   ::set-customer-info
   (fn [{:keys [::spec/loading] :as db} [_ customer-info]]
     (assoc db ::spec/customer-info customer-info
               ::spec/loading (disj loading :customer-info))))
-
 
 (reg-event-fx
   ::list-payment-methods
@@ -209,13 +191,11 @@
      ::cimi-api-fx/operation [(:id customer) "list-payment-methods"
                               #(dispatch [::set-payment-methods %])]}))
 
-
 (reg-event-db
   ::set-payment-methods
   (fn [{:keys [::spec/loading] :as db} [_ payment-methods]]
     (assoc db ::spec/payment-methods payment-methods
               ::spec/loading (disj loading :payment-methods))))
-
 
 (reg-event-fx
   ::upcoming-invoice
@@ -224,13 +204,11 @@
      ::cimi-api-fx/operation [(:id customer) "upcoming-invoice"
                               #(dispatch [::set-upcoming-invoice %])]}))
 
-
 (reg-event-db
   ::set-upcoming-invoice
   (fn [{:keys [::spec/loading] :as db} [_ upcoming-invoice]]
     (assoc db ::spec/upcoming-invoice upcoming-invoice
               ::spec/loading (disj loading :upcoming-invoice))))
-
 
 (reg-event-fx
   ::list-invoices
@@ -245,19 +223,16 @@
                                      (dispatch [::set-invoices nil]))
                                  (dispatch [::set-invoices %]))]}))
 
-
 (reg-event-db
   ::set-invoices
   (fn [{:keys [::spec/loading] :as db} [_ invoices]]
     (assoc db ::spec/invoices invoices
               ::spec/loading (disj loading :invoices))))
 
-
 (reg-event-db
   ::open-modal
   (fn [db [_ modal-key]]
     (assoc db ::spec/open-modal modal-key)))
-
 
 (reg-event-db
   ::close-modal
@@ -265,19 +240,16 @@
     (assoc db ::spec/open-modal nil
               ::spec/error-message nil)))
 
-
 (reg-event-db
   ::clear-error-message
   (fn [db _]
     (assoc db ::spec/error-message nil)))
-
 
 (reg-event-fx
   ::set-error
   (fn [{db :db} [_ error-msg key-loading]]
     {:db (cond-> (assoc db ::spec/error-message error-msg)
                  key-loading (update ::spec/loading disj key-loading))}))
-
 
 (reg-event-fx
   ::change-password
@@ -296,7 +268,6 @@
                              (dispatch [::set-error (str message " (" status ")")]))))]
       {::cimi-api-fx/operation [(:credential-password user) "change-password" callback-fn body]})))
 
-
 (reg-event-fx
   ::create-customer
   (fn [{db :db} [_ {:keys [payment-method] :as customer}]]
@@ -308,7 +279,6 @@
                            (dispatch [::history-events/navigate "profile"]))
                         :on-error #(dispatch [::set-error (-> % response/parse-ex-info :message)
                                               :create-customer])]}))
-
 
 (reg-event-fx
   ::create-subscription
@@ -345,7 +315,6 @@
                      data #(dispatch [::set-confirm-card-setup-result %])]
          :db        (update db ::spec/loading conj :confirm-setup-intent)}))))
 
-
 (reg-event-fx
   ::set-confirm-card-setup-result
   (fn [{db :db} [_ result]]
@@ -361,13 +330,11 @@
                       [::upcoming-invoice]
                       [::close-modal]]}))))
 
-
 (reg-event-db
   ::set-setup-intent
   (fn [{:keys [::spec/loading] :as db} [_ setup-itent]]
     (assoc db ::spec/setup-intent setup-itent
               ::spec/loading (disj loading :create-setup-intent))))
-
 
 (reg-event-fx
   ::create-setup-intent
@@ -376,14 +343,12 @@
      ::cimi-api-fx/operation [(:id customer) "create-setup-intent"
                               #(dispatch [::set-setup-intent %])]}))
 
-
 (reg-event-fx
   ::detach-payment-method
   (fn [{{:keys [::spec/customer]} :db} [_ payment-method]]
     {::cimi-api-fx/operation [(:id customer) "detach-payment-method"
                               #(dispatch [::list-payment-methods])
                               {:payment-method payment-method}]}))
-
 
 (reg-event-fx
   ::set-default-payment-method
@@ -392,7 +357,6 @@
                               #(dispatch [::list-payment-methods])
                               {:payment-method payment-method}]}))
 
-
 (reg-event-fx
   ::add-coupon
   (fn [{{:keys [::spec/customer] :as db} :db} [_ coupon]]
@@ -400,7 +364,6 @@
                               #(dispatch [::add-coupon-result %])
                               {:coupon coupon}]
      :db                     (update db ::spec/loading conj :add-coupon)}))
-
 
 (reg-event-fx
   ::add-coupon-result
@@ -411,14 +374,12 @@
             [:dispatch [::close-modal]]]
        :db (update db ::spec/loading disj :add-coupon)})))
 
-
 (reg-event-fx
   ::remove-coupon
   (fn [{{:keys [::spec/customer] :as db} :db}]
     {::cimi-api-fx/operation [(:id customer) "remove-coupon"
                               #(dispatch [::remove-coupon-result %])]
      :db                     (update db ::spec/loading conj :remove-coupon)}))
-
 
 (reg-event-fx
   ::remove-coupon-result
@@ -429,13 +390,11 @@
        :db       (update db ::spec/loading disj :remove-coupon)})))
 
 
-
 (reg-event-db
   ::set-vendor
   (fn [{:keys [::spec/loading] :as db} [_ vendor]]
     (assoc db ::spec/vendor vendor
               ::spec/loading (disj loading :vendor))))
-
 
 (reg-event-fx
   ::get-vendor
@@ -443,7 +402,6 @@
     {:db               (-> db
                            (update ::spec/loading conj :vendor))
      ::cimi-api-fx/get [id #(dispatch [::set-vendor %])]}))
-
 
 (reg-event-fx
   ::search-existing-vendor
@@ -454,18 +412,10 @@
                               (dispatch [::get-vendor id])
                               (dispatch [::set-vendor nil]))]}))
 
-
-(reg-event-db
-  ::set-active-tab
-  (fn [db [_ active-tab]]
-    (assoc db ::spec/active-tab active-tab)))
-
-
 (reg-event-fx
   ::code-validation-2fa-failed
   (fn [_ [_ response]]
     {:fx [[:dispatch [::set-error (-> response :response :message)]]]}))
-
 
 (reg-event-fx
   ::code-validation-2fa-success
@@ -477,7 +427,6 @@
                        :type    :success}]]
           [:dispatch [::get-user]]]}))
 
-
 (reg-event-fx
   ::two-factor-enabled
   (fn [_ [_ success-header success-content]]
@@ -488,7 +437,6 @@
           [:dispatch [::get-user]]
           [:dispatch [::set-two-factor-step :save-secret]]]}))
 
-
 (reg-event-fx
   ::two-factor-disabled
   (fn [_ [_ success-header success-content]]
@@ -498,7 +446,6 @@
                        :type    :success}]]
           [:dispatch [::get-user]]
           [:dispatch [::close-modal]]]}))
-
 
 (reg-event-fx
   ::two-factor-auth-callback-exec
@@ -511,12 +458,10 @@
                   :on-success      success-dispatch-vec
                   :on-failure      [::code-validation-2fa-failed]}}))
 
-
 (reg-event-db
   ::set-two-factor-step
   (fn [db [_ step]]
     (assoc db ::spec/two-factor-step step)))
-
 
 (reg-event-fx
   ::set-two-factor-op-response
@@ -528,7 +473,6 @@
                (assoc ::spec/two-factor-secret secret))
        :fx [(when two-factor-enable?
               [:dispatch [::set-two-factor-step next-step]])]})))
-
 
 (reg-event-fx
   ::two-factor-operation-call
@@ -552,13 +496,11 @@
            (dispatch [::set-two-factor-op-response %1]))
         {:method two-factor-method}]})))
 
-
 (reg-event-fx
   ::select-method
   (fn [{db :db} [_ method]]
     {:db (assoc db ::spec/two-factor-method method)
      :fx [[:dispatch [::two-factor-operation-call]]]}))
-
 
 (reg-event-db
   ::two-factor-enable
@@ -567,7 +509,6 @@
         (assoc ::spec/open-modal :two-factor-auth)
         (assoc ::spec/two-factor-step :select-method)
         (assoc ::spec/two-factor-enable? true))))
-
 
 (reg-event-fx
   ::two-factor-disable

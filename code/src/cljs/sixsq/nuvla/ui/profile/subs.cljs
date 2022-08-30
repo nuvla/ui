@@ -12,31 +12,26 @@
   (fn [db]
     (::spec/group-trees db)))
 
-
 (reg-sub
   ::user
   (fn [db]
     (::spec/user db)))
-
 
 (reg-sub
   ::customer
   (fn [db]
     (::spec/customer db)))
 
-
 (reg-sub
   ::subscription
   (fn [db]
     (::spec/subscription db)))
-
 
 (reg-sub
   ::subscription-canceled?
   :<- [::subscription]
   (fn [{:keys [status]}]
     (= status "canceled")))
-
 
 (reg-sub
   ::show-subscription
@@ -51,13 +46,11 @@
          (not is-admin?)
          (not is-subgroup?))))
 
-
 (reg-sub
   ::show-coupon
   :<- [::customer]
   (fn [customer]
     (general-utils/can-operation? "add-coupon" customer)))
-
 
 (reg-sub
   ::show-billing-contact
@@ -65,13 +58,11 @@
   (fn [customer]
     (general-utils/can-operation? "customer-info" customer)))
 
-
 (reg-sub
   ::show-consumption
   :<- [::customer]
   (fn [customer]
     (general-utils/can-operation? "upcoming-invoice" customer)))
-
 
 (reg-sub
   ::show-invoices
@@ -79,19 +70,16 @@
   (fn [customer]
     (general-utils/can-operation? "list-invoices" customer)))
 
-
 (reg-sub
   ::show-payment-methods
   :<- [::customer]
   (fn [customer]
     (general-utils/can-operation? "list-payment-methods" customer)))
 
-
 (reg-sub
   ::payment-methods
   (fn [db]
     (::spec/payment-methods db)))
-
 
 (reg-sub
   ::cards-bank-accounts
@@ -102,7 +90,6 @@
            (sort-by (juxt :exp-year :exp-month :payment-method))
            seq))))
 
-
 (reg-sub
   ::payment-methods?
   :<- [::payment-methods]
@@ -112,19 +99,16 @@
         (or (seq cards)
             (seq bank-accounts))))))
 
-
 (reg-sub
   ::default-payment-method
   :<- [::payment-methods]
   (fn [payment-methods]
     (:default-payment-method payment-methods)))
 
-
 (reg-sub
   ::upcoming-invoice
   (fn [db]
     (::spec/upcoming-invoice db)))
-
 
 (reg-sub
   ::upcoming-invoice-lines
@@ -135,18 +119,15 @@
          (group-by :period)
          (sort-by #(-> % first :start)))))
 
-
 (reg-sub
   ::invoices
   (fn [db]
     (::spec/invoices db)))
 
-
 (reg-sub
   ::customer-info
   (fn [db]
     (::spec/customer-info db)))
-
 
 (reg-sub
   ::coupon
@@ -154,12 +135,10 @@
   (fn [customer-info]
     (:coupon customer-info)))
 
-
 (reg-sub
   ::open-modal
   (fn [db]
     (::spec/open-modal db)))
-
 
 (reg-sub
   ::modal-open?
@@ -167,18 +146,15 @@
   (fn [open-modal [_ modal-key]]
     (= open-modal modal-key)))
 
-
 (reg-sub
   ::error-message
   (fn [db]
     (::spec/error-message db)))
 
-
 (reg-sub
   ::loading
   (fn [db]
     (::spec/loading db)))
-
 
 (reg-sub
   ::loading?
@@ -186,49 +162,36 @@
   (fn [loading [_ loading-key]]
     (contains? loading loading-key)))
 
-
 (reg-sub
   ::cannot-create-setup-intent?
   :<- [::customer]
   (fn [customer]
     (not (general-utils/can-operation? "create-setup-intent" customer))))
 
-
 (reg-sub
   ::vendor
   (fn [db]
     (::spec/vendor db)))
-
 
 (reg-sub
   ::group
   (fn [db]
     (::spec/group db)))
 
-
-(reg-sub
-  ::active-tab
-  (fn [db]
-    (::spec/active-tab db)))
-
-
 (reg-sub
   ::two-factor-step
   (fn [db]
     (::spec/two-factor-step db)))
-
 
 (reg-sub
   ::two-factor-method
   (fn [db]
     (::spec/two-factor-method db)))
 
-
 (reg-sub
   ::two-factor-secret
   (fn [db]
     (::spec/two-factor-secret db)))
-
 
 (reg-sub
   ::two-factor-qrcode-value
@@ -243,7 +206,6 @@
            "?secret="
            secret
            "&issuer=Nuvla"))))
-
 
 (reg-sub
   ::two-factor-enable?

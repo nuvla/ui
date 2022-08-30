@@ -65,7 +65,8 @@
     [:div {:style {:display         :flex
                    :justify-content :space-between
                    :align-items     :baseline
-                   :flex-wrap       :wrap-reverse}}
+                   :flex-wrap       :wrap-reverse
+                   :margin-top      10}}
      [ui/Label {:size :medium}
       (str (str/capitalize (tr [:total])) " : " total-items)
       [:div {:style {:display :inline-block}}

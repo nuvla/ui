@@ -310,7 +310,7 @@
         select-all? (subscribe [::subs/select-all?])]
     (fn []
       (let [deployments-list (get @deployments :resources [])]
-        [ui/Segment {:attached "bottom"}
+        [ui/Segment {:basic true}
          (if (= @view "cards")
            [CardsDataTable deployments-list]
            [VerticalDataTable deployments-list {:select-all @select-all?}])]))))

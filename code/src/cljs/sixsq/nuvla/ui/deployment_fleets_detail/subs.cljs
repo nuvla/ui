@@ -1,9 +1,9 @@
 (ns sixsq.nuvla.ui.deployment-fleets-detail.subs
   (:require
+    [clojure.string :as str]
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.deployment-fleets-detail.spec :as spec]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [clojure.string :as str]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub
   ::loading?

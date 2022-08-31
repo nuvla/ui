@@ -3,20 +3,20 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.deployments.events :as deployments-events]
     [sixsq.nuvla.ui.deployment-fleets-detail.spec :as spec]
+    [sixsq.nuvla.ui.deployments.events :as deployments-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
-    [sixsq.nuvla.ui.plugins.events :as events-table]
-    [sixsq.nuvla.ui.plugins.tab :as tab]
     [sixsq.nuvla.ui.main.spec :as main-spec]
-    [sixsq.nuvla.ui.session.spec :as session-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
+    [sixsq.nuvla.ui.plugins.events :as events-plugin]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
+    [sixsq.nuvla.ui.plugins.module-version :as module-version-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination]
-    [sixsq.nuvla.ui.plugins.module-version :as module-version]))
+    [sixsq.nuvla.ui.plugins.tab :as tab]
+    [sixsq.nuvla.ui.session.spec :as session-spec]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 
 (reg-event-fx
@@ -62,7 +62,7 @@
                                (not= (:id deployment-fleet) id) (merge spec/defaults))
      ::cimi-api-fx/get [id #(dispatch [::set-deployment-fleet %])
                         :on-error #(dispatch [::set-deployment-fleet nil])]
-     :fx               [[:dispatch [::events-table/load-events [::spec/events] id]]
+     :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
                         [:dispatch [::job-events/get-jobs id]]
                         [:dispatch [::deployments-events/get-deployments
                                     (str "deployment-fleet='" id "'")]]]}))
@@ -276,7 +276,7 @@
     {::cimi-api-fx/add
      [:deployment-fleet
       (cond->
-        {:spec {:applications (map #(module-version/selected-version
+        {:spec {:applications (map #(module-version-plugin/selected-version
                                       db [::spec/module-versions] (:id %))
                                    apps-selected)
                 :targets      (map :id targets-selected)

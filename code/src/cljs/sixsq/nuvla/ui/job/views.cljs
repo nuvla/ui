@@ -1,17 +1,17 @@
 (ns sixsq.nuvla.ui.job.views
   (:require
     [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
+    [re-frame.core :refer [subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.job.events :as events]
-    [sixsq.nuvla.ui.job.subs :as subs]
     [sixsq.nuvla.ui.job.spec :as spec]
+    [sixsq.nuvla.ui.job.subs :as subs]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 (defn job-map-to-row
   [{:keys [id action time-of-status-change state progress return-code

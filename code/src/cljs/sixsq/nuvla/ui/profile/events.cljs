@@ -21,7 +21,7 @@
 
 (reg-event-fx
   ::init
-  (fn [{{:keys [::spec/tab] :as db} :db}]
+  (fn [{db :db}]
     {:db (merge db spec/defaults)
      :fx [[:dispatch [::get-user]]
           [:dispatch [::search-existing-customer]]]}))

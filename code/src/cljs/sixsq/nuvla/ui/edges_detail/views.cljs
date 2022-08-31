@@ -8,10 +8,9 @@
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.views :as deployments-views]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.edges-detail.events :as events]
-    [sixsq.nuvla.ui.edges-detail.subs :as subs]
     [sixsq.nuvla.ui.edges-detail.spec :as spec]
+    [sixsq.nuvla.ui.edges-detail.subs :as subs]
     [sixsq.nuvla.ui.edges.events :as edges-events]
     [sixsq.nuvla.ui.edges.subs :as edges-subs]
     [sixsq.nuvla.ui.edges.utils :as utils]
@@ -21,6 +20,8 @@
     [sixsq.nuvla.ui.job.views :as job-views]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.plugins.events :as events-plugin]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.resource-log.views :as log-views]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -31,8 +32,7 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.plugins.events :as events-plugin]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)

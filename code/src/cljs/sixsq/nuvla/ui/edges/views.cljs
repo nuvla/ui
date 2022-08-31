@@ -6,8 +6,8 @@
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-fx]
     [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
     [sixsq.nuvla.ui.edges.events :as events]
-    [sixsq.nuvla.ui.edges.subs :as subs]
     [sixsq.nuvla.ui.edges.spec :as spec]
+    [sixsq.nuvla.ui.edges.subs :as subs]
     [sixsq.nuvla.ui.edges.utils :as utils]
     [sixsq.nuvla.ui.edges.views-cluster :as views-cluster]
     [sixsq.nuvla.ui.edges.views-clusters :as views-clusters]
@@ -16,6 +16,8 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
@@ -24,9 +26,7 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.utils.zip :as zip]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]))
+    [sixsq.nuvla.ui.utils.zip :as zip]))
 
 
 (def view-type (r/atom :cards))

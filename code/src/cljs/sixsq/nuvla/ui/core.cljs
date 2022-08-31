@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.core
   (:require
+    [cljs.spec.test.alpha :as ts]
     [form-validator.core :as fv]
     [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]
     [reagent.core :as r]
@@ -13,8 +14,7 @@
     [sixsq.nuvla.ui.main.views :as main-views]
     [sixsq.nuvla.ui.routes :as routes]
     [sixsq.nuvla.ui.session.events :as session-events]
-    [taoensso.timbre :as log]
-    [cljs.spec.test.alpha :as ts]))
+    [taoensso.timbre :as log]))
 
 
 (defn dev-setup []

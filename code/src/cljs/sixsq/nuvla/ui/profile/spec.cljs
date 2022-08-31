@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.profile.spec
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.utils.spec :as us]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+    [sixsq.nuvla.ui.utils.spec :as us]))
 
 (s/def ::user any?)
 (s/def ::customer any?)

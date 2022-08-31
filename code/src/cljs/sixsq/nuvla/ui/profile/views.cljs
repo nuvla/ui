@@ -14,6 +14,7 @@
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.profile.events :as events]
     [sixsq.nuvla.ui.profile.spec :as spec]
     [sixsq.nuvla.ui.profile.subs :as subs]
@@ -23,11 +24,9 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.spec :as us]
-    [sixsq.nuvla.ui.utils.tab :as tab]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 ;;; VALIDATION SPEC

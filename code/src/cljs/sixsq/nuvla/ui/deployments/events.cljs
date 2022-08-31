@@ -10,9 +10,9 @@
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
 (def refresh-action-deployments-id :dashboard-get-deployments)
@@ -58,8 +58,9 @@
   ::get-deployments
   (fn [{{:keys [::spec/additional-filter
                 ::spec/state-selector
-                ::spec/filter-external] :as db} :db} [_ filter-external]]
-    (let [state      (when-not (= "all" state-selector) state-selector)
+                ::spec/filter-external] :as db} :db} [_ filter-external-arg]]
+    (let [filter-external (or filter-external-arg filter-external)
+          state      (when-not (= "all" state-selector) state-selector)
           filter-str (utils/get-filter-param
                        {:full-text-search  (full-text-search-plugin/filter-text
                                              db [::spec/deployments-search])

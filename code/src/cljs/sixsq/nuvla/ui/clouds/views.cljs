@@ -18,6 +18,7 @@
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
@@ -27,8 +28,7 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [sixsq.nuvla.ui.utils.values :as values]
-    [taoensso.timbre :as timbre]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
+    [taoensso.timbre :as timbre]))
 
 (defn MenuBar []
   (let [tr (subscribe [::i18n-subs/tr])]

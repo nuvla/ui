@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.credentials.spec
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.utils.spec :as utils-spec]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+    [sixsq.nuvla.ui.utils.spec :as utils-spec]))
 
 
 (s/def ::credential any?)

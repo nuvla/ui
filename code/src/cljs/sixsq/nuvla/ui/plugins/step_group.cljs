@@ -1,13 +1,13 @@
 (ns sixsq.nuvla.ui.plugins.step-group
   (:require
-    [re-frame.core :refer [dispatch subscribe reg-event-fx]]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.plugins.helpers :as helpers]
-    [taoensso.timbre :as log]
     [cljs.spec.alpha :as s]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [clojure.string :as str]
-    [reagent.core :as r]))
+    [re-frame.core :refer [dispatch reg-event-fx subscribe]]
+    [reagent.core :as r]
+    [sixsq.nuvla.ui.plugins.helpers :as helpers]
+    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [taoensso.timbre :as log]))
 
 (s/def ::active-step keyword?)
 (s/def ::items (s/nilable coll?))

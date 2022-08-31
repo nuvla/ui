@@ -5,15 +5,14 @@
     [sixsq.nuvla.ui.data-set.spec :as data-set-spec]
     [sixsq.nuvla.ui.data-set.utils :as data-set-utils]
     [sixsq.nuvla.ui.data.spec :as spec]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.deployment-dialog.events :as dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.spec :as dialog-spec]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]))
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-event-fx
   ::refresh
@@ -68,7 +67,7 @@
                               (:id data-set)
                               (general-utils/join-and
                                 time-period-filter
-                                (full-text-search/filter-text
+                                (full-text-search-plugin/filter-text
                                   db [::spec/data-search])
                                 (data-set-utils/data-record-geometry-filter
                                   geo-operation map-selection)

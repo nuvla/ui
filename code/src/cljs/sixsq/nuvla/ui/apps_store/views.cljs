@@ -4,8 +4,8 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
     [sixsq.nuvla.ui.apps-store.events :as events]
-    [sixsq.nuvla.ui.apps-store.subs :as subs]
     [sixsq.nuvla.ui.apps-store.spec :as spec]
+    [sixsq.nuvla.ui.apps-store.subs :as subs]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
@@ -15,14 +15,14 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as utils-style]
-    [sixsq.nuvla.ui.utils.values :as utils-values]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination]))
+    [sixsq.nuvla.ui.utils.values :as utils-values]))
 
 (defn ModuleCard
   [{:keys [id name description path subtype logo-url price published versions tags]} show-published?]
@@ -86,7 +86,7 @@
 (defn Pagination
   []
   (let [modules @(subscribe [::subs/modules])]
-    [pagination/Pagination
+    [pagination-plugin/Pagination
      {:db-path      [::spec/pagination]
       :total-items  (:count modules)
       :change-event [::events/get-modules]}]))
@@ -97,7 +97,7 @@
    [ui/MenuMenu {:position "left"}
     [full-text-search-plugin/FullTextSearch
      {:db-path      [::spec/modules-search]
-      :change-event [::pagination/change-page [::spec/pagination] 1]}]]
+      :change-event [::pagination-plugin/change-page [::spec/pagination] 1]}]]
    [RefreshButton]])
 
 (defn ControlBarProjects []
@@ -161,7 +161,7 @@
         (utils-general/capitalize-first-letter (@tr [:apps]))]
        [tab-plugin/Tab
         {:db-path      [::spec/tab]
-         :change-event [::pagination/change-page [::spec/pagination] 1]
+         :change-event [::pagination-plugin/change-page [::spec/pagination] 1]
          :menu         {:secondary true
                         :pointing  true
                         :style     {:display        "flex"

@@ -4,21 +4,21 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.deployment-fleets-detail.views :as detail]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
     [sixsq.nuvla.ui.deployment-fleets.events :as events]
-    [sixsq.nuvla.ui.deployment-fleets.subs :as subs]
     [sixsq.nuvla.ui.deployment-fleets.spec :as spec]
+    [sixsq.nuvla.ui.deployment-fleets.subs :as subs]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination]))
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 (def view-type (r/atom :cards))
 
@@ -108,9 +108,9 @@
 (defn Pagination
   []
   (let [deployment-fleets @(subscribe [::subs/deployment-fleets])]
-    [pagination/Pagination {:db-path      [::spec/pagination]
-                            :total-items  (get deployment-fleets :count 0)
-                            :change-event [::events/refresh]}]))
+    [pagination-plugin/Pagination {:db-path [::spec/pagination]
+                            :total-items    (get deployment-fleets :count 0)
+                            :change-event   [::events/refresh]}]))
 
 (defn DeploymentFleetTable
   []
@@ -160,9 +160,9 @@
 
 (defn ControlBar []
   [ui/GridColumn {:width 4}
-   [full-text-search/FullTextSearch
+   [full-text-search-plugin/FullTextSearch
     {:db-path      [::spec/search]
-     :change-event [::pagination/change-page [::spec/pagination] 1]}]])
+     :change-event [::pagination-plugin/change-page [::spec/pagination] 1]}]])
 
 (defn Main
   []

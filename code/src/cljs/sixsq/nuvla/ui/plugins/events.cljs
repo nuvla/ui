@@ -1,16 +1,16 @@
 (ns sixsq.nuvla.ui.plugins.events
-  (:require [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [sixsq.nuvla.ui.utils.values :as values]
-            [re-frame.core :refer [subscribe dispatch reg-event-fx reg-event-db]]
-            [sixsq.nuvla.ui.plugins.helpers :as helpers]
-            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
-            [sixsq.nuvla.ui.plugins.pagination :as pagination]
-            [cljs.spec.alpha :as s]
-            [sixsq.nuvla.ui.utils.time :as time]
+  (:require [cljs.spec.alpha :as s]
+            [clojure.string :as str]
+            [re-frame.core :refer [dispatch reg-event-fx subscribe]]
             [reagent.core :as r]
-            [clojure.string :as str]))
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.values :as values]))
 
 (s/def ::events (s/nilable coll?))
 (s/def ::loading? (s/nilable boolean?))
@@ -19,7 +19,7 @@
   [& {:keys [default-items-per-page]
       :or   {default-items-per-page 10}}]
   {::loading?   true
-   ::pagination (pagination/build-spec
+   ::pagination (pagination-plugin/build-spec
                   :default-items-per-page default-items-per-page)})
 
 (reg-event-fx
@@ -29,7 +29,7 @@
                    {:filter  (str "content/resource/href='" href "'")
                     :orderby "created:desc"
                     :select  "id, content, severity, timestamp, category"}
-                   (pagination/first-last-params
+                   (pagination-plugin/first-last-params
                      db (conj db-path ::pagination)))]
       {:db                  (cond-> db
                                     loading? (assoc-in
@@ -67,7 +67,7 @@
                             general-utils/round-up)]
           [ui/TableCell category]
           [ui/TableCell (:state content)]])]]
-     [pagination/Pagination
+     [pagination-plugin/Pagination
       {:db-path      (conj db-path ::pagination)
        :total-items  (:count events)
        :change-event [::load-events db-path href true]}]]))

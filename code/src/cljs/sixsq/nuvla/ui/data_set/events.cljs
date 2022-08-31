@@ -7,9 +7,9 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
-    [sixsq.nuvla.ui.utils.response :as response]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 (reg-event-db
   ::set-time-period

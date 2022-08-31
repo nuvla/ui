@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.clouds.spec
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.utils.spec :as utils-spec]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.utils.spec :as utils-spec]))
 
 (s/def ::infra-service-groups any?)
 (s/def ::infra-services any?)

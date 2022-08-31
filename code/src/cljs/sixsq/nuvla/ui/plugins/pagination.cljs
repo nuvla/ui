@@ -1,14 +1,14 @@
 (ns sixsq.nuvla.ui.plugins.pagination
-  (:require [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [re-frame.core :refer [subscribe dispatch reg-event-fx reg-event-db]]
-            [sixsq.nuvla.ui.plugins.helpers :as helpers]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
-            [cljs.spec.alpha :as s]
-            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [reagent.core :as r]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+  (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]))
+            [re-frame.core :refer [dispatch reg-event-fx subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (s/def ::items-per-page (s/nilable int?))
 (s/def ::default-items-per-page (s/nilable int?))

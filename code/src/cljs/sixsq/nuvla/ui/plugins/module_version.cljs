@@ -1,15 +1,15 @@
 (ns sixsq.nuvla.ui.plugins.module-version
-  (:require [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-            [re-frame.core :refer [subscribe dispatch reg-event-fx reg-sub]]
-            [sixsq.nuvla.ui.plugins.helpers :as helpers]
-            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-            [sixsq.nuvla.ui.utils.general :as general-utils]
-            [cljs.spec.alpha :as s]
-            [sixsq.nuvla.ui.apps.utils :as apps-utils]
-            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+  (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
-            [sixsq.nuvla.ui.utils.form-fields :as ff]))
+            [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
+            [sixsq.nuvla.ui.apps.utils :as apps-utils]
+            [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.plugins.helpers :as helpers]
+            [sixsq.nuvla.ui.utils.form-fields :as ff]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (reg-event-fx
   ::load-module
@@ -106,26 +106,21 @@
           env-description :description
           env-value       :value
           env-required    :required}]
-  (let [
-        ;deployment     (subscribe [::subs/deployment])
-        ;creds          (subscribe [::creds-subs/credentials])
-        ;selected-creds (filter-creds env-name @creds)
-        ]
-    [ui/FormField {:required env-required}
-     [:label env-name ff/nbsp (ff/help-popup env-description)]
-     ;(if selected-creds
-     ;  [CredentialsDropdown env-value index deployment selected-creds]
-     [ui/Input
-      {:type      "text"
-       :name      env-name
-       :value     (or env-value "")
-       :read-only false
-       :fluid     true
-       :on-change (ui-callback/input-callback
-                    #(dispatch [::helpers/set (conj db-path ::modules href :content :environmental-variables index) :value %])
-                    )}]
-     ;)
-     ]))
+  [ui/FormField {:required env-required}
+   [:label env-name ff/nbsp (ff/help-popup env-description)]
+   ;(if selected-creds
+   ;  [CredentialsDropdown env-value index deployment selected-creds]
+   [ui/Input
+    {:type      "text"
+     :name      env-name
+     :value     (or env-value "")
+     :read-only false
+     :fluid     true
+     :on-change (ui-callback/input-callback
+                  #(dispatch [::helpers/set (conj db-path ::modules href :content :environmental-variables index) :value %])
+                  )}]
+   ;)
+   ])
 
 
 (defn EnvVariables

@@ -1,15 +1,15 @@
 (ns sixsq.nuvla.ui.deployment-fleets.events
   (:require
-    [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+    [re-frame.core :refer [dispatch reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployment-fleets.spec :as spec]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]))
+    [sixsq.nuvla.ui.utils.response :as response]))
 
 (def refresh-id :dep-fleets-get-deployment-fleets)
 (def refresh-summary-id :dep-fleets-get-deployment-fleets-summary)
@@ -35,15 +35,14 @@
 
 (reg-event-fx
   ::get-deployment-fleets
-  (fn [{{:keys [::spec/state-selector
-                ::spec/full-text-search] :as db} :db}]
+  (fn [{{:keys [::spec/state-selector] :as db} :db}]
     (let [params (->> {:orderby "created:desc"
                        :filter  (general-utils/join-and
                                   (when state-selector
                                     (state-filter state-selector))
-                                  (full-text-search/filter-text
+                                  (full-text-search-plugin/filter-text
                                     db [::spec/search]))}
-                      (pagination/first-last-params db [::spec/pagination]))]
+                      (pagination-plugin/first-last-params db [::spec/pagination]))]
       {::cimi-api-fx/search [:deployment-fleet params
                              #(dispatch [::set-deployment-fleets %])]})))
 
@@ -76,10 +75,11 @@
 
 (reg-event-fx
   ::get-deployment-fleets-summary
-  (fn [{{:keys [::spec/full-text-search] :as _db} :db} _]
+  (fn [{db :db} _]
     {::cimi-api-fx/search [:deployment-fleet
                            (get-query-aggregation-params
-                             full-text-search
+                             (full-text-search-plugin/filter-text
+                               db [::spec/search])
                              "terms:state"
                              nil)
                            #(dispatch [::set-deployment-fleets-summary %])]}))
@@ -88,4 +88,4 @@
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
     {:db (assoc db ::spec/state-selector state-selector)
-     :fx [[:dispatch [::pagination/change-page [::spec/pagination] 1]]]}))
+     :fx [[:dispatch [::pagination-plugin/change-page [::spec/pagination] 1]]]}))

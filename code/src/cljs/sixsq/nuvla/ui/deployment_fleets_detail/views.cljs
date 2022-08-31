@@ -4,31 +4,31 @@
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
     [sixsq.nuvla.ui.acl.views :as acl]
+    [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
+    [sixsq.nuvla.ui.deployment-fleets-detail.events :as events]
+    [sixsq.nuvla.ui.deployment-fleets-detail.spec :as spec]
+    [sixsq.nuvla.ui.deployment-fleets-detail.subs :as subs]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.views :as deployments-views]
-    [sixsq.nuvla.ui.deployment-fleets-detail.events :as events]
-    [sixsq.nuvla.ui.deployment-fleets-detail.subs :as subs]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.job.subs :as job-subs]
     [sixsq.nuvla.ui.job.views :as job-views]
-    [sixsq.nuvla.ui.deployment-fleets-detail.spec :as spec]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.plugins.events :as events-plugin]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+    [sixsq.nuvla.ui.plugins.module-version :as module-version-plugin]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination]
+    [sixsq.nuvla.ui.plugins.step-group :as step-group]
+    [sixsq.nuvla.ui.plugins.tab :as tab]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.plugins.tab :as tab]
-    [sixsq.nuvla.ui.plugins.events :as events-table]
-    [sixsq.nuvla.ui.plugins.step-group :as step-group]
-    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination]
-    [sixsq.nuvla.ui.plugins.module-version :as module-version]
-    [sixsq.nuvla.ui.apps.utils :as apps-utils]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (def refresh-action-id :deployment-fleet-get-deployment-fleet)
@@ -140,15 +140,6 @@
             [ui/GridColumn
              [TabOverviewTags @deployment-fleet]])]]))))
 
-
-(defn TabEvents
-  []
-  (let [{:keys [id]} @(subscribe [::subs/deployment-fleet])]
-    [ui/TabPane
-     [events-table/EventsTabPane {:db-path [::spec/events]
-                           :href           id}]]))
-
-
 (defn TabsDeploymentFleet
   []
   (let [tr               @(subscribe [::i18n-subs/tr])
@@ -160,10 +151,9 @@
                             :key     :overview
                             :icon    "info"}
                  :render   #(r/as-element [TabOverview])}
-                {:menuItem {:content "Events"
-                            :key     :events
-                            :icon    "bolt"}
-                 :render   #(r/as-element [TabEvents])}
+                (events-plugin/events-section
+                  {:db-path [::spec/events]
+                   :href    (:id @deployment-fleet)})
                 {:menuItem {:content "Deployments"
                             :key     :deployments
                             :icon    "rocket"}
@@ -233,7 +223,7 @@
           render   (fn []
                      (r/as-element
                        [ui/TabPane {:loading loading?}
-                        [full-text-search/FullTextSearch
+                        [full-text-search-plugin/FullTextSearch
                          {:db-path      [::spec/apps-search]
                           :change-event [::events/search-apps]}]
                         [ui/ListSA
@@ -316,7 +306,7 @@
           infrastructures @(subscribe [::subs/infrastructures-with-credentials])
           loading?        @(subscribe [::subs/targets-loading?])]
       [ui/TabPane {:loading loading?}
-       [full-text-search/FullTextSearch
+       [full-text-search-plugin/FullTextSearch
         {:db-path      [::spec/edges-search]
          :change-event [::events/search-edges]}]
        [ui/ListSA
@@ -336,7 +326,7 @@
           infrastructures @(subscribe [::subs/infrastructures-with-credentials])
           loading?        @(subscribe [::subs/targets-loading?])]
       [ui/TabPane {:loading loading?}
-       [full-text-search/FullTextSearch
+       [full-text-search-plugin/FullTextSearch
         {:db-path      [::spec/clouds-search]
          :change-event [::events/search-clouds]}]
        [ui/ListSA
@@ -393,13 +383,13 @@
                                   [ui/TabPane
                                    [uix/Accordion
                                     ^{:key id}
-                                    [module-version/ModuleVersions
+                                    [module-version-plugin/ModuleVersions
                                      {:db-path [::spec/module-versions]
                                       :href    id}]
                                     :label "Select version"
                                     :default-open true]
                                    [uix/Accordion
-                                    [module-version/EnvVariables
+                                    [module-version-plugin/EnvVariables
                                      {:db-path [::spec/module-versions]
                                       :href    id}]
                                     :label "Environment variables"
@@ -416,7 +406,7 @@
                     ) @apps-selected)
 
        }]
-     #_[module-version/ModuleVersions
+     #_[module-version-plugin/ModuleVersions
         {:db-path [::spec/module-versions]
          :hrefs   @app-selected}]]))
 
@@ -430,7 +420,7 @@
         create-name-descr (r/atom {:start false})
         on-change-input   (fn [key]
                             (ui-callback/input-callback
-                             #(swap! create-name-descr assoc key %)))]
+                              #(swap! create-name-descr assoc key %)))]
     (dispatch [::events/new])
     (fn []
       (js/console.warn @create-name-descr)
@@ -470,10 +460,10 @@
                                     {:label       (str/capitalize (@tr [:description]))
                                      :placeholder "Describe your deployment fleet"
                                      :value       (or (:description @create-name-descr) "")
-                                     :on-change (on-change-input :description)}]
+                                     :on-change   (on-change-input :description)}]
                                    [ui/FormCheckbox
-                                    {:label   "Start deployment automatically directly after creation"
-                                     :checked (:start @create-name-descr)
+                                    {:label     "Start deployment automatically directly after creation"
+                                     :checked   (:start @create-name-descr)
                                      :on-change (ui-callback/checked
                                                   #(swap! create-name-descr update :start not))}]]
 

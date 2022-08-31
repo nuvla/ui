@@ -2,8 +2,8 @@
   (:require
     [clojure.spec.alpha :as s]
     [sixsq.nuvla.ui.data-set.utils :as utils]
-    [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.utils.time :as time]))
 
 (s/def ::not-found? boolean?)
 (s/def ::time-period (s/tuple any? any?))

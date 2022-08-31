@@ -11,16 +11,6 @@
 
 (def sidebar-width "10rem")
 
-(defn navigate
-  "Fires a navigation event to the given URL. On small devices, this also
-   forces the sidebar to close."
-  [url]
-  (let [device (subscribe [::subs/device])]
-    (when (#{:mobile :tablet} @device)
-      (dispatch [::events/close-sidebar]))
-    (dispatch [::history-events/navigate url])))
-
-
 (defn item
   [label-kw url icon protected?]
   (let [tr       (subscribe [::i18n-subs/tr])
@@ -37,11 +27,10 @@
       :active   @active?
       :href     (if auth-needed? "sign-in" url)
       :on-click (fn [event]
-                  (if auth-needed?
-                    (dispatch [::history-events/navigate "sign-in"])
-                    (navigate url))
+                  (dispatch (if auth-needed?
+                              [::history-events/navigate "sign-in"]
+                              [::events/navigate url]))
                   (.preventDefault event))}]))
-
 
 (defn logo-item
   []
@@ -58,7 +47,6 @@
                 :style    {:margin-top    "10px"
                            :margin-bottom "10px"}
                 :centered true}]]))
-
 
 (defn menu
   "Provides the sidebar menu for selecting major components/panels of the

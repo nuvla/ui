@@ -7,6 +7,7 @@
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as api-fx]
     [sixsq.nuvla.ui.main.effects :as fx]
+    [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.main.spec :as spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.messages.spec :as messages-spec]
@@ -15,22 +16,18 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [taoensso.timbre :as log]))
 
-
 (def notification-polling-id :notifications-polling)
 (def check-ui-version-polling-id :check-ui-version)
-
 
 (reg-event-db
   ::set-loading?
   (fn [db [_ loading?]]
     (assoc db ::spec/loading? loading?)))
 
-
 (reg-event-db
   ::not-found?
   (fn [db [_ not-found?]]
     (assoc db ::spec/not-found? not-found?)))
-
 
 (reg-event-db
   ::check-iframe
@@ -40,7 +37,6 @@
           iframe?         (and location parent-location (not= location parent-location))]
       (log/info "running within iframe?" iframe?)
       (assoc db ::spec/iframe? iframe?))))
-
 
 (reg-event-db
   ::set-device
@@ -58,18 +54,15 @@
               changed? (assoc ::spec/sidebar-open?
                               (not (#{:mobile :tablet} new-device)))))))
 
-
 (reg-event-db
   ::close-sidebar
   (fn [db _]
     (assoc db ::spec/sidebar-open? false)))
 
-
 (reg-event-db
   ::toggle-sidebar
   (fn [{:keys [::spec/sidebar-open?] :as db} _]
     (update db ::spec/sidebar-open? not sidebar-open?)))
-
 
 (reg-event-fx
   ::visible
@@ -105,7 +98,6 @@
                                            notification-polling-id
                                            check-ui-version-polling-id)]})))
 
-
 (reg-event-fx
   ::action-interval-start
   (fn [{{:keys [::spec/actions-interval] :as db} :db}
@@ -126,7 +118,6 @@
       {:dispatch event
        :db       (assoc-in db [::spec/actions-interval id] new-action-opts)})))
 
-
 (reg-event-db
   ::action-interval-pause
   (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id] :as _action-opts}]]
@@ -137,7 +128,6 @@
       (cond-> db
               existing-action (update-in [::spec/actions-interval id] dissoc :timer)))))
 
-
 (reg-event-db
   ::action-interval-delete
   (fn [{:keys [::spec/actions-interval] :as db} [_ {:keys [id] :as _action-opts}]]
@@ -147,18 +137,15 @@
         (js/clearTimeout existing-timer))
       (assoc db ::spec/actions-interval (dissoc actions-interval id)))))
 
-
 (reg-event-fx
   ::open-link
   (fn [_ [_ uri]]
     {::fx/open-new-window [uri]}))
 
-
 (reg-event-db
   ::changes-protection?
   (fn [db [_ choice]]
     (assoc db ::spec/changes-protection? choice)))
-
 
 (reg-event-fx
   ::ignore-changes
@@ -175,50 +162,10 @@
         (do (when choice (ignore-changes-modal))
             {:db close-modal-db})))))
 
-
 (reg-event-db
   ::ignore-changes-modal
   (fn [db [_ callback-fn]]
     (assoc db ::spec/ignore-changes-modal callback-fn)))
-
-
-#_(reg-event-fx
-    ::set-bootsrap-message
-    (fn [{:keys [db]} [_ {resources     :resources
-                          resource-type :resource-type
-                          element-count :count :as response}]]
-      (if response
-
-        (case resource-type
-
-          "infrastructure-service-collection"
-          (if (> element-count 0)
-            {:db             (assoc db ::spec/bootstrap-message nil)
-             ::api-fx/search [:credential
-                              {:filter (u/join-and
-                                         "subtype='infrastructure-service-swarm'"
-                                         (apply u/join-or
-                                                (map #(str "parent='" (:id %) "'") resources)))
-                               :last   0}
-                              #(dispatch [::set-bootsrap-message %])]}
-            {:db (assoc db ::spec/bootstrap-message :no-swarm)})
-
-          "credential-collection"
-          (if (> element-count 0)
-            {:db (assoc db ::spec/bootstrap-message nil)}
-            {:db (assoc db ::spec/bootstrap-message :no-credential)}))
-
-        {:db (assoc db ::spec/bootstrap-message nil)})))
-
-
-#_(reg-event-fx
-    ::check-bootstrap-message
-    (fn [_ _]
-      {::api-fx/search [:infrastructure-service
-                        {:filter "subtype='swarm'"
-                         :select "id"}
-                        #(dispatch [::set-bootsrap-message %])]}))
-
 
 (reg-event-fx
   ::set-notifications
@@ -244,7 +191,6 @@
           dispatch-removes (map (fn [id] [::messages-events/remove id]) notifs-to-remove)]
       {:dispatch-n (concat dispatch-adds dispatch-removes)})))
 
-
 (reg-event-fx
   ::check-notifications
   (fn [_ _]
@@ -254,15 +200,12 @@
                                  (u/join-or "not-before=null" "not-before<='now'"))}
                       #(dispatch [::set-notifications %])]}))
 
-
 (reg-event-fx
   ::notifications-polling
   (fn [_ _]
-    {:dispatch [::action-interval-start`
-                {:id        notification-polling-id
-                 :frequency 60000
-                 :event     [::check-notifications]}]}))
-
+    {:dispatch [::action-interval-start `{:id        notification-polling-id
+                                          :frequency 60000
+                                          :event     [::check-notifications]}]}))
 
 (reg-event-fx
   ::set-message
@@ -271,12 +214,10 @@
             message (assoc :dispatch-later [{:ms       10000
                                              :dispatch [::set-message nil]}]))))
 
-
 (reg-event-db
   ::force-refresh-content
   (fn [db]
     (assoc db ::spec/content-key (random-uuid))))
-
 
 (reg-event-fx
   ::get-ui-config-success
@@ -284,13 +225,11 @@
     (cond-> {:db (assoc db ::spec/config result)}
             stripe (assoc :dispatch [::load-stripe]))))
 
-
 (reg-event-db
   ::log-failed-response
   (fn [db [_ msg response]]
     (log/error msg ": " response)
     db))
-
 
 (reg-event-db
   ::get-ui-version-success
@@ -314,12 +253,10 @@
                                                      :notify? false)
                         should-open-modal? (assoc :open-modal? true))))))
 
-
 (reg-event-db
   ::new-version-open-modal?
   (fn [db [_ open]]
     (assoc-in db [::spec/ui-version :open-modal?] open)))
-
 
 (reg-event-fx
   ::get-ui-config
@@ -334,7 +271,6 @@
                     :on-failure      [::log-failed-response
                                       "Failed to load UI configuration file"]}})))
 
-
 (reg-event-fx
   ::get-ui-version
   (fn []
@@ -347,7 +283,6 @@
                     :on-success      [::get-ui-version-success]
                     :on-failure      [::log-failed-response
                                       "Failed to load UI version file"]}})))
-
 
 (reg-event-fx
   ::check-ui-version-polling
@@ -362,12 +297,10 @@
   (fn [db [_ modal-key]]
     (assoc db ::spec/open-modal modal-key)))
 
-
 (reg-event-db
   ::close-modal
   (fn [db _]
     (assoc db ::spec/open-modal nil)))
-
 
 (reg-event-fx
   ::load-stripe
@@ -377,14 +310,12 @@
       (when-not stripe
         {::fx/load-stripe [stripe-public-key #(dispatch [::stripe-loaded %])]}))))
 
-
 (reg-event-db
   ::stripe-loaded
   (fn [db [_ stripe]]
     ;;^js type hint needed with externs
     ;; inference to not break with advanced optimizations
     (assoc db ::spec/stripe stripe)))
-
 
 (reg-event-fx
   ::subscription-required-dispatch
@@ -403,3 +334,9 @@
                      [::open-modal :subscription-unpaid]
                      [::open-modal :subscription-required]))})))
 
+(reg-event-fx
+  ::navigate
+  (fn [{{:keys [::spec/device]} :db} [_ url]]
+    {:fx [(when (#{:mobile :tablet} device)
+            [:dispatch [::close-sidebar]])
+          [:dispatch [::history-events/navigate url]]]}))

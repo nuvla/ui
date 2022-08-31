@@ -1866,8 +1866,11 @@
        {:menuItem {:content "Deployments"
                    :key     :deployments
                    :icon    "rocket"}
-        :render   #(r/as-element [deployments-views/DeploymentTable
-                                  {:empty-msg (tr [:empty-deployment-nuvlabox-msg])}])}
+        :render   #(r/as-element
+                     [ui/TabPane
+                      [deployments-views/DeploymentTable
+                       {:no-actions true
+                        :empty-msg  (tr [:empty-deployment-nuvlabox-msg])}]])}
        {:menuItem {:content "Vulnerabilities"
                    :key     :vulnerabilities
                    :icon    "shield"}

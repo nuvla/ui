@@ -376,7 +376,7 @@
         select-all? (subscribe [::subs/select-all?])]
     (fn []
       (let [deployments (:resources @elements)]
-        [ui/TabPane
+        [:<>
          [VerticalDataTable
           deployments (assoc options :select-all @select-all?)]
          [Pagination]]))))

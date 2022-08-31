@@ -158,7 +158,8 @@
                             :key     :deployments
                             :icon    "rocket"}
                  :render   #(r/as-element [deployments-views/DeploymentTable
-                                           {:empty-msg (tr [:empty-deployemnt-msg])}])}
+                                           {:no-actions true
+                                            :empty-msg  (tr [:empty-deployemnt-msg])}])}
                 (job-views/jobs-section)
                 (acl/TabAcls deployment-fleet can-edit? ::events/edit)]
       :menu    {:secondary true

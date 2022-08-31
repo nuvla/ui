@@ -12,6 +12,12 @@
     [sixsq.nuvla.ui.plugins.events :as events-plugin]
     [sixsq.nuvla.ui.utils.response :as response]))
 
+(reg-event-fx
+  ::init
+  (fn [{db :db} [_ href]]
+    {:db (merge db spec/defaults)
+     :fx [[:dispatch [::get-deployment href]]]}))
+
 (reg-event-db
   ::set-module-versions
   (fn [db [_ module]]
@@ -67,12 +73,6 @@
                ::cimi-api-fx/get [id #(dispatch [::set-deployment %])
                                   :on-error #(dispatch [::set-deployment nil])]}
               different-deployment? (assoc :db (merge db spec/defaults))))))
-
-(reg-event-db
-  ::reset-db
-  (fn [db]
-    (assoc db ::spec/module-versions nil
-              ::spec/upcoming-invoice nil)))
 
 (reg-event-fx
   ::stop-deployment

@@ -40,7 +40,6 @@
 
 (defn refresh
   [resource-id]
-  (dispatch [::events/reset-db])
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
               :frequency 10000
@@ -781,11 +780,10 @@
 
 (defn TabsDeployment
   [uuid]
-  (let [deployment  (subscribe [::subs/deployment])
-        resource-id (str "deployment/" uuid)]
-    (refresh resource-id)
+  (let [deployment (subscribe [::subs/deployment])]
+    (dispatch [::events/init (str "deployment/" uuid)])
     (fn [_]
-      (let [panes      (deployment-detail-panes)]
+      (let [panes (deployment-detail-panes)]
         [components/LoadingPage {:dimmable? true}
          [:<>
           [components/NotFoundPortal
@@ -800,9 +798,9 @@
           [vpn-info]
           [tab-plugin/Tab
            {:db-path [::spec/tab]
-            :menu  {:secondary true
-                    :pointing  true
-                    :style     {:display        "flex"
-                                :flex-direction "row"
-                                :flex-wrap      "wrap"}}
-            :panes panes}]]]))))
+            :menu    {:secondary true
+                      :pointing  true
+                      :style     {:display        "flex"
+                                  :flex-direction "row"
+                                  :flex-wrap      "wrap"}}
+            :panes   panes}]]]))))

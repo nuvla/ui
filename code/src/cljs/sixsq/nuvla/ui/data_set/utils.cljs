@@ -4,7 +4,6 @@
     [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.time :as time]))
 
-
 (defn create-time-period-filter
   [[time-start time-end]]
   (str "(timestamp>='"
@@ -12,7 +11,6 @@
        "' and timestamp<'"
        (time/time->utc-str time-end)
        "')"))
-
 
 (defn format-bytes
   [bytes]
@@ -27,7 +25,6 @@
           (str (general-utils/round-up v :n-decimal 1) prefix))))
     "..."))
 
-
 (defn data-record-geometry-filter
   [geo-operation data-record-map-geojson]
   (when data-record-map-geojson
@@ -36,15 +33,3 @@
         (map/geojson->filter "geometry" geo-operation data-record-map-geojson)
         (map/geojson->filter "location" geo-operation data-record-map-geojson))
       (map/geojson->filter "geometry" geo-operation data-record-map-geojson))))
-
-
-(defn get-query-params
-  [data-record-filter geojson geo-operation full-text-search time-period-filter page elements-per-page]
-  {:first   (inc (* (dec page) elements-per-page))
-   :last    (* page elements-per-page)
-   :orderby "timestamp:desc"
-   :filter  (general-utils/join-and
-              time-period-filter
-              data-record-filter
-              (data-record-geometry-filter geo-operation geojson)
-              (general-utils/fulltext-query-string full-text-search))})

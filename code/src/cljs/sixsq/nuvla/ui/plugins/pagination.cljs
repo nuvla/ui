@@ -15,7 +15,6 @@
 (s/def ::active-page (s/nilable int?))
 (s/def ::change-event (s/nilable coll?))
 
-;; mandatory init component
 (defn build-spec
   [& {:keys [default-items-per-page]
       :or   {default-items-per-page 10}}]
@@ -68,7 +67,7 @@
                    :flex-wrap       :wrap-reverse
                    :margin-top      10}}
      [ui/Label {:size :medium}
-      (str (str/capitalize (tr [:total])) " : " total-items)
+      (str (str/capitalize (tr [:total])) " : " (or total-items 0))
       [:div {:style {:display :inline-block}}
        ff/nbsp
        "| "

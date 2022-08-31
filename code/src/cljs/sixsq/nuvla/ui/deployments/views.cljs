@@ -385,7 +385,7 @@
   []
   (let [tr                  (subscribe [::i18n-subs/tr])
         bulk-jobs-monitored (subscribe [::subs/bulk-jobs-monitored])]
-    (refresh)
+    (dispatch [::events/init])
     (fn []
       [components/LoadingPage {}
        [:<>

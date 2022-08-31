@@ -19,8 +19,14 @@
 (def refresh-action-nuvlaboxes-id :dashboard-get-nuvlaboxes-summary)
 
 (reg-event-fx
+  ::init
+  (fn [{db :db} [_]]
+    {:db (merge db spec/defaults)
+     :fx [[:dispatch [::refresh]]]}))
+
+(reg-event-fx
   ::refresh
-  (fn [{_db :db} [_]]
+  (fn []
     {:fx [[:dispatch [::main-events/action-interval-start
                       {:id        refresh-action-deployments-summary-id
                        :frequency 20000
@@ -60,13 +66,13 @@
                 ::spec/state-selector
                 ::spec/filter-external] :as db} :db} [_ filter-external-arg]]
     (let [filter-external (or filter-external-arg filter-external)
-          state      (when-not (= "all" state-selector) state-selector)
-          filter-str (utils/get-filter-param
-                       {:full-text-search  (full-text-search-plugin/filter-text
-                                             db [::spec/deployments-search])
-                        :additional-filter additional-filter
-                        :state-selector    state
-                        :filter-external   filter-external})]
+          state           (when-not (= "all" state-selector) state-selector)
+          filter-str      (utils/get-filter-param
+                            {:full-text-search  (full-text-search-plugin/filter-text
+                                                  db [::spec/deployments-search])
+                             :additional-filter additional-filter
+                             :state-selector    state
+                             :filter-external   filter-external})]
       {:db                  (assoc db ::spec/filter-external filter-external)
        ::cimi-api-fx/search [:deployment
                              (->> {:aggregation "terms:state"

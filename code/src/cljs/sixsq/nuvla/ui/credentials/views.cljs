@@ -18,9 +18,9 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.tab :as tab]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.validation :as utils-validation]))
+    [sixsq.nuvla.ui.utils.validation :as utils-validation]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
 
 
 (defn in?
@@ -758,7 +758,7 @@
         is-new?     (subscribe [::subs/is-new?])]
     (fn []
       (let [subtype         (:subtype @credential "")
-            active-tab      (:tab-key (subtype->info subtype))
+            tab-key         (:tab-key (subtype->info subtype))
             icon            (:icon (subtype->info subtype))
             name            (:name (subtype->info subtype))
             header          (str (str/capitalize (str (if @is-new?
@@ -780,13 +780,14 @@
             [utils-validation/validation-error-message ::subs/form-valid?]
             [modal-content]]
            [ui/ModalActions
-            [uix/Button {:text     (if (true? @is-new?) (@tr [:create]) (@tr [:save]))
-                         :positive true
-                         :disabled (when-not @form-valid? true)
-                         :active   true
-                         :on-click #(do (save-callback validation-spec)
-                                        (dispatch [::events/set-active-tab
-                                                   active-tab]))}]]])))))
+            [uix/Button
+             {:text     (if (true? @is-new?) (@tr [:create]) (@tr [:save]))
+              :positive true
+              :disabled (when-not @form-valid? true)
+              :active   true
+              :on-click #(do (save-callback validation-spec)
+                             (dispatch [::tab-plugin/change-tab
+                                        [::spec/tab] tab-key]))}]]])))))
 
 
 (defn AddCredentialModal
@@ -1084,7 +1085,7 @@
      :render   #(r/as-element [CredentialsPane section-sub-text credentials])}))
 
 
-(defn credentials
+(defn panes
   []
   (let [credentials            (subscribe [::subs/credentials])
         coe-service-creds      (filter #(in? coe-subtypes (:subtype %))
@@ -1112,19 +1113,15 @@
   []
   (dispatch [::events/get-credentials])
   (fn []
-    (let [active-tab (subscribe [::subs/active-tab])
-          panes      (credentials)]
-      [components/LoadingPage {}
-       [ui/Tab
-        {:menu        {:secondary true
-                       :pointing  true
-                       :style     {:display        "flex"
-                                   :flex-direction "row"
-                                   :flex-wrap      "wrap"}}
-         :panes       panes
-         :activeIndex (tab/key->index panes @active-tab)
-         :onTabChange (tab/on-tab-change
-                        panes #(dispatch [::events/set-active-tab %]))}]])))
+    [components/LoadingPage {}
+     [tab-plugin/Tab
+      {:db-path [::spec/tab]
+       :menu    {:secondary true
+                 :pointing  true
+                 :style     {:display        "flex"
+                             :flex-direction "row"
+                             :flex-wrap      "wrap"}}
+       :panes   (panes)}]]))
 
 
 (defmethod panel/render :credentials

@@ -123,24 +123,24 @@
 
 (defn DashboardMain
   []
-  (let [tr       (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (refresh)
     (fn []
       [components/LoadingPage {}
        [:<>
-        [:div {:style {:display "flex" :justify-content "space-between"}}
+        [:div {:style {:display         :flex
+                       :justify-content :space-between}}
          [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard]))]
          [MenuRefresh]]
         [Statistics]
-        [:div utils-style/center-items
-         [ui/Grid {:columns   2,
-                   :stackable true
-                   :padded    true}
-          [ui/GridRow
-           [ui/GridColumn {:stretched true}
-            [TabOverviewDeployments]]
-           [ui/GridColumn {:stretched true}
-            [TabOverviewNuvlaBox]]]]]]])))
+        [ui/Grid {:columns   2,
+                  :stackable true
+                  :padded    true}
+         [ui/GridRow
+          [ui/GridColumn {:stretched true}
+           [TabOverviewDeployments]]
+          [ui/GridColumn {:stretched true}
+           [TabOverviewNuvlaBox]]]]]])))
 
 
 (defmethod panel/render :dashboard

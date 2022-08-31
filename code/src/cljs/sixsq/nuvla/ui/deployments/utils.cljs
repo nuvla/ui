@@ -7,7 +7,8 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]))
 
 (def ^:const STARTED "STARTED")
 (def ^:const STARTING "STARTING")
@@ -99,8 +100,7 @@
 (defn get-filter-param
   [{:keys [full-text-search additional-filter state-selector filter-external]
     :as   _args}]
-  (let [filter-state     (when state-selector (state-filter state-selector))
-        full-text-search (general-utils/fulltext-query-string full-text-search)]
+  (let [filter-state     (when state-selector (state-filter state-selector))]
     (general-utils/join-and
       "id!=null"
       filter-state
@@ -110,8 +110,8 @@
 
 (defn get-query-params-summary
   [full-text-search additional-filter]
-  (let [full-text-search (general-utils/fulltext-query-string full-text-search)
-        filter-str       (general-utils/join-and full-text-search additional-filter)
+  (let [filter-str       (general-utils/join-and
+                           full-text-search additional-filter)
         aggregate        "terms:state"]
     (cond-> {:orderby     "created:desc"
              :aggregation aggregate
@@ -161,12 +161,12 @@
 (defn build-bulk-filter
   [{:keys [::spec/select-all?
            ::spec/selected-set
-           ::spec/full-text-search
            ::spec/additional-filter
-           ::spec/state-selector]}]
+           ::spec/state-selector] :as db}]
   (if select-all?
     (get-filter-param
-      {:full-text-search  full-text-search
+      {:full-text-search  (full-text-search-plugin/filter-text
+                            db [::spec/deployments-search])
        :additional-filter additional-filter
        :state-selector    (when-not (= "all" state-selector) state-selector)
        :module-id         nil})

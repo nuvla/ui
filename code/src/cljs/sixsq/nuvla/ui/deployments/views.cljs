@@ -23,28 +23,31 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
     [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]))
 
 (defn refresh
   []
   (dispatch [::events/refresh]))
 
 (defn ControlBar []
-  (let [full-text         (subscribe [::subs/full-text-search])
-        additional-filter (subscribe [::subs/additional-filter])
+  (let [additional-filter (subscribe [::subs/additional-filter])
         filter-open?      (r/atom false)]
     (fn []
       [ui/GridColumn {:width 4}
-       [components/SearchInput
-        {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))
-         :default-value @full-text}]
-       " "
-       ^{:key (random-uuid)}
-       [filter-comp/ButtonFilter
-        {:resource-name  "deployment"
-         :default-filter @additional-filter
-         :open?          filter-open?
-         :on-done        #(dispatch [::events/set-additional-filter %])}]])))
+       [:div {:style {:display    :flex
+                      :align-self :baseline}}
+        [full-text-search-plugin/FullTextSearch
+         {:db-path      [::spec/deployments-search]
+          :change-event [::pagination-plugin/change-page
+                         [::spec/pagination] 1]}]
+        " "
+        ^{:key (random-uuid)}
+        [filter-comp/ButtonFilter
+         {:resource-name  "deployment"
+          :default-filter @additional-filter
+          :open?          filter-open?
+          :on-done        #(dispatch [::events/set-additional-filter %])}]]])))
 
 (defn BulkUpdateModal
   []
@@ -321,9 +324,7 @@
             total         (:count @summary)]
         [ui/GridColumn {:width 8}
          [ui/StatisticGroup {:size  "tiny"
-                             :style {:justify-content "center"
-                                     :padding-top     "20px"
-                                     :padding-bottom  "20px"}}
+                             :style {:justify-content "center"}}
           [components/StatisticState total ["fas fa-rocket"] "TOTAL" clickable?
            ::events/set-state-selector ::subs/state-selector]
           [components/StatisticState started [(utils/state->icon utils/STARTED)] utils/STARTED
@@ -391,8 +392,7 @@
         [uix/PageHeader "rocket"
          (general-utils/capitalize-first-letter (@tr [:deployments]))]
         [MenuBar]
-        [ui/Grid {:columns   3
-                  :stackable true
+        [ui/Grid {:stackable true
                   :reversed  "mobile"}
          [ControlBar]
          [StatisticStates true ::subs/deployments-summary]]

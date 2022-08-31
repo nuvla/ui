@@ -1,12 +1,13 @@
 (ns sixsq.nuvla.ui.deployments.spec
   (:require
     [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search]))
 
 (s/def ::deployments any?)
 (s/def ::deployments-summary any?)
 (s/def ::deployments-summary-all any?)
-(s/def ::full-text-search (s/nilable string?))
+(s/def ::deployments-search any?)
 (s/def ::additional-filter (s/nilable string?))
 (s/def ::filter-external (s/nilable string?))
 (s/def ::view #{"cards" "table"})
@@ -23,7 +24,7 @@
 (s/def ::select-all? boolean?)
 (s/def ::bulk-jobs-monitored any?)
 
-(def defaults {::full-text-search        nil
+(def defaults {::deployments-search      (full-text-search/build-spec)
                ::additional-filter       nil
                ::deployments             nil
                ::deployments-summary     nil

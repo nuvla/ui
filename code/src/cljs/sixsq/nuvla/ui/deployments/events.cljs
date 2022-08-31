@@ -3,23 +3,20 @@
     [clojure.set :as set]
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-    [sixsq.nuvla.ui.apps.spec :as apps-spec]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
     [sixsq.nuvla.ui.deployments.spec :as spec]
     [sixsq.nuvla.ui.deployments.utils :as utils]
-    [sixsq.nuvla.ui.edges-detail.spec :as edges-detail-spec]
     [sixsq.nuvla.ui.job.events :as job-events]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.response :as response]
-    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
-
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]))
 
 (def refresh-action-deployments-summary-id :dashboard-get-deployments-summary)
 (def refresh-action-deployments-id :dashboard-get-deployments)
 (def refresh-action-nuvlaboxes-id :dashboard-get-nuvlaboxes-summary)
-
 
 (reg-event-fx
   ::refresh
@@ -33,13 +30,11 @@
                        :frequency 20000
                        :event     [::get-deployments]}]]]}))
 
-
 (reg-event-db
   ::set-deployments-params-map
   (fn [db [_ {deployment-params :resources}]]
     (assoc db ::spec/deployments-params-map
               (group-by :parent deployment-params))))
-
 
 (reg-event-fx
   ::set-deployments
@@ -59,16 +54,15 @@
                                                           [:deployment-parameter
                                                            query-params callback])))))
 
-
 (reg-event-fx
   ::get-deployments
-  (fn [{{:keys [::spec/full-text-search
-                ::spec/additional-filter
+  (fn [{{:keys [::spec/additional-filter
                 ::spec/state-selector
                 ::spec/filter-external] :as db} :db} [_ filter-external]]
     (let [state      (when-not (= "all" state-selector) state-selector)
           filter-str (utils/get-filter-param
-                       {:full-text-search  full-text-search
+                       {:full-text-search  (full-text-search-plugin/filter-text
+                                             db [::spec/deployments-search])
                         :additional-filter additional-filter
                         :state-selector    state
                         :filter-external   filter-external})]
@@ -81,22 +75,20 @@
                                     db [::spec/pagination]))
                              #(dispatch [::set-deployments %])]})))
 
-
 (reg-event-fx
   ::set-deployments-summary
   (fn [{:keys [db]} [_ deployments]]
     {:db (assoc db ::main-spec/loading? false
                    ::spec/deployments-summary deployments)}))
 
-
 (reg-event-fx
   ::get-deployments-summary
-  (fn [{{:keys [::spec/full-text-search
-                ::spec/additional-filter]} :db} _]
+  (fn [{{:keys [::spec/additional-filter] :as db} :db} _]
     {::cimi-api-fx/search [:deployment (utils/get-query-params-summary
-                                         full-text-search additional-filter)
+                                         (full-text-search-plugin/filter-text
+                                           db [::spec/deployments-search])
+                                         additional-filter)
                            #(dispatch [::set-deployments-summary %])]}))
-
 
 (reg-event-fx
   ::set-deployments-summary-all
@@ -104,22 +96,11 @@
     {:db (assoc db ::main-spec/loading? false
                    ::spec/deployments-summary-all deployments)}))
 
-
 (reg-event-fx
   ::get-deployments-summary-all
   (fn [_]
     {::cimi-api-fx/search [:deployment (utils/get-query-params-summary nil nil)
                            #(dispatch [::set-deployments-summary-all %])]}))
-
-(reg-event-fx
-  ::set-full-text-search
-  (fn [{db :db} [_ full-text-search]]
-    {:db (assoc db
-           ::spec/full-text-search full-text-search
-           ::spec/selected-set #{})
-     :fx [[:dispatch
-           [::pagination-plugin/change-page [::spec/pagination] 1]]]}))
-
 
 (reg-event-fx
   ::set-additional-filter
@@ -129,12 +110,10 @@
      :fx [[:dispatch
            [::pagination-plugin/change-page [::spec/pagination] 1]]]}))
 
-
 (reg-event-db
   ::set-view
   (fn [db [_ view-type]]
     (assoc db ::spec/view view-type)))
-
 
 (reg-event-fx
   ::stop-deployment
@@ -150,7 +129,6 @@
                        :type    :error}]))
          (dispatch [::get-deployments]))]}))
 
-
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
@@ -158,7 +136,6 @@
                    ::spec/selected-set #{})
      :fx [[:dispatch
            [::pagination-plugin/change-page [::spec/pagination] 1]]]}))
-
 
 (reg-event-fx
   ::open-modal-bulk-update
@@ -171,12 +148,10 @@
                            #(dispatch
                               [:sixsq.nuvla.ui.deployments-detail.events/set-module-versions %])]))))
 
-
 (reg-event-db
   ::close-modal-bulk-update
   (fn [db _]
     (assoc db ::spec/bulk-update-modal nil)))
-
 
 (reg-event-fx
   ::bulk-update-params
@@ -190,7 +165,6 @@
                same-module? (= (count buckets) 1)
                module-href  (when same-module? (-> buckets first :key))]
            (dispatch [::open-modal-bulk-update filter-str module-href]))]})))
-
 
 (reg-event-fx
   ::bulk-operation
@@ -208,13 +182,11 @@
               bulk-action (utils/build-bulk-filter db) data]}
             dispatch-vec (assoc :dispatch dispatch-vec))))
 
-
 (reg-event-db
   ::select-id
   (fn [{:keys [::spec/selected-set] :as db} [_ id]]
     (let [fn (if (utils/is-selected? selected-set id) disj conj)]
       (update db ::spec/selected-set fn id))))
-
 
 (reg-event-db
   ::select-all-page
@@ -227,7 +199,6 @@
           (update ::spec/selected-set fn visible-dep-ids)
           (assoc ::spec/select-all? false)))))
 
-
 (reg-event-db
   ::select-all
   (fn [db]
@@ -235,18 +206,15 @@
         (update ::spec/select-all? not)
         (assoc ::spec/selected-set #{}))))
 
-
 (reg-event-db
   ::reset-selected-set
   (fn [db]
     (assoc db ::spec/selected-set #{})))
 
-
 (reg-event-db
   ::add-bulk-job-monitored
   (fn [db [_ {:keys [id] :as job}]]
     (update db ::spec/bulk-jobs-monitored assoc id job)))
-
 
 (reg-event-db
   ::dissmiss-bulk-job-monitored

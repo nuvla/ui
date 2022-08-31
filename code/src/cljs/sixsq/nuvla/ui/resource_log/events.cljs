@@ -6,13 +6,11 @@
     [sixsq.nuvla.ui.resource-log.spec :as spec]
     [sixsq.nuvla.ui.utils.time :as time]))
 
-
 (reg-event-fx
   ::reset
   (fn [{{:keys [::spec/id] :as db} :db}]
     {:db                  (merge db spec/defaults)
      ::cimi-api-fx/delete [id #()]}))
-
 
 (reg-event-fx
   ::delete
@@ -22,13 +20,11 @@
             id (assoc ::cimi-api-fx/delete [id #()]
                       :dispatch [::set-play? false]))))
 
-
 (reg-event-fx
   ::set-since
   (fn [{{:keys [::spec/id] :as db} :db} [_ since]]
     {:db (assoc db ::spec/since since)
      :fx [(when id [:dispatch [::delete]])]}))
-
 
 (reg-event-fx
   ::set-play?
@@ -48,13 +44,11 @@
                                  :frequency 10000
                                  :event     [::get-resource-log]}]}]))))
 
-
 (reg-event-fx
   ::get-resource-log
   (fn [{{:keys [::spec/id]} :db} _]
     (when id
       {::cimi-api-fx/get [id #(dispatch [::set-resource-log %])]})))
-
 
 (defn join-component-name-to-line
   [[component-name line]]
@@ -106,12 +100,10 @@
                            (assoc new-resource-log :log merged-logs))
        :dispatch [::fetch]})))
 
-
 (reg-event-fx
   ::fetch
   (fn [{{:keys [::spec/id]} :db} _]
     {::cimi-api-fx/operation [id "fetch" #()]}))
-
 
 (reg-event-fx
   ::create-log
@@ -125,32 +117,27 @@
                               {:since      (time/time->utc-str since)
                                :components (or components [])}]}))
 
-
 (reg-event-fx
   ::set-log-id
   (fn [{{:keys [::spec/play?] :as db} :db} [_ resource-log-id]]
     {:db       (assoc db ::spec/id resource-log-id)
      :dispatch [::set-play? play?]}))
 
-
 (reg-event-db
   ::set-parent
   (fn [db [_ resource-id]]
     (assoc db ::spec/parent resource-id)))
-
 
 (reg-event-db
   ::clear
   (fn [db [_ current-log]]
     (assoc-in db [::spec/resource-log :log] (into {} (map (fn [[k _]] {k []}) current-log)))))
 
-
 (reg-event-fx
   ::set-components
   (fn [{{:keys [::spec/id] :as db} :db} [_ components]]
     (cond-> {:db (assoc db ::spec/components components)}
             id (assoc :dispatch [::delete]))))
-
 
 (reg-event-db
   ::set-available-components

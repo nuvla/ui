@@ -8,6 +8,7 @@
     [sixsq.nuvla.ui.config :as config]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.views :as deployments-views]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.edges-detail.events :as events]
     [sixsq.nuvla.ui.edges-detail.subs :as subs]
     [sixsq.nuvla.ui.edges-detail.spec :as spec]
@@ -28,7 +29,6 @@
     [sixsq.nuvla.ui.utils.plot :as plot]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.tab :as tab]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
@@ -1318,7 +1318,8 @@
           (when-not (= state "SUSPENDED")
             [ui/GridColumn {:stretched true}
              [deployments-views/DeploymentsOverviewSegment
-              ::deployments-subs/deployments ::events/set-active-tab :deployments]])
+              ::deployments-subs/deployments nil nil
+              #(dispatch [::tab-plugin/change-tab [::spec/tab] :deployments])]])
 
           (when (:node-id @nb-status)
             [ui/GridColumn {:stretched true}
@@ -1881,19 +1882,14 @@
 
 (defn TabsNuvlaBox
   []
-  (let [active-tab (subscribe [::subs/active-tab])
-        panes      (tabs)]
-    [ui/Tab
-     {:menu        {:secondary true
-                    :pointing  true
-                    :style     {:display        "flex"
-                                :flex-direction "row"
-                                :flex-wrap      "wrap"}}
-      :panes       panes
-      :activeIndex (tab/key->index panes @active-tab)
-      :onTabChange (tab/on-tab-change
-                     panes
-                     #(dispatch [::events/set-active-tab %]))}]))
+  [tab-plugin/Tab
+   {:db-path [::spec/tab]
+    :menu    {:secondary true
+              :pointing  true
+              :style     {:display        "flex"
+                          :flex-direction "row"
+                          :flex-wrap      "wrap"}}
+    :panes   (tabs)}])
 
 
 (defn PageHeader
@@ -1928,7 +1924,8 @@
       [ui/Container {:fluid true}
        [PageHeader]
        [MenuBar uuid]
-       [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab :jobs]
+       [components/ErrorJobsMessage ::job-subs/jobs nil nil
+        #(dispatch [::tab-plugin/change-tab [::spec/tab] :jobs])]
        [job-views/ProgressJobAction @nb-status]
        [TabsNuvlaBox]
        [AddPlaybookModal]]]]))

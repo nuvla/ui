@@ -14,12 +14,10 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]))
 
-
 (reg-event-db
   ::set-nuvlabox-status
   (fn [db [_ nuvlabox-status]]
     (assoc db ::spec/nuvlabox-status nuvlabox-status)))
-
 
 (reg-event-db
   ::set-nuvlabox-vulns
@@ -48,18 +46,15 @@
                                     (assoc item :severity "UNKNOWN" :color edges-utils/vuln-unknown-color)))
                                 (:items nuvlabox-vulns)))})))
 
-
 (reg-event-db
   ::set-nuvlabox-associated-ssh-keys
   (fn [db [_ ssh-keys]]
     (assoc db ::spec/nuvlabox-associated-ssh-keys ssh-keys)))
 
-
 (reg-event-db
   ::set-matching-vulns-from-db
   (fn [db [_ vulns]]
     (assoc db ::spec/matching-vulns-from-db (zipmap (map :name vulns) vulns))))
-
 
 (reg-event-db
   ::set-nuvlabox-peripherals
@@ -68,12 +63,10 @@
                                                (map (juxt :id identity))
                                                (into {})))))
 
-
 (reg-event-db
   ::set-vuln-severity-selector
   (fn [db [_ vuln-severity]]
     (assoc db ::spec/vuln-severity-selector vuln-severity)))
-
 
 (reg-event-fx
   ::set-nuvlabox
@@ -93,7 +86,6 @@
                                      (dispatch [::set-nuvlabox-vulns nil]))]
      :fx               [(when infra-srv-grp-id [:dispatch [::get-infra-services infra-srv-grp-id]])]}))
 
-
 (reg-event-fx
   ::get-nuvlabox-associated-ssh-keys
   (fn [_ [_ ssh-keys-ids]]
@@ -106,7 +98,6 @@
                       (apply general-utils/join-or))
          :last   100}
         #(dispatch [::set-nuvlabox-associated-ssh-keys (:resources %)])]})))
-
 
 (reg-event-fx
   ::get-ssh-keys-not-associated
@@ -122,7 +113,6 @@
          :last   100}
         #(callback-fn (get % :resources []))]})))
 
-
 (reg-event-fx
   ::get-matching-vulns-from-db
   (fn [_ [_ vuln-ids]]
@@ -135,7 +125,6 @@
                       (apply general-utils/join-or))
          :last   110}
         #(dispatch [::set-matching-vulns-from-db (:resources %)])]})))
-
 
 (reg-event-fx
   ::operation
@@ -161,7 +150,6 @@
            (dispatch [::get-nuvlabox resource-id])))
       data]}))
 
-
 (reg-event-fx
   ::operation-text-response
   (fn [_ [_ operation resource-id on-success-fn on-error-fn]]
@@ -183,7 +171,6 @@
            (on-success-fn (:message %))
            (dispatch [::get-nuvlabox resource-id])))
       nil]}))
-
 
 (reg-event-fx
   ::get-nuvlabox
@@ -207,7 +194,6 @@
                            [:dispatch [::get-nuvlabox-current-playbook (if (= id (:parent nuvlabox-current-playbook))
                                                                          (:id nuvlabox-current-playbook)
                                                                          nil)]]]}))
-
 
 (reg-event-fx
   ::decommission
@@ -235,13 +221,11 @@
                                             :type    :success}]))
                               (dispatch [::set-nuvlabox %])))]}))
 
-
 (reg-event-fx
   ::delete
   (fn [{{:keys [::spec/nuvlabox]} :db} _]
     (let [nuvlabox-id (:id nuvlabox)]
       {::cimi-api-fx/delete [nuvlabox-id #(dispatch [::history-events/navigate "edges"])]})))
-
 
 (reg-event-fx
   ::custom-action
@@ -277,30 +261,20 @@
                                                              :error)}]))
                :refresh-interval-ms 5000}])))]}))
 
-
-(reg-event-db
-  ::set-active-tab
-  (fn [db [_ key]]
-    (assoc db ::spec/active-tab key)))
-
-
 (reg-event-db
   ::set-nuvlabox-managers
   (fn [db [_ status-per-manager]]
     (assoc db ::spec/nuvlabox-managers status-per-manager)))
-
 
 (reg-event-db
   ::set-join-token
   (fn [db [_ token]]
     (assoc db ::spec/join-token token)))
 
-
 (reg-event-fx
   ::get-join-token
   (fn [_ [_ nuvlabox-id scope]]
     {::cimi-api-fx/get [nuvlabox-id #(dispatch [::get-join-token-from-isg (:infrastructure-service-group %) scope])]}))
-
 
 (reg-event-fx
   ::get-join-token-from-isg
@@ -312,7 +286,6 @@
        :last   1}
       #(dispatch [::get-join-token-from-is (:id (first (:resources %))) scope])]}))
 
-
 (reg-event-fx
   ::get-join-token-from-is
   (fn [_ [_ is-id scope]]
@@ -323,7 +296,6 @@
        :last   1}
       #(dispatch [::set-join-token (first (:resources %))])]}))
 
-
 (reg-event-fx
   ::get-nuvlabox-managers
   (fn [_ [_ self-id]]
@@ -333,7 +305,6 @@
        :select "id, parent, cluster-id, cluster-join-address"
        :last   100}
       #(dispatch [::get-nuvlabox-manager-by-status (:resources %)])]}))
-
 
 (reg-event-fx
   ::get-nuvlabox-manager-by-status
@@ -354,7 +325,6 @@
                               :name   (:name (first (get (group-by :id (:resources %)) (:parent status))))
                               :status status}})))])]}))
 
-
 (reg-event-fx
   ::get-nuvlabox-cluster
   (fn [_ [_ nuvlabox-id]]
@@ -364,12 +334,10 @@
                             :last   1}
                            #(dispatch [::set-nuvlabox-cluster (first (:resources %))])]}))
 
-
 (reg-event-db
   ::set-nuvlabox-cluster
   (fn [db [_ nuvlabox-cluster]]
     (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster)))
-
 
 (reg-event-fx
   ::get-nuvlabox-playbooks
@@ -402,7 +370,6 @@
   (fn [db [_ infra-services]]
     (assoc db ::spec/infra-services infra-services)))
 
-
 (reg-event-fx
   ::edit-playbook
   (fn [_ [_ playbook new-body]]
@@ -423,13 +390,11 @@
                                             :type    :info}])
                                 (dispatch [::get-nuvlabox-playbooks nuvlabox-id])))]})))
 
-
 (reg-event-fx
   ::add-nuvlabox-playbook
   (fn [_ [_ data]]
     {::cimi-api-fx/add [:nuvlabox-playbook data
                         #(dispatch [::get-nuvlabox-playbooks (:parent data)])]}))
-
 
 (reg-event-fx
   ::get-emergency-playbooks
@@ -441,19 +406,16 @@
                             :last    1000}
                            #(dispatch [::set-emergency-playbooks (:resources %)])]}))
 
-
 (reg-event-db
   ::set-emergency-playbooks
   (fn [db [_ nuvlabox-playbooks]]
     (assoc db ::spec/nuvlabox-emergency-playbooks nuvlabox-playbooks)))
-
 
 (reg-event-fx
   ::get-nuvlabox-current-playbook
   (fn [_ [_ nuvlabox-playbook-id]]
     {::cimi-api-fx/get [nuvlabox-playbook-id #(dispatch [::set-nuvlabox-current-playbook %])
                         :on-error #(dispatch [::set-nuvlabox-current-playbook nil])]}))
-
 
 (reg-event-db
   ::set-nuvlabox-current-playbook

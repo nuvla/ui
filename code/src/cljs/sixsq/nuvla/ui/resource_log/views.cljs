@@ -6,12 +6,8 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.resource-log.events :as events]
     [sixsq.nuvla.ui.resource-log.subs :as subs]
-    [sixsq.nuvla.ui.resource-log.spec :as spec]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.plugins.tab :as tab]
-    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
-
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
 (defn log-controller
   [_go-live? _current-log]
@@ -74,7 +70,6 @@
           [ui/Icon {:name "trash", :corner true}]]
          "Clear"]]])))
 
-
 (defn LogsArea
   [log scroll-info go-live?]
   [:<>
@@ -95,7 +90,6 @@
                     :class    ["large-height"]}]]
    [ui/Label (str "line count:")
     [ui/LabelDetail (count log)]]])
-
 
 (defn logs-viewer
   [parent components-subs]
@@ -124,9 +118,8 @@
            (if (and @id last-timestamp)
              (if (empty? log-components)
                [LogsArea (:_all-in-one log) scroll-info @go-live?]
-               [tab-plugin/Tab
-                {:db-path [::spec/tab]
-                 :menu  {:tabular  false
+               [ui/Tab
+                {:menu  {:tabular  false
                          :pointing true
                          :attached "top"}
                  :panes (map
@@ -139,7 +132,6 @@
              [ui/Header {:icon true}
               [ui/Icon {:name "search"}]
               "Get logs"])]]]))))
-
 
 (defn TabLogs
   [_parent _components-subs]

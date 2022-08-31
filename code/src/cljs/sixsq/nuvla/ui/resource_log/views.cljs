@@ -6,8 +6,11 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.resource-log.events :as events]
     [sixsq.nuvla.ui.resource-log.subs :as subs]
+    [sixsq.nuvla.ui.resource-log.spec :as spec]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
+    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
+    [sixsq.nuvla.ui.plugins.tab :as tab]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
 
 
 (defn log-controller
@@ -121,8 +124,9 @@
            (if (and @id last-timestamp)
              (if (empty? log-components)
                [LogsArea (:_all-in-one log) scroll-info @go-live?]
-               [ui/Tab
-                {:menu  {:tabular  false
+               [tab-plugin/Tab
+                {:db-path [::spec/tab]
+                 :menu  {:tabular  false
                          :pointing true
                          :attached "top"}
                  :panes (map

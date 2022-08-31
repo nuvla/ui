@@ -85,12 +85,11 @@
       [ui/TabPane {:loading loading?}
        [EventsTable opts]])))
 
-
-
 (defn events-section
   [{:keys [db-path] :as opts}]
   (let [tr           @(subscribe [::i18n-subs/tr])
-        events-count @(subscribe [::helpers/retrieve (conj db-path ::events) :count])]
+        events-count @(subscribe [::helpers/retrieve
+                                  (conj db-path ::events) :count])]
     {:menuItem {:content (r/as-element
                            [:span (str/capitalize (tr [:events]))
                             (when (pos? events-count)
@@ -101,7 +100,6 @@
                 :key     :events
                 :icon    "bolt"}
      :render   #(r/as-element [EventsTabPane opts])}))
-
 
 (s/fdef events-section
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path

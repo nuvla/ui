@@ -151,23 +151,13 @@
           (map disk-stats (sort-by :device disks))))
 
 
-(defn get-query-params
-  [full-text-search page elements-per-page state-selector]
-  {:first   (inc (* (dec page) elements-per-page))
-   :last    (* page elements-per-page)
-   :orderby "created:desc"
-   :filter  (general-utils/join-and
-              (when state-selector (state-filter state-selector))
-              (general-utils/fulltext-query-string full-text-search))})
-
-
 (defn get-query-aggregation-params
   [full-text-search aggregation extra]
   {:first       0
    :last        0
    :aggregation aggregation
    :filter      (general-utils/join-and
-                  (general-utils/fulltext-query-string full-text-search)
+                  full-text-search
                   (when extra extra))})
 
 

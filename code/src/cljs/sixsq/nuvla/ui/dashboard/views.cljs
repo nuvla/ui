@@ -45,7 +45,7 @@
 
      [:h4 [ui/Icon {:name icon}] (str/upper-case "NuvlaEdges")]
 
-     [edges-views/StatisticStates false]
+     [edges-views/StatisticStatesEdge false]
 
      [ui/Button {:icon     icon
                  :color    :green

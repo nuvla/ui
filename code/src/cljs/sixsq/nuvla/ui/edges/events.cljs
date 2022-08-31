@@ -8,7 +8,9 @@
     [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.response :as response]))
+    [sixsq.nuvla.ui.utils.response :as response]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]))
 
 (def refresh-id :nuvlabox-get-nuvlaboxes)
 (def refresh-id-locations :nuvlabox-get-nuvlabox-locations)
@@ -19,8 +21,16 @@
 
 
 (reg-event-fx
+  ::init
+  (fn [{db :db}]
+    {:db (-> db
+             (merge spec/defaults)
+             (assoc ::main-spec/loading? true))
+     :fx [[:dispatch [::get-nuvlabox-releases]]]}))
+
+(reg-event-fx
   ::refresh-root
-  (fn [_ _]
+  (fn []
     {:fx [[:dispatch [::main-events/action-interval-start {:id        refresh-id
                                                            :frequency 10000
                                                            :event     [::get-nuvlaboxes]}]]
@@ -60,33 +70,19 @@
                                                            :event     [::get-nuvlabox-cluster
                                                                        (str "nuvlabox-cluster/" cluster-id)]}]]]}))
 
-
-(reg-event-fx
-  ::set-page
-  (fn [{db :db} [_ page]]
-    {:db       (assoc db ::spec/page page)
-     :dispatch [::refresh-root]}))
-
-
-(reg-event-fx
-  ::set-full-text-search
-  (fn [{db :db} [_ full-text-search]]
-    {:db       (assoc db ::spec/full-text-search full-text-search
-                         ::spec/page 1)
-     :dispatch [::refresh-root]}))
-
-
 (reg-event-fx
   ::get-nuvlaboxes
-  (fn [{{:keys [::spec/state-selector
-                ::spec/page
-                ::spec/elements-per-page
-                ::spec/full-text-search] :as _db} :db} _]
-    {::cimi-api-fx/search [:nuvlabox
-                           (utils/get-query-params full-text-search page elements-per-page
-                                                   state-selector)
-                           #(dispatch [::set-nuvlaboxes %])]}))
-
+  (fn [{{:keys [::spec/state-selector] :as db} :db} _]
+    {::cimi-api-fx/search
+     [:nuvlabox
+      (->> {:orderby "created:desc"
+            :filter  (general-utils/join-and
+                       (when state-selector (utils/state-filter state-selector))
+                       (full-text-search-plugin/filter-text
+                         db [::spec/edges-search]))}
+           (pagination-plugin/first-last-params
+             db [::spec/pagination]))
+      #(dispatch [::set-nuvlaboxes %])]}))
 
 (reg-event-fx
   ::set-nuvlaboxes
@@ -104,8 +100,7 @@
 
 (reg-event-fx
   ::get-nuvlabox-locations
-  (fn [{{:keys [::spec/state-selector
-                ::spec/full-text-search] :as _db} :db} _]
+  (fn [{{:keys [::spec/state-selector] :as db} :db} _]
     {::cimi-api-fx/search [:nuvlabox
                            {:first  1
                             :last   10000
@@ -113,7 +108,8 @@
                             :filter (general-utils/join-and
                                       "(location!=null or inferred-location!=null)"
                                       (when state-selector (utils/state-filter state-selector))
-                                      (general-utils/fulltext-query-string full-text-search))}
+                                      (full-text-search-plugin/filter-text
+                                        db [::spec/edges-search]))}
                            #(dispatch [::set-nuvlabox-locations %])]}))
 
 
@@ -139,10 +135,11 @@
 
 (reg-event-fx
   ::get-nuvlaboxes-summary
-  (fn [{{:keys [::spec/full-text-search] :as _db} :db} _]
+  (fn [{db :db}]
     {::cimi-api-fx/search [:nuvlabox
                            (utils/get-query-aggregation-params
-                             full-text-search
+                             (full-text-search-plugin/filter-text
+                               db [::spec/edges-search])
                              "terms:online,terms:state"
                              nil)
                            #(dispatch [::set-nuvlaboxes-summary %])]}))
@@ -156,11 +153,11 @@
 
 (reg-event-fx
   ::get-nuvlabox-cluster-summary
-  (fn [{{:keys [::spec/full-text-search
-                ::spec/nuvlabox-cluster] :as _db} :db} _]
+  (fn [{{:keys [::spec/nuvlabox-cluster] :as db} :db} _]
     {::cimi-api-fx/search [:nuvlabox
                            (utils/get-query-aggregation-params
-                             full-text-search
+                             (full-text-search-plugin/filter-text
+                               db [::spec/edges-search])
                              "terms:online,terms:state"
                              (->> (concat (:nuvlabox-managers nuvlabox-cluster) (:nuvlabox-workers nuvlabox-cluster))
                                   (map #(str "id='" % "'"))
@@ -187,11 +184,13 @@
 
 (reg-event-fx
   ::get-nuvlabox-clusters
-  (fn [{{:keys [::spec/page
-                ::spec/elements-per-page
-                ::spec/full-text-search] :as _db} :db} _]
+  (fn [{db :db}]
     {::cimi-api-fx/search [:nuvlabox-cluster
-                           (utils/get-query-params full-text-search page elements-per-page nil)
+                           (->> {:orderby "created:desc"
+                                 :filter  (full-text-search-plugin/filter-text
+                                            db [::spec/edges-search])}
+                                (pagination-plugin/first-last-params
+                                  db [::spec/pagination]))
                            #(do
                               (dispatch [::set-nuvlabox-clusters %])
                               (dispatch [::get-nuvlaboxes-in-clusters %]))]}))
@@ -207,15 +206,15 @@
   ::get-nuvlaboxes-summary-all
   (fn [{_db :db} _]
     {::cimi-api-fx/search [:nuvlabox
-                           (utils/get-query-aggregation-params nil "terms:online,terms:state" nil)
+                           (utils/get-query-aggregation-params
+                             nil "terms:online,terms:state" nil)
                            #(dispatch [::set-nuvlaboxes-summary-all %])]}))
 
 (reg-event-fx
   ::set-state-selector
   (fn [{db :db} [_ state-selector]]
-    {:db (assoc db ::spec/state-selector state-selector
-                   ::spec/page 1)
-     :fx [[:dispatch [::get-nuvlaboxes]]
+    {:db (assoc db ::spec/state-selector state-selector)
+     :fx [[:dispatch [::pagination-plugin/change-page [::spec/pagination] 1]]
           [:dispatch [::get-nuvlabox-locations]]]}))
 
 
@@ -346,32 +345,34 @@
 
 (reg-event-fx
   ::set-nuvlabox-cluster
-  (fn [{:keys [db]} [_ nuvlabox-cluster]]
+  (fn [{:keys [db]} [_ nuvlabox-cluster not-found]]
     {:db (assoc db ::spec/nuvlabox-cluster nuvlabox-cluster
-                   ::spec/nuvlabox-not-found? (nil? nuvlabox-cluster))}))
+                   ::spec/nuvlabox-not-found? not-found)}))
 
 
 (reg-event-fx
   ::get-nuvlabox-cluster
   (fn [_ [_ cluster-id]]
     {::cimi-api-fx/get [cluster-id #(dispatch [::set-nuvlabox-cluster %])
-                        :on-error #(dispatch [::set-nuvlabox-cluster nil])]}))
+                        :on-error #(dispatch [::set-nuvlabox-cluster nil true])]}))
 
 
 (reg-event-fx
   ::get-nuvlaboxes-in-clusters
   (fn [_ [_ selected-clusters]]
-    {::cimi-api-fx/search [:nuvlabox
-                           {:filter (apply general-utils/join-or
-                                           (map #(str "id='" % "'") (flatten
-                                                                      (map
-                                                                        (fn [c]
-                                                                          (concat
-                                                                            (:nuvlabox-managers c)
-                                                                            (get c :nuvlabox-workers [])))
-                                                                        (:resources selected-clusters)))))
-                            :last   10000}
-                           #(dispatch [::set-nuvlaboxes-in-clusters %])]}))
+    {::cimi-api-fx/search
+     [:nuvlabox
+      {:filter (apply general-utils/join-or
+                      (map #(str "id='" % "'")
+                           (flatten
+                             (map
+                               (fn [c]
+                                 (concat
+                                   (:nuvlabox-managers c)
+                                   (get c :nuvlabox-workers [])))
+                               (:resources selected-clusters)))))
+       :last   10000}
+      #(dispatch [::set-nuvlaboxes-in-clusters %])]}))
 
 
 (reg-event-fx

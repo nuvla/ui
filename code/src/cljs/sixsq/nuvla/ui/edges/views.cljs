@@ -7,6 +7,7 @@
     [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
     [sixsq.nuvla.ui.edges.events :as events]
     [sixsq.nuvla.ui.edges.subs :as subs]
+    [sixsq.nuvla.ui.edges.spec :as spec]
     [sixsq.nuvla.ui.edges.utils :as utils]
     [sixsq.nuvla.ui.edges.views-cluster :as views-cluster]
     [sixsq.nuvla.ui.edges.views-clusters :as views-clusters]
@@ -23,94 +24,102 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.utils.zip :as zip]))
+    [sixsq.nuvla.ui.utils.zip :as zip]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]))
 
 
 (def view-type (r/atom :cards))
 (def show-state-statistics (r/atom false))
 
 
-(defn StatisticStates
-  ([] [StatisticStates true])
-  ([_clickable?]
-   (let [tr          (subscribe [::i18n-subs/tr])
-         summary     (subscribe [::subs/nuvlaboxes-summary])
-         summary-all (subscribe [::subs/nuvlaboxes-summary-all])]
-     (fn [clickable?]
-       (let [summary         (if clickable? summary summary-all) ; select all without filter
-             terms           (general-utils/aggregate-to-map
-                               (get-in @summary [:aggregations :terms:state :buckets]))
-             new             (:NEW terms 0)
-             activated       (:ACTIVATED terms 0)
-             commissioned    (:COMMISSIONED terms 0)
-             decommissioning (:DECOMMISSIONING terms 0)
-             decommissioned  (:DECOMMISSIONED terms 0)
-             suspended       (:SUSPENDED terms 0)
-             error           (:ERROR terms 0)
-             total           (:count @summary)
-             online-statuses (general-utils/aggregate-to-map
-                               (get-in @summary [:aggregations :terms:online :buckets]))
-             online          (:1 online-statuses)
-             offline         (:0 online-statuses)
-             unknown         (- total (+ online offline))]
+(defn StatisticStatesEdge
+  [clickable?]
+  (let [summary (if clickable?
+                  (subscribe [::subs/nuvlaboxes-summary])
+                  (subscribe [::subs/nuvlaboxes-summary-all]))]
+    (fn [clickable?]
+      (let [total           (:count @summary)
+            online-statuses (general-utils/aggregate-to-map
+                              (get-in @summary [:aggregations :terms:online :buckets]))
+            online          (:1 online-statuses)
+            offline         (:0 online-statuses)
+            unknown         (- total (+ online offline))]
 
-         [:div {:style {:margin     "10px auto 10px auto"
-                        :text-align "center"
-                        :width      "100%"}}
-          [ui/StatisticGroup (merge {:widths (if clickable? nil 4) :size "tiny"} style/center-block)
-           [:<>
-            [components/StatisticState total ["fas fa-box"] "TOTAL"
-             clickable? ::events/set-state-selector ::subs/state-selector]
-            [components/StatisticState online [(utils/status->icon utils/status-online)] utils/status-online
-             clickable? "green" ::events/set-state-selector ::subs/state-selector]
-            [components/StatisticState offline [(utils/status->icon utils/status-offline) "fas fa-slash"]
-             utils/status-offline clickable? "red" ::events/set-state-selector ::subs/state-selector]
-            [components/StatisticState unknown [(utils/status->icon utils/status-unknown)]
-             utils/status-unknown clickable? "yellow" ::events/set-state-selector ::subs/state-selector]
-            (when clickable?
-              [:span
-               [ui/Statistic
-                {:size     "tiny"
-                 :class    "slight-up"
-                 :style    {:cursor "pointer"}
-                 :on-click #(when clickable?
-                              (reset! show-state-statistics (not @show-state-statistics))
-                              (when-not @show-state-statistics
-                                (dispatch [::events/set-state-selector nil])))}
-                [ui/StatisticValue {:style {:margin "0 10px"}}
-                 [ui/Icon {:name (if @show-state-statistics "angle double up" "angle double down")}]]]
-               ])]]
-          (when clickable?
-            [ui/Segment {:compact true
-                         :width   "auto"
-                         :style   {:text-align "center"
-                                   :display    (if @show-state-statistics "table" "none")}}
-             [:h4 (@tr [:commissionning-states])]
-             [ui/StatisticGroup
-              {:size  "tiny"
-               :style {:margin     "10px auto 10px auto"
-                       :display    "block"
-                       :text-align "center"
-                       :width      "100%"}}
-              [components/StatisticState new [(utils/state->icon utils/state-new)]
-               utils/state-new clickable? ::events/set-state-selector ::subs/state-selector]
-              [components/StatisticState activated [(utils/state->icon utils/state-activated)]
-               utils/state-activated clickable? ::events/set-state-selector ::subs/state-selector]
-              [components/StatisticState commissioned [(utils/state->icon utils/state-commissioned)]
-               utils/state-commissioned clickable? ::events/set-state-selector ::subs/state-selector]
-              [components/StatisticState decommissioning [(utils/state->icon utils/state-decommissioning)]
-               utils/state-decommissioning clickable? ::events/set-state-selector ::subs/state-selector]
-              [components/StatisticState decommissioned [(utils/state->icon utils/state-decommissioned)]
-               utils/state-decommissioned clickable? ::events/set-state-selector ::subs/state-selector]
-              [components/StatisticState suspended [(utils/state->icon utils/state-suspended)]
-               utils/state-suspended clickable? ::events/set-state-selector ::subs/state-selector]
-              [components/StatisticState error [(utils/state->icon utils/state-error)]
-               utils/state-error clickable? ::events/set-state-selector ::subs/state-selector]]])])))))
+        [ui/StatisticGroup {:widths (if clickable? nil 4) :size "tiny"}
+         [components/StatisticState total ["fas fa-box"] "TOTAL"
+          clickable? ::events/set-state-selector ::subs/state-selector]
+         [components/StatisticState online [(utils/status->icon utils/status-online)] utils/status-online
+          clickable? "green" ::events/set-state-selector ::subs/state-selector]
+         [components/StatisticState offline [(utils/status->icon utils/status-offline) "fas fa-slash"]
+          utils/status-offline clickable? "red" ::events/set-state-selector ::subs/state-selector]
+         [components/StatisticState unknown [(utils/status->icon utils/status-unknown)]
+          utils/status-unknown clickable? "yellow" ::events/set-state-selector ::subs/state-selector]
+         (when clickable?
+           [:span
+            [ui/Statistic
+             {:size     "tiny"
+              :class    "slight-up"
+              :style    {:cursor "pointer"}
+              :on-click #(when clickable?
+                           (reset! show-state-statistics (not @show-state-statistics))
+                           (when-not @show-state-statistics
+                             (dispatch [::events/set-state-selector nil])))}
+             [ui/StatisticValue {:style {:margin "0 10px"}}
+              [ui/Icon {:name (if @show-state-statistics "angle double up" "angle double down")}]]]])]))))
+
+
+(defn StatisticStates
+  []
+  (let [tr      (subscribe [::i18n-subs/tr])
+        summary (subscribe [::subs/nuvlaboxes-summary])]
+    (fn []
+      (let [terms           (general-utils/aggregate-to-map
+                              (get-in @summary [:aggregations :terms:state :buckets]))
+            new             (:NEW terms 0)
+            activated       (:ACTIVATED terms 0)
+            commissioned    (:COMMISSIONED terms 0)
+            decommissioning (:DECOMMISSIONING terms 0)
+            decommissioned  (:DECOMMISSIONED terms 0)
+            suspended       (:SUSPENDED terms 0)
+            error           (:ERROR terms 0)]
+
+        [:div {:style {:display         :flex
+                       :justify-content :center
+                       :flex-direction  :column
+                       :align-items     :center}}
+         [StatisticStatesEdge true]
+         [ui/Segment {:compact true
+                      :width   "auto"
+                      :style   {:text-align "center"
+                                :display    (if @show-state-statistics "table" "none")}}
+          [:h4 (@tr [:commissionning-states])]
+          [ui/StatisticGroup
+           {:size  "tiny"
+            :style {:margin     "10px auto 10px auto"
+                    :display    "block"
+                    :text-align "center"
+                    :width      "100%"}}
+           [components/StatisticState new [(utils/state->icon utils/state-new)]
+            utils/state-new true ::events/set-state-selector ::subs/state-selector]
+           [components/StatisticState activated [(utils/state->icon utils/state-activated)]
+            utils/state-activated true ::events/set-state-selector ::subs/state-selector]
+           [components/StatisticState commissioned [(utils/state->icon utils/state-commissioned)]
+            utils/state-commissioned true ::events/set-state-selector ::subs/state-selector]
+           [components/StatisticState decommissioning [(utils/state->icon utils/state-decommissioning)]
+            utils/state-decommissioning true ::events/set-state-selector ::subs/state-selector]
+           [components/StatisticState decommissioned [(utils/state->icon utils/state-decommissioned)]
+            utils/state-decommissioned true ::events/set-state-selector ::subs/state-selector]
+           [components/StatisticState suspended [(utils/state->icon utils/state-suspended)]
+            utils/state-suspended true ::events/set-state-selector ::subs/state-selector]
+           [components/StatisticState error [(utils/state->icon utils/state-error)]
+            utils/state-error true ::events/set-state-selector ::subs/state-selector]]]]))))
 
 (defn switch-from-cluster-view?
   [current-view new-view]
   (when (= current-view :cluster)
-    (dispatch [::events/set-page 1]))
+    (dispatch [::pagination-plugin/change-page
+               [::spec/pagination] 1]))
   (reset! view-type new-view))
 
 (defn MenuBar []
@@ -130,7 +139,8 @@
                       :on-click #(switch-from-cluster-view? @view-type :map)}]
         [ui/MenuItem {:active   (= @view-type :cluster)
                       :on-click #(do
-                                   (dispatch [::events/set-page 1])
+                                   (dispatch [::pagination-plugin/change-page
+                                              [::spec/pagination] 1])
                                    (reset! view-type :cluster))}
          [ui/Icon {:className "fas fa-chart-network"}]]
         [components/RefreshMenu
@@ -744,19 +754,16 @@
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
         current-cluster   (subscribe [::subs/nuvlabox-cluster])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
         total-elements    (if (= @view-type :cluster)
-                            (get @nuvlabox-clusters :count 0)
+                            (:count @nuvlabox-clusters)
                             (if @current-cluster
-                              (+ (count (:nuvlabox-managers @current-cluster)) (count (:nuvlabox-managers @current-cluster)))
-                              (get @nuvlaboxes :count 0)))
-        total-pages       (general-utils/total-pages total-elements @elements-per-page)]
-    [uix/Pagination {:totalitems   total-elements
-                     :totalPages   total-pages
-                     :activePage   @page
-                     :onPageChange (ui-callback/callback
-                                     :activePage #(dispatch [::events/set-page %]))}]))
+                              (+ (count (:nuvlabox-managers @current-cluster))
+                                 (count (:nuvlabox-managers @current-cluster)))
+                              (:count @nuvlaboxes)))]
+    [pagination-plugin/Pagination
+     {:db-path      [::spec/pagination]
+      :change-event [::events/refresh-root]
+      :total-items  total-elements}]))
 
 
 (defn NuvlaboxTable
@@ -785,10 +792,11 @@
         [ui/TableHeaderCell "manager"]]]
 
       [ui/TableBody
-       (for [{:keys [id] :as nuvlabox} selected-nbs]
-         (when id
-           ^{:key id}
-           [NuvlaboxRow nuvlabox managers]))]]]))
+       (doall
+         (for [{:keys [id] :as nuvlabox} selected-nbs]
+           (when id
+             ^{:key id}
+             [NuvlaboxRow nuvlabox managers])))]]]))
 
 
 (defn NuvlaboxMapPoint
@@ -836,28 +844,27 @@
 (defn NuvlaBoxesOrClusters
   []
   (dispatch [::events/refresh-root])
-  (let [tr        (subscribe [::i18n-subs/tr])
-        full-text (subscribe [::subs/full-text-search])]
+  (dispatch [::events/set-nuvlabox-cluster nil])
+  (let [tr (subscribe [::i18n-subs/tr])]
     [components/LoadingPage {}
      [:<>
-      [uix/PageHeader "box" (str
-                              (general-utils/capitalize-first-letter (@tr [:edges])) " "
-                              (when (= @view-type :cluster)
-                                (general-utils/capitalize-first-letter (@tr [:clusters]))))]
+      [uix/PageHeader "box"
+       (str (general-utils/capitalize-first-letter (@tr [:edges])) " "
+            (when (= @view-type :cluster)
+              (general-utils/capitalize-first-letter (@tr [:clusters]))))]
       [MenuBar]
-      [:div {:style {:display "flex"}}
-       [components/SearchInput
-        {:default-value @full-text
-         :on-change     (ui-callback/input-callback
-                          #(dispatch [::events/set-full-text-search %]))
-         :style         {:align-self "flex-start"
-                         :margin-top "20px"}}]
-       (if (= @view-type :cluster)
-         [views-clusters/StatisticStates]
-         [StatisticStates])
-       ; Hack to center the statistics component
-       [ui/Input {:style {:visibility "hidden"}
-                  :icon  "search"}]]
+      [ui/Grid {:stackable true
+                :reversed  "mobile"
+                :style     {:padding-bottom 10}}
+       [ui/GridColumn {:width 3}
+        [full-text-search-plugin/FullTextSearch
+         {:db-path      [::spec/edges-search]
+          :change-event [::pagination-plugin/change-page
+                         [::spec/pagination] 1]}]]
+       [ui/GridColumn {:width 10}
+        (if (= @view-type :cluster)
+          [views-clusters/StatisticStates]
+          [StatisticStates])]]
       (case @view-type
         :cards [NuvlaboxCards]
         :table [NuvlaboxTable]
@@ -878,7 +885,7 @@
 
 (defmethod panel/render :edges
   [path]
-  (dispatch [::events/get-nuvlabox-releases])
+  (dispatch [::events/init])
   (let [[_ path1 path2] path
         n        (count path)
         children (case n

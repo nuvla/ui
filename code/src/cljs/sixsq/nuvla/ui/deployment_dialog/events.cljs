@@ -10,24 +10,22 @@
     [sixsq.nuvla.ui.deployment-dialog.utils :as utils]
     [sixsq.nuvla.ui.deployments-detail.events :as deployments-detail-events]
     [sixsq.nuvla.ui.history.events :as history-events]
+    [sixsq.nuvla.ui.i18n.spec :as i18n-spec]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.messages.events :as messages-events]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.response :as response]
     [sixsq.nuvla.ui.utils.time :as time]))
 
-
 (reg-event-fx
   ::reset
   (fn [{db :db} _]
     {:db (merge db spec/defaults)}))
 
-
 (reg-event-fx
   ::delete-deployment
   (fn [_ [_ id]]
     {::cimi-api-fx/delete [id #()]}))
-
 
 (reg-event-fx
   ::set-credentials
@@ -47,7 +45,6 @@
                              ::spec/credentials-loading? false)}
               selected-cred (assoc :dispatch [::set-selected-credential selected-cred])))))
 
-
 (reg-event-fx
   ::set-data-filters
   (fn [{{:keys [::spec/deployment
@@ -64,7 +61,6 @@
                         {:records {:records-ids selected-data-record-ids}})]
       {:dispatch [::set-deployment (assoc deployment :data data-filter)]})))
 
-
 (reg-event-fx
   ::set-selected-credential
   (fn [{{:keys [::spec/deployment
@@ -73,7 +69,6 @@
                            ::spec/deployment (assoc deployment :parent id))
      :dispatch-n [(when data-step-active? [::set-data-filters])
                   [::creds-events/check-credential credential 2]]}))
-
 
 (reg-event-db
   ::set-active-step
@@ -91,15 +86,11 @@
     {:db       (assoc db ::spec/selected-infra-service infra-service)
      :dispatch [::get-credentials]}))
 
-
 (reg-event-fx
   ::set-infra-services
-  (fn [{{:keys [::spec/selected-infra-service] :as db} :db} [_ {infra-services :resources}]]
-    (let [first-infra (when-not selected-infra-service (first infra-services))]
-      (cond-> {:db (assoc db ::spec/infra-services infra-services
-                             ::spec/infra-services-loading? false)}
-              first-infra (assoc :dispatch [::set-selected-infra-service first-infra])))))
-
+  (fn [{db :db} [_ {infra-services :resources}]]
+    {:db (assoc db ::spec/infra-services infra-services
+                   ::spec/infra-services-loading? false)}))
 
 (reg-event-fx
   ::get-infra-services
@@ -112,14 +103,12 @@
                             :orderby "name:asc,id:asc"}
                            #(dispatch [::set-infra-services %])]}))
 
-
 (defn deployment-update-registries
   [deployment registries-creds-info]
   (let [registry-ids (get-in deployment [:module :content :private-registries])]
     (->> registry-ids
          (map #(-> registries-creds-info (get %) (get :cred-id "")))
          (assoc deployment :registries-credentials))))
-
 
 (reg-event-fx
   ::set-infra-registries-creds
@@ -150,7 +139,6 @@
                                                  deployment registries-creds-info))}
               (seq single-cred-dispatch) (assoc :dispatch-n single-cred-dispatch)))))
 
-
 (reg-event-fx
   ::set-infra-registries
   (fn [{:keys [db]} [_ registry-ids reg-creds-ids {infra-registries :resources}]]
@@ -172,7 +160,6 @@
             (assoc :dispatch [::set-infra-registries-creds
                               registry-ids reg-creds-ids infra-registries {:resources []}]))))
 
-
 (reg-event-fx
   ::get-infra-registries
   (fn [{:keys [db]} [_ registry-ids reg-creds-ids]]
@@ -185,7 +172,6 @@
                             :select  "id, name, description"
                             :orderby "name:asc,id:asc"}
                            #(dispatch [::set-infra-registries registry-ids reg-creds-ids %])]}))
-
 
 (reg-event-fx
   ::set-credential-registry
@@ -202,12 +188,10 @@
                                                update-registries-creds))
        :dispatch [::creds-events/check-credential credential 2]})))
 
-
 (reg-event-db
   ::set-deployment
   (fn [db [_ deployment]]
     (assoc db ::spec/deployment deployment)))
-
 
 (reg-event-db
   ::set-check-dct-result
@@ -220,7 +204,6 @@
         (assoc db ::spec/check-dct result))
       db)))
 
-
 (reg-event-fx
   ::set-job-check-dct
   (fn [_ [_ {:keys [id state] :as job}]]
@@ -231,20 +214,16 @@
         (dispatch [::set-check-dct-result job])
         (dispatch [::check-dct-later id])))))
 
-
-
 (reg-event-fx
   ::get-job-check-dct
   (fn [_ [_ job-id]]
     {::cimi-api-fx/get [job-id #(dispatch [::set-job-check-dct %])]}))
-
 
 (reg-event-fx
   ::check-dct-later
   (fn [_ [_ job-id]]
     {:dispatch-later
      [{:ms 3000 :dispatch [::get-job-check-dct job-id]}]}))
-
 
 (reg-event-fx
   ::check-dct
@@ -272,7 +251,6 @@
                                            (or
                                              (:registries-credentials %)
                                              (:registries-credentials content))])))]}))
-
 
 (reg-event-fx
   ::create-deployment
@@ -311,36 +289,52 @@
                                                :type    :error})]))]}
         old-deployment-id (assoc ::cimi-api-fx/delete [old-deployment-id #() :on-error #()])))))
 
+(defn on-error-reselect-credential
+  [tr error-content resp]
+  (dispatch [::reset])
+  (dispatch [::messages-events/add
+             {:header  (tr [:destination-not-found])
+              :content (str error-content "\n" (response/parse-ex-info resp))
+              :type    :error}]))
 
 (reg-event-fx
   ::reselect-credential
-  (fn [_ [_ credential]]
-    (when credential
-      {::cimi-api-fx/get [(:parent credential) #(dispatch [::set-selected-infra-service %])]}
-      )))
+  (fn [{{:keys [::i18n-spec/tr]} :db} [_ credential]]
+    (let [error-content (tr [:deployment-update-failed-infra-retrieval-fail])
+          on-error      (partial on-error-reselect-credential tr error-content)]
+      (when credential
+        {::cimi-api-fx/get [(:parent credential)
+                            #(dispatch [::set-selected-infra-service %])
+                            :on-error on-error]}))))
 
 (reg-event-fx
   ::open-deployment-modal
-  (fn [{db :db} [_ first-step {:keys [parent id] :as _deployment}]]
-    (when (= :data first-step)
-      (dispatch [::get-data-records]))
-    (cond-> {:db       (assoc db ::spec/deployment nil
-                                 ::spec/selected-credential-id nil
-                                 ::spec/selected-infra-service nil
-                                 ::spec/deploy-modal-visible? true
-                                 ::spec/active-step (or first-step :data)
-                                 ::spec/data-step-active? (= first-step :data)
-                                 ::spec/cloud-filter nil
-                                 ::spec/selected-cloud nil
-                                 ::spec/cloud-infra-services nil
-                                 ::spec/data-clouds nil
-                                 ::spec/registries-creds nil
-                                 ::spec/module-info nil
-                                 ::spec/selected-version nil
-                                 ::spec/original-module nil)
-             :dispatch [::get-deployment id]}
-            parent (assoc ::cimi-api-fx/get [parent #(dispatch [::reselect-credential %])]))))
-
+  (fn [{{:keys [::i18n-spec/tr] :as db} :db} [_ first-step
+                                              {:keys [parent id]
+                                               :as   _deployment}]]
+    (let [error-content (tr [:deployment-update-failed-cred-retrieval-fail])
+          on-error      (partial on-error-reselect-credential tr error-content)]
+      (cond->
+        {:db (assoc db ::spec/deployment nil
+                       ::spec/selected-credential-id nil
+                       ::spec/selected-infra-service nil
+                       ::spec/deploy-modal-visible? true
+                       ::spec/active-step (or first-step :data)
+                       ::spec/data-step-active? (= first-step :data)
+                       ::spec/cloud-filter nil
+                       ::spec/selected-cloud nil
+                       ::spec/cloud-infra-services nil
+                       ::spec/data-clouds nil
+                       ::spec/registries-creds nil
+                       ::spec/module-info nil
+                       ::spec/selected-version nil
+                       ::spec/original-module nil)
+         :fx [[:dispatch [::get-deployment id]]
+              (when (= :data first-step)
+                [:dispatch [::get-data-records]])]}
+        parent (assoc ::cimi-api-fx/get
+                      [parent #(dispatch [::reselect-credential %])
+                       :on-error on-error])))))
 
 (reg-event-fx
   ::get-credentials
@@ -349,7 +343,6 @@
                          ::spec/credentials nil
                          ::spec/selected-credential-id nil)
      :dispatch [::refresh-credentials]}))
-
 
 (reg-event-fx
   ::refresh-credentials
@@ -363,19 +356,16 @@
                    (str "subtype='infrastructure-service-" (:subtype selected-infra-service) "'"))}
         #(dispatch [::set-credentials %])]})))
 
-
 (reg-event-db
   ::set-error-message
   (fn [db [_ title content]]
     (assoc db ::spec/error-message {:title   title
                                     :content content})))
 
-
 (reg-event-db
   ::set-submit-loading?
   (fn [db [_ loading?]]
     (assoc db ::spec/submit-loading? loading?)))
-
 
 (reg-event-fx
   ::deployment-operation
@@ -398,7 +388,6 @@
                                     (str "deployment/" (general-utils/id->uuid id))]))))]
       {::cimi-api-fx/operation [id operation callback]})))
 
-
 (reg-event-fx
   ::edit-deployment
   (fn [{{:keys [::spec/deployment] :as db} :db} [_ operation exec-mode]]
@@ -419,18 +408,15 @@
       {:db                (assoc db ::spec/submit-loading? true)
        ::cimi-api-fx/edit [resource-id dep edit-callback]})))
 
-
 (reg-event-db
   ::set-cloud-infra-services
   (fn [db [_ {infra-services :resources}]]
     (assoc db ::spec/cloud-infra-services (into {} (map (juxt :id identity) infra-services)))))
 
-
 (defn set-data-infra-service-and-filter
   [db infra-service]
   (assoc db ::spec/selected-cloud infra-service
             ::spec/cloud-filter (str "infrastructure-service='" infra-service "'")))
-
 
 (reg-event-fx
   ::get-cloud-infra-services
@@ -438,7 +424,6 @@
     {::cimi-api-fx/search [:infrastructure-service
                            {:filter filter, :select "id, name, description, subtype"}
                            #(dispatch [::set-cloud-infra-services %])]}))
-
 
 (reg-event-fx
   ::set-data-infra-services
@@ -453,7 +438,6 @@
                                                         (first infra-services)))
        :dispatch [::get-cloud-infra-services filter]})))
 
-
 (reg-event-fx
   ::get-data-records
   (fn [{{:keys [::data-set-spec/time-period-filter
@@ -464,53 +448,45 @@
                    (general-utils/join-and time-period-filter content-type-filter))]
       {:db db
        ::cimi-api-fx/search
-           [:data-record {:filter      filter
-                          :last        0
-                          :aggregation "terms:infrastructure-service"}
-            #(dispatch [::set-data-infra-services %])]})))
-
+       [:data-record {:filter      filter
+                      :last        0
+                      :aggregation "terms:infrastructure-service"}
+        #(dispatch [::set-data-infra-services %])]})))
 
 (reg-event-db
   ::set-infra-service-filter
   (fn [db [_ cloud]]
     (set-data-infra-service-and-filter db cloud)))
 
-
 (reg-event-db
   ::set-license-accepted?
   (fn [db [_ accepted?]]
     (assoc db ::spec/license-accepted? accepted?)))
-
 
 (reg-event-db
   ::set-price-accepted?
   (fn [db [_ accepted?]]
     (assoc db ::spec/price-accepted? accepted?)))
 
-
 (reg-event-db
   ::set-selected-version
   (fn [db [_ version]]
     (assoc db ::spec/selected-version version)))
-
 
 (reg-event-db
   ::set-original-module
   (fn [db [_ module]]
     (assoc db ::spec/original-module module)))
 
-
 (reg-event-db
   ::set-module-info
   (fn [db [_ module]]
     (assoc db ::spec/module-info module)))
 
-
 (reg-event-fx
   ::get-module-info
   (fn [_ [_ module-id]]
     {::cimi-api-fx/get [module-id #(dispatch [::set-module-info %])]}))
-
 
 (reg-event-fx
   ::fetch-module

@@ -6,6 +6,9 @@
 
 (def dictionary
   {:en {
+        :deployment-update-failed-cred-retrieval-fail  "Update action is not possible because retrieval of the destination credential failed!"
+        :deployment-update-failed-infra-retrieval-fail "Update action is not possible because retrieval of the destination infrastructure failed!"
+        :destination-not-found                         "Destination not found!"
         :per-page                                      "per page"
         :previous                                      "previous"
         :empty-deployemnt-msg                          "There are currently no running apps (aka deployments)."

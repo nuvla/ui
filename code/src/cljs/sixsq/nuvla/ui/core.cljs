@@ -69,7 +69,7 @@
   (patch-process)
   (dev-setup)
   (dispatch-sync [::db-events/initialize-db])
-  (dispatch-sync [::i18n-events/get-locale-from-local-storage])
+  (dispatch-sync [::i18n-events/set-locale])
   (dispatch-sync [::api-events/get-cloud-entry-point])
   (dispatch-sync [::main-events/get-ui-config])
   (dispatch-sync [::main-events/check-ui-version-polling])

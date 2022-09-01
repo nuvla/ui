@@ -46,7 +46,10 @@
             offline         (:0 online-statuses)
             unknown         (- total (+ online offline))]
 
-        [ui/StatisticGroup {:widths (if clickable? nil 4) :size "tiny"}
+        [ui/StatisticGroup {:widths (if clickable? nil 4)
+                            :size "tiny"
+                            ;:style {:justify-content "center"}
+                            }
          [components/StatisticState total ["fas fa-box"] "TOTAL"
           clickable? ::events/set-state-selector ::subs/state-selector]
          [components/StatisticState online [(utils/status->icon utils/status-online)] utils/status-online

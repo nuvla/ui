@@ -19,6 +19,11 @@
 - Pagination - Enhance pagination out of range behavior
 - Edge navigation to cluster break pagination of main page
 - Deps - update re-frame
+- i18n - Store tr in db to allow event error translation
+- Deployment modal - Bugfix when credential of deployment doesn't exit a random
+  infra is selected
+- Deployment modal - Enhance update error message when credential or
+  infrastructure doesn't exist and close modal
 
 ## [2.32.3] - 2022-08-25
 

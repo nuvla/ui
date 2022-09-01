@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### Added
+
+- Module versions plugin
+- Step group plugin
+- Full text search plugin
+- Events plugin
+- Tab plugin
+- Pagination plugin
+- Plugin concept introduction
+
+### Changed
+
+- Global - use plugins in all pages
+- Deployment table fix query filter conflict
+- Pagination - Enhance pagination out of range behavior
+- Edge navigation to cluster break pagination of main page
+- Deps - update re-frame
+
 ## [2.32.3] - 2022-08-25
 
 ### Changed

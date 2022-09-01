@@ -97,4 +97,3 @@
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path
                                             ::helpers/change-event
                                             ::total-items])))
-

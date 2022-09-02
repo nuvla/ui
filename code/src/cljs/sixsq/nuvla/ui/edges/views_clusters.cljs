@@ -21,12 +21,9 @@
   []
   (let [clusters (subscribe [::subs/nuvlabox-clusters])]
     (fn []
-      [:div {:style {:margin     "10px auto 10px auto"
-                     :text-align "center"
-                     :width      "100%"}}
-       [ui/StatisticGroup (merge {:widths 4 :size "tiny"} style/center-block)
-        [components/StatisticState (:count @clusters) ["fas fa-chart-network"] "TOTAL"
-         false ::events/set-state-selector ::subs/state-selector]]])))
+      [ui/StatisticGroup {:widths 4 :size "tiny"}
+       [components/StatisticState (:count @clusters) ["fas fa-chart-network"] "TOTAL"
+        false ::events/set-state-selector ::subs/state-selector]])))
 
 
 (defn NuvlaBoxClusterCard

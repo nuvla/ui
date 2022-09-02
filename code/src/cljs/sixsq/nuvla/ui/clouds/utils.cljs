@@ -2,23 +2,12 @@
   (:require [clojure.string :as str]
             [sixsq.nuvla.ui.clouds.spec :as spec]))
 
-(defn get-query-params
-  ([page elements-per-page] (get-query-params page elements-per-page nil))
-  ([page elements-per-page filter-str]
-   (cond-> {:first   (inc (* (dec page) elements-per-page))
-            :last    (* page elements-per-page)
-            :select  "id, name"
-            :orderby "created:desc"}
-     filter-str (assoc :filter filter-str))))
-
-
 (defn db->new-service-group
   [db]
   (let [name        (get-in db [::spec/infra-service :name])
         description (get-in db [::spec/infra-service :description])]
     {:name        name
      :description description}))
-
 
 (def infra-service-subtype-exoscale "infrastructure-service-exoscale")
 (def infra-service-subtype-google "infrastructure-service-google")
@@ -58,7 +47,6 @@
     :cloud-doc-link "https://cloud.google.com/docs"}
    })
 
-
 (defn mgmt-cred-subtype-by-id
   [db cred-id]
   (->> (::spec/management-credentials-available db)
@@ -66,20 +54,17 @@
        first
        :subtype))
 
-
 (def cloud-params-keys (->> cloud-params-defaults
                             (map #(vec (keys (val %))))
                             flatten
                             set
                             vec))
 
-
 (defn cloud-param-default-value
   [mgmt-cred-subtype param-kw]
   (if mgmt-cred-subtype
     (param-kw (get cloud-params-defaults mgmt-cred-subtype))
     ""))
-
 
 (defn calc-disk-size
   [user-disk-size default-disk-size]

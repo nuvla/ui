@@ -31,11 +31,6 @@
 
 (s/def ::popup-open? boolean?)
 
-(s/def ::db (s/keys :req [::messages
-                          ::alert-message
-                          ::alert-display
-                          ::popup-open?]))
-
 (def defaults {::messages      []
                ::alert-message nil
                ::alert-display :none

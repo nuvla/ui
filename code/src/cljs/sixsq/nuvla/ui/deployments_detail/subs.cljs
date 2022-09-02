@@ -15,7 +15,8 @@
 
 (reg-sub
   ::deployment
-  ::spec/deployment)
+  (fn [db]
+    (::spec/deployment db)))
 
 
 (reg-sub
@@ -91,12 +92,6 @@
 
 
 (reg-sub
-  ::events
-  (fn [db]
-    (::spec/events db)))
-
-
-(reg-sub
   ::deployment-parameters
   (fn [db]
     (->> db
@@ -137,12 +132,6 @@
   ::upcoming-invoice
   (fn [db]
     (::spec/upcoming-invoice db)))
-
-
-(reg-sub
-  ::active-tab
-  (fn [db]
-    (::spec/active-tab db)))
 
 
 (reg-sub

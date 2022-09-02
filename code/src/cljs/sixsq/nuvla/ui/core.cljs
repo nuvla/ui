@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.core
   (:require
+    [cljs.spec.test.alpha :as ts]
     [form-validator.core :as fv]
     [re-frame.core :refer [clear-subscription-cache! dispatch dispatch-sync]]
     [reagent.core :as r]
@@ -19,6 +20,7 @@
 (defn dev-setup []
   (when config/debug?
     (enable-console-print!)
+    (ts/instrument)
     (log/info "development mode")))
 
 
@@ -67,7 +69,7 @@
   (patch-process)
   (dev-setup)
   (dispatch-sync [::db-events/initialize-db])
-  (dispatch-sync [::i18n-events/get-locale-from-local-storage])
+  (dispatch-sync [::i18n-events/set-locale])
   (dispatch-sync [::api-events/get-cloud-entry-point])
   (dispatch-sync [::main-events/get-ui-config])
   (dispatch-sync [::main-events/check-ui-version-polling])

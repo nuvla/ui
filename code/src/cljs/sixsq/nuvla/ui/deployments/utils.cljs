@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.deployments.spec :as spec]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.time :as time]
@@ -97,39 +98,20 @@
     (str "state='" state "'")))
 
 (defn get-filter-param
-  [{:keys [full-text-search additional-filter state-selector nuvlabox module-id]
+  [{:keys [full-text-search additional-filter state-selector filter-external]
     :as   _args}]
-  (let [filter-state     (when state-selector (state-filter state-selector))
-        filter-nuvlabox  (when nuvlabox (str "nuvlabox='" nuvlabox "'"))
-        filter-module-id (when module-id (str "module/id='" module-id "'"))
-        full-text-search (general-utils/fulltext-query-string full-text-search)]
+  (let [filter-state     (when state-selector (state-filter state-selector))]
     (general-utils/join-and
       "id!=null"
       filter-state
-      filter-nuvlabox
-      filter-module-id
+      filter-external
       full-text-search
       additional-filter)))
 
-(defn get-query-params
-  [{:keys [full-text-search additional-filter
-           state-selector nuvlabox module-id page elements-per-page]}]
-  (let [filter-str (get-filter-param
-                     {:full-text-search  full-text-search
-                      :additional-filter additional-filter
-                      :state-selector    state-selector
-                      :nuvlabox          nuvlabox
-                      :module-id         module-id})]
-    {:first       (inc (* (dec page) elements-per-page))
-     :last        (* page elements-per-page)
-     :aggregation "terms:state"
-     :orderby     "created:desc"
-     :filter      filter-str}))
-
 (defn get-query-params-summary
   [full-text-search additional-filter]
-  (let [full-text-search (general-utils/fulltext-query-string full-text-search)
-        filter-str       (general-utils/join-and full-text-search additional-filter)
+  (let [filter-str       (general-utils/join-and
+                           full-text-search additional-filter)
         aggregate        "terms:state"]
     (cond-> {:orderby     "created:desc"
              :aggregation aggregate
@@ -179,16 +161,14 @@
 (defn build-bulk-filter
   [{:keys [::spec/select-all?
            ::spec/selected-set
-           ::spec/full-text-search
            ::spec/additional-filter
-           ::spec/state-selector
-           ::spec/nuvlabox]}]
+           ::spec/state-selector] :as db}]
   (if select-all?
     (get-filter-param
-      {:full-text-search  full-text-search
+      {:full-text-search  (full-text-search-plugin/filter-text
+                            db [::spec/deployments-search])
        :additional-filter additional-filter
        :state-selector    (when-not (= "all" state-selector) state-selector)
-       :nuvlabox          nuvlabox
        :module-id         nil})
     (->> selected-set
          (map #(str "id='" % "'"))

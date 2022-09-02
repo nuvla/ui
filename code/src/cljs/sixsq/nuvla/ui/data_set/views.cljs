@@ -6,15 +6,19 @@
     [sixsq.nuvla.ui.apps.utils :as application-utils]
     [sixsq.nuvla.ui.cimi.subs :as cimi-subs]
     [sixsq.nuvla.ui.data-set.events :as events]
+    [sixsq.nuvla.ui.data-set.spec :as spec]
     [sixsq.nuvla.ui.data-set.subs :as subs]
     [sixsq.nuvla.ui.data-set.utils :as utils]
     [sixsq.nuvla.ui.data.events :as data-events]
+    [sixsq.nuvla.ui.data.spec :as data-spec]
     [sixsq.nuvla.ui.data.subs :as data-subs]
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.map :as map]
@@ -25,16 +29,13 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]))
 
-
 (defn refresh
   []
   (dispatch [::events/get-data-set]))
 
-
 (defn refresh-data-records
   []
   (dispatch [::events/get-data-records]))
-
 
 (defn ApplicationListItem
   [{:keys [id name description subtype created] :as _application} selectable?]
@@ -46,7 +47,6 @@
      [ui/ListContent
       [ui/ListHeader (str (or name id) " (" (time/ago (time/parse-iso8601 created)) ")")]
       (or description "")]]))
-
 
 (defn ApplicationList
   [_opts]
@@ -65,7 +65,6 @@
             [ApplicationListItem application selectable?])]
          [ui/Message {:error true} (@tr [:no-apps])])])))
 
-
 (defn DataRecordFilter
   []
   (let [tr                        (subscribe [::i18n-subs/tr])
@@ -79,33 +78,33 @@
        {:on-change     (ui-callback/input-callback set-data-record-filter-fn)
         :default-value (or @data-record-filter "")
         :placeholder   "Data records filter"
-        :action        (r/as-element [:<>
-                                      [ui/Button {:icon     "search"
-                                                  :on-click refresh-data-records}]
-                                      ^{:key (random-uuid)}
-                                      [filter-comp/ButtonFilter
-                                       {:resource-name  "data-record"
-                                        :default-filter @data-record-filter
-                                        :open?          filter-open?
-                                        :on-done        set-data-record-filter-fn}]
-                                      (when @suggest-edit-filter?
-                                        [ui/Button {:icon     "save"
-                                                    :primary  true
-                                                    :content  (@tr [:save])
-                                                    :on-click #(dispatch [::events/edit
-                                                                          (:id @data-set)
-                                                                          {:data-record-filter @data-record-filter}
-                                                                          (@tr [:updated-message])])}])])}])))
-
-
-
+        :action        (r/as-element
+                         [:<>
+                          [ui/Button {:icon     "search"
+                                      :on-click refresh-data-records}]
+                          ^{:key (random-uuid)}
+                          [filter-comp/ButtonFilter
+                           {:resource-name  "data-record"
+                            :default-filter @data-record-filter
+                            :open?          filter-open?
+                            :on-done        set-data-record-filter-fn}]
+                          (when @suggest-edit-filter?
+                            [ui/Button
+                             {:icon     "save"
+                              :primary  true
+                              :content  (@tr [:save])
+                              :on-click #(dispatch
+                                           [::events/edit
+                                            (:id @data-set)
+                                            {:data-record-filter
+                                             @data-record-filter}
+                                            (@tr [:updated-message])])}])])}])))
 
 (defn DataRecordMarker
   [{:keys [id name location]}]
   (when location
     [map/Marker {:position (map/longlat->latlong location)}
      [map/Tooltip (or name id)]]))
-
 
 (defn DataRecordGeoJson
   [{:keys [id name geometry]}]
@@ -114,21 +113,22 @@
                   :data  geometry}
      [map/Tooltip (or name id)]]))
 
-
 (defn GeoOperationButton
   [geo-operation]
   (let [tr      (subscribe [::i18n-subs/tr])
         active? (subscribe [::subs/geo-operation-active? geo-operation])]
     (fn [geo-operation]
-      (let [button [ui/Button {:active   @active?
-                               :on-click #(dispatch [::events/set-geo-operation geo-operation])}
+      (let [button [ui/Button
+                    {:active   @active?
+                     :on-click #(dispatch
+                                  [::events/set-geo-operation geo-operation])}
                     geo-operation]]
         [ui/Popup
          {:header            (str/capitalize geo-operation)
-          :content           (@tr [(->> geo-operation (str "geo-op-helper-") keyword)])
+          :content           (@tr [(->> geo-operation
+                                        (str "geo-op-helper-") keyword)])
           :mouse-enter-delay 500
           :trigger           (r/as-element button)}]))))
-
 
 (defn MapFilter
   []
@@ -167,18 +167,23 @@
               [map/EditControl
                {:onCreated (fn [event]
                              (let [layer      (.-layer event)
-                                   geojson    (-> layer .toGeoJSON (js->clj :keywordize-keys true))
+                                   geojson    (-> layer .toGeoJSON
+                                                  (js->clj :keywordize-keys
+                                                           true))
                                    layer-type (.-layerType event)]
-                               (set-map-selection {:geojson    geojson
-                                                   :layer-type layer-type
-                                                   :lat-lngs   (.getLatLngs layer)})
+                               (set-map-selection
+                                 {:geojson    geojson
+                                  :layer-type layer-type
+                                  :lat-lngs   (.getLatLngs layer)})
                                (-> event .-layer .remove)))
                 :onEdited  (fn [event]
                              (let [layer   (get-first-layer event)
-                                   geojson (-> layer .toGeoJSON (js->clj :keywordize-keys true))]
-                               (set-map-selection {:geojson    geojson
-                                                   :layer-type (:layer-type @map-selection)
-                                                   :lat-lngs   (.getLatLngs layer)})))
+                                   geojson (-> layer .toGeoJSON
+                                               (js->clj :keywordize-keys true))]
+                               (set-map-selection
+                                 {:geojson    geojson
+                                  :layer-type (:layer-type @map-selection)
+                                  :lat-lngs   (.getLatLngs layer)})))
                 :onDeleted (fn [event]
                              (when (some? (get-first-layer event))
                                (set-map-selection nil)))
@@ -217,25 +222,32 @@
          [ui/FormGroup {:widths (if extra 3 2)}
           [ui/FormField
            ;; FIXME: Find a better way to set the field width.
-           [ui/DatePicker {:custom-input     (r/as-element [ui/Input {:label (str/capitalize (@tr [:from]))
-                                                                      :style {:min-width "20em"}}])
-                           :selected         time-start
-                           :start-date       time-start
-                           :end-date         time-end
-                           :max-date         time-end
-                           :selects-start    true
-                           :show-time-select true
-                           :time-format      time-format
-                           :time-intervals   1
-                           :locale           @locale
-                           :fixed-height     true
-                           :date-format      date-format
-                           :on-change        #(do (dispatch [::events/set-time-period [% time-end]])
-                                                  (refresh-fn))}]]
+           [ui/DatePicker
+            {:custom-input     (r/as-element
+                                 [ui/Input {:label (str/capitalize
+                                                     (@tr [:from]))
+                                            :style {:min-width "20em"}}])
+             :selected         time-start
+             :start-date       time-start
+             :end-date         time-end
+             :max-date         time-end
+             :selects-start    true
+             :show-time-select true
+             :time-format      time-format
+             :time-intervals   1
+             :locale           @locale
+             :fixed-height     true
+             :date-format      date-format
+             :on-change        #(do (dispatch [::events/set-time-period
+                                               [% time-end]])
+                                    (refresh-fn))}]]
           ;; FIXME: Find a better way to set the field width.
           [ui/FormField
-           [ui/DatePicker {:custom-input     (r/as-element [ui/Input {:label (str/capitalize (@tr [:to]))
-                                                                      :style {:min-width "20em"}}])
+           [ui/DatePicker {:custom-input     (r/as-element
+                                               [ui/Input
+                                                {:label (str/capitalize
+                                                          (@tr [:to]))
+                                                 :style {:min-width "20em"}}])
                            :selected         time-end
                            :start-date       time-start
                            :end-date         time-end
@@ -248,7 +260,9 @@
                            :locale           @locale
                            :fixed-height     true
                            :date-format      date-format
-                           :on-change        #(do (dispatch [::events/set-time-period [time-start %]])
+                           :on-change        #(do (dispatch
+                                                    [::events/set-time-period
+                                                     [time-start %]])
                                                   (refresh-fn))}]]
           (when extra
             [ui/FormField extra])]]))))
@@ -259,7 +273,7 @@
   (let [tr                    (subscribe [::i18n-subs/tr])
         selected-data-sets    (subscribe [::data-subs/selected-data-set-ids])
         selected-data-records (subscribe [::subs/selected-data-record-ids])
-        active-tab            (subscribe [::data-subs/active-tab])
+        active-tab            (subscribe [::tab-plugin/active-tab [::data-spec/tab]])
         on-click              #(dispatch [::main-events/subscription-required-dispatch
                                           [::data-events/open-application-select-modal]])]
     (fn [button-type]
@@ -285,7 +299,8 @@
 (defn CreateDataSet
   []
   (let [tr                       (subscribe [::i18n-subs/tr])
-        active-tab               (subscribe [::data-subs/active-tab])
+        active-tab               (subscribe [::tab-plugin/active-tab
+                                             [::data-spec/tab]])
         selected-data-record-ids (subscribe [::subs/selected-data-record-ids])
         data-record-filter       (subscribe [::subs/data-record-filter])
         map-selection            (subscribe [::subs/map-selection])
@@ -306,7 +321,8 @@
              :primary  true
              :on-click (fn []
                          (dispatch [::data-events/set-modal-open? true])
-                         (dispatch [::data-events/set-add-data-set-form :data-record-filter
+                         (dispatch [::data-events/set-add-data-set-form
+                                    :data-record-filter
                                     (utils-general/join-and
                                       (when selected-data-records?
                                         (->> @selected-data-record-ids
@@ -315,10 +331,11 @@
                                       (when some-filter-str?
                                         @data-record-filter)
                                       (when some-map-selection?
-                                        (utils/data-record-geometry-filter @geo-operation (:geojson @map-selection))))
+                                        (utils/data-record-geometry-filter
+                                          @geo-operation
+                                          (:geojson @map-selection))))
                                     ]))}]]
           )))))
-
 
 (defn DeleteButton
   [{:keys [id name description] :as _data-set}]
@@ -333,7 +350,6 @@
       :header      (@tr [:delete-data-set])
       :content     content}]))
 
-
 (defn MenuBar
   []
   (let [data-set (subscribe [::subs/data-set])]
@@ -345,30 +361,17 @@
        [components/RefreshMenu
         {:on-refresh #(refresh)}]]]]))
 
-
 (defn Pagination
   []
-  (let [data-records      (subscribe [::subs/data-records])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
-        total-elements    (:count @data-records)
-        total-pages       (utils-general/total-pages total-elements @elements-per-page)]
-    [uix/Pagination {:totalitems              total-elements
-                     :totalPages              total-pages
-                     :activePage              @page
-                     :elementsperpage         @elements-per-page
-                     :onElementsPerPageChange (ui-callback/value
-                                                #(do (dispatch [::events/set-elements-per-page %])
-                                                     (dispatch [::events/set-page 1])
-                                                     (dispatch [::events/get-data-records])))
-                     :onPageChange            (ui-callback/callback
-                                                :activePage #(do (dispatch [::events/set-page %])
-                                                                 (dispatch [::events/get-data-records])))}]))
-
+  (let [data-records (subscribe [::subs/data-records])]
+    [pagination-plugin/Pagination
+     {:db-path      [::spec/pagination]
+      :change-event [::events/get-data-records]
+      :total-items  (:count @data-records)}]))
 
 (defn DataRecordRow
-  [{:keys [id name description tags created timestamp bucket content-type infrastructure-service
-           resource:deployment] :as _data-record}]
+  [{:keys [id name description tags created timestamp bucket content-type
+           infrastructure-service resource:deployment] :as _data-record}]
   (let [data-records-set (subscribe [::subs/selected-data-record-ids])]
     (fn [_data-record]
       ^{:key id}
@@ -378,10 +381,11 @@
             selected?       (boolean (@data-records-set id))]
         [ui/TableRow
          [ui/TableCell
-          [ui/Checkbox {:checked  selected?
-                        :on-click (fn [event]
-                                    (dispatch [::events/toggle-data-record-id id])
-                                    (.stopPropagation event))}]]
+          [ui/Checkbox
+           {:checked  selected?
+            :on-click (fn [event]
+                        (dispatch [::events/toggle-data-record-id id])
+                        (.stopPropagation event))}]]
          [ui/TableCell name]
          [ui/TableCell description]
          [ui/TableCell (values/format-created created)]
@@ -390,17 +394,17 @@
          [ui/TableCell content-type]
          [ui/TableCell [uix/Tags tags]]
          [ui/TableCell
-          [values/as-link is-uuid :page "clouds" :label (utils-general/id->short-uuid infrastructure-service)]]
+          [values/as-link is-uuid :page "clouds"
+           :label (utils-general/id->short-uuid infrastructure-service)]]
          [ui/TableCell (when resource:deployment
-                         (values/as-link resource:deployment :label deployment-uuid))]
+                         (values/as-link resource:deployment
+                                         :label deployment-uuid))]
          [ui/TableCell (values/as-link id :label uuid)]]))))
-
 
 (defn NoDataRecordsMessage
   []
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Message {:info true} (@tr [:no-data-records])]))
-
 
 (defn DataRecordTable
   [Pagination]
@@ -432,9 +436,9 @@
        [NoDataRecordsMessage])
      Pagination]))
 
-
 (defn DataRecordCard
-  [{:keys [id name description timestamp _bucket tags _data-object infrastructure-service object] :as data-record}]
+  [{:keys [id name description timestamp _bucket tags
+           _data-object infrastructure-service object] :as data-record}]
   (let [tr                        (subscribe [::i18n-subs/tr])
         data-objects              (subscribe [::subs/data-objects])
         base-uri                  (subscribe [::cimi-subs/base-uri])
@@ -442,21 +446,27 @@
         data-object-id            (:resource:object data-record)
         data-object               (get @data-objects data-object-id)
         filename                  object
-        resource-deployment-id    (some-> data-record :resource:deployment values/resource->id)
-        infrastructure-service-id (some-> infrastructure-service values/resource->id)
+        resource-deployment-id    (some-> data-record
+                                          :resource:deployment
+                                          values/resource->id)
+        infrastructure-service-id (some-> infrastructure-service
+                                          values/resource->id)
         selected?                 (boolean (@data-records-set id))]
     ^{:key id}
     [uix/Card
      {:header      [:span [:p {:style {:overflow      "hidden",
                                        :text-overflow "ellipsis",
-                                       :max-width     "20ch"}} (or name timestamp)]]
-      :meta        (str (@tr [:created]) " " (-> timestamp time/parse-iso8601 time/ago))
+                                       :max-width     "20ch"}}
+                           (or name timestamp)]]
+      :meta        (str (@tr [:created]) " " (-> timestamp
+                                                 time/parse-iso8601 time/ago))
       :description (utils-general/truncate description 60)
       :content     [:<>
                     (when resource-deployment-id
                       [:div {:style {:padding "10px 0 0 0"}}
                        [ui/Icon {:name "rocket"}]
-                       (values/as-link resource-deployment-id :page "deployment" :label (@tr [:deployment]))])
+                       (values/as-link resource-deployment-id :page "deployment"
+                                       :label (@tr [:deployment]))])
                     (when infrastructure-service-id
                       [:div {:style {:padding "10px 0 0 0"}}
                        [ui/Icon {:name "cloud"}]
@@ -473,8 +483,8 @@
                            :target   "_blank"
                            :style    {:color "white"}
                            :download (when filename filename)}
-                       [ui/Icon {:name "cloud download"}] " " (@tr [:download])]])}]))
-
+                       [ui/Icon {:name "cloud download"}] " "
+                       (@tr [:download])]])}]))
 
 (defn cards-per-device
   [device]
@@ -496,7 +506,6 @@
     :mobile 1
     1))
 
-
 (defn TableCell
   [attribute {:keys [id] :as element}]
   (let [tr           (subscribe [::i18n-subs/tr])
@@ -508,7 +517,6 @@
       [components/EditableInput attribute element on-change-fn]
       [ui/TableCell (get element attribute)])))
 
-
 (defn ModalAppPreview
   [_module-filter]
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -519,13 +527,13 @@
                                          :cursor "pointer"}
                               :circular true
                               :color    "blue"
-                              :on-click #(dispatch [::data-events/search-application module-filter])}
+                              :on-click #(dispatch
+                                           [::data-events/search-application
+                                            module-filter])}
                     [ui/Icon {:name "eye"}]
                     (@tr [:preview])])
         :header  (str/capitalize (@tr [:application]))
         :content [ApplicationList {:selectable? false}]}])))
-
-
 
 (defn Summary
   []
@@ -533,7 +541,8 @@
         dataset        (subscribe [::subs/data-set])
         device         (subscribe [::main-subs/device])
         editable?      (subscribe [::subs/editable?])
-        {:keys [id created created-by updated data-record-filter module-filter tags]} @dataset
+        {:keys [id created created-by updated data-record-filter module-filter
+                tags]} @dataset
         resolved-owner (subscribe [::session-subs/resolve-user created-by])]
     [ui/Grid {:columns   (if (contains? #{:wide-screen} @device) 2 1)
               :stackable true
@@ -541,9 +550,9 @@
               :centered  true}
      [ui/GridRow {:centered true}
       [ui/GridColumn
-
-       [ui/SegmentGroup {:style  {:display    "flex", :justify-content "space-between",
-                                  :background "#f3f4f5"}
+       [ui/SegmentGroup {:style  {:display         "flex"
+                                  :justify-content "space-between"
+                                  :background      "#f3f4f5"}
                          :raised true}
         [ui/Segment {:secondary true
                      :color     "green"
@@ -563,8 +572,9 @@
              [ui/TableRow
               [ui/TableCell (str/capitalize (@tr [:tags]))]
               [ui/TableCell
-               [components/EditableTags @dataset #(dispatch [::events/edit id {:tags %}
-                                                             (@tr [:updated-successfully])])]]])
+               [components/EditableTags @dataset
+                #(dispatch [::events/edit id {:tags %}
+                            (@tr [:updated-successfully])])]]])
            [ui/TableRow
             [ui/TableCell (str/capitalize (str (@tr [:created])))]
             [ui/TableCell (-> created time/parse-iso8601 time/ago)]]
@@ -585,8 +595,9 @@
                [ModalAppPreview module-filter])]]
            [ui/TableRow
             [ui/TableCell "Id"]
-            [ui/TableCell (when (some? id) [values/as-link id :label (utils-general/id->uuid id)])]]]]]]]]]))
-
+            [ui/TableCell (when (some? id)
+                            [values/as-link id
+                             :label (utils-general/id->uuid id)])]]]]]]]]]))
 
 (defn DataRecordCards
   [Pagination]
@@ -594,35 +605,26 @@
         device       (subscribe [::main-subs/device])
         resources    (:resources @data-records)]
     [:<>
-     [ui/Grid {:columns   (columns-per-device @device)
-               :stackable true
-               :padded    true
-               :centered  true}
-      [ui/GridRow {:centered true}
-       [ui/GridColumn
-        [SearchHeader refresh-data-records [DataRecordFilter]]
-        [MapFilter]]]
-      [ui/GridRow {:centered true}
-       [ui/GridColumn
-        [ui/Segment style/basic
-         (if (-> resources count pos?)
-           [ui/CardGroup {:centered    true
-                          :itemsPerRow (cards-per-device @device)
-                          :stackable   true}
-            (for [data-record resources]
-              ^{:key (:id data-record)}
-              [DataRecordCard data-record])]
-           [NoDataRecordsMessage]
-           )]]]]
+     [SearchHeader refresh-data-records [DataRecordFilter]]
+     [MapFilter]
+     [ui/Segment style/basic
+      (if (-> resources count pos?)
+        [ui/CardGroup {:centered    true
+                       :itemsPerRow (cards-per-device @device)
+                       :stackable   true}
+         (for [data-record resources]
+           ^{:key (:id data-record)}
+           [DataRecordCard data-record])]
+        [NoDataRecordsMessage])]
      Pagination]))
-
 
 (defn DataSet
   [dataset-id]
   (dispatch [::events/set-data-set-id dataset-id])
   (refresh)
   (let [tr       (subscribe [::i18n-subs/tr])
-        data-set (subscribe [::subs/data-set])]
+        data-set (subscribe [::subs/data-set])
+        device   (subscribe [::main-subs/device])]
     (fn [dataset-id]
       (let [name (:name @data-set)]
         [components/LoadingPage {:dimmable? true}
@@ -635,4 +637,10 @@
            [uix/PageHeader "database" (str name " " (@tr [:data-set]))]
            [MenuBar dataset-id]
            [Summary]
-           [DataRecordCards [Pagination]]]]]))))
+           [ui/Grid {:columns   (columns-per-device @device)
+                     :stackable true
+                     :padded    true
+                     :centered  true}
+            [ui/GridRow {:centered true}
+             [ui/GridColumn
+              [DataRecordCards [Pagination]]]]]]]]))))

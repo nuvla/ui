@@ -14,6 +14,7 @@
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.profile.events :as events]
     [sixsq.nuvla.ui.profile.spec :as spec]
     [sixsq.nuvla.ui.profile.subs :as subs]
@@ -23,7 +24,6 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.spec :as us]
-    [sixsq.nuvla.ui.utils.tab :as tab]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]))
@@ -1449,20 +1449,17 @@
 
 (defn Tabs
   []
-  (let [active-tab (subscribe [::subs/active-tab])]
-    (dispatch [::events/init])
-    (fn []
-      (let [panes (profile-panes)]
-        [ui/Tab
-         {:menu        {:secondary true
-                        :pointing  true
-                        :style     {:display        "flex"
-                                    :flex-direction "row"
-                                    :flex-wrap      "wrap"}}
-          :panes       panes
-          :activeIndex (tab/key->index panes @active-tab)
-          :onTabChange (tab/on-tab-change
-                         panes #(dispatch [::events/set-active-tab %]))}]))))
+  (dispatch [::events/init])
+  (fn []
+    (let [panes (profile-panes)]
+      [tab-plugin/Tab
+       {:db-path [::spec/tab]
+        :menu    {:secondary true
+                  :pointing  true
+                  :style     {:display        "flex"
+                              :flex-direction "row"
+                              :flex-wrap      "wrap"}}
+        :panes   panes}])))
 
 
 (defmethod panel/render :profile

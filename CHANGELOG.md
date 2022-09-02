@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+## [2.32.4] - 2022-09-02
+
+### Added
+
+- Deployment fleets page (experimental hidden)
+- Module versions plugin
+- Step group plugin
+- Full text search plugin
+- Events plugin
+- Tab plugin
+- Pagination plugin
+- Plugin concept introduction
+
+### Changed
+
+- Global - use plugins in all pages
+- Deployment table fix query filter conflict
+- Pagination - Enhance pagination out of range behavior
+- Edge navigation to cluster break pagination of main page
+- Deps - update re-frame
+- i18n - Store tr in db to allow event error translation
+- Deployment modal - Bugfix when credential of deployment doesn't exit a random
+  infra is selected
+- Deployment modal - Enhance update error message when credential or
+  infrastructure doesn't exist and close modal
+
 ## [2.32.3] - 2022-08-25
 
 ### Changed

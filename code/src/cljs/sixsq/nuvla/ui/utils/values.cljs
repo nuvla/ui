@@ -106,7 +106,7 @@
 
 (defn markdown->hiccup
   [markdown]
-  (->> markdown (md/md->hiccup) (md/component)))
+  (some-> markdown (md/md->hiccup {:encode? false}) md/component))
 
 
 (defn hiccup->first-p

@@ -4,6 +4,7 @@
     [reagent.core :as r]
     [sixsq.nuvla.ui.apps-project.views :as apps-project-views]
     [sixsq.nuvla.ui.apps-store.events :as events]
+    [sixsq.nuvla.ui.apps-store.spec :as spec]
     [sixsq.nuvla.ui.apps-store.subs :as subs]
     [sixsq.nuvla.ui.apps.events :as apps-events]
     [sixsq.nuvla.ui.apps.subs :as apps-subs]
@@ -14,26 +15,14 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as utils-style]
-    [sixsq.nuvla.ui.utils.tab :as tab]
-    [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as utils-values]))
-
-
-(defn RefreshMenu
-  []
-  [components/RefreshMenu
-   {:on-refresh #(do (dispatch [::events/get-modules]))}])
-
-
-(defn RefreshMyAppsMenu
-  []
-  [components/RefreshMenu
-   {:on-refresh #(dispatch [::events/get-my-modules])}])
-
 
 (defn ModuleCard
   [{:keys [id name description path subtype logo-url price published versions tags]} show-published?]
@@ -76,50 +65,40 @@
       :on-click      #(dispatch [::history-events/navigate detail-href])
       :button        [ui/Button button-ops]}]))
 
-
 (defn ModulesCardsGroup
-  [modules-list show-published?]
-  [:div utils-style/center-items
-   [ui/CardGroup {:centered    true
-                  :itemsPerRow 4
-                  :stackable   true}
-    (for [{:keys [id] :as module} modules-list]
-      ^{:key id}
-      [ModuleCard module show-published?])]])
-
-
-(defn AppStoreControlBar
   []
-  (let [full-text (subscribe [::subs/full-text-search-published])]
-    [ui/Menu {:secondary true}
-     [ui/MenuMenu {:position "left"}
-      [components/SearchInput
-       {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search-published %]))
-        :default-value @full-text}]]
-     [RefreshMenu]]))
+  (let [modules         (subscribe [::subs/modules])
+        active-tab      (subscribe [::tab-plugin/active-tab [::spec/tab]])
+        show-published? (= @active-tab :allapps)]
+    [:div utils-style/center-items
+     [ui/CardGroup {:centered    true
+                    :itemsPerRow 4
+                    :stackable   true}
+      (for [{:keys [id] :as module} (get @modules :resources [])]
+        ^{:key id}
+        [ModuleCard module show-published?])]]))
 
-
-(defn AllAppsControlBar
+(defn RefreshButton
   []
-  (let [full-text (subscribe [::subs/full-text-search-all-apps])]
-    [ui/Menu {:secondary true}
-     [ui/MenuMenu {:position "left"}
-      [components/SearchInput
-       {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search-all-apps %]))
-        :default-value @full-text}]]
-     [RefreshMenu]]))
+  [components/RefreshMenu
+   {:on-refresh #(dispatch [::events/get-modules])}])
 
-
-(defn MyAppsControlBar
+(defn Pagination
   []
-  (let [full-text (subscribe [::subs/full-text-search-my])]
-    [ui/Menu {:secondary true}
-     [ui/MenuMenu {:position "left"}
-      [components/SearchInput
-       {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search-my %]))
-        :default-value @full-text}]]
-     [RefreshMyAppsMenu]]))
+  (let [modules @(subscribe [::subs/modules])]
+    [pagination-plugin/Pagination
+     {:db-path      [::spec/pagination]
+      :total-items  (:count modules)
+      :change-event [::events/get-modules]}]))
 
+(defn ControlBar
+  []
+  [ui/Menu {:secondary true}
+   [ui/MenuMenu {:position "left"}
+    [full-text-search-plugin/FullTextSearch
+     {:db-path      [::spec/modules-search]
+      :change-event [::pagination-plugin/change-page [::spec/pagination] 1]}]]
+   [RefreshButton]])
 
 (defn ControlBarProjects []
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -128,8 +107,7 @@
       {:name     (@tr [:add])
        :icon     "add"
        :on-click #(dispatch [::apps-events/open-add-modal])}]
-     [RefreshMenu]]))
-
+     [RefreshButton]]))
 
 (defn TabNavigator []
   (let [module (subscribe [::apps-subs/module])]
@@ -144,130 +122,49 @@
          (let [{:keys [children]} @module]
            [apps-project-views/FormatModuleChildren children])]]])))
 
-
-(defn TabAppStore
+(defn TabDefault
   []
-  (let [modules           (subscribe [::subs/published-modules])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])]
-    (dispatch [::events/get-published-modules])
-    (fn []
-      (let [total-modules (get @modules :count 0)
-            total-pages   (utils-general/total-pages total-modules @elements-per-page)]
-        [components/LoadingPage {}
-         [ui/TabPane
-          [AppStoreControlBar]
-          [ModulesCardsGroup (get @modules :resources []) false]
-          [uix/Pagination
-           {:totalitems              total-modules
-            :totalPages              total-pages
-            :activePage              @page
-            :elementsperpage         @elements-per-page
-            :onElementsPerPageChange (ui-callback/value #(do (dispatch [::events/set-elements-per-page %])
-                                                             (dispatch [::events/set-page-published-modules 1])
-                                                             (dispatch [::events/get-published-modules])))
-            :onPageChange            (ui-callback/callback
-                                       :activePage #(dispatch [::events/set-page-published-modules %]))}]]]))))
-
-
-(defn TabAllApps
-  []
-  (let [modules           (subscribe [::subs/modules])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])]
-    (dispatch [::events/get-modules])
-    (fn []
-      (let [total-modules (get @modules :count 0)
-            total-pages   (utils-general/total-pages total-modules @elements-per-page)]
-        [components/LoadingPage {}
-         [ui/TabPane
-          [AllAppsControlBar]
-          [ModulesCardsGroup (get @modules :resources []) true]
-          [uix/Pagination
-           {:totalitems              total-modules
-            :totalPages              total-pages
-            :activePage              @page
-            :elementsperpage         @elements-per-page
-            :onElementsPerPageChange (ui-callback/value #(do (dispatch [::events/set-elements-per-page %])
-                                                             (dispatch [::events/set-page-all-modules 1])
-                                                             (dispatch [::events/get-modules])))
-            :onPageChange            (ui-callback/callback
-                                       :activePage #(dispatch [::events/set-page-all-modules %]))}]]]))))
-
-
-(defn TabMyApps
-  []
-  (let [modules           (subscribe [::subs/my-modules])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])]
-    (dispatch [::events/get-my-modules])
-    (fn []
-      (let [total-modules (get @modules :count 0)
-            total-pages   (utils-general/total-pages total-modules @elements-per-page)]
-        [components/LoadingPage {}
-         [ui/TabPane
-          [MyAppsControlBar]
-          [ModulesCardsGroup (get @modules :resources []) true]
-          [uix/Pagination
-           {:totalitems              total-modules
-            :totalPages              total-pages
-            :activePage              @page
-            :elementsperpage         @elements-per-page
-            :onElementsPerPageChange (ui-callback/value #(do (dispatch [::events/set-elements-per-page %])
-                                                             (dispatch [::events/set-page-my-modules 1])
-                                                             (dispatch [::events/get-my-modules])))
-            :onPageChange            (ui-callback/callback
-                                       :activePage #(dispatch [::events/set-page-my-modules %]))}]]]))))
-
+  [components/LoadingPage {}
+   [ui/TabPane
+    [ControlBar]
+    [ModulesCardsGroup]
+    [Pagination]]])
 
 (defn tabs
   []
-  (let [tr (subscribe [::i18n-subs/tr])]
-    [{:menuItem {:content (utils-general/capitalize-words (@tr [:appstore]))
+  (let [tr     @(subscribe [::i18n-subs/tr])
+        render #(r/as-element [TabDefault])]
+    [{:menuItem {:content (utils-general/capitalize-words (tr [:appstore]))
                  :key     :appstore
                  :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
-      :render   #(r/as-element [TabAppStore])}
-     {:menuItem {:content (utils-general/capitalize-words (@tr [:all-apps]))
+      :render   render}
+     {:menuItem {:content (utils-general/capitalize-words (tr [:all-apps]))
                  :key     :allapps
                  :icon    "grid layout"}
-      :render   #(r/as-element [TabAllApps])}
-     {:menuItem {:content (utils-general/capitalize-words (@tr [:my-apps]))
+      :render   render}
+     {:menuItem {:content (utils-general/capitalize-words (tr [:my-apps]))
                  :key     :myapps
                  :icon    "user"}
-      :render   #(r/as-element [TabMyApps])}
+      :render   render}
      {:menuItem {:content "Navigate Apps"
                  :key     :navigate
                  :icon    "folder open"}
       :render   #(r/as-element [TabNavigator])}]))
 
-
-(defn TabsApps
-  []
-  (let [active-tab (subscribe [::subs/active-tab])
-        panes      (tabs)]
-    [ui/Tab
-     {:menu        {:secondary true
-                    :pointing  true
-                    :style     {:display        "flex"
-                                :flex-direction "row"
-                                :flex-wrap      "wrap"}}
-      :panes       panes
-      :activeIndex (tab/key->index panes @active-tab)
-      :onTabChange (tab/on-tab-change
-                     panes
-                     #(dispatch [::events/set-active-tab %]))}]))
-
-
 (defn RootView
   []
-  (let [tr         (subscribe [::i18n-subs/tr])
-        active-tab (subscribe [::subs/active-tab])]
-    (dispatch [::apps-events/reset-version])
-    (dispatch [::apps-events/module-not-found false])
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (dispatch [::events/init])
     (fn []
-      @active-tab
-      (dispatch [::events/reset-page])
       [ui/Container {:fluid true}
-       [:<>
-        [uix/PageHeader "fas fa-store" (utils-general/capitalize-first-letter (@tr [:apps]))]
-        [TabsApps]]])))
+       [uix/PageHeader "fas fa-store"
+        (utils-general/capitalize-first-letter (@tr [:apps]))]
+       [tab-plugin/Tab
+        {:db-path      [::spec/tab]
+         :change-event [::pagination-plugin/change-page [::spec/pagination] 1]
+         :menu         {:secondary true
+                        :pointing  true
+                        :style     {:display        "flex"
+                                    :flex-direction "row"
+                                    :flex-wrap      "wrap"}}
+         :panes        (tabs)}]])))

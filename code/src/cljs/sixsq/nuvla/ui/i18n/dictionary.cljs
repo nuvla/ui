@@ -6,6 +6,16 @@
 
 (def dictionary
   {:en {
+        :deployment-update-failed-cred-retrieval-fail  "Update action is not possible because retrieval of the destination credential failed!"
+        :deployment-update-failed-infra-retrieval-fail "Update action is not possible because retrieval of the destination infrastructure failed!"
+        :destination-not-found                         "Destination not found!"
+        :per-page                                      "per page"
+        :previous                                      "previous"
+        :empty-deployemnt-msg                          "There are currently no running apps (aka deployments)."
+        :no-deployment-fleet-message-content           "Deployment fleet does not exist or you do not have sufficient access rights."
+        :no-deployment-fleet-message-header            "Oops can't find deployment fleet"
+        :deployment-fleets                             "Deployment fleets"
+        :deployment-fleet                              "Deployment fleet"
         :bulk-force-delete-in-progress                 "Bulk force delete in progress"
         :bulk-stop-in-progress                         "Bulk stop in progress"
         :bulk-update-in-progress                       "Bulk update in progress"

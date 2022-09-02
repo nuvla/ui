@@ -9,6 +9,7 @@
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.views :as deployments-views]
     [sixsq.nuvla.ui.edges-detail.events :as events]
+    [sixsq.nuvla.ui.edges-detail.spec :as spec]
     [sixsq.nuvla.ui.edges-detail.subs :as subs]
     [sixsq.nuvla.ui.edges.events :as edges-events]
     [sixsq.nuvla.ui.edges.subs :as edges-subs]
@@ -19,6 +20,8 @@
     [sixsq.nuvla.ui.job.views :as job-views]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.plugins.events :as events-plugin]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.resource-log.views :as log-views]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
@@ -27,14 +30,12 @@
     [sixsq.nuvla.ui.utils.plot :as plot]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.tab :as tab]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
-(def tab-deployment-index 6)
 
 (def orchestration-icons
   {:swarm      "docker"
@@ -1317,7 +1318,8 @@
           (when-not (= state "SUSPENDED")
             [ui/GridColumn {:stretched true}
              [deployments-views/DeploymentsOverviewSegment
-              ::deployments-subs/deployments ::events/set-active-tab :deployments]])
+              ::deployments-subs/deployments nil nil
+              #(dispatch [::tab-plugin/change-tab [::spec/tab] :deployments])]])
 
           (when (:node-id @nb-status)
             [ui/GridColumn {:stretched true}
@@ -1410,46 +1412,6 @@
               :styled? false
               :count (count peripherals)
               :label interface]))]))))
-
-
-(defn TabEvents
-  []
-  (let [tr                (subscribe [::i18n-subs/tr])
-        nuvlabox          (subscribe [::subs/nuvlabox])
-        all-events        (subscribe [::subs/nuvlabox-events])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        total-elements    (get @all-events :count 0)
-        total-pages       (general-utils/total-pages total-elements @elements-per-page)
-        page              (subscribe [::subs/page])]
-    (fn []
-      (let [events (:resources @all-events)]
-        [ui/TabPane
-         (if (and (pos? total-elements) (= (count events) 0))
-           [ui/Loader {:active true
-                       :inline "centered"}]
-           [ui/Table {:basic "very"}
-            [ui/TableHeader
-             [ui/TableRow
-              [ui/TableHeaderCell [:span (@tr [:event])]]
-              [ui/TableHeaderCell [:span (@tr [:timestamp])]]
-              [ui/TableHeaderCell [:span (@tr [:category])]]
-              [ui/TableHeaderCell [:span (@tr [:state])]]]]
-            [ui/TableBody
-             (for [{:keys [id content timestamp category]} events]
-               ^{:key id}
-               [ui/TableRow
-                [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
-                [ui/TableCell timestamp]
-                [ui/TableCell category]
-                [ui/TableCell (:state content)]])]])
-
-
-         [uix/Pagination {:totalPages   total-pages
-                          :activePage   @page
-                          :onPageChange (ui-callback/callback
-                                          :activePage #(do
-                                                         (dispatch [::events/set-page %])
-                                                         (refresh (:id @nuvlabox))))}]]))))
 
 
 ; there's a similar function in edge.views which can maybe be generalized
@@ -1898,15 +1860,17 @@
                    :key     :peripherals
                    :icon    "usb"}
         :render   #(r/as-element [TabPeripherals])}
-       {:menuItem {:content "Events"
-                   :key     :events
-                   :icon    "bolt"}
-        :render   #(r/as-element [TabEvents])}
+       (events-plugin/events-section
+         {:db-path [::spec/events]
+          :href    (:id @nuvlabox)})
        {:menuItem {:content "Deployments"
                    :key     :deployments
                    :icon    "rocket"}
-        :render   #(r/as-element [deployments-views/DeploymentTable
-                                  {:empty-msg (tr [:empty-deployment-nuvlabox-msg])}])}
+        :render   #(r/as-element
+                     [ui/TabPane
+                      [deployments-views/DeploymentTable
+                       {:no-actions true
+                        :empty-msg  (tr [:empty-deployment-nuvlabox-msg])}]])}
        {:menuItem {:content "Vulnerabilities"
                    :key     :vulnerabilities
                    :icon    "shield"}
@@ -1921,19 +1885,14 @@
 
 (defn TabsNuvlaBox
   []
-  (let [active-tab (subscribe [::subs/active-tab])
-        panes      (tabs)]
-    [ui/Tab
-     {:menu        {:secondary true
-                    :pointing  true
-                    :style     {:display        "flex"
-                                :flex-direction "row"
-                                :flex-wrap      "wrap"}}
-      :panes       panes
-      :activeIndex (tab/key->index panes @active-tab)
-      :onTabChange (tab/on-tab-change
-                     panes
-                     #(dispatch [::events/set-active-tab %]))}]))
+  [tab-plugin/Tab
+   {:db-path [::spec/tab]
+    :menu    {:secondary true
+              :pointing  true
+              :style     {:display        "flex"
+                          :flex-direction "row"
+                          :flex-wrap      "wrap"}}
+    :panes   (tabs)}])
 
 
 (defn PageHeader
@@ -1968,7 +1927,8 @@
       [ui/Container {:fluid true}
        [PageHeader]
        [MenuBar uuid]
-       [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab :jobs]
+       [components/ErrorJobsMessage ::job-subs/jobs nil nil
+        #(dispatch [::tab-plugin/change-tab [::spec/tab] :jobs])]
        [job-views/ProgressJobAction @nb-status]
        [TabsNuvlaBox]
        [AddPlaybookModal]]]]))

@@ -1,16 +1,12 @@
-(ns sixsq.nuvla.ui.dashboard.utils
-  (:require
-    [sixsq.nuvla.ui.apps-store.events :as apps-store-events]))
+(ns sixsq.nuvla.ui.dashboard.utils)
 
 (def type-apps "APPS")
 (def type-deployments "DEPLOYMENTS")
 (def type-nbs "NUVLAEDGES")
 (def type-creds "CREDENTIALS")
 
-(def target-apps {:resource  "apps"
-                  :tab-key   :appstore
-                  :tab-event ::apps-store-events/set-active-tab})
-(def target-deployments {:resource  "deployments"})
+(def target-apps {:resource  "apps"})
+(def target-deployments {:resource "deployments"})
 (def target-nbs {:resource "edges"})
 (def target-creds {:resource "credentials"})
 

@@ -3,10 +3,11 @@
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
     [reagent.core :as r]
+    [sixsq.nuvla.ui.deployment-dialog.views-module-version :as dep-diag-versions]
     [sixsq.nuvla.ui.deployments-detail.subs :as deployments-detail-subs]
     [sixsq.nuvla.ui.deployments-detail.views :as deployments-detail-views]
-    [sixsq.nuvla.ui.deployment-dialog.views-module-version :as dep-diag-versions]
     [sixsq.nuvla.ui.deployments.events :as events]
+    [sixsq.nuvla.ui.deployments.spec :as spec]
     [sixsq.nuvla.ui.deployments.subs :as subs]
     [sixsq.nuvla.ui.deployments.utils :as utils]
     [sixsq.nuvla.ui.filter-comp.views :as filter-comp]
@@ -14,38 +15,39 @@
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.panel :as panel]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
-
+    [sixsq.nuvla.ui.utils.values :as values]))
 
 (defn refresh
   []
   (dispatch [::events/refresh]))
 
-
 (defn ControlBar []
-  (let [full-text         (subscribe [::subs/full-text-search])
-        additional-filter (subscribe [::subs/additional-filter])
+  (let [additional-filter (subscribe [::subs/additional-filter])
         filter-open?      (r/atom false)]
     (fn []
       [ui/GridColumn {:width 4}
-       [components/SearchInput
-        {:on-change     (ui-callback/input-callback #(dispatch [::events/set-full-text-search %]))
-         :default-value @full-text}]
-       " "
-       ^{:key (random-uuid)}
-       [filter-comp/ButtonFilter
-        {:resource-name  "deployment"
-         :default-filter @additional-filter
-         :open?          filter-open?
-         :on-done        #(dispatch [::events/set-additional-filter %])}]])))
-
+       [:div {:style {:display    :flex
+                      :align-self :baseline}}
+        [full-text-search-plugin/FullTextSearch
+         {:db-path      [::spec/deployments-search]
+          :change-event [::pagination-plugin/change-page
+                         [::spec/pagination] 1]}]
+        " "
+        ^{:key (random-uuid)}
+        [filter-comp/ButtonFilter
+         {:resource-name  "deployment"
+          :default-filter @additional-filter
+          :open?          filter-open?
+          :on-done        #(dispatch [::events/set-additional-filter %])}]]])))
 
 (defn BulkUpdateModal
   []
@@ -93,7 +95,6 @@
                                              "bulk-update"
                                              {:module-href @selected-module}
                                              [::events/close-modal-bulk-update]])}]]]))))
-
 
 (defn MenuBar
   []
@@ -159,11 +160,9 @@
            :on-refresh refresh}]]]
        [BulkUpdateModal]])))
 
-
 (defn show-options
   [select-all? no-actions]
   (not (or select-all? (true? no-actions))))
-
 
 (defn RowFn
   [{:keys [id state module] :as deployment}
@@ -205,7 +204,6 @@
           (general-utils/can-delete? deployment)
           [deployments-detail-views/DeleteButton deployment])])]))
 
-
 (defn VerticalDataTable
   [_deployments-list _options]
   (let [tr                    (subscribe [::i18n-subs/tr])
@@ -236,7 +234,6 @@
             (for [{:keys [id] :as deployment} deployments-list]
               ^{:key id}
               [RowFn deployment options])]])))))
-
 
 (defn DeploymentCard
   [{:keys [id state module tags] :as deployment}]
@@ -289,7 +286,6 @@
              (not @select-all?) (assoc :on-select #(dispatch [::events/select-id id])
                                        :selected? @is-selected?))]))
 
-
 (defn CardsDataTable
   [deployments-list]
   [:div style/center-items
@@ -300,7 +296,6 @@
       ^{:key id}
       [DeploymentCard deployment])]])
 
-
 (defn DeploymentsDisplay
   []
   (let [view        (subscribe [::subs/view])
@@ -308,11 +303,10 @@
         select-all? (subscribe [::subs/select-all?])]
     (fn []
       (let [deployments-list (get @deployments :resources [])]
-        [ui/Segment style/basic
+        [ui/Segment {:basic true}
          (if (= @view "cards")
            [CardsDataTable deployments-list]
            [VerticalDataTable deployments-list {:select-all @select-all?}])]))))
-
 
 (defn StatisticStates
   [_clickable? summary-subs]
@@ -330,9 +324,7 @@
             total         (:count @summary)]
         [ui/GridColumn {:width 8}
          [ui/StatisticGroup {:size  "tiny"
-                             :style {:justify-content "center"
-                                     :padding-top     "20px"
-                                     :padding-bottom  "20px"}}
+                             :style {:justify-content "center"}}
           [components/StatisticState total ["fas fa-rocket"] "TOTAL" clickable?
            ::events/set-state-selector ::subs/state-selector]
           [components/StatisticState started [(utils/state->icon utils/STARTED)] utils/STARTED
@@ -347,9 +339,8 @@
           [components/StatisticState error [(utils/state->icon utils/ERROR)] utils/ERROR
            clickable? "red" ::events/set-state-selector ::subs/state-selector]]]))))
 
-
 (defn DeploymentsOverviewSegment
-  [deployment-subs set-active-tab-event deployment-tab-key]
+  [deployment-subs set-active-tab-event deployment-tab-key on-click]
   (let [tr    (subscribe [::i18n-subs/tr])
         icon  "rocket"
         color "blue"]
@@ -368,67 +359,51 @@
                  :icon     icon
                  :style    {:align-self "start"}
                  :content  "Show me"
-                 :on-click #(dispatch [set-active-tab-event deployment-tab-key])}]]))
+                 :on-click (or on-click
+                               #(dispatch [set-active-tab-event deployment-tab-key]))}]]))
 
+(defn Pagination
+  []
+  (let [dep-count @(subscribe [::subs/deployments-count])]
+    [pagination-plugin/Pagination
+     {:db-path      [::spec/pagination]
+      :total-items  dep-count
+      :change-event [::events/refresh]}]))
 
 (defn DeploymentTable
   [options]
-  (let [elements          (subscribe [::subs/deployments])
-        elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
-        select-all?       (subscribe [::subs/select-all?])]
+  (let [elements    (subscribe [::subs/deployments])
+        select-all? (subscribe [::subs/select-all?])]
     (fn []
-      (let [total-elements (:count @elements)
-            total-pages    (general-utils/total-pages total-elements @elements-per-page)
-            deployments    (:resources @elements)]
-        [ui/TabPane
-         [VerticalDataTable deployments (assoc options :select-all @select-all?)]
-
-         (when (pos? (:count @elements))
-           [uix/Pagination {:totalitems   total-elements
-                            :totalPages   total-pages
-                            :activePage   @page
-                            :onPageChange (ui-callback/callback
-                                            :activePage
-                                            #(dispatch [::events/set-page %]))}])]))))
-
+      (let [deployments (:resources @elements)]
+        [:<>
+         [VerticalDataTable
+          deployments (assoc options :select-all @select-all?)]
+         [Pagination]]))))
 
 (defn DeploymentsMainContent
   []
   (let [tr                  (subscribe [::i18n-subs/tr])
-        elements-per-page   (subscribe [::subs/elements-per-page])
-        page                (subscribe [::subs/page])
-        dep-count           (subscribe [::subs/deployments-count])
         bulk-jobs-monitored (subscribe [::subs/bulk-jobs-monitored])]
-    (refresh)
+    (dispatch [::events/init])
     (fn []
-      (let [total-deployments @dep-count
-            total-pages       (general-utils/total-pages
-                                @dep-count @elements-per-page)]
-        [components/LoadingPage {}
-         [:<>
-          [uix/PageHeader "rocket"
-           (general-utils/capitalize-first-letter (@tr [:deployments]))]
-          [MenuBar]
-          [ui/Segment style/basic
-           [ui/Grid {:columns   3
-                     :stackable true
-                     :reversed  "mobile"}
-            [ControlBar]
-            [StatisticStates true ::subs/deployments-summary]]
-           (for [[job-id job] @bulk-jobs-monitored]
-             ^{:key job-id}
-             [components/BulkActionProgress
-              {:header      "Bulk update in progress"
-               :job         job
-               :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
-           [DeploymentsDisplay]]
-          [uix/Pagination
-           {:totalitems   total-deployments
-            :totalPages   total-pages
-            :activePage   @page
-            :onPageChange (ui-callback/callback :activePage #(dispatch [::events/set-page %]))}]]]))))
-
+      [components/LoadingPage {}
+       [:<>
+        [uix/PageHeader "rocket"
+         (general-utils/capitalize-first-letter (@tr [:deployments]))]
+        [MenuBar]
+        [ui/Grid {:stackable true
+                  :reversed  "mobile"}
+         [ControlBar]
+         [StatisticStates true ::subs/deployments-summary]]
+        (for [[job-id job] @bulk-jobs-monitored]
+          ^{:key job-id}
+          [components/BulkActionProgress
+           {:header      "Bulk update in progress"
+            :job         job
+            :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
+        [DeploymentsDisplay]
+        [Pagination]]])))
 
 (defmethod panel/render :deployments
   [path]

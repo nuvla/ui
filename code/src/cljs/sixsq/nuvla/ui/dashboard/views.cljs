@@ -5,7 +5,6 @@
     [sixsq.nuvla.ui.apps-store.subs :as apps-store-subs]
     [sixsq.nuvla.ui.credentials.subs :as credentials-subs]
     [sixsq.nuvla.ui.dashboard.events :as events]
-    [sixsq.nuvla.ui.dashboard.subs :as subs]
     [sixsq.nuvla.ui.dashboard.utils :as utils]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.views :as deployments-views]
@@ -27,60 +26,10 @@
 
 (defn MenuRefresh
   []
-  (let [loading? (subscribe [::subs/loading?])]
-    [:span {:style {:display "inline-flex"}}
-     [components/RefreshCompact
-      {:action-id  events/refresh-action-deployments-id
-       :loading?   @loading?
-       :on-refresh refresh}]]))
-
-
-(defn TabOverviewApps
-  []
-  (let [apps       (subscribe [::apps-store-subs/modules])
-        grouped    (group-by :state (map #(select-keys % [:state]) (:resources @apps)))
-        no-of-apps (count (:resources @apps))
-        color      "grey"
-        icon       "fas fa-store"
-        {:keys [resource tab-key tab-event]} utils/target-apps]
-    [ui/Segment {:secondary true
-                 :color     color
-                 :raised    true}
-     [:h4 [ui/Icon {:className icon}] "Apps "
-      (when @apps
-        [ui/Label {:circular true
-                   :color    color
-                   :size     "tiny"}
-         no-of-apps])]
-     [ui/Table {:basic  "very"
-                :padded false}
-      [ui/TableBody
-       [ui/TableRow
-        [ui/TableCell "Commissioned"]
-        [ui/TableCell (count (get grouped "COMMISSIONED"))]]
-       [ui/TableRow
-        [ui/TableCell "New"]
-        [ui/TableCell (count (get grouped "NEW"))]]
-       [ui/TableRow
-        [ui/TableCell "Activated"]
-        [ui/TableCell (count (get grouped "Activated"))]]
-       [ui/TableRow
-        [ui/TableCell "Decommissioning"]
-        [ui/TableCell (count (get grouped "DECOMMISSIONING"))]]
-       [ui/TableRow
-        [ui/TableCell "Decommissioned"]
-        [ui/TableCell (count (get grouped "DECOMMISSIONED"))]]
-       [ui/TableRow
-        [ui/TableCell "Error"]
-        [ui/TableCell (count (get grouped "ERROR"))]]
-       ]]
-     [ui/Button {:fluid    true
-                 :icon     icon
-                 :color    color
-                 :content  "Show me"
-                 :on-click #((when (and tab-event tab-key)
-                               (dispatch [tab-event tab-key]))
-                             (dispatch [::history-events/navigate resource]))}]]))
+  [:span {:style {:display "inline-flex"}}
+   [components/RefreshCompact
+    {:action-id  events/refresh-action-deployments-id
+     :on-refresh refresh}]])
 
 
 (defn TabOverviewNuvlaBox
@@ -96,7 +45,7 @@
 
      [:h4 [ui/Icon {:name icon}] (str/upper-case "NuvlaEdges")]
 
-     [edges-views/StatisticStates false]
+     [edges-views/StatisticStatesEdge false]
 
      [ui/Button {:icon     icon
                  :color    :green
@@ -137,13 +86,13 @@
 (defn Statistic
   [value icon label target]
   (let [color (if (pos? value) "black" "grey")
-        {:keys [resource tab-key tab-event]} target]
+        {:keys [resource tab-event]} target]
     [ui/Statistic {:style    {:cursor "pointer"}
                    :color    color
                    :class    "slight-up"
                    :on-click #(do
-                                (when (and tab-event tab-key)
-                                  (dispatch [tab-event tab-key]))
+                                (when tab-event
+                                  (dispatch tab-event))
                                 (dispatch [::history-events/navigate resource]))}
      [ui/StatisticValue (or value "-")
       "\u2002"
@@ -174,12 +123,13 @@
 
 (defn DashboardMain
   []
-  (let [tr       (subscribe [::i18n-subs/tr])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (refresh)
     (fn []
       [components/LoadingPage {}
        [:<>
-        [:div {:style {:display "flex" :justify-content "space-between"}}
+        [:div {:style {:display         :flex
+                       :justify-content :space-between}}
          [uix/PageHeader "dashboard" (str/capitalize (@tr [:dashboard]))]
          [MenuRefresh]]
         [Statistics]

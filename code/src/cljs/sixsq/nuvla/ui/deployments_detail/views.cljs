@@ -8,10 +8,11 @@
     [sixsq.nuvla.ui.credentials.components :as creds-comp]
     [sixsq.nuvla.ui.credentials.subs :as creds-subs]
     [sixsq.nuvla.ui.credentials.utils :as creds-utils]
-    [sixsq.nuvla.ui.deployments-detail.events :as events]
-    [sixsq.nuvla.ui.deployments-detail.subs :as subs]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
     [sixsq.nuvla.ui.deployment-dialog.views :as deployment-dialog-views]
+    [sixsq.nuvla.ui.deployments-detail.events :as events]
+    [sixsq.nuvla.ui.deployments-detail.spec :as spec]
+    [sixsq.nuvla.ui.deployments-detail.subs :as subs]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.utils :as deployments-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
@@ -21,6 +22,8 @@
     [sixsq.nuvla.ui.job.views :as job-views]
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.plugins.events :as events-plugin]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.resource-log.views :as log-views]
     [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -28,7 +31,6 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.spec :as spec-utils]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.tab :as tab]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.values :as values]))
 
@@ -38,7 +40,6 @@
 
 (defn refresh
   [resource-id]
-  (dispatch [::events/reset-db])
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
               :frequency 10000
@@ -226,65 +227,6 @@
   (let [module-content (subscribe [::subs/deployment-module-content])
         env-vars       (get @module-content :environmental-variables [])]
     (list-section env-vars :env-vars :env-variables)))
-
-
-(def event-fields #{:id :content :timestamp :category})
-
-
-(defn events-table-info
-  [events]
-  (when-let [start (-> events last :timestamp)]
-    (let [dt-fn (partial deployments-utils/assoc-delta-time start)]
-      (->> events
-           (map #(select-keys % event-fields))
-           (map dt-fn)))))
-
-
-(defn event-map-to-row
-  [{:keys [id content timestamp category delta-time]}]
-  [ui/TableRow
-   [ui/TableCell [values/as-link id :label (general-utils/id->short-uuid id)]]
-   [ui/TableCell timestamp]
-   [ui/TableCell (general-utils/round-up delta-time)]
-   [ui/TableCell category]
-   [ui/TableCell (:state content)]])
-
-
-(defn events-table
-  [_events]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [events]
-      [ui/TabPane
-       [ui/Table {:basic "very"}
-        [ui/TableHeader
-         [ui/TableRow
-          [ui/TableHeaderCell [:span (@tr [:event])]]
-          [ui/TableHeaderCell [:span (@tr [:timestamp])]]
-          [ui/TableHeaderCell [:span (@tr [:delta-min])]]
-          [ui/TableHeaderCell [:span (@tr [:category])]]
-          [ui/TableHeaderCell [:span (@tr [:state])]]]]
-        [ui/TableBody
-         (for [{:keys [id] :as event} events]
-           ^{:key id}
-           [event-map-to-row event])]]])))
-
-
-(defn events-section                                        ;FIXME: add paging
-  []
-  (let [tr          (subscribe [::i18n-subs/tr])
-        events      (subscribe [::subs/events])
-        events-info (events-table-info @events)
-        event-count (count events-info)]
-    {:menuItem {:content (r/as-element
-                           [:span (str/capitalize (@tr [:events]))
-                            (when (> event-count 0)
-                              [ui/Label {:circular true
-                                         :size     "mini"
-                                         :attached "top right"}
-                               event-count])])
-                :key     :events
-                :icon    "bolt"}
-     :render   #(r/as-element [events-table events-info])}))
 
 
 (defn job-map-to-row
@@ -673,7 +615,8 @@
         deployment      (subscribe [::subs/deployment])
         version         (subscribe [::subs/current-module-version])
         versions        (subscribe [::subs/module-versions])
-        {:keys [id state module tags acl owner created-by]} @deployment
+        {:keys [id state module tags acl owner created-by
+                deployment-fleet]} @deployment
         owners          (:owners acl)
         resolved-owners (subscribe [::session-subs/resolve-users owners])
         urls            (get-in module [:content :urls])]
@@ -722,7 +665,13 @@
           [deployments-utils/CloudNuvlaEdgeLink @deployment]]]
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
-         [ui/TableCell @version " " (up-to-date? @version @versions)]]]]]
+         [ui/TableCell @version " " (up-to-date? @version @versions)]]
+        (when deployment-fleet
+          [ui/TableRow
+           [ui/TableCell (str/capitalize (@tr [:deployment-fleet]))]
+           [ui/TableCell [values/as-link (general-utils/id->uuid deployment-fleet) :label
+                          (general-utils/id->uuid deployment-fleet)
+                          :page "deployment-fleets"]]])]]]
      (when-not (deployments-utils/stopped? state)
        [ui/Segment {:attached  false
                     :secondary true}
@@ -775,7 +724,10 @@
      (urls-section)
      (module-version-section)
      (logs-section)
-     (events-section)
+     (when @deployment
+       (events-plugin/events-section
+         {:db-path [::spec/events]
+          :href    (:id @deployment)}))
      (parameters-section)
      (env-vars-section)
      (billing-section)
@@ -828,12 +780,10 @@
 
 (defn TabsDeployment
   [uuid]
-  (let [deployment  (subscribe [::subs/deployment])
-        resource-id (str "deployment/" uuid)]
-    (refresh resource-id)
+  (let [deployment (subscribe [::subs/deployment])]
+    (dispatch [::events/init (str "deployment/" uuid)])
     (fn [_]
-      (let [active-tab (subscribe [::subs/active-tab])
-            panes      (deployment-detail-panes)]
+      (let [panes (deployment-detail-panes)]
         [components/LoadingPage {:dimmable? true}
          [:<>
           [components/NotFoundPortal
@@ -842,17 +792,15 @@
            :no-deployment-message-content]
           [PageHeader]
           [MenuBar @deployment]
-          [components/ErrorJobsMessage ::job-subs/jobs ::events/set-active-tab :jobs]
+          [components/ErrorJobsMessage ::job-subs/jobs
+           nil nil #(dispatch [::tab-plugin/change-tab [::spec/tab] :jobs])]
           [ProgressBars]
           [vpn-info]
-          [ui/Tab
-           {:menu        {:secondary true
-                          :pointing  true
-                          :style     {:display        "flex"
-                                      :flex-direction "row"
-                                      :flex-wrap      "wrap"}}
-            :panes       panes
-            :activeIndex (tab/key->index panes @active-tab)
-            :onTabChange (tab/on-tab-change
-                           panes #(dispatch [::events/set-active-tab %]))}]
-          ]]))))
+          [tab-plugin/Tab
+           {:db-path [::spec/tab]
+            :menu    {:secondary true
+                      :pointing  true
+                      :style     {:display        "flex"
+                                  :flex-direction "row"
+                                  :flex-wrap      "wrap"}}
+            :panes   panes}]]]))))

@@ -174,50 +174,28 @@
 
 (s/def ::module-not-found? boolean?)
 
-(s/def ::db (s/keys :req [::active-input
-                          ::form-spec
-                          ::form-valid?
-                          ::validate-form?
-                          ::is-new?
-                          ::completed?
-                          ::add-modal-visible?
-                          ::default-logo-url
-                          ::logo-url-modal-visible?
-                          ::save-modal-visible?
-                          ::commit-message
-                          ::registries-infra
-                          ::registries-credentials
-                          ::validate-docker-compose
-                          ::compare-module-left
-                          ::compare-module-right
-                          ::module
-                          ::version
-                          ::copy-module
-                          ::paste-modal-visible?
-                          ::active-tab
-                          ::module-not-found?]))
-
-(def defaults {::active-input              nil
-               ::form-spec                 nil
-               ::form-valid?               true
-               ::validate-form?            false
-               ::is-new?                   false
-               ::completed?                true
-               ::add-modal-visible?        false
-               ::logo-url-modal-visible?   false
-               ::save-modal-visible?       false
-               ::default-logo-url          "/ui/images/noimage.png"
-               ::commit-message            ""
-               ::registries                nil
-               ::registries-infra          nil
-               ::registries-credentials    nil
-               ::validate-docker-compose   nil
-               ::compare-module-left       nil
-               ::compare-module-right      nil
-               ::module                    nil
-               ::version                   nil
-               ::copy-module               nil
-               ::paste-modal-visible?      false
-               ::active-tab                :overview
-               ::module-not-found?         false
-               ::details-validation-errors #{}})
+(def defaults
+  {::active-input              nil
+   ::form-spec                 nil
+   ::form-valid?               true
+   ::validate-form?            false
+   ::is-new?                   false
+   ::completed?                true
+   ::add-modal-visible?        false
+   ::logo-url-modal-visible?   false
+   ::save-modal-visible?       false
+   ::default-logo-url          "/ui/images/noimage.png"
+   ::commit-message            ""
+   ::registries                nil
+   ::registries-infra          nil
+   ::registries-credentials    nil
+   ::validate-docker-compose   nil
+   ::compare-module-left       nil
+   ::compare-module-right      nil
+   ::module                    nil
+   ::version                   nil
+   ::copy-module               nil
+   ::paste-modal-visible?      false
+   ::active-tab                :overview
+   ::module-not-found?         false
+   ::details-validation-errors #{}})

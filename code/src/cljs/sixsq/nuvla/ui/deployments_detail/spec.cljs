@@ -1,40 +1,27 @@
 (ns sixsq.nuvla.ui.deployments-detail.spec
   (:require
-    [clojure.spec.alpha :as s]))
-
+    [clojure.spec.alpha :as s]
+    [sixsq.nuvla.ui.plugins.events :as events-plugin]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]))
 
 (s/def ::deployment any?)
-
+(s/def ::loading? boolean?)
 (s/def ::module-versions any?)
-
 (s/def ::deployment-parameters any?)
-
 (s/def ::events any?)
-
 (s/def ::node-parameters any?)
-
 (s/def ::upcoming-invoice any?)
-
-(s/def ::active-tab keyword?)
-
 (s/def ::not-found? boolean?)
 
-
-(s/def ::db (s/keys :req [::not-found?
-                          ::deployment
-                          ::deployment-parameters
-                          ::events
-                          ::node-parameters
-                          ::upcoming-invoice
-                          ::active-tab]))
-
-
-(def defaults {::not-found?                false
-               ::deployment                nil
-               ::deployment-parameters     nil
-               ::module-versions           nil
-               ::events                    nil
-               ::node-parameters           nil
-               ::deployment-log-controller nil
-               ::upcoming-invoice          nil
-               ::active-tab                :overview})
+(def defaults
+  {::not-found?                false
+   ::deployment                nil
+   ::deployment-parameters     nil
+   ::loading?                  true
+   ::module-versions           nil
+   ::events                    (events-plugin/build-spec
+                                 :default-items-per-page 15)
+   ::node-parameters           nil
+   ::deployment-log-controller nil
+   ::upcoming-invoice          nil
+   ::tab                       (tab-plugin/build-spec)})

@@ -86,10 +86,11 @@
     [:div style/center-items
      [ui/CardGroup {:centered    true
                     :itemsPerRow 4}
-      (for [{:keys [id] :as nuvlabox} selected-nbs]
-        (when id
-          ^{:key id}
-          [views-utils/NuvlaboxCard nuvlabox managers]))]]))
+      (doall
+        (for [{:keys [id] :as nuvlabox} selected-nbs]
+         (when id
+           ^{:key id}
+           [views-utils/NuvlaboxCard nuvlabox managers])))]]))
 
 
 (defn NuvlaboxTable
@@ -204,7 +205,7 @@
        (when (not-empty status-notes)
          [ui/TableFooter
           [ui/TableRow
-           [ui/TableCell {:colspan 2}
+           [ui/TableCell {:colSpan 2}
             [ui/Message {:color "brown"
                          :size  "tiny"}
              [ui/MessageHeader

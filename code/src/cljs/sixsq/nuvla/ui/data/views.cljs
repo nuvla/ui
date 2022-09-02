@@ -6,6 +6,7 @@
     [sixsq.nuvla.ui.data-set.events :as data-set-events]
     [sixsq.nuvla.ui.data-set.views :as data-set-views]
     [sixsq.nuvla.ui.data.events :as events]
+    [sixsq.nuvla.ui.data.spec :as spec]
     [sixsq.nuvla.ui.data.subs :as subs]
     [sixsq.nuvla.ui.data.utils :as utils]
     [sixsq.nuvla.ui.deployment-dialog.events :as deployment-dialog-events]
@@ -17,21 +18,20 @@
     [sixsq.nuvla.ui.main.components :as components]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.utils.general :as utils-general]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.tab :as tab]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as utils-values]))
 
-
 (def view-type (r/atom :cards))
-
 
 (defn refresh []
   (dispatch [::events/refresh]))
-
 
 (defn NewDatasetModal []
   (let [open?                  (subscribe [::subs/modal-open?])
@@ -97,7 +97,6 @@
             :positive true
             :on-click #(dispatch [::events/add-data-set])}]]]))))
 
-
 (defn AddDataSet []
   (let [tr (subscribe [::i18n-subs/tr])]
     [uix/MenuItem
@@ -105,10 +104,9 @@
       :icon     "add"
       :on-click #(dispatch [::events/set-modal-open? true])}]))
 
-
 (defn MenuBar
   []
-  (let [active-tab (subscribe [::subs/active-tab])]
+  (let [active-tab (subscribe [::tab-plugin/active-tab [::spec/tab]])]
     [components/StickyBar
      [ui/Menu {:borderless true, :stackable true}
       [data-set-views/ProcessButton :menu-item]
@@ -122,24 +120,16 @@
       [components/RefreshMenu
        {:on-refresh refresh}]]]))
 
-
-(defn FullTextSearch
-  []
-  (let [full-text (subscribe [::subs/full-text-search])]
-    (fn []
-      [components/SearchInput
-       {:on-change     (ui-callback/input-callback
-                         #(dispatch [::events/set-full-text-search %]))
-        :default-value @full-text}])))
-
-
 (defn SearchBar []
   (let [tr (subscribe [::i18n-subs/tr])]
     [:div {:style {:padding "10px 0"}}
      [ui/Message {:info true}
       (@tr [:data-set-search-message])]
-     [data-set-views/SearchHeader refresh [FullTextSearch]]]))
-
+     [data-set-views/SearchHeader refresh
+      [full-text-search-plugin/FullTextSearch
+       {:db-path      [::spec/data-search]
+        :change-event [::pagination-plugin/change-page
+                       [::spec/pagination] 1]}]]]))
 
 (defn ApplicationSelectModal
   []
@@ -191,25 +181,13 @@
            [ui/Icon {:name "rocket"}]
            (@tr [:launch])]]]))))
 
-
 (defn Pagination
   []
-  (let [elements-per-page (subscribe [::subs/elements-per-page])
-        page              (subscribe [::subs/page])
-        total-elements    (subscribe [::subs/total])
-        total-pages       (utils-general/total-pages @total-elements @elements-per-page)]
-
-    [uix/Pagination {:totalitems              @total-elements
-                     :totalPages              total-pages
-                     :activePage              @page
-                     :elementsperpage         @elements-per-page
-                     :onElementsPerPageChange (ui-callback/value
-                                                #(do (dispatch [::events/set-elements-per-page %])
-                                                     (dispatch [::events/set-page 1])
-                                                     (dispatch [::events/get-data-sets])))
-                     :onPageChange            (ui-callback/callback
-                                                :activePage #(dispatch [::events/set-page %]))}]))
-
+  (let [total-elements @(subscribe [::subs/total])]
+    [pagination-plugin/Pagination
+     {:db-path      [::spec/pagination]
+      :change-event [::events/refresh]
+      :total-items  total-elements}]))
 
 (defn DataSetRow
   [{:keys [id name description tags created module-filter data-record-filter] :as _data-set}]
@@ -235,7 +213,6 @@
          [ui/TableCell [uix/Tags tags]]
          [ui/TableCell (utils-values/as-link id :label uuid)]]))))
 
-
 (defn DataSetTable
   []
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -257,7 +234,6 @@
          ^{:key id}
          [DataSetRow ds])]]
      [Pagination]]))
-
 
 (defn DataSetCard
   [{:keys [id name description tags] :as _data-set}]
@@ -286,7 +262,6 @@
                      (dispatch [::history-events/navigate (utils/data-record-href id)])
                      (.preventDefault event))}]))
 
-
 (defn DataSetCards
   []
   (let [tr        (subscribe [::i18n-subs/tr])
@@ -309,14 +284,12 @@
                               (vals @data-sets)))))]
          [Pagination]]))))
 
-
 (defn DataRecords
   []
   (dispatch [::data-set-events/get-data-records])
   (case @view-type
     :cards [data-set-views/DataRecordCards [data-set-views/Pagination]]
     :table [data-set-views/DataRecordTable [data-set-views/Pagination]]))
-
 
 (defn DataSets
   []
@@ -325,7 +298,6 @@
    (case @view-type
      :cards [DataSetCards]
      :table [DataSetTable])])
-
 
 (defn data-panes
   []
@@ -338,12 +310,10 @@
                :icon    "file"}
     :render   #(r/as-element [DataRecords])}])
 
-
 (defn Data
   []
   (refresh)
-  (let [tr         (subscribe [::i18n-subs/tr])
-        active-tab (subscribe [::subs/active-tab])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (fn []
       (let [panes (data-panes)]
         [components/LoadingPage {}
@@ -351,22 +321,19 @@
           [uix/PageHeader "database" (@tr [:data-processing])]
           [MenuBar]
           [NewDatasetModal]
-          [ui/Tab
-           {:menu        {:secondary true
-                          :pointing  true
-                          :style     {:display        "flex"
-                                      :flex-direction "row"
-                                      :flex-wrap      "wrap"}}
-            :panes       panes
-            :activeIndex (tab/key->index panes @active-tab)
-            :onTabChange (tab/on-tab-change
-                           panes
-                           #(dispatch [::events/set-active-tab %]))}]
+          [tab-plugin/Tab
+           {:db-path      [::spec/tab]
+            :menu         {:secondary true
+                           :pointing  true
+                           :style     {:display        "flex"
+                                       :flex-direction "row"
+                                       :flex-wrap      "wrap"}}
+            :change-event [::events/tab-changed]
+            :panes        panes}]
           [ApplicationSelectModal]
           [deployment-dialog-views/deploy-modal true]
           [data-set-views/ProcessButton]
           [data-set-views/CreateDataSet]]]))))
-
 
 (defmethod panel/render :data
   [path]

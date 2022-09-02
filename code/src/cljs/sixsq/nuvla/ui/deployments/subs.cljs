@@ -4,54 +4,30 @@
     [sixsq.nuvla.ui.deployments.spec :as spec]
     [sixsq.nuvla.ui.deployments.utils :as utils]))
 
-
 (reg-sub
   ::deployments
   (fn [db]
     (::spec/deployments db)))
-
 
 (reg-sub
   ::deployments-summary
   (fn [db]
     (::spec/deployments-summary db)))
 
-
 (reg-sub
   ::deployments-summary-all
   (fn [db]
     (::spec/deployments-summary-all db)))
-
-
-(reg-sub
-  ::elements-per-page
-  (fn [db]
-    (::spec/elements-per-page db)))
-
-
-(reg-sub
-  ::page
-  (fn [db]
-    (::spec/page db)))
-
-
-(reg-sub
-  ::full-text-search
-  (fn [db]
-    (::spec/full-text-search db)))
-
 
 (reg-sub
   ::additional-filter
   (fn [db]
     (::spec/additional-filter db)))
 
-
 (reg-sub
   ::view
   (fn [db]
     (::spec/view db)))
-
 
 (reg-sub
   ::deployments-params-map
@@ -122,7 +98,6 @@
   :<- [::selected-set]
   (fn [selected-set [_ id]]
     (utils/is-selected? selected-set id)))
-
 
 (reg-sub
   ::bulk-jobs-monitored

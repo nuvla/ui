@@ -87,7 +87,7 @@
   :dependencies [[reagent "1.1.1" :scope "provided"
                   :exclusions [cljsjs/react
                                cljsjs/react-dom]]
-                 [re-frame "1.2.0" :scope "provided"]
+                 [re-frame "1.3.0" :scope "provided"]
                  [day8.re-frame/http-fx "0.2.4" :scope "provided"]
                  [cljs-ajax "0.8.4" :scope "provided"]
                  [clj-commons/secretary :scope "provided"]

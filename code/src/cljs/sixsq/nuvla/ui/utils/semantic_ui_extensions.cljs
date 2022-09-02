@@ -493,7 +493,8 @@
        :bordered true
        :style    {:width      "auto"
                   :height     "200px"
-                  :object-fit "cover"}}])
+                  :object-fit "cover"
+                  :background "white"}}])
 
    (when corner-button corner-button)
 

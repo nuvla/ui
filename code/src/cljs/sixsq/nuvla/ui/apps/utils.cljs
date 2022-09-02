@@ -100,6 +100,20 @@
     "application_kubernetes" "cubes"
     "question circle"))
 
+(defn subtype-icon-infra
+  [subtype selected]
+  (case subtype
+    "project" [ui/Icon {:name "folder"}]
+    "component" [ui/Icon {:name "docker"}]
+    "application" [ui/Icon {:name "docker"}]
+    "application_kubernetes" [ui/Image {:src   (if selected
+                                                 "/ui/images/kubernetes.svg"
+                                                 "/ui/images/kubernetes-grey.svg")
+                                        :style {:width   "1.18em"
+                                                :margin  "0 .25rem 0 0"
+                                                :display :inline-block}}]
+    [ui/Icon {:name "question circle"}]))
+
 
 (defn meta-subtype-icon
   [subtype]

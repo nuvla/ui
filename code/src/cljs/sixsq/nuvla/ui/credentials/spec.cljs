@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.credentials.spec
   (:require
     [clojure.spec.alpha :as s]
+    [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.utils.spec :as utils-spec]))
 
 
@@ -166,24 +167,7 @@
 (s/def ::infrastructure-services-available any?)
 
 (s/def ::active-tab keyword?)
-
-(s/def ::db (s/keys :req [::add-credential-modal-visible?
-                          ::credential-modal-visible?
-                          ::generated-credential-modal
-                          ::credential
-                          ::credentials
-                          ::credentials-summary
-                          ::active-input
-                          ::form-spec
-                          ::form-valid?
-                          ::validate-form?
-                          ::credential-password
-                          ::error-message
-                          ::state-selector
-                          ::infrastructure-services-available
-                          ::active-tab
-                          ::credential-check-table]))
-
+(s/def ::tab any?)
 
 (def defaults {::add-credential-modal-visible?     false
                ::credential-modal-visible?         false
@@ -200,5 +184,5 @@
                ::state-selector                    nil
                ::infrastructure-services-available nil
                ::credential-check-table            nil
-               ::active-tab                        :cloud-services})
+               ::tab                               (tab-plugin/build-spec)})
 

@@ -238,9 +238,3 @@
                                        {:job-id      (:location response)
                                         :on-complete #(dispatch [::check-credential-complete %])}])
                                     )])))))
-
-
-(reg-event-db
-  ::set-active-tab
-  (fn [db [_ active-tab]]
-    (assoc db ::spec/active-tab active-tab)))

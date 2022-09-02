@@ -1,28 +1,17 @@
 (ns sixsq.nuvla.ui.deployments.spec
   (:require
-    [clojure.spec.alpha :as s]))
-
-
-(s/def ::nuvlabox (s/nilable string?))
+    [clojure.spec.alpha :as s]
+    [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
+    [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]))
 
 (s/def ::deployments any?)
-
 (s/def ::deployments-summary any?)
-
 (s/def ::deployments-summary-all any?)
-
-(s/def ::page int?)
-
-(s/def ::elements-per-page int?)
-
-(s/def ::full-text-search (s/nilable string?))
-
+(s/def ::deployments-search any?)
 (s/def ::additional-filter (s/nilable string?))
-
+(s/def ::filter-external (s/nilable string?))
 (s/def ::view #{"cards" "table"})
-
 (s/def ::deployments-params-map {})
-
 (s/def ::state-selector #{"all"
                           "started"
                           "starting"
@@ -30,43 +19,23 @@
                           "stopped"
                           "error"
                           "pending"})
-
 (s/def ::bulk-update-modal any?)
-
 (s/def ::selected-set set?)
-
 (s/def ::select-all? boolean?)
-
 (s/def ::bulk-jobs-monitored any?)
 
-(s/def ::db (s/keys :req [::deployments
-                          ::deployments-summary
-                          ::deployments-summary-all
-                          ::deployments-params-map
-                          ::page
-                          ::elements-per-page
-                          ::full-text-search
-                          ::additional-filter
-                          ::nuvlabox
-                          ::view
-                          ::state-selector
-                          ::bulk-update-modal
-                          ::selected-set
-                          ::select-all?
-                          ::bulk-jobs-monitored]))
-
-(def defaults {::page                    1
-               ::elements-per-page       8
-               ::full-text-search        nil
+(def defaults {::deployments-search      (full-text-search-plugin/build-spec)
                ::additional-filter       nil
-               ::nuvlabox                nil
                ::deployments             nil
                ::deployments-summary     nil
                ::deployments-summary-all nil
                ::deployments-params-map  nil
+               ::filter-external         nil
                ::view                    "cards"
                ::state-selector          "all"
                ::bulk-update-modal       nil
                ::selected-set            #{}
                ::select-all?             false
-               ::bulk-jobs-monitored     (sorted-map)})
+               ::bulk-jobs-monitored     (sorted-map)
+               ::pagination              (pagination-plugin/build-spec
+                                           :default-items-per-page 8)})

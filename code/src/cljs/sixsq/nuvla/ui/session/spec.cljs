@@ -25,20 +25,6 @@
 
 (s/def ::callback-2fa (s/nilable string?))
 
-
-(s/def ::db (s/keys :req [::session-loading?
-                          ::session
-                          ::error-message
-                          ::success-message
-                          ::redirect-uri
-                          ::server-redirect-uri
-                          ::loading?
-                          ::peers
-                          ::groups
-                          ::callback-2fa
-                          ::groups-hierarchies]))
-
-
 (def defaults
   {::session-loading?    true
    ::session             nil

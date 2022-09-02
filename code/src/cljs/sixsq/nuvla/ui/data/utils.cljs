@@ -3,23 +3,20 @@
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.time :as time]))
 
-
 (defn matches-parameter-name?
   [parameter-name parameter]
   (and parameter-name (= parameter-name (:parameter parameter))))
 
-
 (defn update-parameter-in-list
   [name value parameters]
   (let [f       (partial matches-parameter-name? name)
-        current (first (filter f parameters))               ;; FIXME: Use group-by instead?
+        current (first (filter f parameters))
         others  (remove f parameters)]
     (when current
       (->> (assoc current :value value)
            (conj others)
            (sort-by :parameter)
            vec))))
-
 
 (defn update-parameter-in-deployment
   [name value deployment]
@@ -30,7 +27,6 @@
        (update-parameter-in-list name value)
        (assoc-in deployment [:module :content :inputParameters])))
 
-
 (defn create-time-period-filter
   [[time-start time-end]]
   (str "(timestamp>='"
@@ -38,7 +34,6 @@
        "' and timestamp<'"
        (time/time->utc-str time-end)
        "')"))
-
 
 (defn format-bytes
   [bytes]
@@ -53,15 +48,6 @@
           (str (general-utils/round-up v :n-decimal 1) prefix))))
     "..."))
 
-
 (defn data-record-href
   [id]
   (str "data/" (general-utils/id->uuid id)))
-
-
-(defn get-query-params
-  [full-text-search page elements-per-page]
-  {:first   (inc (* (dec page) elements-per-page))
-   :last    (* page elements-per-page)
-   :orderby "created:desc"
-   :filter  (general-utils/fulltext-query-string full-text-search)})

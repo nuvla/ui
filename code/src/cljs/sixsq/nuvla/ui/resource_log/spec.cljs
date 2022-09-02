@@ -11,22 +11,13 @@
 (s/def ::components any?)
 (s/def ::available-components coll?)
 
-
-(s/def ::db (s/keys :req [::resource-log
-                          ::id
-                          ::parent
-                          ::since
-                          ::play?
-                          ::components
-                          ::available-components]))
-
 (defn default-since []
   (.seconds (time/now) 0))
 
-(def defaults {::resource-log nil
-               ::id           nil
-               ::parent       nil
-               ::play?        false
-               ::since        (default-since)
-               ::components   nil
+(def defaults {::resource-log         nil
+               ::id                   nil
+               ::parent               nil
+               ::play?                false
+               ::since                (default-since)
+               ::components           nil
                ::available-components []})

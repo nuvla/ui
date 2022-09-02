@@ -9,7 +9,6 @@
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]))
 
-
 (defn log-controller
   [_go-live? _current-log]
   (let [locale           (subscribe [::i18n-subs/locale])
@@ -71,7 +70,6 @@
           [ui/Icon {:name "trash", :corner true}]]
          "Clear"]]])))
 
-
 (defn LogsArea
   [log scroll-info go-live?]
   [:<>
@@ -92,7 +90,6 @@
                     :class    ["large-height"]}]]
    [ui/Label (str "line count:")
     [ui/LabelDetail (count log)]]])
-
 
 (defn logs-viewer
   [parent components-subs]
@@ -135,7 +132,6 @@
              [ui/Header {:icon true}
               [ui/Icon {:name "search"}]
               "Get logs"])]]]))))
-
 
 (defn TabLogs
   [_parent _components-subs]

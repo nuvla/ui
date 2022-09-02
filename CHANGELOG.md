@@ -2,8 +2,11 @@
 
 ## Unreleased
 
+## [2.32.4] - 2022-09-02
+
 ### Added
 
+- Deployment fleets page (experimental hidden)
 - Module versions plugin
 - Step group plugin
 - Full text search plugin

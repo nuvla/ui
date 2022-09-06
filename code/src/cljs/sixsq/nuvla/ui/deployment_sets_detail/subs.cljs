@@ -1,8 +1,8 @@
-(ns sixsq.nuvla.ui.deployment-fleets-detail.subs
+(ns sixsq.nuvla.ui.deployment-sets-detail.subs
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.deployment-fleets-detail.spec :as spec]
+    [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub
@@ -11,26 +11,26 @@
     (::spec/loading? db)))
 
 (reg-sub
-  ::deployment-fleet
+  ::deployment-set
   (fn [db]
-    (::spec/deployment-fleet db)))
+    (::spec/deployment-set db)))
 
 (reg-sub
   ::can-edit?
-  :<- [::deployment-fleet]
-  (fn [deployment-fleet _]
-    (general-utils/can-edit? deployment-fleet)))
+  :<- [::deployment-set]
+  (fn [deployment-set _]
+    (general-utils/can-edit? deployment-set)))
 
 (reg-sub
   ::can-delete?
-  :<- [::deployment-fleet]
-  (fn [deployment-fleet _]
-    (general-utils/can-delete? deployment-fleet)))
+  :<- [::deployment-set]
+  (fn [deployment-set _]
+    (general-utils/can-delete? deployment-set)))
 
 (reg-sub
-  ::deployment-fleet-not-found?
+  ::deployment-set-not-found?
   (fn [db]
-    (::spec/deployment-fleet-not-found? db)))
+    (::spec/deployment-set-not-found? db)))
 
 (reg-sub
   ::apps

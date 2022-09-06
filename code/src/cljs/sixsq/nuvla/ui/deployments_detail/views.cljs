@@ -616,7 +616,7 @@
         version         (subscribe [::subs/current-module-version])
         versions        (subscribe [::subs/module-versions])
         {:keys [id state module tags acl owner created-by
-                deployment-fleet]} @deployment
+                deployment-set]} @deployment
         owners          (:owners acl)
         resolved-owners (subscribe [::session-subs/resolve-users owners])
         urls            (get-in module [:content :urls])]
@@ -666,12 +666,12 @@
         [ui/TableRow
          [ui/TableCell (str/capitalize (@tr [:version-number]))]
          [ui/TableCell @version " " (up-to-date? @version @versions)]]
-        (when deployment-fleet
+        (when deployment-set
           [ui/TableRow
-           [ui/TableCell (str/capitalize (@tr [:deployment-fleet]))]
-           [ui/TableCell [values/as-link (general-utils/id->uuid deployment-fleet) :label
-                          (general-utils/id->uuid deployment-fleet)
-                          :page "deployment-fleets"]]])]]]
+           [ui/TableCell (str/capitalize (@tr [:deployment-set]))]
+           [ui/TableCell [values/as-link (general-utils/id->uuid deployment-set) :label
+                          (general-utils/id->uuid deployment-set)
+                          :page "deployment-sets"]]])]]]
      (when-not (deployments-utils/stopped? state)
        [ui/Segment {:attached  false
                     :secondary true}

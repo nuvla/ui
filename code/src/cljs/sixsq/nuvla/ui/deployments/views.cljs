@@ -24,7 +24,8 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]))
 
 (defn refresh
   []
@@ -383,8 +384,7 @@
 
 (defn DeploymentsMainContent
   []
-  (let [tr                  (subscribe [::i18n-subs/tr])
-        bulk-jobs-monitored (subscribe [::subs/bulk-jobs-monitored])]
+  (let [tr (subscribe [::i18n-subs/tr])]
     (dispatch [::events/init])
     (fn []
       [components/LoadingPage {}
@@ -396,12 +396,8 @@
                   :reversed  "mobile"}
          [ControlBar]
          [StatisticStates true ::subs/deployments-summary]]
-        (for [[job-id job] @bulk-jobs-monitored]
-          ^{:key job-id}
-          [components/BulkActionProgress
-           {:header      "Bulk update in progress"
-            :job         job
-            :on-dissmiss #(dispatch [::events/dissmiss-bulk-job-monitored job-id])}])
+        [bulk-progress-plugin/MonitoredJobs
+         {:db-path [::spec/bulk-jobs]}]
         [DeploymentsDisplay]
         [Pagination]]])))
 

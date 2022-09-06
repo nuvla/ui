@@ -1,9 +1,9 @@
-(ns sixsq.nuvla.ui.deployment-fleets-detail.events
+(ns sixsq.nuvla.ui.deployment-sets-detail.events
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
-    [sixsq.nuvla.ui.deployment-fleets-detail.spec :as spec]
+    [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
     [sixsq.nuvla.ui.deployments.events :as deployments-events]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.job.events :as job-events]
@@ -25,10 +25,10 @@
     {:db (merge db spec/defaults)}))
 
 (reg-event-fx
-  ::set-deployment-fleet
-  (fn [{:keys [db]} [_ deployment-fleet]]
-    {:db (assoc db ::spec/deployment-fleet-not-found? (nil? deployment-fleet)
-                   ::spec/deployment-fleet deployment-fleet
+  ::set-deployment-set
+  (fn [{:keys [db]} [_ deployment-set]]
+    {:db (assoc db ::spec/deployment-set-not-found? (nil? deployment-set)
+                   ::spec/deployment-set deployment-set
                    ::main-spec/loading? false)}))
 
 (reg-event-fx
@@ -51,21 +51,20 @@
                                           status (str " (" status ")"))
                          :content message
                          :type    :success}]))
-           (on-success-fn (:message %))
-           (dispatch [::get-nuvlabox resource-id])))
+           (on-success-fn %)))
       data]}))
 
 (reg-event-fx
-  ::get-deployment-fleet
-  (fn [{{:keys [::spec/deployment-fleet] :as db} :db} [_ id]]
+  ::get-deployment-set
+  (fn [{{:keys [::spec/deployment-set] :as db} :db} [_ id]]
     {:db               (cond-> db
-                               (not= (:id deployment-fleet) id) (merge spec/defaults))
-     ::cimi-api-fx/get [id #(dispatch [::set-deployment-fleet %])
-                        :on-error #(dispatch [::set-deployment-fleet nil])]
+                               (not= (:id deployment-set) id) (merge spec/defaults))
+     ::cimi-api-fx/get [id #(dispatch [::set-deployment-set %])
+                        :on-error #(dispatch [::set-deployment-set nil])]
      :fx               [[:dispatch [::events-plugin/load-events [::spec/events] id]]
                         [:dispatch [::job-events/get-jobs id]]
                         [:dispatch [::deployments-events/get-deployments
-                                    (str "deployment-fleet='" id "'")]]]}))
+                                    (str "deployment-set='" id "'")]]]}))
 
 (reg-event-fx
   ::edit
@@ -84,13 +83,13 @@
                                            {:header  success-msg
                                             :content success-msg
                                             :type    :success}]))
-                              (dispatch [::set-deployment-fleet %])))]}))
+                              (dispatch [::set-deployment-set %])))]}))
 
 (reg-event-fx
   ::delete
-  (fn [{{:keys [::spec/deployment-fleet]} :db} _]
-    (let [id (:id deployment-fleet)]
-      {::cimi-api-fx/delete [id #(dispatch [::history-events/navigate "deployment-fleets"])]})))
+  (fn [{{:keys [::spec/deployment-set]} :db} _]
+    (let [id (:id deployment-set)]
+      {::cimi-api-fx/delete [id #(dispatch [::history-events/navigate "deployment-sets"])]})))
 
 (reg-event-fx
   ::custom-action
@@ -274,7 +273,7 @@
            df-descr :description
            df-start :start}]]
     {::cimi-api-fx/add
-     [:deployment-fleet
+     [:deployment-set
       (cond->
         {:spec {:applications (map #(module-version-plugin/selected-version
                                       db [::spec/module-versions] (:id %))
@@ -284,5 +283,5 @@
         df-name (assoc :name df-name)
         df-descr (assoc :description df-descr))
       #(dispatch [::history-events/navigate
-                  (str "deployment-fleets/"
+                  (str "deployment-sets/"
                        (general-utils/id->uuid (:resource-id %)))])]}))

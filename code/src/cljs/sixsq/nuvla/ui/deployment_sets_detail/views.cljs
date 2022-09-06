@@ -1,4 +1,4 @@
-(ns sixsq.nuvla.ui.deployment-fleets-detail.views
+(ns sixsq.nuvla.ui.deployment-sets-detail.views
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
@@ -6,9 +6,9 @@
     [sixsq.nuvla.ui.acl.views :as acl]
     [sixsq.nuvla.ui.apps.utils :as apps-utils]
     [sixsq.nuvla.ui.cimi-detail.views :as cimi-detail-views]
-    [sixsq.nuvla.ui.deployment-fleets-detail.events :as events]
-    [sixsq.nuvla.ui.deployment-fleets-detail.spec :as spec]
-    [sixsq.nuvla.ui.deployment-fleets-detail.subs :as subs]
+    [sixsq.nuvla.ui.deployment-sets-detail.events :as events]
+    [sixsq.nuvla.ui.deployment-sets-detail.spec :as spec]
+    [sixsq.nuvla.ui.deployment-sets-detail.subs :as subs]
     [sixsq.nuvla.ui.deployments.subs :as deployments-subs]
     [sixsq.nuvla.ui.deployments.views :as deployments-views]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -28,10 +28,11 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]))
 
 
-(def refresh-action-id :deployment-fleet-get-deployment-fleet)
+(def refresh-action-id :deployment-set-get-deployment-set)
 
 
 (defn refresh
@@ -39,19 +40,34 @@
   (dispatch [::main-events/action-interval-start
              {:id        refresh-action-id
               :frequency 10000
-              :event     [::events/get-deployment-fleet (str "deployment-fleet/" uuid)]}]))
+              :event     [::events/get-deployment-set (str "deployment-set/" uuid)]}]))
 
+(defn StartButton
+  [{:keys [id] :as deployment-set}]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    [ui/MenuItem
+     {:on-click (fn [_]
+                  (dispatch [::events/operation id "start" {}
+                             #(dispatch [::bulk-progress-plugin/monitor
+                                         [::spec/bulk-jobs] (:location %)])
+                             #()]))
+      :disabled (not (general-utils/can-operation?
+                       "start" deployment-set))}
+     [ui/Icon {:name "play"}]
+     (@tr [:start])]))
 
 (defn MenuBar [uuid]
-  (let [deployment-fleet (subscribe [::subs/deployment-fleet])
-        loading?         (subscribe [::subs/loading?])]
+  (let [deployment-set (subscribe [::subs/deployment-set])
+        loading?       (subscribe [::subs/loading?])]
     (fn []
       (let [MenuItems (cimi-detail-views/format-operations
-                        @deployment-fleet
-                        #{})]
+                        @deployment-set
+                        #{"start"})]
         [components/StickyBar
          [components/ResponsiveMenuBar
-          MenuItems
+          (conj MenuItems
+                ^{:key "start"}
+                [StartButton @deployment-set])
           [components/RefreshMenu
            {:action-id  refresh-action-id
             :loading?   @loading?
@@ -60,26 +76,26 @@
 
 (defn EditableCell
   [attribute]
-  (let [tr               (subscribe [::i18n-subs/tr])
-        deployment-fleet (subscribe [::subs/deployment-fleet])
-        can-edit?        (subscribe [::subs/can-edit?])
-        id               (:id @deployment-fleet)
-        on-change-fn     #(dispatch [::events/edit
-                                     id {attribute %}
-                                     (@tr [:updated-successfully])])]
+  (let [tr             (subscribe [::i18n-subs/tr])
+        deployment-set (subscribe [::subs/deployment-set])
+        can-edit?      (subscribe [::subs/can-edit?])
+        id             (:id @deployment-set)
+        on-change-fn   #(dispatch [::events/edit
+                                   id {attribute %}
+                                   (@tr [:updated-successfully])])]
     (if @can-edit?
-      [components/EditableInput attribute @deployment-fleet on-change-fn]
-      [ui/TableCell (get @deployment-fleet attribute)])))
+      [components/EditableInput attribute @deployment-set on-change-fn]
+      [ui/TableCell (get @deployment-set attribute)])))
 
 
-(defn TabOverviewDeploymentFleet
+(defn TabOverviewDeploymentSet
   [{:keys [id created updated created-by state]}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
     [ui/Segment {:secondary true
                  :color     "blue"
                  :raised    true}
-     [:h4 "Deployment fleet"]
+     [:h4 "Deployment set"]
      [ui/Table {:basic  "very"
                 :padded false}
       [ui/TableBody
@@ -109,28 +125,28 @@
 
 
 (defn TabOverviewTags
-  [{:keys [id] :as deployment-fleet}]
+  [{:keys [id] :as deployment-set}]
   (let [tr (subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
                  :color     "teal"
                  :raised    true}
      [:h4 "Tags"]
      [components/EditableTags
-      deployment-fleet #(dispatch [::events/edit id {:tags %}
-                                   (@tr [:updated-successfully])])]]))
+      deployment-set #(dispatch [::events/edit id {:tags %}
+                                 (@tr [:updated-successfully])])]]))
 
 (defn TabOverview
   []
-  (let [deployment-fleet (subscribe [::subs/deployment-fleet])]
+  (let [deployment-set (subscribe [::subs/deployment-set])]
     (fn []
-      (let [{:keys [tags]} @deployment-fleet]
+      (let [{:keys [tags]} @deployment-set]
         [ui/TabPane
          [ui/Grid {:columns   2
                    :stackable true
                    :padded    true}
           [ui/GridRow
            [ui/GridColumn {:stretched true}
-            [TabOverviewDeploymentFleet @deployment-fleet]]
+            [TabOverviewDeploymentSet @deployment-set]]
            [ui/GridColumn {:stretched true}
             [deployments-views/DeploymentsOverviewSegment
              ::deployments-subs/deployments nil nil
@@ -138,13 +154,13 @@
 
           (when (seq tags)
             [ui/GridColumn
-             [TabOverviewTags @deployment-fleet]])]]))))
+             [TabOverviewTags @deployment-set]])]]))))
 
-(defn TabsDeploymentFleet
+(defn TabsDeploymentSet
   []
-  (let [tr               @(subscribe [::i18n-subs/tr])
-        deployment-fleet (subscribe [::subs/deployment-fleet])
-        can-edit?        @(subscribe [::subs/can-edit?])]
+  (let [tr             @(subscribe [::i18n-subs/tr])
+        deployment-set (subscribe [::subs/deployment-set])
+        can-edit?      @(subscribe [::subs/can-edit?])]
     [tab/Tab
      {:db-path [::spec/tab]
       :panes   [{:menuItem {:content "Overview"
@@ -153,7 +169,7 @@
                  :render   #(r/as-element [TabOverview])}
                 (events-plugin/events-section
                   {:db-path [::spec/events]
-                   :href    (:id @deployment-fleet)})
+                   :href    (:id @deployment-set)})
                 {:menuItem {:content "Deployments"
                             :key     :deployments
                             :icon    "rocket"}
@@ -161,7 +177,7 @@
                                            {:no-actions true
                                             :empty-msg  (tr [:empty-deployemnt-msg])}])}
                 (job-views/jobs-section)
-                (acl/TabAcls deployment-fleet can-edit? ::events/edit)]
+                (acl/TabAcls deployment-set can-edit? ::events/edit)]
       :menu    {:secondary true
                 :pointing  true}}]))
 
@@ -424,7 +440,6 @@
                               #(swap! create-name-descr assoc key %)))]
     (dispatch [::events/new])
     (fn []
-      (js/console.warn @create-name-descr)
       (let [items [{:key         :select-apps-targets
                     :icon        "bullseye"
                     :content     [StepApplicationsTargets]
@@ -454,12 +469,12 @@
                                   [ui/Form
                                    [ui/FormInput
                                     {:label       (str/capitalize (@tr [:name]))
-                                     :placeholder "Name your deployment fleet"
+                                     :placeholder "Name your deployment set"
                                      :value       (or (:name @create-name-descr) "")
                                      :on-change   (on-change-input :name)}]
                                    [ui/FormInput
                                     {:label       (str/capitalize (@tr [:description]))
-                                     :placeholder "Describe your deployment fleet"
+                                     :placeholder "Describe your deployment set"
                                      :value       (or (:description @create-name-descr) "")
                                      :on-change   (on-change-input :description)}]
                                    [ui/FormCheckbox
@@ -509,27 +524,29 @@
            :fluid   true
            :items   items}]]))))
 
-(defn DeploymentFleet
+(defn DeploymentSet
   [uuid]
   (refresh uuid)
-  (let [{:keys [id name]} @(subscribe [::subs/deployment-fleet])]
+  (let [{:keys [id name]} @(subscribe [::subs/deployment-set])]
     [components/LoadingPage {:dimmable? true}
      [:<>
       [components/NotFoundPortal
-       ::subs/deployment-fleet-not-found?
-       :no-deployment-fleet-message-header
-       :no-deployment-fleet-message-content]
+       ::subs/deployment-set-not-found?
+       :no-deployment-set-message-header
+       :no-deployment-set-message-content]
       [ui/Container {:fluid true}
        [uix/PageHeader "bullseye" (or name id)]
        [MenuBar uuid]
+       [bulk-progress-plugin/MonitoredJobs
+        {:db-path [::spec/bulk-jobs]}]
        [components/ErrorJobsMessage
         ::job-subs/jobs nil nil
         #(dispatch [::tab/change-tab [::spec/tab] :jobs])]
-       [TabsDeploymentFleet]]]]))
+       [TabsDeploymentSet]]]]))
 
 
 (defn Details
   [uuid]
   (if (= (str/lower-case uuid) "new")
     [AddPage]
-    [DeploymentFleet uuid]))
+    [DeploymentSet uuid]))

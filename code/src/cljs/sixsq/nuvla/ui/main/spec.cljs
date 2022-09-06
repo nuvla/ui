@@ -85,12 +85,12 @@
                                                             :icon       "rocket"
                                                             :protected? true
                                                             :order      30}
-                                       ;"deployment-fleets" {:url        "deployment-fleets"
-                                       ;                     :label-kw   :deployment-fleets
-                                       ;                     :name       "deployments-fleets"
-                                       ;                     :icon       "bullseye"
-                                       ;                     :protected? true
-                                       ;                     :order      31}
+                                       "deployment-sets" {:url        "deployment-sets"
+                                                            :label-kw   :deployment-sets
+                                                            :name       "deployments-sets"
+                                                            :icon       "bullseye"
+                                                            :protected? true
+                                                            :order      31}
                                        "edges"             {:url        "edges"
                                                             :label-kw   :edges
                                                             :name       "edges"

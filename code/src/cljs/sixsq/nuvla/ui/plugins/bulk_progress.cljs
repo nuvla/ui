@@ -1,7 +1,8 @@
 (ns sixsq.nuvla.ui.plugins.bulk-progress
   (:require [cljs.spec.alpha :as s]
             [clojure.string :as str]
-            [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx
+                                   reg-sub subscribe]]
             [reagent.core :as r]
             [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
             [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
@@ -15,46 +16,48 @@
             [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (s/def ::monitored-ids set?)
-(s/def ::resources map?)
+(s/def ::jobs map?)
 
 (defn build-spec
   []
   {::monitored-ids #{}
-   ::resources     {}})
+   ::jobs          {}})
 
 (reg-event-db
   ::dissmiss
   (fn [db [_ db-path job-id]]
     (-> db
         (update-in (conj db-path ::monitored-ids) disj job-id)
-        (update-in (conj db-path ::resources) dissoc job-id))))
+        (update-in (conj db-path ::jobs) dissoc job-id))))
 
-(reg-event-db
+(reg-event-fx
   ::monitor
-  (fn [db [_ db-path job-id]]
-    (-> db
-        (update-in (conj db-path ::monitored-ids) conj job-id)
-        (assoc-in (conj db-path ::resources) job-id))))
+  (fn [{db :db} [_ db-path job-id]]
+    {:db (update-in db (conj db-path ::monitored-ids) conj job-id)
+     :fx [[:dispatch [::search-jobs db-path]]]}))
 
 (reg-event-db
   ::set-jobs
   (fn [db [_ db-path resources]]
     (let [monitored-ids-path (conj db-path ::monitored-ids)
+          jobs-path          (conj db-path ::jobs)
           finished-jobs-ids  (->> resources
                                   (remove #(-> % :progress (< 100)))
                                   (map :id))
           monitored-ids      (get-in db monitored-ids-path)
-          ids-to-monitor     (apply disj monitored-ids finished-jobs-ids)]
+          ids-to-monitor     (apply disj monitored-ids finished-jobs-ids)
+          jobs               (-> db
+                                 (get-in (conj db-path ::jobs))
+                                 (merge (->> resources
+                                             (map (juxt :id identity))
+                                             (into {}))))]
       (-> db
-          (assoc-in (conj db-path ::resources) (->> resources
-                                                    (map (juxt :id identity))
-                                                    (into {})))
+          (assoc-in jobs-path jobs)
           (assoc-in monitored-ids-path ids-to-monitor)))))
 
 (reg-event-fx
   ::search-jobs
   (fn [{db :db} [_ db-path]]
-
     (let [monitored-ids (get-in db (conj db-path ::monitored-ids))]
       (when (seq monitored-ids)
         {::cimi-api-fx/search
@@ -72,18 +75,23 @@
                        :frequency 10000
                        :event     [::search-jobs db-path]}]]]}))
 
+(reg-sub
+  ::sorted-jobs
+  (fn [db [_ db-path]]
+    (->> (get-in db (conj db-path ::jobs))
+         vals
+         (sort-by :created >))))
+
 (def job-action->header
   {"bulk_stop_deployment"         :bulk-stop-in-progress
    "bulk_update_deployment"       :bulk-update-in-progress
    "bulk_force_delete_deployment" :bulk-force-delete-in-progress})
 
 (defn- MonitoredJob
-  [{:keys [db-path]} job-id]
-  (let [{:keys [state status-message progress action]
-         :as   _job} @(subscribe [::helpers/retrieve
-                                  (conj db-path ::resources) job-id])
-        tr            @(subscribe [::i18n-subs/tr])
-        on-dissmiss   #(dispatch [::dissmiss db-path job-id])
+  [{:keys [db-path]} {:keys [id state status-message progress action]
+                      :as   _job}]
+  (let [tr            @(subscribe [::i18n-subs/tr])
+        on-dissmiss   #(dispatch [::dissmiss db-path id])
         {:keys [FAILED SUCCESS]
          :as   status-message} (when (not= state "FAILED")
                                  (utils-general/json->edn status-message))
@@ -95,10 +103,11 @@
                         (and some-fail? some-success?) "yellow"
                         (or state-failed? some-fail?) "red"
                         :else "green")
-        Header        [uix/TR (or (job-action->header action)
-                                  (some-> action
-                                          (str/replace-all #"_" " ")
-                                          (general-utils/capitalize-first-letter)))]
+        Header        [uix/TR
+                       (or (job-action->header action)
+                           (some-> action
+                                   (str/replace-all #"_" " ")
+                                   (general-utils/capitalize-first-letter)))]
         ProgressBar   (fn [label]
                         [ui/Progress
                          (cond->
@@ -154,13 +163,13 @@
 (defn MonitoredJobs
   [{:keys [db-path] :as _opts}]
   (dispatch [::start-polling db-path])
-  (let [ids (subscribe [::helpers/retrieve db-path ::monitored-ids])]
+  (let [jobs (subscribe [::sorted-jobs db-path])]
     (fn [opts]
       [:<>
        (doall
-         (for [job-id @ids]
-           ^{:key job-id}
-           [MonitoredJob opts job-id]))])))
+         (for [{:keys [id] :as job} @jobs]
+           ^{:key id}
+           [MonitoredJob opts job]))])))
 
 (s/fdef MonitoredJobs
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path])))

@@ -113,4 +113,17 @@
                                       :class    "icon"}
                            [ui/Icon {:name "student"
                                      :size "large"}]]])
+                       [:form {:action (str @cimi-fx/NUVLA_URL "/api/session")
+                               :method "post"
+                               :style  {:display "inline"}}
+                        [:input {:hidden        true
+                                 :name          "href"
+                                 :default-value "session-template/oidc-icrc"}]
+                        [ui/Button {:style    {:margin-left 10}
+                                    :circular true
+                                    :basic    true
+                                    :type     "submit"
+                                    :class    "icon"}
+                         [ui/Image {:style {:size 32}
+                                    :src "/ui/images/icrc2.png"}]]]
                        ]}])))

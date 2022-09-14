@@ -2,8 +2,6 @@
 
 ## Unreleased
 
-## [2.32.5] - 2022-09-14
-
 ### Changed
 
 - Edge details - Reboot icon for operation in menubar

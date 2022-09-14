@@ -131,6 +131,7 @@
          "ready" "check"
          "start" "rocket"
          "stop" "stop"
+         "reboot" "power"
          "cog")
        op-display
        (if @params

@@ -28,6 +28,11 @@
   (-> moment .clone (.add milliseconds "milliseconds")))
 
 
+(defn subtract-milliseconds
+  [moment milliseconds]
+  (-> moment .clone (.subtract milliseconds "milliseconds")))
+
+
 (defn parse-iso8601
   ([iso8601]
    (parse-iso8601 iso8601 default-locale))

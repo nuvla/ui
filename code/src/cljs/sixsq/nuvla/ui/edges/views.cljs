@@ -52,11 +52,11 @@
                             }
          [components/StatisticState total ["fas fa-box"] "TOTAL"
           clickable? ::events/set-state-selector ::subs/state-selector]
-         [components/StatisticState online [(utils/status->icon utils/status-online)] utils/status-online
+         [components/StatisticState online ["fas fa-power-off"] utils/status-online
           clickable? "green" ::events/set-state-selector ::subs/state-selector]
-         [components/StatisticState offline [(utils/status->icon utils/status-offline) "fas fa-slash"]
+         [components/StatisticState offline ["fas fa-power-off"]
           utils/status-offline clickable? "red" ::events/set-state-selector ::subs/state-selector]
-         [components/StatisticState unknown [(utils/status->icon utils/status-unknown)]
+         [components/StatisticState unknown ["fas fa-power-off"]
           utils/status-unknown clickable? "yellow" ::events/set-state-selector ::subs/state-selector]
          (when clickable?
            [:span

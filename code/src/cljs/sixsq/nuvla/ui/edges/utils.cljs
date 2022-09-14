@@ -38,14 +38,6 @@
     (get icons-map state)))
 
 
-(defn status->icon
-  [status]
-  (let [icons-map {status-online  "fas fa-power-off"
-                   status-offline "fas fa-power-off"
-                   status-unknown "fas fa-question"}]
-    (get icons-map status)))
-
-
 (defn status->keyword
   [online]
   (case online
@@ -66,7 +58,7 @@
   [status]
   (case status
     "OPERATIONAL" "green"
-    "DEGRADED" "red"
+    "DEGRADED" "orange"
     "UNKNOWN" "yellow"
     nil))
 

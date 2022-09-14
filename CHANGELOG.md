@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed
+
+- Edge details - Reboot icon for operation in menubar
+- Edge details - Hide create log action from menubar
+- Edge details - Status segment color was depending on online status
+- Edge details - Hearbeat message simplified and add color depending on online
+  status
+
 ## [2.32.4] - 2022-09-02
 
 ### Added

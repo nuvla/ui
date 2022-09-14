@@ -2,9 +2,7 @@
   (:require
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.edges-detail.spec :as spec]
-    [sixsq.nuvla.ui.edges.utils :as utils]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.time :as time]))
+    [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (reg-sub
   ::loading?
@@ -15,12 +13,6 @@
   ::nuvlabox-status
   (fn [db]
     (::spec/nuvlabox-status db)))
-
-(reg-sub
-  ::nuvlabox-online-status
-  :<- [::nuvlabox-status]
-  (fn [{:keys [online]}]
-    (utils/status->keyword online)))
 
 (reg-sub
   ::nuvlabox-components
@@ -64,12 +56,6 @@
   ::matching-vulns-from-db
   (fn [db]
     (::spec/matching-vulns-from-db db)))
-
-(reg-sub
-  ::next-heartbeat-moment
-  :<- [::nuvlabox-status]
-  (fn [{:keys [next-heartbeat]}]
-    (some-> next-heartbeat time/parse-iso8601)))
 
 (reg-sub
   ::nuvlabox

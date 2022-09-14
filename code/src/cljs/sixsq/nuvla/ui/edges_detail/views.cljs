@@ -24,7 +24,6 @@
     [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
     [sixsq.nuvla.ui.resource-log.views :as log-views]
     [sixsq.nuvla.ui.session.subs :as session-subs]
-    [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
     [sixsq.nuvla.ui.utils.plot :as plot]
@@ -625,7 +624,8 @@
       (let [MenuItems (cimi-detail-views/format-operations
                         @nuvlabox
                         #{"edit" "delete" "activate" "decommission"
-                          "generate-new-api-key" "commission" "check-api"})]
+                          "generate-new-api-key" "commission" "check-api"
+                          "create-log"})]
         [components/StickyBar
          [components/ResponsiveMenuBar
           (conj
@@ -807,33 +807,11 @@
                    nil)
                  nil)]))))
 
-
 (defn OnlineStatusIcon
-  [online]
-  [ui/Icon {:name  "power"
-            :color (utils/status->color online)}])
-
-
-(defn Heartbeat
-  [updated]
-  (let [tr                       (subscribe [::i18n-subs/tr])
-        updated-moment           (time/parse-iso8601 updated)
-        status                   (subscribe [::subs/nuvlabox-online-status])
-        next-heartbeat-moment    (subscribe [::subs/next-heartbeat-moment])
-        next-heartbeat-times-ago (time/ago @next-heartbeat-moment)
-
-        last-heartbeat-msg       (if updated
-                                   (str (@tr [:heartbeat-last-was]) " " (time/ago updated-moment))
-                                   (@tr [:heartbeat-unavailable]))
-
-        next-heartbeat-msg       (when @next-heartbeat-moment
-                                   (if (= @status :online)
-                                     (str (@tr [:heartbeat-next-is-expected]) " " next-heartbeat-times-ago)
-                                     (str (@tr [:heartbeat-next-was-expected]) " " next-heartbeat-times-ago)))]
-
-    [ui/Message {:icon    "heartbeat"
-                 :content (str last-heartbeat-msg ". " next-heartbeat-msg)}]))
-
+  [online corner]
+  [ui/Icon {:name   "power"
+            :corner (true? corner)
+            :color  (utils/status->color online)}])
 
 (defn Load
   [resources]
@@ -955,45 +933,6 @@
                 [ui/TableCell restart-count]]))]]]])]))
 
 
-(defn ActionsMenu
-  "This creates a floating (top right) label with a pinned popup menu
-  with a list of available actions for the corresponding resource.
-
-  The list of actions must be passed as an argument, as a list of elements, in the following form:
-  [
-    {:content \"link text\" :on-click #() :style {}}
-  ]"
-  [action-list]
-  [ui/Label {:circular true
-             :floating true
-             :basic    true}
-   [ui/Popup {:position "right center"
-              :on       "click"
-              :style    {:padding "5px"}
-              :size     "small"
-              :pinned   true
-              :trigger  (r/as-element [ui/Button
-                                       {:icon  true
-                                        :style {:margin     "0"
-                                                :padding    "0"
-                                                :border     "0px"
-                                                :background "none"}}
-                                       [ui/Icon {:name "ellipsis vertical"
-                                                 :link true}]])
-              :content  (r/as-element [ui/ListSA {:vertical-align "middle"
-                                                  :link           true
-                                                  :selection      true
-                                                  :divided        true}
-                                       (for [action action-list]
-                                         ^{:key (str "action." (random-uuid))}
-                                         [ui/ListItem {:as "a"}
-                                          [ui/ListContent
-                                           [ui/ListDescription
-                                            [:span {:on-click (:on-click action)
-                                                    :style    (:style action)}
-                                             (:content action)]]]])])}]])
-
-
 (defn edit-action
   [uuid body close-fn]
   (let [tr (subscribe [::i18n-subs/tr])]
@@ -1016,9 +955,8 @@
       [components/EditableInput attribute @nuvlabox on-change-fn]
       [ui/TableCell (get @nuvlabox attribute)])))
 
-
 (defn TabOverviewNuvlaBox
-  [{:keys [id created updated refresh-interval owner created-by]}
+  [{:keys [id created updated refresh-interval owner created-by state]}
    {:keys [nuvlabox-api-endpoint nuvlabox-engine-version]}]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
@@ -1047,12 +985,15 @@
        [ui/TableRow
         [ui/TableCell (str/capitalize (@tr [:owner]))]
         [ui/TableCell @(subscribe [::session-subs/resolve-user owner])]]
+       [ui/TableRow
+        [ui/TableCell (str/capitalize (@tr [:state]))]
+        [ui/TableCell state]]
        (when (and created-by (str/starts-with? owner "group/"))
          [ui/TableRow
           [ui/TableCell (str/capitalize (@tr [:created-by]))]
           [ui/TableCell @(subscribe [::session-subs/resolve-user created-by])]])
        [ui/TableRow
-        [ui/TableCell (str/capitalize (@tr [:telemetry-period]))]
+        [ui/TableCell (str/capitalize (@tr [:report-interval]))]
         [ui/TableCell (str refresh-interval " seconds")]]
        (when nuvlabox-api-endpoint
          [ui/TableRow
@@ -1065,108 +1006,165 @@
         [ui/TableCell (str/capitalize (@tr [:updated]))]
         [ui/TableCell (time/ago (time/parse-iso8601 updated) @locale)]]]]]))
 
+(defn StatusOrNotAvailable
+  [nb-status children]
+  (let [tr (subscribe [::i18n-subs/tr])]
+    (if nb-status
+      children
+      [ui/Message {:content (@tr [:nuvlabox-status-unavailable])}])))
 
-(defn TabOverviewHost
+(defn HostInfo
   [{:keys [hostname ip docker-server-version
-           operating-system architecture last-boot docker-plugins] :as nb-status}
+           operating-system architecture last-boot docker-plugins]
+    :as   _nb-status}
    ssh-creds]
   (let [tr (subscribe [::i18n-subs/tr])]
-    [ui/Segment {:secondary true
-                 :color     "grey"
-                 :raised    true}
-     [:h4 "Host"]
-     (if nb-status
-       [ui/Table {:basic  "very"
-                  :padded false}
-        [ui/TableBody
-         (when hostname
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:hostname]))]
-            [ui/TableCell hostname]])
-         (when operating-system
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:operating-system]))]
-            [ui/TableCell operating-system]])
-         (when architecture
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:architecture]))]
-            [ui/TableCell architecture]])
-         (when ip
-           [ui/TableRow
-            [ui/TableCell "IP"]
-            [ui/TableCell (values/copy-value-to-clipboard
-                            ip ip (@tr [:copy-to-clipboard]) true)]])
-         (when (pos? (count @ssh-creds))
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
-            [ui/TableCell [ui/Popup
-                           {:hoverable true
-                            :flowing   true
-                            :position  "bottom center"
-                            :content   (r/as-element [ui/ListSA {:divided true
-                                                                 :relaxed true}
-                                                      (for [sshkey @ssh-creds]
-                                                        ^{:key (:id sshkey)}
-                                                        [ui/ListItem
-                                                         [ui/ListContent
-                                                          [ui/ListHeader
-                                                           [:a {:href   (str @config/path-prefix
-                                                                             "/api/" (:id sshkey))
-                                                                :target "_blank"}
-                                                            (or (:name sshkey) (:id sshkey))]]
-                                                          [ui/ListDescription
-                                                           (str (subs (:public-key sshkey) 0 55) " ...")]]])])
-                            :trigger   (r/as-element [ui/Icon {:name   "key"
-                                                               :fitted true}
-                                                      (@tr [:nuvlabox-detail-ssh-enabled])
-                                                      [ui/Icon {:name   "angle down"
-                                                                :fitted true}]])}]]])
-         (when docker-server-version
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:docker-server-version]))]
-            [ui/TableCell docker-server-version]])
-         (when (seq docker-plugins)
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:docker-plugins]))]
-            [ui/TableCell (str/join ", " docker-plugins)]])
-         (when last-boot
-           [ui/TableRow
-            [ui/TableCell (str/capitalize (@tr [:last-boot]))]
-            [ui/TableCell (time/time->format last-boot)]])]]
-       ;else
-       [ui/Message {:content (@tr [:nuvlabox-status-unavailable])}])]))
+    [ui/Table {:basic  "very"
+               :padded false}
+     [ui/TableBody
+      (when hostname
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (@tr [:hostname]))]
+         [ui/TableCell hostname]])
+      (when operating-system
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (@tr [:operating-system]))]
+         [ui/TableCell operating-system]])
+      (when architecture
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (@tr [:architecture]))]
+         [ui/TableCell architecture]])
+      (when ip
+        [ui/TableRow
+         [ui/TableCell "IP"]
+         [ui/TableCell (values/copy-value-to-clipboard
+                         ip ip (@tr [:copy-to-clipboard]) true)]])
+      (when (pos? (count @ssh-creds))
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (@tr [:ssh-keys]))]
+         [ui/TableCell
+          [ui/Popup
+           {:hoverable true
+            :flowing   true
+            :position  "bottom center"
+            :content   (r/as-element [ui/ListSA {:divided true
+                                                 :relaxed true}
+                                      (for [sshkey @ssh-creds]
+                                        ^{:key (:id sshkey)}
+                                        [ui/ListItem
+                                         [ui/ListContent
+                                          [ui/ListHeader
+                                           [:a {:href   (str @config/path-prefix
+                                                             "/api/" (:id sshkey))
+                                                :target "_blank"}
+                                            (or (:name sshkey) (:id sshkey))]]
+                                          [ui/ListDescription
+                                           (str (subs (:public-key sshkey) 0 55) " ...")]]])])
+            :trigger   (r/as-element [ui/Icon {:name   "key"
+                                               :fitted true}
+                                      (@tr [:nuvlabox-detail-ssh-enabled])
+                                      [ui/Icon {:name   "angle down"
+                                                :fitted true}]])}]]])
+      (when docker-server-version
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (@tr [:docker-server-version]))]
+         [ui/TableCell docker-server-version]])
+      (when (seq docker-plugins)
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (@tr [:docker-plugins]))]
+         [ui/TableCell (str/join ", " docker-plugins)]])
+      (when last-boot
+        [ui/TableRow
+         [ui/TableCell (str/capitalize (@tr [:last-boot]))]
+         [ui/TableCell (time/time->format last-boot)]])]]))
 
+(defn TabOverviewHost
+  [nb-status ssh-creds]
+  [ui/Segment {:secondary true
+               :color     "grey"
+               :raised    true}
+   [:h4 "Host"]
+   [StatusOrNotAvailable nb-status [HostInfo nb-status ssh-creds]]])
+
+
+(defn NextTelemetryStatus
+  [{:keys [next-heartbeat] :as _nb-status}]
+  (let [{:keys [refresh-interval]} @(subscribe [::subs/nuvlabox])
+        tr                       @(subscribe [::i18n-subs/tr])
+        locale                   @(subscribe [::i18n-subs/locale])
+        next-heartbeat-moment    (some-> next-heartbeat time/parse-iso8601)
+        next-heartbeat-times-ago (some-> next-heartbeat-moment
+                                         (time/ago locale))]
+    (when next-heartbeat-moment
+      [:<>
+       (if (time/before-now? next-heartbeat-moment)
+         [:p (tr [:nuvlaedge-next-telemetry-missing-since])
+          next-heartbeat-times-ago "."]
+         [:p (tr [:nuvlaedge-next-telemetry-expected])
+          next-heartbeat-times-ago "."])
+       [:p (tr [:nuvlaedge-last-telemetry-was])
+        (time/ago
+          (->> refresh-interval
+               (* 2)
+               (+ 10)
+               (* 1000)
+               (time/subtract-milliseconds next-heartbeat-moment)
+               ) locale) "."]])))
+
+(defn StatusNotes
+  [{:keys [status-notes] :as _nb-status}]
+  (when (not-empty status-notes)
+    [ui/Message {:color "brown"
+                 :size  "tiny"}
+     [ui/MessageHeader
+      [ui/Icon {:name "sticky note"}]
+      "Notes"]
+     [ui/MessageList {:items status-notes}]]))
+
+(defn OperationalStatus
+  [{:keys [status online] :as _nb-status}]
+  (let [tr @(subscribe [::i18n-subs/tr])]
+    (when status
+      [:div {:style {:margin "0.5em 0 1em 0"}}
+       (if online
+         (tr [:nuvlaedge-operational-status])
+         (tr [:nuvlaedge-operational-status-was]))
+       [ui/Popup
+        {:trigger        (r/as-element
+                           [ui/Label
+                            {:style {:cursor "help"}
+                             :size  :small
+                             :basic true
+                             :color (utils/operational-status->color status)}
+                            status])
+         :content        (tr [:nuvlabox-operational-status-popup])
+         :position       "bottom center"
+         :on             "hover"
+         :hide-on-scroll true}]])))
+
+(defn StatusInfo
+  [nb-status]
+  [:<>
+   [OperationalStatus nb-status]
+   [NextTelemetryStatus nb-status]
+   [StatusNotes nb-status]])
 
 (defn TabOverviewStatus
-  [{:keys [updated status status-notes] :as _nb-status} nb-id online-status]
-  (let [tr (subscribe [::i18n-subs/tr])]
+  [{:keys [online] :as nb-status}]
+  (let [tr @(subscribe [::i18n-subs/tr])]
     [ui/Segment {:secondary true
-                 :color     (utils/status->color online-status)
+                 :color     "brown"
                  :raised    true}
-     [:h4 "Status "]
-     (when status
-       [:div {:style {:margin "0.5em 0 1em 0"}}
-        "Operational Status: "
-        [ui/Popup
-         {:trigger        (r/as-element [ui/Label {:circular   true
-                                                   :size       "small"
-                                                   :horizontal true
-                                                   :color      (utils/operational-status->color status)}
-                                         status])
-          :content        (@tr [:nuvlabox-operational-status-popup])
-          :position       "bottom center"
-          :on             "hover"
-          :size           "tiny"
-          :hide-on-scroll true}]
-        (when (not-empty status-notes)
-          [ui/Message {:color "brown"
-                       :size  "tiny"}
-           [ui/MessageHeader
-            [ui/Icon {:name "sticky note"}]
-            "Notes"]
-           [ui/MessageList {:items status-notes}]])])
-     [Heartbeat updated nb-id]]))
-
+     [:h4 "Status "
+      [ui/Popup
+       {:trigger        (r/as-element [:span
+                                       {:style {:cursor "help"}}
+                                       [OnlineStatusIcon online]])
+        :content        (tr [:nuvlaedge-online-icon-help])
+        :position       "bottom center"
+        :on             "hover"
+        :hide-on-scroll true}]]
+     [StatusOrNotAvailable nb-status [StatusInfo nb-status]]]))
 
 (defn TabOverviewTags
   [{:keys [id] :as nuvlabox}]
@@ -1298,7 +1296,8 @@
         {:keys [state]} @(subscribe [::subs/nuvlabox])
         infra-services (subscribe [::subs/infra-services])]
     (fn []
-      (let [{:keys [id tags ssh-keys]} @nuvlabox]
+      (let [{:keys [tags ssh-keys]} @nuvlabox
+            suspended? (= state "SUSPENDED")]
         (when (not= (count ssh-keys) (count @ssh-creds))
           (dispatch [::events/get-nuvlabox-associated-ssh-keys ssh-keys]))
         [ui/TabPane
@@ -1309,27 +1308,29 @@
            [ui/GridColumn {:stretched true}
             [TabOverviewNuvlaBox @nuvlabox @nb-status]]
 
-           [ui/GridColumn {:stretched true}
-            [TabOverviewHost @nb-status ssh-creds]]]
+           (when-not suspended?
+             [ui/GridColumn {:stretched true}
+              [TabOverviewHost @nb-status ssh-creds]])]
 
-          [ui/GridColumn {:stretched true}
-           [TabOverviewStatus @nb-status id (:online @nuvlabox)]]
+          (when-not suspended?
+            [ui/GridColumn {:stretched true}
+             [TabOverviewStatus @nb-status]])
 
-          (when-not (= state "SUSPENDED")
+          (when-not suspended?
             [ui/GridColumn {:stretched true}
              [deployments-views/DeploymentsOverviewSegment
               ::deployments-subs/deployments nil nil
               #(dispatch [::tab-plugin/change-tab [::spec/tab] :deployments])]])
 
-          (when (:node-id @nb-status)
+          (when (and (:node-id @nb-status) (not suspended?))
             [ui/GridColumn {:stretched true}
              [TabOverviewCluster @nb-status]])
 
-          (when (seq tags)
+          (when (and (seq tags) (not suspended?))
             [ui/GridColumn
              [TabOverviewTags @nuvlabox]])
 
-          (when (seq @infra-services)
+          (when (and (seq @infra-services) (not suspended?))
             [ui/GridColumn
              [BoxInfraServices]])]]))))
 
@@ -1897,27 +1898,19 @@
 
 (defn PageHeader
   []
-  (let [tr       (subscribe [::i18n-subs/tr])
-        nuvlabox (subscribe [::subs/nuvlabox])]
-    (fn []
-      (let [{:keys [id name state online]} @nuvlabox]
-        [:div
-         [:h2 {:style {:margin "0 0 0 0"}}
-          [ui/Icon {:name "box"}]
-          (or name id)]
-         [:p {:style {:margin "0.5em 0 1em 0"}}
-          [OnlineStatusIcon online]
-          [:span {:style {:font-weight "bold"}}
-           (str/capitalize (@tr [:state]))
-           (@tr [:colon])
-           ff/nbsp]
-          state]]))))
+  (let [{:keys [id name online]} @(subscribe [::subs/nuvlabox])]
+    [:h2
+     [ui/IconGroup
+      [ui/Icon {:name "box"}]
+      [OnlineStatusIcon online true]]
+     (or name id)]))
 
 
 (defn EdgeDetails
   [uuid]
   (refresh uuid)
-  (let [nb-status (subscribe [::subs/nuvlabox-status])]
+  (let [tr        @(subscribe [::i18n-subs/tr])
+        nb-status @(subscribe [::subs/nuvlabox-status])]
     [components/LoadingPage {:dimmable? true}
      [:<>
       [components/NotFoundPortal
@@ -1929,6 +1922,10 @@
        [MenuBar uuid]
        [components/ErrorJobsMessage ::job-subs/jobs nil nil
         #(dispatch [::tab-plugin/change-tab [::spec/tab] :jobs])]
-       [job-views/ProgressJobAction @nb-status]
+       [job-views/ProgressJobAction nb-status]
+       (when (and nb-status (not (:online nb-status)))
+         [ui/Message {:warning true
+                      :icon    "warning sign"
+                      :content (tr [:nuvlaedge-outdated-telemetry-warning])}])
        [TabsNuvlaBox]
        [AddPlaybookModal]]]]))

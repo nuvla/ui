@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## [2.32.5] - 2022-09-14
+
+### Changed
+
+- Edge details - Reboot icon for operation in menubar
+- Edge details - Hide create log action from menubar
+- Edge details - Status segment color was depending on online status
+- Edge details - Regroup and simplify status to end users
+
 ## [2.32.4] - 2022-09-02
 
 ### Added

@@ -1343,7 +1343,8 @@
         new-location (r/atom nil)]
     (fn []
       (let [{:keys [id location inferred-location]} @nuvlabox
-            update-new-location #(reset! new-location %)
+            update-new-location #(do (reset! new-location %)
+                                     (dispatch [::main-events/changes-protection? true]))
             position            (some-> (or @new-location location inferred-location) map/longlat->latlong)]
         [:div
          (if position (@tr [:map-drag-to-update-nb-location])

@@ -124,6 +124,6 @@
                                     :basic    true
                                     :type     "submit"
                                     :class    "icon"}
-                         [ui/Image {:style {:size 32}
-                                    :src "/ui/images/icrc2.png"}]]]
+                         [ui/Image {:style {:width 21}
+                                    :src "/ui/images/icrc.png"}]]]
                        ]}])))

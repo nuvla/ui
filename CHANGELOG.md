@@ -9,6 +9,7 @@
 - Edge details - Status segment color was depending on online status
 - Edge details - Regroup and simplify status to end users
 - Edge details add modal - Points more info links to new documentation
+- Notifications - Renames "NB online" to "NuvlaEdge online"
 
 ## [2.32.4] - 2022-09-02
 

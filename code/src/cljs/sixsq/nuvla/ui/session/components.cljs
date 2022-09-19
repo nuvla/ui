@@ -67,9 +67,7 @@
                :type     "submit"
                :class    "icon"}
     (case icon
-      :github [ui/Icon {:name "github"
-                        :size "large"}]
-      :geant [ui/Icon {:name "student"
-                       :size "large"}]
-      :icrc [ui/Image {:style {:width 21}
-                       :src   "/ui/images/icrc.png"}])]])
+      :github [ui/Icon {:name "github", :size "large"}]
+      :geant [ui/Icon {:name "student", :size "large"}]
+      :icrc [ui/Image {:src "/ui/images/icrc.png", :style {:width 21}}]
+      nil)]])

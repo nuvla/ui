@@ -440,7 +440,8 @@
                               #(swap! create-name-descr assoc key %)))]
     (dispatch [::events/new])
     (fn []
-      (let [items [{:key         :select-apps-targets
+      (let [dep-set-name (:name @create-name-descr)
+            items [{:key         :select-apps-targets
                     :icon        "bullseye"
                     :content     [StepApplicationsTargets]
                     :title       "Applications/Targets"
@@ -470,7 +471,8 @@
                                    [ui/FormInput
                                     {:label       (str/capitalize (@tr [:name]))
                                      :placeholder "Name your deployment set"
-                                     :value       (or (:name @create-name-descr) "")
+                                     :required    true
+                                     :value       (or dep-set-name "")
                                      :on-change   (on-change-input :name)}]
                                    [ui/FormInput
                                     {:label       (str/capitalize (@tr [:description]))
@@ -482,7 +484,6 @@
                                      :checked   (:start @create-name-descr)
                                      :on-change (ui-callback/checked
                                                   #(swap! create-name-descr update :start not))}]]
-
                                   [ui/Segment
                                    "Kubernetes"
                                    [:div "Targets: "
@@ -490,8 +491,7 @@
                                                          "infrastructure-service-kubernetes")))]
                                    [:span "Apps: "
                                     (str (map :name (get (group-by :subtype @apps-selected) "application_kubernetes")))
-                                    ]
-                                   ]
+                                    ]]
                                   [ui/Segment
                                    "Docker"
                                    [:div "Targets: "
@@ -505,7 +505,8 @@
                                   [ui/Button
                                    {:positive true
                                     :on-click #(dispatch [::events/create @create-name-descr])
-                                    :disabled @create-disabled?
+                                    :disabled (or @create-disabled?
+                                                  (str/blank? dep-set-name))
                                     :floated  :right} "Create"]
                                   [:br] [:br] [:br]
                                   ]

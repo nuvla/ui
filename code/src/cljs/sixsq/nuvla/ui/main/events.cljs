@@ -150,7 +150,9 @@
 (reg-event-fx
   ::ignore-changes
   (fn [{{:keys [::spec/ignore-changes-modal] :as db} :db} [_ choice]]
-    (let [close-modal-db (assoc db ::spec/ignore-changes-modal nil)]
+    (let [db (if (map? ignore-changes-modal)
+               (or (:db ignore-changes-modal) db) db)
+          close-modal-db (assoc db ::spec/ignore-changes-modal nil)]
       (cond
 
         (map? ignore-changes-modal)

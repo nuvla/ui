@@ -11,8 +11,9 @@
 - Edge details add modal - Points more info links to new documentation
 - Notifications - Renames "NB online" to "NuvlaEdge online"
 - Session - ICRC sign-in and sign-up support
+- Tab plugin - supports warning user of unsaved changes
+- NuvlaEdge details - location tab warns user of unsaved changes
 - Global - warn user when closing browser tab of unsaved changes
-
 
 ## [2.32.4] - 2022-09-02
 

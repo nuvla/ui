@@ -1362,7 +1362,8 @@
                          :draggable   true
                          :on-drag-end (map/drag-end-location update-new-location)}])]
          [:div {:align "right"}
-          [ui/Button {:on-click #(reset! new-location nil)}
+          [ui/Button {:on-click #(do (reset! new-location nil)
+                                     (dispatch [::main-events/changes-protection? false]))}
            (@tr [:cancel])]
           [ui/Button {:primary  true
                       :on-click #(do (dispatch

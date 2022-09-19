@@ -39,7 +39,6 @@
 (reg-fx
   ::on-unload-protection
   (fn [protected?]
-  (js/console.error "protect?" protected?)
     (if protected?
         (set-unload-protection)
         (clear-unload-protection))))

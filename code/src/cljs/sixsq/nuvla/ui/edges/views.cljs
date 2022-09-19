@@ -152,8 +152,8 @@
           :on-refresh #(dispatch [::events/refresh-root])}]]])))
 
 
-(def usb-doc-url "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/install-with-usb-stick/")
-(def compose-doc-url "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/install-with-compose-files/")
+(def usb-doc-url "https://docs.nuvla.io/nuvlaedge/installation/install-with-usb-stick/")
+(def compose-doc-url "https://docs.nuvla.io/nuvlaedge/installation/install-with-compose-files/")
 
 
 (defn NuvlaDocs

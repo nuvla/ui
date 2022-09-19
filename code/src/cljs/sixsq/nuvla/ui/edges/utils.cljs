@@ -154,15 +154,16 @@
 
 
 (defn prepare-compose-files
-  [nuvlabox-release selected-peripherals replacements]
-  (let [nuvlabox-file-scopes (group-by :scope (:compose-files nuvlabox-release))]
-    (map
-      (fn [peripheral]
-        (let [{:keys [name file]} (first (get nuvlabox-file-scopes peripheral))
-              replacement-list (partition 2 replacements)]
-          {:name name
-           :file (reduce #(apply str/replace %1 %2) file replacement-list)}))
-      selected-peripherals)))
+  ([nuvlabox-release selected-peripherals]
+   (prepare-compose-files nuvlabox-release selected-peripherals identity))
+  ([nuvlabox-release selected-peripherals transform-fn]
+   (let [nuvlabox-file-scopes (group-by :scope (:compose-files nuvlabox-release))]
+     (map
+       (fn [peripheral]
+         (let [{:keys [name file]} (first (get nuvlabox-file-scopes peripheral))]
+           {:name name
+            :file (transform-fn file)}))
+       selected-peripherals))))
 
 
 (defn get-major-version

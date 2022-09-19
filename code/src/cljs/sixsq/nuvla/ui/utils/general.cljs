@@ -371,3 +371,7 @@
     {\- "\\-", \[ "\\[", \] "\\]", \{ "\\{", \} "\\}",
      \( "\\(", \) "\\)", \* "\\*", \+ "\\+", \? "\\?",
      \. "\\.", \\ "\\\\", \^ "\\^", \$ "\\$", \| "\\|"}))
+
+(defn envsubst-str
+  [envsubst s]
+  (str/replace s (->> envsubst keys (map regex-escape) (str/join "|") re-pattern) envsubst))

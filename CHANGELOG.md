@@ -14,6 +14,8 @@
 - Tab plugin - supports warning user of unsaved changes
 - NuvlaEdge details - location tab warns user of unsaved changes
 - Global - warn user when closing browser tab of unsaved changes
+- NuvlaEdge - Envsubst of docker-compose files support NuvlaEdge renaming
+- General utils - envsubst on string
 
 ## [2.32.4] - 2022-09-02
 

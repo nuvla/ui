@@ -26,7 +26,7 @@
 
 (defn FormTokenValidation
   []
-  (let [tr        (subscribe [::i18n-subs/tr])
+  (let [tr (subscribe [::i18n-subs/tr])
         on-submit #(dispatch [::events/validate-2fa-activation %1])]
     (fn []
       [comp/RightPanel
@@ -41,18 +41,21 @@
 
 (defn Form
   []
-  (let [form-conf           {:form-spec    ::session-template-password
-                             :names->value {:username ""
-                                            :password ""}}
-        form                (fv/init-form form-conf)
-        tr                  (subscribe [::i18n-subs/tr])
-        spec->msg           {::username (@tr [:should-not-be-empty])
-                             ::password (@tr [:should-not-be-empty])}
+  (let [form-conf {:form-spec    ::session-template-password
+                   :names->value {:username ""
+                                  :password ""}}
+        form (fv/init-form form-conf)
+        tr (subscribe [::i18n-subs/tr])
+        spec->msg {::username (@tr [:should-not-be-empty])
+                   ::password (@tr [:should-not-be-empty])}
         server-redirect-uri (subscribe [::subs/server-redirect-uri])
-        github-template?    (subscribe [::subs/session-template-exist?
-                                        "session-template/github-nuvla"])
-        geant-template?     (subscribe [::subs/session-template-exist?
-                                        "session-template/oidc-geant"])]
+        resource-url (str @cimi-fx/NUVLA_URL "/api/session")
+        github-session-tmpl "session-template/github-nuvla"
+        geant-session-tmpl "session-template/oidc-geant"
+        icrc-session-tmpl "session-template/oidc-icrc"
+        github-template? (subscribe [::subs/session-template-exist? github-session-tmpl])
+        geant-template? (subscribe [::subs/session-template-exist? geant-session-tmpl])
+        icrc-template? (subscribe [::subs/session-template-exist? icrc-session-tmpl])]
     (fn []
       [comp/RightPanel
        {:title        (@tr [:login-to])
@@ -80,37 +83,23 @@
                                     (:names->value @form)]))
         :ExtraContent [:div {:style {:margin-top 100}}
                        (when (or @github-template?
-                                 @geant-template?)
+                                 @geant-template?
+                                 @icrc-template?)
                          (@tr [:sign-in-with]))
                        (when @github-template?
-                         [:form {:action (str @cimi-fx/NUVLA_URL "/api/session")
-                                 :method "post"
-                                 :style  {:display "inline"}}
-                          [:input {:hidden        true
-                                   :name          "href"
-                                   :default-value "session-template/github-nuvla"}]
-                          [:input {:hidden        true
-                                   :name          "redirect-url"
-                                   :default-value @server-redirect-uri}]
-                          [ui/Button {:style    {:margin-left 10}
-                                      :circular true
-                                      :basic    true
-                                      :type     "submit"
-                                      :class    "icon"}
-                           [ui/Icon {:name "github"
-                                     :size "large"}]]])
+                         [comp/SignExternal
+                          {:resource-url        resource-url
+                           :href                github-session-tmpl
+                           :icon                :github
+                           :server-redirect-uri @server-redirect-uri}])
                        (when @geant-template?
-                         [:form {:action (str @cimi-fx/NUVLA_URL "/api/session")
-                                 :method "post"
-                                 :style  {:display "inline"}}
-                          [:input {:hidden        true
-                                   :name          "href"
-                                   :default-value "session-template/oidc-geant"}]
-                          [ui/Button {:style    {:margin-left 10}
-                                      :circular true
-                                      :basic    true
-                                      :type     "submit"
-                                      :class    "icon"}
-                           [ui/Icon {:name "student"
-                                     :size "large"}]]])
-                       ]}])))
+                         [comp/SignExternal
+                          {:resource-url resource-url
+                           :href         geant-session-tmpl
+                           :icon         :geant}])
+                       (when @icrc-template?
+                         [comp/SignExternal
+                          {:resource-url resource-url
+                           :href         icrc-session-tmpl
+                           :icon         :icrc}])]
+        }])))

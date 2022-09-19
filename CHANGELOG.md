@@ -10,6 +10,7 @@
 - Edge details - Regroup and simplify status to end users
 - Edge details add modal - Points more info links to new documentation
 - Notifications - Renames "NB online" to "NuvlaEdge online"
+- Session - ICRC sign-in and sign-up support
 
 ## [2.32.4] - 2022-09-02
 

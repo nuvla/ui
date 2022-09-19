@@ -11,6 +11,8 @@
 - Edge details add modal - Points more info links to new documentation
 - Notifications - Renames "NB online" to "NuvlaEdge online"
 - Session - ICRC sign-in and sign-up support
+- NuvlaEdge - Envsubst of docker-compose files support NuvlaEdge renaming
+- General utils - envsubst on string
 
 ## [2.32.4] - 2022-09-02
 

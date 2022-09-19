@@ -11,9 +11,9 @@
 
 (defn RightPanel
   [{:keys [title title-bold FormFields submit-text submit-fn ExtraContent]}]
-  (let [error-message   (subscribe [::subs/error-message])
+  (let [error-message (subscribe [::subs/error-message])
         success-message (subscribe [::subs/success-message])
-        loading?        (subscribe [::subs/loading?])]
+        loading? (subscribe [::subs/loading?])]
     [:<>
      [:div {:style {:float "right"}} [i18n-views/LocaleDropdown]]
      [:div {:style {:margin-left "10%"
@@ -28,7 +28,7 @@
                       :size      "tiny"
                       :onDismiss #(dispatch [::events/set-error-message nil])}
           [ui/MessageHeader [uix/TR :error str/capitalize]]
-          [:p [uix/TR @error-message ]]])
+          [:p [uix/TR @error-message]]])
 
        (when @success-message
          [ui/Message {:negative  false
@@ -41,10 +41,35 @@
 
        (when submit-fn
          [ui/Button {:primary  true
-                    :floated  "right"
-                    :loading  @loading?
-                    :on-click submit-fn}
-         submit-text])]
+                     :floated  "right"
+                     :loading  @loading?
+                     :on-click submit-fn}
+          submit-text])]
 
       (when ExtraContent
         ExtraContent)]]))
+
+(defn SignExternal
+  [{:keys [resource-url href icon server-redirect-uri]}]
+  [:form {:action resource-url
+          :method "post"
+          :style  {:display "inline"}}
+   [:input {:hidden        true
+            :name          "href"
+            :default-value href}]
+   (when server-redirect-uri
+     [:input {:hidden        true
+              :name          "redirect-url"
+              :default-value server-redirect-uri}])
+   [ui/Button {:style    {:margin-left 10}
+               :circular true
+               :basic    true
+               :type     "submit"
+               :class    "icon"}
+    (case icon
+      :github [ui/Icon {:name "github"
+                        :size "large"}]
+      :geant [ui/Icon {:name "student"
+                       :size "large"}]
+      :icrc [ui/Image {:style {:width 21}
+                       :src   "/ui/images/icrc.png"}])]])

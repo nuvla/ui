@@ -47,9 +47,7 @@
             unknown         (- total (+ online offline))]
 
         [ui/StatisticGroup {:widths (if clickable? nil 4)
-                            :size "tiny"
-                            ;:style {:justify-content "center"}
-                            }
+                            :size   "tiny"}
          [components/StatisticState total ["fas fa-box"] "TOTAL"
           clickable? ::events/set-state-selector ::subs/state-selector]
          [components/StatisticState online ["fas fa-power-off"] utils/status-online
@@ -189,15 +187,15 @@
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
         playbooks-cronjob    (subscribe [::subs/nuvlabox-playbooks-cronjob])
         private-ssh-key-file (str (general-utils/id->short-uuid nuvlabox-id) ".ssh.private")
-        public-keys          (if @nuvlabox-ssh-keys
-                               (str (str/join "\\n" (:public-keys @nuvlabox-ssh-keys)) "\\n")
-                               nil)
+        public-keys          (when (seq @nuvlabox-ssh-keys)
+                               (str (str/join "\\n" (:public-keys @nuvlabox-ssh-keys)) "\\n"))
         zip-url              (r/atom nil)
-        envsubst             (if public-keys
-                               [#"\$\{NUVLABOX_UUID\}" nuvlabox-id
-                                #"\$\{NUVLABOX_SSH_PUB_KEY\}" public-keys]
-                               [#"\$\{NUVLABOX_UUID\}" nuvlabox-id])
-        download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals envsubst)]
+        envsubst             (cond-> {"${NUVLABOX_UUID}"  nuvlabox-id
+                                      "${NUVLAEDGE_UUID}" nuvlabox-id}
+                                     public-keys (assoc "${NUVLABOX_SSH_PUB_KEY}" public-keys
+                                                        "${NUVLAEDGE_SSH_PUB_KEY}" public-keys))
+        download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals
+                                                          (partial general-utils/envsubst-str envsubst))]
     (when playbooks-toggle
       (dispatch [::events/enable-host-level-management nuvlabox-id]))
     (zip/create download-files #(reset! zip-url %))
@@ -291,8 +289,7 @@
   (let [nuvlabox-release     (:nb-selected nuvlabox-release-data)
         nuvlabox-peripherals (:nb-assets nuvlabox-release-data)
         private-ssh-key-file "nuvlabox.ssh.private"
-        download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals
-                                                          [#"placeholder" "placeholder"])
+        download-files       (utils/prepare-compose-files nuvlabox-release nuvlabox-peripherals)
         download-files-names (map :name download-files)]
     (fn [creation-data _nuvlabox-release-data new-api-key nuvlabox-ssh-keys new-private-ssh-key on-close-fn]
       (let [tr                    (subscribe [::i18n-subs/tr])

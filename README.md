@@ -141,7 +141,7 @@ For **Chrome** on MacOS, this can be done with:
 
 ```
 $ open /Applications/Google\ Chrome.app \
-       --args --disable-web-security --user-data-dir
+       --args --disable-web-security --user-data-dir="/tmp/chrome_dev"
 ```
 
 For **Safari**, first enable the "Develop" menu:

@@ -24,3 +24,22 @@
         (stripejs/loadStripe)
         (.then (fn [stripe]
                  (callback stripe))))))
+
+
+(defn- before-unload-handler [event]
+  (set! (.-returnValue event) "")
+  (.preventDefault event))
+
+(defn- clear-unload-protection []
+  (.removeEventListener js/window "beforeunload" before-unload-handler))
+
+(defn- set-unload-protection []
+  (.addEventListener js/window "beforeunload" before-unload-handler))
+
+(reg-fx
+  ::on-unload-protection
+  (fn [protected?]
+  (js/console.error "protect?" protected?)
+    (if protected?
+        (set-unload-protection)
+        (clear-unload-protection))))

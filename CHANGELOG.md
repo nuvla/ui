@@ -8,6 +8,7 @@
 - Edge details - Hide create log action from menubar
 - Edge details - Status segment color was depending on online status
 - Edge details - Regroup and simplify status to end users
+- Global - warn user when closing browser tab of unsaved changes
 
 ## [2.32.4] - 2022-09-02
 

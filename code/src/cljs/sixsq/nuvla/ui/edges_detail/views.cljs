@@ -1365,12 +1365,13 @@
           [ui/Button {:on-click #(reset! new-location nil)}
            (@tr [:cancel])]
           [ui/Button {:primary  true
-                      :on-click #(dispatch
-                                   [::events/edit id
-                                    (assoc @nuvlabox
-                                      :location
-                                      (update @new-location 0 map/normalize-lng))
-                                    (@tr [:nuvlabox-position-update])])}
+                      :on-click #(do (dispatch
+                                      [::events/edit id
+                                       (assoc @nuvlabox
+                                              :location
+                                              (update @new-location 0 map/normalize-lng))
+                                       (@tr [:nuvlabox-position-update])])
+                                     (dispatch [::main-events/changes-protection? false]))}
            (@tr [:save])]]]))))
 
 

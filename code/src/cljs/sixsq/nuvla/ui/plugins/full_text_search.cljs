@@ -1,6 +1,7 @@
 (ns sixsq.nuvla.ui.plugins.full-text-search
   (:require
     [cljs.spec.alpha :as s]
+    [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-fx subscribe]]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.plugins.helpers :as helpers]
@@ -28,18 +29,21 @@
        :fx [[:dispatch change-event]]})))
 
 (defn FullTextSearch
-  [{:keys [db-path change-event] :as opts}]
+  [{:keys [db-path change-event placeholder-suffix] :as opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
   (let [tr   @(subscribe [::i18n-subs/tr])
+        search-placeholder (tr [:search])
         text @(subscribe [::helpers/retrieve db-path ::text])]
     [ui/Input
      (-> opts
-         (dissoc :db-path :change-event)
-         (assoc :placeholder (tr [:search])
+         (dissoc :db-path :change-event :placeholder-suffix)
+         (assoc :placeholder (if placeholder-suffix
+                               (str (str/replace search-placeholder #"\.\.\." " ") (str/lower-case placeholder-suffix) "...")
+                               search-placeholder)
                 :icon "search"
                 :value (or text "")
                 :on-change (ui-callback/input-callback
-                             #(dispatch [::search db-path %]))))]))
+                            #(dispatch [::search db-path %]))))]))
 
 (s/fdef FullTextSearch
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path

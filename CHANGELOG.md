@@ -4,6 +4,8 @@
 
 ## [2.32.5] - 2022-09-19
 
+- Edges and Deployments - Adds suffix to search place indicating currently selected filter
+
 ### Changed
 
 - Edge details - Reboot icon for operation in menubar

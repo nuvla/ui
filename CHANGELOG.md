@@ -4,6 +4,8 @@
 
 ## [2.32.5] - 2022-09-19
 
+- Profile - Groups tabs warns user of unsaved changes
+
 ### Changed
 
 - Edge details - Reboot icon for operation in menubar

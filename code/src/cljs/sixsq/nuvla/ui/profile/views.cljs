@@ -1220,7 +1220,8 @@
         invite-user (r/atom nil)
         add-user    (r/atom nil)]
     (fn [group]
-      (let [{:keys [id name description]} group]
+      (let [{:keys [id name description]} group
+            set-group-changed! #(swap! group->changed? assoc id true)]
         [ui/Table {:columns 4}
          [ui/TableHeader {:fullWidth true}
           [ui/TableRow
@@ -1241,7 +1242,7 @@
                                      :active?       show-acl?
                                      :on-change     #(do
                                                        (reset! acl %)
-                                                       (swap! group->changed? assoc id true)
+                                                       (set-group-changed!)
                                                        (dispatch [::main-events/changes-protection? true]))}]]])]
          [ui/TableBody
           [ui/TableRow
@@ -1254,7 +1255,7 @@
               [ui/ListSA
                (for [m @members]
                  ^{:key m}
-                 [GroupMember m members editable? #(swap! group->changed? assoc id true)])])]]
+                 [GroupMember m members editable? set-group-changed!])])]]
           (when editable?
             [ui/TableRow
              [ui/TableCell
@@ -1270,7 +1271,7 @@
                             :on-click #(do
                                          (swap! members conj @add-user)
                                          (reset! add-user nil)
-                                         (swap! group->changed? assoc id true)
+                                         (set-group-changed!)
                                          (dispatch [::main-events/changes-protection? true]))}]
                [:span ff/nbsp]
                [:span ff/nbsp]

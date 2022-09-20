@@ -1202,6 +1202,12 @@
                                (update-group->changed?))}])]]]))
 
 
+(defn- only-changed-group? [group->changed? id]
+  (let [changed-groups (filter #(val %) group->changed?)]
+    (and (= (count changed-groups) 1)
+         (= (key (nth changed-groups 0)) id))))
+
+
 (defn GroupMembers
   [group group->changed?]
   (let [tr          (subscribe [::i18n-subs/tr])
@@ -1285,11 +1291,7 @@
                            :icon     "save"
                            :disabled (not @changed?)
                            :on-click #(do (dispatch [::events/edit-group (assoc group :users @members, :acl @acl)])
-                                          (when (let [changed-groups (filter (fn [group-changed?]
-                                                                               (val group-changed?))
-                                                                             @group->changed?)]
-                                                  (and (= (count changed-groups) 1)
-                                                       (= (key (nth changed-groups 0)) id)))
+                                          (when (only-changed-group? @group->changed? id)
                                            (dispatch [::main-events/changes-protection? false]))
                                           (swap! group->changed? assoc id false))}]]])]]))))
 

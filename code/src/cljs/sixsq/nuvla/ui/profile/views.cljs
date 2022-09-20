@@ -12,6 +12,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
@@ -1182,7 +1183,7 @@
 
 
 (defn GroupMember
-  [principal members editable? changed?]
+  [principal members editable?]
   (let [principal-name (subscribe [::session-subs/resolve-principal principal])]
     [ui/ListItem
      [ui/ListContent
@@ -1197,7 +1198,7 @@
                    :size     "small"
                    :color    "red"
                    :on-click (fn [_] (swap! members #(vec (disj (set @members) principal)))
-                               (reset! changed? true))}])]]]))
+                               (dispatch [::main-events/changes-protection? true]))}])]]]))
 
 
 (defn GroupMembers
@@ -1207,7 +1208,7 @@
         users       (:users group)
         members     (r/atom users)
         acl         (r/atom (:acl group))
-        changed?    (r/atom false)
+        changed?    (subscribe [::main-subs/changes-protection?])
         show-acl?   (r/atom false)
         invite-user (r/atom nil)
         add-user    (r/atom nil)]
@@ -1233,7 +1234,7 @@
                                      :active?       show-acl?
                                      :on-change     #(do
                                                        (reset! acl %)
-                                                       (reset! changed? true))}]]])]
+                                                       (dispatch [::main-events/changes-protection? true]))}]]])]
          [ui/TableBody
           [ui/TableRow
            [ui/TableCell
@@ -1245,7 +1246,7 @@
               [ui/ListSA
                (for [m @members]
                  ^{:key m}
-                 [GroupMember m members editable? changed?])])]]
+                 [GroupMember m members editable?])])]]
           (when editable?
             [ui/TableRow
              [ui/TableCell
@@ -1261,7 +1262,7 @@
                             :on-click #(do
                                          (swap! members conj @add-user)
                                          (reset! add-user nil)
-                                         (reset! changed? true))}]
+                                         (dispatch [::main-events/changes-protection? true]))}]
                [:span ff/nbsp]
                [:span ff/nbsp]
                [ui/Input {:placeholder (@tr [:invite-by-email])
@@ -1281,7 +1282,7 @@
                            :icon     "save"
                            :disabled (not @changed?)
                            :on-click #(do (dispatch [::events/edit-group (assoc group :users @members, :acl @acl)])
-                                          (reset! changed? false))}]]])]]))))
+                                          (dispatch [::main-events/changes-protection? false]))}]]])]]))))
 
 
 (defn GroupMembersSegment

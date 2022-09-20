@@ -116,7 +116,8 @@
        [ui/HeaderSubheader {:as "h2"}
         (@tr [:welcome-how-to-nb-header])]
        [ui/HeaderSubheader {:as "h4"}
-        (@tr [:welcome-how-to-nb-subheader]) " " [:a {:href "https://docs.nuvla.io/nuvlabox/nuvlabox-engine"} (@tr [:here])] "."]
+        (@tr [:welcome-how-to-nb-subheader]) " " [:a {:href "https://docs.nuvla.io/nuvlaedge/nuvlaedge-engine/"
+                                                      :target "_blank"} (@tr [:here])] "."]
        [ui/StepGroup {:vertical true}
         (step 1
               (@tr [:welcome-how-to-nb-1-header])
@@ -124,7 +125,7 @@
               " "
               [:a {:target "_blank"
                    :key    "nuvlabox-engine-requirements"
-                   :href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/requirements"}
+                   :href   "https://docs.nuvla.io/nuvlaedge/nuvlaedge-engine/requirements/"}
                (@tr [:welcome-how-to-nb-1-subheader-mid])]
               " "
               (@tr [:welcome-how-to-nb-1-subheader-post])
@@ -144,7 +145,7 @@
               " "
               [:a {:target "_blank"
                    :key    "nuvlabox-engine-quickstart"
-                   :href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/"}
+                   :href   "https://docs.nuvla.io/nuvlaedge/installation/"}
                (@tr [:documentation])]
               " "
               (@tr [:welcome-how-to-nb-3-subheader-post])
@@ -231,7 +232,7 @@
               ^{:key (@tr [:welcome-how-to-video-1-subheader-mid])}
               [:a {:target "_blank"
                    :key    "video-nuvlabox-engine-quickstart"
-                   :href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/"}
+                   :href   "https://docs.nuvla.io/nuvlaedge/installation/"}
                (@tr [:welcome-how-to-video-1-subheader-mid])]
               " "
               (@tr [:welcome-how-to-video-1-subheader-post])

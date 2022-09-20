@@ -4,6 +4,8 @@
 
 ## [2.32.5] - 2022-09-19
 
+- Home - Update old links to point to new NuvlaEdge documentation
+
 ### Changed
 
 - Edge details - Reboot icon for operation in menubar

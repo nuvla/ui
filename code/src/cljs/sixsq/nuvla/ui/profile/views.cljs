@@ -1209,12 +1209,6 @@
                                (set-group-changed! id))}])]]]))
 
 
-(defn- only-changed-group? [group->changed? id]
-  (let [changed-groups (filter #(val %) group->changed?)]
-    (and (= (count changed-groups) 1)
-         (= (key (nth changed-groups 0)) id))))
-
-
 (defn GroupMembers
   [group]
   (let [tr          (subscribe [::i18n-subs/tr])

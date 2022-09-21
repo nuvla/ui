@@ -63,6 +63,13 @@
     :large-screen 2
     1))
 
+(def group-changed! (r/atom {}))
+(defn set-group-changed! [id] (swap! group-changed! assoc id true))
+(defn disable-changes-protection!
+  [id]
+  (swap! group-changed! assoc id false)
+  (when-not (some true? (vals @group-changed!))
+    (dispatch [::main-events/changes-protection? false])))
 
 (defn AddGroupButton
   []
@@ -1183,7 +1190,7 @@
 
 
 (defn GroupMember
-  [principal members editable? update-group->changed?]
+  [id principal members editable?]
   (let [principal-name (subscribe [::session-subs/resolve-principal principal])]
     [ui/ListItem
      [ui/ListContent
@@ -1199,7 +1206,7 @@
                    :color    "red"
                    :on-click (fn [_] (swap! members #(vec (disj (set @members) principal)))
                                (dispatch [::main-events/changes-protection? true])
-                               (update-group->changed?))}])]]]))
+                               (set-group-changed! id))}])]]]))
 
 
 (defn- only-changed-group? [group->changed? id]
@@ -1209,19 +1216,18 @@
 
 
 (defn GroupMembers
-  [group group->changed?]
+  [group]
   (let [tr          (subscribe [::i18n-subs/tr])
         editable?   (utils-general/editable? group false)
         users       (:users group)
         members     (r/atom users)
         acl         (r/atom (:acl group))
-        changed?    (r/cursor group->changed? [(:id group)])
+        changed?    (r/cursor group-changed! [(:id group)])
         show-acl?   (r/atom false)
         invite-user (r/atom nil)
         add-user    (r/atom nil)]
     (fn [group]
-      (let [{:keys [id name description]} group
-            set-group-changed! #(swap! group->changed? assoc id true)]
+      (let [{:keys [id name description]} group]
         [ui/Table {:columns 4}
          [ui/TableHeader {:fullWidth true}
           [ui/TableRow
@@ -1242,7 +1248,7 @@
                                      :active?       show-acl?
                                      :on-change     #(do
                                                        (reset! acl %)
-                                                       (set-group-changed!)
+                                                       (set-group-changed! id)
                                                        (dispatch [::main-events/changes-protection? true]))}]]])]
          [ui/TableBody
           [ui/TableRow
@@ -1255,7 +1261,7 @@
               [ui/ListSA
                (for [m @members]
                  ^{:key m}
-                 [GroupMember m members editable? set-group-changed!])])]]
+                 [GroupMember id m members editable?])])]]
           (when editable?
             [ui/TableRow
              [ui/TableCell
@@ -1271,7 +1277,7 @@
                             :on-click #(do
                                          (swap! members conj @add-user)
                                          (reset! add-user nil)
-                                         (set-group-changed!)
+                                         (set-group-changed! id)
                                          (dispatch [::main-events/changes-protection? true]))}]
                [:span ff/nbsp]
                [:span ff/nbsp]
@@ -1292,13 +1298,11 @@
                            :icon     "save"
                            :disabled (not @changed?)
                            :on-click #(do (dispatch [::events/edit-group (assoc group :users @members, :acl @acl)])
-                                          (when (only-changed-group? @group->changed? id)
-                                           (dispatch [::main-events/changes-protection? false]))
-                                          (swap! group->changed? assoc id false))}]]])]]))))
+                                          (disable-changes-protection! id))}]]])]]))))
 
 
 (defn GroupMembersSegment
-  [group->changed?]
+  []
   (let [tr       (subscribe [::i18n-subs/tr])
         loading? (subscribe [::subs/loading? :group])
         group    (subscribe [::subs/group])]
@@ -1310,7 +1314,7 @@
                    :style   {:height "100%"}}
        [ui/Header {:as :h2 :dividing true} (@tr [:group-members])]
        ^{:key (random-uuid)}
-       [GroupMembers @group group->changed?]])))
+       [GroupMembers @group]])))
 
 
 
@@ -1354,21 +1358,17 @@
                             (when-not @is-admin? "group/nuvla-admin")}
             sorted-groups (->> @groups
                                (remove (comp remove-groups :id))
-                               (sort-by :id))
-            group->changed? (r/atom (reduce (fn [group->changed? group]
-                                              (assoc group->changed? (:id group) false))
-                                            {}
-                                            sorted-groups))]
+                               (sort-by :id))]
         [:<>
          (when @is-group?
            [ui/GridColumn
-            [GroupMembersSegment group->changed?]])
+            [GroupMembersSegment]])
          [GroupHierarchySegment]
          [ui/Segment {:padded true, :color "blue"}
           [ui/Header {:as :h2} (str/capitalize (@tr [:groups]))]
           (for [group sorted-groups]
             ^{:key (str "group-" group)}
-            [GroupMembers group group->changed?])]]))))
+            [GroupMembers group])]]))))
 
 
 (defn SubscriptionAndBilling

@@ -179,7 +179,7 @@
        [ui/HeaderSubheader {:as "h2", :id "deploy-app"}
         (@tr [:welcome-how-to-launch-header])]
        [ui/HeaderSubheader {:as "h4"}
-        (@tr [:welcome-how-to-launch-subheader]) " " [:a {:href "https://docs.nuvla.io/nuvla/launch-app"} (@tr [:here])] "."]
+        (@tr [:welcome-how-to-launch-subheader]) " " [:a {:href "https://docs.nuvla.io/tutorials/deploying-apps/first-app/"} (@tr [:here])] "."]
        [ui/StepGroup {:vertical true}
         (step 1
               (@tr [:welcome-how-to-launch-1-header-])

@@ -2,9 +2,11 @@
 
 ## Unreleased
 
-## [2.32.5] - 2022-09-19
+### Changed
 
-- Edges and Deployments - Adds suffix to search place indicating currently selected filter
+- Edges and Deployments - Adds filter indicator to full text search
+
+## [2.32.5] - 2022-09-19
 
 ### Changed
 

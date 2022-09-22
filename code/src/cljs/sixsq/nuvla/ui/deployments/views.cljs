@@ -36,12 +36,13 @@
     (fn []
       [ui/GridColumn {:width 4}
        [:div {:style {:display    :flex
-                      :align-self :baseline}}
-        [full-text-search-plugin/FullTextSearch
+                      :align-items :baseline }}
+        [full-text-search-plugin/FullTextSearchWithFilterIndicator
          {:db-path      [::spec/deployments-search]
           :change-event [::pagination-plugin/change-page
                          [::spec/pagination] 1]
-          :placeholder-suffix @(subscribe [::subs/state-selector])}]
+          :placeholder-suffix @(subscribe [::subs/state-selector])
+          :additional-filters-applied @additional-filter}]
         " "
         ^{:key (random-uuid)}
         [filter-comp/ButtonFilter

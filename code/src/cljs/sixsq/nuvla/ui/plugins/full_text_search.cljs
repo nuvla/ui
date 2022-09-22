@@ -48,3 +48,14 @@
 (s/fdef FullTextSearch
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path
                                             ::helpers/change-event])))
+
+(defn FullTextSearchWithFilterIndicator
+  [{:keys [additional-filters-applied] :as opts}]
+  [:div
+   [FullTextSearch (dissoc opts :additional-filters-applied)]
+    (when additional-filters-applied [:div {:style { :padding-left "4px"
+                                                    :font-size "0.8rem"
+                                                    :inline-size "200px"
+                                                    :overflow-wrap :break-word}}
+                                      [:div { :style {:font-weight "bold" }} "Filter: "]
+                                      (str additional-filters-applied)])])

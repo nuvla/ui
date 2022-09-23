@@ -60,7 +60,7 @@
     (fn []
       (let [module-id (:id @module)]
         (when module-id
-          [:span (@tr [:compare-version]) " "
+          [:div { :style { :display :flex :gap "4px" :align-items :center } } (@tr [:compare-version]) " "
            [ui/Dropdown {:selection   true
                          :compact     true
                          :placeholder " "
@@ -86,6 +86,9 @@
                                           (when @compare-one
                                             (reset! compare? true))))
                          :options     versions-opt}]
+
+           (when (and @module-compare-left @module-compare-right)
+             [ui/Button { :on-click #(reset! compare? true) } "Compare!"])
 
            [ui/Modal {:open     @compare?
                       :dimmer   "blurring"

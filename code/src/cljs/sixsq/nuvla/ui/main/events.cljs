@@ -142,10 +142,13 @@
   (fn [_ [_ uri]]
     {::fx/open-new-window [uri]}))
 
-(reg-event-db
+
+(reg-event-fx
   ::changes-protection?
-  (fn [db [_ choice]]
-    (assoc db ::spec/changes-protection? choice)))
+  (fn [{db :db} [_ choice]]
+    {:db (assoc db ::spec/changes-protection? choice)
+     ::fx/on-unload-protection choice}))
+
 
 (reg-event-fx
   ::ignore-changes

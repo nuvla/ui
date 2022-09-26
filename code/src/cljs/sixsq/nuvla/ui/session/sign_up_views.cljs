@@ -29,7 +29,7 @@
 
 
 (defn password-repeat-check [form name]
-  (let [password        (get-in @form [:names->value :password])
+  (let [password (get-in @form [:names->value :password])
         password-repeat (get-in @form [:names->value name])]
     (when-not (= password password-repeat)
       [:password-repeat :password-not-equal])))
@@ -37,32 +37,35 @@
 
 (defn Form
   []
-  (let [form-conf                  {:form-spec         ::user-template-email-password
-                                    :names->validators {:password-repeat [password-repeat-check]}
-                                    :names->value      {:email           ""
-                                                        :password        ""
-                                                        :password-repeat ""}}
-        form                       (fv/init-form form-conf)
-        tr                         (subscribe [::i18n-subs/tr])
-        spec->msg                  {::email          (@tr [:email-invalid-format])
-                                    ::password       (@tr [:password-constraint])
-                                    :password-repeat (@tr [:passwords-doesnt-match])}
-        server-redirect-uri        (subscribe [::subs/server-redirect-uri])
+  (let [form-conf {:form-spec         ::user-template-email-password
+                   :names->validators {:password-repeat [password-repeat-check]}
+                   :names->value      {:email           ""
+                                       :password        ""
+                                       :password-repeat ""}}
+        form (fv/init-form form-conf)
+        tr (subscribe [::i18n-subs/tr])
+        spec->msg {::email          (@tr [:email-invalid-format])
+                   ::password       (@tr [:password-constraint])
+                   :password-repeat (@tr [:passwords-doesnt-match])}
         callback-msg-on-validation (js/encodeURI "signup-validation-success")
-        github-template?           (subscribe [::subs/user-template-exist?
-                                               "user-template/nuvla"])
-        geant-template?            (subscribe [::subs/user-template-exist?
-                                               "user-template/geant"])
-        stripe                     (subscribe [::main-subs/stripe])
-        pricing-url                (subscribe [::main-subs/config :pricing-url])
-        create-customer            (r/atom false)
-        form-customer-conf         {:form-spec    ::profile-views/customer
-                                    :names->value {:fullname       ""
-                                                   :street-address ""
-                                                   :city           ""
-                                                   :country        ""
-                                                   :postal-code    ""}}
-        form-customer              (fv/init-form form-customer-conf)]
+        server-redirect-uri (subscribe [::subs/server-redirect-uri])
+        resource-url (str @cimi-fx/NUVLA_URL "/api/user")
+        github-user-tmpl "user-template/nuvla"
+        geant-user-tmpl "user-template/geant"
+        icrc-user-tmpl "user-template/icrc"
+        github-template? (subscribe [::subs/user-template-exist? github-user-tmpl])
+        geant-template? (subscribe [::subs/user-template-exist? geant-user-tmpl])
+        icrc-template? (subscribe [::subs/user-template-exist? icrc-user-tmpl])
+        stripe (subscribe [::main-subs/stripe])
+        pricing-url (subscribe [::main-subs/config :pricing-url])
+        create-customer (r/atom false)
+        form-customer-conf {:form-spec    ::profile-views/customer
+                            :names->value {:fullname       ""
+                                           :street-address ""
+                                           :city           ""
+                                           :country        ""
+                                           :postal-code    ""}}
+        form-customer (fv/init-form form-customer-conf)]
     (fn []
       [comp/RightPanel
        {:title        (@tr [:create-an])
@@ -109,11 +112,11 @@
                        (when @create-customer
                          [profile-views/CustomerFormFields form-customer])]
         :submit-text  (@tr [:sign-up])
-        :submit-fn    #(let [form-signup-valid?   (fv/validate-form-and-show? form)
+        :submit-fn    #(let [form-signup-valid? (fv/validate-form-and-show? form)
                              form-customer-valid? (if @create-customer
                                                     (fv/validate-form-and-show? form-customer)
                                                     true)
-                             form-valid?          (and form-signup-valid? form-customer-valid?)]
+                             form-valid? (and form-signup-valid? form-customer-valid?)]
                          (when form-valid?
                            (let [data (-> @form
                                           :names->value
@@ -123,9 +126,9 @@
                                        :redirect-url (str @server-redirect-uri "?message="
                                                           callback-msg-on-validation)}]
                              (if @create-customer
-                               (let [customer  (-> form-customer
-                                                   profile-views/customer-form->customer
-                                                   (assoc :subscription? true))
+                               (let [customer (-> form-customer
+                                                  profile-views/customer-form->customer
+                                                  (assoc :subscription? true))
                                      data-cust (assoc data :customer customer)]
                                  (dispatch [::events/submit utils/user-tmpl-email-password
                                             data-cust opts]))
@@ -133,37 +136,24 @@
                                           utils/user-tmpl-email-password data opts])))))
         :ExtraContent [:div {:style {:margin-top 100}}
                        (when (or @github-template?
-                                 @geant-template?)
+                                 @geant-template?
+                                 @icrc-template?)
                          (@tr [:sign-up-with]))
                        [:span
                         (when @github-template?
-                          [:form {:action (str @cimi-fx/NUVLA_URL "/api/user")
-                                  :method "post"
-                                  :style  {:display "inline"}}
-                           [:input {:hidden        true
-                                    :name          "href"
-                                    :default-value "user-template/nuvla"}]
-                           [:input {:hidden        true
-                                    :name          "redirect-url"
-                                    :default-value @server-redirect-uri}]
-                           [ui/Button {:style    {:margin-left 10}
-                                       :circular true
-                                       :basic    true
-                                       :type     "submit"
-                                       :class    "icon"}
-                            [ui/Icon {:name "github"
-                                      :size "large"}]]])
+                          [comp/SignExternal
+                           {:resource-url        resource-url
+                            :href                github-user-tmpl
+                            :icon                :github
+                            :server-redirect-uri @server-redirect-uri}])
                         (when @geant-template?
-                          [:form {:action (str @cimi-fx/NUVLA_URL "/api/user")
-                                  :method "post"
-                                  :style  {:display "inline"}}
-                           [:input {:hidden        true
-                                    :name          "href"
-                                    :default-value "user-template/geant"}]
-                           [ui/Button {:style    {:margin-left 10}
-                                       :circular true
-                                       :basic    true
-                                       :type     "submit"
-                                       :class    "icon"}
-                            [ui/Icon {:name "student"
-                                      :size "large"}]]])]]}])))
+                          [comp/SignExternal
+                           {:resource-url resource-url
+                            :href         geant-user-tmpl
+                            :icon         :geant}])
+                        (when @icrc-template?
+                          [comp/SignExternal
+                           {:resource-url resource-url
+                            :href         icrc-user-tmpl
+                            :icon         :icrc}])]]
+        }])))

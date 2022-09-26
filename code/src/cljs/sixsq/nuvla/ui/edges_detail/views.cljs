@@ -233,7 +233,7 @@
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
                             [:span (str (@tr [:nuvlabox-update-error-content])) " "
-                             [:a {:href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/"
+                             [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
                                   :target "_blank"}
                               (str/capitalize (@tr [:see-more]))]])}])
              (when (and (some? target-version) (is-old-version? target-version))
@@ -1343,7 +1343,8 @@
         new-location (r/atom nil)]
     (fn []
       (let [{:keys [id location inferred-location]} @nuvlabox
-            update-new-location #(reset! new-location %)
+            update-new-location #(do (reset! new-location %)
+                                     (dispatch [::main-events/changes-protection? true]))
             position            (some-> (or @new-location location inferred-location) map/longlat->latlong)]
         [:div
          (if position (@tr [:map-drag-to-update-nb-location])
@@ -1361,15 +1362,17 @@
                          :draggable   true
                          :on-drag-end (map/drag-end-location update-new-location)}])]
          [:div {:align "right"}
-          [ui/Button {:on-click #(reset! new-location nil)}
+          [ui/Button {:on-click #(do (reset! new-location nil)
+                                     (dispatch [::main-events/changes-protection? false]))}
            (@tr [:cancel])]
           [ui/Button {:primary  true
-                      :on-click #(dispatch
-                                   [::events/edit id
-                                    (assoc @nuvlabox
-                                      :location
-                                      (update @new-location 0 map/normalize-lng))
-                                    (@tr [:nuvlabox-position-update])])}
+                      :on-click #(do (dispatch
+                                      [::events/edit id
+                                       (assoc @nuvlabox
+                                              :location
+                                              (update @new-location 0 map/normalize-lng))
+                                       (@tr [:nuvlabox-position-update])])
+                                     (dispatch [::main-events/changes-protection? false]))}
            (@tr [:save])]]]))))
 
 

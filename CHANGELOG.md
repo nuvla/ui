@@ -4,10 +4,26 @@
 
 ### Changed
 
+- Home - Update old links to point to new NuvlaEdge documentation
+- Profile - Groups tabs warns user of unsaved changes
+- Apps details - Adds button enabling re-opening comparison after closing it
+
+## [2.32.5] - 2022-09-19
+
+### Changed
+
 - Edge details - Reboot icon for operation in menubar
 - Edge details - Hide create log action from menubar
 - Edge details - Status segment color was depending on online status
 - Edge details - Regroup and simplify status to end users
+- Edge details add modal - Points more info links to new documentation
+- Notifications - Renames "NB online" to "NuvlaEdge online"
+- Session - ICRC sign-in and sign-up support
+- Tab plugin - supports warning user of unsaved changes
+- NuvlaEdge details - location tab warns user of unsaved changes
+- Global - warn user when closing browser tab of unsaved changes
+- NuvlaEdge - Envsubst of docker-compose files support NuvlaEdge renaming
+- General utils - envsubst on string
 
 ## [2.32.4] - 2022-09-02
 

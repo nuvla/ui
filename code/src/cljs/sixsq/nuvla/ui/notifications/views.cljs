@@ -328,7 +328,7 @@
   {"nuvlabox"               [{:key "cpu load" :text "CPU load %" :value "load"}
                              {:key "ram usage" :text "RAM usage %" :value "ram"}
                              {:key "disk usage" :text "Disk usage %" :value "disk"}
-                             {:key "state" :text "NB online" :value "state"}]
+                             {:key "state" :text "NuvlaEdge online" :value "state"}]
    "infrastructure-service" [{:key "status" :text "status" :value "status"}]
    "data-record"            [{:key "content-type" :text "content-type" :value "content-type"}]})
 

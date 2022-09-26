@@ -6,6 +6,7 @@
 
 - Home - Update old links to point to new NuvlaEdge documentation
 - Profile - Groups tabs warns user of unsaved changes
+- Apps - Replaces "App Store" with "Marketplace"
 
 ## [2.32.5] - 2022-09-19
 

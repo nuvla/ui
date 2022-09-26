@@ -239,7 +239,7 @@
                                    :key     :my-apps
                                    :icon    "user"}
                         :render   render}
-                       {:menuItem {:content "App Store"
+                       {:menuItem {:content "Marketplace"
                                    :key     :app-store
                                    :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
                         :render   render}

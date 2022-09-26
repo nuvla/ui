@@ -221,6 +221,7 @@
     (let [{:keys [count]} @(subscribe [::subs/apps])
           apps     @(subscribe [::subs/apps-tree])
           loading? @(subscribe [::subs/apps-loading?])
+          tr     @(subscribe [::i18n-subs/tr])
           render   (fn []
                      (r/as-element
                        [ui/TabPane {:loading loading?}
@@ -235,15 +236,15 @@
                           :change-event [::events/search-apps]}]]))]
       [tab/Tab
        {:db-path      [::spec/tab-new-apps]
-        :panes        [{:menuItem {:content "My apps"
+        :panes        [{:menuItem {:content (general-utils/capitalize-words (tr [:my-apps]))
                                    :key     :my-apps
                                    :icon    "user"}
                         :render   render}
-                       {:menuItem {:content "Marketplace"
+                       {:menuItem {:content (general-utils/capitalize-words (tr [:appstore]))
                                    :key     :app-store
                                    :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
                         :render   render}
-                       {:menuItem {:content "All apps"
+                       {:menuItem {:content (general-utils/capitalize-words (tr [:all-apps]))
                                    :key     :all-apps
                                    :icon    "grid layout"}
                         :render   render}]

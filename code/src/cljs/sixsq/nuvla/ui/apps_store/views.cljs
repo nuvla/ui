@@ -146,7 +146,7 @@
                  :key     :myapps
                  :icon    "user"}
       :render   render}
-     {:menuItem {:content "Navigate Apps"
+     {:menuItem {:content (utils-general/capitalize-words (tr [:navigate-apps]))
                  :key     :navigate
                  :icon    "folder open"}
       :render   #(r/as-element [TabNavigator])}]))

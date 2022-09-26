@@ -429,6 +429,7 @@
         :my-apps                                       "my apps"
         :name                                          "name"
         :name-of-url                                   "name of this url"
+        :navigate-apps                                 "navigate apps"
         :new                                           "new"
         :new-component                                 "new component"
         :new-dataset                                   "new dataset"

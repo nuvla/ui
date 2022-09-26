@@ -69,14 +69,14 @@
   []
   (let [modules         (subscribe [::subs/modules])
         active-tab      (subscribe [::tab-plugin/active-tab [::spec/tab]])
-        show-published? (= @active-tab :allapps)]
+        show-published-tick? (some #(= @active-tab %) [:allapps :myapps])]
     [:div utils-style/center-items
      [ui/CardGroup {:centered    true
                     :itemsPerRow 4
                     :stackable   true}
       (for [{:keys [id] :as module} (get @modules :resources [])]
         ^{:key id}
-        [ModuleCard module show-published?])]]))
+        [ModuleCard module show-published-tick?])]]))
 
 (defn RefreshButton
   []

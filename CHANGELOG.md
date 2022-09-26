@@ -7,6 +7,7 @@
 - Home - Update old links to point to new NuvlaEdge documentation
 - Profile - Groups tabs warns user of unsaved changes
 - Apps details - Adds button enabling re-opening comparison after closing it
+- App store - Fixes bug to now only shows published apps
 
 ## [2.32.5] - 2022-09-19
 

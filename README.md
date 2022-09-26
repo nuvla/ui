@@ -10,8 +10,8 @@ and [reagent](https://github.com/reagent-project/reagent) as foundation, and
 [Semantic UI](https://semantic-ui.com) for basic widgets and styling.
 
 Our aim is to build a user experience such that users can start capturing, deploying and managing
-containers on any virtualised environments (e.g. public cloud, private cloud and infrastructue,
-as well as [NuvlaBox](https://github.com/nuvlabox) edge devices). And all this with no or minimum training.
+containers on any virtualised environments (e.g. public cloud, private cloud and infrastructure,
+as well as [NuvlaEdge](https://github.com/nuvlaedge) devices). And all this with no or minimum training.
 
 More details on the overall Nuvla eco-system is available [here](https://github.com/nuvla/nuvla).
 
@@ -21,39 +21,52 @@ More details on the overall Nuvla eco-system is available [here](https://github.
   the UI served by nginx. Available from the [nuvla/ui
   repository](https://hub.docker.com/r/nuvla/ui) on Docker Hub.
 
-## Installation
+## Development Environment
 
-For development you need [nodejs](https://nodejs.org/), [leiningen](https://leiningen.org/) and [caddy](https://caddyserver.com/)
+### Installation
+
+For development you need [nodejs](https://nodejs.org/), [leiningen](https://leiningen.org/)
+and [caddy](https://caddyserver.com/)
+
+On Mac OS, the `npm` command comes with the Node.js distribution of
+Homebrew. Just run the command `brew install node`.
+
+```bash
+brew install node
+brew install leiningen
+brew install caddy
+```
+
+For other distributions or for direct installation on Mac OS, take a look at tools website for instructions.
 
 The ui can be installed on its own or as part of a full Nuvla stack. Stand alone installations
-must be configured to point to an existing Nuvla server (see
-[Development Environment](#development-environment) section for details).
+must be configured to point to an existing Nuvla server.
 
 You can also run your own Nuvla test server locally, which is great for testing. You'll find instructions
 [here](https://github.com/nuvla/deployment/test).
-
-## Development Environment
-
-The essentials for using the development environment are below.
 
 ### Choose or deploy a Nuvla server
 
 You will need to point your development ui environment to a Nuvla server. For that
 you have a few choices:
 
-1.  [Deploy a test server](https://github.com/nuvla/deployment/tree/master/test)
-2.  Point to an already deployed server (e.g. https://nuvla.io)
+1. [Deploy a test server](https://github.com/nuvla/deployment/tree/master/test)
+2. Point to an already deployed server (e.g. https://nuvla.io)
 
 You then need to configure your local Nuvla ui to point to the Nuvla server (next section).
 
-### Configure your ui for the right server
+### Configure caddy for the right server
 
-To run your UI dev server and your backend server from the same host address we use [Caddy](https://caddyserver.com/) as a reverse-proxy during development. Caddy installs local certificates automatically, so we can run the development environment on a "real" URL.
+To run your UI dev server and your backend server from the same host address we use [Caddy](https://caddyserver.com/) as
+a reverse-proxy during development. Caddy installs local certificates automatically, so we can run the development
+environment on a "real" URL.
 
-First, in your host file, after the `localhost entry`, add a new entry `local-nuvla.dev` (you can choose something else) pointing `127.0.0.1` or `localhost`, for example `local-nuvla.dev`:
+First, in your host file, after the `localhost entry`, add a new entry `nui.localhost` (you can choose something
+else)
+pointing `127.0.0.1` or `localhost`, for example `nui.localhost`:
 
 ```
-127.0.0.1 local-nuvla.dev
+127.0.0.1 nui.localhost
 ```
 
 Second, you create a new file called `Caddyfile` with this content:
@@ -63,24 +76,34 @@ Second, you create a new file called `Caddyfile` with this content:
 	local_certs
 }
 
-local-nuvla.dev {
+nui.localhost {
 	reverse_proxy localhost:8280
 	reverse_proxy /api/* https://nuvla.io   ## this points to a server of your chosing
 }
 ```
 
-From the same directory where the `Caddyfile` is located, you run the command `caddy run` (or `caddy start` to run it in the background).
+From the same directory where the `Caddyfile` is located, you run the command `caddy run` (or `caddy start` to run it in
+the background).
 
-Lastly, edit the file `shadow-cljs.edn` (we use shadow-cljs, which is installed when you `npm install` inside the `code` directory).
-and modify the dev environment configuration to point to your host file entry, `local-nuvla.dev` in our case:
+If you want to point the API somewhere else, you can change your `Caddyfile`
+from `reverse_proxy /api/* https://nuvla.io` to e.g. `reverse_proxy /api/* localhost:8200` and run the
+command `caddy reload` (no need to restart anything else).
+
+### Configure shadow-cljs
+
+Lastly, edit the file `shadow-cljs.edn` (we use shadow-cljs, which is installed when you `npm install` inside the `code`
+directory).Modify the dev environment configuration to point to your host file entry, `nui.localhost` in our
+case:
 
 ```
-:dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL "https://local-nuvla.dev"}`
+:dev        {:closure-defines  {sixsq.nuvla.ui.utils.defines/HOST_URL "https://nui.localhost"}`
 ```
 
-When you now run `lein dev` from the `code` folder, you can visit the Nuvla-Ui at https://local-nuvla.dev.
+### Start development ui
 
-If you want to point the API somewhere else, you can change your `Caddyfile` from `reverse_proxy /api/* https://nuvla.io` to e.g. `reverse_proxy /api/* localhost:8200` and run the command `caddy reload` (no need to restart anything else).
+Run `npm install` inside `code` folder of the cloned repository. This only needs to be done once at the beginning and
+then whenever dependencies change.
+When you now run `lein dev` from the `code` folder, you can visit the Nuvla-Ui at https://nui.localhost.
 
 ## Contributing
 
@@ -88,24 +111,24 @@ If you want to point the API somewhere else, you can change your `Caddyfile` fro
 
 To contribute code to this repository, please follow these steps:
 
-1.  Create a branch from master with a descriptive, kebab-cased name
-    to hold all your changes.
+1. Create a branch from master with a descriptive, kebab-cased name
+   to hold all your changes.
 
-2.  Follow the developer guidelines concerning formatting, etc. when
-    modifying the code.
+2. Follow the developer guidelines concerning formatting, etc. when
+   modifying the code.
 
-3.  Once the changes are ready to be reviewed, create a GitHub pull
-    request. With the pull request, provide a description of the
-    changes and links to any relevant issues (in this repository or
-    others).
+3. Once the changes are ready to be reviewed, create a GitHub pull
+   request. With the pull request, provide a description of the
+   changes and links to any relevant issues (in this repository or
+   others).
 
-4.  Ensure that the triggered CI checks all pass. These are triggered
-    automatically with the results shown directly in the pull request.
+4. Ensure that the triggered CI checks all pass. These are triggered
+   automatically with the results shown directly in the pull request.
 
-5.  Once the checks pass, assign the pull request to the repository
-    coordinator (who may then assign it to someone else).
+5. Once the checks pass, assign the pull request to the repository
+   coordinator (who may then assign it to someone else).
 
-6.  Interact with the reviewer to address any comments.
+6. Interact with the reviewer to address any comments.
 
 When the reviewer is happy with the pull request, he/she will "squash
 & merge" the pull request and delete the corresponding branch.
@@ -134,48 +157,6 @@ Additional, formatting guidelines, not handled by the Cursive plugin:
 IntelliJ (with Cursive) can format easily whole directories of source
 code. Do not hesitate to use this feature to keep the source code
 formatting standardized.
-
-### NPM
-
-The build uses [shadow-cljs](http://shadow-cljs.org/) to facilitate
-the use of Javascript modules packaged with NPM. This requires that
-you install the `npm` command line interface on your development
-machine.
-
-On Mac OS, the `npm` command comes with the Node.js distribution of
-Homebrew. Just run the command `brew install node`.
-
-For other distributions or for direct installation on Mac OS, take a
-look at the Node.js [downloads](https://nodejs.org/en/download/)
-page.
-
-### Leiningen
-
-The development environment requires
-[`lein`](https://leiningen.org). Follow the instructions on the
-Leiningen website to install the tool.
-
-### Workflow
-
-Once all of the development tools have been installed, the workflow is
-as follows:
-
-1.  Run `npm install` at the `code` folder of the cloned repository. This only
-    needs to be done once at the beginning and then whenever
-    dependencies change.
-
-2.  Start a development server for the build with `lein dev` from within the `code` folder. When
-    this completes ("build completed" message in the terminal), you
-    can then connect to the process on https://local-nuvla.dev. If you haven't followed the
-    [reverse proxy setup here](#configure-your-ui-for-the-right-server) then the UI is available at http://localhost:8280 (but without a working backend).
-
-3.  Changes you make to the code should automatically be recompiled
-    and then pushed to your browser.
-
-4.  If you need a REPL, you can run the command `lein cljs-repl` from
-    a different terminal.
-
-5.  You can terminate the process with Ctrl-C from the terminal window.
 
 ## Integration with IntelliJ
 

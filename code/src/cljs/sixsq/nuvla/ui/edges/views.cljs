@@ -861,7 +861,7 @@
          {:db-path      [::spec/edges-search]
           :change-event [::pagination-plugin/change-page
                          [::spec/pagination] 1]
-          :placeholder-suffix @(subscribe [::subs/state-selector])
+          :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))
           :style {:width "100%"}}]]
        [ui/GridColumn {:width 10}
         (if (= @view-type :cluster)

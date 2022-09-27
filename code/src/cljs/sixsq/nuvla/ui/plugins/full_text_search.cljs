@@ -1,7 +1,6 @@
 (ns sixsq.nuvla.ui.plugins.full-text-search
   (:require
     [cljs.spec.alpha :as s]
-    [clojure.string :as str]
     [re-frame.core :refer [dispatch reg-event-fx subscribe]]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.plugins.helpers :as helpers]
@@ -37,9 +36,7 @@
     [ui/Input
      (-> opts
          (dissoc :db-path :change-event :placeholder-suffix)
-         (assoc :placeholder (if placeholder-suffix
-                               (str (str/replace search-placeholder #"\.\.\." " ") (str/lower-case placeholder-suffix) "...")
-                               search-placeholder)
+         (assoc :placeholder (str search-placeholder placeholder-suffix "...")
                 :icon "search"
                 :value (or text "")
                 :on-change (ui-callback/input-callback
@@ -49,13 +46,11 @@
         :args (s/cat :opts (s/keys :req-un [::helpers/db-path
                                             ::helpers/change-event])))
 
-(defn FullTextSearchWithFilterIndicator
-  [{:keys [additional-filters-applied] :as opts}]
-  [:div
-   [FullTextSearch (dissoc opts :additional-filters-applied)]
-    (when additional-filters-applied [:div {:style { :padding-left "4px"
-                                                    :font-size "0.8rem"
-                                                    :inline-size "200px"
-                                                    :overflow-wrap :break-word}}
-                                      [:div { :style {:font-weight "bold" }} "Filter: "]
-                                      (str additional-filters-applied)])])
+(defn FilterSummary
+  [{:keys [additional-filters-applied]}]
+  (when additional-filters-applied [:div [:div {:style {:padding-left "4px"
+                                                        :font-size "0.8rem"
+                                                        :inline-size "200px"
+                                                        :overflow-wrap :break-word}}
+                                          [:div {:style {:font-weight "bold"}} "Filter: "]
+                                          additional-filters-applied]]))

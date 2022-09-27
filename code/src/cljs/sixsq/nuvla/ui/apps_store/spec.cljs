@@ -14,5 +14,5 @@
   {::modules        nil
    ::pagination     (pagination-plugin/build-spec
                       :default-items-per-page 8)
-   ::tab            (tab-plugin/build-spec)
+   ::tab            (tab-plugin/build-spec :active-tab :appstore)
    ::modules-search (full-text-search-plugin/build-spec)})

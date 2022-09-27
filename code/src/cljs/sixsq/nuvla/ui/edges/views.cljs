@@ -220,7 +220,7 @@
                [ui/MessageContent
                 [ui/MessageHeader [:span (@tr [:nuvlabox-playbooks-cronjob]) " "
                                    (when @playbooks-cronjob
-                                     [ui/Popup {:content        @playbooks-cronjob
+                                     [ui/Popup {:content        (@playbooks-cronjob :cronjob)
                                                 :wide           "very"
                                                 :position       "bottom center"
                                                 :hide-on-scroll true

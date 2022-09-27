@@ -11,7 +11,8 @@
 - App store - My apps should filter on active-claim bugfix
 - App store - Show published tick also in my apps tab bugfix
 - App details - Pricing tab Follow user trial period toggle button not shown for read only app bugfix #897
-- NuvlaEdge add modal - Copies correct value to clipboard for cronjob when host level management enabled
+- NuvlaEdge add modal - Copies correct value to clipboard for cronjob when host level management enabled bugfix #879
+- NuvlaEdge add modal - Shows correct value for cronjob in hover popup bugfix
 
 ## [2.32.5] - 2022-09-19
 

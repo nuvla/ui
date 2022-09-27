@@ -13,6 +13,7 @@
 - App details - Pricing tab Follow user trial period toggle button not shown for read only app bugfix #897
 - NuvlaEdge add modal - Copies correct value to clipboard for cronjob when host level management enabled bugfix #879
 - NuvlaEdge add modal - Shows correct value for cronjob in hover popup bugfix
+- Global - Adds cursor style pointer to copy to clipboard component bugfix
 
 ## [2.32.5] - 2022-09-19
 

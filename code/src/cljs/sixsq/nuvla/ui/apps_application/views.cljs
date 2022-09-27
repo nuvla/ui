@@ -381,7 +381,6 @@
         price     (subscribe [::apps-subs/price])
         vendor    (subscribe [::profile-subs/vendor])]
     (fn []
-      (js/console.error "PricingPane" "editable? " @editable? "price" price)
       [:<>
        [:h2 [apps-views-detail/PricingTitle]]
        (if (or (and @editable? @vendor) (some? @price))

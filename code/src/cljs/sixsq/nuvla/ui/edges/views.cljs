@@ -233,7 +233,7 @@
                   [:span (str (@tr [:nuvlabox-playbooks-cronjob-ready])
                               " ")
                    (values/copy-value-to-clipboard
-                     "" @playbooks-cronjob (@tr [:copy-to-clipboard]) true)]
+                    "" (@playbooks-cronjob :cronjob) (@tr [:copy-to-clipboard]) true)]
                   (@tr [:nuvlabox-playbooks-cronjob-wait]))]])
 
             (when @new-private-ssh-key

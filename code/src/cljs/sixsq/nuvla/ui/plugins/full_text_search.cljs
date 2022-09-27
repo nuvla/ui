@@ -29,8 +29,7 @@
        :fx [[:dispatch change-event]]})))
 
 (defn FullTextSearch
-  [{:keys [db-path change-event placeholder-suffix] :as opts
-    :or {placeholder-suffix "..."}}]
+  [{:keys [db-path change-event placeholder-suffix] :as opts}]
   (dispatch [::helpers/set db-path ::change-event change-event])
   (let [tr   @(subscribe [::i18n-subs/tr])
         search-placeholder (tr [:search])
@@ -38,7 +37,9 @@
     [ui/Input
      (-> opts
          (dissoc :db-path :change-event :placeholder-suffix)
-         (assoc :placeholder (str search-placeholder placeholder-suffix)
+         (assoc :placeholder (if placeholder-suffix
+                               (str (str/replace search-placeholder #"\.\.\." " ") (str/lower-case placeholder-suffix) "...")
+                               search-placeholder)
                 :icon "search"
                 :value (or text "")
                 :on-change (ui-callback/input-callback

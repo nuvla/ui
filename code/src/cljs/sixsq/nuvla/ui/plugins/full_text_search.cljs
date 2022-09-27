@@ -47,9 +47,10 @@
 
 (defn FilterSummary
   [{:keys [additional-filters-applied]}]
-  (when additional-filters-applied [:div [:div {:style {:padding-left "4px"
-                                                        :font-size "0.8rem"
-                                                        :inline-size "200px"
-                                                        :overflow-wrap :break-word}}
-                                          [:div {:style {:font-weight "bold"}} "Filter: "]
-                                          additional-filters-applied]]))
+  (when additional-filters-applied
+    [:div {:style {:padding-left "4px"
+                   :font-size "0.8rem"
+                   :inline-size "200px"
+                   :overflow-wrap :break-word}}
+     [:div {:style {:font-weight "bold"}} "Filter: "]
+     additional-filters-applied]))

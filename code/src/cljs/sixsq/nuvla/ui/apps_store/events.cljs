@@ -41,10 +41,10 @@
                              "subtype='application_kubernetes'")
                            (case (::tab-plugin/active-tab tab)
                              :appstore (general-utils/published-query-string)
-                             nil (general-utils/published-query-string)
                              :myapps (general-utils/owner-like-query-string
-                                       (:active-claim session))
-                             :allapps nil)
+                                       (or (:active-claim session)
+                                           (:user session)))
+                             nil)
                            (full-text-search-plugin/filter-text
                              db [::spec/modules-search]))}
                (pagination-plugin/first-last-params db [::spec/pagination]))

@@ -25,7 +25,7 @@
     [sixsq.nuvla.ui.utils.values :as utils-values]))
 
 (defn ModuleCard
-  [{:keys [id name description path subtype logo-url price published versions tags]} show-published?]
+  [{:keys [id name description path subtype logo-url price published versions tags]} show-published-tick?]
   (let [tr             (subscribe [::i18n-subs/tr])
         map-versions   (apps-utils/map-versions-index versions)
         module-id      (if (true? published) (apps-utils/latest-published-module-with-index id map-versions) id)
@@ -59,7 +59,7 @@
                       (or name id)]
       :description   (utils-general/truncate desc-summary 180)
       :content       [uix/Tags tags]
-      :corner-button (when (and published show-published?)
+      :corner-button (when (and published show-published-tick?)
                        [ui/Label {:corner true} [uix/Icon {:name apps-utils/publish-icon}]])
       :href          detail-href
       :on-click      #(dispatch [::history-events/navigate detail-href])
@@ -67,9 +67,9 @@
 
 (defn ModulesCardsGroup
   []
-  (let [modules         (subscribe [::subs/modules])
-        active-tab      (subscribe [::tab-plugin/active-tab [::spec/tab]])
-        show-published-tick? (some #(= @active-tab %) [:allapps :myapps])]
+  (let [modules              (subscribe [::subs/modules])
+        active-tab           (subscribe [::tab-plugin/active-tab [::spec/tab]])
+        show-published-tick? (boolean (#{:allapps :myapps} @active-tab))]
     [:div utils-style/center-items
      [ui/CardGroup {:centered    true
                     :itemsPerRow 4

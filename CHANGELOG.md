@@ -7,7 +7,10 @@
 - Home - Update old links to point to new NuvlaEdge documentation
 - Profile - Groups tabs warns user of unsaved changes
 - Apps details - Adds button enabling re-opening comparison after closing it
-- App store - Fixes bug to now only shows published apps
+- App store - Only shows published apps on initial load bugfix #900
+- App store - My apps should filter on active-claim bugfix
+- App store - Show published tick for all apps tab
+- App - Follow user trial period toggle button enabled even for read only app
 
 ## [2.32.5] - 2022-09-19
 

@@ -95,7 +95,7 @@
   ([value value-to-copy popup-text] (copy-value-to-clipboard value value-to-copy popup-text true))
   ([value value-to-copy popup-text show?]
    [ui/CopyToClipboard {:text value-to-copy}
-    [:span value " "
+    [:span {:style {:cursor :pointer}} value " "
      [ui/Popup {:content (r/as-element [:p popup-text])
                 :trigger (r/as-element [ui/Icon
                                         {:class [(when (not show?) "hide")]

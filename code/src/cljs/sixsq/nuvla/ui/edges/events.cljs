@@ -82,7 +82,8 @@
                          db [::spec/edges-search]))}
            (pagination-plugin/first-last-params
              db [::spec/pagination]))
-      #(dispatch [::set-nuvlaboxes %])]}))
+      #(do (dispatch [::set-nuvlaboxes %])
+           (dispatch [::get-nuvlaboxes-next-heartbeats %]))]}))
 
 (reg-event-fx
   ::set-nuvlaboxes
@@ -97,6 +98,26 @@
       {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
                      ::main-spec/loading? false)})))
 
+(reg-event-fx
+  ::get-nuvlaboxes-next-heartbeats
+  (fn [_ [_ nuvlaboxes]]
+    (let [nuvlaboxes (:resources nuvlaboxes)]
+      (when (seq nuvlaboxes)
+        {::cimi-api-fx/search
+          [:nuvlabox-status
+          {:select "parent,next-heartbeat"
+           :filter  (general-utils/join-and
+                     "online=false"
+                     (apply general-utils/join-or
+                            (map #(str "parent='" (:id %) "'") nuvlaboxes)))}
+          #_(pagination-plugin/first-last-params
+              db [::spec/pagination])
+          #(tap> %)]}))))
+
+;; (reg-event-fx
+;;   ::set-nuvlaboxes-next-heartbeats
+;;   (fn [_ [_ nuvlaboxes]]
+;;     ()))
 
 (reg-event-fx
   ::get-nuvlabox-locations

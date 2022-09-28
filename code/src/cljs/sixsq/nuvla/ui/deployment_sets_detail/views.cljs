@@ -29,7 +29,8 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]))
+    [sixsq.nuvla.ui.plugins.bulk-progress :as bulk-progress-plugin]
+    [sixsq.nuvla.ui.utils.style :as style]))
 
 
 (def refresh-action-id :deployment-set-get-deployment-set)
@@ -427,6 +428,38 @@
         {:db-path [::spec/module-versions]
          :hrefs   @app-selected}]]))
 
+(defn AddSelectedTargetsApps
+  [header apps-names targets-names]
+  (let [warning? (not (and (seq apps-names)
+                           (seq targets-names)))]
+    (when (or (seq apps-names)
+              (seq targets-names))
+      [:<>
+       [ui/Header {:as :h4, :attached :top} header]
+       [ui/Segment {:attached (or warning? :bottom)}
+        [ui/Table {:basic :very :celled true}
+         [ui/TableBody
+          [ui/TableRow
+           [ui/TableCell {:collapsing true}
+            [ui/Header {:as :h5 :content "Targets:"}]]
+           [ui/TableCell
+            (for [target-name targets-names]
+              ^{:key target-name}
+              [ui/Label {:content target-name}])]]
+          [ui/TableRow
+           [ui/TableCell {:collapsing true}
+            [ui/Header {:as :h5 :content "Apps:"}]]
+           [ui/TableCell
+            (for [app-name apps-names]
+              ^{:key app-name}
+              [ui/Label {:content app-name}])]]]]]
+       (when warning?
+         [ui/Message {:warning true :attached :bottom}
+          [ui/Icon {:name "warning"}]
+          (if (seq apps-names)
+            "You selected an app without selecting at least one compatible target!"
+            "You selected a target without selecting a compatible application!")])])))
+
 (defn AddPage
   []
   (let [tr                (subscribe [::i18n-subs/tr])
@@ -440,78 +473,67 @@
                               #(swap! create-name-descr assoc key %)))]
     (dispatch [::events/new])
     (fn []
-      (let [dep-set-name (:name @create-name-descr)
-            items [{:key         :select-apps-targets
-                    :icon        "bullseye"
-                    :content     [StepApplicationsTargets]
-                    :title       "Applications/Targets"
-                    :description "Select applications and targets"}
-                   {:key         :configure
-                    :icon        "configure"
-                    :content     [ConfigureApplications]
-                    :title       "Configure"
-                    :disabled    @disabled?
-                    :description "Configure applications"}
-                   #_{:key         :license
-                      :icon        "book"
-                      :content     [:div "Accept applications licenses"]
-                      :title       "License"
-                      :disabled    @disabled?
-                      :description "Accept licenses"}
-                   #_{:key         :price
-                      :icon        "eur"
-                      :content     [:div "Accept prices"]
-                      :title       "Prices"
-                      :disabled    @disabled?
-                      :description "Accept prices"}
-                   {:key         :summary
-                    :icon        "info"
-                    :content     [:div "This will contain a summary"
-                                  [ui/Form
-                                   [ui/FormInput
-                                    {:label       (str/capitalize (@tr [:name]))
-                                     :placeholder "Name your deployment set"
-                                     :required    true
-                                     :value       (or dep-set-name "")
-                                     :on-change   (on-change-input :name)}]
-                                   [ui/FormInput
-                                    {:label       (str/capitalize (@tr [:description]))
-                                     :placeholder "Describe your deployment set"
-                                     :value       (or (:description @create-name-descr) "")
-                                     :on-change   (on-change-input :description)}]
-                                   [ui/FormCheckbox
-                                    {:label     "Start deployment automatically directly after creation"
-                                     :checked   (:start @create-name-descr)
-                                     :on-change (ui-callback/checked
-                                                  #(swap! create-name-descr update :start not))}]]
-                                  [ui/Segment
-                                   "Kubernetes"
-                                   [:div "Targets: "
-                                    (str (map :name (get (group-by :subtype @targets-selected)
-                                                         "infrastructure-service-kubernetes")))]
-                                   [:span "Apps: "
-                                    (str (map :name (get (group-by :subtype @apps-selected) "application_kubernetes")))
-                                    ]]
-                                  [ui/Segment
-                                   "Docker"
-                                   [:div "Targets: "
-                                    (str (map :name (get (group-by :subtype @targets-selected)
-                                                         "infrastructure-service-swarm")))]
-                                   [:span "Apps: "
-                                    (str (map :name (remove #(= (:subtype %) "application_kubernetes") @apps-selected)))
-                                    ]
-                                   ]
-
-                                  [ui/Button
-                                   {:positive true
-                                    :on-click #(dispatch [::events/create @create-name-descr])
-                                    :disabled (or @create-disabled?
-                                                  (str/blank? dep-set-name))
-                                    :floated  :right} "Create"]
-                                  [:br] [:br] [:br]
-                                  ]
-                    :title       "Summary"
-                    :description "Overall summary"}]]
+      (let [dep-set-name                 (:name @create-name-descr)
+            resource-names-of-subtype    (fn [resources subtype]
+                                           (map #(or (:name %) (:id %)) (get (group-by :subtype resources)
+                                                                             subtype)))
+            selected-swarm-targets-names (resource-names-of-subtype @targets-selected "infrastructure-service-swarm")
+            selected-swarm-apps-names    (map :name (remove #(= (:subtype %) "application_kubernetes") @apps-selected))
+            selected-k8s-targets-names   (resource-names-of-subtype @targets-selected "infrastructure-service-kubernetes")
+            selected-k8s-apps-names      (resource-names-of-subtype @apps-selected "application_kubernetes")
+            items                        [{:key         :select-apps-targets
+                                           :icon        "bullseye"
+                                           :content     [StepApplicationsTargets]
+                                           :title       "Applications/Targets"
+                                           :description "Select applications and targets"}
+                                          {:key         :configure
+                                           :icon        "configure"
+                                           :content     [ConfigureApplications]
+                                           :title       "Configure"
+                                           :disabled    @disabled?
+                                           :description "Configure applications"}
+                                          #_{:key         :license
+                                             :icon        "book"
+                                             :content     [:div "Accept applications licenses"]
+                                             :title       "License"
+                                             :disabled    @disabled?
+                                             :description "Accept licenses"}
+                                          #_{:key         :price
+                                             :icon        "eur"
+                                             :content     [:div "Accept prices"]
+                                             :title       "Prices"
+                                             :disabled    @disabled?
+                                             :description "Accept prices"}
+                                          {:key         :summary
+                                           :icon        "info"
+                                           :content     [ui/Segment (merge style/basic {:clearing true})
+                                                         [ui/Form
+                                                          [ui/FormInput
+                                                           {:label       (str/capitalize (@tr [:name]))
+                                                            :placeholder "Name your deployment set"
+                                                            :required    true
+                                                            :value       (or dep-set-name "")
+                                                            :on-change   (on-change-input :name)}]
+                                                          [ui/FormInput
+                                                           {:label       (str/capitalize (@tr [:description]))
+                                                            :placeholder "Describe your deployment set"
+                                                            :value       (or (:description @create-name-descr) "")
+                                                            :on-change   (on-change-input :description)}]
+                                                          [ui/FormCheckbox
+                                                           {:label     "Start deployment automatically directly after creation"
+                                                            :checked   (:start @create-name-descr)
+                                                            :on-change (ui-callback/checked
+                                                                         #(swap! create-name-descr update :start not))}]]
+                                                         [AddSelectedTargetsApps "Kubernetes" selected-k8s-apps-names selected-k8s-targets-names]
+                                                         [AddSelectedTargetsApps "Docker" selected-swarm-apps-names selected-swarm-targets-names]
+                                                         [ui/Button
+                                                          {:positive true
+                                                           :on-click #(dispatch [::events/create @create-name-descr])
+                                                           :disabled (or @create-disabled?
+                                                                         (str/blank? dep-set-name))
+                                                           :floated  :right} "Create"]]
+                                           :title       "Summary"
+                                           :description "Overall summary"}]]
         [ui/Container {:fluid true}
          [uix/PageHeader "add" "Add"]
          ;(dispatch [::module-version/load-module [::spec/module-versions]

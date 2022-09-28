@@ -220,7 +220,7 @@
                [ui/MessageContent
                 [ui/MessageHeader [:span (@tr [:nuvlabox-playbooks-cronjob]) " "
                                    (when @playbooks-cronjob
-                                     [ui/Popup {:content        @playbooks-cronjob
+                                     [ui/Popup {:content        (@playbooks-cronjob :cronjob)
                                                 :wide           "very"
                                                 :position       "bottom center"
                                                 :hide-on-scroll true
@@ -233,7 +233,7 @@
                   [:span (str (@tr [:nuvlabox-playbooks-cronjob-ready])
                               " ")
                    (values/copy-value-to-clipboard
-                     "" @playbooks-cronjob (@tr [:copy-to-clipboard]) true)]
+                    "" (@playbooks-cronjob :cronjob) (@tr [:copy-to-clipboard]) true)]
                   (@tr [:nuvlabox-playbooks-cronjob-wait]))]])
 
             (when @new-private-ssh-key

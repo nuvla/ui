@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.32.6] - 2022-09-28
+
 ### Changed
 
 - Home - Update old links to point to new NuvlaEdge documentation

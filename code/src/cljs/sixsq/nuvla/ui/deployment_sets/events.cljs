@@ -70,7 +70,7 @@
    :last        0
    :aggregation aggregation
    :filter      (general-utils/join-and
-                  (general-utils/fulltext-query-string full-text-search)
+                  full-text-search
                   (when extra extra))})
 
 (reg-event-fx

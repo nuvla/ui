@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- UI - Let user choose Sepa payment again
+
 ## [2.32.6] - 2022-09-28
 
 ### Changed

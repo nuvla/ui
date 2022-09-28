@@ -730,9 +730,9 @@
            [ui/FormRadio {:label     (@tr [:credit-card])
                           :checked   (= @payment-form "card")
                           :on-change (ui-callback/value #(reset! payment-form "card"))}]
-           #_[ui/FormRadio {:label     (@tr [:bank-account])
-                            :checked   (= @payment-form "sepa_debit")
-                            :on-change (ui-callback/value #(reset! payment-form "sepa_debit"))}]]
+           [ui/FormRadio {:label     (@tr [:bank-account])
+                          :checked   (= @payment-form "sepa_debit")
+                          :on-change (ui-callback/value #(reset! payment-form "sepa_debit"))}]]
           [ui/FormField {:width 9}
            [PaymentMethodInput
             (cond-> {:type         @payment-form

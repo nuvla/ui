@@ -127,23 +127,20 @@
   [{:keys [db-path href] :as _opts}]
   (let [module        @(subscribe [::module db-path href])
         env-variables (get-in module [:content :environmental-variables])]
-    [ui/Segment
-     [ui/Form
-      (map-indexed
-        (fn [i env-variable]
-          ^{:key (str (:name env-variable) "_" i)}
-          [AsFormInput db-path href i env-variable])
-        env-variables)]]))
+    [ui/Form
+     (map-indexed
+       (fn [i env-variable]
+         ^{:key (str (:name env-variable) "_" i)}
+         [AsFormInput db-path href i env-variable])
+       env-variables)]))
 
 (defn ModuleVersions
   [{:keys [db-path href] :as _opts}]
   (let [module           (subscribe [::module db-path href])
         versions-indexed (subscribe [::module-versions-indexed db-path href])
         options          (subscribe [::module-versions-options db-path href])]
-    (fn [{:keys [db-path href] :as _opts}]
+    (fn [{:keys [db-path] :as _opts}]
       (let [{:keys [id content]} @module]
-        (when (nil? id)
-          (dispatch [::load-module db-path href]))
         [:<>
          [ui/FormDropdown
           {:value     (:id content)

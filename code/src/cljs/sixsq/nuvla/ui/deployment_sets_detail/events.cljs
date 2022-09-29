@@ -151,16 +151,19 @@
                 (pagination/first-last-params db [::spec/apps-pagination]))
       #(dispatch [::set-apps %])]}))
 
-(reg-event-db
+(reg-event-fx
   ::toggle-select-app
-  (fn [{:keys [::spec/apps-selected] :as db} [_ id]]
-    (let [op (if (contains? apps-selected id) disj conj)]
-      (update db ::spec/apps-selected op id))))
+  (fn [{{:keys [::spec/apps-selected] :as db} :db} [_ {:keys [id] :as module}]]
+    (let [select? (nil? (apps-selected module))
+          op      (if select? conj disj)]
+      (cond-> {:db (update db ::spec/apps-selected op module)}
+              select? (assoc :fx [[:dispatch [::module-version-plugin/load-module [::spec/module-versions] id]]])))))
 
 (reg-event-db
   ::toggle-select-target
   (fn [{:keys [::spec/targets-selected] :as db} [_ credential credentials]]
-    (let [op (if (contains? targets-selected credential) disj conj)]
+    (let [select? (nil? (targets-selected credential))
+          op (if select? conj disj)]
       (-> db
           (assoc ::spec/targets-selected
                  (apply disj targets-selected credentials))

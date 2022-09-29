@@ -43,12 +43,16 @@
                    [::main-events/subscription-required-dispatch
                     [::events/open-modal :add]])}]))
 
+(defn- date-string->time-ago [created]
+  (-> created time/parse-iso8601 time/ago))
+
 
 (defn NuvlaboxCard
-  [_nuvlabox _managers]
+  [_nuvlabox _managers _next-heartbeats]
   (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [id name description created state tags online] :as _nuvlabox} managers]
-      (let [href (str "edges/" (general-utils/id->uuid id))]
+    (fn [{:keys [id name description created state tags online] :as _nuvlabox} managers next-heartbeats]
+      (let [href (str "edges/" (general-utils/id->uuid id))
+            next-heartbeat (get-in @next-heartbeats [id :next-heartbeat])]
         ^{:key id}
         [uix/Card
          {:on-click    #(dispatch [::history-events/navigate href])
@@ -63,7 +67,11 @@
                                      :corner    true
                                      :color     "blue"}])]
                         (or name id)]
-          :meta        (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))
+          :meta        [:<>
+                        [:div (str (@tr [:created]) " " (date-string->time-ago created))]
+                        (when next-heartbeat [:div  (str (@tr [:online])
+                                                         " "
+                                                         (date-string->time-ago next-heartbeat))])]
           :state       state
           :description (when-not (str/blank? description) description)
           :tags        tags}]))))

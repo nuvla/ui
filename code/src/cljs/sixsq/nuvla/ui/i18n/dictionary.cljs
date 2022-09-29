@@ -354,6 +354,7 @@
         :last-7-days                                   "last 7 days"
         :last-boot                                     "Last Boot"
         :last-check                                    "Last check: "
+        :last-online                                   "last online"
         :launch                                        "launch"
         :launch-for                                    "launch for "
         :launch-force                                  "force launch"
@@ -588,6 +589,7 @@
         :object-count                                  "Number of data objects: %1"
         :objects                                       "objects"
         :offset                                        "offset"
+        :online                                        "online"
         :operating-system                              "operating system"
         :orchestrator                                  "orchestrator"
         :order                                         "order"
@@ -886,8 +888,7 @@
         :yes                                           "yes"
         }
 
-   :fr {
-        :about                                         "à propos"
+   :fr {:about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"
         :accept-costs                                  "J'accepte les coûts"
@@ -1131,6 +1132,7 @@
         :last-30-days                                  "derniers 30 jours"
         :last-7-days                                   "derniers 7 jours"
         :last-check                                    "Dernière vérification: "
+        :last-online                                   "dernier online"
         :launch                                        "lancer"
         :launch-for                                    "lancer pour "
         :launch-force                                  "forcer le lancement"
@@ -1323,6 +1325,7 @@
         :object-count                                  "Nombre d'objets de données : %1"
         :objects                                       "objets"
         :offset                                        "décalage"
+        :online                                        "online"
         :order                                         "ordonner"
         :out-of                                        " sur "
         :owners                                        "propriétaires"
@@ -1569,5 +1572,4 @@
         :welcome-video-subheader-pre                   "Accèder à notre"
         :will-do-it-later                              "Je le ferai plus tard"
         :working-directory                             "Dossier de travail"
-        :yes                                           "oui"
-        }})
+        :yes                                           "oui"}})

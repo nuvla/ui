@@ -110,14 +110,23 @@
                      "online=false"
                      (apply general-utils/join-or
                             (map #(str "parent='" (:id %) "'") nuvlaboxes)))}
-          #_(pagination-plugin/first-last-params
-              db [::spec/pagination])
-          #(tap> %)]}))))
+          #(dispatch [::set-nuvlaboxes-next-heartbeats  %])]}))))
 
-;; (reg-event-fx
-;;   ::set-nuvlaboxes-next-heartbeats
-;;   (fn [_ [_ nuvlaboxes]]
-;;     ()))
+
+(reg-event-fx
+ ::set-nuvlaboxes-next-heartbeats
+ (fn [{:keys [db]} [_ nuvlaboxes]]
+   (if (instance? js/Error nuvlaboxes)
+     (dispatch [::messages-events/add
+                (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
+                  {:header  (cond-> (str "failure getting last online status of offline nuvlaboxes")
+                              status (str " (" status ")"))
+                   :content message
+                   :type    :error})])
+     {:db (assoc db ::spec/next-heartbeats-offline-edges (zipmap
+                                                          (map :parent (:resources nuvlaboxes))
+                                                          (:resources nuvlaboxes))
+                 ::main-spec/loading? false)})))
 
 (reg-event-fx
   ::get-nuvlabox-locations

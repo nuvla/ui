@@ -20,6 +20,11 @@
     (::spec/nuvlaboxes db)))
 
 (reg-sub
+  ::next-heartbeats-offline-edges
+  (fn [db]
+    (::spec/next-heartbeats-offline-edges db)))
+
+(reg-sub
   ::nuvlabox-locations
   ::spec/nuvlabox-locations)
 

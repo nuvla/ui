@@ -7,6 +7,7 @@
 (s/def ::stale-count nat-int?)
 (s/def ::active-count nat-int?)
 (s/def ::nuvlaboxes any?)
+(s/def ::next-heartbeats-offline-edges any?)
 (s/def ::nuvlabox-locations any?)
 (s/def ::nuvlabox-cluster-summary any?)
 (s/def ::nuvlaboxes-summary any?)
@@ -33,6 +34,7 @@
 
 (def defaults
   {::nuvlaboxes                 nil
+   ::next-heartbeats-offline-edges nil
    ::nuvlabox-cluster-summary   nil
    ::nuvlaboxes-summary         nil
    ::nuvlaboxes-summary-all     nil

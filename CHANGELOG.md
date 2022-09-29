@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## [2.32.7] - 2022-09-29
+
+### Changed
+
+- Deployment detail - Page not refreshed bugfix #906
+- Profile - Let user choose Sepa payment again
+
 ## [2.32.6] - 2022-09-28
 
 ### Changed

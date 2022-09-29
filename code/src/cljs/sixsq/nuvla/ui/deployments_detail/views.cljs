@@ -778,10 +778,10 @@
           state]]))))
 
 
-(defn TabsDeployment
+(defn DeploymentDetails
   [uuid]
   (let [deployment (subscribe [::subs/deployment])]
-    (dispatch [::events/init (str "deployment/" uuid)])
+    (refresh (str "deployment/" uuid))
     (fn [_]
       (let [panes (deployment-detail-panes)]
         [components/LoadingPage {:dimmable? true}

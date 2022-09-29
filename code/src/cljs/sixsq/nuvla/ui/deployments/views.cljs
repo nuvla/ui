@@ -406,6 +406,6 @@
   (let [[_ uuid] path
         n        (count path)
         children (case n
-                   2 [deployments-detail-views/TabsDeployment uuid]
+                   2 [deployments-detail-views/DeploymentDetails uuid]
                    [DeploymentsMainContent])]
     [ui/Segment style/basic children]))

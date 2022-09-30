@@ -328,7 +328,10 @@
   {"nuvlabox"               [{:key "cpu load" :text "CPU load %" :value "load"}
                              {:key "ram usage" :text "RAM usage %" :value "ram"}
                              {:key "disk usage" :text "Disk usage %" :value "disk"}
-                             {:key "state" :text "NuvlaEdge online" :value "state"}]
+                             {:key "state" :text "NuvlaEdge online" :value "state"}
+                             {:key "network rx" :text "Network Rx GB" :value "network-rx"}
+                             {:key "network tx" :text "Network Tx GB" :value "network-tx"}
+                             ]
    "infrastructure-service" [{:key "status" :text "status" :value "status"}]
    "data-record"            [{:key "content-type" :text "content-type" :value "content-type"}]})
 
@@ -344,6 +347,8 @@
   {"nuvlabox"               {:load  :numeric
                              :ram   :numeric
                              :disk  :numeric
+                             :network-rx :numeric
+                             :network-tx :numeric
                              :state :boolean}
    "infrastructure-service" {:status :set}
    "data-record"            {:content-type :string}})
@@ -353,6 +358,8 @@
   {"nuvlabox"               {:load  (map (fn [x] {:key x :value x :text x}) [">" "<"])
                              :ram   (map (fn [x] {:key x :value x :text x}) [">" "<"])
                              :disk  (map (fn [x] {:key x :value x :text x}) [">" "<"])
+                             :network-rx (map (fn [x] {:key x :value x :text x}) [">" "<"])
+                             :network-tx (map (fn [x] {:key x :value x :text x}) [">" "<"])
                              :state ((get-in criteria-condition-type ["nuvlabox" :state])
                                      criteria-conditions)}
    "infrastructure-service" {:status ((get-in criteria-condition-type ["infrastructure-service" :status])

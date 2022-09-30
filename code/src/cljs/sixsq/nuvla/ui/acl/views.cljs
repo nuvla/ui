@@ -134,7 +134,6 @@
 
 (defn RightRow
   [{:keys [on-change read-only mode] :as opts} ui-acl row-number principal rights]
-
   (let [principal-name (subscribe [::session-subs/resolve-principal principal])]
     [ui/TableRow
 
@@ -163,159 +162,44 @@
 
 (defn DropdownPrincipals
   [_opts _ui-acl]
-  (let [open       (r/atom false)
-        peers      (subscribe [::session-subs/peers-options])
-        peers-opts (r/atom @peers)
-        groups     (subscribe [::session-subs/groups])
-        tr         (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [on-change fluid value]
+  (let [tr           (subscribe [::i18n-subs/tr])
+        add-item     (r/atom nil)
+        empty-search ""
+        search-query (r/atom empty-search)
+        on-search    #(reset! search-query (.-searchQuery %2))
+        on-add-item  (ui-callback/value
+                       #(do
+                          (reset! add-item {:key   %
+                                            :value %
+                                            :text  %
+                                            :icon  (case (general-utils/id->resource-name %)
+                                                     "user" "user"
+                                                     "group" "group"
+                                                     "question circle outline")})
+                          (reset! search-query empty-search)))]
+    (fn [{:keys [on-change fluid]
           :or   {on-change #()
-                 fluid     false
-                 value     nil}}
+                 fluid     false}}
          ui-acl]
       (let [used-principals (utils/acl-get-all-principals-set @ui-acl)
-            search-fn       (fn [options query-value]
-                              (js/console.error "options" options "query-value" query-value)
-                              #_(filter
-                                #(re-matches
-                                   (re-pattern (str "(?i).*" (general-utils/regex-escape query-value) ".*"))
-                                   (str (:text %) (:value %)))
-                                options)
-                              options
-                              )
-            options         (concat (->>
-                                      @peers-opts
-                                      (remove #(contains? used-principals (:value %)))
-                                      (map #(assoc % :icon "user")))
-                                    (->> @groups
-                                         (remove #(contains? used-principals (:id %)))
-                                         (map #(hash-map :key (:id %)
-                                                         :text (or (:name %)
-                                                                   (:id %))
-                                                         :value (:id %)
-                                                         :icon "group"))))]
-        [ui/Dropdown {:text            @(subscribe [::session-subs/resolve-principal value])
-                      :fluid           fluid
-                      :selection       true
-                      :search          search-fn
-                      :allow-additions true
-                      :style           {:width "250px"}
-                      :upward          false
-                      :addition-label  "Add user/group by ID "
-                      :options         options
-                      }
-
-         #_[ui/DropdownMenu {:style {:overflow-x "auto"
-                                     :min-height "250px"}}
-
-            [ui/DropdownHeader {:icon "user", :content (str/capitalize (@tr [:users]))}]
-
-            [ui/Input {:icon          "search"
-                       :icon-position "left"
-                       :name          "search"
-                       :auto-complete "off"
-                       :on-click      #(reset! open true)
-                       :on-change     (ui-callback/input-callback
-                                        (fn [value]
-                                          (reset!
-                                            peers-opts
-                                            (filter
-                                              #(re-matches
-                                                 (re-pattern (str "(?i).*" (general-utils/regex-escape value) ".*"))
-                                                 (str (:text %) (:value %)))
-                                              @peers))
-                                          ))}]
-
-            (doall
-              (for [{:keys [value text]} (->>
-                                           @peers-opts
-                                           (take 10)
-                                           (remove #(contains? used-principals (:value %))))]
-                ^{:key value}
-                [ui/DropdownItem {:text     (or text value)
-                                  :on-click (fn []
-                                              (on-change value)
-                                              (reset! open false))}]))
-
-            [ui/DropdownDivider]
-
-            [ui/DropdownHeader {:icon "users", :content (str/capitalize (@tr [:groups]))}]
-
-            (doall
-              (for [{group-id :id group-name :name} (remove #(contains? used-principals (:id %)) @groups)]
-                ^{:key group-id}
-                [ui/DropdownItem {:text     (or group-name group-id)
-                                  :on-click (fn []
-                                              (on-change group-id)
-                                              (reset! open false))}]))]]))))
-
-(defn DropdownPrincipalsOld
-  [_opts _ui-acl]
-  (let [open       (r/atom false)
-        peers      (subscribe [::session-subs/peers-options])
-        peers-opts (r/atom @peers)
-        groups     (subscribe [::session-subs/groups])
-        tr         (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [on-change fluid value]
-          :or   {on-change #()
-                 fluid     false
-                 value     nil}}
-         ui-acl]
-      (let [used-principals (utils/acl-get-all-principals-set @ui-acl)]
-        [ui/Dropdown {:text      @(subscribe [::session-subs/resolve-principal value])
-                      :fluid     fluid
-                      :style     {:width "250px"}
-                      :on-open   #(reset! open true)
-                      :open      @open
-                      :upward    false
-                      :className "selection"
-                      :on-blur   #(reset! open false)
-                      :on-close  #()}
-
-         [ui/DropdownMenu {:style {:overflow-x "auto"
-                                   :min-height "250px"}}
-
-          [ui/DropdownHeader {:icon "user", :content (str/capitalize (@tr [:users]))}]
-
-          [ui/Input {:icon          "search"
-                     :icon-position "left"
-                     :name          "search"
-                     :auto-complete "off"
-                     :on-click      #(reset! open true)
-                     :on-change     (ui-callback/input-callback
-                                      (fn [value]
-                                        (reset!
-                                          peers-opts
-                                          (filter
-                                            #(re-matches
-                                               (re-pattern (str "(?i).*" (general-utils/regex-escape value) ".*"))
-                                               (str (:text %) (:value %)))
-                                            @peers))
-                                        ))}]
-
-          (doall
-            (for [{:keys [value text]} (->>
-                                         @peers-opts
-                                         (take 10)
-                                         (remove #(contains? used-principals (:value %))))]
-              ^{:key value}
-              [ui/DropdownItem {:text     (or text value)
-                                :on-click (fn []
-                                            (on-change value)
-                                            (reset! open false))}]))
-
-          [ui/DropdownDivider]
-
-          [ui/DropdownHeader {:icon "users", :content (str/capitalize (@tr [:groups]))}]
-
-          (doall
-            (for [{group-id :id group-name :name} (remove #(contains? used-principals (:id %)) @groups)]
-              ^{:key group-id}
-              [ui/DropdownItem {:text     (or group-name group-id)
-                                :on-click (fn []
-                                            (on-change group-id)
-                                            (reset! open false))}]))]]))))
-
+            options         (subscribe [::session-subs/peers-groups-options used-principals])
+            query           (partial filter #(re-matches
+                                               (re-pattern
+                                                 (str "(?i).*" (general-utils/regex-escape @search-query) ".*"))
+                                               (str (:text %) (:value %))))]
+        [ui/Dropdown {:fluid            fluid
+                      :selection        true
+                      :style            {:width "250px"}
+                      :upward           false
+                      :options          (cond-> @options
+                                                @add-item (conj @options @add-item)
+                                                true query)
+                      :search           true
+                      :on-search-change on-search
+                      :allow-additions  true
+                      :addition-label   (@tr [:add-by-user-group-id])
+                      :on-add-item      on-add-item
+                      :on-change        (ui-callback/value on-change)}]))))
 
 (defn AddRight
   [{:keys [on-change _mode] :as _opts} ui-acl]

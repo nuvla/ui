@@ -6,6 +6,7 @@
 
 (def dictionary
   {:en {
+        :add-by-user-group-id                          "Add by user/group ID: "
         :about                                         "about"
         :about-subtitle                                "This software is brought to you"
         :accept                                        "Accept "
@@ -887,6 +888,7 @@
         }
 
    :fr {
+        :add-by-user-group-id                          "Ajout par utilisateur/groupe ID : "
         :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"

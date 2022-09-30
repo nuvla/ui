@@ -40,15 +40,14 @@ const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 };
 
-export let onRequestGet = onRequest
-export let onRequestPost= onRequest
-export let onRequestPut = onRequest
-export let onRequestPatch = onRequest
-export let onRequestDelete = onRequest
-export let onRequestHead = onRequest
+export let onRequestGet = onRequest;
+export let onRequestPost = onRequest;
+export let onRequestPut = onRequest;
+export let onRequestPatch = onRequest;
+export let onRequestDelete = onRequest;
+export let onRequestHead = onRequest;
 
-
-export async onRequestOptions(request) {
+export async function onRequestOptions(request) {
   // Make sure the necessary headers are present
   // for this to be a valid pre-flight request
   let headers = request.headers;

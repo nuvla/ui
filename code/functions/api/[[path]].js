@@ -9,7 +9,7 @@ export async function onRequest(context) {
     data, // arbitrary space for passing data between middlewares
   } = context;
   const url = new URL(request.url);
-  let apiUrl = 'https://nuvla.io/' + params.path;
+  let apiUrl = 'https://nuvla.io' + url.pathname;
 
   // Rewrite request to point to API URL. This also makes the request mutable
   // so you can add the correct Origin header to make the API server think

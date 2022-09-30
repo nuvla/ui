@@ -33,25 +33,25 @@
 (s/def ::nuvlabox-playbooks-cronjob any?)
 
 (def defaults
-  {::nuvlaboxes                 nil
+  {::nuvlaboxes                   nil
    ::next-heartbeats-offline-edges nil
-   ::nuvlabox-cluster-summary   nil
-   ::nuvlaboxes-summary         nil
-   ::nuvlaboxes-summary-all     nil
-   ::nuvlabox-releases          nil
-   ::state-nuvlaboxes           nil
-   ::state-selector             nil
-   ::open-modal                 nil
-   ::nuvlabox-created-id        nil
-   ::nuvlabox-usb-api-key       nil
-   ::nuvlabox-ssh-key           nil
-   ::nuvlabox-private-ssh-key   nil
-   ::vpn-infra                  nil
-   ::ssh-keys-available         nil
-   ::nuvlabox-clusters          nil
-   ::nuvlabox-cluster           nil
-   ::nuvlaboxes-in-clusters     nil
-   ::nuvlabox-playbooks-cronjob nil
-   ::pagination                 (pagination-plugin/build-spec
-                                  :default-items-per-page 8)
-   ::edges-search               (full-text-search-plugin/build-spec)})
+   ::nuvlabox-cluster-summary     nil
+   ::nuvlaboxes-summary           nil
+   ::nuvlaboxes-summary-all       nil
+   ::nuvlabox-releases            nil
+   ::state-nuvlaboxes             nil
+   ::state-selector               nil
+   ::open-modal                   nil
+   ::nuvlabox-created-id          nil
+   ::nuvlabox-usb-api-key         nil
+   ::nuvlabox-ssh-key             nil
+   ::nuvlabox-private-ssh-key     nil
+   ::vpn-infra                    nil
+   ::ssh-keys-available           nil
+   ::nuvlabox-clusters            nil
+   ::nuvlabox-cluster             nil
+   ::nuvlaboxes-in-clusters       nil
+   ::nuvlabox-playbooks-cronjob   nil
+   ::pagination                   (pagination-plugin/build-spec
+                                    :default-items-per-page 8)
+   ::edges-search                 (full-text-search-plugin/build-spec)})

@@ -732,9 +732,10 @@
 
 
 (defn NuvlaboxRow
-  [{:keys [id name description created state tags online] :as _nuvlabox} managers next-heartbeats]
-  (let [uuid (general-utils/id->uuid id)
-        next-heartbeat (get-in @next-heartbeats [id :next-heartbeat])]
+  [{:keys [id name description created state tags online refresh-interval] :as _nuvlabox} managers]
+  (let [uuid                  (general-utils/id->uuid id)
+        locale                (subscribe [::i18n-subs/locale])
+        next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])]
     [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
@@ -744,7 +745,7 @@
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
      [ui/TableCell (values/format-created created)]
-     [ui/TableCell (when next-heartbeat (values/format-created next-heartbeat))]
+     [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval @locale))]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)
@@ -772,7 +773,6 @@
   []
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
-        next-heartbeats   (subscribe [::subs/next-heartbeats-offline-edges])
         managers          (distinct
                            (apply concat
                                   (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
@@ -801,7 +801,7 @@
          (for [{:keys [id] :as nuvlabox} selected-nbs]
            (when id
              ^{:key id}
-             [NuvlaboxRow nuvlabox managers next-heartbeats])))]]]))
+             [NuvlaboxRow nuvlabox managers])))]]]))
 
 
 (defn NuvlaboxMapPoint
@@ -821,7 +821,6 @@
   []
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
-        next-heartbeats   (subscribe [::subs/next-heartbeats-offline-edges])
         managers          (distinct
                            (apply concat
                                   (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
@@ -832,7 +831,7 @@
       (for [{:keys [id] :as nuvlabox} selected-nbs]
         (when id
           ^{:key id}
-          [views-utils/NuvlaboxCard nuvlabox managers next-heartbeats]))]]))
+          [views-utils/NuvlaboxCard nuvlabox managers]))]]))
 
 
 (defn NuvlaboxMap

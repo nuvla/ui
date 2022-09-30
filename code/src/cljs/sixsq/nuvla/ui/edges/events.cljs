@@ -82,8 +82,8 @@
                          db [::spec/edges-search]))}
            (pagination-plugin/first-last-params
              db [::spec/pagination]))
-      #(do (dispatch [::set-nuvlaboxes %])
-           (dispatch [::get-nuvlaboxes-next-heartbeats %]))]}))
+      #(dispatch [::set-nuvlaboxes %])]}))
+
 
 (reg-event-fx
   ::set-nuvlaboxes
@@ -96,36 +96,37 @@
                     :content message
                     :type    :error})])
       {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
-                     ::main-spec/loading? false)})))
+                     ::main-spec/loading? false)
+       :fx [[:dispatch [::get-nuvlaboxes-next-heartbeats nuvlaboxes]]]})))
+
 
 (reg-event-fx
   ::get-nuvlaboxes-next-heartbeats
-  (fn [_ [_ nuvlaboxes]]
-    (let [nuvlaboxes (:resources nuvlaboxes)]
-      (when (seq nuvlaboxes)
-        {::cimi-api-fx/search
-          [:nuvlabox-status
-          {:select "parent,next-heartbeat"
-           :filter  (general-utils/join-and
-                     "online=false"
-                     (apply general-utils/join-or
-                            (map #(str "parent='" (:id %) "'") nuvlaboxes)))}
-          #(dispatch [::set-nuvlaboxes-next-heartbeats  %])]}))))
+  (fn [_ [_ {nuvlaboxes :resources}]]
+    (when (seq nuvlaboxes)
+      {::cimi-api-fx/search
+       [:nuvlabox-status
+        {:select "parent,next-heartbeat,id"
+         :filter  (general-utils/join-and
+                   "online=false"
+                   (apply general-utils/join-or
+                          (map #(str "parent='" (:id %) "'") nuvlaboxes)))}
+        #(dispatch [::set-nuvlaboxes-next-heartbeats %])]})))
 
 
 (reg-event-fx
  ::set-nuvlaboxes-next-heartbeats
- (fn [{:keys [db]} [_ nuvlaboxes]]
-   (if (instance? js/Error nuvlaboxes)
+ (fn [{:keys [db]} [_ {:keys [resources] :as nuvlaboxes-status}]]
+   (if (instance? js/Error nuvlaboxes-status)
      (dispatch [::messages-events/add
-                (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes)]
+                (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes-status)]
                   {:header  (cond-> (str "failure getting last online status of offline nuvlaboxes")
                               status (str " (" status ")"))
                    :content message
                    :type    :error})])
      {:db (assoc db ::spec/next-heartbeats-offline-edges (zipmap
-                                                          (map :parent (:resources nuvlaboxes))
-                                                          (:resources nuvlaboxes))
+                                                          (map :parent resources)
+                                                          (map :next-heartbeat resources))
                  ::main-spec/loading? false)})))
 
 (reg-event-fx

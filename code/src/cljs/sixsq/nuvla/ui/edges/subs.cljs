@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.edges.subs
-  (:require
-    [re-frame.core :refer [reg-sub]]
-    [sixsq.nuvla.ui.edges.spec :as spec]
-    [sixsq.nuvla.ui.utils.general :as general-utils]))
+  (:require [re-frame.core :refer [reg-sub]]
+            [sixsq.nuvla.ui.edges.spec :as spec]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.time :as time]))
 
 (reg-sub
   ::loading?
@@ -23,6 +23,12 @@
   ::next-heartbeats-offline-edges
   (fn [db]
     (::spec/next-heartbeats-offline-edges db)))
+
+(reg-sub
+  ::next-heartbeat-moment
+  :<- [::next-heartbeats-offline-edges]
+  (fn [next-heartbeats [_ nuvlabox-id]]
+    (some-> (get next-heartbeats nuvlabox-id) time/parse-iso8601)))
 
 (reg-sub
   ::nuvlabox-locations

@@ -1,35 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="Description"
-          content="Web application for Nuvla, a cloud and edge application management platform.">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="Description" content="Web application for Nuvla, a cloud and edge application management platform." />
 
     <title>Nuvla&reg;</title>
 
-    <link rel="stylesheet" href="/ui/css/semantic.min.css">
-    <link rel="stylesheet" href="/ui/css/nuvla-ui.css">
-    <link rel="stylesheet" href="/ui/css/version.css">
-    <link rel="stylesheet" href="/ui/css/all.min.css">
-    <link rel='icon' href='/ui/images/favicon.ico' type='image/x-icon'>
-    <link rel="stylesheet" href="/ui/css/react-datepicker.min.css">
-    <link rel="stylesheet" href="/ui/css/codemirror.css">
-    <link rel="stylesheet" href="/ui/css/foldgutter.css">
-    <link rel="stylesheet" href="/ui/css/dialog.css">
-    <link rel="stylesheet" href="/ui/css/matchesonscrollbar.css">
-    <link rel="stylesheet" href="/ui/css/leaflet.css">
-    <link rel="stylesheet" href="/ui/css/leaflet.draw.css"/>
-</head>
+    <!-- These are not part of the ui repo: add additional path for reverse proxy -->
+    <link rel="stylesheet" href="/proxy/ui/css/semantic.min.css" />
+    <link rel="stylesheet" href="/proxy/ui/css/version.css" />
+    <link rel="icon" href="/proxy/ui/images/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/proxy/ui/css/react-datepicker.min.css" />
+    <link rel="stylesheet" href="/proxy/ui/css/codemirror.css" />
+    <link rel="stylesheet" href="/proxy/ui/css/foldgutter.css" />
+    <link rel="stylesheet" href="/proxy/ui/css/dialog.css" />
+    <link rel="stylesheet" href="/proxy/ui/css/matchesonscrollbar.css" />
+    <link rel="stylesheet" href="/proxy/ui/css/leaflet.css" />
+    <link rel="stylesheet" href="/proxy/ui/css/leaflet.draw.css" />
 
-<body>
-<noscript>
-    <p>The Nuvla browser interface requires JavaScript. Please enable this in your browser.</p>
-</noscript>
-<div id="app"></div>
-<script src="/ui/js/nuvla-ui.js"></script>
-<script>sixsq.nuvla.ui.core.init();</script>
-</body>
+    <!-- These are part of ui repo -->
+    <link rel="stylesheet" href="/ui/css/nuvla-ui.css" />
+    <link rel="stylesheet" href="/ui/css/all.min.css" />
+  </head>
 
+  <body>
+    <noscript>
+      <p>The Nuvla browser interface requires JavaScript. Please enable this in your browser.</p>
+    </noscript>
+    <div id="app"></div>
+    <script src="/ui/js/nuvla-ui.js"></script>
+    <script>
+      sixsq.nuvla.ui.core.init();
+    </script>
+  </body>
 </html>

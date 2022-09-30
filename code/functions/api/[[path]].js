@@ -18,6 +18,12 @@ async function onRequest(context) {
   request.headers.set('Origin', new URL(apiUrl).origin);
   let response = await fetch(request);
 
+  if (url.pathname.includes('cloud-entry-point')) {
+    let body = await response.json();
+    body = { ...body, 'base-uri': url.origin + '/api/' };
+    return new Response(JSON.stringify(body));
+  }
+
   // Recreate the response so you can modify the headers
   response = new Response(response.body, response);
 

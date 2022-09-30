@@ -9,7 +9,7 @@ export async function onRequest(context) {
     data, // arbitrary space for passing data between middlewares
   } = context;
   const url = new URL(request.url);
-  let productionEndpoint = 'https://nuvla.io/';
+  let productionEndpoint = 'https://nuvla.io';
 
   if (GITIGNORED_ASSETS.some((path) => url.pathname.includes(path))) {
     // Go to nuvla.io because those assets are not part of repository

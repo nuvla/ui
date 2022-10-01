@@ -1,0 +1,39 @@
+name: Deploy
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+  pull_request:
+    types: [opened]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # Allow GITHUB_TOKEN to write deployments for my action (https://docs.github.com/en/actions/security-guides/automatic-token-authentication)
+    permissions:
+      contents: read
+      deployments: write
+      pull-requests: write
+    steps:
+      - name: Await CF Pages
+        uses: WalshyDev/cf-pages-await@v1
+        id: pages-action
+        with:
+          # Use an API token (Recommended!)
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+
+          accountId: '9793bc27d30f5d738baf5e5a491b7416'
+          project: 'nuvla-ui'
+          # Add this if you want GitHub Deployments (see below)
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          # Add this if you want to wait for a deployment triggered by a specfied commit
+          commitHash: ${{ steps.push-changes.outputs.commit-hash }}
+
+      - name: Comment on GitHub
+        uses: daohoangson/comment-on-github@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          body: 'URL for specific commit: ${{ steps.pages-action.outputs.url }}, URL for branch alias: ${{ steps.pages-action.outputs.alias }}  (${{ steps.pages-action.outputs.environment }})'

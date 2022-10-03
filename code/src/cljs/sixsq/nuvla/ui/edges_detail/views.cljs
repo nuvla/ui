@@ -1103,13 +1103,7 @@
          [:p (tr [:nuvlaedge-next-telemetry-expected])
           next-heartbeat-times-ago "."])
        [:p (tr [:nuvlaedge-last-telemetry-was])
-        (time/ago
-          (->> refresh-interval
-               (* 2)
-               (+ 10)
-               (* 1000)
-               (time/subtract-milliseconds next-heartbeat-moment)
-               ) locale) "."]])))
+        (utils/last-time-online next-heartbeat-moment refresh-interval locale) "."]])))
 
 (defn StatusNotes
   [{:keys [status-notes] :as _nb-status}]

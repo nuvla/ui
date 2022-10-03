@@ -4,7 +4,7 @@
 
 ### Changed
 
-- acl - Principals add by user/group uuid possible 
+- acl - Make possible add principals by user/group uuid
 - acl - Principals dropdown searchable with groups/user
 
 ## [2.32.7] - 2022-09-29

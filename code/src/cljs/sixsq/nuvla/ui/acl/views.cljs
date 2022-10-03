@@ -162,44 +162,39 @@
 
 (defn DropdownPrincipals
   [_opts _ui-acl]
-  (let [tr           (subscribe [::i18n-subs/tr])
-        add-item     (r/atom nil)
-        empty-search ""
-        search-query (r/atom empty-search)
-        on-search    #(reset! search-query (.-searchQuery %2))
-        on-add-item  (ui-callback/value
-                       #(do
-                          (reset! add-item {:key   %
-                                            :value %
-                                            :text  %
-                                            :icon  (case (general-utils/id->resource-name %)
-                                                     "user" "user"
-                                                     "group" "group"
-                                                     "question circle outline")})
-                          (reset! search-query empty-search)))]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        add-item    (r/atom nil)
+        on-add-item (ui-callback/value
+                      #(reset! add-item {:key   %
+                                         :value %
+                                         :text  %
+                                         :icon  (case (general-utils/id->resource-name %)
+                                                  "user" "user"
+                                                  "group" "group"
+                                                  "question circle outline")}))
+        search      (fn [opts query-search]
+                      (->> opts
+                           (filter #(let [pattern (re-pattern
+                                                    (str "(?i).*" (general-utils/regex-escape query-search) ".*"))]
+                                      (or (re-matches pattern (.-text %))
+                                          (re-matches pattern (.-value %)))))
+                           clj->js))]
     (fn [{:keys [on-change fluid]
           :or   {on-change #()
                  fluid     false}}
          ui-acl]
       (let [used-principals (utils/acl-get-all-principals-set @ui-acl)
-            options         (subscribe [::session-subs/peers-groups-options used-principals])
-            query           (partial filter #(re-matches
-                                               (re-pattern
-                                                 (str "(?i).*" (general-utils/regex-escape @search-query) ".*"))
-                                               (str (:text %) (:value %))))]
-        [ui/Dropdown {:fluid            fluid
-                      :selection        true
-                      :style            {:width "250px"}
-                      :upward           false
-                      :options          (cond-> @options
-                                                @add-item (conj @options @add-item)
-                                                true query)
-                      :search           true
-                      :on-search-change on-search
-                      :allow-additions  true
-                      :addition-label   (@tr [:add-by-user-group-id])
-                      :on-add-item      on-add-item
-                      :on-change        (ui-callback/value on-change)}]))))
+            options         (subscribe [::session-subs/peers-groups-options used-principals])]
+        [ui/Dropdown {:fluid           fluid
+                      :selection       true
+                      :style           {:width "250px"}
+                      :upward          false
+                      :options         (cond-> @options @add-item (conj @add-item))
+                      :search          search
+                      :allow-additions true
+                      :addition-label  (@tr [:add-by-user-group-id])
+                      :on-add-item     on-add-item
+                      :on-change       (ui-callback/value on-change)}]))))
 
 (defn AddRight
   [{:keys [on-change _mode] :as _opts} ui-acl]

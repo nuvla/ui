@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- NuvlaEdge overview - Shows last online times for offline edges #895
+- Dictionary - Replace module by application, typo fix, NuvlaEdge/Cloud order change #916
+
 ## [2.32.7] - 2022-09-29
 
 ### Changed
@@ -23,7 +28,6 @@
 - NuvlaEdge add modal - Copies correct value to clipboard for cronjob when host level management enabled bugfix #879
 - NuvlaEdge add modal - Shows correct value for cronjob in hover popup bugfix
 - Global - Adds cursor style pointer to copy to clipboard component bugfix
-- NuvlaEdge overview - Shows last online times for offline edges #895
 
 ## [2.32.5] - 2022-09-19
 

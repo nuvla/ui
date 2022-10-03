@@ -118,7 +118,7 @@
         :clusters                                      "clusters"
         :code                                          "code"
         :code-validation-failed                        "Code validation failed!"
-        :code-verification                              "Code verification"
+        :code-verification                             "Code verification"
         :coe-cluster-size                              "cluster size"
         :coe-install-manager-portainer                 "Install COE cluster manager Portainer"
         :coe-install-manager-rancher                   "Install COE cluster manager Rancher"
@@ -132,12 +132,12 @@
         :compare-version                               "Compare versions"
         :compatibility                                 "compatibility"
         :component                                     "component"
-        :config-file                                     "Config file"
-        :config-file-info                                "Each config file (.yml) must be on a sparate line."
-        :config-files                                    "Config files"
-        :configuration                                  "configuration"
-        :configure                                      "configure"
-        :confirm-subscribe-text                         "Do you confirm the creation of a new subscription?"
+        :config-file                                   "Config file"
+        :config-file-info                              "Each config file (.yml) must be on a sparate line."
+        :config-files                                  "Config files"
+        :configuration                                 "configuration"
+        :configure                                     "configure"
+        :confirm-subscribe-text                        "Do you confirm the creation of a new subscription?"
         :connect-vpn                                   "connect to the VPN"
         :connectivity-check                            "Connectivity check"
         :connectivity-check-in-progress                "Connectivity check in progress..."
@@ -888,7 +888,8 @@
         :yes                                           "yes"
         }
 
-   :fr {:about                                         "à propos"
+   :fr {
+        :about                                         "à propos"
         :about-subtitle                                "Ce logiciel vous est fournit"
         :accept                                        "Accepter l'"
         :accept-costs                                  "J'accepte les coûts"
@@ -1572,4 +1573,5 @@
         :welcome-video-subheader-pre                   "Accèder à notre"
         :will-do-it-later                              "Je le ferai plus tard"
         :working-directory                             "Dossier de travail"
-        :yes                                           "oui"}})
+        :yes                                           "oui"
+        }})

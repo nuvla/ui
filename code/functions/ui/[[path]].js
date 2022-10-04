@@ -11,7 +11,6 @@ export async function onRequest(context) {
   const url = new URL(request.url);
 
   let { path } = params;
-  console.log(path);
   let [firstPathPart, file] = path;
 
   if (filesToFetchFromProd.includes(file)) {

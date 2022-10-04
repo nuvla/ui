@@ -469,7 +469,7 @@
         :no-infra-services                             "no service found"
         :no-items-to-show                              "There are no items to show."
         :no-messages                                   "no messages"
-        :no-module-message-content                     "Apllication does not exist or you do not have sufficient access rights."
+        :no-module-message-content                     "Application does not exist or you do not have sufficient access rights."
         :no-module-message-header                      "Oops can't find application"
         :no-mounts                                     "no volumes or mounts for this applications"
         :no-notification-method-defined                "no notification method defined"

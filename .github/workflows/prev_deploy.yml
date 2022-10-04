@@ -21,7 +21,7 @@ jobs:
         id: pages-action
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: '9793bc27d30f5d738baf5e5a491b7416'
+          accountId: 'ed40269bd7a426334d38642675bcd393'
           project: 'nuvla-ui'
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           commitHash: ${{ steps.push-changes.outputs.commit-hash }}

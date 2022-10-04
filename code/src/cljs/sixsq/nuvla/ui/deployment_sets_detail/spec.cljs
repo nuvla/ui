@@ -44,5 +44,5 @@
                                  :default-items-per-page 15)
    ::edges-pagination          (pagination-plugin/build-spec
                                  :default-items-per-page 15)
-   ::config-apps-tab           (tab-plugin/build-spec)
+   ::config-apps-tab           (tab-plugin/build-spec :active-tab :app-store)
    ::bulk-jobs                 (bulk-progress-plugin/build-spec)})

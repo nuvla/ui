@@ -252,17 +252,17 @@
                           :change-event [::events/search-apps]}]]))]
       [tab/Tab
        {:db-path      [::spec/tab-new-apps]
-        :panes        [{:menuItem {:content "My apps"
-                                   :key     :my-apps
-                                   :icon    "user"}
-                        :render   render}
-                       {:menuItem {:content "App Store"
+        :panes        [{:menuItem {:content "App Store"
                                    :key     :app-store
                                    :icon    (r/as-element [ui/Icon {:className "fas fa-store"}])}
                         :render   render}
                        {:menuItem {:content "All apps"
                                    :key     :all-apps
                                    :icon    "grid layout"}
+                        :render   render}
+                       {:menuItem {:content "My apps"
+                                   :key     :my-apps
+                                   :icon    "user"}
                         :render   render}]
         :change-event [::events/search-apps]}])))
 

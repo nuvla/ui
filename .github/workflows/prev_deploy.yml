@@ -22,7 +22,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: 'ed40269bd7a426334d38642675bcd393'
-          project: 'nuvla-ui'
+          project: 'ui-nuvla-prev'
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           commitHash: ${{ steps.push-changes.outputs.commit-hash }}
 

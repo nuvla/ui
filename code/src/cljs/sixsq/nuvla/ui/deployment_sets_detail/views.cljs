@@ -559,6 +559,7 @@
       [ui/Container {:fluid true}
        [uix/PageHeader "bullseye" (or name id)]
        [MenuBar uuid]
+       [job-views/ProgressJobAction]
        [bulk-progress-plugin/MonitoredJobs
         {:db-path [::spec/bulk-jobs]}]
        [components/ErrorJobsMessage

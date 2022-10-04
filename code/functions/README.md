@@ -12,6 +12,3 @@ They are not used when developing locally or in production.
 Current drawback: Traefik resets the `X-Forwarded-Host` header to the host of the backend server.
 That's why we overwrite `location` and `base-uri` in response bodies.
 It is working for the moment but could break in the future.
-
-## GA workflow
-The same goes for the Github Actions workflow in `.github/workflows/prev_deploy.yml`: It is only used for preview deployments.

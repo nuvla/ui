@@ -387,7 +387,6 @@
   []
   (let [apps-selected (subscribe [::subs/apps-selected])]
     [:div
-     "Configure the applications here"
      [tab/Tab
       {:db-path [::spec/config-apps-tab]
        :panes   (map

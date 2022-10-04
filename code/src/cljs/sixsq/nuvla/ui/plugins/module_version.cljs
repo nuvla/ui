@@ -48,6 +48,11 @@
     (apps-utils/map-versions-index versions)))
 
 (reg-sub
+  ::module-env-value
+  (fn [db [_ db-path href index]]
+    (get-in db (conj db-path ::modules href :content :environmental-variables index ::new-value))))
+
+(reg-sub
   ::module-versions-options
   (fn [[_ db-path href]]
     [(subscribe [::module-versions-indexed db-path href])
@@ -105,34 +110,39 @@
    index {env-name        :name
           env-description :description
           env-value       :value
-          env-required    :required}]
-  [ui/FormField {:required env-required}
-   [:label env-name ff/nbsp (ff/help-popup env-description)]
-   ;(if selected-creds
-   ;  [CredentialsDropdown env-value index deployment selected-creds]
-   [ui/Input
-    {:type      "text"
-     :name      env-name
-     :value     (or env-value "")
-     :read-only false
-     :fluid     true
-     :on-change (ui-callback/input-callback
-                  #(dispatch [::helpers/set (conj db-path ::modules href :content :environmental-variables index) :value %])
-                  )}]
-   ;)
-   ])
+          env-required    :required} on-change get-value]
+  (let [updated-env-value @(subscribe [::module-env-value db-path href index])]
+    [ui/FormField {:required env-required}
+    [:label env-name ff/nbsp (ff/help-popup env-description)]
+    ;(if selected-creds
+    ;  [CredentialsDropdown env-value index deployment selected-creds]
+    [ui/Input
+     {:type      "text"
+      :name      env-name
+      :value     (or updated-env-value env-value "")
+      :read-only false
+      :fluid     true
+      :on-change (ui-callback/input-callback
+                   #(dispatch [::helpers/set (conj db-path ::modules href :content :environmental-variables index)
+                               ::new-value %])
+                   )}]
+    ;)
+    ]))
 
 
 (defn EnvVariables
-  [{:keys [db-path href] :as _opts}]
+  [{:keys [db-path href on-change] :as _opts}]
   (let [module        @(subscribe [::module db-path href])
         env-variables (get-in module [:content :environmental-variables])]
-    [ui/Form
-     (map-indexed
-       (fn [i env-variable]
-         ^{:key (str (:name env-variable) "_" i)}
-         [AsFormInput db-path href i env-variable])
-       env-variables)]))
+    (if (seq env-variables)
+      [ui/Form
+       (map-indexed
+         (fn [i env-variable]
+           ^{:key (str (:name env-variable) "_" i)}
+           [AsFormInput db-path href i env-variable (partial on-change href (:name env-variable))])
+         env-variables)]
+      [ui/Message "No environment variables defined"]
+      )))
 
 (defn ModuleVersions
   [{:keys [db-path href] :as _opts}]
@@ -153,7 +163,7 @@
                                       @versions-indexed id %)]))
            :fluid     true
            :options   @options}]
-         [:div (str content)]
+         #_[:div (str content)]
 
          ]))))
 

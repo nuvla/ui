@@ -163,7 +163,7 @@
   ::toggle-select-target
   (fn [{:keys [::spec/targets-selected] :as db} [_ credential credentials]]
     (let [select? (nil? (targets-selected credential))
-          op (if select? conj disj)]
+          op      (if select? conj disj)]
       (-> db
           (assoc ::spec/targets-selected
                  (apply disj targets-selected credentials))
@@ -271,7 +271,8 @@
 (reg-event-fx
   ::create
   (fn [{{:keys [::spec/targets-selected
-                ::spec/apps-selected] :as db} :db}
+                ::spec/apps-selected
+                ::spec/module-versions] :as db} :db}
        [_ {df-name  :name
            df-descr :description
            df-start :start}]]

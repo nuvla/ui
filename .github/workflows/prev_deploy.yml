@@ -1,4 +1,4 @@
-name: Deploy
+name: Preview Deploy
 
 concurrency:
   group: ${{ github.ref }}

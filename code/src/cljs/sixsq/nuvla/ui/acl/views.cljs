@@ -187,7 +187,7 @@
             options         (subscribe [::session-subs/peers-groups-options used-principals])]
         [ui/Dropdown {:fluid           fluid
                       :selection       true
-                      :style           {:width "250px"}
+                      :style           {:width "350px"}
                       :upward          false
                       :options         (cond-> @options @add-item (conj @add-item))
                       :search          search

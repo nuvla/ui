@@ -170,4 +170,5 @@
     "group" "group"
     "nuvlabox" "box"
     "infrastructure-service" "cloud"
+    "deployment" "rocket"
     "question circle outline"))

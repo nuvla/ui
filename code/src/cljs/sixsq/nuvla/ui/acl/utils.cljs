@@ -1,6 +1,6 @@
 (ns sixsq.nuvla.ui.acl.utils
-  (:require [clojure.set :as set]))
-
+  (:require [clojure.set :as set]
+            [sixsq.nuvla.ui.utils.general :as general-utils]))
 
 (def rights-hierarchy (-> (make-hierarchy)
 
@@ -19,7 +19,6 @@
                           (derive :view-acl :view-data)
                           (derive :view-data :view-meta)))
 
-
 (defn extent-right
   [right-kw]
   (-> rights-hierarchy
@@ -27,11 +26,9 @@
       (conj right-kw)
       (set)))
 
-
 (def all-defined-rights [:edit-acl :edit-data :edit-meta :view-acl :view-data :view-meta :manage :delete])
 
 (def subset-defined-rights [:edit-acl :view-acl :manage :delete])
-
 
 (defn val-as-set
   [[k v]]
@@ -41,17 +38,14 @@
   [[k v]]
   [k (vec (sort v))])
 
-
 (defn remove-owners-from-rights
   [owners-set [right principals]]
   [right (set/difference principals owners-set)])
-
 
 (defn merge-rights
   ([] {})
   ([acl-a] acl-a)
   ([acl-a acl-b] (merge-with set/union acl-a acl-b)))
-
 
 (defn extend-rights
   [[right principals]]
@@ -59,7 +53,6 @@
     (conj
       (map (fn [sub-right] {sub-right principals}) sub-rights)
       {right principals})))
-
 
 (defn normalize-acl
   "Takes an ACL and returns a normalized version of the ACL where all
@@ -77,7 +70,6 @@
          (map val-as-vector)
          (into {}))))
 
-
 (defn same-base-right
   [right-kw]
   (case right-kw
@@ -87,13 +79,11 @@
     :view-data [:view-data :view-meta]
     [right-kw]))
 
-
 (defn get-principals
   [acl]
   (->> acl
        (mapcat (fn [[_right principal]] principal))
        (set)))
-
 
 (defn acl->ui-acl-format
   [acl]
@@ -114,7 +104,6 @@
     {:owners     local-owners
      :principals principals-rights}))
 
-
 (defn ui-acl-format->acl
   [{:keys [owners principals]}]
   (let [rights-principals (reduce (partial merge-with concat)
@@ -124,23 +113,19 @@
                                           principals))]
     (assoc rights-principals :owners owners)))
 
-
 (defn acl-remove-owner
   [{:keys [owners] :as ui-acl} principal]
   (->> owners
        (filterv #(not= principal %))
        (assoc ui-acl :owners)))
 
-
 (defn acl-get-owners-set
   [{:keys [owners] :as _ui-acl}]
   (set owners))
 
-
 (defn acl-get-principals-set
   [{:keys [principals] :as _ui-acl}]
   (set (map first principals)))
-
 
 (defn acl-get-all-principals-set
   [ui-acl]
@@ -148,11 +133,9 @@
     (acl-get-owners-set ui-acl)
     (acl-get-principals-set ui-acl)))
 
-
 (defn acl-add-owner
   [ui-acl principal]
   (update ui-acl :owners conj principal))
-
 
 (defn acl-remove-principle-from-rights
   [{:keys [principals] :as ui-acl} principal]
@@ -160,32 +143,31 @@
        (filterv #(not= principal (first %)))
        (assoc ui-acl :principals)))
 
-
 (defn acl-get-all-used-rights-set
   [{:keys [principals] :as _ui-acl}]
   (set (mapcat second principals)))
-
 
 (defn acl-rights-empty?
   [{:keys [principals] :as _ui-acl}]
   (empty? principals))
 
-
-(defn acl-principal-exist-in-acl?
-  [ui-acl principal]
-  (contains? (acl-get-all-principals-set ui-acl) principal))
-
-
 (defn acl-add-principal-with-right
   [ui-acl principal right]
   (update ui-acl :principals conj [principal (extent-right right)]))
-
 
 (defn acl-change-rights-for-row
   [ui-acl row-nubmer principal rights]
   (update ui-acl :principals assoc row-nubmer [principal rights]))
 
-
 (defn find-group
   [id groups]
   (some #(when (= (first %) id) %) groups))
+
+(defn id->icon
+  [id]
+  (case (general-utils/id->resource-name id)
+    "user" "user"
+    "group" "group"
+    "nuvlabox" "box"
+    "infrastructure-service" "cloud"
+    "question circle outline"))

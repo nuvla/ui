@@ -84,9 +84,7 @@
 
 (defn PrincipalIcon
   [principal]
-  [ui/Icon {:name (if (str/starts-with? principal "user/")
-                    "user"
-                    "users")}])
+  [ui/Icon {:name (utils/id->icon principal)}])
 
 
 (defn OwnerItem
@@ -168,10 +166,7 @@
                       #(reset! add-item {:key   %
                                          :value %
                                          :text  %
-                                         :icon  (case (general-utils/id->resource-name %)
-                                                  "user" "user"
-                                                  "group" "group"
-                                                  "question circle outline")}))
+                                         :icon  (utils/id->icon %)}))
         search      (fn [opts query-search]
                       (->> opts
                            (filter #(let [pattern (re-pattern

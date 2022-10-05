@@ -1,7 +1,7 @@
 (ns sixsq.nuvla.ui.notifications.spec
   (:require
-    [clojure.spec.alpha :as s]
-    [sixsq.nuvla.ui.utils.spec :as utils-spec]))
+   [clojure.spec.alpha :as s]
+   [sixsq.nuvla.ui.utils.spec :as utils-spec]))
 
 (s/def ::name utils-spec/nonblank-string)
 (s/def ::description utils-spec/nonblank-string)
@@ -58,9 +58,22 @@
 (s/def ::enabled boolean?)
 (s/def ::notification-subscription-config-id utils-spec/nonblank-string)
 
-(s/def ::disk-name utils-spec/nonblank-string)
-(s/def ::network-interface-name utils-spec/nonblank-string)
+(s/def ::device-name string?)
+(s/def ::disk (s/keys :opt-un [::device-name]))
+
+(s/def ::reset-interval #{:daily :monthly :custom})
 (s/def ::reset-in-days #(and (int? %) (< 1 %)))
+
+(def network-options (s/keys
+                          :opt-un [::device-name
+                                   ::reset-interval
+                                   ::reset-in-days]))
+(s/def ::network-rx network-options)
+(s/def ::network-tx network-options)
+(s/def ::custom-options
+  (s/keys :opt-un [::disk
+                   ::network-rx
+                   ::network-tx]))
 
 (s/def ::notification-subscription-config
   (s/keys :req-un [::name
@@ -71,8 +84,7 @@
                    ::method-ids
                    ::criteria]
           :opt-un [::resource-filter
-                   ::disk-name
-                   ::network-interface-name
+                   ::custom-options
                    ::reset-in-days]))
 (s/def ::notification-subscriptions-modal-visible? boolean?)
 (s/def ::add-subscription-modal-visible? boolean?)

@@ -434,8 +434,8 @@
 
 (defn- DeviceNameOptions [{:keys [metric-name]}]
   (let [tr (subscribe [::i18n-subs/tr])
-        custom-options (subscribe [::subs/notification-subscription-custom-device-name (keyword metric-name)])
-        use-other-than-default? (r/atom (or @custom-options false))]
+        custom-options (subscribe [::subs/notification-subscription-custom-options (keyword metric-name)])
+        use-other-than-default? (r/atom (or (:device-name @custom-options) false))]
     (fn []
       [ui/TableCell {:col-span 2
                      :class "font-weight-400"}
@@ -463,25 +463,38 @@
                      :style {:flex 1}}])]])))
 
 
-
 (defn- ResetIntervalOptions [{:keys [metric-name]}]
-  (let []
-    [ui/TableCell {:col-span 2
-                   :class "font-weight-400"}
-     [:div {:style {:display :grid
-                    :grid-template-columns "auto auto 50%"
-                    :align-items :center}}
+  (let [tr (subscribe [::i18n-subs/tr])
+        custom-options (subscribe [::subs/notification-subscription-custom-options metric-name])
+        ]
+        (fn []
+        (let [reset-interval (:reset-interval @custom-options)]
 
-      (for [[value label] [[:daily "Daily reset"]
-                           [:monthly "Monthly reset"]
-                           [:custom "Custom"]]]
-        [:div ^{:key value}
-         [:input {:type :radio
-                  :name :reset
-                  :id value
-                  :value value}]
-         [:label {:for value
-                  :style {:margin-left "0.5rem"}} label]])]]))
+          (js/console.error reset-interval)
+          [ui/TableCell {:col-span 2
+                         :class "font-weight-400"}
+           [:div {:style {:display :grid
+                          :grid-template-columns "auto auto 50%"
+                          :height 40
+                          :align-items :center}}
+
+            (for [[value label] [[:daily (@tr [:subs-notif-daily-reset])]
+                                 [:monthly (@tr [:subs-notif-monthly-reset])]
+                                 [:custom (str/capitalize (@tr [:custom]))]]]
+              [:div ^{:key value}
+               [:input {:type :radio
+                        :name :reset
+                        :id value
+                        :value value
+                        :on-change (ui-callback/value #(dispatch [::events/update-custom-reset-option metric-name value]))}]
+               [:label {:for value
+                        :style {:margin-left "0.5rem"}} label]
+               (when (= :custom reset-interval value)
+                 [ui/Input {:type :number
+                            :min 2
+                            :style {:justify-self :start
+                                    :margin-left "0.5rem"}
+                            :label "days"}])])]]))))
 
 ;; TODO: create custom event for updating custom options
 
@@ -643,16 +656,16 @@
                      [DeviceNameOptions  {:metric-name @metric-name}]]
               :network-rx [:<> ^{:key @metric-name}
                            [ui/TableRow
-                            [ui/TableCell {:col-span 2
-                                           :display :flex}
-                             [ui/Checkbox "Daily reset"]
-                             [ui/Checkbox "Daily reset"]
-                             [ui/Checkbox "Daily reset"]]]
-                           [ui/TableRow [DeviceNameOptions {:metric-name @metric-name}]]]
-              :network-tx [ui/TableRow ^{:key @metric-name}
-                           [DeviceNameOptions {:metric-name @metric-name }]]
+                            [ResetIntervalOptions {:metric-name (keyword @metric-name)}]]
+                           [ui/TableRow
+                            [DeviceNameOptions {:metric-name @metric-name}]]]
+              :network-tx [:<> ^{:key @metric-name}
+                           [ui/TableRow
+                            [ResetIntervalOptions {:metric-name (keyword @metric-name)}]]
+                           [ui/TableRow
+                            [DeviceNameOptions {:metric-name @metric-name}]]]
               [ui/TableRow
-               [ResetIntervalOptions]])]
+               [ResetIntervalOptions {:metric-name (keyword @metric-name)}]])]
            ]
 
           [ui/Header {:as "h3"} "Notification"]

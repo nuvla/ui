@@ -49,6 +49,13 @@
   (fn [db]
     (::spec/notification-subscription-config db)))
 
+
+(reg-sub
+  ::notification-subscription-custom-options
+  :<- [::notification-subscription-config]
+  (fn [{:keys [custom-options]} [_ metric-name]]
+    (get custom-options metric-name)))
+
 ;;
 ;; subscription
 ;;
@@ -173,5 +180,3 @@
 (reg-sub
   ::is-new?
   ::spec/is-new?)
-
-

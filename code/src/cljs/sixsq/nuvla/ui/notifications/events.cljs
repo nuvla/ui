@@ -150,10 +150,19 @@
       (assoc-in db [::spec/notification-subscription-config key] value))))
 
 (reg-event-db
-  ::remove-custom-name-in-notification-subscription
-  (fn [db [_ key]]
-    (update-in db [::spec/notification-subscription-config] dissoc key)))
+  ::update-custom-device-name
+  (fn [db [_ device value]]
+    (update db ::spec/notification-subscription-config assoc-in [:custom-options device :device-name] value)))
 
+(reg-event-db
+  ::remove-custom-name-in-notification-subscription
+  (fn [db [_ device]]
+    (update-in db [::spec/notification-subscription-config :custom-options device] dissoc :device-name)))
+
+(reg-event-db
+  ::update-custom-reset-option
+  (fn [db [_ metric-name value]]
+    (update-in db [::spec/notification-subscription-config :custom-options metric-name] assoc :reset-interval value)))
 
 (reg-event-db
   ::validate-notification-subscription-config-form

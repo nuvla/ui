@@ -149,6 +149,11 @@
       (update-in db [::spec/notification-subscription-config key] merge value)
       (assoc-in db [::spec/notification-subscription-config key] value))))
 
+(reg-event-db
+  ::remove-custom-name-in-notification-subscription
+  (fn [db [_ key]]
+    (update-in db [::spec/notification-subscription-config] dissoc key)))
+
 
 (reg-event-db
   ::validate-notification-subscription-config-form

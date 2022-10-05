@@ -325,16 +325,25 @@
 
 
 (def criteria-metric-options
-  {"nuvlabox"               [{:key "cpu load" :text "CPU load %" :value "load"}
-                             {:key "ram usage" :text "RAM usage %" :value "ram"}
-                             {:key "disk usage" :text "Disk usage %" :value "disk"}
-                             {:key "state" :text "NuvlaEdge online" :value "state"}
-                             {:key "network rx" :text "Network Rx GB" :value "network-rx"}
-                             {:key "network tx" :text "Network Tx GB" :value "network-tx"}
+  {"nuvlabox"               [{:key "cpu load" :text "CPU load %" :value "load" }
+                             {:key "ram usage" :text "RAM usage %" :value "ram" }
+                             {:key "disk usage" :text "Disk usage %" :value "disk" }
+                             {:key "state" :text "NuvlaEdge online" :value "state" }
+                             {:key "network rx" :text "Network Rx GB" :value "network-rx" }
+                             {:key "network tx" :text "Network Tx GB" :value "network-tx" }
                              ]
    "infrastructure-service" [{:key "status" :text "status" :value "status"}]
    "data-record"            [{:key "content-type" :text "content-type" :value "content-type"}]})
 
+(def criteria-value-tr-info-text
+  {"nuvlabox"               {"load"  [:subs-notif-load-info]
+                             "ram"   [:subs-notif-ram-info]
+                             "disk"  [:subs-notif-disk-info]
+                             "network-rx" [:subs-notif-network-info]
+                             "network-tx" [:subs-notif-network-info]
+                             "state" [:subs-notif-state-info]}
+   "infrastructure-service" {"status" [:subs-notif-status-info]}
+   "data-record"            {"content-type" [:subs-notif-content-info]}})
 
 (def criteria-conditions
   {:numeric (map (fn [x] {:key x :value x :text x}) [">" "<" "=" "!="])
@@ -440,7 +449,8 @@
         metric-name         (r/atom "")
         component-option    (r/atom "")
         value-options       (r/atom "")
-        subscription-config (subscribe [::subs/notification-subscription-config])]
+        subscription-config  (subscribe [::subs/notification-subscription-config])
+        use-other-disk?         (r/atom false)]
 
     (dispatch [::events/get-notification-methods])
     (dispatch [::events/reset-subscription-config-all])
@@ -448,7 +458,7 @@
     (fn []
       (let [header          (str/capitalize (str (@tr [:add]) " " (@tr [:subscription])))
             criteria-metric (get-in criteria-condition-type [@collection (keyword @criteria-metric)])
-            {:keys [name description criteria method-ids]} @subscription-config
+            {:keys [name description criteria method-ids disk-name network-interface-name reset-in-days]} @subscription-config
             {:keys [_metric _kind condition value]} criteria]
 
         (when (seq @component-option) (dispatch [::cimi-events/get-resource-metadata @component-option]))
@@ -517,15 +527,22 @@
              [ui/TableCell {:collapsing true
                             :style      {:padding-bottom 8}} "Metric"]
              [ui/TableCell
-              [ui/Dropdown {:selection true
-                            :options   (get criteria-metric-options @collection)
-                            :error     (and @validate-form? (not (seq @metric-name)))
-                            :on-change (ui-callback/value
+              [:div {:style {:display :flex
+                             :align-items :center
+                             :gap "0.3rem"}}
+               [ui/Dropdown {:selection true
+                             :options   (get criteria-metric-options @collection)
+                             :error     (and @validate-form? (not (seq @metric-name)))
+                             :on-change (ui-callback/value
                                          #(do
                                             (reset! metric-name %)
                                             (on-change
-                                              :criteria {:metric %
-                                                         :kind   (criteria-metric-kind @collection %)})))}]]]
+                                             :criteria {:metric %
+                                                        :kind   (criteria-metric-kind @collection %)})))}]
+               [:div {:style  {:white-space :normal
+                               :font-size "0.9rem"}}
+                (some->> (get-in criteria-value-tr-info-text [@collection @metric-name])
+                         (@tr))]]]]
 
             (case criteria-metric
               :string [:<>
@@ -568,6 +585,34 @@
                             :read-only   false
                             :on-change   (ui-callback/value #(on-change :criteria {:value %}))}]]]]
               :boolean nil
+              nil)
+
+            (case (keyword @metric-name)
+              :disk [ui/TableRow
+                     [ui/TableCell {:col-span 2
+                                    :class "font-weight-400"}
+                      [:div {:style {:display :flex
+                                     :justify-items :stretch-between
+                                     :gap 24}}
+                       [ui/Checkbox {:style {:padding-top 10
+                                             :padding-bottom 10
+                                             :margin-right 2}
+                                     :label (@tr [:subs-notif-disk-use-other])
+                                    ;;  :checked @use-other-disk?
+                                     :default-checked false
+                                     :on-change (ui-callback/checked
+                                                 (fn [checked?]
+                                                 (println "checked?" checked?)
+                                                   (when (not checked?)
+                                                    (dispatch [::events/remove-custom-name-in-notification-subscription
+                                                               :disk-name]))
+                                                   (reset! use-other-disk? checked?)))}]
+                       (when @use-other-disk?
+                         [ui/Input {:type :text
+                                    :placeholder (@tr [:subs-notif-name-of-disk-to-monitor])
+                                    :name :other-disk-name
+                                    :on-change (ui-callback/value #(on-change :disk-name %))
+                                    :style {:flex 1}}])]]]
               nil)]]
 
           [ui/Header {:as "h3"} "Notification"]

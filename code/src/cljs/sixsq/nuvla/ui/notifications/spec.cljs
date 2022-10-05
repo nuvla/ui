@@ -57,6 +57,11 @@
 (s/def ::collection utils-spec/nonblank-string)
 (s/def ::enabled boolean?)
 (s/def ::notification-subscription-config-id utils-spec/nonblank-string)
+
+(s/def ::disk-name utils-spec/nonblank-string)
+(s/def ::network-interface-name utils-spec/nonblank-string)
+(s/def ::reset-in-days #(and (int? %) (< 1 %)))
+
 (s/def ::notification-subscription-config
   (s/keys :req-un [::name
                    ::description
@@ -65,7 +70,10 @@
                    ::collection
                    ::method-ids
                    ::criteria]
-          :opt-un [::resource-filter]))
+          :opt-un [::resource-filter
+                   ::disk-name
+                   ::network-interface-name
+                   ::reset-in-days]))
 (s/def ::notification-subscriptions-modal-visible? boolean?)
 (s/def ::add-subscription-modal-visible? boolean?)
 (s/def ::add-subscription-config-modal-visible? boolean?)

@@ -213,3 +213,8 @@ tr.active td {
 .leaflet-top, .leaflet-bottom {
   z-index: 998 !important;
 }
+
+
+.font-weight-400 {
+  font-weight: 400 !important;
+}

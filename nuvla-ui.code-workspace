@@ -1,0 +1,12 @@
+{
+  "folders": [
+    {
+      "name": "code",
+      "path": "code"
+    },
+    {
+      "name": "ui",
+      "path": "."
+    }
+  ]
+}

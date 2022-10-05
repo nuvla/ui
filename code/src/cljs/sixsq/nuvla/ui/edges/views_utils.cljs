@@ -4,6 +4,7 @@
     [re-frame.core :refer [dispatch subscribe]]
     [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
     [sixsq.nuvla.ui.edges.events :as events]
+    [sixsq.nuvla.ui.edges.subs :as subs]
     [sixsq.nuvla.ui.edges.utils :as utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
@@ -43,12 +44,17 @@
                    [::main-events/subscription-required-dispatch
                     [::events/open-modal :add]])}]))
 
+(defn- date-string->time-ago [created]
+  (-> created time/parse-iso8601 time/ago))
+
 
 (defn NuvlaboxCard
   [_nuvlabox _managers]
-  (let [tr (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [id name description created state tags online] :as _nuvlabox} managers]
-      (let [href (str "edges/" (general-utils/id->uuid id))]
+  (let [tr     (subscribe [::i18n-subs/tr])
+        locale (subscribe [::i18n-subs/locale])]
+    (fn [{:keys [id name description created state tags online refresh-interval] :as _nuvlabox} managers]
+      (let [href                  (str "edges/" (general-utils/id->uuid id))
+            next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])]
         ^{:key id}
         [uix/Card
          {:on-click    #(dispatch [::history-events/navigate href])
@@ -63,7 +69,11 @@
                                      :corner    true
                                      :color     "blue"}])]
                         (or name id)]
-          :meta        (str (@tr [:created]) " " (-> created time/parse-iso8601 time/ago))
+          :meta        [:<>
+                        [:div (str (@tr [:created]) " " (date-string->time-ago created))]
+                        (when next-heartbeat-moment
+                          [:div (str (@tr [:last-online]) " "
+                                     (utils/last-time-online next-heartbeat-moment refresh-interval @locale))])]
           :state       state
           :description (when-not (str/blank? description) description)
           :tags        tags}]))))

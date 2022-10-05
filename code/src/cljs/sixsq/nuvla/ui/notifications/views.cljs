@@ -432,6 +432,34 @@
                   :on-change (ui-callback/value
                                #(on-change :criteria {:condition %}))}]]])
 
+(defn- DeviceNameOptions [{:keys [on-change use-other? device]}]
+  (let [tr (subscribe [::i18n-subs/tr])
+        use-other-than-default? (r/atom (or use-other? false))]
+    (fn []
+      [ui/TableRow
+       [ui/TableCell {:col-span 2
+                      :class "font-weight-400"}
+        [:div {:style {:display :flex
+                       :justify-items :stretch-between
+                       :gap 24}}
+         [ui/Checkbox {:style {:padding-top 10
+                               :padding-bottom 10
+                               :margin-right 2}
+                       :label (@tr [(keyword (str "subs-notif-" device "-use-other")) :subs-notif-disk-use-other])
+                       :default-checked @use-other-than-default?
+                       :on-change (ui-callback/checked
+                                   (fn [checked?]
+                                     (when (not checked?)
+                                       (dispatch [::events/remove-custom-name-in-notification-subscription
+                                                  (keyword (str device "-name"))]))
+                                     (reset! use-other-than-default? checked?)))}]
+         (when @use-other-than-default?
+           [ui/Input {:type :text
+                      :placeholder (@tr [(keyword (str "subs-notif-name-of-" device "-to-monitor"))])
+                      :name :other-disk-name
+                      :on-change (ui-callback/value #(on-change :disk-name %))
+                      :style {:flex 1}}])]]])))
+
 
 (defn AddSubscriptionConfigModal
   []
@@ -588,32 +616,16 @@
               nil)
 
             (case (keyword @metric-name)
-              :disk [ui/TableRow
-                     [ui/TableCell {:col-span 2
-                                    :class "font-weight-400"}
-                      [:div {:style {:display :flex
-                                     :justify-items :stretch-between
-                                     :gap 24}}
-                       [ui/Checkbox {:style {:padding-top 10
-                                             :padding-bottom 10
-                                             :margin-right 2}
-                                     :label (@tr [:subs-notif-disk-use-other])
-                                    ;;  :checked @use-other-disk?
-                                     :default-checked false
-                                     :on-change (ui-callback/checked
-                                                 (fn [checked?]
-                                                 (println "checked?" checked?)
-                                                   (when (not checked?)
-                                                    (dispatch [::events/remove-custom-name-in-notification-subscription
-                                                               :disk-name]))
-                                                   (reset! use-other-disk? checked?)))}]
-                       (when @use-other-disk?
-                         [ui/Input {:type :text
-                                    :placeholder (@tr [:subs-notif-name-of-disk-to-monitor])
-                                    :name :other-disk-name
-                                    :on-change (ui-callback/value #(on-change :disk-name %))
-                                    :style {:flex 1}}])]]]
-              nil)]]
+              :disk [DeviceNameOptions {:on-change on-change
+                                        :device "disk"}]
+              :network-rx [DeviceNameOptions {:on-change on-change
+                                              :device "network"
+                                              :use-other? true}]
+              :network-tx [DeviceNameOptions {:on-change on-change
+                                              :device "network"
+                                              :use-other? true}]
+              [DeviceNameOptions {:on-change on-change
+                                  :device "network"}])]]
 
           [ui/Header {:as "h3"} "Notification"]
           [ui/Form

@@ -432,34 +432,58 @@
                   :on-change (ui-callback/value
                                #(on-change :criteria {:condition %}))}]]])
 
-(defn- DeviceNameOptions [{:keys [on-change use-other? device]}]
+(defn- DeviceNameOptions [{:keys [metric-name]}]
   (let [tr (subscribe [::i18n-subs/tr])
-        use-other-than-default? (r/atom (or use-other? false))]
+        custom-options (subscribe [::subs/notification-subscription-custom-device-name (keyword metric-name)])
+        use-other-than-default? (r/atom (or @custom-options false))]
     (fn []
-      [ui/TableRow
-       [ui/TableCell {:col-span 2
-                      :class "font-weight-400"}
-        [:div {:style {:display :flex
-                       :justify-items :stretch-between
-                       :gap 24}}
-         [ui/Checkbox {:style {:padding-top 10
-                               :padding-bottom 10
-                               :margin-right 2}
-                       :label (@tr [(keyword (str "subs-notif-" device "-use-other")) :subs-notif-disk-use-other])
-                       :default-checked @use-other-than-default?
-                       :on-change (ui-callback/checked
-                                   (fn [checked?]
-                                     (when (not checked?)
-                                       (dispatch [::events/remove-custom-name-in-notification-subscription
-                                                  (keyword (str device "-name"))]))
-                                     (reset! use-other-than-default? checked?)))}]
-         (when @use-other-than-default?
-           [ui/Input {:type :text
-                      :placeholder (@tr [(keyword (str "subs-notif-name-of-" device "-to-monitor"))])
-                      :name :other-disk-name
-                      :on-change (ui-callback/value #(on-change :disk-name %))
-                      :style {:flex 1}}])]]])))
+      [ui/TableCell {:col-span 2
+                     :class "font-weight-400"}
+       [:div {:style {:display :flex
+                      :justify-items :stretch-between
+                      :align-items :center
+                      :height 40
+                      :gap 24}}
+        [ui/Checkbox {:style {:margin-right 2}
+                      :label (@tr [(keyword (str "subs-notif-" metric-name "-use-other")) :subs-notif-disk-use-other])
+                      :default-checked @use-other-than-default?
+                      :on-change (ui-callback/checked
+                                  (fn [checked?]
+                                    (when (not checked?)
+                                      (dispatch [::events/remove-custom-name-in-notification-subscription
+                                                 (keyword metric-name)
+                                                 :device-name]))
+                                    (reset! use-other-than-default? checked?)))}]
+        (when @use-other-than-default?
+          [ui/Input {:type :text
+                     :placeholder (@tr [(keyword (str "subs-notif-name-of-" metric-name "-to-monitor"))])
+                     :name :other-disk-name
+                     :default-value (or (:device-name @custom-options) "")
+                     :on-change (ui-callback/value #(dispatch [::events/update-custom-device-name (keyword metric-name) %]))
+                     :style {:flex 1}}])]])))
 
+
+
+(defn- ResetIntervalOptions [{:keys [metric-name]}]
+  (let []
+    [ui/TableCell {:col-span 2
+                   :class "font-weight-400"}
+     [:div {:style {:display :grid
+                    :grid-template-columns "auto auto 50%"
+                    :align-items :center}}
+
+      (for [[value label] [[:daily "Daily reset"]
+                           [:monthly "Monthly reset"]
+                           [:custom "Custom"]]]
+        [:div ^{:key value}
+         [:input {:type :radio
+                  :name :reset
+                  :id value
+                  :value value}]
+         [:label {:for value
+                  :style {:margin-left "0.5rem"}} label]])]]))
+
+;; TODO: create custom event for updating custom options
 
 (defn AddSubscriptionConfigModal
   []
@@ -477,8 +501,7 @@
         metric-name         (r/atom "")
         component-option    (r/atom "")
         value-options       (r/atom "")
-        subscription-config  (subscribe [::subs/notification-subscription-config])
-        use-other-disk?         (r/atom false)]
+        subscription-config  (subscribe [::subs/notification-subscription-config])]
 
     (dispatch [::events/get-notification-methods])
     (dispatch [::events/reset-subscription-config-all])
@@ -616,16 +639,21 @@
               nil)
 
             (case (keyword @metric-name)
-              :disk [DeviceNameOptions {:on-change on-change
-                                        :device "disk"}]
-              :network-rx [DeviceNameOptions {:on-change on-change
-                                              :device "network"
-                                              :use-other? true}]
-              :network-tx [DeviceNameOptions {:on-change on-change
-                                              :device "network"
-                                              :use-other? true}]
-              [DeviceNameOptions {:on-change on-change
-                                  :device "network"}])]]
+              :disk [ui/TableRow ^{:key @metric-name}
+                     [DeviceNameOptions  {:metric-name @metric-name}]]
+              :network-rx [:<> ^{:key @metric-name}
+                           [ui/TableRow
+                            [ui/TableCell {:col-span 2
+                                           :display :flex}
+                             [ui/Checkbox "Daily reset"]
+                             [ui/Checkbox "Daily reset"]
+                             [ui/Checkbox "Daily reset"]]]
+                           [ui/TableRow [DeviceNameOptions {:metric-name @metric-name}]]]
+              :network-tx [ui/TableRow ^{:key @metric-name}
+                           [DeviceNameOptions {:metric-name @metric-name }]]
+              [ui/TableRow
+               [ResetIntervalOptions]])]
+           ]
 
           [ui/Header {:as "h3"} "Notification"]
           [ui/Form

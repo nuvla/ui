@@ -152,12 +152,26 @@
   (fn [db]
     (get db ::spec/components-number)))
 
+(reg-sub
+  ::criteria
+  (fn [db]
+    (get-in db [::spec/notification-subscription-config :criteria])))
+
+(reg-sub
+  ::custom-days
+  :<- [::criteria]
+  (fn [criteria]
+    (some->> (criteria :reset-interval)
+             (re-find #"^(\d{1,3})")
+             first
+             int)))
 
 
 (reg-sub
   ::criteria-metric
-  (fn [db]
-    (get-in db [::spec/notification-subscription-config :criteria :metric])))
+  :<- [::criteria]
+  (fn [criteria]
+    (get criteria :metric)))
 
 
 ;; Validation

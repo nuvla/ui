@@ -40,13 +40,26 @@
 (s/def ::window integer?)
 (s/def ::value-type utils-spec/nonblank-string)
 
+(def reset-interval-regex #"^(month|[1-9]{1,2}[0-9]d|[1-9]d)$")
+(s/def ::reset-interval #(re-matches reset-interval-regex %))
+
+(s/def ::reset-start-date #(and (integer? %)
+                                (< 0 %)
+                                (< % 32)))
+
+(s/def ::dev-name string?)
+
 (s/def ::criteria
   (s/keys :req-un [::kind
                    ::metric
                    ::condition]
           :opt-un [::window
                    ::value
+                   ::reset-interval
+                   ::reset-start-date
+                   ::dev-name
                    ::value-type]))
+
 (s/def ::method-ids
   (s/and (s/coll-of utils-spec/nonblank-string :distinct true :kind vector?)
          not-empty))
@@ -58,22 +71,6 @@
 (s/def ::enabled boolean?)
 (s/def ::notification-subscription-config-id utils-spec/nonblank-string)
 
-(s/def ::device-name string?)
-(s/def ::disk (s/keys :opt-un [::device-name]))
-
-(s/def ::reset-interval #{:daily :monthly :custom})
-(s/def ::reset-in-days #(and (int? %) (< 1 %)))
-
-(def network-options (s/keys
-                          :opt-un [::device-name
-                                   ::reset-interval
-                                   ::reset-in-days]))
-(s/def ::network-rx network-options)
-(s/def ::network-tx network-options)
-(s/def ::custom-options
-  (s/keys :opt-un [::disk
-                   ::network-rx
-                   ::network-tx]))
 
 (s/def ::notification-subscription-config
   (s/keys :req-un [::name
@@ -83,9 +80,7 @@
                    ::collection
                    ::method-ids
                    ::criteria]
-          :opt-un [::resource-filter
-                   ::custom-options
-                   ::reset-in-days]))
+          :opt-un [::resource-filter]))
 (s/def ::notification-subscriptions-modal-visible? boolean?)
 (s/def ::add-subscription-modal-visible? boolean?)
 (s/def ::add-subscription-config-modal-visible? boolean?)

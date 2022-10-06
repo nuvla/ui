@@ -150,19 +150,22 @@
       (assoc-in db [::spec/notification-subscription-config key] value))))
 
 (reg-event-db
+ ::update-custom-days
+ (fn [db [_ value]]
+   (let [custom-interval-days (str value "d")]
+     (when (s/valid? ::spec/reset-interval custom-interval-days)
+       (assoc-in db [::spec/notification-subscription-config :criteria :reset-interval] custom-interval-days)))))
+
+(reg-event-db
   ::update-custom-device-name
-  (fn [db [_ device value]]
-    (update db ::spec/notification-subscription-config assoc-in [:custom-options device :device-name] value)))
+  (fn [db [_ value]]
+    (update db ::spec/notification-subscription-config assoc-in [:criteria :dev-name] value)))
 
 (reg-event-db
   ::remove-custom-name-in-notification-subscription
-  (fn [db [_ device]]
-    (update-in db [::spec/notification-subscription-config :custom-options device] dissoc :device-name)))
+  (fn [db]
+    (update-in db [::spec/notification-subscription-config :criteria] dissoc :dev-name)))
 
-(reg-event-db
-  ::update-custom-reset-option
-  (fn [db [_ metric-name value]]
-    (update-in db [::spec/notification-subscription-config :custom-options metric-name] assoc :reset-interval value)))
 
 (reg-event-db
   ::validate-notification-subscription-config-form

@@ -12,3 +12,14 @@ They are not used when developing locally or in production.
 Current drawback: Traefik resets the `X-Forwarded-Host` header to the host of the backend server.
 That's why we overwrite `location` and `base-uri` in response bodies.
 It is working for the moment but could break in the future.
+
+## Dev
+
+From these commands from within `code` folder:
+```bash
+# Produce release code
+lein install
+
+# Start local server as if it was run by Cloudflare locally
+npx wrangler pages dev ./resources/public/ui --binding API_ENDPOINT="https://nuvla.io"
+```

@@ -16,23 +16,20 @@ export async function onRequest(context) {
 
   let response = await fetch(apiEndpoint + url.pathname, request);
 
-  // override base-uri for /api/cloud-entry-point responses
-  if (firstPathPart === 'cloud-entry-point') {
-    let body = await response.json();
-    body = { ...body, 'base-uri': url.origin + '/api/' };
-    return new Response(JSON.stringify(body));
-  }
-
   // override all location responses for /api/session
   try {
     let body = await response.json();
+    // override base-uri for /api/cloud-entry-point responses
+    if (firstPathPart === 'cloud-entry-point') {
+      body = { ...body, 'base-uri': url.origin + '/api/' };
+    }
     if (body.location) {
       let locationUrl = new URL(body.location);
       locationUrl.host = url.host;
       locationUrl.protocol = url.protocol;
       body = { ...body, location: locationUrl };
     }
-    const newResponse = new Response(JSON.stringify(body));
+    let newResponse = new Response(JSON.stringify(body), {status: response.status});
     if (response.headers.has('set-cookie')) {
       newResponse.headers.set('set-cookie', response.headers.get('set-cookie'));
     }

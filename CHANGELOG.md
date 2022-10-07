@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Dev tools - Cloudflare preview integration
+
 ## [2.32.7] - 2022-09-29
 
 ### Changed

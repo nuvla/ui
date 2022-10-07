@@ -160,14 +160,16 @@
                          {:reset-interval "month"
                           :reset-start-date new-reset-start-date}]]]}))))
 
-(reg-event-db
+(reg-event-fx
  ::choose-custom-reset
- (fn [{:keys [::spec/notification-subscription-config] :as db}]
+ (fn [{ {:keys [::spec/notification-subscription-config] } :db}]
    (let [criteria (:criteria notification-subscription-config)
          reset-in-days (or (:reset-in-days criteria) 1)]
      (when (= (:reset-interval criteria) "month")
-       (update-in db [::spec/notification-subscription-config :criteria] merge {:reset-interval (str reset-in-days "d")
-                                                                                :reset-in-days reset-in-days})))))
+       {:fx [[:dispatch [::update-notification-subscription-config
+                         :criteria
+                         {:reset-interval (str reset-in-days "d")
+                          :reset-in-days reset-in-days}]]]}))))
 
 (reg-event-db
  ::update-custom-days

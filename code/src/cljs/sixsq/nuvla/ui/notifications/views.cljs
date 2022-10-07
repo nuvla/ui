@@ -437,12 +437,16 @@
    "network-rx" [:subs-notif-network-use-other]
    "network-tx" [:subs-notif-network-use-other]})
 
+(def metrics-with-customizable-dev-name #{"network-rx" "network-tx" "disk"})
+
 (defn- DeviceNameOptions []
   (let [tr (subscribe [::i18n-subs/tr])
         criteria (subscribe [::subs/criteria])
         use-other-than-default? (r/atom (or (:dev-name @criteria) false))]
     (fn []
     (let [metric-name (:metric @criteria)]
+    "hello"
+    (when (metrics-with-customizable-dev-name metric-name)
       [ui/TableCell {:col-span 2
                      :class "font-weight-400"}
        [:div {:style {:display :flex
@@ -464,61 +468,69 @@
                      :name :other-disk-name
                      :default-value (or (:dev-name @criteria) "")
                      :on-change (ui-callback/value #(dispatch [::events/update-custom-device-name %]))
-                     :style {:flex 1}}])]]))))
+                     :style {:flex 1}}])]])))))
 
 (defn- clamp [n lower upper]
   (max (min n upper) lower))
 
+
+(def metrics-with-reset-intervals #{"network-rx" "network-tx"})
 
 (defn- ResetIntervalOptions []
   (let [tr                   (subscribe [::i18n-subs/tr])
         criteria             (subscribe [::subs/criteria])]
     (fn []
       (let [reset-interval (:reset-interval @criteria)
-            monthly-reset? (= reset-interval "month")
+            monthly-reset? (or (nil? reset-interval) (= reset-interval "month"))
             custom-reset? (not monthly-reset?)
-            start-date-of-month (:reset-start-date @criteria)
+            start-date-of-month (when monthly-reset? (or (:reset-start-date @criteria) 1))
             custom-interval-days @(subscribe [::subs/custom-days])]
-        [ui/TableCell {:col-span 2
-                       :class "font-weight-400"}
-         [:div {:style {:display :grid
-                        :grid-template-columns "45% 45%"
-                        :justify-content "space-between"
-                        :height 40
-                        :align-items :center}}
-          [:div {:on-click #(dispatch [::events/choose-monthly-reset])}
-           [:input {:type :radio
-                    :name :reset
-                    :checked monthly-reset?
-                    :id :monthly}]
-           [:label {:for :monthly
-                    :style {:margin-left "0.5rem"}} (@tr [:subs-notif-reset-on-day])]
-           [ui/Input {:type :number
-                      :value start-date-of-month
-                      :disabled custom-reset?
-                      :style {:justify-self :start
-                              :margin-left "0.5rem"}
-                      :label (@tr [:of-month])
-                      :label-position :right
-                      :on-change (ui-callback/value #(dispatch [::events/update-notification-subscription-config
-                                                                :criteria
-                                                                {:reset-start-date (clamp % 1 31)}]))}]]
-          [:div {:on-click #(dispatch [::events/choose-custom-reset])
-                 :style {:align-self "end"}}
-           [:input {:type :radio
-                    :name :reset
-                    :checked custom-reset?
-                    :id :custom}]
-           [:label {:for :custom
-                    :style {:margin-left "0.5rem"}} (str/capitalize (@tr [:subs-notif-custom-reset-after]))]
-           [ui/Input {:type :number
-                      :value custom-interval-days
-                      :disabled monthly-reset?
-                      :style {:justify-self :start
-                              :margin-left "0.5rem"}
-                      :label (@tr [:days])
-                      :label-position :right
-                      :on-change (ui-callback/value #(dispatch [::events/update-custom-days (clamp % 1 999)]))}]]]]))))
+        (when (metrics-with-reset-intervals (:metric @criteria))
+              [ui/TableCell {:col-span 2
+                             :class "font-weight-400"}
+               [:div {:style {
+                              ;; :display :grid
+                              ;; :grid-template-columns "45% 45%"
+                              ;; :justify-content "space-between"
+                              :min-height 40
+                              ;; :align-items :center
+                              }
+                      :class "grid-2-cols-responsive"}
+                [:div {:on-click #(dispatch [::events/choose-monthly-reset])}
+                 [:input {:type :radio
+                          :name :reset
+                          :checked monthly-reset?
+                          :id :monthly}]
+                 [:label {:for :monthly
+                          :style {:margin-left "0.5rem"}} (@tr [:subs-notif-reset-on-day])]
+                 [ui/Input {:type :number
+                            :value start-date-of-month
+                            :disabled custom-reset?
+                            :style {:justify-self :start
+                                    :margin-left "0.5rem"
+                                    :max-width "100px"}
+                            :label (@tr [:of-month])
+                            :label-position :right
+                            :on-change (ui-callback/value #(dispatch [::events/update-notification-subscription-config
+                                                                      :criteria
+                                                                      {:reset-start-date (clamp % 1 31)}]))}]]
+                [:div {:on-click #(dispatch [::events/choose-custom-reset])
+                       :style {:align-self "end"}}
+                 [:input {:type :radio
+                          :name :reset
+                          :checked custom-reset?
+                          :id :custom}]
+                 [:label {:for :custom
+                          :style {:margin-left "0.5rem"}} (str/capitalize (@tr [:subs-notif-custom-reset-after]))]
+                 [ui/Input {:type :number
+                            :value custom-interval-days
+                            :disabled monthly-reset?
+                            :style {:justify-self :start
+                                    :margin-left "0.5rem"
+                                    :max-width "75px"}
+                            :label (@tr [:days])
+                            :label-position :right
+                            :on-change (ui-callback/value #(dispatch [::events/update-custom-days (clamp % 1 999)]))}]]]])))))
 
 (defn- get-network-info-text [criteria tr]
   (let [interface-text (if
@@ -527,7 +539,7 @@
                          (@tr [:subs-notif-network-info-specific]))
         interval-text (if (= "month" (:reset-interval criteria))
                         (str (@tr [:subs-notif-network-reset-monthly]) " (" (@tr [:subs-notif-network-resets-on]) " " (:reset-start-date criteria) ")")
-                        (str (@tr [:subs-notif-network-reset-custom]) " (" (@tr [:subs-notif-network-resets-after]) " " (:reset-in-days criteria) " " (:days criteria) ")"))]
+                        (str (@tr [:subs-notif-network-reset-custom]) " (" (@tr [:subs-notif-network-resets-after]) " " (:reset-in-days criteria) " " (:days criteria) " " (@tr [:days]) ")"))]
     (str interface-text " " interval-text)))
 
 (defn- get-info-text [criteria tr]
@@ -697,13 +709,11 @@
               :boolean nil
               nil)
 
-            (when (#{"network-tx" "network-rx"} @metric-name)
-              [ui/TableRow
-               [ResetIntervalOptions]])
+            [ui/TableRow
+             [ResetIntervalOptions]]
 
-            (when (#{"network-tx" "network-rx" "disk"} @metric-name)
-              [ui/TableRow
-               [DeviceNameOptions]])]
+            [ui/TableRow
+             [DeviceNameOptions]]]
            ]
 
           [ui/Header {:as "h3"} "Notification"]
@@ -809,9 +819,9 @@
                             :value     (:metric criteria)
                             :options   (get criteria-metric-options collection)
                             :on-change (ui-callback/value
-                                         #(on-change
-                                            :criteria {:metric %
-                                                       :kind   (criteria-metric-kind collection %)}))}]]]
+                                        #(on-change
+                                          :criteria {:metric %
+                                                     :kind   (criteria-metric-kind collection %)}))}]]]
 
             (if-not (and (= collection "nuvlabox") (= (:metric criteria) "state"))
               [ui/TableRow
@@ -825,7 +835,7 @@
                                            []
                                            ((keyword @criteria-metric) (get criteria-condition-options collection)))
                               :on-change (ui-callback/value
-                                           #(on-change :criteria {:condition %}))}]]]
+                                          #(on-change :criteria {:condition %}))}]]]
               (on-change :criteria {:condition "no"}))
 
             (when-not (= :boolean (get-in criteria-condition-type [collection (keyword @criteria-metric)]))
@@ -838,7 +848,11 @@
                   :name      "Value"
                   :read-only false
                   :value     (:value criteria)
-                  :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]])]]
+                  :on-change (ui-callback/value #(on-change :criteria {:value %}))}]]])
+              [ui/TableRow
+               [ResetIntervalOptions]]
+              [ui/TableRow
+               [DeviceNameOptions]]]]
           [ui/Header {:as "h3"} "Notification"]
           [ui/Form
            [ui/FormGroup

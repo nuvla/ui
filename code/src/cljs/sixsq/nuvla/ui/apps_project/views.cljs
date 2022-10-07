@@ -65,7 +65,7 @@
         [ui/Segment {:secondary true
                      :color     "blue"
                      :raised    true}
-         [:h4 (str/capitalize (@tr [:apps-sub-modules]))]
+         [:h4 (str/capitalize (@tr [:content]))]
          (if (empty? children)
            [ui/Message {:warning true}
             [ui/Icon {:name "warning sign"}]

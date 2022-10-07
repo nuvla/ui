@@ -7,18 +7,15 @@
     [sixsq.nuvla.ui.session.utils :as utils]
     [sixsq.nuvla.ui.utils.general :as general-utils]))
 
-
 (reg-sub
   ::session-loading?
   (fn [db]
     (::spec/session-loading? db)))
 
-
 (reg-sub
   ::session
   (fn [db]
     (::spec/session db)))
-
 
 (reg-sub
   ::active-claim
@@ -26,12 +23,10 @@
   (fn [{:keys [active-claim user]}]
     (or active-claim user)))
 
-
 (reg-sub
   ::groups-hierarchies
   (fn [db]
     (::spec/groups-hierarchies db)))
-
 
 (reg-sub
   ::groups-user
@@ -58,20 +53,17 @@
                         (sort (juxt :name :id)))
                    (next h))))))))
 
-
 (reg-sub
   ::root-groups
   :<- [::groups-hierarchies]
   (fn [hierarchies]
     (set (map :id hierarchies))))
 
-
 (reg-sub
   ::is-group?
   :<- [::active-claim]
   (fn [active-claim]
     (utils/is-group? active-claim)))
-
 
 (reg-sub
   ::switch-group-options
@@ -82,12 +74,10 @@
                (-> groups-user count (> 1)))
       groups-user)))
 
-
 (reg-sub
   ::loading?
   (fn [db]
     (::spec/loading? db)))
-
 
 (reg-sub
   ::roles
@@ -95,13 +85,11 @@
   (fn [session]
     (set (some-> session :roles (str/split #"\s+")))))
 
-
 (reg-sub
   ::has-role?
   :<- [::roles]
   (fn [roles [_ role]]
     (contains? roles role)))
-
 
 (reg-sub
   ::is-admin?
@@ -109,13 +97,11 @@
   (fn [is-admin?]
     is-admin?))
 
-
 (reg-sub
   ::is-user?
   :<- [::has-role? "group/nuvla-user"]
   (fn [is-user?]
     is-user?))
-
 
 (reg-sub
   ::is-subgroup?
@@ -125,7 +111,6 @@
   (fn [[active-claim is-group? root-groups]]
     (and is-group?
          (not (root-groups active-claim)))))
-
 
 (reg-sub
   ::user
@@ -143,13 +128,11 @@
   (fn [session]
     (:user session)))
 
-
 (reg-sub
   ::identifier
   :<- [::session]
   (fn [session]
     (:identifier session)))
-
 
 (reg-sub
   ::logged-in?
@@ -157,24 +140,20 @@
   (fn [session]
     (some? session)))
 
-
 (reg-sub
   ::error-message
   (fn [db]
     (::spec/error-message db)))
-
 
 (reg-sub
   ::success-message
   (fn [db]
     (::spec/success-message db)))
 
-
 (reg-sub
   ::server-redirect-uri
   (fn [db]
     (::spec/server-redirect-uri db)))
-
 
 (reg-sub
   ::user-templates
@@ -182,13 +161,11 @@
   (fn [user-templates]
     user-templates))
 
-
 (reg-sub
   ::user-template-exist?
   :<- [::user-templates]
   (fn [user-templates [_ template-id]]
     (contains? user-templates template-id)))
-
 
 (reg-sub
   ::session-templates
@@ -196,26 +173,22 @@
   (fn [session-templates _]
     session-templates))
 
-
 (reg-sub
   ::session-template-exist?
   :<- [::session-templates]
   (fn [session-templates [_ template-id]]
     (contains? session-templates template-id)))
 
-
 (reg-sub
   ::peers
   (fn [db]
     (::spec/peers db)))
-
 
 (reg-sub
   ::peers-options
   :<- [::peers]
   (fn [peers]
     (map (fn [[k v]] {:key k, :value k, :text v}) peers)))
-
 
 (reg-sub
   ::resolve-user
@@ -227,7 +200,6 @@
       identifier
       (get peers user-id user-id))))
 
-
 (reg-sub
   ::resolve-users
   :<- [::user-id]
@@ -238,12 +210,10 @@
                      identifier
                      (get peers % %)) users))))
 
-
 (reg-sub
   ::groups
   (fn [{:keys [::spec/groups]}]
     groups))
-
 
 (reg-sub
   ::groups-mapping
@@ -253,6 +223,11 @@
          (map (juxt :id :name))
          (into {}))))
 
+(reg-sub
+  ::groups-options
+  :<- [::groups-mapping]
+  (fn [groups-mapping]
+    (map (fn [[id name]] {:key id, :value id, :text (or name (utils/remove-group-prefix id))}) groups-mapping)))
 
 (reg-sub
   ::resolve-principal
@@ -263,7 +238,16 @@
   (fn [[current-user-id identifier peers groups] [_ id]]
     (if (string? id)
       (cond
-        (str/starts-with? id "group/") (get groups id id)
+        (str/starts-with? id "group/") (or (get groups id) (utils/remove-group-prefix id))
         (= id current-user-id) identifier
-        :else (get peers id id))
+        :else (or (get peers id) id))
       id)))
+
+(reg-sub
+  ::peers-groups-options
+  :<- [::peers-options]
+  :<- [::groups-options]
+  (fn [[peers groups] [_ filter-set]]
+    (remove #(contains? filter-set (:value %))
+            (concat (map #(assoc % :icon "user") peers)
+                    (map #(assoc % :icon "group") groups)))))

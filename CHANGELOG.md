@@ -4,6 +4,8 @@
 
 ### Changed
 
+- acl - Make possible add principals by user/group uuid
+- acl - Principals dropdown searchable with groups/user
 - Dev tools - Cloudflare preview integration
 
 ## [2.32.7] - 2022-09-29

@@ -460,7 +460,7 @@
                       :on-change (ui-callback/checked
                                   (fn [checked?]
                                     (when (not checked?)
-                                      (dispatch [::events/remove-custom-name-in-notification-subscription]))
+                                      (dispatch [::events/remove-custom-name]))
                                     (reset! use-other-than-default? checked?)))}]
         (when @use-other-than-default?
           [ui/Input {:type :text
@@ -488,13 +488,7 @@
         (when (metrics-with-reset-intervals (:metric @criteria))
               [ui/TableCell {:col-span 2
                              :class "font-weight-400"}
-               [:div {:style {
-                              ;; :display :grid
-                              ;; :grid-template-columns "45% 45%"
-                              ;; :justify-content "space-between"
-                              :min-height 40
-                              ;; :align-items :center
-                              }
+               [:div {:style {:min-height 40}
                       :class "grid-2-cols-responsive"}
                 [:div {:on-click #(dispatch [::events/choose-monthly-reset])}
                  [:input {:type :radio

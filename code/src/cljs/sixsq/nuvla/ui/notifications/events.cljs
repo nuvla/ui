@@ -149,16 +149,19 @@
       (update-in db [::spec/notification-subscription-config key] merge value)
       (assoc-in db [::spec/notification-subscription-config key] value))))
 
+(defn- update-subscription-criteria-fx [new-values]
+  {:fx [[:dispatch [::update-notification-subscription-config
+                    :criteria
+                    new-values]]]})
+
 (reg-event-fx
  ::choose-monthly-reset
  (fn [{{:keys [::spec/notification-subscription-config]} :db}]
    (let [criteria (:criteria notification-subscription-config)
          new-reset-start-date (or (:reset-start-date criteria) 1)]
      (when (not= (:reset-interval criteria) "month")
-       {:fx [[:dispatch [::update-notification-subscription-config
-                         :criteria
-                         {:reset-interval "month"
-                          :reset-start-date new-reset-start-date}]]]}))))
+       (update-subscription-criteria-fx {:reset-interval "month"
+                                         :reset-start-date new-reset-start-date})))))
 
 (reg-event-fx
  ::choose-custom-reset
@@ -166,27 +169,24 @@
    (let [criteria (:criteria notification-subscription-config)
          reset-in-days (or (:reset-in-days criteria) 1)]
      (when (= (:reset-interval criteria) "month")
-       {:fx [[:dispatch [::update-notification-subscription-config
-                         :criteria
-                         {:reset-interval (str reset-in-days "d")
-                          :reset-in-days reset-in-days}]]]}))))
+       (update-subscription-criteria-fx {:reset-interval (str reset-in-days "d")
+                                         :reset-in-days reset-in-days})))))
 
 (reg-event-fx
  ::update-custom-days
  (fn [_ [_ value]]
    (let [custom-interval-days (str value "d")]
      (when (s/valid? ::spec/reset-interval custom-interval-days)
-      {:fx [[:dispatch [::update-notification-subscription-config
-                         :criteria
-                         {:reset-interval custom-interval-days :reset-in-days value}]]]} ))))
+       (update-subscription-criteria-fx {:reset-interval custom-interval-days
+                                         :reset-in-days value})))))
+
+(reg-event-fx
+ ::update-custom-device-name
+ (fn [_ [_ value]]
+   (update-subscription-criteria-fx {:dev-name value})))
 
 (reg-event-db
-  ::update-custom-device-name
-  (fn [db [_ value]]
-    (update db ::spec/notification-subscription-config assoc-in [:criteria :dev-name] value)))
-
-(reg-event-db
-  ::remove-custom-name-in-notification-subscription
+  ::remove-custom-name
   (fn [db]
     (update-in db [::spec/notification-subscription-config :criteria] dissoc :dev-name)))
 

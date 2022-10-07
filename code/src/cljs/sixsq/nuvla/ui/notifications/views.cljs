@@ -526,25 +526,29 @@
                         :label-position :right
                         :on-change (ui-callback/value #(dispatch [::events/update-custom-days (clamp % 1 999)]))}]]]])))))
 
+(def default-start-date 1)
+(def default-custom-interval 1)
+
 (defn- get-network-info-text [criteria tr]
-  (let [
-        interface-text (if
-                        (empty? (:dev-name criteria))
-                         (@tr [:subs-notif-network-info-default])
-                         (@tr [:subs-notif-network-info-specific]))
-        interval-text (if (= "month" (:reset-interval criteria))
-                        (str (@tr [:subs-notif-network-reset-monthly]) " (" (@tr [:subs-notif-network-resets-on]) " " (or (:reset-start-date criteria) 1) ")")
-                        (str (@tr [:subs-notif-network-reset-custom]) " (" (@tr [:subs-notif-network-resets-after]) " " (:reset-in-days criteria) " " (@tr [:days]) ")"))]
+  (let [start-day-of-month    (or (:reset-start-date criteria) default-start-date)
+        reset-in-days         (or (:reset-in-days criteria) default-custom-interval)
+        reset-interval-string (:reset-interval criteria)
+        interface-text        (if
+                               (empty? (:dev-name criteria))
+                                (@tr [:subs-notif-network-info-default])
+                                (@tr [:subs-notif-network-info-specific]))
+        interval-text         (if (or (empty? reset-interval-string) (= "month" reset-interval-string))
+                                (str (@tr [:subs-notif-network-reset-monthly]) " (" (@tr [:subs-notif-network-resets-on]) " " start-day-of-month ")")
+                                (str (@tr [:subs-notif-network-reset-custom]) " (" (@tr [:subs-notif-network-resets-after]) " " reset-in-days " " (@tr (if (= reset-in-days 1) [:day] [:days])) ")"))]
     (str interface-text " " interval-text)))
 
 (defn- get-info-text [criteria tr]
   (let [metric-name (:metric criteria)]
     (case metric-name
-      "disk" (when (empty? (:dev-name criteria)) (some->> (criteria-metric->translation-info-key (:metric criteria)) (@tr)))
+      "disk" (when (empty? (:dev-name criteria)) (@tr [:subs-notif-disk-info]))
       "network-tx" (get-network-info-text criteria tr)
       "network-rx" (get-network-info-text criteria tr)
-      ""))
-  )
+      "")))
 
 
 (defn AddSubscriptionConfigModal
@@ -807,14 +811,20 @@
              [ui/TableCell {:collapsing true
                             :style      {:padding-bottom 8}} "Metric"]
              [ui/TableCell
-              [ui/Dropdown {:selection true
-                            :disabled  true
-                            :value     (:metric criteria)
-                            :options   (get criteria-metric-options collection)
-                            :on-change (ui-callback/value
-                                        #(on-change
-                                          :criteria {:metric %
-                                                     :kind   (criteria-metric-kind collection %)}))}]]]
+              [:div {:style {:display :flex
+                             :align-items :center
+                             :gap "0.3rem"}}
+               [ui/Dropdown {:selection true
+                             :disabled  true
+                             :value     (:metric criteria)
+                             :options   (get criteria-metric-options collection)
+                             :on-change (ui-callback/value
+                                         #(on-change
+                                           :criteria {:metric %
+                                                      :kind   (criteria-metric-kind collection %)}))}]
+               [:div {:style  {:white-space :normal
+                               :font-size "0.9rem"}}
+                (get-info-text criteria tr)]]]]
 
             (if-not (and (= collection "nuvlabox") (= (:metric criteria) "state"))
               [ui/TableRow

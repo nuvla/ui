@@ -1,5 +1,6 @@
 (ns sixsq.nuvla.ui.notifications.events
   (:require
+    [clojure.string :refer [blank?]]
     [cljs.spec.alpha :as s]
     [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
     [sixsq.nuvla.ui.cimi-api.effects :as cimi-api-fx]
@@ -168,9 +169,11 @@
 (reg-event-fx
  ::choose-custom-reset
  (fn [{{:keys [::spec/notification-subscription-config]} :db}]
-   (let [criteria (:criteria notification-subscription-config)
-         reset-in-days (or (:reset-in-days criteria) 1)]
-     (when (= (:reset-interval criteria) "month")
+   (let [criteria       (:criteria notification-subscription-config)
+         reset-interval (:reset-interval criteria)
+         reset-in-days  (or (:reset-in-days criteria) 1)]
+     (when (or (blank? reset-interval)
+               (= reset-interval "month"))
        (update-subscription-criteria-fx {:reset-interval (str reset-in-days "d")
                                          :reset-in-days reset-in-days})))))
 

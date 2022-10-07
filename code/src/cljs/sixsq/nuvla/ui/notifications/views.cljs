@@ -534,10 +534,10 @@
         reset-in-days         (or (:reset-in-days criteria) default-custom-interval)
         reset-interval-string (:reset-interval criteria)
         interface-text        (if
-                               (empty? (:dev-name criteria))
+                               (str/blank? (:dev-name criteria))
                                 (@tr [:subs-notif-network-info-default])
                                 (@tr [:subs-notif-network-info-specific]))
-        interval-text         (if (or (empty? reset-interval-string) (= "month" reset-interval-string))
+        interval-text         (if (or (str/blank? reset-interval-string) (= "month" reset-interval-string))
                                 (str (@tr [:subs-notif-network-reset-monthly]) " (" (@tr [:subs-notif-network-resets-on]) " " start-day-of-month ")")
                                 (str (@tr [:subs-notif-network-reset-custom]) " (" (@tr [:subs-notif-network-resets-after]) " " reset-in-days " " (@tr (if (= reset-in-days 1) [:day] [:days])) ")"))]
     (str interface-text " " interval-text)))
@@ -545,7 +545,7 @@
 (defn- get-info-text [criteria tr]
   (let [metric-name (:metric criteria)]
     (case metric-name
-      "disk" (when (empty? (:dev-name criteria)) (@tr [:subs-notif-disk-info]))
+      "disk" (when (str/blank? (:dev-name criteria)) (@tr [:subs-notif-disk-info]))
       "network-tx" (get-network-info-text criteria tr)
       "network-rx" (get-network-info-text criteria tr)
       "")))

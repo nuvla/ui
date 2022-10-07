@@ -161,7 +161,7 @@
   ::custom-days
   :<- [::criteria]
   (fn [criteria]
-    (some->> (criteria :reset-interval)
+    (some->> (:reset-interval criteria)
              (re-find #"^(\d{1,3})")
              first
              int)))

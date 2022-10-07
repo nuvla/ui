@@ -150,11 +150,29 @@
       (assoc-in db [::spec/notification-subscription-config key] value))))
 
 (reg-event-db
+ ::choose-monthly-reset
+ (fn [{:keys [::spec/notification-subscription-config] :as db}]
+   (let [criteria (:criteria notification-subscription-config)
+         new-reset-start-date (or (:reset-start-date criteria) 1)]
+     (when (not= (:reset-interval criteria) "month")
+       (update-in db [::spec/notification-subscription-config :criteria] merge {:reset-interval "month"
+                                                                              :reset-start-date new-reset-start-date})))))
+
+(reg-event-db
+ ::choose-custom-reset
+ (fn [{:keys [::spec/notification-subscription-config] :as db}]
+   (let [criteria (:criteria notification-subscription-config)
+         reset-in-days (or (:reset-in-days criteria) 1)]
+     (when (= (:reset-interval criteria) "month")
+       (update-in db [::spec/notification-subscription-config :criteria] merge {:reset-interval (str reset-in-days "d")
+                                                                                :reset-in-days reset-in-days})))))
+
+(reg-event-db
  ::update-custom-days
  (fn [db [_ value]]
    (let [custom-interval-days (str value "d")]
      (when (s/valid? ::spec/reset-interval custom-interval-days)
-       (assoc-in db [::spec/notification-subscription-config :criteria :reset-interval] custom-interval-days)))))
+       (update-in db [::spec/notification-subscription-config :criteria] merge {:reset-interval custom-interval-days :reset-in-days value})))))
 
 (reg-event-db
   ::update-custom-device-name

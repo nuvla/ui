@@ -84,9 +84,7 @@
 
 (defn PrincipalIcon
   [principal]
-  [ui/Icon {:name (if (str/starts-with? principal "user/")
-                    "user"
-                    "users")}])
+  [ui/Icon {:name (utils/id->icon principal)}])
 
 
 (defn OwnerItem
@@ -134,7 +132,6 @@
 
 (defn RightRow
   [{:keys [on-change read-only mode] :as opts} ui-acl row-number principal rights]
-
   (let [principal-name (subscribe [::session-subs/resolve-principal principal])]
     [ui/TableRow
 
@@ -163,71 +160,36 @@
 
 (defn DropdownPrincipals
   [_opts _ui-acl]
-  (let [open       (r/atom false)
-        peers      (subscribe [::session-subs/peers-options])
-        peers-opts (r/atom @peers)
-        groups     (subscribe [::session-subs/groups])
-        tr         (subscribe [::i18n-subs/tr])]
-    (fn [{:keys [on-change fluid value]
+  (let [tr          (subscribe [::i18n-subs/tr])
+        add-item    (r/atom nil)
+        on-add-item (ui-callback/value
+                      #(reset! add-item {:key   %
+                                         :value %
+                                         :text  %
+                                         :icon  (utils/id->icon %)}))
+        search      (fn [opts query-search]
+                      (->> opts
+                           (filter #(let [pattern (re-pattern
+                                                    (str "(?i).*" (general-utils/regex-escape query-search) ".*"))]
+                                      (or (re-matches pattern (.-text %))
+                                          (re-matches pattern (.-value %)))))
+                           clj->js))]
+    (fn [{:keys [on-change fluid]
           :or   {on-change #()
-                 fluid     false
-                 value     nil}}
+                 fluid     false}}
          ui-acl]
-      (let [used-principals (utils/acl-get-all-principals-set @ui-acl)]
-        [ui/Dropdown {:text      @(subscribe [::session-subs/resolve-principal value])
-                      :fluid     fluid
-                      :style     {:width "250px"}
-                      :on-open   #(reset! open true)
-                      :open      @open
-                      :upward    false
-                      :className "selection"
-                      :on-blur   #(reset! open false)
-                      :on-close  #()}
-
-         [ui/DropdownMenu {:style {:overflow-x "auto"
-                                   :min-height "250px"}}
-
-          [ui/DropdownHeader {:icon "user", :content (str/capitalize (@tr [:users]))}]
-
-          [ui/Input {:icon          "search"
-                     :icon-position "left"
-                     :name          "search"
-                     :auto-complete "off"
-                     :on-click      #(reset! open true)
-                     :on-change     (ui-callback/input-callback
-                                      (fn [value]
-                                        (reset!
-                                          peers-opts
-                                          (filter
-                                            #(re-matches
-                                               (re-pattern (str "(?i).*" (general-utils/regex-escape value) ".*"))
-                                               (str (:text %) (:value %)))
-                                            @peers))
-                                        ))}]
-
-          (doall
-            (for [{:keys [value text]} (->>
-                                         @peers-opts
-                                         (take 10)
-                                         (remove #(contains? used-principals (:value %))))]
-              ^{:key value}
-              [ui/DropdownItem {:text     (or text value)
-                                :on-click (fn []
-                                            (on-change value)
-                                            (reset! open false))}]))
-
-          [ui/DropdownDivider]
-
-          [ui/DropdownHeader {:icon "users", :content (str/capitalize (@tr [:groups]))}]
-
-          (doall
-            (for [{group-id :id group-name :name} (remove #(contains? used-principals (:id %)) @groups)]
-              ^{:key group-id}
-              [ui/DropdownItem {:text     (or group-name group-id)
-                                :on-click (fn []
-                                            (on-change group-id)
-                                            (reset! open false))}]))]]))))
-
+      (let [used-principals (utils/acl-get-all-principals-set @ui-acl)
+            options         (subscribe [::session-subs/peers-groups-options used-principals])]
+        [ui/Dropdown {:fluid           fluid
+                      :selection       true
+                      :style           {:width "350px"}
+                      :upward          false
+                      :options         (cond-> @options @add-item (conj @add-item))
+                      :search          search
+                      :allow-additions true
+                      :addition-label  (@tr [:add-by-user-group-id])
+                      :on-add-item     on-add-item
+                      :on-change       (ui-callback/value on-change)}]))))
 
 (defn AddRight
   [{:keys [on-change _mode] :as _opts} ui-acl]

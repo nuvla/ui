@@ -4,8 +4,11 @@
 
 ### Changed
 
-- NuvlaEdge overview - Shows last online times for offline edges #895
 - Dictionary - Replace module by application, typo fix, NuvlaEdge/Cloud order change #916
+- acl - Make possible add principals by user/group uuid
+- acl - Principals dropdown searchable with groups/user
+- Dev tools - Cloudflare preview integration
+- NuvlaEdge overview - Shows last online times for offline edges #895
 
 ## [2.32.7] - 2022-09-29
 

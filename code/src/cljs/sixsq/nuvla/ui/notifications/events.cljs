@@ -171,12 +171,14 @@
                          {:reset-interval (str reset-in-days "d")
                           :reset-in-days reset-in-days}]]]}))))
 
-(reg-event-db
+(reg-event-fx
  ::update-custom-days
- (fn [db [_ value]]
+ (fn [_ [_ value]]
    (let [custom-interval-days (str value "d")]
      (when (s/valid? ::spec/reset-interval custom-interval-days)
-       (update-in db [::spec/notification-subscription-config :criteria] merge {:reset-interval custom-interval-days :reset-in-days value})))))
+      {:fx [[:dispatch [::update-notification-subscription-config
+                         :criteria
+                         {:reset-interval custom-interval-days :reset-in-days value}]]]} ))))
 
 (reg-event-db
   ::update-custom-device-name

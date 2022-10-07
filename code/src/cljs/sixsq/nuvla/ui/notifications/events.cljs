@@ -162,7 +162,7 @@
 
 (reg-event-fx
  ::choose-custom-reset
- (fn [{ {:keys [::spec/notification-subscription-config] } :db}]
+ (fn [{{:keys [::spec/notification-subscription-config]} :db}]
    (let [criteria (:criteria notification-subscription-config)
          reset-in-days (or (:reset-in-days criteria) 1)]
      (when (= (:reset-interval criteria) "month")

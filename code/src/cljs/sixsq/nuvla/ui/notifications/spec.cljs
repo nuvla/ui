@@ -40,7 +40,7 @@
 (s/def ::window integer?)
 (s/def ::value-type utils-spec/nonblank-string)
 
-(def reset-interval-regex #"^(month|[1-9]{1,2}[0-9]d|[1-9]d)$")
+(def reset-interval-regex #"^(month|[1-9][0-9]{0,2}d)$")
 (s/def ::reset-interval #(re-matches reset-interval-regex %))
 
 (s/def ::reset-start-date #(and (integer? %)

@@ -183,7 +183,7 @@
    (let [custom-interval-days (str value "d")]
      (when (s/valid? ::spec/reset-interval custom-interval-days)
        (update-subscription-criteria-fx {:reset-interval custom-interval-days
-                                         :reset-in-days value})))))
+                                         :reset-in-days (js/Number value)})))))
 
 (reg-event-fx
  ::update-custom-device-name

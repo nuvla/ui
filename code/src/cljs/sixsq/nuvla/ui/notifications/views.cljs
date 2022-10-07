@@ -507,7 +507,7 @@
                         :label-position :right
                         :on-change (ui-callback/value #(dispatch [::events/update-notification-subscription-config
                                                                   :criteria
-                                                                  {:reset-start-date (clamp % 1 31)}]))}]]
+                                                                  {:reset-start-date (clamp (js/Number %) 1 31)}]))}]]
             [:div {:on-click #(dispatch [::events/choose-custom-reset])
                    :style {:align-self "end"}}
              [:input {:type :radio

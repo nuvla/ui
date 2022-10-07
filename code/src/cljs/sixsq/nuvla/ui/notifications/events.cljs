@@ -149,14 +149,16 @@
       (update-in db [::spec/notification-subscription-config key] merge value)
       (assoc-in db [::spec/notification-subscription-config key] value))))
 
-(reg-event-db
+(reg-event-fx
  ::choose-monthly-reset
- (fn [{:keys [::spec/notification-subscription-config] :as db}]
+ (fn [{{:keys [::spec/notification-subscription-config]} :db}]
    (let [criteria (:criteria notification-subscription-config)
          new-reset-start-date (or (:reset-start-date criteria) 1)]
      (when (not= (:reset-interval criteria) "month")
-       (update-in db [::spec/notification-subscription-config :criteria] merge {:reset-interval "month"
-                                                                              :reset-start-date new-reset-start-date})))))
+       {:fx [[:dispatch [::update-notification-subscription-config
+                         :criteria
+                         {:reset-interval "month"
+                          :reset-start-date new-reset-start-date}]]]}))))
 
 (reg-event-db
  ::choose-custom-reset

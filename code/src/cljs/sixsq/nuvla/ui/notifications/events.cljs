@@ -142,12 +142,14 @@
     (assoc db ::spec/notification-subscription-config subs-conf)))
 
 
-(reg-event-db
+(reg-event-fx
   ::update-notification-subscription-config
-  (fn [db [_ key value]]
-    (if (map? value)
-      (update-in db [::spec/notification-subscription-config key] merge value)
-      (assoc-in db [::spec/notification-subscription-config key] value))))
+  (fn [{db :db} [_ key value]]
+  (js/console.error "update-notification-subscription-config")
+    {:db (if (map? value)
+           (update-in db [::spec/notification-subscription-config key] merge value)
+           (assoc-in db [::spec/notification-subscription-config key] value))
+     :fx [[:dispatch [::validate-notification-subscription-config-form]]]}))
 
 (defn- update-subscription-criteria-fx [new-values]
   {:fx [[:dispatch [::update-notification-subscription-config
@@ -194,6 +196,7 @@
 (reg-event-db
   ::validate-notification-subscription-config-form
   (fn [db [_]]
+  (js/console.error "VALIDATING")
     (let [subs-config    (get db ::spec/notification-subscription-config)
           form-spec      ::spec/notification-subscription-config
           validate-form? (get db ::spec/validate-form?)

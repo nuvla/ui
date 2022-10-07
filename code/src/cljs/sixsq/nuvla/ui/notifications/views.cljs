@@ -486,54 +486,55 @@
             start-date-of-month (when monthly-reset? (or (:reset-start-date @criteria) 1))
             custom-interval-days @(subscribe [::subs/custom-days])]
         (when (metrics-with-reset-intervals (:metric @criteria))
-              [ui/TableCell {:col-span 2
-                             :class "font-weight-400"}
-               [:div {:style {:min-height 40}
-                      :class "grid-2-cols-responsive"}
-                [:div {:on-click #(dispatch [::events/choose-monthly-reset])}
-                 [:input {:type :radio
-                          :name :reset
-                          :checked monthly-reset?
-                          :id :monthly}]
-                 [:label {:for :monthly
-                          :style {:margin-left "0.5rem"}} (@tr [:subs-notif-reset-on-day])]
-                 [ui/Input {:type :number
-                            :value start-date-of-month
-                            :disabled custom-reset?
-                            :style {:justify-self :start
-                                    :margin-left "0.5rem"
-                                    :max-width "100px"}
-                            :label (@tr [:of-month])
-                            :label-position :right
-                            :on-change (ui-callback/value #(dispatch [::events/update-notification-subscription-config
-                                                                      :criteria
-                                                                      {:reset-start-date (clamp % 1 31)}]))}]]
-                [:div {:on-click #(dispatch [::events/choose-custom-reset])
-                       :style {:align-self "end"}}
-                 [:input {:type :radio
-                          :name :reset
-                          :checked custom-reset?
-                          :id :custom}]
-                 [:label {:for :custom
-                          :style {:margin-left "0.5rem"}} (str/capitalize (@tr [:subs-notif-custom-reset-after]))]
-                 [ui/Input {:type :number
-                            :value custom-interval-days
-                            :disabled monthly-reset?
-                            :style {:justify-self :start
-                                    :margin-left "0.5rem"
-                                    :max-width "100px"}
-                            :label (@tr [:days])
-                            :label-position :right
-                            :on-change (ui-callback/value #(dispatch [::events/update-custom-days (clamp % 1 999)]))}]]]])))))
+          [ui/TableCell {:col-span 2
+                         :class "font-weight-400"}
+           [:div {:style {:min-height 40}
+                  :class "grid-2-cols-responsive"}
+            [:div {:on-click #(dispatch [::events/choose-monthly-reset])}
+             [:input {:type :radio
+                      :name :reset
+                      :checked monthly-reset?
+                      :id :monthly}]
+             [:label {:for :monthly
+                      :style {:margin-left "0.5rem"}} (@tr [:subs-notif-reset-on-day])]
+             [ui/Input {:type :number
+                        :value start-date-of-month
+                        :disabled custom-reset?
+                        :style {:justify-self :start
+                                :margin-left "0.5rem"
+                                :max-width "100px"}
+                        :label (@tr [:of-month])
+                        :label-position :right
+                        :on-change (ui-callback/value #(dispatch [::events/update-notification-subscription-config
+                                                                  :criteria
+                                                                  {:reset-start-date (clamp % 1 31)}]))}]]
+            [:div {:on-click #(dispatch [::events/choose-custom-reset])
+                   :style {:align-self "end"}}
+             [:input {:type :radio
+                      :name :reset
+                      :checked custom-reset?
+                      :id :custom}]
+             [:label {:for :custom
+                      :style {:margin-left "0.5rem"}} (str/capitalize (@tr [:subs-notif-custom-reset-after]))]
+             [ui/Input {:type :number
+                        :value custom-interval-days
+                        :disabled monthly-reset?
+                        :style {:justify-self :start
+                                :margin-left "0.5rem"
+                                :max-width "100px"}
+                        :label (@tr [:days])
+                        :label-position :right
+                        :on-change (ui-callback/value #(dispatch [::events/update-custom-days (clamp % 1 999)]))}]]]])))))
 
 (defn- get-network-info-text [criteria tr]
-  (let [interface-text (if
+  (let [
+        interface-text (if
                         (empty? (:dev-name criteria))
                          (@tr [:subs-notif-network-info-default])
                          (@tr [:subs-notif-network-info-specific]))
         interval-text (if (= "month" (:reset-interval criteria))
-                        (str (@tr [:subs-notif-network-reset-monthly]) " (" (@tr [:subs-notif-network-resets-on]) " " (:reset-start-date criteria) ")")
-                        (str (@tr [:subs-notif-network-reset-custom]) " (" (@tr [:subs-notif-network-resets-after]) " " (:reset-in-days criteria) " " (:days criteria) " " (@tr [:days]) ")"))]
+                        (str (@tr [:subs-notif-network-reset-monthly]) " (" (@tr [:subs-notif-network-resets-on]) " " (or (:reset-start-date criteria) 1) ")")
+                        (str (@tr [:subs-notif-network-reset-custom]) " (" (@tr [:subs-notif-network-resets-after]) " " (:reset-in-days criteria) " " (@tr [:days]) ")"))]
     (str interface-text " " interval-text)))
 
 (defn- get-info-text [criteria tr]
@@ -553,8 +554,7 @@
         validate-form?      (subscribe [::subs/validate-form?])
         form-valid?         (subscribe [::subs/form-valid?])
         on-change           (fn [name-kw value]
-                              (dispatch [::events/update-notification-subscription-config name-kw value])
-                              (dispatch [::events/validate-notification-subscription-config-form]))
+                              (dispatch [::events/update-notification-subscription-config name-kw value]))
         notif-methods       (subscribe [::subs/notification-methods])
         collection          (subscribe [::subs/collection])
         criteria-metric     (subscribe [::subs/criteria-metric])
@@ -731,8 +731,7 @@
         validate-form?      (subscribe [::subs/validate-form?])
         form-valid?         (subscribe [::subs/form-valid?])
         on-change           (fn [name-kw value]
-                              (dispatch [::events/update-notification-subscription-config name-kw value])
-                              (dispatch [::events/validate-notification-subscription-config-form]))
+                              (dispatch [::events/update-notification-subscription-config name-kw value]))
         notif-methods       (subscribe [::subs/notification-methods])
         criteria-metric     (subscribe [::subs/criteria-metric])
         components-number   (subscribe [::subs/components-number])
@@ -1064,8 +1063,7 @@
         subs-by-parent        (subscribe [::subs/subscriptions-by-parent])
         subs-by-parent-counts (subscribe [::subs/subscriptions-by-parent-counts])
         on-change             (fn [name-kw value]
-                                (dispatch-sync [::events/update-notification-subscription-config name-kw value])
-                                (dispatch [::events/validate-notification-subscription-config-form]))]
+                                (dispatch [::events/update-notification-subscription-config name-kw value]))]
     (dispatch [::events/get-notification-subscription-configs])
     (dispatch-sync [::events/get-notification-subscriptions])
     (dispatch [::events/get-notification-methods])

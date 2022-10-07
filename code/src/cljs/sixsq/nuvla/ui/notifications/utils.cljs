@@ -56,6 +56,7 @@
         criteria (if (= "boolean" (:kind criteria))
                    (assoc criteria :value "true")
                    criteria)
+        criteria (dissoc criteria :reset-in-days)
         acl (get-in db [::spec/notification-subscription-config :acl])]
     (-> {}
         (assoc :name name)

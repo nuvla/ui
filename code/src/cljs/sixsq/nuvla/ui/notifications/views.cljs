@@ -521,7 +521,7 @@
                             :disabled monthly-reset?
                             :style {:justify-self :start
                                     :margin-left "0.5rem"
-                                    :max-width "75px"}
+                                    :max-width "100px"}
                             :label (@tr [:days])
                             :label-position :right
                             :on-change (ui-callback/value #(dispatch [::events/update-custom-days (clamp % 1 999)]))}]]]])))))

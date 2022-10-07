@@ -218,3 +218,12 @@ tr.active td {
 .font-weight-400 {
   font-weight: 400 !important;
 }
+
+@media only screen and (min-width: 600px) {
+  .grid-2-cols-responsive {
+    display: grid;
+    grid-template-columns: 45% 45%;
+    justify-content: space-between;
+    align-items: center;
+  }
+}

@@ -9,6 +9,7 @@
 - acl - Principals dropdown searchable with groups/user
 - Dev tools - Cloudflare preview integration
 - NuvlaEdge overview - Shows last online times for offline edges #895
+- NuvlaEdge overview - Shows engine versions on table view #909
 
 ## [2.32.7] - 2022-09-29
 

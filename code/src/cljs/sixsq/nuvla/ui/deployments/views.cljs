@@ -30,6 +30,17 @@
   []
   (dispatch [::events/refresh]))
 
+(defn FilterSummary
+  [{:keys [additional-filters-applied]}]
+  (when additional-filters-applied
+    [:div {:style {:padding-left "4px"
+                   :font-size "0.8rem"
+                   :inline-size "200px"
+                   :overflow-wrap :break-word}}
+     [:div {:style {:font-weight "bold"}} "Filter: "]
+     additional-filters-applied]))
+
+
 (defn ControlBar []
   (let [additional-filter (subscribe [::subs/additional-filter])
         filter-open?      (r/atom false)]
@@ -38,19 +49,20 @@
        [:div {:style {:display    :flex
                       :align-items :baseline}}
         [:div [full-text-search-plugin/FullTextSearch
-                {:db-path      [::spec/deployments-search]
-                 :change-event [::pagination-plugin/change-page
-                                [::spec/pagination] 1]
-                 :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))}]
-               [full-text-search-plugin/FilterSummary
-                 {:additional-filters-applied @additional-filter}]]
+               {:db-path      [::spec/deployments-search]
+                :change-event [::pagination-plugin/change-page
+                               [::spec/pagination] 1]
+                :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))}]]
         " "
         ^{:key (random-uuid)}
         [filter-comp/ButtonFilter
          {:resource-name  "deployment"
           :default-filter @additional-filter
           :open?          filter-open?
-          :on-done        #(dispatch [::events/set-additional-filter %])}]]])))
+          :on-done        #(dispatch [::events/set-additional-filter %])
+          :color-when-filter-active :green}]
+        (when (not (str/blank? @additional-filter)) [ui/Popup {:trigger (r/as-element [ui/Icon {:name "help circle"}])}
+                                                     [FilterSummary {:additional-filters-applied @additional-filter}]])]])))
 
 (defn BulkUpdateModal
   []

@@ -300,14 +300,15 @@
                        (reset! data init-data))
         open-fn     #(reset! open? true)]
     (when resource-name (dispatch [::cimi-events/get-resource-metadata resource-name]))
-    (fn [{:keys [resource-name open? _default-filter on-done]}]
+    (fn [{:keys [resource-name open? _default-filter on-done color-when-filter-active]}]
       (let [filter-string (utils/data->filter-str @data)
             error         (when (and @show-error? (not (str/blank? filter-string)))
                             (utils/filter-syntax-error filter-string))]
         [ui/Modal
          {:trigger    (r/as-element [ui/Button {:icon     "magic"
                                                 :disabled (nil? resource-name)
-                                                :on-click open-fn}])
+                                                :on-click open-fn
+                                                :color (when (not (str/blank? filter-string)) color-when-filter-active)}])
           :open       @open?
           :on-close   close-fn
           :close-icon true}

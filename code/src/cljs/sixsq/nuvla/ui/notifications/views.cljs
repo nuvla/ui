@@ -484,7 +484,7 @@
            [:div {:style {:min-height 40}
                   :class "grid-2-cols-responsive"}
             [:div {:on-click #(dispatch [::events/choose-monthly-reset])
-                   :style {:opacity (if monthly-reset? 1 0.6)}}
+                   :style {:opacity (if monthly-reset? 1 0.4)}}
              [:input {:type :radio
                       :name :reset
                       :checked monthly-reset?
@@ -505,7 +505,7 @@
                                                                   :criteria
                                                                   {:reset-start-date (js/Number %)}]))}]]
             [:div {:on-click #(dispatch [::events/choose-custom-reset])
-                   :style {:align-self "end" :opacity (if custom-reset? 1 0.6)}}
+                   :style {:align-self "end" :opacity (if custom-reset? 1 0.4)}}
              [:input {:type :radio
                       :name :reset
                       :checked custom-reset?

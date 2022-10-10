@@ -47,13 +47,13 @@
 (defn- clean-criteria
   [criteria]
   (let [metric-name (criteria :metric)
-        cr-cleaned (dissoc criteria :reset-start-date)]
+        cr-cleaned (dissoc criteria :reset-in-days)]
     (cond
       (metrics-with-reset-windows metric-name) (if (= (:reset-interval cr-cleaned) "month")
                                                  cr-cleaned
-                                                 (dissoc cr-cleaned :reset-in-days))
-      (= "disk" metric-name) (dissoc cr-cleaned :reset-interval :reset-in-days)
-      :else (dissoc cr-cleaned :dev-name :reset-interval :reset-in-days))))
+                                                 (dissoc cr-cleaned :reset-start-date))
+      (= "disk" metric-name) (dissoc cr-cleaned :reset-interval :reset-start-date)
+      :else (dissoc cr-cleaned :dev-name :reset-interval :reset-start-date))))
 
 (defn db->new-subscription-config
   [db]

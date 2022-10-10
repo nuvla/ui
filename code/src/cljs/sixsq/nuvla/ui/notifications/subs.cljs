@@ -162,7 +162,7 @@
  :<- [::criteria]
  (fn [criteria]
    (let [reset-interval (or (:reset-interval criteria) "")
-         parsed-days    (first (re-find #"^(\d{0,3})d" reset-interval))
+         parsed-days    (first (re-find #"^[\d{0,3}]d" reset-interval))
          reset-in-days  ((fnil js/Number 1) parsed-days)]
      reset-in-days)))
 

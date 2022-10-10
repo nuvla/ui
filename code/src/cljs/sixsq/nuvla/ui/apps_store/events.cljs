@@ -42,7 +42,8 @@
                            (case (::tab-plugin/active-tab tab)
                              :appstore (general-utils/published-query-string)
                              :myapps (general-utils/owner-like-query-string
-                                       (:active-claim session))
+                                       (or (:active-claim session)
+                                           (:user session)))
                              nil)
                            (full-text-search-plugin/filter-text
                              db [::spec/modules-search]))}

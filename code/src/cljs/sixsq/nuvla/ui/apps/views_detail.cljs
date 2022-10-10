@@ -1040,12 +1040,12 @@
             (@tr [:define-price])])
          [ui/Input {:labelPosition "right", :type "text"
                     :placeholder   (str/capitalize (@tr [:amount]))
+                    :disabled      (not @editable?)
                     :error         (not (s/valid? ::spec/cent-amount-daily amount))}
           [:input {:type          "number"
                    :step          1
                    :min           1
                    :default-value amount
-                   :read-only     (not @editable?)
                    :on-change     (ui-callback/input-callback
                                     #(do
                                        (dispatch [::events/cent-amount-daily
@@ -1061,18 +1061,19 @@
                   (general-utils/format "%.2f" (* amount 0.3))
                   "...")
                 "€/" (str/capitalize (@tr [:month])))]]
-         [:span
-          [ui/Checkbox {:label          (@tr [:follow-customer-trial])
-                        :defaultChecked follow-trial
-                        :toggle         true
-                        :on-change      (ui-callback/checked
-                                          #(do
-                                             (dispatch [::events/follow-customer-trial %1])
-                                             (dispatch [::main-events/changes-protection? true])
-                                             (dispatch [::events/validate-form])))}]
-          " "
-          [ui/Popup {:content (@tr [:follow-customer-trial-help])
-                     :trigger (r/as-element [ui/Icon {:name "info circle"}])}]]
+         (when @editable?
+           [:span
+           [ui/Checkbox {:label          (@tr [:follow-customer-trial])
+                         :defaultChecked follow-trial
+                         :toggle         true
+                         :on-change      (ui-callback/checked
+                                           #(do
+                                              (dispatch [::events/follow-customer-trial %1])
+                                              (dispatch [::main-events/changes-protection? true])
+                                              (dispatch [::events/validate-form])))}]
+           " "
+           [ui/Popup {:content (@tr [:follow-customer-trial-help])
+                      :trigger (r/as-element [ui/Icon {:name "info circle"}])}]])
          ]))))
 
 
@@ -1252,4 +1253,4 @@
                                                   :read-only     (not can-edit?)
                                                   :on-change     edit-event}
                              ui-acl]])
-                :key :share-pane}}))
+                :key     :share-pane}}))

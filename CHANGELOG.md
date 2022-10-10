@@ -4,7 +4,35 @@
 
 ### Changed
 
+- Dictionary - Replace module by application, typo fix, NuvlaEdge/Cloud order change #916
+- acl - Make possible add principals by user/group uuid
+- acl - Principals dropdown searchable with groups/user
+- Dev tools - Cloudflare preview integration
+- NuvlaEdge overview - Shows last online times for offline edges #895
 - Edges and Deployments - Adds filter indicator to full text search
+
+
+## [2.32.7] - 2022-09-29
+
+### Changed
+
+- Deployment detail - Page not refreshed bugfix #906
+- Profile - Let user choose Sepa payment again
+
+## [2.32.6] - 2022-09-28
+
+### Changed
+
+- Home - Update old links to point to new NuvlaEdge documentation
+- Profile - Groups tabs warns user of unsaved changes
+- Apps details - Adds button enabling re-opening comparison after closing it
+- App store - Only shows published apps on initial load bugfix #900
+- App store - My apps should filter on active-claim bugfix
+- App store - Show published tick also in my apps tab bugfix
+- App details - Pricing tab Follow user trial period toggle button not shown for read only app bugfix #897
+- NuvlaEdge add modal - Copies correct value to clipboard for cronjob when host level management enabled bugfix #879
+- NuvlaEdge add modal - Shows correct value for cronjob in hover popup bugfix
+- Global - Adds cursor style pointer to copy to clipboard component bugfix
 
 ## [2.32.5] - 2022-09-19
 

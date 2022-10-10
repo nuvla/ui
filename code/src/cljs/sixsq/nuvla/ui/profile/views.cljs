@@ -12,6 +12,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
+    [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.plugins.tab :as tab-plugin]
@@ -62,6 +63,13 @@
     :large-screen 2
     1))
 
+(def group-changed! (r/atom {}))
+(defn set-group-changed! [id] (swap! group-changed! assoc id true))
+(defn disable-changes-protection!
+  [id]
+  (swap! group-changed! assoc id false)
+  (when-not (some true? (vals @group-changed!))
+    (dispatch [::main-events/changes-protection? false])))
 
 (defn AddGroupButton
   []
@@ -722,9 +730,9 @@
            [ui/FormRadio {:label     (@tr [:credit-card])
                           :checked   (= @payment-form "card")
                           :on-change (ui-callback/value #(reset! payment-form "card"))}]
-           #_[ui/FormRadio {:label     (@tr [:bank-account])
-                            :checked   (= @payment-form "sepa_debit")
-                            :on-change (ui-callback/value #(reset! payment-form "sepa_debit"))}]]
+           [ui/FormRadio {:label     (@tr [:bank-account])
+                          :checked   (= @payment-form "sepa_debit")
+                          :on-change (ui-callback/value #(reset! payment-form "sepa_debit"))}]]
           [ui/FormField {:width 9}
            [PaymentMethodInput
             (cond-> {:type         @payment-form
@@ -1182,7 +1190,7 @@
 
 
 (defn GroupMember
-  [principal members editable? changed?]
+  [id principal members editable?]
   (let [principal-name (subscribe [::session-subs/resolve-principal principal])]
     [ui/ListItem
      [ui/ListContent
@@ -1197,7 +1205,8 @@
                    :size     "small"
                    :color    "red"
                    :on-click (fn [_] (swap! members #(vec (disj (set @members) principal)))
-                               (reset! changed? true))}])]]]))
+                               (dispatch [::main-events/changes-protection? true])
+                               (set-group-changed! id))}])]]]))
 
 
 (defn GroupMembers
@@ -1207,7 +1216,7 @@
         users       (:users group)
         members     (r/atom users)
         acl         (r/atom (:acl group))
-        changed?    (r/atom false)
+        changed?    (r/cursor group-changed! [(:id group)])
         show-acl?   (r/atom false)
         invite-user (r/atom nil)
         add-user    (r/atom nil)]
@@ -1233,7 +1242,8 @@
                                      :active?       show-acl?
                                      :on-change     #(do
                                                        (reset! acl %)
-                                                       (reset! changed? true))}]]])]
+                                                       (set-group-changed! id)
+                                                       (dispatch [::main-events/changes-protection? true]))}]]])]
          [ui/TableBody
           [ui/TableRow
            [ui/TableCell
@@ -1245,7 +1255,7 @@
               [ui/ListSA
                (for [m @members]
                  ^{:key m}
-                 [GroupMember m members editable? changed?])])]]
+                 [GroupMember id m members editable?])])]]
           (when editable?
             [ui/TableRow
              [ui/TableCell
@@ -1261,7 +1271,8 @@
                             :on-click #(do
                                          (swap! members conj @add-user)
                                          (reset! add-user nil)
-                                         (reset! changed? true))}]
+                                         (set-group-changed! id)
+                                         (dispatch [::main-events/changes-protection? true]))}]
                [:span ff/nbsp]
                [:span ff/nbsp]
                [ui/Input {:placeholder (@tr [:invite-by-email])
@@ -1281,7 +1292,7 @@
                            :icon     "save"
                            :disabled (not @changed?)
                            :on-click #(do (dispatch [::events/edit-group (assoc group :users @members, :acl @acl)])
-                                          (reset! changed? false))}]]])]]))))
+                                          (disable-changes-protection! id))}]]])]]))))
 
 
 (defn GroupMembersSegment

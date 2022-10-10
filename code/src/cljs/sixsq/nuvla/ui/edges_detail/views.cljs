@@ -233,7 +233,7 @@
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
                             [:span (str (@tr [:nuvlabox-update-error-content])) " "
-                             [:a {:href   "https://docs.nuvla.io/nuvlabox/nuvlabox-engine/v2/installation/"
+                             [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
                                   :target "_blank"}
                               (str/capitalize (@tr [:see-more]))]])}])
              (when (and (some? target-version) (is-old-version? target-version))
@@ -1103,13 +1103,7 @@
          [:p (tr [:nuvlaedge-next-telemetry-expected])
           next-heartbeat-times-ago "."])
        [:p (tr [:nuvlaedge-last-telemetry-was])
-        (time/ago
-          (->> refresh-interval
-               (* 2)
-               (+ 10)
-               (* 1000)
-               (time/subtract-milliseconds next-heartbeat-moment)
-               ) locale) "."]])))
+        (utils/last-time-online next-heartbeat-moment refresh-interval locale) "."]])))
 
 (defn StatusNotes
   [{:keys [status-notes] :as _nb-status}]

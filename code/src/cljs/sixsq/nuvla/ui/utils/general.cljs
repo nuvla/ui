@@ -203,12 +203,18 @@
   (let [[common-map template-map] (split-form-data form-data)]
     (assoc common-map :template template-map)))
 
+(defn id-split
+  [id f]
+  (cond-> (str/split id #"/")
+          f f))
 
 (defn id->uuid
   [id]
-  (let [[_ uuid] (str/split id #"/")]
-    uuid))
+  (id-split id second))
 
+(defn id->resource-name
+  [id]
+  (id-split id first))
 
 (defn id->short-uuid
   [id]

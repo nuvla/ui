@@ -220,7 +220,7 @@
                [ui/MessageContent
                 [ui/MessageHeader [:span (@tr [:nuvlabox-playbooks-cronjob]) " "
                                    (when @playbooks-cronjob
-                                     [ui/Popup {:content        @playbooks-cronjob
+                                     [ui/Popup {:content        (@playbooks-cronjob :cronjob)
                                                 :wide           "very"
                                                 :position       "bottom center"
                                                 :hide-on-scroll true
@@ -233,7 +233,7 @@
                   [:span (str (@tr [:nuvlabox-playbooks-cronjob-ready])
                               " ")
                    (values/copy-value-to-clipboard
-                     "" @playbooks-cronjob (@tr [:copy-to-clipboard]) true)]
+                    "" (@playbooks-cronjob :cronjob) (@tr [:copy-to-clipboard]) true)]
                   (@tr [:nuvlabox-playbooks-cronjob-wait]))]])
 
             (when @new-private-ssh-key
@@ -732,8 +732,10 @@
 
 
 (defn NuvlaboxRow
-  [{:keys [id name description created state tags online] :as _nuvlabox} managers]
-  (let [uuid (general-utils/id->uuid id)]
+  [{:keys [id name description created state tags online refresh-interval] :as _nuvlabox} managers]
+  (let [uuid                  (general-utils/id->uuid id)
+        locale                (subscribe [::i18n-subs/locale])
+        next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])]
     [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
@@ -743,6 +745,7 @@
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
      [ui/TableCell (values/format-created created)]
+     [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval @locale))]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)
@@ -771,14 +774,15 @@
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
         managers          (distinct
-                            (apply concat
-                                   (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
+                           (apply concat
+                                  (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
         current-cluster   (subscribe [::subs/nuvlabox-cluster])
         selected-nbs      (if @current-cluster
                             (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
                                                        (:nuvlabox-workers @current-cluster))]
                               (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
-                            (:resources @nuvlaboxes))]
+                            (:resources @nuvlaboxes))
+        tr                (subscribe [::i18n-subs/tr])]
     [:div style/center-items
      [ui/Table {:compact "very", :selectable true}
       [ui/TableHeader
@@ -787,7 +791,8 @@
         [ui/TableHeaderCell "state"]
         [ui/TableHeaderCell "name"]
         [ui/TableHeaderCell "description"]
-        [ui/TableHeaderCell "created"]
+        [ui/TableHeaderCell (@tr [:created])]
+        [ui/TableHeaderCell (@tr [:last-online])]
         [ui/TableHeaderCell "tags"]
         [ui/TableHeaderCell "manager"]]]
 
@@ -817,8 +822,8 @@
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
         managers          (distinct
-                            (apply concat
-                                   (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
+                           (apply concat
+                                  (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
         selected-nbs      (:resources @nuvlaboxes)]
     [:div style/center-items
      [ui/CardGroup {:centered    true

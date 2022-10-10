@@ -478,12 +478,13 @@
 
 (defn- ResetIntervalOptions []
   (let [tr                   (subscribe [::i18n-subs/tr])
-        criteria             (subscribe [::subs/criteria])]
+        criteria             (subscribe [::subs/criteria])
+        validate-form?       (subscribe [::subs/validate-form?])]
     (fn []
       (let [reset-interval (:reset-interval @criteria)
             monthly-reset? (or (nil? reset-interval) (= reset-interval "month"))
             custom-reset? (not monthly-reset?)
-            start-date-of-month (when monthly-reset? (or (:reset-start-date @criteria) 1))
+            start-date-of-month (or (:reset-start-date @criteria) 1)
             custom-interval-days @(subscribe [::subs/custom-days])]
         (when (metrics-with-reset-intervals (:metric @criteria))
           [ui/TableCell {:col-span 2
@@ -497,8 +498,10 @@
                       :id :monthly}]
              [:label {:for :monthly
                       :style {:margin-left "0.5rem"}} (@tr [:subs-notif-reset-on-day])]
-             [ui/Input {:type :number
-                        :value start-date-of-month
+             [ui/Input {:error (and monthly-reset?
+                                    @validate-form?
+                                    (not (s/valid? ::spec/reset-start-date start-date-of-month)))
+                        :default-value start-date-of-month
                         :disabled custom-reset?
                         :style {:justify-self :start
                                 :margin-left "0.5rem"
@@ -507,7 +510,7 @@
                         :label-position :right
                         :on-change (ui-callback/value #(dispatch [::events/update-notification-subscription-config
                                                                   :criteria
-                                                                  {:reset-start-date (clamp (js/Number %) 1 31)}]))}]]
+                                                                  {:reset-start-date (js/Number %)}]))}]]
             [:div {:on-click #(dispatch [::events/choose-custom-reset])
                    :style {:align-self "end"}}
              [:input {:type :radio
@@ -516,15 +519,15 @@
                       :id :custom}]
              [:label {:for :custom
                       :style {:margin-left "0.5rem"}} (str/capitalize (@tr [:subs-notif-custom-reset-after]))]
-             [ui/Input {:type :number
-                        :value custom-interval-days
+             [ui/Input {:error (and custom-reset? @validate-form? (not (s/valid? ::spec/reset-interval reset-interval)))
+                        :default-value (or custom-interval-days 1)
                         :disabled monthly-reset?
                         :style {:justify-self :start
                                 :margin-left "0.5rem"
                                 :max-width "100px"}
                         :label (@tr [:days])
                         :label-position :right
-                        :on-change (ui-callback/value #(dispatch [::events/update-custom-days (clamp % 1 999)]))}]]]])))))
+                        :on-change (ui-callback/value #(dispatch [::events/update-custom-days %]))}]]]])))))
 
 (def default-start-date 1)
 (def default-custom-interval 1)

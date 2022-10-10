@@ -161,10 +161,9 @@
   ::custom-days
   :<- [::criteria]
   (fn [criteria]
-    (some->> (:reset-interval criteria)
-             (re-find #"^(\d{1,3})")
-             first
-             int)))
+  (let [reset-interval (or (:reset-interval criteria) "")
+        reset-in-days  (js/Number (first (re-find #"^(\d{1,3})d" reset-interval)))]
+    reset-in-days)))
 
 
 (reg-sub

@@ -179,10 +179,10 @@
 (reg-event-fx
  ::update-custom-days
  (fn [_ [_ value]]
-   (let [custom-interval-days (str value "d")]
-     (when (s/valid? ::spec/reset-interval custom-interval-days)
-       (update-subscription-criteria-fx {:reset-interval custom-interval-days
-                                         :reset-in-days (js/Number value)})))))
+   (let [new-custom-days (js/Number value)
+         custom-interval-days (str new-custom-days "d")]
+     (update-subscription-criteria-fx {:reset-interval custom-interval-days
+                                       :reset-in-days new-custom-days}))))
 
 (reg-event-fx
  ::update-custom-device-name

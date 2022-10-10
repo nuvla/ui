@@ -359,8 +359,8 @@
   {"nuvlabox"               {:load  (map (fn [x] {:key x :value x :text x}) [">" "<"])
                              :ram   (map (fn [x] {:key x :value x :text x}) [">" "<"])
                              :disk  (map (fn [x] {:key x :value x :text x}) [">" "<"])
-                             :network-rx (map (fn [x] {:key x :value x :text x}) ["<"])
-                             :network-tx (map (fn [x] {:key x :value x :text x}) ["<"])
+                             :network-rx (map (fn [x] {:key x :value x :text x}) [">"])
+                             :network-tx (map (fn [x] {:key x :value x :text x}) [">"])
                              :state ((get-in criteria-condition-type ["nuvlabox" :state])
                                      criteria-conditions)}
    "infrastructure-service" {:status ((get-in criteria-condition-type ["infrastructure-service" :status])
@@ -660,7 +660,7 @@
                                                           :kind   (criteria-metric-kind @collection %)
                                                           :reset-interval "month"
                                                           :reset-start-date 1
-                                                          :condition "<"}
+                                                          :condition ">"}
                                                          {:metric %
                                                           :kind   (criteria-metric-kind @collection %)}))))}]
                [:div {:style  {:white-space :normal

@@ -491,13 +491,14 @@
                          :class "font-weight-400"}
            [:div {:style {:min-height 40}
                   :class "grid-2-cols-responsive"}
-            [:div {:on-click #(dispatch [::events/choose-monthly-reset])}
+            [:div {:on-click #(dispatch [::events/choose-monthly-reset])
+                   :style {:opacity (if monthly-reset? 1 0.6)}}
              [:input {:type :radio
                       :name :reset
                       :checked monthly-reset?
                       :id :monthly}]
              [:label {:for :monthly
-                      :style {:margin-left "0.5rem"}} (@tr [:subs-notif-reset-on-day])]
+                      :style {:margin-left "0.5rem" }} (@tr [:subs-notif-reset-on-day])]
              [ui/Input {:error (and monthly-reset?
                                     @validate-form?
                                     (not (s/valid? ::spec/reset-start-date start-date-of-month)))
@@ -512,7 +513,7 @@
                                                                   :criteria
                                                                   {:reset-start-date (js/Number %)}]))}]]
             [:div {:on-click #(dispatch [::events/choose-custom-reset])
-                   :style {:align-self "end"}}
+                   :style {:align-self "end" :opacity (if custom-reset? 1 0.6)}}
              [:input {:type :radio
                       :name :reset
                       :checked custom-reset?

@@ -335,15 +335,6 @@
    "infrastructure-service" [{:key "status" :text "status" :value "status"}]
    "data-record"            [{:key "content-type" :text "content-type" :value "content-type"}]})
 
-(def criteria-metric->translation-info-key
-  {"load"  [:subs-notif-load-info]
-   "ram"   [:subs-notif-ram-info]
-   "disk"  [:subs-notif-disk-info]
-   "network-rx" [:subs-notif-network-info]
-   "network-tx" [:subs-notif-network-info]
-   "state" [:subs-notif-state-info]
-   "status" [:subs-notif-status-info]
-   "content-type" [:subs-notif-content-info]})
 
 (def criteria-conditions
   {:numeric (map (fn [x] {:key x :value x :text x}) [">" "<" "=" "!="])
@@ -367,8 +358,8 @@
   {"nuvlabox"               {:load  (map (fn [x] {:key x :value x :text x}) [">" "<"])
                              :ram   (map (fn [x] {:key x :value x :text x}) [">" "<"])
                              :disk  (map (fn [x] {:key x :value x :text x}) [">" "<"])
-                             :network-rx (map (fn [x] {:key x :value x :text x}) [">" "<"])
-                             :network-tx (map (fn [x] {:key x :value x :text x}) [">" "<"])
+                             :network-rx (map (fn [x] {:key x :value x :text x}) ["<"])
+                             :network-tx (map (fn [x] {:key x :value x :text x}) ["<"])
                              :state ((get-in criteria-condition-type ["nuvlabox" :state])
                                      criteria-conditions)}
    "infrastructure-service" {:status ((get-in criteria-condition-type ["infrastructure-service" :status])
@@ -417,6 +408,9 @@
                                       (fn [value] (swap! value-options #(conj @value-options value))))
                     :options        options}])))
 
+(def metric-name->default-condition
+  {"network-tx" "<"
+   "network-rx" "<"})
 
 (defn ConditionRow
   [metric-name condition collection on-change validate-form?]
@@ -425,10 +419,12 @@
                   :style      {:padding-bottom 8}} "Condition"]
    [ui/TableCell
     [ui/Dropdown {:selection true
+                  :disabled (boolean (metric-name->default-condition metric-name))
                   :options   (vec
                                ((keyword metric-name)
                                 (get criteria-condition-options collection)))
                   :error     (and validate-form? (not (seq condition)))
+                  :value     condition
                   :on-change (ui-callback/value
                                #(on-change :criteria {:condition %}))}]]])
 
@@ -469,10 +465,6 @@
                      :default-value (or (:dev-name @criteria) "")
                      :on-change (ui-callback/value #(dispatch [::events/update-custom-device-name %]))
                      :style {:flex 1}}])]])))))
-
-(defn- clamp [n lower upper]
-  (max (min n upper) lower))
-
 
 (def metrics-with-reset-intervals #{"network-rx" "network-tx"})
 
@@ -661,7 +653,8 @@
                                                          {:metric %
                                                           :kind   (criteria-metric-kind @collection %)
                                                           :reset-interval "month"
-                                                          :reset-start-date 1}
+                                                          :reset-start-date 1
+                                                          :condition "<"}
                                                          {:metric %
                                                           :kind   (criteria-metric-kind @collection %)}))))}]
                [:div {:style  {:white-space :normal

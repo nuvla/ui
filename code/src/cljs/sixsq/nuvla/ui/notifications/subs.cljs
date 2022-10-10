@@ -158,12 +158,13 @@
     (get-in db [::spec/notification-subscription-config :criteria])))
 
 (reg-sub
-  ::custom-days
-  :<- [::criteria]
-  (fn [criteria]
-  (let [reset-interval (or (:reset-interval criteria) "")
-        reset-in-days  (js/Number (first (re-find #"^(\d{1,3})d" reset-interval)))]
-    reset-in-days)))
+ ::custom-days
+ :<- [::criteria]
+ (fn [criteria]
+   (let [reset-interval (or (:reset-interval criteria) "")
+         parsed-days    (first (re-find #"^(\d{0,3})d" reset-interval))
+         reset-in-days  ((fnil js/Number 1) parsed-days)]
+     reset-in-days)))
 
 
 (reg-sub

@@ -2,6 +2,7 @@
   (:require
     [re-frame.core :refer [reg-sub]]
     [sixsq.nuvla.ui.deployments.spec :as spec]
+    [sixsq.nuvla.ui.filter-comp.utils :refer [filter-str->data]]
     [sixsq.nuvla.ui.deployments.utils :as utils]))
 
 (reg-sub
@@ -23,6 +24,12 @@
   ::additional-filter
   (fn [db]
     (::spec/additional-filter db)))
+
+(reg-sub
+  ::additional-filter-active
+  :<- [::additional-filter]
+  (fn [additional-filter]
+    (boolean (some-> additional-filter (filter-str->data)))))
 
 (reg-sub
   ::view

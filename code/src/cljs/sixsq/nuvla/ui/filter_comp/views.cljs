@@ -308,7 +308,7 @@
          {:trigger    (r/as-element [ui/Button {:icon     "magic"
                                                 :disabled (nil? resource-name)
                                                 :on-click open-fn
-                                                :color (when (not (str/blank? filter-string)) color-when-filter-active)}])
+                                                :color color-when-filter-active}])
           :open       @open?
           :on-close   close-fn
           :close-icon true}

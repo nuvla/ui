@@ -43,7 +43,8 @@
 
 (defn ControlBar []
   (let [additional-filter (subscribe [::subs/additional-filter])
-        filter-open?      (r/atom false)]
+        filter-open?      (r/atom false)
+        active-filter?    (subscribe [::subs/additional-filter-active])]
     (fn []
       [ui/GridColumn {:width 4}
        [:div {:style {:display    :flex
@@ -60,8 +61,8 @@
           :default-filter @additional-filter
           :open?          filter-open?
           :on-done        #(dispatch [::events/set-additional-filter %])
-          :color-when-filter-active :green}]
-        (when (not (str/blank? @additional-filter)) [ui/Popup {:trigger (r/as-element [ui/Icon {:name "help circle"}])}
+          :color-when-filter-active (when @active-filter? :green)}]
+        (when @active-filter? [ui/Popup {:trigger (r/as-element [:div {:style {:font-size "0.8rem"}} "Filtered" [ui/Icon {:name "help" :color :green}]])}
                                                      [FilterSummary {:additional-filters-applied @additional-filter}]])]])))
 
 (defn BulkUpdateModal

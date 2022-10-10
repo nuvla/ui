@@ -47,9 +47,6 @@
                                 (< 0 %)
                                 (< % 32)))
 
-(s/def ::reset-in-days #(and (integer? %)
-                                (< 0 %)
-                                (< % 1000)))
 
 (s/def ::dev-name string?)
 
@@ -61,7 +58,6 @@
                    ::value
                    ::reset-interval
                    ::reset-start-date
-                   ::reset-in-days
                    ::dev-name
                    ::value-type]))
 

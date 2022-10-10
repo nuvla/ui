@@ -31,6 +31,17 @@
     (some-> (get next-heartbeats nuvlabox-id) time/parse-iso8601)))
 
 (reg-sub
+  ::nuvlaboxes-engine-versions
+  (fn [db]
+    (::spec/nuvlaboxes-engine-versions db)))
+
+(reg-sub
+  ::engine-version
+  :<- [::nuvlaboxes-engine-versions]
+  (fn [engine-versions [_ nuvlabox-id]]
+    (get engine-versions nuvlabox-id)))
+
+(reg-sub
   ::nuvlabox-locations
   ::spec/nuvlabox-locations)
 

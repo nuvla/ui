@@ -106,9 +106,9 @@
     (when (seq nuvlaboxes)
       {::cimi-api-fx/search
        [:nuvlabox-status
-        {:select "parent,next-heartbeat,id"
+        {:select "parent,next-heartbeat,id,nuvlabox-engine-version,online"
          :filter (general-utils/join-and
-                   "online=false"
+                   (general-utils/join-or "online=false" "online=true")
                    (apply general-utils/join-or
                           (map #(str "parent='" (:id %) "'") nuvlaboxes)))}
         #(dispatch [::set-nuvlaboxes-next-heartbeats %])]})))
@@ -124,10 +124,19 @@
                                      status (str " (" status ")"))
                     :content message
                     :type    :error})])
-      {:db (assoc db ::spec/next-heartbeats-offline-edges (zipmap
-                                                            (map :parent resources)
-                                                            (map :next-heartbeat resources))
-                     ::main-spec/loading? false)})))
+      {:db (assoc db ::spec/next-heartbeats-offline-edges (as-> (filter (fn [edge] (= (:online edge) false)) resources) offline-edges
+                                                            (zipmap
+                                                             (map :parent offline-edges)
+                                                             (map :next-heartbeat offline-edges)))
+                  ::main-spec/loading? false)
+       :fx [[:dispatch [::set-nuvlaboxes-engine-versions resources]]]})))
+
+(reg-event-fx
+  ::set-nuvlaboxes-engine-versions
+  (fn [{:keys [db]} [_ nuvlaboxes]]
+    {:db (assoc db ::spec/nuvlaboxes-engine-versions (zipmap
+                                                      (map :parent nuvlaboxes)
+                                                      (map :nuvlabox-engine-version nuvlaboxes)))}))
 
 (reg-event-fx
   ::get-nuvlabox-locations

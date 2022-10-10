@@ -735,7 +735,8 @@
   [{:keys [id name description created state tags online refresh-interval] :as _nuvlabox} managers]
   (let [uuid                  (general-utils/id->uuid id)
         locale                (subscribe [::i18n-subs/locale])
-        next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])]
+        next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
+        engine-version        @(subscribe [::subs/engine-version id])]
     [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
@@ -746,6 +747,7 @@
      [ui/TableCell description]
      [ui/TableCell (values/format-created created)]
      [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval @locale))]
+     [ui/TableCell engine-version]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)
@@ -793,6 +795,7 @@
         [ui/TableHeaderCell "description"]
         [ui/TableHeaderCell (@tr [:created])]
         [ui/TableHeaderCell (@tr [:last-online])]
+        [ui/TableHeaderCell (@tr [:version])]
         [ui/TableHeaderCell "tags"]
         [ui/TableHeaderCell "manager"]]]
 

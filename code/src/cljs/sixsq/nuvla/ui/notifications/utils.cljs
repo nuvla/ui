@@ -42,6 +42,19 @@
                       (assoc-in [:criteria :metric] "content-type"))
     :else m))
 
+(def metrics-with-reset-windows #{"network-rx" "network-tx"})
+
+(defn- clean-criteria
+  [criteria]
+  (let [metric-name (criteria :metric)
+        cr-cleaned (dissoc criteria :reset-start-date)]
+    (cond
+      (metrics-with-reset-windows metric-name) (if (= (:reset-interval cr-cleaned) "month")
+                                                 cr-cleaned
+                                                 (dissoc cr-cleaned :reset-in-days))
+      (= "disk" metric-name) (dissoc cr-cleaned :reset-interval :reset-in-days)
+      :else (dissoc cr-cleaned :dev-name :reset-interval :reset-in-days))))
+
 (defn db->new-subscription-config
   [db]
   (let [name (get-in db [::spec/notification-subscription-config :name])
@@ -53,10 +66,7 @@
         method-ids (get-in db [::spec/notification-subscription-config :method-ids])
         enabled (get-in db [::spec/notification-subscription-config :enabled])
         criteria (get-in db [::spec/notification-subscription-config :criteria])
-        criteria (if (= "boolean" (:kind criteria))
-                   (assoc criteria :value "true")
-                   criteria)
-        criteria (dissoc criteria :reset-in-days)
+        criteria (clean-criteria criteria)
         acl (get-in db [::spec/notification-subscription-config :acl])]
     (-> {}
         (assoc :name name)

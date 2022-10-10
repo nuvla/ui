@@ -13,6 +13,7 @@
     [sixsq.nuvla.ui.notifications.events :as events]
     [sixsq.nuvla.ui.notifications.spec :as spec]
     [sixsq.nuvla.ui.notifications.subs :as subs]
+    [sixsq.nuvla.ui.notifications.utils :refer [metrics-with-reset-windows]]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -466,7 +467,6 @@
                      :on-change (ui-callback/value #(dispatch [::events/update-custom-device-name %]))
                      :style {:flex 1}}])]])))))
 
-(def metrics-with-reset-intervals #{"network-rx" "network-tx"})
 
 (defn- ResetIntervalOptions []
   (let [tr                   (subscribe [::i18n-subs/tr])
@@ -478,7 +478,7 @@
             custom-reset? (not monthly-reset?)
             start-date-of-month (or (:reset-start-date @criteria) 1)
             custom-interval-days @(subscribe [::subs/custom-days])]
-        (when (metrics-with-reset-intervals (:metric @criteria))
+        (when (metrics-with-reset-windows (:metric @criteria))
           [ui/TableCell {:col-span 2
                          :class "font-weight-400"}
            [:div {:style {:min-height 40}
@@ -512,7 +512,8 @@
                       :id :custom}]
              [:label {:for :custom
                       :style {:margin-left "0.5rem"}} (str/capitalize (@tr [:subs-notif-custom-reset-after]))]
-             [ui/Input {:error (and custom-reset? @validate-form? (not (s/valid? ::spec/reset-interval reset-interval)))
+             [ui/Input {:type :number
+                        :error (and custom-reset? @validate-form? (not (s/valid? ::spec/reset-interval reset-interval)))
                         :default-value (or custom-interval-days 1)
                         :disabled monthly-reset?
                         :style {:justify-self :start

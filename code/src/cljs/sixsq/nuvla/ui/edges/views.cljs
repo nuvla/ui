@@ -26,7 +26,8 @@
     [sixsq.nuvla.ui.utils.style :as style]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.utils.zip :as zip]))
+    [sixsq.nuvla.ui.utils.zip :as zip]
+    [sixsq.nuvla.ui.utils.form-fields :as ff]))
 
 
 (def view-type (r/atom :cards))
@@ -732,7 +733,7 @@
 
 
 (defn NuvlaboxRow
-  [{:keys [id name description created state tags online refresh-interval] :as _nuvlabox} managers]
+  [{:keys [id name description created state tags online refresh-interval version] :as _nuvlabox} managers]
   (let [uuid                  (general-utils/id->uuid id)
         locale                (subscribe [::i18n-subs/locale])
         next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
@@ -747,7 +748,7 @@
      [ui/TableCell description]
      [ui/TableCell (values/format-created created)]
      [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval @locale))]
-     [ui/TableCell engine-version]
+     [ui/TableCell (or engine-version (str version ".x.x"))]
      [ui/TableCell [uix/Tags tags]]
      [ui/TableCell {:collapsing true}
       (when (some #{id} managers)
@@ -795,7 +796,7 @@
         [ui/TableHeaderCell "description"]
         [ui/TableHeaderCell (@tr [:created])]
         [ui/TableHeaderCell (@tr [:last-online])]
-        [ui/TableHeaderCell (@tr [:version])]
+        [ui/TableHeaderCell [:span (@tr [:version]) (ff/help-popup (@tr [:edges-version-info]))]]
         [ui/TableHeaderCell "tags"]
         [ui/TableHeaderCell "manager"]]]
 

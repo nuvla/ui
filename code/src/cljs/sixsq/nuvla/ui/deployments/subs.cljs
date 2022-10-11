@@ -1,8 +1,9 @@
 (ns sixsq.nuvla.ui.deployments.subs
   (:require
-    [re-frame.core :refer [reg-sub]]
+    [re-frame.core :refer [reg-sub subscribe]]
     [sixsq.nuvla.ui.deployments.spec :as spec]
-    [sixsq.nuvla.ui.deployments.utils :as utils]))
+    [sixsq.nuvla.ui.deployments.utils :as utils]
+    [sixsq.nuvla.ui.session.subs :as session-subs]))
 
 (reg-sub
   ::deployments
@@ -103,3 +104,11 @@
   ::bulk-jobs-monitored
   (fn [db]
     (::spec/bulk-jobs-monitored db)))
+
+(reg-sub
+ ::created-by
+ (fn [[_ id]]
+   [(subscribe [::session-subs/group id])
+    (subscribe [::session-subs/resolve-user id])])
+ (fn [[group user]]
+   (or user group)))

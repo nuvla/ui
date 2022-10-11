@@ -211,9 +211,23 @@
                      (get peers % %)) users))))
 
 (reg-sub
-  ::groups
+  ::groups-by-id
   (fn [{:keys [::spec/groups]}]
     groups))
+
+(reg-sub
+  ::group
+  :<- [::groups-by-id]
+  (fn [groups-by-id [_ group-id]]
+    (js/console.error "grousp by id" groups-by-id)
+    (js/console.error "group id" group-id)
+    (get groups-by-id group-id)))
+
+(reg-sub
+  ::groups
+  :<- [::groups-by-id]
+  (fn [groups-by-id]
+    (vals groups-by-id)))
 
 (reg-sub
   ::groups-mapping

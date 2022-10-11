@@ -410,8 +410,8 @@
                     :options        options}])))
 
 (def metric-name->default-condition
-  {"network-tx" "<"
-   "network-rx" "<"})
+  {"network-tx" ">"
+   "network-rx" ">"})
 
 (defn ConditionRow
   [metric-name condition collection on-change validate-form?]
@@ -425,7 +425,7 @@
                                ((keyword metric-name)
                                 (get criteria-condition-options collection)))
                   :error     (and validate-form? (not (seq condition)))
-                  :value     condition
+                  :value     (or metric-name->default-condition metric-name condition)
                   :on-change (ui-callback/value
                                #(on-change :criteria {:condition %}))}]]])
 
@@ -441,31 +441,31 @@
         criteria (subscribe [::subs/criteria])
         use-other-than-default? (r/atom (or (:dev-name @criteria) false))]
     (fn []
-    (let [metric-name (:metric @criteria)]
-    "hello"
-    (when (metrics-with-customizable-dev-name metric-name)
-      [ui/TableCell {:col-span 2
-                     :class "font-weight-400"}
-       [:div {:style {:display :flex
-                      :justify-items :stretch-between
-                      :align-items :center
-                      :height 40
-                      :gap 24}}
-        [ui/Checkbox {:style {:margin-right 2}
-                      :label (some->> (metric-name->use-other-translation-key metric-name) (@tr))
-                      :default-checked @use-other-than-default?
-                      :on-change (ui-callback/checked
-                                  (fn [checked?]
-                                    (when (not checked?)
-                                      (dispatch [::events/remove-custom-name]))
-                                    (reset! use-other-than-default? checked?)))}]
-        (when @use-other-than-default?
-          [ui/Input {:type :text
-                     :placeholder (@tr [(keyword (str "subs-notif-name-of-" metric-name "-to-monitor"))])
-                     :name :other-disk-name
-                     :default-value (or (:dev-name @criteria) "")
-                     :on-change (ui-callback/value #(dispatch [::events/update-custom-device-name %]))
-                     :style {:flex 1}}])]])))))
+      (let [metric-name (:metric @criteria)]
+        "hello"
+        (when (metrics-with-customizable-dev-name metric-name)
+          [ui/TableCell {:col-span 2
+                         :class "font-weight-400"}
+           [:div {:style {:display :flex
+                          :justify-items :stretch-between
+                          :align-items :center
+                          :height 40
+                          :gap 24}}
+            [ui/Checkbox {:style {:margin-right 2}
+                          :label (some->> (metric-name->use-other-translation-key metric-name) (@tr))
+                          :default-checked @use-other-than-default?
+                          :on-change (ui-callback/checked
+                                      (fn [checked?]
+                                        (when (not checked?)
+                                          (dispatch [::events/remove-custom-name]))
+                                        (reset! use-other-than-default? checked?)))}]
+            (when @use-other-than-default?
+              [ui/Input {:type :text
+                         :placeholder (@tr [(keyword (str "subs-notif-name-of-" metric-name "-to-monitor"))])
+                         :name :other-disk-name
+                         :default-value (or (:dev-name @criteria) "")
+                         :on-change (ui-callback/value #(dispatch [::events/update-custom-device-name %]))
+                         :style {:flex 1}}])]])))))
 
 
 (defn- ResetIntervalOptions []
@@ -655,14 +655,14 @@
                                          #(do
                                             (reset! metric-name %)
                                             (on-change
-                                             :criteria (if (#{"network-tx" "network-rx"} %)
-                                                         {:metric %
-                                                          :kind   (criteria-metric-kind @collection %)
-                                                          :reset-interval "month"
-                                                          :reset-start-date 1
-                                                          :condition ">"}
-                                                         {:metric %
-                                                          :kind   (criteria-metric-kind @collection %)}))))}]
+                                              :criteria (if (metrics-with-reset-windows %)
+                                                          {:metric %
+                                                           :kind   (criteria-metric-kind @collection %)
+                                                           :reset-interval "month"
+                                                           :reset-start-date 1
+                                                           :condition ">"}
+                                                          {:metric %
+                                                           :kind   (criteria-metric-kind @collection %)}))))}]
                [:div {:style  {:white-space :normal
                                :font-size "0.9rem"}}
                 (get-info-text criteria tr)]]]]
@@ -823,8 +823,8 @@
                              :options   (get criteria-metric-options collection)
                              :on-change (ui-callback/value
                                          #(on-change
-                                           :criteria {:metric %
-                                                      :kind   (criteria-metric-kind collection %)}))}]
+                                            :criteria {:metric %
+                                                       :kind   (criteria-metric-kind collection %)}))}]
                [:div {:style  {:white-space :normal
                                :font-size "0.9rem"}}
                 (get-info-text criteria tr)]]]]
@@ -841,7 +841,7 @@
                                            []
                                            ((keyword @criteria-metric) (get criteria-condition-options collection)))
                               :on-change (ui-callback/value
-                                          #(on-change :criteria {:condition %}))}]]]
+                                           #(on-change :criteria {:condition %}))}]]]
               (on-change :criteria {:condition "no"}))
 
             (when-not (= :boolean (get-in criteria-condition-type [collection (keyword @criteria-metric)]))

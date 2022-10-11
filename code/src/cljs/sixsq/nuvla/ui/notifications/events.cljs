@@ -189,6 +189,7 @@
  (fn [_ [_ value]]
    (update-subscription-criteria-fx {:dev-name value})))
 
+
 (reg-event-db
   ::remove-custom-name
   (fn [db]
@@ -345,12 +346,6 @@
   ::set-resource-tag
   (fn [db [_ resource-tag]]
     (assoc db ::spec/resource-tag resource-tag)))
-
-
-(reg-event-db
-  ::set-criteria-metric
-  (fn [db [_ metric]]
-    (assoc db ::spec/criteria-metric metric)))
 
 
 (reg-event-db

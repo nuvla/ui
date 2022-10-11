@@ -62,7 +62,7 @@
           :open?          filter-open?
           :on-done        #(dispatch [::events/set-additional-filter %])
           :color-when-filter-active (when @active-filter? :green)}]
-        (when @active-filter? [ui/Popup {:trigger (r/as-element [:div {:style {:font-size "0.8rem"}} "Filtered" [ui/Icon {:name "help" :color :green}]])}
+        (when @active-filter? [ui/Popup {:trigger (r/as-element [:div {:style {:font-size "0.8rem"}} "Filtered" [ui/Icon {:name "info" :color :green}]])}
                                                      [FilterSummary {:additional-filters-applied @additional-filter}]])]])))
 
 (defn BulkUpdateModal

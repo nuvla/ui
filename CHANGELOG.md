@@ -10,6 +10,7 @@
 - Dev tools - Cloudflare preview integration
 - NuvlaEdge overview - Shows last online times for offline edges #895
 - NuvlaEdge details - Fixes opening Dropdown menu on key presses inside Update NuvlaEdge form bugfix #908
+- Deployments overview - Shows created by on table an list view #926
 
 ## [2.32.7] - 2022-09-29
 

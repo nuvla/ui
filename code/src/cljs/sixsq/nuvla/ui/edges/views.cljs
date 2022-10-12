@@ -18,6 +18,7 @@
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.plugins.full-text-search :as full-text-search-plugin]
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.forms :as utils-forms]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.map :as map]
@@ -733,11 +734,12 @@
 
 
 (defn NuvlaboxRow
-  [{:keys [id name description created state tags online refresh-interval version] :as _nuvlabox} managers]
+  [{:keys [id name description created state tags online refresh-interval version created-by] :as _nuvlabox} managers]
   (let [uuid                  (general-utils/id->uuid id)
         locale                (subscribe [::i18n-subs/locale])
         next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
-        engine-version        @(subscribe [::subs/engine-version id])]
+        engine-version        @(subscribe [::subs/engine-version id])
+        creator               (subscribe [::session-subs/resolve-user created-by])]
     [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
@@ -747,6 +749,7 @@
      [ui/TableCell (or name uuid)]
      [ui/TableCell description]
      [ui/TableCell (values/format-created created)]
+     [ui/TableCell @creator]
      [ui/TableCell (when next-heartbeat-moment (utils/last-time-online next-heartbeat-moment refresh-interval @locale))]
      [ui/TableCell (or engine-version (str version ".x.x"))]
      [ui/TableCell [uix/Tags tags]]
@@ -796,6 +799,7 @@
         [ui/TableHeaderCell "name"]
         [ui/TableHeaderCell "description"]
         [ui/TableHeaderCell (@tr [:created])]
+        [ui/TableHeaderCell (@tr [:created-by])]
         [ui/TableHeaderCell (@tr [:last-online])]
         [ui/TableHeaderCell [:span (@tr [:version]) (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]]
         [ui/TableHeaderCell "tags"]

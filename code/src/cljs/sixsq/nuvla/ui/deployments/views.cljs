@@ -165,14 +165,13 @@
   (not (or select-all? (true? no-actions))))
 
 (defn RowFn
-  [{:keys [id state module created-by] :as deployment}
+  [{:keys [id state module] :as deployment}
    {:keys [no-actions no-module-name select-all] :as _options}]
   (let [[primary-url-name
          primary-url-pattern] (-> module :content (get :urls []) first)
         url           @(subscribe [::subs/deployment-url id primary-url-pattern])
         selected?     (subscribe [::subs/is-selected? id])
-        show-options? (show-options select-all no-actions)
-        creator       (subscribe [::subs/created-by created-by])]
+        show-options? (show-options select-all no-actions)]
     [ui/TableRow
      (when show-options?
        [ui/TableCell
@@ -193,7 +192,6 @@
                       [ui/Icon {:name "external"}]
                       primary-url-name])]
      [ui/TableCell (-> deployment :created time/parse-iso8601 time/ago)]
-     [ui/TableCell (or (:name @creator) @creator)]
      [ui/TableCell {:style {:overflow      "hidden",
                             :text-overflow "ellipsis",
                             :max-width     "20ch"}}
@@ -230,7 +228,6 @@
              [ui/TableHeaderCell (@tr [:status])]
              [ui/TableHeaderCell (@tr [:url])]
              [ui/TableHeaderCell (@tr [:created])]
-             [ui/TableHeaderCell (@tr [:created-by])]
              [ui/TableHeaderCell (@tr [:infrastructure])]
              (when show-options? [ui/TableHeaderCell (@tr [:actions])])]]
            [ui/TableBody

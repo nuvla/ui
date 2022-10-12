@@ -241,7 +241,7 @@
   ::set-groups
   (fn [db [_ {:keys [resources]}]]
     (when resources
-      (assoc db ::spec/groups (zipmap (map :id resources) resources)))))
+      (assoc db ::spec/groups resources))))
 
 ;; FIXME Consider replacement of this call by get-groups
 (reg-event-fx

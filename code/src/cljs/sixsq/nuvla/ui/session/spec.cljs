@@ -19,7 +19,7 @@
 
 (s/def ::peers any?)
 
-(s/def ::groups map?)
+(s/def ::groups any?)
 
 (s/def ::groups-hierarchies coll?)
 

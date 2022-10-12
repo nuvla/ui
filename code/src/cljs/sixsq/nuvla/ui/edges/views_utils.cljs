@@ -9,6 +9,7 @@
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.events :as main-events]
+    [sixsq.nuvla.ui.session.subs :as session-subs]
     [sixsq.nuvla.ui.utils.general :as general-utils]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
@@ -52,9 +53,10 @@
   [_nuvlabox _managers]
   (let [tr     (subscribe [::i18n-subs/tr])
         locale (subscribe [::i18n-subs/locale])]
-    (fn [{:keys [id name description created state tags online refresh-interval] :as _nuvlabox} managers]
+    (fn [{:keys [id name description created state tags online refresh-interval created-by] :as _nuvlabox} managers]
       (let [href                  (str "edges/" (general-utils/id->uuid id))
-            next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])]
+            next-heartbeat-moment @(subscribe [::subs/next-heartbeat-moment id])
+            creator               (subscribe [::session-subs/resolve-user created-by])]
         ^{:key id}
         [uix/Card
          {:on-click    #(dispatch [::history-events/navigate href])
@@ -71,6 +73,9 @@
                         (or name id)]
           :meta        [:<>
                         [:div (str (@tr [:created]) " " (date-string->time-ago created))]
+                        (when @creator
+                          [:div (str (@tr [:by]) " "
+                                     @creator)])
                         (when next-heartbeat-moment
                           [:div (str (@tr [:last-online]) " "
                                      (utils/last-time-online next-heartbeat-moment refresh-interval @locale))])]

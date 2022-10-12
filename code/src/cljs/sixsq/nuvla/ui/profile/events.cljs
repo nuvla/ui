@@ -429,13 +429,15 @@
 
 (reg-event-fx
   ::two-factor-enabled
-  (fn [_ [_ success-header success-content]]
+  (fn [_ [_ success-header success-content show-confirmation]]
     {:fx [[:dispatch [::messages-events/add
                       {:header  success-header
                        :content success-content
                        :type    :success}]]
           [:dispatch [::get-user]]
-          [:dispatch [::set-two-factor-step :save-secret]]]}))
+          [:dispatch (if show-confirmation
+                         [::set-two-factor-step :save-secret]
+                         [::close-modal])]]}))
 
 (reg-event-fx
   ::two-factor-disabled

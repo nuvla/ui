@@ -785,6 +785,7 @@
                                                        (:nuvlabox-workers @current-cluster))]
                               (into {} (get (group-by :id (:resources @nuvlaboxes)) target-nb-id)))
                             (:resources @nuvlaboxes))
+        maj-version-only? (subscribe [::subs/one-edge-with-only-major-version (map :id selected-nbs)])
         tr                (subscribe [::i18n-subs/tr])]
     [:div style/center-items
      [ui/Table {:compact "very", :selectable true}
@@ -796,7 +797,7 @@
         [ui/TableHeaderCell "description"]
         [ui/TableHeaderCell (@tr [:created])]
         [ui/TableHeaderCell (@tr [:last-online])]
-        [ui/TableHeaderCell [:span (@tr [:version]) (ff/help-popup (@tr [:edges-version-info]))]]
+        [ui/TableHeaderCell [:span (@tr [:version]) (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]]
         [ui/TableHeaderCell "tags"]
         [ui/TableHeaderCell "manager"]]]
 

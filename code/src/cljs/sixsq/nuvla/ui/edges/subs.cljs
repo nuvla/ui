@@ -36,6 +36,12 @@
   (fn [edges-status [_ edge-id]]
     (get-in edges-status [edge-id :nuvlabox-engine-version])))
 
+(reg-sub
+  ::one-edge-with-only-major-version
+  :<- [::edges-status]
+  (fn [edges-status [_ ids]]
+    (js/console.error "edges-status" edges-status)
+    (some nil? (map (fn [id] (get-in edges-status [id :nuvlabox-engine-version])) ids))))
 
 (reg-sub
   ::nuvlabox-locations

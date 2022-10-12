@@ -97,11 +97,11 @@
                     :type    :error})])
       {:db (assoc db ::spec/nuvlaboxes nuvlaboxes
                      ::main-spec/loading? false)
-       :fx [[:dispatch [::get-nuvlaboxes-next-heartbeats nuvlaboxes]]]})))
+       :fx [[:dispatch [::get-nuvlaedges-status nuvlaboxes]]]})))
 
 
 (reg-event-fx
-  ::get-nuvlaboxes-next-heartbeats
+  ::get-nuvlaedges-status
   (fn [_ [_ {nuvlaboxes :resources}]]
     (when (seq nuvlaboxes)
       {::cimi-api-fx/search
@@ -109,11 +109,11 @@
         {:select "parent,next-heartbeat,id,nuvlabox-engine-version,online"
          :filter (apply general-utils/join-or
                         (map #(str "parent='" (:id %) "'") nuvlaboxes))}
-        #(dispatch [::set-nuvlaedges-stati %])]})))
+        #(dispatch [::set-nuvlaedges-status %])]})))
 
 
 (reg-event-fx
-  ::set-nuvlaedges-stati
+  ::set-nuvlaedges-status
   (fn [{:keys [db]} [_ {:keys [resources] :as nuvlaboxes-status}]]
     (if (instance? js/Error nuvlaboxes-status)
       {:fx [[:dispatch [::messages-events/add
@@ -122,7 +122,7 @@
                                                status (str " (" status ")"))
                                     :content message
                                     :type    :error})]]]}
-      {:db (assoc db ::spec/nuvlaedges-select-statis (zipmap
+      {:db (assoc db ::spec/nuvlaedges-select-status (zipmap
                                                       (map :parent resources)
                                                       resources)
                   ::main-spec/loading? false)})))

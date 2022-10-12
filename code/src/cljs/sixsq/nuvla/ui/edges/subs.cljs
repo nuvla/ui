@@ -20,21 +20,21 @@
     (::spec/nuvlaboxes db)))
 
 (reg-sub
-  ::edges-stati
+  ::edges-status
   (fn [db]
-    (::spec/nuvlaedges-select-statis db)))
+    (::spec/nuvlaedges-select-status db)))
 
 (reg-sub
   ::next-heartbeat-moment
-  :<- [::edges-stati]
-  (fn [stati [_ edge-id]]
-    (some-> (get-in stati [edge-id :next-heartbeat]) time/parse-iso8601)))
+  :<- [::edges-status]
+  (fn [status [_ edge-id]]
+    (some-> (get-in status [edge-id :next-heartbeat]) time/parse-iso8601)))
 
 (reg-sub
   ::engine-version
-  :<- [::edges-stati]
-  (fn [edges-stati [_ edge-id]]
-    (get-in edges-stati [edge-id :nuvlabox-engine-version])))
+  :<- [::edges-status]
+  (fn [edges-status [_ edge-id]]
+    (get-in edges-status [edge-id :nuvlabox-engine-version])))
 
 
 (reg-sub

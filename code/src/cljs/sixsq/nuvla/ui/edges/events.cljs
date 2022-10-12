@@ -118,7 +118,7 @@
     (if (instance? js/Error nuvlaboxes-status)
       {:fx [[:dispatch [::messages-events/add
                                  (let [{:keys [status message]} (response/parse-ex-info nuvlaboxes-status)]
-                                   {:header  (cond-> (str "failure getting stati for nuvla edges")
+                                   {:header  (cond-> (str "failure getting status for nuvla edges")
                                                status (str " (" status ")"))
                                     :content message
                                     :type    :error})]]]}

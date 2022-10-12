@@ -136,7 +136,6 @@
                            ::spec/loading (disj loading :customer))}
             customer (assoc :fx [(when (general-utils/can-operation? "get-subscription" customer)
                                    [:dispatch [::get-subscription]])
-                                 [:dispatch [::close-modal]]
                                  (when (general-utils/can-operation? "customer-info" customer)
                                    [:dispatch [::customer-info]])
                                  (when (general-utils/can-operation? "list-invoices" customer)
@@ -156,7 +155,8 @@
                                 (do (dispatch [::set-customer nil])
                                     (dispatch [::set-subscription nil])))]}
       {:fx [[:dispatch [::set-customer nil]]
-            [:dispatch [::set-subscription nil]]]})))
+            [:dispatch [::set-subscription nil]]
+            [:dispatch [::close-modal]]]})))
 
 (reg-event-fx
   ::get-subscription

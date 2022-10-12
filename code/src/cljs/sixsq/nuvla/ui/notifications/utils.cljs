@@ -10,12 +10,11 @@
         method (get-in db [::spec/notification-method :method])
         destination (get-in db [::spec/notification-method :destination])
         acl (get-in db [::spec/notification-method :acl])]
-    (-> {}
-        (assoc :name name)
-        (assoc :description description)
-        (assoc :method method)
-        (assoc :destination destination)
-        (assoc :acl acl))))
+       {:name name
+        :description description
+        :method method
+        :destination destination
+        :acl acl}))
 
 (defn data-record-content-type
   [m]
@@ -68,16 +67,15 @@
         criteria (get-in db [::spec/notification-subscription-config :criteria])
         criteria (clean-criteria criteria)
         acl (get-in db [::spec/notification-subscription-config :acl])]
-    (-> {}
-        (assoc :name name)
-        (assoc :description description)
-        (assoc :enabled enabled)
-        (assoc :method-ids method-ids)
-        (assoc :resource-kind resource-kind)
-        (assoc :resource-filter resource-filter)
-        (assoc :category category)
-        (assoc :criteria criteria)
-        (assoc :acl acl))))
+       {:name name
+        :description description
+        :enabled enabled
+        :method-ids method-ids
+        :resource-kind resource-kind
+        :resource-filter resource-filter
+        :category category
+        :criteria criteria
+        :acl acl}))
 
 
 (defn db->new-subscription
@@ -91,13 +89,12 @@
         method (get-in db [::spec/subscription :method])
         status (get-in db [::spec/subscription :status])
         acl (get-in db [::spec/subscription :acl])]
-    (-> {}
-        (assoc :name name)
-        (assoc :description description)
-        (assoc :type type)
-        (assoc :kind kind)
-        (assoc :category category)
-        (assoc :method method)
-        (assoc :resource resource)
-        (assoc :status status)
-        (assoc :acl acl))))
+       {:name name
+        :description description
+        :type type
+        :kind kind
+        :category category
+        :method method
+        :resource resource
+        :status status
+        :acl acl}))

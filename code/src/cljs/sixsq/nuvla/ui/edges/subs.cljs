@@ -40,8 +40,7 @@
   ::one-edge-with-only-major-version
   :<- [::edges-status]
   (fn [edges-status [_ ids]]
-    (js/console.error "edges-status" edges-status)
-    (some nil? (map (fn [id] (get-in edges-status [id :nuvlabox-engine-version])) ids))))
+    (some (comp nil? :nuvlabox-engine-version edges-status) ids)))
 
 (reg-sub
   ::nuvlabox-locations

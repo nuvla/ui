@@ -44,8 +44,7 @@
 (s/def ::reset-interval #(re-matches reset-interval-regex %))
 
 (s/def ::reset-start-date #(and (integer? %)
-                                (< 0 %)
-                                (< % 32)))
+                                (< 0 % 32)))
 
 
 (s/def ::dev-name string?)

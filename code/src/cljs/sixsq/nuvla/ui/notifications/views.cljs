@@ -540,8 +540,13 @@
                                 (@tr [:subs-notif-network-info-default])
                                 (@tr [:subs-notif-network-info-specific]))
         interval-text         (if (or (str/blank? reset-interval-string) (= "month" reset-interval-string))
-                                (str (@tr [:subs-notif-network-reset-monthly]) " (" (@tr [:subs-notif-network-resets-on]) " " start-day-of-month ")")
-                                (str (@tr [:subs-notif-network-reset-custom]) " (" (@tr [:subs-notif-network-resets-after]) " " reset-in-days " " (@tr (if (= reset-in-days 1) [:day] [:days])) ")"))]
+                                (str (@tr [:subs-notif-network-reset-monthly]) " ("
+                                     (@tr [:subs-notif-network-resets-on]) " "
+                                     start-day-of-month ")")
+                                (str (@tr [:subs-notif-network-reset-custom]) " ("
+                                     (@tr [:subs-notif-network-resets-after]) " "
+                                     reset-in-days " "
+                                     (@tr (if (= reset-in-days 1) [:day] [:days])) ")"))]
     (str interface-text " " interval-text)))
 
 (defn- get-info-text [criteria tr]

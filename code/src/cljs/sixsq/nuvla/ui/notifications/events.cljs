@@ -161,20 +161,16 @@
  (fn [{{:keys [::spec/notification-subscription-config]} :db}]
    (let [criteria (:criteria notification-subscription-config)
          new-reset-start-date (or (:reset-start-date criteria) 1)]
-     (when (not= (:reset-interval criteria) "month")
-       (update-subscription-criteria-fx {:reset-interval "month"
-                                         :reset-start-date new-reset-start-date})))))
+        (update-subscription-criteria-fx {:reset-interval "month"
+                                          :reset-start-date new-reset-start-date}))))
 
 (reg-event-fx
  ::choose-custom-reset
  (fn [{{:keys [::spec/notification-subscription-config]} :db}]
    (let [criteria       (:criteria notification-subscription-config)
-         reset-interval (:reset-interval criteria)
          reset-in-days  (or (:reset-in-days criteria) 1)]
-     (when (or (blank? reset-interval)
-               (= reset-interval "month"))
-       (update-subscription-criteria-fx {:reset-interval (str reset-in-days "d")
-                                         :reset-in-days reset-in-days})))))
+        (update-subscription-criteria-fx {:reset-interval (str reset-in-days "d")
+                                          :reset-in-days reset-in-days}))))
 
 (reg-event-fx
  ::update-custom-days

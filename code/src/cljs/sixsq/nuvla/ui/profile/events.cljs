@@ -276,6 +276,7 @@
                                           payment-method (assoc :payment-method payment-method))
                         #(do
                            (dispatch [::get-customer (:resource-id %)])
+                           (dispatch [::close-modal])
                            (dispatch [::history-events/navigate "profile"]))
                         :on-error #(dispatch [::set-error (-> % response/parse-ex-info :message)
                                               :create-customer])]}))
@@ -291,6 +292,7 @@
                                             :create-customer])
                                  (do
                                    (dispatch [::get-customer (:id customer)])
+                                   (dispatch [::close-modal])
                                    (dispatch [::history-events/navigate "profile"])))
                               nil]}))
 

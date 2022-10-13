@@ -235,7 +235,7 @@
                   [:span (str (@tr [:nuvlabox-playbooks-cronjob-ready])
                               " ")
                    (values/copy-value-to-clipboard
-                    "" (@playbooks-cronjob :cronjob) (@tr [:copy-to-clipboard]) true)]
+                     "" (@playbooks-cronjob :cronjob) (@tr [:copy-to-clipboard]) true)]
                   (@tr [:nuvlabox-playbooks-cronjob-wait]))]])
 
             (when @new-private-ssh-key
@@ -780,8 +780,8 @@
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
         managers          (distinct
-                           (apply concat
-                                  (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
+                            (apply concat
+                                   (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
         current-cluster   (subscribe [::subs/nuvlabox-cluster])
         selected-nbs      (if @current-cluster
                             (for [target-nb-id (concat (:nuvlabox-managers @current-cluster)
@@ -800,8 +800,10 @@
         [ui/TableHeaderCell "description"]
         [ui/TableHeaderCell (@tr [:created])]
         [ui/TableHeaderCell (@tr [:created-by])]
-        [ui/TableHeaderCell (@tr [:last-online])]
-        [ui/TableHeaderCell [:span (@tr [:version]) (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]]
+        [ui/TableHeaderCell {:single-line true} (@tr [:last-online])]
+        [ui/TableHeaderCell {:single-line true}
+         (@tr [:version])
+         (when @maj-version-only? (ff/help-popup (@tr [:edges-version-info])))]
         [ui/TableHeaderCell "tags"]
         [ui/TableHeaderCell "manager"]]]
 
@@ -831,8 +833,8 @@
   (let [nuvlaboxes        (subscribe [::subs/nuvlaboxes])
         nuvlabox-clusters (subscribe [::subs/nuvlabox-clusters])
         managers          (distinct
-                           (apply concat
-                                  (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
+                            (apply concat
+                                   (map :nuvlabox-managers (:resources @nuvlabox-clusters))))
         selected-nbs      (:resources @nuvlaboxes)]
     [:div style/center-items
      [ui/CardGroup {:centered    true

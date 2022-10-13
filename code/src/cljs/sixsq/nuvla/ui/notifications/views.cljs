@@ -13,7 +13,7 @@
     [sixsq.nuvla.ui.notifications.events :as events]
     [sixsq.nuvla.ui.notifications.spec :as spec]
     [sixsq.nuvla.ui.notifications.subs :as subs]
-    [sixsq.nuvla.ui.notifications.utils :refer [metrics-with-reset-windows]]
+    [sixsq.nuvla.ui.notifications.utils :as utils]
     [sixsq.nuvla.ui.panel :as panel]
     [sixsq.nuvla.ui.utils.form-fields :as ff]
     [sixsq.nuvla.ui.utils.general :as general-utils]
@@ -326,15 +326,15 @@
 
 
 (def criteria-metric-options
-  {"nuvlabox"               [{:key "cpu load" :text "CPU load %" :value "load" }
-                             {:key "ram usage" :text "RAM usage %" :value "ram" }
-                             {:key "disk usage" :text "Disk usage %" :value "disk" }
-                             {:key "state" :text "NuvlaEdge online" :value "state" }
-                             {:key "network rx" :text "Network Rx GB" :value "network-rx" }
-                             {:key "network tx" :text "Network Tx GB" :value "network-tx" }
+  {"nuvlabox"               [{:key "cpu load" :text "CPU load %" :value utils/cpu-load }
+                             {:key "ram usage" :text "RAM usage %" :value utils/ram }
+                             {:key "disk usage" :text "Disk usage %" :value utils/disk }
+                             {:key "state" :text "NuvlaEdge online" :value utils/state }
+                             {:key "network rx" :text "Network Rx GB" :value utils/network-rx }
+                             {:key "network tx" :text "Network Tx GB" :value utils/network-tx }
                              ]
-   "infrastructure-service" [{:key "status" :text "status" :value "status"}]
-   "data-record"            [{:key "content-type" :text "content-type" :value "content-type"}]})
+   "infrastructure-service" [{:key "status" :text "status" :value utils/status}]
+   "data-record"            [{:key "content-type" :text "content-type" :value utils/content-type}]})
 
 
 (def criteria-conditions
@@ -410,8 +410,8 @@
                     :options        options}])))
 
 (def metric-name->default-condition
-  {"network-tx" ">"
-   "network-rx" ">"})
+  {utils/network-rx ">"
+   utils/network-tx ">"})
 
 (defn ConditionRow
   [metric-name condition collection on-change validate-form?]
@@ -425,16 +425,16 @@
                                ((keyword metric-name)
                                 (get criteria-condition-options collection)))
                   :error     (and validate-form? (not (seq condition)))
-                  :value     (or metric-name->default-condition metric-name condition)
+                  :value     (or (metric-name->default-condition metric-name) condition)
                   :on-change (ui-callback/value
                                #(on-change :criteria {:condition %}))}]]])
 
 (def metric-name->use-other-translation-key
-  {"disk" [:subs-notif-disk-use-other]
-   "network-rx" [:subs-notif-network-use-other]
-   "network-tx" [:subs-notif-network-use-other]})
+  {utils/disk [:subs-notif-disk-use-other]
+   utils/network-rx [:subs-notif-network-use-other]
+   utils/network-tx [:subs-notif-network-use-other]})
 
-(def metrics-with-customizable-dev-name #{"network-rx" "network-tx" "disk"})
+(def metrics-with-customizable-dev-name #{utils/network-rx utils/network-tx utils/disk})
 
 (defn- DeviceNameOptions []
   (let [tr (subscribe [::i18n-subs/tr])
@@ -478,7 +478,7 @@
             custom-reset? (not monthly-reset?)
             start-date-of-month (or (:reset-start-date @criteria) 1)
             custom-interval-days @(subscribe [::subs/custom-days])]
-        (when (metrics-with-reset-windows (:metric @criteria))
+        (when (utils/metrics-with-reset-windows (:metric @criteria))
           [ui/TableCell {:col-span 2
                          :class "font-weight-400"}
            [:div {:style {:min-height 40}
@@ -488,6 +488,7 @@
              [:input {:type :radio
                       :name :reset
                       :checked monthly-reset?
+                      :read-only true
                       :id :monthly}]
              [:label {:for :monthly
                       :style {:margin-left "0.5rem" }} (@tr [:subs-notif-reset-on-day])]
@@ -512,6 +513,7 @@
              [:input {:type :radio
                       :name :reset
                       :checked custom-reset?
+                      :read-only true
                       :id :custom}]
              [:label {:for :custom
                       :style {:margin-left "0.5rem"}} [:span (str/capitalize (@tr [:subs-notif-custom-reset-after]))]]
@@ -552,9 +554,9 @@
 (defn- get-info-text [criteria tr]
   (let [metric-name (:metric criteria)]
     (case metric-name
-      "disk" (when (str/blank? (:dev-name criteria)) (@tr [:subs-notif-disk-info]))
-      "network-tx" (get-network-info-text criteria tr)
-      "network-rx" (get-network-info-text criteria tr)
+      utils/disk (when (str/blank? (:dev-name criteria)) (@tr [:subs-notif-disk-info]))
+      utils/network-tx (get-network-info-text criteria tr)
+      utils/network-rx (get-network-info-text criteria tr)
       "")))
 
 
@@ -660,7 +662,7 @@
                                          #(do
                                             (reset! metric-name %)
                                             (on-change
-                                              :criteria (if (metrics-with-reset-windows %)
+                                              :criteria (if (utils/metrics-with-reset-windows %)
                                                           {:metric %
                                                            :kind   (criteria-metric-kind @collection %)
                                                            :reset-interval "month"

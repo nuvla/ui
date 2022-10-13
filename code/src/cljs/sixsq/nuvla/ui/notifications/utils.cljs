@@ -2,6 +2,16 @@
   (:require
     [sixsq.nuvla.ui.notifications.spec :as spec]))
 
+(def cpu-load "load")
+(def ram "ram")
+(def disk "disk")
+(def state "state")
+(def network-rx "network-rx")
+(def network-tx "network-tx")
+(def status "status")
+(def content-type "content-type")
+
+
 
 (defn db->new-notification-method
   [db]
@@ -18,7 +28,7 @@
 
 (defn data-record-content-type
   [m]
-  (and (= "data-record" (:resource-kind m)) (= "content-type" (get-in m [:criteria :metric]))))
+  (and (= "data-record" (:resource-kind m)) (= content-type (get-in m [:criteria :metric]))))
 
 (defn view->model
   [v]
@@ -38,10 +48,10 @@
   (cond
     (event-tag m) (-> m
                       (assoc :resource-kind "data-record")
-                      (assoc-in [:criteria :metric] "content-type"))
+                      (assoc-in [:criteria :metric] content-type))
     :else m))
 
-(def metrics-with-reset-windows #{"network-rx" "network-tx"})
+(def metrics-with-reset-windows #{network-rx network-tx})
 
 (defn- clean-criteria
   [criteria]
@@ -51,7 +61,7 @@
       (metrics-with-reset-windows metric-name) (if (= (:reset-interval cr-cleaned) "month")
                                                  cr-cleaned
                                                  (dissoc cr-cleaned :reset-start-date))
-      (= "disk" metric-name) (dissoc cr-cleaned :reset-interval :reset-start-date)
+      (= disk metric-name) (dissoc cr-cleaned :reset-interval :reset-start-date)
       :else (dissoc cr-cleaned :dev-name :reset-interval :reset-start-date))))
 
 (defn db->new-subscription-config

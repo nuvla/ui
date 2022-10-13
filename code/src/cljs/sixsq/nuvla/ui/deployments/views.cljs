@@ -30,21 +30,11 @@
   []
   (dispatch [::events/refresh]))
 
-(defn FilterSummary
-  [{:keys [additional-filters-applied]}]
-  (when additional-filters-applied
-    [:div {:style {:padding-left "4px"
-                   :font-size "0.8rem"
-                   :inline-size "200px"
-                   :overflow-wrap :break-word}}
-     [:div {:style {:font-weight "bold"}} "Filter: "]
-     additional-filters-applied]))
 
 
 (defn ControlBar []
   (let [additional-filter (subscribe [::subs/additional-filter])
-        filter-open?      (r/atom false)
-        active-filter?    (subscribe [::subs/additional-filter-active])]
+        filter-open?      (r/atom false)]
     (fn []
       [ui/GridColumn {:width 4}
        [:div {:style {:display    :flex
@@ -58,12 +48,9 @@
         ^{:key (random-uuid)}
         [filter-comp/ButtonFilter
          {:resource-name  "deployment"
-          :default-filter @additional-filter
+          :default-filter  @additional-filter
           :open?          filter-open?
-          :on-done        #(dispatch [::events/set-additional-filter %])
-          :color-when-filter-active (when @active-filter? :green)}]
-        (when @active-filter? [ui/Popup {:trigger (r/as-element [:div {:style {:font-size "0.8rem"}} "Filtered" [ui/Icon {:name "info" :color :green}]])}
-                                                     [FilterSummary {:additional-filters-applied @additional-filter}]])]])))
+          :on-done        #(dispatch [::events/set-additional-filter %])}]]])))
 
 (defn BulkUpdateModal
   []

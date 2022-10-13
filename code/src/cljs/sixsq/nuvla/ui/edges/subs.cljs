@@ -20,15 +20,27 @@
     (::spec/nuvlaboxes db)))
 
 (reg-sub
-  ::next-heartbeats-offline-edges
+  ::edges-status
   (fn [db]
-    (::spec/next-heartbeats-offline-edges db)))
+    (::spec/nuvlaedges-select-status db)))
 
 (reg-sub
   ::next-heartbeat-moment
-  :<- [::next-heartbeats-offline-edges]
-  (fn [next-heartbeats [_ nuvlabox-id]]
-    (some-> (get next-heartbeats nuvlabox-id) time/parse-iso8601)))
+  :<- [::edges-status]
+  (fn [status [_ edge-id]]
+    (some-> (get-in status [edge-id :next-heartbeat]) time/parse-iso8601)))
+
+(reg-sub
+  ::engine-version
+  :<- [::edges-status]
+  (fn [edges-status [_ edge-id]]
+    (get-in edges-status [edge-id :nuvlabox-engine-version])))
+
+(reg-sub
+  ::one-edge-with-only-major-version
+  :<- [::edges-status]
+  (fn [edges-status [_ ids]]
+    (some (comp nil? :nuvlabox-engine-version edges-status) ids)))
 
 (reg-sub
   ::nuvlabox-locations

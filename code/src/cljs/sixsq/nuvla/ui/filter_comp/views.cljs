@@ -289,9 +289,9 @@
 (defn- FilterSummary
   [{:keys [additional-filters-applied]}]
   (when additional-filters-applied
-    [:div {:style {:padding-left "4px"
-                   :font-size "0.8rem"
-                   :inline-size "200px"
+    [:div {:style {:padding-left  "4px"
+                   :font-size     "0.8rem"
+                   :inline-size   "200px"
                    :overflow-wrap :break-word}}
      [:div {:style {:font-weight "bold"}} "Filter: "]
      additional-filters-applied]))
@@ -310,17 +310,20 @@
         open-fn     #(reset! open? true)]
     (when resource-name (dispatch [::cimi-events/get-resource-metadata resource-name]))
     (fn [{:keys [resource-name open? _default-filter on-done]}]
-      (let [filter-string (utils/data->filter-str @data)
-            error         (when (and @show-error? (not (str/blank? filter-string)))
-                            (utils/filter-syntax-error filter-string))
+      (let [filter-string  (utils/data->filter-str @data)
+            error          (when (and @show-error? (not (str/blank? filter-string)))
+                             (utils/filter-syntax-error filter-string))
             active-filter? (boolean (some-> filter-string (utils/filter-str->data)))]
         [ui/Modal
-         {:trigger (r/as-element [ui/Popup {:trigger (r/as-element [ui/Button {:icon     "magic"
-                                                                               :disabled (nil? resource-name)
-                                                                               :on-click open-fn
-                                                                               :color (when active-filter? :teal)}])
-                                            :disabled (not active-filter?)}
-                                  [FilterSummary {:additional-filters-applied default-filter}]])
+         {:trigger    (r/as-element
+                        [ui/Popup
+                         {:trigger  (r/as-element
+                                      [ui/Button {:icon     "magic"
+                                                  :disabled (nil? resource-name)
+                                                  :on-click open-fn
+                                                  :color    (when active-filter? :teal)}])
+                          :disabled (not active-filter?)}
+                         [FilterSummary {:additional-filters-applied default-filter}]])
           :open       @open?
           :on-close   close-fn
           :close-icon true}

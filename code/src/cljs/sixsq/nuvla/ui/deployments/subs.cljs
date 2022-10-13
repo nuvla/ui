@@ -29,7 +29,7 @@
   ::additional-filter-active
   :<- [::additional-filter]
   (fn [additional-filter]
-    (boolean (some-> additional-filter (filter-str->data)))))
+    (boolean (some-> additional-filter filter-str->data))))
 
 (reg-sub
   ::view

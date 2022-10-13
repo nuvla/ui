@@ -270,12 +270,14 @@
                             :placeholder   "nuvlabox"
                             :required      true
                             :default-value (:project-name @form-data)
-                            :on-change     (ui-callback/input-callback
+                            :on-key-down #(-> % .stopPropagation)
+                            :on-change (ui-callback/input-callback
                                              #(swap! form-data assoc :project-name %))}]
              [ui/FormInput {:label         (str/capitalize (@tr [:working-directory]))
                             :placeholder   "/home/ubuntu/nuvlabox-engine"
                             :required      true
                             :default-value (:working-dir @form-data)
+                            :on-key-down #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :working-dir %))}]
              [ui/FormField
@@ -285,6 +287,7 @@
               [ui/TextArea {:placeholder   "docker-compose.yml\ndocker-compose.gpu.yml\n..."
                             :required      true
                             :default-value (:config-files @form-data)
+                            :on-key-down #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
                                              #(swap! form-data assoc :config-files %))}]]
              [ui/FormField

@@ -136,7 +136,6 @@
                            ::spec/loading (disj loading :customer))}
             customer (assoc :fx [(when (general-utils/can-operation? "get-subscription" customer)
                                    [:dispatch [::get-subscription]])
-                                 [:dispatch [::close-modal]]
                                  (when (general-utils/can-operation? "customer-info" customer)
                                    [:dispatch [::customer-info]])
                                  (when (general-utils/can-operation? "list-invoices" customer)
@@ -156,7 +155,8 @@
                                 (do (dispatch [::set-customer nil])
                                     (dispatch [::set-subscription nil])))]}
       {:fx [[:dispatch [::set-customer nil]]
-            [:dispatch [::set-subscription nil]]]})))
+            [:dispatch [::set-subscription nil]]
+            [:dispatch [::close-modal]]]})))
 
 (reg-event-fx
   ::get-subscription
@@ -276,6 +276,7 @@
                                           payment-method (assoc :payment-method payment-method))
                         #(do
                            (dispatch [::get-customer (:resource-id %)])
+                           (dispatch [::close-modal])
                            (dispatch [::history-events/navigate "profile"]))
                         :on-error #(dispatch [::set-error (-> % response/parse-ex-info :message)
                                               :create-customer])]}))
@@ -291,6 +292,7 @@
                                             :create-customer])
                                  (do
                                    (dispatch [::get-customer (:id customer)])
+                                   (dispatch [::close-modal])
                                    (dispatch [::history-events/navigate "profile"])))
                               nil]}))
 
@@ -429,13 +431,15 @@
 
 (reg-event-fx
   ::two-factor-enabled
-  (fn [_ [_ success-header success-content]]
+  (fn [_ [_ success-header success-content show-confirmation]]
     {:fx [[:dispatch [::messages-events/add
                       {:header  success-header
                        :content success-content
                        :type    :success}]]
           [:dispatch [::get-user]]
-          [:dispatch [::set-two-factor-step :save-secret]]]}))
+          [:dispatch (if show-confirmation
+                         [::set-two-factor-step :save-secret]
+                         [::close-modal])]]}))
 
 (reg-event-fx
   ::two-factor-disabled

@@ -89,7 +89,7 @@
   (case state
     "ONLINE" "online=true"
     "OFFLINE" "online=false"
-    "UNKNOWN" "online!=true and online!=false"
+    "UNKNOWN" "online=null"
     (str "state='" state "'")))
 
 

@@ -1,8 +1,8 @@
 (ns sixsq.nuvla.ui.plugins.tab
   (:require
     [cljs.spec.alpha :as s]
-    [sixsq.nuvla.ui.main.spec :as main-spec]
     [re-frame.core :refer [dispatch reg-event-fx reg-sub subscribe]]
+    [sixsq.nuvla.ui.main.spec :as main-spec]
     [sixsq.nuvla.ui.plugins.helpers :as helpers]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
     [taoensso.timbre :as log]))

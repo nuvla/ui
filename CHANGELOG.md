@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.32.8] - 2022-10-14
+
 ### Changed
 
 - Dictionary - Replace module by application, typo fix, NuvlaEdge/Cloud order change #916

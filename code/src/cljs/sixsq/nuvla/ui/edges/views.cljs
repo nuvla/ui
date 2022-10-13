@@ -872,11 +872,13 @@
       [ui/Grid {:stackable true
                 :reversed  "mobile"
                 :style     {:padding-bottom 10}}
-       [ui/GridColumn {:width 3}
+       [ui/GridColumn {:width 4}
         [full-text-search-plugin/FullTextSearch
-         {:db-path      [::spec/edges-search]
-          :change-event [::pagination-plugin/change-page
-                         [::spec/pagination] 1]}]]
+         {:db-path            [::spec/edges-search]
+          :change-event       [::pagination-plugin/change-page
+                               [::spec/pagination] 1]
+          :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))
+          :style              {:width "100%"}}]]
        [ui/GridColumn {:width 10}
         (if (= @view-type :cluster)
           [views-clusters/StatisticStates]

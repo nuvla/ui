@@ -36,12 +36,13 @@
         filter-open?      (r/atom false)]
     (fn []
       [ui/GridColumn {:width 4}
-       [:div {:style {:display    :flex
-                      :align-self :baseline}}
-        [full-text-search-plugin/FullTextSearch
-         {:db-path      [::spec/deployments-search]
-          :change-event [::pagination-plugin/change-page
-                         [::spec/pagination] 1]}]
+       [:div {:style {:display     :flex
+                      :align-items :baseline}}
+        [:div [full-text-search-plugin/FullTextSearch
+               {:db-path            [::spec/deployments-search]
+                :change-event       [::pagination-plugin/change-page
+                                     [::spec/pagination] 1]
+                :placeholder-suffix (str " " @(subscribe [::subs/state-selector]))}]]
         " "
         ^{:key (random-uuid)}
         [filter-comp/ButtonFilter

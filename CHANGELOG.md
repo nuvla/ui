@@ -14,6 +14,8 @@
 - Deployments overview - Shows created by on table and list view #926
 - Edges overview - Shows created by on table and list view #926
 - Profile - Removes auto closing modal on tab change to enable e-mail 2FA bugfix #918
+- Edges and Deployments - Adds filter indicator to full text search
+- Filter comp - Show filter in popoup and color the button when filter is set
 
 ## [2.32.7] - 2022-09-29
 

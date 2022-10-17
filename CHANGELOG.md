@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- NuvlaEdge details - Show cronjob in confirmation message when enabling host-level management
+
 ## [2.32.8] - 2022-10-14
 
 ### Changed

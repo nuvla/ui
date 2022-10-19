@@ -5,8 +5,8 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  # push:
-  #   branches: [master]
+  push:
+    branches: [issue_929]
   # pull_request:
   #   branches: [master]
   workflow_dispatch:

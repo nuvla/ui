@@ -60,14 +60,6 @@ const config: PlaywrightTestConfig = {
   projects: [
     {
       name: 'chromium',
-      testDir: './tests/loggedin',
-      use: {
-        ...devices['Desktop Chrome'],
-      },
-    },
-    {
-      name: 'chromium-logout',
-      testDir: './tests/logout',
       use: {
         ...devices['Desktop Chrome'],
       },

@@ -9,7 +9,6 @@ test.skip('Marketplace shows only published apps', async ({ page, context }, { p
   // await page.waitForRequest((request) => request.postDataJSON()?.filter?.includes?.('published=true'));
   // await page.waitForResponse((resp) => resp.url().includes('module'));
   // await page.waitForResponse((resp) => resp.url().includes('module'));
-
   // await page.waitForTimeout(5000);
   // const appCards = await page.waitForSelector('a.ui.card', { state: 'visible' });
   // const appCards = page.locator('a.ui.card');

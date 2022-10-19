@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.skip('Logout logs me out', async ({ page, context }, { project, config }) => {
+test('Logout logs me out', async ({ page, context }, { project, config }) => {
   const { baseURL } = config.projects[0].use;
   const welcomePageUrl = baseURL + '/ui/welcome';
   const signInPageUrl = baseURL + '/ui/sign-in';

@@ -1,9 +1,14 @@
 // global-setup.js
 const { chromium, expect } = require('@playwright/test');
 
-module.exports = async (config) => {
+export default async (config) => {
   const { baseURL } = config.projects[0].use;
 
+  const { page, browser } = await login(baseURL, config);
+  await browser.close();
+};
+
+export async function login(baseURL, config) {
   const browser = await chromium.launch();
   const page = await browser.newPage();
   page.setExtraHTTPHeaders({
@@ -25,5 +30,5 @@ module.exports = async (config) => {
   await page.waitForURL(/ui\/welcome/);
   // Save signed-in state to 'storageState.json'.
   await page.context().storageState({ path: config.projects[0].use.storageState });
-  await browser.close();
-};
+  return { page, browser };
+}

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Testing - Added playwright for e2e testing UI and Server
+
 ## [2.32.8] - 2022-10-14
 
 ### Changed

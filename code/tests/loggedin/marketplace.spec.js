@@ -7,7 +7,6 @@ test('Marketplace shows only published apps', async ({ page }, { project, config
   await page.getByRole('link', { name: 'Apps' }).click();
   await expect(page).toHaveURL(marketplaceUrl);
 
-  await page.goto(marketplaceUrl);
   const appCards = await page.locator('a.ui.card').nth(0).waitFor();
   const elements = await page.$$('a.ui.card');
 

@@ -35,5 +35,8 @@ async function login(baseURL, config) {
   await page.waitForURL(/ui\/welcome/);
   // Save signed-in state to 'storageState.json'.
   await page.context().storageState({ path: config.projects[0].use.storageState });
+  page.on('pageerror', (err) => {
+    console.log(err.message);
+  });
   return { page, browser };
 }

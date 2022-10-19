@@ -7,8 +7,11 @@ import { devices } from '@playwright/test';
  */
 require('dotenv').config({ path: './.env.e2e' });
 
-let baseURL = process.env.MANUAL_BASE_URL || process.env.ALIAS_BASE_URL || process.env.UI_BASE_URL || '';
+let baseURL = process.env.UI_BASE_URL || '';
 
+/**
+ * Blow up if now valid URL was provided
+ */
 if (isValidHttpUrl(baseURL)) {
   console.log('Test running on', baseURL);
   console.log('');

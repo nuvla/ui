@@ -10,7 +10,6 @@ module.exports = async (config) => {
     'CF-Access-Client-Id': process.env.CF_CLIENT_ID,
   });
   await page.goto(baseURL + '/ui/sign-in');
-  console.log(page.url());
 
   await page.locator('input[name="username"]').click();
 

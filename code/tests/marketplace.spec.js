@@ -1,8 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-test('Marketplace shows only published apps', async ({ page, context }, { project, config }) => {
+test.skip('Marketplace shows only published apps', async ({ page, context }, { project, config }) => {
   const { baseURL } = config.projects[0].use;
-  console.log({ baseURL });
   const marketplaceUrl = baseURL + '/ui/apps';
 
   await page.goto(marketplaceUrl);

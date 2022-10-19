@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('NuvlaEdge creation and deletion', async ({ page, context }, { project, config }) => {
+test.skip('NuvlaEdge creation and deletion', async ({ page, context }, { project, config }) => {
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.waitForResponse((resp) => resp.url().includes('get-subscription'));

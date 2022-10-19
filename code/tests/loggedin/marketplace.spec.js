@@ -1,8 +1,11 @@
 import { test, expect } from '@playwright/test';
 
-test('Marketplace shows only published apps', async ({ page, context }, { project, config }) => {
+test('Marketplace shows only published apps', async ({ page }, { project, config }) => {
   const { baseURL } = config.projects[0].use;
   const marketplaceUrl = baseURL + '/ui/apps';
+  await page.goto(baseURL + '/ui/welcome');
+  await page.getByRole('link', { name: 'Apps' }).click();
+  await expect(page).toHaveURL(marketplaceUrl);
 
   await page.goto(marketplaceUrl);
   const appCards = await page.locator('a.ui.card').nth(0).waitFor();

@@ -50,18 +50,15 @@ test.only('NuvlaEdge creation and deletion', async ({ page, context }, { project
   await page.getByRole('button', { name: 'delete' }).click();
   await expect(page).toHaveURL(edgesPageRegex);
 
-  // This is a workaround to test clipboard content
-  // if cronjob is copied
+  // This is a workaround to test clipboard content if cronjob is copied
+  // see: https://github.com/microsoft/playwright/issues/8114
   const modifier = process.env.MODIFIER_KEY || 'Control';
   await page.setContent(`<div contenteditable>123</div>`);
   await page.focus('div');
   await page.keyboard.press(`${modifier}+KeyV`);
   await page.keyboard.press(`${modifier}+KeyV`);
-
   const cronjob = await page.evaluate(() => document.querySelector('div').textContent);
-
   expect(cronjob.startsWith('* 0 * * * ')).toBeTruthy();
-
   for (const envVar of ['NUVLABOX_API_KEY', 'NUVLABOX_API_SECRET', 'NUVLA_ENDPOINT']) {
     const testRegex = new RegExp(` (${envVar})=`);
     const [_, matchedEnvVar] = cronjob.match(testRegex) || [];

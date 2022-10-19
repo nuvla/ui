@@ -35,12 +35,11 @@ jobs:
       - name: Run Playwright tests
         run: npx playwright test
         env:
-          ## sets env vars
-          # MANUAL_BASE_URL=${{ github.event.inputs.baseUrl }}
-          UI_E2E_TEST_USERNAME=${{ secrets.UI_E2E_TEST_USERNAME }}
-          UI_E2E_TEST_PASSWORD=${{ secrets.UI_E2E_TEST_PASSWORD }}
-          CF_CLIENT_SECRET=${{ secrets.CF_CLIENT_SECRET }}
-          CF_CLIENT_ID=${{ secrets.CF_CLIENT_ID }}
+          MANUAL_BASE_URL: ${{ github.event.inputs.baseUrl }}
+          UI_E2E_TEST_USERNAME: ${{ secrets.UI_E2E_TEST_USERNAME }}
+          UI_E2E_TEST_PASSWORD: ${{ secrets.UI_E2E_TEST_PASSWORD }}
+          CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
+          CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
       - uses: actions/upload-artifact@v3
         if: always()
         with:

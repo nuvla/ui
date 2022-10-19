@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.skip('NuvlaEdge creation and deletion', async ({ page, context }, { project, config }) => {
+test('NuvlaEdge creation and deletion', async ({ page, context }, { project, config }) => {
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.waitForResponse((resp) => resp.url().includes('get-subscription'));
@@ -11,10 +11,6 @@ test.skip('NuvlaEdge creation and deletion', async ({ page, context }, { project
   await expect(page).toHaveURL(edgesPageRegex);
 
   await page.getByText('Add').click();
-
-  const newEdgeName = `e2e Tesing: Edge creation and deletion in ${project.name}`;
-  await page.locator('input[type="input"]').click();
-  await page.locator('input[type="input"]').fill(newEdgeName);
 
   await page.getByText('bluetooth').click();
 
@@ -30,17 +26,13 @@ test.skip('NuvlaEdge creation and deletion', async ({ page, context }, { project
 
   await page.getByText('Enable host-level management').click();
 
+  const newEdgeName = `e2e Tesing: Edge creation and deletion in ${project.name}`;
+  await page.locator('input[type="input"]').click();
+  await page.locator('input[type="input"]').fill(newEdgeName);
+
   await page.getByRole('button', { name: 'create' }).click();
 
   await page.locator('span:has-text("Host-level management") i').nth(1).click();
-
-  // TODO: unflake this
-  // await page.hover('.icon.eye');
-  // const cronjob = await page.getByText(/^\* 0 \* \* \*/).innerText();
-
-  // for (const envVar of ['NUVLABOX_API_KEY', 'NUVLABOX_API_SECRET', 'NUVLA_ENDPOINT']) {
-  //   expect(cronjob.includes(envVar));
-  // }
 
   await page
     .locator('span:has-text("Enabled and ready to be used. Please copy this cronjob and add it to your system") i')
@@ -53,4 +45,23 @@ test.skip('NuvlaEdge creation and deletion', async ({ page, context }, { project
   await page.getByText(/^delete$/i).click();
   await page.getByRole('button', { name: 'delete' }).click();
   await expect(page).toHaveURL(edgesPageRegex);
+
+  // This is a workaround to test clipboard content
+  // if cronjob is copied
+  const modifier = process.env.MODIFIER_KEY || 'Control';
+  await page.setContent(`<div contenteditable>123</div>`);
+  await page.focus('div');
+  await page.keyboard.press(`${modifier}+KeyV`);
+  await page.keyboard.press(`${modifier}+KeyV`);
+
+  const cronjob = await page.evaluate(() => document.querySelector('div').textContent);
+
+  expect(cronjob.startsWith('* 0 * * * ')).toBeTruthy();
+
+  for (const envVar of ['NUVLABOX_API_KEY', 'NUVLABOX_API_SECRET', 'NUVLA_ENDPOINT']) {
+    const testRegex = new RegExp(` (${envVar})=`);
+    const [_, matchedEnvVar] = cronjob.match(testRegex) || [];
+
+    expect(matchedEnvVar).toBe(envVar);
+  }
 });

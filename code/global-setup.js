@@ -3,8 +3,9 @@ const { chromium, expect } = require('@playwright/test');
 
 module.exports = async (config) => {
   const { baseURL } = config.projects[0].use;
+
   const browser = await chromium.launch();
-  const page = await browser.newPage({});
+  const page = await browser.newPage();
   page.setExtraHTTPHeaders({
     'CF-Access-Client-Secret': process.env.CF_CLIENT_SECRET,
     'CF-Access-Client-Id': process.env.CF_CLIENT_ID,

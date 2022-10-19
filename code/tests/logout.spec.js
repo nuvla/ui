@@ -7,7 +7,7 @@ test('Logout logs me out', async ({ page, context }, { project, config }) => {
 
   await page.goto(welcomePageUrl);
   await page.getByText(/^logout$/i).click();
-  await expect(page).toHaveURL(signInPageUrl + 'blabla');
+  await expect(page).toHaveURL(signInPageUrl);
 
   await page.goto(welcomePageUrl);
 

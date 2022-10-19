@@ -7,6 +7,16 @@ import { devices } from '@playwright/test';
  */
 require('dotenv').config({ path: './.env.e2e' });
 
+let baseURL = process.env.MANUAL_BASE_URL || process.env.ALIAS_BASE_URL || process.env.UI_BASE_URL || '';
+
+if (isValidHttpUrl(baseURL)) {
+  console.log('Test running on', baseURL);
+  console.log('');
+} else {
+  console.error('Not a valid url:', baseURL);
+  throw new Error('not a valid baseURL: ' + baseURL);
+}
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
@@ -40,7 +50,7 @@ const config: PlaywrightTestConfig = {
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.MANUAL_BASE_URL || process.env.ALIAS_BASE_URL || process.env.UI_BASE_URL || 'https://nuvla.io',
+    baseURL,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -110,3 +120,13 @@ const config: PlaywrightTestConfig = {
 };
 
 export default config;
+
+function isValidHttpUrl(s: string) {
+  let url;
+  try {
+    url = new URL(s);
+  } catch (_) {
+    return false;
+  }
+  return url.protocol === 'http:' || url.protocol === 'https:';
+}

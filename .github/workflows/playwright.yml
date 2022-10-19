@@ -12,8 +12,7 @@ on:
     inputs:
       baseUrl:
         description: 'Base URL of UI'
-        required: false
-        default: ''
+        required: true
 
 defaults:
   run:
@@ -26,6 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Await CF Pages
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
         uses: WalshyDev/cf-pages-await@v1
         id: pages-action
         with:
@@ -54,7 +54,5 @@ jobs:
         if: always()
         with:
           name: playwright
-          path: |
-            code/playwright-report/
-            code/test-results/
+          path: code/playwright-report/
           retention-days: 30

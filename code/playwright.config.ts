@@ -40,7 +40,7 @@ const config: PlaywrightTestConfig = {
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.MANUAL_BASE_URL || process.env.UI_BASE_URL || 'https://nuvla.io',
+    baseURL: process.env.MANUAL_BASE_URL || process.env.ALIAS_BASE_URL || process.env.UI_BASE_URL || 'https://nuvla.io',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',

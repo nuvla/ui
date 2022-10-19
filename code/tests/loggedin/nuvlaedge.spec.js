@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('NuvlaEdge creation and deletion', async ({ page, context }, { project, config }) => {
+test.only('NuvlaEdge creation and deletion', async ({ page, context }, { project, config }) => {
   const { baseURL } = config.projects[0].use;
   await page.goto(baseURL + '/ui/welcome');
   await page.waitForResponse((resp) => resp.url().includes('get-subscription'));
@@ -41,6 +41,10 @@ test('NuvlaEdge creation and deletion', async ({ page, context }, { project, con
   await page.locator('.close').click();
 
   await page.getByRole('link', { name: new RegExp(`${newEdgeName}`) }).click();
+
+  await page.getByText('Disable host level management').click();
+  await page.getByRole('button', { name: 'Disable Host Level Management' }).click();
+  await page.getByText('success executing operation disable-host-level-management').click();
 
   await page.getByText(/^delete$/i).click();
   await page.getByRole('button', { name: 'delete' }).click();

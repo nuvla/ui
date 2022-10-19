@@ -19,7 +19,7 @@ defaults:
     working-directory: ./code
 
 jobs:
-  test:
+  e2e-test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:

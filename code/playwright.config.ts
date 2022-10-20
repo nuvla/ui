@@ -47,7 +47,7 @@ const config: PlaywrightTestConfig = {
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     screenshot: 'only-on-failure',
-    video: process.env.CI ? 'retain-on-failure' : 'on',
+    video: process.env.CI ? 'on' : 'on',
     storageState: 'storageState.json',
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
@@ -55,7 +55,7 @@ const config: PlaywrightTestConfig = {
     baseURL,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'retain-on-failure',
+    trace: 'on',
   },
 
   /* Configure projects for major browsers */

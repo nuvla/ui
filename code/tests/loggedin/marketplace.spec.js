@@ -7,7 +7,7 @@ test('Marketplace shows only published apps', async ({ page }, { project, config
   await page.getByRole('link', { name: 'Apps' }).click();
   await expect(page).toHaveURL(marketplaceUrl);
 
-  const appCards = await page.locator('a.ui.card').nth(0).waitFor();
+  const appCards = await page.locator('a.ui.card').nth(0).waitFor({ timeout: 5000 });
   const elements = await page.$$('a.ui.card');
 
   let hrefs = await Promise.all(elements.map(async (elem) => elem.getAttribute('href')));

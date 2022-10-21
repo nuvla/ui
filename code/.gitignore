@@ -4,3 +4,5 @@ node_modules/
 /playwright/.cache/
 .env.e2e
 storageState.json
+storage.json
+storage-e2e.json

@@ -230,13 +230,15 @@
                                                                      :width            160}
                                                        :transparent true}])
                         :show-time-select true
-                        :date-format      "LLL"
+                        :date-format      "MMMM d, yyyy HH:mm"
+                        :time-format      "HH:mm"
                         :on-change        #(reset! data (assoc-in @data [i :value]
-                                                                  (time/time->utc-str %)))}
+                                                                  (time/js-date->utc-str %)))}
                        (and value
                             (not value-is-null?)
                             (not value-now-expression?))
-                       (assoc :selected (time/parse-iso8601 value)))]]]))
+                       (assoc :selected (js/Date. (time/parse-iso8601 value))))]]]))
+
 
 
 (defn CellAttribute

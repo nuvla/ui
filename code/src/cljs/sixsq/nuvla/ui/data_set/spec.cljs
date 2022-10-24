@@ -5,8 +5,10 @@
     [sixsq.nuvla.ui.plugins.pagination :as pagination-plugin]
     [sixsq.nuvla.ui.utils.time :as time]))
 
+(defn- isDate? [d] (instance? js/Date d))
+
 (s/def ::not-found? boolean?)
-(s/def ::time-period (s/tuple any? any?))
+(s/def ::time-period (s/tuple isDate? isDate?))
 (s/def ::time-period-filter (s/nilable string?))
 (s/def ::data-set-id (s/nilable string?))
 (s/def ::data-set any?)
@@ -19,8 +21,8 @@
 (s/def ::selected-data-record-ids (s/coll-of string? :kind set?))
 (s/def ::pagination any?)
 
-(def default-time-period [(time/days-before 30)
-                          (time/days-before -1)])
+(def default-time-period [(time/days-before-date 30)
+                          (time/days-before-date -1)])
 
 (def defaults {::not-found?               false
                ::time-period              default-time-period

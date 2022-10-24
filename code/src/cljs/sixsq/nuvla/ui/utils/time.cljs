@@ -129,6 +129,11 @@
    (-> (now locale) (.startOf "date") (.add (- n) "days"))))
 
 
+(defn days-before-date
+  ([n]
+   (.toDate (days-before n))))
+
+
 (defn time-value
   [iso8601]
   (str (-> iso8601 parse-iso8601 ago) " (" iso8601 ")"))
@@ -149,6 +154,16 @@
   [^js moment]
   (-> moment .clone .utc .format))
 
+
+(defn js-date->utc-str
+  "Javascript Date to ISO string"
+  [^js date]
+  (-> date .toISOString (.split ".") (first) (str "Z")))
+
+(comment
+  (let [date (js/Date.)]
+    (= (time->utc-str (moment date))
+       (js-date->utc-str date))))
 
 (defn time->format
   ([iso8601]

@@ -7,9 +7,9 @@
 (defn create-time-period-filter
   [[time-start time-end]]
   (str "(timestamp>='"
-       (time/time->utc-str time-start)
+       (time/js-date->utc-str time-start)
        "' and timestamp<'"
-       (time/time->utc-str time-end)
+       (time/js-date->utc-str time-end)
        "')"))
 
 (defn format-bytes

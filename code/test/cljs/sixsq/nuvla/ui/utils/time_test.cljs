@@ -97,23 +97,45 @@
 (deftest remaining-test
   (doseq [test-case time-to-go-test-cases]
     (let [past-moment (time/subtract-milliseconds (time/date->moment this-moment) (key test-case))]
-      (is (= (time/remaining past-moment) (:en (val test-case))))
-      (is (= (time/remaining past-moment "en") (:en (val test-case))))
-      (is (= (time/remaining past-moment "fr") (:fr (val test-case)))))))
+      (is (= (:en (val test-case)) (time/remaining past-moment)))
+      (is (= (:en (val test-case)) (time/remaining past-moment "en")))
+      (is (= (:fr (val test-case)) (time/remaining past-moment "fr"))))))
 
 
-(deftest delta-minutes
-  (let [five-minutes-ago (time/subtract-milliseconds (now) (* 5 60 1000))]
-    (is (= (time/delta-minutes five-minutes-ago) 5))
-    (is (= (time/delta-minutes five-minutes-ago (now)) 5))))
+(deftest delta-tests
+  (let [mom (now)
+        thirty-thousand (* 5 60 1000)
+        five-minutes-ago (time/subtract-milliseconds mom thirty-thousand)]
+    (is (= 5 (time/delta-minutes five-minutes-ago)))
+    (is (= 5 (time/delta-minutes five-minutes-ago mom)))
+    (is (= thirty-thousand (time/delta-milliseconds five-minutes-ago mom)))))
+
+;; TODO ?
 (deftest delta-humanize)
-(deftest delta-milliseconds)
-(deftest days-before)
-(deftest days-before-date)
-(deftest time-value)
+
+(deftest days-before-test
+  (is (= (js/Date. (time/days-before 30)) (time/days-before-date 30))))
+
+(deftest time-value-test
+  (let [five-days-ago (time/add-milliseconds (now) (* 1000 60 60 24 5))
+        five-days-ago-iso (.toISOString five-days-ago)]
+    (is (= (str "in 5 days (" five-days-ago-iso ")") (time/time-value five-days-ago-iso)))))
+
+;; TODO ?
 (deftest range-equals)
-(deftest time->utc-str)
+
+(deftest time->utc-str-test
+  (is (= (time/time->utc-str test-moment) "2022-11-05T15:45:40Z")))
+
 (deftest js-date->utc-str)
-(deftest time->format)
+
+(deftest time->format-test
+  (doseq [[format expected]  {"YYYY/MM/DD, hh:mm:ss" {:en "2022/11/05, 04:45:40" :fr  "2022/11/05, 04:45:40" }
+                              "LL" {:en "November 5, 2022" :fr  "5 novembre 2022" }
+                              "LLL" {:en "November 5, 2022 4:45 PM" :fr "5 novembre 2022 16:45" }}]
+    (is (= (:en expected) (time/time->format test-date-as-iso-string format)))
+    (is (= (:en expected) (time/time->format test-date-as-iso-string format "en")))
+    (is (= (:fr expected) (time/time->format test-date-as-iso-string format "fr")))))
 (deftest moment-format)
+
 (deftest parse-ago)

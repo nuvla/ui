@@ -32,4 +32,8 @@
                                              :compiler-options {:infer-externs :auto
                                                                 :optimizations :advanced
                                                                 :pseudo-names  false
-                                                                :pretty-print  false}}}}}
+                                                                :pretty-print  false}}}
+                     :test     {:target     :node-test
+                                :output-to  "out/node-tests.js"
+                                :autorun    true
+                                :compiler-options {:infer-externs true}}}}

@@ -15,6 +15,7 @@
   []
   (/ (.now js/Date) 1000))
 
+(defn date->moment [d] (moment d))
 
 (defn now
   ([]
@@ -88,6 +89,7 @@
        (invalid locale))))
 
 
+;; try to get rid of this
 (defn delta-duration
   ([start]
    (delta-duration start (now)))

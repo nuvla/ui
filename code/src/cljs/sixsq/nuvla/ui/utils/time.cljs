@@ -30,7 +30,7 @@
 
 (defn subtract-milliseconds
   [moment milliseconds]
-  (-> moment .clone (.subtract milliseconds "milliseconds")))
+  (-> moment .clone ^js (.subtract milliseconds "milliseconds")))
 
 
 (defn parse-iso8601
@@ -94,7 +94,7 @@
   ([start end]
    (let [start-moment (parse-iso8601 start)
          end-moment   (parse-iso8601 end)]
-     (.duration moment (.diff end-moment start-moment true)))))
+     (.duration moment ^js (.diff end-moment start-moment true)))))
 
 
 (defn delta-minutes
@@ -131,7 +131,7 @@
 
 (defn days-before-date
   ([n]
-   (.toDate (days-before n))))
+   (.toDate ^js (days-before n))))
 
 
 (defn time-value

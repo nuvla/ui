@@ -8,7 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-
   job-build:
     runs-on: ubuntu-latest
     steps:
@@ -16,7 +15,13 @@ jobs:
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting for sonar
           fetch-depth: 0
-
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install dependencies
+        run: npm ci
+      - name: Run unit tests
+        run: npm run test:unit
       - name: Cache local Maven repository
         uses: actions/cache@v2
         with:

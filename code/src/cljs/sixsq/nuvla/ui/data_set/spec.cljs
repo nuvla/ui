@@ -21,8 +21,8 @@
 (s/def ::selected-data-record-ids (s/coll-of string? :kind set?))
 (s/def ::pagination any?)
 
-(def default-time-period [(time/days-before-date 30)
-                          (time/days-before-date -1)])
+(def default-time-period [(time/days-before 30)
+                          (time/days-before -1)])
 
 (def defaults {::not-found?               false
                ::time-period              default-time-period

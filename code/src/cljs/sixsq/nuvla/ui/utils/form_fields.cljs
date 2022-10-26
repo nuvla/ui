@@ -97,7 +97,7 @@
                                  :show-time-select true
                                  :read-only        read-only
                                  :locale           @locale
-                                 :date-format      "d MMMM YYYY, hh:mm a"
+                                 :date-format      "d MMMM yyyy, hh:mm a"
                                  :on-change        (fn [date]
                                                      (reset! date-atom date)
                                                      (update-fn form-id name date))}

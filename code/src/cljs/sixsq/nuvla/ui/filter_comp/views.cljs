@@ -233,7 +233,7 @@
                         :date-format      "MMMM d, yyyy HH:mm"
                         :time-format      "HH:mm"
                         :on-change        #(reset! data (assoc-in @data [i :value]
-                                                                  (time/js-date->utc-str %)))}
+                                                                  (time/time->utc-str %)))}
                        (and value
                             (not value-is-null?)
                             (not value-now-expression?))

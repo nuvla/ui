@@ -1,15 +1,25 @@
 (ns sixsq.nuvla.ui.utils.time
   (:require
-   ["date-fns" :as dfn]
-   ["date-fns/locale" :refer [fr]]))
+   ["date-fns/parseISO" :as parseISO]
+   ["date-fns/addMilliseconds" :as addMilliseconds]
+   ["date-fns/subMilliseconds" :as subMilliseconds]
+   ["date-fns/differenceInMilliseconds" :as differenceInMilliseconds]
+   ["date-fns/intlFormatDistance" :as intlFormatDistance]
+   ["date-fns/isBefore" :as isBefore]
+   ["date-fns/isAfter" :as isAfter]
+   ["date-fns/formatDistance" :as formatDistance]
+   ["date-fns/differenceInMinutes" :as differenceInMinutes]
+   ["date-fns/startOfDay" :as startOfDay]
+   ["date-fns/subDays" :as subDays]
+   ["date-fns/format" :as format]
+   ["date-fns/locale/fr" :as fr]))
 
 (def ^:const default-locale "en")
 (def ^:const locale-string->locale-object {"fr" fr})
 
 (defn- ^:const get-locale-object [locale]
   (some->> (locale-string->locale-object locale)
-           (assoc {} :locale)
-           (clj->js)))
+           (assoc {} :locale)))
 
 
 (defn timestamp
@@ -26,12 +36,12 @@
 
 (defn add-milliseconds
   [date milliseconds]
-  (dfn/addMilliseconds date milliseconds))
+  (addMilliseconds date milliseconds))
 
 
 (defn subtract-milliseconds
   [date milliseconds]
-  (dfn/subMilliseconds date milliseconds))
+  (subMilliseconds date milliseconds))
 
 
 (defn parse-iso8601
@@ -39,14 +49,14 @@
    (parse-iso8601 iso8601 default-locale))
   ([iso8601 _]
    (if (string? iso8601)
-     (dfn/parseISO iso8601)
+     (parseISO iso8601)
      (js/Date. iso8601))))
 
 (defn parse-unix
   ([unix-timestamp]
-   (dfn/fromUnixTime unix-timestamp))
+   (js/Date. (* 1000 unix-timestamp)))
   ([unix-timestamp _]
-   (dfn/fromUnixTime unix-timestamp)))
+   (js/Date. (* 1000 unix-timestamp))))
 
 
 (defn invalid
@@ -60,7 +70,7 @@
   ([start]
    (delta-milliseconds start (now)))
   ([start end]
-   (dfn/differenceInMilliseconds (parse-iso8601 end) (parse-iso8601 start))))
+   (differenceInMilliseconds (parse-iso8601 end) (parse-iso8601 start))))
 
 (def units-in-ms [["year"     (* 1000 60 60 24 365)]
                   ["month"    (* 1000 60 60 24 31)]
@@ -76,25 +86,25 @@
   ([date]
    (ago date default-locale))
   ([date locale]
-  (let [n (now)
-        unit (some #(when (<= (second %) (Math/abs (delta-milliseconds date n))) (first %)) units-in-ms)]
-    (or (some-> date (dfn/intlFormatDistance (now) (clj->js {:locale locale
-                                                             :numeric "always"
-                                                             :unit unit})))
-        (invalid locale)))))
+   (let [n (now)
+         unit (some #(when (<= (second %) (Math/abs (delta-milliseconds date n))) (first %)) units-in-ms)]
+     (or (some-> date (intlFormatDistance (now) (clj->js {:locale locale
+                                                          :numeric "always"
+                                                          :unit unit})))
+         (invalid locale)))))
 (ago
  (subtract-milliseconds (js/Date.) 1000000))
 
 (defn before-now?
   [iso8601]
   (let [^js ts (parse-iso8601 iso8601)]
-    (dfn/isBefore ts (js/Date.))))
+    (isBefore ts (js/Date.))))
 
 
 (defn after-now?
   [iso8601]
   (let [^js ts (parse-iso8601 iso8601)]
-    (dfn/isAfter ts (js/Date.))))
+    (isAfter ts (js/Date.))))
 
 
 (defn remaining
@@ -106,10 +116,9 @@
   ([expiry-iso8601 locale]
    (or (some-> expiry-iso8601
                (parse-iso8601)
-               (dfn/formatDistance (now) (-> (get-locale-object locale)
-                                             (js->clj)
-                                             (merge {:includeSeconds true})
-                                             (clj->js))))
+               (formatDistance (now) (-> (get-locale-object locale)
+                                         (merge {:includeSeconds true})
+                                         (clj->js))))
        (invalid locale))))
 
 
@@ -118,14 +127,14 @@
   ([start]
    (delta-minutes start (now)))
   ([start end]
-   (dfn/differenceInMinutes end start)))
+   (differenceInMinutes end start)))
 
 
 (defn days-before
   ([n]
    (days-before n default-locale))
   ([n locale]
-   (-> (now locale) (dfn/startOfDay) (dfn/subDays n))))
+   (-> (now locale) (startOfDay) (subDays n))))
 
 
 (defn time-value
@@ -157,9 +166,9 @@
   ([iso8601 custom-format locale-string]
    (let [moment->date-fns-format {"LLL" "PPP p"
                                   "LL" "PPP"}
-         format (or (moment->date-fns-format custom-format) custom-format)
-         locale (get-locale-object locale-string)]
-     (-> (js/Date. iso8601) (dfn/format format locale)))))
+         format-string (or (moment->date-fns-format custom-format) custom-format)
+         locale (clj->js (get-locale-object locale-string))]
+     (-> (js/Date. iso8601) (format format-string locale)))))
 
 
 (defn parse-ago

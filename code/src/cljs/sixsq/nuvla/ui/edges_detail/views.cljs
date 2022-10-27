@@ -846,9 +846,9 @@
                                                           :text     (:title stat)
                                                           :position "bottom"}
                                     :maintainAspectRatio false
-                                    :circumference       4.14
-                                    :rotation            -3.64
-                                    :cutoutPercentage    60}}]]
+                                    :circumference       236
+                                    :rotation            -118
+                                    :cutout              "60%"}}]]
 
          (when (pos? (count (:data-gateway stat)))
            [ui/Container {:key        (:topic stat)
@@ -898,9 +898,9 @@
                                :title  {:display  true
                                         :text     (:title net-stats)
                                         :position "bottom"}
-                               :scales {:yAxes [{:type       "logarithmic"
-                                                 :scaleLabel {:labelString "megabytes"
-                                                              :display     true}}]}}}]]]])
+                               :scales {:y {:type  "logarithmic"
+                                            :title {:text    "megabytes"
+                                                    :display true}}}}}]]]])
      (when container-stats
        [ui/GridRow {:centered true
                     :columns  1}

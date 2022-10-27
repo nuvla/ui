@@ -1,0 +1,71 @@
+name: Playwright Tests
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+on:
+  push:
+    branches: [issue_929]
+  # pull_request:
+  #   branches: [master]
+  workflow_dispatch:
+    inputs:
+      baseUrl:
+        description: 'Base URL of UI'
+        required: true
+
+defaults:
+  run:
+    working-directory: ./code
+
+jobs:
+  e2e-test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Await CF Pages
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
+        uses: WalshyDev/cf-pages-await@v1
+        id: pages-action
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: 'ed40269bd7a426334d38642675bcd393'
+          project: 'ui-nuvla-prev'
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          commitHash: ${{ steps.push-changes.outputs.commit-hash }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+      - name: Run Playwright logged in tests
+        run: npx playwright test loggedin
+        env:
+          UI_BASE_URL: ${{ steps.pages-action.outputs.alias || github.event.inputs.baseUrl }}
+          UI_E2E_TEST_USERNAME: ${{ secrets.UI_E2E_TEST_USERNAME }}
+          UI_E2E_TEST_PASSWORD: ${{ secrets.UI_E2E_TEST_PASSWORD }}
+          CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
+          CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright
+          path: code/playwright-report/
+          retention-days: 30
+      - name: Run Playwright logout tests
+        run: npx playwright test logout
+        env:
+          UI_BASE_URL: ${{ steps.pages-action.outputs.alias || github.event.inputs.baseUrl }}
+          UI_E2E_TEST_USERNAME: ${{ secrets.UI_E2E_TEST_USERNAME }}
+          UI_E2E_TEST_PASSWORD: ${{ secrets.UI_E2E_TEST_PASSWORD }}
+          CF_CLIENT_SECRET: ${{ secrets.CF_CLIENT_SECRET }}
+          CF_CLIENT_ID: ${{ secrets.CF_CLIENT_ID }}
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-logout
+          path: code/playwright-report/
+          retention-days: 30

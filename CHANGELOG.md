@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- CI - adds bundle analyzer job to pipeline
+
 ## [2.32.8] - 2022-10-14
 
 ### Changed

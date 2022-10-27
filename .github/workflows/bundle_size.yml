@@ -1,4 +1,4 @@
-name: Unit tests
+name: Bundle Size
 
 concurrency:
   group: ${{ github.ref }}
@@ -13,7 +13,7 @@ defaults:
     working-directory: ./code
 
 jobs:
-  e2e-test:
+  bundle-size:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:

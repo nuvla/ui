@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed
+
+- Global - upgrades react-datepicker to newest version
+- Global - upgrades react-charts-js to newest version
+- Global - replaces moment with date-fns
+
 ## [2.32.8] - 2022-10-14
 
 ### Changed

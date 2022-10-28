@@ -109,26 +109,19 @@
   (let [releases (subscribe [::edges-subs/nuvlabox-releases-options])
         tr       (subscribe [::i18n-subs/tr])]
     (fn [opts]
-      (when (empty? @releases)
-        (dispatch [::edges-events/get-nuvlabox-releases]))
-      [ui/Dropdown
-       (merge {:selection true
-               :loading   (empty? @releases)
-               :error     (:pre-release opts)
-               :options   (map
-                           (fn [{:keys [pre-release text] :as release}] (merge release
-                                                                               {:content
-                                                                                (r/as-element [:div {:style {:display "flex"
-                                                                                                             :justify-content "space-between"}}
-                                                                                               text
-                                                                                               (when pre-release
-                                                                                                 [:<> " - pre-release"
-                                                                                                  [views-utils/PreReleaseWarning
-                                                                                                   {:show? pre-release
-                                                                                                    :warning-text (@tr [:nuvlabox-pre-release])}]
-                                                                                                  #_[ui/Icon {:name "exclamation triangle"}]])])})) @releases)}
+      (let [selected-release (subscribe [::edges-subs/nuvlabox-releases-from-id (:value opts)])]
+        (when (empty? @releases)
+          (dispatch [::edges-events/get-nuvlabox-releases]))
+        [:<> [ui/Dropdown
 
-              opts)])))
+              (merge {:selection true
+                      :loading   (empty? @releases)
+                      :options   @releases}
+                     (dissoc opts :pre-release))]
+         (when (:pre-release @selected-release) [:span {:style  {:margin "1em"
+                                                                 :color "darkorange"}}
+                                                 (r/as-element [ui/Icon {:name "exclamation triangle"}])
+                                                 (@tr [:nuvlabox-pre-release])])]))))
 
 
 (defn AddRevokeSSHButton
@@ -195,21 +188,23 @@
 
 (defn UpdateButton
   [{:keys [id] :as _resource} operation show?]
-  (let [tr            (subscribe [::i18n-subs/tr])
-        status        (subscribe [::subs/nuvlabox-status])
-        releases      (subscribe [::edges-subs/nuvlabox-releases-options])
-        close-fn      #(reset! show? false)
-        form-data     (r/atom nil)
-        force-restart (r/atom false)
-        project       (-> @status :installation-parameters :project-name)
-        working-dir   (-> @status :installation-parameters :working-dir)
-        config-files  (-> @status :installation-parameters :config-files)
-        environment   (-> @status :installation-parameters :environment)
-        nb-version    (get @status :nuvlabox-engine-version nil)
-        on-change-fn  #(swap! form-data assoc :nuvlabox-release %)
-        on-success-fn close-fn
-        on-error-fn   close-fn
-        on-click-fn   #(dispatch [::events/operation id operation
+  (let [tr             (subscribe [::i18n-subs/tr])
+        status         (subscribe [::subs/nuvlabox-status])
+        releases       (subscribe [::edges-subs/nuvlabox-releases-options])
+        releases-by-no (subscribe [::edges-subs/nuvlabox-releases-by-release-number])
+        releases-by-id (subscribe [::edges-subs/nuvlabox-releases-by-id])
+        close-fn       #(reset! show? false)
+        form-data      (r/atom nil)
+        force-restart  (r/atom false)
+        project        (-> @status :installation-parameters :project-name)
+        working-dir    (-> @status :installation-parameters :working-dir)
+        config-files     (-> @status :installation-parameters :config-files)
+        environment    (-> @status :installation-parameters :environment)
+        nb-version     (get @status :nuvlabox-engine-version nil)
+        on-change-fn   #(swap! form-data assoc :nuvlabox-release %)
+        on-success-fn  close-fn
+        on-error-fn    close-fn
+        on-click-fn    #(dispatch [::events/operation id operation
                                   (utils/format-update-data @form-data)
                                   on-success-fn on-error-fn])]
 
@@ -224,7 +219,8 @@
       (let [correct-nb?    (= (:parent @status) id)
             target-version (->> @releases
                                 (some #(when (= (:value %) (:nuvlabox-release @form-data)) %))
-                                :key)]
+                                :key)
+            selected-nb    (or (:nuvlabox-release @form-data) (:id (@releases-by-no nb-version)))]
         (when-not correct-nb?
           ;; needed to make modal work in cimi detail page
           (dispatch [::events/get-nuvlabox id]))
@@ -234,9 +230,9 @@
           :close-icon true
           :on-close   close-fn
           :trigger    (r/as-element
-                        [ui/MenuItem {:on-click #(reset! show? true)}
-                         [ui/Icon {:name icon}]
-                         title])}
+                       [ui/MenuItem {:on-click #(reset! show? true)}
+                        [ui/Icon {:name icon}]
+                        title])}
          [uix/ModalHeader {:header title}]
          [ui/ModalContent
           (when correct-nb?
@@ -247,23 +243,23 @@
                  :icon    {:name "warning sign", :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
-                            [:span (str (@tr [:nuvlabox-update-error-content])) " "
-                             [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
-                                  :target "_blank"}
-                              (str/capitalize (@tr [:see-more]))]])}])
+                           [:span (str (@tr [:nuvlabox-update-error-content])) " "
+                            [:a {:href   "https://docs.nuvla.io/nuvlaedge/installation/"
+                                 :target "_blank"}
+                             (str/capitalize (@tr [:see-more]))]])}])
              (when (and (some? target-version) (is-old-version? target-version))
                [ui/Message
                 {:warning true
                  :icon    {:name "warning sign", :size "large"}
                  :header  (@tr [:nuvlabox-update-warning])
                  :content (r/as-element
-                            [:span (@tr [:nuvlabox-update-warning-content])])}])
+                           [:span (@tr [:nuvlabox-update-warning-content])])}])
              [ui/Segment
               [:b (@tr [:current-version])]
               [:i nb-version]]])
           [ui/Segment
            [:b (@tr [:update-to])]
-           [DropdownReleases {:placeholder (@tr [:select-version])
+           [DropdownReleases {:value       selected-nb
                               :on-change   (ui-callback/value #(on-change-fn %))
                               :disabled    (is-old-version? nb-version)} "release-date>='2021-02-10T09:51:40Z'"]]
           [uix/Accordion
@@ -287,14 +283,14 @@
                             :default-value (:project-name @form-data)
                             :on-key-down #(-> % .stopPropagation)
                             :on-change (ui-callback/input-callback
-                                             #(swap! form-data assoc :project-name %))}]
+                                        #(swap! form-data assoc :project-name %))}]
              [ui/FormInput {:label         (str/capitalize (@tr [:working-directory]))
                             :placeholder   "/home/ubuntu/nuvlabox-engine"
                             :required      true
                             :default-value (:working-dir @form-data)
                             :on-key-down #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
-                                             #(swap! form-data assoc :working-dir %))}]
+                                            #(swap! form-data assoc :working-dir %))}]
              [ui/FormField
               [:label
                [general-utils/mandatory-name (@tr [:config-files])]
@@ -304,13 +300,13 @@
                             :default-value (:config-files @form-data)
                             :on-key-down #(-> % .stopPropagation)
                             :on-change     (ui-callback/input-callback
-                                             #(swap! form-data assoc :config-files %))}]]
+                                            #(swap! form-data assoc :config-files %))}]]
              [ui/FormField
               [:label (@tr [:env-variables]) " " [components/InfoPopup (@tr [:env-variables-info])]]
               [ui/TextArea {:placeholder   "NUVLA_ENDPOINT=nuvla.io\nPYTHON_VERSION=3.8.5\n..."
                             :default-value (:environment @form-data)
                             :on-change     (ui-callback/input-callback
-                                             #(swap! form-data assoc :environment %))}]]]]
+                                            #(swap! form-data assoc :environment %))}]]]]
            :label (@tr [:advanced])
            :title-size :h4
            :default-open false]]

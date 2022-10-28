@@ -402,8 +402,8 @@
         vpn-infra-opts             (subscribe [::subs/vpn-infra-options])
         nb-releases                (subscribe [::subs/nuvlabox-releases])
         ssh-credentials            (subscribe [::subs/ssh-keys-available])
-        nb-releases-by-id          (group-by :id @nb-releases)
-        first-nb-release           (->> @nb-releases
+        nb-releases-by-id          (subscribe [::subs/nuvlabox-releases-by-id])
+        first-nb-release            (->> @nb-releases
                                         (remove :pre-release)
                                         first)
         default-major-version      (->> first-nb-release :release utils/get-major-version general-utils/str->int)
@@ -577,35 +577,29 @@
 
                  (let [{nb-rel                                          :nb-rel
                         nb-assets                                       :nb-assets
-                        {:keys [release compose-files url pre-release]}  :nb-selected}
+                        {:keys [compose-files url]}  :nb-selected}
                        @nuvlabox-release-data]
                    [ui/Container
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:version])]
                     [edges-detail/DropdownReleases
                      {:value       nb-rel
-                      :pre-release pre-release
                       :on-change   (ui-callback/value
-                                     (fn [value]
-                                       (swap! nuvlabox-release-data
-                                              assoc :nb-rel value)
-                                       (let [nb-selected (->> value
-                                                              (get nb-releases-by-id)
-                                                              first)]
-                                         (swap! creation-data assoc
-                                                :version (-> nb-selected
-                                                             :release
-                                                             utils/get-major-version
-                                                             general-utils/str->int))
-                                         (swap! nuvlabox-release-data
-                                                assoc :nb-selected nb-selected)
-                                         (swap! nuvlabox-release-data assoc :nb-assets
-                                                (set (map :scope (:compose-files nb-selected)))))
-                                       ))}]
-                    (when pre-release [:span {:style  {:margin "1em"
-                                                       :color "red"}}
-                                       (r/as-element [ui/Icon {:name "exclamation triangle"}])
-                                       (@tr [:nuvlabox-pre-release])])
+                                    (fn [value]
+                                      (swap! nuvlabox-release-data
+                                             assoc :nb-rel value)
+                                      (let [nb-selected (get @nb-releases-by-id value)]
+                                        (swap! creation-data assoc
+                                               :version (-> nb-selected
+                                                            :release
+                                                            utils/get-major-version
+                                                            general-utils/str->int))
+                                        (swap! nuvlabox-release-data
+                                               assoc :nb-selected nb-selected)
+                                        (swap! nuvlabox-release-data assoc :nb-assets
+                                               (set (map :scope (:compose-files nb-selected)))))
+                                      ))}]
+
                     [:a {:href   url
                          :target "_blank"
                          :style  {:margin "1em"}}

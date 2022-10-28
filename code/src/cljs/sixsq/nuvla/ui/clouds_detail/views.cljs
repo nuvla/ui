@@ -9,7 +9,7 @@
     [sixsq.nuvla.ui.clouds-detail.events :as events]
     [sixsq.nuvla.ui.clouds-detail.spec :as spec]
     [sixsq.nuvla.ui.clouds-detail.subs :as subs]
-    [sixsq.nuvla.ui.edges-detail.views :as edges-detail-views]
+    [sixsq.nuvla.ui.edges.views-utils :as views-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
@@ -202,7 +202,7 @@
           [ui/Icon {:name "cloud"}]
           (or name id)]
          [:p {:style {:margin "0.5em 0 1em 0"}}
-          [edges-detail-views/OnlineStatusIcon online]
+          [views-utils/OnlineStatusIcon online]
           [:span {:style {:font-weight "bold"}}
            "State "
            [ui/Popup

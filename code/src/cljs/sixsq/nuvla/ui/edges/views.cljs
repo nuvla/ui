@@ -392,7 +392,6 @@
           [ui/Button {:positive true
                       :on-click on-close-fn} (@tr [:close])]]]))))
 
-
 (defn AddModal
   []
   (let [modal-id                   :add
@@ -531,8 +530,8 @@
                                    :placeholder (@tr [:none])
                                    :value       (:vpn-server-id @creation-data)
                                    :on-change   (ui-callback/callback
-                                                  :value #(swap! creation-data assoc
-                                                                 :vpn-server-id %))
+                                                 :value #(swap! creation-data assoc
+                                                                :vpn-server-id %))
                                    :options     @vpn-infra-opts}]]]]]
 
                  [ui/Checkbox {:toggle    true
@@ -578,14 +577,14 @@
 
                  (let [{nb-rel                                          :nb-rel
                         nb-assets                                       :nb-assets
-                        {:keys [release compose-files url pre-release]} :nb-selected}
+                        {:keys [release compose-files url pre-release]}  :nb-selected}
                        @nuvlabox-release-data]
                    [ui/Container
                     [ui/Divider {:horizontal true :as "h3"}
                      (@tr [:version])]
                     [edges-detail/DropdownReleases
-                     {:placeholder release
-                      :value       nb-rel
+                     {:value       nb-rel
+                      :pre-release pre-release
                       :on-change   (ui-callback/value
                                      (fn [value]
                                        (swap! nuvlabox-release-data
@@ -603,16 +602,14 @@
                                          (swap! nuvlabox-release-data assoc :nb-assets
                                                 (set (map :scope (:compose-files nb-selected)))))
                                        ))}]
+                    (when pre-release [:span {:style  {:margin "1em"
+                                                       :color "red"}}
+                                       (r/as-element [ui/Icon {:name "exclamation triangle"}])
+                                       (@tr [:nuvlabox-pre-release])])
                     [:a {:href   url
                          :target "_blank"
                          :style  {:margin "1em"}}
                      (@tr [:nuvlabox-release-notes])]
-                    (when pre-release
-                      [ui/Popup
-                       {:trigger        (r/as-element [ui/Icon {:name "exclamation triangle"}])
-                        :content        (@tr [:nuvlabox-pre-release])
-                        :on             "hover"
-                        :hide-on-scroll true}])
                     [ui/Container
                      (when (> (count compose-files) 1)
                        [ui/Popup
@@ -743,7 +740,7 @@
     [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
-      [edges-detail/OnlineStatusIcon online]]
+      [views-utils/OnlineStatusIcon online]]
      [ui/TableCell {:collapsing true}
       [ui/Icon {:icon (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]

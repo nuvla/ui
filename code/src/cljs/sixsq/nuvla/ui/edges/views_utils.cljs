@@ -2,7 +2,7 @@
   (:require
     [clojure.string :as str]
     [re-frame.core :refer [dispatch subscribe]]
-    [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
+    [reagent.core :as r]
     [sixsq.nuvla.ui.edges.events :as events]
     [sixsq.nuvla.ui.edges.subs :as subs]
     [sixsq.nuvla.ui.edges.utils :as utils]
@@ -16,6 +16,11 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.values :as utils-values]))
 
+(defn OnlineStatusIcon
+  [online corner]
+  [ui/Icon {:name   "power"
+            :corner (true? corner)
+            :color  (utils/status->color online)}])
 
 (defn NuvlaboxRow
   [{:keys [id name description created state tags online] :as _nuvlabox} managers]
@@ -23,7 +28,7 @@
     [ui/TableRow {:on-click #(dispatch [::history-events/navigate (str "edges/" uuid)])
                   :style    {:cursor "pointer"}}
      [ui/TableCell {:collapsing true}
-      [edges-detail/OnlineStatusIcon online]]
+      [OnlineStatusIcon online]]
      [ui/TableCell {:collapsing true}
       [ui/Icon {:icon (utils/state->icon state)}]]
      [ui/TableCell (or name uuid)]
@@ -63,7 +68,7 @@
           :href        href
           :header      [:<>
                         [:div {:style {:float "right"}}
-                         [edges-detail/OnlineStatusIcon online :corner "top right"]]
+                         [OnlineStatusIcon online :corner "top right"]]
                         [ui/IconGroup
                          [ui/Icon {:name "box"}]
                          (when (some #{id} managers)
@@ -87,3 +92,11 @@
 (defn orchestrator-icon
   [orchestrator]
   [uix/Icon {:name (get utils/orchestration-icons (keyword orchestrator) "question circle")}])
+
+(defn PreReleaseWarning [{:keys [show? warning-text]}]
+  (when show?
+    [ui/Popup
+     {:trigger        (r/as-element [ui/Icon {:name "exclamation triangle"}])
+      :content        warning-text
+      :on             "hover"
+      :hide-on-scroll true}]))

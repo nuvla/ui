@@ -13,6 +13,7 @@
     [sixsq.nuvla.ui.clouds.utils :as utils]
     [sixsq.nuvla.ui.credentials.views :as cred-views]
     [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
+    [sixsq.nuvla.ui.edges.views-utils :as views-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
@@ -59,7 +60,7 @@
       :image       logo-url
       :header      [:<>
                     [:div {:style {:float "right"}}
-                     [edges-detail/OnlineStatusIcon status]]
+                     [views-utils/OnlineStatusIcon status]]
                     [edges-detail/ServiceIcon subtype]
                     (or name id)]
       :meta        path

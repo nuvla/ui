@@ -31,7 +31,8 @@
     [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
-    [sixsq.nuvla.ui.utils.values :as values]))
+    [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.edges.views-utils :as views-utils]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -105,14 +106,28 @@
 
 (defn DropdownReleases
   [_opts]
-  (let [releases (subscribe [::edges-subs/nuvlabox-releases-options])]
+  (let [releases (subscribe [::edges-subs/nuvlabox-releases-options])
+        tr       (subscribe [::i18n-subs/tr])]
     (fn [opts]
       (when (empty? @releases)
         (dispatch [::edges-events/get-nuvlabox-releases]))
       [ui/Dropdown
        (merge {:selection true
                :loading   (empty? @releases)
-               :options   @releases}
+               :error     (:pre-release opts)
+               :options   (map
+                           (fn [{:keys [pre-release text] :as release}] (merge release
+                                                                               {:content
+                                                                                (r/as-element [:div {:style {:display "flex"
+                                                                                                             :justify-content "space-between"}}
+                                                                                               text
+                                                                                               (when pre-release
+                                                                                                 [:<> " - pre-release"
+                                                                                                  [views-utils/PreReleaseWarning
+                                                                                                   {:show? pre-release
+                                                                                                    :warning-text (@tr [:nuvlabox-pre-release])}]
+                                                                                                  #_[ui/Icon {:name "exclamation triangle"}]])])})) @releases)}
+
               opts)])))
 
 
@@ -810,11 +825,6 @@
                    nil)
                  nil)]))))
 
-(defn OnlineStatusIcon
-  [online corner]
-  [ui/Icon {:name   "power"
-            :corner (true? corner)
-            :color  (utils/status->color online)}])
 
 (defn Load
   [resources]
@@ -1156,7 +1166,7 @@
       [ui/Popup
        {:trigger        (r/as-element [:span
                                        {:style {:cursor "help"}}
-                                       [OnlineStatusIcon online]])
+                                       [views-utils/OnlineStatusIcon online]])
         :content        (tr [:nuvlaedge-online-icon-help])
         :position       "bottom center"
         :on             "hover"
@@ -1902,7 +1912,7 @@
     [:h2
      [ui/IconGroup
       [ui/Icon {:name "box"}]
-      [OnlineStatusIcon online true]]
+      [views-utils/OnlineStatusIcon online true]]
      (or name id)]))
 
 

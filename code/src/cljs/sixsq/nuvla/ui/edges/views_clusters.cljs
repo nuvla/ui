@@ -66,7 +66,7 @@
                                [ui/ListContent
                                 [ui/ListHeader name
                                  [:div {:style {:float "right"}}
-                                  [edges-detail/OnlineStatusIcon online :corner "top right"]]]
+                                  [views-utils/OnlineStatusIcon online :corner "top right"]]]
                                 [ui/ListDescription (str (@tr [:updated]) " " (-> updated time/parse-iso8601 time/ago))]]])))]
           :extra       [:<>
                         (when (not-empty status-notes)
@@ -91,5 +91,3 @@
         (for [{:keys [id] :as cluster} (:resources @nuvlabox-clusters)]
           ^{:key id}
           [NuvlaBoxClusterCard cluster nuvlaboxes]))]]))
-
-

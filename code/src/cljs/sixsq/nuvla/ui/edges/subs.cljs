@@ -108,8 +108,8 @@
   :<- [::nuvlabox-releases]
   (fn [nuvlabox-releases]
     (map
-      (fn [{:keys [id release]}]
-        {:key release, :text release, :value id})
+      (fn [{:keys [id release pre-release]}]
+        {:key release, :text (str release), :value id, :pre-release pre-release})
       nuvlabox-releases)))
 
 (reg-sub

@@ -104,12 +104,30 @@
     (::spec/nuvlabox-releases db)))
 
 (reg-sub
+  ::nuvlabox-releases-by-id
+  :<- [::nuvlabox-releases]
+  (fn [nuvlabox-releases]
+    (zipmap (map :id nuvlabox-releases) nuvlabox-releases)))
+
+(reg-sub
+  ::nuvlabox-releases-from-id
+  :<- [::nuvlabox-releases-by-id]
+  (fn [nuvlabox-releases-by-id [_ id]]
+    (nuvlabox-releases-by-id id)))
+
+(reg-sub
+  ::nuvlabox-releases-by-release-number
+  :<- [::nuvlabox-releases]
+  (fn [nuvlabox-releases]
+    (zipmap (map :release nuvlabox-releases) nuvlabox-releases)))
+
+(reg-sub
   ::nuvlabox-releases-options
   :<- [::nuvlabox-releases]
   (fn [nuvlabox-releases]
     (map
-      (fn [{:keys [id release]}]
-        {:key release, :text release, :value id})
+      (fn [{:keys [id release pre-release]}]
+        {:key release, :text (str release (when pre-release " - pre-release")), :value id, :pre-release pre-release})
       nuvlabox-releases)))
 
 (reg-sub

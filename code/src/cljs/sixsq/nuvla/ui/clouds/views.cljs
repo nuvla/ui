@@ -13,7 +13,6 @@
     [sixsq.nuvla.ui.clouds.utils :as utils]
     [sixsq.nuvla.ui.credentials.views :as cred-views]
     [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
-    [sixsq.nuvla.ui.edges.views-utils :as views-utils]
     [sixsq.nuvla.ui.history.events :as history-events]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.intercom.events :as intercom-events]
@@ -29,6 +28,7 @@
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.validation :as utils-validation]
     [sixsq.nuvla.ui.utils.values :as values]
+    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]
     [taoensso.timbre :as timbre]))
 
 (defn MenuBar []
@@ -60,7 +60,7 @@
       :image       logo-url
       :header      [:<>
                     [:div {:style {:float "right"}}
-                     [views-utils/OnlineStatusIcon status]]
+                     [OnlineStatusIcon status]]
                     [edges-detail/ServiceIcon subtype]
                     (or name id)]
       :meta        path

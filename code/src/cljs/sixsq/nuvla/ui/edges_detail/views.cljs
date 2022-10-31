@@ -32,7 +32,7 @@
     [sixsq.nuvla.ui.utils.time :as time]
     [sixsq.nuvla.ui.utils.ui-callback :as ui-callback]
     [sixsq.nuvla.ui.utils.values :as values]
-    [sixsq.nuvla.ui.edges.views-utils :as views-utils]))
+    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 
 (def refresh-action-id :nuvlabox-get-nuvlabox)
@@ -1162,7 +1162,7 @@
       [ui/Popup
        {:trigger        (r/as-element [:span
                                        {:style {:cursor "help"}}
-                                       [views-utils/OnlineStatusIcon online]])
+                                       [OnlineStatusIcon online]])
         :content        (tr [:nuvlaedge-online-icon-help])
         :position       "bottom center"
         :on             "hover"
@@ -1908,7 +1908,7 @@
     [:h2
      [ui/IconGroup
       [ui/Icon {:name "box"}]
-      [views-utils/OnlineStatusIcon online true]]
+      [OnlineStatusIcon online true]]
      (or name id)]))
 
 

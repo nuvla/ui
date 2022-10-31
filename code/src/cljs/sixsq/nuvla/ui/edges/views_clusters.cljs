@@ -1,20 +1,19 @@
 (ns sixsq.nuvla.ui.edges.views-clusters
-  (:require
-    [clojure.string :as str]
-    [re-frame.core :refer [dispatch subscribe]]
-    [reagent.core :as r]
-    [sixsq.nuvla.ui.edges-detail.views :as edges-detail]
-    [sixsq.nuvla.ui.edges.events :as events]
-    [sixsq.nuvla.ui.edges.subs :as subs]
-    [sixsq.nuvla.ui.edges.views-utils :as views-utils]
-    [sixsq.nuvla.ui.history.events :as history-events]
-    [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
-    [sixsq.nuvla.ui.main.components :as components]
-    [sixsq.nuvla.ui.utils.general :as general-utils]
-    [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
-    [sixsq.nuvla.ui.utils.style :as style]
-    [sixsq.nuvla.ui.utils.time :as time]))
+  (:require [clojure.string :as str]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]
+            [sixsq.nuvla.ui.edges.events :as events]
+            [sixsq.nuvla.ui.edges.subs :as subs]
+            [sixsq.nuvla.ui.edges.views-utils :as views-utils]
+            [sixsq.nuvla.ui.history.events :as history-events]
+            [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
+            [sixsq.nuvla.ui.main.components :as components]
+            [sixsq.nuvla.ui.utils.general :as general-utils]
+            [sixsq.nuvla.ui.utils.semantic-ui :as ui]
+            [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+            [sixsq.nuvla.ui.utils.style :as style]
+            [sixsq.nuvla.ui.utils.time :as time]
+            [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 
 (defn StatisticStates
@@ -66,7 +65,7 @@
                                [ui/ListContent
                                 [ui/ListHeader name
                                  [:div {:style {:float "right"}}
-                                  [views-utils/OnlineStatusIcon online :corner "top right"]]]
+                                  [OnlineStatusIcon online :corner "top right"]]]
                                 [ui/ListDescription (str (@tr [:updated]) " " (-> updated time/parse-iso8601 time/ago))]]])))]
           :extra       [:<>
                         (when (not-empty status-notes)

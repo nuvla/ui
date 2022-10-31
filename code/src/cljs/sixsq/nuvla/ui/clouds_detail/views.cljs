@@ -9,13 +9,13 @@
     [sixsq.nuvla.ui.clouds-detail.events :as events]
     [sixsq.nuvla.ui.clouds-detail.spec :as spec]
     [sixsq.nuvla.ui.clouds-detail.subs :as subs]
-    [sixsq.nuvla.ui.edges.views-utils :as views-utils]
     [sixsq.nuvla.ui.i18n.subs :as i18n-subs]
     [sixsq.nuvla.ui.main.components :as main-components]
     [sixsq.nuvla.ui.main.events :as main-events]
     [sixsq.nuvla.ui.main.subs :as main-subs]
     [sixsq.nuvla.ui.utils.semantic-ui :as ui]
-    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]))
+    [sixsq.nuvla.ui.utils.semantic-ui-extensions :as uix]
+    [sixsq.nuvla.ui.utils.view-components :refer [OnlineStatusIcon]]))
 
 
 (defn refresh
@@ -202,7 +202,7 @@
           [ui/Icon {:name "cloud"}]
           (or name id)]
          [:p {:style {:margin "0.5em 0 1em 0"}}
-          [views-utils/OnlineStatusIcon online]
+          [OnlineStatusIcon online]
           [:span {:style {:font-weight "bold"}}
            "State "
            [ui/Popup

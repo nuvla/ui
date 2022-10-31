@@ -1,4 +1,5 @@
-(ns sixsq.nuvla.ui.utils.view-components)
+(ns sixsq.nuvla.ui.utils.view-components
+  (:require [sixsq.nuvla.ui.utils.semantic-ui :as ui]))
 
 (defn status->color
   [status]
